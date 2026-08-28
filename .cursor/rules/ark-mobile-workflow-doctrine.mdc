@@ -1,0 +1,61 @@
+---
+description: ARK Mobile workflow doctrine — workflow engine, not CRUD screens; complete vertical shop workflows
+alwaysApply: false
+---
+
+# ARK Mobile Workflow Doctrine
+
+Full doc: `docs/mobile/ark-mobile-workflow-doctrine.md`
+
+## Identity
+
+ARK Mobile is a **workflow engine**, not a miniature desktop and not a CRUD screen collection.
+
+Every screen answers: **What does the user need to do next?** — not "What data do we have?"
+
+## Build order
+
+Complete **vertical workflows** before adding horizontal features:
+
+1. Check-in → RO → assign technician
+2. Inspection → concern workspace → finding (evidence) → recommendation → photos → complete
+3. Comms → estimate → approval → payment (inline actions, no workspace hop)
+4. Repair complete → pickup → close
+
+If a step forces desktop, **observe why** — do not auto-build enforcement or new authority.
+
+## Technician
+
+Assume standing beside the vehicle. **Camera-first.** Concerns are workspaces — findings, photos, recommendations, discussion in one place. No "navigate to Finding Detail" thinking.
+
+## Advisor
+
+Comms actions inline: call, text, open RO, send estimate/payment/inspection, internal note — without leaving conversation.
+
+## My Work cards
+
+Pressure + next action, not status alone. Use projection fields (`next_action`, `attention_reason`, `age_label`, `primary_concern_id`). Tap → concern workspace when possible.
+
+## Check-in
+
+VIN → plate → existing customer → manual. Under one minute. Forms are fallback.
+
+## Notifications
+
+Interruptions → deep link to work. Not inboxes. Poll-first; push deferred per `ark-mobile-notification-doctrine.mdc`.
+
+## Tablet
+
+Master/detail, split view, persistent concern/findings/comms — less navigation when width allows.
+
+## Guardrails
+
+Authority → Observation → Projection → Configuration → Transport.
+
+Flutter projection only. No parallel authority. No duplicated business logic. No shop-specific branching. Config in Settings.
+
+## Success
+
+User completes a visit without wondering where to go next. Hesitation or desktop reach = observation for roadmap.
+
+Companion: `ark-mobile-production-workspace.mdc` · `ark-mobile-projection.mdc` · `ark-mobile-notification-doctrine.mdc`

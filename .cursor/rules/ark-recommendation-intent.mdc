@@ -1,0 +1,46 @@
+# ARK Recommendation Status (Intent)
+
+Recommendation status on a **scope** answers one question:
+
+**What action should the customer take regarding this condition?**
+
+It does **not** answer part classification, billing posture, or warranty program rules.
+
+## Values
+
+| Internal | Label |
+|----------|-------|
+| `immediate_attention` | Immediate Attention |
+| `plan_soon` | Plan Soon |
+| `maintenance` | Maintenance |
+| `diagnostic` | Diagnostic Required |
+| `repair_verification` | Repair Verification |
+| `information_only` | Information Only |
+
+## Does NOT answer
+
+- Part source (shop vs customer supplied)
+- OEM vs aftermarket vs performance/custom
+- Warranty impact on a specific part line
+- Scope billing posture (customer pay, fleet, warranty program)
+
+Use **part line metadata** (`ark-part-line-metadata.mdc`) and **scope billing** (`ark-customer-classification.mdc`) instead.
+
+## Misuse (semantic drift)
+
+| Wrong | Right |
+|-------|-------|
+| Information Only for a performance part line | Part line → Performance/custom; scope status only if no repair sold |
+| Immediate Attention because part is aftermarket | Part line → Aftermarket; status from wear/safety |
+| Maintenance because customer supplied pads | Part line → Customer supplied + warranty impact |
+
+## Finding intent (inspection)
+
+Inspection findings use `InspectionFindingIntent` on `InspectionItem` — separate from scope recommendation status.
+
+Future: split **Finding Type** from **Recommendation Priority**.
+
+## Do not
+
+- Add recommendation statuses for OEM, aftermarket, fleet, warranty, or customer-supplied
+- Encode part metadata in `recommendation_intent`

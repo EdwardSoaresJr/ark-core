@@ -1,0 +1,60 @@
+---
+description: MySQL-only database and migration rules for ARK-SMS
+alwaysApply: true
+---
+
+# ARK Database Rules
+
+ARK-SMS targets MySQL only.
+
+We are not building for SQLite, PostgreSQL, multi-database abstraction, or portable SQL compatibility. Optimize specifically for MySQL operational behavior and constraints.
+
+## Database Laws
+
+- All migrations must be MySQL-safe.
+- Respect MySQL index and identifier length limits.
+- Respect utf8mb4 index sizing constraints.
+- Use explicit index names when necessary to avoid oversized generated names.
+- Avoid Laravel-generated compound index names that may exceed MySQL limits.
+- Prefer predictable, short table names.
+- Prefer predictable foreign key naming.
+- Avoid unnecessary polymorphic relationships.
+- Optimize for operational query speed, not ORM purity.
+- Design indexes intentionally for shop workflows.
+
+## Runtime vs Testing
+
+- **Production and local dev** use MySQL only.
+- **PHPUnit/Pest** use isolated SQLite (`database/testing.sqlite` via `phpunit.xml`). See `ark-database-safety.mdc`.
+- Agents must never wipe or seed local MySQL without explicit user request.
+
+Migrations must remain MySQL-safe. Avoid SQLite-only schema assumptions in application code.
+
+## Operational Priorities
+
+- Predictable migrations.
+- Stable indexing.
+- Fast search.
+- Reliable foreign keys.
+- Maintainable schema evolution.
+- Long-term operational survivability.
+
+## Examples
+
+Bad table name: `repair_order_customer_vehicle_status_transition_histories`
+
+Good table name: `ro_histories`
+
+Bad compound index:
+
+```php
+$table->unique(['repair_order_id', 'vehicle_id', 'customer_id', 'status']);
+```
+
+Good compound index:
+
+```php
+$table->unique(['repair_order_id', 'vehicle_id'], 'ro_vehicle_unique');
+```
+
+Avoid schema designs that create oversized index names, oversized foreign key names, migration instability, or hidden cross-database assumptions.

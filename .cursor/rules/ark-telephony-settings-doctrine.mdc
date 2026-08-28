@@ -1,0 +1,126 @@
+---
+description: Telephony behavior belongs in shop Settings; authority stays in code. Multi-tenant SaaS litmus test for voice config.
+alwaysApply: false
+globs:
+  - app/Ark/Operations/Telephony/**
+  - app/Ark/Operations/Settings/ShopCommunicationsSettingsController.php
+  - resources/views/operations/settings/partials/*telephony*
+  - resources/views/operations/settings/partials/ark-voice*
+  - config/telephony.php
+  - docs/communications/**
+---
+
+# ARK Telephony Settings Doctrine
+
+**Status:** Active  
+**Sequence:** Authority (code) → Settings (behavior) → Transport adapters (wiring)
+
+ARK is multi-shop platform software (Arkify, Shop Registry, identity, products). **LugsNPlugs is one tenant, not the model.**
+
+## Rule
+
+**If a telephony behavior can vary by shop, it must be configurable through Settings.**
+
+Do not hardcode shop-specific telephony assumptions in code, Blade placeholders, seed data, or `.env` (except secrets).
+
+## SaaS litmus test
+
+See [ark-authority-vs-configuration.mdc](ark-authority-vs-configuration.mdc) for the platform-wide deploy + history tests.
+
+**Question:** Can two shops have different telephony behavior without code changes?
+
+**Desired answer:** Yes.
+
+If code changes are required, the behavior belongs in Settings.
+
+**Secondary test:** Could another ARK shop reasonably want this different? → Settings.  
+**Authority test:** Is this operational truth? → Code authority, not Settings.
+
+## Settings (behavior — per shop)
+
+| Surface | Examples | Storage direction |
+|---------|----------|-------------------|
+| **Provider** | Twilio, Asterisk, hybrid parallel ingress | Shop settings — not `config/telephony.php` |
+| **Extensions** | Extension number, display name, owner, device type, location | Registry (`telephony_extensions`) via Settings |
+| **Ring groups** | Service Advisors, Technicians, Management, Parts | Named groups → endpoint membership (settings) |
+| **Page groups** | Page All, Shop Floor, Advisors, Parts | Named paging targets (settings) |
+| **Incoming routing** | Business hours, after hours, voicemail, overflow | Route targets per schedule (settings) |
+| **Business hours** | Already on Communications → Hours | `telephony_call_flow` |
+| **Caller pop** | Customer, vehicle, RO, last message, last appointment | Enable/disable elements per shop (settings projection prefs) |
+
+Shop-specific examples (101 Front Counter, *80 page all, LugsNPlugs extension map) are **tenant data**, never product defaults in PHP or Blade.
+
+## Authority (code — not settings)
+
+Do **not** put authority in settings.
+
+| Bad (settings) | Good (authority) |
+|----------------|------------------|
+| CallSession type enum | `CallSession` model + lifecycle |
+| Conversation statuses | `Conversation` + `ConversationMessage` |
+| Message delivery states | Operational facts on authority rows |
+| Voicemail blob storage | `CallSession` recording metadata |
+
+**Authority stores (fixed in code):**
+
+- `CallSession`
+- `Conversation` / `ConversationMessage`
+- `TelephonyEndpoint` (ring targets)
+- `TelephonyExtension` (internal extension registry)
+- Future: `PageGroup`, transfer events — still authority tables, configured via Settings UI
+
+Settings **point at** authority. Settings do not **become** authority.
+
+## `.env` exception
+
+**Secrets and deployment wiring only:**
+
+- `ASTERISK_INGRESS_TOKEN`
+- Twilio credentials may fall back from `.env` when not saved in Settings — prefer Settings for shop credentials
+
+**Not in `.env`:** provider choice, listener on/off, extensions, ring groups, routing, pop preferences.
+
+## Implementation pattern
+
+```
+Authority (CallSession, Extension, Endpoint)
+    ↑ events / FKs
+Transport adapters (Twilio, Asterisk ingress)
+    ↑ configured by
+Shop Settings (provider, routes, groups, pop prefs)
+    ↓ projected to
+Surfaces (pop, Calls Waiting, mobile API)
+```
+
+- **Projection rule:** Caller pop reads settings for which fields to show; resolver stays authoritative.
+- **Authority adoption:** Ship authority + settings UI → observe before sync jobs and automation.
+
+## Phase 1 scope (parallel ingress)
+
+Phase 1 proves Asterisk **side-by-side** with Twilio:
+
+- HTTP ingress → same `CallSession` path
+- Extension registry in Settings
+- Listener enable in Settings
+- Token in `.env` only
+
+Phase 1 does **not** hardcode LugsNPlugs dial plan. Ring groups, page groups, and full routing tables are **Phase 2+ settings surfaces** — design them as configuration from day one.
+
+## Anti-patterns
+
+- Hardcoding extension 101–104 or staff names in migrations/seeders for all shops
+- `TELEPHONY_PROVIDER` in `.env` as the source of truth
+- Blade copy that names one shop's floor layout as the default
+- New status columns on authority rows to avoid building a settings surface
+- Giant JSON blob that duplicates `CallSession` state
+
+## Companions
+
+| Rule | Relationship |
+|------|--------------|
+| [ark-authority-vs-configuration.mdc](ark-authority-vs-configuration.mdc) | Parent doctrine — authority vs settings |
+| [ark-telephony-roadmap.mdc](ark-telephony-roadmap.mdc) | Channel authority lock |
+| [ark-telephony-inbound-ring-doctrine.mdc](ark-telephony-inbound-ring-doctrine.mdc) | Twilio ring baseline |
+| [ark-pressure-first.mdc](ark-pressure-first.mdc) | Observe before routing automation |
+| [ark-authority-adoption.mdc](ark-authority-adoption.mdc) | Settings before sync jobs |
+| `docs/communications/ark-voice-phase1-spec.md` | Phased build contract |

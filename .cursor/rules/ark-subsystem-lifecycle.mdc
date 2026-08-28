@@ -1,0 +1,100 @@
+---
+description: Subsystem lifecycle — Pressure through Evolution; three states Converging / Observing / Evolving
+alwaysApply: true
+---
+
+# ARK Subsystem Lifecycle
+
+**Catalog:** [docs/runtime/README.md](../../docs/runtime/README.md) · **Cleanup:** [ark-cleanup-sprint-discipline.mdc](ark-cleanup-sprint-discipline.mdc)
+
+## Full lifecycle (what replaced Pressure → Code)
+
+```text
+Pressure             ← repeated operational pain; observe before building
+        ↓
+Authority            ← what production truth is
+        ↓
+Inventory            ← classify with Proof; zero Unknown
+        ↓
+Runtime              ← one page: how it works (docs/runtime/)
+        ↓
+Cleanup              ← delete obsolete architecture; Behavior changes: 0
+        ↓
+Observation          ← shop evidence; baseline log; boring = success
+        ↓
+Baseline             ← known-good operations snapshot frozen
+        ↓
+Evolution            ← features only after baseline earns trust
+```
+
+**Production earns the right to evolve.** Not because a sprint ended — because the baseline demonstrated reliability.
+
+**"Nuke it" is healthy** only when paired with: define authority · inventory with evidence · delete mechanically · observe before evolving.
+
+---
+
+## Three states (every subsystem)
+
+More useful than alpha/beta/production for ARK engineering.
+
+### State 1 — Converging
+
+Questions still being answered. Architecture not yet trusted.
+
+| Allowed | Not allowed |
+| --- | --- |
+| Inventory | Optimization |
+| Cleanup / deletion | Polish |
+| Architecture changes | New features |
+
+Voice **today (post Phase B):** mobile runtime converged; backend PV still converging (Phase D pending).
+
+### State 2 — Observing
+
+Architecture frozen for this subsystem. Proving the simplified model on the floor.
+
+| Allowed | Not allowed |
+| --- | --- |
+| Bug fixes (production broken) | Refactors |
+| Evidence · logs · notebooks | Cleanup sprints |
+| Baseline observation log | Feature creep |
+
+Voice **today:** **Observing** — certify baseline; no voice code unless production breaks.
+
+### State 3 — Evolving
+
+Baseline has earned trust. Subsystem may grow again.
+
+| Allowed |
+| --- |
+| Features |
+| Improvements |
+| Optimization |
+
+**Only after baseline exists** and Stabilize passed.
+
+---
+
+## One page per subsystem
+
+Each runtime page under `docs/runtime/` answers:
+
+| Section | Question |
+| --- | --- |
+| **Authority** | Who owns truth? |
+| **Runtime** | What is the production path? |
+| **Baseline** | What did good look like? (link) |
+| **Known defects** | Missing capabilities ≠ instability |
+| **Observation gate** | What must pass before evolution? |
+
+Not 100 pages. **One place where reality is written down.**
+
+Planned: payments · scheduling · communications · identity · inspection · pricing.
+
+---
+
+## Anti-ceremony
+
+If a runtime document isn't helping someone make a decision in six months — **delete or rewrite it.**
+
+The value is not having documentation. The value is **one authoritative page that matches the floor.**

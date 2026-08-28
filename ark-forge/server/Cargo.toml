@@ -1,0 +1,20 @@
+[package]
+name = "forge-server"
+version = "0.1.0"
+edition = "2021"
+description = "Forge HTTP server — Core + Projection routes"
+
+[[bin]]
+name = "forge-core"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.8", features = ["json"] }
+forge-core = { path = "../core" }
+forge-projection = { path = "../projection" }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

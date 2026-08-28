@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CapabilityIdentity",
+  "description": "Forge Core capability identity — stable, implementation-independent (ADR-0001)",
+  "type": "object",
+  "required": [
+    "id",
+    "display_name",
+    "domain",
+    "resource",
+    "operation",
+    "mode",
+    "version",
+    "stability",
+    "permissions",
+    "arguments",
+    "available"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^core\\.[a-z]+\\.[a-z]+\\.[a-z]+$",
+      "description": "Permanent capability ID, e.g. core.browser.url.open"
+    },
+    "display_name": { "type": "string" },
+    "description": { "type": "string" },
+    "domain": { "type": "string" },
+    "resource": { "type": "string" },
+    "operation": { "type": "string" },
+    "mode": {
+      "type": "string",
+      "enum": ["invoke", "observe"]
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "stability": {
+      "type": "string",
+      "enum": ["stable", "experimental", "deprecated"]
+    },
+    "permissions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "required"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["string", "url", "directory", "file", "enum", "boolean", "integer"]
+          },
+          "required": { "type": "boolean" },
+          "enum_values": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "result": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "available": {
+      "type": "boolean",
+      "description": "Runtime: is this capability invokable on this workstation now?"
+    }
+  }
+}

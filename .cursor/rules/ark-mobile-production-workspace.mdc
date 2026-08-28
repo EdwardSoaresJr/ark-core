@@ -1,0 +1,63 @@
+---
+description: ARK Mobile Production Workspace v1 — perform the repair beside the vehicle; not a technician app
+alwaysApply: false
+---
+
+# ARK Mobile Production Workspace v1
+
+Full doc: `docs/mobile/ark-mobile-production-workspace-v1.md`  
+**Parent:** `ark-mobile-workflow-doctrine.mdc` — complete vertical workflows, not isolated screens
+
+## North star
+
+Can a technician **complete an entire repair without needing a desktop?**
+
+Not: "Can technicians do inspections on their phone?"
+
+## Identity
+
+| Surface | Role |
+| --- | --- |
+| ARK Operations (Desktop) | Run the shop |
+| ARK Mobile | **Perform the repair** |
+| ARK Portal | Experience the repair |
+| ARK Display | See the shop |
+| ARK Voice | Connect the shop |
+
+Mobile is a projection of ARK authority — not a separate product with parallel workflow.
+
+## Principle
+
+Technicians should not walk back to a desktop to record operational truth. Everything beside the vehicle happens on phone or tablet.
+
+## Primary flow
+
+My Work → RO → **Concern** → Findings → Evidence → Notes → Production → Next vehicle.
+
+**Concerns are first-class.** Technicians think in concerns, not RO numbers.
+
+## UX locks
+
+- **Finding-first:** recent findings default; categories are metadata, not nav
+- **Camera-first:** photo → "What did you find?" → save — not form → attach photo
+- **Voice notes:** transcribe → edit → save as finding authority
+- **Tablet:** preferred inspection surface; vehicle + concern + findings visible without deep stacks
+- **RO workspace:** Customer/Vehicle, Concerns, Approved Work, Findings, Photos, Production, Comms — one or two taps
+
+## Production + comms
+
+Production actions use **existing ARK authority** only (start/pause/resume/finish, labor complete, verification, production notes).
+
+Comms within assigned RO: read thread, advisor notes, internal note, approval signal — **no messaging product**, no provider SDKs.
+
+## Non-goals on mobile
+
+Estimate builder, scheduling, payments, portal, accounting, analytics, management dashboards, shop-wide queues for technicians.
+
+## Success
+
+Technician completes diagnosis → findings → photos → notes → production → verification **without desktop**.
+
+**Floor test:** Do they reach for ARK Mobile standing next to the vehicle?
+
+Authority lock: `ark-mobile-projection.mdc` · Comms: `ark-mobile-communications-authority-contract.md` · Push deferred: `ark-mobile-notification-doctrine.mdc`

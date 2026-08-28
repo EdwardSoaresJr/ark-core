@@ -1,0 +1,42 @@
+# ARK Part Line Metadata
+
+Part classification lives on **part estimate lines** (`repair_order_lines`), not on recommendation status.
+
+## Authority chain
+
+```
+Recommendation status (scope)     → customer action / urgency posture
+Scope billing posture (scope)     → fees, matrix, labor defaults
+Part line metadata (part line)    → source, type, warranty impact on this part
+Parts matrix (part line)          → pricing authority
+```
+
+## Fields
+
+| Column | Values | Purpose |
+|--------|--------|---------|
+| `part_source` | `shop_supplied`, `customer_supplied` | Who supplied the part |
+| `part_classification` | `oem`, `aftermarket_replacement`, `performance_custom` | What kind of part (nullable until set) |
+| `part_warranty_impact` | `none`, `customer_supplied`, `aftermarket_related`, `excluded` | Line-level warranty note |
+
+Defaults: shop supplied, classification unset, warranty impact none.
+
+## UI
+
+Part line entry and inline part edit — **Sourcing** section, below vendor/part number.
+
+Only shown for `type = part`. Not on labor, fee, or note lines.
+
+## Snapshots
+
+Estimate snapshots freeze part metadata labels with the line for document truth.
+
+## Do not
+
+- Move part metadata to recommendation status
+- Replace scope billing posture with part warranty impact
+- Infer part classification from recommendation status in reports
+
+## Future
+
+Shop-custom classification values (fleet issue, repeat failure) belong in settings authority — not new recommendation statuses.

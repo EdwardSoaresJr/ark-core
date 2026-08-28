@@ -1,0 +1,62 @@
+---
+description: ARK Explainability Doctrine — What / Why / Show me; evidence required for operational claims
+alwaysApply: true
+---
+
+# ARK Explainability Doctrine
+
+**Full stack:** [docs/ecosystem/ark-truth-stack-v1.md](../../docs/ecosystem/ark-truth-stack-v1.md)
+
+ARK communicates in three layers — not “trust me.”
+
+## Interaction grammar
+
+| Layer | Operator question | UX |
+| --- | --- | --- |
+| **What** | What's the answer? | Summary headline — scannable, calm |
+| **Why** | Why should I believe it? | Expand — timestamps, signals, context |
+| **Show me** | What's the source? | Evidence — immutable authority rows |
+
+Example:
+
+- **What:** Viewed estimate 3×
+- **Why:** Jun 18 2:14 PM · 2:18 PM · 2:27 PM
+- **Show me:** `CommunicationEvent` #4412 · portal link · session
+
+Most software stops at What + “click for details.” ARK separates **why** from **evidence**.
+
+## Explainability Rule (invariant)
+
+Every projection, observation, recommendation, and AI conclusion presented as **operational truth** must expose its evidence.
+
+**If evidence cannot be shown, do not present the statement as operational truth.**
+
+Hold it in engineering detail, notebook, or admin debug — not on the floor.
+
+This is the safeguard against the platform becoming a black box as AI features grow.
+
+## Applies to
+
+- Operational Journey milestones and identity confidence
+- Attention and observation projections
+- Revenue / Journey Explorer rows (link to closed ROs and sessions)
+- Future Operations Briefing sentences
+- Future AI insights (must follow What → Why → Show me — never “your SEO score dropped” without evidence chain)
+
+## Anti-patterns
+
+- Black-box scores without expandable evidence
+- Dashboard KPI walls that summarize without source links
+- AI summaries that cannot cite authority rows
+- Projection tables that become the only copy of operational facts
+- “Trust me” recommendations on the advisor floor
+
+## Companion doctrines
+
+| Doctrine | Relationship |
+| --- | --- |
+| [ark-projection-rule.mdc](ark-projection-rule.mdc) | Projections summarize; never become truth |
+| [ark-observations.mdc](ark-observations.mdc) | Observations must be explainable from source events |
+| [ark-earned-intelligence.mdc](ark-earned-intelligence.mdc) | Intelligence only after repeated sentences |
+| [ark-earned-authority.mdc](ark-earned-authority.mdc) | Publication only after traceable operational truth |
+| [ark-orientation-service.mdc](ark-orientation-service.mdc) | Orientation briefs before action — may consume projections |

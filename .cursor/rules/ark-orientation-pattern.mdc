@@ -1,0 +1,142 @@
+---
+description: Orientation pattern — briefing humans before action; projection vs orientation; ARK product loop
+alwaysApply: false
+---
+
+# ARK Orientation Pattern
+
+**Status:** Frozen doctrine v1  
+**North star:** Reduce **Time to Orientation (TTO)** — seconds until an employee can act confidently.
+
+**Orientation exists to reduce reconstruction.**
+
+A service advisor should not reconstruct the RO, conversation, parts situation, or warranty state. ARK does that. Mental energy goes to helping the customer.
+
+**Station compass:** [ark-station-doctrine.mdc](ark-station-doctrine.mdc) — Authorities own truth. Stations own orientation.
+
+## Pattern (not a "service")
+
+Whenever humans must make decisions, use this pattern — not "call this service."
+
+```php
+Orientation::forRepairOrder($repairOrder, OrientationDensity::Interrupt);
+```
+
+Implementation lives in `app/Ark/Orientation/` — the **pattern** is the product contract.
+
+## Projection vs Orientation (do not conflate)
+
+| | **Projection** | **Orientation** |
+|---|----------------|-----------------|
+| **What** | Derived view of authority optimized for a purpose | Operational briefing before a human acts |
+| **Nature** | Computational | Human-facing |
+| **Examples** | `CallSession` projection, `PartsPressure`, `RepairOrderCurrentSituationProjection` | Front Counter: Edward, 2 waiting, phone not ringing, 1 payment pending |
+| **UI** | Not every projection deserves its own UI | Always prepares a person to work |
+
+Orientation may use one projection, ten projections, or direct authority reads. **Orientation is about preparing a person to work.**
+
+Build reusable projections without assuming each one becomes a screen.
+
+See [ark-projection-rule.mdc](ark-projection-rule.mdc) for projection discipline.
+
+## ARK product loop
+
+```text
+Authority
+    ↓
+Projection
+    ↓
+Orientation
+    ↓
+Action
+    ↓
+Authority changes
+```
+
+Example closed loop:
+
+```text
+ConversationMessage → Current Situation → Advisor reads → Calls customer → ConversationMessage
+```
+
+## Four frozen primitives
+
+With [ark-station-doctrine.mdc](ark-station-doctrine.mdc):
+
+| Primitive | Role |
+|-----------|------|
+| **Authority** | Owns truth |
+| **Projection** | Derives truth for a purpose |
+| **Orientation** | Presents truth for action |
+| **Station** | Operational context where orientation is consumed |
+
+Most future features should not invent new primitives.
+
+## Doctrine
+
+**Every interruption in ARK must begin with orientation.**
+
+Phone rings, text arrives, RO opens, notification surfaces — remind them where they are before asking them to think.
+
+## Orientation variants (one pattern)
+
+| Consumer | Name |
+|----------|------|
+| Repair Order workspace | Repair Order orientation |
+| Attention queue | Advisor orientation |
+| Station surface (e.g. Front Counter) | Station orientation |
+
+Authorities unchanged. **Only orientation changes.**
+
+Morning at Front Counter — appointment late, customer waiting outside, warranty callback, payment failed overnight, tech waiting on approval: **orientation**, not communications.
+
+## Densities
+
+| Density | Surfaces |
+|---------|----------|
+| `Full` | RO sticky band |
+| `Standard` | Comms rail, relationship context |
+| `Compact` | Queue rows |
+| `Interrupt` | Incoming call pop, message interrupt |
+
+Same derivation. Different density. **Never duplicate logic** in presenters or Blade.
+
+## Orientation Platform (Track C — not a product)
+
+Orientation is a **platform service** used by Operations Platform, Portable Station, and every web surface. Code: `app/Ark/Orientation/`.
+
+**Frozen contract:** [docs/product/orientation-platform.md](../../docs/product/orientation-platform.md)
+
+**Frozen verbs (in order):** What is happening? → Why? → What should I do? → Can I trust that? → What can I do right now?
+
+Maps to: `current_situation` → `context` → `next_best_action` → `confidence` → `actions`
+
+Also: `ownership`, `pressure`. Do not invent Summary, Status, Recommendation, Insight, or Guidance.
+
+**Acceptance:** [docs/product/day-in-the-life/](../../docs/product/day-in-the-life/) — *At 8:10 AM…* scenarios, not user stories.
+
+## OperationalOrientation fields (RO engine — normalize to contract at present boundary)
+
+- Situation → `current_situation`
+- Progress stopped because / pressure_label → `pressure`
+- Owner + owner signal → `ownership`
+- Suggested follow-up / next action → `next_best_action`
+- Confidence (case readiness — not AI confidence)
+
+## Non-negotiables
+
+- **Never editable** — typing into orientation destroys trust; use notes instead.
+- **Never new authority** — derive from existing truth layers.
+- **No settings toggles** — rules improve in the engine when evidence earns revision.
+
+## Feature gate
+
+Before building: **Does this reduce TTO or reconstruction?**  
+If no → probably noise.
+
+## Implementation pointers
+
+- Engine: `app/Ark/Orientation/RepairOrderOrientationEngine.php`
+- Facade: `app/Ark/Orientation/Orientation.php`
+- Snippet UI: `resources/views/operations/orientation/partials/snippet.blade.php`
+- Legacy alias: `RepairOrderCurrentSituationProjection` (projection consumed by orientation)

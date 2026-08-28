@@ -1,0 +1,36 @@
+[package]
+name = "ark-bridge"
+version = "0.1.0"
+edition = "2021"
+description = "ARK Bridge — secure transport into Forge Core"
+
+[[bin]]
+name = "ark-bridge"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.8", features = ["json", "ws"] }
+chrono = { version = "0.4", features = ["serde"] }
+futures-util = "0.3"
+hostname = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+uuid = { version = "1", features = ["v4"] }
+
+[target.'cfg(windows)'.dependencies]
+tray-icon = "0.19"
+tao = { version = "0.30", default-features = false, features = ["rwh_06"] }
+winreg = "0.52"
+windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging"] }
+image = { version = "0.25", default-features = false, features = ["ico", "png"] }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"

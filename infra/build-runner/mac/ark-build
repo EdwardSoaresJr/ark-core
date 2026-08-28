@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# ARK build runner — one command for the work day.
+#
+#   ark-build up              Start Docker, Buildx, runner, enable builds
+#   ark-build down            Stop runner, disable builds
+#   ark-build down --docker   Also quit Docker Desktop
+#   ark-build status          Health check
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/ark-builder-env.sh
+source "$SCRIPT_DIR/lib/ark-builder-env.sh"
+
+cmd="${1:-}"
+shift || true
+
+case "$cmd" in
+    up|start)
+        echo "=== ark-build up ==="
+        "$SCRIPT_DIR/check-build-runner.sh" || true
+
+        if ! docker info >/dev/null 2>&1; then
+            open -a Docker 2>/dev/null || true
+            echo "Starting Docker Desktop..."
+            for _ in $(seq 1 90); do
+                docker info >/dev/null 2>&1 && break
+                sleep 2
+            done
+        fi
+
+        docker info >/dev/null 2>&1 || {
+            echo "Docker did not start. Open Docker Desktop manually." >&2
+            exit 1
+        }
+
+        "$SCRIPT_DIR/ensure-buildx.sh"
+
+        if ! grep -q '"ghcr.io"' "$HOME/.docker/config.json" 2>/dev/null; then
+            echo "WARN: GHCR not logged in — run configure-ghcr-login.sh" >&2
+        fi
+
+        mkdir -p "$ARK_HOME"
+        echo "ARK_BUILDER_ENABLED=true" > "$ARK_HOME/builder-enabled.env"
+        export ARK_BUILDER_ENABLED=true
+
+        [[ -f "$RUNNER_DIR/run.sh" ]] || {
+            echo "Runner not registered. Run register-runner.sh first." >&2
+            exit 1
+        }
+
+        echo "ARK_BUILDER_ENABLED=true" > "$RUNNER_DIR/.env"
+
+        if [[ "${1:-}" == "--foreground" ]]; then
+            "$SCRIPT_DIR/lib/stop-runner.sh" 2>/dev/null || true
+            sleep 3
+            cd "$RUNNER_DIR"
+            exec ./run.sh
+        fi
+
+        "$SCRIPT_DIR/install-launchd.sh"
+
+        echo ""
+        echo "Build day started."
+        echo "  Runner:  $RUNNER_NAME"
+        echo "  Cache:   $ARK_BUILD_CACHE ($(du -sh "$ARK_BUILD_CACHE" 2>/dev/null | cut -f1 || echo 0))"
+        echo "  Builds:  ENABLED until ark-build down"
+        ;;
+
+    down|stop)
+        echo "=== ark-build down ==="
+        echo "ARK_BUILDER_ENABLED=false" > "$ARK_HOME/builder-enabled.env"
+        export ARK_BUILDER_ENABLED=false
+
+        if [[ -f "$RUNNER_DIR/run.sh" ]]; then
+            echo "ARK_BUILDER_ENABLED=false" > "$RUNNER_DIR/.env"
+            if [[ "${1:-}" == "--launchd" ]] || launchctl print "gui/$(id -u)/com.github.ark.builder" &>/dev/null; then
+                launchctl bootout "gui/$(id -u)/com.github.ark.builder" 2>/dev/null || true
+            fi
+            "$SCRIPT_DIR/lib/stop-runner.sh" 2>/dev/null || true
+        fi
+
+        if [[ "${1:-}" == "--docker" ]]; then
+            osascript -e 'quit app "Docker"' 2>/dev/null || true
+            echo "Docker Desktop quit."
+        fi
+
+        CACHE=$(du -sh "$ARK_BUILD_CACHE" 2>/dev/null | cut -f1 || echo "0")
+        echo "Build day ended. Cache: $ARK_BUILD_CACHE ($CACHE)"
+        echo "Queued workflows will wait until ark-build up."
+        ;;
+
+    status)
+        "$SCRIPT_DIR/check-build-runner.sh"
+        ;;
+
+    *)
+        echo "Usage: ark-build up | down [--docker] | status" >&2
+        exit 1
+        ;;
+esac

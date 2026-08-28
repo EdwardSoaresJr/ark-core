@@ -1,0 +1,50 @@
+---
+description: Technician Scope Doctrine — production role, assigned work only, burden of proof on visibility
+alwaysApply: true
+---
+
+# Technician Scope Doctrine
+
+Full doc: `docs/operations/technician-scope-doctrine-v1.md`  
+Discovery audit: `docs/operations/technician-discovery-audit.md`  
+Next contract: `docs/operations/repair-order-discovery-contract.md` (draft — observe before implement)
+
+## Mental model
+
+**Technician ≠ low-permission advisor.** Technician = **specialized production role**.
+
+Wrong approach: hide buttons, leave surfaces available, read-only advisor UI.
+
+Right approach: technicians **never enter** most surfaces. **Assigned work only.** Earn visibility through evidence.
+
+## Default answer
+
+When proposing technician access or nav:
+
+> **No — unless it directly supports assigned work** (diagnose, perform, document).
+
+**Burden of proof is on the surface seeking technician visibility.** Do not expand for convenience.
+
+## Technicians own
+
+Assigned ROs, inspection/diagnostic observations, work performed, labor completion, parts visibility for assigned work, vehicle history for assigned work, internal production notes.
+
+## Technicians do not own
+
+Customers, comms queues/recovery, follow-ups, decision pressure, approvals, scheduling pressure, shop-wide queues, financials, estimates, global customer/vehicle/RO search.
+
+## Comms
+
+Consume context **on assigned work only**. No queues, no recovery, no relationship workflows as primary destinations.
+
+## Nav target (observation before build)
+
+My Work → Assigned Repair Orders → Inspection → ARKademy — not Work, Communications, Customers, Vehicles, shop pressure.
+
+## Current gaps (do not guess-close)
+
+Shop-wide workboard and global RO index may still exceed v1 scope. Narrow only after floor observation — see doc § Current enforcement vs doctrine.
+
+## Sequence
+
+Doctrine → Authority → **Observation** → Workflow → Projection. Same as Inspection. Do not skip observation.

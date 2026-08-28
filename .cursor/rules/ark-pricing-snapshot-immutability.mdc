@@ -1,0 +1,114 @@
+---
+description: Estimate Pricing Engine — FROZEN/Maintenance Mode. Snapshots immutable; UX must not reopen resolver or historical pricing.
+alwaysApply: true
+---
+
+# ARK Pricing Snapshot Immutability
+
+**Capability:** Estimate Pricing Engine  
+**Classification:** Permanent Platform Infrastructure · Complete → Closed → Stable → Foundation.
+
+**Posture:** Consume it; don’t work on it. Platform governance — not product development.
+
+**Litmus:** “Does this require changing the Estimate Pricing Engine?” → If yes: “Verified defect?” Yes → reopen narrowly. No → another capability.
+
+**A pricing snapshot is evidence, not a cache.**
+
+Caches are disposable. Evidence is immutable.
+
+## Owns / does not own
+
+| Estimate Pricing owns | Does not own |
+| --- | --- |
+| Labor Policies | Operation definitions |
+| Policy resolution | Operation Class / catalog |
+| Billing posture consumption | Technician standards |
+| Pricing snapshots + overrides | Flat-rate data |
+| Historical pricing integrity | |
+
+## Platform invariants (non-negotiable)
+
+1. **Policies are mutable** — Settings may change labor/parts policy going forward.
+2. **Resolvers are deterministic** — same inputs → same rate, at resolve time.
+3. **Snapshots are immutable** — once written on a repair order line, they are the line’s pricing truth.
+4. **Repair orders never silently reprice** — policy changes and incidental line edits must not rewrite rates.
+5. **Repricing is always an explicit human action** — e.g. `reprice_labor` / “Reprice this line” / “Reprice this repair order”.
+6. **A snapshot records values and provenance** — how the values were produced, not only the dollars. Years later the line must answer *why was this billed at $X/hr?* without consulting today’s settings.
+
+### Provenance on a labor line (permanent)
+
+| Field | Role |
+| --- | --- |
+| Billing posture | Input fact at resolve time |
+| Operation class | Input fact at resolve time |
+| Labor policy ID / version | Which policy produced the rate |
+| Resolved labor rate | Policy answer before override |
+| Final labor rate | What the line bills |
+| Override? / reason / user / timestamp | Explicit human departure from policy |
+
+Missing provenance is incomplete evidence — fill on create/reprice; never invent from current Settings when reading history.
+
+## Prospective only
+
+Pricing policy changes apply to **new resolutions** only.
+
+| Surface | Behavior |
+| --- | --- |
+| **Closed ROs** | Never recalculate labor/parts sell rates from current policy. Ever. |
+| **Open ROs** | Existing line snapshots stay as the customer contract. Unchanged by Settings saves. |
+| **New lines** | Resolver runs → snapshot written. |
+| **Existing lines** | Hours/notes/tech edits may update non-rate fields; **rate snapshot preserved** unless advisor explicitly reprices or overrides rate. |
+
+## Forbidden
+
+- Settings save that rewrites `labor_rate_cents` / `unit_price_cents` on existing lines
+- Line update that re-resolves rate from current policy without explicit reprice/override
+- Treating snapshot columns as a disposable cache to refresh on GET or totals recalc
+- “Helpful” bulk reprice of open estimates without advisor confirmation
+- Reopening pricing resolution, snapshot semantics, or historical pricing during UX work
+
+## Allowed
+
+- Resolve + snapshot on **create** line
+- Explicit **override** (reason-coded) on a line
+- Explicit **reprice** action on a line or RO
+- Totals recalc from **existing** line unit prices (math only — not policy re-resolution)
+- UX that exposes reprice / override / bulk prompt **without** changing the engine
+
+## Engine vs UX (frozen boundary · maintenance mode)
+
+| Layer | Status |
+| --- | --- |
+| **Engine** | Complete and stable — do not reopen |
+| **UX** | May evolve — reprice / override picker / bulk prompt only |
+
+**Do not revisit during UX work:** `LaborPolicyResolver` · `LaborAuthority` · snapshot doctrine · snapshot persistence semantics · historical pricing behavior.
+
+## Engineering rule (platform service)
+
+**Allowed:** fix incorrect behavior · improve reliability/performance without changing behavior · adapt to upstream authority through the handoff contract.
+
+**Not allowed:** redesign pricing doctrine · alter snapshot semantics · change policy resolution behavior · expand ownership beyond the capability boundary · implement Operation Authority inside this engine.
+
+## Pre-production checklist
+
+Before production rollout of this capability pair:
+
+1. Intentional migration window (pricing migrations are deliberate).
+2. Log or count **Billing Posture Resolution**: `explicit` · `category_inference` · `default`. Remove category→posture inference only after inference usage reaches zero.
+
+## Integration contract
+
+Upstream authorities may improve inputs (e.g. Operation Authority replacing `LaborCategoryOperationClassMap`). The engine’s public behavior, invariants, and snapshot semantics remain unchanged. Integrate through established contracts — do not modify internals.
+
+```text
+Operation Authority → Operation Class → Estimate Pricing Engine (consumer)
+```
+
+Engine is oblivious to Operation Class provenance. Provenance is Operation Authority (`$operation->operationClassKey()`). Upstream substitution does not reopen the capability.
+
+## Companions
+
+- [ark-projection-rule.mdc](ark-projection-rule.mdc)
+- [ark-read-write-rule.mdc](ark-read-write-rule.mdc)
+- [CURRENT_MILESTONE.md](../../docs/engineering/CURRENT_MILESTONE.md)

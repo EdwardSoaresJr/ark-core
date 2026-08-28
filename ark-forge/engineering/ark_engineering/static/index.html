@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ARK Engineering</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1419;
+      --panel: #1a222c;
+      --border: #2a3544;
+      --text: #e6edf3;
+      --muted: #8b9cb3;
+      --accent: #0099cc;
+      --ok: #3d9970;
+      --warn: #d4a017;
+      --bad: #c0392b;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    header h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    header span { color: var(--muted); font-size: 0.85rem; }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 1200px;
+    }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .full { grid-column: 1 / -1; }
+    .label { color: var(--muted); font-size: 0.8rem; }
+    .value { margin-bottom: 0.5rem; }
+    pre, textarea {
+      width: 100%;
+      background: #0b1015;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 0.65rem;
+      font-size: 0.82rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    textarea { min-height: 140px; resize: vertical; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button.secondary { background: #334155; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      background: #334155;
+    }
+    .badge.ok { background: #1e4d3a; color: #9fdfbf; }
+    .badge.warn { background: #4d3f1e; color: #f0d890; }
+    .badge.bad { background: #4d1e1e; color: #f0a090; }
+    #flash {
+      padding: 0.5rem 1rem;
+      display: none;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    #flash.show { display: block; }
+    .empty { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ARK Engineering</h1>
+    <span>v0.1 — evidence loop, not chat</span>
+  </header>
+  <div id="flash"></div>
+  <main id="app">
+    <p class="empty">Loading…</p>
+  </main>
+  <script>
+    const app = document.getElementById('app');
+    const flash = document.getElementById('flash');
+
+    function showFlash(message, ok = true) {
+      flash.textContent = message;
+      flash.style.background = ok ? '#1e4d3a' : '#4d1e1e';
+      flash.classList.add('show');
+      setTimeout(() => flash.classList.remove('show'), 4000);
+    }
+
+    async function api(path, body) {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    function renderPlan(planEvent) {
+      if (!planEvent) return '<p class="empty">No plan yet.</p>';
+      return `<pre>${escapeHtml(planEvent.payload?.plan || '')}</pre>`;
+    }
+
+    function renderObserver(obs) {
+      const parts = [];
+      if (obs.git_status) {
+        const p = obs.git_status.payload || {};
+        parts.push(`<div class="label">Git (${escapeHtml(p.source || '')})</div>`);
+        parts.push(`<pre>branch: ${escapeHtml(p.branch || '')}\nmodified: ${p.modified_count ?? '?'}\n${escapeHtml((p.modified_files || []).join('\\n'))}</pre>`);
+      }
+      if (obs.diff) {
+        parts.push(`<div class="label">Diff</div><pre>${escapeHtml(obs.diff.payload?.summary || '')}</pre>`);
+      }
+      if (obs.tests) {
+        const t = obs.tests.payload || {};
+        parts.push(`<div class="label">Tests (exit ${t.exit_code})</div><pre>${escapeHtml(t.output || '')}</pre>`);
+      }
+      return parts.length ? parts.join('') : '<p class="empty">No evidence captured yet.</p>';
+    }
+
+    function renderReviewer(review) {
+      if (!review) return '<p class="empty">No review yet.</p>';
+      const d = review.payload?.decision || review.type?.replace('reviewer.', '');
+      const cls = d === 'approved' ? 'ok' : 'warn';
+      return `<span class="badge ${cls}">${escapeHtml(d)}</span><pre>${escapeHtml(review.payload?.reason || '')}</pre>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function bindActions() {
+      document.getElementById('btn-save-plan')?.addEventListener('click', async () => {
+        const plan = document.getElementById('plan-input').value;
+        await api('/api/plan', { manual_text: plan });
+        showFlash('Plan saved (planner.plan.ready)');
+        load();
+      });
+      document.getElementById('btn-gen-plan')?.addEventListener('click', async () => {
+        await api('/api/plan', { generate: true });
+        showFlash('Plan generated via OpenAI');
+        load();
+      });
+      document.getElementById('btn-start')?.addEventListener('click', async () => {
+        await api('/api/worker/start', {});
+        showFlash('Work started');
+        load();
+      });
+      document.getElementById('btn-done')?.addEventListener('click', async () => {
+        await api('/api/worker/done', {
+          summary: document.getElementById('worker-summary').value,
+          files_touched: document.getElementById('worker-files').value,
+        });
+        showFlash('Declared done — capture evidence next');
+        load();
+      });
+      document.getElementById('btn-observe')?.addEventListener('click', async () => {
+        await api('/api/observer/capture', {
+          test_command: document.getElementById('test-command').value,
+        });
+        showFlash('Evidence captured');
+        load();
+      });
+      document.getElementById('btn-approve')?.addEventListener('click', async () => {
+        await api('/api/reviewer/review', {
+          decision: 'approved',
+          reason: document.getElementById('review-reason').value,
+        });
+        showFlash('Approved');
+        load();
+      });
+      document.getElementById('btn-changes')?.addEventListener('click', async () => {
+        await api('/api/reviewer/review', {
+          decision: 'changes_requested',
+          reason: document.getElementById('review-reason').value,
+        });
+        showFlash('Changes requested');
+        load();
+      });
+      document.getElementById('btn-ai-review')?.addEventListener('click', async () => {
+        await api('/api/reviewer/review', { generate: true });
+        showFlash('AI review recorded');
+        load();
+      });
+    }
+
+    async function load() {
+      const state = await fetch('/api/state').then(r => r.json());
+      const g = state.goal;
+      const t = state.task;
+      app.innerHTML = `
+        <section>
+          <h2>Current Goal</h2>
+          <div class="value"><strong>${escapeHtml(g.title)}</strong></div>
+          <div class="label">Desired outcome</div>
+          <div class="value">${escapeHtml(g.desired_outcome)}</div>
+          <span class="badge">${escapeHtml(g.status)}</span>
+        </section>
+        <section>
+          <h2>Active Task</h2>
+          <div class="value"><strong>${escapeHtml(t.title)}</strong></div>
+          <div class="label">Worker · Repo · Status</div>
+          <div class="value">${escapeHtml(t.worker)} · ${escapeHtml(t.repo)} · <span class="badge">${escapeHtml(t.status)}</span></div>
+        </section>
+        <section class="full">
+          <h2>Plan (falsifiable hypothesis)</h2>
+          ${renderPlan(state.plan)}
+          <textarea id="plan-input" placeholder="Edit or replace plan…">${escapeHtml(state.plan?.payload?.plan || '')}</textarea>
+          <div class="actions">
+            <button type="button" id="btn-save-plan">Save Plan</button>
+            <button type="button" class="secondary" id="btn-gen-plan">Generate (OpenAI)</button>
+          </div>
+        </section>
+        <section>
+          <h2>Worker (human-cursor)</h2>
+          <p class="label">Proposed artifacts — not verified until Observer runs.</p>
+          <textarea id="worker-summary" placeholder="What you did (declaration)…">${escapeHtml(state.worker?.declared_done?.payload?.summary || '')}</textarea>
+          <input id="worker-files" style="width:100%;margin-top:0.5rem;padding:0.5rem;background:#0b1015;border:1px solid var(--border);color:var(--text);border-radius:4px;" placeholder="Files touched (optional)" value="${escapeHtml(state.worker?.declared_done?.payload?.files_touched || '')}" />
+          <div class="actions">
+            <button type="button" id="btn-start">Start Work</button>
+            <button type="button" class="secondary" id="btn-done">Declare Done</button>
+          </div>
+        </section>
+        <section>
+          <h2>Observer (evidence only)</h2>
+          ${renderObserver(state.observer)}
+          <input id="test-command" style="width:100%;margin-top:0.5rem;padding:0.5rem;background:#0b1015;border:1px solid var(--border);color:var(--text);border-radius:4px;" placeholder="Optional test command" value="${escapeHtml(t.test_command || '')}" />
+          <div class="actions">
+            <button type="button" id="btn-observe">Capture Evidence</button>
+          </div>
+        </section>
+        <section class="full">
+          <h2>Reviewer (decision using evidence)</h2>
+          ${renderReviewer(state.reviewer)}
+          <textarea id="review-reason" placeholder="Reason (required for manual review)…"></textarea>
+          <div class="actions">
+            <button type="button" id="btn-approve">Approve</button>
+            <button type="button" class="secondary" id="btn-changes">Request Changes</button>
+            <button type="button" class="secondary" id="btn-ai-review">Review (OpenAI)</button>
+          </div>
+        </section>
+      `;
+      bindActions();
+    }
+
+    load().catch(err => {
+      app.innerHTML = `<p class="empty">Failed to load: ${escapeHtml(err.message)}</p>`;
+    });
+  </script>
+</body>
+</html>

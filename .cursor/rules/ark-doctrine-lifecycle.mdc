@@ -1,0 +1,156 @@
+---
+description: Doctrine Lifecycle — how ARK doctrine evolves; revision only when reality produces evidence
+alwaysApply: true
+---
+
+# ARK Doctrine Lifecycle
+
+**Status:** Meta-doctrine v1  
+**Sequence:** Authority → Doctrine → Projection → Explanation → Observation → Outcome → **Revision (if earned)**
+
+This is not labor doctrine, Flow doctrine, or recommendation doctrine. It explains **how all doctrine earns the right to change**.
+
+Companion build doctrines (Authority Adoption, Pressure First, Projection Rule, Observations) explain how ARK should be built. **This explains how ARK should change.**
+
+## Purpose
+
+Doctrine encodes decisions ARK has made about reality.
+
+Doctrine must **not** change because of individual opinions, isolated complaints, or one-off examples.
+
+Doctrine changes only when **reality produces evidence**.
+
+## Lifecycle
+
+```
+Authority
+  ↓
+Doctrine
+  ↓
+Projection
+  ↓
+Explanation
+  ↓
+Observation
+  ↓
+Outcome
+  ↓
+Revision (if earned)
+```
+
+**Revision is the final step, not the first.**
+
+## Definitions
+
+| Layer | What it is | Examples |
+| --- | --- | --- |
+| **Authority** | What is true | RO state, labor guide rows, communication events, vehicle facts |
+| **Doctrine** | What ARK believes should be done with truth | Shop labor remap, age adjustments, related ops, constraint scoring, recommendation scoring |
+| **Projection** | How doctrine is presented to a specific audience | Customer repair summaries, Flow constraints, recommendation cards, labor explanations |
+| **Explanation** | Why ARK produced a result | Advisor summary + detail; exposes doctrine **without** exposing implementation |
+| **Observation** | What operators do when doctrine is exposed | Trust, override, ignore, follow recommendation |
+| **Outcome** | What happened afterward | Approved, deferred, sold, comeback, revenue, time saved |
+| **Revision** | Doctrine change | Only when observations **and** outcomes form a repeatable pattern |
+
+## Explanation
+
+Explanations expose doctrine without exposing implementation.
+
+**Purpose is not persuasion. Purpose is falsifiability.**
+
+People do not need the code path. They need to understand **the claim ARK is making**.
+
+Pattern: `{Domain}ExplanationProjection` — advisor summary, advisor detail, engineering detail (tests/logs only; never operational UI).
+
+Learned three times: customer labor projection, `LaborExplanationProjection`, Flow / Recommendations / ARK Manager (target).
+
+## Doctrine Survival
+
+The question is not: **Was ARK right?**
+
+The question is: **Did ARK's doctrine survive contact with operators and reality?**
+
+Flow, Recommendations, Labor, Pipeline, and ARK Manager are not data. They are **doctrine** — ARK making a claim about reality.
+
+## Evidence Threshold
+
+```
+Complaint
+  ↓
+Notebook
+  ↓
+Pattern
+  ↓
+Cluster
+  ↓
+Outcome
+  ↓
+Decision
+```
+
+- One complaint is not evidence.
+- One override is not evidence.
+- **Clusters are evidence.**
+
+Doctrine is revised because reality produced evidence — not because someone had a strong opinion on a Tuesday afternoon.
+
+## Outcome Matrix
+
+Track reaction **and** outcome. Silent harm is worse than loud disagreement.
+
+| Reaction | Outcome | Meaning |
+| --- | --- | --- |
+| Complained about | Good | Probably keep |
+| Complained about | Bad | Investigate |
+| Accepted | Good | Keep |
+| Accepted | Bad | **Dangerous** — investigate |
+
+## Doctrine Notebook (floor, not dashboard)
+
+| Job | ARK Total | Reaction | Doctrine Cited | Outcome |
+| --- | --- | --- | --- | --- |
+| Radiator | 2.78 | Override | Age | Sold |
+| Radiator | 2.78 | Trust | — | Sold |
+
+Capture **Repeated Sentences** verbatim — operator phrases are doctrine feedback before clustering:
+
+- *"We don't always do that test."*
+- *"Age adjustment feels high."*
+- *"Actually, this one makes sense."*
+
+Clustering tells you what earned scrutiny: Age, Related Ops, Trust, Pooling, etc.
+
+## Disagreement ≠ Failure
+
+Pushback may mean:
+
+- Bad doctrine → revise
+- Misunderstood doctrine → improve explanation
+- Correct doctrine → observe; do not tune
+- Correct doctrine, poor explanation → explanation projection elsewhere
+- Correct doctrine, bad outcomes → reality measurement (later)
+
+Layers must stay exposed enough to tell which case you are in.
+
+## Anti-Patterns
+
+- One complaint → tune rule → repeat until nobody knows why anything works
+- Building more doctrine before observation period completes
+- Engineering detail in advisor or customer UI
+- Revision without cluster + outcome evidence
+- Assuming disagreement means ARK failed
+
+## Current Phase: Doctrine Observation
+
+Run the shop. Capture behavior, doctrine objections, outcomes. **Resist revision.**
+
+When clusters emerge, earn the right to change doctrine.
+
+## Companion Doctrines
+
+| Doctrine | Relationship |
+| --- | --- |
+| [ark-authority-adoption.mdc](ark-authority-adoption.mdc) | New authorities — observe adoption before automate |
+| [ark-pressure-first.mdc](ark-pressure-first.mdc) | Operational pressure — observe before enforce |
+| [ark-projection-rule.mdc](ark-projection-rule.mdc) | Compute once, render many; projections package doctrine |
+| [ark-observations.mdc](ark-observations.mdc) | Interpretive truth — what happened and why it matters |

@@ -1,0 +1,43 @@
+---
+description: Infrastructure credential discipline — back up every provider secret under infra/backups/, gitignored, manifested, never committed. Read when setting up or rotating any provider credential (Firebase, Twilio, APNs/Apple, Square, Asterisk, Cloudflare, Coolify, etc.).
+alwaysApply: false
+---
+
+# ARK Infrastructure Backups
+
+Provider credentials are **infrastructure assets** — recoverable secrets that must
+never live only on a vendor's servers or one laptop. As ARK accumulates provider
+credentials, each one is versioned locally and backed up off-machine.
+
+Canonical home + full docs: `infra/backups/` (`README.md`, `manifest.md`).
+
+## Rules
+
+- **One hierarchy:** `infra/backups/<provider>/<env>/`. Do not invent a parallel
+  `infrastructure/` tree or scatter credentials beside code.
+- **Never commit credentials.** Root `.gitignore` ignores `/infra/backups/**` and
+  re-includes only `.gitkeep`, `README.md`, `*.md`. Structure + inventory are
+  tracked (survive a fresh clone); secrets are not.
+- **Docs describe, never contain.** `manifest.md` and per-provider `README.md` list
+  what belongs where, what it's for, and `Last Verified` — never the secret value.
+- **Local copy is not a backup.** Also mirror off-machine (1Password / Bitwarden /
+  encrypted drive). Don't keep the only copy in the repo folder.
+- **Don't pre-create empty provider folders.** Add a folder + `README.md` + manifest
+  row when the credential first exists (Pressure First: capture real assets, not
+  scaffold theater).
+
+## When setting up or rotating any provider credential
+
+1. Copy the artifact into `infra/backups/<provider>/<env>/` (it stays gitignored).
+2. Write/update `infra/backups/<provider>/README.md` (each file + restore steps).
+3. Add/update the row in `infra/backups/manifest.md` and set `Last Verified`.
+4. Confirm the off-machine copy exists.
+5. Verify nothing leaked: `git add -n infra/backups` must list only `.md`/`.gitkeep`.
+
+## Populated
+
+- **firebase/** — Android `google-services.json`, iOS `GoogleService-Info.plist`,
+  server Admin SDK `service-account.json` (project `lugsnplugs-ark-mobile`).
+
+**Stinson Rides** credentials and Coolify automation live in the **`stinson-api`**
+repo — not in `arksmsv2`.

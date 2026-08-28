@@ -1,0 +1,47 @@
+---
+description: Earned Intelligence — no AI, automation, or smart features before authority is trusted and repeated operator questions are observed
+alwaysApply: true
+---
+
+# ARK Earned Intelligence
+
+## Anti-pattern: Premature Intelligence
+
+A feature that answers a question **nobody is asking yet**.
+
+Examples:
+
+- AI summary before repeated sentences
+- Push notifications before polling proves insufficient
+- Automatic recommendations before technicians consistently capture evidence
+- Desktop parity before the phone workspace stabilizes
+- Sync jobs, reconciliation, or "smart" routing before the authority wins behaviorally
+
+## Principle
+
+**Intelligence should be introduced only after the underlying authority is trusted and the repeated operator question has been observed.**
+
+This is already ARK's working sequence. Name it so it can be defended.
+
+## The answer to "We should add AI here"
+
+> **"What repeated sentence earned it?"**
+
+If there is no repeated sentence — observe first. Do not build intelligence to discover the question.
+
+## Companion doctrines
+
+| Doctrine | Relationship |
+| --- | --- |
+| [ark-pressure-first.mdc](ark-pressure-first.mdc) | Observe → surface → measure before enforce/automate |
+| [ark-authority-adoption.mdc](ark-authority-adoption.mdc) | Authority ships → observe adoption before automation |
+| [ark-earned-authority.mdc](ark-earned-authority.mdc) | Publication exit gate — traceable truth before outbound copy |
+| [ark-workspace-interaction-language-v1.md](../../docs/ecosystem/ark-workspace-interaction-language-v1.md) | Evolution grammar — repeated sentences earn change |
+
+## Sequence
+
+```
+Authority trusted → Operator question observed (notebook) → Repeated sentences → Tightening → (maybe) Intelligence
+```
+
+Never reverse.

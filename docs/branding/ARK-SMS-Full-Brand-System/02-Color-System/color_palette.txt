@@ -1,0 +1,28 @@
+ARK-SMS OFFICIAL COLOR PALETTE
+Version: 1.0
+Generated: 2026-03-01
+
+PRIMARY NAVY
+Hex: #0A1A2F
+Usage: Primary logo, headings, navigation bars, dark UI sections.
+
+TEAL ACCENT
+Hex: #2AB7CA
+Usage: Buttons, highlights, active states, accents, charts.
+
+CHARCOAL
+Hex: #1F2A44
+Usage: Secondary headings, body emphasis text.
+
+LIGHT GRAY
+Hex: #F5F7FA
+Usage: Backgrounds, panels, cards.
+
+WHITE
+Hex: #FFFFFF
+Usage: Light UI, email backgrounds, contrast text areas.
+
+RULES:
+• Do not introduce additional bright colors without system review.
+• Teal is accent only, never dominant background.
+• Navy is brand anchor.

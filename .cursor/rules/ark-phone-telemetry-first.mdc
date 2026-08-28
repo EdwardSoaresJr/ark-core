@@ -1,0 +1,73 @@
+# ARK Phone Telemetry First
+
+**Status:** Engineering rule v1 — mobile SIP extension survival and future OS-integrated phone
+
+**Companion:** `ark-phone-production-telephony-lock.mdc` · ark-mobile `docs/engineering/phase0-phone-telemetry-v1.md`
+
+## Rule
+
+**Every ARK Phone telephony bug must be reproducible from telemetry before it is fixable in code.**
+
+No speculative reconnect loops. No dispose-and-recreate without evidence.
+
+## Sequence
+
+```text
+Observation → Evidence → Root cause → Minimal fix → Floor test → Production
+```
+
+| Step | Meaning |
+| --- | --- |
+| **Observation** | Operator or floor reports failure — or daily telemetry regresses |
+| **Evidence** | `mobile.voice.lifecycle` logs, `phone_telemetry_daily`, recovery times, drop breadcrumbs |
+| **Root cause** | One sentence tied to evidence — not a hypothesis |
+| **Minimal fix** | Smallest change that addresses that cause only |
+| **Floor test** | Motorola / target device, VVX unaffected |
+| **Production** | Ship only after floor proof |
+
+## Phone telemetry (Phase 0)
+
+Mirror **raw evidence** from mobile — never product interpretation in code:
+
+- Live duration (`live_ms`)
+- Reconnect count (with reason)
+- Unexpected drops (with `after=` breadcrumb)
+- Registration failures
+- Manual retries
+- Recovery time (`networkLost` / `registrationDropped` → extension live)
+- Missed inbound (when correlated)
+
+Engineers decide *"that's trustworthy"* from evidence. Do **not** encode trust labels (`excellent`, `degraded`) in PHP or Dart.
+
+**Regression:** sudden spike in reconnects, manual retries, or recovery_ms → Phase 0 regressed; do not start Phase 1 work.
+
+## Phase 0 exit (human milestone)
+
+Five consecutive business days:
+
+- No manual reconnects
+- No unexplained registration loss
+- No missed inbound from registration posture
+- VVX unaffected
+- **Operator stops checking extension status unprompted**
+
+Phase 1 is earned when behavior changes — not when code ships.
+
+## Observation vs recovery
+
+- **Observation:** uptime snapshots, daily telemetry, lifecycle mirrors — never drive SIP activity on a timer
+- **Recovery:** only real events — resume, network restored, initial auth, manual retry
+
+Phones stay alive because lifecycle is correct, not because something asks "are you okay?" every 120 seconds.
+
+## Telemetry retention
+
+Do not delete mobile voice lifecycle logs. Raw evidence is permanent; interpretation can evolve.
+
+## Forbidden without evidence
+
+- Periodic reconnect timers
+- Hard teardown of healthy registration
+- Trust scores or trust enums in product code
+- Phase 1 (CallKit / Telecom) before Phase 0 human milestone
+- Production Asterisk changes to "fix" mobile without VVX certification

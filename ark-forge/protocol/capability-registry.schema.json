@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CapabilityRegistry",
+  "description": "Forge Core capability registry — ADR-0001 identity model",
+  "type": "object",
+  "required": ["registry_capability_id", "capabilities"],
+  "properties": {
+    "registry_capability_id": {
+      "type": "string",
+      "const": "core.capability.registry.read"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "capability-identity.schema.json"
+      }
+    }
+  }
+}

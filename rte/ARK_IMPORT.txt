@@ -1,0 +1,14 @@
+ARK labor-guide import expectations
+===================================
+
+This public tree does NOT include labor-guide CSV/SQL datasets.
+
+If you have a separately licensed labor guide export that matches this schema,
+place the CSV files beside this folder (gitignored) and use the ARK RTE import
+commands documented in the application.
+
+Expected filenames (not redistributed here):
+  rte_lab.csv, rte_carlvl3.csv, rte_job_lku.csv, rte_engtbl.csv
+  rte_joblvl3.csv, rte_jobtbl.csv, rte_labcom.csv (optional)
+
+See schema.md for column definitions.

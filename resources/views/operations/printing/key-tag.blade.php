@@ -1,0 +1,95 @@
+@php
+    /** @var \App\Ark\Operations\Printing\KeyTagPrintContext $keyTagPrintContext */
+    $lw = isset($labelWidthMm) ? (float) $labelWidthMm : 62.0;
+    $lh = isset($labelHeightMm) ? (float) $labelHeightMm : 38.1;
+    $keyTagBlocks = $keyTagBlocks ?? [];
+@endphp
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @page {
+            size: {{ number_format($lw, 2, '.', '') }}mm {{ number_format($lh, 2, '.', '') }}mm;
+            margin: 0;
+        }
+        html, body {
+            width: {{ number_format($lw, 2, '.', '') }}mm;
+            height: {{ number_format($lh, 2, '.', '') }}mm;
+            margin: 0;
+            font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.15;
+            color: #111;
+        }
+        .tag {
+            display: table;
+            table-layout: fixed;
+            width: {{ number_format($lw, 2, '.', '') }}mm;
+            height: {{ number_format($lh, 2, '.', '') }}mm;
+            padding: 1mm;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .tag-mid {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            box-sizing: border-box;
+            line-height: 0;
+        }
+        .tag-stack {
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            vertical-align: middle;
+            line-height: normal;
+            /* Chromium/Browsershot: translateY tracks better than margin-top for sub-mm tuning. */
+            margin-top: -6mm;
+            transform: translateY(-2mm);
+        }
+        .tag-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6mm;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .tag-inner > .kt-row {
+            margin: 0 !important;
+            flex-shrink: 0;
+            max-width: 100%;
+        }
+        .tag-inner > .kt-row:not(.kt-qr) {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="tag">
+<div class="tag-mid">
+<div class="tag-stack">
+<div class="tag-inner">
+@foreach ($keyTagBlocks as $blockType)
+    @include('operations.printing.blocks.'.$blockType, [
+        'ctx' => $keyTagPrintContext,
+        'size' => 'md',
+    ])
+@endforeach
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

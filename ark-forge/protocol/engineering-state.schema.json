@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ark.autorepairkeeper.com/forge/v1/engineering-state.json",
+  "title": "EngineeringState",
+  "description": "Read-only projection of ARK engineering authority + git observe state",
+  "type": "object",
+  "required": ["repo_path", "milestone", "active_pr", "git", "workstation", "architecture", "generated_at"],
+  "properties": {
+    "repo_path": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "milestone": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string" },
+        "doc_slug": { "type": "string" }
+      }
+    },
+    "active_pr": {
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "git": {
+      "type": "object",
+      "required": ["branch", "clean", "repository_health", "modified_count", "observed_at"],
+      "properties": {
+        "branch": { "type": "string" },
+        "clean": { "type": "boolean" },
+        "repository_health": { "type": "string" },
+        "modified_count": { "type": "integer" },
+        "ahead": { "type": "integer" },
+        "behind": { "type": "integer" },
+        "modified_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "workstation": {
+      "type": "object",
+      "required": ["cursor_running"],
+      "properties": {
+        "cursor_running": { "type": "boolean", "description": "Core process capability probe — not engineering authority" }
+      }
+    },
+    "cursor": {
+      "description": "Deprecated — use workstation.cursor_running",
+      "type": "object",
+      "properties": {
+        "running": { "type": "boolean" }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["Frozen", "Unknown"] }
+      }
+    },
+    "recent_review": {
+      "type": ["object", "null"],
+      "properties": {
+        "title": { "type": "string" },
+        "status": { "type": "string" },
+        "date": { "type": "string" },
+        "filename": { "type": "string" }
+      }
+    },
+    "repository_web_url": {
+      "type": ["string", "null"],
+      "description": "Workbench intent context — HTTPS origin URL when available"
+    }
+  }
+}

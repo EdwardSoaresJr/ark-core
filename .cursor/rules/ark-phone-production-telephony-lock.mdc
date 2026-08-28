@@ -1,0 +1,128 @@
+---
+description: ARK Phone must not regress production VVX / Programmable Voice — mobile adapts to telephony, not the reverse
+alwaysApply: true
+---
+
+# ARK Phone Must Not Regress Production Telephony
+
+**Effective immediately.** Production Poly VVX desk phones (Twilio **Programmable Voice SIP domain** — not Elastic SIP Trunking) and Twilio Programmable Voice webhooks are **production-critical infrastructure**.
+
+ARK Phone development **must never** destabilize production voice transport while chasing mobile Client SDK work.
+
+## Non-Negotiable Rule
+
+ARK Phone success is measured **in addition to** the existing phone system—not by changing it.
+
+If a change risks breaking:
+
+- Poly VVX registration to the Twilio Programmable Voice SIP domain
+- Twilio TwiML ring groups and Programmable Voice webhooks
+- Transfers, hold, voicemail on the Twilio path
+- Existing advisor workflows
+
+…the change **must not deploy**.
+
+## Production Telephony Is the Baseline
+
+Current VVX-on–Programmable Voice SIP domain deployment is the **reference implementation**. ARK Phone (Twilio Client SDK) adapts to the same CallSession authority and ring policy.
+
+**Not Elastic SIP Trunking.** That product was the Asterisk/PBX trunk path and is retired.
+
+Do **not** reintroduce shop PBX ingress or parallel voice transports.
+
+If ARK Phone cannot connect while VVX phones ring, default assumption:
+
+> **The problem is in the mobile Client SDK integration until proven otherwise.**
+
+## Engineering Principle: VVX First
+
+When mobile fails, ask:
+
+> **Would the VVX succeed under the exact same conditions?**
+
+| Answer | Action |
+| --- | --- |
+| **Yes** | Burden of proof is on the mobile client. Compare against working VVX behavior before touching server config. |
+| **No** | Investigate the server — with VVX certification as the regression gate. |
+
+This mindset prevents chasing server-side ghosts on every mobile registration or lifecycle issue.
+
+## Production Telephony Certification
+
+**Lock the certification process, not just the code.**
+
+Before any production telephony change is merged or deployed, the following must pass.
+
+The shop runs on VVX phones today. ARK Phone replaces them over time—but until the last Poly phone is unplugged, **the VVX system is the production standard.**
+
+### VVX Certification (required — deployment gate)
+
+- Incoming call to every ring group
+- Outbound call
+- Hold
+- Blind transfer
+- Attended transfer (if currently supported)
+- Voicemail
+- Intercom/paging (if used)
+- Existing call flows unchanged
+
+**If VVX certification fails, deployment stops immediately — regardless of ARK Phone status.**
+
+### ARK Phone Certification (required for mobile-telephony changes)
+
+- Registration
+- Outbound call
+- Inbound call (if supported by current phase)
+- Hold
+- Transfer (if implemented in current phase)
+
+ARK Phone certification does not override a failed VVX certification.
+
+## Allowed Production Changes
+
+Only when they:
+
+- Fix **verified** bugs
+- Improve reliability for **all** endpoints
+- Add capabilities **without** changing existing behavior
+- Are backwards compatible with every deployed VVX phone
+
+## Prohibited During ARK Phone Development
+
+Do not repeatedly change without concrete server-side evidence:
+
+- PJSIP transports, global WebRTC config, endpoint templates
+- Authentication model, dialplan, ring groups, SIP/TLS transports
+- Traefik routing
+
+Changing production infrastructure to "try something" is **not acceptable**.
+
+## Debugging Strategy
+
+When mobile SIP fails:
+
+1. Verify production VVX phones still work (run VVX certification)
+2. Verify Asterisk still works
+3. Ask: **Would the VVX succeed under the exact same conditions?**
+4. Compare ARK Phone against a working VVX endpoint
+5. Isolate the mobile client
+6. Fix the mobile client
+
+Do **not** begin by modifying production telephony.
+
+## Product Rule
+
+A working Poly VVX phone is the **certification baseline**.
+
+ARK Phone is complete only when it behaves like a VVX endpoint **without requiring production telephony to be continuously reconfigured.**
+
+The objective is to **replace** the desk phone—not destabilize it.
+
+## Companions
+
+| Rule | Relationship |
+| --- | --- |
+| [ark-phone-mission.mdc](ark-phone-mission.mdc) | Research-first mission — adopt proven implementations; gap audit |
+| [ark-telephony-roadmap.mdc](ark-telephony-roadmap.mdc) | Authority boundaries — do not reopen |
+| [ark-mobile-projection.mdc](ark-mobile-projection.mdc) | Mobile reads authority; does not rewrite transport |
+| [ark-pressure-first.mdc](ark-pressure-first.mdc) | Observe mobile failure; do not experiment on production |

@@ -1,0 +1,39 @@
+---
+description: Shop is deployment authority — HTTP from SHOP_BASE_URL, SIP from deployment transport config
+globs:
+alwaysApply: true
+---
+
+# ARK Shop Identity Doctrine
+
+Full doc: `docs/platform/shop-identity-v1.md`
+
+## Constitution
+
+**HTTP is part of the product. SIP is part of the infrastructure. Provisioning is the translator between them.**
+
+## Application
+
+- `SHOP_BASE_URL` — authority for all **HTTP** capabilities (`/voice/*`, microbrowser, webhooks).
+- `ShopBaseUrl` — derive product URLs only.
+- Never `VOICE_HOST`, `VOICE_RUNTIME_HOST`, or `COMMUNICATIONS_VOICE_*` in PHP product code.
+
+## Deployment transport (provisioning only)
+
+- `VOICE_SIP_REGISTRAR`, `VOICE_SIP_PORT` — read via `VoiceTransportConfiguration`.
+- **Do not derive SIP registrar from `SHOP_BASE_URL`.**
+- `VOICE_HOSTNAME` — Coolify/Traefik/Asterisk stack only; never operator UI.
+
+## Provisioning
+
+Operator adds device → ARK generates config → provisioning reads transport config + shop HTTP URLs → device learns registrar and microbrowser. Operator never types transport.
+
+## Reject
+
+- Shared `voice.arksms.com` SIP edge without per-shop VPS routing
+- SIP registrar in operator UI
+- Coupling SIP hostname to product URLs in application code
+
+## Deployment model
+
+One shop → one VPS → one Asterisk. Scale by provisioning shops, not centralizing runtimes.

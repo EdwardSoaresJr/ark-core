@@ -1,0 +1,71 @@
+---
+description: Infrastructure appears; operators choose where it belongs — not how it works
+alwaysApply: true
+---
+
+# ARK Infrastructure Discovery
+
+**Status:** Platform product rule v1  
+**Companions:** [ark-operator-intent.mdc](ark-operator-intent.mdc) · [ark-station-doctrine.mdc](ark-station-doctrine.mdc) · [ark-authority-vs-configuration.mdc](ark-authority-vs-configuration.mdc)
+
+## Principle
+
+**Infrastructure is discovered, not configured.**
+
+Phones, printers, scanners, payment terminals, and bay tablets **appear** on the network or through a simple physical action (plug in, power on, scan QR). ARK notices. The operator decides **where it belongs** — not how it works.
+
+This is a different installation philosophy than almost every business platform, which starts with *Add device → Configure → Test*.
+
+## Sequence
+
+```text
+Infrastructure appears
+  ↓
+ARK discovers (probe, DHCP, QR, terminal handshake)
+  ↓
+Operator expresses intent (where / what work)
+  ↓
+ARK performs implementation (hidden)
+  ↓
+Station ready
+```
+
+Discovery is **authority-adjacent fact** (this MAC checked in, this printer announced itself). Assignment to a station is **operator intent**. Credentials and drivers are **implementation** — never operator steps.
+
+## Examples
+
+| Infrastructure | Discovery signal | Operator decision | ARK implementation (hidden) |
+| --- | --- | --- | --- |
+| **Desk phone** | Provisioning probe | Front Counter vs Service Office | Extension, SIP creds, microbrowser |
+| **Receipt printer** | Network announce / USB | Print at Front Counter | Driver, queue, paper profile |
+| **Payment terminal** | Terminal pairing API | Take payments at Front Counter | Merchant link, device cert |
+| **Bay tablet** | QR / enrollment | Use at Bay 3 | Profile, API token, scope |
+
+The phone should be **persistent** in checking in until someone assigns it. ARK does not care about probe frequency; the operator cares that it appears when ready.
+
+## Relationship to configuration doctrine
+
+| Layer | Question |
+| --- | --- |
+| **Authority** | This hardware identity exists; it checked in at this time. |
+| **Discovery projection** | *A new phone is ready to use.* |
+| **Operator intent** | **Front Counter** |
+| **Configuration (settings)** | Shop-wide defaults — business hours, receipt format, not per-MAC typing |
+| **Implementation** | SIP secret, driver blob, terminal keys — generated, never typed |
+
+Shop behavior belongs in Settings. Hardware identity belongs in authority. **Operators never configure infrastructure by hand** when discovery is available.
+
+## When discovery is not yet built
+
+Bench and support paths may still allow known-identity entry — **master admin / engineer only**, never the default operator loop. The product bar remains: plug in → ARK notices → choose station.
+
+## Anti-patterns
+
+- Operator types MAC addresses, serial numbers, or API keys as the primary path
+- "Add printer" wizards before discovery exists on the floor
+- Treating discovery as a **Communications** feature — it is platform grammar for any attachable infrastructure
+- Skipping the operator **where** decision when multiple stations are plausible
+
+## Floor test
+
+Unbox → plug into Ethernet (or scan QR) → open ARK → choose station → work. No runbook. No glossary.

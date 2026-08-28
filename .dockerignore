@@ -1,0 +1,44 @@
+# Git and local env — never ship to the image
+.git
+.gitattributes
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Composer / npm — installed inside the image
+vendor
+node_modules
+
+# Tests and dev tooling — not needed at runtime
+tests
+phpunit.xml
+.cursor
+docs
+backups
+hooks
+scripts
+
+# Local storage and caches — production uses bind mounts
+storage/app/*
+!storage/app/.gitkeep
+!storage/app/public
+!storage/app/public/.gitkeep
+!storage/app/private
+!storage/app/private/.gitkeep
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
+storage/framework/views/*
+!storage/framework/views/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+database/testing.sqlite
+
+# OS / editor noise
+.DS_Store
+*.swp
+*.swo

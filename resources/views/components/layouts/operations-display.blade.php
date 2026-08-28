@@ -1,0 +1,51 @@
+@props(['refreshSeconds' => null])
+
+@php
+    use App\Support\Branding\Branding;
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="color-scheme" content="dark">
+    <title>{{ Branding::tabTitle() }} · Shop Display</title>
+    @include('partials.branding._favicons')
+    @vite(['resources/css/app.css'])
+</head>
+<body class="ops-shop-display-body h-full overflow-hidden bg-slate-950 text-white antialiased">
+    {{ $slot }}
+
+    @if ($refreshSeconds)
+        <script>
+            (function () {
+                const board = document.getElementById('ops-shop-display-board');
+                const fragmentUrl = @json(route('operations.display.fragment'));
+                const refreshMs = @json((int) $refreshSeconds * 1000);
+
+                if (! board || refreshMs < 10000) {
+                    return;
+                }
+
+                window.setInterval(async function () {
+                    try {
+                        const response = await fetch(fragmentUrl, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            credentials: 'same-origin',
+                        });
+
+                        if (! response.ok) {
+                            return;
+                        }
+
+                        board.innerHTML = await response.text();
+                    } catch (error) {
+                        // Kiosk should fail quietly and retry on the next interval.
+                    }
+                }, refreshMs);
+            })();
+        </script>
+    @endif
+</body>
+</html>

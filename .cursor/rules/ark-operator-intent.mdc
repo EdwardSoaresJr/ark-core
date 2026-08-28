@@ -1,0 +1,117 @@
+---
+description: Platform rule — operators express intent; ARK performs implementation; business decisions stay human
+alwaysApply: true
+---
+
+# ARK Operator Intent
+
+**Status:** Platform product rule v1 — **not** Communications-only  
+**Companions:** [ark-infrastructure-discovery.mdc](ark-infrastructure-discovery.mdc) · [ark-station-doctrine.mdc](ark-station-doctrine.mdc) · [ark-orientation-pattern.mdc](ark-orientation-pattern.mdc) · [ark-projection-rule.mdc](ark-projection-rule.mdc) · [ark-cursor-doctrine.mdc](ark-cursor-doctrine.mdc)
+
+## Platform rule
+
+**Operators express intent. ARK performs implementation.**
+
+The operator says what should happen **where**. ARK decides **how** — pairing, provisioning, credentials, drivers, API keys, extension mapping, microbrowser, presence, validation.
+
+One button. Many implementation steps. Technology fades; work stays front and center.
+
+This rule applies to **every capability** that attaches infrastructure to a station: voice, printing, payments, scanners, bay tablets, cameras, terminals.
+
+## Principle stack (installation + operations)
+
+These sentences work together — not as competing doctrines:
+
+| Principle | Meaning |
+| --- | --- |
+| **Authorities own truth.** | What happened and what exists. |
+| **Stations own orientation.** | Where work happens; who is operating now. |
+| **Capabilities project workflow.** | Communications, payments, printing — orthogonal surfaces. |
+| **Operators express intent. ARK performs implementation.** | Shop language in; implementation hidden out. |
+| **Infrastructure is discovered, not configured.** | Phones, printers, terminals **appear**; operators choose **where**, not **how**. See [ark-infrastructure-discovery.mdc](ark-infrastructure-discovery.mdc). |
+
+## Intent across capabilities
+
+| Domain | Wrong (admin console) | Right (operator intent) |
+| --- | --- | --- |
+| **Voice** | Add device · Enter MAC · Configure SIP | **Front Counter** — where should this phone be used? |
+| **Printing** | Add printer · Select driver · Paper size · Default | **Print estimates at Front Counter** |
+| **Payments** | Pair terminal · Select device · Configure merchant | **Take payments at Front Counter** |
+| **Bay tablets** | Register device · Inspection profile · API key | Scan QR → **Use at Bay 3?** → Done |
+| **Scanners** | Bind scanner · Configure profile | **Scan inspections at Bay 3** |
+
+If Molly would not say it out loud on the floor, it does not belong on an operator surface.
+
+## Intent is not magic
+
+**Business decisions stay with the operator.** ARK must not guess when a wrong guess causes confusion.
+
+Good — requires human judgment:
+
+- New phone found → **Front Counter** or **Service Office?**
+- Two stations could use the same printer → operator chooses
+
+**After intent is expressed, ARK is opinionated.** Once the operator chooses Front Counter, they must **never** see:
+
+- SIP username, registrar, password
+- Provisioning URL, extension mapping
+- PJSIP, Asterisk, merchant IDs, driver names
+
+Those are implementation. The station becoming ready is the outcome.
+
+## Surface rules
+
+- **Nouns:** station, phone, customer, work — not device, endpoint, provision, assign, activate, bind, pair.
+- **Success:** the **station** became operational; hardware is supporting evidence.
+  - Good: *Front Counter is ready. The phone is configuring itself.*
+- **Attention:** the decision needed — not internal state (`Discovered`, `Pending device`).
+  - Good: *A new phone is ready to use. Where should it be used?*
+- **Less information when one answer is obvious.** Single candidate → collapse to confirmation when the floor earns it (*Use at Front Counter?* **Yes**).
+
+## Gold-standard metrics
+
+Every attach/install flow should be measured against:
+
+1. **Under two minutes. No runbook.**
+2. **Zero domain knowledge required.** A shop owner deploys without learning SIP, Asterisk, extension, registrar, provisioning, PJSIP, or equivalent vendor jargon for that capability.
+
+If someone must open documentation to complete install, friction remains.
+
+## Certification (operator + infrastructure)
+
+Certifications validate **experience**, not just wire protocol.
+
+**Front Counter certified** means:
+
+- Factory-reset phone connected (infrastructure)
+- Operator chose where it belongs (intent)
+- ARK completed provisioning (implementation)
+- Station became ready (outcome)
+- First customer call answered (proof)
+
+Not merely: *phone registers.*
+
+## Implementation test
+
+Before shipping any hardware or infrastructure integration:
+
+1. Does the operator express **where** or **what work** — not **how**?
+2. Is every remaining step a **business decision** only ARK should not guess?
+3. After intent, are **all** implementation surfaces hidden?
+4. Can a non-technical owner pass both gold-standard metrics?
+
+## Anti-patterns
+
+- Admin wizards that expose transport, drivers, or credentials on operator paths
+- Auto-assigning hardware to a station when ambiguity exists
+- Success messages describing what ARK did internally instead of what the shop can do now
+- Per-capability install UX that ignores the same intent grammar (telephony gets shop language; printers revert to IT forms)
+- **New platform doctrine files** when the five principles already answer the question
+
+Communications **consumes** stations during install today; station authority lives under Operations long-term. Intent surfaces may appear on capability pages; **grammar stays platform-wide.**
+
+## Session default (architecture stable)
+
+> **What operator step can disappear today?**
+
+Not: *What doctrine should we write?*

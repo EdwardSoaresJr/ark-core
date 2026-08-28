@@ -1,0 +1,152 @@
+---
+description: ARK PDF family doctrine — customer documents, operational sheets, shop labels, shared chrome
+alwaysApply: false
+globs:
+  - resources/views/operations/documents/**
+  - resources/views/operations/printing/**
+  - app/Ark/Operations/Documents/**
+  - app/Ark/Operations/Printing/**
+---
+
+# ARK PDF Doctrine
+
+ARK renders multiple PDF surfaces from one Laravel runtime. They share infrastructure (`HtmlPdfBuilder`, `HeadlessChromiumPdfRenderer`, `LabelPdfRenderer`) but serve different operational roles.
+
+## PDF surfaces
+
+| Surface | Template | Audience | Posture |
+|---------|----------|----------|---------|
+| Customer estimate | `documents/pdf/document.blade.php` | Customer | Repair plan — **frozen** (`ark-pdf-authority-freeze.mdc`) |
+| Customer invoice | Same `document.blade.php` | Customer | Final bill — approved work only |
+| Intake sheet | `documents/sheets/intake.blade.php` | Staff (bay) | Worksheet — capture concern + check-in |
+| Tech sheet | `documents/sheets/tech.blade.php` | Staff (technician) | Worksheet — approved labor/parts pull list |
+| Key tag | `operations/printing/key-tag.blade.php` | Shop label | Thermal label — vehicle identity |
+| Oil change sticker | `operations/printing/oil-change-sticker.blade.php` | Shop label | Thermal label — service reminder |
+
+Do not merge these into one template. Unify **chrome and tokens**, not document purpose.
+
+## Shared letter-document chrome
+
+Customer estimate, customer invoice, intake sheet, and tech sheet share:
+
+- `_pdf-shop-header.blade.php` — logo left, shop contact right
+- `_pdf-identity-band.blade.php` — Customer / Vehicle / Visit columns
+- `_pdf-header-styles.blade.php` — header grid, eyebrow, identity band, sheet-context rhythm
+- `_pdf-concern-chrome.blade.php` — shared scope card, narrative labels, line-list table chrome
+- `OperationalIdentityPresenter` — authoritative identity lines
+
+**Layout law (letter documents):**
+
+- `@page` owns margins; `body { padding: 0 }` — never double-margin body + page
+- Font stack: `ui-sans-serif, system-ui, …` on letter documents
+- Slate operational palette (`#0f172a`, `#334155`, `#64748b`, `#cbd5e1`)
+- Eyebrow labels: 9px, uppercase, tracked, muted
+
+Letter documents use 11px body and the same scope-card markup (`.concern`, `.concern-header`, `.narrative-grid`, `.narrative-label`, `.line-list`).
+
+## Customer documents (estimate + invoice)
+
+Single renderer path: `HeadlessChromiumPdfRenderer` → `document.blade.php`.
+
+**Estimate** — committed and frozen. See `ark-pdf-authority-freeze.mdc`.
+
+**Invoice** — inherits estimate visual language:
+
+- Same header, identity band, scope cards, line grid
+- `Invoice Summary` footer heading; footer total label stays `Total`
+- Work column: `Work Performed` (not `Estimated Work`)
+- Approved work only in snapshot — scope cards should not show customer decision rows
+- Intent category colors acceptable when multiple approved scopes exist; invoice is a bill, not a recommendation ladder
+
+**Do not** on customer documents:
+
+- Duplicate `EstimateTotalsCalculator` math in Blade or JS
+- Add footer label variants beyond H2 freeze rules on estimates
+- Make invoice feel like a different product (different header, different totals block, different typography)
+
+## Operational sheets (intake + tech)
+
+Staff worksheets share scope-card chrome **and** `RecommendationIntent` category colors with customer documents.
+
+**Intake sheet**
+
+- All concerns in RO order; staff intent label in concern head (not customer PDF group labels)
+- Blank-line capture areas for bay check-in and technician initial notes
+- No pricing, no customer decision UI
+
+**Tech sheet**
+
+- Approved concerns only; empty state when nothing approved
+- Labor pull table + parts pull table + completion notes
+- `Total approved labor: X hrs` summary — hours authority, not dollars
+
+**Cohesion with customer PDF:**
+
+- Same shop header + identity band
+- Field labels should align where content overlaps:
+  - `Customer states` (not `Customer concern` on intake — prefer `Customer states`)
+  - `Verified findings`
+  - `Recommendation` / `Work to perform` — intake captures concern; tech captures execution
+
+**Do not** on operational sheets:
+
+- Show dollar totals (tech sheet is pull-list authority, not financial authority)
+- Add customer authorization blocks
+- Use user accent theme on scope cards (intent palette is authoritative)
+
+## Shop labels (key tag + oil sticker)
+
+Separate surface — millimeter sizing, `DejaVu Sans`, centered stack layout.
+
+- Not letter documents; do not force letter-document header or slate tokens
+- `LabelPdfRenderer` + block partials under `operations/printing/blocks/`
+- Tuning is physical-print alignment (`translateY`, mm padding) — change only with label printer evidence
+
+## Intent category colors (platform-wide)
+
+Authoritative source: `RecommendationIntent::accentColor()` and `tintBackground()`.
+
+Category wayfinding — not urgency scoring. Used on customer PDFs, intake/tech PDFs, worksheet scope cards, and estimate review.
+
+| Intent | Accent |
+|--------|--------|
+| Recommended Now | Burgundy `#9f1239` |
+| Diagnostics | Teal `#0f766e` |
+| Address Soon | Amber `#b45309` |
+| Plan For Future | Indigo `#4338ca` |
+| Monitor Condition | Sky `#0369a1` |
+
+User profile accent theme remains for app chrome (nav, buttons). Scope cards use intent palette only.
+
+Customer PDF only: inline decisions use green / amber / red; no colored footer totals. Shop labels stay monochrome.
+
+## Footer total labels (estimate only)
+
+| Situation | Label |
+|-----------|-------|
+| No approved scopes | `Total` |
+| At least one approved scope | `Approved Total` |
+| Invoice | `Total` |
+
+`DocumentFooterPresenter::footerTotalLabel()` — presentation only. H2 expansion frozen.
+
+## Change discipline
+
+1. **Customer estimate** — frozen unless exception in `ark-pdf-authority-freeze.mdc`
+2. **Invoice** — presentation fixes only; must stay visually cohesive with estimate
+3. **Operational sheets** — fix defects and label alignment; no estimate-feature porting
+4. **Shop labels** — printer-evidence only
+
+Before any PDF pass, ask:
+
+- Which surface am I changing?
+- Does it share chrome that should stay aligned?
+- Am I importing the wrong document's features (colors on tech sheet, dollars on intake, etc.)?
+
+## Authority
+
+- Dollar totals: `EstimateTotalsCalculator` via snapshot builders — never Blade math
+- Identity lines: `OperationalIdentityPresenter`
+- Footer copy and labels: `DocumentFooterPresenter`
+- Customer estimate presentation: `DocumentPdfPresenter::prepareForCustomer()`
+- Operational sheet data: `OperationalSheetPresenter`

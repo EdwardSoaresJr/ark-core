@@ -1,0 +1,48 @@
+---
+description: Repair Action ownership — RepairActionOwner transfers once; sheets from actions not ROs
+globs: app/Ark/Operations/Labor/**,app/Ark/Operations/RepairOrders/**WorkGroup**,**/technician*flag*,**/TechnicianFlag*,docs/operations/repair-action*,docs/operations/technician-compensation*
+alwaysApply: false
+---
+
+# Repair Action Assignment & Labor Recognition
+
+**Doctrine:** [docs/operations/repair-action-assignment-and-labor-recognition-v1.md](../../docs/operations/repair-action-assignment-and-labor-recognition-v1.md)
+
+**Repair Orders organize customer work. Repair Actions organize technician work.**
+
+## Two questions
+
+| Authority | Question |
+| --- | --- |
+| **Repair Action Assignment** | Who owns this package? (`RepairActionOwner`) |
+| **Labor Recognition** | Which labor lines are already paid as flag? |
+
+## Hard invariants
+
+- **`RepairActionOwner`** = accountable party (today: Technician only — not bare `owner_technician_id` forever)
+- **Exactly one owner**; ownership **transfers**, never copies
+- Collaborate → **split Repair Actions**; helper time → **R4**
+- **Technician never receives an RO** — receives **owned Repair Actions**
+- **Completed by** = current owner — not last labor-line touch
+- Package Complete ≠ labor-only
+- Recognition once per labor line; attribution from owner at R3
+
+## R1 objective
+
+First unit of shop work that belongs to a technician — **not** “assign technicians” on ROs.
+
+## R1.1 — Operational communication
+
+Repair Actions communicate technician progress: **Owner · Status · Latest Update · Updated At**.
+
+Label is **Update** — not “Technician Notes” / not a historical log. One replaceable note. No chat.
+
+RO `assigned_technician_id` is transitional compatibility only (seed/default). Do not read it for production meaning.
+
+## Resume order
+
+R0 ✅ → R1 ✅ → **R1.1 Status + Latest Update** → Observation locked → R2 only if earned → R3 recognition only after observation → R4 assists → R5 observe
+
+During observation: no Labor Recognition, payroll, assists, Financial (RED), or redesign without verified defect.
+
+Financial stays RED. Do not couple.

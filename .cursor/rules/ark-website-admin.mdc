@@ -1,0 +1,56 @@
+---
+description: Website admin product — owner mental home for customer-facing web; Manage vs Performance; deep-link to Growth
+alwaysApply: false
+---
+
+# ARK Website Admin
+
+**Full doc:** [ark-website-admin-v1.md](../../docs/platform/ark-website-admin-v1.md)
+
+## The sentence
+
+**Owners manage their website. Growth explains why it performs and what to improve next.**
+
+Not a fourth application. A **product inside the Admin Platform** alongside Growth, Voice, and Settings.
+
+## Admin Platform (target nav)
+
+```
+Website · Growth · Voice · Settings
+```
+
+## Two tabs, two questions
+
+| Tab | Owner question | Rule |
+| --- | --- | --- |
+| **Manage** | What do customers see? | Presentation + publishing |
+| **Performance** | How is my website doing? | **Summarize only** — deep-link to Growth |
+
+**Website asks:** *How is my website doing?*  
+**Growth asks:** *Why, and what should we improve?*
+
+**Website never explains why.** Website tells the owner what they can manage and how the website is performing. Growth explains why performance changed and what should be improved.
+
+## Authority (do not merge)
+
+| Product | Owns |
+| --- | --- |
+| **Website** | Presentation, publishing, owner UX |
+| **Growth** | Sessions, attribution, opportunities, optimization |
+| **Settings** | Shop operations — not the website mental home |
+
+Never move Growth into Website. Never bury website Manage in Shop Settings long-term. **Deep-link, don't duplicate.**
+
+## CMS litmus
+
+Every Manage feature must answer:
+
+> Does this help the shop present itself better or convert more visitors?
+
+WordPress parity is a reject.
+
+## Implementation
+
+- Routes: `/app/website/*` as presentation over existing authority
+- Phase 1: nav + Manage (re-home public surface settings) + Performance (projections + Growth links)
+- Customer shell unchanged — see [ark-website-doctrine.mdc](ark-website-doctrine.mdc)

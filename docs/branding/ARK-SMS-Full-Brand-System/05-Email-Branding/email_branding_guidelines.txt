@@ -1,0 +1,11 @@
+ARK-SMS EMAIL BRANDING
+
+Header Background: #0A1A2F
+Logo: White variant
+Primary CTA Button: #2AB7CA
+Button Text: White
+Body Background: #FFFFFF
+Footer Text: #1F2A44
+
+Keep emails clean and minimal.
+Avoid heavy graphics.

@@ -1,0 +1,67 @@
+name: Shop Glass Windows
+
+on:
+  push:
+    tags:
+      - "glass-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shop-glass-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Build Windows installer
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/advisor_station
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Test
+        run: |
+          flutter pub get
+          flutter test
+
+      - name: Build release
+        run: flutter build windows --release --dart-define=GIT_SHA=${{ github.sha }}
+
+      - name: Download VC++ redistributable
+        working-directory: apps/advisor_station/windows/packaging
+        run: |
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Compile installer
+        working-directory: apps/advisor_station/windows/packaging
+        run: |
+          New-Item -ItemType Directory -Force -Path output | Out-Null
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" shop-glass.iss
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LugsNPlugs-Shop-Glass-Setup-0.1.0
+          path: apps/advisor_station/windows/packaging/output/LugsNPlugs-Shop-Glass-Setup-0.1.0.exe
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/advisor_station/windows/packaging/output/LugsNPlugs-Shop-Glass-Setup-0.1.0.exe
+          generate_release_notes: true

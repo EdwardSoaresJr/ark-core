@@ -1,0 +1,1 @@
+# pytest discovers tests/

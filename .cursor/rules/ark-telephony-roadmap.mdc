@@ -1,0 +1,192 @@
+---
+description: Communications authority boundaries, LugsNPlugs build priority, and explicit non-goals — prevents PBX and channel-owned stores
+alwaysApply: true
+---
+
+# ARK Communications Roadmap Lock
+
+Building for **LugsNPlugs reality**, not a generic communications platform.
+
+Telephony is **ingress and coordination**. Conversation is **relationship authority**. Channels feed authority. They do not become authority.
+
+**Telephony answers:** "Do we have this covered?"
+
+**Conversation answers:** "What have we said?"
+
+Do not reopen authority boundaries. Do not build a PBX. Do not introduce channel-specific authority stores.
+
+## Shop Priority (LugsNPlugs)
+
+Estimated communication volume at this shop:
+
+| Channel | Share |
+|---------|-------|
+| SMS/MMS | 70–80% |
+| Phone | 15–25% |
+| Email | 5–10% |
+
+Operational truth: customers text photos, videos, estimate replies; they prefer texting over answering calls; advisors already live in SMS threads.
+
+**Priority follows shop value, not theoretical sequencing.**
+
+If forced to choose tomorrow:
+
+- Missing voicemail → advisors survive
+- Missing texting → primary channel is lost
+
+Communications is **operational infrastructure**, not a project. T5 SMS/MMS and Quick Reply are complete.
+
+## 1. Authority Lock
+
+| Store | Owns |
+|-------|------|
+| **CallSession** | Telephony authority — ring/active/missed/completed, floor ownership, handled, recording metadata (later) |
+| **Conversation** | Relationship authority — messages, summaries, what was said to this customer |
+| **CommunicationEvent** | Operational facts authority (later) — missed call, voicemail received, recording available, SMS delivery failed |
+
+### Rules
+
+- Incoming calls resolve customer context via existing resolvers; they do not create parallel customer stores.
+- Handled means shop floor coverage — not call ended, not issue resolved.
+- Claiming (`owned_by_user_id`) is operational floor ownership — separate from call status and separate from Handled.
+- **SMS/MMS (T5)** writes **ConversationMessage** only. Attachments (photo, video, PDF) live on the message — not a separate MMS subsystem.
+- No SMS authority. No SMS threads. No SMS inbox database. No SMS conversation model. **Conversation already won.**
+- Voicemail and recordings (T6) belong on **CallSession** (`recording_url`, duration, transcript). Conversation may receive summary or advisor-created message — not raw recording blobs as messages.
+- CommunicationEvent (T7) is operational facts — not conversation messages.
+
+### No channel-specific authority stores
+
+Reject patterns like:
+
+- `VoicemailController` + `VoicemailMessage` + `VoicemailThread`
+- `SmsThread` / `SmsAuthority` / `SmsInbox` parallel to Conversation
+- `MmsAttachmentStore` as competing timeline authority
+- Channel-owned timeline systems that compete with Conversation
+
+## 2. Build Order Lock
+
+### Completed — Telephony (T1–T4)
+
+| Phase | Delivers |
+|-------|----------|
+| **T1 Ingress** | Twilio webhook → CallSession, customer context, incoming pop |
+| **T2 Queue** | Shared Calls Waiting, dedupe by caller, Handled clears operational work |
+| **T3 Status + Ownership** | Status callbacks, claim, broadcast updates; Handled ≠ ownership ≠ call state |
+| **T4A Ring Groups** | `telephony_endpoints`, simultaneous `<Dial>`, first answer wins |
+| **T4B SIP Endpoints** | SIP URI normalization, Programmable Voice SIP domain; ARK rings `<Sip>` only |
+| **T4C Auto Ownership** | Answered leg → endpoint owner → `owned_by_user_id`; manual claim overrides |
+
+Operate T4 on the floor. Do not reopen telephony architecture unless operational pain proves it.
+
+### Completed — T5 SMS/MMS + Quick Reply
+
+| Phase | Delivers |
+|-------|----------|
+| **T5 SMS/MMS** | Inbound/outbound SMS/MMS → `ConversationMessage` (+ attachments); Customer Hub + RO projection; no SMS inbox |
+| **Quick Reply** | Reply + attach from Customer Hub and RO communication rail; same outbound API; in-place rail update |
+
+**Do not regress into:** SMS inbox, messaging center, thread navigation, channel-owned stores.
+
+### Completed — Phase 2A Send Estimate
+
+| Delivers |
+|----------|
+| `EstimateAccessToken` + `/portal/estimates/{token}` read-only customer estimate |
+| **Send Estimate** on Quick Reply rail (Customer Hub + RO Review) |
+| SMS with portal link → `ConversationMessage` — no PDF, no email, no estimate texting subsystem |
+
+### Completed — Phase 2C Send Payment Link
+
+| Delivers |
+|----------|
+| **Send Payment Link** on Quick Reply rail (Customer Hub + RO Review) |
+| `CreateCustomerPayTokenAction` → `/portal/pay/{token}` → SMS → `ConversationMessage` |
+| Validates issued invoice, balance due, portal pay enabled — no payment messaging subsystem |
+
+### Next — Phase 2B Send Inspection Link
+
+Conversation remains the **launch point for operations** — not a messaging product.
+
+Each action: click → generate link → send SMS → `ConversationMessage`. Reuse portal token pattern from 2A/2C.
+
+| Phase | Action | Pattern |
+|-------|--------|---------|
+| **2B Send Inspection Link** | Same rail | Inspection portal + token → SMS → `ConversationMessage` |
+
+**Phase 2 rules:**
+
+- No leaving the conversation rail
+- No communications center
+- No SMS authority — every send is a `ConversationMessage`
+- Reuse `SendOutboundMessageAction` / conversation actions — do not build parallel send pipelines
+
+**Advisor-initiated texting — in progress:**
+
+1. **Customer started conversation** → Reply + context actions — built
+2. **Advisor must initiate** → **Text Customer** when no relationship history; **Reply** when history exists — same composer, same API, same `ConversationMessage`
+
+**Completed affordance:** Customer Hub + RO Review label switching; Calls Waiting **Text Customer** deep-link (`?compose=text#customer-communication`).
+
+**Watch:** Workboard row entry if advisors still miss initiation from floor queue.
+
+**2B Send Inspection Link** — build when shop asks for inspection sharing; not roadmap momentum.
+
+### Later
+
+| Phase | Delivers |
+|-------|----------|
+| **T6 Voicemail + Recording** | CallSession metadata; optional conversation summary |
+| **T7 CommunicationEvent** | Operational fact stream (delivery failed, missed call, etc.) |
+| **V1+ ARK Voice** | Desk phones via Twilio Programmable Voice SIP domain; mobile via Twilio Client — see `docs/communications/ark-voice-vision.md` |
+
+## 3. Explicit Non-Goals
+
+Do not build:
+
+- ARK as a **PBX admin product** — extension/trunk UI, IVR builder, contact-center dashboard (FreePBX may run as **transport** behind ARK; ARK does not become the phone company)
+- IVR trees, auto attendants, call trees (unless shop observation proves minimal overflow only)
+- Hunt groups as a product (ARK ring groups are simultaneous dial policy executed via Twilio TwiML)
+- Call-center routing platforms, generic communications SaaS
+- AI-first communications architecture
+- Channel-owned conversation stores
+- Separate deployable **ark-voice** app (decommissioned 2026-06-17 — voice layer stays in ARK SMS)
+
+**Production transport (2026-07):** Twilio Programmable Voice only. Desk phones register to a **Programmable Voice SIP domain** (not Elastic SIP Trunking — that was the Asterisk trunk path). Ingress normalizes to `CallSession`; mobile uses Twilio Client at `/api/mobile/*`. ADR-0005 supersedes shop PBX transport; Elastic SIP wording in older docs is obsolete.
+
+Build operational shop messaging first. Two advisors, one shop number, customers who text — not running a phone company or SaaS comms vendor.
+
+## Success Metric
+
+The shop should answer without leaving ARK:
+
+- Who called?
+- What have we said? (including texts and MMS)
+- Which work is open?
+- Who owns this interaction?
+- Was it handled?
+
+**Floor test threshold (LugsNPlugs):** customer sends photo → advisor replies → advisor sends estimate link → customer approves → advisor sends payment link — all from the conversation rail, no channel thinking.
+
+## Implementation Reference (communications — complete)
+
+- T5: `MessagingWebhookController`, `ProcessInboundMessageAction`, `SendOutboundMessageAction`
+- Quick Reply: `conversation-quick-reply` component, `ark-conversation-quick-reply.js`
+- Surfaces: Customer Hub Relationship Context, RO communication rail
+- Broadcast: `operations.conversations` / `conversation.message.received`
+
+## Implementation Reference (telephony — complete)
+
+- `CallSession`, `CallSessionQueue`, status webhook, claim, mark worked
+- `telephony_endpoints`, `TelephonyRingGroup`, dynamic TwiML in `TwilioTelephonyProvider`
+- `CallSessionOwnershipAssigner`, `TelephonyAnsweredEndpointResolver`
+- Settings → Communications → Telephony endpoint management
+- Pop + queue + Reverb/poll
+
+When extending telephony, change **where calls ring** or **who answered** — not what a call means in Conversation authority.
+
+When extending SMS, add **transport + ConversationMessage** — not a parallel messaging system.
+
+- 2A: `SendEstimateLinkAction`, `EstimateAccessToken`, `/portal/estimates/{token}`
+- 2C: `SendPaymentLinkAction`, `CreateCustomerPayTokenAction`, `/portal/pay/{token}`
+
+When extending Phase 2, add **conversation actions** (estimate, inspection, payment links) — not standalone texting features. Never `EstimateMessage`, `PaymentMessage`, or channel-specific message types — always `ConversationMessage`.

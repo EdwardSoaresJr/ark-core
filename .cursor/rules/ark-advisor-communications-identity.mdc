@@ -1,0 +1,75 @@
+---
+description: Advisor-first communications ownership — freeze workstation automation during Companion
+alwaysApply: true
+---
+
+# Advisor Communications Identity
+
+**Effective:** Post Twilio-native transport reset · Companion inbox-first phase
+
+## Model shift
+
+**Old (PBX / Asterisk):** Which extension answered?
+
+**New (inbox-first):** Which advisor is communicating?
+
+Ownership chain for communications:
+
+```text
+Conversation → Advisor
+```
+
+Not:
+
+```text
+Conversation → Station → Phone → Advisor
+```
+
+## Required vs optional
+
+| Layer | Role in comms |
+| --- | --- |
+| **Advisor** | Primary owner — who is responsible for this relationship thread |
+| **Device** | Transport metadata — desk SIP leg, mobile client, browser |
+| **Conversation** | Relationship authority |
+| **Station** | **Optional** operational metadata — where the interaction happened, not who owns it |
+
+If Edward answers from Companion, desktop, or desk phone → **Edward** owns the conversation. Front Counter is context, not authority.
+
+## Vocabulary (new surfaces)
+
+Prefer **Active advisor** over *current operator at station* in communications UI and API projections.
+
+Existing `Workstation.current_operator_user_id` and workstation presence code may remain during the freeze — do not extend or productize them for Companion.
+
+## Freeze (until Companion reaches production quality)
+
+**Do not build:**
+
+- IP → station inference
+- Lock screens / Step away / idle station lock
+- Browser binding improvements as comms ownership
+- Station automation or inference layers
+- Desktop-centric PBX ownership chains in new comms features
+
+**Continue using:**
+
+- Advisor identity as primary communications authority (`owned_by_user_id`, conversation actor, mobile Sanctum user)
+- Stations as optional metadata on orientation surfaces — not as comms ownership
+
+**Revisit** station automation only after Companion floor certification — not because the old model was wrong, but because the product center of gravity moved.
+
+## Litmus (every comms PR during Companion)
+
+1. Does this assign work to an **advisor**, or to a **station/phone**?
+2. Would this still work if the advisor is on mobile only?
+3. Am I optimizing desktop PBX workflow instead of inbox-first identity?
+
+If (1) is station-first or (3) is yes → stop.
+
+## Companions
+
+- [ark-companion-communications.mdc](ark-companion-communications.mdc) — Companion milestones
+- [ark-station-doctrine.mdc](ark-station-doctrine.mdc) — stations orient; they do not own conversations
+- [communications-foundational-doctrine-v1.md](../../docs/communications/communications-foundational-doctrine-v1.md)
+- [ark-telephony-roadmap.mdc](ark-telephony-roadmap.mdc) — CallSession authority unchanged; ownership is advisor floor coverage

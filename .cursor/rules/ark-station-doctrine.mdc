@@ -1,0 +1,221 @@
+---
+description: Station doctrine — ARK OS anchor; permanence rule; authorities vs orientation; station experiences
+alwaysApply: true
+---
+
+# ARK Station Doctrine
+
+**Status:** Product doctrine v1 — **ARK itself**, not Communications-only  
+**Classification:** **Station is an Operations authority.** Communications is one capability a station can use — not the parent of stations.
+
+**Companions:** [ark-orientation-pattern.mdc](ark-orientation-pattern.mdc) · [ark-operator-intent.mdc](ark-operator-intent.mdc) · [ark-infrastructure-discovery.mdc](ark-infrastructure-discovery.mdc) · [ark-projection-rule.mdc](ark-projection-rule.mdc) · [ark-surfaces.mdc](ark-surfaces.mdc) · [ark-communications-bounded-context.mdc](ark-communications-bounded-context.mdc) · ADR-0001
+
+## Product sentences
+
+**Operators use Communications. Transport providers are implementation details.**
+
+**The shop is composed of stations. Stations are where work happens.**
+
+**Places communicate. People operate them. Devices enable them.**
+
+**Stations define the work. Operators temporarily fulfill the role.**
+
+**Stations are operational authorities. Devices are infrastructure attached to stations.**
+
+### Platform principle stack
+
+**Authorities own truth.**
+
+**Stations own orientation.**
+
+**Capabilities project workflow.**
+
+**Operators express intent. ARK performs implementation.**
+
+**Infrastructure is discovered, not configured.**
+
+Full rules: [ark-operator-intent.mdc](ark-operator-intent.mdc) · [ark-infrastructure-discovery.mdc](ark-infrastructure-discovery.mdc)
+
+Stations do not become authority for everyone else's data — they are where multiple authorities are projected into one operational view for the human standing there.
+
+### Maturity — grammar complete
+
+These five principles govern almost every product decision. **Do not add new platform doctrines** unless one of them is insufficient. See [ark-pr-doctrine-review.mdc](ark-pr-doctrine-review.mdc) (doctrine freeze + litmus test).
+
+Engineering focus shifts from writing rules to **deleting friction**: what operator step can disappear today?
+
+**The Front Counter outlasts people, devices, and carriers.**
+
+## ARK's desktop metaphor
+
+Customers, vehicles, repair orders, phones are **data**. Stations are **where work happens**.
+
+```text
+Shop → Stations → Orientation
+```
+
+Everything else hangs from those. Stronger than organizing around CRUD entities.
+
+## Permanence rule
+
+Anchor around what changes **least**. Capabilities are **not** in this ladder — they have no lifetime like stations or devices; new capabilities attach for years without reshaping permanence.
+
+| Layer | Stability | Why |
+|-------|-----------|-----|
+| **Shop** | Decades | The business itself |
+| **Station** | Years | Front Counter, Bay 1, Office rarely change |
+| **Operator** | Hours | Who is working there shifts through the day |
+| **Devices** | Months / years | Phones, printers, terminals get replaced |
+| **Transport** | Replaceable | SIP carrier, PBX, SMS provider — swap without rewriting operations |
+
+```text
+Shop             → decades
+Station          → years
+Operator         → hours
+Devices          → months / years
+Transport        → replaceable
+```
+
+## Capabilities are orthogonal
+
+Capabilities are things a **station can do** — not a layer it contains. Do not stack them between Station and Devices.
+
+```text
+                 Communications
+                 Payments
+                 Printing
+Shop ── Station ─ Scheduling
+                 Inspection
+                 Orientation
+                 ...
+                 ↓
+              Devices
+                 ↓
+             Transport
+```
+
+Adding Printing or Payments does not change the permanence model.
+
+## Architectural compass
+
+> **Is this describing the work, or today's implementation?**
+
+Implementation → devices / transport. Work → closer to the Station.
+
+## Feature design test
+
+Every new feature answers three questions:
+
+1. **What authority owns this truth?**
+2. **Which station needs to see it?**
+3. **How should it be oriented for the person standing there?**
+
+## Operations — not Communications
+
+Stations do not exist to answer phones. Communications is one contributor to station state.
+
+```text
+Operations
+├── Stations
+├── Repair Orders
+├── Inspections
+├── Scheduling
+└── Communications
+```
+
+Do not nest Stations under Communications.
+
+## Vocabulary
+
+| Operator / product | Code (today) | Never on operator UI |
+|--------------------|--------------|----------------------|
+| **Station** | `Workstation` | Extensions, SIP, PBX, listener URLs, tokens |
+| **Attached device** | `CommunicationDevice` (+ future) | Device inventory as primary object |
+| **Current operator** | Workstation presence | Staff-owned phone model |
+| **Customer access** | Numbers, SMS, hours | Transport labels |
+
+## Stack (permanence + wiring)
+
+```text
+Shop → Station → Operator
+              ↘ capabilities (orthogonal)
+              → Devices → Transport
+```
+
+| Layer | Question |
+|-------|----------|
+| Shop | Can customers reach us? |
+| Station | Where does work happen? |
+| Operator | Who is operating this station? |
+| Device | Is the hardware healthy? |
+| Transport | Is connectivity flowing? |
+
+Nobody skips to transport unless something is broken.
+
+## One orientation pattern
+
+Same architecture everywhere — not three systems:
+
+| Surface | Orientation name |
+|---------|------------------|
+| RO Current Situation | Repair Order orientation |
+| Attention queue | Advisor orientation |
+| Front Counter dashboard | Station orientation |
+
+Authorities unchanged. **Only orientation changes.**
+
+Same engine pattern; density and fields vary. See [ark-orientation-pattern.mdc](ark-orientation-pattern.mdc).
+
+## Design station experiences — not pages
+
+Primary orientation varies by station. Examples:
+
+**Front Counter** — Who is here? Who is waiting? Who is calling? What needs approval? Who is checking out?
+
+**Bay 3** — Which RO is active? What's blocking progress? What parts are missing? Which inspection is next?
+
+**Parts Desk** — What needs ordering? What arrived? What's backordered? Who is waiting?
+
+## Station orientation example
+
+Front Counter projection (operational state — not a communications dashboard):
+
+```text
+Front Counter · Edward
+──────────────────────
+Customer Waiting      2
+Phone Ringing           No
+Unread Messages         1
+Vehicles Ready          3
+Payments Pending        1
+Today's Appointments    2 arriving soon
+Status                  Healthy
+```
+
+## Stable anchor
+
+Most software: **Who owns this device?** ARK: **Where does work happen?**
+
+Edward leaves. VVX replaced. Twilio → Telnyx. Asterisk changes. **Front Counter remains Front Counter.**
+
+## Communications transport (current certification)
+
+ARK owns experience. Providers own plumbing (Twilio PSTN/SMS, Asterisk voice engine today). Certify on floor; do not reopen station authority unless observation proves failure.
+
+## Operator prohibition
+
+**"Where am I?"** — never **"Which extension am I?"**
+
+## SaaS onboarding
+
+**Show me your shop** — not how many phones or extensions.
+
+```text
+□ Front Counter  □ Service Desk  □ Office  □ Bay 1  □ Bay 2  □ Waiting Area
+```
+
+Attach users, phones, printers, terminals **onto** stations. **Station → Device → ARK provisions transport → Ready.**
+
+## Current phase
+
+Architecture largely done. Product polish + floor certification. Remove implementation details until advisors forget they are using a phone system.

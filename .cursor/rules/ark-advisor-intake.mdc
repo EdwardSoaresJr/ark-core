@@ -1,0 +1,161 @@
+---
+description: Advisor Intake Workspace — service counter rhythm, recognition hierarchy
+alwaysApply: false
+---
+
+# ARK Advisor Intake Workspace
+
+Intake is a **Service Counter Workspace**, not a data collection form.
+
+Goal: reduce advisor cognitive load. Advisors think in recognition, not domain models.
+
+## Advisor Mental Model
+
+```
+Recognize the visit (who + what vehicle)
+Why are they here?
+Open Repair Order
+```
+
+Customer and vehicle are **recognition outcomes**, not mandatory first steps. When VIN, plate, or unified search resolves both, the advisor should land on Open RO — not walk a wizard.
+
+Everything else is supporting information and comes later.
+
+## Visit-Anchored Intake (Multi-Surface)
+
+Intake is **visit recognition first**, with one server-authoritative convergence point.
+
+### Entry surfaces (same authority, different posture)
+
+| Surface | Primary entry | Posture |
+|---------|---------------|---------|
+| Service counter (desktop) | Quick check-in (VIN/plate) + unified search | Recognition band left; customer create when unmatched |
+| Mobile check-in | Camera or manual VIN/plate scan | Vehicle-anchored; minimal steps |
+| Fallback | Customer → Vehicle step rail | Only when recognition is incomplete |
+
+All surfaces converge on the same path: **lookup resolves customer + vehicle → Open RO → `AdvisorIntakeService`**.
+
+### Do not fork intake logic
+
+- Mobile is a thin client over existing lookup and intake create — not a separate RO-opening flow.
+- Quick check-in, unified search, and mobile scan share `vehicles/lookup` (or equivalent) authority.
+- Customer/Vehicle steps are a **resolution path**, not the product order.
+
+### Step rail semantics
+
+The Customer → Vehicle → Open RO rail is internal progressive disclosure:
+
+- Auto-complete steps when recognition succeeds (single vehicle, lookup hit, search select).
+- Show Vehicle step only when needed (multi-vehicle, change vehicle, no vehicle on file).
+- Future UX may label the rail **Recognize → Open RO**; do not rip out the rail without explicit scope.
+
+### Mobile scope (when built)
+
+1. Scan or enter VIN/plate
+2. Lookup on file → Open RO (concerns, visit mode, advisor)
+3. Unmatched VIN → slim recognize flow or defer to counter; not a full desktop wizard on phone
+
+Slice C (queue boundary) consumes the same visit-recognized event regardless of surface.
+
+## Visual Hierarchy (Tiers)
+
+### Tier 1 — Recognition
+
+Customer + Vehicle. Largest and most immediate on screen.
+
+Advisor must see within 3 seconds:
+- Customer name, phone
+- Billing class
+- Referral source (when populated)
+- Vehicle year/make/model
+- VIN or plate
+
+Compact, prominent, service-lane fast. No giant disconnected cards.
+
+### Tier 2 — Why Are They Here?
+
+Hero capture. Use this exact phrase in advisor-facing copy.
+
+Not: vehicle issues, concerns, complaints, or domain-model jargon.
+
+The concern/issue capture area must visually dominate the Open RO step.
+
+### Tier 3 — Operational Defaults
+
+Important but secondary. Collapsed or compressed by default:
+- Visit source / visit posture
+- Account posture (billing seed for this visit)
+- Billing class / referral context when shown
+- Advisor notes
+
+Do not remove. Do not change authority. Reduce visual dominance only.
+
+### Tier 4 — ARK Internals
+
+Invisible to advisors:
+- Concern creation mechanics
+- Default resolution
+- Operational events
+
+Advisor sees **Open Repair Order**. ARK creates RO + concerns + events atomically via `AdvisorIntakeService`. Visit posture lives on the repair order (`RepairOrderVisitMode`). See `ark-no-encounters.mdc`.
+
+## Frozen Architecture (Do Not Change In UI Passes)
+
+- `AdvisorIntakeService` transaction
+- RO creation authority
+- Visit posture on `repair_orders` (not encounters)
+- Classification authority (billing class, referral, visit, scope billing)
+- Financial and labor systems
+
+UI passes change hierarchy and copy only unless explicitly scoped otherwise.
+
+## Success Test
+
+Open RO step understood in under 3 seconds:
+
+1. Who is this?
+2. What vehicle?
+3. Why are they here?
+4. How do I open the RO?
+
+If "Why are they here?" feels secondary, the pass failed.
+
+## Tekmetric Test
+
+A service advisor on the phone with another customer at the counter should create the RO without thinking about ARK.
+
+## Intake Qualification Queue (`operations.intake.index`)
+
+Intake is a **qualification workspace**, not a smaller Operations board.
+
+Operations manages lifecycle pressure. Intake manages **recognition and qualification pressure**.
+
+Queue cards use `IntakeQualificationProjection` — deterministic missing-information and next-action signals. No CRM, scoring, or AI recommendations.
+
+Card hierarchy:
+1. Vehicle / customer identity
+2. Concern summary
+3. Missing information (what blocks conversion)
+4. Next action
+
+Do not optimize intake cards for queue density or lifecycle footnotes (parts pressure, estimate totals).
+
+## Epic Slices (Reference)
+
+- **Slice A — Hierarchy Pass:** Copy, layout, recognition band, collapsed defaults. No backend authority changes.
+- **Slice B — Speed Pass:** Auto-skip single vehicle, continue-with-last-vehicle CTA, name+phone new customer, defaults visible on collapsed strip header. Controller routing only — not `AdvisorIntakeService`.
+- **Slice C — One Front Door:** Intake index queue (`operations.intake.index`); RO-oriented cards. No encounter queue.
+
+## Slice B Speed Rules
+
+- One vehicle on file → skip vehicle step, land on Open RO.
+- Multiple vehicles → offer continue with last RO vehicle before browsing.
+- New customer intake → name + phone required; email, address, referral, and billing class visible on the form.
+- Visit defaults strip header shows active selection (e.g. `Drop Off · Customer Pay`) without opening.
+
+## Language Discipline
+
+Advisor-facing intake copy:
+- Use natural counter language
+- Avoid concern/scope jargon on intake surfaces
+- Billing class and referral are labels advisors understand from shop operations, not CRM fields

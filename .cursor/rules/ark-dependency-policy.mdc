@@ -1,0 +1,17 @@
+---
+description: ARK dependency policy
+alwaysApply: true
+---
+
+# ARK Dependency Policy
+
+- Every dependency must solve a real operational problem.
+- Prefer Laravel-native solutions first.
+- Avoid packages that introduce architectural gravity.
+- Avoid frontend framework escalation.
+- Avoid generated architecture systems.
+- Runtime dependencies should remain minimal and understandable.
+- Operational workflows are more important than developer convenience.
+- Prefer direct code over meta-frameworks.
+- Realtime is opt-in, not foundational.
+- If a package increases cognitive load more than operational speed, reject it.

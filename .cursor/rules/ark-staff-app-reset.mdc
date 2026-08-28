@@ -1,0 +1,54 @@
+---
+description: ARK Staff App Reset — role-aware mobile workspace, not module tabs
+alwaysApply: false
+---
+
+# ARK Staff App Reset
+
+Full doc: `ark-mobile/docs/staff-app-reset.md`
+
+## Product rule
+
+Do not build features because the backend has data. Build only the workflow the staff member is trying to complete.
+
+Every screen answers: Where am I? · Current condition? · What next? · Why? · What happened? · What can I do?
+
+## Role homes (not one nav for everyone)
+
+| Profile | Primary question | Home centers on |
+|---------|------------------|-----------------|
+| **Technician** | What do I inspect or repair next? | Assigned ROs → RO workspace → inspection points |
+| **Advisor** | Who needs a response or decision? | Conversations, check-in, approvals, calls |
+| **Manager** | What needs attention across the shop? | Attention board, blockers, ready pickup |
+
+## Technician — do not expose
+
+Global Conversations tab · shop Attention · estimates · payments · dashboards · check-in (unless explicitly earned)
+
+Comms only **inside assigned RO workspace**.
+
+## Advisor — do not expose
+
+Technician inspection entry flow · raw checklist unless reviewing · production-only controls
+
+## RO workspace
+
+Center of technician work. Enter once, stay until done. Inspection points (condition, photos, measurements, notes) — not freeform findings as primary.
+
+Deep links (Attention, check-in, My Work) → `RepairOrderWorkspaceScreen`, not legacy RO detail.
+
+## Shell contract
+
+`home_profile` + `capabilities` from `MobileUserPresenter` — Flutter gates tabs from server, no `if (technician)` nav in Dart.
+
+## Do not build (Phase 1)
+
+Settings · profile pages · analytics dashboards · push/Firebase · AI summaries · desktop estimate builder · payment UI · customer portal — unless floor evidence earns them.
+
+## Acceptance
+
+Technician completes inspection on assigned RO without desktop. Advisor responds and sends next link without desktop. Manager sees who needs attention without searching.
+
+Wrong: same workflow for every role · module list feeling. Right: each role answers their next operational question.
+
+Companion: [ark-staff-product-constitution.mdc](ark-staff-product-constitution.mdc) · `ark-mobile-workflow-doctrine.mdc` · `ark-technician-scope.mdc` · `ark-mobile-production-workspace.mdc`

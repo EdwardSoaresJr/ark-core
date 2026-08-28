@@ -1,0 +1,136 @@
+---
+description: Cleanup sprints may rename/move/delete only — never change runtime behavior
+alwaysApply: true
+---
+
+# ARK Cleanup Sprint Discipline
+
+**Parent:** [communications-voice-cleanup-sprint-v1.md](../../docs/communications/communications-voice-cleanup-sprint-v1.md) · [ark-two-implementations.mdc](ark-two-implementations.mdc)
+
+## Rule
+
+**No cleanup sprint may introduce behavior changes.**
+
+A cleanup PR may:
+
+- Rename
+- Move
+- Delete dead code
+- Simplify (remove seams with one production implementation)
+
+A cleanup PR may **not**:
+
+- Reconnect differently
+- Register differently
+- Change retry timing
+- Alter SIP configuration
+- Change UI flow
+- Modify routing
+- Fix bugs "while I'm in there"
+- Redesign surfaces
+
+## Litmus
+
+Before merge on any cleanup-sprint PR:
+
+> **If this PR were reverted, would call/SIP/registration/routing behave identically to before?**
+
+If behavior would differ → **not a cleanup PR.** Split behavior work out.
+
+## Cursor anti-pattern (explicit ban)
+
+> *"I was already in there…"*
+
+Cleanup passes do not absorb reliability work, SIP fixes, registration tuning, or UI polish. Those ship as separate PRs with separate acceptance tests.
+
+### Banned PR phrases (voice / telephony — automatic fail)
+
+Reject unless that phrase **is** the explicit sprint purpose:
+
+- *"While I was in there…"*
+- *"I also cleaned up…"*
+- *"I noticed…"*
+- *"I took the opportunity…"*
+- *"I simplified…"* (when scope was delete/rename only)
+
+Telephony regressions came from small, well-intentioned changes crossing subsystem boundaries — not big design mistakes.
+
+## Phase structure (voice cleanup example)
+
+| Sub-phase | Code changes? | Deliverable |
+| --- | --- | --- |
+| **B1 — Inventory** | **No** | [ark-mobile-voice-cleanup-inventory-v1.md](../../docs/mobile/ark-mobile-voice-cleanup-inventory-v1.md) — Item · **Runtime Authority** · Classification · Action · Proof · Why + **production graph** + **dead graph** |
+| **B2 — Erasure** | Yes — mechanical only | Delete/Rename per inventory; dead graph empty = Phase B done; PR closure block required |
+
+No code deletion in B1. **No Unknown rows at B1 sign-off** — Unknown must escalate to Dead/Legacy/Infrastructure/Future/Rename. No architecture in B2.
+
+### Unknown escalation (B1)
+
+Unknown is temporary — not a parking lot:
+
+```text
+Unknown → Who calls it? → Runtime trace → Classify
+```
+
+B1 is incomplete while any row remains Unknown.
+
+### Delete gate (B1)
+
+Before **Dead** / **Delete**, answer with evidence:
+
+1. Who calls this?
+2. What production behavior depends on it?
+3. What replaces it? (or "Nothing.")
+
+Uncertain → **Unknown** → stop and investigate. Never guess from naming (`VoiceTransportConfiguration` is not automatically Twilio).
+
+### B2 PR — allowed contents only
+
+Every B2 PR may contain **only:**
+
+- Deletions
+- Renames
+- Import fixes
+- Tests (adjustments for deleted/renamed symbols only)
+
+**Automatic fail** if the PR includes:
+
+- Reconnect logic
+- Retry timing
+- SIP parameters
+- UI behavior
+- Provider logic
+- Lifecycle changes
+
+If behavior would differ after revert → not a B2 PR.
+
+### B2 PR closure block (required)
+
+Every B2 PR description must end with:
+
+```text
+Deleted: XX files
+Renamed: XX symbols
+Behavior changes: 0
+```
+
+Not *expected* zero — **exactly** zero. Cannot honestly write `Behavior changes: 0` → different sprint.
+
+This separates cleanup from behavior. Prevents: *"I cleaned up the voice code… why did the front desk stop ringing?"*
+
+### Package removal (`twilio_voice`)
+
+1. Delete code that imports the package
+2. Prove build + APK launch + unchanged voice path
+3. **Then** remove from `pubspec.yaml`
+
+Never pubspec-first.
+
+### Runtime Authority Report (required after cleanup)
+
+Update [docs/runtime/voice-runtime-authority.md](../../docs/runtime/voice-runtime-authority.md) (or create the subsystem page under `docs/runtime/`). Every report includes acceptance counters ending with **Voice runtime entry points: 1** and **Behavior changes: 0**.
+
+## Companion rules
+
+- [ark-two-implementations.mdc](ark-two-implementations.mdc) — no abstraction without two production implementations
+- [ark-phone-production-telephony-lock.mdc](ark-phone-production-telephony-lock.mdc) — VVX certification gate; no production telephony experiments during mobile work

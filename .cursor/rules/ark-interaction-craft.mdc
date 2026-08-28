@@ -1,0 +1,75 @@
+---
+description: Interaction Craft vs Product Doctrine — borrow interaction, never inherit mental models; governs competitor reviews and Workboard/RO craft
+alwaysApply: true
+---
+
+# ARK Interaction Craft vs Product Doctrine
+
+**Full document:** [ark-interaction-craft-vs-product-doctrine-v1.md](../../docs/ecosystem/ark-interaction-craft-vs-product-doctrine-v1.md)
+
+**Status:** Frozen v1
+
+## Purpose
+
+Competitor reviews improve ARK's **interaction craft** without changing **product doctrine**. Not feature wishlists. Not product ranking.
+
+## Permanent rules
+
+**Competitor products are evidence of interaction craft, not evidence of product doctrine.**
+
+**Borrow interaction. Never inherit mental models.**
+
+**Borrow means:** learn the interaction · reproduce the outcome · reimplement within ARK doctrine.
+
+**Borrow never means:** copy layouts · copy workflows · copy terminology · copy product structure.
+
+## Standing review format (required)
+
+Every competitor review (Shopmonkey, Tekmetric, AutoLeap, Mitchell, Fullbay, Shop-Ware, …):
+
+1. Operating model  
+2. Interaction craft worth stealing  
+3. Architecture worth rejecting  
+4. Doctrine impact  
+5. Steal list  
+6. Do not steal  
+7. One-sentence takeaway (`Borrow X. Reject Y.`)
+
+Complete the Review Checklist in the full document before closing a review.
+
+## Workboard Doctrine
+
+**The board is not where work lives. The board is where decisions happen.**
+
+Representing the shop is not the goal. Directing the advisor is.
+
+**Junk drawer:** A board that accepts everything eventually helps with nothing. Every new card field must eliminate a click or a decision — otherwise it does not belong.
+
+**Card glance (acceptance):** Who? · Vehicle? · Why? · Next? · Money? · Age?
+
+## Persistent Context
+
+Information required continuously while performing work stays visible without scrolling or navigation.
+
+Postures (not entities): Financial · Approval · Communication · Workflow.
+
+*Should this live in the right rail?* → *Is it Persistent Context?*
+
+## Process stability
+
+Do **not** edit the v1 document during a competitor review. Capture template pressure in a notebook. Revise to v2 only when **clusters** of reviews prove the template failed — not because a screen looked prettier.
+
+## Pattern inventory (living companion)
+
+Pattern inventory lives in [ark-interaction-pattern-library-v1.md](../../docs/ecosystem/ark-interaction-pattern-library-v1.md). Patterns are first-class identities; products are evidence. Review notes under `docs/ecosystem/reviews/`. Do **not** expand the frozen doctrine with pattern lists.
+
+## Companions
+
+| Doctrine | Relationship |
+| --- | --- |
+| Pattern Library | Living inventory — patterns authority, products evidence |
+| [ark-projection-rule.mdc](ark-projection-rule.mdc) | Projections package craft; never become authority |
+| [ark-pressure-first.mdc](ark-pressure-first.mdc) | Observe before board/settings explosion |
+| [ark-attention-queue.mdc](ark-attention-queue.mdc) | Attention answers “what's on fire?” |
+| [ark-cursor-doctrine.mdc](ark-cursor-doctrine.mdc) | Operational craft, not SaaS theater |
+| [ark-earned-intelligence.mdc](ark-earned-intelligence.mdc) | Intelligence only after repeated sentences |

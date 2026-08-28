@@ -1,0 +1,91 @@
+---
+description: Inbound ring baseline — customer caller ID on all devices, tiered TwiML stagger, popup authority (reset point adea3e1)
+alwaysApply: false
+globs:
+  - app/Ark/Operations/Telephony/**
+  - tests/Feature/Operations/Telephony*.php
+  - tests/Feature/Operations/Telephony/**
+  - routes/web.php
+---
+
+# ARK Telephony Inbound Ring Doctrine
+
+**Baseline commit:** `adea3e1` (production-verified 2026-06-08).
+
+This is the reset point before experimenting with additional telephony features. If inbound ring regresses, restore this architecture — do not improvise a new PBX path.
+
+## Floor Outcomes (must hold)
+
+1. **Customer caller ID** appears on SIP desk phones and cell endpoints — not the shop Twilio number.
+2. **Popup and queue** show the customer's number via `InboundCallerDisplayPhone`, never shop inbound as the caller.
+3. **Callers hear audio** after the recording disclaimer — ringback or hold while advisors ring; not dead silence.
+4. **Staggered ring delays** still work: delay=0 endpoints ring first; higher tiers join on schedule.
+
+## Architecture Lock
+
+### Ring modes
+
+| Mode | Trigger | Customer leg | Staff legs | Caller ID |
+|------|---------|--------------|------------|-----------|
+| **Parallel** | All `ring_delay_seconds = 0` | Disclaimer → `<Dial>` all endpoints | TwiML `<Sip>` / `<Number>` children | Customer (Twilio passthrough) |
+| **Staggered tiered** | Any endpoint `ring_delay_seconds > 0` | Disclaimer → `<Pause lead>` → `<Dial>` delay≤0 tier | Same TwiML children; delayed tiers via **expand redirect** | Customer (`callerId` on `<Dial>`) |
+
+### Staggered tiered flow (authoritative)
+
+1. Initial TwiML (`TelephonyIncomingCallFlow::buildStaggeredTieredResponse`): disclaimer, lead pause (`staggeredRingLeadSeconds`, 5s with recording / 2s without), `<Dial callerId="{customer}">` for endpoints with `ring_delay_seconds <= 0`.
+2. `TelephonyStaggeredRingDispatcher` initializes **parallel ring state** (not conference), schedules `ExpandStaggeredRingJob` per unique delay tier > 0 at `lead + delay`.
+3. `TelephonyStaggeredRingExpander` redirects the **parent inbound call** to `staggered-expand` webhook with cumulative `maxDelay`.
+4. Expand webhook returns `<Dial callerId="{customer}">` for all endpoints with `ring_delay_seconds <= maxDelay`.
+
+Lead + delay example (shop config: SIP 0s, Molly 0s, Benjamin 10s, Edward 15s):
+
+- ~5s: Desk SIP + Molly cell
+- ~15s: + Benjamin
+- ~20s: + Edward
+
+### Parallel flow (authoritative)
+
+- `TelephonyIncomingCallFlow::buildOpenHoursDialResponse` — single `<Dial>` with all endpoints.
+- `TelephonyWebhookController` calls `initializeParallel` with customer `normalizedFrom`.
+- Cell **machine detection off** when multiple endpoints ring (`TelephonyRingGroup::buildDialChildrenForMaxDelay`).
+- `TelephonyRingLegStatusHandler` remembers child leg CallSids and cancels competing legs when one answers.
+
+## Hard Rejects (caused production regressions)
+
+Do **not** reintroduce without explicit product decision and floor retest:
+
+1. **Conference + REST outbound** for staggered staff ring (`TelephonyStaggeredRingDialer` with `createOutboundCall(shopNumber, …)`). REST `From` is always shop CID on PSTN/SIP.
+2. **Silent conference wait** for customers (`startConferenceOnEnter="false"` + pause-only `waitUrl`). Callers heard silence.
+3. **Broadcasting outbound sessions** to incoming-call popup (`IncomingCallContextBroadcaster` must gate on `CallSessionDirection::Inbound` only).
+4. **Shop number as display caller** in popup/queue when session `from_number` is wrong — use `InboundCallerDisplayPhone`, ring state `customer_caller_id`, never `to_number` for inbound display.
+
+Conference TwiML (`TelephonyConferenceTwiml`, `conference-join`, `conference-wait`) remains for legacy/callback paths — **not** for inbound staggered ring to staff.
+
+## UI and Context
+
+- `IncomingCallContextPresenter` → `display_phone` / `normalized_from` via `InboundCallerDisplayPhone`.
+- `TelephonyCellWhisperFlow` → caller label from ring state or `InboundCallerDisplayPhone`.
+- Callback (`TelephonyCallbackInitiator`) rings advisor with shop `From` — expected; must not hijack inbound popup.
+- Cell whisper uses short configurable prompt (`cell_whisper_prompt` in call flow settings), not caller number — caller ID is on the device display.
+
+## Key Files
+
+| Concern | Files |
+|---------|-------|
+| TwiML response | `TelephonyIncomingCallFlow`, `TelephonyRingGroup` |
+| Stagger schedule | `TelephonyStaggeredRingDispatcher`, `ExpandStaggeredRingJob`, `TelephonyStaggeredRingExpander` |
+| Expand TwiML | `TelephonyStaggeredExpandWebhookController`, route `staggered-expand` |
+| Caller display | `InboundCallerDisplayPhone`, `IncomingCallContextPresenter` |
+| Parallel cancel | `TelephonyRingLegStatusHandler`, `TelephonyRingLegCanceler`, `TelephonyRingState` |
+| Parent redirect | `TwilioVoiceApi::redirectCall` |
+| Cell whisper | `TelephonyCellWhisperFlow`, `TelephonyEndpoint::toTwimlChild` |
+
+## Regression Tests (run before shipping telephony ring changes)
+
+- `TelephonyStaggeredRingTest` — tiered TwiML, expand jobs, expand webhook `callerId`, parallel AMD off
+- `TelephonyIngressTest` — popup `display_phone`, inbound caller display ignores shop number
+- `TelephonyCallbackTest` — callback does not trigger inbound popup; staggered uses dial not conference
+
+## Experimentation Rule
+
+When adding features (hold, transfer, callback UX, new endpoints): extend tiered TwiML or parallel `<Dial>` children. If a change requires REST outbound to ring staff on inbound calls, stop — caller ID will break unless the feature explicitly accepts shop CID on device displays.

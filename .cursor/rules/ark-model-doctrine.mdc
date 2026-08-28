@@ -1,0 +1,37 @@
+---
+description: Model usage doctrine for ARK operational product work
+alwaysApply: true
+---
+
+# ARK Model Doctrine
+
+ARK is beyond generic code generation and CRUD scaffolding. Model use must preserve operational product coherence, workflow continuity, UX hierarchy, server authority, and architectural survivability.
+
+## Model Responsibilities
+
+- **GPT-5.5 is the product brain.** Use for operational doctrine, workflow architecture, UX hierarchy, read/edit posture, financial authority, continuity rules, anti-regression thinking, and major subsystem planning.
+- **Sonnet 4.6 is the primary Cursor implementer.** Use for tightly scoped Laravel, Blade, Tailwind, AJAX continuity, view cleanup, and operational UI implementation passes constrained by doctrine.
+- **Opus 4.8 is for deep systems review.** Use for major architecture risk, subsystem collisions, long-range product structure, and difficult product conflicts. Do not use for routine Blade/UI loops.
+- **Codex 5.3 is for mechanical coding.** Use for isolated utilities, migrations, data transforms, helpers, and repetitive backend work. Do not let it drive UX, workflow posture, or product direction.
+- **Fast models are only for tiny edits.** Use for boilerplate, trivial cleanup, and small scaffolds. Avoid for operational UX, estimates, customer workflow, financial systems, or continuity-sensitive work.
+
+## Preferred Workflow
+
+1. GPT-5.5 defines doctrine, posture, hierarchy, and operational direction.
+2. Sonnet implements constrained passes.
+3. GPT-5.5 reviews for coherence, regression, and product fit.
+
+## Cursor Usage Rules
+
+- Cursor should execute constrained operational passes, not invent product identity.
+- Preserve Laravel authority, Blade rendering, deterministic financial logic, and scoped AJAX continuity.
+- Do not introduce SPA drift, duplicated frontend state, financial logic in JavaScript, casual abstractions, or over-componentization.
+- Do not improvise workflow philosophy during implementation.
+
+## Operational UX Priority
+
+Always prioritize operational familiarity, scanability, workflow rhythm, review-first posture, and dense-but-calm hierarchy over originality, trendy SaaS visuals, framework aesthetics, or flashy design.
+
+## Regression Test
+
+If a change creates more CRUD feeling, admin-panel feeling, floating cards, generic SaaS posture, reduced scanability, weaker continuity, or less operational rhythm, the implementation is wrong even if it is technically functional.

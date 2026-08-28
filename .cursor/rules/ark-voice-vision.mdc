@@ -1,0 +1,22 @@
+---
+description: Communications bounded context — frozen; see ark-communications-bounded-context.mdc and communications-bounded-context-v1.md
+alwaysApply: false
+---
+
+# ARK Voice / Communications (legacy pointer)
+
+**Architecture is frozen.** Do not extend this file for new design.
+
+**Read first:** `docs/communications/ark-voice-endpoint-architecture-v1.md` (frozen endpoint baseline)  
+**Also:** `docs/communications/communications-bounded-context-v1.md`  
+**Cursor rule:** `ark-communications-bounded-context.mdc`
+
+## Quick invariants
+
+- **SessionEvent** — immutable platform primitive; telephony-agnostic vocabulary.
+- **FakeSessionProvider** — permanent provider alongside Twilio and Asterisk.
+- **Flutter** — `/api/mobile/*` only; transport hidden in adapters.
+- Legacy standalone `ark-voice` app decommissioned 2026-06-17.
+
+Vision context (not architecture): `docs/communications/ark-voice-vision.md`  
+Mobile contract: `docs/mobile/ark-mobile-communications-authority-contract.md`

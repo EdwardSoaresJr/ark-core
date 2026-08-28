@@ -1,0 +1,41 @@
+---
+description: Engineering Authority — read before implementation; append to IMPLEMENTATION_LOG after
+alwaysApply: true
+---
+
+# Engineering Authority
+
+Every implementation session must begin by reading the Engineering Authority.
+
+**Full index:** [docs/engineering/README.md](../../docs/engineering/README.md)
+
+## Before Writing Code
+
+Read in order:
+
+1. [docs/engineering/CURRENT_MILESTONE.md](../../docs/engineering/CURRENT_MILESTONE.md)
+2. [docs/engineering/ACTIVE_PR.md](../../docs/engineering/ACTIVE_PR.md)
+3. [docs/engineering/ARCHITECTURE.md](../../docs/engineering/ARCHITECTURE.md)
+4. [docs/engineering/STANDARDS.md](../../docs/engineering/STANDARDS.md)
+
+**Canonical endpoint architecture (do not duplicate):** [docs/communications/ark-voice-endpoint-architecture-v1.md](../../docs/communications/ark-voice-endpoint-architecture-v1.md)
+
+## After Implementation
+
+Append an entry to [docs/engineering/IMPLEMENTATION_LOG.md](../../docs/engineering/IMPLEMENTATION_LOG.md).
+
+Every entry must include: date, PR, files changed, reason, architecture impact, outstanding questions.
+
+## Do Not Modify (Unless Explicitly Instructed)
+
+- ADRs in `docs/engineering/adr/` — **never edit accepted ADRs**; supersede with a new ADR
+- [ARCHITECTURE.md](../../docs/engineering/ARCHITECTURE.md) — architecture review required
+- [STANDARDS.md](../../docs/engineering/STANDARDS.md) — architecture review required
+
+Architecture documents are reviewed. Implementation documents (`CURRENT_MILESTONE.md`, `ACTIVE_PR.md`, `IMPLEMENTATION_LOG.md`) are updated.
+
+## Stop Discipline
+
+- Never continue into another PR or milestone.
+- Stop after completing the requested PR scope in [ACTIVE_PR.md](../../docs/engineering/ACTIVE_PR.md).
+- One milestone · one PR · one review · stop.

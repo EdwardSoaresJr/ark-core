@@ -1,0 +1,45 @@
+---
+description: ARK Read/Write Rule — GET requests must not mutate operational truth
+alwaysApply: true
+---
+
+# ARK Read/Write Rule
+
+GET requests must not mutate operational truth.
+
+**Reads read. Writes write.**
+
+## Default
+
+GET = zero writes.
+
+## Forbidden on GET Paths
+
+Unless explicitly justified, documented, and measurable:
+
+- `UPDATE` / `DELETE` on operational tables
+- cleanup sweeps triggered by page render
+- `touch()` / heartbeat persistence (`last_seen_at`, session side effects)
+- recalculating and persisting truth that should already be stored (`ensureFinancialTotalsAreCurrent()` and similar)
+
+## When a Write on GET Seems Necessary
+
+1. **Remove** — prefer eliminating the mutation.
+2. **Move** — dedicated write path, middleware heartbeat, queued job, or explicit user action.
+3. **Justify** — document why, add composition/budget test coverage, and track in query composition reports.
+
+Never hide writes inside view composers, layout bootstrapping, or "convenience" helpers.
+
+## Companion to Projection Rule
+
+Projection Rule stops repeated **questions** during render.
+
+Read/Write Rule stops repeated **mutation** during render.
+
+Together they explain the largest ARK V2 performance wins: workboard projections, lifecycle select projection, shop settings memoization, and removing financial recalculation from GET show/review paths.
+
+## Verification
+
+- Query composition reports must show **0** `repair_order_lines` UPDATEs on RO show/review GET.
+- Extend read/write audits to any GET mutation surfaced by composition (`call_sessions`, `users.last_seen_at`, etc.).
+- `tests/Feature/Operations/QueryBudgetTest.php` guards hot surfaces; add invariants when new GET write paths are discovered.

@@ -1,0 +1,49 @@
+---
+description: Market Authority — business health, opportunity-first causality, becoming; read before Growth Pressure or Owner Today market trust work
+alwaysApply: false
+---
+
+# ARK Market Authority
+
+**Full document:** [docs/ecosystem/ark-market-authority-v1.md](../../docs/ecosystem/ark-market-authority-v1.md)
+
+**Frozen 2026-07-07.** Do not extend v1 Growth Pressure / ledger code without realigning to this model.
+
+## Naming
+
+**Market Authority** = trust the market grants the business (business health).
+
+**Authority** elsewhere in ARK = DDD operational truth (`RepairOrder`, `Vehicle`, …).
+
+**Earned Authority** = publication gate when knowledge leaves the shop — different job. See [ark-earned-authority.mdc](ark-earned-authority.mdc).
+
+## Three frozen statements
+
+**Law:** Operational excellence creates market authority opportunities. Markets determine whether those opportunities become market authority.
+
+**Corollary:** Businesses control opportunities and investments. Markets control outcomes.
+
+**Becoming (meta-principle):** Every projection exists to answer: *What is becoming true?*
+
+## Non-negotiable causal chain
+
+Successful repair → **Opportunity Created** (not gated on review ask) → investments (invitation, ads, …) → market witnesses (review, referral, return, …) → observations → projections.
+
+**Businesses cannot grant market authority to themselves.** Market authority is inferred, never a table or score.
+
+## Advisor vs model
+
+Advisor UI: *"Did you invite the customer to share their experience?"* — not doctrine vocabulary.
+
+Model events: `MarketAuthorityOpportunityCreated`, `MarketAuthorityInvestmentMade`, market witnesses later.
+
+## Before measuring outcomes
+
+**Never measure an outcome until the opportunity that produced it is identified.** Count reviews last; ask when trust was possible first.
+
+## Do not
+
+- Gate opportunity on review checkbox
+- Treat ledger/score as truth
+- Gamify capture rate
+- Build Selection Pressure before repeated floor vocabulary

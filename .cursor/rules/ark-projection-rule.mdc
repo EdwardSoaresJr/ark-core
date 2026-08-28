@@ -1,0 +1,133 @@
+---
+description: ARK Projection Doctrine — summarize truth once; disposable projections; never become authority
+alwaysApply: true
+---
+
+# ARK Projection Doctrine
+
+**Platform stack:** [docs/ecosystem/ark-truth-stack-v1.md](../../docs/ecosystem/ark-truth-stack-v1.md)
+
+Prevent convenience-layer fan-out, repeated derivation, hidden performance regressions, and projections that silently become authority.
+
+## Core invariant
+
+**A projection summarizes truth. It never becomes truth.**
+
+Every projection in ARK is **disposable**. Delete it; rebuild from authority and events. If rebuild is impossible, the projection has leaked into authority — fix that before shipping.
+
+## Projection Rule #1 — Audience language
+
+**Operational truth should not require users to understand operational structure.**
+
+| Audience | Speaks |
+| --- | --- |
+| Advisors | Answers to work questions |
+| Technicians | Work to perform |
+| Owners | Operations to observe |
+| Engineers | Authorities to model |
+
+Each projection speaks the language of its audience. Domain names and UI labels **do not have to match**. Renaming `RepairOrderWorkGroup` because the advisor sees “What are we doing?” is the wrong fix — that collapses the healthy separation between engineer model and operator language.
+
+### When users hesitate
+
+```
+Something feels awkward
+ ↓
+Suspect a projection leaking implementation — not a wrong authority
+ ↓
+Simplify the projection
+ ↓
+Leave authority alone
+```
+
+Do **not** default to redesigning the model because the UI asked someone to think like software.
+
+Earned examples (same pattern, three audiences):
+
+| Surface | Leak removed | Authority left alone |
+| --- | --- | --- |
+| Soft-capacity scheduling | Bay/tech required too early | Appointment capacity model |
+| Technician work order | Estimate concepts on the bay sheet | Estimate / labor lines |
+| Estimate UX | Operation vs Labor object construction | Concern → Operation → Labor |
+
+Apply the same question next in Communications, Inspections, and ARK Voice: **what implementation detail is leaking into this user’s workflow?**
+
+## Rule
+
+If a surface renders the same derived answer more than once, create a projection.
+
+Do not repeatedly call domain methods from Blade views, presenters, view composers, layout bootstrapping, or UI helpers when the answer can be computed once and reused.
+
+## Layer responsibilities
+
+| Layer | Role |
+| --- | --- |
+| **Authority / events** | What happened — append-only truth |
+| **Projections** | Package answers once per render — disposable |
+| **Narratives** | Explain truth for an audience (Briefing, Journey story) |
+| **Evidence** | Justify claims — links to immutable sources |
+| **Orientation** | Brief humans before action — may consume projections |
+| **Views** | Render projection and narrative data — never derive truth inline |
+
+See [ark-explainability-doctrine.mdc](ark-explainability-doctrine.mdc) for What / Why / Show me.
+
+## Projection catalog (examples)
+
+| Projection | Authority |
+| --- | --- |
+| Operational Journey | Growth + Voice + Operations events |
+| Attention queue | Observations + comms + calls |
+| Workboard cards | RO lifecycle + parts + payments |
+| Revenue Explorer | Posted / closed ROs + attribution |
+| Communications recovery | Communication events + read state |
+| Technician surfaces | Assigned work + production events |
+| Operations Briefing | Composed narrative from projections above |
+
+No `AttentionItem`, SMS inbox, or parallel queue authority. Projections **compose**; they do not **store** operational work.
+
+## Preferred pattern
+
+**Controller / projection:** compute derived values once, batch related calculations, pass explicit projection data to the view.
+
+**Blade:** render projection data; do not derive operational truth inline.
+
+## Good examples
+
+- `WorkboardCardProjection` — parts pressure, vehicle identity, payment posture, next action, footnotes once per RO.
+- `RepairOrderLifecycleSelectProjection` — allowed transitions, blocking reasons, closeout reasons once; Blade renders options.
+- `OperationalJourneyProjection` — story milestones + `JourneyEvidenceItem[]` from immutable events.
+
+## Bad examples
+
+Calling `partsPressure()`, `blockingReason()`, or `canTransition()` repeatedly across partials during a single render.
+
+Writing journey milestones, attention rows, or briefing facts into projection-only tables without authority backing.
+
+## Architectural test
+
+When profiling a slow page, ask: **Is this query coming from authority, or from convenience?**
+
+Authority cost is usually acceptable. Convenience cost must be measured, explained, projected, and reused.
+
+When reviewing a new feature, ask: **If we deleted this projection, could we rebuild it from events?**
+
+## Query composition stability
+
+Track composition, not just total query count:
+
+| Category | Target |
+| --- | --- |
+| Truth layers | Stable |
+| Projection layers | Stable |
+| Convenience layers | Shrinking |
+| GET mutations | Zero |
+
+Use `php artisan ark:query-composition:ro-show --markdown` before and after convenience-layer changes on hot surfaces.
+
+## Protected truth layers
+
+Do not optimize these unless measurement proves regression: LifecycleProjection, CommunicationTruth, PartsPressure, VehicleIdentityPressure, CustomerIdentityPressure. They have earned trust.
+
+## Outbound publication
+
+Projections that leave the shop (website, email, AI, reports) follow [ark-earned-authority.mdc](ark-earned-authority.mdc). A projection may summarize truth for an audience; it must not invent truth for publication.

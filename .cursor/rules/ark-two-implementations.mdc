@@ -1,0 +1,71 @@
+---
+description: No Manager/Strategy/Factory unless two production implementations exist — platform lean rule
+alwaysApply: true
+---
+
+# ARK Two Implementations Rule
+
+**Parent:** [communications-voice-cleanup-sprint-v1.md](../../docs/communications/communications-voice-cleanup-sprint-v1.md) · [ark-dependency-policy.mdc](ark-dependency-policy.mdc)
+
+## Rule
+
+**No abstraction survives without at least two production implementations.**
+
+If there is exactly one runtime, one provider, or one transport in production today, do not introduce (or keep):
+
+- Manager
+- Strategy
+- Provider selector
+- Factory
+- Adapter layer
+- Interface whose only implementer is the one class you already have
+
+**Do not replace one abstraction with a prettier abstraction.** Example of what to reject:
+
+```text
+TwilioVoiceTransport → VoiceTransportInterface → ArkVoiceTransport
+```
+
+When only `ArkVoiceTransport` ships, **`ArkVoiceTransport` is enough.**
+
+## Litmus
+
+Before adding or preserving a seam, ask:
+
+> **Name the second production implementation that uses this abstraction today.**
+
+If you cannot name it → **delete, inline, or rename** — do not generalize.
+
+## Labels (audit pass — B1 classification)
+
+Every inventory row gets **Classification** (what it is) and **Action** (what B2 may do). Plus **Proof** (evidence column).
+
+| Classification | Meaning | Allowed action |
+| --- | --- | --- |
+| **Dead** | Proven unused | Delete |
+| **Legacy** | Referenced; scheduled for retirement | Keep (document why) |
+| **Infrastructure** | Production runtime | Keep |
+| **Future** | Planned phase (CallKit, …) | Keep |
+| **Rename** | Good impl, wrong vocabulary | Rename only |
+| **Unknown** | Cannot prove role | **Stop** — not Delete |
+
+**Delete gate:** Who calls this? · What behavior depends on it? · What replaces it?  
+All three answered with proof → Dead/Delete. Else → Unknown.
+
+No "maybe." No naming-based deletion.
+
+## Scope
+
+Broader than telephony. Applies to transports, payment gateways, push providers, report engines, and any "we might support X someday" seam.
+
+**Exception:** Test doubles and fakes in `tests/` do not count as a second production implementation.
+
+## Voice cleanup (Phase B — ark-mobile)
+
+**B1 before B2.** Inventory first; erasure second. See sprint doc.
+
+**30-second test:** Clone ark-mobile → voice runtime is immediately `ArkVoiceTransport` → `sip_ua` → Asterisk. Not `VoiceProvider`, `TransportStrategy`, or `AsteriskVoiceTransport`.
+
+**Naming:** Keep **`ArkVoiceTransport`** — ARK owns the client; Asterisk is execution, not the product name on the transport class.
+
+Backend `TelephonyProviderManager` / Twilio-vs-Asterisk shims stay until VVX is boring, ARK Phone stops destabilizing production, and rollback is explicitly closed (Phase D).

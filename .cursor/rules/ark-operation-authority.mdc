@@ -1,0 +1,64 @@
+---
+description: Operation Authority — Complete/Closed. Owns Operation Class only. Reopen for verified defects only.
+alwaysApply: true
+---
+
+# Operation Authority v1
+
+**Status:** Complete · Closed · Foundational Authority
+
+**Mission:** Own Operation Class. Nothing else.
+
+## Owns
+
+- Operation
+- Operation Class
+
+## Does not own
+
+Service definitions · Standard labor · Inspection templates · Parts · Advisor workflow · Pricing · Technician workflow · Catalog management · Search · UI · **shop default labor category** (Labor Categories owns that)
+
+Seeded `operations` rows are temporary records so Pricing can resolve Operation Class — **not a service catalog**. Expand only when another capability earns it.
+
+## Consumer
+
+Estimate Pricing Engine (consumes Operation Class only).
+
+## Contract
+
+```text
+Estimate Line → Operation → owns Operation Class → Estimate Pricing Engine
+```
+
+## Permanent invariants
+
+1. Operation owns Operation Class.
+2. Pricing never infers Operation Class.
+3. Pricing consumes Operation Class only (`$operation->operationClassKey()` / relation).
+4. Operation Authority never prices labor.
+5. Estimate Pricing never owns Operation metadata.
+
+## One question
+
+`$operation->operationClassKey()` — the record is the authority. No OperationResolver.
+
+## Authority richness
+
+**Authorities may begin life with a single field if that field is the operational truth they own.**
+
+Richness comes from operational pressure — not imagination. A thin Operation that only owns `operation_class_id` is enough until the shop earns more.
+
+## Migration follow-ups (approved; do not freeze as permanent)
+
+1. Delete `Operation::forLine(..., code)` / shop-default category bridge once `operation_id` is universal on labor lines.
+2. (Pricing consumer) Delete labor-category → posture inference once Billing Posture is always explicit on resolve.
+
+These are **deletions** of transitional compatibility paths after operational adoption demonstrates they are unused — not future improvements.
+
+`Operation::forShopDefaultLaborCategory()` is transitional loading only — not doctrine ownership of the default.
+
+**Pre-production:** Count Billing Posture Resolution (`explicit` · `category_inference` · `default`) so inference can be removed when the counter is zero.
+
+## Reopen criteria
+
+Verified defects only. Not metadata, pickers, or catalogs — those are other capabilities.

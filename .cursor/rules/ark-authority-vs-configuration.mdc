@@ -1,0 +1,216 @@
+---
+description: Authority vs Configuration — operational truth in code; shop behavior in Settings. Governs multi-tenant ARK SaaS boundaries.
+alwaysApply: true
+---
+
+# ARK Authority vs Configuration
+
+**Status:** Active doctrine  
+**Maturation step:** Same family as Authority vs Projection, Observation vs Attention, Doctrine vs Revision.
+
+ARK is multi-shop platform software. **LugsNPlugs is one tenant, not the model.**
+
+## Rule
+
+**Authority** answers what happened and what exists.  
+**Configuration (Settings)** answers how this shop behaves.
+
+Configuration **points at** authority. Configuration must not **become** authority.
+
+## ARK hierarchy
+
+Doctrine stack — each layer has a rule; Configuration is no longer an afterthought:
+
+```text
+Authority        — what happened, what exists (code)
+    ↓
+Observation      — measure adoption and pressure before enforcing
+    ↓
+Projection       — package answers once per render/request
+    ↓
+Configuration    — how this shop behaves (Settings)
+```
+
+**Maturity arc:** Can ARK represent reality → learn from reality → **stay coherent when shops disagree?** That third question is SaaS maturity; this doctrine answers it.
+
+Configuration sits at the bottom of the *read path* (surfaces consume projections shaped by settings). It does not replace authority above it.
+
+## Authority (code — operational truth)
+
+These exist regardless of transport, provider, or shop preference:
+
+| Domain | Examples |
+|--------|----------|
+| Customer / vehicle | `Customer`, `Vehicle` |
+| Workflow | `RepairOrder`, estimate lines, lifecycle |
+| Communications | `Conversation`, `ConversationMessage`, `CallSession` |
+| Telephony | `TelephonyEndpoint`, `TelephonyExtension` |
+| Inspection | `InspectionItem`, verified findings |
+
+Fixed enums for **truth** (RO status, call lifecycle, message direction) belong in code — not shop settings.
+
+## Configuration (Settings — shop behavior)
+
+Two shops should disagree **without a deployment**:
+
+| Domain | Examples |
+|--------|----------|
+| Telephony | Provider, business hours, ring groups, page groups, routing, caller-pop fields |
+| Notifications | Channels, escalation, browser chime |
+| Portal (future) | Show history, photos, findings, messaging, payments |
+| Mobile (future) | Capabilities surfaced per shop — not hardcoded nav trees |
+
+Shop-specific names, extension maps, and floor layout are **tenant data** entered in Settings — never product defaults in PHP, Blade, or seeders for all shops.
+
+## Litmus tests
+
+### 1. Deploy test
+
+**Can Shop A and Shop B differ without a code deploy?**
+
+- Yes → Configuration  
+- No → reconsider — likely authority or missing settings surface
+
+### 2. History test
+
+**Would historical records become incorrect if this changed?**
+
+- Yes → **Authority** (changing it rewrites operational truth)  
+- No → **Configuration** (e.g. renaming a ring group does not invalidate past `CallSession` rows)
+
+### 3. Reasonableness test
+
+**Could another ARK shop reasonably want this different?**
+
+- Yes → Configuration  
+- No → probably platform invariant (keep in code)
+
+### 4. Truth test
+
+**Is this operational truth?**
+
+- Yes → Authority  
+- No → Configuration
+
+### 5. Adoption test
+
+**Will changing this require retraining staff?**
+
+Be cautious before putting high-retraining items in Settings — even when they pass the SaaS test.
+
+| Example | Verdict | Why |
+|---------|---------|-----|
+| Ring group display name | Configuration | Rename without rewriting history or relearning workflow vocabulary |
+| RO lifecycle status labels | Authority (usually) | Fractures the mental model of the entire product if every shop invents statuses |
+
+Something can pass **deploy** and **history** tests but fail **adoption**. Prefer platform-stable vocabulary for concepts staff carry across shops (lifecycle, disposition, call handled).
+
+## `.env` and `config()`
+
+| Belongs in `.env` | Belongs in Settings |
+|-------------------|---------------------|
+| Secrets (tokens, keys) | Provider choice |
+| Deployment wiring (URLs hosts share) | Business hours, routing |
+| CI/test overrides | Feature toggles per shop |
+
+**Audit question for every `config(...)` / `env(...)` in operational code:**
+
+> Is this operational truth, or shop behavior?
+
+If behavior → move toward Settings.
+
+## Surfaces
+
+### Operations (Blade)
+
+Settings → projections → views. Views render answers; they do not derive truth or shop policy inline.
+
+### ARK Mobile (Flutter)
+
+**Bad:** tenant checks and baked-in nav in the binary:
+
+```dart
+if (shop == "LugsNPlugs") { ... }
+if (communicationsEnabled) { ... }
+showInspectionTab = true; // hardcoded
+```
+
+**Good:**
+
+```text
+Authority
+    ↓
+Capabilities (platform)
+    ↓
+Settings (per shop)
+    ↓
+Projection (app shell / API payload)
+```
+
+The Flutter app reshapes itself from the shell payload. Shop may disable communications, telephony, or inspections without a rebuild.
+
+**Audit:** search mobile + API for shop slug checks, hardcoded tab lists, and feature flags not sourced from capabilities/settings.
+
+### Portal
+
+Next likely stress test for this doctrine.
+
+| Configuration (visibility) | Authority (unchanged) |
+|----------------------------|------------------------|
+| Show messaging | `Conversation` |
+| Show findings | Inspection / finding authority |
+| Show photos | Media on authority rows |
+| Show maintenance history | Vehicle / RO history |
+| Show payments | Invoice / payment authority |
+
+**Audit:** portal routes and Blade gates — feature toggles belong in Settings; records stay in authority.
+
+### Workboard (later)
+
+Possible future configuration — only after repeated evidence that shops genuinely disagree:
+
+- Needs-action thresholds
+- Stale definitions
+- Attention decorations
+
+**Resist** making every board behavior configurable until floor observation proves disagreement. Pressure First applies: observe before settings explosion.
+
+## Sequence
+
+```
+Authority (ship truth)
+    → Configuration (settings UI)
+    → Observation (adoption / pressure)
+    → Workflow / automation (only if evidence)
+```
+
+Do not skip to automation because a settings surface feels empty. See [ark-authority-adoption.mdc](ark-authority-adoption.mdc).
+
+## Consistency rule
+
+The doctrine is only valuable if it catches leaks **outside** the subsystem that introduced it.
+
+After shipping configuration for one domain (e.g. telephony), **leave that domain alone** and audit adjacent surfaces for the same mistake: `config()`, `env()`, tenant slug checks, LugsNPlugs-as-default assumptions.
+
+Priority audit order when ready: **Mobile → Portal → lingering env/config** → Workboard (last, observation-gated).
+
+**Mobile snapshot:** [docs/mobile/ark-mobile-authority-configuration-audit-v1.md](../../docs/mobile/ark-mobile-authority-configuration-audit-v1.md)
+
+## Anti-patterns
+
+- `CallSession` status or type in shop settings JSON
+- `TELEPHONY_PROVIDER` in `.env` as source of truth
+- LugsNPlugs extension map in migrations for all tenants
+- Giant settings blob duplicating authority row state
+- Flutter screens that encode shop policy instead of reading capabilities
+- `if (shop == "LugsNPlugs")` or equivalent tenant slug branching in product code
+
+## Companions
+
+| Rule | Relationship |
+|------|--------------|
+| [ark-projection-rule.mdc](ark-projection-rule.mdc) | Truth → projection → view |
+| [ark-telephony-settings-doctrine.mdc](ark-telephony-settings-doctrine.mdc) | Telephony instance of this rule |
+| [ark-pressure-first.mdc](ark-pressure-first.mdc) | Observe before enforcement |
+| [ark-authority-adoption.mdc](ark-authority-adoption.mdc) | Observe before automation |
+| [ark-surfaces.mdc](ark-surfaces.mdc) | Operations / portal / platform boundaries |

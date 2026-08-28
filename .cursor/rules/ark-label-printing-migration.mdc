@@ -1,0 +1,81 @@
+---
+description: Printing is operational infrastructure (like invoices/PDFs)—migrate from ARK-SMS with audit-first parity. No QZ code until audit answers blocking questions.
+globs: docs/printing/**,**/printing/**,**/*label*,**/*print*,**/*qz*
+alwaysApply: false
+---
+
+# ARK Label Printing — Migration Doctrine
+
+Read first:
+
+- `docs/printing/ark-printing-doctrine.md` — **operational infrastructure** rules
+- `docs/printing/migration-brief.md` — scope and migration order
+- `docs/printing/ark-sms-printing-audit.md` — must be `AUDITED` before any code
+
+## Infrastructure posture
+
+Printing is **operational infrastructure** — not a convenience feature, UI feature, or document feature.
+
+Same class as: invoices, payments, estimate PDFs.
+
+Key tags and oil stickers are daily workflow requirements. Parity with ARK-SMS is mandatory for adoption.
+
+## Hard stop
+
+**Do not write QZ code, print routes, or print UI until the audit answers:**
+
+1. Where are the current templates?
+2. How are dimensions defined?
+3. How are printer names stored?
+4. How are oil change mileages calculated?
+5. How are QZ certificates handled?
+6. What settings already exist?
+
+Audit completed 2026-06-06 from production (`/var/www/sites/ark-sms/production/current`). Read `docs/printing/ark-sms-printing-audit.md` before porting. Port for parity — do not redesign.
+
+## Migration, not invention
+
+ARK-SMS already works: QZ Tray, Brother QL-800, templates, settings.
+
+**Achieve parity. Do not invent a better printing system.**
+
+## Fast path
+
+One click from operational surface:
+
+- **RO review** → Print key tag
+- **Vehicle / service** → Print oil sticker
+
+No wizard. No settings detour. No modal chain.
+
+## Authority (server only)
+
+| Label | Authority |
+|-------|-----------|
+| Key tag | Repair order, customer, vehicle |
+| Oil sticker | Vehicle, mileage, service data, shop settings |
+
+Never calculate sticker values in JavaScript. Never duplicate mileage logic.
+
+## Printer independence
+
+Brother QL-800 is current production target. Architecture supports future printers via **settings**. Do not hardcode Brother into business logic.
+
+## Failure posture
+
+If QZ unavailable: show clear operational error (e.g. "QZ Tray is not connected…"). No silent fail. No fake success.
+
+## Parity before redesign
+
+Same workflow, speed, information, and print quality as ARK-SMS. Templates may evolve later; printing authority may not.
+
+## Migration order
+
+1. Complete audit
+2. Port settings
+3. Port QZ integration (verbatim from v1)
+4. Port key tag + oil sticker
+5. Validate QL-800 output
+6. Wire entry points
+
+Do not add print packages unless audit proves QZ path insufficient.

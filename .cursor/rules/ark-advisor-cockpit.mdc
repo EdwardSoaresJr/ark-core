@@ -1,0 +1,66 @@
+---
+description: Advisor cockpit — customer-first, attention zones, observation decorations; Phase A outranks inspection UI
+globs:
+  - resources/views/operations/home.blade.php
+  - resources/views/operations/workboard/partials/home-*.blade.php
+  - app/Ark/Operations/Today/AdvisorHome*.php
+  - app/Ark/Operations/OperationsHomeController.php
+---
+
+# Advisor Cockpit
+
+Full spec: `docs/operations/advisor-cockpit-discoverability-v1.md`
+
+## Core insight
+
+Optimize for **seeing the shop**, not **understanding the shop**.
+
+**Customer conversation-centric** — not RO-centric, not lifecycle-centric.
+
+Scan order: **Customer → Vehicle → Attention**. Status is a badge. Attention zones organize the board.
+
+## Card shape
+
+```
+LEE WRIGHT
+2018 Ram 2500 · RO #1584
+⚠ observation decorations
+Waiting Approval · $9,027
+[ Open ] [ Call ] [ Text ]
+```
+
+## Attention zones (not lanes, not Kanban)
+
+- **Needs Action** — what can hurt me today
+- **Active Work** — vehicles in progress
+- **Ready Pickup** — waiting to leave
+
+Derived from triage pressure + observations — not lifecycle columns re-skinned.
+
+## Observations = card decorations
+
+`EstimateViewed`, `CustomerWaitingResponse`, decision pressure, etc. decorate the card. **The card is the recommendation.** No separate recommendation panel before the advisor sees customers.
+
+## Layout
+
+```
+Context strip (Flow · Pipeline · Recommendation · Edward metrics)
+Attention zone board (hero)
+```
+
+Intelligence explains visible work — it does not replace the board.
+
+## Acceptance tests
+
+- **Molly:** customer calls → find them in <5s (customer name hero)
+- **Edward:** 8:00, no clicks → counts + Needs Action zone answers urgency
+- **Stress:** 20–30 ROs, zones not flat list, still scannable
+
+## Build rules
+
+- Reuse `WorkboardTriageCard`, `OperationalObservationResolver`, `AdvisorHomeCardSurfaceProjection`
+- `AdvisorHomeAttentionBoardProjection` for zone grouping + row shape
+- Lane column grid retired as primary UI
+- **Phase A shipped — BUILD: NO · TUNE: NO · OBSERVE: YES**
+- Do not add chips, AI, or decoration density during observation week
+- Do not let inspection v1.5 or portal work displace observation

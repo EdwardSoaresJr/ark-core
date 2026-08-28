@@ -1,0 +1,42 @@
+---
+description: ARK Mobile — Flutter projection of ARK V2 authority; Sanctum API only
+alwaysApply: false
+---
+
+# ARK Mobile Projection
+
+ARK Mobile is a **mobile projection**, not a separate product.
+
+## Lock
+
+- Authority stays in ARK V2 (MySQL, Laravel, existing domains)
+- Mobile consumes `/api/mobile/*` — never scrapes Blade
+- **Sanctum** bearer auth — no Firebase Auth, no mobile-only users
+- **Spatie permissions** — Flutter never decides authority
+- Findings create existing **`InspectionItem`** — no parallel Finding store
+- Communications consume **`Conversation`** + **`UnifiedOperationalTimeline`** — no SMS inbox authority
+- **Comms transport lock:** SMS/MMS and conversation timeline never use provider SDKs — only `/api/mobile/communications*`. See `docs/mobile/ark-mobile-communications-authority-contract.md`
+- **ARK Phone exception:** Voice dialer (`ArkVoiceDialer`, `sip_ua`, optional `twilio_voice`) is a **first-class SIP endpoint** — not a messaging transport. Must follow [ark-phone-mission.mdc](ark-phone-mission.mdc) and [ark-phone-production-telephony-lock.mdc](ark-phone-production-telephony-lock.mdc); research before inventing.
+- **Notification lock:** ARK owns notification authority; APNs/FCM transport only — no Firebase Auth, Firestore, or Firebase-driven workflow. Push **deferred** until floor observation. See `docs/mobile/ark-mobile-notification-doctrine.md`
+
+## API naming
+
+Use `/api/mobile/{resource}` — not `/api/flutter`, `/api/tech`, or versioned mobile silos.
+
+## Technician scope
+
+Assigned RO discovery only unless user has `operations.access`.
+
+Comms on mobile for technicians = conversations linked to **assigned** ROs.
+
+## Flutter (separate repo)
+
+- Phone-first; not a desktop clone
+- `flutter_secure_storage` for tokens
+- Riverpod for state
+- Photo capture → upload to ARK → attachment id returned
+
+Full spec: `docs/mobile/ark-mobile-projection-v1.md`  
+Production Workspace v1: `docs/mobile/ark-mobile-production-workspace-v1.md`  
+Comms boundary: `docs/mobile/ark-mobile-communications-authority-contract.md`  
+Notifications: `docs/mobile/ark-mobile-notification-doctrine.md`
