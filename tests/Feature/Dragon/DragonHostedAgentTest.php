@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.lugsnplugs.local']);
+    config(['shop.identity' => 'test.demo-auto.local']);
     config(['dragon.provider' => 'fake']);
 });
 
@@ -44,7 +44,7 @@ function hostedDragonStaff(): array
 
 function dragonToken(?string $shopIdentity = null): array
 {
-    return DragonServiceToken::issue('test-dragon', $shopIdentity ?? 'test.lugsnplugs.local');
+    return DragonServiceToken::issue('test-dragon', $shopIdentity ?? 'test.demo-auto.local');
 }
 
 function dragonOpenRo(
@@ -136,7 +136,7 @@ test('employee contract requires investigation without catalog phrase routing', 
 
     expect($prompt)->toContain('Investigate before answering')
         ->and($prompt)->toContain('talk like a person standing at the front counter')
-        ->and($prompt)->toContain('LUGSNPLUGS-SPECIFIC ADVICE')
+        ->and($prompt)->toContain('DEMO-AUTO-SPECIFIC ADVICE')
         ->and($prompt)->toContain('waiting-approval dollars')
         ->and($prompt)->toContain('refine once if empty')
         ->and($prompt)->toContain('supplied-text rewrite 0 tools')

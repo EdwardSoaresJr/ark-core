@@ -1,7 +1,7 @@
 <div class="ops-learn-prose">
     <h3>Owner targets in Settings</h3>
     <p>Shop excellence targets live in <strong>Settings → Owner Targets &amp; Reporting</strong> — gross margin bands, ELR expectations, car count goals, owner digest schedule. Patch via <code>operations.settings.shop.excellence.update</code>.</p>
-    <p>Targets are LugsNPlugs truth — industry benchmarks stay in docs, not hardcoded surprises in reports.</p>
+    <p>Targets are Demo Auto Repair truth — industry benchmarks stay in docs, not hardcoded surprises in reports.</p>
     <p>Quarterly owner review marks target refresh complete — paid coaching notes stay in private docs, not customer-visible fields.</p>
 
     <x-operations.learn.figure

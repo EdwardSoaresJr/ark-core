@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-26  
 **Status:** Approved  
-**Reviewer:** Human + Agent 1 scope audit  
+**Reviewer:** Human scope audit  
 **Related:** PR1, PR2, Milestone 1 First Contact, [ark-voice-endpoint-architecture-v1.md](../../communications/ark-voice-endpoint-architecture-v1.md)
 
 ## Reason

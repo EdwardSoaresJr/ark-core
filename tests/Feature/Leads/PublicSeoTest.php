@@ -15,7 +15,7 @@ test('public homepage includes technical seo tags and auto repair json-ld', func
     ShopSettings::current()->update([
         'address_line_1' => '100 Main Street',
         'address_line_2' => 'Unit D',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
         'phone' => '7194136227',
@@ -28,8 +28,8 @@ test('public homepage includes technical seo tags and auto repair json-ld', func
         ->assertSee('<meta name="color-scheme" content="light dark">', false)
         ->assertSee('data-public-surface-theme-toggle', false)
         ->assertSee('ark-customer-theme', false)
-        ->assertSee('<title>Auto Repair Colorado Springs | Verified Diagnostics</title>', false)
-        ->assertSee('Colorado Springs auto repair with testing and live data', false)
+        ->assertSee('<title>Auto Repair Demo City | Verified Diagnostics</title>', false)
+        ->assertSee('Demo City auto repair with testing and live data', false)
         ->assertSee('<meta name="description"', false)
         ->assertSee('<link rel="canonical"', false)
         ->assertSee('<meta property="og:title"', false)
@@ -67,7 +67,7 @@ test('llms.txt is available on the public marketing host', function (): void {
         'shop_name' => 'Demo Auto Repair',
         'address_line_1' => '100 Main Street',
         'address_line_2' => 'Unit D',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
         'phone' => '7194136227',
@@ -164,18 +164,18 @@ test('public legacy redirect resolver maps gsc top botble urls', function (): vo
         ->toBe('/common-problems');
 
     expect(PublicLegacyRedirect::resolve('auto-repair/colorado'))
-        ->toBe('/common-problems/auto-repair-colorado-springs');
+        ->toBe('/common-problems/auto-repair-demo-city');
 
     expect(PublicLegacyRedirect::resolve('brake-repair'))
-        ->toBe('/common-problems/brake-repair-colorado-springs');
+        ->toBe('/common-problems/brake-repair-demo-city');
 });
 
 test('legacy service urls redirect to common problem pages', function (): void {
     $this->get('/auto-repair/colorado')
-        ->assertRedirect('/common-problems/auto-repair-colorado-springs');
+        ->assertRedirect('/common-problems/auto-repair-demo-city');
 
     $this->get('/brake-repair')
-        ->assertRedirect('/common-problems/brake-repair-colorado-springs');
+        ->assertRedirect('/common-problems/brake-repair-demo-city');
 });
 
 test('book form prefills concern from query string', function (): void {
@@ -289,7 +289,7 @@ test('public footer reinforces trust with contact navigation and social connect'
         ->assertSee('RepairPal', false)
         ->assertSee('Directions', false)
         ->assertDontSee('4.9 Google rating', false)
-        ->assertDontSee('Family owned in Colorado Springs.', false)
+        ->assertDontSee('Family owned in Demo City.', false)
         ->assertSee('Privacy', false)
         ->assertSee('Terms', false)
         ->assertSee(route('public.financing'), false)
@@ -297,7 +297,7 @@ test('public footer reinforces trust with contact navigation and social connect'
         ->assertSee(route('public.repairpal.certified'), false)
         ->assertSee(route('public.privacy'), false)
         ->assertSee(route('public.terms'), false)
-        ->assertSee(route('public.common-problems.show', 'car-diagnostics-colorado-springs'), false);
+        ->assertSee(route('public.common-problems.show', 'car-diagnostics-demo-city'), false);
 });
 
 test('financing is visible across public pages below the main content', function (): void {

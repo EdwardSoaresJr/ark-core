@@ -67,7 +67,7 @@
                 ])
 
                 <p class="public-cp-footer-note">
-                    Colorado Springs independent repair. We test before we recommend parts.
+                    Demo City independent repair. We test before we recommend parts.
                     <a href="{{ route('public.common-problems.index') }}" class="public-link">Browse all common problems</a>
                 </p>
             </article>

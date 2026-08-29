@@ -85,7 +85,7 @@ final class PublicTrustSignalsProjection
 
         $proofItems[] = [
             'label' => 'Family owned',
-            'detail' => 'Independent shop in Colorado Springs',
+            'detail' => 'Independent shop in Demo City',
             'href' => null,
         ];
 

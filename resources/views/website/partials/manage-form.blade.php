@@ -23,7 +23,7 @@
                 type="text"
                 name="positioning_lede"
                 value="{{ old('positioning_lede', $publicSurfaceSettings['positioning_lede'] ?? '') }}"
-                placeholder="When other shops can't find the problem, start here. Dealer-level diagnostics in Colorado Springs."
+                placeholder="When other shops can't find the problem, start here. Dealer-level diagnostics in Demo City."
                 class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
             >
             <span class="mt-1 block text-[11px] text-slate-500">Shown under the homepage headline — how you want to be remembered in the first 20 seconds.</span>
@@ -111,7 +111,7 @@
                 type="text"
                 name="local_tagline"
                 value="{{ old('local_tagline', $publicSurfaceSettings['local_tagline']) }}"
-                placeholder="Family owned in Colorado Springs."
+                placeholder="Family owned in Demo City."
                 class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
             >
             <span class="mt-1 block text-[11px] text-slate-500">Shown under the review badge.</span>

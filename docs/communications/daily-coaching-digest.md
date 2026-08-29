@@ -26,7 +26,7 @@ Advisors get defensive when AI picks "losers." ARK surfaces **coaching opportuni
 
 Dimension scoring scaffold in `dimension_scores` JSON:
 
-- Acknowledge · Reassure · Gather Information (LugsNPlugs call doctrine)
+- Acknowledge · Reassure · Gather Information (Demo Auto Repair call doctrine)
 - Appointment conversion · Customer experience
 
 ### Phase 3

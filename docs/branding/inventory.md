@@ -90,7 +90,7 @@ No login illustrations or background images were migrated (ARK-SMS apt-book `boo
 
 | Asset | Location | Classification |
 |-------|----------|----------------|
-| LugsNPlugs seed logo | `resources/seed-assets/operations/lugsnplugs-logo.webp` | Demo shop logo |
+| Demo Auto Repair seed logo | `resources/seed-assets/operations/demo-auto-logo.webp` | Demo shop logo |
 | Laravel Breeze SVG | `components/application-logo.blade.php` | **Unused placeholder** |
 | Laravel welcome SVG | `welcome.blade.php` | **Orphaned** |
 | Design reference captures | `resources/design-reference/**` | UX reference only |

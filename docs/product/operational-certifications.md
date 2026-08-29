@@ -188,4 +188,4 @@ Certifications shipped — not version theatrics. Use the release dashboard shap
 
 ## Framework complete
 
-No more levels. No more documents. Govern decisions with this brief: [cursor-agent-brief.md](./cursor-agent-brief.md)
+No more levels. No more documents. Govern decisions with product certification docs

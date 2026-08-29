@@ -45,7 +45,7 @@ ssh production 'cd .../bookstack && ./bootstrap-storage.sh && ./apply-branding.s
 
 ## ARK-WEB (`demo-auto.test`)
 
-**Policy exception:** keep **LugsNPlugs** shop favicon, OG image, and SEO. Do not force ARK ecosystem mark on the public marketing site. Operational hosts share ARK favicons; customer-facing web stays shop-branded.
+**Policy exception:** keep **Demo Auto Repair** shop favicon, OG image, and SEO. Do not force ARK ecosystem mark on the public marketing site. Operational hosts share ARK favicons; customer-facing web stays shop-branded.
 
 Copy the ARK pack into arkweb only if a future **staff/admin** surface is added under arkweb — not for public pages.
 
@@ -61,7 +61,7 @@ Guardrails cron re-applies layout patch and `docker cp` favicons after Coolify u
 |-------|--------|----------|---------|--------|
 | Tab favicon = ARK mark | ✓ | ✓ after deploy | Shop (intentional) | ✓ after deploy |
 | Apple touch icon | ✓ | ✓ theme | Shop | ✓ |
-| Login / header logo family | ARK transparent light | BookStack app name | LugsNPlugs | Instance name |
+| Login / header logo family | ARK transparent light | BookStack app name | Demo Auto Repair | Instance name |
 | Primary blue `#0099cc` | Ops chrome | BookStack + theme CSS | Shop theme | — |
 
 Run: `./infra/branding/verify-ecosystem-branding.sh`
@@ -72,8 +72,8 @@ Ownership: `docs/branding/ownership.md`
 
 Per-product accent on the **same** ARK mark (blue V2, teal ARKademy, purple Arkify). Standardize the mark first; color variants later.
 
-## Cursor enforcement
+## Branding enforcement
 
-Agents must read `.cursor/rules/ark-ecosystem-identity.mdc` before changing favicons, login branding, or cross-product head metadata.
+Agents must read doctrine `ark-ecosystem-identity.mdc` before changing favicons, login branding, or cross-product head metadata.
 
 Ecosystem UX (switcher, bridges, ARKademy landing): `docs/ecosystem/ecosystem-ux-doctrine.md`

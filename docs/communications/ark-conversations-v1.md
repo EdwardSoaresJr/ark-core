@@ -8,7 +8,7 @@
 >
 > **Conversations is the operational memory of the repair shop.** Everything else is implementation.
 
-**Companions:** [communications-foundational-doctrine-v1.md](communications-foundational-doctrine-v1.md) · [communications-authority.md](../communications-authority.md) · Attention Queue doctrine (Cursor: `ark-attention-queue.mdc`)
+**Companions:** [communications-foundational-doctrine-v1.md](communications-foundational-doctrine-v1.md) · [communications-authority.md](../communications-authority.md) · Attention Queue doctrine (`ark-attention-queue`)
 
 **Do not** name external products in this document. Build from ARK principles only.
 

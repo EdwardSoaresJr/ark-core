@@ -55,26 +55,12 @@ Domain canonical architecture (e.g. `docs/communications/ark-voice-endpoint-arch
 - Do not build task queues, MCP servers, daemons, or orchestration before the manual process is stable and repeated pain is observed.
 - The filter for every proposed feature: **What repeated pain does this remove today?** If it cannot answer, it waits.
 
-## ARK Forge (Agent 2)
+## Engineering discipline
 
-ARK Forge is an **engineering workbench** — observability, workspace, task running (earned later). The dashboard is one projection.
-
-| Layer | Role |
-|-------|------|
-| Git + `docs/engineering/` | Engineering truth |
-| **Forge Core** | Workstation capability truth — capability graph, never product domain |
-| **Workbench (Flutter)** | Views only — projection + capability invoke |
-
-Agent 2 bounded context: **ARK Forge only.** Do not pull ARK Voice into Forge reviews. Agent 1 ships product code and ignores Forge.
-
-Friction notebook: [forge-observation-notebook.md](research/forge-observation-notebook.md). Record friction, not solutions.
-
-## AI Development Rules
-
-- AI must never continue into the next milestone.
-- AI must stop after completing the requested PR.
-- AI must not redesign frozen architecture.
-- AI must document architectural deviations in [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md).
+- Do not continue into the next milestone unbidden.
+- Stop after completing the requested change set.
+- Do not redesign frozen architecture.
+- Document architectural deviations in [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) when that log is present in the working tree.
 
 ## Customer shell contract
 

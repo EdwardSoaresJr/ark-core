@@ -188,7 +188,7 @@ test('comms interrupt api omits live outbound calls', function () {
         'provider' => 'twilio',
         'provider_call_sid' => 'CAoutboundpopup001',
         'direction' => CallSessionDirection::Outbound,
-        'from_number' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'from_number' => 'sip:101@example.sip.us1.twilio.com',
         'to_number' => '+17195551234',
         'normalized_from' => '7195550000',
         'normalized_to' => '7195551234',

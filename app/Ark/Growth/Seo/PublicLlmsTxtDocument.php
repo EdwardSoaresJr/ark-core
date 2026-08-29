@@ -15,7 +15,7 @@ final class PublicLlmsTxtDocument
         $shop = ShopSettings::current();
         $name = $shop->displayName();
         $street = $shop->publicationStreetAddress();
-        $city = trim((string) $shop->city) ?: 'Colorado Springs';
+        $city = trim((string) $shop->city) ?: 'Demo City';
         $region = trim((string) $shop->state) ?: 'CO';
         $postal = trim((string) $shop->postal_code) ?: '80909';
         $phone = PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
@@ -56,7 +56,7 @@ Email: {$email}
 - https://demo-auto.test/common-problems/car-wont-start
 - https://demo-auto.test/common-problems/brake-noise
 - https://demo-auto.test/common-problems/ac-not-cold
-- https://demo-auto.test/common-problems/auto-repair-colorado-springs
+- https://demo-auto.test/common-problems/auto-repair-demo-city
 
 TXT;
     }

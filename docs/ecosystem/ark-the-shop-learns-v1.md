@@ -117,7 +117,7 @@ Between **accumulation** and **contribution**, ARK may track **confidence** — 
 
 Not every repeated event becomes knowledge. Some are coincidences, anomalies, or trends that disappear. Confidence determines whether ARK **suggests** contribution — never whether it publishes without human review.
 
-Companion: [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) · [ark-observations.mdc](../../.cursor/rules/ark-observations.mdc)
+Companion: ark-pressure-first.mdc · ark-observations.mdc
 
 ---
 
@@ -141,7 +141,7 @@ Shop knowledge may therefore:
 
 Knowledge is never immutable. Revision follows the same discipline as creation: clusters of evidence, outcomes, and human review — not one contrary data point or one opinion.
 
-Companion: [ark-doctrine-lifecycle.mdc](../../.cursor/rules/ark-doctrine-lifecycle.mdc)
+Companion: ark-doctrine-lifecycle.mdc
 
 ---
 
@@ -170,7 +170,7 @@ Publication is a **downstream projection** — one contribution may eventually f
 - Training library  
 - ARKademy  
 
-**Compute once (contributed truth); render many (audiences).** Companion: [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc)
+**Compute once (contributed truth); render many (audiences).** Companion: ark-projection-rule.mdc
 
 Operator-facing language prefers **Contribute to Shop Knowledge** over *Promote to Public* — the shop is not "publishing"; it is contributing truth the platform may later project.
 
@@ -241,13 +241,13 @@ The Shop Learns describes the full lifecycle through Audience. Earned Authority 
 | --- | --- |
 | [ark-truth-stack-v1.md](./ark-truth-stack-v1.md) | Events → projections → narratives → evidence |
 | [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Publication exit gate; traceable outbound claims |
-| [ark-observations.mdc](../../.cursor/rules/ark-observations.mdc) | Observation vocabulary before accumulation |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Observe → surface → measure before enforce |
-| [ark-earned-intelligence.mdc](../../.cursor/rules/ark-earned-intelligence.mdc) | Intelligence only after repeated sentences |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Project once; never become truth |
-| [ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc) | What / Why / Show me for operational claims |
-| [ark-doctrine-lifecycle.mdc](../../.cursor/rules/ark-doctrine-lifecycle.mdc) | Doctrine and shop knowledge revision when reality produces evidence |
-| [ark-operator-intent.mdc](../../.cursor/rules/ark-operator-intent.mdc) | Contribution grammar — intent in, implementation hidden |
+| ark-observations.mdc | Observation vocabulary before accumulation |
+| ark-pressure-first.mdc | Observe → surface → measure before enforce |
+| ark-earned-intelligence.mdc | Intelligence only after repeated sentences |
+| ark-projection-rule.mdc | Project once; never become truth |
+| ark-explainability-doctrine.mdc | What / Why / Show me for operational claims |
+| ark-doctrine-lifecycle.mdc | Doctrine and shop knowledge revision when reality produces evidence |
+| ark-operator-intent.mdc | Contribution grammar — intent in, implementation hidden |
 
 ---
 

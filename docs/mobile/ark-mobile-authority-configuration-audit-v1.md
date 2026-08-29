@@ -2,7 +2,7 @@
 
 **Status:** Observation artifact — not a backlog  
 **Date:** 2026-06-15  
-**Doctrine:** [.cursor/rules/ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc)  
+**Doctrine:** doctrine `ark-authority-vs-configuration.mdc`  
 **Companion:** [ark-mobile-projection-v1.md](ark-mobile-projection-v1.md) · [ark-mobile-migration-audit-v1.md](ark-mobile-migration-audit-v1.md)  
 **Flutter repo:** `ark-mobile` (sibling to `arksmsv2`)  
 **Backend shell:** `app/Ark/Mobile/MobileUserPresenter.php` → `GET /api/mobile/me`
@@ -25,7 +25,7 @@ This document records observations only. No tasks. No implementation commitment.
 
 | Posture | Assessment |
 |---------|------------|
-| **Strong** | Authority → Capabilities → Flutter shell largely works; nav is capability-driven; server scoping owns visibility; no obvious `if (shop == "LugsNPlugs")` rot in production Dart |
+| **Strong** | Authority → Capabilities → Flutter shell largely works; nav is capability-driven; server scoping owns visibility; no obvious `if (shop == "Demo Auto Repair")` rot in production Dart |
 | **Weak** | Configuration does not reach the shell consistently; intake/tab semantics partially hardcoded; push/poll hints exist but are not consumed; shop mobile surface toggles do not exist; attention/call deep-linking incomplete |
 
 **Next evolution (conceptual, not scheduled):** Make **configuration a first-class projection** the same way capabilities already are — not rebuild mobile architecture.
@@ -64,7 +64,7 @@ What already matches the doctrine.
 
 - No runtime shop slug checks in Flutter `lib/`.
 - No scattered `if (isAdvisor) showCommsTab()` nav pattern.
-- LugsNPlugs appears in **compile-time** defaults (API URL, debug email, bundle id, demo data) — deployment/branding posture, not per-request shop behavior.
+- Demo Auto Repair appears in **compile-time** defaults (API URL, debug email, bundle id, demo data) — deployment/branding posture, not per-request shop behavior.
 
 ---
 
@@ -199,10 +199,10 @@ Observe whether advisors attempt call actions from mobile attention. Hide call r
 
 ---
 
-### O9 — LugsNPlugs compile-time defaults in ark-mobile
+### O9 — Demo Auto Repair compile-time defaults in ark-mobile
 
 **Observation**  
-Default API URL, debug login prefill, Android bundle id, and demo data reference LugsNPlugs. Not runtime tenant branching.
+Default API URL, debug login prefill, Android bundle id, and demo data reference Demo Auto Repair. Not runtime tenant branching.
 
 **Doctrine impact**  
 Product/deployment posture — not shop configuration. Matters for Shop #2 onboarding and Arkify builds, not for Authority vs Configuration per se.

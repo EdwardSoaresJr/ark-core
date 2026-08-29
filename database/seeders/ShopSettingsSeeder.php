@@ -24,7 +24,7 @@ class ShopSettingsSeeder extends Seeder
         'website' => 'https://demo-auto.test',
         'address_line_1' => '100 Main Street',
         'address_line_2' => 'Suite A',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
     ];

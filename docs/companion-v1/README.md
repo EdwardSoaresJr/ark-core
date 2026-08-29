@@ -14,13 +14,13 @@
 
 **Product doctrine:** [../communications/communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md)
 
-**Cursor rule:** [`.cursor/rules/ark-companion-communications.mdc`](../../.cursor/rules/ark-companion-communications.mdc)
+**Doctrine: ** doctrine `ark-companion-communications.mdc`
 
 **Floor test:** [`../mobile/companion-sprint-1-run-the-shop.md`](../mobile/companion-sprint-1-run-the-shop.md)
 
 ---
 
-## How to guide Cursor now
+## How to guide implementation now
 
 **Stop building Companion features.** Fix production breaks only.
 

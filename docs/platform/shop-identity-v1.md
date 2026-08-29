@@ -52,7 +52,7 @@ SIP is transport. Phones register to a **SIP registrar hostname** defined by dep
 
 Examples (all valid, all deployment-specific):
 
-- `voice.demo-auto.test` (LugsNPlugs Production Cutover today)
+- `voice.demo-auto.test` (production voice cutover today)
 - `app.demo-auto.test:5060` (same hostname as shop, different protocol)
 - `shop1.arksms.com:5060` (future fleet default)
 
@@ -106,13 +106,13 @@ When DNS allows, the simplest deployment uses **one hostname, two protocols**:
 
 No extra subdomains. No global SIP proxy. Same VPS, same certificate strategy for HTTP; SIP on port 5060.
 
-LugsNPlugs Production Cutover may temporarily use a separate `VOICE_SIP_REGISTRAR` until SIP is routed through the shop hostname.
+production voice cutover may temporarily use a separate `VOICE_SIP_REGISTRAR` until SIP is routed through the shop hostname.
 
 ## White label
 
 White labeling changes HTTP identity only (`shop1.com/voice`). Transport configuration updates independently if DNS requires it.
 
-## Cursor drift test
+## Identity drift test
 
 **Reject:**
 

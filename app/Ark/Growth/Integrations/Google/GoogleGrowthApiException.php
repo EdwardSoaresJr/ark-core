@@ -41,7 +41,7 @@ final class GoogleGrowthApiException extends RuntimeException
         }
 
         if ($status === 403) {
-            return 'Google denied access while trying to '.$action.'. Add the active Growth service account as a Manager on the Lugs N Plugs listing in Google Business Profile, then try again.';
+            return 'Google denied access while trying to '.$action.'. Add the active Growth service account as a Manager on the Demo Auto Repair listing in Google Business Profile, then try again.';
         }
 
         if ($googleMessage !== '') {

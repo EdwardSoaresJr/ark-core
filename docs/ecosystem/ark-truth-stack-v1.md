@@ -28,7 +28,7 @@ This is ARK's design language — not a slogan. Every significant surface should
 
 If a projection is deleted, it must be rebuildable completely from authority and events. No projection table may become the only place an operational fact lives.
 
-**Projection Rule #1 — Audience language:** Operational truth should not require users to understand operational structure. Advisors answer questions; technicians perform work; owners observe operations; engineers model authorities. Each projection speaks its audience. UI language and domain names need not match — do not rename authorities to chase operator wording. When users hesitate, first suspect a projection leaking implementation, not a wrong model. Full rule: [.cursor/rules/ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc).
+**Projection Rule #1 — Audience language:** Operational truth should not require users to understand operational structure. Advisors answer questions; technicians perform work; owners observe operations; engineers model authorities. Each projection speaks its audience. UI language and domain names need not match — do not rename authorities to chase operator wording. When users hesitate, first suspect a projection leaking implementation, not a wrong model. Full rule: doctrine `ark-projection-rule.mdc.`
 
 ---
 
@@ -61,7 +61,7 @@ When adding a new surface, ask: **Which authority does this read?** If the answe
 4. **Narratives compose projections.** Briefings and journey stories do not invent new truth.
 5. **Evidence links downward.** Every narrative claim must trace to authority or be withheld.
 
-Companion: [ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc) · [.cursor/rules/ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc)
+Companion: ark-explainability-doctrine.mdc · doctrine `ark-projection-rule.mdc`
 
 ---
 
@@ -153,8 +153,8 @@ Never skip to narrative, publication, or AI before authority and observation are
 | --- | --- |
 | [ark-constitution-v1.md](./ark-constitution-v1.md) | Coherence over capability; four grammars |
 | [ark-workspace-interaction-language-v1.md](./ark-workspace-interaction-language-v1.md) | Workspace evolution |
-| [ark-observations.mdc](../../.cursor/rules/ark-observations.mdc) | Interpretive truth vocabulary |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Observe before enforce |
+| ark-observations.mdc | Interpretive truth vocabulary |
+| ark-pressure-first.mdc | Observe before enforce |
 | [ark-event-native-platform-v1.md](./ark-event-native-platform-v1.md) | Event-native OS — streams, observations, platform sentence |
 | [event-contracts-v1.md](../mobile/event-contracts-v1.md) | Business event language (eight questions) |
 | [ark-scoped-event-streams-v1.md](./ark-scoped-event-streams-v1.md) | Event Stream Engine (infrastructure) |

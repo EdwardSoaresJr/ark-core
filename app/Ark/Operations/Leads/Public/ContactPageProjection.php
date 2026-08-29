@@ -158,6 +158,6 @@ final class ContactPageProjection
             return 'https://maps.google.com/maps?q='.urlencode($mapsUrl).'&z=15&output=embed';
         }
 
-        return 'https://maps.google.com/maps?q='.urlencode($query !== '' ? $query : 'Colorado Springs, CO').'&z=15&output=embed';
+        return 'https://maps.google.com/maps?q='.urlencode($query !== '' ? $query : 'Demo City, ST').'&z=15&output=embed';
     }
 }

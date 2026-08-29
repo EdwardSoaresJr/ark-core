@@ -62,7 +62,7 @@ Phone · VVX · Tablet · Desktop · Wallboard · Watch
 
 The device is almost irrelevant. Continuity is not.
 
-See [ark-station-doctrine.mdc](../../.cursor/rules/ark-station-doctrine.mdc).
+See ark-station-doctrine.mdc.
 
 ---
 
@@ -116,7 +116,7 @@ When they stop thinking about devices, ARK crosses from good shop software into 
 
 Catalog: [docs/operations/README.md](../operations/README.md)
 
-Recordings of **LugsNPlugs actually running** — not demos. Reference implementations for this shop; other shops record their own when ARK multi-tenants.
+Recordings of **Demo Auto Repair actually running** — not demos. Reference implementations for this shop; other shops record their own when ARK multi-tenants.
 
 **Engineer sentence (every PR):**
 

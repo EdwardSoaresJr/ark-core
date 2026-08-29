@@ -15,7 +15,7 @@
 
 M2 closed (authority + production acceptance). M3 one question: *Can a real Shop enter a real Workspace?*
 
-Strategy (frozen): [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform with new shops; migrate LugsNPlugs last.
+Strategy (frozen): [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform with new shops; migrate Demo Auto Repair last.
 
 ## Host split
 

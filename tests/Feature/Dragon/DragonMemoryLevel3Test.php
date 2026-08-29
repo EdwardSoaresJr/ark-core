@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.lugsnplugs.local']);
+    config(['shop.identity' => 'test.demo-auto.local']);
     config(['dragon.provider' => 'fake']);
 });
 
@@ -248,7 +248,7 @@ test('company memory taught on staff chat is recallable from a new Shop Glass co
             'message' => 'Remember that we require loaded charging-system evidence before condemning an alternator.',
         ])->assertOk();
 
-    $issued = StationDeviceToken::issue('glass-memory-cert', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('glass-memory-cert', 'test.demo-auto.local');
     $fake = app(FakeDragonProvider::class);
     $fake->script = [
         new DragonModelTurn(null, [[
@@ -334,7 +334,7 @@ test('advisor cannot write company-wide memory', function (): void {
 
 test('location remember uses the current workstation not a model-chosen id', function (): void {
     [$user, $token] = memoryAdmin();
-    $here = memoryWorkstation('Colorado Springs');
+    $here = memoryWorkstation('Demo City');
     $other = memoryWorkstation('Downtown');
     $here->forceFill(['current_operator_user_id' => $user->id])->save();
 

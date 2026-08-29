@@ -126,7 +126,7 @@ final class LeadThanksProjection
             $links[] = [
                 'label' => 'Browse common car problems',
                 'href' => CustomerSurfaceUrls::commonProblems(),
-                'description' => 'Plain guides for problems we see in Colorado Springs.',
+                'description' => 'Plain guides for problems we see in Demo City.',
             ];
         }
 

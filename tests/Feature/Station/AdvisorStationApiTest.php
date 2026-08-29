@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.lugsnplugs.local']);
+    config(['shop.identity' => 'test.demo-auto.local']);
     config(['shop.dragon_work_items_limit' => 50]);
 });
 
@@ -63,7 +63,7 @@ function stationOpenRo(RepairOrderStatus $status): RepairOrder
 }
 
 test('station device token loads dashboard with customer and vehicle, without contact PII', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     stationOpenRo(RepairOrderStatus::WaitingApproval);
     stationOpenRo(RepairOrderStatus::InProgress);
 
@@ -88,7 +88,7 @@ test('station dashboard rejects unauthenticated callers', function (): void {
 });
 
 test('station glass excludes inactive advisors from assignment choices', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     User::factory()->create(['name' => 'Active Advisor', 'is_active' => true])
         ->assignRole(ArkRole::Advisor->value);
     User::factory()->create(['name' => 'Disabled Advisor', 'is_active' => false])
@@ -114,7 +114,7 @@ test('station dashboard rejects staff Sanctum tokens', function (): void {
 });
 
 test('station dashboard rejects Dragon machine tokens', function (): void {
-    $issued = DragonServiceToken::issue('test-dragon', 'test.lugsnplugs.local');
+    $issued = DragonServiceToken::issue('test-dragon', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->getJson('/api/station/dashboard')
@@ -122,7 +122,7 @@ test('station dashboard rejects Dragon machine tokens', function (): void {
 });
 
 test('station repair order show uses ARK open-work card', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $ro = stationOpenRo(RepairOrderStatus::InProgress);
 
     $this->withToken($issued['plain_text'])
@@ -134,7 +134,7 @@ test('station repair order show uses ARK open-work card', function (): void {
 });
 
 test('station API rejects writes', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dashboard')
@@ -142,7 +142,7 @@ test('station API rejects writes', function (): void {
 });
 
 test('station device token cannot hit Dragon or staff mobile routes', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $ro = stationOpenRo(RepairOrderStatus::InProgress);
 
     $this->withToken($issued['plain_text'])
@@ -175,7 +175,7 @@ test('station device token cannot hit Dragon or staff mobile routes', function (
 });
 
 test('revoked station device token is rejected immediately', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $issued['token']->revoke();
 
     $this->withToken($issued['plain_text'])
@@ -193,7 +193,7 @@ test('station device token is tenant isolated by shop identity', function (): vo
 
 test('station last_used_at updates without leaking the plaintext token', function (): void {
     Carbon::setTestNow(Carbon::parse('2026-08-22 19:05:00'));
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     expect($issued['token']->last_used_at)->toBeNull();
 
@@ -213,13 +213,13 @@ test('station last_used_at updates without leaking the plaintext token', functio
 });
 
 test('station me returns device name without token secrets', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $response = $this->withToken($issued['plain_text'])
         ->getJson('/api/station/me')
         ->assertOk()
         ->assertJsonPath('surface', 'advisor_station')
-        ->assertJsonPath('shop_identity', 'test.lugsnplugs.local')
+        ->assertJsonPath('shop_identity', 'test.demo-auto.local')
         ->assertJsonPath('station.name', 'front-counter-glass')
         ->assertJsonMissingPath('token_hash')
         ->assertJsonMissingPath('token_prefix');
@@ -234,7 +234,7 @@ test('station token can start a hosted Dragon conversation without a staff PAT',
         new DragonModelTurn('Waiting approval is the shop pressure. Open those ROs in ARK.', []),
     ];
 
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dragon/chat', ['message' => 'What needs attention?'])
@@ -245,7 +245,7 @@ test('station token can start a hosted Dragon conversation without a staff PAT',
 });
 
 test('station token cannot post the dashboard', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dashboard', ['message' => 'no'])
@@ -268,7 +268,7 @@ test('station Dragon conversation_id continues the same hosted thread', function
         new DragonModelTurn('Still waiting approval. Open RO 1597 in ARK.', []),
     ];
 
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $first = $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dragon/chat', ['message' => 'What needs attention?'])
@@ -302,7 +302,7 @@ test('station Dragon keeps the live Glass thread even without conversation_id', 
         new DragonModelTurn('The Silverado is still the one you named.', []),
     ];
 
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $first = $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dragon/chat', ['message' => 'Treat the Silverado as the priority today.'])
@@ -322,7 +322,7 @@ test('station Dragon keeps the live Glass thread even without conversation_id', 
 });
 
 test('dragon service principal cannot use station Ask Dragon', function (): void {
-    $issued = DragonServiceToken::issue('test-dragon', 'test.lugsnplugs.local');
+    $issued = DragonServiceToken::issue('test-dragon', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dragon/chat', ['message' => 'What needs attention?'])
@@ -334,7 +334,7 @@ test('Dragon unavailable returns 503 and the glass dashboard still loads', funct
     $fake = app(FakeDragonProvider::class);
     $fake->unavailable = true;
 
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dragon/chat', ['message' => 'What needs attention?'])
@@ -352,7 +352,7 @@ test('station Ask Dragon can answer an open-RO count without a staff PAT', funct
     stationOpenRo(RepairOrderStatus::InProgress);
     stationOpenRo(RepairOrderStatus::WaitingApproval);
 
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $this->withToken($issued['plain_text'])
         ->postJson('/api/station/dragon/chat', ['message' => 'How many repair orders are open?'])
@@ -362,7 +362,7 @@ test('station Ask Dragon can answer an open-RO count without a staff PAT', funct
 });
 
 test('station dashboard includes live CallSession rows', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $ro = stationOpenRo(RepairOrderStatus::InProgress);
 
     CallSession::query()->create([
@@ -389,7 +389,7 @@ test('station dashboard includes live CallSession rows', function (): void {
 });
 
 test('station glass call show resolves customer and open RO context', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $ro = stationOpenRo(RepairOrderStatus::WaitingApproval);
 
     $session = CallSession::query()->create([
@@ -416,7 +416,7 @@ test('station glass call show resolves customer and open RO context', function (
 });
 
 test('desk projects unclaimed missed calls into shared work', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $ro = stationOpenRo(RepairOrderStatus::WaitingApproval);
 
     CallSession::query()->create([
@@ -442,7 +442,7 @@ test('desk projects unclaimed missed calls into shared work', function (): void 
 });
 
 test('return-call task does not mark the missed call handled', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $ro = stationOpenRo(RepairOrderStatus::WaitingApproval);
 
@@ -474,7 +474,7 @@ test('return-call task does not mark the missed call handled', function (): void
 });
 
 test('handled missed call sets worked_at and leaves the desk', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $ro = stationOpenRo(RepairOrderStatus::WaitingApproval);
 
@@ -516,7 +516,7 @@ test('handled missed call sets worked_at and leaves the desk', function (): void
 });
 
 test('unknown caller call show does not invent a customer', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
 
     $session = CallSession::query()->create([
         'provider' => 'twilio',
@@ -540,7 +540,7 @@ test('unknown caller call show does not invent a customer', function (): void {
 });
 
 test('station glass settings store advisor mode on the device token', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $this->withToken($issued['plain_text'])
@@ -555,7 +555,7 @@ test('station glass settings store advisor mode on the device token', function (
 });
 
 test('completing an advisor task does not change repair order status', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $ro = stationOpenRo(RepairOrderStatus::WaitingApproval);
 

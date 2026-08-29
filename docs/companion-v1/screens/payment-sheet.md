@@ -2,7 +2,7 @@
 
 **ID:** `companion.screen.payment-sheet`  
 **Role(s):** Advisor  
-**ARK doctrine:** [`ark-square-payments.mdc`](../../../.cursor/rules/ark-square-payments.mdc) — server-authoritative balance  
+**ARK doctrine:** `ark-square-payments.mdc` — server-authoritative balance  
 **Status:** 📝 draft — Edward review
 
 ---

@@ -3,7 +3,7 @@
 **Status:** `AUDITED` (production server source + config; tenant DB values not sampled — multi-tenant)
 
 **Audited on:** 2026-06-06  
-**Auditor:** Cursor agent via `root@24.144.81.19`  
+**Auditor:** remote session via `root@24.144.81.19`  
 **ARK-SMS deploy path:** `/var/www/sites/ark-sms/production/current`  
 **Release:** `20260531023539`  
 **V1 reference doc (on server):** `docs/ARK-SMS-PRINTING-QZ-KEY-TAGS.md` (240 lines — canonical operational detail)

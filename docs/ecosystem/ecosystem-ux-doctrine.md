@@ -21,7 +21,7 @@ Each product keeps its native purpose:
 | Surface | Branding |
 |---------|----------|
 | Operational hosts (`app`, `learn`, `platform`) | ARK ecosystem mark + cerulean family |
-| Public shop (`demo-auto.test`) | LugsNPlugs shop branding — intentional exception (served by ARK V2 Public Surface, not a separate product) |
+| Public shop (`demo-auto.test`) | Demo Auto Repair shop branding — intentional exception (served by ARK V2 Public Surface, not a separate product) |
 
 See `docs/branding/ecosystem-identity.md` for favicon and asset ownership.
 

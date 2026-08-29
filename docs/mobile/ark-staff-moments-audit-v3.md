@@ -1,7 +1,7 @@
 # ARK Staff — Shop Posture Audit v3
 
 **Status:** **Frozen** — philosophy complete. Implement against [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md).  
-**Rule:** [`.cursor/rules/ark-staff-product-constitution.mdc`](../../.cursor/rules/ark-staff-product-constitution.mdc)
+**Rule:** doctrine `ark-staff-product-constitution.mdc`
 
 **Standing review criterion (every ARK Staff UI change):**
 
@@ -38,7 +38,7 @@ reference CRM is emotionally flat — same visual intensity everywhere. ARK shou
 
 We are **designing ARK**, not reacting to reference CRM.
 
-**North star:** Walking into LugsNPlugs at 8:00 AM — bays, waiting, rhythm — not CRM, not records.
+**North star:** Walking into Demo Auto Repair at 8:00 AM — bays, waiting, rhythm — not CRM, not records.
 
 **Primary metric:** **Decision budget** — count stops where Edward asks *where / which tab / which customer / which RO*, not tap count.
 

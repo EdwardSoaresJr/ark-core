@@ -30,14 +30,14 @@ test('common problem page renders featured media when configured', function (): 
     CommonProblemFeaturedMedia::persistGalleryForSlug('engine-overheating', [[
         'id' => 'photo-one',
         'path' => $path,
-        'alt' => 'Technician pressure testing a cooling system at LugsNPlugs',
+        'alt' => 'Technician pressure testing a cooling system at Demo Auto Repair',
         'caption' => 'Cooling system verification before recommending parts.',
     ]]);
 
     $this->get(route('public.common-problems.show', 'engine-overheating'))
         ->assertOk()
         ->assertSee('public-featured-media', false)
-        ->assertSee('Technician pressure testing a cooling system at LugsNPlugs', false)
+        ->assertSee('Technician pressure testing a cooling system at Demo Auto Repair', false)
         ->assertSee('Cooling system verification before recommending parts.', false)
         ->assertSee('loading="eager"', false)
         ->assertSee('fetchpriority="high"', false)
@@ -52,7 +52,7 @@ test('legacy single-image storage normalizes to a one-item gallery', function ()
     $raw['common_problem_featured_media'] = [
         'engine-overheating' => [
             'path' => $path,
-            'alt' => 'Technician pressure testing a cooling system at LugsNPlugs',
+            'alt' => 'Technician pressure testing a cooling system at Demo Auto Repair',
             'caption' => 'Cooling system verification before recommending parts.',
         ],
     ];
@@ -63,7 +63,7 @@ test('legacy single-image storage normalizes to a one-item gallery', function ()
     );
 
     expect($gallery)->toHaveCount(1)
-        ->and($gallery[0]['alt'])->toBe('Technician pressure testing a cooling system at LugsNPlugs');
+        ->and($gallery[0]['alt'])->toBe('Technician pressure testing a cooling system at Demo Auto Repair');
 });
 
 test('featured media rotates across gallery images on reload', function (): void {
@@ -118,7 +118,7 @@ test('admin can upload featured media gallery for a common problem page', functi
                 UploadedFile::fake()->image('brake-noise.jpg', 1600, 900),
             ],
             'new_alts' => [
-                'Technician measuring brake pad thickness on a Colorado Springs vehicle',
+                'Technician measuring brake pad thickness on a Demo City vehicle',
             ],
             'new_captions' => [
                 'Brake pad measurement before recommending replacement.',
@@ -134,7 +134,7 @@ test('admin can upload featured media gallery for a common problem page', functi
 
     $this->get(route('public.common-problems.show', 'brake-noise'))
         ->assertOk()
-        ->assertSee('Technician measuring brake pad thickness on a Colorado Springs vehicle', false);
+        ->assertSee('Technician measuring brake pad thickness on a Demo City vehicle', false);
 });
 
 test('admin can manage multiple gallery images with order and metadata', function (): void {
@@ -166,12 +166,12 @@ test('admin can manage multiple gallery images with order and metadata', functio
             'items' => [
                 [
                     'id' => 'second',
-                    'alt' => 'Technician replacing a thermostat on a Honda Civic at LugsNPlugs',
+                    'alt' => 'Technician replacing a thermostat on a Honda Civic at Demo Auto Repair',
                     'caption' => 'Thermostat replacement photo',
                 ],
                 [
                     'id' => 'first',
-                    'alt' => 'Technician pressure testing a radiator on a Subaru Outback at LugsNPlugs',
+                    'alt' => 'Technician pressure testing a radiator on a Subaru Outback at Demo Auto Repair',
                     'caption' => 'Primary cooling system photo',
                 ],
             ],
@@ -179,7 +179,7 @@ test('admin can manage multiple gallery images with order and metadata', functio
                 UploadedFile::fake()->image('cooling-fan.jpg', 1600, 900),
             ],
             'new_alts' => [
-                'Technician diagnosing a cooling fan on a Toyota Camry at LugsNPlugs',
+                'Technician diagnosing a cooling fan on a Toyota Camry at Demo Auto Repair',
             ],
             'new_captions' => [
                 'Cooling fan diagnosis photo',
@@ -202,7 +202,7 @@ test('homepage settings save preserves common problem featured media map', funct
     CommonProblemFeaturedMedia::persistGalleryForSlug('oil-leak', [[
         'id' => 'oil-leak-photo',
         'path' => $path,
-        'alt' => 'Engine on lift showing an oil leak inspection at LugsNPlugs',
+        'alt' => 'Engine on lift showing an oil leak inspection at Demo Auto Repair',
         'caption' => '',
     ]]);
 
@@ -280,8 +280,8 @@ test('common problem page with featured media outputs og and twitter image metad
     $secondaryPath = CommonProblemFeaturedMedia::STORAGE_PREFIX.$slug.'/secondary.jpg';
     Storage::disk('public')->put($primaryPath, 'fake-image');
     Storage::disk('public')->put($secondaryPath, 'fake-image-two');
-    $primaryAlt = 'Technician pressure testing a cooling system on a Subaru Outback at LugsNPlugs';
-    $secondaryAlt = 'Technician replacing a thermostat on a Honda Civic at LugsNPlugs';
+    $primaryAlt = 'Technician pressure testing a cooling system on a Subaru Outback at Demo Auto Repair';
+    $secondaryAlt = 'Technician replacing a thermostat on a Honda Civic at Demo Auto Repair';
 
     CommonProblemFeaturedMedia::persistGalleryForSlug($slug, [
         [
@@ -327,7 +327,7 @@ test('removing all gallery items deletes stored files', function (): void {
     CommonProblemFeaturedMedia::persistGalleryForSlug($slug, [[
         'id' => 'brake',
         'path' => $path,
-        'alt' => 'Technician measuring brake pad thickness on a Colorado Springs vehicle',
+        'alt' => 'Technician measuring brake pad thickness on a Demo City vehicle',
         'caption' => '',
     ]]);
 

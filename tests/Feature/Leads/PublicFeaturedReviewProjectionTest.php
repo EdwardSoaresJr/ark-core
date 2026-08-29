@@ -46,10 +46,10 @@ test('home social proof picks randomly from the review list', function (): void 
     expect(count($seen))->toBeGreaterThan(1);
 });
 
-test('home social proof has no Greg Powell name lock', function (): void {
+test('home social proof has no fixed attribution name lock', function (): void {
     $reviews = [
         ['quote' => 'Clean shop.', 'attribution' => 'Alex'],
-        ['quote' => 'Edward is exceptionally meticulous and methodical.', 'attribution' => 'Greg Powell'],
+        ['quote' => 'Exceptionally meticulous and methodical in approach.', 'attribution' => 'Sample Reviewer'],
     ];
 
     $seen = [];

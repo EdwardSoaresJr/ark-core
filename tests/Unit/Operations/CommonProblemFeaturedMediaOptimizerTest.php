@@ -64,7 +64,7 @@ test('optimize command converts legacy uploads to webp variants', function (): v
     CommonProblemFeaturedMedia::persistGalleryForSlug($slug, [[
         'id' => 'legacy',
         'path' => $legacyPath,
-        'alt' => 'Technician pressure testing a cooling system at LugsNPlugs',
+        'alt' => 'Technician pressure testing a cooling system at Demo Auto Repair',
         'caption' => '',
     ]]);
 

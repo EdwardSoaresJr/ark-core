@@ -69,7 +69,7 @@ Full doctrine: [ark-truth-stack-v1.md](./ark-truth-stack-v1.md)
 
 **Projection summarizes truth. It never becomes truth.** Every projection is disposable and rebuildable from authority. Narratives (Briefing, Journey story) compose projections — they do not invent truth. If evidence cannot be shown, a claim is not operational truth.
 
-See also: [.cursor/rules/ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) · [.cursor/rules/ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc)
+See also: doctrine `ark-projection-rule.mdc` · doctrine `ark-explainability-doctrine.mdc`
 
 ---
 
@@ -133,7 +133,7 @@ If there is no good answer yet, the idea goes into the **notebook**, not into `m
 
 That does not kill innovation. It **channels** it.
 
-See [.cursor/rules/ark-earned-intelligence.mdc](../../.cursor/rules/ark-earned-intelligence.mdc).
+See doctrine `ark-earned-intelligence.mdc.`
 
 ---
 
@@ -149,7 +149,7 @@ If the claim cannot trace to a verified repair, repeated customer question, docu
 
 Earned Authority is the **gatekeeper** between internal truth and every outbound surface (website, Companion, AI, ARKademy, reports, social, email).
 
-See [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) · [.cursor/rules/ark-earned-authority.mdc](../../.cursor/rules/ark-earned-authority.mdc).
+See [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) · doctrine `ark-earned-authority.mdc.`
 
 ---
 
@@ -164,7 +164,7 @@ Every significant PR answers four questions. If it cannot, it is probably not re
 | Workspace | Which operator question does this answer? |
 | Evolution | Which repeated sentence earned this? |
 
-See [.cursor/rules/ark-pr-doctrine-review.mdc](../../.cursor/rules/ark-pr-doctrine-review.mdc).
+See doctrine `ark-pr-doctrine-review.mdc.`
 
 ---
 
@@ -276,9 +276,9 @@ Customers will not read the doctrine. They will feel the **consistency** every t
 | Document | Role |
 | --- | --- |
 | [ark-workspace-interaction-language-v1.md](./ark-workspace-interaction-language-v1.md) | Interaction grammar, design tests, evolution loop |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Visibility before enforcement |
-| [ark-authority-adoption.mdc](../../.cursor/rules/ark-authority-adoption.mdc) | Observe adoption before automate |
-| [ark-earned-intelligence.mdc](../../.cursor/rules/ark-earned-intelligence.mdc) | Intelligence after repeated sentences |
+| ark-pressure-first.mdc | Visibility before enforcement |
+| ark-authority-adoption.mdc | Observe adoption before automate |
+| ark-earned-intelligence.mdc | Intelligence after repeated sentences |
 | [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Exit gate — when knowledge may leave the shop |
-| [ark-pr-doctrine-review.mdc](../../.cursor/rules/ark-pr-doctrine-review.mdc) | Four-question PR lint |
+| ark-pr-doctrine-review.mdc | Four-question PR lint |
 | [workspace-evolution-notebook.md](../operations/workspace-evolution-notebook.md) | Era 3 notebook — observe, record, ship reluctantly |

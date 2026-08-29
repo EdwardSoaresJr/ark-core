@@ -36,7 +36,7 @@ Same sentence, different role → **lens inside a workspace**, not a second page
 
 Every piece of information has one authority. Everything else is a projection.
 
-Aligns with [ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc) and [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc).
+Aligns with ark-authority-vs-configuration.mdc and ark-projection-rule.mdc.
 
 ---
 

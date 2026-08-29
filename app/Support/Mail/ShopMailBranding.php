@@ -23,7 +23,7 @@ final class ShopMailBranding
             return $appName;
         }
 
-        return 'LugsNPlugs';
+        return 'Demo Auto Repair';
     }
 
     public static function logoUrl(): ?string

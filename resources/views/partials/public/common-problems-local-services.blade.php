@@ -33,7 +33,7 @@
     }"
 >
     <h2 id="local-services-heading" class="public-section-title">
-        {{ $heading ?? 'Auto repair in Colorado Springs' }}
+        {{ $heading ?? 'Auto repair in Demo City' }}
     </h2>
     <p class="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base">
         {{ $lede ?? 'Looking for a shop, diagnostics, brakes, or maintenance — not just a symptom guide? Start here.' }}

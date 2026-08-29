@@ -72,7 +72,7 @@ Recommendations, customer presentations, colors, and future portal views are **p
 
 ---
 
-## LugsNPlugs workflow (not traditional DVI)
+## Demo Auto Repair workflow (not traditional DVI)
 
 Traditional DVI assumes:
 

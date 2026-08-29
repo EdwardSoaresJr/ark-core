@@ -8,7 +8,7 @@
 
 ## Why UI is frozen
 
-Cursor has been modifying a product it never fully understood. Companion v1 is designed **first**, built **second** — in new Flutter (or clean branch), not by patching the old shell.
+Earlier iterations modified a product it never fully understood. Companion v1 is designed **first**, built **second** — in new Flutter (or clean branch), not by patching the old shell.
 
 ---
 

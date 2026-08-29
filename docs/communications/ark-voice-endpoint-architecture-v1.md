@@ -2,7 +2,7 @@
 
 **Status:** Frozen baseline (2026-06-26)  
 **Supersedes:** ad-hoc provisioning design in migration plan drafts v1–v3  
-**Companions:** [communications-bounded-context-v1.md](communications-bounded-context-v1.md) · [ark-voice-vision.md](ark-voice-vision.md) · [production-voice-cutover-v1.md](production-voice-cutover-v1.md) · [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc)
+**Companions:** [communications-bounded-context-v1.md](communications-bounded-context-v1.md) · [ark-voice-vision.md](ark-voice-vision.md) · [production-voice-cutover-v1.md](production-voice-cutover-v1.md) · ark-projection-rule.mdc
 
 **Change policy:** Architectural changes must justify departure from this document. Do not reopen fundamentals without floor evidence.
 
@@ -179,7 +179,7 @@ Both supported. Claim flow is **optional** (`claim_flow_enabled` in shop communi
 | **Known device** | Admin enters MAC → assign workstation → plug in → serve projection → Connected |
 | **Claim device** (Phase 2) | Unknown MAC → bootstrap → claim code on screen → assign workstation → reprovision → Connected |
 
-LugsNPlugs default UX: known MAC (phone in hand). Claim flow enables zero-touch at scale.
+Demo Auto Repair default UX: known MAC (phone in hand). Claim flow enables zero-touch at scale.
 
 ---
 
@@ -299,4 +299,4 @@ Laravel runs migrations in **filename order**. History must not look accidental.
 
 When building Phase 1, start with PR1 (schema + projection table + telephony workstation extension) → PR2 (projection regenerate + Poly builder + GET serve) → PR3 (shop UI) → PR4 (VVX350 floor proof).
 
-Cursor prompt authority: this document.
+This document is the authority for implementation.

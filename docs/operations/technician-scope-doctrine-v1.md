@@ -31,7 +31,7 @@ ARK's history leaned toward **everyone gets access → hide things later**.
 
 This doctrine moves toward **assigned work only → earn additional visibility through evidence**.
 
-For a single-shop operation like LugsNPlugs, that is closer to reality.
+For a single-shop operation like Demo Auto Repair, that is closer to reality.
 
 ---
 
@@ -184,7 +184,7 @@ Before adding technician visibility, ask:
 
 If any answer is no, reject the change.
 
-**Observation questions (LugsNPlugs):**
+**Observation questions (Demo Auto Repair):**
 
 - When you clock in, where do you go first?
 - What pages do you use all day?

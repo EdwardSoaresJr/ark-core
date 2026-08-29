@@ -62,4 +62,4 @@ These are places where the Portal UI cannot honestly answer a customer question 
 
 Record friction. Do not fill holes with marketing or AI fluency.
 
-Companion: [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) · [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc)
+Companion: ark-projection-rule.mdc · ark-pressure-first.mdc

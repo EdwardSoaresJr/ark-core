@@ -40,7 +40,7 @@ Add when ready (not blocking landing):
 | Operations | Cross-role floor workflow (workboard rhythm, handoffs) |
 | ARK V2 Training | Product-specific how-tos tied to ARK UI |
 
-### LugsNPlugs SOPs (shop shelf)
+### Demo Auto Repair SOPs (shop shelf)
 
 Shop-private content — not distributed to other shops:
 
@@ -57,12 +57,12 @@ Use BookStack pages with clear **PLACEHOLDER** titles until real SOPs are writte
 
 | Placeholder topic | Suggested book |
 |-------------------|----------------|
-| Answering the Phone | LugsNPlugs SOPs · Service Advisor |
-| Handling Self-Diagnosed Customers | LugsNPlugs SOPs · Service Advisor |
+| Answering the Phone | Demo Auto Repair SOPs · Service Advisor |
+| Handling Self-Diagnosed Customers | Demo Auto Repair SOPs · Service Advisor |
 | Building an Estimate | Shop In A Box · Advisor Operations |
-| Vehicle Check-In | LugsNPlugs SOPs · Service Advisor |
+| Vehicle Check-In | Demo Auto Repair SOPs · Service Advisor |
 | Parts Ordering | Shop In A Box · Advisor Operations |
-| Warranty Exceptions | LugsNPlugs SOPs · Operations |
+| Warranty Exceptions | Demo Auto Repair SOPs · Operations |
 
 **Do not** treat these as authoritative SOPs until shop review. Registry keys (`legacy-key:{role}:{slug}`) should be assigned when pages are promoted from placeholder to operational truth.
 
@@ -72,7 +72,7 @@ Use BookStack pages with clear **PLACEHOLDER** titles until real SOPs are writte
 |------|--------|-------|
 | 1 | Ensure `Shop In A Box` shelf exists with role books | `ark:arkademy:import-bookstack --force` |
 | 2 | Set BookStack default home to **Shelves** or deep-link shelf URL | BookStack settings / ARK cutover URLs |
-| 3 | Create **LugsNPlugs SOPs** shelf + empty books (manual or API) | Shop admin |
+| 3 | Create **Demo Auto Repair SOPs** shelf + empty books (manual or API) | Shop admin |
 | 4 | Add placeholder pages with visible “Draft” tags | Shop admin |
 | 5 | Register URLs in `arkademy_content_registry` when stable | ARK import / manual |
 
@@ -84,7 +84,7 @@ Consider a custom BookStack home or theme view if:
 
 - Advisors still open ARKademy and ask “where do I start?”
 - Role-based entry needs above-the-fold cards (Owner / Advisor / Tech)
-- Shop In A Box and LugsNPlugs SOPs need explicit visual hierarchy
+- Shop In A Box and Demo Auto Repair SOPs need explicit visual hierarchy
 
 Prefer **shelf descriptions and book ordering** first. Custom landing is **Phase 2 UX**, not a blocker for ecosystem cohesion.
 
@@ -103,5 +103,5 @@ All use `ArkademyUrls` / `EcosystemArkademyBridge` — deterministic legacy keys
 Staff can answer without guidance:
 
 1. Where is **base** curriculum? → Shop In A Box shelf
-2. Where are **our shop** SOPs? → LugsNPlugs SOPs shelf
+2. Where are **our shop** SOPs? → Demo Auto Repair SOPs shelf
 3. Where is **my role** book? → Named book inside the right shelf

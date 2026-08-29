@@ -7,7 +7,7 @@
     $phoneDisplay = \App\Ark\Operations\PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
     $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '7194136227';
     $smsHref = 'sms:'.$phoneTel;
-    $cityState = trim(implode(', ', array_filter([$shop->city, $shop->state]))) ?: 'Colorado Springs, CO';
+    $cityState = trim(implode(', ', array_filter([$shop->city, $shop->state]))) ?: 'Demo City, ST';
     $addressParts = array_filter([
         $shop->publicationStreetAddress(),
         $cityState,

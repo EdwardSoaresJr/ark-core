@@ -690,7 +690,7 @@ test('advisor intake can create a customer with address and referral source', fu
         'phone' => '719-555-1212',
         'address_line_1' => '123 Main St',
         'address_line_2' => 'Unit 4B',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80903',
         'referral_source' => EncounterSource::Website->value,
@@ -704,7 +704,7 @@ test('advisor intake can create a customer with address and referral source', fu
         ->display_phone->toBe('(719) 555-1212')
         ->address_line_1->toBe('123 Main St')
         ->address_line_2->toBe('Unit 4B')
-        ->city->toBe('Colorado Springs')
+        ->city->toBe('Demo City')
         ->state->toBe('CO')
         ->postal_code->toBe('80903')
         ->referral_source->toBe(EncounterSource::Website->value);
@@ -753,7 +753,7 @@ test('advisor intake can update selected customer and continue', function () {
             'phone' => '7195553030',
             'email' => 'updated@example.com',
             'address_line_1' => '500 Updated Ave',
-            'city' => 'Colorado Springs',
+            'city' => 'Demo City',
             'state' => 'CO',
             'postal_code' => '80909',
             'customer_type' => 'Retail',

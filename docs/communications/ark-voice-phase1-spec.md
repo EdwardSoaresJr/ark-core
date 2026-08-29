@@ -1,7 +1,7 @@
 # ARK Voice Phase 1 — Parallel Ingress Spec
 
 **Status:** Active build contract  
-**Doctrine:** [.cursor/rules/ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc) · [.cursor/rules/ark-telephony-settings-doctrine.mdc](../../.cursor/rules/ark-telephony-settings-doctrine.mdc)  
+**Doctrine:** doctrine `ark-authority-vs-configuration.mdc` · doctrine `ark-telephony-settings-doctrine.mdc`  
 **Vision:** [ark-voice-vision.md](ark-voice-vision.md)
 
 ---
@@ -28,7 +28,7 @@ Phase 1 must answer **yes** for everything it ships:
 | Ingress shared secret | `.env` (`ASTERISK_INGRESS_TOKEN`) only |
 | Call lifecycle truth | Code → `CallSession` |
 
-**LugsNPlugs is bootstrap data, not the product model.** No hardcoded 101/102/103/104 in application code.
+**Demo Auto Repair is bootstrap data, not the product model.** No hardcoded 101/102/103/104 in application code.
 
 ---
 
@@ -122,7 +122,7 @@ Twilio remains production PSTN. Asterisk proves internal event path and extensio
 - [ ] Provider selectable per shop (not `.env`)
 - [ ] Real or simulated Asterisk events create `CallSession` with `provider=asterisk`
 - [ ] Caller context API returns same shape as Twilio pop
-- [ ] No LugsNPlugs-specific constants in product code
+- [ ] No Demo Auto Repair-specific constants in product code
 - [ ] Tests green on SQLite CI
 
 ---

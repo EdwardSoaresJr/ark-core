@@ -104,7 +104,7 @@ Placement decisions: [cluster-assignment-authority-v1.md](cluster-assignment-aut
 | Included | Excluded |
 | --- | --- |
 | Docs, enums, models, migration | Provisioning engine |
-| Dev seeder: Shared Cluster A | Production LugsNPlugs changes |
+| Dev seeder: Shared Cluster A | Production Demo Auto Repair changes |
 | Hidden read-only admin table | Edit/actions, nav link |
 | Relationships only | Stancl, routing, Coolify API |
 

@@ -1,7 +1,7 @@
 # Explainable Recommendations v1
 
 **Status:** v1 complete — Growth SEO audit  
-**Parent:** [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) · [ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc)
+**Parent:** ark-projection-rule.mdc · ark-explainability-doctrine.mdc
 
 ## Problem
 

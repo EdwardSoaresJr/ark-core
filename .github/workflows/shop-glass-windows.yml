@@ -56,12 +56,12 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LugsNPlugs-Shop-Glass-Setup-0.1.0
-          path: apps/advisor_station/windows/packaging/output/LugsNPlugs-Shop-Glass-Setup-0.1.0.exe
+          name: Demo Auto Repair-Shop-Glass-Setup-0.1.0
+          path: apps/advisor_station/windows/packaging/output/Demo Auto Repair-Shop-Glass-Setup-0.1.0.exe
 
       - name: Attach to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/advisor_station/windows/packaging/output/LugsNPlugs-Shop-Glass-Setup-0.1.0.exe
+          files: apps/advisor_station/windows/packaging/output/Demo Auto Repair-Shop-Glass-Setup-0.1.0.exe
           generate_release_notes: true

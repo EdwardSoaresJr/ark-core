@@ -152,7 +152,7 @@ That is a bug.
 
 ---
 
-## Current status (LugsNPlugs)
+## Current status (Demo Auto Repair)
 
 **Transport enabled on production** (2026-06-27) after Portable Station Phase 1 observation. Advisors still have Attention polling when push fails or device is unregistered.
 
@@ -165,4 +165,4 @@ Setup wiring: [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push
 - [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push-setup-doctrine-v1.md)
 - [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md)
 - [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md)
-- [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) — observe before automate
+- ark-pressure-first.mdc — observe before automate

@@ -57,7 +57,7 @@ class UpdateGrowthIntegrationsRequest extends FormRequest
             if ($enabled && $location === '') {
                 $validator->errors()->add(
                     'google_business_profile_location',
-                    'Pick a listing before enabling sync — click Discover locations and choose Lugs N Plugs, or paste the locations/… ID here.',
+                    'Pick a listing before enabling sync — click Discover locations and choose Demo Auto Repair, or paste the locations/… ID here.',
                 );
             }
 

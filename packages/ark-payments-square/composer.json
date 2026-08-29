@@ -1,0 +1,25 @@
+{
+    "name": "ark/payments-square",
+    "description": "Optional Square Terminal, keyed, and portal payments adapter for ARK. Pulls square/square (and its OSL-3.0 transitive apimatic/jsonmapper). Install explicitly: composer require ark/payments-square",
+    "type": "library",
+    "version": "0.1.0",
+    "license": "AGPL-3.0-only",
+    "require": {
+        "php": "^8.3",
+        "square/square": "^45.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\Ark\\Operations\\Payments\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "App\\Ark\\Operations\\Payments\\SquarePaymentsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

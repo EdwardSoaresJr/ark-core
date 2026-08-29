@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>MPI is shop revenue infrastructure</h3>
-    <p>Multi-point inspection is how LugsNPlugs turns every visit into honest vehicle health documentation — not a checkbox for free oil changes. Complete the template every time policy requires; partial inspections hide deferred work from the customer and the owner.</p>
+    <p>Multi-point inspection is how Demo Auto Repair turns every visit into honest vehicle health documentation — not a checkbox for free oil changes. Complete the template every time policy requires; partial inspections hide deferred work from the customer and the owner.</p>
     <p>ARK inspection items map to findings advisors convert to recommendations. Skip items only when physically impossible on that vehicle — not because you are rushed.</p>
     <p>Photos on red/yellow items are standard — customers believe pictures; advisors sell pictures.</p>
 

@@ -145,7 +145,7 @@ Operational context is progressive disclosure — show only what reduces uncerta
 
 ## Build order (milestones only)
 
-Cursor executes implementation details. Product input stops at milestones:
+Engineering executes implementation details. Product input stops at milestones:
 
 | # | Milestone | Success signal |
 | --- | --- | --- |
@@ -197,9 +197,9 @@ After Milestone 4 (minimum): advisor completes [`companion-sprint-1-run-the-shop
 
 ---
 
-## Cursor input model
+## Implementation input model
 
-**Give Cursor:**
+**Give implementers:**
 
 - This mission
 - Design philosophy (*every tap reduces uncertainty*)
@@ -208,10 +208,10 @@ After Milestone 4 (minimum): advisor completes [`companion-sprint-1-run-the-shop
 - Deep-link boundary (sacred)
 - Authority constraints
 
-**Do not give Cursor:**
+**Do not give implementers:**
 
 - Screen-by-screen build sequences
 - Pixel specs as primary instruction
 - Architecture essays (architecture is stable)
 
-Cursor fills implementation details once the mission is clear.
+Implementers fill implementation details once the mission is clear.

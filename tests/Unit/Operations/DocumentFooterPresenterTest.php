@@ -9,7 +9,7 @@ test('document footer merges global recommendation and retail disclaimers into i
             'global_disclaimer' => 'Estimate is based on visible conditions. Final cost may change.',
             'customer_type' => 'Retail',
             'customer_type_disclaimer' => 'This estimate reflects repairs recommended based on our inspection.',
-            'authorization_language' => "By approving this estimate, I authorize LugsNPlugs.\n\nI agree to pay for authorized work.",
+            'authorization_language' => "By approving this estimate, I authorize Demo Auto Repair.\n\nI agree to pay for authorized work.",
         ],
         'settings' => [
             'recommendation_disclaimer' => 'Recommendations are based on verified findings. Further testing may change the repair path.',

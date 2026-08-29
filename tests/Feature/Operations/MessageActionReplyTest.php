@@ -32,7 +32,7 @@ beforeEach(function () {
         'telephony_inbound_number' => '7195559999',
         'address_line_1' => '100 Main Street',
         'address_line_2' => 'Unit D',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
         'telephony_call_flow' => [

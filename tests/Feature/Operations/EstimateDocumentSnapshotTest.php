@@ -162,7 +162,7 @@ test('estimate pdf identity band shows customer address when on file', function 
 
     $repairOrder->customer->update([
         'address_line_1' => '100 Main Street Suite A',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
     ]);
@@ -179,8 +179,8 @@ test('estimate pdf identity band shows customer address when on file', function 
 
     expect($identityHtml)
         ->toContain('Address: 100 Main Street Suite A')
-        ->toContain('Colorado Springs, CO 80909')
-        ->not->toContain('Address: 100 Main Street Suite A · Colorado Springs, CO 80909');
+        ->toContain('Demo City, ST 80909')
+        ->not->toContain('Address: 100 Main Street Suite A · Demo City, ST 80909');
 });
 
 test('estimate pdf identity band shows unassigned technician when none assigned', function () {

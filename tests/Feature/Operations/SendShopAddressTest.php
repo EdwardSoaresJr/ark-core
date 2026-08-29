@@ -28,7 +28,7 @@ beforeEach(function () {
         'shop_name' => 'Demo Auto Repair',
         'address_line_1' => '100 Main Street',
         'address_line_2' => 'Unit D',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
     ]);
@@ -64,7 +64,7 @@ test('shop address sms copy includes street and maps link', function () {
     expect($body)->toContain('Demo Auto Repair')
         ->and($body)->toContain('100 Main Street')
         ->and($body)->toContain('Unit D')
-        ->and($body)->toContain('Colorado Springs, CO 80909')
+        ->and($body)->toContain('Demo City, ST 80909')
         ->and($body)->toContain('Google Maps:')
         ->and($body)->toContain('maps.google.com/?q=');
 });

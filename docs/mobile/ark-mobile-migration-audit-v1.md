@@ -5,7 +5,7 @@
 
 ## Executive summary
 
-Cursor did **not** evolve the original app. It built a **new Flutter client** (`ark-mobile`) against a **new API projection** (`/api/mobile/*` on ARK V2). That was intentional per `ark-mobile-projection-v1.md`:
+The rebuild did **not** evolve the original app. It built a **new Flutter client** (`ark-mobile`) against a **new API projection** (`/api/mobile/*` on ARK V2). That was intentional per `ark-mobile-projection-v1.md`:
 
 > Legacy `arksms_shop` is reference only — not port wholesale.
 
@@ -13,8 +13,8 @@ Cursor did **not** evolve the original app. It built a **new Flutter client** (`
 
 | App | Path | Backend | Status |
 |-----|------|---------|--------|
-| **Original** | `/Users/edwardsoares/arksms_shop` | ARK v1 tenant API (`/api/tenant/v1/mobile/*`, `/api/mobile/*`) | Production usage, 79 Dart files |
-| **New** | `/Users/edwardsoares/Herd/ark-mobile` | ARK V2 (`https://app.demo-auto.test/api/mobile/*`) | Phase 1 + v1.1/v1.2 UX, 32 Dart files |
+| **Original** | `legacy private shop app path (not redistributed)` | ARK v1 tenant API (`/api/tenant/v1/mobile/*`, `/api/mobile/*`) | Production usage, 79 Dart files |
+| **New** | `private ark-mobile sibling (not redistributed)` | ARK V2 (`https://app.demo-auto.test/api/mobile/*`) | Phase 1 + v1.1/v1.2 UX, 32 Dart files |
 
 **Recommendation:** Pause feature expansion until Phase 2 harvest plan is agreed. Do **not** retire `arksms_shop` until VIN/intake/advisor parity is defined and shipped on V2 projections.
 
@@ -157,7 +157,7 @@ Push (FCM), offline queue, VIN, intake, OBD, advisor hub, status changes, time c
 | **Vehicle lookup** | Via decode + RO prefill | No | **Missing** | **Required Phase 2** |
 | **Concern-scoped photo intake** | Yes | Partial (findings only) | **Partial** | Extend finding capture; harvest concern attach UX |
 | **Offline photo queue** | Yes | No | **Missing** | **Required before rollout** for greasy-floor reliability |
-| **OBD / DTC scan** | Yes (BLE) | No | **Missing** | **Nice to have** until V2 backend owns OBD attach; high value for LugsNPlugs |
+| **OBD / DTC scan** | Yes (BLE) | No | **Missing** | **Nice to have** until V2 backend owns OBD attach; high value for Demo Auto Repair |
 | **My Work / assigned ROs** | Yes (Jobs API) | Yes | **Parity** | New app better hierarchy (v1.1) |
 | **RO detail** | Yes (job detail + RO screen) | Yes | **Parity+** | New concern/finding drill-down stronger |
 | **Findings + photos** | Via intake + inspection placeholder | Yes | **Partial** | New app is finding-first (correct doctrine) |
@@ -172,7 +172,7 @@ Push (FCM), offline queue, VIN, intake, OBD, advisor hub, status changes, time c
 | **Money leaks / playbook** | Yes | No | **Missing** | **Retire / replace** with V2 Attention + Owner digest |
 | **Activity feed** | Yes | Alerts poll only | **Partial** | **Phase 3** — map to Attention queue projection |
 | **Time clock** | Yes | No | **Missing** | **Nice to have** — only if shop still uses mobile clock |
-| **Multi-tenant domain login** | Yes | No (single shop) | **By design** | **Retire** for LugsNPlugs single-tenant V2 |
+| **Multi-tenant domain login** | Yes | No (single shop) | **By design** | **Retire** for Demo Auto Repair single-tenant V2 |
 | **Customer timeline** | Yes | No | **Missing** | **Phase 3** — Customer Hub projection |
 | **Vehicle repair history** | Yes | No | **Missing** | **Phase 2** tech scope (assigned RO only) |
 | **Diagnostic → labor convert** | Yes | No | **Missing** | **Phase 3** — needs V2 OBD/diagnostic authority |
@@ -309,13 +309,13 @@ Until these pass on **ark-mobile + ARK V2**, keep **`arksms_shop`** installed fo
 
 ---
 
-## 7. Answer to “did Cursor start a new app?”
+## 7. Answer to “did the rebuild start a new app?”
 
 **Yes.** And that was documented doctrine — not an accident.
 
-What Cursor did well: V2-aligned projections, finding-first inspection UX, technician scope, Sanctum, test coverage.
+What the rebuild did well: V2-aligned projections, finding-first inspection UX, technician scope, Sanctum, test coverage.
 
-What Cursor skipped: **harvest inventory** from `arksms_shop` before sprinting on RO/findings polish.
+What the rebuild skipped: **harvest inventory** from `arksms_shop` before sprinting on RO/findings polish.
 
 **Next move:** Agree Phase 2 harvest (VIN + check-in + comms thread + offline queue). Do not add net-new surfaces until VIN scan exists — it is the highest ROI bridge between old and new.
 
@@ -323,8 +323,8 @@ What Cursor skipped: **harvest inventory** from `arksms_shop` before sprinting o
 
 ## References
 
-- Legacy app: `/Users/edwardsoares/arksms_shop`
-- New app: `/Users/edwardsoares/Herd/ark-mobile`
+- Legacy app: `legacy private shop app path (not redistributed)`
+- New app: `private ark-mobile sibling (not redistributed)`
 - V2 doctrine: `docs/mobile/ark-mobile-projection-v1.md`
 - Comms transport lock: `docs/mobile/ark-mobile-communications-authority-contract.md`
 - V2 mobile API: `app/Ark/Mobile/`, `routes/api.php`

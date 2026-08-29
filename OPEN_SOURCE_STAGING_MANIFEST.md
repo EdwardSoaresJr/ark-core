@@ -1,9 +1,9 @@
 # ARK Public Staging Manifest
 
 **Created:** 2026-08-28  
-**Source foundry:** `/Users/edwardsoares/Herd/arksmsv2` @ `a8d1d5e6de1d5f87cdf4b79455745f6e845647d4`  
-**Staging path:** `/Users/edwardsoares/Herd/ark-public-staging`  
-**Status:** LOCAL STAGING ONLY — not published · no GitHub remote · license undecided
+**Source foundry:** private foundry clone (not redistributed)  
+**Staging path:** local public-candidate staging tree  
+**Status:** LOCAL STAGING ONLY — not published · no GitHub remote · **AGPL-3.0-only** (`LICENSE` + `NOTICE`)
 
 ## Intent
 
@@ -17,7 +17,7 @@ Rule: **separate code from proprietary fuel** — do not hollow the architecture
 **Open Dragon runtime** (agent loop, tools, Level 3 memory engine, BYO provider).  
 **Exclude Dragon fuel** (arkai import dump, ARKademy/shop knowledge packs).
 
-License and final Hosted Dragon commercial boundary remain undecided.
+License: **AGPL-3.0-only** (project decision). Hosted Dragon commercial boundary: empty tanks / BYO — see `DRAGON_PUBLIC_BOUNDARY.md`.
 
 ## Verification
 
@@ -37,7 +37,7 @@ License and final Hosted Dragon commercial boundary remain undecided.
 - `.env.example` with placeholder `demo-auto.test` domains
 - Dockerfile, composer.lock, package-lock.json
 - Engineering/docs doctrine (residual proving-ground mentions may remain in narrative docs)
-- `.cursor/rules` doctrine (production deploy rules stripped)
+- Private IDE / agent rule packs (not shipped)
 
 ## EXCLUDED (categories)
 
@@ -46,8 +46,8 @@ License and final Hosted Dragon commercial boundary remain undecided.
 | `.git/` history | Start fresh public history |
 | `rte/*.csv`, `rte/*.sql`, flat labor files | Licensed third-party automotive fuel |
 | `database/data/dragon-arkai-import-v1.json` | Shop knowledge + employee PII |
-| `docs/shop-excellence/cecil-bullard`, `lucas-underwood`, `sources.yaml`, `lugs-n-plugs`, `private/` | Third-party training synthesis / shop private |
-| `infra/coolify/**`, production deploy scripts, backups | LugsNPlugs/Coolify ops |
+| `docs/shop-excellence/cecil-bullard`, `lucas-underwood`, `sources.yaml`, `demo-shop`, `private/` | Third-party training synthesis / shop private |
+| `infra/coolify/**`, production deploy scripts, backups | Demo Auto Repair/Coolify ops |
 | `docs/deployment/**`, growth GSC screenshots | Production ops / analytics |
 | `.env`, `.env.production`, credential backups, OIDC PEMs | Secrets |
 | `vendor/`, `node_modules/`, build artifacts, sqlite DBs | Regenerable / local |
@@ -57,17 +57,17 @@ License and final Hosted Dragon commercial boundary remain undecided.
 
 - Owner PII in seeders → synthetic Alex Rivera / `example.test` / `7195550199` / fake VIN
 - Shop identity seeder → Demo Auto Repair / `719-555-0100` / `demo-auto.test`
-- Domain defaults `*.lugsnplugs.com` → `*.demo-auto.test` across config/tests/apps (majority)
+- Domain defaults `*.demo-auto.test` → `*.demo-auto.test` across config/tests/apps (majority)
 - Production IPs / Coolify app ids / Twilio SID placeholders neutralized or removed with ops trees
 - Stock Laravel README replaced with ARK public README
 - Labor `rte/README` rewritten: fuel not redistributed
 
 ## Known residual debt (scrub before publish)
 
-- Some docs still narrate LugsNPlugs / Autorepairkeeper as historical context
+- Some docs still narrate Demo Auto Repair / Autorepairkeeper as historical context
 - `config/public_seo.php` and public marketing copy may still feel shop-specific — needs second pass or synthetic SEO pack
-- Preline Fair Use + OSL/Square license review unfinished
-- LICENSE / SECURITY.md / CONTRIBUTING not added (intentional until counsel)
+- Preline + Square/OSL notices recorded in `NOTICE` (Square remains optional)
+- SECURITY.md / CONTRIBUTING optional follow-ups (not license blockers)
 - Storage preference keys renamed `ark.shop_glass.*` in Flutter — verify no broken migrations of local prefs (client apps)
 - Demo logo is former shop asset renamed file — replace with ARK-owned neutral mark before publish
 - Full `php artisan test` + stranger MySQL boot not certified
@@ -80,4 +80,4 @@ Mechanical private → public export: allowlist rsync + sanitizers + CI gate. No
 
 - Create GitHub public repo from this tree until human inspection of this manifest
 - Push anywhere yet
-- Claim license
+- Treat Cursor as committing or creating the public remote (human only)

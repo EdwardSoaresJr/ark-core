@@ -126,7 +126,7 @@ final class InspectionReportProjection
             'mode' => $mode,
             'ready' => $summary['recorded_count'] > 0,
             'shop' => [
-                'name' => (string) ($shopLayers['name'] ?? 'LugsNPlugs'),
+                'name' => (string) ($shopLayers['name'] ?? 'Demo Auto Repair'),
                 'phone' => PhoneNumber::display($shopLayers['phone'] ?? null) ?? ($shopLayers['phone'] ?? null),
                 'email' => $shopLayers['email'] ?? null,
                 'website' => $shopLayers['website'] ?? null,
@@ -192,7 +192,7 @@ final class InspectionReportProjection
             'mode' => $mode,
             'ready' => false,
             'shop' => [
-                'name' => (string) ($shopLayers['name'] ?? 'LugsNPlugs'),
+                'name' => (string) ($shopLayers['name'] ?? 'Demo Auto Repair'),
                 'phone' => PhoneNumber::display($shopLayers['phone'] ?? null) ?? ($shopLayers['phone'] ?? null),
                 'email' => $shopLayers['email'] ?? null,
                 'website' => $shopLayers['website'] ?? null,

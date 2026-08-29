@@ -30,7 +30,7 @@ final class FrozenInspectionTemplateDefinitions
                     key: 'rear_axle_brake_type',
                     gateGroup: 'axle_gate',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsRearAxleMeta(),
+                    meta: InspectionTemplatePointMeta::shopRearAxleMeta(),
                 ),
             ]],
             ['name' => 'Left Front', 'items' => self::cornerPoints(
@@ -68,13 +68,13 @@ final class FrozenInspectionTemplateDefinitions
                     'Brake fluid — level / condition',
                     key: 'std_brake_fluid',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeasureMeta('shared', 'brake_fluid'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeasureMeta('shared', 'brake_fluid'),
                 ),
                 self::point(
                     'Parking brake',
                     key: 'std_parking_brake',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeasureMeta('shared', 'parking_brake'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeasureMeta('shared', 'parking_brake'),
                 ),
             ]],
             // Preserved until later phase freezes — not redesigned in Phase 2A.
@@ -253,13 +253,13 @@ final class FrozenInspectionTemplateDefinitions
                 key: "std_{$corner}_tire",
                 slots: $tireSlots,
                 allowsNa: false,
-                meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('tire', $corner, 'tire'),
+                meta: InspectionTemplatePointMeta::shopCornerMeta('tire', $corner, 'tire'),
             ),
             self::point(
                 "{$labelPrefix} Wheel",
                 key: "std_{$corner}_wheel",
                 allowsNa: false,
-                meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('wheel', $corner, 'wheel'),
+                meta: InspectionTemplatePointMeta::shopCornerMeta('wheel', $corner, 'wheel'),
             ),
         ];
 
@@ -272,21 +272,21 @@ final class FrozenInspectionTemplateDefinitions
                     slots: $discPads,
                     axleRole: 'front',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeasureMeta($corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeasureMeta($corner, 'brake_assembly'),
                 ),
                 self::point(
                     "{$labelPrefix} Rotor",
                     key: "std_{$corner}_rotor",
                     axleRole: 'front',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('rotor', $corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeta('rotor', $corner, 'brake_assembly'),
                 ),
                 self::point(
                     "{$labelPrefix} Caliper",
                     key: "std_{$corner}_caliper",
                     axleRole: 'front',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('caliper', $corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeta('caliper', $corner, 'brake_assembly'),
                 ),
             ];
         } else {
@@ -298,21 +298,21 @@ final class FrozenInspectionTemplateDefinitions
                     slots: $discPads,
                     axleRole: 'rear_disc',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeasureMeta($corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeasureMeta($corner, 'brake_assembly'),
                 ),
                 self::point(
                     "{$labelPrefix} Rotor",
                     key: "std_{$corner}_rotor",
                     axleRole: 'rear_disc',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('rotor', $corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeta('rotor', $corner, 'brake_assembly'),
                 ),
                 self::point(
                     "{$labelPrefix} Caliper",
                     key: "std_{$corner}_caliper",
                     axleRole: 'rear_disc',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('caliper', $corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeta('caliper', $corner, 'brake_assembly'),
                 ),
                 self::point(
                     "{$labelPrefix} Drum brake",
@@ -320,7 +320,7 @@ final class FrozenInspectionTemplateDefinitions
                     slots: $drumSlots ?? InspectionMeasurementSlots::drumBrake(),
                     axleRole: 'rear_drum',
                     allowsNa: false,
-                    meta: InspectionTemplatePointMeta::lugsnplugsCornerMeasureMeta($corner, 'brake_assembly'),
+                    meta: InspectionTemplatePointMeta::shopCornerMeasureMeta($corner, 'brake_assembly'),
                 ),
             ];
         }
@@ -329,7 +329,7 @@ final class FrozenInspectionTemplateDefinitions
             "{$labelPrefix} Brake hose",
             key: "std_{$corner}_brake_hose",
             allowsNa: false,
-            meta: InspectionTemplatePointMeta::lugsnplugsCornerMeta('brake_hose', $corner, 'brake_hose'),
+            meta: InspectionTemplatePointMeta::shopCornerMeta('brake_hose', $corner, 'brake_hose'),
         );
 
         return $items;

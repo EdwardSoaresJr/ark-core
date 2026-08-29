@@ -15,7 +15,7 @@
 5. **Participants, not products** — Customer, Advisor, AI Agent, System speak on one timeline; AI is never a parallel authority  
 6. **Provider layer is replaceable** — Twilio is an adapter, not architecture  
 
-**Purpose:** Communications truth before Cursor writes webhooks, inbox UI, Twilio integration, or AI receptionist features. This addresses a **true ARK gap** (conversation authority), not a telephony gap.
+**Purpose:** Communications truth before implementers write webhooks, inbox UI, Twilio integration, or AI receptionist features. This addresses a **true ARK gap** (conversation authority), not a telephony gap.
 
 ---
 

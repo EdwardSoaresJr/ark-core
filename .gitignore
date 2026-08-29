@@ -6,9 +6,8 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
-/.cursor/*
-!/.cursor/rules/
-!/.cursor/rules/**
+# Private IDE / agent workflow — not part of the public product
+/.cursor/
 /.idea
 /.nova
 /.phpunit.cache
@@ -46,5 +45,12 @@ arksmsv2
 /rte/*.sql
 /rte/ark_labor_flat.csv
 
-# Flutter ephemeral
+# Flutter ephemeral / machine-local
 **/Flutter/ephemeral/
+**/flutter/ephemeral/
+**/local.properties
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+**/.flutter-plugins-dependencies
+.env.installer-bak
+.env.tmp

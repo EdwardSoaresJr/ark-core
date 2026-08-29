@@ -187,6 +187,6 @@ Website PRs must state:
 | Document | Relationship |
 | --- | --- |
 | [ark-website-doctrine-v1.md](ark-website-doctrine-v1.md) | Customer application — one shell, two auth states |
-| [ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc) | Settings vs authority |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Performance = projections |
+| ark-authority-vs-configuration.mdc | Settings vs authority |
+| ark-projection-rule.mdc | Performance = projections |
 | [docs/growth/DOCTRINE.md](../growth/DOCTRINE.md) | Growth owns optimization |

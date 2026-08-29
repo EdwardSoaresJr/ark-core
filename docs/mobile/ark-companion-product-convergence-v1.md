@@ -25,7 +25,7 @@ Desktop users **browse**. Phone users **react**.
 
 **Out of scope:** Voice Phase D backend cleanup — voice subsystem remains **Observing**.
 
-**Companions:** [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md) · [`.cursor/rules/ark-staff-product-constitution.mdc`](../../.cursor/rules/ark-staff-product-constitution.mdc)
+**Companions:** [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md) · doctrine `ark-staff-product-constitution.mdc`
 
 ---
 

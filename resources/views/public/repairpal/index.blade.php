@@ -7,7 +7,7 @@
         <x-slot:primary>
             <h1 class="public-page-title">RepairPal at {{ $shopName }}</h1>
             <p class="public-page-lede">
-                {{ $shopName }} is a RepairPal Certified auto repair shop in Colorado Springs.
+                {{ $shopName }} is a RepairPal Certified auto repair shop in Demo City.
                 These pages explain what that certification means — before you leave our site to check it on RepairPal.
             </p>
 

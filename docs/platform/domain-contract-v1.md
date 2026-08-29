@@ -2,7 +2,7 @@
 
 **Status:** Locked — stancl / Shop provisioning prep  
 **Date:** 2026-07-19  
-**Companions:** [shop-authority-v1.md](shop-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md) · [shop-identity-v1.md](shop-identity-v1.md) (HTTP vs SIP; deployment autonomy) · [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc)
+**Companions:** [shop-authority-v1.md](shop-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md) · [shop-identity-v1.md](shop-identity-v1.md) (HTTP vs SIP; deployment autonomy) · ark-surfaces.mdc
 
 This contract defines **who each hostname is for**. It does not prescribe Coolify topology or SIP registrars.
 
@@ -71,7 +71,7 @@ No public login. No Shop staff login. If an internal admin UI is needed later, i
 | **Owns** | Operations · Repair Orders · Communications · Customers · Vehicles · Scheduling · APIs · Mobile · Reverb · Authentication |
 | **Stancl** | Primary tenant domain |
 
-Examples: `lugsnplugs.arksms.com`, `joesauto.arksms.com`.
+Examples: `demo-auto.arksms.com`, `joesauto.arksms.com`.
 
 There is no required `app.` prefix. The Shop slug **is** the operations host.
 
@@ -129,8 +129,8 @@ Everything hangs off one Shop:
 
 ```text
 Create Shop
-  → Slug                  lugsnplugs
-  → Operations Domain     lugsnplugs.arksms.com
+  → Slug                  demo-auto
+  → Operations Domain     demo-auto.arksms.com
   → Public Domain         (optional — custom or trial preview)
   → Deployment Profile    Shared | Dedicated | …
   → Provision
@@ -140,8 +140,8 @@ Conceptual model:
 
 ```text
 Shop
-├── Operations Domain     lugsnplugs.arksms.com
-├── Public Domain         demo-auto.test  (or lugsnplugs-preview.arksms.com)
+├── Operations Domain     demo-auto.arksms.com
+├── Public Domain         demo-auto.test  (or demo-auto-preview.arksms.com)
 └── Deployment Profile    Shared Cluster A
 ```
 
@@ -178,11 +178,11 @@ Tenant wildcard:
 
 ---
 
-## Migration note (LugsNPlugs today → v1)
+## Migration note (Demo Auto Repair today → v1)
 
 | Today | Domain Contract v1 |
 | --- | --- |
-| `app.demo-auto.test` | `lugsnplugs.arksms.com` (Operations Domain) |
+| `app.demo-auto.test` | `demo-auto.arksms.com` (Operations Domain) |
 | `demo-auto.test` | Public Domain (unchanged role) |
 | `portal.demo-auto.test` | Collapse into Public Domain (redirect period OK) |
 | `learn.demo-auto.test` | Move toward `learn.autorepairkeeper.com` (central) |

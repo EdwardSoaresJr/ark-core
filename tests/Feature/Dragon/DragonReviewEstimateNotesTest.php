@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.lugsnplugs.local']);
+    config(['shop.identity' => 'test.demo-auto.local']);
 });
 
 function renRo(): RepairOrder

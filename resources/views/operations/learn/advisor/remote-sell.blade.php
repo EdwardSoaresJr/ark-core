@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Remote sell after check-in</h3>
-    <p>Most customers at LugsNPlugs approve from their phone after intake — not at the counter. ARK’s remote sell path is: build a presentable estimate in review mode, send the customer a portal link, they approve or defer each <strong>recommended</strong> scope, shop moves forward automatically when authority is captured.</p>
+    <p>Most customers at Demo Auto Repair approve from their phone after intake — not at the counter. ARK’s remote sell path is: build a presentable estimate in review mode, send the customer a portal link, they approve or defer each <strong>recommended</strong> scope, shop moves forward automatically when authority is captured.</p>
     <p>The portal is not a second estimate — it is the same grouped scopes, totals, and narrative you see in review mode. PDF, email, SMS, and portal all read from the same authoritative snapshot pipeline.</p>
 
     <x-operations.learn.figure

@@ -113,7 +113,7 @@ test('admin can upload and remove shop estimate logo', function () {
         'logo' => UploadedFile::fake()->image('shop-logo.png', 320, 140),
         'address_line_1' => '123 Shop Road',
         'address_line_2' => 'Suite B',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80903',
     ])->assertRedirect(route('operations.settings.shop.edit'));
@@ -134,7 +134,7 @@ test('admin can upload and remove shop estimate logo', function () {
         'remove_logo' => '1',
         'address_line_1' => '123 Shop Road',
         'address_line_2' => 'Suite B',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80903',
     ])->assertRedirect(route('operations.settings.shop.edit'));
@@ -155,7 +155,7 @@ test('admin can persist authoritative operational defaults', function () {
         'website' => 'https://example.com',
         'address_line_1' => '123 Shop Road',
         'address_line_2' => 'Suite B',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80903',
     ])->assertRedirect(route('operations.settings.shop.edit'));
@@ -502,7 +502,7 @@ test('shop settings seeder provides current business defaults without wiping ope
         ->and($settings->address_line_1)->toBe('100 Main Street')
         ->and($settings->address_line_2)->toBe('D')
         ->and($settings->postal_code)->toBe('80909')
-        ->and($settings->logo_path)->toBe('shop-logos/lugsnplugs-logo.webp')
+        ->and($settings->logo_path)->toBe('shop-logos/demo-auto-logo.webp')
         ->and($settings->default_labor_rate_cents)->toBe(16500)
         ->and($settings->tax_enabled)->toBeTrue()
         ->and($settings->tax_label)->toBe('C/S Tax')
@@ -526,7 +526,7 @@ test('shop settings seeder provides current business defaults without wiping ope
         ->and($settings->appointments_enabled)->toBeTrue()
         ->and($settings->operational_profile)->toBe(OperationalProfile::RepairShop->value);
 
-    Storage::disk('public')->assertExists('shop-logos/lugsnplugs-logo.webp');
+    Storage::disk('public')->assertExists('shop-logos/demo-auto-logo.webp');
 
     $settings->update([
         'shop_name' => 'Owner Changed Shop',

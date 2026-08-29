@@ -152,12 +152,12 @@ final class CommonProblemRegistry
     public static function featuredLocalServices(): array
     {
         $slugs = [
-            'auto-repair-colorado-springs',
-            'mechanic-colorado-springs',
-            'car-diagnostics-colorado-springs',
-            'brake-repair-colorado-springs',
-            'tune-up-colorado-springs',
-            'audi-repair-colorado-springs',
+            'auto-repair-demo-city',
+            'mechanic-demo-city',
+            'car-diagnostics-demo-city',
+            'brake-repair-demo-city',
+            'tune-up-demo-city',
+            'audi-repair-demo-city',
         ];
 
         return collect($slugs)
@@ -175,12 +175,12 @@ final class CommonProblemRegistry
     public static function featuredForIndexLocalServices(): array
     {
         $slugs = [
-            'auto-repair-colorado-springs',
-            'mechanic-colorado-springs',
-            'car-diagnostics-colorado-springs',
-            'brake-repair-colorado-springs',
-            'tune-up-colorado-springs',
-            'audi-repair-colorado-springs',
+            'auto-repair-demo-city',
+            'mechanic-demo-city',
+            'car-diagnostics-demo-city',
+            'brake-repair-demo-city',
+            'tune-up-demo-city',
+            'audi-repair-demo-city',
             'car-fluid-service',
             'electrical-diagnostics',
         ];
@@ -217,12 +217,12 @@ final class CommonProblemRegistry
     public static function transactionalSlugs(): array
     {
         return [
-            'auto-repair-colorado-springs',
-            'mechanic-colorado-springs',
-            'car-diagnostics-colorado-springs',
-            'brake-repair-colorado-springs',
-            'tune-up-colorado-springs',
-            'audi-repair-colorado-springs',
+            'auto-repair-demo-city',
+            'mechanic-demo-city',
+            'car-diagnostics-demo-city',
+            'brake-repair-demo-city',
+            'tune-up-demo-city',
+            'audi-repair-demo-city',
             'car-fluid-service',
             'brake-fluid-service',
             'transmission-fluid-change',

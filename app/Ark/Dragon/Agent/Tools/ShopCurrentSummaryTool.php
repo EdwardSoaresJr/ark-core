@@ -16,7 +16,7 @@ final class ShopCurrentSummaryTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Live LugsNPlugs floor snapshot: open RO counts, waiting approval, in production, unassigned work, technician load, oldest/stale jobs, plus short lists of unassigned_repair_orders and in_production_repair_orders. Use before answering questions about current priorities, worry, focus, bottlenecks, workload, what looks ugly, who is buried, what is unassigned, or what is in production. Name vehicles from those lists when asked. No customer PII.';
+        return 'Live Demo Auto Repair floor snapshot: open RO counts, waiting approval, in production, unassigned work, technician load, oldest/stale jobs, plus short lists of unassigned_repair_orders and in_production_repair_orders. Use before answering questions about current priorities, worry, focus, bottlenecks, workload, what looks ugly, who is buried, what is unassigned, or what is in production. Name vehicles from those lists when asked. No customer PII.';
     }
 
     public function parameters(): array

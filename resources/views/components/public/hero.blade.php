@@ -1,5 +1,5 @@
 @props([
-    'eyebrow' => 'Colorado Springs independent repair',
+    'eyebrow' => 'Demo City independent repair',
     'title',
     'lede' => null,
 ])

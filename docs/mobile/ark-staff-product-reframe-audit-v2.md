@@ -268,7 +268,7 @@ Edward: beside vehicle, flashlight, gloves, interrupted every 20s.
 ## 12. Screenshot board protocol (do this next)
 
 1. **Device:** iPhone 14 Pro logical size + one Android mid-size.  
-2. **Account:** Production or staging with real LugsNPlugs data (not empty tenant).  
+2. **Account:** Production or staging with real Demo Auto Repair data (not empty tenant).  
 3. **Role:** Capture as **Advisor** (Edward) — full tab set.  
 4. **States per screen:** Populated · Empty · Error (where safe).  
 5. **Layout:** Figma/FigJam or printed grid — rows = capability, columns = screen state.  

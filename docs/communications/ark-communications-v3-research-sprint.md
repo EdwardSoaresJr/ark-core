@@ -268,7 +268,7 @@ Prefer **computed Turn** (doctrine) over “mark read”:
 
 ## Outstanding questions for floor notebook (not for code yet)
 
-1. For LugsNPlugs volume: Should **Done** be manual (Quo) or mostly **Turn-computed** (ARK doctrine)?
+1. For Demo Auto Repair volume: Should **Done** be manual (Quo) or mostly **Turn-computed** (ARK doctrine)?
 2. Does morning **Attention recovery** merge into Communications · Needs You, or remain a thin “since last shift” banner *inside* Communications?
 3. After one shell lands: keep Calls & VM in section nav as Evidence, or nest under thread Evidence + a library route?
 

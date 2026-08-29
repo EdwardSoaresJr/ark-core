@@ -108,7 +108,7 @@ final class SeoEngine
     public function forCommonProblemsIndex(): SeoPageMeta
     {
         $context = ShopSeoContext::resolve(
-            'Symptoms, driving safety, common causes, and when to have your vehicle checked — Colorado Springs independent repair.',
+            'Symptoms, driving safety, common causes, and when to have your vehicle checked — Demo City independent repair.',
         );
 
         return $this->build(
@@ -221,8 +221,8 @@ final class SeoEngine
                 'answer' => 'No. You can request service on this site, call or text the shop, or use RepairPal if you prefer their estimate flow.',
             ],
             [
-                'question' => 'How do I verify LugsNPlugs is still RepairPal Certified?',
-                'answer' => 'Open the official RepairPal profile for LugsNPlugs. That listing is the third-party source of record for certification status.',
+                'question' => 'How do I verify Demo Auto Repair is still RepairPal Certified?',
+                'answer' => 'Open the official RepairPal profile for Demo Auto Repair. That listing is the third-party source of record for certification status.',
             ],
         ];
 
@@ -270,7 +270,7 @@ final class SeoEngine
             ],
             [
                 'question' => 'What is the RepairPal nationwide warranty period?',
-                'answer' => 'The RepairPal Certified warranty is 12 months / 12,000 miles on qualifying parts and labor — whichever comes first. LugsNPlugs also offers a separate shop warranty of 24 months / 24,000 miles on qualifying work, where applicable.',
+                'answer' => 'The RepairPal Certified warranty is 12 months / 12,000 miles on qualifying parts and labor — whichever comes first. Demo Auto Repair also offers a separate shop warranty of 24 months / 24,000 miles on qualifying work, where applicable.',
             ],
         ];
 
@@ -337,7 +337,7 @@ final class SeoEngine
 
         $title = filled($problem['seo_title'] ?? null)
             ? (string) $problem['seo_title']
-            : sprintf('%s — %s | Colorado Springs', $context['name'], $problem['page_title'] ?? $problem['title']);
+            : sprintf('%s — %s | Demo City', $context['name'], $problem['page_title'] ?? $problem['title']);
 
         $featuredMedia = CommonProblemFeaturedMedia::primaryForDisplay(
             is_array($problem['featured_media'] ?? null) ? $problem['featured_media'] : null,

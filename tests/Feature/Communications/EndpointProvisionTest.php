@@ -28,8 +28,8 @@ beforeEach(function (): void {
     File::delete(VoiceTransportConfiguration::storagePath());
     File::delete(storage_path('framework/testing/ark-production.env'));
 
-    config()->set('telephony.sip_provisioning.host', 'lugsnplugs.sip.twilio.com');
-    config()->set('voice-transport.sip_registrar', 'lugsnplugs.sip.twilio.com');
+    config()->set('telephony.sip_provisioning.host', 'example.sip.twilio.com');
+    config()->set('voice-transport.sip_registrar', 'example.sip.twilio.com');
     config()->set('telephony.sip_provisioning.default_password', 'secret-101');
 });
 
@@ -107,7 +107,7 @@ test('get provision config serves poly phone1 body from endpoint configuration p
         ->assertSee('device.prov.serverName="'.$provisionServer.'"', false)
         ->assertSee('reg.1.auth.userId="101"', false)
         ->assertSee('reg.1.auth.password="secret-101"', false)
-        ->assertSee('reg.1.server.1.address="lugsnplugs.sip.twilio.com"', false)
+        ->assertSee('reg.1.server.1.address="example.sip.twilio.com"', false)
         ->assertSee('reg.1.server.1.register="1"', false)
         ->assertSee('reg.1.server.1.transport="UDPOnly"', false)
         ->assertDontSee('assigned_user');

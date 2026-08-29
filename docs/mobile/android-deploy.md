@@ -1,6 +1,6 @@
 # ARK Mobile — Android release deploy
 
-**App ID:** `com.lugsnplugs.ark_mobile`  
+**App ID:** `com.arksms.ark_mobile`  
 **API default:** `https://app.demo-auto.test`  
 **Repo:** `ark-mobile` (Flutter)
 
@@ -60,7 +60,7 @@ jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.a
 
 ## Google Play Console
 
-1. Create app with package `com.lugsnplugs.ark_mobile` (if not already registered).
+1. Create app with package `com.arksms.ark_mobile` (if not already registered).
 2. Upload `app-release.aab` to **Production** or **Internal testing**.
 3. Complete store listing, content rating, and target API requirements.
 4. Enable **Play App Signing** — Google holds the app signing key; you upload with the upload key above.

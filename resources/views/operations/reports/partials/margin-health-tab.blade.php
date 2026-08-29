@@ -3,7 +3,7 @@
         <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Margin Health</p>
             <p class="text-xs text-slate-400">
-                Closed sales truth vs LugsNPlugs targets.
+                Closed sales truth vs Demo Auto Repair targets.
                 Edit bands in
                 <a href="{{ route('operations.settings.shop.edit', ['section' => 'excellence']) }}" class="font-semibold text-slate-700 underline decoration-slate-300 hover:text-slate-950">Settings → Owner Targets &amp; Reporting</a>.
                 Parts matrix lives in

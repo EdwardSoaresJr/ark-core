@@ -141,7 +141,7 @@ InspectionReportProjection
   → HtmlPdfBuilder::toPdfBytes()                            (same Blade)
 ```
 
-- LugsNPlugs shop letterhead via existing presentation layers (not ARK product `Branding`)  
+- Demo Auto Repair shop letterhead via existing presentation layers (not ARK product `Branding`)  
 - Page-break-aware sections (`page-break-inside: avoid` on finding blocks)  
 - Photos sized for print; embed as data URIs or absolute URLs Chromium can load  
 - Footer: shop · RO · report date · page numbers (print CSS)  
@@ -224,7 +224,7 @@ InspectionReportProjection
 
 ## 13. Visual language (binding craft)
 
-- LugsNPlugs identity, strong typography, evidence as interest  
+- Demo Auto Repair identity, strong typography, evidence as interest  
 - Condition recognizable without emoji/alert spam  
 - Prefer:
 

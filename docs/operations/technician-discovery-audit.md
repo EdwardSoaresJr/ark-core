@@ -198,7 +198,7 @@ Removing the menu without scoping `repair_orders.view` would be permission theat
 ## Observation questions (before implementation)
 
 1. Does Landon use Repair Orders index, or only workboard → assigned card?
-2. **Unassigned pool:** May technicians claim work, or only see assigned work? (LugsNPlugs hypothesis: Ben/Edward assign → Landon performs.)
+2. **Unassigned pool:** May technicians claim work, or only see assigned work? (Demo Auto Repair hypothesis: Ben/Edward assign → Landon performs.)
 3. **Vehicle history:** Prior diagnosis/repair/measurements on same vehicle — required for diagnose, or over-exposure?
 4. Completed historical ROs — ever needed, or noise?
 5. Direct URL to assigned RO (advisor link, print sheet) — must keep working?

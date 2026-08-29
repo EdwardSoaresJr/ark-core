@@ -4,7 +4,7 @@
 This doctrine defines the roles and invariants of ARK Engineering. Changes require repeated evidence from engineering observations, not preference or anticipated future features.
 
 **Not:** A roadmap, orchestrator spec, or tool integration guide  
-**Test:** Remove every implementation (Forge, Bridge, Cursor, OpenAI, Voice). The doctrine still describes sound engineering.
+**Test:** Remove every implementation (Forge, Bridge, editors, OpenAI, Voice). The doctrine still describes sound engineering.
 
 ---
 

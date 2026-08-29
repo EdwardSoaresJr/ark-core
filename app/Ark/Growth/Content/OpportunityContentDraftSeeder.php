@@ -26,8 +26,8 @@ final class OpportunityContentDraftSeeder
         $label = $this->pageTitle($title, $query);
         $slug = Str::slug($query);
         $shop = ShopSettings::current();
-        $shopName = trim((string) ($shop->shop_name ?? '')) ?: 'LugsNPlugs';
-        $city = trim((string) ($shop->city ?? '')) ?: 'Colorado Springs';
+        $shopName = trim((string) ($shop->shop_name ?? '')) ?: 'Demo Auto Repair';
+        $city = trim((string) ($shop->city ?? '')) ?: 'Demo City';
 
         $problem = $this->matchRegistryProblem($query);
 

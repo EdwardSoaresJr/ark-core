@@ -6,7 +6,7 @@
 
 ## Context
 
-LugsNPlugs production ran a hybrid stack: Twilio SMS/MMS and Programmable Voice webhooks existed in ARK, but PSTN ingress and desk phones were routed through a shop Asterisk VPS. That split blocked floor certification, duplicated transport paths, and kept a `TelephonyProgrammableVoiceGuard` gate inactive whenever `telephony_provider=asterisk`.
+Demo Auto Repair production ran a hybrid stack: Twilio SMS/MMS and Programmable Voice webhooks existed in ARK, but PSTN ingress and desk phones were routed through a shop Asterisk VPS. That split blocked floor certification, duplicated transport paths, and kept a `TelephonyProgrammableVoiceGuard` gate inactive whenever `telephony_provider=asterisk`.
 
 ARK communications authority (`CallSession`, `Conversation`, `CommunicationEvent`, `UnifiedOperationalTimeline`) was already correct. The reset targets **transport only**.
 

@@ -11,7 +11,7 @@ Copy [_template.md](./_template.md) to `{slug}.md`. Update index below.
 - Certification: *"Did we pass?"*  
 - Operation: *"How does Edward actually work?"*
 
-Catalog: [operations/README.md](../operations/README.md) — reference implementations for LugsNPlugs; other shops record their own.
+Catalog: [operations/README.md](../operations/README.md) — reference implementations for Demo Auto Repair; other shops record their own.
 
 **PR gate:** Re-record the operation. Smoother → better product.
 

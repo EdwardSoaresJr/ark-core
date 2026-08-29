@@ -34,7 +34,7 @@ it('seeds acceptance criteria and a complete content draft for create page oppor
     expect($opportunity->acceptance_criteria)->not->toBeNull()
         ->and(collect($opportunity->acceptance_criteria)->pluck('label'))->toContain('FAQ included')
         ->and($opportunity->content_draft)->not->toBeNull()
-        ->and($opportunity->content_draft['slug'])->toBe('brake-repair-colorado-springs')
+        ->and($opportunity->content_draft['slug'])->toBe('brake-repair-demo-city')
         ->and($opportunity->content_draft['summary'])->not->toBe('')
         ->and($opportunity->content_draft['symptoms'])->not->toBe([])
         ->and($opportunity->content_draft['faq'])->not->toBe([]);
@@ -48,8 +48,8 @@ it('blocks publish when the content draft is incomplete', function (): void {
     $opportunity->update([
         'status' => GrowthOpportunityStatus::Building,
         'content_draft' => [
-            'title' => 'Brake Repair Colorado Springs',
-            'slug' => 'brake-repair-colorado-springs',
+            'title' => 'Brake Repair Demo City',
+            'slug' => 'brake-repair-demo-city',
             'summary' => '',
             'symptoms' => [],
             'diagnosis' => '',
@@ -105,9 +105,9 @@ it('allows publish when all acceptance criteria are satisfied', function (): voi
     $opportunity->update([
         'status' => GrowthOpportunityStatus::Building,
         'content_draft' => [
-            'title' => 'Brake Repair Colorado Springs',
-            'slug' => 'brake-repair-colorado-springs',
-            'summary' => 'Symptoms and repair guidance for brake repair in Colorado Springs.',
+            'title' => 'Brake Repair Demo City',
+            'slug' => 'brake-repair-demo-city',
+            'summary' => 'Symptoms and repair guidance for brake repair in Demo City.',
             'symptoms' => ['Humming at speed', 'Noise changes in turns'],
             'diagnosis' => 'Lift and check for play at each corner.',
             'common_causes' => ['Worn bearing', 'Dry or damaged hub'],
@@ -141,9 +141,9 @@ it('strips Create and Improve prefixes from page draft titles', function (): voi
     $opportunity = GrowthOpportunity::query()->where('search_query', 'brake repair colorado springs')->firstOrFail();
     $opportunity->update([
         'content_draft' => [
-            'title' => 'Create: Brake Repair Colorado Springs',
-            'slug' => 'brake-repair-colorado-springs',
-            'summary' => 'Brakes grinding or squealing in Colorado Springs?',
+            'title' => 'Create: Brake Repair Demo City',
+            'slug' => 'brake-repair-demo-city',
+            'summary' => 'Brakes grinding or squealing in Demo City?',
             'symptoms' => ['Squeal when slowing down'],
             'diagnosis' => 'We inspect pads and rotors.',
             'common_causes' => ['Worn pads'],
@@ -160,8 +160,8 @@ it('strips Create and Improve prefixes from page draft titles', function (): voi
         ->withSession([\App\Ark\Operations\Workstations\WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('growth.opportunities.build', $opportunity))
         ->assertOk()
-        ->assertSee('Brake Repair Colorado Springs', false)
-        ->assertDontSee('Create: Brake Repair Colorado Springs', false);
+        ->assertSee('Brake Repair Demo City', false)
+        ->assertDontSee('Create: Brake Repair Demo City', false);
 });
 
 it('renders the content builder checklist for an opportunity', function (): void {
@@ -177,7 +177,7 @@ it('renders the content builder checklist for an opportunity', function (): void
         ->assertSee('Publish checklist')
         ->assertSee('Edit page content')
         ->assertSee('Indexed by Google')
-        ->assertSee('brake-repair-colorado-springs');
+        ->assertSee('brake-repair-demo-city');
 });
 
 it('renders staff preview for draft common problem content', function (): void {
@@ -228,7 +228,7 @@ it('content builder preview link targets staff preview route not public slug', f
         ->get(route('growth.opportunities.build', $opportunity))
         ->assertOk()
         ->assertSee(route('growth.opportunities.preview', $opportunity), false)
-        ->assertSee('/common-problems/brake-repair-colorado-springs', false);
+        ->assertSee('/common-problems/brake-repair-demo-city', false);
 });
 
 it('shows posture counts and validated badge on the queue', function (): void {

@@ -21,7 +21,7 @@ test('common problem authority projection packages standard sections', function 
 });
 
 test('transactional service pages use misconception heading instead of sounds like', function (): void {
-    $problem = CommonProblemRegistry::find('auto-repair-colorado-springs');
+    $problem = CommonProblemRegistry::find('auto-repair-demo-city');
 
     expect($problem)->not->toBeNull();
 
@@ -30,7 +30,7 @@ test('transactional service pages use misconception heading instead of sounds li
     expect($authority['often_confused_heading'])->toBe('Common misconceptions')
         ->and($authority['often_confused_with'][1] ?? '')->toContain('Many repairs that feel');
 
-    $this->get(route('public.common-problems.show', 'auto-repair-colorado-springs'))
+    $this->get(route('public.common-problems.show', 'auto-repair-demo-city'))
         ->assertOk()
         ->assertSee('Common misconceptions', false)
         ->assertSee('Many repairs that feel', false)

@@ -13,7 +13,7 @@ return [
         'page_title' => 'P0300 Code: Random / Multiple Cylinder Misfire',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0300 — random or multiple cylinder misfire.',
-        'meta_description' => 'P0300 check engine code in Colorado Springs? Random or multiple cylinder misfire explained in plain English — symptoms, if you can drive, common causes, and how LugsNPlugs checks misfire counts before replacing coils or plugs.',
+        'meta_description' => 'P0300 check engine code in Demo City? Random or multiple cylinder misfire explained in plain English — symptoms, if you can drive, common causes, and how Demo Auto Repair checks misfire counts before replacing coils or plugs.',
         'problem' => 'Your engine is missing fire in more than one cylinder — or the computer cannot pin the miss to a single hole. That is what P0300 means: random or multiple cylinder misfire. Fuel is not burning cleanly in the combustion chamber, so you may feel a shake, lose power, or watch MPG drop. On Colorado hills and at altitude, weak spark or a lean air/fuel mix shows up fast under load. A flashing check engine light with P0300 is urgent — unburned fuel can overheat the catalytic converter before you know which plug or coil is at fault.',
         'symptoms' => [
             'Check engine light on — steady or flashing, with P0300 stored or pending',
@@ -69,7 +69,7 @@ return [
                 'answer' => 'It can be. Mild rough idle is annoying. Active misfire under load — especially with a flashing light — can damage the catalytic converter quickly. How urgent it is depends on misfire counts and how the car feels.',
             ],
             [
-                'question' => 'How does LugsNPlugs diagnose P0300?',
+                'question' => 'How does Demo Auto Repair diagnose P0300?',
                 'answer' => 'We review per-cylinder misfire counters, inspect plugs and coils, and check fuel trim and vacuum leaks when the data points that way — not a blind parts swap from the code definition.',
             ],
         ],
@@ -81,7 +81,7 @@ return [
         'page_title' => 'P0420 Code: Catalyst System Efficiency (Bank 1)',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0420 — catalyst system efficiency below threshold bank 1.',
-        'meta_description' => 'P0420 catalytic converter code in Colorado Springs? What catalyst efficiency below threshold on bank 1 means in plain English, symptoms, if you can keep driving, and how LugsNPlugs rules out misfire and exhaust leaks before recommending a converter.',
+        'meta_description' => 'P0420 catalytic converter code in Demo City? What catalyst efficiency below threshold on bank 1 means in plain English, symptoms, if you can keep driving, and how Demo Auto Repair rules out misfire and exhaust leaks before recommending a converter.',
         'problem' => 'Bank 1\'s catalytic converter is not scrubbing exhaust as well as it should — that is the claim behind P0420 (catalyst system efficiency below threshold). Oxygen sensors before and after the cat feed that judgment, so a lazy sensor, an exhaust leak, or an engine problem that already cooked the catalyst can look the same as a worn converter. Colorado shops see P0420 after ignored misfires, oil consumption, or quick code clears that never fixed the real issue. Proving the cat is actually bad takes more than reading the definition on a parts-store printout.',
         'symptoms' => [
             'Check engine light on with P0420 — often no obvious driveability change at first',
@@ -136,7 +136,7 @@ return [
                 'answer' => 'No. Oxygen sensors, exhaust leaks, and engine problems can mimic a bad converter. We verify those before recommending a cat — especially if misfire or oil consumption is in the history.',
             ],
             [
-                'question' => 'How does LugsNPlugs diagnose P0420?',
+                'question' => 'How does Demo Auto Repair diagnose P0420?',
                 'answer' => 'We rule out misfire and leaks, test O2 sensor behavior, and inspect the exhaust system. Converter replacement is quoted only when evidence supports it — not from the code definition alone.',
             ],
         ],
@@ -148,7 +148,7 @@ return [
         'page_title' => 'P0430 Code: Catalyst System Efficiency (Bank 2)',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0430 — catalyst system efficiency below threshold bank 2.',
-        'meta_description' => 'P0430 check engine code in Colorado Springs? Catalyst efficiency bank 2 explained in plain English — how it differs from P0420, common causes, and how LugsNPlugs diagnoses before replacing a catalytic converter.',
+        'meta_description' => 'P0430 check engine code in Demo City? Catalyst efficiency bank 2 explained in plain English — how it differs from P0420, common causes, and how Demo Auto Repair diagnoses before replacing a catalytic converter.',
         'problem' => 'Same catalyst-efficiency story as P0420, but on bank 2 — the side of a V engine that does not include cylinder 1. P0430 means that bank\'s catalytic converter is not cleaning exhaust well enough for the oxygen sensors to pass their monitor. A worn cat, a slow O2 sensor, or an exhaust leak can all set it. Verify engine health and sensors on that bank before assuming the converter failed — otherwise you buy hardware the real fault will destroy again.',
         'symptoms' => [
             'Check engine light with P0430 — may appear alone or with P0420',
@@ -206,7 +206,7 @@ return [
         'page_title' => 'P0174 Code: System Too Lean (Bank 2)',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0174 — system too lean bank 2.',
-        'meta_description' => 'P0174 check engine code in Colorado Springs? System too lean bank 2 explained in plain English — symptoms, driving safety, common causes, and how LugsNPlugs checks fuel trim on bank 2 before recommending parts.',
+        'meta_description' => 'P0174 check engine code in Demo City? System too lean bank 2 explained in plain English — symptoms, driving safety, common causes, and how Demo Auto Repair checks fuel trim on bank 2 before recommending parts.',
         'problem' => 'Too much air or not enough fuel on bank 2 — that lean mix is what P0174 (system too lean) is flagging. Bank 2 is the opposite side from bank 1 on a V engine (no cylinder 1). Lean running can cause misfire, hesitation, and catalytic converter damage if it goes on. On a four-cylinder, P0174 often rides with P0171 when both banks are reported. Colorado altitude can nudge fuel trim when cold; we still verify live data rather than clearing the light and hoping.',
         'symptoms' => [
             'Check engine light with P0174 — alone or with P0171',
@@ -257,7 +257,7 @@ return [
                 'answer' => 'Same type of fault, different bank. On many vehicles both codes appear together when the issue affects overall airflow — MAF, fuel pressure — rather than one bank only.',
             ],
             [
-                'question' => 'How does LugsNPlugs diagnose P0174?',
+                'question' => 'How does Demo Auto Repair diagnose P0174?',
                 'answer' => 'We read live fuel trim per bank, inspect for vacuum leaks and MAF contamination, and test fuel delivery — same evidence path as P0171, bank-aware.',
             ],
         ],
@@ -269,7 +269,7 @@ return [
         'page_title' => 'P0442 Code: EVAP System Small Leak Detected',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0442 — EVAP system small leak detected.',
-        'meta_description' => 'P0442 EVAP small leak code in Colorado Springs? Often gas cap related — symptoms, if you can drive, common causes, and how LugsNPlugs smoke-tests the evaporative emissions system before replacing parts.',
+        'meta_description' => 'P0442 EVAP small leak code in Demo City? Often gas cap related — symptoms, if you can drive, common causes, and how Demo Auto Repair smoke-tests the evaporative emissions system before replacing parts.',
         'problem' => 'Something between the gas tank and the engine is not holding pressure during the car\'s EVAP self-test — that is P0442, evaporative emissions small leak detected. The gas cap gets blamed first (and sometimes it is the fix), but cracked hoses, a stuck purge valve, or a leaking filler neck show up just as often on Colorado vehicles that see big temperature swings. Driveability is usually fine; the light stays on and emissions can fail until the leak is found and sealed.',
         'symptoms' => [
             'Check engine light on — the car may drive completely normally',
@@ -322,7 +322,7 @@ return [
                 'answer' => 'Sometimes — if the cap seal is worn or was left loose. If a quality OEM-style cap does not clear the code after drive cycles, smoke testing finds the real leak.',
             ],
             [
-                'question' => 'How does LugsNPlugs diagnose P0442?',
+                'question' => 'How does Demo Auto Repair diagnose P0442?',
                 'answer' => 'We inspect the cap and visible hoses, then smoke-test the EVAP system when needed. We do not replace canisters or valves without locating the leak.',
             ],
         ],
@@ -334,7 +334,7 @@ return [
         'page_title' => 'P0455 Code: EVAP System Large Leak Detected',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0455 — EVAP system large leak detected.',
-        'meta_description' => 'P0455 EVAP large leak code in Colorado Springs? Bigger evaporative leak than P0442 — gas cap, hoses, and purge valves. If you can drive and how LugsNPlugs smoke-tests before replacing EVAP parts.',
+        'meta_description' => 'P0455 EVAP large leak code in Demo City? Bigger evaporative leak than P0442 — gas cap, hoses, and purge valves. If you can drive and how Demo Auto Repair smoke-tests before replacing EVAP parts.',
         'problem' => 'Fuel vapor is escaping the sealed path between the tank and the engine in a big way — P0455 is EVAP system large leak detected. Leaving the gas cap off after a fill-up still sets it often, but a disconnected hose, open purge valve, or damaged tank seal can trip the monitor just as fast. The engine usually runs fine; what you notice is the light, possible fuel smell, and an emissions monitor that will not pass until the leak is sealed.',
         'symptoms' => [
             'Check engine light on right after getting gas — cap left off or loose',
@@ -385,7 +385,7 @@ return [
                 'answer' => 'Usually not for drivability — it is an emissions monitor fault. Fuel smell or visible leaking is a separate safety concern that should be inspected promptly.',
             ],
             [
-                'question' => 'How does LugsNPlugs diagnose P0455?',
+                'question' => 'How does Demo Auto Repair diagnose P0455?',
                 'answer' => 'Cap and hose inspection first, then smoke testing. We locate the leak before quoting canisters, valves, or tank parts.',
             ],
         ],
@@ -397,7 +397,7 @@ return [
         'page_title' => 'P0128 Code: Coolant Thermostat Below Regulating Temperature',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0128 — coolant thermostat below regulating temperature.',
-        'meta_description' => 'P0128 thermostat code in Colorado Springs? Engine not reaching proper temperature — symptoms, if you can drive, stuck-open thermostat causes, and how LugsNPlugs verifies cooling system data before replacing parts.',
+        'meta_description' => 'P0128 thermostat code in Demo City? Engine not reaching proper temperature — symptoms, if you can drive, stuck-open thermostat causes, and how Demo Auto Repair verifies cooling system data before replacing parts.',
         'problem' => 'The coolant is not getting hot enough, fast enough — your engine is running cool when it should be at operating temperature. That is P0128: coolant thermostat below regulating temperature. A thermostat stuck open is the usual culprit, though a wrong-temp thermostat, a cooling fan that never shuts off, or a skewed coolant temperature sensor can set the same light. In Colorado winters that means wasted fuel, rich warm-up running, and lukewarm heat from the vents until the cooling system is sorted.',
         'symptoms' => [
             'Check engine light with P0128 — engine may run otherwise fine',
@@ -449,7 +449,7 @@ return [
                 'answer' => 'No — P0128 is about running too cool. Overheating is a separate failure path: stuck closed thermostat, leaks, or fan failure.',
             ],
             [
-                'question' => 'How does LugsNPlugs diagnose P0128?',
+                'question' => 'How does Demo Auto Repair diagnose P0128?',
                 'answer' => 'We verify live coolant temp data on a drive, inspect thermostat operation, and check the sensor and fan before recommending a thermostat replacement.',
             ],
         ],
@@ -461,7 +461,7 @@ return [
         'page_title' => 'P0101 Code: MAF Circuit Range / Performance',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0101 — mass airflow circuit range or performance.',
-        'meta_description' => 'P0101 MAF sensor code in Colorado Springs? Mass airflow circuit performance explained in plain English — symptoms, driving safety, dirty MAF vs. vacuum leaks, and how LugsNPlugs verifies airflow data before replacing the sensor.',
+        'meta_description' => 'P0101 MAF sensor code in Demo City? Mass airflow circuit performance explained in plain English — symptoms, driving safety, dirty MAF vs. vacuum leaks, and how Demo Auto Repair verifies airflow data before replacing the sensor.',
         'problem' => 'The computer is not getting a believable air measurement from the mass airflow (MAF) sensor — that mismatch is P0101, MAF circuit range/performance. A dirty hot wire, an air leak after the sensor, or a failing MAF can set it, often alongside lean codes P0171 and P0174 and a rough idle. Oil from oiled reusable filters is a frequent culprit on cars serviced at home or quick-lube shops. Cleaning, fixing an intake boot, or replacing the sensor only makes sense after live airflow data and a leak check back that up.',
         'symptoms' => [
             'Check engine light with P0101 — may include P0171 or P0174',
@@ -524,7 +524,7 @@ return [
         'page_title' => 'P0301 Code: Cylinder 1 Misfire Detected',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0301 — cylinder 1 misfire detected.',
-        'meta_description' => 'P0301 cylinder 1 misfire code in Colorado Springs? What it means in plain English, if you can drive, coil and plug causes, and how LugsNPlugs isolates cylinder 1 before recommending parts.',
+        'meta_description' => 'P0301 cylinder 1 misfire code in Demo City? What it means in plain English, if you can drive, coil and plug causes, and how Demo Auto Repair isolates cylinder 1 before recommending parts.',
         'problem' => 'Cylinder 1 is the one dropping the ball — fuel is not burning cleanly in that hole alone. P0301 is cylinder 1 misfire detected, which is narrower than P0300 (random or multiple). Most of the time it is ignition: spark plug, coil, or boot on that cylinder, sometimes the injector. A flashing light with P0301 still risks catalytic converter damage from unburned fuel, so the urgency stays high even when the scan tool already named the cylinder.',
         'symptoms' => [
             'Check engine light — may flash under load with active misfire',
@@ -586,7 +586,7 @@ return [
         'page_title' => 'P0302 Code: Cylinder 2 Misfire Detected',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0302 — cylinder 2 misfire detected.',
-        'meta_description' => 'P0302 cylinder 2 misfire in Colorado Springs? Symptoms, driving safety, and how LugsNPlugs verifies cylinder 2 ignition before replacing coils or plugs.',
+        'meta_description' => 'P0302 cylinder 2 misfire in Demo City? Symptoms, driving safety, and how Demo Auto Repair verifies cylinder 2 ignition before replacing coils or plugs.',
         'problem' => 'One cylinder is missing — this time cylinder 2 in your engine\'s firing order. P0302 names that miss so diagnosis can stay on that hole: coil, plug, injector, or compression. You may feel the same shake or stumble as other misfire codes; the difference is the scan tool already pointed at position 2. A flashing light still means unburned fuel can hurt the catalytic converter, so treat active misfire with the same urgency as P0301.',
         'symptoms' => [
             'Check engine light with P0302 stored or pending',
@@ -626,7 +626,7 @@ return [
         'page_title' => 'P0303 Code: Cylinder 3 Misfire Detected',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0303 — cylinder 3 misfire detected.',
-        'meta_description' => 'P0303 cylinder 3 misfire in Colorado Springs? What the code means in plain English, if you can drive, and how LugsNPlugs isolates cylinder 3 before recommending ignition parts.',
+        'meta_description' => 'P0303 cylinder 3 misfire in Demo City? What the code means in plain English, if you can drive, and how Demo Auto Repair isolates cylinder 3 before recommending ignition parts.',
         'problem' => 'Cylinder 3 is misfiring — combustion in that cylinder is incomplete enough for the computer to store P0303. On many V6 engines, cylinder 3 sits on bank 2, so lean codes like P0174 can ride along when that bank is short on fuel. Ignition on cylinder 3 (plug, coil, boot) is the first check; injectors and compression come after. Keep the load light if the light is flashing — unburned fuel still threatens the catalytic converter.',
         'symptoms' => [
             'Check engine light with P0303',
@@ -666,7 +666,7 @@ return [
         'page_title' => 'P0304 Code: Cylinder 4 Misfire Detected',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0304 — cylinder 4 misfire detected.',
-        'meta_description' => 'P0304 cylinder 4 misfire in Colorado Springs? Common on four-cylinder engines — symptoms, driving safety, and LugsNPlugs diagnosis before coil or plug replacement.',
+        'meta_description' => 'P0304 cylinder 4 misfire in Demo City? Common on four-cylinder engines — symptoms, driving safety, and Demo Auto Repair diagnosis before coil or plug replacement.',
         'problem' => 'On a lot of four-cylinder engines, cylinder 4 is the rearmost plug — hardest to reach, easiest to leave with a loose boot after DIY work. When that hole misfires, you get P0304: cylinder 4 misfire detected. Fuel is not burning cleanly there, so idle can feel rough and a flashing light under load still risks catalytic converter damage. Diagnosis starts with the plug, coil, and boot on cylinder 4 before chasing injectors or compression.',
         'symptoms' => [
             'P0304 on four-cylinder engines — very common isolated misfire code',
@@ -710,7 +710,7 @@ return [
         'page_title' => 'P0401 Code: EGR Flow Insufficient Detected',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0401 — EGR flow insufficient detected.',
-        'meta_description' => 'P0401 EGR code in Colorado Springs? Exhaust gas recirculation flow insufficient — symptoms, if you can drive, carbon-clogged EGR causes, and how LugsNPlugs tests flow before replacing valves.',
+        'meta_description' => 'P0401 EGR code in Demo City? Exhaust gas recirculation flow insufficient — symptoms, if you can drive, carbon-clogged EGR causes, and how Demo Auto Repair tests flow before replacing valves.',
         'problem' => 'When the computer asks for exhaust gas recirculation, not enough exhaust is getting back into the intake — that shortfall is P0401 (EGR flow insufficient). Carbon often clogs the EGR valve or passages; a failed valve or a sensor that under-reports flow can set the same light. Some drivers feel ping on acceleration or a rough idle if the valve sticks open; plenty of others only notice the check engine light until emissions testing comes due.',
         'symptoms' => [
             'Check engine light with P0401',
@@ -767,7 +767,7 @@ return [
         'page_title' => 'P0340 Code: Camshaft Position Sensor Circuit',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0340 — camshaft position sensor circuit malfunction.',
-        'meta_description' => 'P0340 camshaft position sensor code in Colorado Springs? No-start and stall risk explained in plain English — wiring vs. sensor causes, and how LugsNPlugs tests the cam signal before replacing parts.',
+        'meta_description' => 'P0340 camshaft position sensor code in Demo City? No-start and stall risk explained in plain English — wiring vs. sensor causes, and how Demo Auto Repair tests the cam signal before replacing parts.',
         'problem' => 'The computer cannot see where the camshaft is in its rotation — no reliable camshaft position signal, or a circuit out of range. That is P0340. Some vehicles crank and will not start; others run poorly or stall when hot. Wiring at the connector, oil soaking the sensor, or a failed sensor are the usual suspects; timing belt or chain problems can also throw cam correlation off. Sorting signal loss from mechanical timing keeps you from replacing a sensor when the belt jumped.',
         'symptoms' => [
             'Check engine light with P0340 — may crank with no start on some models',
@@ -825,7 +825,7 @@ return [
         'page_title' => 'P0135 Code: O2 Sensor Heater Circuit (Bank 1 Sensor 1)',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0135 — O2 sensor heater circuit bank 1 sensor 1.',
-        'meta_description' => 'P0135 oxygen sensor heater code in Colorado Springs? Upstream O2 heater circuit fault explained — emissions and fuel trim effects, and how LugsNPlugs tests wiring before replacing sensors.',
+        'meta_description' => 'P0135 oxygen sensor heater code in Demo City? Upstream O2 heater circuit fault explained — emissions and fuel trim effects, and how Demo Auto Repair tests wiring before replacing sensors.',
         'problem' => 'The upstream oxygen sensor on bank 1 (sensor 1, before the catalytic converter) has a built-in heater that should warm it up fast so the computer can trim fuel and finish emissions monitors. When that heater circuit fails, you get P0135 — often with no change in how the car drives. Cold weather is when you notice it: longer rich warm-up, slow readiness, and a light that will not clear until the heater path (sensor, wiring, or fuse) is fixed.',
         'symptoms' => [
             'Check engine light with P0135 — often no obvious symptom',
@@ -881,7 +881,7 @@ return [
         'page_title' => 'P0016 Code: Crank / Cam Position Correlation',
         'tier' => 2,
         'concern_prefill' => 'My check engine light is on with code P0016 — crankshaft camshaft position correlation bank 1.',
-        'meta_description' => 'P0016 timing correlation code in Colorado Springs? Cam and crank out of sync explained — timing chain, belt, or sensor causes. When to stop driving and how LugsNPlugs verifies timing before major engine work.',
+        'meta_description' => 'P0016 timing correlation code in Demo City? Cam and crank out of sync explained — timing chain, belt, or sensor causes. When to stop driving and how Demo Auto Repair verifies timing before major engine work.',
         'problem' => 'Valve timing is not lining up with piston position the way the computer expects — crankshaft and camshaft position signals are out of sync. That correlation fault is P0016. On high-mileage chain engines, stretched chains or worn tensioners are common; on belt engines, a jumped tooth is serious. Some cases are only a bad sensor or wiring with no mechanical slip. Live cam/crank data and a timing check separate an expensive chain or belt job from a circuit repair before you open the front cover.',
         'symptoms' => [
             'Check engine light with P0016 — may run rough, rattle on start, or lack power',

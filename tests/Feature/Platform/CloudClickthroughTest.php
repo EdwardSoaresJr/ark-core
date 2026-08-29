@@ -40,7 +40,7 @@ it('creates a real User and owned Shop through the Cloud Funnel', function () {
     expect(Shop::query()->count())->toBe(0);
 
     $this->post(route('cloud.trial.workspace.store'), [
-        'slug' => 'lugsnplugs',
+        'slug' => 'demo-auto',
     ])->assertRedirect(route('cloud.trial.account'));
 
     $this->post(route('cloud.trial.account.store'), [
@@ -61,7 +61,7 @@ it('creates a real User and owned Shop through the Cloud Funnel', function () {
     $shop = $user->ownedShop;
     expect($shop)->not->toBeNull()
         ->and($shop->display_name)->toBe('Demo Auto Repair')
-        ->and($shop->slug)->toBe('lugsnplugs')
+        ->and($shop->slug)->toBe('demo-auto')
         ->and($shop->owner_user_id)->toBe($user->id)
         ->and($shop->status)->toBe(ShopStatus::Prospect)
         ->and($shop->uuid)->not->toBeEmpty()
@@ -86,7 +86,7 @@ it('creates a real User and owned Shop through the Cloud Funnel', function () {
     $this->get(route('cloud.dashboard'))
         ->assertOk()
         ->assertSee('Open Workspace', false)
-        ->assertSee('lugsnplugs.arksms.com', false)
+        ->assertSee('demo-auto.arksms.com', false)
         ->assertSee('Demo Auto Repair', false);
 
     $this->assertAuthenticated();

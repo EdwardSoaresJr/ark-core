@@ -2,7 +2,7 @@
 
 Operational acceptance scenarios for ARK — not personas, not user stories.
 
-> **Evolution note:** These scenarios are **role-based today** (advisor, technician, owner, parts) because they match how LugsNPlugs validates behavior on the floor right now. They will **gradually migrate to station-based** files as Station becomes the primary operational anchor — e.g. `front-counter.md`, `bay.md`, `parts-desk.md`, `office.md`, `portable-station.md`. The station question is permanent; the operator changes. Role docs stay useful until each station regression suite is written; do not rewrite everything at once.
+> **Evolution note:** These scenarios are **role-based today** (advisor, technician, owner, parts) because they match how Demo Auto Repair validates behavior on the floor right now. They will **gradually migrate to station-based** files as Station becomes the primary operational anchor — e.g. `front-counter.md`, `bay.md`, `parts-desk.md`, `office.md`, `portable-station.md`. The station question is permanent; the operator changes. Role docs stay useful until each station regression suite is written; do not rewrite everything at once.
 
 ARK optimizes **where work happens**, not org charts. Another shop may call the role "Service Writer" or "Foreman" — they still have Front Counter, Bays, Parts Desk, and Office.
 

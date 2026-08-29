@@ -22,7 +22,7 @@ beforeEach(function (): void {
     config()->set('public_lead.phone_verification_required', false);
 
     ShopSettings::current()->update([
-        'shop_name' => 'LugsNPlugs',
+        'shop_name' => 'Demo Auto Repair',
         'shop_timezone' => 'America/Denver',
         'twilio_account_sid' => 'ACtestverify',
         'twilio_auth_token' => 'test-token',

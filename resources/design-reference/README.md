@@ -74,7 +74,7 @@ ARK should ultimately converge toward:
 - AutoLeap readability refinement
 - ARK operational continuity architecture
 
-Cursor should use this library as operational UX reference authority when refining:
+Maintainers should use this library as operational UX reference authority when refining:
 
 - dashboards
 - queues

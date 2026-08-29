@@ -175,7 +175,7 @@ Templates and UI modes project from the same `InspectionItem` authority:
 | **Concern Specific** | Customer complaint drives diagnosis | Overheating → cooling system, pressure test, fan operation |
 | **Repair Verification** | After repair | No leaks, pressure holds, road test passed |
 
-LugsNPlugs default rhythm is **concern-first** (Layer 2), not menu-service MPI (Layer 1).
+Demo Auto Repair default rhythm is **concern-first** (Layer 2), not menu-service MPI (Layer 1).
 
 MPI templates seed items only. They must not become authority.
 
@@ -299,7 +299,7 @@ Doctrine → Authority → Observation → Workflow → Projection → Derivatio
 
 ---
 
-## Shop build priority (LugsNPlugs — sequencing)
+## Shop build priority (Demo Auto Repair — sequencing)
 
 Inspection v1.5 is spec-ready but **not the front-door blocker**. Prioritize when scheduling implementation work:
 
@@ -309,4 +309,4 @@ Inspection v1.5 is spec-ready but **not the front-door blocker**. Prioritize whe
 
 Inspection doctrine is stable. Do not let inspection UI work displace urgent workboard/RO discovery fixes.
 
-Advisor discoverability: see `docs/operations/advisor-cockpit-discoverability-v1.md` — **Phase A (advisor cockpit) outranks inspection UI** at LugsNPlugs.
+Advisor discoverability: see `docs/operations/advisor-cockpit-discoverability-v1.md` — **Phase A (advisor cockpit) outranks inspection UI** at Demo Auto Repair.

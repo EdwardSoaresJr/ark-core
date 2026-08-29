@@ -23,7 +23,7 @@ from the private foundry that proves ARK on the floor.
 
 ## What you do not get (by design)
 
-- Production Coolify / LugsNPlugs deploy runbooks
+- Production Coolify / Demo Auto Repair deploy runbooks
 - Credential backups or live secrets
 - Real-Time Labor Guide (RTE) or other licensed automotive datasets
 - Private Dragon knowledge imports / ARKademy dumps
@@ -33,40 +33,43 @@ from the private foundry that proves ARK on the floor.
 
 ## Requirements
 
-- PHP 8.3+ (match `composer.json`)
-- Composer
-- Node.js + npm (Vite assets)
+- PHP 8.3+ (match `composer.json`) — **or** Docker Compose (below)
+- Composer (host path only)
+- Node.js + npm (Vite assets; host path / image build as needed)
 - MySQL 8 (application database)
-- Redis (queues / cache; required for full production shape)
+- Redis optional for first-run (file/database drivers); recommended for full production shape
 
 Automated tests use an isolated SQLite file (`database/testing.sqlite`) via PHPUnit — not your MySQL database.
 
-## Quick start (local)
+## Quick start (Docker Compose — stranger path)
 
 ```bash
-cp .env.example .env
+docker compose up -d --build
+```
+
+Open **http://localhost:8088** → complete **`/setup`**.
+
+On the Compose network, database fields are: host `mysql`, port `3306`, database/user/password `ark`.
+
+See `docs/installation/README.md`.
+
+## Quick start (local PHP)
+
+```bash
 composer install
-php artisan key:generate
+cp .env.example .env
+# Optional: set APP_KEY and DB_* here, or let /setup guide you on writable hosts.
+php artisan key:generate   # skip if the wizard will generate on writable installs
 
-# Configure MySQL in .env, then:
-php artisan migrate
-php artisan db:seed
-
-npm install
-npm run build
-
+# Point DB_* at an empty MySQL database, then:
 php artisan serve
 ```
 
-Default seeded staff (local only):
+Visit the app URL. If ARK is not installed, the browser opens **`/setup`**.
 
-| Email | Password | Role |
-| --- | --- | --- |
-| `admin@ark.test` | `password` | Admin |
-| `advisor@ark.test` | `password` | Advisor |
-| `tech@ark.test` | `password` | Technician |
+Advanced operators may still configure bootstrap via environment variables; the wizard is the normal product path.
 
-Change these before any shared environment.
+Default seeded staff users (`admin@ark.test`, etc.) are for **development seeders only** — production first-run creates your own administrator in the wizard.
 
 ## Optional integrations
 
@@ -93,10 +96,16 @@ See `docs/engineering/` for deeper doctrine (scrubbed for public distribution; s
 
 ## License
 
-**Not decided in this staging tree.** Do not treat this snapshot as an official
-public release until a `LICENSE` file is added after legal review.
+ARK is licensed under the **GNU Affero General Public License v3.0 only**
+(`AGPL-3.0-only`). See `LICENSE` and `NOTICE` in the repository root.
+
+Optional Square payments (`composer require ark/payments-square`) installs
+additional third-party packages under **their** licenses; see `NOTICE`.
+ARK’s AGPL does not relicense those packages.
+
+This licensing choice is a **project decision**, not legal advice.
 
 ## Status
 
-**Staging / pre-publish.** Inspect `OPEN_SOURCE_STAGING_MANIFEST.md` before any
-GitHub publication. Do not assume this tree is redistribution-complete.
+**Ready for curated public publish** after human review of the license delta.
+Inspect `OPEN_SOURCE_STRATEGY_DECISIONS.md` and certification docs before pushing a remote.

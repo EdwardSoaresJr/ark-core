@@ -34,7 +34,7 @@ test('communications workspace shows outbound dialed number and active status fo
         'provider' => 'twilio',
         'provider_call_sid' => 'CAoutbound001',
         'direction' => CallSessionDirection::Outbound,
-        'from_number' => 'sip:desk1@lnp-chelton.sip.twilio.com',
+        'from_number' => 'sip:desk1@example.sip.us1.twilio.com',
         'to_number' => '+18005551212',
         'normalized_from' => '7195550000',
         'normalized_to' => '8005551212',
@@ -52,14 +52,14 @@ test('communications workspace shows outbound dialed number and active status fo
         ->assertSee('(800) 555-1212', false)
         ->assertSee('Active', false)
         ->assertSee('To', false)
-        ->assertDontSee('sip:desk1@lnp-chelton.sip.twilio.com', false);
+        ->assertDontSee('sip:desk1@example.sip.us1.twilio.com', false);
 
     $this->actingAs($advisor)
         ->get(CommunicationsNeedsYou::url(['call' => $session->id]))
         ->assertOk()
         ->assertSee('(800) 555-1212', false)
         ->assertSee('Active', false)
-        ->assertDontSee('sip:desk1@lnp-chelton.sip.twilio.com', false);
+        ->assertDontSee('sip:desk1@example.sip.us1.twilio.com', false);
 });
 
 test('communications workspace fragment returns updated outbound call signature', function (): void {
@@ -69,7 +69,7 @@ test('communications workspace fragment returns updated outbound call signature'
         'provider' => 'twilio',
         'provider_call_sid' => 'CAoutbound002',
         'direction' => CallSessionDirection::Outbound,
-        'from_number' => 'sip:desk1@lnp-chelton.sip.twilio.com',
+        'from_number' => 'sip:desk1@example.sip.us1.twilio.com',
         'to_number' => '+18005559999',
         'normalized_from' => '7195550000',
         'normalized_to' => '8005559999',
@@ -116,7 +116,7 @@ test('handled call stays in inbox with full thread including outbound messages',
         'provider' => 'twilio',
         'provider_call_sid' => 'CAhandledout001',
         'direction' => CallSessionDirection::Outbound,
-        'from_number' => 'sip:desk1@lnp-chelton.sip.twilio.com',
+        'from_number' => 'sip:desk1@example.sip.us1.twilio.com',
         'to_number' => '+18005551212',
         'normalized_from' => '7195550000',
         'normalized_to' => '8005551212',

@@ -133,7 +133,7 @@ Printer output must always be generated from authoritative operational data.
 
 ---
 
-## What Cursor needs next
+## What implementers need next
 
 Not more doctrine. **ARK-SMS source code** and a completed audit.
 

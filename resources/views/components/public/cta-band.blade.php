@@ -7,7 +7,7 @@
         $shop->publicationStreetAddress(),
         trim(implode(', ', array_filter([$shop->city, $shop->state]))),
     ]);
-    $addressLine = $addressParts !== [] ? implode(' · ', $addressParts) : 'Colorado Springs, CO';
+    $addressLine = $addressParts !== [] ? implode(' · ', $addressParts) : 'Demo City, ST';
     $hours = app(\App\Ark\Operations\Leads\Public\PublicSurfaceSettings::class)::current()['business_hours_label'] ?? null;
 @endphp
 

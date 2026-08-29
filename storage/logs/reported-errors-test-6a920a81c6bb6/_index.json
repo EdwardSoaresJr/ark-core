@@ -1,0 +1,24 @@
+[
+    {
+        "id": "76f029f0",
+        "filename": "2026-08-28T222401Z_76f029f0.json",
+        "reported_at": "2026-08-28T22:24:01+00:00",
+        "exception_class": "RuntimeException",
+        "exception_message": "Repeated archive",
+        "status_code": null,
+        "url": "http://localhost:8080",
+        "route": null,
+        "user_email": null
+    },
+    {
+        "id": "5510aa28",
+        "filename": "2026-08-28T222401Z_5510aa28.json",
+        "reported_at": "2026-08-28T22:24:01+00:00",
+        "exception_class": "RuntimeException",
+        "exception_message": "Repeated archive",
+        "status_code": null,
+        "url": "http://localhost:8080",
+        "route": null,
+        "user_email": null
+    }
+]

@@ -142,7 +142,7 @@ test('existing featured media gallery still renders after contribution', functio
     CommonProblemFeaturedMedia::persistGalleryForSlug('brake-noise', [[
         'id' => 'existing',
         'path' => $path,
-        'alt' => 'Technician measuring brake pad thickness on a Colorado Springs vehicle',
+        'alt' => 'Technician measuring brake pad thickness on a Demo City vehicle',
         'caption' => 'Existing gallery photo.',
     ]]);
 
@@ -163,7 +163,7 @@ test('existing featured media gallery still renders after contribution', functio
     $this->get(route('public.common-problems.show', 'brake-noise'))
         ->assertOk()
         ->assertSee('public-featured-media', false)
-        ->assertSee('Technician measuring brake pad thickness on a Colorado Springs vehicle', false);
+        ->assertSee('Technician measuring brake pad thickness on a Demo City vehicle', false);
 });
 
 test('contribute evidence rejects unknown slug via action', function (): void {

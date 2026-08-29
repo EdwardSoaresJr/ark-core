@@ -334,7 +334,7 @@ R3 is blocked because R1 changed the shop’s unit of work — not because recog
 
 ---
 
-## Cursor stop / start
+## Implementation stop / start
 
 **Permitted when intentionally resumed:** R1 → R2 → R3 → R4 → R5 in order.
 

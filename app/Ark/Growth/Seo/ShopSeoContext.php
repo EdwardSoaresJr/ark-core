@@ -54,7 +54,7 @@ final class ShopSeoContext
     private static function postalAddress(ShopSettings $shop): ?array
     {
         $street = $shop->publicationStreetAddress();
-        $city = trim((string) $shop->city) !== '' ? trim((string) $shop->city) : 'Colorado Springs';
+        $city = trim((string) $shop->city) !== '' ? trim((string) $shop->city) : 'Demo City';
         $region = trim((string) $shop->state) !== '' ? trim((string) $shop->state) : 'CO';
         $postal = trim((string) $shop->postal_code) !== '' ? trim((string) $shop->postal_code) : '80909';
 

@@ -2,7 +2,7 @@
 
 **Status:** v0.1 stood up (staff `/api/tech` + `apps/ark_tech`). Shop Glass remains the sellable-track command center; ARK Tech is a **separate technician product**, not a Glass/Mobile mode.
 
-**Certification hardware (first):** existing LugsNPlugs **Android tablets** — rugged SKU deferred until floor log is filled.
+**Certification hardware (first):** existing Demo Auto Repair **Android tablets** — rugged SKU deferred until floor log is filled.
 
 **Auth:** human staff Sanctum via `POST /api/tech/auth/login` (technician or admin). Not `stn_` / `drg_` / `vce_`.
 
@@ -192,7 +192,7 @@ Outage: hide Ask Dragon / Rewrite; DVI continues. No fabricated safety language.
 
 ## Real hardware test
 
-**Not run in this direction lock.** No APK was installed on a shop tablet in this pass. Next engineering slice (when started) installs on **existing LugsNPlugs Android tablets**.
+**Not run in this direction lock.** No APK was installed on a shop tablet in this pass. Next engineering slice (when started) installs on **existing Demo Auto Repair Android tablets**.
 
 ---
 

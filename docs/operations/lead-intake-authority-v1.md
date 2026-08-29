@@ -8,7 +8,7 @@
 
 ## Problem
 
-LugsNPlugs has mature RO, estimate, and workflow tooling. The weak point is **before the RO exists**: website forms, calls, texts, Messenger, and future channel ingress leak into email, hope, or disconnected surfaces.
+Demo Auto Repair has mature RO, estimate, and workflow tooling. The weak point is **before the RO exists**: website forms, calls, texts, Messenger, and future channel ingress leak into email, hope, or disconnected surfaces.
 
 ## Primary funnel
 
@@ -383,7 +383,7 @@ Architecture gets simpler; business capability gets larger.
 
 ## Companion docs
 
-- `docs/deployment/lugsnplugs-public-surface-cutover-v1.md` — Botble → public surface cutover
+- `docs/deployment/demo-auto-public-surface-cutover-v1.md` — Botble → public surface cutover
 - `docs/communications-authority.md` — Conversation as relationship authority
-- `.cursor/rules/ark-no-encounters.mdc` — Encounter retired
-- `.cursor/rules/ark-pressure-first.mdc` — observe before automate
+- doctrine `ark-no-encounters.mdc` — Encounter retired
+- doctrine `ark-pressure-first.mdc` — observe before automate

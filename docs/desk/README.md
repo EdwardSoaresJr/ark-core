@@ -6,7 +6,7 @@ Not Shop Glass. Not ARK Tech. Not ARK Web.
 
 Staff sign-in uses Sanctum: `POST /api/desk/auth/login`. No `stn_` station tokens.
 
-The Windows app is **not** bound to LugsNPlugs. On sign-in the advisor enters this shop’s ARK origin (`https://app.yourshop.com`). That host is the tenant. Tokens are stored per last shop; changing shops signs out first.
+The Windows app is **not** bound to Demo Auto Repair. On sign-in the advisor enters this shop’s ARK origin (`https://app.yourshop.com`). That host is the tenant. Tokens are stored per last shop; changing shops signs out first.
 
 Location inside a tenant is a **workstation** (Front Counter, Service Office). Desk does not invent a Location domain. If the shop has more than one active station, the advisor picks where they are working (`POST /api/desk/workstation`).
 

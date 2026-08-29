@@ -54,7 +54,7 @@ test('generic device registration alone does not make MobileApp ring-eligible', 
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -92,7 +92,7 @@ test('generic device registration alone does not make MobileApp ring-eligible', 
         'To' => '+17195559999',
         'CallStatus' => 'ringing',
     ])->assertOk()
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false)
         ->assertSee('+17195550199</Number>', false)
         ->assertDontSee($identity.'</Client>', false)
         ->assertDontSee('<Client', false);
@@ -131,7 +131,7 @@ test('recent voice_ready marks MobileApp ring-eligible and coverage available', 
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -143,7 +143,7 @@ test('recent voice_ready marks MobileApp ring-eligible and coverage available', 
         'CallStatus' => 'ringing',
     ])->assertOk()
         ->assertSee($identity.'</Client>', false)
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false);
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false);
 
     $coverage = CommunicationsShopProjection::forCurrentShop()->resolve()['coverage'];
     $row = collect($coverage)->first(fn ($item) => $item->name === 'Alex Rivera');
@@ -183,7 +183,7 @@ test('stale voice_ready does not ring MobileApp', function (): void {
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -194,7 +194,7 @@ test('stale voice_ready does not ring MobileApp', function (): void {
         'To' => '+17195559999',
         'CallStatus' => 'ringing',
     ])->assertOk()
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false)
         ->assertDontSee($identity.'</Client>', false);
 });
 

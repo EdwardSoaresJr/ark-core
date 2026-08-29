@@ -2,7 +2,7 @@
 
 **Status:** Active  
 **Audience:** ARK V2, ARK Mobile, ARK Voice, Communications  
-**Companion:** [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md) · [ark-telephony-roadmap.mdc](../../.cursor/rules/ark-telephony-roadmap.mdc)
+**Companion:** [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md) · ark-telephony-roadmap.mdc
 
 ---
 

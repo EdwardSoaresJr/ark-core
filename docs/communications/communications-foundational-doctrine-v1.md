@@ -85,7 +85,7 @@ If Edward answers from Companion, desktop, or desk phone, **Edward** owns the th
 
 **Freeze (Companion phase):** Do not extend workstation automation, IP inference, lock screens, or browser binding as comms ownership. Revisit only after Companion reaches production quality.
 
-Cursor rule: [.cursor/rules/ark-advisor-communications-identity.mdc](../../.cursor/rules/ark-advisor-communications-identity.mdc)
+Doctrine: doctrine `ark-advisor-communications-identity.mdc`
 
 ---
 

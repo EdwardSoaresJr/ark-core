@@ -3,7 +3,7 @@
 use App\Ark\Growth\PublicSurface\PublicMarketingUrl;
 use App\Ark\Operations\Leads\Public\CommonProblemRegistry;
 
-test('wheel bearing noise page answers the questions Colorado Springs drivers ask', function (): void {
+test('wheel bearing noise page answers the questions Demo City drivers ask', function (): void {
     $problem = CommonProblemRegistry::find('wheel-bearing-noise');
 
     expect($problem)->not->toBeNull()
@@ -18,7 +18,7 @@ test('wheel bearing noise page answers the questions Colorado Springs drivers as
         ->assertSee('What repair usually involves', false)
         ->assertSee('What is wheel bearing noise?', false)
         ->assertSee('What does a bad wheel bearing sound like?', false)
-        ->assertSee('Wheel bearing noise in Colorado Springs?', false)
+        ->assertSee('Wheel bearing noise in Demo City?', false)
         ->assertSee('How do you tell bearing noise from tire noise?', false)
         ->assertSee('Brake Noise', false)
         ->assertSee('<link rel="canonical"', false);

@@ -80,7 +80,7 @@ These must be answered on the floor **before** capability or route changes. Hypo
 | **Claim pool** | Technician sees unassigned ready work and self-assigns |
 | **Assigned only** | Advisor/owner assigns; technician sees only `assigned_technician_id = me` |
 
-**LugsNPlugs hypothesis:** Ben/Edward assign → Landon performs → **assigned only**.
+**Demo Auto Repair hypothesis:** Ben/Edward assign → Landon performs → **assigned only**.
 
 **Validate with Landon before hard-coding.**
 

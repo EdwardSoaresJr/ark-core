@@ -1,7 +1,7 @@
 # Task: Provision endpoint gates (G3 / G4)
 
 **Goal:** [Complete First Contact Certification](../goals/first-contact-certification.md)  
-**Worker:** human-cursor  
+**Worker:** human  
 **Status:** In progress — G4 production URL returns 200; G5–G7 not bench-certified yet
 
 ---

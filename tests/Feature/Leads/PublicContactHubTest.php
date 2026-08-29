@@ -15,7 +15,7 @@ beforeEach(function (): void {
         'learn_training_gate_enabled' => false,
         'address_line_1' => '100 Main Street',
         'address_line_2' => 'Unit D',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80909',
         'phone' => '7194136227',
@@ -27,10 +27,10 @@ test('public contact hub is a dedicated destination with nap hours form and faqs
     $response = $this->get(route('public.contact'))
         ->assertOk()
         ->assertSee('Contact us', false)
-        ->assertSee('Contact LugsNPlugs', false)
+        ->assertSee('Contact Demo Auto Repair', false)
         ->assertSee('(719) 413-6227', false)
         ->assertSee('100 Main Street', false)
-        ->assertSee('Colorado Springs', false)
+        ->assertSee('Demo City', false)
         ->assertSee('80909', false)
         ->assertSee('Need help with your vehicle?', false)
         ->assertSee('Book an Appointment', false)

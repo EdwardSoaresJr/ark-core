@@ -9,7 +9,7 @@
         article="workflow-defaults"
         file="workflow-defaults-form.png"
         alt="Workflow defaults settings form"
-        caption="Align defaults with how LugsNPlugs actually writes estimates — not how software shipped."
+        caption="Align defaults with how Demo Auto Repair actually writes estimates — not how software shipped."
     />
 
     <h3>Visit and note posture</h3>

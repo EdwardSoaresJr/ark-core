@@ -17,7 +17,7 @@
 | | Reference CRM | ARK Companion |
 |---|-----|---------------|
 | **Verdict** | Agency sub-account switcher · CRM login | **Target: Yes** |
-| **Why** | Multi-location CRM complexity | **One shop (LugsNPlugs P0)** · staff Breeze login · lands on **role home** |
+| **Why** | Multi-location CRM complexity | **One shop (Demo Auto Repair P0)** · staff Breeze login · lands on **role home** |
 
 ---
 

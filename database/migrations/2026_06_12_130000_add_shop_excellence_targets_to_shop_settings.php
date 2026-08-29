@@ -13,7 +13,7 @@ return new class extends Migration
             $table->json('shop_excellence_targets')->nullable()->after('shop_overhead_per_hour_cents');
         });
 
-        $legacyPath = base_path(config('shop-excellence.targets_path', 'docs/shop-excellence/lugs-n-plugs/targets.php'));
+        $legacyPath = base_path(config('shop-excellence.targets_path', 'docs/shop-excellence/demo-shop/targets.php'));
 
         if (! is_readable($legacyPath)) {
             return;

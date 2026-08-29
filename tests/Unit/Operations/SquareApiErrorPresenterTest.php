@@ -3,7 +3,14 @@
 use App\Ark\Operations\Payments\SquareApiErrorPresenter;
 use Square\Exceptions\SquareApiException;
 
+/**
+ * Runs only when ark/payments-square is installed (Square SDK present).
+ */
 test('square api error presenter translates unauthorized terminal device errors', function () {
+    if (! class_exists(SquareApiErrorPresenter::class) || ! class_exists(SquareApiException::class)) {
+        $this->markTestSkipped('Optional ark/payments-square adapter is not installed.');
+    }
+
     $exception = new SquareApiException(
         'API request failed',
         400,

@@ -69,7 +69,7 @@ Experience ladder (funnel): Phase 1 shipped. Implementation backlog is **M1–M6
 | **M3** | `/app` handoff → Workspace Launch (shop workspace) |
 | **M4** | Alpine timers → ProvisioningRequest events |
 | **M5** | Stripe after workspace success |
-| **M6** | Existing shop claim (LugsNPlugs = #1) |
+| **M6** | Existing shop claim (Demo Auto Repair = #1) |
 
 ## Not on the roadmap
 
@@ -81,7 +81,7 @@ Experience ladder (funnel): Phase 1 shipped. Implementation backlog is **M1–M6
 
 - [cloud-saas-critical-path-v1.md](cloud-saas-critical-path-v1.md) — **execute this**
 - [cloud-m3-workspace-launch-brief-v1.md](cloud-m3-workspace-launch-brief-v1.md) — M3 brief
-- [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform; migrate LugsNPlugs last
+- [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform; migrate Demo Auto Repair last
 - [NEXT.md](NEXT.md) — Monday pointer
 - [PRODUCT-TRACK.md](PRODUCT-TRACK.md) — sellable track
 - Platform orchestrator — **M4**, not before

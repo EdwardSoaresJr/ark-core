@@ -3,7 +3,7 @@
         {
             "source_id": "website",
             "source_type": "website",
-            "display_name": "LugsNPlugs website",
+            "display_name": "Demo Auto Repair website",
             "authority_class": "public_company_statement",
             "location": "https://demo-auto.test"
         },
@@ -40,14 +40,14 @@
             "id": "e642d05d-b10e-48e6-b1b1-77d77052d3d0",
             "memory_type": "shop_standard",
             "source_operator": "Edward",
-            "content": "LugsNPlugs never condemns an alternator from battery voltage alone.",
+            "content": "Demo Auto Repair never condemns an alternator from battery voltage alone.",
             "created_at": "2026-07-01T00:00:00Z"
         },
         {
             "id": "b0a49c02-c9f3-4a8e-b786-82a136c881eb",
             "memory_type": "shop_standard",
             "source_operator": "Edward",
-            "content": "[resource:how-the-shop-answers] How LugsNPlugs answers shop questions. Also mentions alternator testing only as an example.",
+            "content": "[resource:how-the-shop-answers] How Demo Auto Repair answers shop questions. Also mentions alternator testing only as an example.",
             "created_at": "2026-07-01T00:00:00Z"
         },
         {

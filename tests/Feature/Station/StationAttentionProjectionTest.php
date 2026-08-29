@@ -22,7 +22,7 @@ use Illuminate\Support\Carbon;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.lugsnplugs.local']);
+    config(['shop.identity' => 'test.demo-auto.local']);
     config(['dragon.provider' => 'fake']);
     ShopSettings::current()->update([
         'appointments_enabled' => true,
@@ -231,7 +231,7 @@ test('attention payload omits contact PII', function (): void {
 });
 
 test('station dashboard serves attention rows and coming in without dragon', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $customer = attentionCustomer('Dana', 'Miles', '7195550101');
     $repairOrder = attentionRepairOrder(
         RepairOrderStatus::WaitingApproval,
@@ -252,7 +252,7 @@ test('station dashboard serves attention rows and coming in without dragon', fun
 });
 
 test('hosted attention nudge uses snapshot only and failure does not break dashboard', function (): void {
-    $issued = StationDeviceToken::issue('front-counter-glass', 'test.lugsnplugs.local');
+    $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $customer = attentionCustomer('Dana', 'Miles', '7195550101');
     attentionRepairOrder(
         RepairOrderStatus::WaitingApproval,

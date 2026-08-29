@@ -7,7 +7,7 @@
         <dt>Operations</dt>
         <dd>Queue pressure, approval momentum, liability, recommendation conversion.</dd>
         <dt>Margin Health</dt>
-        <dd>Parts margin, ELR, ARO, and sales mix vs LugsNPlugs targets — Cecil Bullard bands with next actions. Break-even pulse when monthly fixed costs are set.</dd>
+        <dd>Parts margin, ELR, ARO, and sales mix vs Demo Auto Repair targets — Cecil Bullard bands with next actions. Break-even pulse when monthly fixed costs are set.</dd>
         <dt>Owner P&amp;L</dt>
         <dd>Management P&amp;L from posted RO truth: service revenue, COGS, gross profit, prorated operating expenses, estimated operating income, tax remittance posture, and 20% net profit benchmark. Reconcile with bookkeeper — not authoritative accounting.</dd>
         <dt>Financial</dt>
@@ -66,7 +66,7 @@
     <p>Advisors post ROs from the financial rail when invoice is ready — <strong>Post Repair Order</strong> records <code>posted_at</code> and includes the RO in Sales Posted. Close — Paid posts automatically. Unposted closed work does not appear in owner KPIs.</p>
 
     <h3>Target hints</h3>
-    <p>Green and amber hints on margin KPIs reflect targets in <strong>Settings → Owner Targets &amp; Reporting</strong>. Update there as LugsNPlugs targets evolve.</p>
+    <p>Green and amber hints on margin KPIs reflect targets in <strong>Settings → Owner Targets &amp; Reporting</strong>. Update there as Demo Auto Repair targets evolve.</p>
 
     <h3>Owner digest email</h3>
     <p>When enabled, admins receive a daily email with Sales Posted, Cash Collected, reconciliation status, queue pressure, and links to Financial tab and Bookend. Schedule lives in Owner Targets settings.</p>

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install launchd agent so ark-build-01 survives logout and Cursor shell exit.
+# Install launchd agent so ark-build-01 survives logout and interactive shell exit.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -43,7 +43,7 @@
                     <li>A shop credential you can verify independently — not only our word.</li>
                     <li>Access to RepairPal’s review and estimate tools when you use their platform.</li>
                     <li>Nationwide RepairPal Certified warranty (12 months / 12,000 miles) on qualifying repairs done at this shop — see our <a href="{{ route('public.repairpal.warranty') }}" class="public-link">RepairPal warranty page</a>.</li>
-                    <li>The same diagnostic standard we use for every Colorado Springs customer: verify the problem before recommending the repair.</li>
+                    <li>The same diagnostic standard we use for every Demo City customer: verify the problem before recommending the repair.</li>
                 </ul>
             </section>
 

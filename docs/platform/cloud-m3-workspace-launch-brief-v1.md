@@ -44,7 +44,7 @@ Workspace Launch         ← M3 — this milestone
 
 **One authority:** Workspace Launch.
 
-The authenticated owner of a platform `Shop` can leave the Cloud dashboard and enter a workspace that belongs to **that Shop** — not LugsNPlugs production by accident.
+The authenticated owner of a platform `Shop` can leave the Cloud dashboard and enter a workspace that belongs to **that Shop** — not Demo Auto Repair production by accident.
 
 ### What “real” means in M3
 
@@ -84,13 +84,13 @@ Expected: **Yes** / **No**.
 
 ## Current placeholder (replace this)
 
-`CloudExperienceController::openWorkspace` redirects authenticated users to LugsNPlugs ops `/app` (or app host login).
+`CloudExperienceController::openWorkspace` redirects authenticated users to Demo Auto Repair ops `/app` (or app host login).
 
 That is a fake handoff. It does not prove Shop → Workspace.
 
 ```text
 Old:
-  Dashboard → Open Workspace → /app  (LugsNPlugs)
+  Dashboard → Open Workspace → /app  (Demo Auto Repair)
 
 New:
   Dashboard → Open Workspace → Workspace Launch → shop workspace
@@ -110,7 +110,7 @@ Do **not** implement in M3:
 | Coolify / Docker deploy | M4+ |
 | DNS automation | M4+ |
 | Stripe / billing | M5 |
-| Existing-shop claim / LugsNPlugs migration | M6 / migration proof |
+| Existing-shop claim / Demo Auto Repair migration | M6 / migration proof |
 | Multi-tenant middleware explosion “for later” | only what launch requires |
 | Funnel / dashboard redesign | never for M3 |
 
@@ -141,8 +141,8 @@ Prefer the smallest durable record that answers: *this Shop has a workspace dest
 Per [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md):
 
 - Prove launch by onboarding a **brand-new** shop on Cloud.
-- Do **not** migrate or risk LugsNPlugs production as the experiment.
-- LugsNPlugs stays on the monolithic production app until the platform is proven.
+- Do **not** migrate or risk Demo Auto Repair production as the experiment.
+- Demo Auto Repair stays on the monolithic production app until the platform is proven.
 
 ---
 
@@ -170,7 +170,7 @@ Authority green is not enough. M3 closes only when both pass.
 A reviewer answers **YES**:
 
 - Does a real `Shop` have a durable Workspace Launch path?
-- Does Open Workspace use that path — not a hardcoded LugsNPlugs `/app` shortcut?
+- Does Open Workspace use that path — not a hardcoded Demo Auto Repair `/app` shortcut?
 
 ### B — Experience + production
 
@@ -181,7 +181,7 @@ Walk as a **brand-new** Cloud user on `autorepairkeeper.com`:
 3. Land in a workspace that is **for that Shop**
 4. Identity continues (no “who am I?” break)
 5. Return / login later still reaches the same Shop’s launch path
-6. LugsNPlugs ops (`app.demo-auto.test`) remains unaffected for the production shop
+6. Demo Auto Repair ops (`app.demo-auto.test`) remains unaffected for the production shop
 
 Visual regressions or “why did this page change?” → fail.
 
@@ -205,6 +205,6 @@ When code starts: one authority, one PR scope, stop.
 | --- | --- |
 | **M4** | ProvisioningRequest + execution behind the existing timeline |
 | **M5** | Stripe after workspace success |
-| **M6** | Existing shop claim — still not “migrate LugsNPlugs” as an experiment |
+| **M6** | Existing shop claim — still not “migrate Demo Auto Repair” as an experiment |
 
-Migration of LugsNPlugs remains a **proof**, not a milestone — see strategy doc.
+Migration of Demo Auto Repair remains a **proof**, not a milestone — see strategy doc.

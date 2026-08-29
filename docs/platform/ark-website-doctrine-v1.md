@@ -1,11 +1,11 @@
 # ARK Website Doctrine — One Customer Application
 
 **Status:** Canonical  
-**Scope:** LugsNPlugs customer experience — anonymous and authenticated states
+**Scope:** Demo Auto Repair customer experience — anonymous and authenticated states
 
 ## The sentence
 
-**One LugsNPlugs customer application with two authentication states.**
+**One Demo Auto Repair customer application with two authentication states.**
 
 Not *website* + *portal*. Not *marketing* + *product*.
 
@@ -162,7 +162,7 @@ Customer-facing UI work is incomplete until:
 
 | Document | Relationship |
 | --- | --- |
-| [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc) | Three applications — customer, operations, admin |
+| ark-surfaces.mdc | Three applications — customer, operations, admin |
 | [ark-earned-authority-v1.md](../ecosystem/ark-earned-authority-v1.md) | Public marketing v1 closed — publication when shop earns new knowledge |
 | [ecosystem-identity.md](../branding/ecosystem-identity.md) | Tab mark across ARK products |
 | [shop-identity-v1.md](shop-identity-v1.md) | One shop deployment — customer routes on same host |

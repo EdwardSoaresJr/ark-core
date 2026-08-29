@@ -53,4 +53,4 @@ Rules when earned:
 
 ## Why
 
-Fits Google’s expectations for business review solicitation, protects the Google Business Profile, and matches LugsNPlugs: **Accurate Diagnostics. Honest Repairs.** — ask for an honest review, not a managed score.
+Fits Google’s expectations for business review solicitation, protects the Google Business Profile, and matches Demo Auto Repair: **Accurate Diagnostics. Honest Repairs.** — ask for an honest review, not a managed score.

@@ -158,20 +158,20 @@ test('unknown texter still records conversation message on phone surface', funct
         'MessageSid' => 'SMunknown01',
         'From' => '+15550100999',
         'To' => '+17195559999',
-        'Body' => 'Is this Lugs N Plugs?',
+        'Body' => 'Is this Demo Auto Repair?',
         'NumMedia' => '0',
     ])->assertOk();
 
     $message = ConversationMessage::query()->sole();
 
-    expect($message->body)->toBe('Is this Lugs N Plugs?')
+    expect($message->body)->toBe('Is this Demo Auto Repair?')
         ->and($message->participant->customer_id)->toBeNull()
         ->and(Conversation::query()->sole()->contact_address)->toBe('5550100999');
 
     $lead = \App\Ark\Operations\Leads\Lead::query()->sole();
 
     expect($lead->source)->toBe(\App\Ark\Operations\Leads\LeadSource::Sms)
-        ->and($lead->concern)->toBe('Is this Lugs N Plugs?');
+        ->and($lead->concern)->toBe('Is this Demo Auto Repair?');
 });
 
 test('messaging webhook rejects invalid signature when token configured', function () {

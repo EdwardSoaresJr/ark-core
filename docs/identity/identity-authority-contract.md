@@ -35,7 +35,7 @@ Product User (projection)
 | **Role** (operational posture: admin, advisor, technician) | **ARK** (Spatie `roles`) | What the person **is** in the shop. Drives permissions inside ARK V2. BookStack roles are **mapped projections** of role, not source of truth. |
 | **Product access** (which products a user may enter) | **ARK** | What the person **may use**. Separate axis from role. See §2.1. |
 | **Permission** (fine-grained capability) | **ARK** (`permissions`, policies) | BookStack shelf/book ACLs stay BookStack-local; **staff access tier** comes from ARK role mapping only in Phase 1b. |
-| **Shop membership** (which shop a staff user belongs to) | **ARK** (future `shop_id` / tenant claim) | Today: single shop (LugsNPlugs). Contract assumes multi-shop without schema rewrite. |
+| **Shop membership** (which shop a staff user belongs to) | **ARK** (future `shop_id` / tenant claim) | Today: single shop (Demo Auto Repair). Contract assumes multi-shop without schema rewrite. |
 | **Customer identity** | **ARK** (`customers` + portal tokens) | Portal is not Phase 1b. Do not merge customer and staff directories. |
 | **BookStack user row** | **Projection** | Created/updated on OIDC login; `external_auth_id` = ARK `users.id`. |
 | **BookStack groups/roles** | **Projection** | Synced from OIDC `groups` claim on login; ARK role change → next login refresh. |
@@ -326,9 +326,9 @@ Membership: user belongs to 1..n shops; token includes active shop context
 | Can `shop1.arksms.com` and `shop2.arksms.com` share one issuer? | **Yes** — same issuer; `shop_id` claim + app routing |
 | Is user data isolated per shop? | **Yes** — operations data already shop-scoped; identity carries membership |
 | Can one human work at two shops? | **Yes** — multiple memberships; active shop selected at login or host-derived |
-| Does BookStack get one instance per shop? | **Phase 1b:** single LugsNPlugs instance. **Future:** shop-scoped shelves or instance-per-shop — projection still from same ARK user |
+| Does BookStack get one instance per shop? | **Phase 1b:** single Demo Auto Repair instance. **Future:** shop-scoped shelves or instance-per-shop — projection still from same ARK user |
 
-**Phase 1b scope:** Implement issuer with `shop_id` claim **reserved** (constant for LugsNPlugs). Do not build full multi-shop switching UI until Shop In A Box demands it.
+**Phase 1b scope:** Implement issuer with `shop_id` claim **reserved** (constant for Demo Auto Repair). Do not build full multi-shop switching UI until Shop In A Box demands it.
 
 ---
 
@@ -391,7 +391,7 @@ Each sub-phase ships with tests and runbook updates. No content migration or tra
 | `docs/branding/ownership.md` | Operational vs public host branding |
 | `docs/branding/ecosystem-identity.md` | Presentation layer consistency |
 | `docs/identity/oidc-design-pass.md` | Implementation approach — **next gate before code** |
-| `.cursor/rules/ark-surfaces.md` | Staff vs portal surface separation |
+| doctrine `ark-surfaces.md` | Staff vs portal surface separation |
 
 ---
 

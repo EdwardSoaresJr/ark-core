@@ -373,7 +373,7 @@ test('sip outbound twiml includes recording disclaimer and record attribute', fu
     TelephonyEndpoint::query()->create([
         'name' => 'Desk1',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -387,7 +387,7 @@ test('sip outbound twiml includes recording disclaimer and record attribute', fu
 
     $this->post(route('webhooks.communications.twilio.voice.sip-outbound'), [
         'CallSid' => 'CAoutrec01',
-        'From' => 'sip:desk1@lnp-chelton.sip.twilio.com',
+        'From' => 'sip:desk1@example.sip.us1.twilio.com',
         'To' => '7195550101',
         'CallStatus' => 'ringing',
     ])->assertOk()
@@ -442,7 +442,7 @@ test('voice-ready mobile app endpoint rings as Client alongside Sip and cell', f
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -465,7 +465,7 @@ test('voice-ready mobile app endpoint rings as Client alongside Sip and cell', f
         'To' => '+17195559999',
         'CallStatus' => 'ringing',
     ])->assertOk()
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false)
         ->assertSee('+17195550199</Number>', false)
         ->assertSee('<Client', false)
         ->assertSee($identity.'</Client>', false);
@@ -498,7 +498,7 @@ test('stale or disabled mobile app endpoints are omitted from inbound ring', fun
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -512,7 +512,7 @@ test('stale or disabled mobile app endpoints are omitted from inbound ring', fun
         'To' => '+17195559999',
         'CallStatus' => 'ringing',
     ])->assertOk()
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false)
         ->assertSee(MobileVoiceIdentity::fromDevice($readyDevice).'</Client>', false)
         ->assertDontSee(MobileVoiceIdentity::fromDevice($staleDevice).'</Client>', false)
         ->assertDontSee(MobileVoiceIdentity::fromDevice($disabledDevice).'</Client>', false);
@@ -536,7 +536,7 @@ test('missing twiml app sid omits Client while Sip and Number keep ringing', fun
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -559,7 +559,7 @@ test('missing twiml app sid omits Client while Sip and Number keep ringing', fun
         'To' => '+17195559999',
         'CallStatus' => 'ringing',
     ])->assertOk()
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false)
         ->assertSee('+17195550199</Number>', false)
         ->assertDontSee('<Client', false)
         ->assertDontSee($identity.'</Client>', false);
@@ -583,7 +583,7 @@ test('missing ios voip push credential omits Client while Sip keeps ringing', fu
     TelephonyEndpoint::query()->create([
         'name' => 'WP820 WiFi Phone',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:wp820@lnp-chelton.sip.twilio.com',
+        'destination' => 'sip:wp820@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -597,7 +597,7 @@ test('missing ios voip push credential omits Client while Sip keeps ringing', fu
         'To' => '+17195559999',
         'CallStatus' => 'ringing',
     ])->assertOk()
-        ->assertSee('sip:wp820@lnp-chelton.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:wp820@example.sip.us1.twilio.com</Sip>', false)
         ->assertDontSee('<Client', false)
         ->assertDontSee($identity.'</Client>', false);
 

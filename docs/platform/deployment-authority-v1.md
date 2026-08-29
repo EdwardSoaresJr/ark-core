@@ -35,7 +35,7 @@ Customers never buy “ARK Cloud.” They experience it on **Start Trial**.
 | --- | --- | --- |
 | **ARK Cloud** | Shop, Deployment, Routing Target, Ingress Endpoint (truth) | Proxying bytes |
 | **Coolify** | Deploy containers / apps on a target | Routing registry, hostname → Shop |
-| **ARK Edge (Traefik)** | “Given `lugsnplugs.arksms.com`, where do I send this?” | Stancl, ROs, customers, provisioning |
+| **ARK Edge (Traefik)** | “Given `demo-auto.arksms.com`, where do I send this?” | Stancl, ROs, customers, provisioning |
 | **Laravel + Stancl** | Resolve Shop on this machine; run ARK | Choosing a VPS |
 
 Coolify may **host** Traefik on the same VPS as the front door. Coolify must **not** be the routing registry. Replace Coolify later without rewriting edge or Shop authority.
@@ -218,16 +218,16 @@ Edge / Routing Target decide geography.
 
 ---
 
-## Parallel evolution (protect LugsNPlugs)
+## Parallel evolution (protect Demo Auto Repair)
 
-**Never pioneer Stancl on LugsNPlugs production.**
+**Never pioneer Stancl on Demo Auto Repair production.**
 
 | Phase | Action |
 | --- | --- |
-| **1 Today** | LugsNPlugs single-tenant on current VPS — feature work OK; no Stancl conversion |
+| **1 Today** | Demo Auto Repair single-tenant on current VPS — feature work OK; no Stancl conversion |
 | **2** | Shared Cluster A + ARK Edge — prove provision with e.g. `testgarage.arksms.com` |
-| **3** | `autorepairkeeper.com` trials → Shared Cluster A; LugsNPlugs untouched |
-| **4** | After real shops prove the model → migrate LugsNPlugs as a routine workflow |
+| **3** | `autorepairkeeper.com` trials → Shared Cluster A; Demo Auto Repair untouched |
+| **4** | After real shops prove the model → migrate Demo Auto Repair as a routine workflow |
 
 ---
 

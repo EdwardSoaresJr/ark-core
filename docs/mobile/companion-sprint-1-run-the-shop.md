@@ -3,7 +3,7 @@
 **Status:** **Execution milestone** — starts **after** Companion v1 product discovery gate.  
 **Discovery (active now):** [`../companion-v1/README.md`](../companion-v1/README.md)
 
-**Owner:** Edward (LugsNPlugs)  
+**Owner:** Edward (Demo Auto Repair)  
 **Device:** Razr — primary execution surface for the advisor day
 
 ---
@@ -42,7 +42,7 @@ If **no** → that's what we build.
 
 **Progress filter:**
 
-> Does this help Edward run LugsNPlugs from the phone **today**?
+> Does this help Edward run Demo Auto Repair from the phone **today**?
 
 If not → not P0.
 

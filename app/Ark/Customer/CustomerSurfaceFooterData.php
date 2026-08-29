@@ -20,7 +20,7 @@ final class CustomerSurfaceFooterData
         $publicSurface = PublicSurfaceSettings::current();
 
         $streetAddress = $shop->publicationStreetAddress();
-        $cityState = trim(implode(', ', array_filter([$shop->city, $shop->state]))) ?: 'Colorado Springs, CO';
+        $cityState = trim(implode(', ', array_filter([$shop->city, $shop->state]))) ?: 'Demo City, ST';
         $postalCode = trim((string) ($shop->postal_code ?? '')) ?: '80909';
 
         $addressParts = array_filter([
@@ -28,7 +28,7 @@ final class CustomerSurfaceFooterData
             $cityState,
             $postalCode,
         ]);
-        $addressLine = $addressParts !== [] ? implode(' · ', $addressParts) : 'Colorado Springs, CO';
+        $addressLine = $addressParts !== [] ? implode(' · ', $addressParts) : 'Demo City, ST';
 
         $phoneDisplay = PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
         $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '7194136227';
@@ -58,7 +58,7 @@ final class CustomerSurfaceFooterData
         $termsUrl = Route::has('public.terms') ? route('public.terms') : null;
 
         $diagnosticsUrl = Route::has('public.common-problems.show')
-            ? route('public.common-problems.show', 'car-diagnostics-colorado-springs')
+            ? route('public.common-problems.show', 'car-diagnostics-demo-city')
             : $commonProblemsUrl;
 
         $googleRating = (float) ($publicSurface['google_rating'] ?? 0);
@@ -68,7 +68,7 @@ final class CustomerSurfaceFooterData
             'shop_name' => $shopName,
             'address_line' => $addressLine,
             'street_address' => $streetAddress !== '' ? $streetAddress : $addressLine,
-            'city_state' => $cityState !== '' ? $cityState : 'Colorado Springs, CO',
+            'city_state' => $cityState !== '' ? $cityState : 'Demo City, ST',
             'phone_display' => $phoneDisplay,
             'phone_tel' => $phoneTel,
             'business_hours_label' => $publicSurface['business_hours_label'],

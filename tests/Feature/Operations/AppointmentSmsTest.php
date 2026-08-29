@@ -25,7 +25,7 @@ beforeEach(function () {
     ShopSettings::current()->update([
         'appointments_enabled' => true,
         'shop_timezone' => 'America/Denver',
-        'shop_name' => 'LugsNPlugs',
+        'shop_name' => 'Demo Auto Repair',
         'phone' => '7194136227',
         'telephony_inbound_number' => '7195559999',
     ]);

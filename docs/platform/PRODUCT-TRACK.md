@@ -109,7 +109,7 @@ Invite · Domain · Billing · SMS · Website · Voice · Reviews — after they
 
 Underneath (invisible): Shop · Deployment · ProvisioningRequest · ClusterAssignment · Coolify · Stancl · DNS.
 
-## First customer: LugsNPlugs
+## First customer: Demo Auto Repair
 
 Ruthless standard. Walk the adoption journey yourself. Every awkward edge is one a future customer won’t hit.
 

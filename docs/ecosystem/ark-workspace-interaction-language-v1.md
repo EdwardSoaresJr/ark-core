@@ -598,11 +598,11 @@ That is a different priority than most enterprise apps — and it explains every
 | Doctrine | Relationship |
 | --- | --- |
 | [ark-constitution-v1.md](./ark-constitution-v1.md) | Coherence over capability; hierarchy of evidence |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Views render projections; do not re-derive |
-| [ark-authority-adoption.mdc](../../.cursor/rules/ark-authority-adoption.mdc) | Observe adoption before automate |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Observe → surface → measure → enforce |
-| [ark-earned-intelligence.mdc](../../.cursor/rules/ark-earned-intelligence.mdc) | No intelligence before repeated sentences |
-| [ark-pr-doctrine-review.mdc](../../.cursor/rules/ark-pr-doctrine-review.mdc) | Four-question PR lint |
+| ark-projection-rule.mdc | Views render projections; do not re-derive |
+| ark-authority-adoption.mdc | Observe adoption before automate |
+| ark-pressure-first.mdc | Observe → surface → measure → enforce |
+| ark-earned-intelligence.mdc | No intelligence before repeated sentences |
+| ark-pr-doctrine-review.mdc | Four-question PR lint |
 | [ark-mobile-production-workspace-v1.md](../mobile/ark-mobile-production-workspace-v1.md) | Mobile proving ground |
 | [ark-mobile-projection-v1.md](../mobile/ark-mobile-projection-v1.md) | Authority → projection → UI |
 
@@ -675,7 +675,7 @@ Every **significant PR** must answer four questions — architectural linting:
 
 If a PR cannot answer all four, it probably is not ready.
 
-Cursor and human reviewers should act as **doctrine reviewers**, not only code generators. See [.cursor/rules/ark-pr-doctrine-review.mdc](../../.cursor/rules/ark-pr-doctrine-review.mdc).
+Human reviewers should act as **doctrine reviewers**, not only implementers. See companion doctrine `ark-pr-doctrine-review`.
 
 ### Reviewer output shape
 
@@ -732,7 +732,7 @@ When someone says *"We should add AI here"* — the answer is:
 
 > **"What repeated sentence earned it?"**
 
-See [.cursor/rules/ark-earned-intelligence.mdc](../../.cursor/rules/ark-earned-intelligence.mdc).
+See doctrine `ark-earned-intelligence.mdc.`
 
 ---
 

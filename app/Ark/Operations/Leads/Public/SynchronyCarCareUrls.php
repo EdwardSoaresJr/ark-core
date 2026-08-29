@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Leads\Public;
 
 /**
- * LugsNPlugs Synchrony Car Care merchant links — site codes track channel attribution.
+ * Demo Auto Repair Synchrony Car Care merchant links — site codes track channel attribution.
  *
  * 401 — website text links
  * 402 — QR codes (signage, printed materials, estimate QR later)
@@ -11,13 +11,13 @@ namespace App\Ark\Operations\Leads\Public;
  */
 final class SynchronyCarCareUrls
 {
-    public const MERCHANT_ID = 'CR243778456';
+    public const MERCHANT_ID = 'CR000000000';
 
-    public const SITE_CODE_LINK = 'acewel401';
+    public const SITE_CODE_LINK = 'demo401';
 
-    public const SITE_CODE_QR = 'acewel402';
+    public const SITE_CODE_QR = 'demo402';
 
-    public const SITE_CODE_EMBED = 'acewel403';
+    public const SITE_CODE_EMBED = 'demo403';
 
     public const APPLY_BUTTON_IMAGE = 'https://www.synchrony.com/mmc/assets/syf_apply_218.png';
 

@@ -3,7 +3,7 @@
 **Status:** B1 ✅ · **B2 ✅ (ark-mobile)** — pending commit  
 **Report:** [ark-mobile-voice-runtime-authority-report-v1.md](../mobile/ark-mobile-voice-runtime-authority-report-v1.md)  
 **Date:** 2026-07-04  
-**Repo:** `/Users/edwardsoares/Herd/ark-mobile` (sibling to `arksmsv2`)  
+**Repo:** `private ark-mobile sibling (not redistributed)` (sibling to `arksmsv2`)  
 **Mission (architecture):** [phase-b-voice-cleanup-mission-v1.md](../communications/phase-b-voice-cleanup-mission-v1.md) · **Runtime:** [../runtime/voice-runtime-authority.md](../runtime/voice-runtime-authority.md)  
 **Sprint (evidence):** [communications-voice-cleanup-sprint-v1.md](../communications/communications-voice-cleanup-sprint-v1.md)
 
@@ -237,7 +237,7 @@ Stale Twilio docs / README sections
 ### `TwilioVoiceTransport`
 
 1. **Who calls this?** Only `ArkVoiceDialer._bindTransport` when `transportKey == 'twilio'`.
-2. **What production behavior depends on it?** None — `MobileVoiceTransportManager` never returns `twilio`; LugsNPlugs production API issues `ark_voice`.
+2. **What production behavior depends on it?** None — `MobileVoiceTransportManager` never returns `twilio`; Demo Auto Repair production API issues `ark_voice`.
 3. **What replaces it?** `ArkVoiceTransport` (already production).
 
 ### `twilio_voice` package
@@ -291,4 +291,4 @@ Renamed: XX symbols
 Behavior changes: 0
 ```
 
-See [ark-cleanup-sprint-discipline.mdc](../../.cursor/rules/ark-cleanup-sprint-discipline.mdc).
+See ark-cleanup-sprint-discipline.mdc.

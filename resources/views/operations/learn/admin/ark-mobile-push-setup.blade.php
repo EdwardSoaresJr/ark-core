@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Status — production operational (2026-06-27)</h3>
-    <p>ARK owns notification authority. Firebase is <strong>FCM transport only</strong> — free tier, no Firestore/Auth/Analytics. LugsNPlugs production push is <strong>enabled</strong> (<code>lugsnplugs-ark-mobile</code>). iOS still needs APNs <code>.p8</code> in Firebase Console before iPhone push works. Advisors still have Attention polling when push fails.</p>
+    <p>ARK owns notification authority. Firebase is <strong>FCM transport only</strong> — free tier, no Firestore/Auth/Analytics. Demo Auto Repair production push is <strong>enabled</strong> (<code>demo-auto-ark-mobile</code>). iOS still needs APNs <code>.p8</code> in Firebase Console before iPhone push works. Advisors still have Attention polling when push fails.</p>
 
     <h3>When push is justified (later)</h3>
     <p>ARK owns notification authority. Firebase is <strong>transport only</strong> — not Auth, Firestore, or workflow. ARK sends via FCM HTTP v1; Flutter registers a token via <code>POST /api/mobile/device</code> only.</p>

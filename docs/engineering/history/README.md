@@ -34,7 +34,7 @@ history/
 # Task: {title}
 
 **Goal:** [{goal}](../goals/{goal-slug}.md)
-**Worker:** human-cursor | codex-cli | …
+**Worker:** human | codex-cli | …
 **Status:** open | stopped | complete
 
 ---

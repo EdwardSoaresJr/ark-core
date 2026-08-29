@@ -16,7 +16,7 @@ it('uses host-only cookies on the company product host', function () {
         ->and(SessionCookieDomain::forHost('app.autorepairkeeper.com', '.demo-auto.test'))->toBeNull();
 });
 
-it('keeps the shared ops domain on LugsNPlugs hosts', function () {
+it('keeps the shared ops domain on Demo Auto Repair hosts', function () {
     config([
         'surfaces.company' => 'autorepairkeeper.com',
         'surfaces.company_www' => 'www.autorepairkeeper.com',

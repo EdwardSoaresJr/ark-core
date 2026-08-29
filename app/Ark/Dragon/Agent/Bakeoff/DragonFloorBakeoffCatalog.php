@@ -3,7 +3,7 @@
 namespace App\Ark\Dragon\Agent\Bakeoff;
 
 /**
- * Frozen LugsNPlugs floor set. Not synthetic. Human judgment still owns “competent employee.”
+ * Frozen Demo Auto Repair floor set. Not synthetic. Human judgment still owns “competent employee.”
  *
  * @phpstan-type Task array{
  *     id: string,

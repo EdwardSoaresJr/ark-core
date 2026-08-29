@@ -116,7 +116,7 @@
                             @elseif ($gbp['server_firebase_client_email'])
                                 <p class="mt-2 rounded-sm border border-sky-200 bg-sky-50 px-2 py-1.5 text-[11px] leading-4 text-sky-900">
                                     <span class="font-semibold">Server Firebase account available.</span>
-                                    ARK can use <span class="font-mono">{{ $gbp['server_firebase_client_email'] }}</span> from <code class="font-mono text-[10px]">firebase-mobile-service-account.json</code> — the same <code class="font-mono text-[10px]">lugsnplugs-ark-mobile</code> project as mobile push. No paste required.
+                                    ARK can use <span class="font-mono">{{ $gbp['server_firebase_client_email'] }}</span> from <code class="font-mono text-[10px]">firebase-mobile-service-account.json</code> — the same <code class="font-mono text-[10px]">demo-auto-ark-mobile</code> project as mobile push. No paste required.
                                 </p>
                             @else
                                 <p class="mt-1 text-[11px] leading-4 text-slate-500">
@@ -138,7 +138,7 @@
                                         <span class="font-semibold">Use server Firebase account instead.</span>
                                         Switch from <span class="font-mono">{{ $gbp['client_email'] }}</span> to
                                         <span class="font-mono">{{ $gbp['server_firebase_client_email'] }}</span>
-                                        (<code class="font-mono text-[10px]">lugsnplugs-ark-mobile</code>). Save integrations, then try Discover locations.
+                                        (<code class="font-mono text-[10px]">demo-auto-ark-mobile</code>). Save integrations, then try Discover locations.
                                     </span>
                                 </label>
                             @else
@@ -164,7 +164,7 @@
                                         <p class="mt-1 text-xs text-red-700">{{ $message }}</p>
                                     @enderror
                                     <p class="mt-1 text-[11px] leading-4 text-slate-500">
-                                        Required before enabling sync. Click <strong>Discover locations</strong> and pick the Colorado Springs listing.
+                                        Required before enabling sync. Click <strong>Discover locations</strong> and pick the Demo City listing.
                                     </p>
                                 </div>
                                 <button
@@ -258,10 +258,10 @@
                                 Create a <strong>service account</strong> → Keys → Add key → JSON. Paste the full file above.
                             </li>
                             <li>
-                                In <a href="https://business.google.com/" class="font-semibold text-sky-700 underline" target="_blank" rel="noopener">Google Business Profile</a>, open Lugs N Plugs → Users → add the service account email as a <strong>Manager</strong>.
+                                In <a href="https://business.google.com/" class="font-semibold text-sky-700 underline" target="_blank" rel="noopener">Google Business Profile</a>, open Demo Auto Repair → Users → add the service account email as a <strong>Manager</strong>.
                             </li>
                             <li>
-                                Save the JSON here, click <strong>Discover locations</strong>, and pick the Colorado Springs listing.
+                                Save the JSON here, click <strong>Discover locations</strong>, and pick the Demo City listing.
                             </li>
                             <li>
                                 Enable sync, check backfill if you want history, then save. Use <strong>Rebuild now</strong> on Opportunities anytime.

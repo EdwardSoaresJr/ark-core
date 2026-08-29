@@ -102,7 +102,7 @@ test('popular dtc common problem pages are indexable with faq schema', function 
 test('gsc intent common problem pages are live with faq schema', function (): void {
     foreach ([
         'car-fluid-service',
-        'audi-repair-colorado-springs',
+        'audi-repair-demo-city',
         'burnt-transmission-fluid',
         'misfire-under-load',
         'transmission-fluid-change',
@@ -127,7 +127,7 @@ test('gsc intent pages appear in sitemap', function (): void {
 
     foreach ([
         'car-fluid-service',
-        'audi-repair-colorado-springs',
+        'audi-repair-demo-city',
         'misfire-under-load',
         'electrical-diagnostics',
     ] as $slug) {
@@ -140,11 +140,11 @@ test('gsc intent pages appear in sitemap', function (): void {
 
 test('local service intent pages are live with ctr-focused titles', function (): void {
     $pages = [
-        'auto-repair-colorado-springs' => 'Auto Repair Colorado Springs | Test First',
-        'mechanic-colorado-springs' => 'Mechanic Colorado Springs | Diagnostics First',
-        'car-diagnostics-colorado-springs' => 'Car Diagnostics Colorado Springs | Live Scan',
-        'brake-repair-colorado-springs' => 'Brake Repair Colorado Springs | Inspected Before',
-        'tune-up-colorado-springs' => 'Tune Up Colorado Springs | Maintenance With Evidence',
+        'auto-repair-demo-city' => 'Auto Repair Demo City | Test First',
+        'mechanic-demo-city' => 'Mechanic Demo City | Diagnostics First',
+        'car-diagnostics-demo-city' => 'Car Diagnostics Demo City | Live Scan',
+        'brake-repair-demo-city' => 'Brake Repair Demo City | Inspected Before',
+        'tune-up-demo-city' => 'Tune Up Demo City | Maintenance With Evidence',
     ];
 
     foreach ($pages as $slug => $titleFragment) {
@@ -161,28 +161,28 @@ test('local service intent pages are live with ctr-focused titles', function ():
 test('homepage uses intent-first seo title', function (): void {
     $this->get(route('public.home'))
         ->assertOk()
-        ->assertSee('<title>Auto Repair Colorado Springs | Verified Diagnostics</title>', false);
+        ->assertSee('<title>Auto Repair Demo City | Verified Diagnostics</title>', false);
 });
 
 test('legacy estimate and local service urls redirect correctly', function (): void {
     $this->get('/request-estimate')->assertRedirect('/');
 
     $this->get('/auto-repair')
-        ->assertRedirect('/common-problems/auto-repair-colorado-springs');
+        ->assertRedirect('/common-problems/auto-repair-demo-city');
 
-    $this->get('/mechanic-colorado-springs')
-        ->assertRedirect('/common-problems/mechanic-colorado-springs');
+    $this->get('/mechanic-demo-city')
+        ->assertRedirect('/common-problems/mechanic-demo-city');
 });
 
 test('local service pages appear in sitemap', function (): void {
     $response = $this->get(route('sitemap.xml'))->assertOk();
 
     foreach ([
-        'auto-repair-colorado-springs',
-        'mechanic-colorado-springs',
-        'car-diagnostics-colorado-springs',
-        'brake-repair-colorado-springs',
-        'tune-up-colorado-springs',
+        'auto-repair-demo-city',
+        'mechanic-demo-city',
+        'car-diagnostics-demo-city',
+        'brake-repair-demo-city',
+        'tune-up-demo-city',
     ] as $slug) {
         $response->assertSee(
             '<loc>'.PublicMarketingUrl::baseUrl().'/common-problems/'.$slug.'</loc>',

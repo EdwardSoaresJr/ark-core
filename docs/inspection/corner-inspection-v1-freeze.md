@@ -1,4 +1,4 @@
-# LugsNPlugs Standard Vehicle Inspection — Corner Inspection v1.0
+# Demo Auto Repair Standard Vehicle Inspection — Corner Inspection v1.0
 
 **Status:** Frozen · Phase 2A · Permanent doctrine  
 **Scope:** Corner Inspection only — do not expand into Steering, Suspension, Under Vehicle, Under Hood, Exterior, or Road Test from this freeze.  
@@ -53,7 +53,7 @@ Brake-fluid correlation prompts (pads healthy + fluid low → verify) are future
 
 ---
 
-## Condition projection (LugsNPlugs)
+## Condition projection (Demo Auto Repair)
 
 Technician workflow uses **Green · Yellow · Red**.
 
@@ -68,7 +68,7 @@ Literal color names are **never** authority. Colors are shop projection labels f
 **Green** — no expand.  
 **Yellow / Red** — expand: structured observation · technician note · photo.
 
-LugsNPlugs policy: Yellow and Red require photographs. That policy lives in Builder metadata (`photo_policy: when_not_green`), not hardcoded platform law.
+Demo Auto Repair policy: Yellow and Red require photographs. That policy lives in Builder metadata (`photo_policy: when_not_green`), not hardcoded platform law.
 
 ---
 
@@ -104,4 +104,4 @@ Assumed shop equipment: tablet, flashlight, tire pressure gauge, tread gauge, br
 - Full dynamic Builder admin UI  
 - Auto Concerns / estimates from corner findings  
 - Rotor thickness SM on Standard  
-- Hardcoding LugsNPlugs photo policy as platform-invariant  
+- Hardcoding Demo Auto Repair photo policy as platform-invariant  

@@ -169,6 +169,6 @@ Do **not** build more notification features. Build continuity surfaces.
 ## Companions
 
 - [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) — transport boundary
-- [ark-observations.mdc](../../.cursor/rules/ark-observations.mdc) — observation vocabulary
-- [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) — compute once, render many
-- [ark-orientation-pattern.mdc](../../.cursor/rules/ark-orientation-pattern.mdc) — briefing before action
+- ark-observations.mdc — observation vocabulary
+- ark-projection-rule.mdc — compute once, render many
+- ark-orientation-pattern.mdc — briefing before action

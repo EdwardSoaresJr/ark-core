@@ -25,7 +25,7 @@
             <section class="public-content-section">
                 <h2>Nationwide coverage</h2>
                 <p>
-                    This warranty is meant for travel — not only for drivers who stay in Colorado Springs.
+                    This warranty is meant for travel — not only for drivers who stay in Demo City.
                     If a related issue shows up while you are away, participating RepairPal Certified shops can help look at warranty work under the program’s terms.
                 </p>
             </section>
@@ -62,7 +62,7 @@
                     <div>
                         <dt class="font-semibold text-slate-900">How is this different from the shop warranty page?</dt>
                         <dd class="mt-1 text-sm leading-relaxed text-slate-600 sm:text-base">
-                            Our <a href="{{ route('public.warranty') }}" class="public-link">repair warranty</a> page describes the LugsNPlugs shop warranty: 24 months / 24,000 miles on qualifying parts and labor, where applicable.
+                            Our <a href="{{ route('public.warranty') }}" class="public-link">repair warranty</a> page describes the Demo Auto Repair shop warranty: 24 months / 24,000 miles on qualifying parts and labor, where applicable.
                             This page is the RepairPal Certified warranty: 12 months / 12,000 miles nationwide on qualifying repairs.
                         </dd>
                     </div>

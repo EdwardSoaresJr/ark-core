@@ -59,7 +59,7 @@ test('shop-specific synchrony merchant url is preserved as link channel', functi
     ShopSettings::current()->update([
         'public_surface_settings' => array_merge(PublicSurfaceSettings::DEFAULTS, [
             'trust_signals' => array_merge(PublicSurfaceSettings::DEFAULTS['trust_signals'], [
-                'synchrony_url' => 'https://www.synchrony.com/mmc/CR243778456?sitecode=acewel403',
+                'synchrony_url' => 'https://www.synchrony.com/mmc/CR000000000?sitecode=demo403',
             ]),
         ]),
     ]);
@@ -84,7 +84,7 @@ test('empty stored wisetack url falls back to shop prequal link', function (): v
 });
 
 test('shop-specific wisetack prequal url is preserved', function (): void {
-    $prequalUrl = 'https://wisetack.us/#/prequal/lugs-n-plugs-example';
+    $prequalUrl = 'https://wisetack.us/#/prequal/demo-auto-example';
 
     ShopSettings::current()->update([
         'public_surface_settings' => array_merge(PublicSurfaceSettings::DEFAULTS, [
@@ -147,7 +147,7 @@ test('public homepage surfaces booking conversion and common problems', function
         ->assertSee('View Auto Repair Services', false)
         ->assertDontSee('Ready when you are', false)
         ->assertSee('What our customers say', false)
-        ->assertDontSee('Auto repair in Colorado Springs', false)
+        ->assertDontSee('Auto repair in Demo City', false)
         ->assertDontSee('Warm air? It may be a leak, compressor, or electrical issue.', false)
         ->assertDontSee('Dealer-Level Diagnostics', false)
         ->assertSee('4.9 on Google', false)

@@ -1,6 +1,6 @@
 # Advisor Cockpit & Discoverability v1
 
-**Status:** Active — build priority for LugsNPlugs  
+**Status:** Active — build priority for Demo Auto Repair  
 **Sequence:** Discoverability → Observation → Consolidation → Inspection v1.5  
 **Companions:** [Inspection Authority v1.5](../inspection/inspection-authority-v1.5.md) · [Repair Order Discovery Contract](repair-order-discovery-contract.md) (technician scope — separate concern)
 

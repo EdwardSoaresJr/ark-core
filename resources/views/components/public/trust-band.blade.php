@@ -24,7 +24,7 @@
                 </span>
                 <span class="public-trust-band__google-copy">
                     <span class="public-trust-band__google-rating">{{ $googleRating }}★ Google rating</span>
-                    <span class="public-trust-band__google-count">Colorado Springs drivers on Google</span>
+                    <span class="public-trust-band__google-count">Demo City drivers on Google</span>
                 </span>
             </a>
         @endif

@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
-    ShopSettings::current()->update(['shop_name' => 'LugsNPlugs']);
+    ShopSettings::current()->update(['shop_name' => 'Demo Auto Repair']);
 });
 
 test('portal vehicle detail shows active visit and documents', function () {

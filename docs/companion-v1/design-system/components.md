@@ -109,7 +109,7 @@
 | Label | Metadata · timestamps |
 | Spacing 4/8/12/16/24 | No per-screen inventing |
 
-Reference: ~15–20% tighter than generic CRM — `ark-cursor-doctrine` — but **spec here in Companion terms**, not doctrine prose.
+Reference: ~15–20% tighter than generic CRM — `ark product doctrine` — but **spec here in Companion terms**, not doctrine prose.
 
 ---
 

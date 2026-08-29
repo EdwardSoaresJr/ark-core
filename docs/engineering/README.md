@@ -1,6 +1,6 @@
 # Engineering Authority
 
-This directory is the **Engineering Authority** for ARK-SMS. It is the single source of truth for engineering agents (Cursor, ChatGPT reviews, future MCP agents) before making implementation decisions.
+This directory is the **Engineering Authority** for ARK-SMS. It is the single source of truth for engineering maintainers and automated review tools before making implementation decisions.
 
 This hierarchy does **not** replace existing domain documentation. Communications architecture, bounded-context docs, and ecosystem doctrine remain canonical for their respective domains. The Engineering Authority references those documents and tracks current implementation state.
 
@@ -39,7 +39,7 @@ Every engineering agent must read these files **in this order** before writing c
 4. [ACTIVE_PR.md](ACTIVE_PR.md) — scope of the current pull request
 5. [workflow-completion-certification.md](workflow-completion-certification.md) — workflow ↔ operation mapping
 6. [ARCHITECTURE.md](ARCHITECTURE.md) — permanent engineering doctrines (when needed)
-7. [STANDARDS.md](STANDARDS.md) — architectural rules, PR discipline, AI development rules
+7. [STANDARDS.md](STANDARDS.md) — architectural rules, PR discipline, engineering discipline
 8. [ROADMAP.md](ROADMAP.md) — major engineering phases (context only)
 9. [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) — append-only history of what shipped
 10. [scheduling-runtime-authority.md](../runtime/scheduling-runtime-authority.md) — when touching appointments / capacity / Living Demo
@@ -54,12 +54,6 @@ Append an entry to [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md). Do not rewrit
 
 Frozen decisions live in [adr/](adr/). **Never edit an accepted ADR.** If a decision changes, write a new ADR that supersedes the old one. History is preserved.
 
-## Research (Agent 2)
-
-Platform and process research — not active implementation scope. See [research/](research/).
-
-Agent 2 mission complete (2026-06-26). Do not extend platform research until floor evidence earns it.
-
 ## Reviews
 
 Architecture and scope review records live in [reviews/](reviews/). ADRs capture decisions; reviews capture judgment.
@@ -73,5 +67,5 @@ Architecture and scope review records live in [reviews/](reviews/). ADRs capture
 | **Engineering history (event replay)** | [history/README.md](history/README.md) |
 | Endpoint architecture | [docs/communications/ark-voice-endpoint-architecture-v1.md](../communications/ark-voice-endpoint-architecture-v1.md) |
 | Communications bounded context | [docs/communications/communications-bounded-context-v1.md](../communications/communications-bounded-context-v1.md) |
-| **Customer continuity workspace (binding UI/impl guardrail)** | [communications-workspace-rules.md](communications-workspace-rules.md) · Cursor: `ark-communications-workspace-guardrail.mdc` — relationship state first; not a messaging inbox |
+| **Customer continuity workspace (binding UI/impl guardrail)** | [communications-workspace-rules.md](communications-workspace-rules.md) · `ark-communications-workspace-guardrail` — relationship state first; not a messaging inbox |
 | ARK Voice vision | [docs/communications/ark-voice-vision.md](../communications/ark-voice-vision.md) |

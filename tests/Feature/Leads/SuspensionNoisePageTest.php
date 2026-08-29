@@ -3,7 +3,7 @@
 use App\Ark\Growth\PublicSurface\PublicMarketingUrl;
 use App\Ark\Operations\Leads\Public\CommonProblemRegistry;
 
-test('suspension noise page answers the questions Colorado Springs drivers ask', function (): void {
+test('suspension noise page answers the questions Demo City drivers ask', function (): void {
     $problem = CommonProblemRegistry::find('suspension-noise');
 
     expect($problem)->not->toBeNull()

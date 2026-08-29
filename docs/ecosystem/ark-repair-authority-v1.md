@@ -107,10 +107,10 @@ Until then, the code is allowed to lag the doctrine. That is not debt — it is 
 | --- | --- |
 | [ark-truth-stack-v1.md](./ark-truth-stack-v1.md) | Events → projections → narratives → evidence |
 | [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | When knowledge may leave the shop |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Projections summarize; never become truth |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Observe before enforce / publish |
+| ark-projection-rule.mdc | Projections summarize; never become truth |
+| ark-pressure-first.mdc | Observe before enforce / publish |
 | [ark-the-shop-learns-v1.md](./ark-the-shop-learns-v1.md) | How shop knowledge is earned, revised, retired |
-| [ark-doctrine-lifecycle.mdc](../../.cursor/rules/ark-doctrine-lifecycle.mdc) | Revision only after observation + outcome |
+| ark-doctrine-lifecycle.mdc | Revision only after observation + outcome |
 
 ---
 

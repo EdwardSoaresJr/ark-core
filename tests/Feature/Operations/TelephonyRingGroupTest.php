@@ -52,7 +52,7 @@ test('twiml includes multiple enabled endpoints with number and sip children', f
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:101@example.sip.twilio.com',
         'enabled' => true,
         'position' => 2,
     ]);
@@ -69,7 +69,7 @@ test('twiml includes multiple enabled endpoints with number and sip children', f
         ->assertSee('+17195551001</Number>', false)
         ->assertSee('+17195551002</Number>', false)
         ->assertSee('<Sip', false)
-        ->assertSee('sip:101@lugsnplugs.sip.twilio.com</Sip>', false)
+        ->assertSee('sip:101@example.sip.twilio.com</Sip>', false)
         ->assertSee('statusCallback="'.route('webhooks.communications.twilio.voice.status').'"', false)
         ->assertSee('statusCallbackEvent="answered in-progress"', false);
 });
@@ -146,7 +146,7 @@ test('telephony settings can save ring delay seconds per endpoint', function () 
                 [
                     'name' => 'Ben SIP',
                     'type' => 'sip',
-                    'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+                    'destination' => 'sip:desk1@example.sip.twilio.com',
                     'ring_delay_seconds' => '0',
                     'enabled' => '1',
                 ],
@@ -213,7 +213,7 @@ test('sip destinations are normalized with sip prefix when saved', function () {
                 [
                     'name' => 'Front Desk SIP',
                     'type' => 'sip',
-                    'destination' => '101@lugsnplugs.sip.twilio.com',
+                    'destination' => '101@example.sip.twilio.com',
                     'enabled' => '1',
                 ],
             ],
@@ -221,7 +221,7 @@ test('sip destinations are normalized with sip prefix when saved', function () {
         ->assertRedirect();
 
     expect(TelephonyEndpoint::query()->first()?->destination)
-        ->toBe('sip:101@lugsnplugs.sip.twilio.com');
+        ->toBe('sip:101@example.sip.twilio.com');
 });
 
 test('telephony settings require profile cell for enabled cell endpoint without phone', function () {
@@ -360,7 +360,7 @@ test('desk only inbound ring setting excludes cell and mobile from twiml', funct
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:101@example.sip.twilio.com',
         'enabled' => true,
         'position' => 1,
     ]);
@@ -388,7 +388,7 @@ test('inbound ring skips cell endpoint when caller is the same number', function
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:101@example.sip.twilio.com',
         'enabled' => true,
         'position' => 1,
     ]);

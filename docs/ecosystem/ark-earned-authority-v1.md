@@ -76,7 +76,7 @@ Projection must never invent, exaggerate, or infer beyond its authority.
 | **Never exaggerate** | Rounded marketing numbers without verified counts are fabrication |
 | **Publish uncertainty** | When the shop does not know yet, say so — that is trustworthy |
 
-Companion: [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) · [ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc)
+Companion: ark-projection-rule.mdc · ark-explainability-doctrine.mdc
 
 **Explainability Rule:** If evidence cannot be shown, the claim is not operational truth — hold it in engineering detail or the notebook, not on the floor or the public site.
 
@@ -211,11 +211,11 @@ When planning engineering time after v1:
 | [ark-truth-stack-v1.md](./ark-truth-stack-v1.md) | Events → projections → narratives → evidence |
 | [ark-repair-authority-v1.md](./ark-repair-authority-v1.md) | Repair is the authority; problem/service/advisor pages are projections — rename last |
 | [ark-constitution-v1.md](./ark-constitution-v1.md) | Coherence over capability; hierarchy of evidence |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Observe before enforce — same sequence, public side |
-| [ark-observations.mdc](../../.cursor/rules/ark-observations.mdc) | Vocabulary earns placement before publication |
-| [ark-earned-intelligence.mdc](../../.cursor/rules/ark-earned-intelligence.mdc) | Intelligence after repeated sentences — inbound to Earned Authority |
-| [ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc) | What / Why / Show me for every outbound claim |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Compute once; never become truth |
+| ark-pressure-first.mdc | Observe before enforce — same sequence, public side |
+| ark-observations.mdc | Vocabulary earns placement before publication |
+| ark-earned-intelligence.mdc | Intelligence after repeated sentences — inbound to Earned Authority |
+| ark-explainability-doctrine.mdc | What / Why / Show me for every outbound claim |
+| ark-projection-rule.mdc | Compute once; never become truth |
 | [ark-the-shop-learns-v1.md](./ark-the-shop-learns-v1.md) | Accumulation lifecycle — how shop knowledge is earned, revised, and retired before publication |
 | [ark-market-authority-v1.md](./ark-market-authority-v1.md) | Market trust — opportunity-first; distinct from Earned Authority (publication) |
 | [docs/growth/DOCTRINE.md](../growth/DOCTRINE.md) | Growth measures completed work — observer, not gatekeeper |
@@ -225,7 +225,7 @@ When planning engineering time after v1:
 
 ## Closing
 
-> **You're not trying to build the prettiest auto repair website in Colorado Springs. You're trying to build the most trustworthy automotive knowledge source in Colorado Springs.**
+> **You're not trying to build the prettiest auto repair website in Demo City. You're trying to build the most trustworthy automotive knowledge source in Demo City.**
 
 That is harder to copy — because it depends on years of real repairs, real diagnostics, and real observations, not better web design.
 

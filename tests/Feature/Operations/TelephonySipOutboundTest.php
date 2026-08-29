@@ -29,7 +29,7 @@ test('sip outbound webhook dials pstn with shop caller id', function () {
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => 'sip:101@example.sip.us1.twilio.com',
         'user_id' => $advisor->id,
         'enabled' => true,
         'position' => 0,
@@ -43,7 +43,7 @@ test('sip outbound webhook dials pstn with shop caller id', function () {
 
     $response = $this->post(route('webhooks.communications.twilio.voice.sip-outbound'), [
         'CallSid' => 'CAoutbound001',
-        'From' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'From' => 'sip:101@example.sip.us1.twilio.com',
         'To' => '+17195551234',
         'CallStatus' => 'ringing',
     ]);
@@ -68,15 +68,15 @@ test('sip outbound parses sip uri dialed numbers', function () {
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => '101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => '101@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
 
     $this->post(route('webhooks.communications.twilio.voice.sip-outbound'), [
         'CallSid' => 'CAoutbound002',
-        'From' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
-        'To' => 'sip:+17195559876@lugsnplugs.sip.us1.twilio.com',
+        'From' => 'sip:101@example.sip.us1.twilio.com',
+        'To' => 'sip:+17195559876@example.sip.us1.twilio.com',
         'CallStatus' => 'ringing',
     ])->assertOk()
         ->assertSee('<Number>+17195559876</Number>', false);
@@ -85,7 +85,7 @@ test('sip outbound parses sip uri dialed numbers', function () {
 test('sip outbound rejects unknown sip endpoints', function () {
     $this->post(route('webhooks.communications.twilio.voice.sip-outbound'), [
         'CallSid' => 'CAoutbound003',
-        'From' => 'sip:999@lugsnplugs.sip.us1.twilio.com',
+        'From' => 'sip:999@example.sip.us1.twilio.com',
         'To' => '+17195551234',
         'CallStatus' => 'ringing',
     ])->assertOk()
@@ -98,8 +98,8 @@ test('sip outbound rejects unknown sip endpoints', function () {
 test('sip outbound stores long sip endpoint uris from production twilio domains', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    $fromUri = 'sip:desk1@lnp-chelton.sip.twilio.com';
-    $toUri = 'sip:719@lnp-chelton.sip.twilio.com;transport=tcp';
+    $fromUri = 'sip:desk1@example.sip.us1.twilio.com';
+    $toUri = 'sip:719@example.sip.us1.twilio.com;transport=tcp';
 
     TelephonyEndpoint::query()->create([
         'name' => 'Desk 1 SIP',
@@ -134,14 +134,14 @@ test('sip outbound requires shop caller id number in settings', function () {
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => 'sip:101@example.sip.us1.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
 
     $this->post(route('webhooks.communications.twilio.voice.sip-outbound'), [
         'CallSid' => 'CAoutbound004',
-        'From' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'From' => 'sip:101@example.sip.us1.twilio.com',
         'To' => '+17195551234',
         'CallStatus' => 'ringing',
     ])->assertOk()

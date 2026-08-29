@@ -8,11 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 final class PublicSurfaceSettings
 {
-    public const REPAIRPAL_LISTING_URL = 'https://www.repairpal.com/auto-repair-near-me/auto-repair-in-colorado-springs-colorado/lugs-n-plugs-automotive-auto-repair-in-colorado-springs-co';
+    public const REPAIRPAL_LISTING_URL = 'https://www.repairpal.com/';
 
     public const SYNCHRONY_CAR_CARE_URL = 'https://www.synchrony.com/financing/car-care/prospecting';
 
-    public const WISETACK_PREQUAL_URL = 'https://wisetack.us/#/uz8sh8e/prequalify';
+    public const WISETACK_PREQUAL_URL = 'https://wisetack.us/#/prequal/demo-auto-example';
 
     /** Homepage composition roles — gallery index assignment, not interchangeable decoration. */
     public const PHOTO_ROLE_HERO = 'hero';
@@ -62,27 +62,27 @@ final class PublicSurfaceSettings
         'headline' => 'Accurate Diagnostics. Honest Repairs.',
         'positioning_lede' => 'We find the real problem first. You get a clear estimate before we do any repairs.',
         'google_rating' => '4.9',
-        'google_review_count' => 56,
-        'google_reviews_url' => 'https://g.page/r/Cf8J_e1XmXpMEAE/review',
-        'local_tagline' => 'Family owned in Colorado Springs.',
-        'customer_quote' => 'Edward is an amazing mechanic and his shop is meticulously clean and organized. He offered various OE and OEM part selections to help fit my budget.',
-        'customer_quote_attribution' => 'Eric',
+        'google_review_count' => 24,
+        'google_reviews_url' => '',
+        'local_tagline' => 'Family owned in Demo City.',
+        'customer_quote' => 'They kept me updated the entire time and found the issue another shop missed.',
+        'customer_quote_attribution' => 'A. Customer',
         'customer_reviews' => [
             [
-                'quote' => 'Expecting the worst but Edward and Caleb were great and found it only needed a proper trans service that another shop said they did but left seriously underfilled.',
-                'attribution' => 'Richard Conti',
+                'quote' => 'Honest about what needed fixing — no upsells, just clear options and fair pricing.',
+                'attribution' => 'A. Customer',
             ],
             [
-                'quote' => 'Edward is exceptionally meticulous and methodical in his approach to vehicle repair, while also prioritizing a truly comfortable and transparent customer experience.',
-                'attribution' => 'Greg Powell',
+                'quote' => 'Had my brakes done and they walked me through the inspection photos. Felt completely informed.',
+                'attribution' => 'B. Customer',
             ],
             [
-                'quote' => 'Edward is an amazing mechanic and his shop is meticulously clean and organized. He offered various OE and OEM part selections to help fit my budget.',
-                'attribution' => 'Eric',
+                'quote' => 'They kept me updated the entire time and found the issue another shop missed.',
+                'attribution' => 'C. Customer',
             ],
             [
                 'quote' => 'The most trustworthy shop in town — won\'t go anywhere else.',
-                'attribution' => 'Bradley Vogleman',
+                'attribution' => 'D. Customer',
             ],
         ],
         'response_time_hint' => 'During business hours we usually reply within 30–60 minutes.',
@@ -92,7 +92,7 @@ final class PublicSurfaceSettings
             'repairpal_url' => self::REPAIRPAL_LISTING_URL,
             'financing_available' => true,
             'wisetack_url' => self::WISETACK_PREQUAL_URL,
-            'synchrony_url' => 'https://www.synchrony.com/mmc/CR243778456?sitecode=acewel401',
+            'synchrony_url' => self::SYNCHRONY_CAR_CARE_URL,
         ],
         'social_profiles' => [
             'facebook_url' => null,
@@ -109,7 +109,7 @@ final class PublicSurfaceSettings
             ],
             [
                 'question' => 'What is the difference between the shop warranty and RepairPal?',
-                'answer' => 'The LugsNPlugs shop warranty is 24 months / 24,000 miles on qualifying parts and labor, where applicable. RepairPal Certified warranty is 12 months / 12,000 miles nationwide on qualifying repairs.',
+                'answer' => 'The Demo Auto Repair shop warranty is 24 months / 24,000 miles on qualifying parts and labor, where applicable. RepairPal Certified warranty is 12 months / 12,000 miles nationwide on qualifying repairs.',
             ],
             [
                 'question' => 'Do you accept customer-supplied parts?',
@@ -131,7 +131,7 @@ final class PublicSurfaceSettings
         'shop_photos' => [
             [
                 'path' => 'shop-photos/shop-bay.webp',
-                'alt' => 'Inside the LugsNPlugs service bays',
+                'alt' => 'Inside the Demo Auto Repair service bays',
             ],
             [
                 'path' => 'shop-photos/scan-data.webp',
@@ -159,33 +159,33 @@ final class PublicSurfaceSettings
         // Seeded from CommonProblemRegistry::featuredLocalServices() — presentation only.
         'shop_services' => [
             [
-                'title' => 'Auto Repair Colorado Springs',
-                'common_problem_slug' => 'auto-repair-colorado-springs',
+                'title' => 'Auto Repair Demo City',
+                'common_problem_slug' => 'auto-repair-demo-city',
                 'enabled' => true,
             ],
             [
-                'title' => 'Mechanic Colorado Springs',
-                'common_problem_slug' => 'mechanic-colorado-springs',
+                'title' => 'Mechanic Demo City',
+                'common_problem_slug' => 'mechanic-demo-city',
                 'enabled' => true,
             ],
             [
-                'title' => 'Car Diagnostics Colorado Springs',
-                'common_problem_slug' => 'car-diagnostics-colorado-springs',
+                'title' => 'Car Diagnostics Demo City',
+                'common_problem_slug' => 'car-diagnostics-demo-city',
                 'enabled' => true,
             ],
             [
-                'title' => 'Brake Repair Colorado Springs',
-                'common_problem_slug' => 'brake-repair-colorado-springs',
+                'title' => 'Brake Repair Demo City',
+                'common_problem_slug' => 'brake-repair-demo-city',
                 'enabled' => true,
             ],
             [
-                'title' => 'Tune Up Colorado Springs',
-                'common_problem_slug' => 'tune-up-colorado-springs',
+                'title' => 'Tune Up Demo City',
+                'common_problem_slug' => 'tune-up-demo-city',
                 'enabled' => true,
             ],
             [
-                'title' => 'Audi Repair Colorado Springs',
-                'common_problem_slug' => 'audi-repair-colorado-springs',
+                'title' => 'Audi Repair Demo City',
+                'common_problem_slug' => 'audi-repair-demo-city',
                 'enabled' => true,
             ],
         ],
@@ -562,7 +562,7 @@ final class PublicSurfaceSettings
     {
         $value = self::nonEmptyString($stored);
         $retired = [
-            'We verify the problem before recommending the repair. Dealer-level diagnostics in Colorado Springs — not code-read-and-guess.',
+            'We verify the problem before recommending the repair. Dealer-level diagnostics in Demo City — not code-read-and-guess.',
             'We find the real problem first and provide a clear, detailed estimate before any repairs are done.',
         ];
 

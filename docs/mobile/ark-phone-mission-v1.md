@@ -1,7 +1,7 @@
 # ARK Phone Mission v1
 
 **Status:** Engineering doctrine — research before code  
-**Companions:** [ark-phone-production-telephony-lock.mdc](../../.cursor/rules/ark-phone-production-telephony-lock.mdc) · [ark-voice-endpoint-architecture-v1.md](../communications/ark-voice-endpoint-architecture-v1.md) · `ark-mobile` repo
+**Companions:** ark-phone-production-telephony-lock.mdc · [ark-voice-endpoint-architecture-v1.md](../communications/ark-voice-endpoint-architecture-v1.md) · `ark-mobile` repo
 
 ---
 
@@ -74,7 +74,7 @@ Do **not** modify to make mobile work:
 - production PJSIP
 - production trunks
 
-Mobile must adapt to the PBX baseline. See [ark-phone-production-telephony-lock.mdc](../../.cursor/rules/ark-phone-production-telephony-lock.mdc).
+Mobile must adapt to the PBX baseline. See ark-phone-production-telephony-lock.mdc.
 
 **VVX first:** If mobile fails and VVX would succeed under the same conditions, the problem is in the mobile client until proven otherwise.
 
@@ -133,7 +133,7 @@ Document what is already solved **before** modifying ARK.
 
 ## Mature reference implementations (study first)
 
-These are not endorsements to swap stacks blindly — they are **prior art** Cursor must read before inventing.
+These are not endorsements to swap stacks blindly — they are **prior art** maintainers must read before inventing.
 
 ### Flutter / Dart SIP clients
 
@@ -209,6 +209,6 @@ Repo: `ark-mobile` · transport: `ArkVoiceTransport` → `sip_ua` over WSS to sh
 
 ## Related certifications
 
-- VVX + ARK Phone: [ark-phone-production-telephony-lock.mdc](../../.cursor/rules/ark-phone-production-telephony-lock.mdc)
+- VVX + ARK Phone: ark-phone-production-telephony-lock.mdc
 - Phone-first shop week: [phone-first-shop.md](../product/certifications/phone-first-shop.md)
 - Voice transport cert: [voice-transport.md](../product/certifications/voice-transport.md)

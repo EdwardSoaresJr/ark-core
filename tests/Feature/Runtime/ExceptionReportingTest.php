@@ -189,21 +189,21 @@ test('reportable server exceptions are archived as structured json files', funct
         'errors.report.file.retention_days' => 30,
     ]);
 
-    app(ExceptionReporter::class)->notify(new RuntimeException('Archive me for Cursor'));
+    app(ExceptionReporter::class)->notify(new RuntimeException('Archive me for review'));
 
     expect($directory.'/latest.json')->toBeFile()
         ->and($directory.'/_index.json')->toBeFile();
 
     $latest = json_decode(file_get_contents($directory.'/latest.json'), true);
 
-    expect($latest['exception_message'])->toBe('Archive me for Cursor')
+    expect($latest['exception_message'])->toBe('Archive me for review')
         ->and($latest['id'])->toBeString()->not->toBe('')
         ->and($latest['report_markdown'] ?? '')->toContain('Report ID')
         ->and($latest['trace'])->toBeArray();
 
     $this->artisan('errors:recent', ['--limit' => 5])
         ->assertSuccessful()
-        ->expectsOutputToContain('Archive me for Cursor');
+        ->expectsOutputToContain('Archive me for review');
 
     config(['errors.report.file.path' => $directory]);
 

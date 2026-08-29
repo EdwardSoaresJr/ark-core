@@ -37,7 +37,7 @@ test('website manage renders public surface form', function (): void {
         ->assertSee('Connect with us', false)
         ->assertSee('Facebook page URL', false)
         ->assertSee('Services we provide', false)
-        ->assertSee('Auto Repair Colorado Springs', false)
+        ->assertSee('Auto Repair Demo City', false)
         ->assertSee(route('website.manage.update'), false);
 });
 
@@ -61,8 +61,8 @@ test('website manage persists shop services list', function (): void {
                     'enabled' => '1',
                 ],
                 [
-                    'title' => 'Brake Repair Colorado Springs',
-                    'common_problem_slug' => 'brake-repair-colorado-springs',
+                    'title' => 'Brake Repair Demo City',
+                    'common_problem_slug' => 'brake-repair-demo-city',
                     'enabled' => '1',
                 ],
                 [
@@ -84,7 +84,7 @@ test('website manage persists shop services list', function (): void {
 
     expect(PublicSurfaceSettings::shopServicesForDisplay())->toHaveCount(2)
         ->and(collect(PublicSurfaceSettings::shopServicesForDisplay())->pluck('title')->all())
-        ->toBe(['Oil Changes', 'Brake Repair Colorado Springs']);
+        ->toBe(['Oil Changes', 'Brake Repair Demo City']);
 
     $this->get(route('public.home'))
         ->assertOk()

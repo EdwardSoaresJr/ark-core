@@ -32,7 +32,7 @@ If two surfaces share the sentence honestly → merge. If the sentence is vague 
 | **Customer** | Portal | Any ops surface |
 | **Admin** | Settings | Daily rail |
 
-## Handoff rule (Cursor)
+## Handoff rule
 
 Before any surface ships or survives a prune pass, write its survival sentence. If another surface already owns that sentence, the new thing must be a **panel or projection** — not a route, nav tab, or rail link.
 
@@ -50,7 +50,7 @@ Before any surface ships or survives a prune pass, write its survival sentence. 
 
 - `operations.communications.calls` (Calls & VM library — recordings, voicemail, missed calls)
 - Calls & VM section nav link
-- See `.cursor/rules/ark-comms-call-surfaces-lock.mdc`
+- See doctrine `ark-comms-call-surfaces-lock.mdc`
 
 ---
 
@@ -288,6 +288,6 @@ Likely priorities after rail prune — only ship when notebook clusters:
 ## Related doctrine
 
 - `ark-attention-queue.mdc` — Attention is projection, not parallel inbox authority
-- `ark-cursor-doctrine.mdc` — Attention → Work → RO primary flow
+- `product doctrine` — Attention → Work → RO primary flow
 - `ark-technician-scope.mdc` — technician never primary on comms/queues
 - `docs/communications/communications-workspace-sprint-v1.md` — sprint that shipped Attention without retiring siblings

@@ -6,11 +6,11 @@ use Tests\TestCase;
 uses(TestCase::class);
 
 it('reads sip transport from deployment configuration', function (): void {
-    config()->set('voice-transport.sip_registrar', 'lugsnplugs.sip.twilio.com');
+    config()->set('voice-transport.sip_registrar', 'example.sip.twilio.com');
     config()->set('voice-transport.sip_port', 5060);
     config()->set('voice-transport.sip_outbound_proxy', 'proxy.example.com');
 
-    expect(VoiceTransportConfiguration::sipRegistrar())->toBe('lugsnplugs.sip.twilio.com')
+    expect(VoiceTransportConfiguration::sipRegistrar())->toBe('example.sip.twilio.com')
         ->and(VoiceTransportConfiguration::sipPort())->toBe(5060)
         ->and(VoiceTransportConfiguration::sipOutboundProxy())->toBe('proxy.example.com');
 });
@@ -24,7 +24,7 @@ it('throws when sip registrar is not configured', function (): void {
 
 it('applies runtime config from an explicit registrar', function (): void {
     config()->set('voice-transport.sip_registrar', '');
-    VoiceTransportConfiguration::applyRuntimeConfig('lugsnplugs.sip.twilio.com');
+    VoiceTransportConfiguration::applyRuntimeConfig('example.sip.twilio.com');
 
-    expect(VoiceTransportConfiguration::sipRegistrar())->toBe('lugsnplugs.sip.twilio.com');
+    expect(VoiceTransportConfiguration::sipRegistrar())->toBe('example.sip.twilio.com');
 });

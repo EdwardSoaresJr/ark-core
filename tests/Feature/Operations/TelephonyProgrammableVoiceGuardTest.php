@@ -32,7 +32,7 @@ test('legacy sip outbound twiml omits recording disclaimer when outbound recordi
     $endpoint = TelephonyEndpoint::query()->create([
         'name' => 'Legacy Desk',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:101@example.sip.twilio.com',
         'enabled' => true,
         'position' => 0,
     ]);
@@ -40,7 +40,7 @@ test('legacy sip outbound twiml omits recording disclaimer when outbound recordi
     $provider = app(\App\Ark\Operations\Telephony\Providers\TwilioTelephonyProvider::class);
     $payload = $provider->parseSipOutboundVoiceRequest(new \Illuminate\Http\Request([
         'From' => $endpoint->destination,
-        'To' => 'sip:+17195551234@lugsnplugs.sip.twilio.com',
+        'To' => 'sip:+17195551234@example.sip.twilio.com',
         'CallSid' => 'CAlegacyout',
     ]));
 

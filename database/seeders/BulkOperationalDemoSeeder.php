@@ -281,7 +281,7 @@ class BulkOperationalDemoSeeder extends Seeder
             1 => 'Fountain',
             2 => 'Monument',
             3 => 'Pueblo',
-            default => 'Colorado Springs',
+            default => 'Demo City',
         };
     }
 

@@ -37,7 +37,7 @@ OperationalJourneyProjection
 
 **Identity confidence** on `growth_sessions`: `score`, `reason`, `evidence` JSON — always answers *why* ARK linked this session to this customer.
 
-**Journey Evidence:** each milestone is expandable — story is the summary; immutable source rows are one click away. Platform doctrine: [Truth Stack](../ecosystem/ark-truth-stack-v1.md) · [Explainability](../../.cursor/rules/ark-explainability-doctrine.mdc).
+**Journey Evidence:** each milestone is expandable — story is the summary; immutable source rows are one click away. Platform doctrine: [Truth Stack](../ecosystem/ark-truth-stack-v1.md) · Explainability.
 
 ## Phase 2 — Public Surface Intelligence
 

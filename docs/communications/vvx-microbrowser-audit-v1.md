@@ -236,7 +236,7 @@ Mobile continuity API remains the rich surface. VVX is the **appliance slice**.
 
 ---
 
-## ChatGPT / Cursor prompt (continuity appliance)
+## Continuity appliance notes (historical)
 
 ```
 VVX is a continuity appliance, not a web app. Static HTML never reloads.

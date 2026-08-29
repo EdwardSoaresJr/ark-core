@@ -13,7 +13,7 @@ beforeEach(function () {
     config()->set('services.twilio.account_sid', 'ACtestaccount');
 
     ShopSettings::current()->update([
-        'shop_name' => 'LugsNPlugs',
+        'shop_name' => 'Demo Auto Repair',
         'telephony_inbound_number' => '7195559999',
         'twilio_account_sid' => 'ACtestaccount',
         'twilio_auth_token' => 'test-token',

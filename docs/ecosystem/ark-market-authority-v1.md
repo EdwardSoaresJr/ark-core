@@ -197,10 +197,10 @@ Shipped before this freeze:
 | --- | --- |
 | [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Publication exit gate — orthogonal; names "Earned Authority" not market trust |
 | [ark-truth-stack-v1.md](./ark-truth-stack-v1.md) | Events → observations → projections |
-| [ark-observations.mdc](../../.cursor/rules/ark-observations.mdc) | Interpretive truth — Market Authority observations are observations |
-| [ark-pressure-first.mdc](../../.cursor/rules/ark-pressure-first.mdc) | Observe before enforce; measure outcomes after opportunities |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Projections summarize; market authority is never stored as projection-only truth |
-| [ark-explainability-doctrine.mdc](../../.cursor/rules/ark-explainability-doctrine.mdc) | What / Why / Show me for every becoming claim |
+| ark-observations.mdc | Interpretive truth — Market Authority observations are observations |
+| ark-pressure-first.mdc | Observe before enforce; measure outcomes after opportunities |
+| ark-projection-rule.mdc | Projections summarize; market authority is never stored as projection-only truth |
+| ark-explainability-doctrine.mdc | What / Why / Show me for every becoming claim |
 | [ark-constitution-v1.md](./ark-constitution-v1.md) | Coherence over capability |
 
 ---

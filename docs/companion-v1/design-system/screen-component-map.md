@@ -45,4 +45,4 @@ Every screen composes from [`components.md`](components.md). No orphan widgets i
 | Screen horizontal padding | 16 | Body |
 | Cerulean primary | `#0099cc` | ARK ecosystem · CTAs |
 
-Reference: [`ark-interface-constitution.mdc`](../../.cursor/rules/ark-interface-constitution.mdc) · [`ark-ecosystem-identity.mdc`](../../.cursor/rules/ark-ecosystem-identity.mdc)
+Reference: `ark-interface-constitution.mdc` · `ark-ecosystem-identity.mdc`

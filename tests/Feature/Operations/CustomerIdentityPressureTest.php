@@ -18,7 +18,7 @@ test('customer with phone email and address is complete', function () {
         'phone' => '7195551000',
         'email' => 'complete@example.test',
         'address_line_1' => '123 Main St',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'postal_code' => '80903',
     ]);
 
@@ -29,7 +29,7 @@ test('customer with phone email and address is complete', function () {
 test('customer missing phone and email is critical', function () {
     $customer = customerIdentityFixture([
         'address_line_1' => '123 Main St',
-        'city' => 'Colorado Springs',
+        'city' => 'Demo City',
         'postal_code' => '80903',
     ]);
 

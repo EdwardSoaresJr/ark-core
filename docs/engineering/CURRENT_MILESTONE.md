@@ -2,7 +2,7 @@
 
 **ARK Sellable Track — frozen board**
 
-**Plan:** `.cursor/plans/ark_sellable_track_dafe2a9a.plan.md` (FROZEN)
+**Plan:** private sellable-track plan (FROZEN)
 
 **Standing order:** Ship vertical slices. No more doctrine unless implementation exposes a contradiction.
 
@@ -269,7 +269,7 @@ Ownership transfers/day · avg Repair Actions/RO · multi-tech vs single-tech RO
 
 **Common Problems hierarchy (binding):** Answer first → progressive depth → quiet proof → appropriate action.
 
-**Not Theme v1 debt (leave alone):** zero related links on some CP pages · “Colorado Springs” SEO-ish H1s · sparse older problem bodies — content/SEO/authority enrichment later when earned.
+**Not Theme v1 debt (leave alone):** zero related links on some CP pages · “Demo City” SEO-ish H1s · sparse older problem bodies — content/SEO/authority enrichment later when earned.
 
 **Observation only:** Mobile header Book + Call/Book sticky sandwich — watch; do not redesign without usability pressure.
 
@@ -327,11 +327,11 @@ Estimate Line → Operation → owns Operation Class → Estimate Pricing Engine
 
 **Invariants:** Operation owns class · Pricing never infers class · Pricing consumes class only · Operation never prices · Pricing never owns Operation metadata. One question: `$operation->operationClassKey()`.
 
-**Reopen:** Verified defects only. Doctrine: [.cursor/rules/ark-operation-authority.mdc](../../.cursor/rules/ark-operation-authority.mdc)
+**Reopen:** Verified defects only. Doctrine: doctrine `ark-operation-authority.mdc`
 
 **Ship posture:** Ready when asked — do not deploy until explicitly requested. Stop feature work. Next capability starts from shop operational pressure.
 
-**Heuristic:** [.cursor/rules/ark-authority-answers-directly.mdc](../../.cursor/rules/ark-authority-answers-directly.mdc)
+**Heuristic:** doctrine `ark-authority-answers-directly.mdc`
 
 **Approved migration follow-ups (cleanup only — not blockers):**
 
@@ -434,7 +434,7 @@ ConversationMessage (+ EstimateSent when estimate)
 
 **Litmus test:** “Does this require changing the Estimate Pricing Engine?” → If yes: “Is this fixing a verified defect?” Yes → reopen narrowly. No → another capability.
 
-**Doctrine:** [.cursor/rules/ark-pricing-snapshot-immutability.mdc](../../.cursor/rules/ark-pricing-snapshot-immutability.mdc)
+**Doctrine:** doctrine `ark-pricing-snapshot-immutability.mdc`
 
 ---
 
@@ -457,9 +457,9 @@ ConversationMessage (+ EstimateSent when estimate)
 
 ---
 
-## Shipping posture (Cursor)
+## Shipping posture
 
-- **Build Mode:** [.cursor/rules/ark-build-mode.mdc](../../.cursor/rules/ark-build-mode.mdc) — doctrine closed; implement; Doctrine budget: ZERO; discover ≠ generalize
+- **Build Mode:** doctrine `ark-build-mode.mdc` — doctrine closed; implement; Doctrine budget: ZERO; discover ≠ generalize
 - Stop producing audits unless requested
 - Build vertical slices that: compile · pass tests · demo (screenshot/recording) · commit independently
 - No multi-topic commits · no speculative refactors · no new doctrine docs unless implementation reveals a genuine conflict

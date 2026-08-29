@@ -4,9 +4,11 @@ namespace App\Ark\Operations\Payments;
 
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
-use Square\Environments;
-use Square\SquareClient;
 
+/**
+ * Shop Square posture and credentials — no Square SDK imports.
+ * Live API calls live in the optional ark/payments-square package.
+ */
 final class SquareConfiguration
 {
     public function __construct(
@@ -97,25 +99,15 @@ final class SquareConfiguration
             : 'https://web.squarecdn.com/v1/square.js';
     }
 
-    public function client(): SquareClient
-    {
-        return new SquareClient(
-            token: $this->accessToken(),
-            options: [
-                'baseUrl' => $this->isSandbox()
-                    ? Environments::Sandbox->value
-                    : Environments::Production->value,
-            ],
-        );
-    }
-
     /**
      * @return array<string, mixed>
      */
     public function publicConfig(): array
     {
         return [
-            'enabled' => $this->operational(),
+            'enabled' => $this->operational() && SquareSdk::installed(),
+            'adapterInstalled' => SquareSdk::adapterPackagePresent(),
+            'credentialsConfigured' => $this->configured(),
             'applicationId' => $this->applicationId(),
             'locationId' => $this->locationId(),
             'environment' => $this->environment(),

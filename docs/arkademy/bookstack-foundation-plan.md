@@ -73,10 +73,10 @@ Shop In A Box
 └── ARK V2
 ```
 
-**LugsNPlugs SOPs** (shop — private)
+**Demo Auto Repair SOPs** (shop — private)
 
 ```
-LugsNPlugs SOPs
+Demo Auto Repair SOPs
 ├── Service Advisor
 ├── Technician
 └── Operations
@@ -102,7 +102,7 @@ See migration `2026_06_14_100000_create_arkademy_content_registry_table.php` and
 
 ## 1. Recommended deployment (Arkify / Coolify)
 
-Follow the **arkweb pattern**: separate Coolify application on `ark-lugsnplugs-production` (`203.0.113.10`), never the control plane.
+Follow the **arkweb pattern**: separate Coolify application on `ark-demo-shop-production` (`203.0.113.10`), never the control plane.
 
 | Item | Recommendation |
 |------|----------------|
@@ -286,7 +286,7 @@ Map current role catalogs to BookStack hierarchy.
 | Shelf | Scope | Audience |
 |-------|-------|----------|
 | **Shop In A Box** | Base — shared across shops | All roles; curated by platform admin |
-| **LugsNPlugs SOPs** | Shop — private | Staff; shop admin editors |
+| **Demo Auto Repair SOPs** | Shop — private | Staff; shop admin editors |
 
 Future shops: duplicate shelf template `Shop In A Box` via export/import; add `{Shop Name} SOPs` shelf locally.
 
@@ -381,7 +381,7 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 
 - Each shop instance: own BookStack + own `{Shop} SOPs` shelf.
 - Base content: import ZIP or API push from golden **Shop In A Box** export.
-- ARK fleet admin (Autorepairkeeper platform) owns base export pipeline — not LugsNPlugs shop admin.
+- ARK fleet admin (Autorepairkeeper platform) owns base export pipeline — not Demo Auto Repair shop admin.
 
 ---
 
@@ -441,7 +441,7 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 
 ---
 
-## 8. Phase 1 implementation tickets (Cursor — when approved)
+## 8. Phase 1 implementation tickets (when approved)
 
 ### 1a — Deploy (no SSO yet)
 
@@ -480,7 +480,7 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 
 | Decision | Choice |
 |----------|--------|
-| BookStack hosting | Separate Coolify app on lugsnplugs production |
+| BookStack hosting | Separate Coolify app on demo-auto production |
 | ARKademy URL | `learn.demo-auto.test` |
 | SSO method | OIDC with ARK as issuer |
 | Default theme | ARK cerulean `#0099cc` |

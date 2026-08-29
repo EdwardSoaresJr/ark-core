@@ -4,7 +4,7 @@
 
 If a page stops helping decisions, delete or rewrite it.
 
-**Companion rules:** [ark-subsystem-lifecycle.mdc](../../.cursor/rules/ark-subsystem-lifecycle.mdc) · [ark-cleanup-sprint-discipline.mdc](../../.cursor/rules/ark-cleanup-sprint-discipline.mdc) · [ark-two-implementations.mdc](../../.cursor/rules/ark-two-implementations.mdc)
+**Companion rules:** ark-subsystem-lifecycle.mdc · ark-cleanup-sprint-discipline.mdc · ark-two-implementations.mdc
 
 ---
 
@@ -44,7 +44,7 @@ Evolution
 | **Observing** | Frozen · logs · bug fixes only | **Mobile + floor certification** |
 | **Evolving** | Features after baseline trust | Not yet |
 
-See [ark-subsystem-lifecycle.mdc](../../.cursor/rules/ark-subsystem-lifecycle.mdc).
+See ark-subsystem-lifecycle.mdc.
 
 ---
 

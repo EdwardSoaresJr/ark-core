@@ -67,9 +67,9 @@
     <h3>Step 2 — SIP domain (Twilio) — this is where you get the domain</h3>
     <ol>
         <li>Develop → Voice → Manage → <strong>SIP domains</strong> → Create SIP domain.</li>
-        <li><strong>Friendly name</strong> — e.g. <code>LugsNPlugs shop phones</code>.</li>
-        <li><strong>SIP URI</strong> — pick a globally unique slug, e.g. <code>lugsnplugs</code>.</li>
-        <li>After save, Twilio shows the full hostname — copy it exactly, e.g. <code>lugsnplugs.sip.us1.twilio.com</code> (region suffix may differ).</li>
+        <li><strong>Friendly name</strong> — e.g. <code>Demo Auto Repair shop phones</code>.</li>
+        <li><strong>SIP URI</strong> — pick a globally unique slug, e.g. <code>demo-auto</code>.</li>
+        <li>After save, Twilio shows the full hostname — copy it exactly, e.g. <code>example.sip.us1.twilio.com</code> (region suffix may differ).</li>
         <li><strong>Voice authentication</strong> — attach your credential list.</li>
         <li><strong>SIP registration</strong> → Edit → <strong>Enable</strong> → attach the same credential list.</li>
         <li>Leave SIP domain <strong>Call Control → A call comes in</strong> pointed at ARK (see above).</li>
@@ -80,10 +80,10 @@
     <ul>
         <li><strong>Username / Auth ID</strong> — <code>101</code> (matches credential list).</li>
         <li><strong>Password</strong> — from credential list.</li>
-        <li><strong>Domain / Registrar / SIP server</strong> — <code>lugsnplugs.sip.us1.twilio.com</code> (your full domain from Twilio).</li>
+        <li><strong>Domain / Registrar / SIP server</strong> — <code>example.sip.us1.twilio.com</code> (your full domain from Twilio).</li>
         <li><strong>Transport</strong> — UDP (or TCP/TLS if supported).</li>
     </ul>
-    <p>Some clients want the full login: <code>101@lugsnplugs.sip.us1.twilio.com</code>.</p>
+    <p>Some clients want the full login: <code>101@example.sip.us1.twilio.com</code>.</p>
     <p>Phone must show <strong>Registered</strong>. Confirm in Twilio on the SIP domain → <strong>Registered endpoints</strong> tab.</p>
 
     <h3>Step 4 — Add the endpoint in ARK</h3>
@@ -92,15 +92,15 @@
     <ul>
         <li><strong>Name</strong> — <code>Desk1</code> or <code>Front Desk SIP</code></li>
         <li><strong>Type</strong> — SIP</li>
-        <li><strong>Destination</strong> — <code>sip:101@lugsnplugs.sip.us1.twilio.com</code> (<code>101@…</code> also works; ARK adds <code>sip:</code>)</li>
+        <li><strong>Destination</strong> — <code>sip:101@example.sip.us1.twilio.com</code> (<code>101@…</code> also works; ARK adds <code>sip:</code>)</li>
         <li><strong>Owner</strong> — staff member for automatic floor ownership when this phone answers (recommended)</li>
         <li><strong>Enabled</strong> — checked</li>
     </ul>
     <p><strong>How to build the destination:</strong> <code>sip:</code> + <strong>credential username</strong> + <code>@</code> + <strong>full SIP domain hostname from Twilio</strong>.</p>
-    <p>Example LugsNPlugs ring group:</p>
+    <p>Example Demo Auto Repair ring group:</p>
     <ol>
         <li>Primary cell — Cell — <code>+17195550199</code></li>
-        <li>Front Desk SIP — SIP — <code>sip:101@lugsnplugs.sip.us1.twilio.com</code></li>
+        <li>Front Desk SIP — SIP — <code>sip:101@example.sip.us1.twilio.com</code></li>
         <li>Advisor cell — Cell — <code>+1…</code></li>
     </ol>
     <p>All enabled endpoints ring simultaneously. Cell-only groups work without SIP — add Cell endpoints if desk phones are not ready.</p>

@@ -3,14 +3,14 @@
 
 **Report ID:** `{{ $context['report_id'] ?? 'unknown' }}`
 
-Reference this ID on the VPS or in Cursor when investigating.
+Reference this ID on the VPS or in your editor when investigating.
 
 @if (! empty($context['report_copy_url']))
 <x-mail::button :url="$context['report_copy_url']">
 Open copy-friendly report
 </x-mail::button>
 
-The copy page includes one-click **Copy markdown** for Cursor.
+The copy page includes one-click **Copy markdown** for pasting into an investigation note.
 @endif
 
 An `ark-error-{{ $context['report_id'] ?? 'unknown' }}.md` attachment is included for paste-friendly context.

@@ -1,7 +1,7 @@
 # Customer Continuity Workspace Rules (Binding)
 
 **Status:** Binding engineering guardrail  
-**Audience:** Cursor / PR reviewers / implementers  
+**Audience:** PR reviewers / implementers  
 **Not:** Frozen Conversations product doctrine  
 **Filename note:** Path stays `communications-workspace-rules.md` for continuity with existing links; the workspace itself is **customer continuity**, not a messaging product.
 
@@ -10,9 +10,9 @@
 | **Architecture (frozen)** | [ark-conversations-v1.md](../communications/ark-conversations-v1.md) · [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) | What the product is |
 | **This document** | Engineering workspace rules | UI + implementation constraints so PRs stay aligned |
 
-Do **not** edit frozen Conversations doctrine for wording polish. Enforce alignment here and in the Cursor rule.
+Do **not** edit frozen Conversations doctrine for wording polish. Enforce alignment here and in companion doctrine.
 
-**Cursor rule:** [.cursor/rules/ark-communications-workspace-guardrail.mdc](../../.cursor/rules/ark-communications-workspace-guardrail.mdc)
+**Doctrine: ** doctrine `ark-communications-workspace-guardrail.mdc`
 
 ---
 
@@ -282,7 +282,7 @@ Reject any PR that introduces:
 | --- | --- |
 | [ark-conversations-v1.md](../communications/ark-conversations-v1.md) | Frozen product doctrine (The Six Ones) — do not reword for this guardrail |
 | [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) | Frozen authorities + transport doctrine (bounded context name may remain Communications) |
-| [ark-attention-queue.mdc](../../.cursor/rules/ark-attention-queue.mdc) | Attention is recovery triage — not a channel inbox |
-| [ark-comms-call-surfaces-lock.mdc](../../.cursor/rules/ark-comms-call-surfaces-lock.mdc) | Calls & VM evidence library stays discoverable |
-| [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | RO / customer surfaces project conversation — never become authority |
-| [ark-advisor-communications-identity.mdc](../../.cursor/rules/ark-advisor-communications-identity.mdc) | Advisor owns the conversation; station is optional metadata |
+| ark-attention-queue.mdc | Attention is recovery triage — not a channel inbox |
+| ark-comms-call-surfaces-lock.mdc | Calls & VM evidence library stays discoverable |
+| ark-projection-rule.mdc | RO / customer surfaces project conversation — never become authority |
+| ark-advisor-communications-identity.mdc | Advisor owns the conversation; station is optional metadata |

@@ -16,7 +16,7 @@ This document remains reference for ledger types, post-issuance invoice states, 
 3. **`BalanceDueCalculator`** — first-class authority; every screen uses it  
 4. **Payment ledger** — deposits are ledger rows, not a parallel subsystem  
 
-**Purpose:** Financial truth before Cursor writes invoices, payments, or closeout UI. This addresses a **true ARK gap** (financial spine), not a visual gap.
+**Purpose:** Financial truth before implementers write invoices, payments, or closeout UI. This addresses a **true ARK gap** (financial spine), not a visual gap.
 
 ---
 
@@ -366,7 +366,7 @@ Ledger entries + `BalanceDueCalculator` are authoritative. `RepairOrderPaymentPo
 
 ---
 
-## Cursor Implementation Prompt
+## Implementation notes (historical)
 
 **Stop.** Do not use this prompt to build living-invoice sync. Read [`ARK-FINANCIAL-AUTHORITY-V2.md`](ARK-FINANCIAL-AUTHORITY-V2.md) first.
 

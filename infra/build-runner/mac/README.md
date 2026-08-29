@@ -14,7 +14,7 @@ ark-build status
 Add to PATH (once, via `install-prerequisites.sh`):
 
 ```bash
-export PATH="/Users/edwardsoares/Herd/arksmsv2/infra/build-runner/mac:$PATH"
+export PATH="$HOME/path/to/arksms/infra/build-runner/mac:$PATH"
 ```
 
 ## Workflow files (never rename production early)

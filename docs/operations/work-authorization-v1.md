@@ -100,7 +100,7 @@ Never: *“We need another hour…”*
 
 ## Vocabulary
 
-| Internal (authority) | Meaning | Customer / LugsNPlugs policy (example) |
+| Internal (authority) | Meaning | Customer / Demo Auto Repair policy (example) |
 | --- | --- | --- |
 | **Work Authorization** | Grammar: customer-authorized package of work | — |
 | **Package Type** | Testing · Maintenance · (future) Repair · Programming · Inspection | — |
@@ -225,7 +225,7 @@ Pricing Policy (shop configuration)
 Estimate Package line → Financial Position
 ```
 
-Examples (illustrative only — not LugsNPlugs defaults in code):
+Examples (illustrative only — not Demo Auto Repair defaults in code):
 
 | Shop | Level 1 | Level 2 | Level 3 |
 | --- | --- | --- | --- |

@@ -157,7 +157,7 @@ Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLe
 | **Outcome** | Dense, calm card rhythm; scan without SaaS whitespace or chaos |
 | **Sources** | Wrenchy |
 | **Evidence count** | 1 |
-| **Doctrine gate** | Cursor Doctrine; borrow density, reject workflow-as-home |
+| **Doctrine gate** | product doctrine; borrow density, reject workflow-as-home |
 | **Surfaces** | Workboard |
 | **Status** | `shipped` — denser card padding/gap |
 | **Convergence** | Workboard → Attention / Intake lists if earned |

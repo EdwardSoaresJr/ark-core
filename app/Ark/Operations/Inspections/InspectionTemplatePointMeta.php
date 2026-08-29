@@ -255,11 +255,11 @@ final class InspectionTemplatePointMeta
     }
 
     /**
-     * Default LugsNPlugs Corner Builder meta — shop-configurable, not platform law.
+     * Default Demo Auto Repair Corner Builder meta — shop-configurable, not platform law.
      *
      * @return BuilderMeta
      */
-    public static function lugsnplugsCornerMeta(string $library, string $corner, string $group): array
+    public static function shopCornerMeta(string $library, string $corner, string $group): array
     {
         return [
             'condition_palette' => self::PALETTE_GYR,
@@ -292,7 +292,7 @@ final class InspectionTemplatePointMeta
      *
      * @return BuilderMeta
      */
-    public static function lugsnplugsCornerMeasureMeta(string $corner, string $group): array
+    public static function shopCornerMeasureMeta(string $corner, string $group): array
     {
         return [
             'condition_palette' => self::PALETTE_GYR,
@@ -320,7 +320,7 @@ final class InspectionTemplatePointMeta
      *
      * @return BuilderMeta
      */
-    public static function lugsnplugsRearAxleMeta(): array
+    public static function shopRearAxleMeta(): array
     {
         return [
             'group' => 'axle_gate',

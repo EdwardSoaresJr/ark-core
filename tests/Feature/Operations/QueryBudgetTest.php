@@ -118,7 +118,7 @@ test('repair order inspection show get has no mutations', function () {
 
 test('portal vehicle detail stays within query budget', function () {
     Mail::fake();
-    ShopSettings::current()->update(['shop_name' => 'LugsNPlugs']);
+    ShopSettings::current()->update(['shop_name' => 'Demo Auto Repair']);
 
     $customer = portalCustomerForQueryBudget();
     $vehicle = $customer->vehicles()->firstOrFail();

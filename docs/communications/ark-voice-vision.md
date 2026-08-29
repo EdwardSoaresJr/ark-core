@@ -4,13 +4,13 @@
 **Audience:** ARK V2, ARK Mobile, shop floor hardware, communications  
 **Sequence:** Authority → Observation → Transport → Projections
 
-**Companions:** [communications-authority.md](../communications-authority.md) · [ark-mobile-communications-authority-contract.md](../mobile/ark-mobile-communications-authority-contract.md) · [ark-telephony-roadmap.mdc](../../.cursor/rules/ark-telephony-roadmap.mdc) · [ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc) · [ark-telephony-settings-doctrine.mdc](../../.cursor/rules/ark-telephony-settings-doctrine.mdc) · [ark-voice-phase1-spec.md](ark-voice-phase1-spec.md)
+**Companions:** [communications-authority.md](../communications-authority.md) · [ark-mobile-communications-authority-contract.md](../mobile/ark-mobile-communications-authority-contract.md) · ark-telephony-roadmap.mdc · ark-authority-vs-configuration.mdc · ark-telephony-settings-doctrine.mdc · [ark-voice-phase1-spec.md](ark-voice-phase1-spec.md)
 
 ---
 
 ## Purpose
 
-LugsNPlugs needs more than SMS and cloud ring-to-cell.
+Demo Auto Repair needs more than SMS and cloud ring-to-cell.
 
 The shop needs a **communications operating system**:
 
@@ -122,7 +122,7 @@ ARK emits once. Projections and transport adapters consume.
 | **Hybrid** (likely) | Twilio PSTN in → Asterisk shop fabric → desk/mobile/SIP |
 | **ARK Voice native** (later) | Custom transport only if Asterisk + adapters prove insufficient |
 
-Provider selection is **shop infrastructure**, configured in **Settings → Communications** — not hardcoded per tenant and not `TELEPHONY_PROVIDER` in `.env`. See [ark-telephony-settings-doctrine.mdc](../../.cursor/rules/ark-telephony-settings-doctrine.mdc).
+Provider selection is **shop infrastructure**, configured in **Settings → Communications** — not hardcoded per tenant and not `TELEPHONY_PROVIDER` in `.env`. See ark-telephony-settings-doctrine.mdc.
 
 Existing seam: `TelephonyProvider` contract + `TwilioTelephonyProvider`. Future: `AsteriskTelephonyProvider`, unified ingress normalizer → `CallSession`.
 
@@ -218,7 +218,7 @@ Observe floor pain
 | **V4** | Shop display + observation-driven TTS/page hooks | One proven event (e.g. RO approved) |
 | **V5** | Hybrid PSTN (Twilio in, Asterisk fabric) if needed | Operational measurement |
 
-SMS/MMS priority remains per [ark-telephony-roadmap.mdc](../../.cursor/rules/ark-telephony-roadmap.mdc). Voice expansion follows **observed** shop pain — not roadmap momentum.
+SMS/MMS priority remains per ark-telephony-roadmap.mdc. Voice expansion follows **observed** shop pain — not roadmap momentum.
 
 ---
 

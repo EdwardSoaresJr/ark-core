@@ -51,7 +51,7 @@ Surface grammar at every stop:
 
 Shop Walk consumes **station orientation** — Front Counter, bays, Parts Desk as operational places, not device inventory. VVX microbrowser and bay tablets are future continuity surfaces on the same projection.
 
-See [ark-station-doctrine.mdc](../../.cursor/rules/ark-station-doctrine.mdc).
+See ark-station-doctrine.mdc.
 
 ---
 

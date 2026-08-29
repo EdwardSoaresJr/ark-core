@@ -105,7 +105,7 @@
 
             <div class="customer-footer__legal">
                 <p class="customer-footer__copyright">
-                    &copy; {{ date('Y') }} {{ $footer['shop_name'] }}. Colorado Springs independent repair.
+                    &copy; {{ date('Y') }} {{ $footer['shop_name'] }}. Demo City independent repair.
                 </p>
                 @if (filled($footer['privacy_url']) || filled($footer['terms_url']))
                     <div class="customer-footer__legal-links">

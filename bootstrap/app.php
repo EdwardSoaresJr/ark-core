@@ -21,6 +21,8 @@ use App\Http\Middleware\EnsurePasswordIsSet;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\PreventPortalSearchIndexing;
 use App\Http\Middleware\RecordStaffFrontDoorLanding;
+use App\Ark\Install\Middleware\RedirectUninstalledToSetup;
+use App\Ark\Install\Middleware\UseInstallerRuntime;
 use App\Http\Middleware\ConfigureSessionCookieDomain;
 use App\Http\Middleware\RedirectCrossSurfaceRequests;
 use App\Http\Middleware\SyncEcosystemDisplayThemeCookie;
@@ -46,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
         then: function (): void {
+            require __DIR__.'/../routes/install.php';
             // Cloud before public — public legacy catch-all must not swallow /cloud.
             require __DIR__.'/../routes/cloud.php';
             require __DIR__.'/../routes/portal.php';
@@ -63,6 +66,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Before StartSession — company host must not inherit Domain=.demo-auto.test.
         $middleware->prepend(ConfigureSessionCookieDomain::class);
         $middleware->prepend(RedirectCrossSurfaceRequests::class);
+        // First-run: file session/cache before DB exists; redirect app traffic to /setup.
+        $middleware->prepend(UseInstallerRuntime::class);
+        $middleware->prependToGroup('web', RedirectUninstalledToSetup::class);
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',

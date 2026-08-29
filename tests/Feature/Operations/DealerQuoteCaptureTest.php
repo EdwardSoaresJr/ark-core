@@ -82,8 +82,14 @@ it('parses penkhus-style dealer quote text', function () {
         ->and($parsed['lines'][1]['quantity'])->toBe('12');
 });
 
+// Real third-party dealer OCR fixture excluded from public staging.
 it('parses real penkhus cdk ocr fixture for Q19696', function () {
-    $ocr = file_get_contents(base_path('tests/Fixtures/dealer-quotes/penkhus-q19696-ocr.txt'));
+    $fixture = base_path('tests/Fixtures/dealer-quotes/penkhus-q19696-ocr.txt');
+    if (! is_file($fixture)) {
+        $this->markTestSkipped('Private dealer OCR fixture not shipped in public staging.');
+    }
+
+    $ocr = file_get_contents($fixture);
     $parsed = app(DealerQuoteParser::class)->parse((string) $ocr);
 
     expect($parsed['supplier_name'])->toBe('Bob Penkhus Volkswagen')

@@ -31,7 +31,7 @@ Do not duplicate ARK workflows on the glass.
 One canvas. Not SaaS tabs.
 
 ```
-LugsNPlugs · clock · ARK ● · Dragon ● · Ask Dragon
+Demo Auto Repair · clock · ARK ● · Dragon ● · Ask Dragon
 ────────────────────────────────────────────────
 SHOP RIGHT NOW          │  NEEDS ACTION
 Active / approvals /    │  Ranked cards: RO · vehicle · why · age

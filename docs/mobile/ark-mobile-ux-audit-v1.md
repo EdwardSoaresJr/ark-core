@@ -88,7 +88,7 @@ Work rows are big bordered cards; RO overview uses bordered chips + plain sectio
 large outlined squares; Search uses outlined pill chips. Five surfaces, five card languages.
 
 **The fix is one thing:** one `ArkCard` / `ArkSection` primitive with a single border/elevation/
-padding rule. (Doctrine: dense but calm, ~15–20% tighter — `ark-cursor-doctrine`.)
+padding rule. (Doctrine: dense but calm, ~15–20% tighter — `ark product doctrine`.)
 
 ### SYS-5 — The action bar is not context-aware (and duplicates content).
 

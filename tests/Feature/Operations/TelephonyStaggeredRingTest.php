@@ -36,7 +36,7 @@ test('parallel ring twiml is unchanged when all endpoint ring delays are zero', 
     TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,
@@ -72,7 +72,7 @@ test('staggered ring uses conference wait twiml while immediate endpoints ring v
     TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,
@@ -123,7 +123,7 @@ test('staggered ring dispatcher queues immediate outbound jobs and delayed expan
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,
@@ -175,7 +175,7 @@ test('staggered expand job dials only the new delay tier without redirecting par
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,
@@ -219,7 +219,7 @@ test('ring leg answered status assigns owner and cancels other outbound legs', f
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'user_id' => $ben->id,
         'enabled' => true,
         'position' => 0,
@@ -269,7 +269,7 @@ test('ring leg answered status assigns owner and cancels other outbound legs', f
         [
             'CallSid' => 'CAoutSip01',
             'CallStatus' => 'answered',
-            'Called' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+            'Called' => 'sip:desk1@example.sip.twilio.com',
         ],
     );
 
@@ -393,7 +393,7 @@ test('parallel ring leg answer cancels competing cell leg call sid', function ()
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'user_id' => $ben->id,
         'enabled' => true,
         'ring_delay_seconds' => 0,
@@ -460,7 +460,7 @@ test('cell leg pickup marks screening without cancelling competing sip leg', fun
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'user_id' => $ben->id,
         'enabled' => true,
         'position' => 0,
@@ -540,7 +540,7 @@ test('cell accept press 1 marks answered and cancels competing legs', function (
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'user_id' => $ben->id,
         'enabled' => true,
         'position' => 0,
@@ -593,7 +593,7 @@ test('ring leg in progress status cancels competing outbound legs', function () 
     $sip = TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'user_id' => $ben->id,
         'enabled' => true,
         'position' => 0,
@@ -649,7 +649,7 @@ test('staggered expand webhook dials cumulative endpoints with customer caller i
     TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,
@@ -716,7 +716,7 @@ test('parallel cell ring disables machine detection when multiple endpoints ring
     TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,
@@ -794,7 +794,7 @@ test('staggered expand twiml includes caller ring tone on dial', function () {
     TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,

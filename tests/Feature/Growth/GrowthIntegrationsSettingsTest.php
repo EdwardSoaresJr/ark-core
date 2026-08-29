@@ -34,10 +34,10 @@ function sampleGoogleServiceAccountJson(): string
 {
     return json_encode([
         'type' => 'service_account',
-        'project_id' => 'lugsnplugs-growth',
+        'project_id' => 'demo-auto-growth',
         'private_key_id' => 'abc123',
         'private_key' => "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7\n-----END PRIVATE KEY-----\n",
-        'client_email' => 'growth@lugsnplugs-growth.iam.gserviceaccount.com',
+        'client_email' => 'growth@demo-auto-growth.iam.gserviceaccount.com',
         'client_id' => '1234567890',
         'token_uri' => 'https://oauth2.googleapis.com/token',
     ], JSON_THROW_ON_ERROR);
@@ -130,9 +130,9 @@ it('falls back to the server firebase service account for growth credentials', f
 
     file_put_contents($path, json_encode([
         'type' => 'service_account',
-        'project_id' => 'lugsnplugs-ark-mobile',
+        'project_id' => 'demo-auto-ark-mobile',
         'private_key' => "-----BEGIN PRIVATE KEY-----\nTEST\n-----END PRIVATE KEY-----\n",
-        'client_email' => 'firebase-adminsdk-fbsvc@lugsnplugs-ark-mobile.iam.gserviceaccount.com',
+        'client_email' => 'firebase-adminsdk-fbsvc@demo-auto-ark-mobile.iam.gserviceaccount.com',
     ], JSON_THROW_ON_ERROR));
 
     $settings = GrowthIntegrationSettings::current();
@@ -140,7 +140,7 @@ it('falls back to the server firebase service account for growth credentials', f
     expect($settings->hasGoogleServiceAccountCredentials())->toBeTrue()
         ->and($settings->googleServiceAccountSource())->toBe('server_file')
         ->and($settings->googleServiceAccountCredentials()['client_email'] ?? null)
-        ->toBe('firebase-adminsdk-fbsvc@lugsnplugs-ark-mobile.iam.gserviceaccount.com');
+        ->toBe('firebase-adminsdk-fbsvc@demo-auto-ark-mobile.iam.gserviceaccount.com');
 });
 
 it('validates location and credentials when enabling google business profile', function (): void {
@@ -201,10 +201,10 @@ it('discovers google business profile locations using stored credentials', funct
             'locations' => [
                 [
                     'name' => 'locations/98765432109876543210',
-                    'title' => 'Lugs N Plugs Auto Care',
+                    'title' => 'Demo Auto Repair Auto Care',
                     'storefrontAddress' => [
                         'addressLines' => ['123 Main St'],
-                        'locality' => 'Colorado Springs',
+                        'locality' => 'Demo City',
                         'administrativeArea' => 'CO',
                         'postalCode' => '80909',
                     ],
@@ -217,7 +217,7 @@ it('discovers google business profile locations using stored credentials', funct
         ->postJson(route('growth.integrations.discover-locations'))
         ->assertOk()
         ->assertJsonPath('locations.0.id', 'locations/98765432109876543210')
-        ->assertJsonPath('locations.0.title', 'Lugs N Plugs Auto Care')
+        ->assertJsonPath('locations.0.title', 'Demo Auto Repair Auto Care')
         ->assertJsonPath('credentials_source', 'growth_settings');
 });
 
@@ -234,7 +234,7 @@ it('discovers locations from pasted json before save', function (): void {
             'locations' => [
                 [
                     'name' => 'locations/98765432109876543210',
-                    'title' => 'Lugs N Plugs Auto Care',
+                    'title' => 'Demo Auto Repair Auto Care',
                 ],
             ],
         ], 200),
@@ -295,9 +295,9 @@ it('switches growth google credentials to the server firebase account', function
 
     file_put_contents($path, json_encode([
         'type' => 'service_account',
-        'project_id' => 'lugsnplugs-ark-mobile',
+        'project_id' => 'demo-auto-ark-mobile',
         'private_key' => "-----BEGIN PRIVATE KEY-----\nTEST\n-----END PRIVATE KEY-----\n",
-        'client_email' => 'firebase-adminsdk-fbsvc@lugsnplugs-ark-mobile.iam.gserviceaccount.com',
+        'client_email' => 'firebase-adminsdk-fbsvc@demo-auto-ark-mobile.iam.gserviceaccount.com',
     ], JSON_THROW_ON_ERROR));
 
     ShopSettings::current()->update([
@@ -327,7 +327,7 @@ it('switches growth google credentials to the server firebase account', function
     expect(ShopSettings::current()->fresh()->growth_google_service_account)->toBeNull()
         ->and($settings->googleServiceAccountSource())->toBe('server_file')
         ->and($settings->googleServiceAccountCredentials()['client_email'] ?? null)
-        ->toBe('firebase-adminsdk-fbsvc@lugsnplugs-ark-mobile.iam.gserviceaccount.com');
+        ->toBe('firebase-adminsdk-fbsvc@demo-auto-ark-mobile.iam.gserviceaccount.com');
 });
 
 it('shows saved credentials status without re-displaying json', function (): void {
@@ -339,5 +339,5 @@ it('shows saved credentials status without re-displaying json', function (): voi
         ->get(route('growth.integrations.index'))
         ->assertOk()
         ->assertSee('Saved on server.')
-        ->assertSee('growth@lugsnplugs-growth.iam.gserviceaccount.com');
+        ->assertSee('growth@demo-auto-growth.iam.gserviceaccount.com');
 });

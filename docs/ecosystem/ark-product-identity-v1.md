@@ -182,4 +182,4 @@ That notebook validates whether the product is actually changing how the shop op
 
 - [ark-constitution-v1.md](ark-constitution-v1.md) — constitutional principle: coherence over capability
 - [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) — communications authority
-- [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc) — three applications, one runtime
+- ark-surfaces.mdc — three applications, one runtime

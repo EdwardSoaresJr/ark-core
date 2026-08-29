@@ -18,8 +18,12 @@
             </p>
         </div>
 
-        <div class="mt-3 rounded-sm border px-3 py-2 text-xs font-semibold {{ $squareConfigured ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900' }}">
-            @if ($squareConfigured)
+        <div class="mt-3 rounded-sm border px-3 py-2 text-xs font-semibold {{ \App\Ark\Operations\Payments\SquareSdk::adapterPackagePresent() ? ($squareConfigured ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900') : 'border-amber-200 bg-amber-50 text-amber-900' }}">
+            @if (! \App\Ark\Operations\Payments\SquareSdk::adapterPackagePresent())
+                Square adapter not installed. Core ARK does not bundle Square.
+                Install explicitly on the server: <code class="font-mono">{{ \App\Ark\Operations\Payments\SquareSdk::adapterPackageHint() }}</code>
+                — then add credentials below.
+            @elseif ($squareConfigured)
                 Square API credentials detected. Environment: {{ $square->environment() }}.
                 @if ($integrations->squareCredentialSource() === 'env')
                     <span class="font-normal">Using server <code>.env</code> fallback — save here to move credentials into Settings.</span>

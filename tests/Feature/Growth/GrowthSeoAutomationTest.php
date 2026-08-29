@@ -55,7 +55,7 @@ it('converts a seeded opportunity draft into a common problem shape', function (
     $draft = [
         'title' => 'P0420 Code',
         'slug' => 'p0420',
-        'summary' => 'P0420 catalyst efficiency in Colorado Springs.',
+        'summary' => 'P0420 catalyst efficiency in Demo City.',
         'symptoms' => ['Check engine light on'],
         'diagnosis' => 'We verify live data before recommending a catalytic converter.',
         'common_causes' => ['Upstream misfire'],
@@ -88,7 +88,7 @@ it('auto publishes a qualified create opportunity as a live common problem page'
         'content_draft' => [
             'title' => 'P0420 Catalyst',
             'slug' => 'p0420-catalyst',
-            'summary' => 'P0420 catalyst efficiency in Colorado Springs.',
+            'summary' => 'P0420 catalyst efficiency in Demo City.',
             'symptoms' => ['Check engine light on', 'Failed emissions'],
             'diagnosis' => 'We verify fuel trim and catalyst response before quoting converters.',
             'common_causes' => ['Misfire history', 'Oil consumption'],

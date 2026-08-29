@@ -25,7 +25,7 @@ Login shell: `theme.accent_theme` added beside `display_mode` / `accent_color`.
 2. Another shop can ship a different slot layout (tested: 4-corner lining). **Yes.**
 3. Unseen items (tested: Battery CCA) pick `measurement` from slots. **Yes.**
 4. Kind comes from slots/gate, not item IDs. **Yes.**
-5. No Flutter `if (lugsNPlugs)` / brake template IDs. **Yes.**
+5. No Flutter `if (demo-auto)` / brake template IDs. **Yes.**
 6. Measurements stay structured rows. **Yes.**
 7–8. Voice is a proposal until Save & Next. **Yes.**
 9. Finding keeps the utterance; no “unsafe to drive” invention. **Yes.**

@@ -2,7 +2,7 @@
 
 **ID:** `companion.screen.my-work`  
 **Role(s):** Technician  
-**ARK doctrine:** [`ark-technician-scope.mdc`](../../../.cursor/rules/ark-technician-scope.mdc)  
+**ARK doctrine:** `ark-technician-scope.mdc`  
 **Status:** 📝 draft — Edward review
 
 ---

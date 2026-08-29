@@ -116,7 +116,7 @@ return new class extends Migration
                     'Recipient is responsible for ensuring compatibility with their window/home.',
                     'Entries close Friday at 6:00 PM.',
                     'Recipient selected randomly Saturday.',
-                    'LugsNPlugs reserves the right to verify eligibility.',
+                    'Demo Auto Repair reserves the right to verify eligibility.',
                     'Void where prohibited.',
                 ], JSON_THROW_ON_ERROR),
                 'opens_at' => \Illuminate\Support\Carbon::parse('2026-07-28 00:00:00', $denver)->utc(),

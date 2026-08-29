@@ -5,18 +5,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * LugsNPlugs floor truth: two VVX350 desk phones on Twilio Elastic SIP.
+ * Historical one-shot: reconcile two front-desk VVX rows when matching MACs exist.
  *
- * MAC 48256730A0FB → 192.168.1.131 → desk1 → Front Desk Right
- * MAC 48256730757F → 192.168.1.171 → desk2 → Front Desk Left
- *
- * Harmless on other tenants — only runs when these MACs or partial rows exist.
+ * Public staging ships synthetic placeholder MACs only. On a fresh Demo Auto
+ * install these constants match nothing, so this migration is a no-op.
+ * Original proving-ground hardware inventory was removed from the public tree.
  */
 return new class extends Migration
 {
-    private const RIGHT_MAC = '48256730A0FB';
+    private const RIGHT_MAC = '000000000001';
 
-    private const LEFT_MAC = '48256730757F';
+    private const LEFT_MAC = '000000000002';
 
     public function up(): void
     {

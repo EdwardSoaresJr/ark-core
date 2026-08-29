@@ -13,13 +13,13 @@ beforeEach(function (): void {
 });
 
 test('public surface settings default from shop settings when column empty', function (): void {
-    expect(PublicSurfaceSettings::current()['google_review_count'])->toBe(56)
+    expect(PublicSurfaceSettings::current()['google_review_count'])->toBe(24)
         ->and(PublicSurfaceSettings::current()['positioning_lede'])->toContain('real problem first')
-        ->and(PublicSurfaceSettings::current()['local_tagline'])->toBe('Family owned in Colorado Springs.')
+        ->and(PublicSurfaceSettings::current()['local_tagline'])->toBe('Family owned in Demo City.')
         ->and(PublicSurfaceSettings::current()['business_hours_label'])->toBe('Mon–Fri: 9:00 AM – 6:00 PM · Sat–Sun: Closed')
-        ->and(PublicSurfaceSettings::current()['customer_quote'])->toContain('proper trans service')
+        ->and(PublicSurfaceSettings::current()['customer_quote'])->toContain('no upsells')
         ->and(PublicSurfaceSettings::reviewsForDisplay())->toHaveCount(4)
-        ->and(PublicSurfaceSettings::reviewsForDisplay()[1]['attribution'])->toBe('Greg Powell')
+        ->and(PublicSurfaceSettings::reviewsForDisplay()[1]['attribution'])->toBe('B. Customer')
         ->and(PublicSurfaceSettings::photosForDisplay())->toHaveCount(4)
         ->and(PublicSurfaceSettings::current()['composition_photos'][PublicSurfaceSettings::PHOTO_ROLE_DIAGNOSTIC_EVIDENCE])->toBe(1);
 });
@@ -164,14 +164,14 @@ test('guest cannot update public surface settings', function (): void {
 test('admin can update financing links for the public website', function (): void {
     ShopSettings::current()->update(['learn_training_gate_enabled' => false]);
 
-    $wisetackUrl = 'https://wisetack.us/#/uz8sh8e/prequalify';
+    $wisetackUrl = 'https://wisetack.us/#/prequal/demo-auto-example';
     $synchronyUrl = SynchronyCarCareUrls::linkUrl();
 
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->patch(route('website.manage.update'), [
             'google_rating' => '4.9',
             'google_review_count' => 56,
-            'google_reviews_url' => 'https://www.google.com/maps/search/?api=1&query=LugsNPlugs',
+            'google_reviews_url' => 'https://www.google.com/maps/search/?api=1&query=Demo+Auto+Repair',
             'wisetack_url' => $wisetackUrl,
             'synchrony_url' => $synchronyUrl,
             'photo_alt' => ['Bay', 'Scan', 'Lift', 'Tech'],
@@ -190,15 +190,15 @@ test('admin can update financing links for the public website', function (): voi
 test('admin can update social profile urls for the public website', function (): void {
     ShopSettings::current()->update(['learn_training_gate_enabled' => false]);
 
-    $facebook = 'https://www.facebook.com/lugsnplugs';
-    $instagram = 'https://www.instagram.com/lugsnplugs';
-    $nextdoor = 'https://nextdoor.com/pages/lugsnplugs-automotive';
+    $facebook = 'https://www.facebook.com/demo-auto';
+    $instagram = 'https://www.instagram.com/demo-auto';
+    $nextdoor = 'https://nextdoor.com/pages/demo-auto-automotive';
 
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->patch(route('website.manage.update'), [
             'google_rating' => '4.9',
             'google_review_count' => 56,
-            'google_reviews_url' => 'https://www.google.com/maps/search/?api=1&query=LugsNPlugs',
+            'google_reviews_url' => 'https://www.google.com/maps/search/?api=1&query=Demo+Auto+Repair',
             'facebook_url' => $facebook,
             'instagram_url' => $instagram,
             'nextdoor_url' => $nextdoor,
@@ -229,9 +229,8 @@ test('admin can update social profile urls for the public website', function ():
 });
 
 test('shop social profiles omit empty channels from display and sameAs', function (): void {
+    // Demo defaults ship without a Google Business review URL; sameAs stays empty until configured.
     expect(ShopSocialProfiles::forDisplay())
-        ->not->toBeEmpty()
-        ->and(collect(ShopSocialProfiles::forDisplay())->pluck('key')->all())
-        ->toContain('google_reviews')
+        ->toBeEmpty()
         ->and(ShopSocialProfiles::sameAsUrls())->toBe([]);
 });

@@ -25,7 +25,7 @@ enum OperationalReportTab: string
     {
         return match ($this) {
             self::Operations => 'Queue pressure, approval drag, labor liability, and recommendation conversion',
-            self::MarginHealth => 'Parts margin, ELR, ARO, and sales mix vs LugsNPlugs targets',
+            self::MarginHealth => 'Parts margin, ELR, ARO, and sales mix vs Demo Auto Repair targets',
             self::OwnerPl => 'Management P&L from posted sales, operating income estimate, and tax posture',
             self::Financial => 'Posted RO summary, payments reconciliation, financial mix, and recent posts',
             self::Production => 'Live pressure, advisor throughput, and technician production',

@@ -21,7 +21,7 @@ test('mobile push verify passes with container path and readable credentials fil
 
     file_put_contents($path, json_encode([
         'type' => 'service_account',
-        'project_id' => 'lugsnplugs-ark-mobile',
+        'project_id' => 'demo-auto-ark-mobile',
         'client_email' => 'fcm@test.iam.gserviceaccount.com',
         'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
     ], JSON_THROW_ON_ERROR));

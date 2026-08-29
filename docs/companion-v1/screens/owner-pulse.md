@@ -30,7 +30,7 @@ Owner mode in More · separate from Edward advisor tabs during counter hours
 
 ## Doctrine
 
-[`ark-shop-excellence.mdc`](../../../.cursor/rules/ark-shop-excellence.mdc) — workflow truth vs closed sales truth
+`ark-shop-excellence.mdc` — workflow truth vs closed sales truth
 
 ---
 

@@ -3,7 +3,7 @@
 **Milestone:** Milestone 1 — First Contact  
 **Date:** _fill after certification_  
 **Device:** Poly VVX350  
-**Shop:** LugsNPlugs  
+**Shop:** Demo Auto Repair  
 
 > Certification record — not a debug log. Name failed **gates** (G1–G7), not subsystems.
 

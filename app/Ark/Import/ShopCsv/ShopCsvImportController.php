@@ -35,7 +35,7 @@ final class ShopCsvImportController
             'plate',
             'plate_state',
         ])."\n".
-            'Maria,Lopez,(719) 555-0142,maria@example.com,12 Main St,Colorado Springs,CO,80903,Retail,Prefers texts,2018,Honda,Civic,,ABC123,CO'."\n".
+            'Maria,Lopez,(719) 555-0142,maria@example.com,12 Main St,Demo City,CO,80903,Retail,Prefers texts,2018,Honda,Civic,,ABC123,CO'."\n".
             'James,Nguyen,7195550199,james@example.com,,,,,Fleet,,2020,Ford,F-150,1FTEW1E50LFA00001,,'."\n";
 
         return response()->streamDownload(static function () use ($csv): void {

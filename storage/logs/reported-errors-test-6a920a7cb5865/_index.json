@@ -1,0 +1,13 @@
+[
+    {
+        "id": "4ebfd1ab",
+        "filename": "2026-08-28T222356Z_4ebfd1ab.json",
+        "reported_at": "2026-08-28T22:23:56+00:00",
+        "exception_class": "RuntimeException",
+        "exception_message": "Archive me for review",
+        "status_code": null,
+        "url": "http://localhost:8080",
+        "route": null,
+        "user_email": null
+    }
+]

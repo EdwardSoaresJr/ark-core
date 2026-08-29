@@ -2,7 +2,7 @@
 
 ## Migrated from ARK-SMS
 
-**Source:** `/Users/edwardsoares/PhpstormProjects/ARK-SMS-CloudWays-Staging/public/assets/ARK_SMS_FINAL_DROP_IN_PACK`
+**Source:** `local ARK SMS drop-in branding pack (not redistributed)`
 
 **Destination:** `public/assets/ARK_SMS_FINAL_DROP_IN_PACK/` (29 files, byte-identical copy)
 

@@ -45,7 +45,7 @@ test('shop mail branding never falls back to Laravel', function () {
     ]);
     ShopSettings::forgetCurrent();
 
-    expect(ShopMailBranding::shopName())->toBe('LugsNPlugs')
-        ->and(ShopMailBranding::from()->name)->toBe('LugsNPlugs')
+    expect(ShopMailBranding::shopName())->toBe('Demo Auto Repair')
+        ->and(ShopMailBranding::from()->name)->toBe('Demo Auto Repair')
         ->and(ShopMailBranding::shopName())->not->toBe('Laravel');
 });

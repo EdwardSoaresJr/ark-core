@@ -38,16 +38,16 @@ final class CommonProblemSymptomGroups
             ],
             [
                 'label' => 'Popular makes',
-                'slugs' => ['audi-repair-colorado-springs', 'subaru-overheating', 'jeep-overheating', 'jeep-death-wobble', 'honda-timing-belt'],
+                'slugs' => ['audi-repair-demo-city', 'subaru-overheating', 'jeep-overheating', 'jeep-death-wobble', 'honda-timing-belt'],
             ],
             [
-                'label' => 'Colorado Springs services',
+                'label' => 'Demo City services',
                 'slugs' => [
-                    'auto-repair-colorado-springs',
-                    'mechanic-colorado-springs',
-                    'car-diagnostics-colorado-springs',
-                    'brake-repair-colorado-springs',
-                    'tune-up-colorado-springs',
+                    'auto-repair-demo-city',
+                    'mechanic-demo-city',
+                    'car-diagnostics-demo-city',
+                    'brake-repair-demo-city',
+                    'tune-up-demo-city',
                 ],
             ],
             [

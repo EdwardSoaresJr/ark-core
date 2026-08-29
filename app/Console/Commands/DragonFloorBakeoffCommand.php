@@ -21,7 +21,7 @@ final class DragonFloorBakeoffCommand extends Command
         {--dry-run : Print the frozen task set only}
         {--only= : Comma-separated task ids}';
 
-    protected $description = 'Floor-certify ARK-hosted Dragon vs arkai/Qwen on the frozen LugsNPlugs task set. Does not cut over.';
+    protected $description = 'Floor-certify ARK-hosted Dragon vs arkai/Qwen on the frozen Demo Auto Repair task set. Does not cut over.';
 
     public function handle(
         ChatDragonAgentAction $chat,

@@ -21,8 +21,10 @@ use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
 use App\Ark\Operations\Parts\PartsTechHttpClient;
 use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
 use App\Ark\Operations\Payments\FakeSquarePaymentsClient;
+use App\Ark\Operations\Payments\SquareAdapterMissingClient;
 use App\Ark\Operations\Payments\SquareApiPaymentsClient;
 use App\Ark\Operations\Payments\SquareConfiguration;
+use App\Ark\Operations\Payments\SquareSdk;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -59,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
+        if (\App\Ark\Install\InstallationState::isNotInstalled()) {
+            config([
+                'session.driver' => 'file',
+                'cache.default' => 'file',
+                'queue.default' => 'sync',
+            ]);
+        }
+
         $this->app->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {
             $resolver = $app->make(PartsTechCredentialsResolver::class);
             $credentials = $resolver->forUser(auth()->user());
@@ -69,11 +80,24 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(MobileVoiceCredentials::class, fn (): MobileVoiceCredentials => MobileVoiceCredentials::forCurrentShop());
         $this->app->scoped(RepairOrderStatusCatalog::class);
 
+        // Default Fake. Optional ark/payments-square ServiceProvider rebinds to the live SDK client.
+        // If credentials look configured but the adapter is missing, fail loudly (not silent Fake charges).
         $this->app->bind(SquarePaymentsClient::class, function (): SquarePaymentsClient {
             if (app()->environment('testing')) {
                 return new FakeSquarePaymentsClient;
             }
 
+            if (! SquareSdk::adapterPackagePresent()) {
+                $square = app(SquareConfiguration::class);
+
+                if ($square->enabled() || $square->configured()) {
+                    return new SquareAdapterMissingClient;
+                }
+
+                return new FakeSquarePaymentsClient;
+            }
+
+            // Package provider should have rebound this; keep a safe fallback if discovery order differs.
             if (! app(SquareConfiguration::class)->configured()) {
                 return new FakeSquarePaymentsClient;
             }

@@ -24,7 +24,7 @@ enum ServiceAdvisorMode: string
     public function instruction(): string
     {
         return match ($this) {
-            self::ServiceAdvisorRewrite => 'Rewrite like a seasoned LugsNPlugs service advisor: calm, direct, dense, professional. Fact-preserving. No chatbot cheer or school-report filler. Connect finding to recommendation only when both are documented.',
+            self::ServiceAdvisorRewrite => 'Rewrite like a seasoned Demo Auto Repair service advisor: calm, direct, dense, professional. Fact-preserving. No chatbot cheer or school-report filler. Connect finding to recommendation only when both are documented.',
             self::CleanUp => 'Preserve wording closely. Fix spelling, grammar, and readability only.',
             self::CustomerFriendly => 'Translate technician shorthand into customer-understandable language without inventing facts.',
             self::Concise => 'Make the note shorter while preserving every documented finding and recommendation.',

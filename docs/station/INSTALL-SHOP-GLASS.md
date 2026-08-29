@@ -1,14 +1,14 @@
 # Install the Shop Glass
 
-Windows front-counter glass for LugsNPlugs. **ARK is the shop. Flutter is the glass. Dragon is optional.**
+Windows front-counter glass for Demo Auto Repair. **ARK is the shop. Flutter is the glass. Dragon is optional.**
 
-Product name: **LugsNPlugs Shop Glass**
+Product name: **ARK Shop Glass**
 
 ## Where Edward downloads the installer
 
 1. Open GitHub (signed in): [EdwardSoaresJr/arksmsv2 Releases](https://github.com/EdwardSoaresJr/arksmsv2/releases)
 2. Open the latest **`glass-v…`** release (example: `glass-v0.1.0`)
-3. Download **`LugsNPlugs-Shop-Glass-Setup-0.1.0.exe`**
+3. Download **`Demo Auto Repair-Shop-Glass-Setup-0.1.0.exe`**
 
 The repository is private. Use the GitHub account that already has access. No Flutter, Git, or Visual Studio is required on the shop PC.
 
@@ -32,13 +32,13 @@ flutter build windows --release
 
 Then compile `windows/packaging/shop-glass.iss` with [Inno Setup 6](https://jrsoftware.org/isinfo.php). Output:
 
-`apps/advisor_station/windows/packaging/output/LugsNPlugs-Shop-Glass-Setup-0.1.0.exe`
+`apps/advisor_station/windows/packaging/output/Demo Auto Repair-Shop-Glass-Setup-0.1.0.exe`
 
 ## Install (shop PC)
 
 1. Run the Setup `.exe`
 2. Install (per-user is allowed)
-3. Launch **LugsNPlugs Shop Glass** from Start Menu or desktop shortcut
+3. Launch **ARK Shop Glass** from Start Menu or desktop shortcut
 4. On ARK (server/admin), issue a device token — plaintext is shown **once**:
 
 ```bash

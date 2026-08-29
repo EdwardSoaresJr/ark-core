@@ -147,7 +147,7 @@ Non-negotiables from the accepted contract:
 | Role ≠ product access | Authorize checks `products`; `groups` is not the gate |
 | `sub` immutable | `users.id` only — see §2.1 |
 | Closed claim surface | See §2.2 |
-| `shop_id` reserved | Constant for LugsNPlugs in 1b |
+| `shop_id` reserved | Constant for Demo Auto Repair in 1b |
 | One issuer, many clients | Client registry from day one |
 | Staff ≠ customer directories | Separate clients and `sub` namespaces — see §2.5 |
 | Breeze stays on ARK V2 | Issuer reuses same `users` + password |
@@ -226,7 +226,7 @@ Fallback: `app/Ark/Runtime/Identity/Oidc/` — discovery, authorize, token, user
 | `email`, `email_verified`, `name` | yes | profile |
 | `groups` | yes | Spatie role names |
 | `products` | yes | resolved product access |
-| `shop_id` | yes | `"1"` (LugsNPlugs) in 1b |
+| `shop_id` | yes | `"1"` (Demo Auto Repair) in 1b |
 
 No other claims without contract amendment.
 

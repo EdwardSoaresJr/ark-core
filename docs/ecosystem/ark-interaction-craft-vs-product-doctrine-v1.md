@@ -2,7 +2,7 @@
 
 **Status:** Frozen v1  
 **Standing rule:** Every competitor review — Shopmonkey, Tekmetric, AutoLeap, Mitchell, Fullbay, Shop-Ware, and all that follow — must use this template.  
-**Companions:** Projection Rule · Pressure First · Attention Queue · Cursor Doctrine · Workspace Rules · [Constitution](ark-constitution-v1.md)
+**Companions:** Projection Rule · Pressure First · Attention Queue · product doctrine · Workspace Rules · [Constitution](ark-constitution-v1.md)
 
 ---
 

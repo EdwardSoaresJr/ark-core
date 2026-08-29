@@ -10,13 +10,11 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
-    private const NEW_REVIEW_URL = 'https://g.page/r/Cf8J_e1XmXpMEAE/review';
+    private const NEW_REVIEW_URL = '';
 
     /** @var list<string> */
     private const LEGACY_REVIEW_URLS = [
-        'https://maps.app.goo.gl/A9A1M7MWh92j1edH6',
-        'https://www.google.com/maps/search/?api=1&query=LugsNPlugs+Colorado+Springs',
-        'https://www.google.com/maps/search/?api=1&query=LugsNPlugs',
+        'https://www.google.com/maps/search/?api=1&query=Demo+Auto+Repair',
     ];
 
     public function up(): void

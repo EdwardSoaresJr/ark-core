@@ -1,7 +1,7 @@
 # ARK V2 Interface Constitution
 
 **Status:** Active — Phases 0–5 complete (2026-06-14). New operations UI work follows this substrate.  
-**Companion:** `ark-cursor-doctrine.mdc` (product posture). This document is **structure and visual language**.  
+**Companion:** `product doctrine` (product posture). This document is **structure and visual language**.  
 **Earned freeze (2026-08-05 / rename 2026-08-06):** Interaction primitives below — Repair Order Presentation Reset (Builder identity retired).
 
 ---
@@ -505,7 +505,7 @@ Prioritized fixes — behavior preserved, substrate aligned.
 ### Phase 0 — Document + lint (this PR)
 
 - [x] This constitution in `docs/ark-v2-interface-constitution.md`
-- [x] Cursor rule pointer: `ark-interface-constitution.mdc` → link here + PR checklist
+- [x] Doctrine pointer: `ark-interface-constitution.mdc` → link here + PR checklist
 
 ### Phase 1 — Shared components (1–2 passes)
 

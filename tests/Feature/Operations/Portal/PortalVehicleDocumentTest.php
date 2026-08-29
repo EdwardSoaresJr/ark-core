@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Storage::fake('local');
-    ShopSettings::current()->update(['shop_name' => 'LugsNPlugs']);
+    ShopSettings::current()->update(['shop_name' => 'Demo Auto Repair']);
 });
 
 test('portal customer can view and download a vehicle document pdf', function () {

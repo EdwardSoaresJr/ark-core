@@ -21,7 +21,7 @@
 | --- | --- |
 | AutoRepair / Organization / LocalBusiness (name, url, address, telephone, sameAs, …) | Preserved |
 | `AggregateRating` on business schema | **Removed** |
-| `Review` JSON-LD about LugsNPlugs | Not emitted (builder exists unused) |
+| `Review` JSON-LD about Demo Auto Repair | Not emitted (builder exists unused) |
 
 ### Visible trust (preserved)
 

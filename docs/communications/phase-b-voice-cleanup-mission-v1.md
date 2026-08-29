@@ -34,7 +34,7 @@ If any code contradicts this model, assume obsolete until proven otherwise.
 | 1 | No new abstractions without two production implementations |
 | 2 | Keep **`ArkVoiceTransport`** — never rename to `AsteriskVoiceTransport` |
 | 3 | Delete — do not deprecate, wrap, or leave for later |
-| 4 | **No behavior changes** — cleanup only (see [ark-cleanup-sprint-discipline.mdc](../../.cursor/rules/ark-cleanup-sprint-discipline.mdc)) |
+| 4 | **No behavior changes** — cleanup only (see ark-cleanup-sprint-discipline.mdc) |
 
 ---
 

@@ -740,7 +740,7 @@ class OperationalReportRangeMetrics
     }
 
     /**
-     * Cecil Bullard margin bands — closed sales truth vs LugsNPlugs targets.
+     * Cecil Bullard margin bands — closed sales truth vs Demo Auto Repair targets.
      *
      * @return list<array{metric: string, actual: string, target: string, posture: string, tone: 'good'|'warn'|null, action: string}>
      */

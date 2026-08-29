@@ -2,17 +2,17 @@
 
 **Status:** Frozen until proven  
 **Companions:** [cloud-saas-critical-path-v1.md](cloud-saas-critical-path-v1.md) · [cloud-funnel-v1.md](cloud-funnel-v1.md) · [NEXT.md](NEXT.md)  
-**Cursor rule:** `.cursor/rules/ark-multi-tenant-development.mdc`
+**Doctrine: ** doctrine `ark-multi-tenant-development.mdc`
 
 ## Decision
 
 We are **not** building a generic SaaS platform first.
 
-We are building the multi-tenant platform **around** the real LugsNPlugs production shop until the platform proves itself.
+We are building the multi-tenant platform **around** the real Demo Auto Repair production shop until the platform proves itself.
 
-LugsNPlugs remains the proving ground.
+The proving-ground shop remains the reference tenant.
 
-Only after the complete multi-tenant architecture is stable and production-proven will LugsNPlugs itself migrate onto the new tenant architecture.
+Only after the complete multi-tenant architecture is stable and production-proven will Demo Auto Repair itself migrate onto the new tenant architecture.
 
 This is intentional.
 
@@ -29,7 +29,7 @@ It should become the first successful migration.
 ```text
 Today:
 
-LugsNPlugs Production
+Demo Auto Repair Production
         │
         ▼
 Monolithic production application
@@ -41,11 +41,11 @@ Target:
                      │
      ┌───────────────┼───────────────┐
      ▼               ▼               ▼
- LugsNPlugs      Shop A         Shop B
+ Demo Auto Repair      Shop A         Shop B
     Tenant        Tenant         Tenant
 ```
 
-Do **not** migrate LugsNPlugs until the platform is ready.
+Do **not** migrate Demo Auto Repair until the platform is ready.
 
 ## Development strategy
 
@@ -62,9 +62,9 @@ Until migration day, build:
 
 Assume these create **new shops**.
 
-Not replacing LugsNPlugs.
+Not replacing Demo Auto Repair.
 
-Every milestone should create another production-capable tenant while LugsNPlugs continues operating normally.
+Every milestone should create another production-capable tenant while Demo Auto Repair continues operating normally.
 
 ## Validation rule
 
@@ -79,7 +79,7 @@ Questions should always be:
 - Can a brand-new tenant deploy?
 - Can a brand-new customer succeed?
 
-Only after those answers are consistently **yes** should LugsNPlugs migrate.
+Only after those answers are consistently **yes** should Demo Auto Repair migrate.
 
 ## Migration philosophy
 
@@ -89,16 +89,16 @@ Only after those answers are consistently **yes** should LugsNPlugs migrate.
 
 When it happens, it should feel boring.
 
-The goal is that moving LugsNPlugs is simply changing where it runs — not redesigning how it operates.
+The goal is that moving Demo Auto Repair is simply changing where it runs — not redesigning how it operates.
 
 ## Engineering guardrail
 
-Do **not** add temporary code paths that exist only because LugsNPlugs is still on the legacy application.
+Do **not** add temporary code paths that exist only because Demo Auto Repair is still on the legacy application.
 
 Instead:
 
 1. Build the correct platform.
-2. Keep LugsNPlugs on the existing production system.
+2. Keep Demo Auto Repair on the existing production system.
 3. Migrate only when the new platform is demonstrably complete.
 
 Avoid long-lived compatibility layers unless they are required for the eventual migration itself.
@@ -117,11 +117,11 @@ The platform is considered proven when:
 - Backups work
 - Existing tenant operations are stable
 
-Only then should LugsNPlugs become another tenant on the platform.
+Only then should Demo Auto Repair become another tenant on the platform.
 
 ## Architectural principle
 
-**LugsNPlugs is the proving ground, not the prototype.**
+**Demo Auto Repair is the proving-ground shop, not the prototype.**
 
 We validate the platform against real operational needs every day, but we do not move the business onto the new infrastructure until the infrastructure has earned that trust.
 

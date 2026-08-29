@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     ShopSettings::current()->update([
-        'shop_name' => 'LugsNPlugs',
+        'shop_name' => 'Demo Auto Repair',
         'shop_timezone' => 'America/Denver',
         'learn_training_gate_enabled' => false,
     ]);

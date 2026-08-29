@@ -3,7 +3,7 @@
  *
  * Loaded before print-helpers inline script. Core print flow stays in
  * resources/views/components/print-helpers.blade.php; this file owns detection
- * + debug hooks so Cursor/developers have a single drop-in module.
+ * + debug hooks so operators and developers have a single drop-in module.
  */
 (function (window) {
     'use strict';

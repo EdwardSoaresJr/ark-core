@@ -388,8 +388,8 @@ Commitments matter. They do not explain April vs May. Flow might.
 
 ## References
 
-- `.cursor/rules/ark-projection-rule.mdc`
-- `.cursor/rules/ark-pressure-first.mdc` — observe → surface → measure before enforce
+- doctrine `ark-projection-rule.mdc`
+- doctrine `ark-pressure-first.mdc` — observe → surface → measure before enforce
 - `app/Ark/Operations/Today/TodayPipelineProjection.php`
 - `app/Ark/Operations/Today/AdvisorTodayShopRadarBuilder.php`
 - `app/Ark/Operations/Workboard/WorkboardSwimlaneCatalog.php`

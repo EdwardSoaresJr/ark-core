@@ -55,7 +55,7 @@ After this certification, the shop can answer customer calls and texts entirely 
 
 ## Notes
 
-- Voice cutover: business number on Twilio Elastic SIP Trunk `LugsNPlugs ARK Voice`; legacy Programmable Voice webhook cleared on the number.
+- Voice cutover: business number on Twilio Elastic SIP Trunk `Demo Auto Repair ARK Voice`; legacy Programmable Voice webhook cleared on the number.
 - Rollback remains Twilio Console only — repoint Voice URL to legacy webhook; no ARK deploy required.
 - Production Certified waits for one week of sustained PSTN on the trunk path without rollback.
 

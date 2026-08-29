@@ -11,7 +11,7 @@ use App\Mail\PortalAccessCodeMail;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
-    ShopSettings::current()->update(['shop_name' => 'LugsNPlugs']);
+    ShopSettings::current()->update(['shop_name' => 'Demo Auto Repair']);
 });
 
 test('estimate page links guests to portal access with vehicle return url', function () {

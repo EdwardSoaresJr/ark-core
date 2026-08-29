@@ -15,10 +15,10 @@ Platform owns truth. ARKv2 projects work. Companion projects communications. Eve
 The development loop changed:
 
 ```text
-Shop → Pressure → Observation → Notebook → Cluster → Cursor → Ship
+Shop → Pressure → Observation → Notebook → Cluster → Implement → Ship
 ```
 
-The shop became the product designer. Cursor is the implementation partner.
+The shop became the product designer. Engineering implements what the shop earns.
 
 **Protect boredom.** Great communications software disappears. If Molly reaches for Companion without thinking — and ARKv2 only for operational work — the architecture is working.
 
@@ -126,7 +126,7 @@ Production feel wraps the hierarchy. It does not compete with it.
 ## Doctrine companions
 
 - [ARK Product Identity v1](../ecosystem/ark-product-identity-v1.md) — frozen north star
-- [Pressure First](../../.cursor/rules/ark-pressure-first.mdc) — observe before enforce
-- [Earned Intelligence](../../.cursor/rules/ark-earned-intelligence.mdc) — repeated sentences earn features
-- [Observations](../../.cursor/rules/ark-observations.mdc) — interpretive truth from floor evidence
+- Pressure First — observe before enforce
+- Earned Intelligence — repeated sentences earn features
+- Observations — interpretive truth from floor evidence
 - [09-production-feel.md](09-production-feel.md) — M7 complete; floor cert is this notebook

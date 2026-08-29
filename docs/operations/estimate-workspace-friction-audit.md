@@ -128,14 +128,14 @@ Never propose a fix in the same breath as the pause.
 
 | Session date | Walked by | Path notes |
 | --- | --- | --- |
-| 2026-07-23 | Edward + Cursor | Friction Discovery opened · notebook + milestone pointers live · guided walk ready at Step 1 · **no solutions** |
-| 2026-07-23 | Edward + Cursor | Step 1 cleared (no pause) · proceed Step 2 Check In form |
-| 2026-07-23 | Edward + Cursor | Pause #1 Choice on Check In form (intake vs estimate mental model) · watch for repeat on estimate entry · proceed Step 3 |
-| 2026-07-23 | Edward + Cursor | Pause #2 Choice · same cluster (Intake→Operational) · Step 4 Add Concern is the cluster test · no fix |
-| 2026-07-23 | Edward + Cursor | Step 4 cleared · cluster handoff-localized (not compose) · proceed Step 5 · still no fix |
-| 2026-07-23 | Edward + Cursor | Pause #3 Information · Approval Forecast candidate (approved vs recommended projected total) · ARKv1 parity request · no authority change |
-| 2026-07-24 | Edward + Cursor | Forecast earned · PDF presentation friction (box-in-box + “Needs your approval”) · invoice-style customer copy + compact advisor strip |
-| 2026-07-24 | Edward + Cursor | Pause #4 Context · Priority projected as containers (empty MAINTENANCE / PLAN SOON boxes across page breaks) · flatten: concern unit + priority badge/sort · authority unchanged |
+| 2026-07-23 | Edward + engineering | Friction Discovery opened · notebook + milestone pointers live · guided walk ready at Step 1 · **no solutions** |
+| 2026-07-23 | Edward + engineering | Step 1 cleared (no pause) · proceed Step 2 Check In form |
+| 2026-07-23 | Edward + engineering | Pause #1 Choice on Check In form (intake vs estimate mental model) · watch for repeat on estimate entry · proceed Step 3 |
+| 2026-07-23 | Edward + engineering | Pause #2 Choice · same cluster (Intake→Operational) · Step 4 Add Concern is the cluster test · no fix |
+| 2026-07-23 | Edward + engineering | Step 4 cleared · cluster handoff-localized (not compose) · proceed Step 5 · still no fix |
+| 2026-07-23 | Edward + engineering | Pause #3 Information · Approval Forecast candidate (approved vs recommended projected total) · ARKv1 parity request · no authority change |
+| 2026-07-24 | Edward + engineering | Forecast earned · PDF presentation friction (box-in-box + “Needs your approval”) · invoice-style customer copy + compact advisor strip |
+| 2026-07-24 | Edward + engineering | Pause #4 Context · Priority projected as containers (empty MAINTENANCE / PLAN SOON boxes across page breaks) · flatten: concern unit + priority badge/sort · authority unchanged |
 
 ---
 

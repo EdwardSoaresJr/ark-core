@@ -186,7 +186,7 @@ class CloudScreenshotStageSeeder extends Seeder
                 'phone' => '7195550147',
                 'customer_type' => 'Retail',
                 'address_line_1' => '1840 Cascade Ave',
-                'city' => 'Colorado Springs',
+                'city' => 'Demo City',
                 'state' => 'CO',
                 'postal_code' => '80903',
                 'notes' => 'Prefers text. Usually replies same morning.',
@@ -491,7 +491,7 @@ class CloudScreenshotStageSeeder extends Seeder
                     'last_name' => $row['last'],
                     'phone' => $row['phone'],
                     'customer_type' => 'Retail',
-                    'city' => 'Colorado Springs',
+                    'city' => 'Demo City',
                     'state' => 'CO',
                 ],
             );

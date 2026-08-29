@@ -6,7 +6,7 @@
 **Runtime authority:** [docs/runtime/voice-runtime-authority.md](../runtime/voice-runtime-authority.md) · [runtime catalog](../runtime/README.md)  
 **Hard rule:** Zero change in production telephony behavior until each phase explicitly says otherwise (dialplan, PJSIP, VVX, trunk routing, registration, call routing, Twilio trunk).
 
-**Platform rules:** [ark-two-implementations.mdc](../../.cursor/rules/ark-two-implementations.mdc) · [ark-cleanup-sprint-discipline.mdc](../../.cursor/rules/ark-cleanup-sprint-discipline.mdc)
+**Platform rules:** ark-two-implementations.mdc · ark-cleanup-sprint-discipline.mdc
 
 ---
 
@@ -662,7 +662,7 @@ Phase D         Delete backend PV runtime (one-way door; rollback closed)
 
 **B1 — Inventory (no code):** [inventory doc](../mobile/ark-mobile-voice-cleanup-inventory-v1.md) — Runtime Authority · Proof · Unknown escalation · production + dead graphs. Zero Unknown at sign-off.
 
-**B2 — Erasure (mechanical):** Per inventory; empty dead graph = Phase B done. PR closure: `Behavior changes: 0` — [cleanup sprint discipline](../../.cursor/rules/ark-cleanup-sprint-discipline.mdc).
+**B2 — Erasure (mechanical):** Per inventory; empty dead graph = Phase B done. PR closure: `Behavior changes: 0` — cleanup sprint discipline.
 
 - Single production path: **`ArkVoiceTransport`** (not `AsteriskVoiceTransport`)
 - Remove Twilio mobile SDK and all transport selection
@@ -737,4 +737,4 @@ File-level checklist from 2026-07-04 inventory. **This document is authority.**
 
 ## Product framing
 
-This sprint shifted from **delete Twilio** to **make ARK own call routing**. Preserve behavior while replacing implementation. If Cursor stays disciplined about the parity safeguard, the shop gets a system that is easier to maintain and easier for owners to understand.
+This sprint shifted from **delete Twilio** to **make ARK own call routing**. Preserve behavior while replacing implementation. With a disciplined parity safeguard, the shop gets a system that is easier to maintain and easier for owners to understand.

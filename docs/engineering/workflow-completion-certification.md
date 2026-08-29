@@ -39,7 +39,7 @@ Operation videos protect that starting point. See [operations/README.md](../oper
 | --- | --- |
 | "Did we pass?" | "How does Edward actually work?" |
 
-Ten-operation catalog (LugsNPlugs reference implementations): `01-customer-arrival` through `10-warranty-claim`. Videos gitignored under `docs/operations/videos/`; index in README.
+Ten-operation catalog (Demo Auto Repair reference implementations): `01-customer-arrival` through `10-warranty-claim`. Videos gitignored under `docs/operations/videos/`; index in README.
 
 Other shops record their own sets — videos are **executable examples**, not platform requirements.
 

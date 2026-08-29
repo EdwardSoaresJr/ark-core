@@ -18,7 +18,7 @@ final class ContentDraftToCommonProblemConverter
     {
         $normalized = ContentBuilderSchema::normalize($draft, null, $searchQuery);
         $shop = ShopSettings::current();
-        $shopName = trim((string) ($shop->shop_name ?? '')) ?: 'LugsNPlugs';
+        $shopName = trim((string) ($shop->shop_name ?? '')) ?: 'Demo Auto Repair';
         $slug = (string) $normalized['slug'];
         $title = (string) $normalized['title'];
         $query = trim((string) ($searchQuery ?? $title));

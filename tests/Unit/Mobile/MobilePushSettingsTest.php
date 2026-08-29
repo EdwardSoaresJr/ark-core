@@ -12,7 +12,7 @@ test('mobile push resolves firebase project id from server credentials file', fu
 
     file_put_contents($path, json_encode([
         'type' => 'service_account',
-        'project_id' => 'lugsnplugs-ark-mobile',
+        'project_id' => 'demo-auto-ark-mobile',
         'client_email' => 'fcm@test.iam.gserviceaccount.com',
         'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
     ], JSON_THROW_ON_ERROR));
@@ -28,7 +28,7 @@ test('mobile push resolves firebase project id from server credentials file', fu
 
     $settings = MobilePushSettings::current();
 
-    expect($settings->resolvedProjectId())->toBe('lugsnplugs-ark-mobile')
+    expect($settings->resolvedProjectId())->toBe('demo-auto-ark-mobile')
         ->and($settings->isOperational())->toBeTrue()
         ->and($settings->credentialsSourceLabel())->toBe('Platform server file');
 
@@ -40,7 +40,7 @@ test('mobile push is not operational when shop dispatch is disabled', function (
 
     file_put_contents($path, json_encode([
         'type' => 'service_account',
-        'project_id' => 'lugsnplugs-ark-mobile',
+        'project_id' => 'demo-auto-ark-mobile',
         'client_email' => 'fcm@test.iam.gserviceaccount.com',
         'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
     ], JSON_THROW_ON_ERROR));

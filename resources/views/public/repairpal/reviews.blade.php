@@ -33,7 +33,7 @@
             <section class="public-content-section">
                 <h2>Google reviews still matter</h2>
                 <p>
-                    Most Colorado Springs drivers find us through Google Maps and Search. We show our Google rating on the homepage because it is a primary local signal.
+                    Most Demo City drivers find us through Google Maps and Search. We show our Google rating on the homepage because it is a primary local signal.
                     RepairPal is a second signal for drivers who already trust that network — or who arrive from a RepairPal estimate.
                 </p>
                 @if (filled($googleReviewsUrl ?? null))

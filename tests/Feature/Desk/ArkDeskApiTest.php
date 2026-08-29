@@ -20,7 +20,7 @@ use Laravel\Sanctum\Sanctum;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.lugsnplugs.local']);
+    config(['shop.identity' => 'test.demo-auto.local']);
     config(['dragon.provider' => 'fake']);
 });
 
@@ -211,7 +211,7 @@ test('one advisor cannot complete the other advisor private task', function (): 
 });
 
 test('desk work names the tenant shop and occupying a station is operator intent', function (): void {
-    ShopSettings::current()->update(['shop_name' => 'LugsNPlugs']);
+    ShopSettings::current()->update(['shop_name' => 'Demo Auto Repair']);
     [$molly] = deskAdvisor('Molly');
     $front = Workstation::query()->create([
         'shop_settings_id' => ShopSettings::current()->id,
@@ -230,7 +230,7 @@ test('desk work names the tenant shop and occupying a station is operator intent
     Sanctum::actingAs($molly);
     $this->getJson('/api/desk/work')
         ->assertOk()
-        ->assertJsonPath('shop.name', 'LugsNPlugs')
+        ->assertJsonPath('shop.name', 'Demo Auto Repair')
         ->assertJsonPath('workstation.name', 'Service Office');
 
     $this->postJson('/api/desk/workstation', ['workstation_id' => $front->id])

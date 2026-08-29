@@ -21,7 +21,7 @@ final class ShopFinancialSnapshotTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Live LugsNPlugs operational money: posted sales, cash collected, labor/parts sales, and waiting-approval dollars. Use for today, this month (shop MTD), or a named calendar month that is on or before the shop clock. The shop clock in the system prompt is the date — never call the current month/year the future. Does not provide net profit. Keep posted sales, cash collected, waiting-approval dollars, and profit distinct.';
+        return 'Live Demo Auto Repair operational money: posted sales, cash collected, labor/parts sales, and waiting-approval dollars. Use for today, this month (shop MTD), or a named calendar month that is on or before the shop clock. The shop clock in the system prompt is the date — never call the current month/year the future. Does not provide net profit. Keep posted sales, cash collected, waiting-approval dollars, and profit distinct.';
     }
 
     public function parameters(): array

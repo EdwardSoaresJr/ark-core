@@ -219,7 +219,7 @@ test('schema speech parser maps only configured slots', function (): void {
     ]);
 });
 
-test('tech dvi payload follows a shop template that is not the LugsNPlugs brake list', function (): void {
+test('tech dvi payload follows a shop template that is not the Demo Auto Repair brake list', function (): void {
     $tech = User::factory()->create()->assignRole(ArkRole::Technician->value);
     $repairOrder = techAssignedRepairOrder($tech);
     $template = InspectionTemplate::query()->create([

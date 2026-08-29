@@ -319,7 +319,7 @@ Authority → Observation → Projection → Configuration → Transport
 - No duplicated business logic
 - No parallel authority
 - No shop-specific branching
-- No hardcoded LugsNPlugs workflows
+- No hardcoded Demo Auto Repair workflows
 - Everything configurable lives in Settings
 - Everything operational lives in ARK authority
 
@@ -346,4 +346,4 @@ Do not optimize for feature count. Optimize for **uninterrupted shop workflow**.
 | [Production Workspace v1](./ark-mobile-production-workspace-v1.md) | Technician production surface — concerns, camera-first, tablet |
 | [Notification doctrine](./ark-mobile-notification-doctrine.md) | Poll-first; push deferred |
 | [Projection v1](./ark-mobile-projection-v1.md) | API transport layer |
-| `.cursor/rules/ark-mobile-workflow-doctrine.mdc` | Cursor enforcement |
+| doctrine `ark-mobile-workflow-doctrine.mdc` | doctrine enforcement |

@@ -21,12 +21,12 @@ return [
     [
         'slug' => 'check-engine-light',
         'title' => 'Check Engine Light',
-        'page_title' => 'Check Engine Light Diagnosis in Colorado Springs',
-        'seo_title' => 'Check Engine Light Colorado Springs | Scanned & Diagnosed | LugsNPlugs',
+        'page_title' => 'Check Engine Light Diagnosis in Demo City',
+        'seo_title' => 'Check Engine Light Demo City | Scanned & Diagnosed | Demo Auto Repair',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on.',
         'card_teaser' => 'Gas cap, sensor, or misfire — we find out which before recommending parts.',
-        'meta_description' => 'Check engine light on in Colorado Springs? Find out if you can keep driving, common causes, and how LugsNPlugs diagnoses it with real testing — not a parts guess.',
+        'meta_description' => 'Check engine light on in Demo City? Find out if you can keep driving, common causes, and how Demo Auto Repair diagnoses it with real testing — not a parts guess.',
         'problem' => 'Your check engine light means the computer saw something outside its normal range. Sometimes it’s simple, like a gas cap. Sometimes it’s a misfire, an emissions fault, or a sensor problem that gets worse if you wait.',
         'symptoms' => [
             'Solid check engine light, and the car still drives normally',
@@ -61,7 +61,7 @@ return [
         'tier' => 1,
         'concern_prefill' => 'My AC isn\'t blowing cold.',
         'card_teaser' => 'Warm air from the vents? Could be a leak, the compressor, or a wiring problem.',
-        'meta_description' => 'AC not cold in Colorado Springs? Find out if you can keep driving, common causes like refrigerant leaks and condenser damage, and how LugsNPlugs tests the system before adding refrigerant.',
+        'meta_description' => 'AC not cold in Demo City? Find out if you can keep driving, common causes like refrigerant leaks and condenser damage, and how Demo Auto Repair tests the system before adding refrigerant.',
         'problem' => 'When the air from your vents stays warm or barely cool, the AC is not pulling heat out of the cabin the way it should. In Colorado summers — and even on hot spring days — that is more than comfort. A weak AC can also make defrost slower when you need a clear windshield.',
         'symptoms' => [
             'Air never gets cold, or only gets cold at highway speed',
@@ -95,7 +95,7 @@ return [
         'tier' => 1,
         'concern_prefill' => 'My brakes are making noise.',
         'card_teaser' => 'Squeal, grind, or a shaky pedal? We check pads, rotors, and calipers.',
-        'meta_description' => 'Brakes grinding or squealing in Colorado Springs? Find out if you can keep driving, what causes brake noise, and how LugsNPlugs inspects pads, rotors, and calipers.',
+        'meta_description' => 'Brakes grinding or squealing in Demo City? Find out if you can keep driving, what causes brake noise, and how Demo Auto Repair inspects pads, rotors, and calipers.',
         'problem' => 'Brake noise runs from a dusty squeal to metal-on-metal grinding that usually means the pads are worn out. Your brakes are what stop the car — if something sounds wrong, it is worth a quick look before it gets worse.',
         'symptoms' => [
             'Squeal or squeak when you slow down',
@@ -127,11 +127,11 @@ return [
     [
         'slug' => 'car-wont-start',
         'title' => 'Car Won\'t Start',
-        'page_title' => 'No-Start Service: Car Won\'t Start in Colorado Springs',
+        'page_title' => 'No-Start Service: Car Won\'t Start in Demo City',
         'tier' => 1,
         'concern_prefill' => 'My car won\'t start.',
         'card_teaser' => 'Clicking, silence, or cranking with no start — each one tells a different story.',
-        'meta_description' => 'No-start service in Colorado Springs? Clicking vs. silence vs. cranks-but-won\'t-start explained. How LugsNPlugs tests battery, starter, fuel, and ignition before replacing parts.',
+        'meta_description' => 'No-start service in Demo City? Clicking vs. silence vs. cranks-but-won\'t-start explained. How Demo Auto Repair tests battery, starter, fuel, and ignition before replacing parts.',
         'problem' => 'A no-start usually falls into two camps: the engine does not turn over at all, or it turns over but never fires. Each one points to different parts — battery, starter, fuel, ignition, or the security system — and guessing at parts without testing wastes time and money.',
         'symptoms' => [
             'One click or fast clicking when you turn the key',
@@ -166,7 +166,7 @@ return [
         'tier' => 1,
         'concern_prefill' => 'My engine is overheating.',
         'card_teaser' => 'Gauge in the red? Pull over — could be a leak, thermostat, or fan.',
-        'meta_description' => 'Engine overheating in Colorado Springs? Find out when to stop driving, common causes, and how LugsNPlugs tracks down coolant leaks and cooling system faults.',
+        'meta_description' => 'Engine overheating in Demo City? Find out when to stop driving, common causes, and how Demo Auto Repair tracks down coolant leaks and cooling system faults.',
         'problem' => 'Overheating means the engine is not shedding heat fast enough. Climbing toward Pikes Peak, sitting in summer traffic, or a small coolant leak can push the temperature into the danger zone — where head gaskets and aluminum parts fail quickly.',
         'symptoms' => [
             'Temperature gauge in the red or a warning light on',
@@ -201,7 +201,7 @@ return [
         'tier' => 2,
         'concern_prefill' => 'My battery keeps dying.',
         'card_teaser' => 'Dead again after sitting? Battery, alternator, or something draining it.',
-        'meta_description' => 'Battery keeps dying in Colorado Springs? Parasitic drain vs. charging problems explained. How LugsNPlugs load-tests batteries and alternators the right way.',
+        'meta_description' => 'Battery keeps dying in Demo City? Parasitic drain vs. charging problems explained. How Demo Auto Repair load-tests batteries and alternators the right way.',
         'problem' => 'A battery that keeps dying is either not holding a charge, not getting recharged while you drive, or draining while parked. Cold Colorado mornings expose weak batteries fast — but swapping another battery at the parts store without testing usually does not fix the root cause.',
         'symptoms' => [
             'Slow crank in the morning, fine after a jump',
@@ -234,7 +234,7 @@ return [
         'title' => 'Oil Leak',
         'tier' => 2,
         'concern_prefill' => 'I have an oil leak.',
-        'meta_description' => 'Oil leak under your car in Colorado Springs? Find out if it is safe to drive, common leak sources, and how LugsNPlugs tells a slow seep from an active leak.',
+        'meta_description' => 'Oil leak under your car in Demo City? Find out if it is safe to drive, common leak sources, and how Demo Auto Repair tells a slow seep from an active leak.',
         'problem' => 'Oil leaks range from a slow seep on the driveway to an active leak that drops oil pressure while you drive. How urgent it is depends on how much oil you are losing and how fast — not just whether there is a spot on the pavement.',
         'symptoms' => [
             'Fresh oil spots where you park',
@@ -267,7 +267,7 @@ return [
         'title' => 'Transmission Slipping',
         'tier' => 2,
         'concern_prefill' => 'My transmission is slipping.',
-        'meta_description' => 'Transmission slipping in Colorado Springs? Find out if you should stop driving, common causes, and how LugsNPlugs checks fluid, pressure, and fault data before recommending an overhaul.',
+        'meta_description' => 'Transmission slipping in Demo City? Find out if you should stop driving, common causes, and how Demo Auto Repair checks fluid, pressure, and fault data before recommending an overhaul.',
         'problem' => 'Slipping feels like the engine revs but the car does not accelerate the way it should — or you get harsh shifts, delayed engagement, or a flare between gears. Automatic and manual transmissions fail differently, but driving hard while it slips causes internal damage fast.',
         'symptoms' => [
             'RPM flare between gears or a delayed shift',
@@ -301,7 +301,7 @@ return [
         'title' => 'ABS Light',
         'tier' => 2,
         'concern_prefill' => 'My ABS light is on.',
-        'meta_description' => 'ABS light on in Colorado Springs? Find out if you can still brake safely, common causes, and how LugsNPlugs scans the ABS module and wheel-speed sensors.',
+        'meta_description' => 'ABS light on in Demo City? Find out if you can still brake safely, common causes, and how Demo Auto Repair scans the ABS module and wheel-speed sensors.',
         'problem' => 'The ABS light means the anti-lock braking system found a fault and turned itself off. Your regular brakes usually still work, but on slick or gravel roads the wheels may lock up under a hard stop — worth knowing before the next storm.',
         'symptoms' => [
             'ABS or traction control warning light on',
@@ -334,7 +334,7 @@ return [
         'title' => 'Rough Idle',
         'tier' => 2,
         'concern_prefill' => 'My car has a rough idle.',
-        'meta_description' => 'Rough idle or shaking at a stop in Colorado Springs? Find out if it is safe to drive, common causes, and how LugsNPlugs uses live data to find misfires and vacuum leaks.',
+        'meta_description' => 'Rough idle or shaking at a stop in Demo City? Find out if it is safe to drive, common causes, and how Demo Auto Repair uses live data to find misfires and vacuum leaks.',
         'problem' => 'A rough idle — shaking, uneven RPM, or stalling at stoplights — usually means the engine is not burning fuel evenly at low speed. It may feel fine on the highway, which makes it easy to put off — but misfires waste fuel and can damage the catalytic converter.',
         'symptoms' => [
             'Shake you feel in the seat or steering wheel at idle',
@@ -370,7 +370,7 @@ return [
         'tier' => 1,
         'concern_prefill' => 'I think I have a bad wheel bearing — humming or grinding from a wheel.',
         'card_teaser' => 'Hum that rises with speed — bearing, tire, or something else?',
-        'meta_description' => 'Wheel bearing noise in Colorado Springs? Steady humming or grinding that rises with speed — not engine RPM — when to stop driving, what it is often confused with, and how LugsNPlugs diagnoses hub and bearing faults before quoting parts.',
+        'meta_description' => 'Wheel bearing noise in Demo City? Steady humming or grinding that rises with speed — not engine RPM — when to stop driving, what it is often confused with, and how Demo Auto Repair diagnoses hub and bearing faults before quoting parts.',
         'problem' => 'A bad wheel bearing lets the wheel hub move too much where it sits on the spindle. At first you might hear a hum that follows road speed — not engine RPM. Left alone, the play gets worse, heat builds, and a worn bearing can damage the hub or ABS tone ring. On Front Range highways and mountain passes, that is not a sound to guess about.',
         'symptoms' => [
             'Steady humming, rumbling, or roaring that rises and falls with speed — not with shifts or revs',
@@ -387,7 +387,7 @@ return [
         ],
         'common_causes' => [
             'Normal wear on high-mileage vehicles — especially front bearings on heavy crossovers and trucks',
-            'Impact damage from potholes, curbs, or off-road use on Colorado Springs streets',
+            'Impact damage from potholes, curbs, or off-road use on Demo City streets',
             'Contaminated grease from a failed seal — water and road salt speed up wear',
             'Previous improper install or overtightened axle nut',
             'Collision or suspension damage that loads the bearing unevenly',
@@ -437,7 +437,7 @@ return [
                 'answer' => 'After a road test, we lift the car and check for play and roughness at each wheel, compare corners, and rule out tires and brakes. We do not recommend parts without that check.',
             ],
             [
-                'question' => 'Wheel bearing noise in Colorado Springs?',
+                'question' => 'Wheel bearing noise in Demo City?',
                 'answer' => 'Yes — potholes, curb hits, and mountain driving wear front bearings hard on trucks and crossovers. If the hum rises with speed and changes in a turn, bring it in before grinding starts.',
             ],
             [
@@ -454,11 +454,11 @@ return [
     [
         'slug' => 'suspension-noise',
         'title' => 'Suspension Noise',
-        'page_title' => 'Suspension Noise & Clunk: Colorado Springs Diagnosis',
+        'page_title' => 'Suspension Noise & Clunk: Demo City Diagnosis',
         'tier' => 1,
         'concern_prefill' => 'My suspension is clunking or making noise over bumps.',
         'card_teaser' => 'Clunk over bumps — bushings, ball joints, or strut mounts?',
-        'meta_description' => 'Suspension noise in Colorado Springs? Clunks over bumps, rattles on rough roads, and front-end looseness — what it is often confused with, when to stop driving, and how LugsNPlugs inspects ball joints, struts, and control arms before quoting parts.',
+        'meta_description' => 'Suspension noise in Demo City? Clunks over bumps, rattles on rough roads, and front-end looseness — what it is often confused with, when to stop driving, and how Demo Auto Repair inspects ball joints, struts, and control arms before quoting parts.',
         'problem' => 'When something in the suspension gets loose or worn, you usually hear it before anything else fails. It might clunk over potholes, rattle on rough roads, or creak when you turn at parking-lot speed. Colorado roads beat up front-end parts fast. Suspension, steering, and wheel bearings can sound similar — we check on the lift instead of guessing from the parking lot.',
         'symptoms' => [
             'Clunk or knock over bumps, driveway lips, or railroad tracks',
@@ -540,7 +540,7 @@ return [
         'page_title' => 'P0171 Code: System Too Lean (Bank 1)',
         'tier' => 1,
         'concern_prefill' => 'My check engine light is on with code P0171 — system too lean bank 1.',
-        'meta_description' => 'P0171 check engine code in Colorado Springs? What system too lean bank 1 means, common symptoms, if you can keep driving, typical causes, and how LugsNPlugs checks fuel trim before recommending parts.',
+        'meta_description' => 'P0171 check engine code in Demo City? What system too lean bank 1 means, common symptoms, if you can keep driving, typical causes, and how Demo Auto Repair checks fuel trim before recommending parts.',
         'problem' => 'Too much air or not enough fuel on bank 1 — that lean mix is what P0171 (system too lean) is flagging. Bank 1 is the side of the engine that includes cylinder 1. Lean running can cause misfire, hesitation, and catalytic converter damage if it goes on. A vacuum leak, dirty mass airflow (MAF) sensor, low fuel pressure, or an exhaust leak near the oxygen sensor can all set it. The code shows what the computer sees. It does not name which part failed.',
         'symptoms' => [
             'Check engine light on, often with P0171 stored or pending',
@@ -608,7 +608,7 @@ return [
         'page_title' => 'Subaru Overheating: Outback, Forester & Crosstrek',
         'tier' => 1,
         'concern_prefill' => 'My Subaru is overheating.',
-        'meta_description' => 'Subaru overheating in Colorado Springs? Outback and Forester cooling problems, head gasket warning signs, when to stop driving, and how LugsNPlugs pressure-tests before major work.',
+        'meta_description' => 'Subaru overheating in Demo City? Outback and Forester cooling problems, head gasket warning signs, when to stop driving, and how Demo Auto Repair pressure-tests before major work.',
         'problem' => 'Subarus work hard around here — I-25, Powers, mountain grades. When the cooling system has even a small problem, the engine runs hot. Sometimes it is a simple fix: a stuck thermostat or a fan that will not turn on. Sometimes coolant keeps disappearing with no puddle underneath — a pattern Subarus are known for when a head gasket starts to fail. Either way, a climbing temperature gauge is not something to put off until next week.',
         'symptoms' => [
             'Temperature gauge climbing in traffic or going uphill',
@@ -663,7 +663,7 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'Why do Subarus overheat in Colorado Springs?',
+                'question' => 'Why do Subarus overheat in Demo City?',
                 'answer' => 'Altitude, summer traffic, and long grades all load the cooling system. Age, small leaks, and fan failures show up first. On higher-mileage Outback and Forester models, we also rule out a head gasket when coolant vanishes without a puddle.',
             ],
             [
@@ -683,7 +683,7 @@ return [
         'page_title' => 'Honda Timing Belt Replacement & Interval',
         'tier' => 1,
         'concern_prefill' => 'I need Honda timing belt service — or I am not sure if it was ever done.',
-        'meta_description' => 'Honda timing belt replacement in Colorado Springs? Accord, Civic, and Pilot intervals, warning signs, what happens if it breaks, and how LugsNPlugs inspects timing parts before failure.',
+        'meta_description' => 'Honda timing belt replacement in Demo City? Accord, Civic, and Pilot intervals, warning signs, what happens if it breaks, and how Demo Auto Repair inspects timing parts before failure.',
         'problem' => 'Many Honda four-cylinder and V6 engines use a rubber timing belt instead of a metal chain. The belt does not give you much warning — it either works or it breaks. If it breaks on an interference engine, the pistons can hit the open valves and bend them in seconds. Colorado heat and dry storage age rubber even on low-mileage cars, so the service interval is usually based on both time and miles — not on whether the belt still looks fine.',
         'symptoms' => [
             'Often no symptoms at all until the belt breaks — that is why scheduled service matters',
@@ -751,7 +751,7 @@ return [
         'page_title' => 'Jeep Overheating: Wrangler, Cherokee & Grand Cherokee',
         'tier' => 1,
         'concern_prefill' => 'My Jeep is overheating.',
-        'meta_description' => 'Jeep overheating in Colorado Springs? Wrangler and Cherokee cooling problems, when to stop driving on I-25 and mountain grades, and how LugsNPlugs pressure-tests before quoting radiators or head work.',
+        'meta_description' => 'Jeep overheating in Demo City? Wrangler and Cherokee cooling problems, when to stop driving on the highway and steep grades, and how Demo Auto Repair pressure-tests before quoting radiators or head work.',
         'problem' => 'Jeeps work hard in Colorado — slow trail crawls, summer traffic on Powers, and long pulls on I-25 and Monument Hill. Wranglers run warm by design, but a climbing gauge, steam, or coolant that keeps disappearing is not normal. It might be a fan relay, clogged radiator fins, or a water pump. On higher-mileage 3.6L and 4.0L engines, it could also be a head gasket starting to fail. We pressure-test before quoting parts.',
         'symptoms' => [
             'Temperature gauge climbing in traffic or going uphill',
@@ -802,7 +802,7 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'Why do Jeeps overheat in Colorado Springs?',
+                'question' => 'Why do Jeeps overheat in Demo City?',
                 'answer' => 'Altitude, summer heat, slow trail speeds with low airflow, and long highway grades all load the cooling system. Age, small leaks, and fan failures show up first. On higher-mileage 3.6L and 4.0L engines, we also rule out a head gasket when coolant vanishes without a puddle.',
             ],
             [
@@ -822,7 +822,7 @@ return [
         'page_title' => 'Jeep Death Wobble: Wrangler Diagnosis & Fix',
         'tier' => 1,
         'concern_prefill' => 'My Jeep has death wobble — violent shaking after a bump.',
-        'meta_description' => 'Jeep death wobble in Colorado Springs? Violent steering shake after a bump at highway speed — not the same as tire balance. How LugsNPlugs inspects track bar, ball joints, and steering before replacing parts.',
+        'meta_description' => 'Jeep death wobble in Demo City? Violent steering shake after a bump at highway speed — not the same as tire balance. How Demo Auto Repair inspects track bar, ball joints, and steering before replacing parts.',
         'problem' => 'Death wobble is a violent side-to-side shake of the front wheels — usually on solid-axle Wranglers after you hit a bump, expansion joint, or rut at highway speed. It is not a steady hum, and an alignment alone will not fix it. Most cases come from worn or loose front suspension and steering parts: track bar bushings, ball joints, tie rod ends, or wheel bearing play. A lift kit without proper caster correction can make it worse. Colorado front-range expansion joints and I-25 seams trigger it fast when something is loose.',
         'symptoms' => [
             'Violent steering wheel shake that starts after a bump and does not stop until you slow down',
@@ -889,12 +889,12 @@ return [
     [
         'slug' => 'car-fluid-service',
         'title' => 'Car Fluid Service',
-        'page_title' => 'Car Fluid Service in Colorado Springs',
-        'seo_title' => 'Car Fluid Service Colorado Springs | Inspect First | LugsNPlugs',
+        'page_title' => 'Car Fluid Service in Demo City',
+        'seo_title' => 'Car Fluid Service Demo City | Inspect First | Demo Auto Repair',
         'tier' => 1,
         'concern_prefill' => 'I need fluid service — oil, coolant, brake, or transmission fluids checked or changed.',
         'card_teaser' => 'Oil, coolant, brake, and transmission fluid — we check condition first.',
-        'meta_description' => 'Car fluid service in Colorado Springs? Oil, coolant, brake, transmission, and power steering fluids — what each does, when to service, and how LugsNPlugs inspects condition before recommending changes.',
+        'meta_description' => 'Car fluid service in Demo City? Oil, coolant, brake, transmission, and power steering fluids — what each does, when to service, and how Demo Auto Repair inspects condition before recommending changes.',
         'problem' => 'Each fluid protects a different system — oil, coolant, brake fluid, transmission fluid, power steering. Colorado heat, cold starts, and mountain grades stress them differently. We check level, color, smell, and service history before recommending what your vehicle actually needs.',
         'symptoms' => [
             'Dashboard reminder for oil life or maintenance due',
@@ -948,7 +948,7 @@ return [
                 'answer' => 'Depends on what your vehicle needs: engine oil and filter, coolant strength and level check, brake fluid moisture test, transmission fluid inspection, and power steering level. We recommend specific services after inspection — not a generic bundle.',
             ],
             [
-                'question' => 'How often should fluids be changed in Colorado Springs?',
+                'question' => 'How often should fluids be changed in Demo City?',
                 'answer' => 'Follow your manufacturer interval for oil and coolant. Colorado heat and altitude make overdue coolant and transmission service show up faster. We look up your exact spec rather than guessing from a sticker.',
             ],
             [
@@ -959,15 +959,15 @@ return [
         'related_problem_slugs' => ['oil-leak', 'engine-overheating', 'transmission-fluid-change', 'brake-fluid-service', 'burnt-transmission-fluid'],
     ],
     [
-        'slug' => 'audi-repair-colorado-springs',
-        'title' => 'Audi Repair Colorado Springs',
-        'page_title' => 'Audi Repair & Service in Colorado Springs',
-        'seo_title' => 'Audi Repair Colorado Springs | Independent Service | LugsNPlugs',
+        'slug' => 'audi-repair-demo-city',
+        'title' => 'Audi Repair Demo City',
+        'page_title' => 'Audi Repair & Service in Demo City',
+        'seo_title' => 'Audi Repair Demo City | Independent Service | Demo Auto Repair',
         'tier' => 1,
-        'concern_prefill' => 'I need Audi repair or service in Colorado Springs.',
+        'concern_prefill' => 'I need Audi repair or service in Demo City.',
         'card_teaser' => 'Independent Audi care with the right specs, tools, and parts.',
-        'meta_description' => 'Audi repair in Colorado Springs? Diagnostics, oil service, brakes, and parts for Audi and VW platforms — how LugsNPlugs diagnoses before recommending repairs.',
-        'problem' => 'We work on Audis in Colorado Springs every week — oil service with the correct spec, brakes, check engine diagnostics, suspension noise, and cooling issues. We scan, test, and show you what failed before quoting, same as any other make. We match Audi-specific fluid and parts to your VIN.',
+        'meta_description' => 'Audi repair in Demo City? Diagnostics, oil service, brakes, and parts for Audi and VW platforms — how Demo Auto Repair diagnoses before recommending repairs.',
+        'problem' => 'We work on Audis in Demo City every week — oil service with the correct spec, brakes, check engine diagnostics, suspension noise, and cooling issues. We scan, test, and show you what failed before quoting, same as any other make. We match Audi-specific fluid and parts to your VIN.',
         'symptoms' => [
             'Check engine light or Audi MMI warnings you need decoded',
             'Oil service due — unsure which VW/Audi oil spec your engine requires',
@@ -1015,7 +1015,7 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'Do you work on Audi in Colorado Springs?',
+                'question' => 'Do you work on Audi in Demo City?',
                 'answer' => 'Yes — diagnostics, oil service, brakes, cooling, suspension, and check engine work on Audi and VW platforms. We match fluid and parts specs to your VIN.',
             ],
             [
@@ -1035,7 +1035,7 @@ return [
         'page_title' => 'Burnt Transmission Fluid: What It Means',
         'tier' => 1,
         'concern_prefill' => 'My transmission fluid smells burnt or looks dark — what does that mean?',
-        'meta_description' => 'Burnt transmission fluid in Colorado Springs? What dark or smoky ATF means, if you can keep driving, common causes, and how LugsNPlugs inspects fluid before recommending service or repair.',
+        'meta_description' => 'Burnt transmission fluid in Demo City? What dark or smoky ATF means, if you can keep driving, common causes, and how Demo Auto Repair inspects fluid before recommending service or repair.',
         'problem' => 'Healthy automatic transmission fluid is usually red or pink and smells slightly sweet or oily — not smoky or harsh. Burnt fluid means the transmission has overheated or the fluid is far past its service life. Clutch material in the fluid, slip under load, and delayed shifts often follow. Colorado mountain grades and stop-and-go traffic load automatics. Ignoring a burnt smell can turn a fluid service into a rebuild conversation.',
         'symptoms' => [
             'Dark brown or black fluid on the dipstick — was red when new',
@@ -1103,7 +1103,7 @@ return [
         'page_title' => 'Misfire Under Load: Hills, Passing & Highway',
         'tier' => 1,
         'concern_prefill' => 'My engine misfires under load — on hills, passing, or highway acceleration.',
-        'meta_description' => 'Engine misfire under load in Colorado Springs? Hesitation on grades and I-25 merges — P0300 family codes, if you can drive, common causes, and how LugsNPlugs reads misfire counters before replacing coils.',
+        'meta_description' => 'Engine misfire under load in Demo City? Hesitation on grades and highway merges — P0300 family codes, if you can drive, common causes, and how Demo Auto Repair reads misfire counters before replacing coils.',
         'problem' => 'Misfire under load is different from a rough idle at a stoplight. The engine may feel fine until you ask for power — merging, passing, or climbing Monument Hill — then it stumbles, shakes, or flashes the check engine light. Colorado altitude and steep grades expose weak coils, worn plugs, lean fuel trim, and fuel delivery problems that idle fine in a parking lot. The computer stores P0300 or cylinder-specific codes when misfire counts get high enough.',
         'symptoms' => [
             'Hesitation or shake only when accelerating hard — idle may feel fine',
@@ -1162,15 +1162,15 @@ return [
                 'answer' => 'Road test or controlled load with live misfire counters, then ignition and fuel trim checks — not a default tune-up quote from the symptom alone.',
             ],
         ],
-        'related_problem_slugs' => ['p0300', 'rough-idle', 'check-engine-light', 'p0171', 'audi-repair-colorado-springs'],
+        'related_problem_slugs' => ['p0300', 'rough-idle', 'check-engine-light', 'p0171', 'audi-repair-demo-city'],
     ],
     [
         'slug' => 'transmission-fluid-change',
         'title' => 'Transmission Fluid Change',
-        'page_title' => 'Transmission Fluid Change Near Colorado Springs',
+        'page_title' => 'Transmission Fluid Change Near Demo City',
         'tier' => 1,
         'concern_prefill' => 'I need a transmission fluid change — not sure if it is due or what type my vehicle needs.',
-        'meta_description' => 'Transmission fluid change in Colorado Springs? When service is due, pan drop vs. fluid exchange, burnt fluid warning signs, and how LugsNPlugs matches the right fluid to your transmission before we drain anything.',
+        'meta_description' => 'Transmission fluid change in Demo City? When service is due, pan drop vs. fluid exchange, burnt fluid warning signs, and how Demo Auto Repair matches the right fluid to your transmission before we drain anything.',
         'problem' => 'People look up a transmission fluid change for a few reasons: the service is due, shifts feel off, or someone smelled burnt fluid. Not every car needs the same job. Some need the pan dropped and the filter changed. Others need a specific automatic transmission fluid (ATF) or CVT fluid. If the transmission already slips, we may need to diagnose it before any flush. We check the fluid type, the fluid condition, and how it shifts before we drain anything.',
         'symptoms' => [
             'A maintenance light or shop sticker says transmission service is overdue',
@@ -1235,10 +1235,10 @@ return [
     [
         'slug' => 'brake-fluid-service',
         'title' => 'Brake Fluid Service',
-        'page_title' => 'Brake Fluid Service & Flush in Colorado Springs',
+        'page_title' => 'Brake Fluid Service & Flush in Demo City',
         'tier' => 1,
         'concern_prefill' => 'I need brake fluid service — fluid looks dark or interval is due.',
-        'meta_description' => 'Brake fluid service in Colorado Springs? When to flush brake fluid, moisture testing, soft pedal warning signs, and how LugsNPlugs inspects ABS and brake lines before recommending a flush.',
+        'meta_description' => 'Brake fluid service in Demo City? When to flush brake fluid, moisture testing, soft pedal warning signs, and how Demo Auto Repair inspects ABS and brake lines before recommending a flush.',
         'problem' => 'Brake fluid absorbs moisture over time. Colorado’s temperature swings make that worse. Dark fluid in the reservoir often means the service is overdue — not always an emergency. Moisture lowers the boiling point, can corrode parts inside the ABS system, and can contribute to a soft pedal. We test the fluid and check for leaks before recommending a flush. We do not add it to every oil change by default.',
         'symptoms' => [
             'Brake fluid looks dark amber or brown in the master cylinder reservoir',
@@ -1302,12 +1302,12 @@ return [
     [
         'slug' => 'electrical-diagnostics',
         'title' => 'Electrical System Diagnostics',
-        'page_title' => 'Electrical System Diagnostics in Colorado Springs',
-        'seo_title' => 'Electrical Diagnostics Colorado Springs | Test Before Replace | LugsNPlugs',
+        'page_title' => 'Electrical System Diagnostics in Demo City',
+        'seo_title' => 'Electrical Diagnostics Demo City | Test Before Replace | Demo Auto Repair',
         'tier' => 1,
         'concern_prefill' => 'I need electrical system diagnostics — battery drain, warning lights, or something electrical is failing.',
         'card_teaser' => 'Battery drain, charging, or starting — we test before we replace parts.',
-        'meta_description' => 'Electrical system diagnostics in Colorado Springs? Parasitic drain, charging, starting, and module faults — how LugsNPlugs tests circuits before replacing batteries, alternators, or computers.',
+        'meta_description' => 'Electrical system diagnostics in Demo City? Parasitic drain, charging, starting, and module faults — how Demo Auto Repair tests circuits before replacing batteries, alternators, or computers.',
         'problem' => 'Electrical problems overlap. A dead battery might be the alternator, a drain, or a module that never goes to sleep. Warning lights might be a sensor, a wire, or a bad ground. We test the system before replacing parts. That can include checking voltage drop, looking for a parasitic draw that drains the battery while the car is off, and reading live data from the vehicle. Cold Colorado mornings show weak batteries. Summer heat and stop-and-go traffic stress charging systems.',
         'symptoms' => [
             'Battery dead overnight or after the car sits a few days',
@@ -1371,15 +1371,15 @@ return [
         'related_problem_slugs' => ['car-wont-start', 'battery-keeps-dying', 'check-engine-light', 'abs-light'],
     ],
     [
-        'slug' => 'auto-repair-colorado-springs',
-        'title' => 'Auto Repair Colorado Springs',
-        'page_title' => 'Auto Repair Shop in Colorado Springs',
-        'seo_title' => 'Auto Repair Colorado Springs | Test First, Clear Estimates | LugsNPlugs',
+        'slug' => 'auto-repair-demo-city',
+        'title' => 'Auto Repair Demo City',
+        'page_title' => 'Auto Repair Shop in Demo City',
+        'seo_title' => 'Auto Repair Demo City | Test First, Clear Estimates | Demo Auto Repair',
         'tier' => 1,
-        'concern_prefill' => 'I need auto repair in Colorado Springs.',
+        'concern_prefill' => 'I need auto repair in Demo City.',
         'card_teaser' => 'We figure out what is wrong before we recommend parts.',
-        'meta_description' => 'Auto repair in Colorado Springs? Family-owned shop that tests first, shows you what failed, and covers qualifying repairs with a 24-month warranty — book at LugsNPlugs.',
-        'problem' => 'LugsNPlugs is a full-service independent shop in Colorado Springs. We handle brakes, engines, transmissions, cooling, electrical work, and check-engine diagnostics. You bring the vehicle in, we test it on the lift, and we show you what failed before you approve any work.',
+        'meta_description' => 'Auto repair in Demo City? Family-owned shop that tests first, shows you what failed, and covers qualifying repairs with a 24-month warranty — book at Demo Auto Repair.',
+        'problem' => 'Demo Auto Repair is a full-service independent shop in Demo City. We handle brakes, engines, transmissions, cooling, electrical work, and check-engine diagnostics. You bring the vehicle in, we test it on the lift, and we show you what failed before you approve any work.',
         'symptoms' => [
             'Check engine light, warning messages, or something that just does not feel right',
             'Brakes squealing, a pulsing pedal, or an ABS light after winter driving',
@@ -1392,7 +1392,7 @@ return [
         'can_drive' => [
             'We use live scan data to verify the problem — not just read a code and guess.',
             'We show you the failed tests before we quote parts.',
-            'Family-owned Colorado Springs shop with Google reviews and a 24-month / 24,000-mile warranty on qualifying repairs.',
+            'Family-owned Demo City shop with Google reviews and a 24-month / 24,000-mile warranty on qualifying repairs.',
             'Ask about same-day or next-day openings when your vehicle is safe to drive in.',
         ],
         'common_causes' => [
@@ -1424,30 +1424,30 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'Where is LugsNPlugs auto repair in Colorado Springs?',
-                'answer' => 'We are a local independent shop in Colorado Springs — family-owned. Address and hours are on this page; book through the form or call to talk to a service advisor.',
+                'question' => 'Where is Demo Auto Repair auto repair in Demo City?',
+                'answer' => 'We are a local independent shop in Demo City — family-owned. Address and hours are on this page; book through the form or call to talk to a service advisor.',
             ],
             [
                 'question' => 'Do you do all types of auto repair?',
                 'answer' => 'We handle most passenger vehicle repair — brakes, engine, cooling, transmission service, electrical, diagnostics, and maintenance. If a job needs a specialist, we tell you upfront.',
             ],
             [
-                'question' => 'Is LugsNPlugs a mobile auto repair service?',
-                'answer' => 'We are a Colorado Springs repair shop with lifts, diagnostic bays, pressure testers, and scopes. You bring the vehicle in so we can verify the problem on the floor before recommending parts.',
+                'question' => 'Is Demo Auto Repair a mobile auto repair service?',
+                'answer' => 'We are a Demo City repair shop with lifts, diagnostic bays, pressure testers, and scopes. You bring the vehicle in so we can verify the problem on the floor before recommending parts.',
             ],
         ],
-        'related_problem_slugs' => ['mechanic-colorado-springs', 'car-diagnostics-colorado-springs', 'check-engine-light', 'car-fluid-service', 'brake-repair-colorado-springs'],
+        'related_problem_slugs' => ['mechanic-demo-city', 'car-diagnostics-demo-city', 'check-engine-light', 'car-fluid-service', 'brake-repair-demo-city'],
     ],
     [
-        'slug' => 'mechanic-colorado-springs',
-        'title' => 'Mechanic Colorado Springs',
-        'page_title' => 'Mechanic & Auto Shop in Colorado Springs',
-        'seo_title' => 'Mechanic Colorado Springs | Diagnostics First, No Guessing | LugsNPlugs',
+        'slug' => 'mechanic-demo-city',
+        'title' => 'Mechanic Demo City',
+        'page_title' => 'Mechanic & Auto Shop in Demo City',
+        'seo_title' => 'Mechanic Demo City | Diagnostics First, No Guessing | Demo Auto Repair',
         'tier' => 1,
-        'concern_prefill' => 'I need a mechanic in Colorado Springs.',
+        'concern_prefill' => 'I need a mechanic in Demo City.',
         'card_teaser' => 'We test first, then explain what is urgent and what can wait.',
-        'meta_description' => 'Mechanic in Colorado Springs? LugsNPlugs is a family-owned shop that tests before quoting parts and explains what is urgent versus what can wait.',
-        'problem' => 'A good mechanic runs tests before quoting parts. At LugsNPlugs that means scan data, voltage checks, pressure tests, and road tests when it is safe. Then we explain what is wrong, what is urgent, and what can wait. Same shop, same people, same warranty every visit.',
+        'meta_description' => 'Mechanic in Demo City? Demo Auto Repair is a family-owned shop that tests before quoting parts and explains what is urgent versus what can wait.',
+        'problem' => 'A good mechanic runs tests before quoting parts. At Demo Auto Repair that means scan data, voltage checks, pressure tests, and road tests when it is safe. Then we explain what is wrong, what is urgent, and what can wait. Same shop, same people, same warranty every visit.',
         'symptoms' => [
             'You want a mechanic you can trust with a new vehicle or ongoing care',
             'A warning light, noise, or change in how the car drives that you want checked properly',
@@ -1490,29 +1490,29 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'How do I find a good mechanic in Colorado Springs?',
-                'answer' => 'Look for shops that explain their tests and show you data, not just codes. Read recent reviews about diagnosis and communication. LugsNPlugs focuses on verification before replacement — ask us to walk you through what we found.',
+                'question' => 'How do I find a good mechanic in Demo City?',
+                'answer' => 'Look for shops that explain their tests and show you data, not just codes. Read recent reviews about diagnosis and communication. Demo Auto Repair focuses on verification before replacement — ask us to walk you through what we found.',
             ],
             [
-                'question' => 'Does LugsNPlugs work on all makes?',
+                'question' => 'Does Demo Auto Repair work on all makes?',
                 'answer' => 'We service most domestic, Asian, and European passenger vehicles. Audi, Subaru, Jeep, Honda, and Toyota are common here — we match parts and fluids to your VIN.',
             ],
             [
                 'question' => 'Do you offer mobile mechanic service?',
-                'answer' => 'Our Colorado Springs shop has lifts, scopes, pressure testers, and full diagnostic bays. You bring the vehicle in so we can verify the problem properly before recommending parts.',
+                'answer' => 'Our Demo City shop has lifts, scopes, pressure testers, and full diagnostic bays. You bring the vehicle in so we can verify the problem properly before recommending parts.',
             ],
         ],
-        'related_problem_slugs' => ['auto-repair-colorado-springs', 'car-diagnostics-colorado-springs', 'audi-repair-colorado-springs', 'check-engine-light', 'electrical-diagnostics'],
+        'related_problem_slugs' => ['auto-repair-demo-city', 'car-diagnostics-demo-city', 'audi-repair-demo-city', 'check-engine-light', 'electrical-diagnostics'],
     ],
     [
-        'slug' => 'car-diagnostics-colorado-springs',
-        'title' => 'Car Diagnostics Colorado Springs',
-        'page_title' => 'Car & Engine Diagnostics in Colorado Springs',
-        'seo_title' => 'Car Diagnostics Colorado Springs | Live Scan Data | LugsNPlugs',
+        'slug' => 'car-diagnostics-demo-city',
+        'title' => 'Car Diagnostics Demo City',
+        'page_title' => 'Car & Engine Diagnostics in Demo City',
+        'seo_title' => 'Car Diagnostics Demo City | Live Scan Data | Demo Auto Repair',
         'tier' => 1,
-        'concern_prefill' => 'I need car diagnostics in Colorado Springs.',
+        'concern_prefill' => 'I need car diagnostics in Demo City.',
         'card_teaser' => 'Live scan data and circuit tests — not a parts list from a code reader.',
-        'meta_description' => 'Car diagnostics in Colorado Springs? Check engine, electrical, no-start, and drivability — LugsNPlugs uses live scan data and circuit tests before recommending parts.',
+        'meta_description' => 'Car diagnostics in Demo City? Check engine, electrical, no-start, and drivability — Demo Auto Repair uses live scan data and circuit tests before recommending parts.',
         'problem' => 'A warning light or odd behavior is a clue — not a diagnosis. Check engine lights, no-starts, battery drains, misfires under load, and problems that come and go need real testing: live scan data, voltage checks, ground tests, and road tests when it is safe. We explain what failed and what can wait — including when a code list alone is not enough to quote parts.',
         'symptoms' => [
             'Check engine or other warning lights — steady or flashing',
@@ -1522,7 +1522,7 @@ return [
             'ABS, traction, or stability messages after winter or battery work',
             'A problem that is hard to catch on a short visit because it comes and goes',
         ],
-        'can_drive_heading' => 'What is included in car diagnostics at LugsNPlugs?',
+        'can_drive_heading' => 'What is included in car diagnostics at Demo Auto Repair?',
         'can_drive' => [
             'Scan tool with live data — fuel trim, misfire counters, and sensor response',
             'Circuit tests — voltage drop, parasitic draw, and charging system load test',
@@ -1558,7 +1558,7 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'How much does car diagnostics cost in Colorado Springs?',
+                'question' => 'How much does car diagnostics cost in Demo City?',
                 'answer' => 'Diagnostic time depends on the fault — a quick scan and obvious misfire is different from an intermittent drain. We quote diagnostic time upfront and apply it toward repair when you approve work here.',
             ],
             [
@@ -1570,17 +1570,17 @@ return [
                 'answer' => 'We test before we replace. You see scan data and circuit results — not a mystery list of parts. That is the difference between a code read and real diagnosis.',
             ],
         ],
-        'related_problem_slugs' => ['check-engine-light', 'electrical-diagnostics', 'car-wont-start', 'misfire-under-load', 'auto-repair-colorado-springs'],
+        'related_problem_slugs' => ['check-engine-light', 'electrical-diagnostics', 'car-wont-start', 'misfire-under-load', 'auto-repair-demo-city'],
     ],
     [
-        'slug' => 'brake-repair-colorado-springs',
-        'title' => 'Brake Repair Colorado Springs',
-        'page_title' => 'Brake Repair & Service in Colorado Springs',
-        'seo_title' => 'Brake Repair Colorado Springs | Inspected Before Quoted | LugsNPlugs',
+        'slug' => 'brake-repair-demo-city',
+        'title' => 'Brake Repair Demo City',
+        'page_title' => 'Brake Repair & Service in Demo City',
+        'seo_title' => 'Brake Repair Demo City | Inspected Before Quoted | Demo Auto Repair',
         'tier' => 1,
-        'concern_prefill' => 'I need brake repair in Colorado Springs.',
+        'concern_prefill' => 'I need brake repair in Demo City.',
         'card_teaser' => 'Pads, rotors, and ABS — we measure on the lift before we quote.',
-        'meta_description' => 'Brake repair in Colorado Springs? Squeal, pulse, grinding, or ABS light — LugsNPlugs measures pad and rotor thickness before quoting pads, rotors, or fluid service.',
+        'meta_description' => 'Brake repair in Demo City? Squeal, pulse, grinding, or ABS light — Demo Auto Repair measures pad and rotor thickness before quoting pads, rotors, or fluid service.',
         'problem' => 'Brakes around here take a beating — hills, winter salt, stop-and-go traffic. Squeal does not always mean worn pads. Sometimes it is brake dust, missing shims, or a caliper that is not sliding freely. A pulsing pedal can come from the rotors or from the suspension. We measure pad and rotor thickness, check caliper slide, and scan ABS when the light is on — then quote what the inspection supports, not a flat menu price.',
         'symptoms' => [
             'Squealing or grinding when slowing down',
@@ -1626,7 +1626,7 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'How much does brake repair cost in Colorado Springs?',
+                'question' => 'How much does brake repair cost in Demo City?',
                 'answer' => 'Depends on pad and rotor condition, caliper health, and whether ABS parts are involved. We quote after measuring — not from a generic menu.',
             ],
             [
@@ -1638,17 +1638,17 @@ return [
                 'answer' => 'Inspect first. We show pad thickness and rotor condition before you approve pads, rotors, calipers, or fluid.',
             ],
         ],
-        'related_problem_slugs' => ['brake-noise', 'brake-fluid-service', 'abs-light', 'auto-repair-colorado-springs'],
+        'related_problem_slugs' => ['brake-noise', 'brake-fluid-service', 'abs-light', 'auto-repair-demo-city'],
     ],
     [
-        'slug' => 'tune-up-colorado-springs',
-        'title' => 'Tune Up Colorado Springs',
-        'page_title' => 'Tune-Up & Maintenance in Colorado Springs',
-        'seo_title' => 'Tune Up Colorado Springs | Maintenance With Evidence | LugsNPlugs',
+        'slug' => 'tune-up-demo-city',
+        'title' => 'Tune Up Demo City',
+        'page_title' => 'Tune-Up & Maintenance in Demo City',
+        'seo_title' => 'Tune Up Demo City | Maintenance With Evidence | Demo Auto Repair',
         'tier' => 1,
-        'concern_prefill' => 'I need a tune-up or maintenance service in Colorado Springs.',
+        'concern_prefill' => 'I need a tune-up or maintenance service in Demo City.',
         'card_teaser' => 'Plugs, filters, and fluids matched to your schedule — not a one-size package.',
-        'meta_description' => 'Tune-up and maintenance in Colorado Springs? Spark plugs, filters, fluids, and performance checks — LugsNPlugs matches service to your manufacturer interval, not a generic package.',
+        'meta_description' => 'Tune-up and maintenance in Demo City? Spark plugs, filters, fluids, and performance checks — Demo Auto Repair matches service to your manufacturer interval, not a generic package.',
         'problem' => 'Tune-up means something different on every vehicle. Spark plug intervals vary, some engines use long-life coils, and others still need older ignition parts. Colorado altitude and cold starts make neglected maintenance show up as misfires and hard starts. We look up your interval, inspect what is due, and recommend only what makes sense for your car.',
         'symptoms' => [
             'Rough idle, hesitation, or misfire — especially when cold',
@@ -1693,7 +1693,7 @@ return [
         ],
         'faq' => [
             [
-                'question' => 'How often should I get a tune-up in Colorado Springs?',
+                'question' => 'How often should I get a tune-up in Demo City?',
                 'answer' => 'Follow your manufacturer schedule for spark plugs, filters, and fluids — not a generic 30k rule. We look up your exact engine spec.',
             ],
             [
@@ -1705,6 +1705,6 @@ return [
                 'answer' => 'Whatever your interval calls for — plugs, filters, fluids — based on your VIN spec and what we see on inspection, not a one-size bundle.',
             ],
         ],
-        'related_problem_slugs' => ['rough-idle', 'misfire-under-load', 'car-fluid-service', 'check-engine-light', 'auto-repair-colorado-springs'],
+        'related_problem_slugs' => ['rough-idle', 'misfire-under-load', 'car-fluid-service', 'check-engine-light', 'auto-repair-demo-city'],
     ],
 ];

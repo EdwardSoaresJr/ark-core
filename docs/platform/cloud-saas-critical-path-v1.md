@@ -18,7 +18,7 @@ Everything else is 1.1+.
 | **M3** | Real **Workspace launch** — Shop enters a real workspace (launch authority). Brief: [cloud-m3-workspace-launch-brief-v1.md](cloud-m3-workspace-launch-brief-v1.md). | brief | Not Coolify / DNS / Stripe / ProvisioningRequest |
 | **M4** | **Provisioning** — wire `ProvisioningRequest` into the existing timeline; replace Alpine timers with events. UI unchanged. | after M3 | |
 | **M5** | **Stripe** — only after someone can reach a workspace. Trial → workspace → 14 days → subscribe. Never charge before success. | after M3 | |
-| **M6** | **Production adoption** — existing shop claims ownership → verify domain/email → attach existing tenant. LugsNPlugs migration is a later **proof**, not this milestone alone. | after M3 | |
+| **M6** | **Production adoption** — existing shop claims ownership → verify domain/email → attach existing tenant. Demo Auto Repair migration is a later **proof**, not this milestone alone. | after M3 | |
 
 **Current:** **M2 closed.** **M3 brief written — code closed** until authority boundary + production acceptance gate are accepted. Strategy: [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md).
 
@@ -68,7 +68,7 @@ Milestones are scoped by **authority**, not feature volume. Full guardrail: [clo
 
 No to (1) → out of M3. No to (2) → implementation is leaking into experience.
 
-Also: prove with a **brand-new** Cloud shop — never by migrating LugsNPlugs. See [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md).
+Also: prove with a **brand-new** Cloud shop — never by migrating Demo Auto Repair. See [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md).
 
 Cut ruthlessly. Only build pieces that move **visitor → successful shop owner**.
 
@@ -77,5 +77,5 @@ Cut ruthlessly. Only build pieces that move **visitor → successful shop owner*
 - [NEXT.md](NEXT.md) — host split + pointer here
 - [cloud-funnel-v1.md](cloud-funnel-v1.md) — funnel journey (do not rewrite)
 - [cloud-m3-workspace-launch-brief-v1.md](cloud-m3-workspace-launch-brief-v1.md) — M3 brief (code closed until accepted)
-- [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform; migrate LugsNPlugs last
+- [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform; migrate Demo Auto Repair last
 - Platform orchestrator — enters at **M4**, not before

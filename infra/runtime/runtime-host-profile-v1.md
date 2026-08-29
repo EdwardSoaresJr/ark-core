@@ -2,7 +2,7 @@
 
 **Status:** Accepted — frozen operational baseline for all Arkify production runtime hosts  
 **Version:** 1.0 — 2026-06-15  
-**Sequence:** [Doctrine](../coolify/production-runtime-host-doctrine-v1.md) → **Profile** (this file) → [Shop implementation](../coolify/lugsnplugs-runtime-profile.md)
+**Sequence:** [Doctrine](../coolify/production-runtime-host-doctrine-v1.md) → **Profile** (this file) → [Shop implementation](../coolify/demo-auto-runtime-profile.md)
 
 Every new ARK deployment starts from this profile. Shop-specific documents record **host identity, observed metrics, and justified deviations** — not a rediscovery of these baselines.
 
@@ -178,9 +178,9 @@ infra/coolify/<shop>-runtime-profile.md
 |-------|------|----------|
 | Doctrine | `production-runtime-host-doctrine-v1.md` | Why runtime ≠ build |
 | Profile | `runtime-host-profile-v1.md` (this file) | Frozen baselines every shop inherits |
-| Implementation | `lugsnplugs-runtime-profile.md` | IP, containers, observed RSS, phase, deviations |
+| Implementation | `demo-auto-runtime-profile.md` | IP, containers, observed RSS, phase, deviations |
 
-**Deviation examples:** LugsNPlugs still runs legacy on-host build until P2; FPM baseline not yet copied into Dockerfile; swappiness still 60.
+**Deviation examples:** Demo Auto Repair still runs legacy on-host build until P2; FPM baseline not yet copied into Dockerfile; swappiness still 60.
 
 When hardware changes, update the **shop implementation** — not this profile unless the fleet baseline itself changes.
 
@@ -189,6 +189,6 @@ When hardware changes, update the **shop implementation** — not this profile u
 ## Related docs
 
 - [Production Runtime Host Doctrine v1](../coolify/production-runtime-host-doctrine-v1.md)
-- [LugsNPlugs Runtime Profile](../coolify/lugsnplugs-runtime-profile.md) — first shop implementation
+- [Demo Auto Repair Runtime Profile](../coolify/demo-auto-runtime-profile.md) — first shop implementation
 - [Pull-Only Deployments](../coolify/pull-only-deployments.md) — P0–P2 cutover
-- [DEPLOYMENT.md](../coolify/DEPLOYMENT.md) — LugsNPlugs Coolify layout
+- [DEPLOYMENT.md](../coolify/DEPLOYMENT.md) — Demo Auto Repair Coolify layout

@@ -1,0 +1,62 @@
+# Stranger / self-host stack — MySQL + ARK web (artisan serve).
+# Not the production Coolify image.
+#
+#   docker compose up -d --build
+#   open http://localhost:8088  → /setup
+#
+# Wizard database fields (Compose network):
+#   host: mysql   port: 3306   database: ark   user: ark   password: ark
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ark
+      MYSQL_USER: ark
+      MYSQL_PASSWORD: ark
+      MYSQL_ROOT_PASSWORD: arkroot
+    ports:
+      # Host-side E2E / local tools only — app container uses mysql:3306
+      - "3307:3306"
+    volumes:
+      - ark_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uark", "-park"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/selfhost/Dockerfile
+    ports:
+      # Prefer 8088: host 8080 is commonly taken by other local tools.
+      - "8088:80"
+    environment:
+      APP_NAME: ARK
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8088
+      SHOP_BASE_URL: http://localhost:8088
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: ark
+      DB_USERNAME: ark
+      DB_PASSWORD: ark
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    volumes:
+      # Persist install lock, APP_KEY file, sessions, logs across recreate
+      - ark_storage:/app/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  ark_mysql:
+  ark_storage:

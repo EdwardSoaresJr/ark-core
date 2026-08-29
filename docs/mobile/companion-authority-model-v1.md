@@ -434,7 +434,7 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 |--|--|
 | **Verdict** | Projection |
 | **Question answered** | *What changed since I last looked?* |
-| **Source of truth** | Cursor: `users.last_seen_at` (or dedicated continuity cursor) + event authorities |
+| **Source of truth** | Current: `users.last_seen_at` (or dedicated continuity cursor) + event authorities |
 | **Not** | Module summary, shop pulse dashboard, widget grid |
 | **Examples** | Customer replied · Inspection finished · Josh transferred a call · Estimate approved · Customer arrived · New voicemail · Tech blocked |
 | **Implementation target** | `MobileOrientationProjection` evolution — feed rows, not cards |

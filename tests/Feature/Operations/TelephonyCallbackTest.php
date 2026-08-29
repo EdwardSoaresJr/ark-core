@@ -53,7 +53,7 @@ test('advisor can start a callback that rings their sip then dials the customer'
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => 'sip:101@example.sip.us1.twilio.com',
         'user_id' => $advisor->id,
         'enabled' => true,
         'position' => 0,
@@ -78,7 +78,7 @@ test('advisor can start a callback that rings their sip then dials the customer'
 
     Http::assertSent(function ($request) {
         return str_contains($request->url(), '/Calls.json')
-            && ($request['To'] ?? '') === 'sip:101@lugsnplugs.sip.us1.twilio.com'
+            && ($request['To'] ?? '') === 'sip:101@example.sip.us1.twilio.com'
             && str_contains((string) ($request['Url'] ?? ''), 'callback-answer');
     });
 });
@@ -89,7 +89,7 @@ test('callback marks queued caller handled when call session id is provided', fu
     TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => 'sip:101@example.sip.us1.twilio.com',
         'user_id' => $advisor->id,
         'enabled' => true,
         'position' => 0,
@@ -139,7 +139,7 @@ test('callback answer webhook dials the customer after the advisor answers', fun
     $endpoint = TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => 'sip:101@example.sip.us1.twilio.com',
         'user_id' => $advisor->id,
         'enabled' => true,
         'position' => 0,
@@ -162,7 +162,7 @@ test('callback answer webhook dials the customer after the advisor answers', fun
     twilioSignedPost('webhooks.communications.twilio.voice.callback-answer', ['token' => $token], [
         'CallSid' => 'CAcallbackAnswer01',
         'From' => '+17195550100',
-        'To' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'To' => 'sip:101@example.sip.us1.twilio.com',
         'CallStatus' => 'in-progress',
     ])->assertOk()
         ->assertSee('<Dial callerId="+17195550100"', false)
@@ -228,7 +228,7 @@ test('callback answer does not trigger incoming call popup broadcast', function 
     $endpoint = TelephonyEndpoint::query()->create([
         'name' => 'Front Desk SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'destination' => 'sip:101@example.sip.us1.twilio.com',
         'user_id' => $advisor->id,
         'enabled' => true,
         'position' => 0,
@@ -251,7 +251,7 @@ test('callback answer does not trigger incoming call popup broadcast', function 
     twilioSignedPost('webhooks.communications.twilio.voice.callback-answer', ['token' => $token], [
         'CallSid' => 'CAcallbackPopup01',
         'From' => '+17195550100',
-        'To' => 'sip:101@lugsnplugs.sip.us1.twilio.com',
+        'To' => 'sip:101@example.sip.us1.twilio.com',
         'CallStatus' => 'in-progress',
     ])->assertOk();
 
@@ -367,7 +367,7 @@ test('staggered ring starts with immediate twiml dial instead of conference hold
     TelephonyEndpoint::query()->create([
         'name' => 'Ben SIP',
         'type' => TelephonyEndpointType::Sip,
-        'destination' => 'sip:desk1@lugsnplugs.sip.twilio.com',
+        'destination' => 'sip:desk1@example.sip.twilio.com',
         'enabled' => true,
         'ring_delay_seconds' => 0,
         'position' => 0,

@@ -22,11 +22,11 @@ When favicons change, update the **pack first**, then sync downstream surfaces.
 | **ARK V2** | `app.demo-auto.test`, `portal.demo-auto.test` | ARK ecosystem mark | `Branding::favicon()` via `_favicons.blade.php` |
 | **ARKademy** | `learn.demo-auto.test` | ARK ecosystem mark | Theme `/theme/arkademy/favicon/*` + `app-custom-head` in BookStack settings |
 | **Arkify** | `platform.autorepairkeeper.com` | ARK ecosystem mark | `infra/branding/apply-arkify-branding.sh` + guardrails cron |
-| **ARK-WEB** | `demo-auto.test` | **Shop branding (exception)** | LugsNPlugs favicon + OG in `arkweb` — do not force ARK mark |
+| **ARK-WEB** | `demo-auto.test` | **Shop branding (exception)** | Demo Auto Repair favicon + OG in `arkweb` — do not force ARK mark |
 
 ### ARK-WEB exception (documented)
 
-`demo-auto.test` is customer-facing marketing. It keeps **LugsNPlugs** favicon, OG image, and SEO copy. Operational hosts (`app.*`, `learn.*`, `platform.*`) share the ARK tab mark so staff recognize ecosystem tools.
+`demo-auto.test` is customer-facing marketing. It keeps **Demo Auto Repair** favicon, OG image, and SEO copy. Operational hosts (`app.*`, `learn.*`, `platform.*`) share the ARK tab mark so staff recognize ecosystem tools.
 
 ## Upgrade survival
 
@@ -60,4 +60,4 @@ See `docs/branding/verification/` for fetched favicon binaries and audit notes.
 
 - `docs/branding/ecosystem-identity.md` — doctrine
 - `docs/branding/inventory.md` — full asset inventory
-- `.cursor/rules/ark-ecosystem-identity.mdc` — agent enforcement
+- doctrine `ark-ecosystem-identity.mdc` — agent enforcement

@@ -7,7 +7,16 @@
         "laravel",
         "framework"
     ],
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/ark-payments-square",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.3",
         "bacon/bacon-qr-code": "^3.1",
@@ -21,10 +30,12 @@
         "smalot/pdfparser": "^2.12",
         "spatie/browsershot": "^5.4",
         "spatie/laravel-permission": "^8.0",
-        "square/square": "^45.1",
         "symfony/http-client": "^8.1",
         "symfony/postmark-mailer": "^7.4",
         "twilio/sdk": "^8.0"
+    },
+    "suggest": {
+        "ark/payments-square": "Optional Square Terminal/keyed/portal payments. Pulls square/square (MIT) and apimatic/jsonmapper (OSL-3.0). Not in the default core graph — install explicitly when needed."
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

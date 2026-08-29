@@ -23,7 +23,7 @@
 | Messenger channel enum / contact surface / adapter | **Deployed** — `MetaMessengerIngress`, webhook, outbound, link UI |
 | Meta App (platform) vs Page (shop) separation | **Deployed (PR 1)** — env `META_MESSENGER_*`; shop Page ID + encrypted Page token; webhook routes by `entry.id` |
 
-SMS already proves the ingress pattern Messenger will reuse. **Meta App credentials belong to ARK (platform).** Shops connect Pages only. OAuth “Connect Facebook” is PR 2 — not required for LugsNPlugs manual Page-token path.
+SMS already proves the ingress pattern Messenger will reuse. **Meta App credentials belong to ARK (platform).** Shops connect Pages only. OAuth “Connect Facebook” is PR 2 — not required for Demo Auto Repair manual Page-token path.
 
 ---
 
