@@ -31,6 +31,28 @@ from the private foundry that proves ARK on the floor.
 
 **Open the engine. Bring your own fuel.**
 
+## See ARK in action
+
+### Run the whole shop from one place
+
+![ARK Job Board](docs/images/ark-job-board.png)
+
+### Repair orders without losing the story of the job
+
+![ARK Repair Order](docs/images/ark-repair-order.png)
+
+### Digital vehicle inspections
+
+![ARK Digital Vehicle Inspection](docs/images/ark-inspection.png)
+
+### Customer estimates and approvals
+
+![ARK Customer Estimate](docs/images/ark-estimate-customer.png)
+
+### Customer communication built into the workflow
+
+![ARK Communications](docs/images/ark-communications.png)
+
 ## Requirements
 
 - PHP 8.3+ (match `composer.json`) — **or** Docker Compose (below)
