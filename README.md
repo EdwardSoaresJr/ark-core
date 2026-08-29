@@ -2,6 +2,8 @@
 
 **Shop management software for independent repair shops.**
 
+**Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
+
 ARK is operational shop software — repair orders, customers, vehicles, estimates,
 inspections, scheduling, communications, and advisor/technician workflows —
 built around authorities and projections, not CRUD theater.
@@ -118,16 +120,21 @@ See `docs/engineering/` for deeper doctrine (scrubbed for public distribution; s
 
 ## License
 
-ARK is licensed under the **GNU Affero General Public License v3.0 only**
-(`AGPL-3.0-only`). See `LICENSE` and `NOTICE` in the repository root.
+**Copyright (C) 2026 Edward Soares Jr.**
+
+License: ARK is open-source software licensed under the
+**GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`).
+See `LICENSE` and `NOTICE`.
 
 Optional Square payments (`composer require ark/payments-square`) installs
 additional third-party packages under **their** licenses; see `NOTICE`.
 ARK’s AGPL does not relicense those packages.
 
+Brand and naming: see `TRADEMARKS.md`. You may fork under the AGPL; do not
+present a modified product as the official ARK distribution without permission.
+
 This licensing choice is a **project decision**, not legal advice.
 
 ## Status
 
-**Ready for curated public publish** after human review of the license delta.
-Inspect `OPEN_SOURCE_STRATEGY_DECISIONS.md` and certification docs before pushing a remote.
+Public release: https://github.com/EdwardSoaresJr/ark

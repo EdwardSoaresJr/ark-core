@@ -2,18 +2,26 @@
 
 ARK — shop management software for independent repair shops.
 
-Copyright (c) Edward Soares Jr. and contributors.
+**Copyright (C) 2026 Edward Soares Jr.**
+
+ARK is licensed under the GNU Affero General Public License
+version 3 only (`AGPL-3.0-only`). See the file `LICENSE` in the repository root.
+
+Additional copyright may belong to contributors who submit changes under the
+same license. Third-party components retain their own copyrights and licenses
+(see below).
 
 ## Project license (project decision — not legal advice)
 
 ARK (this repository, excluding third-party components) is licensed under the
 **GNU Affero General Public License version 3 only** (`AGPL-3.0-only`).
-See the file `LICENSE` in the repository root.
 
 This NOTICE documents third-party materials that ARK uses or optionally
 installs. It is a **project licensing decision record**, not legal advice.
 ARK’s AGPL license does **not** relicense third-party packages; those packages
 remain under their own licenses.
+
+Brand and naming: see `TRADEMARKS.md`.
 
 ---
 
