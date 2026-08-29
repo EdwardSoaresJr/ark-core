@@ -50,7 +50,7 @@ function arkClearRuntimeAppKey(): void
 
 it('bootstraps a stable APP_KEY so /setup is reachable with an empty key', function () {
     [$path, $original] = arkSwapEnvForKeyTest("APP_NAME=ARK\nAPP_KEY=\nCUSTOM_KEEP=yes\n");
-    $keyFile = storage_path('app/install/app_key');
+    $keyFile = \App\Ark\Install\InstallStorage::path('app_key');
     @unlink($keyFile);
 
     try {
@@ -140,7 +140,7 @@ it('fails closed when APP_KEY is missing and the environment is immutable', func
 it('reuses a Docker-style install app_key file without rotating', function () {
     $existing = 'base64:'.base64_encode(random_bytes(32));
     [$path, $original] = arkSwapEnvForKeyTest("APP_NAME=ARK\nAPP_KEY=\n");
-    $keyFile = storage_path('app/install/app_key');
+    $keyFile = \App\Ark\Install\InstallStorage::path('app_key');
     File::ensureDirectoryExists(dirname($keyFile));
     File::put($keyFile, $existing);
 

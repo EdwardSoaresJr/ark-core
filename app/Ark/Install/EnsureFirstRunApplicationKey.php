@@ -15,9 +15,9 @@ use RuntimeException;
  */
 final class EnsureFirstRunApplicationKey
 {
-    private const KEY_FILE = 'install/app_key';
+    private const KEY_FILE = 'app_key';
 
-    private const LOCK_FILE = 'install/app_key.lock';
+    private const LOCK_FILE = 'app_key.lock';
 
     public function __construct(
         private readonly InstallerEnvironmentWriter $envWriter,
@@ -132,7 +132,7 @@ final class EnsureFirstRunApplicationKey
 
     private function keyFilePath(): string
     {
-        return storage_path('app/'.self::KEY_FILE);
+        return InstallStorage::path(self::KEY_FILE);
     }
 
     private function readKeyFile(): string
@@ -164,7 +164,7 @@ final class EnsureFirstRunApplicationKey
      */
     private function withExclusiveLock(callable $callback): void
     {
-        $path = storage_path('app/'.self::LOCK_FILE);
+        $path = InstallStorage::path(self::LOCK_FILE);
         $dir = dirname($path);
         if (! is_dir($dir)) {
             mkdir($dir, 0755, true);

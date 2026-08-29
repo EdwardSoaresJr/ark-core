@@ -15,11 +15,11 @@ final class InstallationState
 
     public const INSTALLED = 'installed';
 
-    private const RELATIVE_PATH = 'install/state.json';
+    private const RELATIVE_PATH = 'state.json';
 
     public static function path(): string
     {
-        return storage_path('app/'.self::RELATIVE_PATH);
+        return InstallStorage::path(self::RELATIVE_PATH);
     }
 
     public static function status(): string

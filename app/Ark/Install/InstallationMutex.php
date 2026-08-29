@@ -7,14 +7,14 @@ namespace App\Ark\Install;
  */
 final class InstallationMutex
 {
-    private const RELATIVE = 'install/install.lock';
+    private const RELATIVE = 'install.lock';
 
     /** @var resource|null */
     private static $handle = null;
 
     public static function path(): string
     {
-        return storage_path('app/'.self::RELATIVE);
+        return InstallStorage::path(self::RELATIVE);
     }
 
     public static function acquire(): bool

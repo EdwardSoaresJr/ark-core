@@ -8,11 +8,11 @@ namespace App\Ark\Install;
  */
 final class InstallDraft
 {
-    private const RELATIVE = 'install/draft.json';
+    private const RELATIVE = 'draft.json';
 
     public static function path(): string
     {
-        return storage_path('app/'.self::RELATIVE);
+        return InstallStorage::path(self::RELATIVE);
     }
 
     /**
