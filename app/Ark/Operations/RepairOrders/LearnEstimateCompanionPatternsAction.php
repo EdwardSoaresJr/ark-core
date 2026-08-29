@@ -7,6 +7,27 @@ namespace App\Ark\Operations\RepairOrders;
  */
 final class LearnEstimateCompanionPatternsAction
 {
+    /** Observed patterns need this many supports before they warn. */
+    public const OBSERVED_SUPPORT_FLOOR = 3;
+
+    /** @var list<string> */
+    private const JUNK_PHRASES = [
+        'customer provided',
+        'customer parts',
+        'parts provided',
+        'provided by customer',
+        'see advisor',
+        'see notes',
+        'as discussed',
+        'per customer',
+    ];
+
+    /** @var list<string> */
+    private const HARDWARE_ONLY = [
+        'bolt', 'bolts', 'nut', 'nuts', 'screw', 'screws', 'washer', 'washers',
+        'clamp', 'clamps', 'clip', 'clips', 'pin', 'pins', 'ring', 'rings',
+    ];
+
     public function ingest(RepairOrder $repairOrder): void
     {
         $repairOrder->loadMissing(['lines', 'concerns']);
@@ -24,6 +45,8 @@ final class LearnEstimateCompanionPatternsAction
             return;
         }
 
+        $catalog = EstimateCompanionPattern::query()->get();
+
         foreach ($labors as $labor) {
             $jobTokens = EstimateCompanionTokens::from(EstimateCompanionTokens::lineText($labor));
             if (count($jobTokens) < 2) {
@@ -33,46 +56,39 @@ final class LearnEstimateCompanionPatternsAction
             $jobKey = EstimateCompanionTokens::key($jobTokens);
             $jobNeedle = mb_strtolower(trim((string) $labor->description));
             $laborHaystack = EstimateCompanionTokens::lineText($labor);
+            $laborConcernId = $labor->repair_order_concern_id;
 
             foreach ($parts as $part) {
+                if (! $this->sameConcern($laborConcernId, $part->repair_order_concern_id)) {
+                    continue;
+                }
+
                 $text = EstimateCompanionTokens::lineText($part);
 
                 if ($this->skipCompanionText($text)) {
                     continue;
                 }
 
-                $existing = EstimateCompanionPattern::query()->get()
-                    ->first(fn (EstimateCompanionPattern $pattern): bool => $pattern->matchesJob($laborHaystack)
-                        && $pattern->companionMatchesText($text));
+                $existing = $catalog->first(
+                    fn (EstimateCompanionPattern $pattern): bool => $pattern->matchesJob($laborHaystack)
+                        && $pattern->companionMatchesText($text),
+                );
 
                 if ($existing !== null) {
-                    $needles = $existing->job_needles ?? [];
-                    if ($jobNeedle !== '' && ! in_array($jobNeedle, $needles, true)) {
-                        $needles[] = $jobNeedle;
-                    }
-                    $companionNeedles = $existing->companion_needles ?? [];
-                    if ($text !== '' && ! in_array($text, $companionNeedles, true)) {
-                        $companionNeedles[] = $text;
-                    }
-                    $existing->forceFill([
-                        'job_needles' => array_values($needles),
-                        'companion_needles' => array_slice(array_values($companionNeedles), 0, 12),
-                        'support_count' => (int) $existing->support_count + 1,
-                    ])->save();
-
+                    $this->bumpExisting($existing, $jobNeedle, $text);
                     continue;
                 }
 
                 $companionTokens = EstimateCompanionTokens::from($text);
-                if ($companionTokens === []) {
+                if ($companionTokens === [] || EstimateCompanionTokens::key($companionTokens) === $jobKey) {
+                    continue;
+                }
+
+                if ($this->hardwareOnlyTokens($companionTokens)) {
                     continue;
                 }
 
                 $companionKey = EstimateCompanionTokens::key($companionTokens);
-                if ($companionKey === $jobKey) {
-                    continue;
-                }
-
                 $row = EstimateCompanionPattern::query()->firstOrNew([
                     'job_key' => $jobKey,
                     'companion_key' => $companionKey,
@@ -90,10 +106,11 @@ final class LearnEstimateCompanionPatternsAction
 
                 $row->job_needles = array_values($needles);
                 $row->companion_needles = array_slice(array_values($companionNeedles), 0, 12);
-                $row->companion_label = $row->companion_label ?: ($companionTokens[0] ?? 'item');
+                $row->companion_label = $row->companion_label ?: EstimateCompanionTokens::labelFor($text, $companionTokens);
                 $row->source = $row->exists && $row->source === 'seed' ? 'seed' : 'observed';
                 $row->support_count = (int) $row->support_count + 1;
                 $row->save();
+                $catalog->push($row);
             }
         }
     }
@@ -120,13 +137,67 @@ final class LearnEstimateCompanionPatternsAction
         }
     }
 
+    private function bumpExisting(EstimateCompanionPattern $existing, string $jobNeedle, string $text): void
+    {
+        $needles = $existing->job_needles ?? [];
+        if ($jobNeedle !== '' && ! in_array($jobNeedle, $needles, true)) {
+            $needles[] = $jobNeedle;
+        }
+        $companionNeedles = $existing->companion_needles ?? [];
+        if ($text !== '' && ! in_array($text, $companionNeedles, true)) {
+            $companionNeedles[] = $text;
+        }
+        $existing->forceFill([
+            'job_needles' => array_values($needles),
+            'companion_needles' => array_slice(array_values($companionNeedles), 0, 12),
+            'support_count' => (int) $existing->support_count + 1,
+        ])->save();
+    }
+
+    private function sameConcern(mixed $laborConcernId, mixed $partConcernId): bool
+    {
+        if ($laborConcernId === null || $partConcernId === null) {
+            return $laborConcernId === $partConcernId;
+        }
+
+        return (int) $laborConcernId === (int) $partConcernId;
+    }
+
     private function skipCompanionText(string $text): bool
     {
         if ($text === '') {
             return true;
         }
 
-        return (bool) preg_match('/\b(leak|stain)\b/u', $text)
-            && ! preg_match('/\b(change|flush|engine oil|motor oil|antifreeze)\b/u', $text);
+        foreach (self::JUNK_PHRASES as $phrase) {
+            if (str_contains($text, $phrase)) {
+                return true;
+            }
+        }
+
+        if (preg_match('/\b(leak|stain)\b/u', $text)
+            && ! preg_match('/\b(change|flush|engine oil|motor oil|antifreeze)\b/u', $text)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<string>  $tokens
+     */
+    private function hardwareOnlyTokens(array $tokens): bool
+    {
+        if ($tokens === []) {
+            return true;
+        }
+
+        foreach ($tokens as $token) {
+            if (! in_array($token, self::HARDWARE_ONLY, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

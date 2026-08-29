@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection;
+use App\Ark\Operations\RepairOrders\EstimateCompanionPattern;
 use App\Ark\Operations\RepairOrders\LearnEstimateCompanionPatternsAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -42,6 +43,38 @@ function timingJobOrder(string $laborDescription, array $extraLineDescriptions =
     $repairOrder->setRelation('lines', $lines);
 
     return $repairOrder;
+}
+
+function teachCompanion(string $laborDescription, string $partDescription, int $times = 3, bool $sameConcern = true): void
+{
+    $learn = app(LearnEstimateCompanionPatternsAction::class);
+
+    foreach (range(1, $times) as $_) {
+        $ro = repairOrderForCommunication(\App\Ark\Operations\RepairOrders\RepairOrderStatus::Estimate);
+        $ro->lines()->update(['description' => $laborDescription]);
+
+        $concernId = $ro->concerns()->first()->id;
+        if (! $sameConcern) {
+            $other = $ro->concerns()->create([
+                'summary' => 'Unrelated concern',
+                'disposition' => \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Recommended,
+                'position' => 2,
+            ]);
+            $concernId = $other->id;
+        }
+
+        $ro->lines()->create([
+            'repair_order_concern_id' => $concernId,
+            'type' => RepairOrderLineType::Part,
+            'description' => $partDescription,
+            'quantity' => '1.00',
+            'unit_price_cents' => 2500,
+            'subtotal_cents' => 2500,
+            'total_cents' => 2500,
+            'position' => 2,
+        ]);
+        $learn->ingest($ro->fresh(['lines', 'concerns']));
+    }
 }
 
 test('timing belt without oil and coolant needs attention from the shop catalog', function () {
@@ -87,40 +120,60 @@ test('ignition timing is not a timing job', function () {
         ->and($projection['needs_attention'])->toBeFalse();
 });
 
-test('repeated labor-plus-part tickets teach a new companion', function () {
-    $learn = app(LearnEstimateCompanionPatternsAction::class);
+test('repeated labor-plus-part tickets teach a new companion at the support floor', function () {
+    teachCompanion('Replace wheel bearing', 'Gear oil', times: 3);
 
-    $first = repairOrderForCommunication(\App\Ark\Operations\RepairOrders\RepairOrderStatus::Estimate);
-    $first->lines()->update(['description' => 'Replace wheel bearing']);
-    $first->lines()->create([
-        'repair_order_concern_id' => $first->concerns()->first()->id,
-        'type' => RepairOrderLineType::Part,
-        'description' => 'Gear oil',
-        'quantity' => '1.00',
-        'unit_price_cents' => 2500,
-        'subtotal_cents' => 2500,
-        'total_cents' => 2500,
-        'position' => 2,
-    ]);
-    $learn->ingest($first->fresh(['lines', 'concerns']));
-
-    $second = repairOrderForCommunication(\App\Ark\Operations\RepairOrders\RepairOrderStatus::Estimate);
-    $second->lines()->update(['description' => 'Replace wheel bearing']);
-    $second->lines()->create([
-        'repair_order_concern_id' => $second->concerns()->first()->id,
-        'type' => RepairOrderLineType::Part,
-        'description' => 'Gear oil',
-        'quantity' => '1.00',
-        'unit_price_cents' => 2500,
-        'subtotal_cents' => 2500,
-        'total_cents' => 2500,
-        'position' => 2,
-    ]);
-    $learn->ingest($second->fresh(['lines', 'concerns']));
-
-    $third = timingJobOrder('Replace wheel bearing');
-    $projection = (new EstimateCompanionCompletenessProjection)->for($third);
+    $projection = (new EstimateCompanionCompletenessProjection)->for(
+        timingJobOrder('Replace wheel bearing', [], 'Wheel bearing'),
+    );
 
     expect($projection['needs_attention'])->toBeTrue()
-        ->and($projection['missing'])->toContain('gear');
+        ->and($projection['missing'])->toContain('oil');
+});
+
+test('observed companions below the support floor do not surface', function () {
+    teachCompanion('Replace wheel bearing', 'Gear oil', times: 2);
+
+    $projection = (new EstimateCompanionCompletenessProjection)->for(
+        timingJobOrder('Replace wheel bearing', [], 'Wheel bearing'),
+    );
+
+    expect($projection['missing'])->not->toContain('oil')
+        ->and($projection['missing'])->not->toContain('gear');
+});
+
+test('companions on a different concern do not teach the labor job', function () {
+    teachCompanion('Replace timing belt', 'Brake pads', times: 3, sameConcern: false);
+
+    $projection = (new EstimateCompanionCompletenessProjection)->for(
+        timingJobOrder('Replace timing belt'),
+    );
+
+    expect($projection['missing'])->not->toContain('brake')
+        ->and($projection['missing'])->toContain('oil');
+});
+
+test('junk companion text is not learned', function () {
+    teachCompanion('Replace alternator', 'Customer provided alternator', times: 3);
+
+    expect(
+        EstimateCompanionPattern::query()
+            ->where('source', 'observed')
+            ->get()
+            ->contains(fn (EstimateCompanionPattern $pattern): bool => str_contains(
+                mb_strtolower((string) $pattern->companion_label.' '.implode(' ', $pattern->companion_needles ?? [])),
+                'customer',
+            ))
+    )->toBeFalse();
+});
+
+test('hardware-only companions are not learned', function () {
+    teachCompanion('Replace control arm', 'Bolts', times: 3);
+
+    expect(
+        EstimateCompanionPattern::query()
+            ->where('source', 'observed')
+            ->where('companion_label', 'bolts')
+            ->exists()
+    )->toBeFalse();
 });

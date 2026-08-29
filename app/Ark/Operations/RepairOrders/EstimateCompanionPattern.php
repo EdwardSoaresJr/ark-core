@@ -33,7 +33,7 @@ class EstimateCompanionPattern extends Model
             return false;
         }
 
-        if ($this->source === 'observed' && $this->support_count < 2) {
+        if ($this->source === 'observed' && $this->support_count < LearnEstimateCompanionPatternsAction::OBSERVED_SUPPORT_FLOOR) {
             return false;
         }
 

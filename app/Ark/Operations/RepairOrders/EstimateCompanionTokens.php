@@ -8,7 +8,13 @@ final class EstimateCompanionTokens
     private const STOP = [
         'a', 'an', 'the', 'and', 'or', 'of', 'for', 'to', 'with', 'on', 'in', 'at',
         'replace', 'replacement', 'remove', 'perform', 'labor', 'hours', 'hour',
-        'qty', 'job', 'rnr', 'kit',
+        'qty', 'job', 'rnr', 'kit', 'customer', 'provided', 'new', 'oem', 'aftermarket',
+    ];
+
+    /** @var list<string> */
+    private const PREFERRED_LABELS = [
+        'oil', 'coolant', 'antifreeze', 'fluid', 'atf', 'filter', 'gasket', 'belt',
+        'pump', 'seal', 'grease', 'lubricant',
     ];
 
     /**
@@ -37,6 +43,26 @@ final class EstimateCompanionTokens
         sort($tokens);
 
         return array_slice($tokens, 0, 3);
+    }
+
+    /**
+     * @param  list<string>  $tokens
+     */
+    public static function labelFor(string $text, array $tokens): string
+    {
+        $haystack = mb_strtolower($text);
+
+        foreach (self::PREFERRED_LABELS as $label) {
+            if (str_contains($haystack, $label)) {
+                return $label;
+            }
+        }
+
+        if (preg_match('/\b(\d+\s*w-?\s*\d+)\b/u', $haystack, $match)) {
+            return strtolower(str_replace(' ', '', $match[1]));
+        }
+
+        return $tokens[0] ?? 'item';
     }
 
     public static function key(array $tokens): string
