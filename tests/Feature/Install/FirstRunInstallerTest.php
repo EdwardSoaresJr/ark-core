@@ -12,6 +12,10 @@ beforeEach(function () {
     InstallationState::resetForTests();
 });
 
+afterEach(function () {
+    InstallationState::resetForTests();
+});
+
 it('reports not installed on a fresh tree and redirects the app to setup', function () {
     expect(InstallationState::isInstalled())->toBeFalse();
 
