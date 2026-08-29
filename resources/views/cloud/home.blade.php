@@ -1,5 +1,8 @@
 @php
-    $trial = \App\Ark\Platform\Cloud\CloudUrls::route('trial.shop');
+    $ctaUrl = \App\Ark\Platform\Cloud\CloudPublicPosture::primaryCtaUrl();
+    $ctaLabel = \App\Ark\Platform\Cloud\CloudPublicPosture::primaryCtaLabel();
+    $signupsOpen = \App\Ark\Platform\Cloud\CloudPublicPosture::signupsOpen();
+    $pricingPublic = \App\Ark\Platform\Cloud\CloudPublicPosture::pricingPublic();
     $pricing = \App\Ark\Platform\Cloud\CloudUrls::route('pricing');
 @endphp
 
@@ -28,15 +31,19 @@
                 so you can spend less time managing software and more time running your shop.
             </p>
             <div class="mt-12 flex flex-wrap items-center gap-4">
-                <a href="{{ $trial }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary text-lg !px-9 !py-4">
-                    Start Free Trial
+                <a href="{{ $ctaUrl }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary text-lg !px-9 !py-4">
+                    {{ $ctaLabel }}
                 </a>
                 <a href="#product" class="cloud-btn-ghost cloud-btn-ghost-on-dark !px-7 !py-3.5">
                     See the product
                 </a>
             </div>
             <p class="mt-5 text-sm" style="color: rgba(255,255,255,0.55)">
-                Free trial · no credit card to start
+                @if ($signupsOpen)
+                    Free trial · no credit card to start
+                @else
+                    Prefer not to run your own server? We’ll host ARK for you.
+                @endif
             </p>
         </div>
     </section>
@@ -232,75 +239,101 @@
         </p>
     </section>
 
-    {{-- 5. Pricing — simple, then CTA --}}
-    <section class="border-t border-[var(--cloud-line)] bg-white/60">
-        <div class="mx-auto max-w-6xl px-5 sm:px-8 py-24 sm:py-32">
-            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Pricing</p>
-            <h2 class="cloud-display mt-4 text-3xl sm:text-5xl font-semibold max-w-2xl leading-tight">
-                Start free. Decide when Tuesday feels better.
-            </h2>
+    @if ($pricingPublic)
+        <section class="border-t border-[var(--cloud-line)] bg-white/60">
+            <div class="mx-auto max-w-6xl px-5 sm:px-8 py-24 sm:py-32">
+                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Pricing</p>
+                <h2 class="cloud-display mt-4 text-3xl sm:text-5xl font-semibold max-w-2xl leading-tight">
+                    Start free. Decide when Tuesday feels better.
+                </h2>
 
-            <div class="mt-14 grid gap-6 lg:grid-cols-3">
-                @foreach ([
-                    [
-                        'name' => 'Trial',
-                        'price' => 'Free',
-                        'period' => '14 days',
-                        'blurb' => 'Get your shop online. Write real repair orders. No contract to try it.',
-                        'featured' => true,
-                    ],
-                    [
-                        'name' => 'Shop',
-                        'price' => '$299',
-                        'period' => '/ month',
-                        'blurb' => 'One location — repairs, customer updates, website, and the tools your floor needs.',
-                        'featured' => false,
-                    ],
-                    [
-                        'name' => 'Multi-Location',
-                        'price' => 'Talk to us',
-                        'period' => '',
-                        'blurb' => 'More than one shop. Same product. Room to grow.',
-                        'featured' => false,
-                    ],
-                ] as $plan)
-                    <div @class([
-                        'rounded-2xl p-8 sm:p-9 border',
-                        'border-[var(--cloud-cerulean)] bg-white shadow-[0_24px_60px_-36px_rgba(0,153,204,0.55)]' => $plan['featured'],
-                        'border-[var(--cloud-line)] bg-white/80' => ! $plan['featured'],
-                    ])>
-                        <p class="cloud-display text-xl font-semibold">{{ $plan['name'] }}</p>
-                        <p class="mt-5 flex items-baseline gap-1">
-                            <span class="cloud-display text-4xl font-semibold">{{ $plan['price'] }}</span>
-                            @if ($plan['period'] !== '')
-                                <span class="text-[var(--cloud-muted)]">{{ $plan['period'] }}</span>
-                            @endif
-                        </p>
-                        <p class="mt-4 text-[var(--cloud-muted)] leading-relaxed text-lg">{{ $plan['blurb'] }}</p>
-                    </div>
-                @endforeach
+                <div class="mt-14 grid gap-6 lg:grid-cols-3">
+                    @foreach ([
+                        [
+                            'name' => 'Trial',
+                            'price' => 'Free',
+                            'period' => '14 days',
+                            'blurb' => 'Get your shop online. Write real repair orders. No contract to try it.',
+                            'featured' => true,
+                        ],
+                        [
+                            'name' => 'Shop',
+                            'price' => '$299',
+                            'period' => '/ month',
+                            'blurb' => 'One location — repairs, customer updates, website, and the tools your floor needs.',
+                            'featured' => false,
+                        ],
+                        [
+                            'name' => 'Multi-Location',
+                            'price' => 'Talk to us',
+                            'period' => '',
+                            'blurb' => 'More than one shop. Same product. Room to grow.',
+                            'featured' => false,
+                        ],
+                    ] as $plan)
+                        <div @class([
+                            'rounded-2xl p-8 sm:p-9 border',
+                            'border-[var(--cloud-cerulean)] bg-white shadow-[0_24px_60px_-36px_rgba(0,153,204,0.55)]' => $plan['featured'],
+                            'border-[var(--cloud-line)] bg-white/80' => ! $plan['featured'],
+                        ])>
+                            <p class="cloud-display text-xl font-semibold">{{ $plan['name'] }}</p>
+                            <p class="mt-5 flex items-baseline gap-1">
+                                <span class="cloud-display text-4xl font-semibold">{{ $plan['price'] }}</span>
+                                @if ($plan['period'] !== '')
+                                    <span class="text-[var(--cloud-muted)]">{{ $plan['period'] }}</span>
+                                @endif
+                            </p>
+                            <p class="mt-4 text-[var(--cloud-muted)] leading-relaxed text-lg">{{ $plan['blurb'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-10 flex flex-wrap items-center gap-4">
+                    <a href="{{ $ctaUrl }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary text-lg !px-9 !py-4">{{ $ctaLabel }}</a>
+                    <a href="{{ $pricing }}" class="cloud-btn-ghost">See full pricing</a>
+                </div>
             </div>
-
-            <div class="mt-10 flex flex-wrap items-center gap-4">
-                <a href="{{ $trial }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary text-lg !px-9 !py-4">Start Free Trial</a>
-                <a href="{{ $pricing }}" class="cloud-btn-ghost">See full pricing</a>
+        </section>
+    @else
+        <section class="border-t border-[var(--cloud-line)] bg-white/60">
+            <div class="mx-auto max-w-3xl px-5 sm:px-8 py-24 sm:py-32 text-center">
+                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Hosted ARK</p>
+                <h2 class="cloud-display mt-4 text-3xl sm:text-5xl font-semibold leading-tight">
+                    Don’t want to mess with a server?
+                </h2>
+                <p class="mt-6 text-xl text-[var(--cloud-muted)] leading-relaxed">
+                    We’ll host ARK for your shop. Self-serve signup isn’t open yet — tell us you’re interested
+                    and we’ll reach out when hosted is ready.
+                </p>
+                <a href="{{ $ctaUrl }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary mt-10 text-lg !px-10 !py-4 inline-flex">
+                    {{ $ctaLabel }}
+                </a>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
-    {{-- Final ask — shop outcome, not brand funnel --}}
     <section class="mx-auto max-w-6xl px-5 sm:px-8 py-24 sm:py-32">
         <div class="rounded-3xl border border-[var(--cloud-line)] bg-white px-8 py-16 sm:px-16 sm:py-20 text-center shadow-[0_40px_100px_-48px_rgba(11,18,32,0.45)]">
             <h2 class="cloud-display text-3xl sm:text-5xl font-semibold max-w-2xl mx-auto leading-tight">
-                Ready to get your shop online?
+                @if ($signupsOpen)
+                    Ready to get your shop online?
+                @else
+                    Ready when you are.
+                @endif
             </h2>
             <p class="mt-6 text-xl text-[var(--cloud-muted)] max-w-xl mx-auto leading-relaxed">
-                Start running your shop in minutes — not after a week of training.
+                @if ($signupsOpen)
+                    Start running your shop in minutes — not after a week of training.
+                @else
+                    See the product, then ask about hosted ARK if you’d rather we run the infrastructure.
+                @endif
             </p>
-            <a href="{{ $trial }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary mt-10 text-lg !px-10 !py-4 inline-flex">
-                Start Free Trial
+            <a href="{{ $ctaUrl }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary mt-10 text-lg !px-10 !py-4 inline-flex">
+                {{ $ctaLabel }}
             </a>
-            <p class="mt-4 text-sm text-[var(--cloud-muted)]">Free trial · explore the Cloud Funnel at your pace</p>
+            @if ($signupsOpen)
+                <p class="mt-4 text-sm text-[var(--cloud-muted)]">Free trial · explore the Cloud Funnel at your pace</p>
+            @endif
         </div>
     </section>
 </x-cloud.shell>

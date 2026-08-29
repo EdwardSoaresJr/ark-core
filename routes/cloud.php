@@ -18,6 +18,7 @@ $registerCloud = function (): void {
     Route::get('/pricing', [CloudExperienceController::class, 'pricing'])->name('pricing');
     Route::get('/resources', [CloudExperienceController::class, 'resources'])->name('resources');
     Route::get('/demo', [CloudExperienceController::class, 'demo'])->name('demo');
+    Route::get('/hosted', [CloudExperienceController::class, 'hosted'])->name('hosted');
     Route::get('/login', [CloudExperienceController::class, 'login'])->name('login');
     Route::post('/login', [CloudExperienceController::class, 'storeLogin'])->name('login.store');
 

@@ -25,7 +25,9 @@
         </ul>
 
         <div class="mt-12 flex flex-wrap gap-3">
-            <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('trial.shop') }}" class="cloud-btn-primary">Start Free Trial</a>
+            <a href="{{ \App\Ark\Platform\Cloud\CloudPublicPosture::primaryCtaUrl() }}" class="cloud-btn-primary">
+                {{ \App\Ark\Platform\Cloud\CloudPublicPosture::primaryCtaLabel() }}
+            </a>
             <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('home') }}#product" class="cloud-btn-ghost">See the product</a>
         </div>
     </div>

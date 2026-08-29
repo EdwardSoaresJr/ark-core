@@ -19,6 +19,7 @@ final class CloudUrls
         'pricing' => '/pricing',
         'resources' => '/resources',
         'demo' => '/demo',
+        'hosted' => '/hosted',
         'login' => '/login',
         'login.store' => '/login',
         'trial.shop' => '/trial',

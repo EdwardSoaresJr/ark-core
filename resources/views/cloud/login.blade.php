@@ -29,8 +29,13 @@
         </form>
 
         <p class="mt-5 text-center text-sm text-[var(--cloud-muted)]">
-            New shop?
-            <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('trial.shop') }}" class="font-semibold text-[var(--cloud-cerulean)] hover:underline">Start Free Trial</a>
+            @if (\App\Ark\Platform\Cloud\CloudPublicPosture::signupsOpen())
+                New shop?
+                <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('trial.shop') }}" class="font-semibold text-[var(--cloud-cerulean)] hover:underline">Start Free Trial</a>
+            @else
+                Looking for hosted ARK?
+                <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('hosted') }}" class="font-semibold text-[var(--cloud-cerulean)] hover:underline">Ask about hosting</a>
+            @endif
         </p>
     </div>
 </x-cloud.shell>

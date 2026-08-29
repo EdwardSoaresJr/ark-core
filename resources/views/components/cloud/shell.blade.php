@@ -171,15 +171,17 @@
                 <nav class="flex items-center gap-0.5 sm:gap-1 text-sm font-medium text-[var(--cloud-muted)]">
                     <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('home') }}" class="hidden md:inline px-2.5 py-2 rounded-md hover:text-[var(--cloud-ink)] transition-colors">Home</a>
                     <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('features') }}" class="hidden md:inline px-2.5 py-2 rounded-md hover:text-[var(--cloud-ink)] transition-colors">Features</a>
-                    <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('pricing') }}" class="hidden sm:inline px-2.5 py-2 rounded-md hover:text-[var(--cloud-ink)] transition-colors">Pricing</a>
+                    @if (\App\Ark\Platform\Cloud\CloudPublicPosture::pricingPublic())
+                        <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('pricing') }}" class="hidden sm:inline px-2.5 py-2 rounded-md hover:text-[var(--cloud-ink)] transition-colors">Pricing</a>
+                    @endif
                     <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('resources') }}" class="hidden lg:inline px-2.5 py-2 rounded-md hover:text-[var(--cloud-ink)] transition-colors">Resources</a>
                     <a href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('login') }}" class="px-2.5 py-2 rounded-md hover:text-[var(--cloud-ink)] transition-colors">Login</a>
                     <a
-                        href="{{ \App\Ark\Platform\Cloud\CloudUrls::route('trial.shop') }}"
+                        href="{{ \App\Ark\Platform\Cloud\CloudPublicPosture::primaryCtaUrl() }}"
                         data-cloud-event="cloud_funnel_homepage_cta"
                         class="cloud-btn-primary !py-2.5 !px-5 !text-sm ml-2 shadow-[0_10px_28px_-12px_rgba(0,122,166,0.9)]"
                     >
-                        Start Free Trial
+                        {{ \App\Ark\Platform\Cloud\CloudPublicPosture::primaryCtaLabel() }}
                     </a>
                 </nav>
             </div>

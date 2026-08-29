@@ -18,19 +18,40 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-it('serves the ARK Cloud home funnel', function () {
+it('serves the ARK Cloud home funnel with hosted-interest posture', function () {
     $this->get(route('cloud.home'))
         ->assertOk()
         ->assertSee('Run your shop with confidence', false)
         ->assertSee('Built for the floor', false)
-        ->assertSee('Start Free Trial', false)
+        ->assertSee('Ask about hosted ARK', false)
         ->assertSee('assets/cloud/product/repair-order-live.png', false)
-        ->assertSee('Ready to get your shop online', false)
+        ->assertSee('Ready when you are', false)
         ->assertSee('Help your first customer', false)
+        ->assertDontSee('Start Free Trial', false)
+        ->assertDontSee('$299', false)
         ->assertDontSee('inside ARK', false);
 });
 
-it('creates a real User and owned Shop through the Cloud Funnel', function () {
+it('hides pricing and redirects trial to hosted when public funnel is closed', function () {
+    $this->get(route('cloud.pricing'))->assertRedirect(route('cloud.hosted'));
+    $this->get(route('cloud.trial.shop'))->assertRedirect(route('cloud.hosted'));
+    $this->post(route('cloud.trial.shop.store'), ['shop_name' => 'Blocked Shop'])
+        ->assertRedirect(route('cloud.hosted'));
+    $this->get(route('cloud.demo'))->assertRedirect(route('cloud.hosted'));
+
+    $this->get(route('cloud.hosted'))
+        ->assertOk()
+        ->assertSee('We’ll run the server', false)
+        ->assertSee('Email us about hosting', false)
+        ->assertSee('hello@autorepairkeeper.com', false);
+});
+
+it('creates a real User and owned Shop through the Cloud Funnel when signups are open', function () {
+    config([
+        'ark-cloud.public_signups' => true,
+        'ark-cloud.public_pricing' => true,
+    ]);
+
     Notification::fake();
 
     $this->post(route('cloud.trial.shop.store'), [
@@ -93,6 +114,11 @@ it('creates a real User and owned Shop through the Cloud Funnel', function () {
 });
 
 it('logs in later and resumes from the real Shop', function () {
+    config([
+        'ark-cloud.public_signups' => true,
+        'ark-cloud.public_pricing' => true,
+    ]);
+
     Notification::fake();
 
     $this->post(route('cloud.trial.shop.store'), ['shop_name' => 'Mile High Motors']);
@@ -125,7 +151,7 @@ it('logs in later and resumes from the real Shop', function () {
 });
 
 it('rejects invalid cloud login credentials', function () {
-    $user = User::factory()->create([
+    User::factory()->create([
         'email' => 'owner@example.com',
     ]);
 
@@ -154,15 +180,22 @@ it('supports password reset for cloud accounts', function () {
     Notification::assertSentTo($user, ResetPassword::class);
 });
 
-it('serves pricing features resources login and demo', function () {
-    $this->get(route('cloud.pricing'))->assertOk()->assertSee('Multi-Location', false);
+it('serves features resources login and hosted interest', function () {
     $this->get(route('cloud.features'))->assertOk()->assertSee('What makes Tuesday easier', false);
     $this->get(route('cloud.resources'))->assertOk()->assertSee('Built for the floor', false);
-    $this->get(route('cloud.login'))->assertOk()->assertSee('Sign in', false);
-    $this->get(route('cloud.demo'))
+    $this->get(route('cloud.login'))
         ->assertOk()
-        ->assertSee('Ready to get your shop online', false)
-        ->assertDontSee('become an ARK customer', false);
+        ->assertSee('Sign in', false)
+        ->assertSee('Ask about hosting', false);
+    $this->get(route('cloud.hosted'))
+        ->assertOk()
+        ->assertSee('We’ll run the server', false);
+});
+
+it('serves public pricing when enabled', function () {
+    config(['ark-cloud.public_pricing' => true]);
+
+    $this->get(route('cloud.pricing'))->assertOk()->assertSee('Multi-Location', false);
 });
 
 it('points Cloud URLs at the company host when configured', function () {
@@ -175,5 +208,6 @@ it('points Cloud URLs at the company host when configured', function () {
     expect(\App\Ark\Platform\Cloud\CloudUrls::usesCloudPrefix())->toBeFalse()
         ->and(\App\Ark\Platform\Cloud\CloudUrls::route('home'))->toBe('https://autorepairkeeper.com/')
         ->and(\App\Ark\Platform\Cloud\CloudUrls::route('features'))->toBe('https://autorepairkeeper.com/features')
-        ->and(\App\Ark\Platform\Cloud\CloudUrls::route('trial.shop'))->toBe('https://autorepairkeeper.com/trial');
+        ->and(\App\Ark\Platform\Cloud\CloudUrls::route('trial.shop'))->toBe('https://autorepairkeeper.com/trial')
+        ->and(\App\Ark\Platform\Cloud\CloudUrls::route('hosted'))->toBe('https://autorepairkeeper.com/hosted');
 });

@@ -43,8 +43,12 @@ final class CloudExperienceController
         return view('cloud.features');
     }
 
-    public function pricing(): View
+    public function pricing(): View|RedirectResponse
     {
+        if (! CloudPublicPosture::pricingPublic()) {
+            return redirect()->to(CloudUrls::route('hosted'));
+        }
+
         return view('cloud.pricing');
     }
 
@@ -53,9 +57,21 @@ final class CloudExperienceController
         return view('cloud.resources');
     }
 
-    public function demo(): View
+    public function demo(): View|RedirectResponse
     {
+        if (! CloudPublicPosture::signupsOpen()) {
+            return redirect()->to(CloudUrls::route('hosted'));
+        }
+
         return view('cloud.demo');
+    }
+
+    public function hosted(): View
+    {
+        return view('cloud.hosted', [
+            'interestMailto' => CloudPublicPosture::interestMailto(),
+            'interestEmail' => CloudPublicPosture::interestEmail(),
+        ]);
     }
 
     public function login(): View
@@ -81,14 +97,22 @@ final class CloudExperienceController
         $trial = $this->accounts->session();
 
         if (blank($trial['shop_name'] ?? null)) {
-            return redirect()->to(CloudUrls::route('trial.shop'));
+            return redirect()->to(
+                CloudPublicPosture::signupsOpen()
+                    ? CloudUrls::route('trial.shop')
+                    : CloudUrls::route('hosted')
+            );
         }
 
         return redirect()->to(CloudUrls::route('dashboard'));
     }
 
-    public function trialShop(): View
+    public function trialShop(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $trial = $this->accounts->session();
         CloudFunnelAnalytics::track(CloudFunnelAnalytics::TRIAL_STARTED, [
             'has_existing_session' => filled($trial['shop_name'] ?? null),
@@ -102,6 +126,10 @@ final class CloudExperienceController
 
     public function storeTrialShop(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $validated = $request->validate([
             'shop_name' => ['required', 'string', 'max:120'],
         ]);
@@ -124,6 +152,10 @@ final class CloudExperienceController
 
     public function trialWorkspace(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $trial = $this->accounts->session();
         if (blank($trial['shop_name'] ?? null)) {
             return redirect()->to(CloudUrls::route('trial.shop'));
@@ -138,6 +170,10 @@ final class CloudExperienceController
 
     public function storeTrialWorkspace(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $ignoreShopId = Auth::user()?->ownedShop?->id;
 
         $validated = $request->validate([
@@ -163,6 +199,10 @@ final class CloudExperienceController
 
     public function trialAccount(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $trial = $this->accounts->session();
         if (blank($trial['shop_name'] ?? null) || blank($trial['slug'] ?? null)) {
             return redirect()->to(CloudUrls::route('trial.shop'));
@@ -179,6 +219,10 @@ final class CloudExperienceController
 
     public function storeTrialAccount(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $validated = $request->validate([
             'owner_name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -203,6 +247,10 @@ final class CloudExperienceController
 
     public function provisioning(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectWhenSignupsClosed()) {
+            return $redirect;
+        }
+
         $trial = $this->accounts->session();
         if (blank($trial['shop_name'] ?? null) || blank($trial['owner_name'] ?? null)) {
             return redirect()->to(CloudUrls::route('trial.shop'));
@@ -214,6 +262,15 @@ final class CloudExperienceController
             'ownerName' => $trial['owner_name'],
             'step' => 4,
         ]);
+    }
+
+    private function redirectWhenSignupsClosed(): ?RedirectResponse
+    {
+        if (CloudPublicPosture::signupsOpen()) {
+            return null;
+        }
+
+        return redirect()->to(CloudUrls::route('hosted'));
     }
 
     public function welcome(): View|RedirectResponse
