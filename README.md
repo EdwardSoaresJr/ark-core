@@ -1,6 +1,6 @@
 # ARK
 
-**Shop management software for independent repair shops.**
+**Shop management software for independent auto repair shops.**
 
 **Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
 
