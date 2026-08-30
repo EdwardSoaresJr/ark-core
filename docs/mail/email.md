@@ -27,3 +27,14 @@ Never put ARK Mail’s upstream Postmark credentials in self-hosted ARK.
 ## Installation identity
 
 `storage/app/install/installation_uuid` is a durable non-secret UUID. The ARK Mail credential (encrypted in shop settings) authenticates.
+
+## Credential threat boundary
+
+| Compromise | What an attacker gets | What they do not get |
+|---|---|---|
+| **Public ARK database alone** | Encrypted `ark_mail_credential` ciphertext (and other shop rows) | Usable signing secret **if** `APP_KEY` / disk secrets are not also compromised — Laravel `encrypted` cast requires the app key |
+| **Full ARK host** (DB + `APP_KEY` / filesystem / running process) | Ability to sign as that installation until revoked | Upstream Postmark tokens, other tenants, ability to override From/Reply-To/quotas on the control plane |
+
+ARK Mail’s boundary is **service-side policy**, not DRM on the client. A fully compromised authorized install can use its valid credentials until the tenant/installation is suspended or revoked on ark-mail.
+
+Stranger-cert should explicitly check: DB dump without `APP_KEY` is insufficient to mint valid HMAC signatures.
