@@ -16,7 +16,7 @@ You should **not** need to hand-edit a giant `.env` for a typical install.
 - Writable `storage/` and `bootstrap/cache/`
 - Composer dependencies installed (`composer install`)
 
-Redis is recommended for production cache/queues but **not** required for first-run (installer uses file/database drivers until you harden the stack).
+Redis is part of the **canonical** Docker Compose runtime (cache, sessions, Horizon queues, Reverb support). Native LAMP/LEMP installs can start thinner for first-run, then add Redis before enabling realtime telephony and background jobs.
 
 ## Bootstrap vs application configuration
 
@@ -45,15 +45,21 @@ php artisan ark:install-status
 php artisan ark:install-recover --force   # clears interrupted IN_PROGRESS only — never unlocks INSTALLED
 ```
 
-## Docker Compose (stranger path)
+## Docker Compose (recommended)
 
-Smallest self-host stack (MySQL + ARK):
+Canonical self-host stack — same runtime architecture production uses:
+
+| Service | Role |
+| --- | --- |
+| `mysql` | Application database (volume `ark_mysql`) |
+| `redis` | Cache, sessions, Horizon queues (volume `ark_redis`) |
+| `app` | Production Dockerfile: nginx, PHP-FPM, **Horizon**, **Reverb**, **scheduler** (volume `ark_storage`) |
 
 ```bash
 docker compose up -d --build
 ```
 
-Then open **http://localhost:8088** — you should land on `/setup`.
+Then open **http://localhost:8088/setup**.
 
 Wizard database fields on the Compose network:
 
@@ -65,6 +71,12 @@ Wizard database fields on the Compose network:
 | User | `ark` |
 | Password | `ark` |
 
-This is **not** the production Coolify image. It is the open-source first-run path: bring the stack up, finish installation in the browser, recreate containers, and keep working.
+Compose defaults include `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `SESSION_DRIVER=redis`, and `BROADCAST_CONNECTION=reverb`, with Reverb listening inside the app container (same supervisord model as Coolify). Local Reverb app id/key/secret are development defaults in `docker-compose.yml` — replace them for any internet-facing shop.
+
+Recreate the app container after install; MySQL, Redis, and `ark_storage` keep shop state.
+
+## Advanced installation
+
+Native PHP / Apache / Nginx (LAMP or LEMP), manual queue workers, and the reduced `docker/selfhost/Dockerfile` Apache image are documented for operators who know why they want them. They are **not** the default path. Prefer Compose unless you are intentionally running a custom stack.
 
 See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).

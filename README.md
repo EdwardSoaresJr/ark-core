@@ -63,23 +63,25 @@ ARK can be run with Docker Compose or directly on a compatible PHP environment.
 * Composer when running directly on the host
 * Node.js and npm for Vite assets
 * MySQL 8 for the application database
-* Redis is optional for initial setup but recommended for a full production deployment
+* Redis — required for the canonical runtime (cache, sessions, queues, Horizon)
 
 Automated tests use an isolated SQLite database at `database/testing.sqlite` through PHPUnit. Tests do not use your application MySQL database.
 
 ## Quick start with Docker Compose
 
-For most new installations, Docker Compose is the simplest way to get ARK running locally.
+**Recommended.** Compose boots the same runtime architecture ARK runs in production:
+
+MySQL · Redis · app (nginx, PHP-FPM, Horizon, Reverb, scheduler) · persistent storage
 
 ```bash
+git clone https://github.com/EdwardSoaresJr/ark.git
+cd ark
 docker compose up -d --build
 ```
 
 Then open:
 
-**http://localhost:8088**
-
-ARK will guide you through the installation process at **`/setup`**.
+**http://localhost:8088/setup**
 
 When using the included Compose environment, the default database connection values are:
 
@@ -89,7 +91,7 @@ When using the included Compose environment, the default database connection val
 * Username: `ark`
 * Password: `ark`
 
-See `docs/installation/README.md` for additional installation information.
+See `docs/installation/README.md` for what the stack includes and for advanced (non-Docker) installation.
 
 ## Quick start with local PHP
 

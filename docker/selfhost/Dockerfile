@@ -1,6 +1,9 @@
 FROM php:8.4-apache-bookworm
 
-# Stranger / self-host runtime — not the production Coolify image.
+# Advanced / minimal Apache image — NOT the default Compose path.
+# Default `docker compose up` builds the root Dockerfile (nginx, php-fpm,
+# Horizon, Reverb, scheduler) so self-host matches production runtime semantics.
+# Use this file only when you intentionally want a reduced stack.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git unzip libzip-dev libicu-dev \
     && docker-php-ext-install pdo_mysql zip bcmath intl pcntl \

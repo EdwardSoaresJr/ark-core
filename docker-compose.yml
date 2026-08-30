@@ -1,11 +1,20 @@
-# Stranger / self-host stack — MySQL + ARK web (artisan serve).
-# Not the production Coolify image.
+# Canonical self-host stack — same runtime architecture LugsNPlugs production uses.
 #
 #   docker compose up -d --build
-#   open http://localhost:8088  → /setup
+#   open http://localhost:8088 → /setup
+#
+# Services:
+#   mysql     — application database (durable volume)
+#   redis     — cache, sessions, queues (Horizon)
+#   app       — production ARK image: nginx, php-fpm, Horizon, Reverb, scheduler
+#
+# Persistent shop state lives in volumes (not in the image):
+#   ark_mysql, ark_redis, ark_storage
 #
 # Wizard database fields (Compose network):
 #   host: mysql   port: 3306   database: ark   user: ark   password: ark
+#
+# Local Reverb credentials below are for self-host only — not production secrets.
 
 services:
   mysql:
@@ -16,7 +25,7 @@ services:
       MYSQL_PASSWORD: ark
       MYSQL_ROOT_PASSWORD: arkroot
     ports:
-      # Host-side E2E / local tools only — app container uses mysql:3306
+      # Host-side tools only — app uses mysql:3306 on the Compose network
       - "3307:3306"
     volumes:
       - ark_mysql:/var/lib/mysql
@@ -27,10 +36,22 @@ services:
       retries: 30
       start_period: 15s
 
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - ark_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   app:
     build:
       context: .
-      dockerfile: docker/selfhost/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-compose}
     ports:
       # Prefer 8088: host 8080 is commonly taken by other local tools.
       - "8088:80"
@@ -40,23 +61,47 @@ services:
       APP_DEBUG: "false"
       APP_URL: http://localhost:8088
       SHOP_BASE_URL: http://localhost:8088
+
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: "3306"
       DB_DATABASE: ark
       DB_USERNAME: ark
       DB_PASSWORD: ark
-      SESSION_DRIVER: file
-      CACHE_STORE: file
-      QUEUE_CONNECTION: sync
+
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+      # Same semantics as LugsNPlugs production
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      BROADCAST_CONNECTION: reverb
+
+      # Reverb — process listens on 9090 inside the app container (supervisord).
+      # Browsers reach it via nginx on :80 (Compose publishes 8088).
+      REVERB_APP_ID: ark-local
+      REVERB_APP_KEY: arklocalreverbkey20c
+      REVERB_APP_SECRET: arklocalreverbsecret20charsx
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: "9090"
+      REVERB_BROADCAST_HOST: 127.0.0.1
+      REVERB_BROADCAST_PORT: "9090"
+      REVERB_SCHEME: http
+      REVERB_PORT: "8088"
+
       LOG_CHANNEL: stderr
     volumes:
-      # Persist install lock, APP_KEY file, sessions, logs across recreate
+      # Install lock, APP_KEY file, media, sessions/cache files if any, logs
       - ark_storage:/app/storage
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   ark_mysql:
+  ark_redis:
   ark_storage:
