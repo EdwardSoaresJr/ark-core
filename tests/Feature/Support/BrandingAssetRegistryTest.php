@@ -29,12 +29,23 @@ test('branding registry resolves canonical ARK-SMS asset urls', function () {
 
 test('guest and operations layouts reference branding authority', function () {
     $guestHtml = view('layouts.guest', ['slot' => ''])->render();
-    $operationsHtml = Blade::render('<x-operations.app>test</x-operations.app>');
 
     expect($guestHtml)
-        ->toContain(Branding::loginImage())
+        ->toContain(Branding::sidebarIcon())
+        ->toContain('>ARK</span>')
+        ->toContain(Branding::tabTitle())
         ->toContain(Branding::favicon('ico'))
-        ->and($operationsHtml)
+        ->not->toContain(Branding::loginImage())
+        ->not->toContain('ARK-SMS');
+
+    // Operations shell needs Vite build assets; skip when the manifest is absent locally.
+    if (! file_exists(public_path('build/manifest.json'))) {
+        return;
+    }
+
+    $operationsHtml = Blade::render('<x-operations.app>test</x-operations.app>');
+
+    expect($operationsHtml)
         ->toContain(Branding::sidebarLogo())
         ->toContain('ops-rail-brand-logo')
         ->not->toContain('ops-rail-version">v2</span>')

@@ -215,6 +215,11 @@ final class CompleteInstallationAction
         $user->is_active = true;
         $user->is_master_admin = true;
         $user->password_set_at = now();
+        // Trusted first-run bootstrap: mail is optional during setup, so this
+        // administrator must not be blocked by MustVerifyEmail after install.
+        if ($user->email_verified_at === null) {
+            $user->email_verified_at = now();
+        }
         if (! $user->exists) {
             $user->password = Hash::make($admin['password']);
         }
