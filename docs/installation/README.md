@@ -45,6 +45,22 @@ php artisan ark:install-status
 php artisan ark:install-recover --force   # clears interrupted IN_PROGRESS only — never unlocks INSTALLED
 ```
 
+## Vultr (cloud VPS) beginner guide
+
+Step-by-step for a small Vultr Ubuntu server, Docker, HTTPS (Caddy), and `/setup`:
+
+→ **[vultr.md](./vultr.md)**
+
+Uses a **2 GB (~$10/mo)** plan until the **1 GB (~$5)** tier is stranger-certified. We will not advertise $5 until that pass exists.
+
+## Vultr (cloud VPS) beginner guide
+
+Step-by-step for a small Vultr Ubuntu server with Docker and HTTPS:
+
+→ **[vultr.md](./vultr.md)**
+
+Uses a **2 GB (~$10/mo)** plan until the **1 GB (~$5)** tier is stranger-certified. We will not advertise $5 until that pass exists.
+
 ## Docker Compose (recommended)
 
 Canonical self-host stack — same runtime architecture production uses:

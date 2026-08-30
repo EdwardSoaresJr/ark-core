@@ -91,6 +91,12 @@ When using the included Compose environment, the default database connection val
 * Username: `ark`
 * Password: `ark`
 
+**Cloud VPS (Vultr):** step-by-step guide with HTTPS — [`docs/installation/vultr.md`](docs/installation/vultr.md).  
+Starter size is **~2 GB RAM (~$10/mo)** until a **$5 / 1 GB** plan is stranger-certified.
+
+**Cloud VPS (Vultr):** [`docs/installation/vultr.md`](docs/installation/vultr.md) — Ubuntu, Docker, HTTPS (Caddy), `/setup`.  
+Starter size: **~2 GB RAM (~$10/mo)** until a **$5 / 1 GB** plan is stranger-certified.
+
 See `docs/installation/README.md` for what the stack includes and for advanced (non-Docker) installation.
 
 ## Quick start with local PHP
