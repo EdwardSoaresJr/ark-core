@@ -10,7 +10,8 @@ for dir in \
     /app/storage/framework/cache/data \
     /app/storage/framework/sessions \
     /app/storage/framework/views \
-    /app/storage/logs
+    /app/storage/logs \
+    /app/storage/app/install
 do
     mkdir -p "$dir"
 done
@@ -19,6 +20,11 @@ chown -R www-data:www-data /app/storage/app /app/storage/framework /app/storage/
 find /app/storage/app /app/storage/framework -type d -exec chmod 2775 {} +
 find /app/storage/app /app/storage/framework -type f -exec chmod 664 {} + 2>/dev/null || true
 chmod 2775 /app/storage/logs
+
+# APP_KEY must exist in the process environment before supervisord starts php-fpm,
+# Horizon, Reverb, and the scheduler. Persists on ark_storage across recreate.
+# shellcheck source=/dev/null
+. /app/infra/coolify/bootstrap-app-key.sh
 
 # OIDC signing keys: CLI creates as root; php-fpm runs as www-data.
 if [ -d /app/storage/app/private/oidc/keys ]; then

@@ -30,7 +30,7 @@ Redis is part of the **canonical** Docker Compose runtime (cache, sessions, Hori
 
 **Writable:** ARK can update `.env` during setup.
 
-**Immutable (Docker/K8s/platform):** inject `APP_KEY` and `DB_*` via the host. The wizard validates and continues without fighting the platform.
+**Immutable (Docker/K8s/platform):** Compose/Coolify inject `DB_*` (and usually `APP_URL`). Canonical Docker **bootstraps `APP_KEY`** onto durable install storage when the host does not inject one. The wizard validates and continues without fighting the platform.
 
 ## After install
 

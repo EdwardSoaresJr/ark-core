@@ -164,6 +164,10 @@ First build can take several minutes. Coffee is allowed.
 
 No manual MySQL install. No Composer. No Laravel `.env` homework for a normal shop.
 
+**Public ports:** only **80** and **443** (Caddy). MySQL, Redis, and the app container stay on the private Compose network — they are not published on the VPS.
+
+**APP_KEY:** generated automatically on first boot and stored on the durable `ark_storage` volume. You do **not** run `php artisan key:generate`.
+
 ---
 
 ## 8. Check it
@@ -253,6 +257,7 @@ Move to the **HTTPS + domain** path before entering real customers.
 | Build killed / “no space” / random failures | Confirm 2 GB RAM + 2 GB swap; `df -h`; prune old images `docker system prune -af` only if you know you can rebuild |
 | HTTPS fails | DNS A record must point at this server; ports 80/443 open; wait for propagation |
 | `/setup` loops or 500 | `docker compose ... logs -f app` |
+| `/setup` returns 503 about APP_KEY | Rebuild/recreate after pulling a release that bootstraps APP_KEY in the Coolify entrypoint; do not hand-edit keys on a beginner install |
 | Site up but popups/queues feel dead | Confirm `app` container is the production image (Horizon + Reverb in `ps aux` inside the container) |
 
 More installer notes: [README.md](./README.md) · [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)

@@ -3,6 +3,7 @@
 use App\Ark\Install\EnsureFirstRunApplicationKey;
 use App\Ark\Install\InstallationState;
 use App\Ark\Install\InstallerEnvironmentWriter;
+use App\Ark\Install\InstallStorage;
 use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
@@ -50,7 +51,7 @@ function arkClearRuntimeAppKey(): void
 
 it('bootstraps a stable APP_KEY so /setup is reachable with an empty key', function () {
     [$path, $original] = arkSwapEnvForKeyTest("APP_NAME=ARK\nAPP_KEY=\nCUSTOM_KEEP=yes\n");
-    $keyFile = \App\Ark\Install\InstallStorage::path('app_key');
+    $keyFile = InstallStorage::path('app_key');
     @unlink($keyFile);
 
     try {
@@ -68,7 +69,6 @@ it('bootstraps a stable APP_KEY so /setup is reachable with an empty key', funct
         expect($env)->toContain('CUSTOM_KEEP=yes');
         expect($env)->toMatch('/^APP_KEY=.+$/m');
 
-        // Simulate a fresh request with empty in-memory key — must reload the same persisted value.
         arkClearRuntimeAppKey();
         $this->get(route('install.welcome'))->assertOk();
         expect((string) config('app.key'))->toBe($key);
@@ -118,11 +118,12 @@ it('does not regenerate APP_KEY when the application is already installed', func
 it('fails closed when APP_KEY is missing and the environment is immutable', function () {
     $path = base_path('.env');
     $original = is_file($path) ? File::get($path) : null;
-    // Make .env unwritable to force immutable mode without mocking a final class.
     if (! is_file($path)) {
         File::put($path, "APP_KEY=\n");
     }
     $chmodOk = @chmod($path, 0444);
+    $keyFile = InstallStorage::path('app_key');
+    @unlink($keyFile);
 
     try {
         arkClearRuntimeAppKey();
@@ -134,13 +135,14 @@ it('fails closed when APP_KEY is missing and the environment is immutable', func
     } finally {
         @chmod($path, 0600);
         arkRestoreEnvForKeyTest($path, $original);
+        @unlink($keyFile);
     }
 });
 
 it('reuses a Docker-style install app_key file without rotating', function () {
     $existing = 'base64:'.base64_encode(random_bytes(32));
     [$path, $original] = arkSwapEnvForKeyTest("APP_NAME=ARK\nAPP_KEY=\n");
-    $keyFile = \App\Ark\Install\InstallStorage::path('app_key');
+    $keyFile = InstallStorage::path('app_key');
     File::ensureDirectoryExists(dirname($keyFile));
     File::put($keyFile, $existing);
 
@@ -154,6 +156,36 @@ it('reuses a Docker-style install app_key file without rotating', function () {
         $env = File::get($path);
         expect($env)->toContain($existing);
     } finally {
+        arkRestoreEnvForKeyTest($path, $original);
+        @unlink($keyFile);
+    }
+});
+
+it('applies a durable Docker app_key on an immutable host without writing .env', function () {
+    $existing = 'base64:'.base64_encode(random_bytes(32));
+    $path = base_path('.env');
+    $original = is_file($path) ? File::get($path) : null;
+    if (! is_file($path)) {
+        File::put($path, "APP_NAME=ARK\nAPP_KEY=\n");
+    }
+    $chmodOk = @chmod($path, 0444);
+    $keyFile = InstallStorage::path('app_key');
+    File::ensureDirectoryExists(dirname($keyFile));
+    File::put($keyFile, $existing);
+
+    try {
+        arkClearRuntimeAppKey();
+        expect($chmodOk)->toBeTrue();
+        expect(app(InstallerEnvironmentWriter::class)->mode())->toBe('immutable');
+
+        app(EnsureFirstRunApplicationKey::class)->ensure();
+
+        expect((string) config('app.key'))->toBe($existing)
+            ->and(trim(File::get($keyFile)))->toBe($existing);
+
+        expect(File::get($path))->not->toContain($existing);
+    } finally {
+        @chmod($path, 0600);
         arkRestoreEnvForKeyTest($path, $original);
         @unlink($keyFile);
     }

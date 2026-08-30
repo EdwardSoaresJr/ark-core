@@ -36,6 +36,20 @@ final class EnsureFirstRunApplicationKey
             );
         }
 
+        // Canonical Docker persists APP_KEY to install storage in entrypoint.sh.
+        // Immutable hosts (no writable /.env) apply that durable key at runtime only.
+        // Writable hosts also sync it into .env so Herd/local stays coherent.
+        $fromKeyFile = $this->readKeyFile();
+        if ($fromKeyFile !== '') {
+            if ($this->envWriter->mode() === 'writable') {
+                $this->persistAndApply($fromKeyFile);
+            } else {
+                $this->applyRuntimeKey($fromKeyFile);
+            }
+
+            return;
+        }
+
         if ($this->envWriter->mode() !== 'writable') {
             throw new RuntimeException(
                 'APP_KEY is missing and the environment is not writable. Supply APP_KEY via the hosting platform environment, then reload.'

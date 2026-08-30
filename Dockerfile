@@ -100,7 +100,10 @@ RUN chmod +x /usr/local/bin/ark-entrypoint.sh \
         /usr/local/etc/php-fpm.d/www.conf \
     && grep -q '^pm.max_requests' /usr/local/etc/php-fpm.d/www.conf \
         && sed -i 's/^pm.max_requests = .*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf \
-        || echo 'pm.max_requests = 500' >> /usr/local/etc/php-fpm.d/www.conf
+        || echo 'pm.max_requests = 500' >> /usr/local/etc/php-fpm.d/www.conf \
+    && (grep -q '^clear_env' /usr/local/etc/php-fpm.d/www.conf \
+        && sed -i 's/^;*clear_env.*/clear_env = no/' /usr/local/etc/php-fpm.d/www.conf \
+        || echo 'clear_env = no' >> /usr/local/etc/php-fpm.d/www.conf)
 
 EXPOSE 80
 CMD ["/usr/local/bin/ark-entrypoint.sh"]

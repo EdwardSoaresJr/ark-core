@@ -9,6 +9,8 @@
 
 services:
   mysql:
+    # Public VPS: MySQL stays on the Compose network only (no host :3307).
+    ports: !override []
     volumes:
       - ./docker/mysql/small-vps.cnf:/etc/mysql/conf.d/small-vps.cnf:ro
     command:

@@ -8,7 +8,7 @@
 
 ## Cannot write environment
 
-Immutable hosts must provide `APP_KEY`, `APP_URL`, and `DB_*` via the platform. The wizard will not chmod the filesystem.
+Immutable hosts must provide `APP_URL` and `DB_*` via the platform (Compose already does for self-host). Canonical Docker generates and persists `APP_KEY` on first boot when unset. The wizard will not chmod the filesystem.
 
 ## Database connection failed
 
