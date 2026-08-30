@@ -137,16 +137,43 @@ public function updateEmail(Request $request): RedirectResponse
                     'ark_mail_service_url' => rtrim((string) $data['ark_mail_service_url'], '/'),
                 ]);
             }
-            $activation->activate();
+            $started = $activation->activate();
         } catch (\Throwable $e) {
             ShopSettings::current()->persistTrusted([
                 'ark_mail_status' => 'error',
             ]);
 
-            return $redirect->with('status', 'ARK Mail could not be enabled: '.$e->getMessage());
+            return $redirect->with('status', 'Could not start ARK Cloud pairing: '.$e->getMessage());
         }
 
-        return $redirect->with('status', 'ARK Mail connected. Replies go to your shop email.');
+        $code = $started['pairing_code'] ?? '';
+
+        return $redirect
+            ->with('status', $code !== ''
+                ? "Pairing code {$code}. Approve it in ARK Cloud, then finish connecting here."
+                : ($started['message'] ?? 'Approve the pairing code in ARK Cloud, then finish connecting here.'))
+            ->with('ark_mail_pairing_public_id', $started['pairing_public_id'] ?? null)
+            ->with('ark_mail_pairing_code', $code !== '' ? $code : null);
+    }
+
+    public function claimArkMail(Request $request, ArkMailActivationClient $activation): RedirectResponse
+    {
+        $data = $request->validate([
+            'pairing_public_id' => ['required', 'uuid'],
+        ]);
+
+        $redirect = redirect()->route('operations.settings.shop.edit', [
+            'section' => 'communications',
+            'communications-tab' => 'email',
+        ]);
+
+        try {
+            $activation->claimPairing($data['pairing_public_id']);
+        } catch (\Throwable $e) {
+            return $redirect->with('status', 'Could not finish pairing: '.$e->getMessage());
+        }
+
+        return $redirect->with('status', 'ARK Box connected. Replies go to your shop email.');
     }
 
     public function disconnectArkMail(ArkMailActivationClient $activation): RedirectResponse

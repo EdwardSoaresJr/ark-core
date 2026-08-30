@@ -1,24 +1,39 @@
-# Customer email (ARK Mail)
+# Customer email (ARK Cloud → ARK Mail)
 
-ARK sends transactional customer email through **ARK Mail**.
+Official ARK sends production transactional email through **ARK Cloud**, which entitles the Box to the **ARK Mail** service.
 
-## Operator setup
+```
+OutboundTransactionalMail
+        ↓
+ArkMailClient
+        ↓
+ARK Cloud (identity + entitlement)
+        ↓
+Mail service policy / fake|Postmark transport
+```
 
-1. Open **Settings → Email**
-2. Choose **Connect**
-3. Set the shop reply-to address (defaults to Shop Profile email)
+## Production behavior
 
 | State | Result |
 |---|---|
-| Connected | Transactional mail works |
-| Not connected | *Email isn’t configured yet.* — nothing pretends to have sent |
-| Suspended | ARK Mail is suspended — reconnect or contact support |
+| Box paired + mail entitled | Transactional mail works |
+| Not paired / not entitled | *Email isn’t configured yet.* — no false “sent” |
 
-Marketing and broadcast email are not supported.
+No official BYO Postmark / SMTP Settings path.
+
+## Pairing
+
+1. Box starts pairing (`POST /api/v1/pairing/start`) and shows a short code.
+2. Operator approves the code in the ARK Cloud portal for a shop (**no credential in the browser**).
+3. Box claims once (`POST /api/v1/pairing/claim`) and stores the Cloud-issued credential.
+
+Cloud owns installation identity and entitlements. Mail owns mail-specific policy.
 
 ## Development / CI
 
-Local and test environments may use Laravel `log` or `array` mailers so work does not require the hosted service.
+Non-production may use Laravel `log` or `array` mailers.
+
+## Configuration
 
 ```env
 ARK_MAIL_SERVICE_URL=
@@ -26,17 +41,4 @@ ARK_MAIL_ALLOW_ACTIVATION=false
 MAIL_MAILER=log
 ```
 
-## Engineering notes
-
-`ArkMailClient` posts to the hosted ARK Mail API using the installation UUID and the encrypted shop credential stored after Connect.
-
-Do not put the mail service’s upstream provider tokens in self-hosted ARK. From address, reply-to, and quotas are enforced by the mail service.
-
-### Credential compromise
-
-| Compromise | Attacker can | Attacker cannot |
-|---|---|---|
-| Database only (no `APP_KEY`) | See encrypted credential ciphertext | Mint valid signed requests |
-| Full host (DB + `APP_KEY` / running process) | Send as that installation until revoked | Access other shops’ mail, or the mail service’s upstream provider credentials |
-
-Revoke or suspend the installation on the mail service if a shop host is compromised.
+`ARK_MAIL_SERVICE_URL` points at ARK Cloud (Mail is served under Cloud). Never put upstream Postmark credentials in self-hosted ARK.

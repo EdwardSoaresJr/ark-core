@@ -2,13 +2,16 @@
     $outbound = app(\App\Ark\Mail\OutboundTransactionalMail::class);
     $arkStatus = $outbound->statusLabel();
     $arkConnected = $settings->ark_mail_status === 'connected' && filled($settings->ark_mail_credential);
+    $arkPairing = $settings->ark_mail_status === 'pairing';
+    $pairingCode = session('ark_mail_pairing_code');
+    $pairingPublicId = session('ark_mail_pairing_public_id');
 @endphp
 
 <div class="space-y-4">
     <div>
         <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Customer Email</p>
         <p class="mt-1 text-xs leading-5 text-slate-500">
-            Official ARK sends transactional customer email through ARK Mail.
+            Official ARK sends transactional customer email through ARK Cloud Mail.
             Marketing and broadcast are not supported.
         </p>
     </div>
@@ -18,12 +21,12 @@
             <div>
                 <p class="text-sm font-semibold text-slate-900">ARK Mail</p>
                 <p class="mt-0.5 text-xs leading-5 text-slate-500">
-                    Managed transactional email. No SMTP server required. Replies go to your shop reply-to address.
+                    Managed transactional email via ARK Cloud. Replies go to your shop reply-to address.
                 </p>
             </div>
             <span class="shrink-0 rounded-sm border px-2 py-1 text-[10px] font-bold uppercase tracking-wide
-                {{ $arkConnected ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : ($settings->ark_mail_status === 'suspended' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-slate-200 bg-slate-50 text-slate-600') }}">
-                {{ $arkStatus }}
+                {{ $arkConnected ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : ($settings->ark_mail_status === 'suspended' ? 'border-rose-200 bg-rose-50 text-rose-900' : ($arkPairing ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-slate-200 bg-slate-50 text-slate-600')) }}">
+                {{ $arkPairing ? 'Pairing' : $arkStatus }}
             </span>
         </div>
 
@@ -38,6 +41,20 @@
                     Disconnect
                 </button>
             </form>
+        @elseif ($arkPairing && $pairingPublicId)
+            <div class="rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                @if ($pairingCode)
+                    <p class="font-semibold text-slate-900">Pairing code: <span class="font-mono tracking-widest">{{ $pairingCode }}</span></p>
+                @endif
+                <p class="mt-1 text-slate-500">Approve this code in ARK Cloud for the correct shop, then finish connecting.</p>
+            </div>
+            <form method="POST" action="{{ route('operations.settings.shop.email.ark-mail.claim') }}">
+                @csrf
+                <input type="hidden" name="pairing_public_id" value="{{ $pairingPublicId }}">
+                <button type="submit" class="inline-flex min-h-9 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
+                    Finish connecting
+                </button>
+            </form>
         @else
             <div class="rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
                 Email isn’t configured yet. Connect ARK Mail to send estimates, invoices, and other customer email.
@@ -46,18 +63,18 @@
                 @csrf
                 @if (! config('services.ark_mail.base_url'))
                     <label class="block">
-                        <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Service URL (dev)</span>
+                        <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Cloud URL (dev)</span>
                         <input
                             type="url"
                             name="ark_mail_service_url"
                             value="{{ old('ark_mail_service_url', $settings->ark_mail_service_url) }}"
                             class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                            placeholder="http://ark-mail.test"
+                            placeholder="http://ark-cloud.test"
                         >
                     </label>
                 @endif
                 <p class="text-[11px] leading-4 text-slate-500">
-                    Connect ARK Mail to send customer email.
+                    Starts pairing. You’ll approve the code in ARK Cloud, then finish here.
                 </p>
                 <button type="submit" class="inline-flex min-h-9 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
                     Connect

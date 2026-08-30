@@ -83,6 +83,9 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::post('/app/settings/shop/email/ark-mail/enable', [ShopIntegrationSettingsController::class, 'enableArkMail'])
         ->name('operations.settings.shop.email.ark-mail.enable');
 
+    Route::post('/app/settings/shop/email/ark-mail/claim', [ShopIntegrationSettingsController::class, 'claimArkMail'])
+        ->name('operations.settings.shop.email.ark-mail.claim');
+
     Route::post('/app/settings/shop/email/ark-mail/disconnect', [ShopIntegrationSettingsController::class, 'disconnectArkMail'])
         ->name('operations.settings.shop.email.ark-mail.disconnect');
 

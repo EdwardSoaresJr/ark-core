@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * Untrusted Box client for ARK Cloud Mail (first Cloud service).
+ * Speaks ARK Cloud installation auth — not a generic mail-provider adapter.
+ */
 final class ArkMailClient
 {
     public function isConfigured(): bool
@@ -24,7 +28,7 @@ final class ArkMailClient
     {
         $settings = ShopSettings::current();
         $base = rtrim($this->serviceUrl($settings), '/');
-        $path = '/api/v1/messages/transactional';
+        $path = '/api/v1/services/mail/messages/transactional';
         $credential = (string) $settings->ark_mail_credential;
         $installationUuid = InstallationIdentity::uuid();
 
@@ -74,10 +78,10 @@ final class ArkMailClient
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'X-Ark-Mail-Installation-Id' => $installationUuid,
-                'X-Ark-Mail-Timestamp' => $timestamp,
-                'X-Ark-Mail-Nonce' => $nonce,
-                'X-Ark-Mail-Signature' => $signature,
+                'X-Ark-Installation-Id' => $installationUuid,
+                'X-Ark-Timestamp' => $timestamp,
+                'X-Ark-Nonce' => $nonce,
+                'X-Ark-Signature' => $signature,
             ])->withBody($raw, 'application/json')
                 ->timeout(20)
                 ->post($base.$path);
@@ -103,7 +107,7 @@ final class ArkMailClient
         $reason = is_string($json['reason_code'] ?? null) ? $json['reason_code'] : 'rejected';
         $message = is_string($json['message'] ?? null) ? $json['message'] : 'ARK Mail rejected the message.';
 
-        if ($reason === 'tenant_suspended') {
+        if (in_array($reason, ['tenant_suspended', 'installation_suspended', 'installation_revoked'], true)) {
             $settings->persistTrusted([
                 'ark_mail_status' => 'suspended',
             ]);
