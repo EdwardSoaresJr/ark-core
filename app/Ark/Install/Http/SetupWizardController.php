@@ -8,6 +8,7 @@ use App\Ark\Install\DatabaseSafetyInspector;
 use App\Ark\Install\InstallDraft;
 use App\Ark\Install\InstallationState;
 use App\Ark\Install\InstallerEnvironmentWriter;
+use App\Ark\Install\RuntimeDatabaseConfig;
 use App\Ark\Install\SystemRequirementsChecker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,12 +45,14 @@ final class SetupWizardController
     public function database(InstallerEnvironmentWriter $envWriter): View
     {
         $draft = InstallDraft::all();
+        $defaults = RuntimeDatabaseConfig::formDefaults($draft);
 
         return view('install.database', [
             'step' => 3,
             'steps' => $this->steps(),
             'envMode' => $envWriter->mode(),
             'draft' => $draft,
+            'defaults' => $defaults,
             'suggestedUrl' => $draft['app_url'] ?? $this->suggestedAppUrl(),
         ]);
     }
@@ -74,12 +77,19 @@ final class SetupWizardController
             session()->flash('install_http_warning', true);
         }
 
-        $db = [
+        $identity = [
             'host' => $data['db_host'],
             'port' => $data['db_port'],
             'database' => $data['db_database'],
             'username' => $data['db_username'],
-            'password' => $data['db_password'] ?? '',
+        ];
+
+        $db = [
+            ...$identity,
+            'password' => RuntimeDatabaseConfig::resolvePassword(
+                (string) ($data['db_password'] ?? ''),
+                $identity,
+            ),
         ];
 
         $test = $tester->test($db);

@@ -77,15 +77,7 @@ docker compose up -d --build
 
 Then open **http://localhost:8088/setup**.
 
-Wizard database fields on the Compose network:
-
-| Field | Value |
-| --- | --- |
-| Host | `mysql` |
-| Port | `3306` |
-| Database | `ark` |
-| User | `ark` |
-| Password | `ark` |
+The Database step is pre-filled from Compose runtime settings. Leave the password blank and click **Test Connection** — you should not need to type Docker service names or credentials by hand.
 
 Compose defaults include `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `SESSION_DRIVER=redis`, and `BROADCAST_CONNECTION=reverb`, with Reverb listening inside the app container (same supervisord model as Coolify). Local Reverb app id/key/secret are development defaults in `docker-compose.yml` — replace them for any internet-facing shop.
 

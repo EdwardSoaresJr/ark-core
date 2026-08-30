@@ -200,17 +200,7 @@ Complete:
 
 Welcome → System → Database → Shop → Admin → Optional integrations → Install
 
-**Database fields on this Compose network:**
-
-| Field | Value |
-| --- | --- |
-| Host | `mysql` |
-| Port | `3306` |
-| Database | `ark` |
-| Username | `ark` |
-| Password | `ark` |
-
-That password is only between containers on your server. Still change defaults before exposing anything exotic; for a normal single-shop VPS behind HTTPS it is the intended Compose wiring.
+**Database step:** the wizard is pre-filled from the Compose runtime (`mysql` / `ark`). Leave the password blank — ARK uses the runtime password. Click **Test Connection**; you should not need to re-type Docker networking details.
 
 ---
 
