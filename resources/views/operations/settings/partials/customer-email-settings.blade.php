@@ -35,7 +35,7 @@
             <form method="POST" action="{{ route('operations.settings.shop.email.ark-mail.disconnect') }}">
                 @csrf
                 <button type="submit" class="inline-flex min-h-9 items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                    Disable / disconnect
+                    Disconnect
                 </button>
             </form>
         @else
@@ -57,11 +57,10 @@
                     </label>
                 @endif
                 <p class="text-[11px] leading-4 text-slate-500">
-                    Activation provisions a per-installation credential with the hosted ARK Mail service.
-                    Upstream mail-infrastructure credentials are never shown here.
+                    Connect ARK Mail to send customer email.
                 </p>
                 <button type="submit" class="inline-flex min-h-9 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-                    Enable ARK Mail
+                    Connect
                 </button>
             </form>
         @endif

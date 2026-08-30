@@ -16,7 +16,7 @@ You should **not** need to hand-edit a giant `.env` for a typical install.
 - Writable `storage/` and `bootstrap/cache/`
 - Composer dependencies installed (`composer install`)
 
-Redis is part of the **canonical** Docker Compose runtime (cache, sessions, Horizon queues, Reverb support). Native LAMP/LEMP installs can start thinner for first-run, then add Redis before enabling realtime telephony and background jobs.
+Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Reverb support). Native LAMP/LEMP installs can start thinner for first-run, then add Redis before enabling realtime telephony and background jobs.
 
 ## Bootstrap vs application configuration
 
@@ -30,7 +30,7 @@ Redis is part of the **canonical** Docker Compose runtime (cache, sessions, Hori
 
 **Writable:** ARK can update `.env` during setup.
 
-**Immutable (Docker/K8s/platform):** Compose/Coolify inject `DB_*` (and usually `APP_URL`). Canonical Docker **bootstraps `APP_KEY`** onto durable install storage when the host does not inject one. The wizard validates and continues without fighting the platform.
+**Immutable (Docker/K8s/platform):** Compose/Coolify inject `DB_*` (and usually `APP_URL`). Docker Compose **bootstraps `APP_KEY`** onto durable install storage when the host does not inject one. The wizard validates and continues without fighting the platform.
 
 ## After install
 
@@ -45,25 +45,17 @@ php artisan ark:install-status
 php artisan ark:install-recover --force   # clears interrupted IN_PROGRESS only — never unlocks INSTALLED
 ```
 
-## Vultr (cloud VPS) beginner guide
+## Cloud VPS beginner guide
 
-Step-by-step for a small Vultr Ubuntu server, Docker, HTTPS (Caddy), and `/setup`:
-
-→ **[vultr.md](./vultr.md)**
-
-Uses a **2 GB (~$10/mo)** plan until the **1 GB (~$5)** tier is stranger-certified. We will not advertise $5 until that pass exists.
-
-## Vultr (cloud VPS) beginner guide
-
-Step-by-step for a small Vultr Ubuntu server with Docker and HTTPS:
+Step-by-step for a small Ubuntu cloud server, Docker, HTTPS (Caddy), and `/setup`:
 
 → **[vultr.md](./vultr.md)**
 
-Uses a **2 GB (~$10/mo)** plan until the **1 GB (~$5)** tier is stranger-certified. We will not advertise $5 until that pass exists.
+Use a **2 GB (~$10/mo)** plan for your first live shop. Smaller 1 GB plans are not recommended yet.
 
 ## Docker Compose (recommended)
 
-Canonical self-host stack — same runtime architecture production uses:
+Self-host stack — same runtime shape production uses:
 
 | Service | Role |
 | --- | --- |

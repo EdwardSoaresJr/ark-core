@@ -8,10 +8,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-/**
- * Untrusted public client for the private ARK Mail control plane.
- * Official production path only — not a generic mail-provider adapter.
- */
 final class ArkMailClient
 {
     public function isConfigured(): bool

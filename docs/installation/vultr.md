@@ -31,13 +31,13 @@ ARK’s full stack is heavier than a brochure website. It runs MySQL, Redis, PHP
 
 | Vultr plan (typical) | RAM | ARK status |
 | --- | --- | --- |
-| **~$5 / mo** Cloud Compute | **1 GB** | **Not certified yet.** May OOM under full stack. Do not rely on this until ARK publishes a pass. |
-| **~$10 / mo** Cloud Compute | **2 GB** | **Recommended starter** until the $5 tier is stranger-certified. |
+| **~$5 / mo** Cloud Compute | **1 GB** | **Not recommended yet.** May run out of memory under the full stack. |
+| **~$10 / mo** Cloud Compute | **2 GB** | **Recommended starter** for a first live shop. |
 | $12+ / more RAM | 2 GB+ | Comfortable for a small shop. |
 
-We will not advertise “$5/month” in the README until someone follows **only** this guide on a fresh $5 Vultr box and ARK survives install, photos, restart, and reboot.
+We will not advertise “$5/month” in the README until a fresh 1 GB box has completed install, photos, restart, and reboot successfully.
 
-**Use a 2 GB (~$10) plan for your first live shop** unless you are helping certify the 1 GB tier.
+**Use a 2 GB (~$10) plan for your first live shop.**
 
 ---
 

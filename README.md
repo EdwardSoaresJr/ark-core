@@ -63,7 +63,7 @@ ARK can be run with Docker Compose or directly on a compatible PHP environment.
 * Composer when running directly on the host
 * Node.js and npm for Vite assets
 * MySQL 8 for the application database
-* Redis — required for the canonical runtime (cache, sessions, queues, Horizon)
+* Redis — required for the Docker Compose runtime (cache, sessions, queues, Horizon)
 
 Automated tests use an isolated SQLite database at `database/testing.sqlite` through PHPUnit. Tests do not use your application MySQL database.
 
@@ -91,11 +91,8 @@ When using the included Compose environment, the default database connection val
 * Username: `ark`
 * Password: `ark`
 
-**Cloud VPS (Vultr):** step-by-step guide with HTTPS — [`docs/installation/vultr.md`](docs/installation/vultr.md).  
-Starter size is **~2 GB RAM (~$10/mo)** until a **$5 / 1 GB** plan is stranger-certified.
-
-**Cloud VPS (Vultr):** [`docs/installation/vultr.md`](docs/installation/vultr.md) — Ubuntu, Docker, HTTPS (Caddy), `/setup`.  
-Starter size: **~2 GB RAM (~$10/mo)** until a **$5 / 1 GB** plan is stranger-certified.
+**Cloud VPS:** step-by-step with HTTPS — [`docs/installation/vultr.md`](docs/installation/vultr.md).  
+Starter size: **~2 GB RAM (~$10/mo)**. Smaller 1 GB plans are not recommended yet.
 
 See `docs/installation/README.md` for what the stack includes and for advanced (non-Docker) installation.
 

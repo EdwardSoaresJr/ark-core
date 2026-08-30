@@ -1,39 +1,24 @@
 # Customer email (ARK Mail)
 
-Official ARK sends production transactional email through **ARK Mail** only.
+ARK sends transactional customer email through **ARK Mail**.
 
-```
-OutboundTransactionalMail
-        ↓
-ArkMailClient
-        ↓
-private ark-mail control plane
-        ↓
-Postmark (service-side)
-```
+## Operator setup
 
-## Production behavior
+1. Open **Settings → Email**
+2. Choose **Connect**
+3. Set the shop reply-to address (defaults to Shop Profile email)
 
 | State | Result |
 |---|---|
-| ARK Mail connected | Transactional mail works |
-| ARK Mail not connected | *Email isn’t configured yet.* — no false “sent” |
+| Connected | Transactional mail works |
+| Not connected | *Email isn’t configured yet.* — nothing pretends to have sent |
+| Suspended | ARK Mail is suspended — reconnect or contact support |
 
-There is **no** official BYO Postmark / SMTP Settings path. Forks may implement other providers under AGPL; official ARK does not maintain that seam.
+Marketing and broadcast email are not supported.
 
 ## Development / CI
 
-Non-production environments may use Laravel `log` or `array` mailers so local work and tests do not require the hosted service.
-
-## Reply-To
-
-When ARK Mail is connected, customer replies go to the shop reply-to address (Settings → Email), defaulting to Shop Profile email.
-
-## Transactional only
-
-Estimate, invoice, inspection, appointment, document, payment/deposit/review links, and account system messages. Marketing and broadcast are rejected by the hosted service.
-
-## Configuration
+Local and test environments may use Laravel `log` or `array` mailers so work does not require the hosted service.
 
 ```env
 ARK_MAIL_SERVICE_URL=
@@ -41,19 +26,17 @@ ARK_MAIL_ALLOW_ACTIVATION=false
 MAIL_MAILER=log
 ```
 
-Never put ARK Mail’s upstream Postmark credentials in self-hosted ARK.
+## Engineering notes
 
-## Installation identity
+`ArkMailClient` posts to the hosted ARK Mail API using the installation UUID and the encrypted shop credential stored after Connect.
 
-`storage/app/install/installation_uuid` is a durable non-secret UUID. The ARK Mail credential (encrypted in shop settings) authenticates.
+Do not put the mail service’s upstream provider tokens in self-hosted ARK. From address, reply-to, and quotas are enforced by the mail service.
 
-## Credential threat boundary
+### Credential compromise
 
-| Compromise | What an attacker gets | What they do not get |
+| Compromise | Attacker can | Attacker cannot |
 |---|---|---|
-| **Public ARK database alone** | Encrypted `ark_mail_credential` ciphertext (and other shop rows) | Usable signing secret **if** `APP_KEY` / disk secrets are not also compromised — Laravel `encrypted` cast requires the app key |
-| **Full ARK host** (DB + `APP_KEY` / filesystem / running process) | Ability to sign as that installation until revoked | Upstream Postmark tokens, other tenants, ability to override From/Reply-To/quotas on the control plane |
+| Database only (no `APP_KEY`) | See encrypted credential ciphertext | Mint valid signed requests |
+| Full host (DB + `APP_KEY` / running process) | Send as that installation until revoked | Access other shops’ mail, or the mail service’s upstream provider credentials |
 
-ARK Mail’s boundary is **service-side policy**, not DRM on the client. A fully compromised authorized install can use its valid credentials until the tenant/installation is suspended or revoked on ark-mail.
-
-Stranger-cert should explicitly check: DB dump without `APP_KEY` is insufficient to mint valid HMAC signatures.
+Revoke or suspend the installation on the mail service if a shop host is compromised.
