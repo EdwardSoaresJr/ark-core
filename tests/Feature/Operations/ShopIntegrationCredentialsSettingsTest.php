@@ -156,12 +156,19 @@ test('partstech settings save credentials encrypted in shop settings', function 
         ->and($credentials->partsTechQuoteImportConfigured())->toBeTrue();
 });
 
-test('email settings save reply-to without byo postmark token', function () {
+test('email settings save provider choice and reply-to without exposing stored token', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
+    ShopSettings::current()->persistTrusted([
+        'learn_training_gate_enabled' => false,
+        'email_provider' => 'postmark',
+        'postmark_token' => 'pm-already-stored-token',
+    ]);
+
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.email.update'), [
+            'email_provider' => 'postmark',
             'postmark_reply_to' => 'service@example.com',
             'postmark_reply_to_name' => 'Example Shop',
         ])
@@ -172,9 +179,20 @@ test('email settings save reply-to without byo postmark token', function () {
 
     $settings = ShopSettings::current()->fresh();
 
-    expect($settings->postmark_reply_to)->toBe('service@example.com')
+    expect($settings->email_provider)->toBe('postmark')
+        ->and($settings->postmark_reply_to)->toBe('service@example.com')
         ->and($settings->postmark_reply_to_name)->toBe('Example Shop')
-        ->and(Schema::hasColumn('shop_settings', 'postmark_token'))->toBeFalse();
+        ->and(Schema::hasColumn('shop_settings', 'postmark_token'))->toBeTrue()
+        ->and(Schema::hasColumn('shop_settings', 'email_provider'))->toBeTrue()
+        ->and($settings->postmark_token)->toBe('pm-already-stored-token');
+
+    // Token must never be rendered back after save (encrypted at rest; blank input on edit).
+    $blade = view('operations.settings.partials.customer-email-settings', [
+        'settings' => $settings,
+    ])->render();
+
+    expect($blade)->not->toContain('pm-already-stored-token')
+        ->and($blade)->toContain('Postmark');
 });
 
 test('integration settings pages show credential fields', function () {

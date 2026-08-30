@@ -91,12 +91,14 @@ final class ArkMailActivationClient
         );
 
         $settings = ShopSettings::current();
+        $updates = [
+            'email_provider' => 'ark_mail',
+        ];
         $replyTo = $settings->postmark_reply_to ?: $settings->email;
         if (filled($replyTo)) {
-            $settings->persistTrusted([
-                'postmark_reply_to' => strtolower((string) $replyTo),
-            ]);
+            $updates['postmark_reply_to'] = strtolower((string) $replyTo);
         }
+        $settings->persistTrusted($updates);
 
         Log::info('ark_cloud.paired', [
             'shop_public_id' => $shopPublicId,

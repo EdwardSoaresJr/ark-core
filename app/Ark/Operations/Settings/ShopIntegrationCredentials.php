@@ -204,9 +204,16 @@ final class ShopIntegrationCredentials
         return $this->resolve($this->settings->postmark_reply_to_name, config('mail.reply_to.name'));
     }
 
-    /**
-     * @deprecated Official production email is ARK Mail only. Prefer OutboundTransactionalMail::isReady().
-     */
+    public function postmarkConfigured(): bool
+    {
+        return filled($this->settings->postmark_token);
+    }
+
+    public function hasStoredPostmarkToken(): bool
+    {
+        return filled($this->settings->postmark_token);
+    }
+
     public function transactionalEmailConfigured(): bool
     {
         return app(\App\Ark\Mail\OutboundTransactionalMail::class)->isReady();

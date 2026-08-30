@@ -22,13 +22,13 @@ it('creates a durable installation uuid once', function () {
         ->and(Str::isUuid($a))->toBeTrue();
 });
 
-it('returns not configured in production without ark mail', function () {
+it('returns not configured in production without ark mail or byo postmark', function () {
     config(['mail.default' => 'array']);
-    app()->instance('env', 'production');
-    // Force production check via Environment
     $this->app['env'] = 'production';
 
     ShopSettings::current()->persistTrusted([
+        'email_provider' => null,
+        'postmark_token' => null,
         'ark_mail_credential' => null,
         'cloud_credential' => null,
         'cloud_status' => null,
@@ -66,6 +66,8 @@ it('returns not configured in production without ark mail', function () {
 it('allows local array mailer outside production', function () {
     config(['mail.default' => 'array']);
     ShopSettings::current()->persistTrusted([
+        'email_provider' => null,
+        'postmark_token' => null,
         'ark_mail_credential' => null,
         'cloud_credential' => null,
         'cloud_status' => null,
@@ -105,6 +107,8 @@ it('ignores MAIL_MAILER=postmark as official production path', function () {
     config(['services.postmark.token' => 'should-not-enable-mail']);
 
     ShopSettings::current()->persistTrusted([
+        'email_provider' => null,
+        'postmark_token' => null,
         'ark_mail_credential' => null,
         'cloud_credential' => null,
         'cloud_status' => null,

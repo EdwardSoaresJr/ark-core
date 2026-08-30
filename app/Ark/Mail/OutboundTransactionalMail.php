@@ -2,25 +2,45 @@
 
 namespace App\Ark\Mail;
 
+use App\Ark\Cloud\CloudConnection;
+use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
 
-/** Sends customer transactional email (estimates, invoices, documents). */
+/**
+ * Sends customer transactional email through the shop's configured provider.
+ *
+ * Selection is exclusive: ARK Mail, shop-owned Postmark, local log/array (non-production),
+ * or not configured. No silent cross-provider fallback.
+ */
 final class OutboundTransactionalMail
 {
+    public const PROVIDER_ARK_MAIL = 'ark_mail';
+
+    public const PROVIDER_POSTMARK = 'postmark';
+
+    public const PROVIDER_NONE = 'none';
+
     public function __construct(
         private readonly ArkMailClient $arkMail,
     ) {}
 
     /**
-     * @return 'ark_mail'|'local_log'|'none'
+     * @return 'ark_mail'|'byo_postmark'|'local_log'|'none'
      */
     public function providerMode(): string
     {
-        if ($this->arkMail->isConfigured()) {
-            return 'ark_mail';
+        $selected = $this->selectedProvider();
+
+        if ($selected === self::PROVIDER_ARK_MAIL) {
+            return $this->arkMail->isConfigured() ? 'ark_mail' : 'none';
         }
 
+        if ($selected === self::PROVIDER_POSTMARK) {
+            return $this->byoPostmarkConfigured() ? 'byo_postmark' : 'none';
+        }
+
+        // No explicit production provider — allow log/array only outside production (tests/dev).
         if ($this->allowsLocalMailer()) {
             return 'local_log';
         }
@@ -35,14 +55,18 @@ final class OutboundTransactionalMail
 
     public function statusLabel(): string
     {
-        $cloud = \App\Ark\Cloud\CloudConnection::current();
+        $cloud = CloudConnection::current();
+        $selected = $this->selectedProvider();
 
         return match (true) {
-            $cloud->isSuspended() => 'Suspended',
-            $cloud->isPairing() => 'Pairing',
-            $this->arkMail->isConfigured() => 'Connected',
+            $cloud->isSuspended() && $selected === self::PROVIDER_ARK_MAIL => 'Suspended',
+            $cloud->isPairing() && $selected === self::PROVIDER_ARK_MAIL => 'Pairing',
+            $this->providerMode() === 'ark_mail' => 'ARK Mail',
+            $this->providerMode() === 'byo_postmark' => 'Postmark (your account)',
             $this->providerMode() === 'local_log' => 'Local development mailer',
-            default => 'Not connected',
+            $selected === self::PROVIDER_ARK_MAIL => 'ARK Mail (not connected)',
+            $selected === self::PROVIDER_POSTMARK => 'Postmark (token required)',
+            default => 'Not configured',
         };
     }
 
@@ -78,6 +102,10 @@ final class OutboundTransactionalMail
             return $this->arkMail->send($envelope);
         }
 
+        if ($mode === 'byo_postmark') {
+            return $this->sendViaByoPostmark($recipientEmail, $mailable);
+        }
+
         // local_log / array — development and automated tests only
         try {
             Mail::to(strtolower(trim($recipientEmail)))->send($mailable);
@@ -95,6 +123,55 @@ final class OutboundTransactionalMail
         }
 
         return TransactionalMailResult::notConfigured();
+    }
+
+    /**
+     * @return 'ark_mail'|'postmark'|'none'
+     */
+    public function selectedProvider(): string
+    {
+        $raw = strtolower(trim((string) (ShopSettings::current()->email_provider ?? '')));
+
+        return match ($raw) {
+            self::PROVIDER_ARK_MAIL => self::PROVIDER_ARK_MAIL,
+            self::PROVIDER_POSTMARK => self::PROVIDER_POSTMARK,
+            default => self::PROVIDER_NONE,
+        };
+    }
+
+    public function byoPostmarkConfigured(): bool
+    {
+        return filled(ShopSettings::current()->postmark_token);
+    }
+
+    private function sendViaByoPostmark(string $recipientEmail, Mailable $mailable): TransactionalMailResult
+    {
+        $settings = ShopSettings::current();
+        $token = (string) $settings->postmark_token;
+
+        $previousDefault = config('mail.default');
+        $previousToken = config('services.postmark.token');
+        $previousStream = config('services.postmark.message_stream_id');
+
+        config([
+            'mail.default' => 'postmark',
+            'services.postmark.token' => $token,
+            'services.postmark.message_stream_id' => $settings->postmark_message_stream_id ?: null,
+        ]);
+
+        try {
+            Mail::mailer('postmark')->to(strtolower(trim($recipientEmail)))->send($mailable);
+        } catch (\Throwable $e) {
+            return TransactionalMailResult::providerError('Postmark could not send the message.');
+        } finally {
+            config([
+                'mail.default' => $previousDefault,
+                'services.postmark.token' => $previousToken,
+                'services.postmark.message_stream_id' => $previousStream,
+            ]);
+        }
+
+        return TransactionalMailResult::sent();
     }
 
     private function allowsLocalMailer(): bool
