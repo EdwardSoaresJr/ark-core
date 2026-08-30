@@ -14,9 +14,15 @@ return [
     |
     */
 
+    'ark_cloud' => [
+        'base_url' => env('ARK_CLOUD_BASE_URL', env('ARK_MAIL_SERVICE_URL')),
+        'allow_pairing' => (bool) env('ARK_CLOUD_ALLOW_PAIRING', env('ARK_MAIL_ALLOW_ACTIVATION', false)),
+    ],
+
+    // Kept as aliases for older env files / local configs.
     'ark_mail' => [
-        'base_url' => env('ARK_MAIL_SERVICE_URL'),
-        'allow_activation' => (bool) env('ARK_MAIL_ALLOW_ACTIVATION', false),
+        'base_url' => env('ARK_MAIL_SERVICE_URL', env('ARK_CLOUD_BASE_URL')),
+        'allow_activation' => (bool) env('ARK_MAIL_ALLOW_ACTIVATION', env('ARK_CLOUD_ALLOW_PAIRING', false)),
     ],
 
     // Laravel framework may still reference a postmark mailer transport;

@@ -252,6 +252,7 @@ test('exception reporter redacts sensitive request input', function () {
         'square_access_token' => 'square-live-token',
         'postmark_token' => 'postmark-live-token',
         'ark_mail_credential' => 'arkmail-secret',
+        'cloud_credential' => 'cloud-secret',
         'messenger_page_access_token' => 'meta-live-token',
         'integrations' => [
             'webhook_secret' => 'nested-secret',
@@ -267,6 +268,7 @@ test('exception reporter redacts sensitive request input', function () {
         ->and($redacted['square_access_token'])->toBe('[redacted]')
         ->and($redacted['postmark_token'])->toBe('[redacted]')
         ->and($redacted['ark_mail_credential'])->toBe('[redacted]')
+        ->and($redacted['cloud_credential'])->toBe('[redacted]')
         ->and($redacted['messenger_page_access_token'])->toBe('[redacted]')
         ->and($redacted['integrations']['webhook_secret'])->toBe('[redacted]')
         ->and($redacted['integrations']['shop_phone'])->toBe('555-0100');

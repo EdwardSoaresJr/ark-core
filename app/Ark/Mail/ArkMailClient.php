@@ -2,34 +2,25 @@
 
 namespace App\Ark\Mail;
 
+use App\Ark\Cloud\CloudConnection;
 use App\Ark\Install\InstallationIdentity;
-use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-/**
- * Untrusted Box client for ARK Cloud Mail (first Cloud service).
- * Speaks ARK Cloud installation auth — not a generic mail-provider adapter.
- */
 final class ArkMailClient
 {
     public function isConfigured(): bool
     {
-        $settings = ShopSettings::current();
-
-        return filled($settings->ark_mail_credential)
-            && filled($settings->ark_mail_tenant_public_id)
-            && $settings->ark_mail_status === 'connected'
-            && filled($this->serviceUrl($settings));
+        return CloudConnection::current()->isConnected();
     }
 
     public function send(TransactionalMailEnvelope $envelope): TransactionalMailResult
     {
-        $settings = ShopSettings::current();
-        $base = rtrim($this->serviceUrl($settings), '/');
+        $cloud = CloudConnection::current();
+        $base = $cloud->baseUrl();
         $path = '/api/v1/services/mail/messages/transactional';
-        $credential = (string) $settings->ark_mail_credential;
+        $credential = (string) $cloud->credential();
         $installationUuid = InstallationIdentity::uuid();
 
         $attachments = [];
@@ -44,8 +35,8 @@ final class ArkMailClient
                 continue;
             }
             $attachments[] = [
-                'filename' => $attachment['filename'],
-                'mime' => $attachment['mime'],
+                'filename' => $attachment['filename'] ?? $attachment['name'] ?? 'attachment',
+                'mime' => $attachment['mime'] ?? 'application/octet-stream',
                 'content_base64' => base64_encode($bytes),
             ];
         }
@@ -91,7 +82,7 @@ final class ArkMailClient
                 'error' => $e->getMessage(),
             ]);
 
-            return TransactionalMailResult::providerError('ARK Mail service is unavailable.');
+            return TransactionalMailResult::providerError('ARK Mail is unavailable.');
         }
 
         $json = $response->json() ?? [];
@@ -108,9 +99,7 @@ final class ArkMailClient
         $message = is_string($json['message'] ?? null) ? $json['message'] : 'ARK Mail rejected the message.';
 
         if (in_array($reason, ['tenant_suspended', 'installation_suspended', 'installation_revoked'], true)) {
-            $settings->persistTrusted([
-                'ark_mail_status' => 'suspended',
-            ]);
+            $cloud->markSuspended();
         }
 
         Log::info('ark_mail.client.rejected', [
@@ -119,10 +108,5 @@ final class ArkMailClient
         ]);
 
         return TransactionalMailResult::rejected($reason, $message, $correlationId);
-    }
-
-    private function serviceUrl(ShopSettings $settings): string
-    {
-        return (string) ($settings->ark_mail_service_url ?: config('services.ark_mail.base_url'));
     }
 }

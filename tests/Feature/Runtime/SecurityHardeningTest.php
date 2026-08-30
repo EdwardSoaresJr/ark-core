@@ -44,6 +44,7 @@ test('shop integration secrets cannot be mass assigned', function () {
         'twilio_auth_token' => 'mass-assigned-token',
         'square_access_token' => 'mass-assigned-square',
         'ark_mail_credential' => 'mass-assigned-ark-mail',
+        'cloud_credential' => 'mass-assigned-cloud',
         'partstech_api_key' => 'mass-assigned-api-key',
         'partstech_password' => 'mass-assigned-password',
         'messenger_app_secret' => 'mass-assigned-messenger',
@@ -56,6 +57,7 @@ test('shop integration secrets cannot be mass assigned', function () {
     expect($settings->twilio_auth_token)->toBeNull()
         ->and($settings->square_access_token)->toBeNull()
         ->and($settings->ark_mail_credential)->toBeNull()
+        ->and($settings->cloud_credential)->toBeNull()
         ->and($settings->partstech_api_key)->toBeNull()
         ->and($settings->partstech_password)->toBeNull()
         ->and($settings->messenger_app_secret)->toBeNull()

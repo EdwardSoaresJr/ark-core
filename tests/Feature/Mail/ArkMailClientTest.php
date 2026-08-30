@@ -30,6 +30,8 @@ it('returns not configured in production without ark mail', function () {
 
     ShopSettings::current()->persistTrusted([
         'ark_mail_credential' => null,
+        'cloud_credential' => null,
+        'cloud_status' => null,
         'ark_mail_status' => null,
         'ark_mail_tenant_public_id' => null,
     ]);
@@ -65,6 +67,8 @@ it('allows local array mailer outside production', function () {
     config(['mail.default' => 'array']);
     ShopSettings::current()->persistTrusted([
         'ark_mail_credential' => null,
+        'cloud_credential' => null,
+        'cloud_status' => null,
         'ark_mail_status' => null,
     ]);
 
@@ -102,6 +106,8 @@ it('ignores MAIL_MAILER=postmark as official production path', function () {
 
     ShopSettings::current()->persistTrusted([
         'ark_mail_credential' => null,
+        'cloud_credential' => null,
+        'cloud_status' => null,
         'ark_mail_status' => null,
     ]);
 
@@ -111,7 +117,7 @@ it('ignores MAIL_MAILER=postmark as official production path', function () {
 
 it('does not log ark mail credentials on activation failure', function () {
     Http::fake([
-        '*/api/v1/activate' => Http::response(['ok' => false, 'message' => 'nope'], 422),
+        '*/api/v1/pairing/start' => Http::response(['ok' => false, 'message' => 'nope'], 422),
     ]);
 
     config(['services.ark_mail.base_url' => 'http://ark-mail.test', 'services.ark_mail.allow_activation' => true]);

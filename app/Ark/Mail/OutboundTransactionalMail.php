@@ -2,19 +2,10 @@
 
 namespace App\Ark\Mail;
 
-use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
 
-/**
- * Official outbound transactional email entry.
- *
- * Production: ARK Mail only (via ArkMailClient → private ark-mail).
- * Local / CI / testing: Laravel log|array mailers permitted.
- *
- * No official BYO Postmark/SMTP path. Forks may add providers under AGPL;
- * official ARK does not maintain that seam.
- */
+/** Sends customer transactional email (estimates, invoices, documents). */
 final class OutboundTransactionalMail
 {
     public function __construct(
@@ -44,11 +35,11 @@ final class OutboundTransactionalMail
 
     public function statusLabel(): string
     {
-        $settings = ShopSettings::current();
+        $cloud = \App\Ark\Cloud\CloudConnection::current();
 
         return match (true) {
-            $settings->ark_mail_status === 'suspended' => 'Suspended',
-            $settings->ark_mail_status === 'error' => 'Configuration error',
+            $cloud->isSuspended() => 'Suspended',
+            $cloud->isPairing() => 'Pairing',
             $this->arkMail->isConfigured() => 'Connected',
             $this->providerMode() === 'local_log' => 'Local development mailer',
             default => 'Not connected',

@@ -2,16 +2,16 @@
 
 namespace App\Ark\Mail;
 
+use App\Ark\Cloud\CloudConnection;
 use App\Ark\Install\InstallationIdentity;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Box-side pairing against ARK Cloud.
+ * Starts and finishes Cloud pairing from Settings → Email.
  *
- * Flow: startPairing → operator approves in Cloud portal → claimPairing.
- * Cloud owns entitlement authority. This client only stores the issued credential.
+ * Sequence: startPairing → approve in ARK Cloud → claimPairing.
  */
 final class ArkMailActivationClient
 {
@@ -29,30 +29,42 @@ final class ArkMailActivationClient
         ]);
 
         if (! $response->successful() || ! ($response->json('ok') ?? false)) {
-            $message = $response->json('message') ?? 'Could not start ARK Cloud pairing.';
-            throw new \RuntimeException(is_string($message) ? $message : 'Could not start ARK Cloud pairing.');
+            $message = $response->json('message') ?? 'Could not start pairing.';
+            throw new \RuntimeException(is_string($message) ? $message : 'Could not start pairing.');
         }
 
-        ShopSettings::current()->persistTrusted([
-            'ark_mail_service_url' => $base,
-            'ark_mail_status' => 'pairing',
-        ]);
+        $pairingPublicId = (string) $response->json('public_id');
+        $pairingCode = (string) $response->json('pairing_code');
+        $expiresAt = (string) $response->json('expires_at');
+
+        CloudConnection::current()->beginPairing(
+            $base,
+            $pairingPublicId,
+            $pairingCode,
+            $expiresAt,
+        );
 
         return [
-            'pairing_code' => (string) $response->json('pairing_code'),
-            'pairing_public_id' => (string) $response->json('public_id'),
-            'expires_at' => (string) $response->json('expires_at'),
+            'pairing_code' => $pairingCode,
+            'pairing_public_id' => $pairingPublicId,
+            'expires_at' => $expiresAt,
             'installation_uuid' => $installationUuid,
         ];
     }
 
     /**
-     * After portal approval, claim the one-time Cloud-issued installation credential.
-     *
      * @return array{status: string, shop_public_id: ?string}
      */
-    public function claimPairing(string $pairingPublicId, ?string $serviceUrl = null): array
+    public function claimPairing(?string $pairingPublicId = null, ?string $serviceUrl = null): array
     {
+        $cloud = CloudConnection::current();
+        $cloud->clearExpiredPairing();
+
+        $pairingPublicId = $pairingPublicId ?: $cloud->pairingPublicId();
+        if (! filled($pairingPublicId)) {
+            throw new \RuntimeException('No pairing in progress. Start connecting again.');
+        }
+
         $base = $this->baseUrl($serviceUrl);
         $installationUuid = InstallationIdentity::uuid();
 
@@ -62,47 +74,48 @@ final class ArkMailActivationClient
         ]);
 
         if (! $response->successful() || ! ($response->json('ok') ?? false)) {
-            $message = $response->json('message') ?? 'Pairing claim failed.';
-            throw new \RuntimeException(is_string($message) ? $message : 'Pairing claim failed.');
+            $message = $response->json('message') ?? 'Could not finish pairing.';
+            throw new \RuntimeException(is_string($message) ? $message : 'Could not finish pairing.');
         }
 
         $credential = $response->json('credential');
         if (! is_string($credential) || $credential === '') {
-            throw new \RuntimeException('ARK Cloud did not return an installation credential.');
+            throw new \RuntimeException('ARK Cloud did not return a connection credential.');
         }
+
+        $shopPublicId = $response->json('shop_public_id');
+        $cloud->completePairing(
+            $base,
+            $credential,
+            is_string($shopPublicId) ? $shopPublicId : null,
+        );
 
         $settings = ShopSettings::current();
         $replyTo = $settings->postmark_reply_to ?: $settings->email;
-
-        $settings->persistTrusted([
-            'ark_mail_service_url' => $base,
-            'ark_mail_tenant_public_id' => $response->json('shop_public_id'),
-            'ark_mail_from_email' => null,
-            'ark_mail_credential' => $credential,
-            'ark_mail_status' => 'connected',
-            'ark_mail_connected_at' => now(),
-            'postmark_reply_to' => filled($replyTo) ? strtolower((string) $replyTo) : $settings->postmark_reply_to,
-        ]);
+        if (filled($replyTo)) {
+            $settings->persistTrusted([
+                'postmark_reply_to' => strtolower((string) $replyTo),
+            ]);
+        }
 
         Log::info('ark_cloud.paired', [
-            'shop_public_id' => $response->json('shop_public_id'),
+            'shop_public_id' => $shopPublicId,
             'installation_uuid' => $installationUuid,
         ]);
 
         return [
             'status' => 'connected',
-            'shop_public_id' => $response->json('shop_public_id'),
+            'shop_public_id' => is_string($shopPublicId) ? $shopPublicId : null,
         ];
     }
 
     /**
-     * Settings "Connect" — starts pairing and returns the code for Cloud portal approval.
-     *
      * @return array{status: string, pairing_code: string, pairing_public_id: string, expires_at: string, message: string}
      */
     public function activate(?string $serviceUrl = null): array
     {
-        if (! config('services.ark_mail.allow_activation', false) && app()->environment('production')) {
+        if (! config('services.ark_cloud.allow_pairing', config('services.ark_mail.allow_activation', false))
+            && app()->environment('production')) {
             throw new \RuntimeException('ARK Cloud pairing is not available yet for this installation.');
         }
 
@@ -113,28 +126,26 @@ final class ArkMailActivationClient
             'pairing_code' => $started['pairing_code'],
             'pairing_public_id' => $started['pairing_public_id'],
             'expires_at' => $started['expires_at'],
-            'message' => 'Approve this code in ARK Cloud, then finish connecting from this Box.',
+            'message' => 'Approve this code in ARK Cloud, then finish connecting here.',
         ];
     }
 
     public function disconnect(): void
     {
-        ShopSettings::current()->persistTrusted([
-            'ark_mail_credential' => null,
-            'ark_mail_tenant_public_id' => null,
-            'ark_mail_from_email' => null,
-            'ark_mail_status' => null,
-            'ark_mail_connected_at' => null,
-        ]);
+        CloudConnection::current()->clear();
     }
 
     private function baseUrl(?string $serviceUrl = null): string
     {
-        $settings = ShopSettings::current();
-        $base = rtrim((string) ($serviceUrl ?: $settings->ark_mail_service_url ?: config('services.ark_mail.base_url')), '/');
+        $base = rtrim((string) (
+            $serviceUrl
+            ?: CloudConnection::current()->baseUrl()
+            ?: config('services.ark_cloud.base_url')
+            ?: config('services.ark_mail.base_url')
+        ), '/');
 
         if ($base === '') {
-            throw new \RuntimeException('ARK Cloud service URL is not configured.');
+            throw new \RuntimeException('ARK Cloud URL is not configured.');
         }
 
         return $base;

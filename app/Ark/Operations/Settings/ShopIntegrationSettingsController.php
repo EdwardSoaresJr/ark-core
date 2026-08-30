@@ -132,34 +132,33 @@ public function updateEmail(Request $request): RedirectResponse
         ]);
 
         try {
-            if (filled($data['ark_mail_service_url'] ?? null)) {
-                ShopSettings::current()->persistTrusted([
-                    'ark_mail_service_url' => rtrim((string) $data['ark_mail_service_url'], '/'),
-                ]);
-            }
-            $started = $activation->activate();
+            $serviceUrl = filled($data['ark_mail_service_url'] ?? null)
+                ? rtrim((string) $data['ark_mail_service_url'], '/')
+                : null;
+            $started = $activation->activate($serviceUrl);
         } catch (\Throwable $e) {
             ShopSettings::current()->persistTrusted([
                 'ark_mail_status' => 'error',
+                'cloud_status' => 'error',
             ]);
 
-            return $redirect->with('status', 'Could not start ARK Cloud pairing: '.$e->getMessage());
+            return $redirect->with('status', 'Could not start connecting: '.$e->getMessage());
         }
 
         $code = $started['pairing_code'] ?? '';
 
-        return $redirect
-            ->with('status', $code !== ''
+        return $redirect->with(
+            'status',
+            $code !== ''
                 ? "Pairing code {$code}. Approve it in ARK Cloud, then finish connecting here."
-                : ($started['message'] ?? 'Approve the pairing code in ARK Cloud, then finish connecting here.'))
-            ->with('ark_mail_pairing_public_id', $started['pairing_public_id'] ?? null)
-            ->with('ark_mail_pairing_code', $code !== '' ? $code : null);
+                : ($started['message'] ?? 'Approve the pairing code in ARK Cloud, then finish connecting here.')
+        );
     }
 
     public function claimArkMail(Request $request, ArkMailActivationClient $activation): RedirectResponse
     {
         $data = $request->validate([
-            'pairing_public_id' => ['required', 'uuid'],
+            'pairing_public_id' => ['nullable', 'uuid'],
         ]);
 
         $redirect = redirect()->route('operations.settings.shop.edit', [
@@ -168,12 +167,12 @@ public function updateEmail(Request $request): RedirectResponse
         ]);
 
         try {
-            $activation->claimPairing($data['pairing_public_id']);
+            $activation->claimPairing($data['pairing_public_id'] ?? null);
         } catch (\Throwable $e) {
-            return $redirect->with('status', 'Could not finish pairing: '.$e->getMessage());
+            return $redirect->with('status', 'Could not finish connecting: '.$e->getMessage());
         }
 
-        return $redirect->with('status', 'ARK Box connected. Replies go to your shop email.');
+        return $redirect->with('status', 'ARK Mail connected. Replies go to your shop email.');
     }
 
     public function disconnectArkMail(ArkMailActivationClient $activation): RedirectResponse

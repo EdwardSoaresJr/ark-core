@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 /**
  * Durable non-secret installation identity.
  * Survives container recreation when storage/app/install is persisted.
- * Does NOT authenticate — ARK Mail credential authenticates.
+ * Does not authenticate the Box to ARK Cloud.
  */
 final class InstallationIdentity
 {
