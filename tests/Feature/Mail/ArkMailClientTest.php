@@ -5,8 +5,6 @@ use App\Ark\Mail\OutboundTransactionalMail;
 use App\Ark\Mail\TransactionalMailOperation;
 use App\Ark\Mail\TransactionalMailResult;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Mail\DocumentCustomerMail;
-use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -24,13 +22,16 @@ it('creates a durable installation uuid once', function () {
         ->and(Str::isUuid($a))->toBeTrue();
 });
 
-it('returns not configured when no provider is available', function () {
-    config(['mail.default' => 'unavailable-mailer']);
+it('returns not configured in production without ark mail', function () {
+    config(['mail.default' => 'array']);
+    app()->instance('env', 'production');
+    // Force production check via Environment
+    $this->app['env'] = 'production';
 
     ShopSettings::current()->persistTrusted([
-        'postmark_token' => null,
         'ark_mail_credential' => null,
         'ark_mail_status' => null,
+        'ark_mail_tenant_public_id' => null,
     ]);
 
     $outbound = app(OutboundTransactionalMail::class);
@@ -60,15 +61,15 @@ it('returns not configured when no provider is available', function () {
         ->and($result->operatorMessage())->toContain("isn't configured");
 });
 
-it('preserves BYO laravel mail path when postmark is configured', function () {
+it('allows local array mailer outside production', function () {
+    config(['mail.default' => 'array']);
     ShopSettings::current()->persistTrusted([
-        'postmark_token' => 'byo-postmark-token',
         'ark_mail_credential' => null,
         'ark_mail_status' => null,
     ]);
 
     $outbound = app(OutboundTransactionalMail::class);
-    expect($outbound->providerMode())->toBe('byo_postmark');
+    expect($outbound->providerMode())->toBe('local_log');
 
     $mailable = new class extends \Illuminate\Mail\Mailable
     {
@@ -79,7 +80,7 @@ it('preserves BYO laravel mail path when postmark is configured', function () {
 
         public function envelope(): \Illuminate\Mail\Mailables\Envelope
         {
-            return new \Illuminate\Mail\Mailables\Envelope(subject: 'BYO');
+            return new \Illuminate\Mail\Mailables\Envelope(subject: 'Local');
         }
     };
 
@@ -92,6 +93,20 @@ it('preserves BYO laravel mail path when postmark is configured', function () {
 
     expect($result->ok())->toBeTrue();
     Mail::assertOutgoingCount(1);
+});
+
+it('ignores MAIL_MAILER=postmark as official production path', function () {
+    $this->app['env'] = 'production';
+    config(['mail.default' => 'postmark']);
+    config(['services.postmark.token' => 'should-not-enable-mail']);
+
+    ShopSettings::current()->persistTrusted([
+        'ark_mail_credential' => null,
+        'ark_mail_status' => null,
+    ]);
+
+    expect(app(OutboundTransactionalMail::class)->providerMode())->toBe('none')
+        ->and(app(OutboundTransactionalMail::class)->isReady())->toBeFalse();
 });
 
 it('does not log ark mail credentials on activation failure', function () {

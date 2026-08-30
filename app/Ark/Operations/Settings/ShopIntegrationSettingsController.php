@@ -102,29 +102,22 @@ public function updatePartsTech(Request $request): RedirectResponse
 public function updateEmail(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'postmark_token' => ['nullable', 'string', 'max:512'],
             'postmark_reply_to' => ['nullable', 'email', 'max:255'],
             'postmark_reply_to_name' => ['nullable', 'string', 'max:255'],
-            'postmark_message_stream_id' => ['nullable', 'string', 'max:64'],
         ]);
 
         $settings = ShopSettings::current();
-        $updates = [
+        $settings->persistTrusted([
             'postmark_reply_to' => $this->nullableTrimmedString($data['postmark_reply_to'] ?? null),
             'postmark_reply_to_name' => $this->nullableTrimmedString($data['postmark_reply_to_name'] ?? null),
-            'postmark_message_stream_id' => $this->nullableTrimmedString($data['postmark_message_stream_id'] ?? null),
-        ];
-
-        $this->mergeSecretField($updates, 'postmark_token', $data['postmark_token'] ?? null);
-
-        $settings->persistTrusted($updates);
+        ]);
 
         return redirect()
             ->route('operations.settings.shop.edit', [
                 'section' => 'communications',
                 'communications-tab' => 'email',
             ])
-            ->with('status', 'Email settings saved.');
+            ->with('status', 'Reply-to settings saved.');
     }
 
     public function enableArkMail(Request $request, ArkMailActivationClient $activation): RedirectResponse
@@ -165,6 +158,6 @@ public function updateEmail(Request $request): RedirectResponse
                 'section' => 'communications',
                 'communications-tab' => 'email',
             ])
-            ->with('status', 'ARK Mail disconnected. You can still use your own Postmark provider.');
+            ->with('status', 'ARK Mail disconnected.');
     }
 }

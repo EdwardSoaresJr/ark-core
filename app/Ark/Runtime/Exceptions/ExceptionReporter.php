@@ -31,6 +31,8 @@ class ExceptionReporter
         'client_secret',
         'signing_secret',
         'webhook_secret',
+        'credential',
+        'postmark',
     ];
 
     public function notify(Throwable $exception): void

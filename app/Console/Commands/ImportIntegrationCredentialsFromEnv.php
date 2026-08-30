@@ -37,11 +37,8 @@ class ImportIntegrationCredentialsFromEnv extends Command
             'PARTSTECH_USERNAME' => 'partstech_username',
             'PARTSTECH_API_KEY' => 'partstech_api_key',
             'PARTSTECH_PASSWORD' => 'partstech_password',
-            'POSTMARK_TOKEN' => 'postmark_token',
-            'POSTMARK_API_KEY' => 'postmark_token',
             'POSTMARK_REPLY_TO' => 'postmark_reply_to',
             'POSTMARK_REPLY_TO_NAME' => 'postmark_reply_to_name',
-            'POSTMARK_MESSAGE_STREAM_ID' => 'postmark_message_stream_id',
         ];
 
         $fromEnv = [];
@@ -50,10 +47,6 @@ class ImportIntegrationCredentialsFromEnv extends Command
             $value = $this->readEnvValue($envFile, $envKey);
 
             if ($value !== null && $value !== '') {
-                if (isset($fromEnv[$column]) && $column === 'postmark_token') {
-                    continue;
-                }
-
                 $fromEnv[$column] = $value;
             }
         }
@@ -73,11 +66,11 @@ class ImportIntegrationCredentialsFromEnv extends Command
         $this->line('  Square: '.($credentials->squareConfigured() ? 'configured' : 'incomplete'));
         $this->line('  PartsTech catalog: '.($credentials->partsTechCatalogConfigured() ? 'configured' : 'incomplete'));
         $this->line('  PartsTech quote import: '.($credentials->partsTechQuoteImportConfigured() ? 'configured' : 'incomplete'));
-        $this->line('  Postmark: '.($credentials->postmarkConfigured() ? 'configured' : 'incomplete'));
+        $this->line('  Mail reply-to: '.(filled($credentials->mailReplyTo()) ? 'configured' : 'incomplete'));
         $this->line('  Twilio source: '.$credentials->twilioCredentialSource());
         $this->line('  Square source: '.$credentials->squareCredentialSource());
         $this->line('  PartsTech source: '.$credentials->partsTechCredentialSource());
-        $this->line('  Postmark source: '.$credentials->postmarkCredentialSource());
+        $this->line('  ARK Mail: '.(app(\App\Ark\Mail\OutboundTransactionalMail::class)->isReady() ? 'ready' : 'not connected'));
 
         if ($this->option('clear-env')) {
             $this->clearEnvKeys($envFile, array_keys($keys));

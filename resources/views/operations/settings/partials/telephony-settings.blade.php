@@ -105,7 +105,7 @@
         </div>
 
         @if ($communicationsTab === 'email')
-            @include('operations.settings.partials.postmark-email-settings', ['settings' => $settings])
+            @include('operations.settings.partials.customer-email-settings', ['settings' => $settings])
         @elseif ($communicationsTab === 'messenger')
             @include('operations.settings.partials.communications-channels-settings', ['settings' => $settings])
         @elseif ($communicationsTab === 'mobile')

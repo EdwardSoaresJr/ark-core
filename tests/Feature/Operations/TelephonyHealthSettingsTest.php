@@ -100,7 +100,7 @@ test('settings communications email tab hides twilio health dashboard', function
         'communications-tab' => 'email',
     ]))
         ->assertOk()
-        ->assertSee('Postmark email')
+        ->assertSee('ARK Mail')
         ->assertSee('Server token')
         ->assertDontSee('Webhook URLs (paste into Twilio Console)')
         ->assertDontSee('Last incoming call')

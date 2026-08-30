@@ -5,8 +5,8 @@ namespace App\Ark\Operations\Settings;
 use Throwable;
 
 /**
- * Merges shop-stored integration credentials into runtime config so mail transports
- * and legacy config('services.*') reads stay authoritative without config:cache churn.
+ * Applies shop-stored reply-to and PartsTech credentials into runtime config.
+ * Does not inject Postmark tokens — official production mail is ARK Mail only.
  */
 final class ShopIntegrationRuntimeConfig
 {
@@ -18,19 +18,13 @@ final class ShopIntegrationRuntimeConfig
             return;
         }
 
-        $postmarkToken = $credentials->postmarkToken();
-
-        if ($postmarkToken !== null) {
-            config(['services.postmark.token' => $postmarkToken]);
-        }
-
-        $replyTo = $credentials->postmarkReplyTo();
+        $replyTo = $credentials->mailReplyTo();
 
         if ($replyTo !== null) {
             config(['mail.reply_to.address' => $replyTo]);
         }
 
-        $replyToName = $credentials->postmarkReplyToName();
+        $replyToName = $credentials->mailReplyToName();
 
         if ($replyToName !== null) {
             config(['mail.reply_to.name' => $replyToName]);

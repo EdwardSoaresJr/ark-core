@@ -10,6 +10,7 @@ use App\Ark\Operations\Payments\SquareConfiguration;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Mail\OutboundTransactionalMail;
 use App\Ark\Operations\Vehicles\VehicleIdentityPressure;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
@@ -22,6 +23,7 @@ final class RepairOrderConversationSendProjection
         private readonly BalanceDueCalculator $balanceDue,
         private readonly DepositPortalLinkContext $depositLink,
         private readonly ScheduledOutboundEstimateProjection $scheduledOutbound,
+        private readonly OutboundTransactionalMail $outboundMail,
     ) {}
 
     /**
@@ -187,8 +189,8 @@ final class RepairOrderConversationSendProjection
             return 'You do not have permission to email estimates.';
         }
 
-        if (! $this->credentials->postmarkConfigured()) {
-            return 'Shop email is not configured. Check Settings → Integrations.';
+        if (! $this->outboundMail->isReady()) {
+            return 'Email isn’t configured yet. Connect ARK Mail in Settings → Email.';
         }
 
         $email = strtolower(trim((string) ($repairOrder->customer?->email ?? '')));
@@ -265,8 +267,8 @@ final class RepairOrderConversationSendProjection
             return 'You do not have permission to email payment links.';
         }
 
-        if (! $this->credentials->postmarkConfigured()) {
-            return 'Shop email is not configured. Check Settings → Integrations.';
+        if (! $this->outboundMail->isReady()) {
+            return 'Email isn’t configured yet. Connect ARK Mail in Settings → Email.';
         }
 
         $email = strtolower(trim((string) ($repairOrder->customer?->email ?? '')));
@@ -355,8 +357,8 @@ final class RepairOrderConversationSendProjection
             return 'You do not have permission to email deposit requests.';
         }
 
-        if (! $this->credentials->postmarkConfigured()) {
-            return 'Shop email is not configured. Check Settings → Integrations.';
+        if (! $this->outboundMail->isReady()) {
+            return 'Email isn’t configured yet. Connect ARK Mail in Settings → Email.';
         }
 
         $email = strtolower(trim((string) ($repairOrder->customer?->email ?? '')));

@@ -18,8 +18,11 @@ return [
         'base_url' => env('ARK_MAIL_SERVICE_URL'),
         'allow_activation' => (bool) env('ARK_MAIL_ALLOW_ACTIVATION', false),
     ],
+
+    // Laravel framework may still reference a postmark mailer transport;
+    // official ARK does not configure or document shop-held Postmark tokens.
     'postmark' => [
-        'token' => env('POSTMARK_TOKEN', env('POSTMARK_API_KEY')),
+        'token' => null,
     ],
 
     'resend' => [

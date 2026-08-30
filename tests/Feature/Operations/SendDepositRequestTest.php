@@ -29,7 +29,7 @@ beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
     config()->set('services.twilio.auth_token', 'test-token');
     config()->set('services.twilio.account_sid', 'ACtestaccount');
-    config()->set('services.postmark.token', 'pm-token');
+    config()->set('mail.default', 'array');
     config()->set('services.square.application_id', 'sq0idp-test-app');
     config()->set('services.square.access_token', 'test-token');
     config()->set('services.square.location_id', 'LOC123');

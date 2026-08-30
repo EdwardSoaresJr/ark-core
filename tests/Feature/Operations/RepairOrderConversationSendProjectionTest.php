@@ -9,7 +9,8 @@ beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
     config()->set('services.twilio.auth_token', 'test-token');
     config()->set('services.twilio.account_sid', 'ACtestaccount');
-    config()->set('services.postmark.token', 'pm-token');
+    // Local/CI mailer — official production path is ARK Mail only.
+    config()->set('mail.default', 'array');
 });
 
 test('payment send projection explains missing issued invoice', function () {

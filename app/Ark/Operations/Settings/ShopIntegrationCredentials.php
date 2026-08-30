@@ -194,47 +194,22 @@ final class ShopIntegrationCredentials
         return 'none';
     }
 
-    public function postmarkToken(): ?string
-    {
-        return $this->resolve($this->settings->postmark_token, config('services.postmark.token'));
-    }
-
-    public function postmarkReplyTo(): ?string
+    public function mailReplyTo(): ?string
     {
         return $this->resolve($this->settings->postmark_reply_to, config('mail.reply_to.address'));
     }
 
-    public function postmarkReplyToName(): ?string
+    public function mailReplyToName(): ?string
     {
         return $this->resolve($this->settings->postmark_reply_to_name, config('mail.reply_to.name'));
     }
 
-    public function postmarkMessageStreamId(): ?string
+    /**
+     * @deprecated Official production email is ARK Mail only. Prefer OutboundTransactionalMail::isReady().
+     */
+    public function transactionalEmailConfigured(): bool
     {
-        return $this->resolve($this->settings->postmark_message_stream_id, env('POSTMARK_MESSAGE_STREAM_ID'));
-    }
-
-    public function postmarkConfigured(): bool
-    {
-        return filled($this->postmarkToken());
-    }
-
-    public function hasStoredPostmarkToken(): bool
-    {
-        return filled($this->settings->postmark_token);
-    }
-
-    public function postmarkCredentialSource(): string
-    {
-        if (filled($this->settings->postmark_token)) {
-            return 'database';
-        }
-
-        if (filled(config('services.postmark.token'))) {
-            return 'env';
-        }
-
-        return 'none';
+        return app(\App\Ark\Mail\OutboundTransactionalMail::class)->isReady();
     }
 
     public function openaiApiKey(): ?string

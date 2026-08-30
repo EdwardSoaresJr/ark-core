@@ -2,45 +2,35 @@
 
 namespace App\Ark\Mail;
 
-use App\Ark\Mail\Providers\ArkMailProvider;
-use App\Ark\Mail\Providers\NotConfiguredMailProvider;
-use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 /**
- * Resolves outbound path: ARK Mail (preferred when connected) → BYO Laravel/Postmark → not configured.
+ * Official outbound transactional email entry.
+ *
+ * Production: ARK Mail only (via ArkMailClient → private ark-mail).
+ * Local / CI / testing: Laravel log|array mailers permitted.
+ *
+ * No official BYO Postmark/SMTP path. Forks may add providers under AGPL;
+ * official ARK does not maintain that seam.
  */
 final class OutboundTransactionalMail
 {
     public function __construct(
-        private readonly ArkMailProvider $arkMail,
-        private readonly ShopIntegrationCredentials $credentials,
+        private readonly ArkMailClient $arkMail,
     ) {}
 
+    /**
+     * @return 'ark_mail'|'local_log'|'none'
+     */
     public function providerMode(): string
     {
         if ($this->arkMail->isConfigured()) {
             return 'ark_mail';
         }
 
-        if ($this->credentials->postmarkConfigured()) {
-            return 'byo_postmark';
-        }
-
-        // Local/dev log mailer is not a production provider — still allow explicit log/array in non-production
-        $mailer = (string) config('mail.default');
-        if (app()->environment('production') && in_array($mailer, ['log', 'array'], true)) {
-            return 'none';
-        }
-
-        if (in_array($mailer, ['postmark', 'smtp', 'ses', 'mailgun', 'sendmail'], true)) {
-            return 'byo_laravel';
-        }
-
-        if (! app()->environment('production') && in_array($mailer, ['log', 'array'], true)) {
+        if ($this->allowsLocalMailer()) {
             return 'local_log';
         }
 
@@ -60,16 +50,12 @@ final class OutboundTransactionalMail
             $settings->ark_mail_status === 'suspended' => 'Suspended',
             $settings->ark_mail_status === 'error' => 'Configuration error',
             $this->arkMail->isConfigured() => 'Connected',
-            $this->credentials->postmarkConfigured() => 'Connected (your Postmark)',
-            $this->providerMode() === 'local_log' => 'Local log mailer',
-            $this->providerMode() === 'byo_laravel' => 'Connected (your mailer)',
+            $this->providerMode() === 'local_log' => 'Local development mailer',
             default => 'Not connected',
         };
     }
 
     /**
-     * Preferred entry for existing Mailable-based flows.
-     *
      * @param  list<array{filename: string, mime: string, path?: string, content?: string}>  $attachments
      */
     public function sendMailable(
@@ -101,7 +87,7 @@ final class OutboundTransactionalMail
             return $this->arkMail->send($envelope);
         }
 
-        // BYO / local: preserve existing Laravel Mail behavior
+        // local_log / array — development and automated tests only
         try {
             Mail::to(strtolower(trim($recipientEmail)))->send($mailable);
         } catch (\Throwable $e) {
@@ -118,5 +104,16 @@ final class OutboundTransactionalMail
         }
 
         return TransactionalMailResult::notConfigured();
+    }
+
+    private function allowsLocalMailer(): bool
+    {
+        if (app()->environment('production')) {
+            return false;
+        }
+
+        $mailer = (string) config('mail.default');
+
+        return in_array($mailer, ['log', 'array'], true);
     }
 }

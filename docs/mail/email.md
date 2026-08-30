@@ -1,25 +1,44 @@
-# Customer email (ARK Mail + BYO)
+# Customer email (ARK Mail)
 
-## Options
+Official ARK sends production transactional email through **ARK Mail** only.
 
-1. **ARK Mail** (recommended convenience) — managed transactional email via the private hosted ARK Mail service. The shop never receives Postmark master credentials.
-2. **Bring your own Postmark** — configure a server token under Settings → Email. Self-hosted ARK remains fully independent.
-3. **Not configured** — send actions show *Email isn’t configured yet* and link to Settings. No false “sent”, no crash, no silent discard.
+```
+OutboundTransactionalMail
+        ↓
+ArkMailClient
+        ↓
+private ark-mail control plane
+        ↓
+Postmark (service-side)
+```
+
+## Production behavior
+
+| State | Result |
+|---|---|
+| ARK Mail connected | Transactional mail works |
+| ARK Mail not connected | *Email isn’t configured yet.* — no false “sent” |
+
+There is **no** official BYO Postmark / SMTP Settings path. Forks may implement other providers under AGPL; official ARK does not maintain that seam.
+
+## Development / CI
+
+Non-production environments may use Laravel `log` or `array` mailers so local work and tests do not require the hosted service.
 
 ## Reply-To
 
-ARK Mail sends From an ARK-controlled domain (`shop-{id}@sending-domain`). **Reply-To** is the shop’s configured email (Shop Profile / reply-to). Customers reply directly to the shop.
+When ARK Mail is connected, customer replies go to the shop reply-to address (Settings → Email), defaulting to Shop Profile email.
 
 ## Transactional only
 
-ARK Mail allows operational classes such as estimate, invoice, inspection, appointment, document, payment/deposit/review links, and account system messages. Marketing, newsletters, and broadcast are rejected by the hosted service — not by trusting the client label.
+Estimate, invoice, inspection, appointment, document, payment/deposit/review links, and account system messages. Marketing and broadcast are rejected by the hosted service.
 
 ## Configuration
 
 ```env
 ARK_MAIL_SERVICE_URL=
 ARK_MAIL_ALLOW_ACTIVATION=false
-POSTMARK_TOKEN=
+MAIL_MAILER=log
 ```
 
 Never put ARK Mail’s upstream Postmark credentials in self-hosted ARK.

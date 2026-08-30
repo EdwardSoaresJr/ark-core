@@ -251,6 +251,7 @@ test('exception reporter redacts sensitive request input', function () {
         'twilio_auth_token' => 'twilio-live-token',
         'square_access_token' => 'square-live-token',
         'postmark_token' => 'postmark-live-token',
+        'ark_mail_credential' => 'arkmail-secret',
         'messenger_page_access_token' => 'meta-live-token',
         'integrations' => [
             'webhook_secret' => 'nested-secret',
@@ -265,6 +266,7 @@ test('exception reporter redacts sensitive request input', function () {
         ->and($redacted['twilio_auth_token'])->toBe('[redacted]')
         ->and($redacted['square_access_token'])->toBe('[redacted]')
         ->and($redacted['postmark_token'])->toBe('[redacted]')
+        ->and($redacted['ark_mail_credential'])->toBe('[redacted]')
         ->and($redacted['messenger_page_access_token'])->toBe('[redacted]')
         ->and($redacted['integrations']['webhook_secret'])->toBe('[redacted]')
         ->and($redacted['integrations']['shop_phone'])->toBe('555-0100');

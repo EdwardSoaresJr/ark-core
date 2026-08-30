@@ -127,7 +127,7 @@ Optional integrations include:
 
 * Square
 * Twilio
-* Postmark
+* ARK Mail
 * PartsTech
 * OpenAI / Dragon
 * External labor-guide imports

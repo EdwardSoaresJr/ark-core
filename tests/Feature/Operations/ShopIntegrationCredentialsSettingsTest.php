@@ -6,6 +6,7 @@ use App\Ark\Operations\Telephony\TelephonyHealth;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\Schema;
 
 test('communications settings save twilio credentials encrypted in shop settings', function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -111,7 +112,6 @@ test('shop integration credentials fall back to env when database is empty', fun
         'partstech_username' => null,
         'partstech_api_key' => null,
         'partstech_password' => null,
-        'postmark_token' => null,
     ]);
 
     config()->set('services.twilio.account_sid', 'AC-env-only');
@@ -121,14 +121,12 @@ test('shop integration credentials fall back to env when database is empty', fun
     config()->set('services.square.location_id', 'LOC-ENV');
     config()->set('services.partstech.username', 'parts-env');
     config()->set('services.partstech.password', 'parts-secret');
-    config()->set('services.postmark.token', 'postmark-env-token');
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
     expect($credentials->twilioCredentialSource())->toBe('env')
         ->and($credentials->squareCredentialSource())->toBe('env')
-        ->and($credentials->partsTechCredentialSource())->toBe('env')
-        ->and($credentials->postmarkCredentialSource())->toBe('env');
+        ->and($credentials->partsTechCredentialSource())->toBe('env');
 });
 
 test('partstech settings save credentials encrypted in shop settings', function () {
@@ -158,15 +156,12 @@ test('partstech settings save credentials encrypted in shop settings', function 
         ->and($credentials->partsTechQuoteImportConfigured())->toBeTrue();
 });
 
-test('email settings save postmark credentials encrypted in shop settings', function () {
+test('email settings save reply-to without byo postmark token', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
-    config()->set('services.postmark.token', null);
-
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.email.update'), [
-            'postmark_token' => 'postmark-server-token',
             'postmark_reply_to' => 'service@example.com',
             'postmark_reply_to_name' => 'Example Shop',
         ])
@@ -176,11 +171,10 @@ test('email settings save postmark credentials encrypted in shop settings', func
         ]));
 
     $settings = ShopSettings::current()->fresh();
-    $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($settings->postmark_token)->toBe('postmark-server-token')
-        ->and($settings->postmark_reply_to)->toBe('service@example.com')
-        ->and($credentials->postmarkConfigured())->toBeTrue();
+    expect($settings->postmark_reply_to)->toBe('service@example.com')
+        ->and($settings->postmark_reply_to_name)->toBe('Example Shop')
+        ->and(Schema::hasColumn('shop_settings', 'postmark_token'))->toBeFalse();
 });
 
 test('integration settings pages show credential fields', function () {
@@ -209,8 +203,8 @@ test('integration settings pages show credential fields', function () {
         'communications-tab' => 'email',
     ]))
         ->assertOk()
-        ->assertSee('Postmark email')
-        ->assertSee('Server token');
+        ->assertSee('ARK Mail')
+        ->assertSee('Reply-To');
 });
 
 test('shop integration credentials prefer database values over env fallback', function () {

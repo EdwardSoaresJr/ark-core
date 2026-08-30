@@ -1,27 +1,19 @@
 <?php
 
-namespace App\Ark\Mail\Providers;
+namespace App\Ark\Mail;
 
 use App\Ark\Install\InstallationIdentity;
-use App\Ark\Mail\TransactionalMailEnvelope;
-use App\Ark\Mail\TransactionalMailProvider;
-use App\Ark\Mail\TransactionalMailResult;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Untrusted client for the private ARK Mail control plane.
- * Never holds Postmark master credentials.
+ * Untrusted public client for the private ARK Mail control plane.
+ * Official production path only — not a generic mail-provider adapter.
  */
-final class ArkMailProvider implements TransactionalMailProvider
+final class ArkMailClient
 {
-    public function name(): string
-    {
-        return 'ark_mail';
-    }
-
     public function isConfigured(): bool
     {
         $settings = ShopSettings::current();
@@ -124,7 +116,6 @@ final class ArkMailProvider implements TransactionalMailProvider
         Log::info('ark_mail.client.rejected', [
             'correlation_id' => $correlationId,
             'reason_code' => $reason,
-            // never log credential
         ]);
 
         return TransactionalMailResult::rejected($reason, $message, $correlationId);
