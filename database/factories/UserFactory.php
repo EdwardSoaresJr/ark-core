@@ -31,7 +31,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'accent_theme' => AccentTheme::Ark2->value,
-            'display_theme' => DisplayTheme::System->value,
+            'display_theme' => DisplayTheme::default()->value,
             'email_verified_at' => now(),
         ];
     }

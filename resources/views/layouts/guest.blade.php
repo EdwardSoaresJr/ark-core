@@ -18,11 +18,11 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @else
             <style>
-                body { margin: 0; min-height: 100vh; background: #f1f5f9; color: #0f172a; font-family: ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+                body { margin: 0; min-height: 100vh; background: #f1f5f9; color: #020617; font-family: ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
                 label { display: block; font-size: 0.875rem; font-weight: 500; color: #334155; }
-                input[type="email"], input[type="password"], input[type="text"] { margin-top: 0.25rem; display: block; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+                input[type="email"], input[type="password"], input[type="text"] { margin-top: 0.25rem; display: block; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 0.125rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; }
                 input[type="checkbox"] { margin: 0; }
-                button, .btn-primary { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 0.375rem; background: #0e7490; color: #fff; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; }
+                button, .btn-primary { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 0.125rem; background: #020617; color: #fff; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; }
                 a { color: #475569; font-size: 0.875rem; }
                 .text-red-600, [class*="text-red"] { color: #dc2626; font-size: 0.875rem; }
             </style>
@@ -31,15 +31,8 @@
     <body class="font-sans text-slate-950 antialiased">
         <div class="flex min-h-screen flex-col items-center bg-slate-100 pt-6 sm:justify-center sm:pt-0">
             <div>
-                <a href="/" class="inline-flex items-center gap-3 no-underline" aria-label="ARK">
-                    <img
-                        src="{{ \App\Support\Branding\Branding::sidebarIcon() }}"
-                        alt=""
-                        width="40"
-                        height="40"
-                        style="height: 40px; width: 40px;"
-                    >
-                    <span class="text-2xl font-semibold tracking-tight text-slate-900">ARK</span>
+                <a href="/">
+                    <img src="{{ \App\Support\Branding\Branding::loginImage() }}" alt="{{ config('app.name', 'ARK-SMS') }}" style="max-height: 48px; width: auto;">
                 </a>
             </div>
 

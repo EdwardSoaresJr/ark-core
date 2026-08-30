@@ -103,7 +103,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                         return prefersDark ? 'dark' : 'light';
                     }
 
-                    return legacyTheme === 'dark' || (!legacyTheme && prefersDark) ? 'dark' : 'light';
+                    // No server preference and no legacy storage: light (not OS dark).
+                    return legacyTheme === 'dark' ? 'dark' : 'light';
                 })();
 
                 const applyTheme = (theme) => {

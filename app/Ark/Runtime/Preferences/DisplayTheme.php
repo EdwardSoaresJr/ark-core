@@ -17,9 +17,15 @@ enum DisplayTheme: string
         };
     }
 
+    /**
+     * Fresh users / missing preference default to light.
+     *
+     * Dark mode is incomplete; "system" remains an explicit saved choice for
+     * users who pick it, but it must not be the first-run implicit default.
+     */
     public static function default(): self
     {
-        return self::System;
+        return self::Light;
     }
 
     public static function tryFromStored(?string $value): self

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('display_theme', 16)->default('system')->after('accent_color');
+            $table->string('display_theme', 16)->default('light')->after('accent_color');
         });
     }
 

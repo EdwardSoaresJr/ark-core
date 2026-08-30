@@ -2,9 +2,11 @@
 
 use App\Ark\Install\CompleteInstallationAction;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Runtime\Preferences\DisplayTheme;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -13,13 +15,17 @@ beforeEach(function () {
     config(['auth.require_email_verification' => true]);
 });
 
-it('marks the installer-created administrator email as verified', function () {
+function invokeEnsureAdministrator(array $admin): User
+{
     $action = app(CompleteInstallationAction::class);
     $method = new \ReflectionMethod(CompleteInstallationAction::class, 'ensureAdministrator');
     $method->setAccessible(true);
 
-    /** @var User $admin */
-    $admin = $method->invoke($action, [
+    return $method->invoke($action, $admin);
+}
+
+it('marks the installer-created administrator email as verified', function () {
+    $admin = invokeEnsureAdministrator([
         'name' => 'Shop Owner',
         'email' => 'owner@example.test',
         'password' => 'secure-password-123',
@@ -31,12 +37,9 @@ it('marks the installer-created administrator email as verified', function () {
 });
 
 it('lets the installer-created administrator past the verification notice without mail', function () {
-    $action = app(CompleteInstallationAction::class);
-    $method = new \ReflectionMethod(CompleteInstallationAction::class, 'ensureAdministrator');
-    $method->setAccessible(true);
+    Notification::fake();
 
-    /** @var User $admin */
-    $admin = $method->invoke($action, [
+    $admin = invokeEnsureAdministrator([
         'name' => 'Shop Owner',
         'email' => 'owner@example.test',
         'password' => 'secure-password-123',
@@ -45,16 +48,55 @@ it('lets the installer-created administrator past the verification notice withou
     $this->actingAs($admin->fresh())
         ->get('/app/verify-email')
         ->assertRedirect();
+
+    Notification::assertNothingSent();
 });
 
-it('presents ARK branding on the verification notice for unverified users', function () {
-    $user = User::factory()->unverified()->create();
+it('gives the installer-created administrator the light appearance default', function () {
+    expect(DisplayTheme::default())->toBe(DisplayTheme::Light);
 
-    $this->actingAs($user)
-        ->get('/app/verify-email')
-        ->assertOk()
-        ->assertSee('ARK', false)
-        ->assertSee('Verify your email', false)
-        ->assertDontSee('ARK-SMS', false)
-        ->assertDontSee('AUTO REPAIR KEEPER', false);
+    $admin = invokeEnsureAdministrator([
+        'name' => 'Shop Owner',
+        'email' => 'owner@example.test',
+        'password' => 'secure-password-123',
+    ]);
+
+    expect($admin->display_theme)->toBe(DisplayTheme::Light->value)
+        ->and($admin->displayTheme())->toBe(DisplayTheme::Light)
+        ->and($admin->displayTheme()->resolvesToDark(true))->toBeFalse();
+});
+
+it('does not auto-verify later staff accounts created outside the installer', function () {
+    Notification::fake();
+
+    $bootstrap = invokeEnsureAdministrator([
+        'name' => 'Shop Owner',
+        'email' => 'owner@example.test',
+        'password' => 'secure-password-123',
+    ]);
+
+    $this->actingAs($bootstrap)
+        ->post(route('operations.settings.staff.store'), [
+            'name' => 'New Advisor',
+            'email' => 'advisor@example.test',
+            'roles' => [ArkRole::Advisor->value],
+        ])
+        ->assertRedirect();
+
+    $advisor = User::query()->where('email', 'advisor@example.test')->firstOrFail();
+
+    expect($advisor->email_verified_at)->toBeNull()
+        ->and($advisor->hasVerifiedEmail())->toBeFalse();
+});
+
+it('preserves explicit existing appearance preferences', function () {
+    foreach ([DisplayTheme::Dark, DisplayTheme::Light, DisplayTheme::System] as $theme) {
+        $user = User::factory()->create(['display_theme' => $theme->value]);
+
+        expect($user->fresh()->displayTheme())->toBe($theme);
+    }
+
+    expect(DisplayTheme::tryFromStored('dark'))->toBe(DisplayTheme::Dark)
+        ->and(DisplayTheme::tryFromStored('system'))->toBe(DisplayTheme::System)
+        ->and(DisplayTheme::tryFromStored(null))->toBe(DisplayTheme::Light);
 });

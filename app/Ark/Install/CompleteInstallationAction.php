@@ -6,6 +6,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Workstations\StoreWorkstationAction;
 use App\Ark\Operations\Workstations\Workstation;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Runtime\Preferences\DisplayTheme;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Encryption\Encrypter;
@@ -219,6 +220,11 @@ final class CompleteInstallationAction
         // administrator must not be blocked by MustVerifyEmail after install.
         if ($user->email_verified_at === null) {
             $user->email_verified_at = now();
+        }
+        // Fresh install default appearance is light (dark mode is incomplete).
+        // Do not overwrite an already-persisted explicit preference.
+        if ($user->display_theme === null || $user->display_theme === '') {
+            $user->display_theme = DisplayTheme::default()->value;
         }
         if (! $user->exists) {
             $user->password = Hash::make($admin['password']);

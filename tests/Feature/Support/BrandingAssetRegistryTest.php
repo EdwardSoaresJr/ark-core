@@ -31,12 +31,8 @@ test('guest and operations layouts reference branding authority', function () {
     $guestHtml = view('layouts.guest', ['slot' => ''])->render();
 
     expect($guestHtml)
-        ->toContain(Branding::sidebarIcon())
-        ->toContain('>ARK</span>')
-        ->toContain(Branding::tabTitle())
-        ->toContain(Branding::favicon('ico'))
-        ->not->toContain(Branding::loginImage())
-        ->not->toContain('ARK-SMS');
+        ->toContain(Branding::loginImage())
+        ->toContain(Branding::favicon('ico'));
 
     // Operations shell needs Vite build assets; skip when the manifest is absent locally.
     if (! file_exists(public_path('build/manifest.json'))) {

@@ -68,7 +68,7 @@ final class Branding
 
     public static function tabTitle(): string
     {
-        return 'ARK';
+        return 'ARK-SMS';
     }
 
     public static function learnName(): string

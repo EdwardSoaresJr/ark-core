@@ -6,6 +6,7 @@ use App\Ark\Operations\Labor\RecordTechnicianCompensationAgreementAction;
 use App\Ark\Operations\Labor\TechnicianFloorWageSuggestion;
 use App\Ark\Operations\Labor\TechnicianLaborPayBasis;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Runtime\Preferences\DisplayTheme;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,6 +53,7 @@ class StaffMemberController
             'password' => StaffInvitationIssuer::placeholderPassword(),
             'is_active' => true,
             'password_set_at' => null,
+            'display_theme' => DisplayTheme::default()->value,
         ]);
 
         $user->syncRoles($roles);
