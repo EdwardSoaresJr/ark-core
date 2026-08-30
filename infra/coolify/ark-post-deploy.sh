@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
-# Container post-deploy tasks for ARK on Coolify.
-# Called from infra/coolify/entrypoint.sh on every start.
+# Installed-instance post-deploy for ARK on Coolify / canonical Docker.
+# Invoked from infra/coolify/entrypoint.sh when InstallationState is installed.
+# Defense in depth: refuse DB mutations on first-run / uninstalled hosts.
 set -euo pipefail
 
 cd /app
 
-echo "[ark-post-deploy] running migrations..."
+set +e
+php artisan ark:install-status --check-installed --quiet
+install_status=$?
+set -e
+
+if [[ "$install_status" -ne 0 ]]; then
+    echo "[ark-post-deploy] ARK is not installed; skipping installed-instance post-deploy."
+    exit 0
+fi
+
+echo "[ark-post-deploy] ARK installed; running migrations..."
 php artisan migrate --force --no-interaction
 
 echo "[ark-post-deploy] syncing RBAC permissions..."
