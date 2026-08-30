@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Container post-deploy tasks for ARK on Coolify.
+# Called from infra/coolify/entrypoint.sh on every start.
+set -euo pipefail
+
+cd /app
+
+echo "[ark-post-deploy] running migrations..."
+php artisan migrate --force --no-interaction
+
+echo "[ark-post-deploy] syncing RBAC permissions..."
+php artisan db:seed --class=Database\\Seeders\\ArkAuthorizationSeeder --force --no-interaction
+
+echo "[ark-post-deploy] ensuring voice SIP transport config..."
+php artisan ark:voice:ensure-transport-config --no-interaction || {
+    echo "[ark-post-deploy] Voice SIP registrar not configured yet (non-fatal)." >&2
+}
+
+echo "[ark-post-deploy] verifying mobile push transport..."
+php artisan ark:mobile-push:verify --no-interaction || {
+    echo "[ark-post-deploy] Mobile push transport not operational (check FIREBASE_CREDENTIALS + FCM_ENABLED)." >&2
+}
+
+echo "[ark-post-deploy] backfilling communication reviews from call intelligence..."
+php artisan communications:sync-sms-intelligence --days=90 --queue-analysis --no-interaction
+php artisan communications:sync-reviews --no-interaction
+
+php artisan config:clear --no-interaction >/dev/null 2>&1 || true
+php artisan route:clear --no-interaction >/dev/null 2>&1 || true
+php artisan view:clear --no-interaction >/dev/null 2>&1 || true
+
+echo "[ark-post-deploy] optimizing common-problem featured media..."
+php artisan ark:public-surface:optimize-common-problem-media --only-missing --no-interaction || {
+    echo "[ark-post-deploy] Common-problem media optimization skipped or failed (non-fatal)." >&2
+}
+
+if [[ "${BOOKSTACK_CUTOVER:-false}" == "true" ]] \
+    && [[ -n "${BOOKSTACK_API_TOKEN_ID:-}" ]] \
+    && [[ -n "${BOOKSTACK_API_TOKEN_SECRET:-}" ]]; then
+    echo "[ark-post-deploy] syncing ARKademy catalog to BookStack..."
+    php artisan ark:arkademy:import-bookstack --force --no-interaction || {
+        echo "[ark-post-deploy] BookStack import failed (non-fatal)." >&2
+    }
+    php artisan ark:bookstack:lockdown --no-interaction || {
+        echo "[ark-post-deploy] BookStack lockdown failed (non-fatal)." >&2
+    }
+else
+    echo "[ark-post-deploy] BookStack sync skipped (cutover or API token not configured)."
+fi
+
+echo "[ark-post-deploy] complete."
