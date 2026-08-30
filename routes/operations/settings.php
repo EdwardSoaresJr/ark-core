@@ -80,6 +80,12 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/email', [ShopIntegrationSettingsController::class, 'updateEmail'])
         ->name('operations.settings.shop.email.update');
 
+    Route::post('/app/settings/shop/email/ark-mail/enable', [ShopIntegrationSettingsController::class, 'enableArkMail'])
+        ->name('operations.settings.shop.email.ark-mail.enable');
+
+    Route::post('/app/settings/shop/email/ark-mail/disconnect', [ShopIntegrationSettingsController::class, 'disconnectArkMail'])
+        ->name('operations.settings.shop.email.ark-mail.disconnect');
+
     Route::patch('/app/settings/shop/telephony', [ShopCommunicationsSettingsController::class, 'updateTelephony'])
         ->name('operations.settings.shop.telephony.update');
 

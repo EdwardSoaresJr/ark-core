@@ -8,9 +8,11 @@ use App\Ark\Operations\Conversations\ConversationParticipantResolver;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Mail\OutboundTransactionalMail;
+use App\Ark\Mail\TransactionalMailException;
+use App\Ark\Mail\TransactionalMailOperation;
 use App\Mail\DocumentCustomerMail;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 final class DocumentEmailDelivery
@@ -21,6 +23,7 @@ final class DocumentEmailDelivery
         private readonly ConversationRecorder $conversations,
         private readonly ConversationResolver $conversationResolver,
         private readonly ConversationParticipantResolver $participants,
+        private readonly OutboundTransactionalMail $outboundMail,
     ) {}
 
     public function send(
@@ -45,14 +48,44 @@ final class DocumentEmailDelivery
         $note = filled($staffNote) ? trim($staffNote) : null;
         $repairOrder = $document->repairOrder;
 
-        Mail::to($recipientEmail)->send(new DocumentCustomerMail(
+        $mailable = new DocumentCustomerMail(
             customer: $customer,
             document: $document,
             shopName: $shopName,
             attachmentFilename: $attachmentFilename,
             repairOrder: $repairOrder,
             staffNote: $note,
-        ));
+        );
+
+        $attachments = [];
+        if (filled($document->storage_path)) {
+            $full = storage_path('app/'.$document->storage_path);
+            // local disk may store under storage/app/private or storage/app
+            if (! is_file($full)) {
+                $full = \Illuminate\Support\Facades\Storage::disk('local')->path($document->storage_path);
+            }
+            if (is_file($full)) {
+                $attachments[] = [
+                    'filename' => $attachmentFilename,
+                    'mime' => $document->content_type ?: 'application/octet-stream',
+                    'path' => $full,
+                ];
+            }
+        }
+
+        $mailResult = $this->outboundMail->sendMailable(
+            TransactionalMailOperation::DocumentSend,
+            $recipientEmail,
+            $mailable,
+            'document-'.$document->id.'-'.Str::uuid(),
+            'document',
+            (string) $document->id,
+            $attachments,
+        );
+
+        if (! $mailResult->ok()) {
+            throw new TransactionalMailException($mailResult);
+        }
 
         $summary = sprintf(
             '%s emailed to %s.',

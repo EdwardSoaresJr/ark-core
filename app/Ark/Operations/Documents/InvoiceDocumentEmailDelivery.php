@@ -15,9 +15,12 @@ use App\Ark\Operations\Payments\CreateCustomerPayTokenAction;
 use App\Ark\Operations\Payments\SquareConfiguration;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Mail\OutboundTransactionalMail;
+use App\Ark\Mail\TransactionalMailException;
+use App\Ark\Mail\TransactionalMailOperation;
 use App\Mail\InvoiceCustomerMail;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Throwable;
 
 class InvoiceDocumentEmailDelivery
@@ -30,6 +33,7 @@ class InvoiceDocumentEmailDelivery
         private readonly OperationalEventRecorder $events,
         private readonly ConversationRecorder $conversations,
         private readonly CommunicationEventRecorder $communicationEvents,
+        private readonly OutboundTransactionalMail $outboundMail,
     ) {}
 
     public function send(RepairOrder $repairOrder, User $actor, string $recipientEmail, ?string $staffNote = null): void
@@ -72,7 +76,7 @@ class InvoiceDocumentEmailDelivery
         $shopName = $settings->shop_name ?: config('app.name', 'ARK-SMS');
         $pdfFilename = sprintf('invoice-ro-%d.pdf', $repairOrder->repair_order_id);
 
-        Mail::to($recipientEmail)->send(new InvoiceCustomerMail(
+        $mailable = new InvoiceCustomerMail(
             repairOrder: $repairOrder,
             balanceDueCents: $balance->balanceDueCents,
             shopName: $shopName,
@@ -80,7 +84,30 @@ class InvoiceDocumentEmailDelivery
             pdfFilename: $pdfFilename,
             staffNote: filled($staffNote) ? trim($staffNote) : null,
             payUrl: $payUrl,
-        ));
+        );
+
+        $attachments = [];
+        if (filled($invoice->pdf_path) && is_file($invoice->pdf_path)) {
+            $attachments[] = [
+                'filename' => $pdfFilename,
+                'mime' => 'application/pdf',
+                'path' => $invoice->pdf_path,
+            ];
+        }
+
+        $mailResult = $this->outboundMail->sendMailable(
+            TransactionalMailOperation::InvoiceSend,
+            $recipientEmail,
+            $mailable,
+            'invoice-'.$repairOrder->repair_order_id.'-'.Str::uuid(),
+            'repair_order',
+            (string) $repairOrder->repair_order_id,
+            $attachments,
+        );
+
+        if (! $mailResult->ok()) {
+            throw new TransactionalMailException($mailResult);
+        }
 
         $summary = 'Final invoice emailed to '.$recipientEmail.'.';
 

@@ -14,6 +14,10 @@ return [
     |
     */
 
+    'ark_mail' => [
+        'base_url' => env('ARK_MAIL_SERVICE_URL'),
+        'allow_activation' => (bool) env('ARK_MAIL_ALLOW_ACTIVATION', false),
+    ],
     'postmark' => [
         'token' => env('POSTMARK_TOKEN', env('POSTMARK_API_KEY')),
     ],

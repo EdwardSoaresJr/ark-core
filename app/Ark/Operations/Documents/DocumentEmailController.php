@@ -39,12 +39,23 @@ final class DocumentEmailController
             ])->redirectTo($this->redirectBack($request, $customer, $document));
         }
 
-        $delivery->send(
-            $document,
-            $request->user(),
-            $recipientEmail,
-            $data['message'] ?? null,
-        );
+        try {
+            $delivery->send(
+                $document,
+                $request->user(),
+                $recipientEmail,
+                $data['message'] ?? null,
+            );
+        } catch (\App\Ark\Mail\TransactionalMailException $exception) {
+            $settingsUrl = route('operations.settings.shop.edit', [
+                'section' => 'communications',
+                'communications-tab' => 'email',
+            ]);
+
+            return redirect()
+                ->to($this->redirectBack($request, $customer, $document))
+                ->with('status', $exception->result->operatorMessage().' Open Settings → Email: '.$settingsUrl);
+        }
 
         return redirect()
             ->to($this->redirectBack($request, $customer, $document))

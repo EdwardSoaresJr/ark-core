@@ -65,6 +65,15 @@ class EstimateDocumentEmailController
             return redirect()
                 ->to($this->redirectBack($request, $repairOrder))
                 ->with('status', 'Estimate email failed. The PDF could not be generated — check Chromium runtime support.');
+        } catch (\App\Ark\Mail\TransactionalMailException $exception) {
+            $settingsUrl = route('operations.settings.shop.edit', [
+                'section' => 'communications',
+                'communications-tab' => 'email',
+            ]);
+
+            return redirect()
+                ->to($this->redirectBack($request, $repairOrder))
+                ->with('status', $exception->result->operatorMessage().' Open Settings → Email: '.$settingsUrl);
         }
 
         if ($request->boolean('acknowledge_timing_fluids')) {

@@ -15,9 +15,12 @@ use App\Ark\Operations\Portal\CreateOrReuseEstimateAccessTokenAction;
 use App\Ark\Operations\RepairOrders\MarkEstimateAwaitingCustomerApprovalAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Mail\OutboundTransactionalMail;
+use App\Ark\Mail\TransactionalMailException;
+use App\Ark\Mail\TransactionalMailOperation;
 use App\Mail\EstimateCustomerMail;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Throwable;
 
 class EstimateDocumentEmailDelivery
@@ -30,6 +33,7 @@ class EstimateDocumentEmailDelivery
         private readonly CommunicationEventRecorder $communicationEvents,
         private readonly CreateOrReuseEstimateAccessTokenAction $estimateTokens,
         private readonly MarkEstimateAwaitingCustomerApprovalAction $markAwaitingApproval,
+        private readonly OutboundTransactionalMail $outboundMail,
     ) {}
 
     /**
@@ -66,7 +70,7 @@ class EstimateDocumentEmailDelivery
         $accessToken = $this->estimateTokens->execute($repairOrder, $actor);
         $portalUrl = route('portal.estimates.show', ['token' => $accessToken->plainToken]);
 
-        Mail::to($recipientEmail)->send(new EstimateCustomerMail(
+        $mailable = new EstimateCustomerMail(
             repairOrder: $repairOrder,
             totals: $totals,
             shopName: $shopName,
@@ -74,7 +78,30 @@ class EstimateDocumentEmailDelivery
             pdfPath: $document->pdf_path,
             pdfFilename: $pdfFilename,
             staffNote: filled($staffNote) ? trim($staffNote) : null,
-        ));
+        );
+
+        $attachments = [];
+        if (filled($document->pdf_path) && is_file($document->pdf_path)) {
+            $attachments[] = [
+                'filename' => $pdfFilename,
+                'mime' => 'application/pdf',
+                'path' => $document->pdf_path,
+            ];
+        }
+
+        $mailResult = $this->outboundMail->sendMailable(
+            TransactionalMailOperation::EstimateSend,
+            $recipientEmail,
+            $mailable,
+            'estimate-'.$repairOrder->repair_order_id.'-'.Str::uuid(),
+            'repair_order',
+            (string) $repairOrder->repair_order_id,
+            $attachments,
+        );
+
+        if (! $mailResult->ok()) {
+            throw new TransactionalMailException($mailResult);
+        }
 
         $summary = 'Estimate emailed to '.$recipientEmail.' with portal review link.';
 

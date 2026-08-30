@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Mail\ArkMailActivationClient;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
@@ -124,5 +125,46 @@ public function updateEmail(Request $request): RedirectResponse
                 'communications-tab' => 'email',
             ])
             ->with('status', 'Email settings saved.');
+    }
+
+    public function enableArkMail(Request $request, ArkMailActivationClient $activation): RedirectResponse
+    {
+        $data = $request->validate([
+            'ark_mail_service_url' => ['nullable', 'url', 'max:255'],
+        ]);
+
+        $redirect = redirect()->route('operations.settings.shop.edit', [
+            'section' => 'communications',
+            'communications-tab' => 'email',
+        ]);
+
+        try {
+            if (filled($data['ark_mail_service_url'] ?? null)) {
+                ShopSettings::current()->persistTrusted([
+                    'ark_mail_service_url' => rtrim((string) $data['ark_mail_service_url'], '/'),
+                ]);
+            }
+            $activation->activate();
+        } catch (\Throwable $e) {
+            ShopSettings::current()->persistTrusted([
+                'ark_mail_status' => 'error',
+            ]);
+
+            return $redirect->with('status', 'ARK Mail could not be enabled: '.$e->getMessage());
+        }
+
+        return $redirect->with('status', 'ARK Mail connected. Replies go to your shop email.');
+    }
+
+    public function disconnectArkMail(ArkMailActivationClient $activation): RedirectResponse
+    {
+        $activation->disconnect();
+
+        return redirect()
+            ->route('operations.settings.shop.edit', [
+                'section' => 'communications',
+                'communications-tab' => 'email',
+            ])
+            ->with('status', 'ARK Mail disconnected. You can still use your own Postmark provider.');
     }
 }
