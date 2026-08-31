@@ -8,7 +8,7 @@
 
 ## Problem
 
-LugsNPlugs has mature RO, estimate, and workflow tooling. The weak point is **before the RO exists**: website forms, calls, texts, Messenger, and future channel ingress leak into email, hope, or disconnected surfaces.
+Demo Auto Repair has mature RO, estimate, and workflow tooling. The weak point is **before the RO exists**: website forms, calls, texts, Messenger, and future channel ingress leak into email, hope, or disconnected surfaces.
 
 ## Primary funnel
 
@@ -222,7 +222,7 @@ They sometimes overlap. For strangers they **diverge** — and burying unknown S
 
 ## Public surface goal
 
-`lugsnplugs.com` is a **thin public surface inside ARK SMS** — not a brochure CMS.
+`demo-auto.example` is a **thin public surface inside ARK SMS** — not a brochure CMS.
 
 Homepage job: capture high-quality leads (concern + phone), not page views or blog traffic.
 
@@ -383,7 +383,7 @@ Architecture gets simpler; business capability gets larger.
 
 ## Companion docs
 
-- `docs/deployment/lugsnplugs-public-surface-cutover-v1.md` — Botble → public surface cutover
+- `docs/deployment/demo-auto-public-surface-cutover-v1.md` — Botble → public surface cutover
 - `docs/communications-authority.md` — Conversation as relationship authority
 - `.cursor/rules/ark-no-encounters.mdc` — Encounter retired
 - `.cursor/rules/ark-pressure-first.mdc` — observe before automate

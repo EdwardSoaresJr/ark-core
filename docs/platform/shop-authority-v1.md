@@ -57,16 +57,16 @@ Example:
 
 | Field | Value |
 | --- | --- |
-| slug | `lugsnplugs` |
-| display_name | LugsNPlugs Automotive |
-| legal_name | LugsNPlugs Automotive LLC |
+| slug | `demo-auto` |
+| display_name | Demo Auto Repair |
+| legal_name | Demo Auto Repair LLC |
 
 ### Slug immutability (locked)
 
 After provisioning, **`slug` never changes**.
 
 ```text
-lugsnplugs  →  always  lugsnplugs.arksms.com
+demo-auto  →  always  demo.arksms.example
 ```
 
 Rebrand later by changing **display name**, **Public Domain**, logo, website — not the Operations Domain.
@@ -83,9 +83,9 @@ Per [domain-contract-v1.md](domain-contract-v1.md):
 
 | Concept | Example | Audience |
 | --- | --- | --- |
-| **Operations Domain** | `lugsnplugs.arksms.com` | Staff |
-| **Public Domain** | `lugsnplugs.com` | Customers (optional until connected) |
-| **Preview Domain** | `lugsnplugs-preview.arksms.com` | Temporary public (trial) |
+| **Operations Domain** | `demo.arksms.example` | Staff |
+| **Public Domain** | `demo-auto.example` | Customers (optional until connected) |
+| **Preview Domain** | `demo-preview.example` | Temporary public (trial) |
 
 DNS records, certificates, and Stancl domain rows are **projections** of these concepts.
 

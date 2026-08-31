@@ -3,7 +3,7 @@
 **Station:** Front Counter (fixed) + Portable Station (phone)  
 **Primary question:** Who needs a response or decision?
 
-Edward is a service advisor at LugsNPlugs. He splits time between the Front Counter VVX and the lot. ARK must treat his phone as a **Portable Station peer** — not a shrunken inbox app.
+Edward is a service advisor at Demo Auto Repair. He splits time between the Front Counter VVX and the lot. ARK must treat his phone as a **Portable Station peer** — not a shrunken inbox app.
 
 ---
 

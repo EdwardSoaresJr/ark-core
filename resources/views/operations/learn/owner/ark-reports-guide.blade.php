@@ -66,7 +66,7 @@
     <p>Advisors post ROs from the financial rail when invoice is ready — <strong>Post Repair Order</strong> records <code>posted_at</code> and includes the RO in Sales Posted. Close — Paid posts automatically. Unposted closed work does not appear in owner KPIs.</p>
 
     <h3>Target hints</h3>
-    <p>Green and amber hints on margin KPIs reflect targets in <strong>Settings → Owner Targets &amp; Reporting</strong>. Update there as LugsNPlugs targets evolve.</p>
+    <p>Green and amber hints on margin KPIs reflect targets in <strong>Settings → Owner Targets &amp; Reporting</strong>. Update there as shop targets evolve.</p>
 
     <h3>Owner digest email</h3>
     <p>When enabled, admins receive a daily email with Sales Posted, Cash Collected, reconciliation status, queue pressure, and links to Financial tab and Day Review. Schedule lives in Owner Targets settings.</p>

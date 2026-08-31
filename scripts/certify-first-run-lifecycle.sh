@@ -6,7 +6,7 @@
 # Usage (destructive to THIS Compose project name only):
 #   ./scripts/certify-first-run-lifecycle.sh
 #
-# Never points at LugsNPlugs / production volumes.
+# Never points at Demo Auto Repair / production volumes.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
