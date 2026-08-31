@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stranger Compose path certification:
+# Compose path certification:
 #   docker compose up -d --build  →  /setup reachable  →  install inside app  →  recreate still works
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -74,7 +74,7 @@ $result = app(CompleteInstallationAction::class)->execute([
         'port' => '3306',
         'database' => 'ark',
         'username' => 'ark',
-        'password' => 'ark',
+        'password' => \App\Ark\Install\RuntimeDatabaseConfig::read()['password'],
     ],
     'app_url' => 'http://localhost:8088',
     'shop' => [
@@ -147,4 +147,4 @@ if (!$user || !Hash::check('Compose-Passw0rd!', $user->password)) {
 echo "COMPOSE_RESTART_OK\n";
 PHP
 
-echo "==> COMPOSE STRANGER PATH PASS"
+echo "==> COMPOSE INSTALL PATH PASS"

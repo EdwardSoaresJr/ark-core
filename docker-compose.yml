@@ -1,36 +1,52 @@
-# Canonical self-host stack — same runtime architecture LugsNPlugs production uses.
+# Self-host stack.
 #
 #   docker compose up -d --build
 #   open http://localhost:8088 → /setup
 #
 # Services:
-#   mysql     — application database (durable volume)
-#   redis     — cache, sessions, queues (Horizon)
-#   app       — production ARK image: nginx, php-fpm, Horizon, Reverb, scheduler
+#   install-bootstrap — generates per-install secrets before MySQL starts
+#   mysql             — application database (durable volume)
+#   redis             — cache, sessions, queues (Horizon)
+#   app               — nginx, php-fpm, Horizon, Reverb, scheduler
 #
 # Persistent shop state lives in volumes (not in the image):
-#   ark_mysql, ark_redis, ark_storage
+#   ark_secrets, ark_mysql, ark_redis, ark_storage
 #
-# Wizard database fields (Compose network):
-#   host: mysql   port: 3306   database: ark   user: ark   password: ark
+# Database username is `ark`. Passwords are generated on first boot and are
+# not listed here. The setup wizard uses the runtime connection automatically.
 #
-# Local Reverb credentials below are for self-host only — not production secrets.
+# Public VPS overlay (HTTPS, no published MySQL port): docker-compose.vultr.yml
 
 services:
+  install-bootstrap:
+    image: alpine:3.20
+    restart: "no"
+    volumes:
+      - ark_secrets:/ark/secrets
+      - ark_mysql:/var/lib/mysql
+      - ./docker/selfhost/bootstrap-install-secrets.sh:/ark/bootstrap-install-secrets.sh:ro
+    command: ["/bin/sh", "/ark/bootstrap-install-secrets.sh"]
+
   mysql:
     image: mysql:8.4
     environment:
       MYSQL_DATABASE: ark
       MYSQL_USER: ark
-      MYSQL_PASSWORD: ark
-      MYSQL_ROOT_PASSWORD: arkroot
     ports:
       # Host-side tools only — app uses mysql:3306 on the Compose network
       - "3307:3306"
     volumes:
       - ark_mysql:/var/lib/mysql
+      - ark_secrets:/run/ark/secrets:ro
+      - ./docker/selfhost/mysql-with-secrets.sh:/ark/mysql-with-secrets.sh:ro
+      - ./docker/selfhost/mysql-healthcheck.sh:/ark/mysql-healthcheck.sh:ro
+    entrypoint: ["/bin/sh", "/ark/mysql-with-secrets.sh"]
+    command: ["mysqld"]
+    depends_on:
+      install-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uark", "-park"]
+      test: ["CMD", "/bin/sh", "/ark/mysql-healthcheck.sh"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -61,29 +77,23 @@ services:
       APP_DEBUG: "false"
       APP_URL: http://localhost:8088
       SHOP_BASE_URL: http://localhost:8088
+      ARK_MANAGED_DATABASE: "true"
 
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: "3306"
       DB_DATABASE: ark
       DB_USERNAME: ark
-      DB_PASSWORD: ark
 
       REDIS_CLIENT: phpredis
       REDIS_HOST: redis
       REDIS_PORT: "6379"
 
-      # Same semantics as LugsNPlugs production
       CACHE_STORE: redis
       SESSION_DRIVER: redis
       QUEUE_CONNECTION: redis
       BROADCAST_CONNECTION: reverb
 
-      # Reverb — process listens on 9090 inside the app container (supervisord).
-      # Browsers reach it via nginx on :80 (Compose publishes 8088).
-      REVERB_APP_ID: ark-local
-      REVERB_APP_KEY: arklocalreverbkey20c
-      REVERB_APP_SECRET: arklocalreverbsecret20charsx
       REVERB_SERVER_HOST: 0.0.0.0
       REVERB_SERVER_PORT: "9090"
       REVERB_BROADCAST_HOST: 127.0.0.1
@@ -93,8 +103,8 @@ services:
 
       LOG_CHANNEL: stderr
     volumes:
-      # Install lock, APP_KEY file, media, sessions/cache files if any, logs
       - ark_storage:/app/storage
+      - ark_secrets:/run/ark/secrets:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -102,6 +112,7 @@ services:
         condition: service_healthy
 
 volumes:
+  ark_secrets:
   ark_mysql:
   ark_redis:
   ark_storage:

@@ -21,6 +21,21 @@ find /app/storage/app /app/storage/framework -type d -exec chmod 2775 {} +
 find /app/storage/app /app/storage/framework -type f -exec chmod 664 {} + 2>/dev/null || true
 chmod 2775 /app/storage/logs
 
+# Compose/Vultr: load generated install secrets (DB password, Reverb, APP_KEY)
+# before PHP-FPM starts. Coolify/platform installs skip this file and keep
+# injected environment values.
+if [ -s "${ARK_INSTALL_SECRETS_FILE:-/run/ark/secrets/install.env}" ]; then
+    # shellcheck disable=SC1091
+    set -a
+    . "${ARK_INSTALL_SECRETS_FILE:-/run/ark/secrets/install.env}"
+    set +a
+    export DB_PASSWORD REVERB_APP_KEY REVERB_APP_SECRET
+    export DB_DATABASE="${DB_DATABASE:-ark}"
+    export DB_USERNAME="${DB_USERNAME:-ark}"
+    export REVERB_APP_ID="${REVERB_APP_ID:-ark}"
+    unset MYSQL_ROOT_PASSWORD
+fi
+
 # APP_KEY must exist in the process environment before supervisord starts php-fpm,
 # Horizon, Reverb, and the scheduler. Persists on ark_storage across recreate.
 # Presence of APP_KEY does NOT mean ARK is installed.

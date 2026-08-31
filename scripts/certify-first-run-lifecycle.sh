@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Disposable Compose certification: first-run must NOT run installed-instance post-deploy.
 #
-# Proves the live Vultr stranger failure mode:
-#   fresh volumes → boot → /setup usable → DB not polluted by migrate
+# Proves: fresh volumes → boot → /setup usable → DB not polluted by migrate
 #
 # Usage (destructive to THIS Compose project name only):
 #   ./scripts/certify-first-run-lifecycle.sh

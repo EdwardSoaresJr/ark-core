@@ -10,7 +10,10 @@ MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3307
 MYSQL_DB=ark
 MYSQL_USER=ark
-MYSQL_PASS=ark
+
+read_db_password() {
+  docker compose exec -T mysql sh -c 'grep ^DB_PASSWORD= /run/ark/secrets/install.env | cut -d= -f2- | tr -d "\""'
+}
 
 echo "==> Reset compose volumes (disposable)"
 "${COMPOSE[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
@@ -18,7 +21,7 @@ echo "==> Reset compose volumes (disposable)"
 
 echo "==> Wait for MySQL"
 for i in $(seq 1 60); do
-  if docker compose exec -T mysql mysqladmin ping -h 127.0.0.1 -uark -park --silent 2>/dev/null; then
+  if docker compose exec -T mysql /bin/sh /ark/mysql-healthcheck.sh >/dev/null 2>&1; then
     break
   fi
   sleep 2
@@ -28,8 +31,11 @@ for i in $(seq 1 60); do
   fi
 done
 
+MYSQL_PASS="$(read_db_password)"
+export MYSQL_HOST MYSQL_PORT MYSQL_DB MYSQL_USER MYSQL_PASS
+
 # Ensure empty
-TABLES=$(docker compose exec -T mysql mysql -N -uark -park ark -e "SHOW TABLES;" 2>/dev/null | wc -l | tr -d ' ')
+TABLES=$(docker compose exec -T mysql sh -c 'set -a; . /run/ark/secrets/install.env; set +a; mysql -N -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -e "SHOW TABLES;"' 2>/dev/null | wc -l | tr -d ' ')
 if [ "${TABLES}" != "0" ]; then
   echo "Database not empty after fresh volume — abort"
   exit 1
@@ -137,7 +143,7 @@ echo "==> Restart MySQL container (persistence check)"
 "${COMPOSE[@]}" restart mysql
 sleep 8
 for i in $(seq 1 30); do
-  if docker compose exec -T mysql mysqladmin ping -h 127.0.0.1 -uark -park --silent 2>/dev/null; then
+  if docker compose exec -T mysql /bin/sh /ark/mysql-healthcheck.sh >/dev/null 2>&1; then
     break
   fi
   sleep 2
