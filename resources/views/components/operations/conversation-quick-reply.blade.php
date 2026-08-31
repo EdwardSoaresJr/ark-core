@@ -188,7 +188,7 @@
     $callHref = PhoneNumber::telUri($customer->phone);
     $showSmsComposer = $canSendSms;
     $showSmsUnavailableNotice = filled($customer->phone)
-        && $integrations->twilioConfigured()
+        && $integrations->messagingConfigured()
         && ! $canSendSms
         && filled($smsBlockedReason);
     $showCommsToolbar = $showSmsComposer

@@ -18,7 +18,7 @@ use RuntimeException;
 class SendOutboundContactMessageAction
 {
     public function __construct(
-        private readonly TwilioMessagingSender $sender,
+        private readonly OutboundSmsTransport $transport,
         private readonly ConversationRecorder $recorder,
         private readonly ConversationLinker $linker,
         private readonly ConversationMessageBroadcaster $broadcaster,
@@ -41,8 +41,8 @@ class SendOutboundContactMessageAction
             'Only phone conversations can receive SMS replies.',
         );
 
-        if (! $this->credentials->twilioConfigured()) {
-            throw new RuntimeException('Shop messaging is disabled.');
+        if (! $this->transport->isConfigured()) {
+            throw new RuntimeException('Outbound SMS is not configured.');
         }
 
         $phone = trim((string) $conversation->contact_address);
@@ -64,7 +64,7 @@ class SendOutboundContactMessageAction
 
         $mediaUrls = $storedAttachment !== null ? [$storedAttachment['public_url']] : [];
 
-        $result = $this->sender->send($phone, $messageBody, $mediaUrls);
+        $result = $this->transport->send($phone, $messageBody, $mediaUrls);
 
         $this->linkKnownCustomer($conversation, $phone);
 
@@ -72,7 +72,7 @@ class SendOutboundContactMessageAction
             conversation: $conversation,
             actor: $actor,
             body: $messageBody,
-            providerMessageSid: $result->messageSid,
+            providerMessageSid: $result->messageId,
         );
 
         if ($storedAttachment !== null) {
@@ -90,7 +90,7 @@ class SendOutboundContactMessageAction
 
         return [
             'message' => $message,
-            'provider_message_sid' => $result->messageSid,
+            'provider_message_sid' => $result->messageId,
         ];
     }
 

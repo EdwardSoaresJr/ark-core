@@ -20,9 +20,7 @@ beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
     Http::fake();
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('advisor can add internal note from communications inbox', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -154,52 +152,6 @@ test('communications inbox shows send estimate when customer is linked', functio
         ->assertSee('Send Estimate', false);
 });
 
-test('mark handled clears the row from needs attention and lands on the list', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMmarkhandled001',
-        'From' => '+17195558090',
-        'To' => '+17195559999',
-        'Body' => 'Is my car ready?',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $conversation = Conversation::query()->where('contact_address', '7195558090')->sole();
-
-    // Missed call from the same customer — the row must clear as one unit.
-    $session = CallSession::query()->create([
-        'provider' => 'twilio',
-        'provider_call_sid' => 'CAmarkhandled001',
-        'direction' => CallSessionDirection::Inbound,
-        'from_number' => '+17195558090',
-        'to_number' => '+17195559999',
-        'normalized_from' => '7195558090',
-        'status' => CallSessionStatus::Missed,
-        'started_at' => now()->subMinutes(10),
-    ]);
-
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url())
-        ->assertOk()
-        ->assertSee('(719) 555-8090', false);
-
-    $this->actingAs($advisor)
-        ->post(route('operations.communications.conversations.mark-handled', $conversation), [
-            'section' => 'inbox',
-        ])
-        ->assertRedirect(route('operations.communications.inbox', ['filter' => 'needs']))
-        ->assertSessionHas('status', 'Marked handled.');
-
-    expect($conversation->refresh()->status)->toBe(ConversationStatus::Resolved)
-        ->and($session->refresh()->worked_at)->not->toBeNull();
-
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url())
-        ->assertOk()
-        ->assertDontSee('(719) 555-8090', false);
-});
-
 test('marking a call handled returns to the list without re-selecting the cleared row', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
@@ -222,54 +174,6 @@ test('marking a call handled returns to the list without re-selecting the cleare
         ->assertSessionHas('status', 'Call marked handled.');
 
     expect($session->refresh()->worked_at)->not->toBeNull();
-});
-
-test('opening a conversation marks it read over json without a redirect', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMmarkread001',
-        'From' => '+17195558092',
-        'To' => '+17195559999',
-        'Body' => 'Sending photos of the leak.',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $conversation = Conversation::query()->where('contact_address', '7195558092')->sole();
-
-    $this->actingAs($advisor)
-        ->postJson(route('operations.communications.conversations.mark-read', $conversation))
-        ->assertOk()
-        ->assertJson(['ok' => true]);
-
-    expect($conversation->reads()->where('user_id', $advisor->id)->exists())->toBeTrue();
-});
-
-test('resolved conversation clears unread rows for every advisor', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-    $secondAdvisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMresolvedunread1',
-        'From' => '+17195558093',
-        'To' => '+17195559999',
-        'Body' => 'Quick question about my invoice.',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $conversation = Conversation::query()->where('contact_address', '7195558093')->sole();
-
-    $this->actingAs($advisor)
-        ->post(route('operations.communications.conversations.mark-handled', $conversation), [
-            'section' => 'inbox',
-        ])
-        ->assertRedirect(route('operations.communications.inbox', ['filter' => 'needs']));
-
-    $unreadForSecondAdvisor = app(\App\Ark\Operations\Communications\UnreadInboundMessageQueue::class)
-        ->latestUnreadPerConversation($secondAdvisor)
-        ->pluck('conversation_id');
-
-    expect($unreadForSecondAdvisor)->not->toContain($conversation->id);
 });
 
 test('technician cannot use communications workspace action routes', function (): void {

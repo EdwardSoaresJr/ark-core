@@ -3,41 +3,28 @@
 namespace App\Ark\Operations\Telephony;
 
 use App\Ark\Operations\Telephony\Contracts\TelephonyProvider;
-use App\Ark\Operations\Telephony\Providers\TwilioTelephonyProvider;
-use InvalidArgumentException;
+use App\Ark\Operations\Telephony\Providers\NotConfiguredTelephonyProvider;
+use RuntimeException;
 
 class TelephonyProviderManager
 {
     public function current(): TelephonyProvider
     {
-        return app(TwilioTelephonyProvider::class);
+        return app(NotConfiguredTelephonyProvider::class);
     }
 
     public function currentType(): TelephonyProviderType
     {
-        return TelephonyProviderType::Twilio;
+        return TelephonyProviderType::None;
     }
 
     public function resolve(TelephonyProviderType $type): TelephonyProvider
     {
-        return match ($type) {
-            TelephonyProviderType::Twilio => app(TwilioTelephonyProvider::class),
-            TelephonyProviderType::Fake => app(TwilioTelephonyProvider::class),
-            default => app(TwilioTelephonyProvider::class),
-        };
+        return app(NotConfiguredTelephonyProvider::class);
     }
 
-    /**
-     * Twilio HTTP webhooks always parse Twilio payloads — independent of shop primary provider.
-     */
-    public function twilio(): TwilioTelephonyProvider
+    public function twilio(): TelephonyProvider
     {
-        $provider = $this->resolve(TelephonyProviderType::Twilio);
-
-        if (! $provider instanceof TwilioTelephonyProvider) {
-            throw new InvalidArgumentException('Twilio telephony provider is not registered.');
-        }
-
-        return $provider;
+        throw new RuntimeException('Voice telephony is not configured.');
     }
 }

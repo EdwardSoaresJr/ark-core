@@ -104,9 +104,7 @@ test('customer hub comms timeline merges calls and messages chronologically', fu
 
 test('customer hub comms tab renders unified timeline filters', function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [

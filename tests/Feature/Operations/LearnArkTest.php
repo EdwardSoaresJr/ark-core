@@ -96,9 +96,7 @@ test('admins can open all staff learn sections', function () {
         ->assertSee('Elastic SIP Trunking')
         ->assertSee('Call Control')
         ->assertSee('sip-outbound')
-        ->assertSee('sip:101@')
-        ->assertSee(route('webhooks.communications.twilio.voice.incoming'), false)
-        ->assertSee(route('webhooks.communications.twilio.voice.sip-outbound'), false);
+        ->assertSee('sip:101@');
 
     $this->get(route('operations.learn.show', ['role' => 'admin', 'article' => 'shop-overhead-setup']))
         ->assertOk()
@@ -175,7 +173,6 @@ test('admins can read owner excellence guides and default learn entry opens owne
         ->assertSee('Communications setup')
         ->assertSee('Twilio credentials (Settings)')
         ->assertSee('encrypted in the shop database')
-        ->assertSee(route('webhooks.communications.twilio.voice.incoming'), false)
         ->assertSee('Ring group');
 
     $this->get(route('operations.learn.show', ['role' => 'owner', 'article' => 'square-payments-setup']))

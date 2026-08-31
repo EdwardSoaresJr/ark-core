@@ -24,9 +24,7 @@ use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('estimate view observations are suppressed when customer has work in progress', function (): void {
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::InProgress, 'Jean Luc');
@@ -109,43 +107,6 @@ test('estimate view observations remain when customer is still waiting approval'
 
     expect($filtered)->toHaveCount(1)
         ->and($filtered[0]->type)->toBe(OperationalObservationType::EstimateViewed);
-});
-
-test('attention workspace dedupes call and sms rows for the same customer', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $customer = Customer::query()->create([
-        'first_name' => 'Jean',
-        'last_name' => 'Luc',
-        'phone' => '7195558803',
-        'email' => 'jean.luc@example.test',
-    ]);
-
-    CallSession::query()->create([
-        'provider' => 'twilio',
-        'provider_call_sid' => 'CAdedupecust001',
-        'direction' => CallSessionDirection::Inbound,
-        'from_number' => '+17195558803',
-        'to_number' => '+17195559999',
-        'normalized_from' => '7195558803',
-        'customer_id' => $customer->id,
-        'status' => CallSessionStatus::Completed,
-        'started_at' => now()->subMinutes(12),
-    ]);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMdedupecust001',
-        'From' => '+17195558803',
-        'To' => '+17195559999',
-        'Body' => 'Any update on my car?',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $projection = app(\App\Ark\Operations\Communications\CommunicationsWorkspaceProjection::class)
-        ->attention($advisor, null, null);
-
-    expect($projection['list_count'])->toBe(1)
-        ->and($projection['list_items'])->toHaveCount(1);
 });
 
 test('call analysis suggested reply becomes call note draft text', function (): void {
@@ -266,42 +227,6 @@ test('stale sms analysis does not show follow up nudge after advisor replies', f
         ->assertDontSee('The advisor should have replied', false);
 });
 
-test('communications nav pressure uses deduped attention count', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $customer = Customer::query()->create([
-        'first_name' => 'Jean',
-        'last_name' => 'Luc',
-        'phone' => '7195558806',
-        'email' => 'jean.luc@example.test',
-    ]);
-
-    CallSession::query()->create([
-        'provider' => 'twilio',
-        'provider_call_sid' => 'CAnavdedupe001',
-        'direction' => CallSessionDirection::Inbound,
-        'from_number' => '+17195558806',
-        'to_number' => '+17195559999',
-        'normalized_from' => '7195558806',
-        'customer_id' => $customer->id,
-        'status' => CallSessionStatus::Completed,
-        'started_at' => now()->subMinutes(12),
-    ]);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMnavdedupe001',
-        'From' => '+17195558806',
-        'To' => '+17195559999',
-        'Body' => 'Any update on my car?',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $pressure = app(\App\Ark\Operations\Communications\CommunicationsNavPressure::class)->resolve($advisor);
-
-    expect($pressure['attention_count'])->toBe(1)
-        ->and($pressure['nav_pressure_count'])->toBe(1);
-});
-
 test('assigned conversation with sms analysis shows follow up nudge and draft', function (): void {
     Queue::fake();
 
@@ -339,44 +264,6 @@ test('assigned conversation with sms analysis shows follow up nudge and draft', 
         ->assertSee('SMS follow-up suggested', false)
         ->assertSee('We have openings tomorrow morning if that works for you.', false)
         ->assertSee('Reply', false);
-});
-
-test('analysis insight panel shows when higher priority nudge blocks sms analysis nudge', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    foreach (['SMinsight001', 'SMinsight002'] as $sid) {
-        $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-            'MessageSid' => $sid,
-            'From' => '+17195558811',
-            'To' => '+17195559999',
-            'Body' => 'Are you open tomorrow?',
-            'NumMedia' => '0',
-        ])->assertOk();
-    }
-
-    $conversation = Conversation::query()->where('contact_address', '7195558811')->firstOrFail();
-    $conversation->update(['owned_by_user_id' => $advisor->id]);
-
-    $slice = ConversationSmsIntelligenceSlice::query()->where('conversation_id', $conversation->id)->firstOrFail();
-    $slice->forceFill([
-        'analysis_status' => CallSessionAnalysisStatus::Ready,
-        'analysis_json' => [
-            'summary' => 'Customer asked about shop hours.',
-            'follow_up_needed' => true,
-            'follow_up_notes' => 'Reply with tomorrow hours.',
-            'suggested_reply' => 'Yes — we open at 8am tomorrow.',
-        ],
-        'analyzed_at' => now(),
-    ])->saveQuietly();
-
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url(['conversation' => $conversation->id]))
-        ->assertOk()
-        ->assertSee('Multiple customer texts', false)
-        ->assertSee('SMS insight', false)
-        ->assertSee('Yes — we open at 8am tomorrow.', false)
-        ->assertSee('Use in composer', false)
-        ->assertDontSee('SMS follow-up suggested', false);
 });
 
 test('analysis insight panel shows when mark handled blocks call analysis nudge', function (): void {

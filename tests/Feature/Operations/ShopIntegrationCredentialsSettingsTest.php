@@ -8,19 +8,14 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Schema;
 
-test('communications settings save twilio credentials encrypted in shop settings', function () {
+test('communications settings keep messaging transport not configured without credential fields', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
-
-    config()->set('services.twilio.account_sid', null);
-    config()->set('services.twilio.auth_token', null);
 
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.telephony.update'), [
             'communications_tab' => 'general',
             'telephony_inbound_number' => '+17195550100',
-            'twilio_account_sid' => 'AC-settings-test',
-            'twilio_auth_token' => 'secret-twilio-token',
         ])
         ->assertRedirect(route('operations.settings.shop.edit', [
             'section' => 'communications',
@@ -29,13 +24,22 @@ test('communications settings save twilio credentials encrypted in shop settings
 
     $settings = ShopSettings::current()->fresh();
 
-    expect($settings->twilio_account_sid)->toBe('AC-settings-test')
-        ->and($settings->twilio_auth_token)->toBe('secret-twilio-token');
+    expect($settings->telephony_inbound_number)->toBe('+17195550100');
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioConfigured())->toBeTrue()
-        ->and(TelephonyHealth::forCurrentShop()->credentialsConfigured())->toBeTrue();
+    expect($credentials->messagingConfigured())->toBeFalse()
+        ->and($credentials->twilioConfigured())->toBeFalse()
+        ->and(TelephonyHealth::forCurrentShop()->credentialsConfigured())->toBeFalse();
+
+    $this->actingAs($admin)
+        ->get(route('operations.settings.shop.edit', [
+            'section' => 'communications',
+            'communications-tab' => 'general',
+        ]))
+        ->assertOk()
+        ->assertDontSee('Account SID', false)
+        ->assertSee('require a messaging/voice transport implementation', false);
 });
 
 test('payments settings save square credentials encrypted in shop settings', function () {
@@ -102,8 +106,6 @@ test('payments settings leave blank secrets unchanged', function () {
 
 test('shop integration credentials fall back to env when database is empty', function () {
     ShopSettings::current()->persistTrusted([
-        'twilio_account_sid' => null,
-        'twilio_auth_token' => null,
         'square_application_id' => null,
         'square_access_token' => null,
         'square_location_id' => null,
@@ -114,8 +116,6 @@ test('shop integration credentials fall back to env when database is empty', fun
         'partstech_password' => null,
     ]);
 
-    config()->set('services.twilio.account_sid', 'AC-env-only');
-    config()->set('services.twilio.auth_token', 'token-env-only');
     config()->set('services.square.application_id', 'sq-env-app');
     config()->set('services.square.access_token', 'sq-env-token');
     config()->set('services.square.location_id', 'LOC-ENV');
@@ -124,7 +124,8 @@ test('shop integration credentials fall back to env when database is empty', fun
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioCredentialSource())->toBe('env')
+    expect($credentials->messagingConfigured())->toBeFalse()
+        ->and($credentials->twilioCredentialSource())->toBe('none')
         ->and($credentials->squareCredentialSource())->toBe('env')
         ->and($credentials->partsTechCredentialSource())->toBe('env');
 });
@@ -197,9 +198,9 @@ test('integration settings pages show credential fields', function () {
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'communications']))
         ->assertOk()
-        ->assertSee('Messaging account')
-        ->assertSee('Account SID')
-        ->assertSee('Auth token');
+        ->assertDontSee('Account SID', false)
+        ->assertDontSee('Auth token', false)
+        ->assertSee('messaging/voice transport implementation', false);
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()
@@ -222,8 +223,6 @@ test('integration settings pages show credential fields', function () {
 });
 
 test('shop integration credentials prefer database values over env fallback', function () {
-    config()->set('services.twilio.account_sid', 'AC-from-env');
-    config()->set('services.twilio.auth_token', 'token-from-env');
     config()->set('services.square.application_id', 'sq-env-app');
     config()->set('services.square.access_token', 'sq-env-token');
     config()->set('services.square.location_id', 'LOC-ENV');
@@ -231,8 +230,6 @@ test('shop integration credentials prefer database values over env fallback', fu
     config()->set('services.square.environment', 'sandbox');
 
     ShopSettings::current()->persistTrusted([
-        'twilio_account_sid' => 'AC-from-db',
-        'twilio_auth_token' => 'token-from-db',
         'square_application_id' => 'sq-db-app',
         'square_access_token' => 'sq-db-token',
         'square_location_id' => 'LOC-DB',
@@ -242,8 +239,8 @@ test('shop integration credentials prefer database values over env fallback', fu
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioAccountSid())->toBe('AC-from-db')
-        ->and($credentials->twilioCredentialSource())->toBe('database')
+    expect($credentials->messagingConfigured())->toBeFalse()
+        ->and($credentials->twilioAccountSid())->toBeNull()
         ->and($credentials->squareEnvironment())->toBe('production')
         ->and($credentials->squareCredentialSource())->toBe('database');
 });

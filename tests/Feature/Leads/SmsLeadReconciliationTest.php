@@ -11,9 +11,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('unknown inbound sms reconciles an open lead', function (): void {
     $this->post(route('webhooks.communications.twilio.messaging.incoming'), [

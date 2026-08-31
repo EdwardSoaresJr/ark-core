@@ -17,9 +17,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'shop_name' => 'Demo Auto Repair',
         'telephony_inbound_number' => '7195559999',
@@ -50,6 +48,7 @@ function fakeTwilioLookup(string $type = 'mobile', bool $valid = true): void
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 }
 
 test('classifier marks landlines as not sms capable with reason', function () {
@@ -142,26 +141,6 @@ test('outbound send looks up and refuses landline before twilio messages api', f
 
     Http::assertSent(fn ($request) => str_contains($request->url(), 'lookups.twilio.com'));
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'Messages.json'));
-});
-
-test('inbound sms marks the phone as sms capable without lookup', function () {
-    config()->set('services.twilio.auth_token', null);
-    Http::fake();
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMinboundcap01',
-        'From' => '+17195551234',
-        'To' => '+17195559999',
-        'Body' => 'Hi shop',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $capability = PhoneSmsCapability::findByNormalizedPhone('7195551234');
-
-    expect($capability)->not->toBeNull()
-        ->and($capability->sms_capable)->toBeTrue();
-
-    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'lookups.twilio.com'));
 });
 
 test('delivery failure for landline error marks phone not sms capable', function () {

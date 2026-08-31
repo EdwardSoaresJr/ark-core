@@ -15,15 +15,15 @@ use Throwable;
 /**
  * Interprets expected replies on open Message Action contracts.
  *
- * Consent keywords still win first (MessagingWebhookController).
+ * Consent keywords still win first on inbound SMS.
  * ConversationMessage rows stay append-only — reply truth is written at create time.
  */
 final class ProcessMessageActionReplyAction
 {
     public function __construct(
         private readonly FindOpenMessageActionContract $contracts,
-        private readonly TwilioSmsIngress $ingress,
-        private readonly TwilioMessagingSender $sender,
+        private readonly InboundSmsConversationIngress $ingress,
+        private readonly OutboundSmsTransport $transport,
         private readonly ConversationRecorder $recorder,
         private readonly SyncConversationTurnAction $syncTurn,
     ) {}
@@ -126,7 +126,7 @@ final class ProcessMessageActionReplyAction
         }
 
         try {
-            $result = $this->sender->send($fromPhone, $body);
+            $result = $this->transport->send($fromPhone, $body);
             $inbound?->loadMissing('conversation');
             $conversation = $inbound?->conversation;
 
@@ -134,7 +134,7 @@ final class ProcessMessageActionReplyAction
                 $this->recorder->recordSystemOutboundSms(
                     $conversation,
                     $body,
-                    $result->messageSid,
+                    $result->messageId,
                     [
                         MessageActionContract::META_ACTION => MessageActionKey::Address->value,
                         'auto_reply_to' => MessageActionReply::Directions->value,

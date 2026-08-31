@@ -23,9 +23,7 @@ use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    Cache::flush();
+            Cache::flush();
 
     $flow = ShopSettings::defaultTelephonyCallFlow();
     $flow['missed_call_rescue_enabled'] = true;
@@ -79,6 +77,7 @@ test('missed call rescue sends system sms into conversation when enabled', funct
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $customer = Customer::query()->create([
         'first_name' => 'Sam',
@@ -152,6 +151,7 @@ test('missed call rescue respects cooldown after a prior rescue', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $session = missedCallRescueSession(sid: 'CArescue002');
     expect(app(SendMissedCallRescueSmsAction::class)->execute($session))->toBeTrue();
@@ -242,6 +242,7 @@ test('missed call rescue skips landline after twilio lookup', function () {
         ], 200),
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMshouldnot'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $session = missedCallRescueSession(sid: 'CArescueland');
     $sent = app(SendMissedCallRescueSmsAction::class)->execute($session);

@@ -12,8 +12,6 @@ beforeEach(function (): void {
     config()->set('public_lead.phone_verification_required', true);
 
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
     ]);
     ShopSettings::forgetCurrent();
@@ -21,6 +19,7 @@ beforeEach(function (): void {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMtest', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 });
 
 test('website lead requires verified phone when verify is enabled', function (): void {

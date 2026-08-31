@@ -11,7 +11,7 @@ use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
-use App\Ark\Operations\Messaging\TwilioSmsIngress;
+use App\Ark\Operations\Messaging\InboundSmsConversationIngress;
 use App\Ark\Operations\Observations\OperationalObservationStream;
 use App\Ark\Operations\Observations\OperationalObservationStreamEntry;
 use App\Ark\Operations\Observations\OperationalObservationType;
@@ -26,9 +26,7 @@ beforeEach(function (): void {
 });
 
 test('inbound sms emits customer_replied into operational observation stream', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -39,7 +37,7 @@ test('inbound sms emits customer_replied into operational observation stream', f
         'phone' => '7195554411',
     ]);
 
-    $result = app(TwilioSmsIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
+    $result = app(InboundSmsConversationIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
         contactSurface: ConversationContactSurface::Phone,
         contactKey: '7195554411',
         providerMessageId: 'SMobservation001',
@@ -68,9 +66,7 @@ test('inbound sms emits customer_replied into operational observation stream', f
 });
 
 test('shop reply resolves customer_replied observation for conversation', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -78,6 +74,7 @@ test('shop reply resolves customer_replied observation for conversation', functi
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMreply001', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
@@ -87,7 +84,7 @@ test('shop reply resolves customer_replied observation for conversation', functi
         'phone' => '7195554412',
     ]);
 
-    app(TwilioSmsIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
+    app(InboundSmsConversationIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
         contactSurface: ConversationContactSurface::Phone,
         contactKey: '7195554412',
         providerMessageId: 'SMobservation002',
@@ -112,9 +109,7 @@ test('shop reply resolves customer_replied observation for conversation', functi
 });
 
 test('mobile orientation home surfaces customer_replied from observation stream', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -128,7 +123,7 @@ test('mobile orientation home surfaces customer_replied from observation stream'
         'phone' => '7195554413',
     ]);
 
-    app(TwilioSmsIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
+    app(InboundSmsConversationIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
         contactSurface: ConversationContactSurface::Phone,
         contactKey: '7195554413',
         providerMessageId: 'SMobservation003',
@@ -152,9 +147,7 @@ test('mobile orientation home surfaces customer_replied from observation stream'
 });
 
 test('continuity badge counts unresolved observations not unread messages', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -165,6 +158,7 @@ test('continuity badge counts unresolved observations not unread messages', func
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMreply002', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     Customer::query()->create([
         'first_name' => 'Badge',
@@ -172,7 +166,7 @@ test('continuity badge counts unresolved observations not unread messages', func
         'phone' => '7195554415',
     ]);
 
-    app(TwilioSmsIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
+    app(InboundSmsConversationIngress::class)->ingest(new \App\Ark\Operations\Conversations\InboundConversationPayload(
         contactSurface: ConversationContactSurface::Phone,
         contactKey: '7195554415',
         providerMessageId: 'SMobservation004',

@@ -42,8 +42,6 @@ beforeEach(function (): void {
     Carbon::setTestNow(Carbon::parse('2026-07-24 10:00:00', 'America/Denver'));
 
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
     ]);
     ShopSettings::forgetCurrent();

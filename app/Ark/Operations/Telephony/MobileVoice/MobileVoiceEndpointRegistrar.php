@@ -109,41 +109,7 @@ final class MobileVoiceEndpointRegistrar
      */
     public function isEndpointVoiceReady(TelephonyEndpoint $endpoint, ?int $timeoutMinutes = null): bool
     {
-        if ($endpoint->type !== TelephonyEndpointType::MobileApp || ! $endpoint->enabled) {
-            return false;
-        }
-
-        $credentials = MobileVoiceCredentials::forCurrentShop();
-
-        if (! $credentials->twilioClientConfigured()) {
-            return false;
-        }
-
-        $parsed = MobileVoiceIdentity::parse((string) $endpoint->destination);
-
-        if ($parsed === null) {
-            return false;
-        }
-
-        $device = MobileDevice::query()->find($parsed['device_id']);
-
-        if (! $device instanceof MobileDevice) {
-            return false;
-        }
-
-        if ((int) $device->user_id !== (int) $parsed['user_id']) {
-            return false;
-        }
-
-        if ($endpoint->user_id !== null && (int) $device->user_id !== (int) $endpoint->user_id) {
-            return false;
-        }
-
-        if (! $credentials->inboundPushConfiguredForPlatform($device->platform)) {
-            return false;
-        }
-
-        return $this->deviceHasRecentVoiceReady($device, $timeoutMinutes ?? $endpoint->presenceTimeoutMinutes());
+        return false;
     }
 
     public function deviceHasRecentVoiceReady(MobileDevice $device, int $timeoutMinutes = self::COVERAGE_PRESENCE_MINUTES): bool
@@ -160,7 +126,7 @@ final class MobileVoiceEndpointRegistrar
     }
 
     /**
-     * Mobile coverage is live only while Twilio Client voice readiness is recent for an enabled endpoint.
+     * Mobile coverage is live only while mobile voice readiness is recent for an enabled endpoint.
      */
     public function userHasLiveCoverage(User $user): bool
     {

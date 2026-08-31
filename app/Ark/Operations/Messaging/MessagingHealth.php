@@ -17,7 +17,7 @@ final class MessagingHealth
 
     public function webhookUrl(): string
     {
-        return route('webhooks.communications.twilio.messaging.incoming');
+        return '';
     }
 
     public function lastWebhookAt(): ?Carbon
@@ -43,7 +43,7 @@ final class MessagingHealth
 
     public function webhookState(): string
     {
-        if (! filled($this->credentials->twilioAuthToken())) {
+        if (! $this->credentials->messagingConfigured()) {
             return 'error';
         }
 

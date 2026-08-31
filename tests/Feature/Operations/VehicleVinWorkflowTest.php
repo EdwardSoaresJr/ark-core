@@ -14,9 +14,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     \App\Ark\Operations\Settings\ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -157,6 +155,7 @@ test('send estimate blocks when vehicle vin is missing', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMblocked', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = vinWorkflowRepairOrder(vin: null);
@@ -172,6 +171,7 @@ test('send estimate succeeds after vin is added to vehicle record', function () 
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMallowed', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     \App\Ark\Operations\Settings\ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',

@@ -26,9 +26,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -41,6 +39,7 @@ test('send estimate creates access token and sends sms conversation message', fu
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = estimateLinkRepairOrder();
@@ -86,6 +85,7 @@ test('resending estimate link keeps waiting approval and reports already waiting
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = estimateLinkRepairOrder();
@@ -283,6 +283,7 @@ test('portal estimate prepared date uses first estimate sent not latest access t
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     ShopSettings::current()->update(['shop_timezone' => 'America/Denver']);
     ShopDisplayTimezone::apply();
@@ -413,6 +414,7 @@ test('send estimate blocks timing job missing oil and coolant', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMfluids', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = timingJobEstimateRepairOrder();
@@ -428,6 +430,7 @@ test('send estimate timing fluids override is allowed', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMfluidsok', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = timingJobEstimateRepairOrder();

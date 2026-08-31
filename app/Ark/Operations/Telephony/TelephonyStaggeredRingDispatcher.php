@@ -13,7 +13,7 @@ class TelephonyStaggeredRingDispatcher
     public function __construct(
         private readonly TelephonyRingGroup $ringGroup,
         private readonly TelephonyRingState $ringState,
-        private readonly TwilioVoiceApi $twilio,
+        private readonly OutboundVoiceCallControl $twilio,
         private readonly TelephonyOutboundCallerId $outboundCallerId,
     ) {}
 

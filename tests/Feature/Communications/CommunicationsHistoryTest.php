@@ -100,9 +100,7 @@ test('history finds old calls by phone search across all time', function (): voi
 });
 
 test('history recorded filter and playback action surface for old calls', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $session = CallSession::query()->create([

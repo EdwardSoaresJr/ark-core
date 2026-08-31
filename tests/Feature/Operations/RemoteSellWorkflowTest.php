@@ -62,10 +62,9 @@ test('texting estimate link moves repair order to awaiting approval and logs est
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);

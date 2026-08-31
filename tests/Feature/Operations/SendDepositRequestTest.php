@@ -27,9 +27,7 @@ use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    config()->set('mail.default', 'array');
+            config()->set('mail.default', 'array');
     config()->set('services.square.application_id', 'sq0idp-test-app');
     config()->set('services.square.access_token', 'test-token');
     config()->set('services.square.location_id', 'LOC123');
@@ -87,6 +85,7 @@ function fakeDepositOutboundHttp(string $messageSid = 'SMdeposit01'): void
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 }
 
 test('send deposit request creates pay_deposit token with amount and sends sms', function () {

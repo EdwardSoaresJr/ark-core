@@ -16,7 +16,7 @@ return [
     'phone_verification_required' => env('PUBLIC_LEAD_PHONE_VERIFY', true),
 
     /** @deprecated Unused — Phone Verification Authority owns OTP delivery. */
-    'twilio_verify_service_sid' => env('TWILIO_VERIFY_SERVICE_SID'),
+
 
     /** @deprecated Use phone_verification.session_ttl_minutes. */
     'verification_ttl_minutes' => (int) env('PUBLIC_LEAD_PHONE_VERIFY_TTL', 30),

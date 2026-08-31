@@ -15,7 +15,7 @@
     use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 
     $integrations = app(ShopIntegrationCredentials::class);
-    $canSend = $integrations->twilioConfigured();
+    $canSend = $integrations->messagingConfigured();
     $autoOpen = request()->query('compose') === 'text';
     $canSchedule = OperationsFeatures::appointmentsEnabled();
     $scheduleHref = $canSchedule

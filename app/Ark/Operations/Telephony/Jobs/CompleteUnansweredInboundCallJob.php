@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Telephony\Jobs;
 
 use App\Ark\Operations\Telephony\TelephonyRingState;
-use App\Ark\Operations\Telephony\TwilioVoiceApi;
+use App\Ark\Operations\Telephony\OutboundVoiceCallControl;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -15,7 +15,7 @@ class CompleteUnansweredInboundCallJob implements ShouldQueue
         public readonly string $parentCallSid,
     ) {}
 
-    public function handle(TelephonyRingState $ringState, TwilioVoiceApi $twilio): void
+    public function handle(TelephonyRingState $ringState, OutboundVoiceCallControl $twilio): void
     {
         if (! $twilio->configured()) {
             return;
@@ -29,9 +29,7 @@ class CompleteUnansweredInboundCallJob implements ShouldQueue
 
         $twilio->redirectCall(
             $this->parentCallSid,
-            route('webhooks.communications.twilio.voice.unanswered-voicemail', [
-                'parentCallSid' => $this->parentCallSid,
-            ]),
+            '',
         );
     }
 }

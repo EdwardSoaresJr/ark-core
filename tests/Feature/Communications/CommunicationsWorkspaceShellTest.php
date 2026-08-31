@@ -40,50 +40,6 @@ test('advisor can open attention and internal workspace shells', function (): vo
         ->assertSee('Management', false);
 });
 
-test('attention workspace thread renders inbound mms image attachments', function (): void {
-    \Illuminate\Support\Facades\Http::fake([
-        'https://api.twilio.com/*' => \Illuminate\Support\Facades\Http::response('image-bytes', 200, ['Content-Type' => 'image/jpeg']),
-    ]);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('broadcasting.default', 'null');
-
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    \App\Ark\Operations\Customers\Customer::query()->create([
-        'first_name' => 'Photo',
-        'last_name' => 'Customer',
-        'phone' => '7196416535',
-        'customer_type' => 'Retail',
-    ]);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMworkspacemms001',
-        'From' => '+17196416535',
-        'To' => '+17195559999',
-        'Body' => '',
-        'NumMedia' => '1',
-        'MediaUrl0' => 'https://api.twilio.com/2010-04-01/Accounts/ACtest/Messages/MM123/Media/ME456',
-        'MediaContentType0' => 'image/jpeg',
-    ])->assertOk();
-
-    $conversation = \App\Ark\Operations\Conversations\Conversation::query()->sole();
-    $message = \App\Ark\Operations\Conversations\ConversationMessage::query()->sole();
-    $attachment = \App\Ark\Operations\Conversations\ConversationMessageAttachment::query()->sole();
-
-    $attachmentUrl = route('operations.conversation-attachments.show', [
-        'conversation' => $conversation,
-        'message' => $message,
-        'attachment' => $attachment,
-    ]);
-
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url(['conversation' => $conversation->id]))
-        ->assertOk()
-        ->assertSee('ops-attachment-thumb', false)
-        ->assertSee($attachmentUrl, false)
-        ->assertSee('ops-attachment-thumb__image', false);
-});
-
 test('internal channel workspace shows read only thread shell', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $channel = InternalChannel::query()->where('slug', 'general')->firstOrFail();

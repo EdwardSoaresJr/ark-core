@@ -2,9 +2,8 @@
 
 namespace App\Ark\Operations\Telephony\Media;
 
-use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Telephony\Media\Contracts\CallSessionMediaSource;
-use App\Ark\Operations\Telephony\Media\Sources\TwilioCallSessionMediaSource;
 
 final class CallSessionMediaLocator
 {
@@ -12,10 +11,9 @@ final class CallSessionMediaLocator
     private array $sources;
 
     public function __construct(
-        TwilioCallSessionMediaSource $twilio,
-        private readonly ShopIntegrationCredentials $credentials,
+        private readonly OutboundSmsTransport $messaging,
     ) {
-        $this->sources = [$twilio];
+        $this->sources = [];
     }
 
     public function parse(?string $reference): ?CallSessionMediaUri
@@ -58,7 +56,7 @@ final class CallSessionMediaLocator
 
     public function playbackAvailable(): bool
     {
-        return $this->credentials->twilioConfigured();
+        return false;
     }
 
     private function sourceFor(CallSessionMediaUri $uri): ?CallSessionMediaSource

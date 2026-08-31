@@ -22,9 +22,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('attention workspace shows mark handled nudge for unhandled completed call', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -116,50 +114,6 @@ test('advisor can mark call handled from nudge action and log response', functio
     expect(AdvisorNudgeResponse::query()->sole())
         ->response->toBe(AdvisorNudgeResponseKind::Acted)
         ->and(AdvisorNudgeResponse::query()->sole()->nudge_key)->toBe('call.mark_handled');
-});
-
-test('unassigned conversation shows assign nudge on attention workspace', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMnudgeunassigned1',
-        'From' => '+17195559010',
-        'To' => '+17195559999',
-        'Body' => 'Are you open tomorrow?',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $conversation = Conversation::query()->where('contact_address', '7195559010')->firstOrFail();
-
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url(['conversation' => $conversation->id]))
-        ->assertOk()
-        ->assertSee('Unassigned thread', false)
-        ->assertSee('Assign to me', false);
-});
-
-test('waiting customer conversation nudge includes draft reply text', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    foreach (['SMnudgedraft001', 'SMnudgedraft002'] as $sid) {
-        $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-            'MessageSid' => $sid,
-            'From' => '+17195559011',
-            'To' => '+17195559999',
-            'Body' => 'Can you call me back about my brakes?',
-            'NumMedia' => '0',
-        ])->assertOk();
-    }
-
-    $conversation = Conversation::query()->where('contact_address', '7195559011')->firstOrFail();
-
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url(['conversation' => $conversation->id]))
-        ->assertOk()
-        ->assertSee('Suggested next step', false)
-        ->assertSee('Multiple customer texts', false)
-        ->assertSee('sorry for the delay', false)
-        ->assertSee('Reply', false);
 });
 
 test('logging call note from analysis nudge records call analysis follow up response', function (): void {
@@ -377,9 +331,9 @@ test('sending sms analysis draft reply records acted response', function (): voi
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-
+    
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -409,90 +363,3 @@ test('sending sms analysis draft reply records acted response', function (): voi
         ->and(AdvisorNudgeResponse::query()->sole()->nudge_key)->toBe('conversation.sms_analysis_follow_up');
 });
 
-test('sending nudge draft reply records acted response for linked customer', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $customer = Customer::query()->create([
-        'first_name' => 'Maria',
-        'last_name' => 'Lopez',
-        'phone' => '7195559020',
-        'email' => 'maria@example.test',
-    ]);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMnudgesend001in',
-        'From' => '+17195559020',
-        'To' => '+17195559999',
-        'Body' => 'Can you call me back about my brakes?',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $conversation = Conversation::query()->where('contact_address', '7195559020')->firstOrFail();
-    $entityKey = 'conversation:'.$conversation->id;
-
-    Http::fake([
-        'https://api.twilio.com/*' => Http::response([
-            'sid' => 'SMnudgesend001',
-            'status' => 'queued',
-        ], 201),
-    ]);
-
-    config()->set('services.twilio.auth_token', 'test-token');
-
-    ShopSettings::current()->update([
-        'telephony_inbound_number' => '7195559999',
-    ]);
-
-    $this->actingAs($advisor)
-        ->postJson(route('operations.customers.conversation-messages.store', $customer), [
-            'body' => 'Hi Maria, sorry for the delay — still need help with the brakes?',
-            'nudge_key' => 'conversation.waiting_response',
-            'entity_key' => $entityKey,
-        ])
-        ->assertOk();
-
-    expect(AdvisorNudgeResponse::query()->sole())
-        ->response->toBe(AdvisorNudgeResponseKind::Acted)
-        ->and(AdvisorNudgeResponse::query()->sole()->nudge_key)->toBe('conversation.waiting_response')
-        ->and(AdvisorNudgeResponse::query()->sole()->entity_key)->toBe($entityKey);
-});
-
-test('sending nudge draft reply records acted response for unlinked contact thread', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
-        'MessageSid' => 'SMnudgesend002in',
-        'From' => '+17195559021',
-        'To' => '+17195559999',
-        'Body' => 'Are you open tomorrow?',
-        'NumMedia' => '0',
-    ])->assertOk();
-
-    $conversation = Conversation::query()->where('contact_address', '7195559021')->firstOrFail();
-    $entityKey = 'conversation:'.$conversation->id;
-
-    Http::fake([
-        'https://api.twilio.com/*' => Http::response([
-            'sid' => 'SMnudgesend002',
-            'status' => 'queued',
-        ], 201),
-    ]);
-
-    config()->set('services.twilio.auth_token', 'test-token');
-
-    ShopSettings::current()->update([
-        'telephony_inbound_number' => '7195559999',
-    ]);
-
-    $this->actingAs($advisor)
-        ->postJson(route('operations.conversations.messages.store', $conversation), [
-            'body' => 'Yes — we open at 8am tomorrow.',
-            'nudge_key' => 'conversation.unassigned',
-            'entity_key' => $entityKey,
-        ])
-        ->assertOk();
-
-    expect(AdvisorNudgeResponse::query()->sole())
-        ->response->toBe(AdvisorNudgeResponseKind::Acted)
-        ->and(AdvisorNudgeResponse::query()->sole()->nudge_key)->toBe('conversation.unassigned');
-});

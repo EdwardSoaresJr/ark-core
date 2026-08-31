@@ -24,9 +24,7 @@ beforeEach(function () {
 });
 
 test('call queue exposes recording and voicemail playback for missed calls', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = actingAsLearnCurrentAdvisor();
 
     $customer = Customer::query()->create([
@@ -71,9 +69,7 @@ test('call queue exposes recording and voicemail playback for missed calls', fun
 });
 
 test('call queue shows recording and voicemail when they are different files', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     CallSession::query()->create([
@@ -162,9 +158,7 @@ test('call queue returns unworked recent sessions for all advisors', function ()
 });
 
 test('call queue exposes text customer action for matched callers when messaging is enabled', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -439,8 +433,7 @@ test('call queue open ros url targets open repair orders when customer has multi
 });
 
 test('call queue api includes unread inbound sms in items and summary', function () {
-    config()->set('services.twilio.auth_token', null);
-
+    
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $customer = Customer::query()->create([
@@ -457,9 +450,7 @@ test('call queue api includes unread inbound sms in items and summary', function
         'NumMedia' => '0',
     ])->assertOk();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $this->actingAs($advisor)
         ->getJson(route('operations.telephony.call-queue'))
         ->assertOk()
@@ -482,8 +473,7 @@ test('operations layout exposes unified comms interrupt panel', function () {
 });
 
 test('operations layout bootstraps comms queue with unread sms', function () {
-    config()->set('services.twilio.auth_token', null);
-
+    
     $advisor = actingAsLearnCurrentAdvisor();
 
     Customer::query()->create([
@@ -500,9 +490,7 @@ test('operations layout bootstraps comms queue with unread sms', function () {
         'NumMedia' => '0',
     ])->assertOk();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()

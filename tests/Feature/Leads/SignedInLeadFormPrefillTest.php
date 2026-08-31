@@ -69,8 +69,6 @@ test('signed-in customer can submit lead without phone verification when phone m
     config()->set('public_lead.phone_verification_required', true);
 
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
     ]);
     ShopSettings::forgetCurrent();

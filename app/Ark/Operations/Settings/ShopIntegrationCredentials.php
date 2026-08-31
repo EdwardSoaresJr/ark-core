@@ -13,37 +13,34 @@ final class ShopIntegrationCredentials
         return new self(ShopSettings::current());
     }
 
-    public function twilioAccountSid(): ?string
+    public function messagingConfigured(): bool
     {
-        return $this->resolve($this->settings->twilio_account_sid, config('services.twilio.account_sid'));
-    }
-
-    public function twilioAuthToken(): ?string
-    {
-        return $this->resolve($this->settings->twilio_auth_token, config('services.twilio.auth_token'));
+        return app(\App\Ark\Operations\Messaging\OutboundSmsTransport::class)->isConfigured();
     }
 
     public function twilioConfigured(): bool
     {
-        return filled($this->twilioAccountSid()) && filled($this->twilioAuthToken());
+        return $this->messagingConfigured();
+    }
+
+    public function twilioAccountSid(): ?string
+    {
+        return null;
+    }
+
+    public function twilioAuthToken(): ?string
+    {
+        return null;
     }
 
     public function hasStoredTwilioAuthToken(): bool
     {
-        return filled($this->settings->twilio_auth_token);
+        return false;
     }
 
     public function twilioCredentialSource(): string
     {
-        if ($this->hasStoredTwilioAuthToken() || filled($this->settings->twilio_account_sid)) {
-            return 'database';
-        }
-
-        if (filled(config('services.twilio.auth_token')) || filled(config('services.twilio.account_sid'))) {
-            return 'env';
-        }
-
-        return 'none';
+        return $this->messagingConfigured() ? 'transport' : 'none';
     }
 
     public function squareApplicationId(): ?string

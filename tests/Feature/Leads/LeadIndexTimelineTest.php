@@ -11,9 +11,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('lead-linked inbox context shows check in and disposal actions', function (): void {
     $recorder = app(LeadRecorder::class);

@@ -19,9 +19,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'appointments_enabled' => true,
         'shop_timezone' => 'America/Denver',
@@ -108,6 +106,7 @@ test('advisor can send appointment confirmation sms into conversation', function
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     Carbon::setTestNow(Carbon::parse('2026-07-14 10:00:00', 'America/Denver'));
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -155,6 +154,7 @@ test('reminder command sends day-before and hours-before texts when due', functi
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $customer = appointmentSmsCustomer();

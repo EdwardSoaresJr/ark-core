@@ -28,9 +28,12 @@ use App\Ark\Operations\Payments\SquareSdk;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
+use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopIntegrationRuntimeConfig;
-use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceCredentials;
+use App\Ark\Operations\Telephony\Contracts\TelephonyProvider;
+use App\Ark\Operations\Telephony\Providers\NotConfiguredTelephonyProvider;
 use App\Ark\Operations\Workspace\WorkspaceTabBootEnricher;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyAdapter;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyClient;
@@ -77,7 +80,8 @@ class AppServiceProvider extends ServiceProvider
             return new PartsTechHttpClient($credentials);
         });
         $this->app->scoped(ShopIntegrationCredentials::class, fn (): ShopIntegrationCredentials => ShopIntegrationCredentials::forCurrentShop());
-        $this->app->scoped(MobileVoiceCredentials::class, fn (): MobileVoiceCredentials => MobileVoiceCredentials::forCurrentShop());
+        $this->app->bind(OutboundSmsTransport::class, NotConfiguredOutboundSmsTransport::class);
+        $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);
         $this->app->scoped(RepairOrderStatusCatalog::class);
 
         // Default Fake. Optional ark/payments-square ServiceProvider rebinds to the live SDK client.

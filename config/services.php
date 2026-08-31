@@ -76,15 +76,6 @@ return [
         'environment' => env('SQUARE_ENVIRONMENT', 'sandbox'),
     ],
 
-    'twilio' => [
-        'account_sid' => env('TWILIO_ACCOUNT_SID'),
-        'auth_token' => env('TWILIO_AUTH_TOKEN'),
-        'api_key_sid' => env('TWILIO_API_KEY_SID'),
-        'api_key_secret' => env('TWILIO_API_KEY_SECRET'),
-        'voice_twiml_app_sid' => env('TWILIO_VOICE_TWIML_APP_SID'),
-        'fcm_credential_sid' => env('TWILIO_FCM_CREDENTIAL_SID'),
-        'apns_voip_credential_sid' => env('TWILIO_APNS_VOIP_CREDENTIAL_SID'),
-    ],
 
     'slack' => [
         'notifications' => [

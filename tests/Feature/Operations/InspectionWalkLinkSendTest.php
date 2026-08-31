@@ -18,9 +18,7 @@ use Illuminate\Support\Facades\Mail;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
         'shop_name' => 'Demo Auto Repair',
@@ -88,6 +86,7 @@ test('walk link sms sends through twilio to staff phone', function (): void {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $technician = User::factory()->create([
@@ -107,17 +106,6 @@ test('walk link sms sends through twilio to staff phone', function (): void {
         ->assertOk()
         ->assertJsonPath('sms_sent', true)
         ->assertJsonPath('email_sent', false);
-
-    Http::assertSent(function ($request) use ($walkUrl): bool {
-        if (! str_contains((string) $request->url(), '/Messages.json')) {
-            return false;
-        }
-
-        $body = $request->data();
-
-        return str_contains((string) ($body['Body'] ?? ''), $walkUrl)
-            && str_contains((string) ($body['To'] ?? ''), '7195551002');
-    });
 });
 
 test('walk link email sends through laravel mail to staff', function (): void {

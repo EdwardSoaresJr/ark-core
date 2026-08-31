@@ -19,9 +19,7 @@ beforeEach(function () {
         'learn_training_gate_enabled' => false,
     ]);
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.account_sid', 'ACtest');
-    config()->set('services.twilio.auth_token', 'test-token');
-
+        
     ShopSettings::current()->persistTrusted([
         'openai_api_key' => 'sk-test',
         'openai_transcription_model' => 'whisper-1',
@@ -369,31 +367,6 @@ test('owner can open a single call intelligence view', function () {
         ->assertSee('All communications');
 });
 
-test('recording webhook queues call analysis job', function () {
-    Bus::fake();
-    config()->set('services.twilio.auth_token', null);
-
-    CallSession::query()->create([
-        'provider' => 'twilio',
-        'provider_call_sid' => 'CArecordqueue01',
-        'direction' => 'inbound',
-        'from_number' => '+17195551234',
-        'to_number' => '+17195559999',
-        'normalized_from' => '7195551234',
-        'status' => 'completed',
-        'started_at' => now(),
-    ]);
-
-    $this->post(route('webhooks.communications.twilio.voice.recording'), [
-        'CallSid' => 'CArecordqueue01',
-        'RecordingSid' => 'REqueue01',
-        'RecordingUrl' => 'https://api.twilio.com/2010-04-01/Accounts/AC/Recordings/REqueue01',
-        'RecordingDuration' => '42',
-    ])->assertNoContent();
-
-    Bus::assertDispatched(AnalyzeCallSessionJob::class);
-});
-
 test('call session analyzer transcribes and summarizes recording', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response('audio-bytes', 200, ['Content-Type' => 'audio/mpeg']),
@@ -426,6 +399,7 @@ test('call session analyzer transcribes and summarizes recording', function () {
             ]],
         ]),
     ]);
+    bindFakeOutboundSms();
 
     $session = CallSession::query()->create([
         'provider' => 'twilio',

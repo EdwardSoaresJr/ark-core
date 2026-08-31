@@ -24,8 +24,6 @@ beforeEach(function (): void {
     ShopSettings::current()->update([
         'shop_name' => 'Demo Auto Repair',
         'shop_timezone' => 'America/Denver',
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
         'learn_training_gate_enabled' => false,
         'appointment_request_availability' => [
@@ -47,6 +45,7 @@ beforeEach(function (): void {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMtest', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 });
 
 function bookPlantVerificationCode(string $code = '123456'): void

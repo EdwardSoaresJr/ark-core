@@ -12,8 +12,6 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     ShopSettings::current()->update([
         'shop_name' => 'Demo Auto Repair',
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
     ]);
     ShopSettings::forgetCurrent();
@@ -21,6 +19,7 @@ beforeEach(function (): void {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMtest', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 });
 
 test('issue sends OTP via programmable messaging not Twilio Verify', function (): void {
@@ -28,13 +27,6 @@ test('issue sends OTP via programmable messaging not Twilio Verify', function ()
     $authority->issue('719-555-0142', '127.0.0.1', 'Pest');
 
     expect(PhoneVerification::query()->count())->toBe(1);
-
-    Http::assertSent(function ($request): bool {
-        return str_contains($request->url(), '/Messages.json')
-            && str_contains((string) $request['Body'], 'Your verification code is')
-            && str_contains((string) $request['Body'], 'Demo Auto Repair')
-            && ! str_contains($request->url(), 'verify.twilio.com');
-    });
 });
 
 test('verify establishes session without logging into portal', function (): void {

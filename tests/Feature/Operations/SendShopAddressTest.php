@@ -20,9 +20,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
         'shop_name' => 'Demo Auto Repair',
@@ -86,6 +84,7 @@ test('send address creates outbound conversation message', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $customer = shopAddressCustomer();
@@ -113,6 +112,7 @@ test('send address can attach repair order context', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $customer = shopAddressCustomer();

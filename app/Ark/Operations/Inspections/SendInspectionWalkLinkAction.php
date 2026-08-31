@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Inspections;
 
 use App\Ark\Operations\Messaging\OutboundDeliveryMode;
 use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
-use App\Ark\Operations\Messaging\TwilioMessagingSender;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
@@ -23,7 +23,7 @@ use RuntimeException;
 final class SendInspectionWalkLinkAction
 {
     public function __construct(
-        private readonly TwilioMessagingSender $sms,
+        private readonly OutboundSmsTransport $sms,
         private readonly ResolvePhoneSmsCapabilityAction $smsCapability,
         private readonly ShopIntegrationCredentials $credentials,
     ) {}
@@ -93,8 +93,8 @@ final class SendInspectionWalkLinkAction
 
     private function sendSms(User $recipient, string $body): void
     {
-        if (! $this->credentials->twilioConfigured()) {
-            throw new RuntimeException('Shop messaging is disabled.');
+        if (! $this->credentials->messagingConfigured()) {
+            throw new RuntimeException('Outbound SMS is not configured.');
         }
 
         $rawPhone = $recipient->getRawOriginal('phone');

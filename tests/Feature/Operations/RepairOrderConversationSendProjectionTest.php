@@ -7,9 +7,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    // Local/CI mailer — official production path is ARK Mail only.
+            // Local/CI mailer — official production path is ARK Mail only.
     config()->set('mail.default', 'array');
 });
 

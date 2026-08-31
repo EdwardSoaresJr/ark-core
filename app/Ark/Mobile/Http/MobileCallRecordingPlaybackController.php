@@ -35,8 +35,8 @@ final class MobileCallRecordingPlaybackController
             abort(404);
         }
 
-        $accountSid = $this->credentials->twilioAccountSid();
-        $authToken = $this->credentials->twilioAuthToken();
+        $accountSid = null;
+        $authToken = null;
 
         if (! filled($accountSid) || ! filled($authToken)) {
             abort(404, 'Recording playback is not available.');

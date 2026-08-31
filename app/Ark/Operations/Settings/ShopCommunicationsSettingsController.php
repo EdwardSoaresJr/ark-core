@@ -62,13 +62,6 @@ class ShopCommunicationsSettingsController
         }
 
         $data = $request->validate([
-            'twilio_account_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_auth_token' => ['nullable', 'string', 'max:128'],
-            'twilio_api_key_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_api_key_secret' => ['nullable', 'string', 'max:128'],
-            'twilio_voice_twiml_app_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_fcm_credential_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_apns_voip_credential_sid' => ['nullable', 'string', 'max:64'],
             'telephony_inbound_number' => ['nullable', 'string', 'max:32'],
             'telephony_provider' => ['nullable', Rule::enum(TelephonyProviderType::class)],
             'telephony_call_flow' => ['nullable', 'array'],
@@ -248,14 +241,7 @@ class ShopCommunicationsSettingsController
             $settingsUpdates['telephony_inbound_number'] = filled($data['telephony_inbound_number'] ?? null)
                 ? trim((string) $data['telephony_inbound_number'])
                 : null;
-            $settingsUpdates['telephony_provider'] = TelephonyProviderType::Twilio->value;
-            $settingsUpdates['twilio_account_sid'] = $this->nullableTrimmedString($data['twilio_account_sid'] ?? null);
-            $this->mergeSecretField($settingsUpdates, 'twilio_auth_token', $data['twilio_auth_token'] ?? null);
-            $settingsUpdates['twilio_api_key_sid'] = $this->nullableTrimmedString($data['twilio_api_key_sid'] ?? null);
-            $this->mergeSecretField($settingsUpdates, 'twilio_api_key_secret', $data['twilio_api_key_secret'] ?? null);
-            $settingsUpdates['twilio_voice_twiml_app_sid'] = $this->nullableTrimmedString($data['twilio_voice_twiml_app_sid'] ?? null);
-            $settingsUpdates['twilio_fcm_credential_sid'] = $this->nullableTrimmedString($data['twilio_fcm_credential_sid'] ?? null);
-            $settingsUpdates['twilio_apns_voip_credential_sid'] = $this->nullableTrimmedString($data['twilio_apns_voip_credential_sid'] ?? null);
+            $settingsUpdates['telephony_provider'] = TelephonyProviderType::None->value;
 
             $messageActionsInput = is_array($data['message_actions'] ?? null) ? $data['message_actions'] : [];
             $settingsUpdates['message_actions'] = [
@@ -298,7 +284,7 @@ class ShopCommunicationsSettingsController
 
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'runtime-health'])
-            ->with('status', 'Communications infrastructure is managed through Twilio settings.');
+            ->with('status', 'Communications infrastructure settings are not available in stock Core.');
     }
 
     private function updateMobilePush(Request $request): RedirectResponse
@@ -306,11 +292,6 @@ class ShopCommunicationsSettingsController
         $request->validate([
             'mobile_push' => ['nullable', 'array'],
             'mobile_push.enabled' => ['nullable', 'boolean'],
-            'twilio_api_key_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_api_key_secret' => ['nullable', 'string', 'max:128'],
-            'twilio_voice_twiml_app_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_fcm_credential_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_apns_voip_credential_sid' => ['nullable', 'string', 'max:64'],
         ]);
 
         $settings = ShopSettings::current();
@@ -323,12 +304,6 @@ class ShopCommunicationsSettingsController
                 ),
             ],
         ];
-
-        $settingsUpdates['twilio_api_key_sid'] = $this->nullableTrimmedString($request->input('twilio_api_key_sid'));
-        $this->mergeSecretField($settingsUpdates, 'twilio_api_key_secret', $request->input('twilio_api_key_secret'));
-        $settingsUpdates['twilio_voice_twiml_app_sid'] = $this->nullableTrimmedString($request->input('twilio_voice_twiml_app_sid'));
-        $settingsUpdates['twilio_fcm_credential_sid'] = $this->nullableTrimmedString($request->input('twilio_fcm_credential_sid'));
-        $settingsUpdates['twilio_apns_voip_credential_sid'] = $this->nullableTrimmedString($request->input('twilio_apns_voip_credential_sid'));
 
         $settings->persistTrusted($settingsUpdates);
         Cache::forget('mobile:fcm:access_token');

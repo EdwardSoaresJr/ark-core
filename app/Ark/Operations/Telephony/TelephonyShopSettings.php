@@ -7,17 +7,17 @@ use App\Ark\Operations\Settings\ShopSettings;
 readonly class TelephonyShopSettings
 {
     public function __construct(
-        public TelephonyProviderType $primaryProvider = TelephonyProviderType::Twilio,
+        public TelephonyProviderType $primaryProvider = TelephonyProviderType::None,
     ) {}
 
     public static function fromShopSettings(ShopSettings $settings): self
     {
         $raw = trim((string) ($settings->telephony_provider ?? ''));
 
-        $provider = TelephonyProviderType::tryFrom($raw) ?? TelephonyProviderType::Twilio;
+        $provider = TelephonyProviderType::tryFrom($raw) ?? TelephonyProviderType::None;
 
-        if ($provider !== TelephonyProviderType::Twilio) {
-            $provider = TelephonyProviderType::Twilio;
+        if ($provider === TelephonyProviderType::Twilio || $provider === TelephonyProviderType::Fake) {
+            $provider = TelephonyProviderType::None;
         }
 
         return new self(primaryProvider: $provider);

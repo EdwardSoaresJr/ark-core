@@ -6,7 +6,7 @@ class TelephonyRingLegCanceler
 {
     public function __construct(
         private readonly TelephonyRingState $ringState,
-        private readonly TwilioVoiceApi $twilio,
+        private readonly OutboundVoiceCallControl $twilio,
     ) {}
 
     public function cancelCompetingLegs(string $parentCallSid, int $answeredEndpointId): void

@@ -9,14 +9,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'shop_name' => 'Demo Auto Repair',
         'telephony_inbound_number' => '7195559999',
-        'twilio_account_sid' => 'ACtestaccount',
-        'twilio_auth_token' => 'test-token',
     ]);
 });
 
@@ -27,6 +23,7 @@ test('customer can access portal with sms code', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $customer = portalAccessCustomer(phone: '7195551212');
 
@@ -99,6 +96,7 @@ test('unknown contact still redirects to verify without revealing absence', func
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMnone', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $this->post(route('portal.access.challenges.store'), [
         'contact' => 'unknown@example.test',

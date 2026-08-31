@@ -9,7 +9,7 @@ use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
-use App\Ark\Operations\Messaging\TwilioMessagingSender;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Mail\WebsiteLeadConfirmationMail;
 use App\Support\Mail\ShopMailBranding;
@@ -20,7 +20,7 @@ use Throwable;
 class SendWebsiteLeadConfirmationAction
 {
     public function __construct(
-        private readonly TwilioMessagingSender $sender,
+        private readonly OutboundSmsTransport $transport,
         private readonly ConversationRecorder $recorder,
         private readonly ShopIntegrationCredentials $credentials,
         private readonly LeadConfirmationAuditConversation $confirmationAudit,
@@ -79,12 +79,12 @@ class SendWebsiteLeadConfirmationAction
 
         try {
             $body = WebsiteLeadConfirmationCopy::smsBody($lead);
-            $result = $this->sender->send($lead->contact_phone, $body);
+            $result = $this->transport->send($lead->contact_phone, $body);
 
             $this->recorder->recordSystemOutboundSms(
                 $conversation,
                 $body,
-                $result->messageSid,
+                $result->messageId,
                 metadata: [
                     'website_lead_confirmation' => true,
                     'lead_id' => $lead->id,

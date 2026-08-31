@@ -178,34 +178,10 @@
 
                 <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
                     <div class="border-b border-slate-200 pb-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Messaging account</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Messaging &amp; voice transport</p>
                         <p class="mt-1 text-xs leading-5 text-slate-500">
-                            Twilio account for SMS, MMS, and your business number. Saved encrypted — leave secret fields blank to keep the current value.
-                            {{ $telephonyHealth->credentialSourceLabel() }}.
+                            Outbound SMS and voice calling require a messaging/voice transport implementation. Stock ARK Core does not ship with one configured.
                         </p>
-                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                            <label class="block">
-                                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Account SID</span>
-                                <input
-                                    type="text"
-                                    name="twilio_account_sid"
-                                    value="{{ old('twilio_account_sid', $settings->twilio_account_sid) }}"
-                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                                    placeholder="AC…"
-                                    autocomplete="off"
-                                >
-                            </label>
-                            <label class="block">
-                                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Auth token</span>
-                                <input
-                                    type="password"
-                                    name="twilio_auth_token"
-                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                                    placeholder="{{ ($shopIntegrations ?? null)?->hasStoredTwilioAuthToken() ? 'Saved — leave blank to keep' : 'Primary auth token' }}"
-                                    autocomplete="new-password"
-                                >
-                            </label>
-                        </div>
                     </div>
 
                     <label class="block max-w-md">
@@ -662,7 +638,7 @@
                                 @error('telephony_call_flow.caller_ring_promo_url')
                                     <p class="mt-1 text-[11px] text-rose-700">{{ $message }}</p>
                                 @enderror
-                                <p class="mt-1 text-[11px] leading-4 text-slate-500">Tip: upload to your website, S3, or Twilio Assets. Keep clips short — they loop until an advisor answers.</p>
+                                <p class="mt-1 text-[11px] leading-4 text-slate-500">Tip: upload to your website, S3, or a public media host. Keep clips short — they loop until an advisor answers.</p>
                             </div>
                         </fieldset>
                     </div>

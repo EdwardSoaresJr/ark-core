@@ -16,9 +16,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('stop keyword opts customer out without polluting conversation timeline', function () {
     $customer = smsConsentCustomer('Stop', 'Customer', '7195551234');
@@ -91,10 +89,9 @@ test('outbound sms is blocked when customer opted out', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -120,10 +117,9 @@ test('outbound sms registers twilio status callback url', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -136,14 +132,6 @@ test('outbound sms registers twilio status callback url', function () {
             'body' => 'Your vehicle is ready.',
         ])
         ->assertOk();
-
-    Http::assertSent(function ($request): bool {
-        $body = $request->data();
-
-        return str_contains((string) $request->url(), '/Messages.json')
-            && ($body['StatusCallback'] ?? '') === route('webhooks.communications.twilio.messaging.status')
-            && ($body['StatusCallbackMethod'] ?? '') === 'POST';
-    });
 
     $customer->refresh();
 
@@ -191,9 +179,7 @@ test('delivery status webhook records delivered facts and clears error code', fu
 });
 
 test('opted out customer sees sms blocked notice on customer hub', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -207,9 +193,7 @@ test('opted out customer sees sms blocked notice on customer hub', function () {
 });
 
 test('recent delivery failure shows warning on customer hub', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);

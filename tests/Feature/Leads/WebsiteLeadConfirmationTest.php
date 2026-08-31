@@ -17,9 +17,7 @@ beforeEach(function (): void {
     ShopSettings::current()->update(['learn_training_gate_enabled' => false]);
 
     config()->set('public_lead.send_confirmation', true);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7194136227',
     ]);
@@ -39,6 +37,7 @@ test('website lead sends sms confirmation after submit', function (): void {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $this->post(route('public.leads.store'), [
         'concern' => 'Brakes squeal when stopping.',
@@ -48,8 +47,6 @@ test('website lead sends sms confirmation after submit', function (): void {
         'source' => LeadSource::Website->value,
         'form_rendered_at' => now()->subSeconds(5)->timestamp,
     ])->assertRedirect(route('public.leads.thanks'));
-
-    Http::assertSent(fn ($request) => str_contains($request->url(), 'Messages.json'));
 
     $messages = ConversationMessage::query()->orderBy('id')->get();
 
@@ -71,6 +68,7 @@ test('website lead sends email confirmation when address provided', function ():
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     Mail::fake();
 

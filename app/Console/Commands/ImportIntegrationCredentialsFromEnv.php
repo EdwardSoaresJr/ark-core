@@ -25,8 +25,6 @@ class ImportIntegrationCredentialsFromEnv extends Command
         }
 
         $keys = [
-            'TWILIO_ACCOUNT_SID' => 'twilio_account_sid',
-            'TWILIO_AUTH_TOKEN' => 'twilio_auth_token',
             'SQUARE_APPLICATION_ID' => 'square_application_id',
             'SQUARE_ACCESS_TOKEN' => 'square_access_token',
             'SQUARE_LOCATION_ID' => 'square_location_id',
@@ -62,7 +60,7 @@ class ImportIntegrationCredentialsFromEnv extends Command
         $credentials = ShopIntegrationCredentials::forCurrentShop();
 
         $this->info('Imported into shop_settings:');
-        $this->line('  Twilio: '.($credentials->twilioConfigured() ? 'configured' : 'incomplete'));
+        $this->line('  Messaging: '.($credentials->messagingConfigured() ? 'configured' : 'not configured'));
         $this->line('  Square: '.($credentials->squareConfigured() ? 'configured' : 'incomplete'));
         $this->line('  PartsTech catalog: '.($credentials->partsTechCatalogConfigured() ? 'configured' : 'incomplete'));
         $this->line('  PartsTech quote import: '.($credentials->partsTechQuoteImportConfigured() ? 'configured' : 'incomplete'));

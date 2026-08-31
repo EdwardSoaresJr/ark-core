@@ -8,10 +8,7 @@ class TelephonyCellWhisperFlow
     {
         $prompt = TelephonyCallFlowSettings::fromShopSettings()->cellWhisperPrompt();
 
-        $acceptUrl = route('webhooks.communications.twilio.voice.cell-accept', [
-            'parentCallSid' => $parentCallSid,
-            'endpointId' => $endpointId,
-        ]);
+        $acceptUrl = '';
 
         return '<?xml version="1.0" encoding="UTF-8"?>'
             .'<Response>'
@@ -49,6 +46,6 @@ class TelephonyCellWhisperFlow
 
     public function conferenceJoinResponse(string $conferenceName): string
     {
-        return TelephonyConferenceTwiml::staffJoinResponse($conferenceName);
+        throw new \RuntimeException('Voice telephony is not configured.');
     }
 }

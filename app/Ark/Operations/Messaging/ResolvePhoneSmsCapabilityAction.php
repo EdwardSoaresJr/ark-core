@@ -5,17 +5,15 @@ namespace App\Ark\Operations\Messaging;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class ResolvePhoneSmsCapabilityAction
 {
     public const FRESH_DAYS = 90;
 
     public function __construct(
-        private readonly TwilioPhoneLookupClient $lookup,
         private readonly PhoneSmsCapabilityClassifier $classifier,
         private readonly ShopIntegrationCredentials $credentials,
+        private readonly OutboundSmsTransport $transport,
     ) {}
 
     public function execute(string $phone, bool $forceRefresh = false): ?PhoneSmsCapability
@@ -32,40 +30,12 @@ class ResolvePhoneSmsCapabilityAction
             return $existing;
         }
 
-        if (! $this->credentials->twilioConfigured()) {
+        if (! $this->transport->isConfigured()) {
             return $existing;
         }
 
-        try {
-            $result = $this->lookup->lookupLineType($normalized);
-        } catch (Throwable $exception) {
-            Log::warning('phone_sms_capability_lookup_failed', [
-                'phone' => $normalized,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return $existing;
-        }
-
-        $classified = $this->classifier->classify(
-            valid: $result['valid'],
-            lineType: $result['line_type'],
-            carrierName: $result['carrier_name'],
-            validationErrors: $result['validation_errors'],
-        );
-
-        return PhoneSmsCapability::query()->updateOrCreate(
-            ['normalized_phone' => $normalized],
-            [
-                'valid' => $result['valid'],
-                'line_type' => $result['line_type'],
-                'carrier_name' => $result['carrier_name'],
-                'sms_capable' => $classified['sms_capable'],
-                'reason' => $classified['reason'],
-                'checked_at' => now(),
-                'raw_payload' => $result['raw'],
-            ],
-        );
+        // Line-type lookup requires a messaging transport implementation.
+        return $existing;
     }
 
     /**
@@ -108,7 +78,7 @@ class ResolvePhoneSmsCapabilityAction
             return PhoneSmsCapability::findByNormalizedPhone($normalized);
         }
 
-        $reason = 'Twilio delivery failed'
+        $reason = 'Delivery failed'
             .($errorCode !== null && $errorCode !== '' ? " ({$errorCode})" : '')
             .' — number cannot receive SMS.';
 

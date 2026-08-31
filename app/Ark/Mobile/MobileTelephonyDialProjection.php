@@ -6,7 +6,7 @@ use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceTransportManager;
 use App\Ark\Operations\Telephony\TelephonyEndpointMatcher;
 use App\Ark\Operations\Telephony\TelephonyOutboundCallerId;
-use App\Ark\Operations\Telephony\TwilioVoiceApi;
+use App\Ark\Operations\Telephony\OutboundVoiceCallControl;
 use App\Models\User;
 
 /**
@@ -16,7 +16,7 @@ final class MobileTelephonyDialProjection
 {
     public function __construct(
         private readonly ShopIntegrationCredentials $credentials,
-        private readonly TwilioVoiceApi $twilio,
+        private readonly OutboundVoiceCallControl $twilio,
         private readonly TelephonyEndpointMatcher $endpointMatcher,
         private readonly TelephonyOutboundCallerId $callerId,
         private readonly MobileVoiceTransportManager $voiceTransports,

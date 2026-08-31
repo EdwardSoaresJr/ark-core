@@ -16,8 +16,6 @@ test('mobile staff devices projection lists registered devices with extensions',
 
     ShopSettings::current()->persistTrusted([
         'telephony_provider' => TelephonyProviderType::Twilio->value,
-        'twilio_account_sid' => 'AC-test-account',
-        'twilio_auth_token' => 'test-auth-token',
     ]);
 
     app(RegisterMobileDeviceAction::class)->execute(

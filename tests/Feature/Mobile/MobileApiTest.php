@@ -1217,9 +1217,7 @@ test('blocked lifecycle move returns a reason from mobile', function (): void {
 });
 
 test('advisor can load conversation thread and reply on mobile', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     \App\Ark\Operations\Settings\ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -1298,6 +1296,7 @@ test('advisor can load conversation thread and reply on mobile', function (): vo
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $this->withToken($token)
         ->postJson('/api/mobile/communications/'.$conversation->id.'/messages', [
@@ -1314,9 +1313,7 @@ test('advisor can load conversation thread and reply on mobile', function (): vo
 });
 
 test('mobile conversation thread merges calls and multi-channel messages', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = User::factory()->create(['name' => 'Molly Advisor'])->assignRole(ArkRole::Advisor->value);
     $token = $advisor->createToken('test')->plainTextToken;
 
@@ -1390,9 +1387,7 @@ test('mobile conversation thread merges calls and multi-channel messages', funct
 });
 
 test('mobile conversation thread exposes activity projection with context and actions', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = User::factory()->create(['name' => 'Molly Advisor'])->assignRole(ArkRole::Advisor->value);
     $token = $advisor->createToken('test')->plainTextToken;
 
@@ -1481,13 +1476,9 @@ test('mobile conversation thread exposes activity projection with context and ac
 });
 
 test('mobile me and conversation call actions use shop callback when twilio is ready', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '+17195550100',
-        'twilio_account_sid' => 'AC-test',
-        'twilio_auth_token' => 'test-token',
     ]);
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -1539,6 +1530,7 @@ test('mobile me and conversation call actions use shop callback when twilio is r
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'CAmobilecb1'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $this->withToken($token)
         ->postJson('/api/mobile/telephony/callback', [
@@ -1550,13 +1542,9 @@ test('mobile me and conversation call actions use shop callback when twilio is r
 });
 
 test('mobile me uses shop callback when advisor has staff cell phone but no telephony endpoint', function (): void {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '+17195550100',
-        'twilio_account_sid' => 'AC-test',
-        'twilio_auth_token' => 'test-token',
     ]);
 
     $advisor = User::factory()->create([
@@ -1577,10 +1565,9 @@ test('advisor can send estimate link from mobile api', function (): void {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $token = $advisor->createToken('test')->plainTextToken;
 
@@ -1630,10 +1617,9 @@ test('advisor can send inspection link from mobile api', function (): void {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMmobileinsp', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $token = $advisor->createToken('test')->plainTextToken;
 
@@ -2528,10 +2514,9 @@ test('advisor customer workspace exposes money, open work, and quick actions', f
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '+17195550100',
     ]);

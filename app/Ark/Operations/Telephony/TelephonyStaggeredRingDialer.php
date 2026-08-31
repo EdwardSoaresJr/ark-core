@@ -6,7 +6,7 @@ use App\Ark\Operations\PhoneNumber;
 class TelephonyStaggeredRingDialer
 {
     public function __construct(
-        private readonly TwilioVoiceApi $twilio,
+        private readonly OutboundVoiceCallControl $twilio,
         private readonly TelephonyRingState $ringState,
     ) {}
 
@@ -31,20 +31,14 @@ class TelephonyStaggeredRingDialer
         }
 
         $joinUrl = $endpoint->type === TelephonyEndpointType::Cell
-            ? route('webhooks.communications.twilio.voice.cell-whisper', [
-                'parentCallSid' => $parentCallSid,
-                'endpointId' => $endpointId,
-            ])
+            ? ''
             : route('webhooks.communications.twilio.voice.conference-join', [
                 'conference' => $state['conference_name'],
                 'parentCallSid' => $parentCallSid,
                 'endpointId' => $endpointId,
             ]);
 
-        $statusCallbackUrl = route('webhooks.communications.twilio.voice.ring-status', [
-            'parentCallSid' => $parentCallSid,
-            'endpointId' => $endpointId,
-        ]);
+        $statusCallbackUrl = '';
 
         $outboundCallSid = $this->twilio->createOutboundCall(
             $state['shop_caller_id'],

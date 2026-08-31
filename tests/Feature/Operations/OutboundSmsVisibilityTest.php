@@ -41,10 +41,9 @@ test('outbound sms appears on customer hub timeline after send', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -94,10 +93,9 @@ test('mobile conversation send records on the viewed conversation thread', funct
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);

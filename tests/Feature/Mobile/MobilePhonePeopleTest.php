@@ -17,8 +17,6 @@ beforeEach(function () {
     ShopSettings::current()->update([
         'telephony_inbound_number' => '+17195550100',
         'telephony_provider' => \App\Ark\Operations\Telephony\TelephonyProviderType::Twilio->value,
-        'twilio_account_sid' => 'AC-test-account',
-        'twilio_auth_token' => 'test-auth-token',
     ]);
 });
 

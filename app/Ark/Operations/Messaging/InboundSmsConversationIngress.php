@@ -12,12 +12,11 @@ use App\Ark\Operations\Conversations\InboundConversationPayload;
 use App\Ark\Operations\Leads\LeadReconciler;
 use App\Ark\Operations\Observations\CustomerRepliedObservationEmitter;
 
-class TwilioSmsIngress implements ConversationIngress
+class InboundSmsConversationIngress implements ConversationIngress
 {
     public function __construct(
         private readonly CustomerCallContextResolver $callContextResolver,
         private readonly ConversationRecorder $recorder,
-        private readonly TwilioMediaFetcher $mediaFetcher,
         private readonly ConversationMessageBroadcaster $broadcaster,
         private readonly LeadReconciler $leadReconciler,
         private readonly CustomerRepliedObservationEmitter $customerRepliedObservations,
@@ -55,11 +54,6 @@ class TwilioSmsIngress implements ConversationIngress
             toNumber: isset($payload->metadata['to_number']) ? (string) $payload->metadata['to_number'] : null,
             metadata: $extraMetadata,
         );
-
-        if ($payload->media !== []) {
-            $this->mediaFetcher->attachToMessage($message, $payload->media);
-            $message->load('attachments');
-        }
 
         $this->leadReconciler->reconcileInboundSms($message, $context?->customer);
 

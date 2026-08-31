@@ -20,9 +20,7 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     \App\Ark\Operations\Settings\ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -124,6 +122,7 @@ test('send estimate sms with missing vin override records operational fact', fun
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMoverride', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = missingVinEstimateRepairOrder();

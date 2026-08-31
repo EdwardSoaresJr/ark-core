@@ -165,6 +165,7 @@ test('uncontacted website lead escalates to advisor phones after delay', functio
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMleadesc001', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     User::factory()->create([
         'phone' => '3035551212',
@@ -181,8 +182,6 @@ test('uncontacted website lead escalates to advisor phones after delay', functio
     $lead->forceFill(['created_at' => now()->subMinutes(5)])->save();
 
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestaccount',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '+17195559999',
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_escalation_enabled' => true,
@@ -206,6 +205,7 @@ test('contacted website leads do not escalate', function (): void {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMleadesc002', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     User::factory()->create([
         'phone' => '3035551212',
@@ -223,8 +223,6 @@ test('contacted website leads do not escalate', function (): void {
     $lead->forceFill(['created_at' => now()->subMinutes(10)])->save();
 
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestaccount',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '+17195559999',
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_escalation_enabled' => true,

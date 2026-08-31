@@ -41,9 +41,7 @@ use Tests\Support\ConversationsH0;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    ShopSettings::current()->update([
+            ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
         'portal_signature_required' => false,
     ]);

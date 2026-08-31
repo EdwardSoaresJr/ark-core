@@ -2,25 +2,20 @@
 
 namespace App\Ark\Operations\Realtime;
 
-use App\Ark\Operations\Realtime\Normalizers\TwilioSessionEventNormalizer;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\IncomingCallPayload;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Models\User;
 
-/**
- * Transport ingress: raw provider payload → normalizer → canonical DTO → RecordSessionEventAction.
- */
 final class SessionEventIngress
 {
     public function __construct(
         private readonly IngestCanonicalSessionEventAction $ingest,
-        private readonly TwilioSessionEventNormalizer $twilioNormalizer,
     ) {}
 
     public function supportsProvider(TelephonyProviderType $provider): bool
     {
-        return $provider === TelephonyProviderType::Twilio;
+        return false;
     }
 
     /**
@@ -90,10 +85,7 @@ final class SessionEventIngress
 
     public function normalizePayload(IncomingCallPayload $payload): ?CanonicalSessionEvent
     {
-        return match ($payload->provider) {
-            TelephonyProviderType::Twilio => $this->twilioNormalizer->fromPayload($payload),
-            TelephonyProviderType::Fake => null,
-        };
+        return null;
     }
 
     /**
@@ -101,10 +93,7 @@ final class SessionEventIngress
      */
     public function normalizeRaw(TelephonyProviderType $provider, array $raw): ?CanonicalSessionEvent
     {
-        return match ($provider) {
-            TelephonyProviderType::Twilio => $this->twilioNormalizer->fromRaw($raw),
-            TelephonyProviderType::Fake => null,
-        };
+        return null;
     }
 
     /**
@@ -112,28 +101,7 @@ final class SessionEventIngress
      */
     private function payloadFromRaw(TelephonyProviderType $provider, array $raw): IncomingCallPayload
     {
-        $canonical = $this->normalizeRaw($provider, $raw);
-
-        if ($canonical?->type === SessionEventType::SessionStarted && $canonical->sessionIdentity !== null) {
-            $identity = $canonical->sessionIdentity;
-
-            return new IncomingCallPayload(
-                provider: $provider,
-                providerCallSid: (string) ($identity['provider_call_sid'] ?? ''),
-                fromNumber: (string) ($identity['from_number'] ?? ''),
-                toNumber: (string) ($identity['to_number'] ?? ''),
-                normalizedFrom: (string) ($identity['normalized_from'] ?? ''),
-                normalizedTo: isset($identity['normalized_to']) ? (string) $identity['normalized_to'] : null,
-                status: \App\Ark\Operations\Telephony\CallSessionStatus::Ringing,
-                rawPayload: $raw,
-                direction: $identity['direction'] ?? \App\Ark\Operations\Telephony\CallSessionDirection::Inbound,
-            );
-        }
-
-        $callSid = match ($provider) {
-            TelephonyProviderType::Twilio => trim((string) ($raw['CallSid'] ?? '')),
-            TelephonyProviderType::Fake => trim((string) ($raw['provider_call_sid'] ?? '')),
-        };
+        $callSid = trim((string) ($raw['CallSid'] ?? $raw['provider_call_sid'] ?? ''));
 
         return new IncomingCallPayload(
             provider: $provider,

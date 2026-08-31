@@ -11,9 +11,7 @@ use Tests\TestCase;
 uses(TestCase::class, RefreshDatabase::class);
 
 test('provider tone is success when telephony signals are healthy', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-    config()->set('broadcasting.default', 'reverb');
+            config()->set('broadcasting.default', 'reverb');
     config()->set('broadcasting.connections.reverb.key', 'reverb-key');
 
     ShopSettings::current()->update([
@@ -37,9 +35,7 @@ test('provider tone is success when telephony signals are healthy', function () 
 });
 
 test('provider tone is danger when twilio credentials are missing', function () {
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', null);
-
+        
     $health = TelephonyHealth::forCurrentShop();
 
     expect($health->providerTone('success'))->toBe('danger')
@@ -47,9 +43,7 @@ test('provider tone is danger when twilio credentials are missing', function () 
 });
 
 test('provider tone is warning when any operational signal is degraded', function () {
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '+17195550100',
     ]);

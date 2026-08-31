@@ -5,7 +5,6 @@ namespace App\Ark\Operations\Telephony;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceCredentials;
 use App\Ark\Runtime\Broadcast\ReverbDeployment;
 use Illuminate\Support\Carbon;
 
@@ -30,11 +29,7 @@ final class TelephonyHealth
 
     public function providerLabel(): string
     {
-        if ($this->primaryProvider() === TelephonyProviderType::Twilio && $this->credentials->twilioConfigured()) {
-            return 'Twilio · Enabled';
-        }
-
-        return $this->primaryProvider()->label();
+        return 'Voice transport not configured';
     }
 
     public function voiceIngressTone(): string
@@ -64,30 +59,12 @@ final class TelephonyHealth
 
     public function providerTone(string $smsWebhookTone): string
     {
-        if (! $this->credentialsConfigured() || ! $this->accountSidConfigured()) {
-            return 'danger';
-        }
-
-        $tones = [
-            $this->rollupConnectionTone(),
-            $this->webhookTone(),
-            $smsWebhookTone,
-        ];
-
-        if ($this->reverbConfigured()) {
-            $tones[] = $this->reverbTone();
-        }
-
-        return $this->worstTone($tones);
+        return 'muted';
     }
 
     private function rollupConnectionTone(): string
     {
-        if (! $this->credentials->twilioConfigured()) {
-            return 'muted';
-        }
-
-        return $this->connectionTone();
+        return 'muted';
     }
 
     /**
@@ -117,12 +94,12 @@ final class TelephonyHealth
 
     public function credentialsConfigured(): bool
     {
-        return filled($this->credentials->twilioAuthToken());
+        return $this->credentials->messagingConfigured();
     }
 
     public function accountSidConfigured(): bool
     {
-        return filled($this->credentials->twilioAccountSid());
+        return $this->credentials->messagingConfigured();
     }
 
     public function credentialSourceLabel(): string
@@ -230,55 +207,47 @@ final class TelephonyHealth
 
     public function webhookUrl(): string
     {
-        return route('webhooks.communications.twilio.voice.incoming');
+        return '';
     }
 
     public function sipOutboundWebhookUrl(): string
     {
-        return route('webhooks.communications.twilio.voice.sip-outbound');
+        return '';
     }
 
     public function clientOutboundWebhookUrl(): string
     {
-        return route('webhooks.communications.twilio.voice.client-outbound');
+        return '';
     }
 
     public function clientIncomingWebhookUrl(): string
     {
-        return route('webhooks.communications.twilio.voice.client-incoming');
+        return '';
     }
 
     public function mobileVoiceClientConfigured(): bool
     {
-        return MobileVoiceCredentials::forCurrentShop()->twilioClientConfigured();
+        return false;
     }
 
-    /**
-     * Boolean health only — never expose credential SID values.
-     */
     public function mobileVoiceTwimlAppPresent(): bool
     {
-        return filled(MobileVoiceCredentials::forCurrentShop()->twimlAppSid());
+        return false;
     }
 
     public function mobileVoiceIosVoipPushCredentialPresent(): bool
     {
-        return filled(MobileVoiceCredentials::forCurrentShop()->apnsVoipCredentialSid());
+        return false;
     }
 
     public function mobileVoiceAndroidFcmCredentialPresent(): bool
     {
-        return filled(MobileVoiceCredentials::forCurrentShop()->fcmCredentialSid());
+        return false;
     }
 
-    /**
-     * Shop can deliver Twilio Client inbound wake on at least one mobile platform.
-     */
     public function mobileVoiceClientInboundEnabled(): bool
     {
-        $credentials = MobileVoiceCredentials::forCurrentShop();
-
-        return $credentials->twilioClientConfigured() && $credentials->supportsInboundPush();
+        return false;
     }
 
     public function mobileVoiceClientLabel(): string

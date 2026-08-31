@@ -29,8 +29,6 @@ test('advisor can open dedicated calls and voicemail library', function (): void
 
 test('calls library shows inline voicemail player for sessions with voicemail', function (): void {
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'AC-test',
-        'twilio_auth_token' => 'test-token',
     ]);
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);

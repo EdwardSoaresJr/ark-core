@@ -15,9 +15,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    config()->set('services.square.application_id', 'sq0idp-test-app');
+            config()->set('services.square.application_id', 'sq0idp-test-app');
     config()->set('services.square.access_token', 'test-token');
     config()->set('services.square.location_id', 'LOC123');
 
@@ -35,6 +33,7 @@ test('send payment link creates access token and sends sms conversation message'
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();
@@ -121,6 +120,7 @@ test('send payment link via sms ignores invalid customer email on file', functio
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();
@@ -191,6 +191,7 @@ test('staff payment preview token does not invalidate existing customer pay link
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();

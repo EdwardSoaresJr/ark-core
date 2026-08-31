@@ -234,9 +234,7 @@ test('communications inbox conversation thread includes customer calls', functio
 test('communications inbox call thread renders recording player when available', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    config()->set('services.twilio.auth_token', 'test-token');
-
+        
     $conversation = Conversation::query()->create([
         'contact_surface' => ConversationContactSurface::Phone,
         'contact_address' => '7195550199',

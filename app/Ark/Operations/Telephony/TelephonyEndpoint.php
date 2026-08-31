@@ -113,10 +113,7 @@ class TelephonyEndpoint extends Model
 
         if ($parentCallSid !== null && $parentCallSid !== '' && $this->id > 0) {
             $whisperUrl = ' url="'.htmlspecialchars(
-                route('webhooks.communications.twilio.voice.cell-whisper', [
-                    'parentCallSid' => $parentCallSid,
-                    'endpointId' => $this->id,
-                ]),
+                '',
                 ENT_XML1,
             ).'"';
         }

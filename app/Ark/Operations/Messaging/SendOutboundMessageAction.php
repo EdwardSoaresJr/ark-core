@@ -20,7 +20,7 @@ use RuntimeException;
 class SendOutboundMessageAction
 {
     public function __construct(
-        private readonly TwilioMessagingSender $sender,
+        private readonly OutboundSmsTransport $transport,
         private readonly ConversationRecorder $recorder,
         private readonly ConversationLinker $linker,
         private readonly ConversationMessageBroadcaster $broadcaster,
@@ -45,8 +45,8 @@ class SendOutboundMessageAction
         array $metadata = [],
         ?string $toPhone = null,
     ): array {
-        if (! $this->credentials->twilioConfigured()) {
-            throw new RuntimeException('Shop messaging is disabled.');
+        if (! $this->transport->isConfigured()) {
+            throw new RuntimeException('Outbound SMS is not configured.');
         }
 
         $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials);
@@ -76,7 +76,7 @@ class SendOutboundMessageAction
 
         $mediaUrls = $storedAttachment !== null ? [$storedAttachment['public_url']] : [];
 
-        $result = $this->sender->send((string) $destinationPhone, $messageBody, $mediaUrls);
+        $result = $this->transport->send((string) $destinationPhone, $messageBody, $mediaUrls);
 
         $customer->forceFill([
             'last_sms_delivery_status' => $result->status !== '' ? $result->status : 'queued',
@@ -86,7 +86,7 @@ class SendOutboundMessageAction
             customer: $customer,
             actor: $actor,
             body: $messageBody,
-            providerMessageSid: $result->messageSid,
+            providerMessageSid: $result->messageId,
             repairOrder: $repairOrder,
             conversation: $conversation,
             metadata: $metadata,
@@ -109,7 +109,7 @@ class SendOutboundMessageAction
 
         return [
             'message' => $message,
-            'provider_message_sid' => $result->messageSid,
+            'provider_message_sid' => $result->messageId,
         ];
     }
 

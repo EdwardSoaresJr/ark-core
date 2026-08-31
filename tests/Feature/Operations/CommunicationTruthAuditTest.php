@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-});
+        });
 
 test('duplicate stop keyword keeps consent state and records one opt out event', function () {
     $customer = smsConsentCustomer('Dup', 'Stop', '7195551414');
@@ -104,10 +102,9 @@ test('queued failed delivered recovery updates customer state and records both d
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -122,8 +119,7 @@ test('queued failed delivered recovery updates customer state and records both d
         ])
         ->assertOk();
 
-    config()->set('services.twilio.auth_token', null);
-
+    
     $customer->refresh();
 
     expect($customer->last_sms_delivery_status)->toBe('queued');

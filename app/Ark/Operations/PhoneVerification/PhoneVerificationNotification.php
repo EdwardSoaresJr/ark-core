@@ -2,16 +2,16 @@
 
 namespace App\Ark\Operations\PhoneVerification;
 
-use App\Ark\Operations\Messaging\TwilioMessagingSender;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Delivers OTP SMS. Transport only — Twilio today; swap sender later without changing callers.
+ * Delivers OTP SMS via the outbound messaging transport.
  */
 final class PhoneVerificationNotification
 {
     public function __construct(
-        private readonly TwilioMessagingSender $sender,
+        private readonly OutboundSmsTransport $transport,
     ) {}
 
     public function sendSms(string $phoneE164, string $plainCode): void
@@ -32,6 +32,6 @@ final class PhoneVerificationNotification
             'Reply STOP to opt out.',
         ]);
 
-        $this->sender->send($phoneE164, $body);
+        $this->transport->send($phoneE164, $body);
     }
 }

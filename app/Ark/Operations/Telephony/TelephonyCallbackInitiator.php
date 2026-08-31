@@ -13,7 +13,7 @@ class TelephonyCallbackInitiator
     public function __construct(
         private readonly TelephonyEndpointMatcher $endpointMatcher,
         private readonly TelephonyOutboundCallerId $callerId,
-        private readonly TwilioVoiceApi $twilio,
+        private readonly OutboundVoiceCallControl $twilio,
         private readonly TelephonyCallbackStore $callbackStore,
         private readonly ShopIntegrationCredentials $credentials,
     ) {}
@@ -65,8 +65,8 @@ class TelephonyCallbackInitiator
             repairOrderId: $repairOrderId,
         ));
 
-        $answerUrl = route('webhooks.communications.twilio.voice.callback-answer', ['token' => $token]);
-        $statusCallbackUrl = route('webhooks.communications.twilio.voice.status');
+        $answerUrl = '';
+        $statusCallbackUrl = '';
 
         $callSid = $this->twilio->createOutboundCall(
             $shopCallerId,

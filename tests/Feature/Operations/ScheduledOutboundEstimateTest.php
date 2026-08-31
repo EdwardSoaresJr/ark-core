@@ -27,9 +27,7 @@ use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-    config()->set('app.timezone', 'UTC');
+            config()->set('app.timezone', 'UTC');
 
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
@@ -76,6 +74,7 @@ test('send now cancels pending scheduled estimate before sending', function () {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = scheduledOutboundEstimateRepairOrder();
@@ -110,6 +109,7 @@ test('scheduled job sends through delivery action and snapshots recipient phone'
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = scheduledOutboundEstimateRepairOrder();

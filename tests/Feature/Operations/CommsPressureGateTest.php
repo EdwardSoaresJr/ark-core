@@ -40,9 +40,7 @@ test('attention gate allows intake while website lead pressure is active', funct
 });
 
 test('attention gate redirects advisors with unresolved comms pressure', function () {
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', null);
-
+        
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -126,9 +124,7 @@ test('attention gate does not block repair orders when only workboard lead press
 });
 
 test('attention gate allows customer and ro reply destinations while pressure is active', function () {
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', null);
-
+        
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -158,9 +154,7 @@ test('attention gate allows customer and ro reply destinations while pressure is
 });
 
 test('attention gate does not block technicians with unresolved comms pressure', function () {
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', null);
-
+        
     $this->seed(ArkAuthorizationSeeder::class);
 
     ShopSettings::current()->update([
@@ -218,9 +212,7 @@ test('attention gate does not block technicians with unresolved comms pressure',
 });
 
 test('attention gate is disabled when shop setting is off', function () {
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', null);
-
+        
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => false,
@@ -254,12 +246,11 @@ test('comms escalation texts active advisors after delay', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMesc001', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $this->seed(ArkAuthorizationSeeder::class);
 
-    config()->set('services.twilio.auth_token', null);
-    config()->set('services.twilio.account_sid', null);
-
+        
     User::factory()->create([
         'phone' => '3035551212',
     ])->assignRole(ArkRole::Advisor->value);
@@ -279,8 +270,6 @@ test('comms escalation texts active advisors after delay', function () {
     ])->assertOk();
 
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestaccount',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '+17195559999',
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_escalation_enabled' => true,

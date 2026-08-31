@@ -43,8 +43,6 @@ test('public homepage returns 200', function (): void {
 
 test('public book page opens with SMS identity gate before any wizard', function (): void {
     ShopSettings::current()->update([
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
     ]);
     ShopSettings::forgetCurrent();
@@ -78,8 +76,6 @@ test('book appointment request stores preferred visit in lead without creating a
 
     ShopSettings::current()->update([
         'shop_timezone' => 'America/Denver',
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
         'appointment_request_availability' => [
             'weekly' => [
@@ -147,8 +143,6 @@ test('book appointment request with single name never stores placeholder surname
 
     ShopSettings::current()->update([
         'shop_timezone' => 'America/Denver',
-        'twilio_account_sid' => 'ACtestverify',
-        'twilio_auth_token' => 'test-token',
         'telephony_inbound_number' => '7195559999',
         'appointment_request_availability' => [
             'weekly' => [

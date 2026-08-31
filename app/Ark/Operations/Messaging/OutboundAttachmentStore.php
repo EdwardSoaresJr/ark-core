@@ -50,7 +50,7 @@ class OutboundAttachmentStore
         abort_unless(Storage::disk('local')->exists($path), 500, 'Outbound MMS attachment could not be stored.');
 
         $publicUrl = URL::temporarySignedRoute(
-            'webhooks.communications.twilio.messaging.outbound-media',
+            'messaging.outbound-media',
             now()->addDay(),
             ['token' => $mediaToken],
             absolute: true,

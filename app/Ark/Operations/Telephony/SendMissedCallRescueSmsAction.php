@@ -8,7 +8,7 @@ use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
-use App\Ark\Operations\Messaging\TwilioMessagingSender;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -19,7 +19,7 @@ use Throwable;
 class SendMissedCallRescueSmsAction
 {
     public function __construct(
-        private readonly TwilioMessagingSender $sender,
+        private readonly OutboundSmsTransport $transport,
         private readonly ConversationRecorder $recorder,
         private readonly ConversationResolver $conversations,
         private readonly InboundCallerDisplayPhone $callerPhone,
@@ -99,13 +99,13 @@ class SendMissedCallRescueSmsAction
         $body = MissedCallRescueCopy::bodyFor($session, $flow);
 
         try {
-            $result = $this->sender->send($normalizedPhone, $body);
+            $result = $this->transport->send($normalizedPhone, $body);
             $conversation = $this->conversations->forPhone($normalizedPhone);
 
             $this->recorder->recordSystemOutboundSms(
                 $conversation,
                 $body,
-                $result->messageSid,
+                $result->messageId,
                 metadata: [
                     'missed_call_rescue' => true,
                     'call_session_id' => $session->id,

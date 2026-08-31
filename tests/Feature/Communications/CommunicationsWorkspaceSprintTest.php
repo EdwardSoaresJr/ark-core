@@ -36,9 +36,7 @@ beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->seed(RepairOrderStatusCatalogSeeder::class);
     fakeCommsWorkspaceTwilio();
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtest');
-    config()->set('broadcasting.default', 'null');
+            config()->set('broadcasting.default', 'null');
 
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
@@ -69,6 +67,7 @@ function fakeCommsWorkspaceTwilio(string $messageSid = 'SMworkspace001'): void
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 }
 
 function commsWorkspaceAdvisor(): User
@@ -199,8 +198,7 @@ test('customer inbound sms returns conversation to needs attention', function ()
         ])
         ->assertOk();
 
-    config()->set('services.twilio.auth_token', null);
-
+    
     $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
         'MessageSid' => 'SMcustomerreply001',
         'From' => '+17195550200',

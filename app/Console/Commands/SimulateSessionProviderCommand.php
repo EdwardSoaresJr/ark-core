@@ -28,7 +28,7 @@ class SimulateSessionProviderCommand extends Command
 
         $provider = match ($providerKey) {
             'fake' => TelephonyProviderType::Fake,
-            'twilio' => TelephonyProviderType::Twilio,
+            'none' => TelephonyProviderType::None,
             default => null,
         };
 

@@ -248,7 +248,6 @@ test('exception reporter redacts sensitive request input', function () {
         'password' => 'super-secret',
         'password_confirmation' => 'super-secret',
         'current_password' => 'old-secret',
-        'twilio_auth_token' => 'twilio-live-token',
         'square_access_token' => 'square-live-token',
         'postmark_token' => 'postmark-live-token',
         'ark_mail_credential' => 'arkmail-secret',
@@ -264,7 +263,6 @@ test('exception reporter redacts sensitive request input', function () {
         ->and($redacted['password'])->toBe('[redacted]')
         ->and($redacted['password_confirmation'])->toBe('[redacted]')
         ->and($redacted['current_password'])->toBe('[redacted]')
-        ->and($redacted['twilio_auth_token'])->toBe('[redacted]')
         ->and($redacted['square_access_token'])->toBe('[redacted]')
         ->and($redacted['postmark_token'])->toBe('[redacted]')
         ->and($redacted['ark_mail_credential'])->toBe('[redacted]')
@@ -287,7 +285,6 @@ test('exception reporter context redacts sensitive input from the current reques
 
     $request = Request::create('/app/settings/shop', 'POST', [
         'shop_name' => 'Auto Repair Keeper',
-        'twilio_auth_token' => 'twilio-live-token',
         'square_access_token' => 'square-live-token',
     ]);
 
@@ -296,7 +293,6 @@ test('exception reporter context redacts sensitive input from the current reques
     $context = app(ExceptionReporter::class)->context(new RuntimeException('Settings save failed'));
 
     expect($context['input']['shop_name'])->toBe('Auto Repair Keeper')
-        ->and($context['input']['twilio_auth_token'])->toBe('[redacted]')
         ->and($context['input']['square_access_token'])->toBe('[redacted]');
 });
 

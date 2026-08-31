@@ -23,9 +23,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -57,6 +55,7 @@ test('send inspection link creates access token and sends sms conversation messa
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = inspectionLinkRepairOrder();
@@ -106,6 +105,7 @@ test('customer can open inspection portal with token', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMinspection02', 'status' => 'queued'], 201),
     ]);
+    bindFakeOutboundSms();
 
     $response = $this->actingAs($advisor)
         ->postJson(route('operations.repair-orders.conversation-actions.send-inspection', $repairOrder));

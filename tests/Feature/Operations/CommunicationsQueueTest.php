@@ -24,8 +24,7 @@ beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
     config()->set('broadcasting.default', 'null');
-    config()->set('services.twilio.auth_token', null);
-    Storage::fake('local');
+        Storage::fake('local');
 });
 
 test('communications attention projection skips recent activity feed', function () {
@@ -242,9 +241,7 @@ test('communications queue reply url deep links to estimate review when customer
         'NumMedia' => '0',
     ])->assertOk();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'AC-test');
-
+        
     $expectedReplyUrl = route('operations.repair-orders.show', $repairOrder->repair_order_id)
         .'?compose=text#comms';
 
@@ -287,6 +284,7 @@ test('communications queue api includes inbound mms with attachment indicator', 
     Http::fake([
         'https://api.twilio.com/*' => Http::response('image-bytes', 200, ['Content-Type' => 'image/jpeg']),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = actingAsLearnCurrentAdvisor();
 
@@ -360,10 +358,9 @@ test('unknown unmatched sms shows reply action and can send from conversation re
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtest');
-
+        
     \App\Ark\Operations\Settings\ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -480,6 +477,7 @@ test('aged unreplied mms stays in needs attention via shop turn', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response('image-bytes', 200, ['Content-Type' => 'image/jpeg']),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = actingAsLearnCurrentAdvisor();
     commsQueueCustomer('Aged', 'Mms', '7196416535');
@@ -602,6 +600,7 @@ test('work communications queue lane shows reply for inbound sms and mms', funct
     Http::fake([
         'https://api.twilio.com/*' => Http::response('image-bytes', 200, ['Content-Type' => 'image/jpeg']),
     ]);
+    bindFakeOutboundSms();
 
     $advisor = actingAsLearnCurrentAdvisor();
     $customer = commsQueueCustomer('Lane', 'Reply', '7195554321');
@@ -624,9 +623,7 @@ test('work communications queue lane shows reply for inbound sms and mms', funct
         'MediaContentType0' => 'image/jpeg',
     ])->assertOk();
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtest');
-
+        
     \App\Ark\Operations\Settings\ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);

@@ -2,7 +2,6 @@
 
 namespace App\Ark\Mobile;
 
-use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceCredentials;
 use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceEndpointRegistrar;
 use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceRegistrationProjection;
 use App\Ark\Operations\Telephony\TelephonyExtension;
@@ -69,6 +68,6 @@ final class MobileStaffDevicesProjection
 
     public function arkVoiceConfigured(): bool
     {
-        return MobileVoiceCredentials::forCurrentShop()->twilioClientConfigured();
+        return false;
     }
 }

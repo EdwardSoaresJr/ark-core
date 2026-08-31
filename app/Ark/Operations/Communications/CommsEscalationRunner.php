@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Communications;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadSource;
-use App\Ark\Operations\Messaging\TwilioMessagingSender;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Telephony\CallSession;
@@ -34,7 +34,7 @@ class CommsEscalationRunner
             return 0;
         }
 
-        $sender = new TwilioMessagingSender($credentials);
+        $sender = app(OutboundSmsTransport::class);
         $delayMinutes = $settings->escalationDelayMinutes();
         $cutoff = now()->subMinutes($delayMinutes);
         $sent = 0;
@@ -158,7 +158,7 @@ class CommsEscalationRunner
         return trim("ARK: Unhandled website lead from {$name} ({$phone}){$snippet}. Check In now. {$intakeUrl}");
     }
 
-    private function notifyAdvisors(TwilioMessagingSender $sender, string $body, string $kind, string $referenceId): bool
+    private function notifyAdvisors(OutboundSmsTransport $sender, string $body, string $kind, string $referenceId): bool
     {
         $recipients = $this->advisorsWithPhones();
 

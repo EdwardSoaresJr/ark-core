@@ -23,9 +23,7 @@ beforeEach(function (): void {
     $this->seed(RepairOrderStatusCatalogSeeder::class);
     $this->app->bind(PdfRenderer::class, ReviewRequestFakePdfRenderer::class);
 
-    config()->set('services.twilio.auth_token', 'test-token');
-    config()->set('services.twilio.account_sid', 'ACtestaccount');
-
+        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
         'shop_name' => 'Demo Auto Repair',
@@ -83,6 +81,7 @@ test('review request text sends once and records outbound authority', function (
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
     seedReviewRequestSmsCapable();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -122,6 +121,7 @@ test('review request text sends once and records outbound authority', function (
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
 
     $this->actingAs($advisor)
         ->post(route('operations.repair-orders.review-request.send', $repairOrder->fresh()), [
@@ -165,6 +165,7 @@ test('review request text and email both send once', function (): void {
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
     seedReviewRequestSmsCapable();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -216,6 +217,7 @@ test('failed text send does not mark review request sent', function (): void {
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['message' => 'fail'], 500),
     ]);
+    bindFakeOutboundSms();
     seedReviewRequestSmsCapable();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
@@ -287,6 +289,7 @@ test('sent review request presents as communication history', function (): void 
             'status' => 'queued',
         ], 201),
     ]);
+    bindFakeOutboundSms();
     seedReviewRequestSmsCapable();
 
     $advisor = User::factory()->create([

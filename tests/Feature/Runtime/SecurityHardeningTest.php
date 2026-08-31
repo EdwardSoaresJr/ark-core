@@ -41,7 +41,6 @@ test('shop integration secrets cannot be mass assigned', function () {
     $settings = ShopSettings::current();
 
     $settings->update([
-        'twilio_auth_token' => 'mass-assigned-token',
         'square_access_token' => 'mass-assigned-square',
         'ark_mail_credential' => 'mass-assigned-ark-mail',
         'cloud_credential' => 'mass-assigned-cloud',
@@ -54,8 +53,7 @@ test('shop integration secrets cannot be mass assigned', function () {
 
     $settings->refresh();
 
-    expect($settings->twilio_auth_token)->toBeNull()
-        ->and($settings->square_access_token)->toBeNull()
+    expect($settings->square_access_token)->toBeNull()
         ->and($settings->ark_mail_credential)->toBeNull()
         ->and($settings->cloud_credential)->toBeNull()
         ->and($settings->partstech_api_key)->toBeNull()
@@ -64,9 +62,9 @@ test('shop integration secrets cannot be mass assigned', function () {
         ->and($settings->messenger_page_access_token)->toBeNull()
         ->and($settings->square_webhook_signature_key)->toBeNull();
 
-    $settings->persistTrusted(['twilio_auth_token' => 'trusted-token']);
+    $settings->persistTrusted(['square_access_token' => 'trusted-token']);
 
-    expect($settings->fresh()->twilio_auth_token)->toBe('trusted-token');
+    expect($settings->fresh()->square_access_token)->toBe('trusted-token');
 });
 
 test('appointment status rejects off-site redirect targets', function () {

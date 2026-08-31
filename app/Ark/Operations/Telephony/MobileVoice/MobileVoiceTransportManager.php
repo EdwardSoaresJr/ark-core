@@ -5,18 +5,15 @@ namespace App\Ark\Operations\Telephony\MobileVoice;
 use App\Ark\Mobile\MobileDevice;
 use App\Models\User;
 
-/**
- * Mobile in-app voice transport — Twilio Programmable Voice Client SDK.
- */
 final class MobileVoiceTransportManager
 {
     public function __construct(
-        private readonly TwilioMobileVoiceTransport $twilio,
+        private readonly NotConfiguredMobileVoiceTransport $transport,
     ) {}
 
     public function current(): MobileVoiceTransport
     {
-        return $this->twilio;
+        return $this->transport;
     }
 
     public function isInAppReady(User $user, ?MobileDevice $device = null): bool
