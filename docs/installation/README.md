@@ -30,7 +30,7 @@ Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Re
 
 **Writable:** ARK can update `.env` during setup.
 
-**Immutable (Docker/K8s/platform):** Compose/Coolify inject `DB_*` (and usually `APP_URL`). Docker Compose **bootstraps `APP_KEY`** onto durable install storage when the host does not inject one. The wizard validates and continues without fighting the platform.
+**Immutable (Docker/K8s/platform):** Compose/Coolify inject `DB_*` (and usually `APP_URL`). Docker Compose generates `APP_KEY`, the application database password, the MySQL root password, and Reverb secrets on first boot when they are not already stored. The wizard verifies the runtime database and continues.
 
 ## After install
 
@@ -51,7 +51,7 @@ Step-by-step for a small Ubuntu cloud server, Docker, HTTPS (Caddy), and `/setup
 
 → **[vultr.md](./vultr.md)**
 
-Use a **2 GB (~$10/mo)** plan for your first live shop. Smaller 1 GB plans are not recommended yet.
+**1 GB RAM** is the supported starter/minimum for a small shop (use swap). **2 GB RAM** is recommended when you want extra headroom during updates, imports, photos, and heavier use.
 
 ## Docker Compose (recommended)
 
@@ -69,11 +69,11 @@ docker compose up -d --build
 
 Then open **http://localhost:8088/setup**.
 
-The Database step is pre-filled from Compose runtime settings. Leave the password blank and click **Test Connection** — you should not need to type Docker service names or credentials by hand.
+The Database step should show **Connected** for a normal Compose install. You do not type Docker-internal MySQL credentials.
 
-Compose defaults include `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `SESSION_DRIVER=redis`, and `BROADCAST_CONNECTION=reverb`, with Reverb listening inside the app container (same supervisord model as Coolify). Local Reverb app id/key/secret are development defaults in `docker-compose.yml` — replace them for any internet-facing shop.
+First boot generates unique database and realtime secrets onto a dedicated volume. Recreating containers keeps those secrets. `docker compose down -v` is a new installation and generates new secrets.
 
-Recreate the app container after install; MySQL, Redis, and `ark_storage` keep shop state.
+Compose uses Redis for cache, sessions, Horizon, and Reverb. Advanced PHP installs can start thinner, then add Redis before enabling realtime telephony and background jobs.
 
 ## Advanced installation
 

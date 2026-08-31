@@ -155,7 +155,7 @@ Covers: redirect when uninstalled, wizard OK, lock after install, env allowlist 
 
 1. End-to-end certify against a disposable empty MySQL (migrate → lock → login → restart)
 2. Prior snapshot scrub (Demo Auto Repair narrative, license, Preline Fair Use)
-3. Optional: stranger `docker compose` path
+3. Optional: Compose `docker compose` path
 4. Squash installer into curated public commit before remote
 
 **STOP.** No GitHub remote created.

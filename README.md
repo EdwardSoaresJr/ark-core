@@ -83,16 +83,9 @@ Then open:
 
 **http://localhost:8088/setup**
 
-When using the included Compose environment, the default database connection values are:
+The setup wizard uses the database Compose already created. You should not need to type database credentials.
 
-* Host: `mysql`
-* Port: `3306`
-* Database: `ark`
-* Username: `ark`
-* Password: `ark`
-
-**Cloud VPS:** step-by-step with HTTPS — [`docs/installation/vultr.md`](docs/installation/vultr.md).  
-Starter size: **~2 GB RAM (~$10/mo)**. Smaller 1 GB plans are not recommended yet.
+Cloud VPS with HTTPS: [`docs/installation/vultr.md`](docs/installation/vultr.md).
 
 See `docs/installation/README.md` for what the stack includes and for advanced (non-Docker) installation.
 

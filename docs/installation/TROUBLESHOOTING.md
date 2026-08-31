@@ -8,12 +8,18 @@
 
 ## Cannot write environment
 
-Immutable hosts must provide `APP_URL` and `DB_*` via the platform (Compose already does for self-host). Canonical Docker generates and persists `APP_KEY` on first boot when unset. The wizard will not chmod the filesystem.
+Immutable hosts must provide `APP_URL` and `DB_*` via the platform. Compose generates `APP_KEY` and database secrets on first boot. The wizard will not chmod the filesystem.
+
+## Existing Docker data after an update
+
+If Compose logs say install secrets are missing, this machine already has a MySQL volume but no saved installation secrets. ARK will not invent new database passwords for that data.
+
+Restore the previous secrets volume, or start a new installation with `docker compose down -v` (this deletes shop data on this machine).
 
 ## Database connection failed
 
-- Create an **empty** MySQL database first.
-- Verify host/port/user/password.
+- **Compose install:** the Database step should say Connected without a password field. If it failed, check `docker compose logs mysql` and `docker compose logs install-bootstrap`.
+- **Manual PHP install:** create an **empty** MySQL database first, then verify host/port/user/password.
 - The installer never logs the password.
 
 ## Database not empty

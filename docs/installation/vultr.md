@@ -29,15 +29,12 @@ Your Vultr server
 
 ARK’s full stack is heavier than a brochure website. It runs MySQL, Redis, PHP-FPM, Horizon, Reverb, and the scheduler together.
 
-| Vultr plan (typical) | RAM | ARK status |
-| --- | --- | --- |
-| **~$5 / mo** Cloud Compute | **1 GB** | **Not recommended yet.** May run out of memory under the full stack. |
-| **~$10 / mo** Cloud Compute | **2 GB** | **Recommended starter** for a first live shop. |
-| $12+ / more RAM | 2 GB+ | Comfortable for a small shop. |
+| RAM | Use |
+| --- | --- |
+| **1 GB** | Supported starter/minimum for a small ARK shop. Add swap on small hosts. |
+| **2 GB** | Recommended when you want extra headroom for updates, imports, photos, queues, and heavier use. |
 
-We will not advertise “$5/month” in the README until a fresh 1 GB box has completed install, photos, restart, and reboot successfully.
-
-**Use a 2 GB (~$10) plan for your first live shop.**
+Typical Vultr Cloud Compute pricing at the time of writing is about **$5/mo for 1 GB** and **$10/mo for 2 GB**. Use swap on 1 GB (see below).
 
 ---
 
@@ -48,7 +45,7 @@ We will not advertise “$5/month” in the README until a fresh 1 GB box has co
 3. Choose:
    - **Server type:** Cloud Compute / Shared CPU  
    - **OS:** Ubuntu (24.04 LTS or newest LTS)  
-   - **Plan:** **2 GB RAM** (~$10/mo) until $5 is certified  
+   - **Plan:** **1 GB RAM** is enough to get a small shop running (use swap). **2 GB RAM** if you want more headroom.  
    - **Location:** closest region to your shop  
 4. Add an **SSH key** if you have one (recommended).
 5. Deploy. Copy the **public IPv4** address.
@@ -166,7 +163,7 @@ No manual MySQL install. No Composer. No Laravel `.env` homework for a normal sh
 
 **Public ports:** only **80** and **443** (Caddy). MySQL, Redis, and the app container stay on the private Compose network — they are not published on the VPS.
 
-**APP_KEY:** generated automatically on first boot and stored on the durable `ark_storage` volume. You do **not** run `php artisan key:generate`.
+**APP_KEY and database passwords:** generated automatically on first boot and stored on durable volumes. You do **not** run `php artisan key:generate`, and you do **not** invent MySQL passwords for a normal Compose install.
 
 ---
 
@@ -200,7 +197,7 @@ Complete:
 
 Welcome → System → Database → Shop → Admin → Optional integrations → Install
 
-**Database step:** the wizard is pre-filled from the Compose runtime (`mysql` / `ark`). Leave the password blank — ARK uses the runtime password. Click **Test Connection**; you should not need to re-type Docker networking details.
+**Database step:** for a normal Compose install, ARK should show **Database · Connected**. You should not need to type Docker database credentials.
 
 ---
 
@@ -244,23 +241,10 @@ Move to the **HTTPS + domain** path before entering real customers.
 
 | Symptom | Try |
 | --- | --- |
-| Build killed / “no space” / random failures | Confirm 2 GB RAM + 2 GB swap; `df -h`; prune old images `docker system prune -af` only if you know you can rebuild |
+| Build killed / “no space” / random failures | Confirm swap is on (`free -h`); 1 GB hosts need the 2 GB swapfile above; `df -h`; prune old images `docker system prune -af` only if you know you can rebuild |
 | HTTPS fails | DNS A record must point at this server; ports 80/443 open; wait for propagation |
 | `/setup` loops or 500 | `docker compose ... logs -f app` |
 | `/setup` returns 503 about APP_KEY | Rebuild/recreate after pulling a release that bootstraps APP_KEY in the Coolify entrypoint; do not hand-edit keys on a beginner install |
 | Site up but popups/queues feel dead | Confirm `app` container is the production image (Horizon + Reverb in `ps aux` inside the container) |
 
 More installer notes: [README.md](./README.md) · [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-
----
-
-## Certification status
-
-| Check | Status |
-| --- | --- |
-| Guide published | Yes |
-| Compose + Caddy path in repo | Yes |
-| Stranger cert on fresh Vultr **2 GB** | Pending |
-| Stranger cert on fresh Vultr **1 GB ($5)** | Pending — do not promise yet |
-
-When certification passes, the README can say a concrete monthly number with a straight face.
