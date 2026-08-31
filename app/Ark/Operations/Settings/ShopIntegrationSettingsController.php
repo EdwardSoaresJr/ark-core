@@ -99,44 +99,17 @@ public function updatePartsTech(Request $request): RedirectResponse
             ->with('status', 'PartsTech settings saved.');
     }
 
-public function updateEmail(Request $request): RedirectResponse
+    public function updateEmail(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'email_provider' => ['required', Rule::in(['ark_mail', 'postmark', 'none'])],
-            'postmark_token' => ['nullable', 'string', 'max:512'],
-            'postmark_message_stream_id' => ['nullable', 'string', 'max:64'],
             'postmark_reply_to' => ['nullable', 'email', 'max:255'],
             'postmark_reply_to_name' => ['nullable', 'string', 'max:255'],
-            'clear_postmark_token' => ['nullable', 'boolean'],
         ]);
 
-        $settings = ShopSettings::current();
-        $provider = (string) $data['email_provider'];
-
-        $updates = [
-            'email_provider' => $provider === 'none' ? null : $provider,
+        ShopSettings::current()->persistTrusted([
             'postmark_reply_to' => $this->nullableTrimmedString($data['postmark_reply_to'] ?? null),
             'postmark_reply_to_name' => $this->nullableTrimmedString($data['postmark_reply_to_name'] ?? null),
-            'postmark_message_stream_id' => $this->nullableTrimmedString($data['postmark_message_stream_id'] ?? null),
-        ];
-
-        if ($request->boolean('clear_postmark_token')) {
-            $updates['postmark_token'] = null;
-        } else {
-            $this->mergeSecretField($updates, 'postmark_token', $data['postmark_token'] ?? null);
-        }
-
-        if ($provider === 'postmark' && ! filled($updates['postmark_token'] ?? null) && ! filled($settings->postmark_token)) {
-            return redirect()
-                ->route('operations.settings.shop.edit', [
-                    'section' => 'communications',
-                    'communications-tab' => 'email',
-                ])
-                ->withInput()
-                ->withErrors(['postmark_token' => 'A Postmark Server API token is required when Postmark is selected.']);
-        }
-
-        $settings->persistTrusted($updates);
+        ]);
 
         return redirect()
             ->route('operations.settings.shop.edit', [
@@ -194,9 +167,6 @@ public function updateEmail(Request $request): RedirectResponse
 
         try {
             $activation->claimPairing($data['pairing_public_id'] ?? null);
-            ShopSettings::current()->persistTrusted([
-                'email_provider' => 'ark_mail',
-            ]);
         } catch (\Throwable $e) {
             return $redirect->with('status', 'Could not finish connecting: '.$e->getMessage());
         }
@@ -207,13 +177,6 @@ public function updateEmail(Request $request): RedirectResponse
     public function disconnectArkMail(ArkMailActivationClient $activation): RedirectResponse
     {
         $activation->disconnect();
-
-        $settings = ShopSettings::current();
-        if ($settings->email_provider === 'ark_mail') {
-            $settings->persistTrusted([
-                'email_provider' => filled($settings->postmark_token) ? 'postmark' : null,
-            ]);
-        }
 
         return redirect()
             ->route('operations.settings.shop.edit', [
