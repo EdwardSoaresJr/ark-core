@@ -9,7 +9,7 @@
     <div class="cards">
         <div class="opt">
             <strong>Dragon / AI</strong>
-            <span>Status: Not configured — bring your own provider key later in Settings. Live shop truth still works without Dragon.</span>
+            <span>Status: Not configured — Dragon runtime is included; hosted model service is optional via ARK Cloud when available.</span>
         </div>
         <div class="opt">
             <strong>Square</strong>
@@ -21,7 +21,7 @@
         </div>
         <div class="opt">
             <strong>Mail</strong>
-            <span>Status: Uses log/mailer defaults until you configure a provider.</span>
+            <span>Status: Not configured — connect ARK Mail from Settings after pairing with ARK Cloud. Local installs use log mailer for development.</span>
         </div>
         <div class="opt">
             <strong>Labor guide</strong>
