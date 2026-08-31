@@ -1,6 +1,6 @@
 # Docker Desktop — recommended settings for ARK builds
 
-**Machine:** MacBook Pro M5 Max, 48 GiB RAM  
+**Machine class:** Apple Silicon Mac build workstation (16+ GiB RAM recommended)  
 **Role:** Build worker only — never run production containers here.
 
 Open **Docker Desktop → Settings → Resources**:
@@ -27,7 +27,7 @@ To relocate Docker Desktop's disk image (optional): Docker Desktop → Settings 
 
 ## Builder only — not runtime
 
-| MacBook Pro | Production VPS |
+| Build Mac | Production VPS |
 |-------------|----------------|
 | GitHub runner | Pull GHCR image |
 | Docker build + push | Run containers |

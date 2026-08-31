@@ -1,0 +1,33 @@
+# ~2 GiB envelope with swap headroom (closer to Vultr + 2G swapfile).
+# Hard RSS budget ~2 GiB; memswap allows page-out during MySQL init / migrate spikes.
+#
+# Includes small-VPS MySQL tuning from docker-compose.vultr.yml.
+
+services:
+  mysql:
+    mem_limit: 768m
+    memswap_limit: 1536m
+    cpus: "1.0"
+    volumes:
+      - ./docker/mysql/small-vps.cnf:/etc/mysql/conf.d/small-vps.cnf:ro
+    command:
+      - --innodb-buffer-pool-size=256M
+      - --innodb-buffer-pool-instances=1
+      - --performance-schema=OFF
+      - --max-connections=50
+
+  redis:
+    mem_limit: 128m
+    memswap_limit: 256m
+    cpus: "0.5"
+    command:
+      - redis-server
+      - --maxmemory
+      - 96mb
+      - --maxmemory-policy
+      - allkeys-lru
+
+  app:
+    mem_limit: 1152m
+    memswap_limit: 2048m
+    cpus: "1.5"
