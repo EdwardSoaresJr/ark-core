@@ -965,18 +965,9 @@
     </script>
 
     @php
-        $partsTechLauncher = app(App\Ark\Operations\Parts\PartsTechCatalogLauncher::class);
-        $partstechPoNumber = $partsTechLauncher->poNumber($repairOrder);
-        $partstechPrepareUrl = $partsTechLauncher->usesRemoteCartPreparation(auth()->user())
-            ? route('operations.repair-orders.partstech.prepare', $repairOrder)
-            : '';
-        $canImportPartstechQuote = $partsTechLauncher->usesRemoteCartPreparation(auth()->user());
         $repairOrder->loadMissing('customer');
-        $partstechShopSettings = App\Ark\Operations\Settings\ShopSettings::current();
-        $defaultPartsMatrixKey = $partstechShopSettings->defaultPartsMatrix()['key'];
-        $partstechCatalogUrl = $partsTechLauncher->launchUrl($repairOrder);
-        $partstechBlockedReason = $partsTechLauncher->blockedReason($repairOrder);
-        $partstechCatalogWarning = $partsTechLauncher->catalogWarning($repairOrder);
+        $shopSettings = App\Ark\Operations\Settings\ShopSettings::current();
+        $defaultPartsMatrixKey = $shopSettings->defaultPartsMatrix()['key'];
         $laborGuideConcernId = $repairOrder->concerns->count() === 1
             ? $repairOrder->concerns->first()->id
             : null;
@@ -1016,17 +1007,6 @@
         }), {
             partsMatrices: @js($partsMatrices),
             defaultPartsMatrixKey: @js($defaultPartsMatrixKey),
-            partstechCatalogUrl: @js($partstechCatalogUrl),
-            partstechPrepareUrl: @js($partstechPrepareUrl),
-            partstechPoNumber: @js($partstechPoNumber),
-            partstechCatalogWarning: @js($partstechCatalogWarning),
-            partstechNotice: '',
-            partstechCartLocked: false,
-            partstechBlockingReference: '',
-            partstechCatalogOpening: false,
-            partstechPullLoading: false,
-            partstechPullStatus: '',
-            partstechPreferredConcernId: '',
             laborGuideNotice: '',
             clearLaborGuideNotice() {
                 this.laborGuideNotice = '';
@@ -1038,126 +1018,6 @@
                         invokeEl: document.querySelector('[data-workspace-modal-trigger=add-work]'),
                     },
                 }));
-            },
-            partsTechCatalogUrlWithConcern(catalogUrl, concernId) {
-                if (! catalogUrl || ! concernId) {
-                    return catalogUrl;
-                }
-
-                try {
-                    const url = new URL(catalogUrl);
-
-                    url.searchParams.set('concern_id', String(concernId));
-
-                    return url.toString();
-                } catch {
-                    return catalogUrl;
-                }
-            },
-            async openPartsTechCatalog(forceCartSwitch = false, concernId = null) {
-                if (! this.partstechCatalogUrl || this.partstechCatalogOpening || this.partstechPullLoading) {
-                    return;
-                }
-
-                this.partstechPreferredConcernId = concernId != null && concernId !== ''
-                    ? String(concernId)
-                    : '';
-
-                if (this.partstechPoNumber) {
-                    try {
-                        await navigator.clipboard.writeText(this.partstechPoNumber);
-                    } catch {
-                        // Clipboard is optional; server-side cart prep is authoritative when configured.
-                    }
-                }
-
-                let catalogUrl = this.partstechCatalogUrl;
-                const preferredConcernId = this.partstechPreferredConcernId || null;
-
-                if (this.partstechPrepareUrl) {
-                    this.partstechCatalogOpening = true;
-
-                    try {
-                        const response = await fetch(this.partstechPrepareUrl, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: {
-                                Accept: 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
-                            },
-                            body: JSON.stringify({
-                                force_cart_switch: forceCartSwitch,
-                                concern_id: preferredConcernId,
-                            }),
-                        });
-
-                        const payload = await response.json().catch(() => ({}));
-
-                        if (payload?.cart_locked) {
-                            this.partstechCartLocked = true;
-                            this.partstechBlockingReference = payload?.blocking_cart_reference || '';
-                            this.partstechNotice = payload?.message || 'PartsTech is busy on another repair order.';
-
-                            return;
-                        }
-
-                        this.partstechCartLocked = false;
-                        this.partstechBlockingReference = '';
-
-                        if (payload?.catalog_url) {
-                            catalogUrl = payload.catalog_url;
-                        }
-
-                        if (! response.ok || payload?.prepared === false) {
-                            const loginHint = payload?.partstech_login
-                                ? 'Sign into PartsTech in your browser as ' + payload.partstech_login + '. '
-                                : 'Sign into PartsTech using the same login ARK uses for your profile (or shop default). ';
-
-                            this.partstechNotice = payload?.message || (loginHint + 'Confirm PO shows ' + (this.partstechPoNumber || 'R{RO}') + ' after ARK prepares the cart.');
-                        } else {
-                            const notices = [];
-
-                            if (payload?.partstech_login) {
-                                notices.push('Use PartsTech as ' + payload.partstech_login + ' · PO ' + (payload.cart_reference || this.partstechPoNumber || 'R{RO}'));
-                            }
-
-                            if (Array.isArray(payload?.warnings)) {
-                                payload.warnings.forEach((warning) => {
-                                    if (warning) {
-                                        notices.push(warning);
-                                    }
-                                });
-                            }
-
-                            this.partstechNotice = notices.join(' ');
-                        }
-                    } catch {
-                        this.partstechNotice = 'Could not reach ARK to prepare the PartsTech cart. Opening catalog anyway.';
-                    } finally {
-                        this.partstechCatalogOpening = false;
-                    }
-                }
-
-                catalogUrl = this.partsTechCatalogUrlWithConcern(catalogUrl, preferredConcernId);
-
-                const windowName = this.partstechPoNumber
-                    ? `ark-partstech-ro-${this.partstechPoNumber}`
-                    : 'ark-partstech';
-
-                if (this.partstechCatalogWarning && ! this.partstechCartLocked && ! this.partstechNotice) {
-                    this.partstechNotice = this.partstechCatalogWarning;
-                }
-
-                window.open(catalogUrl, windowName, 'noopener,noreferrer');
-            },
-            async switchPartsTechToThisRo() {
-                await this.openPartsTechCatalog(true, this.partstechPreferredConcernId || null);
-            },
-            clearPartstechNotice() {
-                this.partstechNotice = '';
-                this.partstechCartLocked = false;
-                this.partstechBlockingReference = '';
             },
             openLaborGuideFromTrigger(trigger) {
                 if (! trigger?.dataset?.laborGuide) {
@@ -1224,8 +1084,6 @@
         })"
         x-init="initWorksheetCollaboration()"
         class="ops-estimate-workspace ops-estimate-workspace--builder"
-        @ark:partstech-warning.window="partstechNotice = $event.detail.message || ''; partstechCartLocked = Boolean($event.detail.cartLocked)"
-        @ark:partstech-pull-quote-state.window="partstechPullLoading = Boolean($event.detail?.loading); partstechPullStatus = $event.detail?.status || ''"
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
     >
         @include('operations.repair-orders.partials.worksheet-busy-overlay')
@@ -1263,27 +1121,6 @@
             @endif
         </div>
 
-        <div x-show="partstechNotice" x-cloak class="border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-            <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <p x-text="partstechNotice"></p>
-                    <p x-show="partstechCartLocked" x-cloak class="mt-1 text-xs font-medium leading-4 text-amber-950">
-                        Closing the PartsTech tab does not clear the cart on PartsTech&apos;s servers. Switch to this RO if you are done with the other cart, or pull that quote first.
-                    </p>
-                    <button
-                        x-show="partstechCartLocked"
-                        x-cloak
-                        type="button"
-                        class="mt-2 rounded-sm bg-amber-900 px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-amber-50 hover:bg-amber-950"
-                        @click="switchPartsTechToThisRo()"
-                    >
-                        Switch PartsTech to this RO
-                    </button>
-                </div>
-                <button type="button" class="shrink-0 text-xs font-bold uppercase tracking-[0.08em] text-amber-800 hover:text-amber-950" @click="clearPartstechNotice()">Dismiss</button>
-            </div>
-        </div>
-
         <div x-show="laborGuideNotice" x-cloak class="border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-950">
             <div class="flex items-start justify-between gap-3">
                 <p x-text="laborGuideNotice"></p>
@@ -1312,11 +1149,6 @@
                         'mode' => 'edit',
                         'isTerminal' => $isTerminal,
                         'showConcernStore' => false,
-                        'partsTechConfigured' => $partsTechLauncher->configured(),
-                        'canImportPartstechQuote' => $canImportPartstechQuote,
-                        'partstechPoNumber' => $partstechPoNumber,
-                        'partstechCatalogUrl' => $partstechCatalogUrl,
-                        'partstechBlockedReason' => $partstechBlockedReason,
                         'laborGuideConcernId' => $laborGuideConcernId,
                         'rteLaborGuide' => $rteLaborGuide,
                     ])
@@ -1370,16 +1202,6 @@
                     ])
                 </div>
 
-                <div
-                    x-show="partstechCatalogOpening || partstechPullLoading"
-                    x-cloak
-                    class="ops-partstech-busy-strip"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span class="ops-partstech-loader shrink-0" aria-hidden="true"></span>
-                    <span x-text="partstechCatalogOpening ? 'Preparing PartsTech cart…' : (partstechPullStatus || 'Pulling quote from PartsTech…')"></span>
-                </div>
             </div>
         </div>
 
@@ -1465,25 +1287,11 @@
                         'laborCategories' => $laborCategories,
                         'defaultLaborRate' => $defaultLaborRate,
                         'defaultNotesPrivate' => $defaultNotesPrivate,
-                        'partstechShopSettings' => $partstechShopSettings,
+                        'shopSettings' => $shopSettings,
                         'technicians' => $technicians ?? collect(),
                     ])
 
                     <div class="ops-worksheet-concerns">
-                        @if ($canImportPartstechQuote)
-                            @include('operations.repair-orders.partials.repair-order-partstech-import', [
-                                'repairOrder' => $repairOrder,
-                                'estimateVersion' => $estimateVersion,
-                                'partstechPoNumber' => $partstechPoNumber,
-                                'partstechPrepareUrl' => $partstechPrepareUrl,
-                                'canImportQuote' => true,
-                            ])
-                        @elseif ($partsTechLauncher->configured() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
-                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}" class="font-semibold underline decoration-slate-400 hover:text-slate-900">Settings → PartsTech</a>.
-                            </p>
-                        @endif
-
                         @if (! $isTerminal)
                             @include('operations.repair-orders.partials.repair-order-dealer-quote-capture', [
                                 'repairOrder' => $repairOrder,
@@ -1499,8 +1307,8 @@
                         @forelse ($worksheetConcerns as $concern)
                             @php
                                 $concernPartsMatrixKey = $concern->billing_posture
-                                    ->defaultPartsMatrix($partstechShopSettings)['key'];
-                                $concernLaborDefaults = $partstechShopSettings->laborDefaultsForConcern(
+                                    ->defaultPartsMatrix($shopSettings)['key'];
+                                $concernLaborDefaults = $shopSettings->laborDefaultsForConcern(
                                     $concern->billing_posture,
                                     $repairOrder->customer,
                                 );
@@ -1549,8 +1357,6 @@
                                                 'estimateVersion' => $estimateVersion,
                                                 'concernDefaultLaborRate' => $concernDefaultLaborRate,
                                                 'canMoveScopeToNewRo' => ! ($financial['hasIssuedInvoice'] ?? false),
-                                                'showPartstechCatalog' => $partsTechLauncher->configured(),
-                                                'partstechCatalogUrl' => $partstechCatalogUrl,
                                                 'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
                                             ])
                                         </x-slot:toolbar>

@@ -3,7 +3,6 @@
 use App\Ark\Operations\RepairOrders\RepairOrderMention;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('repair order mention html links same-customer shop numbers', function () {
     $html = RepairOrderMention::html('Comeback from @RO1677 today.', [

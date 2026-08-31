@@ -47,7 +47,7 @@ class VehicleVinDecodeController
             $aggregateSeed = $vin;
         } else {
             $decoded = $manager->decodePlate($plate, $plateState);
-            $failureMessage = 'Vehicle could not be decoded from that plate. Plate decode uses PartsTech — confirm Settings → PartsTech has a username and API key.';
+            $failureMessage = 'Vehicle could not be decoded from that plate. Plate decode is not available.';
             $aggregateSeed = $plate.'|'.$plateState;
         }
 

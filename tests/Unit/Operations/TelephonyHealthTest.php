@@ -8,7 +8,7 @@ use App\Ark\Operations\Telephony\TelephonyHealth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('provider tone is success when telephony signals are healthy', function () {
             config()->set('broadcasting.default', 'reverb');

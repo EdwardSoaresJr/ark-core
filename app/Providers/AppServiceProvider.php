@@ -17,8 +17,8 @@ use App\Ark\Operations\Documents\PdfRuntimeConfigurator;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Learn\LearnArkProgressResolver;
 use App\Ark\Operations\Messaging\Events\ConversationMessageReceived;
-use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
-use App\Ark\Operations\Parts\PartsTechHttpClient;
+use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
+use App\Ark\Operations\Parts\NotConfiguredPartsCatalogLauncher;
 use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
 use App\Ark\Operations\Payments\FakeSquarePaymentsClient;
 use App\Ark\Operations\Payments\SquareAdapterMissingClient;
@@ -45,7 +45,6 @@ use App\Ark\Platform\VoiceTransportRuntimeConfig;
 use App\Ark\Runtime\Broadcast\ReverbDeployment;
 use App\Ark\Runtime\Surfaces\PublicRootUrlConfigurator;
 use App\Ark\Vehicles\Providers\NhtsaProvider;
-use App\Ark\Vehicles\Providers\PartsTechProvider;
 use App\Ark\Vehicles\VehicleIntelligenceManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -73,12 +72,6 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
-        $this->app->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {
-            $resolver = $app->make(PartsTechCredentialsResolver::class);
-            $credentials = $resolver->forUser(auth()->user());
-
-            return new PartsTechHttpClient($credentials);
-        });
         $this->app->scoped(ShopIntegrationCredentials::class, fn (): ShopIntegrationCredentials => ShopIntegrationCredentials::forCurrentShop());
         $this->app->bind(OutboundSmsTransport::class, NotConfiguredOutboundSmsTransport::class);
         $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);
@@ -147,13 +140,11 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(PartsCatalogLauncher::class, NotConfiguredPartsCatalogLauncher::class);
+
         $this->app->bind(PdfRenderer::class, HeadlessChromiumPdfRenderer::class);
         $this->app->bind(VehicleIntelligenceManager::class, fn ($app) => new VehicleIntelligenceManager(
-            [
-                $app->make(PartsTechProvider::class),
-                $app->make(NhtsaProvider::class),
-            ],
-            $app->make(PartsTechProvider::class),
+            [$app->make(NhtsaProvider::class)],
         ));
 
         $this->app->bind(PushTransport::class, FirebasePushTransport::class);

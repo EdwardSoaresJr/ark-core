@@ -10,7 +10,6 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('estimate instrument strip exposes profitability and procurement gauges', function () {
     $concern = new RepairOrderConcern([

@@ -11,7 +11,7 @@ use App\Ark\Operations\RepairOrders\TimingJobCompanionFluidProjection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 function timingJobOrder(string $laborDescription, array $extraLineDescriptions = [], string $concernSummary = 'Timing belt'): RepairOrder
 {

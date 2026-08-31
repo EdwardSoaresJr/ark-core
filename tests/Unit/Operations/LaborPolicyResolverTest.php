@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('labor policy resolver returns retail maintenance hourly rate', function () {
     $resolved = app(LaborPolicyResolver::class)->resolve(

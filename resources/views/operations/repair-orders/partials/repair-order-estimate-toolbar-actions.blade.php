@@ -4,20 +4,13 @@
 
     $mode = $mode ?? 'edit';
     $isTerminal = $isTerminal ?? false;
-    $canImportPartstechQuote = $canImportPartstechQuote ?? false;
-    $partsTechConfigured = $partsTechConfigured ?? false;
-    $partstechCatalogUrl = $partstechCatalogUrl ?? null;
-    $partstechBlockedReason = $partstechBlockedReason ?? null;
-    $partstechPoNumber = $partstechPoNumber ?? null;
     $laborGuideConcernId = $laborGuideConcernId ?? null;
     $showConcernStore = ($showConcernStore ?? false) && $mode === 'edit' && ! $isTerminal;
-    $showPartstechCatalog = $mode === 'edit' && $partsTechConfigured && ! $isTerminal;
-    $showPullQuote = $mode === 'edit' && $canImportPartstechQuote && ! $isTerminal;
     $showCaptureDealerQuote = $mode === 'edit' && ! $isTerminal;
     $showLaborGuides = $mode === 'edit' && ! $isTerminal && LaborGuideProvider::enabled() !== [];
     $rteDataAvailable = app(RteLaborGuideAvailability::class)->available();
     $showRteLaborGuide = $mode === 'edit' && ! $isTerminal && $rteDataAvailable;
-    $showProcurement = $showPartstechCatalog || $showPullQuote || $showCaptureDealerQuote;
+    $showProcurement = $showCaptureDealerQuote;
     $showLaborGroup = $showLaborGuides || $showRteLaborGuide;
 @endphp
 
@@ -38,13 +31,6 @@
 
             @if ($showProcurement)
                 <div class="ops-review-toolbar-group" data-toolbar-group="procurement">
-                    @include('operations.repair-orders.partials.repair-order-partstech-toolbar-group', [
-                        'showCatalog' => $showPartstechCatalog,
-                        'showPullQuote' => $showPullQuote,
-                        'partstechCatalogUrl' => $partstechCatalogUrl,
-                        'partstechBlockedReason' => $partstechBlockedReason,
-                        'partstechPoNumber' => $partstechPoNumber,
-                    ])
                     @if ($showCaptureDealerQuote)
                         <button
                             type="button"

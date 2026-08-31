@@ -6,7 +6,6 @@ use App\Ark\Operations\Settings\ShopSettings;
 use Carbon\CarbonImmutable;
 use Database\Seeders\ShopSettingsSeeder;
 
-uses(Tests\TestCase::class);
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function (): void {

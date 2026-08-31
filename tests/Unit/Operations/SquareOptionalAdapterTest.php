@@ -1,6 +1,5 @@
 <?php
 
-uses(Tests\TestCase::class);
 
 use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
 use App\Ark\Operations\Payments\FakeSquarePaymentsClient;

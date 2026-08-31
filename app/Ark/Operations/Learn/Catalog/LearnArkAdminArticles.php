@@ -74,12 +74,6 @@ final class LearnArkAdminArticles
                 'view' => 'operations.learn.admin.messenger-setup',
             ],
             [
-                'slug' => 'partstech-setup',
-                'title' => 'PartsTech integration setup',
-                'summary' => 'Credentials, shop linkage, common import failures.',
-                'view' => 'operations.learn.admin.partstech-setup',
-            ],
-            [
                 'slug' => 'shop-overhead-setup',
                 'title' => 'Shop overhead and loaded labor cost',
                 'summary' => 'Overhead worksheet and technician loaded cost.',

@@ -5,7 +5,6 @@ use App\Ark\Operations\LaborGuides\Rte\RteLaborHoursBasis;
 use App\Ark\Operations\LaborGuides\Rte\RteShopLaborHoursProjection;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('labor match attribution breaks guide hours through shop and age layers', function (): void {
     $projection = new LaborMatchAttributionProjection(

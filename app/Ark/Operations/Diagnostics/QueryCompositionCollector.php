@@ -242,8 +242,8 @@ final class QueryCompositionCollector
             'Portal' => [
                 'PortalEstimatePage.php',
             ],
-            'PartsTech' => [
-                'PartsTechCatalogLauncher.php',
+            'PartsCatalog' => [
+                'NotConfiguredPartsCatalogLauncher.php',
                 'LaborGuideLauncher.php',
             ],
             'AuthorizationChecks' => [

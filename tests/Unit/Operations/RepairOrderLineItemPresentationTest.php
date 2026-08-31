@@ -7,7 +7,6 @@ use App\Ark\Operations\RepairOrders\RepairOrderLineItemPresentation;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('procurement chip tones map operational states', function () {
     expect(RepairOrderLineItemPresentation::procurementChipTone(PartProcurementState::Ordered))

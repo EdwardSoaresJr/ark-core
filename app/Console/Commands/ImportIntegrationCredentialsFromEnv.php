@@ -30,11 +30,6 @@ class ImportIntegrationCredentialsFromEnv extends Command
             'SQUARE_LOCATION_ID' => 'square_location_id',
             'SQUARE_WEBHOOK_SIGNATURE_KEY' => 'square_webhook_signature_key',
             'SQUARE_ENVIRONMENT' => 'square_environment',
-            'PARTSTECH_BASE_URL' => 'partstech_base_url',
-            'PARTSTECH_CATALOG_PATH' => 'partstech_catalog_path',
-            'PARTSTECH_USERNAME' => 'partstech_username',
-            'PARTSTECH_API_KEY' => 'partstech_api_key',
-            'PARTSTECH_PASSWORD' => 'partstech_password',
             'POSTMARK_REPLY_TO' => 'postmark_reply_to',
             'POSTMARK_REPLY_TO_NAME' => 'postmark_reply_to_name',
         ];
@@ -62,12 +57,7 @@ class ImportIntegrationCredentialsFromEnv extends Command
         $this->info('Imported into shop_settings:');
         $this->line('  Messaging: '.($credentials->messagingConfigured() ? 'configured' : 'not configured'));
         $this->line('  Square: '.($credentials->squareConfigured() ? 'configured' : 'incomplete'));
-        $this->line('  PartsTech catalog: '.($credentials->partsTechCatalogConfigured() ? 'configured' : 'incomplete'));
-        $this->line('  PartsTech quote import: '.($credentials->partsTechQuoteImportConfigured() ? 'configured' : 'incomplete'));
         $this->line('  Mail reply-to: '.(filled($credentials->mailReplyTo()) ? 'configured' : 'incomplete'));
-        $this->line('  Twilio source: '.$credentials->twilioCredentialSource());
-        $this->line('  Square source: '.$credentials->squareCredentialSource());
-        $this->line('  PartsTech source: '.$credentials->partsTechCredentialSource());
         $this->line('  ARK Mail: '.(app(\App\Ark\Mail\OutboundTransactionalMail::class)->isReady() ? 'ready' : 'not connected'));
 
         if ($this->option('clear-env')) {

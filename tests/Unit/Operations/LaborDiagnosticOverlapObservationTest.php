@@ -4,7 +4,6 @@ use App\Ark\Operations\Labor\LaborDiagnosticLaborMatcher;
 use App\Ark\Operations\Labor\LaborDiagnosticOverlapObservation;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('diagnostic labor matcher recognizes combustion and diagnosis descriptions', function (): void {
     $matcher = new LaborDiagnosticLaborMatcher;

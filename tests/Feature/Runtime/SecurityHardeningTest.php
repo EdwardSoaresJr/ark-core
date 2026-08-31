@@ -22,15 +22,13 @@ test('privileged user fields cannot be mass assigned', function () {
         'is_active' => false,
         'password' => 'hacked-password',
         'password_set_at' => now(),
-        'partstech_password' => 'secret',
     ]);
 
     $user->refresh();
 
     expect($user->is_master_admin)->toBeFalse()
         ->and($user->is_active)->toBeTrue()
-        ->and($user->hasPasswordSet())->toBeFalse()
-        ->and($user->hasStoredPartsTechPassword())->toBeFalse();
+        ->and($user->hasPasswordSet())->toBeFalse();
 
     $user->forceFill(['is_master_admin' => true])->save();
 
@@ -44,8 +42,6 @@ test('shop integration secrets cannot be mass assigned', function () {
         'square_access_token' => 'mass-assigned-square',
         'ark_mail_credential' => 'mass-assigned-ark-mail',
         'cloud_credential' => 'mass-assigned-cloud',
-        'partstech_api_key' => 'mass-assigned-api-key',
-        'partstech_password' => 'mass-assigned-password',
         'messenger_app_secret' => 'mass-assigned-messenger',
         'square_webhook_signature_key' => 'mass-assigned-webhook',
     ]);
@@ -55,8 +51,6 @@ test('shop integration secrets cannot be mass assigned', function () {
     expect($settings->square_access_token)->toBeNull()
         ->and($settings->ark_mail_credential)->toBeNull()
         ->and($settings->cloud_credential)->toBeNull()
-        ->and($settings->partstech_api_key)->toBeNull()
-        ->and($settings->partstech_password)->toBeNull()
         ->and($settings->messenger_app_secret)->toBeNull()
         ->and($settings->square_webhook_signature_key)->toBeNull();
 

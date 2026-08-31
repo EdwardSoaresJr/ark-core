@@ -160,8 +160,6 @@ use App\Ark\Operations\OperationsHomeController;
 use App\Ark\Operations\OperationsIndexController;
 use App\Ark\Operations\Parts\DealerQuoteShowController;
 use App\Ark\Operations\Parts\RepairOrderDealerQuoteCaptureController;
-use App\Ark\Operations\Parts\RepairOrderPartsTechCatalogController;
-use App\Ark\Operations\Parts\RepairOrderPartsTechQuoteImportController;
 use App\Ark\Operations\Payments\RepairOrderSquareDepositInitiateController;
 use App\Ark\Operations\Payments\RepairOrderSquarePaymentCancelController;
 use App\Ark\Operations\Payments\RepairOrderSquarePaymentInitiateController;
@@ -341,7 +339,6 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/appearance', [ProfileController::class, 'updateAppearance'])->name('profile.appearance.update');
         Route::patch('/profile/display-theme', [DisplayThemeController::class, 'update'])->name('profile.display-theme.update');
-        Route::patch('/profile/partstech', [ProfileController::class, 'updatePartsTech'])->name('profile.partstech.update');
         Route::patch('/profile/workstation-pin', [ProfileController::class, 'updateWorkstationPin'])->name('profile.workstation-pin.update');
         Route::post('/profile/dev-role/technician', [DevRolePretendController::class, 'technician'])->name('dev-role-pretend.technician');
         Route::post('/profile/dev-role/clear', [DevRolePretendController::class, 'clear'])->name('dev-role-pretend.clear');
@@ -1538,19 +1535,6 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/lines/pricing-preview', RepairOrderLinePricingPreviewController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.lines.pricing-preview');
-
-        Route::post('/app/repair-orders/{repairOrder}/partstech/prepare', [RepairOrderPartsTechCatalogController::class, 'prepare'])
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.partstech.prepare');
-        Route::get('/app/repair-orders/{repairOrder}/partstech', [RepairOrderPartsTechCatalogController::class, 'redirect'])
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.partstech');
-        Route::get('/app/repair-orders/{repairOrder}/partstech/import-quote/preview', [RepairOrderPartsTechQuoteImportController::class, 'preview'])
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.partstech.import.preview');
-        Route::post('/app/repair-orders/{repairOrder}/partstech/import-quote', [RepairOrderPartsTechQuoteImportController::class, 'store'])
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.partstech.import');
 
         Route::post('/app/repair-orders/{repairOrder}/dealer-quotes/analyze', [RepairOrderDealerQuoteCaptureController::class, 'analyze'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

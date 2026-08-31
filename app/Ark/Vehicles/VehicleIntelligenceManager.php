@@ -30,9 +30,6 @@ final class VehicleIntelligenceManager
             $candidate = $provider->decode($vin);
             $usable = (bool) $candidate?->isUsable();
 
-            // Diagnostic: shows which providers answered for a VIN, so once
-            // PartsTech credentials are entered we can confirm it is responding
-            // (and acting as primary over the NHTSA fallback).
             Log::debug('vin_decode.provider', [
                 'provider' => class_basename($provider),
                 'usable' => $usable,

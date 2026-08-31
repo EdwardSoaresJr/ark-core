@@ -41,14 +41,6 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'partstech' => [
-        'base_url' => env('PARTSTECH_BASE_URL', 'https://app.partstech.com'),
-        'catalog_path' => env('PARTSTECH_CATALOG_PATH', ''),
-        'username' => env('PARTSTECH_USERNAME'),
-        'api_key' => env('PARTSTECH_API_KEY'),
-        'password' => env('PARTSTECH_PASSWORD'),
-    ],
-
     'labor_guides' => [
         'alldata' => [
             'base_url' => env('LABOR_GUIDE_ALLDATA_URL', 'https://my.alldata.com/repair'),

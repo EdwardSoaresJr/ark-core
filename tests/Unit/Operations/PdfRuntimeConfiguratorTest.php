@@ -4,7 +4,6 @@ use App\Ark\Operations\Documents\PdfRuntimeConfigurator;
 use App\Ark\Operations\Documents\PdfRuntimePaths;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 it('re-resolves chrome when cached path is stale', function (): void {
     config([

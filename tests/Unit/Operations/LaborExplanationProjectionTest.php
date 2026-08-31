@@ -5,7 +5,6 @@ use App\Ark\Operations\LaborGuides\Rte\RteLaborHoursBasis;
 use App\Ark\Operations\LaborGuides\Rte\RteShopLaborHoursProjection;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('labor explanation projection builds advisor summary for radiator package at shop avg with age padding', function (): void {
     $projection = new LaborExplanationProjection(

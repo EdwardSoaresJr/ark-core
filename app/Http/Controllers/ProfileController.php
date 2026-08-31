@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Ark\Operations\Parts\UserPartsTechCredentials;
 use App\Ark\Operations\Workstations\UpdateWorkstationOperatorPinAction;
 use App\Ark\Runtime\Preferences\AccentTheme;
 use App\Ark\Runtime\Preferences\DisplayTheme;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Http\Requests\ProfileAppearanceUpdateRequest;
 use App\Http\Requests\ProfileIdentityUpdateRequest;
-use App\Http\Requests\ProfilePartsTechUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -58,29 +56,6 @@ class ProfileController extends Controller
         return $this->redirectToTab('appearance')->with('status', 'appearance-updated');
     }
 
-    public function updatePartsTech(ProfilePartsTechUpdateRequest $request): RedirectResponse
-    {
-        $user = $request->user();
-        $data = $request->validated();
-
-        UserPartsTechCredentials::guardPasswordRequired(
-            $user,
-            $data['partstech_username'] ?? null,
-            $data['partstech_password'] ?? null,
-            route('profile.edit', ['tab' => 'partstech']),
-        );
-
-        UserPartsTechCredentials::apply(
-            $user,
-            $data['partstech_username'] ?? null,
-            $data['partstech_password'] ?? null,
-        );
-
-        $user->save();
-
-        return $this->redirectToTab('partstech')->with('status', 'partstech-updated');
-    }
-
     public function updateWorkstationPin(
         Request $request,
         UpdateWorkstationOperatorPinAction $updatePin,
@@ -103,7 +78,7 @@ class ProfileController extends Controller
 
     private function resolveInitialTab(Request $request): string
     {
-        $allowed = ['profile', 'appearance', 'password', 'workstation-pin', 'partstech'];
+        $allowed = ['profile', 'appearance', 'password', 'workstation-pin'];
 
         $tabFromQuery = $request->query('tab');
 
@@ -116,7 +91,6 @@ class ProfileController extends Controller
             'appearance-updated' => 'appearance',
             'password-updated' => 'password',
             'workstation-pin-updated' => 'workstation-pin',
-            'partstech-updated' => 'partstech',
             default => null,
         };
 
@@ -132,10 +106,6 @@ class ProfileController extends Controller
 
         if ($errors?->hasBag('updateWorkstationPin') && $errors->getBag('updateWorkstationPin')->isNotEmpty()) {
             return 'workstation-pin';
-        }
-
-        if ($errors?->has('partstech_username') || $errors?->has('partstech_password')) {
-            return 'partstech';
         }
 
         if ($errors?->has('accent_theme') || $errors?->has('accent_color') || $errors?->has('display_theme')) {

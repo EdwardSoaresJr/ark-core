@@ -40,7 +40,7 @@ final class QueryCompositionReport
             'ShopSettings',
             'Staff',
             'Portal',
-            'PartsTech',
+            'PartsCatalog',
             'AuthorizationChecks',
             'ViewComposers',
             'BladeMisc',

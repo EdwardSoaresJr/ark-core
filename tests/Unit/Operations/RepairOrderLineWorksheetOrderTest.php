@@ -12,7 +12,6 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\ShopSettingsSeeder;
 
-uses(Tests\TestCase::class);
 uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function (): void {

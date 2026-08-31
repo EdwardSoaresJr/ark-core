@@ -25,8 +25,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'partstech_username', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
-#[Hidden(['password', 'remember_token', 'partstech_password', 'operator_pin_hash'])]
+#[Fillable(['name', 'email', 'phone', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
+#[Hidden(['password', 'remember_token', 'operator_pin_hash'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -42,7 +42,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'partstech_password' => 'encrypted',
             'is_active' => 'boolean',
             'is_master_admin' => 'boolean',
             'workday_hours' => 'decimal:2',
@@ -236,16 +235,6 @@ class User extends Authenticatable implements MustVerifyEmail
             ->filter()
             ->values()
             ->all();
-    }
-
-    public function hasStoredPartsTechPassword(): bool
-    {
-        return filled($this->partstech_password);
-    }
-
-    public function usesPersonalPartsTechLogin(): bool
-    {
-        return filled(trim((string) $this->partstech_username)) && $this->hasStoredPartsTechPassword();
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
-use App\Ark\Operations\Parts\PartsTechCatalogLauncher;
+use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use Illuminate\Support\Collection;
 
@@ -263,7 +263,7 @@ final class RepairOrderEstimateInstrumentProjection
             ['label' => 'Shop part lines', 'detail' => (string) $total],
         ];
 
-        $launcher = app(PartsTechCatalogLauncher::class);
+        $launcher = app(PartsCatalogLauncher::class);
 
         if ($launcher->configured()) {
             $items[] = ['label' => 'PO', 'detail' => $launcher->poNumber($repairOrder)];

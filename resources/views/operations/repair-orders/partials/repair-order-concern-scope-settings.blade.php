@@ -21,17 +21,6 @@
             'authorViaModal' => $authorViaModal,
         ])
         <div class="ops-scope-header-toolbar-actions">
-            @if (($showPartstechCatalog ?? false) && ($partstechCatalogUrl ?? null))
-                <button
-                    type="button"
-                    class="ops-scope-settings__partstech"
-                    @click="openPartsTechCatalog(false, {{ $concern->id }})"
-                    :disabled="partstechCatalogOpening || partstechPullLoading"
-                    title="Open PartsTech for this scope. Pull Quote will default parts to this concern."
-                >
-                    PartsTech
-                </button>
-            @endif
             <form method="POST" action="{{ route('operations.repair-orders.concerns.move', [$repairOrder, $concern]) }}" data-refresh-scope="worksheet" data-continuity-focus="#concern-{{ $concern->id }} button[name='move-up']" @submit.prevent="submitWorksheetForm($event)">
                 @csrf
                 @method('PATCH')

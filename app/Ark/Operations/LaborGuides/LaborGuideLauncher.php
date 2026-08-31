@@ -2,16 +2,15 @@
 
 namespace App\Ark\Operations\LaborGuides;
 
-use App\Ark\Operations\Parts\PartsTechShopReference;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderShopReference;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use Illuminate\Support\Str;
 
 /**
  * Opens AllData or ProDemand in the browser and copies VIN for manual paste.
  *
- * Unlike PartsTech, these vendors do not consume ARK query-string vehicle context on
- * generic login URLs. VIN prefill requires Mitchell/AllData partner pass-through APIs.
+ * These vendors do not consume ARK query-string vehicle context on generic login URLs.
  */
 final class LaborGuideLauncher
 {
@@ -82,7 +81,7 @@ final class LaborGuideLauncher
                 'After sign-in, search by year, make, and model in the guide.',
             ];
 
-        $segments[] = 'These guides do not load vehicle data from ARK URLs yet (unlike PartsTech).';
+        $segments[] = 'These guides do not load vehicle data from ARK URLs yet.';
 
         if ($ymm !== '') {
             $segments[] = 'Vehicle: '.$ymm.'.';
@@ -101,7 +100,7 @@ final class LaborGuideLauncher
     public function clipboardContext(RepairOrder $repairOrder, ?int $concernId = null): string
     {
         $segments = [
-            'RO '.PartsTechShopReference::cartReference($repairOrder),
+            'RO '.RepairOrderShopReference::cartReference($repairOrder),
         ];
 
         if ($vin = $this->vinForRepairOrder($repairOrder)) {

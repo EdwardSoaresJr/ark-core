@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-uses(Tests\TestCase::class);
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {

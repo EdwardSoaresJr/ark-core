@@ -4,7 +4,6 @@ use App\Ark\Communications\Provisioning\EndpointProvisionServerUrl;
 use App\Ark\Communications\Provisioning\PolyPhoneProvServerProvisioning;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('poly phone provision server points at ark provision path', function (): void {
     config()->set('shop.base_url', 'https://app.demo-auto.test');

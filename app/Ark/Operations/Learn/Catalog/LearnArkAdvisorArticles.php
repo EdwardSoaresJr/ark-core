@@ -97,12 +97,6 @@ final class LearnArkAdvisorArticles
                 'view' => 'operations.learn.advisor.parts-and-labor',
             ],
             [
-                'slug' => 'partstech-workflow',
-                'title' => 'PartsTech catalog and quotes',
-                'summary' => 'Open catalog from RO, import quotes, assign to scopes.',
-                'view' => 'operations.learn.advisor.partstech-workflow',
-            ],
-            [
                 'slug' => 'parts-procurement',
                 'title' => 'Parts status and waiting-parts',
                 'summary' => 'Procurement fields, waiting-parts lane, release when parts land.',

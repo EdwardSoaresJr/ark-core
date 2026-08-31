@@ -74,9 +74,6 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::get('/app/settings/shop/payments/square-terminal-device-code/{deviceCodeId}', [SquareTerminalDeviceCodeController::class, 'show'])
         ->name('operations.settings.shop.payments.square-terminal-device-code.show');
 
-    Route::patch('/app/settings/shop/partstech', [ShopIntegrationSettingsController::class, 'updatePartsTech'])
-        ->name('operations.settings.shop.partstech.update');
-
     Route::patch('/app/settings/shop/email', [ShopIntegrationSettingsController::class, 'updateEmail'])
         ->name('operations.settings.shop.email.update');
 

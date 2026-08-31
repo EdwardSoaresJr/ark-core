@@ -5,7 +5,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('mobile push resolves firebase project id from server credentials file', function () {
     $path = tempnam(sys_get_temp_dir(), 'ark-fcm-');

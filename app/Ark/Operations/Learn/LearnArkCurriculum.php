@@ -62,7 +62,6 @@ final class LearnArkCurriculum
             'advisor:incoming-calls-floor',
             'advisor:ark-mobile-attention',
             'advisor:ark-mobile-check-in',
-            'advisor:partstech-workflow',
             'advisor:deposits-and-invoicing',
             'technician:multi-point-inspection',
             'technician:ark-mobile-field-work',

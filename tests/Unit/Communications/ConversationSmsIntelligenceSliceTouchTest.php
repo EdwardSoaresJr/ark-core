@@ -3,9 +3,6 @@
 use App\Ark\Operations\Communications\ConversationSmsIntelligenceSlice;
 use App\Ark\Operations\Communications\ConversationSmsIntelligenceSliceTouch;
 
-// Datetime casts on the Eloquent slice model need a booted application.
-uses(Tests\TestCase::class);
-
 test('single outbound sms with transcript is eligible for advisor coaching', function () {
     $slice = new ConversationSmsIntelligenceSlice([
         'message_count' => 1,

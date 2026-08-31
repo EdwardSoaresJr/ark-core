@@ -9,7 +9,7 @@ use App\Ark\Operations\Workboard\WorkboardCardProjection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('workboard footnote mirror paid ledger unpaid shows balance due not paid', function () {
     [$footnote, $nextAction] = workboardPaymentFootnoteCase(

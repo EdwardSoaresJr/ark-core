@@ -3,7 +3,6 @@
 use App\Ark\Platform\ShopBaseUrl;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 it('derives voice capability urls from shop base url', function (): void {
     config()->set('shop.base_url', 'https://shop1.arksms.com');

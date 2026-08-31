@@ -3,7 +3,7 @@
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\LaborGuides\LaborGuideLauncher;
 use App\Ark\Operations\LaborGuides\LaborGuideProvider;
-use App\Ark\Operations\Parts\PartsTechShopReference;
+use App\Ark\Operations\RepairOrders\RepairOrderShopReference;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -86,7 +86,7 @@ test('labor guide handoff notice tells advisors to paste vin', function () {
         ->toContain('ProDemand')
         ->toContain('VIN 1HGCM82633A004352')
         ->toContain('paste')
-        ->toContain('unlike PartsTech');
+        ->not->toContain('PartsTech');
 });
 
 test('labor guide opens without vin and skips clipboard copy', function () {
@@ -185,7 +185,7 @@ test('labor guide clipboard context includes scope summary', function () {
     $context = app(LaborGuideLauncher::class)->clipboardContext($repairOrder, $concern->id);
 
     expect($context)
-        ->toContain('RO '.PartsTechShopReference::cartReference($repairOrder))
+        ->toContain('RO '.RepairOrderShopReference::cartReference($repairOrder))
         ->toContain('VIN 1HGCM82633A004352')
         ->toContain('2018 Honda Accord')
         ->toContain('Scope: Steering vibration');

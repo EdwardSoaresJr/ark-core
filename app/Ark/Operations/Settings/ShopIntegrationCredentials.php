@@ -119,75 +119,51 @@ final class ShopIntegrationCredentials
 
     public function partsTechBaseUrl(): string
     {
-        $resolved = $this->resolve($this->settings->partstech_base_url, config('services.partstech.base_url'));
-
-        return rtrim((string) ($resolved ?: 'https://app.partstech.com'), '/');
+        return '';
     }
 
     public function partsTechCatalogPath(): string
     {
-        return trim((string) ($this->resolve($this->settings->partstech_catalog_path, config('services.partstech.catalog_path')) ?? ''));
+        return '';
     }
 
     public function partsTechUsername(): ?string
     {
-        return $this->resolve($this->settings->partstech_username, config('services.partstech.username'));
+        return null;
     }
 
     public function partsTechApiKey(): ?string
     {
-        return $this->resolve($this->settings->partstech_api_key, config('services.partstech.api_key'));
+        return null;
     }
 
     public function partsTechPassword(): ?string
     {
-        return $this->resolve($this->settings->partstech_password, config('services.partstech.password'));
+        return null;
     }
 
     public function partsTechCatalogConfigured(): bool
     {
-        $hasCredential = filled($this->partsTechApiKey()) || filled($this->partsTechPassword());
-
-        return $this->partsTechBaseUrl() !== ''
-            && filled($this->partsTechUsername())
-            && $hasCredential;
+        return false;
     }
 
     public function partsTechQuoteImportConfigured(): bool
     {
-        return $this->partsTechBaseUrl() !== ''
-            && filled($this->partsTechUsername())
-            && filled($this->partsTechPassword());
+        return false;
     }
 
     public function hasStoredPartsTechApiKey(): bool
     {
-        return filled($this->settings->partstech_api_key);
+        return false;
     }
 
     public function hasStoredPartsTechPassword(): bool
     {
-        return filled($this->settings->partstech_password);
+        return false;
     }
 
     public function partsTechCredentialSource(): string
     {
-        if (
-            filled($this->settings->partstech_password)
-            || filled($this->settings->partstech_api_key)
-            || filled($this->settings->partstech_username)
-        ) {
-            return 'database';
-        }
-
-        if (
-            filled(config('services.partstech.password'))
-            || filled(config('services.partstech.api_key'))
-            || filled(config('services.partstech.username'))
-        ) {
-            return 'env';
-        }
-
         return 'none';
     }
 

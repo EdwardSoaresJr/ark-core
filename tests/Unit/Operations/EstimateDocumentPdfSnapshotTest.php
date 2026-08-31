@@ -9,7 +9,6 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 it('builds a renderable snapshot from live repair order when import snapshot is minimal', function (): void {
     $repairOrder = new RepairOrder;

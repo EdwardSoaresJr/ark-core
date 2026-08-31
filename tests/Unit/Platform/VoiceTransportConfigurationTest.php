@@ -3,7 +3,6 @@
 use App\Ark\Platform\VoiceTransportConfiguration;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 it('reads sip transport from deployment configuration', function (): void {
     config()->set('voice-transport.sip_registrar', 'example.sip.twilio.com');

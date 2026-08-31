@@ -4,7 +4,7 @@ namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Labor\LaborLinePresenter;
-use App\Ark\Operations\Parts\PartsTechCatalogLauncher;
+use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use Carbon\CarbonInterface;
@@ -401,7 +401,7 @@ final class RepairOrderLineItemPresentation
         }
 
         if ($repairOrder !== null) {
-            $launcher = app(PartsTechCatalogLauncher::class);
+            $launcher = app(PartsCatalogLauncher::class);
 
             if ($launcher->configured()) {
                 $items[] = ['label' => 'PO', 'detail' => $launcher->poNumber($repairOrder)];

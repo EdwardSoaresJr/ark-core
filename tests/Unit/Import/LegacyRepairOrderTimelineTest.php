@@ -5,7 +5,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 // RepairOrderStatus::isTerminal() resolves the status catalog from the container.
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('legacy repair order timeline prefers status log close over updated_at', function () {
     $closedAt = LegacyRepairOrderTimeline::closedAt([

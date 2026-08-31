@@ -245,36 +245,18 @@ test('the shop can decode a vin and still override fields before saving', functi
         ->assertJsonPath('normalized_vehicle_key', '2019-toyota-rav4-xle-2-5l-awd-automatic');
 });
 
-test('the shop can decode a plate via partstech', function () {
+test('plate decode is not available in stock core', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
-    config()->set('services.partstech.username', 'ark');
-    config()->set('services.partstech.api_key', 'secret');
-    config()->set('services.partstech.base_url', 'https://partstech.test');
-
-    Http::fake([
-        'partstech.test/*' => Http::response([
-            'vehicle' => [
-                'vin' => '2T3RFREV6KW020202',
-                'year' => '2019',
-                'make' => 'Toyota',
-                'model' => 'RAV4',
-                'trim' => 'XLE',
-                'engine' => '2.5L',
-            ],
-        ]),
-    ]);
+    Http::fake();
 
     $this->postJson(route('operations.vehicles.decode-vin'), [
         'plate' => 'ABC123',
         'plate_state' => 'CO',
     ])
-        ->assertOk()
-        ->assertJsonPath('vin', '2T3RFREV6KW020202')
-        ->assertJsonPath('plate', 'ABC123')
-        ->assertJsonPath('plate_state', 'CO')
-        ->assertJsonPath('make', 'Toyota')
-        ->assertJsonPath('model', 'Rav4')
-        ->assertJsonPath('trim', 'XLE');
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Vehicle could not be decoded from that plate. Plate decode is not available.');
+
+    Http::assertNothingSent();
 });

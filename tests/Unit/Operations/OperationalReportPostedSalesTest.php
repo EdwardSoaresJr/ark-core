@@ -22,7 +22,7 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('sales posted excludes unpaid repair orders without posted_at', function () {
     $customer = Customer::query()->create([

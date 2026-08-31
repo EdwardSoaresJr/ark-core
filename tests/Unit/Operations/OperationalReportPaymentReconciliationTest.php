@@ -14,7 +14,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('total cashiered matches cash collected kpi', function () {
     [$from, $to] = OperationalReportDateScope::resolveRange('2026-06-08', '2026-06-08');

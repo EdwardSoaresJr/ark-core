@@ -72,33 +72,6 @@ public function updatePayments(Request $request): RedirectResponse
             ->with('status', 'Square payment settings saved.');
     }
 
-public function updatePartsTech(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'partstech_base_url' => ['nullable', 'url', 'max:255'],
-            'partstech_catalog_path' => ['nullable', 'string', 'max:255'],
-            'partstech_username' => ['nullable', 'string', 'max:128'],
-            'partstech_api_key' => ['nullable', 'string', 'max:512'],
-            'partstech_password' => ['nullable', 'string', 'max:512'],
-        ]);
-
-        $settings = ShopSettings::current();
-        $updates = [
-            'partstech_base_url' => $this->nullableTrimmedString($data['partstech_base_url'] ?? null),
-            'partstech_catalog_path' => $this->nullableTrimmedString($data['partstech_catalog_path'] ?? null),
-            'partstech_username' => $this->nullableTrimmedString($data['partstech_username'] ?? null),
-        ];
-
-        $this->mergeSecretField($updates, 'partstech_api_key', $data['partstech_api_key'] ?? null);
-        $this->mergeSecretField($updates, 'partstech_password', $data['partstech_password'] ?? null);
-
-        $settings->persistTrusted($updates);
-
-        return redirect()
-            ->route('operations.settings.shop.edit', ['section' => 'partstech'])
-            ->with('status', 'PartsTech settings saved.');
-    }
-
     public function updateEmail(Request $request): RedirectResponse
     {
         $data = $request->validate([

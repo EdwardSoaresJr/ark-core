@@ -3,7 +3,6 @@
 use App\Ark\Operations\LaborGuides\Rte\RteShopLaborHoursProjection;
 use Tests\TestCase;
 
-uses(TestCase::class);
 
 test('shop labor projection maps book average to lo and weighted high to avg', function (): void {
     $projection = new RteShopLaborHoursProjection(

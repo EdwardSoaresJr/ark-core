@@ -15,6 +15,11 @@ it('does not advertise protected turnkey provider credentials in env example', f
         'POSTMARK_MESSAGE_STREAM',
         'META_MESSENGER_PAGE_ACCESS_TOKEN',
         'ANTHROPIC_API_KEY',
+        'PARTSTECH_USERNAME',
+        'PARTSTECH_API_KEY',
+        'PARTSTECH_PASSWORD',
+        'PARTSTECH_BASE_URL',
+        'PARTSTECH_CATALOG_PATH',
     ];
 
     foreach ($forbiddenKeys as $key) {

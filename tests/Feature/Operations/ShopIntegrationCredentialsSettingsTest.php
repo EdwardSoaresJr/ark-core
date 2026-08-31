@@ -111,50 +111,19 @@ test('shop integration credentials fall back to env when database is empty', fun
         'square_location_id' => null,
         'square_webhook_signature_key' => null,
         'square_environment' => null,
-        'partstech_username' => null,
-        'partstech_api_key' => null,
-        'partstech_password' => null,
     ]);
 
     config()->set('services.square.application_id', 'sq-env-app');
     config()->set('services.square.access_token', 'sq-env-token');
     config()->set('services.square.location_id', 'LOC-ENV');
-    config()->set('services.partstech.username', 'parts-env');
-    config()->set('services.partstech.password', 'parts-secret');
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
     expect($credentials->messagingConfigured())->toBeFalse()
         ->and($credentials->twilioCredentialSource())->toBe('none')
         ->and($credentials->squareCredentialSource())->toBe('env')
-        ->and($credentials->partsTechCredentialSource())->toBe('env');
-});
-
-test('partstech settings save credentials encrypted in shop settings', function () {
-    $this->seed(ArkAuthorizationSeeder::class);
-    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
-
-    config()->set('services.partstech.username', null);
-    config()->set('services.partstech.password', null);
-    config()->set('services.partstech.api_key', null);
-
-    $this->actingAs($admin)
-        ->patch(route('operations.settings.shop.partstech.update'), [
-            'partstech_base_url' => 'https://partstech.test',
-            'partstech_username' => 'ark-shop',
-            'partstech_api_key' => 'api-key-secret',
-            'partstech_password' => 'shop-password',
-        ])
-        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'partstech']));
-
-    $settings = ShopSettings::current()->fresh();
-    $credentials = ShopIntegrationCredentials::forCurrentShop();
-
-    expect($settings->partstech_username)->toBe('ark-shop')
-        ->and($settings->partstech_api_key)->toBe('api-key-secret')
-        ->and($settings->partstech_password)->toBe('shop-password')
-        ->and($credentials->partsTechCatalogConfigured())->toBeTrue()
-        ->and($credentials->partsTechQuoteImportConfigured())->toBeTrue();
+        ->and($credentials->partsTechCredentialSource())->toBe('none')
+        ->and($credentials->partsTechCatalogConfigured())->toBeFalse();
 });
 
 test('email settings save reply-to and surface ARK Mail without Postmark credential fields', function () {
@@ -207,11 +176,6 @@ test('integration settings pages show credential fields', function () {
         ->assertSee('Application ID')
         ->assertSee('Access token')
         ->assertSee('Webhook signature key');
-
-    $this->get(route('operations.settings.shop.edit', ['section' => 'partstech']))
-        ->assertOk()
-        ->assertSee('PartsTech')
-        ->assertSee('Shop username');
 
     $this->get(route('operations.settings.shop.edit', [
         'section' => 'communications',
