@@ -236,7 +236,7 @@ use App\Ark\Operations\Reports\OperationalReportController;
 use App\Ark\Operations\Reports\ReportsEndOfDayController;
 use App\Ark\Operations\Reports\ReportsIndexController;
 use App\Ark\Operations\Search\OperationsGlobalSearchController;
-use App\Ark\Operations\ShopExcellence\OwnerBookendController;
+use App\Ark\Operations\ShopExcellence\OwnerDayReviewController;
 use App\Ark\Operations\ShopExcellence\PartsMatrixTuneController;
 use App\Ark\Operations\Staff\OwnerStaffCoachingController;
 use App\Ark\Operations\Staff\StaffFrontDoor;
@@ -812,7 +812,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->name('operations.reports.operational');
 
         Route::middleware('owner.workspace')->group(function (): void {
-            Route::get('/app/owner/bookend', OwnerBookendController::class)
+            Route::get('/app/owner/day-review', OwnerDayReviewController::class)
+                ->name('operations.owner.day-review');
+            // Legacy path retained for bookmarks and older links.
+            Route::get('/app/owner/bookend', OwnerDayReviewController::class)
                 ->name('operations.owner.bookend');
 
             Route::get('/app/owner/technician-production', [TechnicianProductionAssistController::class, 'index'])

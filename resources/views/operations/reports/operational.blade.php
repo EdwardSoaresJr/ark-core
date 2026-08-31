@@ -16,7 +16,7 @@
                             @php
                                 $shopDay = App\Ark\Operations\Reports\OperationalReportDateScope::shopDateString($from);
                                 $eodUrl = \App\Ark\Operations\ShopExcellence\OwnerWorkspaceAccess::allows(auth()->user())
-                                    ? route('operations.owner.bookend', ['date' => $shopDay])
+                                    ? route('operations.owner.day-review', ['date' => $shopDay])
                                     : route('operations.reports.end-of-day', ['date' => $shopDay]);
                             @endphp
                             <a href="{{ $eodUrl }}" class="font-bold text-sky-800 underline decoration-sky-200 hover:text-sky-950">End of Day card</a>

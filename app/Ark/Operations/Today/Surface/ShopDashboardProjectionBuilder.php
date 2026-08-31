@@ -174,7 +174,7 @@ final class ShopDashboardProjectionBuilder
             pendingUrl: $pendingUrl,
             declinedUrl: $declinedUrl,
             approvedUrl: $approvedUrl,
-            footnote: 'Click a number to open matching ROs · Posted sales live on Reports / Bookend',
+            footnote: 'Click a number to open matching ROs · Posted sales live on Reports / Day Review',
         );
     }
 

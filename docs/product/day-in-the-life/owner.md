@@ -3,7 +3,7 @@
 **Station:** Office + Portable Station for floor walks  
 **Primary question:** What needs attention across the shop?
 
-Molly is an owner-operator. She needs **daily numbers and queue truth**, not a second ERP dashboard. Mobile is for pulse checks on the lot; Bookend and Operational Report remain desktop-weight surfaces.
+Molly is an owner-operator. She needs **daily numbers and queue truth**, not a second ERP dashboard. Mobile is for pulse checks on the lot; Day Review and Operational Report remain desktop-weight surfaces.
 
 ---
 
@@ -69,7 +69,7 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 
 ---
 
-## 5:30 PM — Bookend the day
+## 5:30 PM — Day Review
 
 **Floor:** Shop closing. Molly reviews queue with advisors.
 
@@ -78,14 +78,14 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 | Verb | Content |
 |------|---------|
 | What is happening? | 4 open decision rows · 2 comms unhandled |
-| Why? | End-of-day bookend queue |
+| Why? | End-of-day Day Review queue |
 | What should I do? | Clear or assign follow-ups for tomorrow |
 | Can I trust that? | Same Attention authority as morning |
-| What can I do? | Bookend review (desktop) · assign owners |
+| What can I do? | Day Review review (desktop) · assign owners |
 
-**Surfaces:** Bookend `/app/owner/bookend` (desktop) · Attention (mobile partial)
+**Surfaces:** Day Review `/app/owner/day-review` (desktop) · Attention (mobile partial)
 
-**Status:** ⚠️ Bookend desktop only · Mobile Attention is substitute, not bookend
+**Status:** ⚠️ Day Review desktop only · Mobile Attention is substitute, not Day Review
 
 ---
 
@@ -108,7 +108,7 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 | 7:30 | Morning pulse | ⚠️ |
 | 11:00 | ELR / financial review | 🔲 desktop only (intentional) |
 | 3:00 | Escalation drill-down | ⚠️ |
-| 5:30 | Bookend | 🔲 desktop |
+| 5:30 | Day Review | 🔲 desktop |
 | 6:00 | Owner digest email | ✅ email |
 
 **Rule:** Owner mobile scenarios are **orientation and attention**, not reporting parity. Measure progress by escalation and pulse scenarios, not by shipping dashboards on phone.

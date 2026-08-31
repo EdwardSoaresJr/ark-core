@@ -17,7 +17,7 @@ End-of-day or morning **daily numbers** — car count · closed sales · ELR tea
 - Date · shop name
 - Cards: closed ROs · gross · car count · (optional) waiting approval dollars
 - Label every metric with source — closed vs open queue
-- Link to Bookend on desktop P1
+- Link to Day Review on desktop P1
 - **Not** net profit theater without real P&L
 
 ---
@@ -30,7 +30,7 @@ Owner mode in More · separate from Edward advisor tabs during counter hours
 
 ## Doctrine
 
-`ark-shop-excellence.mdc` — workflow truth vs closed sales truth
+[`ark-shop-excellence.mdc`](../../../.cursor/rules/ark-shop-excellence.mdc) — workflow truth vs closed sales truth
 
 ---
 

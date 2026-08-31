@@ -22,7 +22,7 @@ final class OwnerOperationalPulse
     }
 
     /**
-     * Lucas daily digest — closed sales + operational pressure for the shop day.
+     * Daily digest — closed sales + operational pressure for the shop day.
      *
      * @return array{
      *     range_label: string,
@@ -40,6 +40,7 @@ final class OwnerOperationalPulse
      *     financial_url: string,
      *     margin_health_url: string,
      *     owner_pl_url: string,
+     *     day_review_url: string,
      *     bookend_url: string
      * }
      */
@@ -92,7 +93,7 @@ final class OwnerOperationalPulse
                     ->values()
                     ->all(),
             ),
-            'priorities' => collect($this->bookendPriorities())
+            'priorities' => collect($this->dayReviewPriorities())
                 ->filter(fn (array $priority): bool => $priority['count'] > 0)
                 ->values()
                 ->all(),
@@ -123,17 +124,28 @@ final class OwnerOperationalPulse
                 'to' => $toLabel,
                 'tab' => 'owner-pl',
             ]),
-            'bookend_url' => route('operations.owner.bookend'),
+            'day_review_url' => route('operations.owner.day-review'),
+            'bookend_url' => route('operations.owner.day-review'),
         ];
     }
 
     /**
-     * Bookend priorities — what owns tomorrow before you leave.
+     * Queue pressure for tomorrow — open approvals, parts, unpaid pickup, etc.
+     *
+     * @return list<array{label: string, count: int, hint: string, tone: string}>
+     */
+    public function dayReviewPriorities(): array
+    {
+        return app(ShopBehaviorPulse::class)->priorities();
+    }
+
+    /**
+     * @deprecated Use dayReviewPriorities()
      *
      * @return list<array{label: string, count: int, hint: string, tone: string}>
      */
     public function bookendPriorities(): array
     {
-        return app(ShopBehaviorPulse::class)->priorities();
+        return $this->dayReviewPriorities();
     }
 }

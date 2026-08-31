@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Attrition is normal — growth is not optional</h3>
-    <p>Lucas Underwood (L&amp;N Performance, <em>Changing The Industry</em>) reminds owners that customers die, move, buy new cars, and leave. A healthy shop at real revenue <strong>always needs new clients</strong>. Hearing “we’ve never advertised” often means the shop was underperforming its potential — not that marketing is unnecessary.</p>
+    <p>Customers die, move, buy new cars, and leave. A healthy shop at real revenue <strong>always needs new clients</strong>. Hearing “we’ve never advertised” often means the shop was underperforming its potential — not that marketing is unnecessary.</p>
 
     <h3>What this means at the counter</h3>
     <ul>

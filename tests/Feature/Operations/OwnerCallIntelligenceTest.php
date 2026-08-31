@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
+    ShopSettings::current()->persistTrusted([
+        'learn_training_gate_enabled' => false,
+    ]);
     $this->seed(ArkAuthorizationSeeder::class);
     config()->set('services.twilio.account_sid', 'ACtest');
     config()->set('services.twilio.auth_token', 'test-token');
@@ -42,7 +45,7 @@ test('multi role admins with bookend access can open call intelligence', functio
     ]);
 
     $this->actingAs($admin)
-        ->get(route('operations.owner.bookend'))
+        ->get(route('operations.owner.day-review'))
         ->assertOk();
 
     $this->actingAs($admin)

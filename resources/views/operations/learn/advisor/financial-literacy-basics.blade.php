@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Why advisors should speak the language</h3>
-    <p>Cecil Bullard and Lucas Underwood both push shops to teach the team how a business runs — not only how to turn wrenches. You do not set labor rate or matrix tiers, but your write-ups, time entries, and follow-through move these numbers.</p>
+    <p>Shops that teach the team how a business runs — not only how to turn wrenches — make better decisions at the counter. You do not set labor rate or matrix tiers, but your write-ups, time entries, and follow-through move these numbers.</p>
 
     <h3>ARO (average repair order)</h3>
     <p>Total posted sales ÷ number of cars in scope. Grows when you:</p>
@@ -30,7 +30,7 @@
     <p>Owners watch both. <strong>Sales Posted</strong> is when the RO is posted after invoice — your margin KPIs use this. <strong>Cash Collected</strong> is payments in the drawer today. Deposits and timing make them differ; you post and collect so reconciliation foots.</p>
 
     <h3>What you can see in ARK</h3>
-    <p>Owners and admins use the Operational Report for daily KPIs. Your operational levers are on the RO: scopes, repair actions, approvals, post, and follow-up — those roll into the numbers they review at bookend.</p>
+    <p>Owners and admins use the Operational Report for daily KPIs. Your operational levers are on the RO: scopes, repair actions, approvals, post, and follow-up — those roll into the numbers they review at Day Review.</p>
 
     <p>Parts and labor entry detail: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'parts-and-labor']) }}">Parts and labor entry</a>. Closeout: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'deposits-and-invoicing']) }}">Deposits, invoice, and closeout</a>.</p>
 </div>

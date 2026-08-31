@@ -57,16 +57,16 @@ Example:
 
 | Field | Value |
 | --- | --- |
-| slug | `demo-auto` |
-| display_name | Demo Auto Repair |
-| legal_name | Demo Auto Repair LLC |
+| slug | `lugsnplugs` |
+| display_name | LugsNPlugs Automotive |
+| legal_name | LugsNPlugs Automotive LLC |
 
 ### Slug immutability (locked)
 
 After provisioning, **`slug` never changes**.
 
 ```text
-demo-auto  →  always  demo-auto.arksms.com
+lugsnplugs  →  always  lugsnplugs.arksms.com
 ```
 
 Rebrand later by changing **display name**, **Public Domain**, logo, website — not the Operations Domain.
@@ -83,9 +83,9 @@ Per [domain-contract-v1.md](domain-contract-v1.md):
 
 | Concept | Example | Audience |
 | --- | --- | --- |
-| **Operations Domain** | `demo-auto.arksms.com` | Staff |
-| **Public Domain** | `demo-auto.test` | Customers (optional until connected) |
-| **Preview Domain** | `demo-auto-preview.arksms.com` | Temporary public (trial) |
+| **Operations Domain** | `lugsnplugs.arksms.com` | Staff |
+| **Public Domain** | `lugsnplugs.com` | Customers (optional until connected) |
+| **Preview Domain** | `lugsnplugs-preview.arksms.com` | Temporary public (trial) |
 
 DNS records, certificates, and Stancl domain rows are **projections** of these concepts.
 
@@ -145,7 +145,7 @@ Capability gates on the Shop, not infrastructure:
 - Website  
 - Multi-location  
 - AI  
-- Bookend  
+- Day Review  
 - (extend only when an entitlement is real)
 
 Distinct from fleet **ProductAccess** (which ecosystem products are provisioned: ARK V2, ARKademy, …). Features answer “what may this Shop use?” ProductAccess answers “which products exist for this Shop in the fleet.”

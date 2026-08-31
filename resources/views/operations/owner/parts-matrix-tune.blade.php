@@ -11,7 +11,7 @@
                 <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Matrix tune assistant</p>
                 <h1 class="mt-0.5 text-base font-black text-slate-950">Simulate parts matrix changes from closed truth</h1>
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Cecil step 2 — matrix sets price. Lucas cadence — review closed sample before changing live policy.
+                    Matrix sets price. Review a closed sample before changing live policy.
                     Simulation never writes to shop settings; apply manually after review.
                 </p>
             </div>
@@ -177,7 +177,7 @@
         </form>
 
         <div class="flex flex-wrap gap-2 text-xs">
-            <a href="{{ route('operations.owner.bookend') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Bookend</a>
+            <a href="{{ route('operations.owner.day-review') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Day Review</a>
             <a href="{{ route('operations.reports.operational', ['tab' => 'margin-health', 'from' => $analysis['from'], 'to' => $analysis['to']]) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Margin Health</a>
             <a href="{{ route('operations.settings.shop.edit', ['section' => 'financial', 'financialTab' => 'parts']) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Parts Matrix settings</a>
             <a href="{{ route('operations.settings.shop.edit', ['section' => 'excellence']) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Owner Targets</a>

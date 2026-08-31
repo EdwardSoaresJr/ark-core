@@ -53,8 +53,8 @@ final class BusinessCockpitProjectionBuilder
 
         if (OwnerWorkspaceAccess::allows($user)) {
             $links[] = [
-                'label' => 'Bookend',
-                'url' => route('operations.owner.bookend'),
+                'label' => 'Day Review',
+                'url' => route('operations.owner.day-review'),
             ];
         }
 

@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Daily management numbers</h3>
-    <p>Do not wait for monthly P&L to steer the shop. Cecil Bullard’s profitable shops manage these KPIs daily or weekly from management reports.</p>
+    <p>Do not wait for monthly P&L to steer the shop. Profitable shops manage these KPIs daily or weekly from management reports.</p>
 
     <h3>The six KPIs</h3>
     <ol>

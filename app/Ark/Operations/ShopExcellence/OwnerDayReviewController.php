@@ -8,7 +8,7 @@ use App\Ark\Operations\Reports\OperationalReportDateScope;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
-class OwnerBookendController
+class OwnerDayReviewController
 {
     public function __invoke(
         Request $request,
@@ -18,9 +18,9 @@ class OwnerBookendController
         $shopDate = $request->input('date');
         [$from, $to] = OperationalReportDateScope::resolveRange($shopDate, $shopDate);
 
-        return view('operations.owner.bookend', [
+        return view('operations.owner.day-review', [
             'eod' => EndOfDayReportProjection::resolve($from, $to),
-            'priorities' => $pulse->bookendPriorities(),
+            'priorities' => $pulse->dayReviewPriorities(),
             'nudgeInsight' => $nudgeInsight->lastSevenDays(),
             'targetReviewStale' => ShopExcellenceTargets::targetReviewStale(),
             'lastTargetReview' => ShopExcellenceTargets::lastTargetReview(),

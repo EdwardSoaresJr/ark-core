@@ -1,5 +1,5 @@
-<x-operations.app title="Bookend">
-    <section class="ops-bookend space-y-3">
+<x-operations.app title="Day Review">
+    <section class="ops-day-review space-y-3">
         @if ($targetReviewStale)
             <div class="border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
                 @if ($lastTargetReview)
@@ -13,10 +13,10 @@
 
         @include('operations.reports.partials.end-of-day-report', ['eod' => $eod])
 
-        <div class="ops-bookend-queue border border-slate-300 bg-white">
+        <div class="ops-day-review-queue border border-slate-300 bg-white">
             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Tomorrow's queue pressure</p>
-                <p class="text-xs text-slate-500">Lucas bookend — name the first move before you leave. Numbers above; unfinished work below.</p>
+                <p class="text-xs text-slate-500">name the first move before you leave. Numbers above; unfinished work below.</p>
             </div>
             <ul class="divide-y divide-slate-100">
                 @forelse ($priorities as $priority)
@@ -63,7 +63,7 @@
             <a href="{{ route('operations.reports.index') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">All reports</a>
             <a href="{{ $eod->reportUrl }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Operational Report</a>
             <a href="{{ route('operations.workboard') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Workboard</a>
-            <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Bookend guide</a>
+            <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Day Review guide</a>
         </div>
     </section>
 </x-operations.app>

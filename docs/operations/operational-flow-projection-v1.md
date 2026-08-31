@@ -94,7 +94,7 @@ Stages represent **operational accumulation points** in the shop cycle — not e
 | `quality_check` | Quality Check | `quality_check` status |
 | `ready_pickup` | Ready Pickup | `completed`, `invoiced`, `ready_pickup` — work complete, cash conversion may still be pending (Pipeline owns unpaid-at-pickup dollars) |
 
-**Paid is excluded from Flow v1.** Paid belongs to Pipeline / Bookend. Flow stops at Ready Pickup — work and cash conversion still in motion.
+**Paid is excluded from Flow v1.** Paid belongs to Pipeline / Day Review. Flow stops at Ready Pickup — work and cash conversion still in motion.
 
 **Closed ROs are excluded** from Flow.
 
@@ -249,7 +249,7 @@ Single entry point. No static helpers called from Blade.
 | **Recommendations** | Engine receives optional `FlowConstraintProjection`; boost cards whose `ruleKey` aligns with constraint stage. |
 | **ARK Manager** | Narrates constraint + reasons — never inventing bottleneck from LLM when Flow projection is present. |
 | **Operational Report** (later) | Weekly constraint history — feeds Outcomes. |
-| **Owner bookend** (later) | End-of-day constraint snapshot comparison. |
+| **Owner Day Review** (later) | End-of-day constraint snapshot comparison. |
 
 ---
 
@@ -358,7 +358,7 @@ Ready Pickup             4     $3,800
 | Question | Default until measured |
 |----------|------------------------|
 | `work_arrives` vs `needs_diagnosis` boundary | Use line count + status slug; refine with floor observation |
-| Include `paid` bucket on Today? | **No — excluded from Flow v1.** Pipeline / Bookend own paid truth. |
+| Include `paid` bucket on Today? | **No — excluded from Flow v1.** Pipeline / Day Review own paid truth. |
 | Snapshot trigger: cron vs first visit | Notebook manual week one; automate after observation |
 | Weight tuning | Ship v1 defaults; shop settings only if LNP proves misfire |
 
@@ -380,7 +380,7 @@ Pipeline and Flow together answer the two questions that explain revenue:
 
 - **Pipeline:** Where is the money? (collected / money buckets)
 - **Flow:** Where is work stuck? (operational stages through ready pickup)
-- **Bookend:** Historical paid truth (end-of-day closeout — not Flow)
+- **Day Review:** Historical paid truth (end-of-day closeout — not Flow)
 
 Commitments matter. They do not explain April vs May. Flow might.
 
@@ -388,8 +388,8 @@ Commitments matter. They do not explain April vs May. Flow might.
 
 ## References
 
-- doctrine `ark-projection-rule.mdc`
-- doctrine `ark-pressure-first.mdc` — observe → surface → measure before enforce
+- `.cursor/rules/ark-projection-rule.mdc`
+- `.cursor/rules/ark-pressure-first.mdc` — observe → surface → measure before enforce
 - `app/Ark/Operations/Today/TodayPipelineProjection.php`
 - `app/Ark/Operations/Today/AdvisorTodayShopRadarBuilder.php`
 - `app/Ark/Operations/Workboard/WorkboardSwimlaneCatalog.php`

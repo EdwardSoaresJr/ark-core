@@ -80,7 +80,7 @@ class OperationalReportRangeMetrics
                 'Effective Labor Rate',
                 $effectiveLaborRateCents !== null ? $this->money($effectiveLaborRateCents).'/hr' : 'n/a',
                 $elrFloor !== null
-                    ? 'posted sales · Cecil ELR floor '.$this->money($elrFloor).'/hr'
+                    ? 'posted sales · ELR floor '.$this->money($elrFloor).'/hr'
                     : 'posted sales / billed hours',
                 ShopExcellenceTargets::toneForMinimum($effectiveLaborRateCents, $elrFloor),
             ),
@@ -108,11 +108,11 @@ class OperationalReportRangeMetrics
     }
 
     /**
-     * Owner bookend — executive pulse plus margin, pipeline, and break-even supplements.
+     * Owner day-review KPIs — executive pulse plus margin, pipeline, and break-even supplements.
      *
      * @return list<array{label: string, value: string, hint: string, tone: 'good'|'warn'|null}>
      */
-    public function bookendKpis(): array
+    public function dayReviewKpis(): array
     {
         $partsGpCents = $this->partsGrossProfitCents();
         $partsSalesCents = $this->partsSalesCents();
@@ -209,6 +209,13 @@ class OperationalReportRangeMetrics
 
         return array_merge($this->kpis(), $supplemental);
     }
+
+    /** @deprecated Use dayReviewKpis() */
+    public function bookendKpis(): array
+    {
+        return $this->dayReviewKpis();
+    }
+
 
     /**
      * @return array{label: string, value: string, hint: string, tone: 'good'|'warn'|null}
@@ -740,7 +747,7 @@ class OperationalReportRangeMetrics
     }
 
     /**
-     * Cecil Bullard margin bands — closed sales truth vs Demo Auto Repair targets.
+     * Margin health rows — closed sales truth vs shop targets.
      *
      * @return list<array{metric: string, actual: string, target: string, posture: string, tone: 'good'|'warn'|null, action: string}>
      */

@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Know why you are profitable — not just busy</h3>
-    <p>Lucas Underwood (L&amp;N Performance, <em>Changing The Industry</em> podcast) pushes owners to use shop data daily. ARK’s Operational Report is your daily pulse — Sales Posted for margin truth, Cash Collected for drawer truth.</p>
+    <p>Owners who steer from daily shop data catch margin leaks before month-end. ARK’s Operational Report is your daily pulse — Sales Posted for margin truth, Cash Collected for drawer truth.</p>
 
     <h3>Morning pulse (5 minutes)</h3>
     <ol>
@@ -10,15 +10,15 @@
         <li>If cash ≠ posted, open Financial tab reconciliation — one drill-down, not guesswork.</li>
     </ol>
 
-    <h3>Bookend before you leave</h3>
+    <h3>Day Review before you leave</h3>
     <p>If you go home stressed without a plan, tomorrow owns you. Before walking out:</p>
     <ul>
         <li>Scan tomorrow’s queue — approvals aging, parts backlog, ready execution.</li>
         <li>Note <strong>one</strong> number that was off today (ELR down? parts margin slip? reconciliation gap?).</li>
-        <li>Open <a href="{{ route('operations.owner.bookend') }}">Bookend</a> — scan tomorrow's queue pressure and name the first move.</li>
+        <li>Open <a href="{{ route('operations.owner.day-review') }}">Day Review</a> — scan tomorrow's queue pressure and name the first move.</li>
         <li>Assign the <strong>first move</strong> tomorrow — who calls which customer, which RO is priority.</li>
     </ul>
-    <p>Owner digest email (when enabled) lands around your configured time with Sales Posted, Cash Collected, reconcile status, and queue pressure — use it if you bookend from your phone.</p>
+    <p>Owner digest email (when enabled) lands around your configured time with Sales Posted, Cash Collected, reconcile status, and queue pressure — use it if you close the day from your phone.</p>
 
     <h3>Weekly rhythm</h3>
     <ul>

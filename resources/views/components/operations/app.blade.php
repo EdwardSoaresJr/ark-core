@@ -335,14 +335,14 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                 </a>
                             @endcan
                             @if ($canAccessOwnerWorkspace)
-                                <a href="{{ route('operations.owner.bookend') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
+                                <a href="{{ route('operations.owner.day-review') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.day-review', 'operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
                                         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
                                             <path d="M4 15.5h12M5.5 13V8M10 13V4.5M14.5 13v-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                                             <path d="M3.5 3.5l13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.35" />
                                         </svg>
                                     </span>
-                                    <span>Bookend</span>
+                                    <span>Day Review</span>
                                 </a>
                                 <a href="{{ route('operations.owner.technician-production.index') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.technician-production.*') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">

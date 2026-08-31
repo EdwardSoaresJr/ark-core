@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -7,6 +8,9 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function () {
+    ShopSettings::current()->persistTrusted([
+        'learn_training_gate_enabled' => false,
+    ]);
     Carbon::setTestNow(Carbon::parse('2026-06-06 04:00:00', config('app.timezone')));
 });
 
@@ -46,7 +50,7 @@ test('advisors route end of day card to the standalone eod report', function () 
         ->assertSee('All reports', false);
 });
 
-test('admins route end of day card to bookend', function () {
+test('admins route end of day card to day review', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
@@ -54,7 +58,7 @@ test('admins route end of day card to bookend', function () {
 
     $this->get(route('operations.reports.index'))
         ->assertOk()
-        ->assertSee(route('operations.owner.bookend', ['date' => $shopDay], false), false);
+        ->assertSee(route('operations.owner.day-review', ['date' => $shopDay], false), false);
 });
 
 test('operational report links back to the reports catalog', function () {

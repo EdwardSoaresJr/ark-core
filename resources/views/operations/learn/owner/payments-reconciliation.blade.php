@@ -29,9 +29,9 @@
     <ol>
         <li>End of day: check reconciliation for today — does it foot?</li>
         <li>If gap: one RO drill-down, not spreadsheet archaeology.</li>
-        <li>Bookend queue pressure separately — reconciliation is numbers; bookend is unfinished work.</li>
+        <li>Day Review queue pressure separately — reconciliation is numbers; Day Review is unfinished work.</li>
     </ol>
-    <p>Daily digest email repeats Sales Posted, Cash Collected, and reconcile yes/no — use it as a nudge if you bookend late. Configure in <strong>Settings → Owner Targets &amp; Reporting</strong>.</p>
+    <p>Daily digest email repeats Sales Posted, Cash Collected, and reconcile yes/no — use it as a nudge if you close the day late. Configure in <strong>Settings → Owner Targets &amp; Reporting</strong>.</p>
 
     <h3>Advisor accountability</h3>
     <p>Train advisors: invoice → collect → <strong>post</strong> before they leave. Unposted work makes Sales Posted lie and forces owner detective work. Guide: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'deposits-and-invoicing']) }}">Deposits, invoice, and closeout</a>.</p>

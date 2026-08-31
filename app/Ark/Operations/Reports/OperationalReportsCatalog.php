@@ -42,7 +42,7 @@ final readonly class OperationalReportsCatalog
                         'title' => 'End of Day',
                         'hint' => 'Posted sales, ELR, RO summary, and cash reconciliation.',
                         'url' => $this->canAccessBookend
-                            ? route('operations.owner.bookend', ['date' => $today])
+                            ? route('operations.owner.day-review', ['date' => $today])
                             : route('operations.reports.end-of-day', ['date' => $today]),
                     ],
                 ],

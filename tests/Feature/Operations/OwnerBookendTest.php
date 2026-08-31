@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Mail\OwnerDailyDigestMail;
@@ -7,12 +8,20 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Mail;
 
-test('admins can open owner bookend workspace', function () {
+
+beforeEach(function () {
+    ShopSettings::current()->persistTrusted([
+        'learn_training_gate_enabled' => false,
+    ]);
+});
+
+test('admins can open owner day review workspace', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    $this->get(route('operations.owner.bookend'))
+    $this->get(route('operations.owner.day-review'))
         ->assertOk()
+        ->assertSee('Day Review', false)
         ->assertSee('End of Day Report', false)
         ->assertSee('How effective is your shop at selling work?', false)
         ->assertSee('RO Summary', false)
@@ -22,13 +31,17 @@ test('admins can open owner bookend workspace', function () {
         ->assertSee('Effective Labor Rate', false)
         ->assertSee('Sales Posted', false)
         ->assertSee('Cash Collected', false);
+
+    $this->get(route('operations.owner.bookend'))
+        ->assertOk()
+        ->assertSee('Day Review', false);
 });
 
-test('advisors cannot open owner bookend workspace', function () {
+test('advisors cannot open owner day review workspace', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
-    $this->get(route('operations.owner.bookend'))
+    $this->get(route('operations.owner.day-review'))
         ->assertForbidden();
 });
 

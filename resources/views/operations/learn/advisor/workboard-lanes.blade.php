@@ -35,6 +35,6 @@
 
     <h3>Morning and end-of-shift habits</h3>
     <p>Before you touch a wrench or open intake, start at <a href="{{ route('operations.index') }}">Work</a> for overnight customer decisions, follow-ups, and shop counts, then open the workboard for lane detail.</p>
-    <p>At shift end, glance at approvals still aging and parts still on order — those are tomorrow’s first moves. Owners use <a href="{{ route('operations.owner.bookend') }}">Bookend</a> for the same scan at a higher level.</p>
+    <p>At shift end, glance at approvals still aging and parts still on order — those are tomorrow’s first moves. Owners use <a href="{{ route('operations.owner.day-review') }}">Day Review</a> for the same scan at a higher level.</p>
     <p>New advisors: read <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'getting-started']) }}">Advisor basics</a> first, then keep this guide open until lane names match what you say at the counter.</p>
 </div>

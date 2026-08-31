@@ -201,7 +201,7 @@ final class MobileOrientationProjection
         }
 
         if (($capabilities['owner_bookend'] ?? false) && $profile === 'manager') {
-            $actions[] = ['key' => 'bookend', 'label' => 'Bookend', 'enabled' => true];
+            $actions[] = ['key' => 'bookend', 'label' => 'Day Review', 'enabled' => true];
         }
 
         $actions[] = ['key' => 'apps', 'label' => 'All apps', 'enabled' => true];

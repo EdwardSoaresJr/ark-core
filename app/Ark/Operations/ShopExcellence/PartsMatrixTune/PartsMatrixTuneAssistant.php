@@ -80,8 +80,8 @@ final class PartsMatrixTuneAssistant
             'minimum_sample_lines' => self::MIN_SAMPLE_LINES,
             'trustworthy_floor' => (string) config('ark-reports.trustworthy_data_starts_at'),
             'doctrine' => [
-                'cecil_step' => 'Follow the parts matrix religiously — margin comes from system pricing, not advisor discounting.',
-                'lucas_cadence' => 'Review closed truth quarterly; simulate before changing live matrix policy.',
+                'matrix_discipline' => 'Follow the parts matrix — margin comes from system pricing, not advisor discounting.',
+                'review_cadence' => 'Review closed truth quarterly; simulate before changing live matrix policy.',
                 'mix_note' => 'Parts/labor mix is structural (inspections, parts lists, ARO). Matrix tuning affects parts margin only.',
             ],
             'posture' => [

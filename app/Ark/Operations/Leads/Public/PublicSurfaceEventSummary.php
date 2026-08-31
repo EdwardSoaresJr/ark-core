@@ -6,7 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Read-only funnel counts for observation — Bookend projection later.
+ * Read-only funnel counts for observation — Day Review projection later.
  */
 class PublicSurfaceEventSummary
 {

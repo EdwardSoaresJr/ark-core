@@ -26,13 +26,13 @@ final class LearnArkOwnerArticles
             ],
             [
                 'slug' => 'daily-rhythm',
-                'title' => 'Bookend your day + daily reports',
+                'title' => 'Day Review + daily reports',
                 'summary' => 'Know why you are profitable, not just busy.',
                 'view' => 'operations.learn.owner.daily-rhythm',
             ],
             [
                 'slug' => 'bookend-walkthrough',
-                'title' => 'Using Bookend end-of-day',
+                'title' => 'Using Day Review end-of-day',
                 'summary' => 'Digest lines, tomorrow queue pressure, weekly follow-up.',
                 'view' => 'operations.learn.owner.bookend-walkthrough',
             ],

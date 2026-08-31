@@ -1,8 +1,15 @@
 <?php
 
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+
+beforeEach(function () {
+    ShopSettings::current()->persistTrusted([
+        'learn_training_gate_enabled' => false,
+    ]);
+});
 
 test('advisors can read remote sell and updated authorization guides', function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -151,7 +158,7 @@ test('admins can read owner excellence guides and default learn entry opens owne
 
     $this->get(route('operations.learn.show', ['role' => 'owner', 'article' => 'daily-rhythm']))
         ->assertOk()
-        ->assertSee('Bookend before you leave');
+        ->assertSee('Day Review before you leave');
 
     $this->get(route('operations.learn.show', ['role' => 'owner', 'article' => 'weekly-owner-review']))
         ->assertOk()
@@ -225,7 +232,7 @@ test('learn ark appears in operations navigation for staff', function () {
         ->assertSee(\App\Support\Branding\Branding::learnName());
 });
 
-test('bookend appears in operations navigation for admins only', function () {
+test('day review appears in operations navigation for admins only', function () {
     $this->seed(ArkAuthorizationSeeder::class);
 
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
@@ -243,7 +250,7 @@ test('bookend appears in operations navigation for admins only', function () {
     $this->actingAs($admin)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Bookend');
+        ->assertSee('Day Review');
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     foreach (\App\Ark\Operations\Learn\LearnArkCurriculum::requiredArticlesFor($advisor) as $article) {
@@ -260,5 +267,5 @@ test('bookend appears in operations navigation for admins only', function () {
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertDontSee('>Bookend<');
+        ->assertDontSee('>Day Review<');
 });

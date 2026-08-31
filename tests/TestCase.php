@@ -13,11 +13,13 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->withoutVite();
+
         // Existing suites assume a running shop — not the first-run wizard.
         InstallationState::markInstalled();
 
         if (Schema::hasTable('shop_settings')) {
-            ShopSettings::current()->update([
+            ShopSettings::current()->persistTrusted([
                 'learn_training_gate_enabled' => false,
                 'telephony_call_flow' => array_merge(
                     ShopSettings::defaultTelephonyCallFlow(),

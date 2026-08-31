@@ -32,8 +32,8 @@
 Payments reconciliation
 </x-mail::button>
 
-<x-mail::button :url="$digest['bookend_url']">
-Bookend your day
+<x-mail::button :url="$digest['day_review_url'] ?? $digest['bookend_url']">
+Review your day
 </x-mail::button>
 
 <x-mail::button :url="$digest['owner_pl_url']">

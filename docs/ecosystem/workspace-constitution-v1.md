@@ -24,7 +24,7 @@ Every workspace owns exactly one operational responsibility.
 | **Intake** | Convert new customers into repair orders |
 | **Repair Order** | Execute one repair |
 | **Today** | Produce today's work |
-| **Bookend** | Close the day |
+| **Day Review** | Close the day |
 
 Not two. Not "mostly." Exactly one.
 
@@ -36,7 +36,7 @@ Same sentence, different role → **lens inside a workspace**, not a second page
 
 Every piece of information has one authority. Everything else is a projection.
 
-Aligns with ark-authority-vs-configuration.mdc and ark-projection-rule.mdc.
+Aligns with [ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc) and [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc).
 
 ---
 

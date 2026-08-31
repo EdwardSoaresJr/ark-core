@@ -26,7 +26,7 @@
 
     <h3>Visit posture vs lifecycle</h3>
     <p>Visit posture (vehicle on lot, dropped off, waiting) complements lifecycle — both should agree. See <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'visit-posture']) }}">Visit posture</a>.</p>
-    <p>Owner bookend scans aging approvals and stuck transitions — advisors fix during the day, not at 6 PM surprise.</p>
+    <p>Owner Day Review scans aging approvals and stuck transitions — advisors fix during the day, not at 6 PM surprise.</p>
 
     <x-operations.learn.video
         role="advisor"
@@ -41,5 +41,5 @@
     <p>Workboard: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Workboard lanes</a>.</p>
     <p>Closeout: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'deposits-and-invoicing']) }}">Deposits, invoice, and closeout</a>.</p>
     <p>Authorization: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'customer-authorization']) }}">Customer authorization</a>.</p>
-    <p>Owner end-of-day: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}">Bookend walkthrough</a>.</p>
+    <p>Owner end-of-day: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}">Day Review walkthrough</a>.</p>
 </div>

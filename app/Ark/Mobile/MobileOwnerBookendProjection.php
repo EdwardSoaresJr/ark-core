@@ -17,11 +17,8 @@ final class MobileOwnerBookendProjection
     ) {}
 
     /**
-     * Owner bookend — Lucas end-of-day pulse for mobile. Numbers from posted sales
-     * truth; queue pressure from live shop behavior. No web URLs — mobile renders
-     * projections only.
-     *
-     * @return array<string, mixed>
+     * Owner day review for mobile — posted sales truth and live queue pressure.
+     * No web URLs; mobile renders the projection only.
      */
     public function forDate(?Carbon $shopDate = null): array
     {
@@ -47,7 +44,7 @@ final class MobileOwnerBookendProjection
             ],
             'sales_effectiveness' => $this->metrics($eod->salesEffectiveness),
             'shop_metrics' => $this->metrics($eod->shopMetrics),
-            'priorities' => $this->pulse->bookendPriorities(),
+            'priorities' => $this->pulse->dayReviewPriorities(),
             'target_review' => [
                 'stale' => ShopExcellenceTargets::targetReviewStale(),
                 'last_review' => ShopExcellenceTargets::lastTargetReview(),

@@ -3,7 +3,7 @@
 **Station:** Front Counter (fixed) + Portable Station (phone)  
 **Primary question:** Who needs a response or decision?
 
-Edward is a service advisor at Demo Auto Repair. He splits time between the Front Counter VVX and the lot. ARK must treat his phone as a **Portable Station peer** — not a shrunken inbox app.
+Edward is a service advisor at LugsNPlugs. He splits time between the Front Counter VVX and the lot. ARK must treat his phone as a **Portable Station peer** — not a shrunken inbox app.
 
 ---
 
@@ -165,13 +165,13 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 |------|---------|
 | What is happening? | 2 decisions pending · 1 comms item missed |
 | Why? | Dollars and age on each row |
-| What should I do? | Bookend queue before leaving |
+| What should I do? | Day Review queue before leaving |
 | Can I trust that? | Workflow truth from posted/open ROs |
 | What can I do? | Open each row · Mark handled |
 
-**Surfaces:** Attention / Bookend (C) · Portable Attention tab (B)
+**Surfaces:** Attention / Day Review (C) · Portable Attention tab (B)
 
-**Status:** ⚠️ Mobile Attention ✅ · Bookend surface desktop only
+**Status:** ⚠️ Mobile Attention ✅ · Day Review surface desktop only
 
 ---
 
@@ -186,4 +186,4 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 | 10:00 | Warranty approval updates pressure | ⚠️ |
 | 12:00 | Station switch Front Counter | 🔲 |
 | 2:30 | Send estimate from lot | ✅ |
-| 5:45 | Bookend / end of day | ⚠️ |
+| 5:45 | Day Review / end of day | ⚠️ |

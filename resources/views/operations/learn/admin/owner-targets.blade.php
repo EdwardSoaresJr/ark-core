@@ -1,7 +1,7 @@
 <div class="ops-learn-prose">
     <h3>Owner targets in Settings</h3>
     <p>Shop excellence targets live in <strong>Settings → Owner Targets &amp; Reporting</strong> — gross margin bands, ELR expectations, car count goals, owner digest schedule. Patch via <code>operations.settings.shop.excellence.update</code>.</p>
-    <p>Targets are Demo Auto Repair truth — industry benchmarks stay in docs, not hardcoded surprises in reports.</p>
+    <p>Targets are LugsNPlugs truth — industry benchmarks stay in docs, not hardcoded surprises in reports.</p>
     <p>Quarterly owner review marks target refresh complete — paid coaching notes stay in private docs, not customer-visible fields.</p>
 
     <x-operations.learn.figure
@@ -20,7 +20,7 @@
     <h3>Admin habits</h3>
     <p>Do not change targets mid-week to greenwash a bad month — owners lose trust in the product.</p>
     <p>After target edits, walk owner through <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'daily-kpis']) }}">Daily KPIs</a> and <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'payments-reconciliation']) }}">Payments reconciliation</a> so report labels match conversation.</p>
-    <p>Owner guides: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'quarterly-target-review']) }}">Quarterly target review</a>, <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}">Bookend walkthrough</a>.</p>
+    <p>Owner guides: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'quarterly-target-review']) }}">Quarterly target review</a>, <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}">Day Review walkthrough</a>.</p>
 
     <h3>Related guides</h3>
     <p>Financial rules: <a href="{{ route('operations.learn.show', ['role' => 'admin', 'article' => 'financial-rules']) }}">Financial rules</a>.</p>

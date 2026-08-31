@@ -56,7 +56,7 @@
         <div class="flex flex-wrap gap-2 text-xs">
             <a href="{{ route('operations.owner.call-intelligence') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Call intelligence</a>
             <a href="{{ route('operations.settings.shop.edit', ['section' => 'staff']) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Team settings</a>
-            <a href="{{ route('operations.owner.bookend') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Owner bookend</a>
+            <a href="{{ route('operations.owner.day-review') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Day Review</a>
         </div>
     </section>
 </x-operations.app>

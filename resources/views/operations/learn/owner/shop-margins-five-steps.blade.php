@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Why margins matter</h3>
-    <p>Profit is made managing the business through numbers — not by discounting parts or labor to keep customers comfortable. These five steps come from Cecil Bullard and the Institute for Automotive Business Excellence (public synthesis).</p>
+    <p>Profit is made managing the business through numbers — not by discounting parts or labor to keep customers comfortable. These five steps are the margin levers ARK reinforces in reporting and workflow.</p>
 
     <h3>Step 1 — Raise posted labor rate</h3>
     <p>Small, consistent increases ($5–10/hr) beat waiting for a crisis. Match cost of living at least once a year. A three-tech shop at 72% productivity can add ~$43k/year from a $10/hr increase alone.</p>

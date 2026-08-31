@@ -8,7 +8,7 @@
 
 ## Problem
 
-Demo Auto Repair has mature RO, estimate, and workflow tooling. The weak point is **before the RO exists**: website forms, calls, texts, Messenger, and future channel ingress leak into email, hope, or disconnected surfaces.
+LugsNPlugs has mature RO, estimate, and workflow tooling. The weak point is **before the RO exists**: website forms, calls, texts, Messenger, and future channel ingress leak into email, hope, or disconnected surfaces.
 
 ## Primary funnel
 
@@ -222,7 +222,7 @@ They sometimes overlap. For strangers they **diverge** — and burying unknown S
 
 ## Public surface goal
 
-`demo-auto.test` is a **thin public surface inside ARK SMS** — not a brochure CMS.
+`lugsnplugs.com` is a **thin public surface inside ARK SMS** — not a brochure CMS.
 
 Homepage job: capture high-quality leads (concern + phone), not page views or blog traffic.
 
@@ -294,7 +294,7 @@ This is **reconciliation**, not CRM. Conversation stays authoritative for messag
 
 **2A validation:** Text shop from unknown number; confirm Lead authority with `source=sms` and concern from message body — visible on **Communications → Needs attention** when shop-turn — even if Comms row is marked read.
 
-### Growth measurement (Bookend / owner rhythm)
+### Growth measurement (Day Review / owner rhythm)
 
 Before Lead Truth, owner review skews to closed-work truth: revenue, GP, ARO — **how did the shop perform?** after the fact.
 
@@ -313,7 +313,7 @@ After Lead Truth, the limiting factor becomes measurable **before** the month en
 
 Count opportunities that **entered** a stage but never reached the next — funnel drop, not CRM disposition.
 
-Example (monthly Bookend projection):
+Example (monthly Day Review projection):
 
 ```
 Leads Created:     87
@@ -331,7 +331,7 @@ Leakage:
 
 The bottleneck becomes visible: e.g. *31 leads contacted but never scheduled* is an advisor/scheduling problem, not a "lost opportunity" moral judgment.
 
-Phase 1 explicitly excluded Bookend changes. Add **Lead Leakage** projection only after Phase 2 ingress + sandbox validates the full chain.
+Phase 1 explicitly excluded Day Review changes. Add **Lead Leakage** projection only after Phase 2 ingress + sandbox validates the full chain.
 
 ## Prioritized next steps
 
@@ -339,7 +339,7 @@ Phase 1 explicitly excluded Bookend changes. Add **Lead Leakage** projection onl
 2. **Phase 2B** — Messenger unknown → reconcile/open Lead
 3. **Phase 2C** — unknown call → reconcile/open Lead
 4. **Google Business attribution** — source labeling + ingress when API exists
-5. **Bookend / owner growth projections** — after funnel is proven in observation
+5. **Day Review / owner growth projections** — after funnel is proven in observation
 6. **SEO / content engine** — last; not the growth bottleneck
 
 ## Intake connection
@@ -377,13 +377,13 @@ Architecture gets simpler; business capability gets larger.
 - Appointment scheduler UI
 - Google Business / Messenger expansion (beyond existing Messenger comms)
 - Encounter revival
-- Bookend / report changes
+- Day Review / report changes
 - Separate `arkweb` repo or Botble port
 - Production DNS cutover (documented separately; not executed in code pass)
 
 ## Companion docs
 
-- `docs/deployment/demo-auto-public-surface-cutover-v1.md` — Botble → public surface cutover
+- `docs/deployment/lugsnplugs-public-surface-cutover-v1.md` — Botble → public surface cutover
 - `docs/communications-authority.md` — Conversation as relationship authority
-- doctrine `ark-no-encounters.mdc` — Encounter retired
-- doctrine `ark-pressure-first.mdc` — observe before automate
+- `.cursor/rules/ark-no-encounters.mdc` — Encounter retired
+- `.cursor/rules/ark-pressure-first.mdc` — observe before automate

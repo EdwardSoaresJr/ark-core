@@ -28,11 +28,11 @@ If two surfaces share the sentence honestly → merge. If the sentence is vague 
 |------|-------------------|---------------|
 | **Advisor** | Work (`/app`), Communications (Attention), Intake, RO | Global RO index, customer/vehicle search rails, Inbox, History, Growth, Voice |
 | **Technician** | Today, Workboard (production lens), RO (assigned) | Comms queue, Leads, Customers, Reports, Settings |
-| **Owner** | Bookend, Reports | Day-to-day RO, comms triage |
+| **Owner** | Day Review, Reports | Day-to-day RO, comms triage |
 | **Customer** | Portal | Any ops surface |
 | **Admin** | Settings | Daily rail |
 
-## Handoff rule
+## Handoff rule (Cursor)
 
 Before any surface ships or survives a prune pass, write its survival sentence. If another surface already owns that sentence, the new thing must be a **panel or projection** — not a route, nav tab, or rail link.
 
@@ -50,7 +50,7 @@ Before any surface ships or survives a prune pass, write its survival sentence. 
 
 - `operations.communications.calls` (Calls & VM library — recordings, voicemail, missed calls)
 - Calls & VM section nav link
-- See doctrine `ark-comms-call-surfaces-lock.mdc`
+- See `.cursor/rules/ark-comms-call-surfaces-lock.mdc`
 
 ---
 
@@ -102,9 +102,9 @@ Legend: **Rec** = Keep page · **Rail−** = Remove from rail · **Panel** = Dem
 | `/app/work/queues/comms` | Comms | — | Redirect | — | → Attention | Attention | Redirect | High | — |
 | `/app/appointments` | Intake | Advisor | Ctx | No | **Borderline page** — schedule truth; should open from Intake/Today. | Intake, Today | Panel | Med | 2 |
 | `/app/appointments/create`, `{appointment}` | Intake | Advisor | Ctx | Schedule | CRUD inside scheduling job. | — | Ctx | Med | 2 |
-| `/app/reports` | Owner | Owner/Adv | Page | Yes | **Pass** — closed-loop financial/ops truth weekly+. | Bookend (different: EOD queue) | Rail cap | Med | Observe |
+| `/app/reports` | Owner | Owner/Adv | Page | Yes | **Pass** — closed-loop financial/ops truth weekly+. | Day Review (different: EOD queue) | Rail cap | Med | Observe |
 | `/app/reports/operations`, `end-of-day` | Owner | Owner | Page | Reports tabs | Same job as reports hub. | Reports index | Keep | Med | — |
-| `/app/owner/bookend` | Owner | Owner | Page | Yes | **Pass** — close day against queue truth + tomorrow's move. | Reports | Keep | High | — |
+| `/app/owner/day-review` | Owner | Owner | Page | Yes | **Pass** — close day against queue truth + tomorrow's move. | Reports | Keep | High | — |
 | `/app/owner/call-intelligence*` | Owner | Owner | Admin | No | Coaching/analytics — not daily ops. | Reports | Admin | Med | — |
 | `/app/owner/parts-matrix-tune` | Owner | Owner | Admin | No | Matrix tuning — settings-adjacent. | Settings | Admin | Med | — |
 | `/app/owner/staff/{user}/coaching` | Owner | Owner | Ctx | Call intel | Staff coaching detail. | Call intelligence | Ctx | Med | — |
@@ -288,6 +288,6 @@ Likely priorities after rail prune — only ship when notebook clusters:
 ## Related doctrine
 
 - `ark-attention-queue.mdc` — Attention is projection, not parallel inbox authority
-- `product doctrine` — Attention → Work → RO primary flow
+- `ark-cursor-doctrine.mdc` — Attention → Work → RO primary flow
 - `ark-technician-scope.mdc` — technician never primary on comms/queues
 - `docs/communications/communications-workspace-sprint-v1.md` — sprint that shipped Attention without retiring siblings

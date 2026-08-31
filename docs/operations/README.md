@@ -10,7 +10,7 @@
 | Certification video | Operation video |
 | --- | --- |
 | "Did we pass?" | "How does Edward actually work?" |
-| Demo of a checklist | Recording of Demo Auto Repair running |
+| Demo of a checklist | Recording of LugsNPlugs running |
 | Pass/fail gate | Reference implementation |
 
 **Stop filming certifications. Film operations.**
@@ -19,7 +19,7 @@ Future engineers — including people who never met Edward — should watch thes
 
 ---
 
-## Catalog (Demo Auto Repair reference implementations)
+## Catalog (LugsNPlugs reference implementations)
 
 Videos are **not requirements**. They are **executable examples** of how one shop runs. Another tenant records its own versions when ARK multi-shops.
 
@@ -34,11 +34,11 @@ Store files under `operations/videos/` (gitignored — too large for git). This 
 | 05 | `05-vehicle-pickup.mp4` | Ready vehicle → invoice → payment → close | ⬜ |
 | 06 | `06-shop-walk.mp4` | Edward walks bays → counter → parts without search | ⬜ |
 | 07 | `07-opening-the-shop.mp4` | Morning open → stations → first moves | ⬜ |
-| 08 | `08-closing-the-shop.mp4` | End of day → bookend → handoff | ⬜ |
+| 08 | `08-closing-the-shop.mp4` | End of day → Day Review → handoff | ⬜ |
 | 09 | `09-parts-arrival.mp4` | Parts hit shelf → RO/production notified | ⬜ |
 | 10 | `10-warranty-claim.mp4` | Warranty path through shop | ⬜ |
 
-Add operations as the floor earns them. Do not invent operations that Demo Auto Repair does not perform.
+Add operations as the floor earns them. Do not invent operations that LugsNPlugs does not perform.
 
 ---
 
@@ -91,7 +91,7 @@ Operation videos protect that starting point as ARK grows and other shops record
 
 ## Multi-shop (future)
 
-Demo Auto Repair videos = **reference implementations**, not platform requirements.
+LugsNPlugs videos = **reference implementations**, not platform requirements.
 
 Shop B may not warranty-claim the same way. Shop C may open differently. The platform must stay flexible enough that each shop records its own `operations/` catalog.
 

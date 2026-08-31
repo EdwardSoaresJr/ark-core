@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Attention\AdvisorNudgeResponse;
 use App\Ark\Operations\Attention\AdvisorNudgeResponseKind;
 use App\Ark\Operations\Attention\AdvisorNudgeWeeklyInsightProjection;
@@ -46,7 +47,7 @@ test('weekly nudge insight calculates per nudge and overall action rates', funct
         ->and($insight['rows'][1]['action_rate'])->toBe(0);
 });
 
-test('owner bookend surfaces weekly nudge measurement when responses exist', function (): void {
+test('owner day review surfaces weekly nudge measurement when responses exist', function (): void {
     $admin = User::factory()->create()->assignRole(\App\Ark\Runtime\Authorization\ArkRole::Admin->value);
 
     AdvisorNudgeResponse::query()->create([
@@ -57,7 +58,7 @@ test('owner bookend surfaces weekly nudge measurement when responses exist', fun
     ]);
 
     $this->actingAs($admin)
-        ->get(route('operations.owner.bookend'))
+        ->get(route('operations.owner.day-review'))
         ->assertOk()
         ->assertSee('Comms nudge measurement', false)
         ->assertSee('Customer waiting', false)

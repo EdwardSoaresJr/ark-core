@@ -20,10 +20,10 @@
 
     <h3>3. Cash vs posted (Financial tab)</h3>
     <p>Open <a href="{{ route('operations.reports.operational', ['tab' => 'financial']) }}">Financial</a> for the week. Reconciliation should foot each day you were open. Persistent gaps mean advisors are collecting without posting — coach the post step on the financial rail.</p>
-    <p>Compare ARK <strong>Sales Posted</strong> to your bookkeeper’s revenue for the same period. They should directionally match. Net profit, break-even, and Cecil’s 20% net target live in P&amp;L — not in RO data alone.</p>
+    <p>Compare ARK <strong>Sales Posted</strong> to your bookkeeper’s revenue for the same period. They should directionally match. Net profit, break-even, and your net-target percent live in P&amp;L — not in RO data alone.</p>
 
     <h3>4. One implementation commitment</h3>
-    <p>Cecil Bullard: knowledge without implementation is waste. Write down <strong>one</strong> change for next week (e.g. +$5 labor rate, matrix row tune-up, DVI standard). Review it on Monday during your <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'daily-rhythm']) }}">daily rhythm</a>.</p>
+    <p>Knowledge without implementation is waste. Write down <strong>one</strong> change for next week (e.g. +$5 labor rate, matrix row tune-up, DVI standard). Review it on Monday during your <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'daily-rhythm']) }}">daily rhythm</a>.</p>
 
     <h3>5. Update targets quarterly</h3>
     <p>When the shop grows, update <strong>Settings → Owner Targets &amp; Reporting</strong> so report bands stay honest.</p>
