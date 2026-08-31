@@ -5,7 +5,6 @@ namespace App\Ark\Operations\Telephony;
 use App\Ark\Operations\Communications\CommunicationInteractionAnalysisSummarizer;
 use App\Ark\Operations\Communications\RecordCommunicationReviewFromCallAction;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 final class CallSessionAnalyzer
@@ -60,7 +59,7 @@ final class CallSessionAnalyzer
         if (! $this->credentials->openaiConfigured()) {
             $callSession->forceFill([
                 'analysis_status' => CallSessionAnalysisStatus::Skipped,
-                'analysis_error' => 'OpenAI API key is not configured in shop settings.',
+                'analysis_error' => 'Model provider is not configured.',
             ])->saveQuietly();
 
             return;
@@ -117,20 +116,7 @@ final class CallSessionAnalyzer
 
     private function transcribe(string $audioBytes, int $callSessionId): string
     {
-        $response = Http::timeout(180)
-            ->withToken((string) $this->credentials->openaiApiKey())
-            ->attach('file', $audioBytes, "call-session-{$callSessionId}.mp3")
-            ->post('https://api.openai.com/v1/audio/transcriptions', [
-                'model' => $this->credentials->openaiTranscriptionModel(),
-                'language' => 'en',
-                'response_format' => 'text',
-            ]);
-
-        if (! $response->successful()) {
-            throw new \RuntimeException('Transcription failed: '.$response->body());
-        }
-
-        return trim($response->body());
+        throw new \RuntimeException('Model provider is not configured.');
     }
 
     /**

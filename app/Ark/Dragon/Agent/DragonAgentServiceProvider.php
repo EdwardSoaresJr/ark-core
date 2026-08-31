@@ -4,7 +4,7 @@ namespace App\Ark\Dragon\Agent;
 
 use App\Ark\Dragon\Agent\Contracts\DragonModelProvider;
 use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
-use App\Ark\Dragon\Agent\Providers\OpenAiDragonProvider;
+use App\Ark\Dragon\Agent\Providers\NotConfiguredDragonProvider;
 use App\Ark\Dragon\Agent\Tools\AdvisorTasksQueryTool;
 use App\Ark\Dragon\Agent\Tools\AppointmentsQueryTool;
 use App\Ark\Dragon\Agent\Tools\EstimatesAdvisorContextTool;
@@ -46,12 +46,14 @@ final class DragonAgentServiceProvider extends ServiceProvider
 
         $this->app->singleton(FakeDragonProvider::class);
 
+        $this->app->singleton(NotConfiguredDragonProvider::class);
+
         $this->app->bind(DragonModelProvider::class, function ($app): DragonModelProvider {
-            $provider = (string) config('dragon.provider', 'openai');
+            $provider = (string) config('dragon.provider', 'none');
 
             return match ($provider) {
                 'fake' => $app->make(FakeDragonProvider::class),
-                default => $app->make(OpenAiDragonProvider::class),
+                default => $app->make(NotConfiguredDragonProvider::class),
             };
         });
     }

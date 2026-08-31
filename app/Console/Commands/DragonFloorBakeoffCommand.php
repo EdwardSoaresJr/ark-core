@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Ark\Dragon\Agent\Bakeoff\DragonFloorBakeoffCatalog;
 use App\Ark\Dragon\Agent\ChatDragonAgentAction;
+use App\Ark\Dragon\Agent\Contracts\DragonModelProvider;
 use App\Ark\Dragon\Agent\DragonProviderUnavailable;
 use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
 use App\Models\User;
@@ -106,7 +107,7 @@ final class DragonFloorBakeoffCommand extends Command
             'arkai' => 'Leave arkai running. Hybrid until the floor says otherwise.',
             'ran_at' => now()->toIso8601String(),
             'hosted_provider' => config('dragon.provider'),
-            'hosted_model' => config('dragon.openai_model'),
+            'hosted_model' => app(DragonModelProvider::class)->modelName(),
             'tasks' => $rows,
         ];
 

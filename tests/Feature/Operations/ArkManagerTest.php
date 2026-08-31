@@ -20,7 +20,6 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -154,55 +153,6 @@ test('ark manager draft communication endpoint returns draft requiring human app
         ->assertJsonPath('requires_human_approval', true)
         ->assertJsonPath('ai_enhanced', false)
         ->assertJsonStructure(['body']);
-});
-
-test('openai ark manager brief uses database credentials and caches result', function () {
-    Carbon::setTestNow('2026-06-15 08:00:00');
-
-    ShopSettings::current()->persistTrusted([
-        'openai_api_key' => 'sk-test',
-        'openai_analysis_model' => 'gpt-4o-mini',
-    ]);
-
-    Http::fake([
-        'https://api.openai.com/v1/chat/completions' => Http::response([
-            'choices' => [[
-                'message' => [
-                    'content' => json_encode([
-                        'paragraphs' => [
-                            'Good morning.',
-                            'Revenue in flight: $4,200.',
-                            'Primary constraint: Waiting Approval.',
-                        ],
-                        'recommended_focus' => 'Approval follow-up',
-                    ]),
-                ],
-            ]],
-        ]),
-    ]);
-
-    decisionPressureRepairOrder(
-        firstName: 'Jane',
-        lastName: 'Doe',
-        status: RepairOrderStatus::WaitingApproval,
-        lineCents: 420_000,
-    );
-
-    $advisor = actingAsLearnCurrentAdvisor();
-    $today = resolveAdvisorTodayProjection();
-    $service = app(ArkManagerService::class);
-
-    $first = $service->morningBrief($today, $advisor);
-    $second = $service->morningBrief($today, $advisor);
-
-    expect($first->aiEnhanced)->toBeTrue()
-        ->and($first->source)->toBe('openai')
-        ->and($first->body())->toContain('Waiting Approval')
-        ->and($second->body())->toBe($first->body());
-
-    Http::assertSentCount(1);
-
-    Carbon::setTestNow();
 });
 
 test('deterministic provider explains recommendation from why reasons', function () {

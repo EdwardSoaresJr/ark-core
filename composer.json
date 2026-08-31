@@ -30,8 +30,7 @@
         "smalot/pdfparser": "^2.12",
         "spatie/browsershot": "^5.4",
         "spatie/laravel-permission": "^8.0",
-        "symfony/http-client": "^8.1",
-        "symfony/postmark-mailer": "^7.4"
+        "symfony/http-client": "^8.1"
     },
     "suggest": {
         "ark/payments-square": "Optional Square Terminal/keyed/portal payments. Pulls square/square (MIT) and apimatic/jsonmapper (OSL-3.0). Not in the default core graph — install explicitly when needed."

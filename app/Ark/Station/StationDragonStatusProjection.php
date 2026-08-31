@@ -2,17 +2,13 @@
 
 namespace App\Ark\Station;
 
-use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Dragon\Agent\Contracts\DragonModelProvider;
 
 /**
- * Glass Dragon chip + ARK-derived observations. No OpenAI call on dashboard poll.
+ * Glass Dragon chip + ARK-derived observations. No model call on dashboard poll.
  */
 final class StationDragonStatusProjection
 {
-    public function __construct(
-        private readonly ShopIntegrationCredentials $credentials,
-    ) {}
-
     /**
      * @param  array<string, mixed>  $attention
      * @param  array<string, mixed>  $todaySummary
@@ -32,14 +28,11 @@ final class StationDragonStatusProjection
 
     public function hostedReady(): bool
     {
-        if (! (bool) config('dragon.hosted_chat_enabled', true)) {
+        if (! (bool) config('dragon.hosted_chat_enabled', false)) {
             return false;
         }
 
-        $shop = trim((string) ($this->credentials->openaiApiKey() ?? ''));
-        $env = trim((string) config('dragon.openai_api_key'));
-
-        return $shop !== '' || $env !== '';
+        return app(DragonModelProvider::class)->health()['ok'] ?? false;
     }
 
     /**

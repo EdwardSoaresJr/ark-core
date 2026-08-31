@@ -19,12 +19,6 @@ beforeEach(function () {
         'learn_training_gate_enabled' => false,
     ]);
     $this->seed(ArkAuthorizationSeeder::class);
-        
-    ShopSettings::current()->persistTrusted([
-        'openai_api_key' => 'sk-test',
-        'openai_transcription_model' => 'whisper-1',
-        'openai_analysis_model' => 'gpt-4o-mini',
-    ]);
 });
 
 test('owner call intelligence page requires admin role', function () {
@@ -367,37 +361,9 @@ test('owner can open a single call intelligence view', function () {
         ->assertSee('All communications');
 });
 
-test('call session analyzer transcribes and summarizes recording', function () {
+test('call session analyzer skips when model provider is not configured', function () {
     Http::fake([
         'https://api.twilio.com/*' => Http::response('audio-bytes', 200, ['Content-Type' => 'audio/mpeg']),
-        'https://api.openai.com/v1/audio/transcriptions' => Http::response('Customer wants an oil change tomorrow morning.'),
-        'https://api.openai.com/v1/chat/completions' => Http::response([
-            'choices' => [[
-                'message' => [
-                    'content' => json_encode([
-                        'summary' => 'Customer requested an oil change appointment.',
-                        'customer_intent' => 'Schedule maintenance.',
-                        'outcome' => 'Appointment discussed.',
-                        'sentiment' => 'positive',
-                        'follow_up_needed' => false,
-                        'follow_up_notes' => null,
-                        'missed_upsell' => false,
-                        'missed_upsell_notes' => null,
-                        'empathy_score' => 5,
-                        'empathy_notes' => 'Acknowledged timing preference immediately.',
-                        'ownership_score' => 5,
-                        'clarity_score' => 5,
-                        'appointment_captured' => true,
-                        'appointment_notes' => 'Drop-off booked for tomorrow morning.',
-                        'coaching_priority' => 'none',
-                        'coaching_notes' => null,
-                        'coaching_strengths' => ['Clear next step', 'Warm tone'],
-                        'coaching_improvements' => [],
-                        'topics' => ['oil change'],
-                    ]),
-                ],
-            ]],
-        ]),
     ]);
     bindFakeOutboundSms();
 
@@ -418,36 +384,23 @@ test('call session analyzer transcribes and summarizes recording', function () {
 
     $session->refresh();
 
-    expect($session->analysis_status)->toBe(CallSessionAnalysisStatus::Ready)
-        ->and($session->transcript)->toContain('oil change')
-        ->and($session->analysisSummary())->toContain('oil change appointment')
-        ->and($session->analysis_json['empathy_score'])->toBe(5)
-        ->and($session->analysis_json['missed_upsell'])->toBeFalse()
-        ->and($session->analysis_json['coaching_strengths'])->toContain('Clear next step');
+    expect($session->analysis_status)->toBe(CallSessionAnalysisStatus::Skipped)
+        ->and($session->analysis_error)->toBe('Model provider is not configured.')
+        ->and(CallSessionAnalyzer::enabled())->toBeFalse();
 });
 
-test('admin can save call intelligence openai settings on communications recording tab', function () {
+test('communications recording tab shows model provider notice without openai fields', function () {
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     $this->actingAs($admin)
-        ->from(route('operations.settings.shop.edit', ['section' => 'communications', 'communications-tab' => 'recording']))
-        ->patch(route('operations.settings.shop.telephony.update'), [
-            'communications_tab' => 'recording',
-            'openai_api_key' => 'sk-admin-test',
-            'openai_transcription_model' => 'whisper-1',
-            'openai_analysis_model' => 'gpt-4o-mini',
-            'telephony_call_flow' => [
-                'record_inbound_calls' => '1',
-                'record_outbound_calls' => '1',
-            ],
-        ])
-        ->assertRedirect(route('operations.settings.shop.edit', [
+        ->get(route('operations.settings.shop.edit', [
             'section' => 'communications',
             'communications-tab' => 'recording',
-        ]));
-
-    expect(ShopSettings::current()->fresh()->openai_api_key)->toBe('sk-admin-test')
-        ->and(CallSessionAnalyzer::enabled())->toBeTrue();
+        ]))
+        ->assertOk()
+        ->assertSee('Stock Core does not include one')
+        ->assertDontSee('OpenAI API key')
+        ->assertDontSee('name="openai_api_key"');
 });
 
 test('owner call intelligence lists analyzed sms threads', function () {

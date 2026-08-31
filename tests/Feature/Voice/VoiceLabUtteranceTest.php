@@ -1,7 +1,6 @@
 <?php
 
 use App\Ark\Voice\Lab\VoiceLabRecordScore;
-use Illuminate\Support\Facades\Http;
 
 test('voice lab is absent when disabled', function (): void {
     config([
@@ -18,7 +17,6 @@ test('voice lab rejects a bad secret', function (): void {
     config([
         'voice.lab_enabled' => true,
         'voice.lab_secret' => 'lab-secret',
-        'dragon.openai_api_key' => 'sk-test',
     ]);
 
     $this->call('POST', '/api/voice/lab/utterance', [], [], [], [
@@ -28,15 +26,10 @@ test('voice lab rejects a bad secret', function (): void {
     ], str_repeat('R', 80))->assertUnauthorized();
 });
 
-test('voice lab transcribes wav without storing or calling dragon', function (): void {
+test('voice lab returns error when model provider is not configured', function (): void {
     config([
         'voice.lab_enabled' => true,
         'voice.lab_secret' => 'lab-secret',
-        'dragon.openai_api_key' => 'sk-test',
-    ]);
-
-    Http::fake([
-        'https://api.openai.com/v1/audio/transcriptions' => Http::response('Right rear two millimeters, left rear three.', 200),
     ]);
 
     $this->call('POST', '/api/voice/lab/utterance', [], [], [], [
@@ -46,14 +39,8 @@ test('voice lab transcribes wav without storing or calling dragon', function ():
         'CONTENT_TYPE' => 'audio/wav',
         'CONTENT_LENGTH' => 80,
     ], str_repeat('R', 80))
-        ->assertOk()
-        ->assertJsonPath('transcript', 'Right rear two millimeters, left rear three.')
-        ->assertJsonPath('stored', false)
-        ->assertJsonPath('dragon', false)
-        ->assertJsonPath('score.record_accurate', true)
-        ->assertJsonPath('score.laterality_swap_suspected', false);
-
-    Http::assertSent(fn ($request): bool => str_contains($request->url(), 'audio/transcriptions'));
+        ->assertStatus(502)
+        ->assertJsonPath('message', 'Voice lab transcription requires a model provider (not configured).');
 });
 
 test('swapped laterality is a record fail even when conversational overlap is true', function (): void {

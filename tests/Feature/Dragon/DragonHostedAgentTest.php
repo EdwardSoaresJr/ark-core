@@ -279,37 +279,6 @@ test('estimate get flags missing oil and coolant on a timing job', function (): 
         ->and($payload['check_before_sending']['missing'])->toBe(['oil', 'coolant']);
 });
 
-test('openai complete posts tools and never puts the api key in the body', function (): void {
-    config([
-        'dragon.openai_api_key' => 'sk-test-secret-key',
-        'dragon.openai_model' => 'gpt-4o',
-        'dragon.openai_base_url' => 'https://api.openai.com/v1',
-    ]);
-
-    Http::fake([
-        'https://api.openai.com/v1/chat/completions' => Http::response([
-            'choices' => [[
-                'message' => ['role' => 'assistant', 'content' => 'Board is quiet.'],
-                'finish_reason' => 'stop',
-            ]],
-            'usage' => ['prompt_tokens' => 20, 'completion_tokens' => 8],
-        ], 200),
-    ]);
-
-    $turn = app(\App\Ark\Dragon\Agent\Providers\OpenAiDragonProvider::class)->complete(
-        [['role' => 'user', 'content' => 'How is the shop?']],
-        app(DragonToolRegistry::class)->openaiTools(),
-    );
-
-    expect($turn->content)->toBe('Board is quiet.');
-    Http::assertSent(function ($request): bool {
-        return str_contains($request->url(), 'chat/completions')
-            && str_contains($request->body(), 'shop_current_summary')
-            && ! str_contains($request->body(), 'shop.current_summary')
-            && ! str_contains($request->body(), 'sk-test-secret-key');
-    });
-});
-
 test('provider outage returns 503 instead of a fabricated answer', function (): void {
     $fake = app(FakeDragonProvider::class);
     $fake->unavailable = true;

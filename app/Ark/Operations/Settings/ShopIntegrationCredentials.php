@@ -208,38 +208,32 @@ final class ShopIntegrationCredentials
 
     public function openaiApiKey(): ?string
     {
-        $database = trim((string) ($this->settings->openai_api_key ?? ''));
-
-        return $database !== '' ? $database : null;
+        return null;
     }
 
     public function openaiConfigured(): bool
     {
-        return filled($this->openaiApiKey());
+        return false;
     }
 
     public function hasStoredOpenaiApiKey(): bool
     {
-        return filled($this->settings->openai_api_key);
+        return false;
     }
 
     public function openaiTranscriptionModel(): string
     {
-        $model = trim((string) ($this->settings->openai_transcription_model ?? ''));
-
-        return $model !== '' ? $model : 'whisper-1';
+        return 'whisper-1';
     }
 
     public function openaiAnalysisModel(): string
     {
-        $model = trim((string) ($this->settings->openai_analysis_model ?? ''));
-
-        return $model !== '' ? $model : 'gpt-4o-mini';
+        return 'gpt-4o-mini';
     }
 
     public function openaiCredentialSource(): string
     {
-        return $this->hasStoredOpenaiApiKey() ? 'database' : 'none';
+        return 'none';
     }
 
     public function credentialSourceLabel(string $source): string
