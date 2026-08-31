@@ -11,6 +11,7 @@ afterEach(function () {
     config([
         'database.default' => $this->originalDefault,
         'database.connections.mysql' => $this->originalMysql,
+        'install.managed_database' => false,
     ]);
 });
 
@@ -85,3 +86,24 @@ it('lets an explicit password win over the runtime password', function () {
         'username' => 'ark',
     ]))->toBe('operator-override');
 });
+
+it('treats compose runtime as a managed database when the flag is set', function () {
+    arkUnitDockerDbConfig('secret-test-value');
+    config(['install.managed_database' => true]);
+
+    expect(RuntimeDatabaseConfig::isManaged())->toBeTrue();
+});
+
+it('does not treat a manual php install as managed', function () {
+    config([
+        'install.managed_database' => false,
+        'database.default' => 'mysql',
+        'database.connections.mysql.host' => '127.0.0.1',
+        'database.connections.mysql.database' => 'ark',
+        'database.connections.mysql.username' => 'ark',
+        'database.connections.mysql.password' => 'secret-test-value',
+    ]);
+
+    expect(RuntimeDatabaseConfig::isManaged())->toBeFalse();
+});
+

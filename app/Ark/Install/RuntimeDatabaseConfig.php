@@ -5,15 +5,25 @@ namespace App\Ark\Install;
 /**
  * Effective database settings already known to the running application.
  *
- * Canonical Docker/Compose injects DB_* into the process environment; Laravel
- * resolves them into config('database.connections.*'). The installer must
- * surface those values instead of generic localhost defaults.
- *
- * Passwords are available to PHP for connection testing but must never be
- * rendered into HTML, logs, or draft files.
+ * Compose injects DB_* into the process environment; Laravel resolves them
+ * into config('database.connections.*'). Passwords are available to PHP for
+ * connection testing but must never be rendered into HTML, logs, or drafts.
  */
 final class RuntimeDatabaseConfig
 {
+    public static function isManaged(): bool
+    {
+        if (! filter_var(config('install.managed_database', false), FILTER_VALIDATE_BOOLEAN)) {
+            return false;
+        }
+
+        $runtime = self::read();
+
+        return $runtime['host'] !== ''
+            && $runtime['database'] !== ''
+            && $runtime['username'] !== '';
+    }
+
     /**
      * @return array{
      *     connection: string,
@@ -86,7 +96,7 @@ final class RuntimeDatabaseConfig
      *   4. Empty string
      *
      * An empty password field therefore does NOT wipe a platform-provided
-     * password when the stranger leaves the Docker defaults alone.
+     * password when the operator leaves the runtime identity unchanged.
      *
      * @param  array{host: string, port: string|int, database: string, username: string}  $identity
      */

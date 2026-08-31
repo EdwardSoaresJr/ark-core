@@ -88,7 +88,15 @@
         .opt span { color: var(--muted); font-size: .85rem; }
         .review dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: .75rem; }
         .review dd { margin: .15rem 0 0; font-weight: 600; }
-        .warn-box { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: .75rem 1rem; margin: 1rem 0; font-size: .9rem; }
+        .ok-box { background: var(--pass-bg); color: var(--pass); border-radius: 8px; padding: .75rem 1rem; margin: 1rem 0; font-size: .9rem; }
+        .error-box { background: var(--fail-bg); color: var(--fail); border-radius: 8px; padding: .75rem 1rem; margin: 1rem 0; font-size: .9rem; }
+        .db-status {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+            margin: 1rem 0; padding: .85rem 1rem; border-radius: 8px; border: 1px solid var(--line);
+        }
+        .db-status.is-ok { background: var(--pass-bg); border-color: #bbf7d0; color: var(--pass); }
+        .db-status.is-fail { background: var(--fail-bg); border-color: #fecaca; color: var(--fail); }
+        .db-status span { font-weight: 700; }
     </style>
 </head>
 <body>

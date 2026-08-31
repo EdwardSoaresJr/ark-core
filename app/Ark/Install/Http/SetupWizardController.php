@@ -42,10 +42,24 @@ final class SetupWizardController
         ]);
     }
 
-    public function database(InstallerEnvironmentWriter $envWriter): View
-    {
+    public function database(
+        Request $request,
+        InstallerEnvironmentWriter $envWriter,
+        DatabaseConnectionTester $tester,
+        DatabaseSafetyInspector $safety,
+    ): View {
         $draft = InstallDraft::all();
         $defaults = RuntimeDatabaseConfig::formDefaults($draft);
+        $manual = $request->boolean('manual') || (bool) ($draft['db_manual'] ?? false);
+        $managed = RuntimeDatabaseConfig::isManaged() && ! $manual;
+
+        $databaseStatus = null;
+        $databaseMessage = null;
+        if ($managed) {
+            $probe = $this->probeRuntimeDatabase($tester, $safety);
+            $databaseStatus = $probe['ok'] ? 'connected' : 'failed';
+            $databaseMessage = $probe['message'];
+        }
 
         return view('install.database', [
             'step' => 3,
@@ -53,6 +67,10 @@ final class SetupWizardController
             'envMode' => $envWriter->mode(),
             'draft' => $draft,
             'defaults' => $defaults,
+            'managed' => $managed,
+            'runtimeManaged' => RuntimeDatabaseConfig::isManaged(),
+            'databaseStatus' => $databaseStatus,
+            'databaseMessage' => $databaseMessage,
             'suggestedUrl' => $draft['app_url'] ?? $this->suggestedAppUrl(),
         ]);
     }
@@ -63,6 +81,52 @@ final class SetupWizardController
         DatabaseSafetyInspector $safety,
     ): RedirectResponse {
         $this->rateLimit($request, 'install-db-test');
+
+        $manual = $request->boolean('manual');
+        $managed = RuntimeDatabaseConfig::isManaged() && ! $manual;
+
+        if ($managed) {
+            $data = $request->validate([
+                'app_url' => ['required', 'url', 'max:255', 'regex:/^https?:\/\//i'],
+            ]);
+
+            if (str_starts_with(strtolower($data['app_url']), 'http://')) {
+                session()->flash('install_http_warning', true);
+            }
+
+            $runtime = RuntimeDatabaseConfig::read();
+            $db = [
+                'host' => $runtime['host'],
+                'port' => $runtime['port'],
+                'database' => $runtime['database'],
+                'username' => $runtime['username'],
+                'password' => $runtime['password'],
+            ];
+
+            $test = $tester->test($db);
+            if (! $test['ok']) {
+                return back()->withInput($request->except('db_password'))->withErrors(['database' => $test['message']]);
+            }
+
+            $inspect = $safety->inspect($db);
+            if (! $inspect['ok']) {
+                return back()->withInput($request->except('db_password'))->withErrors(['database' => $inspect['message']]);
+            }
+
+            InstallDraft::merge([
+                'app_url' => rtrim($data['app_url'], '/'),
+                'db_host' => $db['host'],
+                'db_port' => $db['port'],
+                'db_database' => $db['database'],
+                'db_username' => $db['username'],
+                'db_tested' => true,
+                'db_managed' => true,
+                'db_manual' => false,
+            ]);
+            session(['install.db_password' => $db['password']]);
+
+            return redirect()->route('install.shop')->with('status', 'Database is ready.');
+        }
 
         $data = $request->validate([
             'app_url' => ['required', 'url', 'max:255', 'regex:/^https?:\/\//i'],
@@ -109,8 +173,9 @@ final class SetupWizardController
             'db_database' => $db['database'],
             'db_username' => $db['username'],
             'db_tested' => true,
+            'db_managed' => false,
+            'db_manual' => true,
         ]);
-        // Password only in session — never draft file.
         session(['install.db_password' => $db['password']]);
 
         return redirect()->route('install.shop')->with('status', $test['message']);
@@ -302,6 +367,35 @@ final class SetupWizardController
             ['n' => 6, 'label' => 'Integrations'],
             ['n' => 7, 'label' => 'Review'],
         ];
+    }
+
+    /**
+     * @return array{ok: bool, message: string}
+     */
+    private function probeRuntimeDatabase(
+        DatabaseConnectionTester $tester,
+        DatabaseSafetyInspector $safety,
+    ): array {
+        $runtime = RuntimeDatabaseConfig::read();
+        $db = [
+            'host' => $runtime['host'],
+            'port' => $runtime['port'],
+            'database' => $runtime['database'],
+            'username' => $runtime['username'],
+            'password' => $runtime['password'],
+        ];
+
+        $test = $tester->test($db);
+        if (! $test['ok']) {
+            return $test;
+        }
+
+        $inspect = $safety->inspect($db);
+        if (! $inspect['ok']) {
+            return ['ok' => false, 'message' => $inspect['message']];
+        }
+
+        return ['ok' => true, 'message' => 'Database is ready.'];
     }
 
     private function databaseReady(): bool

@@ -14,7 +14,7 @@
         <dt>Application URL</dt>
         <dd>{{ $draft['app_url'] ?? '—' }}</dd>
         <dt>Database</dt>
-        <dd>{{ ($draft['db_username'] ?? '') }}@{{ ($draft['db_host'] ?? '') }}:{{ ($draft['db_port'] ?? '') }} / {{ ($draft['db_database'] ?? '') }}</dd>
+        <dd>@if (!empty($draft['db_managed'])) Connected @else {{ ($draft['db_username'] ?? '') }}@{{ ($draft['db_host'] ?? '') }}:{{ ($draft['db_port'] ?? '') }} / {{ ($draft['db_database'] ?? '') }} @endif</dd>
         <dt>Shop</dt>
         <dd>{{ $draft['shop_name'] ?? '—' }} · {{ $draft['shop_timezone'] ?? '—' }}</dd>
         <dt>Administrator</dt>

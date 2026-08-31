@@ -8,7 +8,7 @@ use PDOException;
 /**
  * Fail closed on suspicious non-empty databases before migrations.
  */
-final class DatabaseSafetyInspector
+class DatabaseSafetyInspector
 {
     /**
      * @param  array{host: string, port: string|int, database: string, username: string, password?: string|null}  $config

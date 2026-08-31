@@ -7,7 +7,7 @@ use PDO;
 use PDOException;
 use Throwable;
 
-final class DatabaseConnectionTester
+class DatabaseConnectionTester
 {
     /**
      * @param  array{connection?: string, host: string, port: string|int, database: string, username: string, password?: string|null}  $config
