@@ -23,6 +23,11 @@ class MessengerHealth
         return new self($shopConnection);
     }
 
+    public function webhookUrl(): string
+    {
+        return '';
+    }
+
     public function lastWebhookAt(): ?Carbon
     {
         return $this->latestInboundAt();

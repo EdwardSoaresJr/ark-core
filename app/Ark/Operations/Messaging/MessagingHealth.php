@@ -79,8 +79,10 @@ final class MessagingHealth
     {
         $notes = [];
 
-        if ($this->webhookState() === 'waiting') {
-            $notes[] = 'No inbound SMS webhook has reached ARK yet. Confirm the Twilio messaging URL matches the webhook below.';
+        if ($this->credentials->messagingConfigured() === false) {
+            $notes[] = 'Outbound SMS transport is not configured in stock Core.';
+        } elseif ($this->webhookState() === 'waiting') {
+            $notes[] = 'No inbound SMS has reached ARK yet.';
         }
 
         return $notes;
