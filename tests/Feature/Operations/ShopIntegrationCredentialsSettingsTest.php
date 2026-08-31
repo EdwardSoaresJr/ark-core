@@ -197,7 +197,7 @@ test('integration settings pages show credential fields', function () {
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'communications']))
         ->assertOk()
-        ->assertSee('Twilio credentials')
+        ->assertSee('Messaging account')
         ->assertSee('Account SID')
         ->assertSee('Auth token');
 

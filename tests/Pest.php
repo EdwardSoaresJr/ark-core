@@ -52,6 +52,10 @@ pest()->extend(TestCase::class)
             $settings->update(['shop_timezone' => ShopSettings::INSTALL_DEFAULT_TIMEZONE]);
         }
 
+        if ($settings->learn_training_gate_enabled !== false) {
+            $settings->update(['learn_training_gate_enabled' => false]);
+        }
+
         ShopDisplayTimezone::apply();
     })
     ->in('Feature');

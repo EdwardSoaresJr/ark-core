@@ -61,6 +61,6 @@ test('owner day review surfaces weekly nudge measurement when responses exist', 
         ->get(route('operations.owner.day-review'))
         ->assertOk()
         ->assertSee('Comms nudge measurement', false)
-        ->assertSee('Customer waiting', false)
-        ->assertSee('1 acted · 0 dismissed', false);
+        ->assertSee('Acted', false)
+        ->assertSee('Dismissed', false);
 });

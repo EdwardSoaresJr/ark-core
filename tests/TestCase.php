@@ -18,14 +18,17 @@ abstract class TestCase extends BaseTestCase
         // Existing suites assume a running shop — not the first-run wizard.
         InstallationState::markInstalled();
 
-        if (Schema::hasTable('shop_settings')) {
-            ShopSettings::current()->persistTrusted([
-                'learn_training_gate_enabled' => false,
-                'telephony_call_flow' => array_merge(
-                    ShopSettings::defaultTelephonyCallFlow(),
-                    ['comms_attention_gate_enabled' => false],
-                ),
-            ]);
+        if (! Schema::hasTable('shop_settings')) {
+            return;
         }
+
+        ShopSettings::forgetCurrent();
+        ShopSettings::current()->update([
+            'learn_training_gate_enabled' => false,
+            'telephony_call_flow' => array_merge(
+                ShopSettings::defaultTelephonyCallFlow(),
+                ['comms_attention_gate_enabled' => false],
+            ),
+        ]);
     }
 }

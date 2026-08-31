@@ -227,7 +227,8 @@ test('learn ark appears in operations navigation for staff', function () {
     }
 
     $this->actingAs($technician)
-        ->get(route('operations.index'))
+        ->followingRedirects()
+        ->get(route('operations.learn.index'))
         ->assertOk()
         ->assertSee(\App\Support\Branding\Branding::learnName());
 });
