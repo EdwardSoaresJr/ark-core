@@ -1,3 +1,5 @@
+> **Status for public Core:** Superseded by [ADR-0007](ADR-0007-stock-core-voice-transport-boundary.md). Retained as historical foundry context only.
+
 # ADR-0005: Twilio Native Voice Transport
 
 **Status:** Accepted — Elastic SIP product naming corrected by [ADR-0006](ADR-0006-programmable-voice-sip-domain-not-elastic-sip-trunking.md) (do not restore Elastic SIP Trunking)
