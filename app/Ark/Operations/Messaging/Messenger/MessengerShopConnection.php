@@ -5,8 +5,7 @@ namespace App\Ark\Operations\Messaging\Messenger;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Shop Page connection — Page ID + long-lived Page token + policy.
- * Platform App credentials never live here.
+ * Shop Messenger channel settings — no bundled Meta transport in Core.
  */
 final class MessengerShopConnection
 {
@@ -15,7 +14,6 @@ final class MessengerShopConnection
         private readonly bool $enabled,
         private readonly ?string $pageId,
         private readonly ?string $pageName,
-        private readonly ?string $pageAccessToken,
         private readonly ?MetaMessengerMessageTag $outsideWindowTag,
     ) {}
 
@@ -28,18 +26,11 @@ final class MessengerShopConnection
             ? trim((string) $settings->messenger_page_id)
             : (filled($messenger['page_id'] ?? null) ? trim((string) $messenger['page_id']) : null);
 
-        $token = filled($settings->messenger_page_access_token)
-            ? (string) $settings->messenger_page_access_token
-            : (filled($messenger['page_access_token'] ?? null)
-                ? trim((string) $messenger['page_access_token'])
-                : null);
-
         return new self(
             settings: $settings,
             enabled: (bool) ($messenger['enabled'] ?? false),
             pageId: $pageId,
             pageName: filled($messenger['page_name'] ?? null) ? trim((string) $messenger['page_name']) : null,
-            pageAccessToken: $token,
             outsideWindowTag: MetaMessengerMessageTag::tryFrom((string) ($messenger['outside_window_tag'] ?? '')),
         );
     }
@@ -61,7 +52,7 @@ final class MessengerShopConnection
 
     public function isConfigured(): bool
     {
-        return filled($this->pageId) && filled($this->pageAccessToken);
+        return false;
     }
 
     public function pageId(): ?string
@@ -72,11 +63,6 @@ final class MessengerShopConnection
     public function pageName(): ?string
     {
         return $this->pageName;
-    }
-
-    public function pageAccessToken(): ?string
-    {
-        return $this->pageAccessToken;
     }
 
     public function outsideWindowTag(): ?MetaMessengerMessageTag

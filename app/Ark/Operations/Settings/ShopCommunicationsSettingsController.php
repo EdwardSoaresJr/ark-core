@@ -310,19 +310,11 @@ class ShopCommunicationsSettingsController
         $data = $request->validate([
             'channels' => ['nullable', 'array'],
             'channels.messenger.enabled' => ['nullable', 'boolean'],
-            'channels.messenger.page_id' => ['nullable', 'string', 'max:64'],
-            'channels.messenger.page_name' => ['nullable', 'string', 'max:120'],
-            'channels.messenger.page_access_token' => ['nullable', 'string', 'max:2048'],
             'channels.messenger.outside_window_tag' => ['nullable', 'string', Rule::enum(MetaMessengerMessageTag::class)],
         ]);
 
         $existing = CommunicationsChannelSettings::fromShopSettings(ShopSettings::current());
         $messengerInput = is_array($data['channels']['messenger'] ?? null) ? $data['channels']['messenger'] : [];
-
-        $pageId = $this->nullableTrimmedString($messengerInput['page_id'] ?? null);
-        $pageToken = filled($messengerInput['page_access_token'] ?? null)
-            ? trim((string) $messengerInput['page_access_token'])
-            : $existing->messengerPageAccessToken;
 
         $outsideTag = array_key_exists('outside_window_tag', $messengerInput)
             ? (filled($messengerInput['outside_window_tag'] ?? null)
@@ -344,8 +336,6 @@ class ShopCommunicationsSettingsController
         DB::transaction(function () use (
             $settings,
             $request,
-            $pageId,
-            $pageToken,
             $outsideTag,
             $messengerInput,
             $existing,
@@ -355,15 +345,12 @@ class ShopCommunicationsSettingsController
                 'communications_channels' => [
                     'messenger' => array_filter([
                         'enabled' => $request->boolean('channels.messenger.enabled'),
-                        'page_id' => $pageId,
-                        'page_name' => $this->nullableTrimmedString($messengerInput['page_name'] ?? null)
-                            ?? $existing->messengerPageName,
+                        'page_id' => $existing->messengerPageId,
+                        'page_name' => $existing->messengerPageName,
                         'outside_window_tag' => $outsideTag,
                         'verify_token' => filled($legacyVerify) ? $legacyVerify : null,
                     ], fn ($value) => $value !== null),
                 ],
-                'messenger_page_id' => $pageId,
-                'messenger_page_access_token' => $pageToken,
             ]);
         });
 

@@ -109,7 +109,7 @@ test('admins can open all staff learn sections', function () {
         ->assertOk()
         ->assertSee('Facebook Messenger setup')
         ->assertSee('24-hour window')
-        ->assertSee(route('webhooks.communications.meta.messenger'), false);
+        ->assertSee('Messenger outbound is not configured');
 
     $this->get(route('operations.learn.show', ['role' => 'advisor', 'article' => 'repair-actions']))
         ->assertOk()

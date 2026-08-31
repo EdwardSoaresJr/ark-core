@@ -383,7 +383,6 @@ TEXT;
         'communications_channels' => 'array',
         'message_actions' => 'array',
         'messenger_app_secret' => 'encrypted',
-        'messenger_page_access_token' => 'encrypted',
         'square_access_token' => 'encrypted',
         'square_webhook_signature_key' => 'encrypted',
         'partstech_api_key' => 'encrypted',

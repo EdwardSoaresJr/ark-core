@@ -7,7 +7,6 @@ use App\Ark\Operations\Messaging\Messenger\MessengerShopConnection;
 
 /**
  * Shop communications channel JSON projection.
- * Messenger Page credentials: prefer MessengerShopConnection (encrypted token column).
  */
 final class CommunicationsChannelSettings
 {
@@ -15,7 +14,6 @@ final class CommunicationsChannelSettings
         public readonly bool $messengerEnabled,
         public readonly ?string $messengerPageId,
         public readonly ?string $messengerPageName,
-        public readonly ?string $messengerPageAccessToken,
         public readonly ?MetaMessengerMessageTag $messengerOutsideWindowTag,
     ) {}
 
@@ -27,7 +25,6 @@ final class CommunicationsChannelSettings
             messengerEnabled: $connection->isEnabled(),
             messengerPageId: $connection->pageId(),
             messengerPageName: $connection->pageName(),
-            messengerPageAccessToken: $connection->pageAccessToken(),
             messengerOutsideWindowTag: $connection->outsideWindowTag(),
         );
     }
@@ -42,7 +39,6 @@ final class CommunicationsChannelSettings
                 'enabled' => $this->messengerEnabled,
                 'page_id' => $this->messengerPageId,
                 'page_name' => $this->messengerPageName,
-                // Token is stored encrypted on shop_settings.messenger_page_access_token — never echo into JSON.
                 'outside_window_tag' => $this->messengerOutsideWindowTag?->value,
             ],
         ];

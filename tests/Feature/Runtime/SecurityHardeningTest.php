@@ -47,7 +47,6 @@ test('shop integration secrets cannot be mass assigned', function () {
         'partstech_api_key' => 'mass-assigned-api-key',
         'partstech_password' => 'mass-assigned-password',
         'messenger_app_secret' => 'mass-assigned-messenger',
-        'messenger_page_access_token' => 'mass-assigned-page-token',
         'square_webhook_signature_key' => 'mass-assigned-webhook',
     ]);
 
@@ -59,7 +58,6 @@ test('shop integration secrets cannot be mass assigned', function () {
         ->and($settings->partstech_api_key)->toBeNull()
         ->and($settings->partstech_password)->toBeNull()
         ->and($settings->messenger_app_secret)->toBeNull()
-        ->and($settings->messenger_page_access_token)->toBeNull()
         ->and($settings->square_webhook_signature_key)->toBeNull();
 
     $settings->persistTrusted(['square_access_token' => 'trusted-token']);

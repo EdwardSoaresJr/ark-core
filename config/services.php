@@ -84,19 +84,4 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Meta Messenger (platform App — not shop Page)
-    |--------------------------------------------------------------------------
-    |
-    | One ARK Meta App per deploy. Shops connect Pages only (Page ID + token).
-    |
-    */
-    'meta_messenger' => [
-        'app_id' => env('META_MESSENGER_APP_ID'),
-        'app_secret' => env('META_MESSENGER_APP_SECRET'),
-        'verify_token' => env('META_MESSENGER_VERIFY_TOKEN'),
-        'graph_version' => env('META_MESSENGER_GRAPH_VERSION', 'v23.0'),
-    ],
-
 ];

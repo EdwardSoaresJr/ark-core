@@ -23,91 +23,19 @@ class MessengerHealth
         return new self($shopConnection);
     }
 
-    public static function webhookCacheKey(string $pageId): string
-    {
-        return 'messenger:webhook:last_received_at:'.trim($pageId);
-    }
-
-    public static function outboundSuccessCacheKey(string $pageId): string
-    {
-        return 'messenger:outbound:last_success_at:'.trim($pageId);
-    }
-
-    public static function outboundFailureCacheKey(string $pageId): string
-    {
-        return 'messenger:outbound:last_failure_at:'.trim($pageId);
-    }
-
-    public static function rememberWebhookReceived(string $pageId): void
-    {
-        $pageId = trim($pageId);
-
-        if ($pageId === '') {
-            return;
-        }
-
-        cache()->put(self::webhookCacheKey($pageId), now(), now()->addDays(30));
-    }
-
-    public static function rememberOutboundSuccess(string $pageId): void
-    {
-        $pageId = trim($pageId);
-
-        if ($pageId === '') {
-            return;
-        }
-
-        cache()->put(self::outboundSuccessCacheKey($pageId), now(), now()->addDays(30));
-    }
-
-    public static function rememberOutboundFailure(string $pageId): void
-    {
-        $pageId = trim($pageId);
-
-        if ($pageId === '') {
-            return;
-        }
-
-        cache()->put(self::outboundFailureCacheKey($pageId), now(), now()->addDays(30));
-    }
-
-    public function webhookUrl(): string
-    {
-        return MetaMessengerPlatformConfiguration::current()->webhookUrl();
-    }
-
     public function lastWebhookAt(): ?Carbon
     {
-        $pageId = $this->shopConnection->pageId();
-
-        if (! filled($pageId)) {
-            return null;
-        }
-
-        return $this->cachedTimestamp(self::webhookCacheKey((string) $pageId))
-            ?? $this->latestInboundAt();
+        return $this->latestInboundAt();
     }
 
     public function lastOutboundSuccessAt(): ?Carbon
     {
-        $pageId = $this->shopConnection->pageId();
-
-        if (! filled($pageId)) {
-            return null;
-        }
-
-        return $this->cachedTimestamp(self::outboundSuccessCacheKey((string) $pageId));
+        return null;
     }
 
     public function lastOutboundFailureAt(): ?Carbon
     {
-        $pageId = $this->shopConnection->pageId();
-
-        if (! filled($pageId)) {
-            return null;
-        }
-
-        return $this->cachedTimestamp(self::outboundFailureCacheKey((string) $pageId));
+        return null;
     }
 
     public function webhookState(): string
@@ -116,38 +44,22 @@ class MessengerHealth
             return 'muted';
         }
 
-        if (! $this->shopConnection->isConfigured()) {
-            return 'error';
-        }
-
-        if (! MetaMessengerPlatformConfiguration::current()->isConfigured()) {
-            return 'error';
-        }
-
-        if ($this->lastWebhookAt() === null) {
-            return 'waiting';
-        }
-
-        return 'healthy';
+        return 'waiting';
     }
 
     public function webhookLabel(): string
     {
         return match ($this->webhookState()) {
-            'healthy' => 'Healthy',
-            'waiting' => 'Waiting for first message',
             'muted' => 'Disabled',
-            default => 'Incomplete setup',
+            default => 'Not configured',
         };
     }
 
     public function webhookTone(): string
     {
         return match ($this->webhookState()) {
-            'healthy' => 'success',
-            'waiting' => 'warning',
             'muted' => 'muted',
-            default => 'danger',
+            default => 'warning',
         };
     }
 
@@ -160,19 +72,7 @@ class MessengerHealth
             return [];
         }
 
-        $notes = [];
-
-        if (! MetaMessengerPlatformConfiguration::current()->isConfigured()) {
-            $notes[] = 'Platform Meta App credentials are missing (App Secret / Verify Token).';
-        }
-
-        if (! $this->shopConnection->isConfigured()) {
-            $notes[] = 'Page connection is incomplete — save Facebook Page ID and Page access token.';
-        } elseif ($this->lastWebhookAt() === null) {
-            $notes[] = 'No inbound Messenger webhook has reached ARK for this Page yet.';
-        }
-
-        return $notes;
+        return ['Messenger transport is not configured in Core.'];
     }
 
     public function formatTimestamp(?Carbon $timestamp): ?string
@@ -193,21 +93,6 @@ class MessengerHealth
         }
 
         return $timestamp->diffForHumans(short: true);
-    }
-
-    private function cachedTimestamp(string $key): ?Carbon
-    {
-        $cached = cache()->get($key);
-
-        if ($cached instanceof Carbon) {
-            return $cached;
-        }
-
-        if (is_string($cached) && $cached !== '') {
-            return Carbon::parse($cached);
-        }
-
-        return null;
     }
 
     private function latestInboundAt(): ?Carbon

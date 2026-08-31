@@ -7,12 +7,9 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Database\QueryException;
 
-test('communications channels settings tab saves messenger page fields atomically', function () {
+test('communications channels settings tab saves messenger enabled flag', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = actingAsLearnCurrentStaff(ArkRole::Admin);
-
-    config()->set('services.meta_messenger.app_secret', 'platform-app-secret');
-    config()->set('services.meta_messenger.verify_token', 'platform-verify-token');
 
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.telephony.update'), [
@@ -20,9 +17,6 @@ test('communications channels settings tab saves messenger page fields atomicall
             'channels' => [
                 'messenger' => [
                     'enabled' => '1',
-                    'page_id' => '1122334455',
-                    'page_name' => 'Demo Auto Repair',
-                    'page_access_token' => 'EAABstub-token',
                 ],
             ],
         ])
@@ -36,20 +30,12 @@ test('communications channels settings tab saves messenger page fields atomicall
     $connection = MessengerShopConnection::forShop($shopSettings);
 
     expect($settings->messengerEnabled)->toBeTrue()
-        ->and($settings->messengerPageId)->toBe('1122334455')
-        ->and($settings->messengerPageName)->toBe('Demo Auto Repair')
-        ->and($settings->messengerPageAccessToken)->toBe('EAABstub-token')
-        ->and($shopSettings->messenger_page_id)->toBe('1122334455')
-        ->and($shopSettings->messenger_page_access_token)->toBe('EAABstub-token')
-        ->and($connection->isConfigured())->toBeTrue()
-        ->and(data_get($shopSettings->communications_channels, 'messenger.page_access_token'))->toBeNull();
+        ->and($connection->isEnabled())->toBeTrue()
+        ->and($connection->isConfigured())->toBeFalse();
 });
 
-test('communications channels settings page shows health card without platform secrets', function () {
+test('communications channels settings page shows messenger not configured state', function () {
     $this->seed(ArkAuthorizationSeeder::class);
-
-    config()->set('services.meta_messenger.app_secret', 'platform-app-secret');
-    config()->set('services.meta_messenger.verify_token', 'platform-verify-token');
 
     $this->actingAs(actingAsLearnCurrentStaff(ArkRole::Admin))
         ->get(route('operations.settings.shop.edit', [
@@ -58,15 +44,10 @@ test('communications channels settings page shows health card without platform s
         ]))
         ->assertOk()
         ->assertSee('Facebook Messenger')
-        ->assertSee('Enable Messenger ingress and queue')
-        ->assertSee('Advanced · Page credentials')
-        ->assertSee('Facebook Page ID')
-        ->assertDontSee('Webhook verify token')
-        ->assertDontSee('App secret')
-        ->assertDontSee('Regenerate')
-        ->assertSee(\App\Support\Branding\Branding::learnName())
-        ->assertSee('Messenger setup')
-        ->assertSee('data-arkademy-guide="admin:messenger-setup"', false);
+        ->assertSee('Not configured')
+        ->assertSee('Show Messenger in inbound queue filters')
+        ->assertDontSee('Page access token')
+        ->assertDontSee('Advanced · Page credentials');
 });
 
 test('messenger page id cannot belong to two shops', function () {

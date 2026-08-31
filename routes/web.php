@@ -142,7 +142,6 @@ use App\Ark\Operations\Maintenance\AddExtraOilQuartsAtCostController;
 use App\Ark\Operations\Maintenance\ConfirmEngineOilInstalledController;
 use App\Ark\Operations\Messaging\CancelScheduledOutboundEstimateController;
 use App\Ark\Operations\Messaging\CancelScheduledOutboundSmsController;
-use App\Ark\Operations\Messaging\Messenger\MessengerWebhookController;
 use App\Ark\Operations\Messaging\OutboundMmsMediaController;
 use App\Ark\Operations\Messaging\SendAdvisorMessageActionController;
 use App\Ark\Operations\Messaging\SendConversationContactMessageController;
@@ -330,9 +329,6 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/media/outbound-mms/{token}', OutboundMmsMediaController::class)
             ->middleware('signed')
             ->name('messaging.outbound-media');
-
-        Route::match(['GET', 'POST'], '/webhooks/communications/meta/messenger', MessengerWebhookController::class)
-            ->name('webhooks.communications.meta.messenger');
 
     });
 

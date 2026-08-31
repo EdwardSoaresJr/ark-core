@@ -3,13 +3,11 @@
 namespace App\Ark\Operations\Messaging\Messenger;
 
 /**
- * Messenger Channel Connection projection — first channel of the Connect/Health shape.
- * Not a new authority store.
+ * Messenger channel connection projection — transport not bundled in Core.
  */
 final class MessengerChannelConnection
 {
     public function __construct(
-        private readonly MetaMessengerPlatformConfiguration $platform,
         private readonly MessengerShopConnection $shopConnection,
         private readonly MessengerHealth $health,
     ) {}
@@ -19,7 +17,6 @@ final class MessengerChannelConnection
         $shop = MessengerShopConnection::current();
 
         return new self(
-            MetaMessengerPlatformConfiguration::current(),
             $shop,
             MessengerHealth::forShopConnection($shop),
         );
@@ -28,15 +25,9 @@ final class MessengerChannelConnection
     public static function forShopConnection(MessengerShopConnection $shopConnection): self
     {
         return new self(
-            MetaMessengerPlatformConfiguration::current(),
             $shopConnection,
             MessengerHealth::forShopConnection($shopConnection),
         );
-    }
-
-    public function platform(): MetaMessengerPlatformConfiguration
-    {
-        return $this->platform;
     }
 
     public function shopConnection(): MessengerShopConnection
@@ -51,9 +42,7 @@ final class MessengerChannelConnection
 
     public function isOperational(): bool
     {
-        return $this->shopConnection->isEnabled()
-            && $this->shopConnection->isConfigured()
-            && $this->platform->isConfigured();
+        return false;
     }
 
     public function statusLabel(): string
@@ -62,28 +51,14 @@ final class MessengerChannelConnection
             return 'Disabled';
         }
 
-        if (! $this->platform->isConfigured()) {
-            return 'Platform credentials missing';
-        }
-
-        if (! $this->shopConnection->isConfigured()) {
-            return 'Page connection incomplete';
-        }
-
-        if ($this->health->lastWebhookAt() === null) {
-            return 'Webhook not yet observed';
-        }
-
-        return 'Connected';
+        return 'Not configured';
     }
 
     public function statusTone(): string
     {
         return match ($this->statusLabel()) {
-            'Connected' => 'success',
-            'Webhook not yet observed' => 'warning',
             'Disabled' => 'muted',
-            default => 'danger',
+            default => 'warning',
         };
     }
 }
