@@ -18,6 +18,7 @@ Classification for public Core extraction.
 | `PUBLIC_DOMAIN` / `surfaces.public` | Host routing seam only |
 | Appointment availability settings | When shop can take requests |
 | Platform SaaS funnel views (`resources/views/cloud/**`) | ARK Platform product — not shop Website CMS |
+| `BOOKING_SURFACE_BASE_URL` + `/book` redirect-away (unnamed) | Cutover safety: keep marketing `/book` off Core; see [lnp-book-cutover-survival.md](./lnp-book-cutover-survival.md) |
 
 ## REMOVE (done or enforced)
 
