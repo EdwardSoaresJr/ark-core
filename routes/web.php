@@ -205,6 +205,8 @@ use App\Ark\Operations\RepairOrders\RepairOrderLineUpdateController;
 use App\Ark\Operations\RepairOrders\RepairOrderMileageUpdateController;
 use App\Ark\Operations\RepairOrders\RepairOrderOperationalSheetController;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentController;
+use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureController;
+use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureStatusController;
 use App\Ark\Operations\RepairOrders\RepairOrderPostController;
 use App\Ark\Operations\RepairOrders\RepairOrderShowController;
 use App\Ark\Operations\RepairOrders\RepairOrderTechnicianAssignmentController;
@@ -1304,6 +1306,14 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/app/repair-orders/{repairOrder}/payment', RepairOrderPaymentController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.repair-orders.payment.update');
+
+        Route::post('/app/repair-orders/{repairOrder}/payment-capture', RepairOrderPaymentCaptureController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.repair-orders.payment-capture.store');
+
+        Route::post('/app/repair-orders/{repairOrder}/payment-capture/{attempt}/refresh', RepairOrderPaymentCaptureStatusController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
+            ->name('operations.repair-orders.payment-capture.refresh');
 
         Route::post('/app/repair-orders/{repairOrder}/refund', RepairOrderLedgerRefundController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)

@@ -48,8 +48,44 @@ final class FabricIngressController
             'voice.incoming.ended' => $this->voiceIncomingEnded($payload),
             'sms.incoming.received' => $this->smsIncomingReceived($payload),
             'sms.conversation.updated' => $this->smsConversationUpdated($payload),
+            'payments.capture.updated' => $this->paymentsCaptureUpdated($payload),
             default => response()->json(['ok' => false, 'error' => 'unknown_operation'], 422),
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function paymentsCaptureUpdated(array $payload): JsonResponse
+    {
+        $attemptId = (string) ($payload['capture_attempt_public_id'] ?? '');
+        $idempotencyKey = (string) ($payload['idempotency_key'] ?? '');
+
+        $attempt = null;
+        if ($attemptId !== '') {
+            $attempt = \App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt::query()
+                ->where('public_id', $attemptId)
+                ->first();
+        }
+        if ($attempt === null && $idempotencyKey !== '') {
+            $attempt = \App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt::query()
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+        }
+
+        if ($attempt === null) {
+            Log::warning('ark_payments.fabric.attempt_not_found', [
+                'capture_attempt_public_id' => $attemptId,
+                'idempotency_key' => $idempotencyKey,
+            ]);
+
+            return response()->json(['ok' => true, 'applied' => false]);
+        }
+
+        app(\App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction::class)
+            ->apply($attempt, $payload);
+
+        return response()->json(['ok' => true, 'applied' => true]);
     }
 
     /**

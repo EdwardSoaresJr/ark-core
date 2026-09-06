@@ -134,6 +134,12 @@
             ])
         @endif
 
+        @include('operations.repair-orders.partials.financial-take-payment', [
+            'repairOrder' => $repairOrder,
+            'financial' => $financial,
+            'estimateVersion' => $estimateVersion,
+        ])
+
         @if ($financial['canWaiveBalance'] ?? false)
             <a
                 href="#waive-balance"

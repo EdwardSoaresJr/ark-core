@@ -68,6 +68,7 @@ import { arkScopeEntryIntake, focusWorksheetConcernRepairAction } from './ark-sc
 import { arkLaborMemorySuggest } from './ark-labor-memory-suggest';
 import { arkRoMention } from './ark-repair-order-mention';
 import { arkRteLaborGuide } from './ark-rte-labor-guide';
+import { arkPaymentCapture } from './ark-payment-capture';
 import { arkInspectPopover } from './ark-inspect-popover';
 import { initNumericOnlyInputs } from './ark-numeric-only';
 window.Alpine = Alpine;
@@ -111,6 +112,7 @@ Alpine.data('arkCommsInterrupt', arkCommsInterrupt);
 Alpine.data('arkCallQueue', () => arkCallQueue());
 Alpine.data('arkTelephonyCallback', arkTelephonyCallback);
 Alpine.data('arkConversationQuickReply', (config = {}) => arkConversationQuickReply(config));
+Alpine.data('arkPaymentCapture', (config = {}) => arkPaymentCapture(config));
 Alpine.data('arkPortalSendMenu', (config = {}) => arkPortalSendMenu(config));
 Alpine.data('arkReviewPrintMenu', arkReviewPrintMenu);
 Alpine.data('arkFloatingCommsMenu', (config = {}) => arkFloatingCommsMenu(config));
