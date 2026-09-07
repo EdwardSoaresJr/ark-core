@@ -12,7 +12,6 @@ use App\Http\Middleware\ApplyDevRolePretend;
 use App\Http\Middleware\EnsureAdvisorCommsCleared;
 use App\Http\Middleware\EnsureApiStaffActive;
 use App\Http\Middleware\EnsureAppointmentsSurfaceEnabled;
-use App\Http\Middleware\EnsureLearnArkTrainingCurrent;
 use App\Http\Middleware\EnsureBusinessWorkspaceAccess;
 use App\Http\Middleware\EnsureOwnerWorkspaceAccess;
 use App\Http\Middleware\EnsurePasswordIsSet;
@@ -92,9 +91,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ApplyDevRolePretend::class,
             EnsureUserIsActive::class,
             EnsurePasswordIsSet::class,
-            EnsureLearnArkTrainingCurrent::class,
+            // LearnArkTrainingGate retired: no shop-wide ARKademy workboard wall.
             // Presence must run before the comms gate so previous_last_seen_at is
-            // available and Attention request caches share one key for the layout.
             TrackStaffCallPresence::class,
             EnsureAdvisorCommsCleared::class,
             SyncEcosystemDisplayThemeCookie::class,

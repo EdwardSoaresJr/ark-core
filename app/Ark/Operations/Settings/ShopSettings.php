@@ -557,7 +557,7 @@ TEXT;
             'default_notes_private' => true,
             'default_visit_mode' => RepairOrderVisitMode::DropOff->value,
             'default_estimate_state' => RepairOrderStatus::Estimate->value,
-            'learn_training_gate_enabled' => true,
+            'learn_training_gate_enabled' => false,
             'appointments_enabled' => false,
             'shop_memory' => \App\Ark\ShopMemory\ShopMemoryProviderCatalog::defaultSettings(),
             'appointment_slot_minutes' => 30,

@@ -25,7 +25,7 @@ it('applies repair shop profile defaults', function (): void {
         ->and($settings->operational_profile)->toBe('repair_shop')
         ->and($settings->appointments_enabled)->toBeTrue()
         ->and($settings->qz_printing_enabled)->toBeTrue()
-        ->and($settings->learn_training_gate_enabled)->toBeTrue()
+        ->and($settings->learn_training_gate_enabled)->toBeFalse()
         ->and($settings->default_visit_mode)->toBe(RepairOrderVisitMode::DropOff->value);
 });
 

@@ -12,6 +12,11 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @deprecated Shop-wide Learn workboard gate is retired ({@see LearnArkTrainingGate}).
+ * Kept only so historical references and diagnostics remain searchable.
+ * Not registered on the web middleware stack.
+ */
 class EnsureLearnArkTrainingCurrent
 {
     public function __construct(

@@ -46,7 +46,7 @@ final class ApplyOperationalProfileDefaults
                 'appointments_enabled' => true,
                 'default_visit_mode' => RepairOrderVisitMode::DropOff->value,
                 'qz_printing_enabled' => true,
-                'learn_training_gate_enabled' => true,
+                'learn_training_gate_enabled' => false,
             ],
             OperationalProfile::SoloShop => [
                 'appointments_enabled' => false,

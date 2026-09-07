@@ -42,53 +42,15 @@
             </div>
         @endif
 
-        @if ($canManageTrainingGate ?? false)
-            <div class="ops-learn-owner-gate">
-                <div class="ops-learn-owner-gate__copy">
-                    <p class="ops-learn-owner-gate__title">Owner training controls</p>
-                    @if ($trainingGateEnabled ?? true)
-                        <p class="ops-learn-owner-gate__body">
-                            Gate is <strong>on</strong> — staff must finish required guides or snooze to reach the workboard.
-                            @if ($ownerTrainingBypass ?? false)
-                                You have owner bypass; your workboard is never gated.
-                            @endif
-                        </p>
-                    @else
-                        <p class="ops-learn-owner-gate__body">
-                            Gate is <strong>off</strong> — all staff can use the workboard without finishing guides. Progress is still tracked.
-                        </p>
-                    @endif
-                </div>
-                <form method="POST" action="{{ route('operations.learn.training-gate') }}" class="ops-learn-owner-gate__form">
-                    @csrf
-                    <input type="hidden" name="enabled" value="{{ ($trainingGateEnabled ?? true) ? '0' : '1' }}">
-                    <button type="submit" class="ops-learn-owner-gate__btn">
-                        {{ ($trainingGateEnabled ?? true) ? 'Pause gate for all staff' : 'Turn gate back on' }}
-                    </button>
-                </form>
-            </div>
-        @elseif (! ($trainingGateEnabled ?? true))
-            <div class="ops-learn-owner-gate ops-learn-owner-gate--info" role="status">
-                <p class="ops-learn-owner-gate__body">Required training gate is paused shop-wide.</p>
-            </div>
-        @endif
-
-        @if ($trainingSnooze)
-            <div class="ops-learn-snooze-banner" role="status">
-                Training snoozed until <strong>{{ $trainingSnooze['snoozed_until_label'] }}</strong>.
-                <a href="{{ route('operations.learn.index') }}">Resume guides</a>
-            </div>
-        @endif
-
         <header class="ops-learn__header">
             <div>
                 <p class="ops-learn__eyebrow">Staff training</p>
                 <h1 class="ops-learn__title">{{ \App\Support\Branding\Branding::learnName() }}</h1>
-                <p class="ops-learn__lede">Role-based training for how this shop uses ARK. You see your track and every role below it on the floor.</p>
+                <p class="ops-learn__lede">Role-based training for how this shop uses ARK. Available to authorized staff — progress is tracked; workboard access is not blocked by a shop-wide gate.</p>
                 @if (($trainingSummary['required'] ?? 0) > 0)
                     <div class="ops-learn-training">
                         <div class="ops-learn-training__meta">
-                            <span>Required training</span>
+                            <span>Track progress</span>
                             <span class="tabular-nums">{{ $trainingSummary['completed'] }}/{{ $trainingSummary['required'] }}</span>
                         </div>
                         <div class="ops-learn-training__bar" aria-hidden="true">

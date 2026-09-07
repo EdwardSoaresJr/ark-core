@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Learn;
 
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Support\Branding\Branding;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,21 +90,22 @@ class LearnArkProgressController
             abort(403);
         }
 
-        $data = $request->validate([
+        // Global shop-wide training gate is retired. Setting is forced off for clarity;
+        // employee × module × capability gates are a future Process Engine concern.
+        $request->validate([
             'enabled' => ['required', 'boolean'],
         ]);
 
         ShopSettings::current()->update([
-            'learn_training_gate_enabled' => (bool) $data['enabled'],
+            'learn_training_gate_enabled' => false,
         ]);
-
-        $message = $data['enabled']
-            ? 'Required training gate is on — staff must finish guides or snooze to reach the workboard.'
-            : 'Required training gate paused — staff can use the workboard without finishing guides.';
 
         return redirect()
             ->back()
-            ->with('learn_gate_control', $message);
+            ->with(
+                'learn_gate_control',
+                Branding::learnName().' is available to authorized staff. Shop-wide workboard training gates are retired — future requirements will be employee-specific.',
+            );
     }
 
     public function snooze(Request $request, LearnArkProgressResolver $resolver): RedirectResponse

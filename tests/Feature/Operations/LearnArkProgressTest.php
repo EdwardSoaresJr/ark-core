@@ -12,79 +12,48 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function () {
+    config(['bookstack.cutover' => false]);
+    // Legacy setting may still be true in DB; global gate must not enforce.
     ShopSettings::current()->update(['learn_training_gate_enabled' => true]);
 });
 
-test('workboard redirects to required learn guide when training is incomplete', function () {
+test('workboard stays available when learn guides are incomplete', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $this->actingAs($advisor);
-
-    $this->get(route('operations.index'))
-        ->assertRedirect(route('operations.learn.show', [
-            'role' => 'advisor',
-            'article' => 'getting-started',
-        ]));
-});
-
-test('staff can snooze required training to access the workboard temporarily', function () {
-    $this->seed(ArkAuthorizationSeeder::class);
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-    $this->actingAs($advisor);
-
-    $this->post(route('operations.learn.progress.snooze'))
-        ->assertRedirect(route('operations.index'))
-        ->assertSessionHas('learn_snoozed');
 
     $this->get(route('operations.index'))
         ->assertOk();
-
-    expect(LearnTrainingSnooze::query()
-        ->where('user_id', $advisor->id)
-        ->where('snoozed_until', '>', now())
-        ->exists())->toBeTrue();
 });
 
-test('expired snooze requires training progress before staff can snooze again', function () {
+test('learn guides remain reachable without a shop-wide workboard gate', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
 
-    LearnTrainingSnooze::query()->create([
-        'user_id' => $advisor->id,
-        'snoozed_at' => now()->subHours(5),
-        'snoozed_until' => now()->subHour(),
-    ]);
+    $this->get(route('operations.learn.show', [
+        'role' => 'advisor',
+        'article' => 'getting-started',
+    ]))->assertOk()
+        ->assertSee('Advisor basics', false);
+});
 
-    $this->actingAs($advisor)
-        ->post(route('operations.learn.progress.snooze'))
-        ->assertRedirect(route('operations.learn.show', [
-            'role' => 'advisor',
-            'article' => 'getting-started',
-        ]))
-        ->assertSessionHas('learn_snooze_blocked');
-
-    LearnCheckpoint::query()->create([
-        'user_id' => $advisor->id,
-        'article_key' => 'advisor:getting-started',
-        'checkpoint_key' => 'h-0',
-        'checkpoint_index' => 0,
-        'active_seconds_at_reach' => 25,
-        'reached_at' => now(),
-    ]);
+test('snooze endpoint is a no-op when the global training gate is retired', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
 
     $this->post(route('operations.learn.progress.snooze'))
-        ->assertRedirect(route('operations.index'));
+        ->assertRedirect();
+
+    expect(LearnTrainingSnooze::query()->where('user_id', $advisor->id)->exists())->toBeFalse();
+
+    $this->get(route('operations.index'))->assertOk();
 });
 
-test('completing a required guide allows snoozing again when more guides remain', function () {
+test('completing a required guide still records progress without gating the workboard', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    LearnTrainingSnooze::query()->create([
-        'user_id' => $advisor->id,
-        'snoozed_at' => now()->subHours(5),
-        'snoozed_until' => now()->subHour(),
-    ]);
 
     LearnCompletion::query()->create([
         'user_id' => $advisor->id,
@@ -96,11 +65,39 @@ test('completing a required guide allows snoozing again when more guides remain'
     ]);
 
     $this->actingAs($advisor)
-        ->post(route('operations.learn.progress.snooze'))
-        ->assertRedirect(route('operations.index'));
+        ->get(route('operations.index'))
+        ->assertOk();
+
+    expect(LearnCompletion::query()
+        ->where('user_id', $advisor->id)
+        ->where('article_key', 'advisor:getting-started')
+        ->exists())->toBeTrue();
 });
 
-test('expired training snooze sends staff back to required guides', function () {
+test('stale article completions remain readable and do not block the workboard', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    LearnCompletion::query()->create([
+        'user_id' => $advisor->id,
+        'article_key' => 'advisor:getting-started',
+        'catalog_version' => 1,
+        'article_version' => 1,
+        'active_seconds' => 90,
+        'completed_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.index'))
+        ->assertOk();
+
+    $this->get(route('operations.learn.show', [
+        'role' => 'advisor',
+        'article' => 'getting-started',
+    ]))->assertOk();
+});
+
+test('expired training snooze does not block the workboard after gate retirement', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
@@ -112,10 +109,7 @@ test('expired training snooze sends staff back to required guides', function () 
 
     $this->actingAs($advisor)
         ->get(route('operations.index'))
-        ->assertRedirect(route('operations.learn.show', [
-            'role' => 'advisor',
-            'article' => 'getting-started',
-        ]));
+        ->assertOk();
 });
 
 test('home opens when required learn guides are complete', function () {
@@ -390,11 +384,10 @@ test('required article page shows training progress footer', function () {
     $this->get(route('operations.learn.show', ['role' => 'advisor', 'article' => 'getting-started']))
         ->assertOk()
         ->assertSee('Required guide — read each section')
-        ->assertSee('Mark guide complete')
-        ->assertSee('Snooze '.LearnArkCurriculum::SNOOZE_HOURS.'h — workboard');
+        ->assertSee('Mark guide complete');
 });
 
-test('shop owner bypasses required training gate without completing guides', function () {
+test('shop owner can open workboard without completing guides', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $owner = User::factory()->create(['is_master_admin' => true])->assignRole(ArkRole::Admin->value);
     $this->actingAs($owner);
@@ -403,13 +396,13 @@ test('shop owner bypasses required training gate without completing guides', fun
         ->assertOk();
 });
 
-test('owner can pause required training gate for all staff', function () {
+test('owner training-gate endpoint forces legacy setting off and does not block staff', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $owner = User::factory()->create(['is_master_admin' => true])->assignRole(ArkRole::Admin->value);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $this->actingAs($owner)
-        ->post(route('operations.learn.training-gate'), ['enabled' => false])
+        ->post(route('operations.learn.training-gate'), ['enabled' => true])
         ->assertRedirect()
         ->assertSessionHas('learn_gate_control');
 
@@ -418,28 +411,6 @@ test('owner can pause required training gate for all staff', function () {
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk();
-});
-
-test('owner can turn required training gate back on', function () {
-    $this->seed(ArkAuthorizationSeeder::class);
-    $owner = User::factory()->create(['is_master_admin' => true])->assignRole(ArkRole::Admin->value);
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-
-    ShopSettings::current()->update(['learn_training_gate_enabled' => false]);
-
-    $this->actingAs($owner)
-        ->post(route('operations.learn.training-gate'), ['enabled' => true])
-        ->assertRedirect()
-        ->assertSessionHas('learn_gate_control');
-
-    expect(ShopSettings::current()->fresh()->learn_training_gate_enabled)->toBeTrue();
-
-    $this->actingAs($advisor)
-        ->get(route('operations.index'))
-        ->assertRedirect(route('operations.learn.show', [
-            'role' => 'advisor',
-            'article' => 'getting-started',
-        ]));
 });
 
 test('non-owner admin cannot change training gate setting', function () {

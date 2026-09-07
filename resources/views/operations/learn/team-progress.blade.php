@@ -4,18 +4,12 @@
             <div>
                 <p class="ops-learn__eyebrow">Staff training</p>
                 <h1 class="ops-learn__title">Team training progress</h1>
-                <p class="ops-learn__lede">Who has finished required {{ \App\Support\Branding\Branding::learnName() }} guides. Optional guides are not tracked here.</p>
+                <p class="ops-learn__lede">Who has finished {{ \App\Support\Branding\Branding::learnName() }} track guides. Progress is tracked; workboard access is not blocked shop-wide.</p>
             </div>
             <div class="ops-learn-print-select__actions">
                 <a href="{{ route('operations.learn.index') }}" class="ops-learn-print-select__btn">Back to guides</a>
             </div>
         </header>
-
-        @if (! ($trainingGateEnabled ?? true))
-            <div class="ops-learn-owner-gate ops-learn-owner-gate--info" role="status">
-                <p class="ops-learn-owner-gate__body">Required training gate is paused — staff are not blocked from the workboard.</p>
-            </div>
-        @endif
 
         <div class="ops-learn-team__table-wrap">
             <table class="ops-learn-table ops-learn-team__table">
