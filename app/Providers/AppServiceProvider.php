@@ -19,6 +19,7 @@ use App\Ark\Operations\Learn\LearnArkProgressResolver;
 use App\Ark\Operations\Messaging\Events\ConversationMessageReceived;
 use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
 use App\Ark\Operations\Parts\NotConfiguredPartsCatalogLauncher;
+use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -109,7 +110,13 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(PartsCatalogLauncher::class, NotConfiguredPartsCatalogLauncher::class);
+        $this->app->bind(PartsCatalogLauncher::class, function ($app) {
+            if (config('services.parts_catalog.driver') === 'platform') {
+                return $app->make(PlatformPartsCatalogLauncher::class);
+            }
+
+            return $app->make(NotConfiguredPartsCatalogLauncher::class);
+        });
 
         $this->app->bind(PdfRenderer::class, HeadlessChromiumPdfRenderer::class);
         $this->app->bind(VehicleIntelligenceManager::class, fn ($app) => new VehicleIntelligenceManager(

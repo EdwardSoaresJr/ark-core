@@ -21,6 +21,17 @@ test('stock core cannot activate parts catalog via shop settings credentials', f
         ->and($credentials->partsTechCredentialSource())->toBe('none');
 });
 
+test('platform parts catalog driver binds without exposing partstech credentials', function () {
+    config()->set('services.parts_catalog.driver', 'platform');
+
+    expect(app(PartsCatalogLauncher::class))
+        ->toBeInstanceOf(\App\Ark\Operations\Parts\PlatformPartsCatalogLauncher::class);
+
+    $credentials = ShopIntegrationCredentials::forCurrentShop();
+    expect($credentials->partsTechCatalogConfigured())->toBeFalse()
+        ->and($credentials->partsTechCredentialSource())->toBe('none');
+});
+
 test('parts catalog routes are not registered in stock core', function () {
     expect(\Illuminate\Support\Facades\Route::has('operations.repair-orders.partstech'))->toBeFalse()
         ->and(\Illuminate\Support\Facades\Route::has('operations.settings.shop.partstech.update'))->toBeFalse()

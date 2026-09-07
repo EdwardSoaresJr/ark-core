@@ -31,6 +31,11 @@ return [
         'base_url' => env('ARK_MAIL_SERVICE_URL', env('ARK_CLOUD_BASE_URL')),
     ],
 
+    // Stock Core: not_configured. Set platform only when calling ARK Platform parts service.
+    'parts_catalog' => [
+        'driver' => env('ARK_PARTS_CATALOG_DRIVER', 'not_configured'),
+    ],
+
     // Laravel framework may still reference a postmark mailer transport;
     // official ARK does not configure or document shop-held Postmark tokens.
     'postmark' => [
