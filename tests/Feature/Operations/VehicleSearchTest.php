@@ -25,6 +25,9 @@ test('customer index loads customers without a search query', function () {
         ->assertSee('Customers', false)
         ->assertSee('Any type', false)
         ->assertSee('From', false)
+        ->assertSee('ops-ro-card--move', false)
+        ->assertSee('ops-job-card__activity', false)
+        ->assertSee('ops-status-chip--move', false)
         ->assertDontSee('Start typing to find a customer.');
 });
 

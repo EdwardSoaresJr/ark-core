@@ -17108,40 +17108,40 @@
         text-transform: uppercase;
     }
 
-    .ops-status-chip--closed {
+    .ops-status-chip.ops-status-chip--closed {
         border-color: theme('colors.slate.200');
         background: theme('colors.slate.100');
         color: theme('colors.slate.600');
     }
 
-    .ops-status-chip--approval {
+    .ops-status-chip.ops-status-chip--approval {
         border-color: theme('colors.orange.200');
         background: theme('colors.orange.50');
         color: theme('colors.orange.800');
     }
 
-    .ops-status-chip--blocked {
+    .ops-status-chip.ops-status-chip--blocked {
         border-color: theme('colors.amber.200');
         background: theme('colors.amber.50');
         color: theme('colors.amber.900');
     }
 
-    .ops-status-chip--motion {
+    .ops-status-chip.ops-status-chip--motion {
         border-color: theme('colors.sky.200');
         background: theme('colors.sky.50');
         color: theme('colors.sky.900');
     }
 
-    .ops-status-chip--ready {
+    .ops-status-chip.ops-status-chip--ready {
         border-color: theme('colors.emerald.200');
         background: theme('colors.emerald.50');
         color: theme('colors.emerald.800');
     }
 
-    .ops-status-chip--move {
-        border-color: theme('colors.slate.200');
-        background: theme('colors.slate.100');
-        color: theme('colors.slate.700');
+    .ops-status-chip.ops-status-chip--move {
+        border-color: color-mix(in srgb, var(--ops-accent-500) 26%, white);
+        background: color-mix(in srgb, var(--ops-accent-500) 14%, white);
+        color: var(--ops-accent-900);
     }
 
     .ops-ro-card--approval::before,
@@ -23851,6 +23851,20 @@ html.dark .ops-printing-cmd,
         background: theme('colors.emerald.50');
     }
 
+    .ops-ro-index-card.ops-ro-card--move {
+        border-color: color-mix(in srgb, var(--ops-accent-500) 26%, white);
+        background: color-mix(in srgb, var(--ops-accent-500) 8%, white);
+    }
+
+    .ops-ro-index-card.ops-ro-card--closed {
+        border-color: theme('colors.slate.200');
+        background: theme('colors.slate.50');
+    }
+
+    .ops-ro-index-card.ops-ro-card--move::before {
+        background: var(--ops-accent-500);
+    }
+
     .ops-ro-index-card .ops-ro-concern {
         margin: 0;
         -webkit-line-clamp: 1;
@@ -23882,6 +23896,16 @@ html.dark .ops-printing-cmd,
     .ops-ro-index-card.ops-ro-card--ready .ops-job-card__activity {
         border-top-color: theme('colors.emerald.200');
         background: theme('colors.emerald.100');
+    }
+
+    .ops-ro-index-card.ops-ro-card--move .ops-job-card__activity {
+        border-top-color: color-mix(in srgb, var(--ops-accent-500) 26%, white);
+        background: color-mix(in srgb, var(--ops-accent-500) 16%, white);
+    }
+
+    .ops-ro-index-card.ops-ro-card--closed .ops-job-card__activity {
+        border-top-color: theme('colors.slate.200');
+        background: theme('colors.slate.100');
     }
 
     .ops-job-card__scan a.ops-job-card__vehicle,
