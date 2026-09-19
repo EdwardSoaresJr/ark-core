@@ -1,6 +1,6 @@
 # Core recovery transfer
 
-Local overlay from private `arksmsv2` HEAD `6eeaa50e` onto public ARK `2facd90` (already 4 local commits ahead of `origin/main` `c24eb69`). Histories are unrelated; this is not a merge.
+Local overlay from private `arksmsv2` onto public ARK `2facd90` (already 4 local commits ahead of `origin/main` `c24eb69`). First copy used private HEAD `6eeaa50e`; later index-card commits through `e56b967e` were overlaid after production moved. Histories are unrelated; this is not a merge.
 
 Copied committed Core shop files: website records and signed read API, confirmation mail on `ArkMailClient`, PDF/UI, scheduling, inspection/recommendations, communications workspace, PartsTech/catalog toolbar, hosted mail/payments/parts clients used by Core.
 
