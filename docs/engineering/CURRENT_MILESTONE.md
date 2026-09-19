@@ -1,5 +1,14 @@
 # Milestone
 
+Canonical Core development is this public ARK repository. See [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md).
+
+Local recovery from the legacy `arksmsv2` tree is on branch `recovery/shared-core-from-arksmsv2`. Do not push or deploy until an explicit cutover.
+
+---
+
+# Historical board
+
+
 **ARK Sellable Track — frozen board**
 
 **Plan:** private sellable-track plan (FROZEN)

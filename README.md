@@ -8,7 +8,9 @@ ARK is shop management software built around the way an automotive repair shop a
 
 Under the hood, ARK is designed around clear sources of truth, predictable system behavior, and server-side business rules rather than duplicating important logic throughout the application.
 
-This repository contains the **public open-source distribution of ARK**.
+This repository contains the **public open-source distribution of ARK**. It is the **canonical Core** repository. Confirm identity with `./scripts/assert-canonical-core-repo.sh` (Git root + `origin`, not the folder name).
+
+ARK Platform is a separate repository. The private `arksmsv2` tree is legacy and must not receive new Core development.
 
 It is a clean public snapshot and does not include private shop data, production credentials or infrastructure, licensed automotive datasets, or private Dragon knowledge sources.
 
@@ -21,7 +23,7 @@ It is a clean public snapshot and does not include private shop data, production
 * Labor-guide import interfaces for integrating supported external data sources
 * Server-side **API contracts** for mobile and third-party clients (`/api/mobile`, station pairing, and related endpoints)
 
-Marketing website / SEO / Growth tools are not part of Core. See `docs/platform/ark-core-website-boundary.md`.
+Marketing website CMS and SEO tools are not part of Core. Core may hold shop website **records** (drafts and publications) for Platform and Foundry. The editor UI belongs in Platform. See `docs/platform/ark-core-website-boundary.md` and `docs/engineering/CANONICAL_REPOSITORY.md`.
 
 ## What is not included
 
