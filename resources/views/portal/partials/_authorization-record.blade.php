@@ -1,6 +1,6 @@
 @props([
     'record',
-    'title' => 'Approval on file',
+    'title' => 'We have your approval',
     'intro' => null,
 ])
 
@@ -25,13 +25,13 @@
         </div>
         @if (filled($approvedAt))
             <div class="flex flex-wrap gap-x-1">
-                <dt class="font-semibold">Date</dt>
+                <dt class="font-semibold">Approved</dt>
                 <dd>{{ $approvedAt }}</dd>
             </div>
         @endif
         @if (filled($sourceLabel))
             <div class="flex flex-wrap gap-x-1">
-                <dt class="font-semibold">Method</dt>
+                <dt class="font-semibold">Approval method</dt>
                 <dd>{{ $sourceLabel }}</dd>
             </div>
         @endif

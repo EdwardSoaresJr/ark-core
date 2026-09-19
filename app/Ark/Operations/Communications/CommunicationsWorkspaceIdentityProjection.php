@@ -29,6 +29,7 @@ final class CommunicationsWorkspaceIdentityProjection
 {
     public function __construct(
         private readonly CustomerCallContextResolver $callContextResolver,
+        private readonly CommunicationsRelationshipContextResolver $relationshipContext,
         private readonly InboundCallerDisplayPhone $callerDisplayPhone,
         private readonly BalanceDueCalculator $balances,
     ) {}
@@ -37,43 +38,43 @@ final class CommunicationsWorkspaceIdentityProjection
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
-    public function forListRow(array $row, ?CustomerCallContext $context = null): array
+    public function forListRow(array $row, ?CustomerCallContext $context = null, ?array $relationship = null): array
     {
         $phone = $this->displayPhoneFromRow($row);
         $normalized = PhoneNumber::normalize((string) ($row['normalized_phone'] ?? $row['display_phone'] ?? ''));
         $customer = $context?->customer;
-        $known = $customer !== null || filled($row['customer_id'] ?? null);
+        $matched = (bool) ($relationship['customer']['matched'] ?? ($customer !== null));
+        $customerName = $relationship['customer']['name'] ?? $customer?->name;
+        $customerStatus = (string) ($relationship['customer']['status'] ?? ($matched ? 'Customer' : 'Unmatched'));
 
         $name = match (true) {
-            filled($customer?->name) => (string) $customer->name,
-            filled($row['headline'] ?? null) && ! $this->isAmbiguousHeadline((string) $row['headline']) => (string) $row['headline'],
+            filled($customerName) => (string) $customerName,
             $phone !== null => $phone,
-            default => 'Unknown contact',
+            filled($row['headline'] ?? null) && ! $this->isAmbiguousHeadline((string) $row['headline']) => (string) $row['headline'],
+            default => 'Unmatched',
         };
 
-        if (! $known && $phone !== null) {
-            $name = $phone;
-        }
-
-        $primaryRo = $context?->openRepairOrders->first();
-        $vehicle = $primaryRo?->vehicle;
-        $vehicleLabel = $vehicle !== null
-            ? trim("{$vehicle->year} {$vehicle->make} {$vehicle->model}")
-            : null;
-        $vehicleLabel = $vehicleLabel !== '' ? $vehicleLabel : null;
-        $roStatus = $primaryRo?->repairOrder->statusDisplayLabel();
+        $visit = is_array($relationship['current_visit'] ?? null) ? $relationship['current_visit'] : null;
+        $visitSource = (string) ($visit['source'] ?? CommunicationsVisitSource::None->value);
 
         return [
             'name' => $name,
-            'phone' => $phone,
-            'normalized_phone' => $normalized,
-            'email' => filled($customer?->email) ? (string) $customer->email : null,
-            'known_customer' => $known,
-            'customer_id' => $customer?->id ?? (isset($row['customer_id']) ? (int) $row['customer_id'] : null),
-            'vehicle_label' => $vehicleLabel,
-            'ro_label' => $primaryRo !== null ? '#'.$primaryRo->repairOrder->repair_order_id : null,
-            'ro_status' => $roStatus,
-            'link_status' => $known ? 'Customer linked' : 'No customer',
+            'phone' => $phone ?? ($relationship['thread']['phone'] ?? null),
+            'normalized_phone' => $normalized ?? ($relationship['thread']['normalized_phone'] ?? null),
+            'email' => filled($relationship['customer']['email'] ?? null)
+                ? (string) $relationship['customer']['email']
+                : (filled($customer?->email) ? (string) $customer->email : null),
+            'known_customer' => $matched,
+            'customer_id' => $relationship['customer']['id'] ?? $customer?->id ?? (isset($row['customer_id']) ? (int) $row['customer_id'] : null),
+            'customer_status' => $customerStatus,
+            'vehicle_label' => $visit['vehicle_label'] ?? null,
+            'ro_label' => $visit['ro_label'] ?? null,
+            'ro_status' => $visit['lifecycle_label'] ?? null,
+            'visit_source' => $visitSource,
+            'visit_source_label' => (string) ($visit['source_label'] ?? 'No current visit'),
+            'visit_label' => (string) ($visit['label'] ?? 'No current visit'),
+            'turn_label' => (string) ($relationship['turn']['label'] ?? ''),
+            'link_status' => $customerStatus,
         ];
     }
 
@@ -88,82 +89,73 @@ final class CommunicationsWorkspaceIdentityProjection
     ): array {
         $conversation->loadMissing(['owner:id,name']);
 
-        $phoneRaw = $conversation->contact_surface === ConversationContactSurface::Phone
-            ? trim((string) $conversation->contact_address)
-            : null;
-        $callContext ??= ($phoneRaw !== null && $phoneRaw !== ''
-            ? $this->callContextResolver->resolve($phoneRaw)
-            : null);
-
-        $customer = $callContext?->customer ?? $lead?->customer;
-        $primaryRo = $callContext?->openRepairOrders->first()?->repairOrder ?? $lead?->repairOrder;
-        if ($primaryRo instanceof RepairOrder) {
-            $primaryRo->loadMissing(['vehicle', 'customer']);
-            $customer ??= $primaryRo->customer;
+        $relationship = $this->relationshipContext->forConversation($conversation, $lead);
+        $visit = $relationship['current_visit'];
+        $primaryRo = $visit['repair_order'] instanceof RepairOrder ? $visit['repair_order'] : null;
+        $customer = null;
+        if (filled($relationship['customer']['id'] ?? null)) {
+            $customer = Customer::query()->find((int) $relationship['customer']['id']);
         }
 
-        $displayPhone = $phoneRaw !== null && $phoneRaw !== ''
-            ? (PhoneNumber::display($phoneRaw) ?? $phoneRaw)
-            : (filled($customer?->phone) ? (PhoneNumber::display((string) $customer->phone) ?? (string) $customer->phone) : null);
-
+        $displayPhone = $relationship['thread']['phone'] ?? null;
         $name = match (true) {
-            filled($lead?->contact_name) => (string) $lead->contact_name,
-            $customer !== null => (string) $customer->name,
-            $displayPhone !== null => $displayPhone,
-            default => 'Unknown contact',
+            filled($relationship['customer']['name'] ?? null) => (string) $relationship['customer']['name'],
+            filled($displayPhone) => (string) $displayPhone,
+            default => 'Unmatched',
         };
 
-        $vehicle = $primaryRo?->vehicle;
-        $vehicleLabel = $vehicle !== null ? trim("{$vehicle->year} {$vehicle->make} {$vehicle->model}") : null;
         $balance = $primaryRo !== null ? $this->balances->forRepairOrder($primaryRo) : null;
         $lastActivity = ($conversation->posture_changed_at ?? $conversation->updated_at);
+        $matched = (bool) ($relationship['customer']['matched'] ?? false);
 
-        $identity = [
+        return [
+            'thread' => $relationship['thread'],
+            'customer' => $relationship['customer'],
+            'current_visit' => $visit,
+            'turn' => $relationship['turn'],
             'name' => $name,
             'phone' => $displayPhone,
-            'normalized_phone' => PhoneNumber::normalize($phoneRaw ?? (string) ($customer?->phone ?? '')),
-            'email' => filled($customer?->email)
-                ? (string) $customer->email
-                : (filled($lead?->contact_email) ? (string) $lead->contact_email : null),
-            'email_label' => filled($customer?->email)
-                ? (string) $customer->email
-                : (filled($lead?->contact_email) ? (string) $lead->contact_email : 'No email'),
+            'normalized_phone' => $relationship['thread']['normalized_phone'] ?? null,
+            'email' => $relationship['customer']['email'] ?? null,
+            'email_label' => filled($relationship['customer']['email'] ?? null)
+                ? (string) $relationship['customer']['email']
+                : 'No email',
             'location' => $this->locationLabel($customer),
             'address' => $customer?->display_address,
-            'known_customer' => $customer !== null,
-            'customer_id' => $customer?->id,
-            'vehicle_label' => $vehicleLabel !== '' ? $vehicleLabel : null,
-            'vehicle_id' => $vehicle?->id,
-            'repair_order_id' => $primaryRo?->id,
-            'ro_number' => $primaryRo?->repair_order_id,
-            'ro_label' => $primaryRo !== null ? '#'.$primaryRo->repair_order_id : null,
-            'ro_status' => $primaryRo?->statusDisplayLabel(),
-            'ro_url' => $primaryRo !== null ? route('operations.repair-orders.show', $primaryRo) : null,
+            'known_customer' => $matched,
+            'customer_id' => $relationship['customer']['id'] ?? null,
+            'customer_status' => (string) ($relationship['customer']['status'] ?? 'Unmatched'),
+            'vehicle_label' => $visit['vehicle_label'] ?? null,
+            'vehicle_id' => $primaryRo?->vehicle_id,
+            'repair_order_id' => $visit['repair_order_id'] ?? null,
+            'ro_number' => $visit['ro_number'] ?? null,
+            'ro_label' => $visit['ro_label'] ?? null,
+            'ro_status' => $visit['lifecycle_label'] ?? null,
+            'ro_url' => $visit['url'] ?? null,
+            'visit_source' => (string) ($visit['source'] ?? CommunicationsVisitSource::None->value),
+            'visit_source_label' => (string) ($visit['source_label'] ?? 'No current visit'),
+            'linked_visit_label' => $visit['linked_visit']['ro_label'] ?? null,
             'concern' => filled($primaryRo?->concern_summary)
                 ? (string) $primaryRo->concern_summary
                 : (filled($lead?->concern) ? (string) $lead->concern : null),
-            'turn_label' => $turnReason ?? match ($conversation->waiting_on) {
-                ConversationWaitingOn::Shop => 'Waiting on Shop',
-                ConversationWaitingOn::Customer => 'Waiting on Customer',
-                default => 'Open',
-            },
+            'turn_label' => (string) ($relationship['turn']['label'] ?? ConversationWaitingOn::Shop->label()),
             'status_label' => $conversation->status->label(),
-            'assigned' => $conversation->owner?->name,
+            'assigned' => $relationship['assigned'] ?? $conversation->owner?->name,
             'last_activity' => $lastActivity instanceof Carbon
                 ? 'Last activity '.$lastActivity->diffForHumans(short: true)
                 : null,
             'balance_due_label' => $balance !== null && $balance->balanceDueCents > 0
                 ? '$'.number_format($balance->balanceDueCents / 100, 2)
                 : null,
-            'link_status' => $customer !== null ? 'Customer linked' : 'No customer linked yet',
+            'link_status' => (string) ($relationship['customer']['status'] ?? 'Unmatched'),
             'conversation_id' => $conversation->id,
-            'origin_label' => $lead !== null ? $lead->source->opportunityLabel() : null,
+            'origin_label' => $relationship['origin_label'] ?? ($lead !== null ? $lead->source->opportunityLabel() : null),
             'can_mark_handled' => $conversation->status === ConversationStatus::Open,
             'mark_handled_url' => route('operations.communications.conversations.mark-handled', $conversation),
             'mark_read_url' => route('operations.communications.conversations.mark-read', $conversation),
             'actions' => $this->actions(
                 phone: $displayPhone,
-                normalizedPhone: PhoneNumber::normalize($phoneRaw ?? ''),
+                normalizedPhone: $relationship['thread']['normalized_phone'] ?? null,
                 customer: $customer,
                 primaryRo: $primaryRo,
                 conversation: $conversation,
@@ -171,8 +163,6 @@ final class CommunicationsWorkspaceIdentityProjection
                 lead: $lead,
             ),
         ];
-
-        return $identity;
     }
 
     /**
@@ -185,7 +175,7 @@ final class CommunicationsWorkspaceIdentityProjection
         $displayPhone = $this->callerDisplayPhone->forSession($session);
         $callContext ??= ($phone !== '' ? $this->callContextResolver->resolve($phone) : null);
         $customer = $callContext?->customer ?? $session->customer;
-        $primaryRo = $session->repairOrder ?? $callContext?->openRepairOrders->first()?->repairOrder;
+        $primaryRo = $session->repairOrder;
         if ($primaryRo instanceof RepairOrder) {
             $primaryRo->loadMissing('vehicle');
         }
@@ -193,8 +183,9 @@ final class CommunicationsWorkspaceIdentityProjection
         $vehicle = $primaryRo?->vehicle;
         $vehicleLabel = $vehicle !== null ? trim("{$vehicle->year} {$vehicle->make} {$vehicle->model}") : null;
         $known = $customer !== null;
-        $name = $known ? (string) $customer->name : 'Unknown contact';
+        $name = $known ? (string) $customer->name : ($displayPhone !== '' ? $displayPhone : 'Unmatched');
         $balance = $primaryRo !== null ? $this->balances->forRepairOrder($primaryRo) : null;
+        $customerStatus = $known ? 'Customer' : 'Unmatched';
 
         return [
             'name' => $name,
@@ -206,6 +197,7 @@ final class CommunicationsWorkspaceIdentityProjection
             'address' => $customer?->display_address,
             'known_customer' => $known,
             'customer_id' => $customer?->id,
+            'customer_status' => $customerStatus,
             'vehicle_label' => $vehicleLabel !== '' ? $vehicleLabel : null,
             'vehicle_id' => $vehicle?->id,
             'repair_order_id' => $primaryRo?->id,
@@ -213,8 +205,11 @@ final class CommunicationsWorkspaceIdentityProjection
             'ro_label' => $primaryRo !== null ? '#'.$primaryRo->repair_order_id : null,
             'ro_status' => $primaryRo?->statusDisplayLabel(),
             'ro_url' => $primaryRo !== null ? route('operations.repair-orders.show', $primaryRo) : null,
+            'visit_source' => $primaryRo !== null ? CommunicationsVisitSource::Linked->value : CommunicationsVisitSource::None->value,
+            'visit_source_label' => $primaryRo !== null ? 'Linked visit' : 'No current visit',
+            'visit_label' => $primaryRo !== null ? 'Current visit' : 'No current visit',
             'concern' => filled($primaryRo?->concern_summary) ? (string) $primaryRo->concern_summary : null,
-            'turn_label' => $session->worked_at !== null ? 'Waiting on Customer' : 'Waiting on Shop',
+            'turn_label' => $session->worked_at !== null ? 'Waiting on customer' : 'Needs shop',
             'status_label' => $session->status->operationalLabel(),
             'assigned' => $session->owner?->name,
             'last_activity' => $session->started_at !== null
@@ -223,7 +218,7 @@ final class CommunicationsWorkspaceIdentityProjection
             'balance_due_label' => $balance !== null && $balance->balanceDueCents > 0
                 ? '$'.number_format($balance->balanceDueCents / 100, 2)
                 : null,
-            'link_status' => $known ? 'Customer linked' : 'No customer',
+            'link_status' => $customerStatus,
             'call_session_id' => $session->id,
             'can_mark_handled' => $session->worked_at === null,
             'mark_handled_url' => route('operations.communications.calls.mark-handled', $session),

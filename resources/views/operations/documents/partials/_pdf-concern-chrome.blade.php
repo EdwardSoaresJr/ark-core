@@ -46,14 +46,14 @@
     print-color-adjust: exact;
 }
 
-        .concern-header-title {
+.concern-header-title {
             grid-column: 1;
             grid-row: 2;
             min-width: 0;
             color: #0f172a;
-            font-size: 12.5px;
-            font-weight: 700;
-            line-height: 1.3;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.25;
             letter-spacing: -0.01em;
         }
 
@@ -108,7 +108,7 @@
 
 .concern-header-status {
     grid-column: 2;
-    grid-row: 3;
+    grid-row: 2;
     display: flex;
     justify-content: flex-end;
     align-items: center;

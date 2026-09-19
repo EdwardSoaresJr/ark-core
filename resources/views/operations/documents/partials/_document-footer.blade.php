@@ -26,9 +26,13 @@
     }
 
     $authorizationText = trim(collect($footer['authorization'] ?? [])->filter()->implode(' '));
-    $pdfImportantInformation = $isPdf
-        ? app(\App\Ark\Operations\Documents\DocumentFooterPresenter::class)->pdfImportantInformationBullets($footer['important_information'] ?? [])
-        : ($footer['important_information'] ?? []);
+    $pdfImportantInformation = $isPdf ? [] : ($footer['important_information'] ?? []);
+    $pdfDisclosure = $isPdf
+        ? app(\App\Ark\Operations\Documents\DocumentFooterPresenter::class)->pdfImportantInformationDisclosure($footer['important_information'] ?? [])
+        : null;
+    $pdfTermsDisclosure = $isPdf && ! empty($footer['customer_type_terms']['bullets'] ?? [])
+        ? app(\App\Ark\Operations\Documents\DocumentFooterPresenter::class)->pdfImportantInformationDisclosure($footer['customer_type_terms']['bullets'])
+        : null;
     $approvalForecast = is_array($snapshot['approval_forecast'] ?? null)
         ? $snapshot['approval_forecast']
         : null;
@@ -44,44 +48,41 @@
 @if ($isPdf)
     <footer class="document-footer">
         <section class="footer-decision-area">
-            <p class="footer-decision-heading">{{ $summaryLabel }}</p>
             <div class="footer-decision-body">
                 <div class="footer-decision-main">
+                    <div class="footer-summary-head">
+                        <p class="footer-decision-heading">{{ $summaryLabel }}</p>
+                        <p class="closing-status-value">{{ $approval['status_label'] ?? 'Pending Approval' }}</p>
+                    </div>
+
                     @if ($authorizationText !== '')
                         <p class="closing-authorization">{{ $authorizationText }}</p>
                     @endif
 
-                    <div class="closing-approval">
-                        <div class="closing-status-row">
-                            <span class="closing-status-label">Approval Status</span>
-                            <span class="closing-status-value">{{ $approval['status_label'] ?? 'Pending Approval' }}</span>
+                    @if (! empty($approval['show_signature_lines']))
+                        <div class="closing-signature-row">
+                            <div class="closing-signature-field">
+                                <span class="closing-signature-label">Approved By</span>
+                                <span class="closing-signature-line" aria-hidden="true"></span>
+                            </div>
+                            <div class="closing-signature-field closing-signature-field--date">
+                                <span class="closing-signature-label">Date</span>
+                                <span class="closing-signature-line" aria-hidden="true"></span>
+                            </div>
                         </div>
-
-                        @if (! empty($approval['show_signature_lines']))
-                            <div class="closing-signature-row">
-                                <div class="closing-signature-field">
-                                    <span class="closing-signature-label">Approved By</span>
-                                    <span class="closing-signature-line" aria-hidden="true"></span>
-                                </div>
-                                <div class="closing-signature-field closing-signature-field--date">
-                                    <span class="closing-signature-label">Date</span>
-                                    <span class="closing-signature-line" aria-hidden="true"></span>
-                                </div>
-                            </div>
-                        @elseif (! empty($approval['approved_by']) || ! empty($approval['approved_at_display']))
-                            <div class="closing-evidence-row">
-                                @if (! empty($approval['approved_by']))
-                                    <span><strong>By:</strong> {{ $approval['approved_by'] }}</span>
-                                @endif
-                                @if (! empty($approval['approved_at_display']))
-                                    <span><strong>Date:</strong> {{ $approval['approved_at_display'] }}</span>
-                                @endif
-                                @if (! empty($approval['source_label']))
-                                    <span><strong>Via:</strong> {{ $approval['source_label'] }}</span>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
+                    @elseif (! empty($approval['approved_by']) || ! empty($approval['approved_at_display']))
+                        <div class="closing-evidence-row">
+                            @if (! empty($approval['approved_by']))
+                                <span><strong>By:</strong> {{ $approval['approved_by'] }}</span>
+                            @endif
+                            @if (! empty($approval['approved_at_display']))
+                                <span><strong>Date:</strong> {{ $approval['approved_at_display'] }}</span>
+                            @endif
+                            @if (! empty($approval['source_label']))
+                                <span><strong>Via:</strong> {{ $approval['source_label'] }}</span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="footer-decision-totals">
@@ -148,45 +149,36 @@
                 </div>
             </div>
 
-            @if (! empty($pdfImportantInformation) || ! empty($footer['customer_type_terms']['bullets'] ?? []))
-                <section class="footer-notes footer-notes--in-summary">
-                    @if (! empty($pdfImportantInformation))
-                        <p class="footer-eyebrow">Important Information</p>
-                        <ul class="footer-bullets-compact footer-bullets-compact--pdf">
-                            @foreach ($pdfImportantInformation as $bullet)
-                                <li>{{ $bullet }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
+            @if (filled($pdfDisclosure))
+                <p class="footer-disclosure"><span>Important:</span> {{ $pdfDisclosure }}</p>
+            @endif
 
-                    @if (! empty($footer['customer_type_terms']['bullets'] ?? []))
-                        <p class="footer-eyebrow footer-eyebrow--terms">{{ $footer['customer_type_terms']['heading'] }}</p>
-                        <ul class="footer-bullets-compact footer-bullets-compact--single footer-bullets-compact--pdf">
-                            @foreach ($footer['customer_type_terms']['bullets'] as $bullet)
-                                <li>{{ $bullet }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </section>
+            @if (filled($pdfTermsDisclosure))
+                <p class="footer-disclosure"><span>{{ $footer['customer_type_terms']['heading'] }}:</span> {{ $pdfTermsDisclosure }}</p>
             @endif
 
             @php $repairPortal = $snapshot['repair_portal'] ?? null; @endphp
             @if (is_array($repairPortal) && filled($repairPortal['qr_data_uri'] ?? null))
-                <section class="repair-portal-ad" style="margin-top:0.14in;padding-top:0.1in;border-top:1px solid #cbd5e1;display:flex;gap:0.14in;align-items:center;">
-                    <div style="flex:1;min-width:0;">
-                        <p style="margin:0;font-size:9px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">{{ $repairPortal['headline'] ?? 'Vehicle Portal' }}</p>
-                        <p style="margin:4px 0 0;font-size:12px;font-weight:700;color:#0f172a;">{{ $repairPortal['cta'] ?? 'View your vehicle online' }}</p>
-                        <p style="margin:4px 0 0;font-size:10px;color:#334155;">Scan to view</p>
-                        <ul style="margin:6px 0 0;padding-left:1.1em;font-size:10px;color:#334155;">
-                            @foreach (($repairPortal['bullets'] ?? []) as $bullet)
-                                <li style="margin:0 0 2px;">{{ $bullet }}</li>
-                            @endforeach
-                        </ul>
+                @php
+                    $portalHeadline = trim((string) ($repairPortal['headline'] ?? 'Vehicle Portal'));
+                    $portalDetail = trim((string) ($repairPortal['callout'] ?? ''));
+                    $portalPrefix = $portalHeadline.' — ';
+                    if ($portalDetail !== '' && str_starts_with($portalDetail, $portalPrefix)) {
+                        $portalDetail = substr($portalDetail, strlen($portalPrefix));
+                    }
+                    if ($portalDetail === $portalHeadline) {
+                        $portalDetail = '';
+                    }
+                @endphp
+                <div class="repair-portal-ad">
+                    <img src="{{ $repairPortal['qr_data_uri'] }}" alt="Vehicle portal QR" width="64" height="64">
+                    <div class="repair-portal-ad-copy">
+                        <p class="repair-portal-ad-title">{{ $portalHeadline }}</p>
+                        @if ($portalDetail !== '')
+                            <p class="repair-portal-ad-detail">{{ $portalDetail }}</p>
+                        @endif
                     </div>
-                    <div style="flex-shrink:0;text-align:center;">
-                        <img src="{{ $repairPortal['qr_data_uri'] }}" alt="Vehicle portal QR" width="88" height="88" style="display:block;width:88px;height:88px;">
-                    </div>
-                </section>
+                </div>
             @endif
         </section>
     </footer>

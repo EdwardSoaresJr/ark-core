@@ -132,7 +132,13 @@ test('operational sheets always show mileage capture fields with verify when val
         ->toContain('mileage-capture-label">Mileage out</span>')
         ->not->toContain('class="mileage-capture-verify"')
         ->not->toContain('class="mileage-capture-value"')
-        ->toContain('Mileage: — / —');
+        ->not->toContain('Mileage: — / —');
+
+    $missingSheet = $presenter->intake($repairOrder);
+    expect(collect($missingSheet['identity']['vehicle']['lines'])->pluck('label'))
+        ->not->toContain('Mileage')
+        ->and(collect($missingSheet['identity']['visit']['lines'])->pluck('label'))
+        ->not->toContain('Mileage');
 
     $repairOrder->update(['mileage_in' => 165604]);
     $freshRepairOrder = $repairOrder->fresh(['customer', 'vehicle', 'assignedTechnician', 'concerns.lines']);
@@ -144,7 +150,12 @@ test('operational sheets always show mileage capture fields with verify when val
     expect($missingOutHtml)
         ->toContain('mileage-capture-value">165,604</p>')
         ->toContain('class="mileage-capture-verify"')
-        ->toContain('Mileage: 165,604 / —');
+        ->toContain('Mileage: 165,604')
+        ->not->toContain('Mileage: 165,604 / —');
+
+    $inOnlySheet = $presenter->intake($freshRepairOrder);
+    expect(collect($inOnlySheet['identity']['visit']['lines'])->firstWhere('label', 'Mileage')['value'])->toBe('165,604')
+        ->and(collect($inOnlySheet['identity']['vehicle']['lines'])->pluck('label'))->not->toContain('Mileage');
 
     $repairOrder->update(['mileage_out' => 165892]);
     $freshRepairOrder = $repairOrder->fresh(['customer', 'vehicle', 'assignedTechnician', 'concerns.lines']);
@@ -157,7 +168,9 @@ test('operational sheets always show mileage capture fields with verify when val
         ->toContain('mileage-capture-value">165,604</p>')
         ->toContain('mileage-capture-value">165,892</p>')
         ->toContain('class="mileage-capture-verify"')
-        ->toContain('Mileage: 165,604 / 165,892');
+        ->toContain('Mileage in: 165,604')
+        ->toContain('Mileage out: 165,892')
+        ->not->toContain('Mileage: 165,604 / 165,892');
 });
 
 test('operational sheets always show advisor and technician capture with prefill when assigned', function () {
@@ -216,6 +229,26 @@ test('operational sheets always show advisor and technician capture with prefill
         ->toContain('Unassigned');
 });
 
+test('tech sheet includes approved concern lines that are not on a repair action', function () {
+    [$repairOrder] = repairOrderForOperationalSheets();
+    $approved = $repairOrder->concerns->firstWhere('summary', 'Replace front pads and rotors');
+
+    RepairOrderLine::query()
+        ->where('repair_order_concern_id', $approved->id)
+        ->update(['repair_order_work_group_id' => null]);
+    $approved->workGroups()->delete();
+
+    $sheet = app(OperationalSheetPresenter::class)->tech($repairOrder->fresh());
+
+    expect($sheet['has_approved_work'])->toBeTrue()
+        ->and($sheet['technician_name'])->toBe('Bay Technician')
+        ->and($sheet['approved_flag_hours'])->toBe('2.5')
+        ->and($sheet['concerns'])->toHaveCount(1)
+        ->and($sheet['concerns'][0]['summary'])->toBe('Replace front pads and rotors')
+        ->and($sheet['concerns'][0]['parts'])->toHaveCount(2)
+        ->and($repairOrder->assignedTechnician?->name)->toBe('Bay Technician');
+});
+
 test('tech sheet presenter reports empty state when no approved concerns exist', function () {
     [$repairOrder] = repairOrderForOperationalSheets(approvedWork: false);
 
@@ -268,6 +301,7 @@ test('operational sheet blade views render intake and tech content', function ()
         ->toContain('Vehicle')
         ->toContain('Visit')
         ->toContain('Check In · RO #')
+        ->not->toContain('Status:')
         ->toContain('Keys / Check In')
         ->toContain('Advisor: Front Desk Advisor')
         ->toContain('Customer Concerns')

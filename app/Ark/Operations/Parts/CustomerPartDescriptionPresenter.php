@@ -185,7 +185,7 @@ final class CustomerPartDescriptionPresenter
         }
 
         return $this->resolve(
-            customerDescription: $line->customer_description,
+            customerDescription: $this->manualCustomerDescription($line->customer_description, $line->customer_description_source),
             inventoryDescription: (string) $line->description,
             siblingPartDescriptions: $this->siblingPartDescriptions($line),
         );
@@ -217,10 +217,28 @@ final class CustomerPartDescriptionPresenter
         }
 
         return $this->resolve(
-            customerDescription: $line['customer_description'] ?? null,
+            customerDescription: $this->manualCustomerDescription(
+                $line['customer_description'] ?? null,
+                $line['customer_description_source'] ?? null,
+            ),
             inventoryDescription: (string) ($line['description'] ?? ''),
             siblingPartDescriptions: $siblingPartDescriptions,
         );
+    }
+
+    private function manualCustomerDescription(mixed $description, mixed $source): ?string
+    {
+        $explicit = trim((string) $description);
+
+        if ($explicit === '') {
+            return null;
+        }
+
+        if (CustomerDescriptionSource::tryFromStored($source) === CustomerDescriptionSource::Generated) {
+            return null;
+        }
+
+        return $explicit;
     }
 
     /**
@@ -363,7 +381,7 @@ final class CustomerPartDescriptionPresenter
 
     private function stripPartNumberTokens(string $value): string
     {
-        $cleaned = preg_replace('/\b(?:part\s*#?\s*)?[A-Z]{1,4}\d[\w-]*\b/i', ' ', $value) ?? $value;
+        $cleaned = preg_replace('/\b(?:part\s*#?\s*)?[A-Z]{1,4}\d{2,}[A-Z0-9]*\b/i', ' ', $value) ?? $value;
         $cleaned = preg_replace('/\bH\d+-[A-Z0-9]+\b/i', ' ', $cleaned) ?? $cleaned;
         $cleaned = preg_replace('/\b\d{3,}\b/u', ' ', $cleaned) ?? $cleaned;
 
@@ -478,9 +496,8 @@ final class CustomerPartDescriptionPresenter
             $cleaned = preg_replace('/\b'.preg_quote($token, '/').'\b/i', ' ', $cleaned) ?? $cleaned;
         }
 
-        $cleaned = preg_replace('/\b(?:part\s*#?\s*)?[A-Z]{1,4}\d[\w-]*\b/i', ' ', $cleaned) ?? $cleaned;
+        $cleaned = $this->stripPartNumberTokens($cleaned);
         $cleaned = preg_replace('/\b\d+(?:\.\d+)?\s*(?:mm|in|inch|inches)\b/i', ' ', $cleaned) ?? $cleaned;
-        $cleaned = preg_replace('/\bH\d+-[A-Z0-9]+\b/i', ' ', $cleaned) ?? $cleaned;
         $cleaned = $this->normalizeSpacing($cleaned);
 
         if ($cleaned === '') {
@@ -559,7 +576,7 @@ final class CustomerPartDescriptionPresenter
             }
         }
 
-        $cleaned = preg_replace('/\b(?:part\s*#?\s*)?[A-Z]{1,4}\d[\w-]*\b/i', ' ', $cleaned) ?? $cleaned;
+        $cleaned = $this->stripPartNumberTokens($cleaned);
         $cleaned = preg_replace('/\b\d+(?:\.\d+)?\s*(?:mm|in|inch|inches)\b/i', ' ', $cleaned) ?? $cleaned;
 
         return $this->normalizeSpacing($cleaned);
@@ -767,7 +784,7 @@ final class CustomerPartDescriptionPresenter
     {
         $cleaned = $description;
 
-        $cleaned = preg_replace('/\b(?:part\s*#?\s*)?[A-Z]{1,4}\d[\w-]*\b/i', ' ', $cleaned) ?? $cleaned;
+        $cleaned = $this->stripPartNumberTokens($cleaned);
         $cleaned = preg_replace('/\b\d+(?:\.\d+)?\s*(?:mm|in|inch|inches)\b/i', ' ', $cleaned) ?? $cleaned;
         $cleaned = preg_replace('/\bH\d+-[A-Z0-9]+\b/i', ' ', $cleaned) ?? $cleaned;
 

@@ -73,9 +73,6 @@ final class IntakeEntryQuery
         return $params;
     }
 
-    /**
-     * @return array<string, int|string>
-     */
     public static function fromAppointment(\App\Ark\Operations\Appointments\Appointment $appointment): array
     {
         if ($appointment->lead_id !== null && $appointment->lead !== null) {
@@ -104,6 +101,8 @@ final class IntakeEntryQuery
         if ($concern !== '' && ! isset($params['concern'])) {
             $params['concern'] = mb_substr($concern, 0, 5000);
         }
+
+        $params['appointment_id'] = $appointment->id;
 
         return $params;
     }

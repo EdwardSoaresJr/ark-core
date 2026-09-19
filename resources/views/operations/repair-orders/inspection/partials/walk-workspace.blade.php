@@ -394,6 +394,21 @@
         </section>
     @endif
 
+    @if ($canEdit && ! $tabletMode && in_array($living_record['status'] ?? '', ['fail', 'needs_attention', 'monitor'], true))
+        <section class="ops-inspection-walk__section">
+            <h3 class="ops-inspection-walk__section-label">Recommendation</h3>
+            <form method="post" action="{{ route('operations.repair-orders.inspection.items.recommendations.store', [$repairOrder, $living_record['id']]) }}" class="grid gap-2">
+                @csrf
+                <input type="hidden" name="title" value="{{ $living_record['label'] ?? '' }}">
+                @if (($living_record['status'] ?? '') === 'fail')
+                    <input type="hidden" name="safety_related" value="1">
+                    <input type="hidden" name="due_kind" value="now">
+                @endif
+                <button type="submit" class="ops-inspection-btn ops-inspection-btn--secondary">Create recommendation</button>
+            </form>
+        </section>
+    @endif
+
     @if ($tabletMode)
         <nav class="ops-inspection-walk__sticky-nav" aria-label="Walk navigation">
             @if ($nav['prior_url'] ?? null)

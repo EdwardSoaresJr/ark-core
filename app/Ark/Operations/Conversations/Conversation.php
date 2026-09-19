@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Conversations;
 
+use App\Ark\Growth\Models\GrowthSession;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
+    'growth_session_id',
     'contact_surface',
     'contact_address',
     'status',
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'waiting_on',
     'posture_changed_at',
     'resolved_at',
+    'follow_up_due_at',
     'reopen_count',
 ])]
 class Conversation extends Model
@@ -29,6 +32,7 @@ class Conversation extends Model
             'waiting_on' => ConversationWaitingOn::class,
             'posture_changed_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'follow_up_due_at' => 'datetime',
             'reopen_count' => 'integer',
         ];
     }
@@ -44,6 +48,11 @@ class Conversation extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owned_by_user_id');
+    }
+
+    public function growthSession(): BelongsTo
+    {
+        return $this->belongsTo(GrowthSession::class);
     }
 
     public function participants(): HasMany

@@ -4,6 +4,7 @@ namespace App\Ark\Operations\RepairOrders\Status;
 
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkflowStatus;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -136,46 +137,29 @@ final class RepairOrderStatusCatalog
         $this->bootIfNeeded();
 
         $boardSlugs = array_flip($this->advisorBoardSlugs());
-        $templates = collect(RepairOrderStatusCatalogDefaults::advisorLaneTemplates())->keyBy('key');
-        $slugsByLane = [];
-        $customOwnLanes = [];
-
-        foreach ($this->statusesBySlug ?? [] as $slug => $definition) {
-            if (! isset($boardSlugs[$slug])) {
-                continue;
-            }
-
-            $laneKey = $definition->advisor_lane_key ?? $slug;
-
-            if ($templates->has($laneKey)) {
-                $slugsByLane[$laneKey][] = $slug;
-            } else {
-                $customOwnLanes[$laneKey][] = $slug;
-            }
-        }
-
         $lanes = [];
 
-        foreach ($templates as $laneKey => $template) {
-            $slugs = $slugsByLane[$laneKey] ?? [];
+        foreach (app(JobBoardLaneCatalog::class)->homeBoardColumns() as $column) {
+            $slugs = [];
+
+            foreach ($this->statusesBySlug ?? [] as $slug => $definition) {
+                if (! isset($boardSlugs[$slug])) {
+                    continue;
+                }
+
+                if ($definition->advisor_lane_key === $column['key']) {
+                    $slugs[] = $slug;
+                }
+            }
 
             if ($slugs === []) {
                 continue;
             }
 
             $lanes[] = [
-                'label' => $template['label'],
-                'description' => $template['description'],
-                'tone' => $template['tone'],
-                'statuses' => $slugs,
-            ];
-        }
-
-        foreach ($customOwnLanes as $laneKey => $slugs) {
-            $lanes[] = [
-                'label' => $this->labelForSlug($slugs[0]),
-                'description' => 'Custom workflow status',
-                'tone' => 'motion',
+                'label' => $column['label'],
+                'description' => 'Job Board lane',
+                'tone' => $column['tone'],
                 'statuses' => $slugs,
             ];
         }
@@ -603,8 +587,11 @@ final class RepairOrderStatusCatalog
                     'is_terminal' => $status->is_terminal,
                     'is_system' => $status->is_system,
                     'active' => $status->active,
+                    'sort_order' => $status->sort_order,
                     'show_on_advisor_board' => $status->show_on_advisor_board,
                     'show_on_technician_board' => $status->show_on_technician_board,
+                    'requires_mileage_in' => $status->requires_mileage_in,
+                    'requires_mileage_out' => $status->requires_mileage_out,
                     'variants' => $variants,
                     'transitions' => $transitions,
                 ];

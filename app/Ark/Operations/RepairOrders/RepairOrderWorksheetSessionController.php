@@ -15,7 +15,7 @@ class RepairOrderWorksheetSessionController
     ): JsonResponse {
         $data = $request->validate([
             'session_token' => ['required', 'string', 'max:64'],
-            'surface' => ['required', 'string', 'in:builder,review'],
+            'surface' => ['required', 'string', 'in:builder,review,repair_order'],
             'opened_estimate_version' => ['nullable', 'integer', 'min:1'],
         ]);
 

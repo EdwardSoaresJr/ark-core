@@ -47,7 +47,7 @@ test('portal estimate shows visit reason once, then recommended work', function 
     $response = $this->get(route('portal.estimates.show', ['token' => $plainToken]))
         ->assertOk()
         ->assertSee('Reason for Visit', false)
-        ->assertSee('Customer reported:', false)
+        ->assertSee('Customer Concern', false)
         ->assertSee('Need new brakes/rotors for front and rear.', false)
         ->assertDontSee('Preliminary Estimate', false)
         ->assertDontSee('Until we verify your VIN and inspect the vehicle', false)
@@ -151,8 +151,8 @@ test('pdf and browser footers place important information after approval', funct
         ],
     ])->render();
 
-    $approvalPos = strpos($html, 'Approval Status');
-    $importantPos = strpos($html, 'Important Information');
+    $approvalPos = strpos($html, 'Pending Approval');
+    $importantPos = strpos($html, 'Important:');
 
     expect($approvalPos)->not->toBeFalse()
         ->and($importantPos)->not->toBeFalse()

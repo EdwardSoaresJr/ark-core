@@ -140,7 +140,8 @@
                 </div>
             </div>
 
-            <div x-show="step === 'review' && capture" class="border-t border-slate-200">
+            <template x-if="step === 'review' && capture">
+            <div class="border-t border-slate-200">
                 <div class="grid gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Supplier</p>
@@ -374,6 +375,7 @@
                     </div>
                 </form>
             </div>
+            </template>
             </div>
         </div>
     </div>

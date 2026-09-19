@@ -113,40 +113,90 @@
                 @forelse ($repairOrders as $repairOrder)
                     @php
                         $displayTz = config('app.display_timezone');
+                        $customer = $repairOrder->customer;
+                        $vehicle = $repairOrder->vehicle;
                         $roShowUrl = filled($repairOrder->repair_order_id)
                             ? route('operations.repair-orders.show', $repairOrder)
                             : null;
+                        $customerUrl = $customer
+                            ? route('operations.customers.show', $customer)
+                            : null;
+                        $vehicleUrl = ($customer && $vehicle)
+                            ? route('operations.customers.show', [
+                                'customer' => $customer,
+                                'vehicle' => $vehicle->id,
+                            ])
+                            : null;
+                        $documentsUrl = $customer
+                            ? route('operations.customers.show', [
+                                'customer' => $customer,
+                                'tab' => 'documents',
+                            ])
+                            : null;
                     @endphp
-                    <a
-                        href="{{ $roShowUrl ?? '#' }}"
-                        @if ($roShowUrl === null) aria-disabled="true" onclick="return false;" @endif
-                        class="ops-ro-card ops-ro-card--{{ $repairOrder->status->indexTone() }}"
-                    >
+                    <div class="ops-ro-card ops-ro-card--{{ $repairOrder->status->indexTone() }}">
                         <div class="ops-ro-card-top">
                             <div class="ops-ro-card-primary min-w-0">
-                                <p class="ops-ro-vehicle">{{ $repairOrder->vehicle->display_name }}</p>
-                                <p class="ops-ro-subline">
-                                    <span class="ops-ro-number">#{{ $repairOrder->repair_order_id }}</span>
-                                    <span class="ops-ro-sep">·</span>
-                                    <span class="ops-ro-customer">{{ $repairOrder->customer->name }}</span>
+                                <p class="ops-ro-vehicle">
+                                    @if ($vehicleUrl !== null)
+                                        <a href="{{ $vehicleUrl }}" class="ops-ro-card-identity-link block" title="{{ $vehicle->display_name }}">{{ $vehicle->display_name }}</a>
+                                    @else
+                                        {{ $vehicle?->display_name ?? 'Unknown vehicle' }}
+                                    @endif
+                                </p>
+                                <p class="ops-ro-subline flex items-center gap-1 min-w-0">
+                                    <span class="ops-ro-subline-copy min-w-0 truncate">
+                                        @if ($roShowUrl !== null)
+                                            <a href="{{ $roShowUrl }}" class="ops-ro-number ops-ro-card-identity-link">#{{ $repairOrder->repair_order_id }}</a>
+                                        @else
+                                            <span class="ops-ro-number">#{{ $repairOrder->repair_order_id }}</span>
+                                        @endif
+                                        <span class="ops-ro-sep">·</span>
+                                        @if ($customerUrl !== null)
+                                            <a href="{{ $customerUrl }}" class="ops-ro-customer ops-ro-card-identity-link">{{ $customer->name }}</a>
+                                        @else
+                                            <span class="ops-ro-customer">{{ $customer?->name ?? 'Unknown customer' }}</span>
+                                        @endif
+                                    </span>
+                                    @if ($documentsUrl !== null)
+                                        <a href="{{ $documentsUrl }}" class="ops-ro-card-docs-link ops-ro-card-identity-link shrink-0" title="Documents" aria-label="Documents for {{ $customer->name }}">
+                                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                                <path d="M4.5 2.5h5.2L12 4.8V13a.5.5 0 0 1-.5.5h-7A.5.5 0 0 1 4 13V3a.5.5 0 0 1 .5-.5Z" stroke="currentColor" stroke-width="1.2"/>
+                                                <path d="M9.5 2.5V5H12" stroke="currentColor" stroke-width="1.2"/>
+                                                <path d="M6 8h4M6 10.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                            </svg>
+                                        </a>
+                                    @endif
                                 </p>
                             </div>
-                            <span class="ops-status-chip shrink-0 ops-status-chip--{{ $repairOrder->status->indexTone() }}">{{ $repairOrder->statusDisplayLabel() }}</span>
+                            @if ($roShowUrl !== null)
+                                <a href="{{ $roShowUrl }}" class="ops-status-chip shrink-0 ops-status-chip--{{ $repairOrder->status->indexTone() }}">{{ $repairOrder->statusDisplayLabel() }}</a>
+                            @else
+                                <span class="ops-status-chip shrink-0 ops-status-chip--{{ $repairOrder->status->indexTone() }}">{{ $repairOrder->statusDisplayLabel() }}</span>
+                            @endif
                         </div>
 
-                        <p class="ops-ro-concern">{{ $repairOrder->concern_summary }}</p>
-
-                        <p class="ops-ro-footnote tabular-nums">
-                            Opened {{ $repairOrder->displayOpenedAt()->timezone($displayTz)->format('M j, Y') }}
-                            @if ($closedAt = $repairOrder->displayClosedAt())
-                                <span class="ops-ro-sep">·</span>
-                                Closed {{ $closedAt->timezone($displayTz)->format('M j, g:i A') }}
-                            @else
-                                <span class="ops-ro-sep">·</span>
-                                Updated {{ $repairOrder->updated_at->timezone($displayTz)->format('M j, g:i A') }}
-                            @endif
-                        </p>
-                    </a>
+                        @if ($roShowUrl !== null)
+                            <a href="{{ $roShowUrl }}" class="ops-ro-card-rest-link">
+                                <span class="ops-ro-concern">{{ $repairOrder->concern_summary }}</span>
+                                <span class="ops-ro-footnote tabular-nums">
+                                    Opened {{ $repairOrder->displayOpenedAt()->timezone($displayTz)->format('M j, Y') }}
+                                    @if ($closedAt = $repairOrder->displayClosedAt())
+                                        <span class="ops-ro-sep">·</span>
+                                        Closed {{ $closedAt->timezone($displayTz)->format('M j, g:i A') }}
+                                    @else
+                                        <span class="ops-ro-sep">·</span>
+                                        Updated {{ $repairOrder->updated_at->timezone($displayTz)->format('M j, g:i A') }}
+                                    @endif
+                                </span>
+                            </a>
+                        @else
+                            <span class="ops-ro-concern">{{ $repairOrder->concern_summary }}</span>
+                            <span class="ops-ro-footnote tabular-nums">
+                                Opened {{ $repairOrder->displayOpenedAt()->timezone($displayTz)->format('M j, Y') }}
+                            </span>
+                        @endif
+                    </div>
                 @empty
                     <div class="ops-index-empty ops-ro-retrieval-empty">
                         @if ($hasFilters)

@@ -1,7 +1,9 @@
 <?php
 
+use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
+use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Customers\Customer;
@@ -11,6 +13,7 @@ use App\Ark\Operations\Inspections\InspectionObservedState;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Portal\InspectionAccessToken;
+use App\Ark\Operations\Portal\PortalShortLink;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -23,7 +26,9 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-        
+    config()->set('services.twilio.auth_token', 'test-token');
+    config()->set('services.twilio.account_sid', 'ACtestaccount');
+
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -48,8 +53,13 @@ function seedInspectionLinkSmsCapablePhone(string $phone = '7195551212'): void
 }
 
 test('send inspection link creates access token and sends sms conversation message', function () {
-    seedMobileSmsCapability('7195551212');
-    bindFakeOutboundSms();
+    seedInspectionLinkSmsCapablePhone();
+    Http::fake([
+        'https://api.twilio.com/*' => Http::response([
+            'sid' => 'SMinspection01',
+            'status' => 'queued',
+        ], 201),
+    ]);
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = inspectionLinkRepairOrder();
@@ -72,7 +82,36 @@ test('send inspection link creates access token and sends sms conversation messa
         ->and($message->body)->not->toContain('/portal/inspections/')
         ->and($message->body)->toContain('inspection results')
         ->and($message->participant->participant_type)->toBe(ConversationParticipantType::Advisor)
-        ->and($message->metadata['repair_order_id'])->toBe($repairOrder->id);
+        ->and($message->metadata['repair_order_id'])->toBe($repairOrder->id)
+        ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::InspectionSent)->exists())->toBeTrue();
+});
+
+test('resending inspection link reuses the same short url', function () {
+    seedInspectionLinkSmsCapablePhone();
+    Http::fake([
+        'https://api.twilio.com/*' => Http::response(['sid' => 'SMinspection-resend', 'status' => 'queued'], 201),
+    ]);
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = inspectionLinkRepairOrder();
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-inspection', $repairOrder))
+        ->assertOk();
+
+    $firstGo = (string) str(ConversationMessage::query()->orderBy('id')->value('body'))->after('/go/');
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-inspection', $repairOrder))
+        ->assertOk();
+
+    $secondGo = (string) str(ConversationMessage::query()->orderByDesc('id')->value('body'))->after('/go/');
+
+    expect($secondGo)->toBe($firstGo)
+        ->and($firstGo)->not->toBe('')
+        ->and(PortalShortLink::query()->count())->toBe(1)
+        ->and(InspectionAccessToken::query()->count())->toBe(2)
+        ->and(ConversationMessage::query()->count())->toBe(2);
 });
 
 test('send inspection link requires recorded findings', function () {
@@ -92,11 +131,13 @@ test('send inspection link requires recorded findings', function () {
 });
 
 test('customer can open inspection portal with token', function () {
-    seedMobileSmsCapability('7195551212');
+    seedInspectionLinkSmsCapablePhone();
     $repairOrder = inspectionLinkRepairOrder();
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    bindFakeOutboundSms();
+    Http::fake([
+        'https://api.twilio.com/*' => Http::response(['sid' => 'SMinspection02', 'status' => 'queued'], 201),
+    ]);
 
     $response = $this->actingAs($advisor)
         ->postJson(route('operations.repair-orders.conversation-actions.send-inspection', $repairOrder));
@@ -190,3 +231,20 @@ function inspectionLinkRepairOrder(bool $recordFinding = true): RepairOrder
 
     return $repairOrder->fresh(['customer', 'vehicle']);
 }
+
+test('hosted platform inspection send records inspection_sent without a core conversation message', function () {
+    enableHostedPlatformSendWithoutCoreMirror();
+    seedInspectionLinkSmsCapablePhone();
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = inspectionLinkRepairOrder();
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-inspection', $repairOrder))
+        ->assertOk()
+        ->assertJsonPath('message_id', null);
+
+    expect(ConversationMessage::query()->count())->toBe(0)
+        ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::InspectionSent)->exists())->toBeTrue();
+});
+

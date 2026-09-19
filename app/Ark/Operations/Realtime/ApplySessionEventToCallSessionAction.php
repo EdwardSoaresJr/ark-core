@@ -74,10 +74,17 @@ final class ApplySessionEventToCallSessionAction
         $session->status = match ($outcome) {
             'failed' => CallSessionStatus::Failed,
             'missed' => CallSessionStatus::Missed,
-            default => $session->answered_at !== null
+            default => $this->wasAnswered($session)
                 ? CallSessionStatus::Completed
                 : CallSessionStatus::Missed,
         };
         $session->ended_at ??= $occurredAt;
+    }
+
+    private function wasAnswered(CallSession $session): bool
+    {
+        return $session->answered_at !== null
+            || $session->status === CallSessionStatus::Answered
+            || filled($session->recording_url);
     }
 }

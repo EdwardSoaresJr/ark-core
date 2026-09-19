@@ -64,6 +64,11 @@ class InspectionItem extends Model
         return $this->hasMany(InspectionItemPhoto::class)->orderBy('id');
     }
 
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(\App\Ark\Operations\Recommendations\Recommendation::class, 'originating_inspection_item_id');
+    }
+
     public function categoryLabel(): string
     {
         if (filled($this->checklist_category_name)) {

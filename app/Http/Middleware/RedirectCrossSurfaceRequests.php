@@ -15,12 +15,21 @@ class RedirectCrossSurfaceRequests
         $host = $request->getHost();
         $uri = $request->getRequestUri();
 
-        // Company product: www → apex (ARK Platform).
+        // Company product: www → apex (ARK Cloud).
         $companyHost = SurfaceRouting::companyHost();
         $companyWww = SurfaceRouting::companyWwwHost();
         if ($companyHost !== null && $companyWww !== null && $host === $companyWww) {
             return redirect()->to(
                 SurfaceRouting::urlForHost($companyHost, $uri),
+                301,
+            );
+        }
+
+        $publicHost = SurfaceRouting::publicHost();
+        $publicWww = SurfaceRouting::publicWwwHost();
+        if ($publicHost !== null && $publicWww !== null && $host === $publicWww) {
+            return redirect()->to(
+                SurfaceRouting::urlForHost($publicHost, $uri),
                 301,
             );
         }
@@ -44,7 +53,7 @@ class RedirectCrossSurfaceRequests
             );
         }
 
-        if ($host === SurfaceRouting::appHost() && $this->isPortalPath($request)) {
+        if ($host === SurfaceRouting::appHost() && $this->isSignedInCustomerPortalPath($request)) {
             return redirect()->to(
                 SurfaceRouting::urlForHost(SurfaceRouting::customerHost(), $uri),
             );
@@ -56,9 +65,11 @@ class RedirectCrossSurfaceRequests
             );
         }
 
+        // Custom / public website host hitting ops paths → permanent ARK URL.
+        // Skip when website and ops share one host (Hosted default URL).
         if (
-            SurfaceRouting::publicHost() !== null
-            && $host === SurfaceRouting::publicHost()
+            SurfaceRouting::isPublicHost($host)
+            && $host !== SurfaceRouting::appHost()
             && $request->is('app', 'app/*', 'webhooks', 'webhooks/*', 'dashboard', 'profile', 'profile/*', 'repair-orders', 'repair-orders/*')
         ) {
             return redirect()->to(
@@ -69,17 +80,20 @@ class RedirectCrossSurfaceRequests
         return $next($request);
     }
 
-    private function isPortalPath(Request $request): bool
+    private function isSignedInCustomerPortalPath(Request $request): bool
     {
         return $request->is(
             'portal',
-            'portal/*',
-            'go/*',
+            'portal/access',
+            'portal/access/*',
+            'portal/home',
+            'portal/vehicles',
+            'portal/vehicles/*',
+            'portal/logout',
             'access',
             'access/*',
-            'estimates/*',
-            'pay/*',
             'home',
+            'vehicles',
             'vehicles/*',
             'logout',
         );

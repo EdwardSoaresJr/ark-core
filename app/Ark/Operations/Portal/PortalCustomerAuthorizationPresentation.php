@@ -89,7 +89,7 @@ final class PortalCustomerAuthorizationPresentation
         return [
             'approved_by' => trim($approvedBy) !== '' ? trim($approvedBy) : 'Customer',
             'approved_at_label' => $approvedAt !== null
-                ? ShopDisplayTimezone::format($approvedAt)
+                ? ShopDisplayTimezone::format($approvedAt, 'M j, Y \a\t g:i A')
                 : null,
             'source_label' => self::customerSourceLabel($source),
             'approved_amount' => $approvedAmountCents > 0

@@ -38,8 +38,6 @@ final class CommunicationReviewScore
     }
 
     /**
-     * Phase 2 dimension scaffold — Demo Auto Repair doctrine expands here.
-     *
      * @param  array<string, mixed>  $analysis
      * @return array<string, mixed>
      */

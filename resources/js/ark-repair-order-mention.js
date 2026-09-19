@@ -1,5 +1,5 @@
 /**
- * Insert @RO1677 into visit-reason / concern fields from this customer's prior visits.
+ * Insert @RO1677 into visit-reason / concern fields from this vehicle's prior visits.
  */
 
 export function mentionFragmentAtCaret(el) {

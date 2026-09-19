@@ -28,6 +28,23 @@
         </div>
 
         <div class="border border-slate-200">
+            <p class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Key tag</p>
+            <div class="px-3 py-3">
+                <label class="block max-w-sm text-xs font-medium text-slate-500">
+                    Mileage required
+                    @php
+                        $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
+                    @endphp
+                    <select name="key_tag_mileage_requirement" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                        <option value="none" @selected($keyTagMileage === 'none')>None — print without mileage in</option>
+                        <option value="in" @selected($keyTagMileage === 'in')>Mileage in — don't print until it is entered</option>
+                    </select>
+                    <span class="mt-1 block font-normal leading-4 text-slate-500">A blocked print says mileage in is missing. It does not print a blank tag.</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="border border-slate-200">
             <p class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Scopes &amp; concerns</p>
             <div class="grid gap-4 px-3 py-3 md:grid-cols-2">
                 <label class="block text-xs font-medium text-slate-500">
@@ -50,21 +67,25 @@
 
         <div class="border border-slate-200">
             <p class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Worksheet notes</p>
-            <div class="px-3 py-3">
-                <label class="flex items-start gap-2 text-xs font-medium text-slate-500">
-                    <input type="hidden" name="default_notes_private" value="0">
-                    <input
-                        type="checkbox"
-                        name="default_notes_private"
-                        value="1"
-                        @checked(old('default_notes_private', $settings->default_notes_private))
-                        class="mt-0.5 rounded border-slate-300 text-slate-800"
-                    >
-                    <span>
-                        New notes default to Advisor only
-                        <span class="block font-normal text-slate-500">When checked, Technician and Customer stay off until an advisor opts them in. When unchecked, Customer is also selected by default.</span>
-                    </span>
-                </label>
+            <div class="max-w-md px-3 py-3">
+                @php
+                    $noteDefaults = \App\Ark\Operations\RepairOrders\NoteAudience::defaultsFromShop();
+                    $noteAudience = [
+                        'advisor' => old('default_notes_visible_to_advisor', $noteDefaults->advisor ? '1' : '0') === '1',
+                        'technician' => old('default_notes_visible_to_technician', $noteDefaults->technician ? '1' : '0') === '1',
+                        'customer' => old('default_notes_visible_to_customer', $noteDefaults->customer ? '1' : '0') === '1',
+                    ];
+                @endphp
+                @include('operations.repair-orders.partials.repair-order-note-privacy-field', [
+                    'audience' => $noteAudience,
+                    'inputId' => 'default-note-audience',
+                    'fields' => [
+                        'advisor' => 'default_notes_visible_to_advisor',
+                        'technician' => 'default_notes_visible_to_technician',
+                        'customer' => 'default_notes_visible_to_customer',
+                    ],
+                ])
+                <p class="mt-2 text-xs leading-4 text-slate-500">New notes start with these views selected. The same choices are on each note.</p>
             </div>
         </div>
     </div>

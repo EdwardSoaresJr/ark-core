@@ -33,9 +33,20 @@
         };
     @endphp
 
-    <article @class(['ops-comms-workspace__bubble', $bubbleClass])>
+    <article
+        @class(['ops-comms-workspace__bubble', $bubbleClass])
+        @if (filled($event->metadata['platform_message_public_id'] ?? null))
+            data-platform-message-id="{{ $event->metadata['platform_message_public_id'] }}"
+        @endif
+    >
         <p class="ops-comms-workspace__bubble-meta">
             {{ $event->headline }}
+            @if (filled($event->metadata['visit_label'] ?? null))
+                · {{ $event->metadata['visit_label'] }}
+                @if (filled($event->metadata['visit_vehicle_label'] ?? null))
+                    · {{ $event->metadata['visit_vehicle_label'] }}
+                @endif
+            @endif
             · {{ $occurredLabel }}
         </p>
         @if (filled($body))

@@ -46,14 +46,10 @@ final class DocumentEmailController
                 $recipientEmail,
                 $data['message'] ?? null,
             );
-        } catch (\App\Ark\Mail\TransactionalMailException $exception) {
-            $settingsUrl = route('operations.settings.shop.edit', [
-                'section' => 'ark-cloud',
-            ]);
-
-            return redirect()
-                ->to($this->redirectBack($request, $customer, $document))
-                ->with('status', $exception->result->operatorMessage().' Open Settings → Email: '.$settingsUrl);
+        } catch (\RuntimeException $exception) {
+            throw ValidationException::withMessages([
+                'email' => $exception->getMessage(),
+            ])->redirectTo($this->redirectBack($request, $customer, $document));
         }
 
         return redirect()

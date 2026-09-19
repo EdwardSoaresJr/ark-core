@@ -28,6 +28,7 @@ test('customer estimate totals presentation uses gross labor and subtracts stand
 
     expect($breakdown['labor_cents'])->toBe(33000)
         ->and($breakdown['standing_discount_cents'])->toBe(3300)
+        ->and($breakdown['fees_label'])->toBe('Shop supplies')
         ->and($breakdown['subtotal_before_tax_cents'])->toBe(49258)
         ->and($breakdown['total_cents'])->toBe(50726)
         ->and($breakdown['subtotal_before_tax_cents'] + $breakdown['tax_cents'])->toBe($breakdown['total_cents']);
@@ -43,7 +44,7 @@ test('customer tax label clarifies parts-only tax and excludes fees', function (
     ]);
 
     expect(CustomerEstimateTotalsPresentation::customerTaxLabel($settings))
-        ->toBe('C/S Tax (parts)');
+        ->toBe('Sales tax (parts)');
 });
 
 test('legacy snapshot totals upgrade net labor to gross when standing discount is present', function (): void {
@@ -59,6 +60,7 @@ test('legacy snapshot totals upgrade net labor to gross when standing discount i
     ], 'Military');
 
     expect($breakdown['labor_cents'])->toBe(33000)
+        ->and($breakdown['customer_tax_label'])->toBe('Sales tax (parts)')
         ->and($breakdown['subtotal_before_tax_cents'])->toBe(49258)
         ->and($breakdown['total_cents'])->toBe(50726);
 });

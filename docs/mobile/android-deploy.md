@@ -1,7 +1,7 @@
 # ARK Mobile — Android release deploy
 
-**App ID:** `com.arksms.ark_mobile`  
-**API default:** `https://app.demo-auto.test`  
+**App ID:** `com.lugsnplugs.ark_mobile`  
+**API default:** shop operations origin (`APP_URL` / pairing). LugsNPlugs: `https://lugsnplugs.arksms.com`  
 **Repo:** `ark-mobile` (Flutter)
 
 Release signing lives in `android/app/build.gradle.kts`. With `android/key.properties` present, release builds use the upload keystore. Without it, release falls back to debug keys (USB floor test only — not Play Store).
@@ -60,7 +60,7 @@ jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.a
 
 ## Google Play Console
 
-1. Create app with package `com.arksms.ark_mobile` (if not already registered).
+1. Create app with package `com.lugsnplugs.ark_mobile` (if not already registered).
 2. Upload `app-release.aab` to **Production** or **Internal testing**.
 3. Complete store listing, content rating, and target API requirements.
 4. Enable **Play App Signing** — Google holds the app signing key; you upload with the upload key above.
@@ -77,4 +77,4 @@ Bluetooth OBD requires the **native Android app**, not a browser build. Grant ne
 
 ## ARKademy
 
-Staff-facing install guide: **Shop In A Box → Admin → ARK Mobile Android deploy** on [learn.demo-auto.test](https://learn.demo-auto.test).
+Staff-facing install guide: **Shop In A Box → Admin → ARK Mobile Android deploy** on [learn.lugsnplugs.com](https://learn.lugsnplugs.com).

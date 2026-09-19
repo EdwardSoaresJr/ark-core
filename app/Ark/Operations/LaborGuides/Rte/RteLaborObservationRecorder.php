@@ -10,7 +10,7 @@ use App\Ark\Operations\Vehicles\VehicleMatchProjection;
 use App\Models\User;
 
 /**
- * Append-only RTE adoption facts — observation only, no learning or doctrine changes.
+ * Records RTE lookup usage. Does not change labor hours or matching.
  */
 final class RteLaborObservationRecorder
 {

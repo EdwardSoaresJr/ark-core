@@ -65,14 +65,10 @@ class EstimateDocumentEmailController
             return redirect()
                 ->to($this->redirectBack($request, $repairOrder))
                 ->with('status', 'Estimate email failed. The PDF could not be generated — check Chromium runtime support.');
-        } catch (\App\Ark\Mail\TransactionalMailException $exception) {
-            $settingsUrl = route('operations.settings.shop.edit', [
-                'section' => 'ark-cloud',
-            ]);
-
-            return redirect()
-                ->to($this->redirectBack($request, $repairOrder))
-                ->with('status', $exception->result->operatorMessage().' Open Settings → Email: '.$settingsUrl);
+        } catch (\RuntimeException $exception) {
+            throw ValidationException::withMessages([
+                'email' => $exception->getMessage(),
+            ])->redirectTo($this->redirectBack($request, $repairOrder));
         }
 
         if ($request->boolean('acknowledge_timing_fluids')) {

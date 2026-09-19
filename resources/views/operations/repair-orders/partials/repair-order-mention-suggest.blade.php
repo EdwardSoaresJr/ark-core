@@ -1,25 +1,3 @@
-@php
-    $mentionSuggestions = $priorVisitMentions['suggestions'] ?? [];
-@endphp
-@if ($mentionSuggestions !== [])
-    <div class="ark-ro-mention__chips" role="list">
-        <p class="ark-ro-mention__hint">Previous visits — click or type @RO</p>
-        @foreach ($mentionSuggestions as $visit)
-            <button
-                type="button"
-                class="ark-ro-mention__chip{{ ! empty($visit['same_vehicle']) ? ' ark-ro-mention__chip--same' : '' }}"
-                role="listitem"
-                @click="insertChip({{ \Illuminate\Support\Js::from($visit) }})"
-            >
-                <span class="ark-ro-mention__chip-label">{{ $visit['label'] }}</span>
-                @if (($visit['detail'] ?? '') !== '')
-                    <span class="ark-ro-mention__chip-detail">{{ $visit['detail'] }}</span>
-                @endif
-            </button>
-        @endforeach
-    </div>
-@endif
-
 <div
     class="ark-ro-mention__menu"
     x-show="open && matches.length > 0"

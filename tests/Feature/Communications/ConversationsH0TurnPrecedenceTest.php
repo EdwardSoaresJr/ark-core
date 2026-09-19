@@ -115,7 +115,7 @@ test('precedence: stacked inbound SMS call voicemail portal stays one Waiting on
     Carbon::setTestNow();
 });
 
-test('precedence: advisor outbound call after inbound resolves to Waiting on Customer', function (): void {
+test('precedence: advisor outbound call after inbound stays Needs attention', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $customer = precedenceCustomer('7195558103');
     $phone = PhoneNumber::normalize((string) $customer->phone);
@@ -156,11 +156,11 @@ test('precedence: advisor outbound call after inbound resolves to Waiting on Cus
         'owned_by_user_id' => $advisor->id,
     ]);
 
-    expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Customer);
+    expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Shop);
     Carbon::setTestNow();
 });
 
-test('precedence: advisor SMS after inbound call resolves Turn (explicit)', function (): void {
+test('precedence: advisor SMS after inbound call does not close the work', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $customer = precedenceCustomer('7195558104');
     $phone = PhoneNumber::normalize((string) $customer->phone);
@@ -181,10 +181,9 @@ test('precedence: advisor SMS after inbound call resolves Turn (explicit)', func
 
     expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Shop);
 
-    // Explicit doctrine: outbound SMS resolves the customer's inbound communication need.
     Carbon::setTestNow(Carbon::parse('2026-07-13 12:05:00', 'UTC'));
     $recorder->recordOutboundSms($customer, $advisor, 'Got your call — here is the estimate.', 'SM-resolves-call');
 
-    expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Customer);
+    expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Shop);
     Carbon::setTestNow();
 });

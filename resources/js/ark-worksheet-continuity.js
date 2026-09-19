@@ -317,10 +317,9 @@ export const arkWorksheetContinuity = (config = {}) => {
         surfaceWorksheetSaved() {
             const flash = document.getElementById('worksheet-status-flash');
             const serverStatus = flash?.querySelector('[data-worksheet-server-status]')?.textContent?.trim()
-                || flash?.textContent?.trim()
                 || '';
 
-            if (serverStatus.toLowerCase().includes('saved') || serverStatus.toLowerCase().includes("couldn't save")) {
+            if (serverStatus !== '') {
                 this.revealWorksheetStatus();
 
                 return;

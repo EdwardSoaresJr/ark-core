@@ -2,8 +2,17 @@ import { arkEchoEnabled, getArkEcho } from './ark-echo';
 
 const POLL_MS = 4000;
 
-function fragmentUrl() {
-    return document.getElementById('ops-comms-workspace-live')?.dataset.fragmentUrl ?? '';
+function fragmentUrl(signature = '') {
+    const base = document.getElementById('ops-comms-workspace-live')?.dataset.fragmentUrl ?? '';
+
+    if (base === '' || signature === '') {
+        return base;
+    }
+
+    const url = new URL(base, window.location.origin);
+    url.searchParams.set('signature', signature);
+
+    return `${url.pathname}${url.search}`;
 }
 
 function syncListCount(count) {
@@ -13,7 +22,8 @@ function syncListCount(count) {
         return;
     }
 
-    let countEl = title.querySelector('[data-comms-workspace-count]');
+    let countEl = title.querySelector('[data-comms-workspace-count]')
+        || title.querySelector('.ops-pressure-count');
     const value = Number(count ?? 0);
 
     if (value > 0) {
@@ -24,6 +34,7 @@ function syncListCount(count) {
             title.appendChild(countEl);
         }
 
+        countEl.dataset.commsWorkspaceCount = '';
         countEl.textContent = `(${value})`;
         countEl.hidden = false;
     } else if (countEl) {
@@ -39,7 +50,88 @@ function replaceSection(sectionId, html) {
         return;
     }
 
+    if (window.Alpine?.destroyTree) {
+        window.Alpine.destroyTree(section);
+    }
+
     section.innerHTML = html;
+
+    if (window.Alpine?.initTree) {
+        window.Alpine.initTree(section);
+    }
+}
+
+function listItemsEl() {
+    return document.querySelector('#ops-comms-workspace-list .ops-comms-workspace__list-items');
+}
+
+function captureListScroll() {
+    return listItemsEl()?.scrollTop ?? 0;
+}
+
+function restoreListScroll(top) {
+    const el = listItemsEl();
+
+    if (el) {
+        el.scrollTop = top;
+    }
+}
+
+function hrefKey(href) {
+    if (! href) {
+        return '';
+    }
+
+    try {
+        const url = new URL(href, window.location.origin);
+
+        return `${url.pathname}${url.search}`;
+    } catch {
+        return href;
+    }
+}
+
+function markSelectedRow(href) {
+    if (! href) {
+        return;
+    }
+
+    const selected = hrefKey(href);
+
+    document.querySelectorAll('.ops-comms-workspace__list-row').forEach((row) => {
+        row.classList.toggle(
+            'ops-comms-workspace__list-row--active',
+            hrefKey(row.getAttribute('href')) === selected,
+        );
+    });
+}
+
+function syncFragmentUrl(nextUrl) {
+    const live = document.getElementById('ops-comms-workspace-live');
+
+    if (! live) {
+        return;
+    }
+
+    const fragment = new URL(live.dataset.fragmentUrl || nextUrl.href, window.location.origin);
+
+    ['conversation', 'lead', 'call', 'filter', 'section', 'platform_conversation', 'owner'].forEach((key) => {
+        if (nextUrl.searchParams.has(key)) {
+            fragment.searchParams.set(key, nextUrl.searchParams.get(key));
+        } else if (key === 'conversation' || key === 'lead' || key === 'call' || key === 'platform_conversation') {
+            fragment.searchParams.delete(key);
+        }
+    });
+
+    fragment.searchParams.delete('signature');
+    live.dataset.fragmentUrl = `${fragment.pathname}${fragment.search}`;
+}
+
+function selectionHref(url) {
+    return url.searchParams.has('conversation')
+        || url.searchParams.has('lead')
+        || url.searchParams.has('call')
+        || url.searchParams.has('platform_conversation');
 }
 
 function threadMessagesEl() {
@@ -195,35 +287,117 @@ export function initCommsWorkspace() {
     }
 
     let inflight = false;
-    let lastSignature = '';
+    let selectionGeneration = 0;
+    let lastSignature = root.dataset.pollSignature ?? '';
 
-    const applyPayload = (payload) => {
-        if (! payload) {
+    const applyPayload = (payload, { replaceList = true, selectedHref = null } = {}) => {
+        if (! payload || payload.unchanged) {
             return;
         }
 
         const threadScroll = captureThreadScroll();
         const composerState = captureComposerState();
-        const selectedKey = document.querySelector('.ops-comms-workspace__list-row--active')?.getAttribute('href') ?? null;
+        const listScroll = captureListScroll();
+        const selectedKey = selectedHref
+            ?? document.querySelector('.ops-comms-workspace__list-row--active')?.getAttribute('href')
+            ?? null;
 
-        replaceSection('ops-comms-workspace-list', payload.list ?? '');
-        replaceSection('ops-comms-workspace-thread', payload.thread ?? '');
-        replaceSection('ops-comms-workspace-context', payload.context ?? '');
-        syncListCount(payload.list_count ?? 0);
+        if (replaceList && typeof payload.list === 'string' && payload.list !== '') {
+            replaceSection('ops-comms-workspace-list', payload.list);
+        }
+        if (typeof payload.thread === 'string' && payload.thread !== '') {
+            replaceSection('ops-comms-workspace-thread', payload.thread);
+        }
+        if (typeof payload.context === 'string' && payload.context !== '') {
+            replaceSection('ops-comms-workspace-context', payload.context);
+        }
+        if (payload.list_count !== undefined) {
+            syncListCount(payload.list_count);
+        }
 
         requestAnimationFrame(() => {
             restoreThreadScroll(threadScroll);
             restoreComposerState(composerState);
+            restoreListScroll(listScroll);
             markOpenConversationRead();
 
             if (selectedKey) {
-                document.querySelectorAll('.ops-comms-workspace__list-row').forEach((row) => {
-                    if (row.getAttribute('href') === selectedKey) {
-                        row.classList.add('ops-comms-workspace__list-row--active');
-                    }
-                });
+                markSelectedRow(selectedKey);
             }
         });
+    };
+
+    const fetchWorkspace = async (requestUrl) => {
+        const response = await fetch(requestUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (! response.ok) {
+            return null;
+        }
+
+        return response.json();
+    };
+
+    const openSelection = async (nextUrl, { push = true } = {}) => {
+        const live = document.getElementById('ops-comms-workspace-live');
+
+        if (! live) {
+            return false;
+        }
+
+        const fragment = new URL(live.dataset.fragmentUrl || nextUrl.href, window.location.origin);
+
+        ['conversation', 'lead', 'call', 'filter', 'section', 'platform_conversation', 'owner'].forEach((key) => {
+            if (nextUrl.searchParams.has(key)) {
+                fragment.searchParams.set(key, nextUrl.searchParams.get(key));
+            } else if (key === 'conversation' || key === 'lead' || key === 'call' || key === 'platform_conversation') {
+                fragment.searchParams.delete(key);
+            }
+        });
+
+        fragment.searchParams.delete('signature');
+        inflight = true;
+        selectionGeneration += 1;
+        const generation = selectionGeneration;
+
+        try {
+            const payload = await fetchWorkspace(`${fragment.pathname}${fragment.search}`);
+
+            if (generation !== selectionGeneration) {
+                return false;
+            }
+
+            if (! payload || (payload.unchanged === true && ! payload.thread)) {
+                return false;
+            }
+
+            lastSignature = String(payload.signature ?? lastSignature);
+            const selectedHref = `${nextUrl.pathname}${nextUrl.search}`;
+            applyPayload(payload, { replaceList: false, selectedHref });
+            syncFragmentUrl(nextUrl);
+
+            if (push) {
+                window.history.pushState({ commsWorkspace: true }, '', selectedHref);
+            }
+
+            requestAnimationFrame(() => {
+                scrollThreadToBottom();
+                markOpenConversationRead();
+            });
+
+            return true;
+        } catch {
+            return false;
+        } finally {
+            if (generation === selectionGeneration) {
+                inflight = false;
+            }
+        }
     };
 
     const refresh = async () => {
@@ -232,9 +406,10 @@ export function initCommsWorkspace() {
         }
 
         inflight = true;
+        const generation = selectionGeneration;
 
         try {
-            const response = await fetch(url, {
+            const response = await fetch(fragmentUrl(lastSignature) || url, {
                 headers: {
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -242,23 +417,35 @@ export function initCommsWorkspace() {
                 credentials: 'same-origin',
             });
 
-            if (! response.ok) {
+            if (! response.ok || generation !== selectionGeneration) {
                 return;
             }
 
             const payload = await response.json();
-            const signature = String(payload.signature ?? '');
 
-            if (signature !== '' && signature === lastSignature) {
+            if (generation !== selectionGeneration) {
                 return;
             }
 
-            lastSignature = signature;
+            const signature = String(payload.signature ?? '');
+
+            if (payload.unchanged) {
+                lastSignature = signature || lastSignature;
+
+                return;
+            }
+
+            if (signature !== '') {
+                lastSignature = signature;
+            }
+
             applyPayload(payload);
         } catch {
             // Polling backup when realtime misses — stay quiet.
         } finally {
-            inflight = false;
+            if (generation === selectionGeneration) {
+                inflight = false;
+            }
         }
     };
 
@@ -284,6 +471,52 @@ export function initCommsWorkspace() {
     };
 
     document.addEventListener('ark:call-queue-changed', refresh);
+
+    root.addEventListener('click', async (event) => {
+        const row = event.target instanceof Element
+            ? event.target.closest('.ops-comms-workspace__list-row')
+            : null;
+
+        if (
+            ! row
+            || event.defaultPrevented
+            || event.metaKey
+            || event.ctrlKey
+            || event.shiftKey
+            || event.altKey
+            || event.button !== 0
+        ) {
+            return;
+        }
+
+        const href = row.getAttribute('href');
+
+        if (! href) {
+            return;
+        }
+
+        const next = new URL(href, window.location.origin);
+
+        if (! selectionHref(next)) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const opened = await openSelection(next);
+
+        if (! opened) {
+            window.location.assign(href);
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        if (! document.getElementById('ops-comms-workspace-live')) {
+            return;
+        }
+
+        openSelection(new URL(window.location.href), { push: false });
+    });
 
     bindRealtime();
     window.setInterval(refresh, POLL_MS);

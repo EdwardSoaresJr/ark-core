@@ -42,11 +42,68 @@ final readonly class AdvisorHomeCockpitProjection
     ) {}
 
     /**
+     * Job Board column chrome only — morning brief / attention zones are not rendered on /app.
+     *
      * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
      * @param  Collection<int, EstimateTotals>  $repairOrderTotals
      */
+    public static function forJobBoard(
+        array $homeBoardColumns,
+        Collection $repairOrderTotals,
+        int $activeCarCount,
+        ?int $recommendedRepairOrderId = null,
+    ): self {
+        $columnsByKey = [];
+
+        foreach ($homeBoardColumns as $column) {
+            $amountCents = 0;
+
+            foreach ($column->visibleCards as $card) {
+                if (! $card instanceof WorkboardTriageCard) {
+                    continue;
+                }
+
+                $totals = $repairOrderTotals[$card->repairOrder->id] ?? null;
+
+                if ($totals instanceof EstimateTotals) {
+                    $amountCents += $totals->totalCents();
+                }
+            }
+
+            $columnsByKey[$column->key] = new AdvisorHomeColumnStat(
+                key: $column->key,
+                label: $column->label,
+                count: $column->totalCount,
+                amountCents: $amountCents,
+                amountLabel: self::moneyLabel($amountCents),
+            );
+        }
+
+        return new self(
+            constraintColumnKey: null,
+            constraintLabel: null,
+            constraintColumn: null,
+            pipelineAmountCents: 0,
+            pipelineAmountLabel: '$0',
+            pipelineRoCount: 0,
+            pipelineInventoryUrl: null,
+            nextRecommendation: null,
+            recommendedRepairOrderId: $recommendedRepairOrderId,
+            columnsByKey: $columnsByKey,
+            hotCards: [],
+            activeCarCount: $activeCarCount,
+            needsActionCount: 0,
+            largestPendingApproval: null,
+            oldestOpenRo: null,
+            needsCallCount: 0,
+            attentionZones: [],
+            nextAttentionRow: null,
+        );
+    }
+
     /**
      * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
+     * @param  Collection<int, EstimateTotals>  $repairOrderTotals
      * @param  list<AdvisorHomeAttentionZone>  $attentionZones
      */
     public static function resolve(

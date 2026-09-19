@@ -107,9 +107,8 @@ final class MobileStaffAccess
 
     public function canSetConcernDisposition(User $user, RepairOrder $repairOrder): bool
     {
-        // The estimate decision (approve / decline / defer) is an advisor/owner
-        // action that mutates the estimate. Technicians own production, not
-        // approvals (technician-scope doctrine).
+        // Estimate approve / decline / defer is an advisor/owner action.
+        // Technicians may change production status, not estimate disposition.
         if (! $user->can(ArkCapability::RepairOrdersManage->value)) {
             return false;
         }
@@ -119,9 +118,8 @@ final class MobileStaffAccess
 
     public function canChangeRepairOrderLifecycle(User $user, RepairOrder $repairOrder): bool
     {
-        // RO lifecycle (status moves, close-out) is advisor/owner authority.
-        // Technicians own production status on concerns, not the repair order
-        // lifecycle (technician-scope doctrine).
+        // RO status and close-out are advisor/owner actions.
+        // Technicians may change production status on concerns, not RO lifecycle.
         if (! $user->can(ArkCapability::RepairOrdersManage->value)) {
             return false;
         }

@@ -57,18 +57,36 @@ test('operational identity presenter includes mileage and advisor when data exis
         'created_by' => $advisor->id,
     ]);
 
-    $identity = OperationalIdentityPresenter::forRepairOrder($repairOrder);
+    $identity = OperationalIdentityPresenter::forRepairOrder($repairOrder->fresh());
 
     expect($identity['vehicle']['subtitle'])->toBe('Black · 3.7L V6')
         ->and(collect($identity['vehicle']['lines'])->pluck('label')->all())
-        ->toContain('Mileage')
+        ->not->toContain('Mileage')
         ->not->toContain('Mileage in')
         ->not->toContain('Color')
         ->not->toContain('Engine')
-        ->and(collect($identity['vehicle']['lines'])->firstWhere('label', 'Mileage')['value'])->toBe('165,604 / —')
+        ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Mileage')['value'])->toBe('165,604')
         ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Advisor')['value'])->toBe('Lane Advisor')
         ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Technician')['value'])->toBe('Bay Tech')
         ->and($identity['visit']['title'])->toBe('RO #'.$repairOrder->repair_order_id);
+
+    $repairOrder->concerns()->create([
+        'summary' => 'Split job',
+        'disposition' => \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Approved,
+        'position' => 1,
+    ]);
+    $concern = $repairOrder->concerns()->first();
+    $other = User::factory()->create(['name' => 'Other Tech'])->assignRole(ArkRole::Technician->value);
+    $concern->workGroups()->create([
+        'title' => 'Split job',
+        'position' => 1,
+        'owner_type' => \App\Ark\Operations\RepairOrders\RepairActionOwnerType::Technician,
+        'owner_user_id' => $other->id,
+    ]);
+
+    $split = OperationalIdentityPresenter::forRepairOrder($repairOrder->fresh());
+
+    expect(collect($split['visit']['lines'])->firstWhere('label', 'Technician')['value'])->toBe('Other Tech');
 });
 
 test('operational identity presenter surfaces customer preferred contact method', function () {
@@ -107,7 +125,7 @@ test('repair order review header shows service lane identity band without presen
 
     [$repairOrder] = identityHeaderRepairOrderFixture();
 
-    $this->get(route('operations.repair-orders.show', $repairOrder))
+    $response = $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('ops-service-lane-band', false)
         ->assertSee('>Customer</p>', false)
@@ -117,16 +135,25 @@ test('repair order review header shows service lane identity band without presen
         ->assertSee('(719) 229-7105')
         ->assertSee('165,604')
         ->assertSee('Lane Advisor')
+        ->assertSee('Bay Tech')
         ->assertDontSee('ops-service-lane-footer', false)
         ->assertSee('ops-mileage-inline')
-        ->assertSee("task: 'mileage'", false)
         ->assertSee('data-workspace-modal-form="mileage"', false)
-        ->assertDontSee('arkRepairOrderMileage')
         ->assertSee('>In</span>', false)
         ->assertSee('>Out</span>', false)
         ->assertDontSee('Advisor:')
         ->assertDontSee('Presentation')
         ->assertDontSee('recommendation pending review');
+
+    $html = $response->getContent();
+    $vehiclePos = strpos($html, '>Vehicle</p>');
+    $visitPos = strpos($html, '>Visit</p>');
+    $mileagePos = strpos($html, 'ops-mileage-inline');
+
+    expect($vehiclePos)->toBeInt()
+        ->and($visitPos)->toBeGreaterThan($vehiclePos)
+        ->and($mileagePos)->toBeGreaterThan($visitPos)
+        ->and(substr($html, $vehiclePos, $visitPos - $vehiclePos))->not->toContain('ops-mileage-inline');
 });
 
 test('repair order identity band owns customer and vehicle presentation once', function () {
@@ -178,7 +205,9 @@ test('estimate pdf identity band omits internal presentation reminders', functio
 
     $identity = OperationalIdentityPresenter::fromSnapshot($snapshot, customerFacing: true);
 
-    expect($identity['visit']['posture'])->toBeNull();
+    expect($identity['visit']['posture'])->toBeNull()
+        ->and(collect($identity['vehicle']['lines'])->pluck('label')->all())->not->toContain('Mileage')
+        ->and(collect($identity['visit']['lines'])->pluck('label')->all())->toContain('Mileage');
 });
 
 test('closed repair order estimate snapshot still labels visit column as estimate', function () {
@@ -209,9 +238,13 @@ test('closed repair order estimate snapshot still labels visit column as estimat
         'concerns' => [],
     ], customerFacing: true);
 
-    expect($identity['visit']['title'])->toBe('Estimate · RO #1547')
+    expect($identity['visit']['title'])->toBe('RO #1547')
+        ->and(collect($identity['visit']['lines'])->pluck('label')->all())->not->toContain('Status')
         ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Technician')['value'])->toBe('Bay Tech')
-        ->and(collect($identity['vehicle']['lines'])->pluck('label')->all())->toContain('Plate', 'VIN', 'Mileage');
+        ->and(collect($identity['vehicle']['lines'])->pluck('label')->all())->toContain('Plate', 'VIN')
+        ->and(collect($identity['vehicle']['lines'])->pluck('label')->all())->not->toContain('Mileage')
+        ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Mileage in')['value'])->toBe('165,604')
+        ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Mileage out')['value'])->toBe('165,650');
 });
 
 test('estimate snapshot visit status follows concern authorization not lifecycle label', function () {
@@ -222,7 +255,7 @@ test('estimate snapshot visit status follows concern authorization not lifecycle
             'repair_order_id' => 1591,
             'status' => 'approved',
             'status_label' => 'Approved',
-            'advisor_name' => 'Alex Rivera',
+            'advisor_name' => 'Edward Soares',
         ],
         'customer' => ['name' => 'Emirhan Cadas'],
         'vehicle' => ['display_name' => '2020 Toyota Corolla LE'],
@@ -239,8 +272,8 @@ test('estimate snapshot visit status follows concern authorization not lifecycle
         ],
     ], customerFacing: false);
 
-    expect(collect($identity['visit']['lines'])->firstWhere('label', 'Status')['value'])
-        ->toBe('Deferred for follow-up');
+    expect(collect($identity['visit']['lines'])->pluck('label')->all())
+        ->not->toContain('Status');
 });
 
 test('invoice pdf identity band labels visit column as invoice', function () {
@@ -257,7 +290,8 @@ test('invoice pdf identity band labels visit column as invoice', function () {
         'concerns' => [],
     ], customerFacing: true);
 
-    expect($identity['visit']['title'])->toBe('Final Invoice · RO #42')
+    expect($identity['visit']['title'])->toBe('RO #42')
+        ->and($identity['visit']['status_badge'])->toBe('In Progress')
         ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Advisor')['value'])->toBe('Lane Advisor');
 });
 
@@ -276,4 +310,68 @@ test('invoice pdf identity band falls back to repair order advisor when generate
     ], customerFacing: true);
 
     expect(collect($identity['visit']['lines'])->firstWhere('label', 'Advisor')['value'])->toBe('ARK Admin');
+});
+
+test('customer pdf identity omits unassigned technician placeholders', function () {
+    $identity = OperationalIdentityPresenter::fromSnapshot([
+        'document_type' => 'estimate',
+        'pdf_document_label' => 'Estimate',
+        'repair_order' => [
+            'repair_order_id' => 1737,
+            'status' => 'approved',
+            'status_label' => 'Approved',
+            'advisor_name' => 'Edward Soares',
+            'assigned_technician_name' => 'Needs owner',
+        ],
+        'customer' => ['name' => 'Brad Bailey'],
+        'vehicle' => ['display_name' => '2017 Fiat 124 Spider Classica'],
+        'staff' => [
+            'execution' => ['technician_name' => 'Needs owner'],
+        ],
+        'concerns' => [
+            ['disposition' => 'approved'],
+        ],
+    ], customerFacing: true);
+
+    expect($identity['visit']['title'])->toBe('RO #1737')
+        ->and($identity['visit']['status_badge'])->toBe('Approved')
+        ->and(collect($identity['visit']['lines'])->pluck('label')->all())
+        ->not->toContain('Technician')
+        ->not->toContain('Status');
+});
+
+test('customer pdf identity puts a single mileage on visit when in and out match', function () {
+    $identity = OperationalIdentityPresenter::fromSnapshot([
+        'document_type' => 'estimate',
+        'pdf_document_label' => 'Estimate',
+        'repair_order' => [
+            'repair_order_id' => 1737,
+            'status' => 'approved',
+            'status_label' => 'Approved',
+            'advisor_name' => 'Edward Soares',
+        ],
+        'customer' => ['name' => 'Brad Bailey'],
+        'vehicle' => [
+            'display_name' => '2017 Fiat 124 Spider Classica',
+            'vin' => 'JC1NFAEK2H0121920',
+            'plate' => 'BIUV55',
+            'plate_state' => 'CO',
+            'color' => 'Red',
+            'engine' => '1.4L L4 vin K SOHC EAM MultiAir',
+            'mileage_in' => 44168,
+            'mileage_out' => 44168,
+        ],
+        'concerns' => [
+            ['disposition' => 'approved'],
+        ],
+    ], customerFacing: true);
+
+    expect(collect($identity['vehicle']['lines'])->pluck('label')->all())
+        ->toContain('VIN', 'Plate')
+        ->not->toContain('Mileage')
+        ->and(collect($identity['visit']['lines'])->pluck('label')->all())
+        ->toContain('Mileage')
+        ->not->toContain('Mileage in')
+        ->not->toContain('Mileage out')
+        ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Mileage')['value'])->toBe('44,168');
 });

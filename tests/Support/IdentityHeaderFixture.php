@@ -19,6 +19,7 @@ use App\Models\User;
 function identityHeaderRepairOrderFixture(): array
 {
     $advisor = User::factory()->create(['name' => 'Lane Advisor'])->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create(['name' => 'Bay Tech'])->assignRole(ArkRole::Technician->value);
 
     $customer = Customer::query()->create([
         'first_name' => 'Amber',
@@ -39,6 +40,7 @@ function identityHeaderRepairOrderFixture(): array
     $repairOrder = RepairOrder::query()->create([
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
+        'assigned_technician_id' => $technician->id,
         'status' => RepairOrderStatus::Estimate,
         'concern_summary' => 'Noise on acceleration',
         'drop_off' => true,

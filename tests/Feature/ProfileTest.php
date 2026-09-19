@@ -7,9 +7,18 @@ test('profile page is displayed', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/profile');
+        ->get('/app/profile');
 
     $response->assertOk();
+    expect(route('profile.edit', absolute: false))->toBe('/app/profile');
+});
+
+test('legacy profile urls redirect into the operations shell', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get('/profile?tab=partstech')
+        ->assertRedirect('/app/profile?tab=partstech');
 });
 
 test('profile information can be updated', function () {
@@ -17,7 +26,7 @@ test('profile information can be updated', function () {
 
     $response = $this
         ->actingAs($user)
-        ->patch('/profile', [
+        ->patch('/app/profile', [
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
@@ -119,7 +128,7 @@ test('email verification status is unchanged when the email address is unchanged
 
     $response = $this
         ->actingAs($user)
-        ->patch('/profile', [
+        ->patch('/app/profile', [
             'name' => 'Test User',
             'email' => $user->email,
         ]);
@@ -136,11 +145,62 @@ test('users cannot delete their own account from profile settings', function () 
 
     $response = $this
         ->actingAs($user)
-        ->delete('/profile', [
+        ->delete('/app/profile', [
             'password' => 'password',
         ]);
 
     $response->assertMethodNotAllowed();
 
     $this->assertNotNull($user->fresh());
+});
+
+test('user can save personal parts tech credentials on profile', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('profile.partstech.update'), [
+            'partstech_username' => 'ben-advisor',
+            'partstech_password' => 'ben-partstech',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('profile.edit', ['tab' => 'partstech']))
+        ->assertSessionHas('status', 'partstech-updated');
+
+    $user->refresh();
+
+    expect($user->partstech_username)->toBe('ben-advisor')
+        ->and($user->partstech_password)->toBe('ben-partstech')
+        ->and($user->usesPersonalPartsTechLogin())->toBeTrue();
+});
+
+test('profile parts tech username requires password when none stored', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->from(route('profile.edit', ['tab' => 'partstech']))
+        ->patch(route('profile.partstech.update'), [
+            'partstech_username' => 'ben-advisor',
+        ])
+        ->assertRedirect(route('profile.edit', ['tab' => 'partstech']))
+        ->assertSessionHasErrors('partstech_password');
+});
+
+test('user can clear personal parts tech login from profile', function () {
+    $user = User::factory()->create([
+        'partstech_username' => 'ben-advisor',
+        'partstech_password' => 'ben-partstech',
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('profile.partstech.update'), [
+            'partstech_username' => '',
+            'partstech_password' => '',
+        ])
+        ->assertSessionHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->partstech_username)->toBeNull()
+        ->and($user->partstech_password)->toBeNull()
+        ->and($user->usesPersonalPartsTechLogin())->toBeFalse();
 });

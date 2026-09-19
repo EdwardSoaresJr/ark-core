@@ -13,7 +13,7 @@
 <x-operations.app :title="$stationName.' · Communications'">
     <div class="mx-auto max-w-3xl space-y-4 px-4 py-4">
         <header class="space-y-1 border-b border-slate-200 pb-3">
-            <a href="{{ route('operations.shop.communications') }}" class="text-xs font-semibold text-sky-700">← Communications</a>
+            <a href="{{ route('operations.shop.communications') }}" class="text-xs font-semibold text-sky-700">← Stations &amp; Phones</a>
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <h1 class="text-xl font-black text-slate-950">{{ $stationName }}</h1>
                 @if ($workspace['first_contact']['ready'] && auth()->user()?->isMasterAdmin())

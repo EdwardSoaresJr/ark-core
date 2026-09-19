@@ -53,7 +53,7 @@ test('closed repair order still opens vehicle identity through workspace modal',
         );
 });
 
-test('customer hub vehicle deep link opens edit workspace modal', function () {
+test('customer hub vehicle deep link opens the vehicles tab without the edit modal', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
@@ -63,11 +63,10 @@ test('customer hub vehicle deep link opens edit workspace modal', function () {
 
     $this->get(route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]))
         ->assertOk()
-        ->assertSee('hub-vehicle', false)
-        ->assertSee('vehicleId', false)
-        ->assertSee('data-workspace-modal-form="hub-vehicle"', false)
-        ->assertSee('Decode VIN', false)
-        ->assertSee((string) $vehicle->id, false);
+        ->assertSee('id="vehicle-'.$vehicle->id.'"', false)
+        ->assertSee("arkCustomerHubTabs('vehicles')", false)
+        ->assertSee('initialTask: null', false)
+        ->assertDontSee("initialTask: 'hub-vehicle'", false);
 });
 
 test('customer and vehicle identity updates persist globally and refresh identity json', function () {

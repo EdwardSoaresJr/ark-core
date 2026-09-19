@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Settings;
 
+use Illuminate\Support\Facades\Schema;
+
 final class ShopIntegrationCredentials
 {
     public function __construct(
@@ -45,52 +47,149 @@ final class ShopIntegrationCredentials
 
     public function partsTechBaseUrl(): string
     {
-        return '';
+        $resolved = $this->resolve($this->settings->partstech_base_url ?? null, config('services.partstech.base_url'));
+
+        return rtrim((string) ($resolved ?: ''), '/');
     }
 
     public function partsTechCatalogPath(): string
     {
-        return '';
+        return trim((string) ($this->resolve($this->settings->partstech_catalog_path ?? null, config('services.partstech.catalog_path')) ?? ''));
     }
 
     public function partsTechUsername(): ?string
     {
-        return null;
+        return $this->resolve($this->settings->partstech_username ?? null, config('services.partstech.username'));
     }
 
     public function partsTechApiKey(): ?string
     {
-        return null;
+        return $this->resolve($this->settings->partstech_api_key ?? null, null);
     }
 
     public function partsTechPassword(): ?string
     {
-        return null;
+        return $this->resolve($this->settings->partstech_password ?? null, null);
     }
 
     public function partsTechCatalogConfigured(): bool
     {
-        return false;
+        $hasCredential = filled($this->partsTechApiKey()) || filled($this->partsTechPassword());
+
+        return $this->partsTechBaseUrl() !== ''
+            && filled($this->partsTechUsername())
+            && $hasCredential;
     }
 
     public function partsTechQuoteImportConfigured(): bool
     {
-        return false;
+        return $this->partsTechBaseUrl() !== ''
+            && filled($this->partsTechUsername())
+            && filled($this->partsTechPassword());
     }
 
     public function hasStoredPartsTechApiKey(): bool
     {
-        return false;
+        return filled($this->settings->partstech_api_key ?? null);
     }
 
     public function hasStoredPartsTechPassword(): bool
     {
-        return false;
+        return filled($this->settings->partstech_password ?? null);
     }
 
     public function partsTechCredentialSource(): string
     {
+        if (
+            filled($this->settings->partstech_password ?? null)
+            || filled($this->settings->partstech_api_key ?? null)
+            || filled($this->settings->partstech_username ?? null)
+        ) {
+            return 'database';
+        }
+
         return 'none';
+    }
+
+    public function repairLinkLaunchUrl(): ?string
+    {
+        if (! $this->repairLinkEnabled() || ! Schema::hasColumn('shop_settings', 'repairlink_url')) {
+            return null;
+        }
+
+        return self::normalizedHttpsUrl($this->settings->repairlink_url ?? null);
+    }
+
+    public function repairLinkEnabled(): bool
+    {
+        if (! Schema::hasColumn('shop_settings', 'repairlink_enabled')) {
+            return false;
+        }
+
+        return (bool) $this->settings->repairlink_enabled;
+    }
+
+    public function repairLinkConfigured(): bool
+    {
+        return $this->repairLinkLaunchUrl() !== null;
+    }
+
+    public function nexpartLaunchUrl(): ?string
+    {
+        if (! $this->nexpartEnabled() || ! Schema::hasColumn('shop_settings', 'nexpart_url')) {
+            return null;
+        }
+
+        return self::normalizedHttpsUrl($this->settings->nexpart_url ?? null);
+    }
+
+    public function nexpartEnabled(): bool
+    {
+        if (! Schema::hasColumn('shop_settings', 'nexpart_enabled')) {
+            return false;
+        }
+
+        return (bool) $this->settings->nexpart_enabled;
+    }
+
+    public function nexpartConfigured(): bool
+    {
+        return $this->nexpartLaunchUrl() !== null;
+    }
+
+    public static function normalizedHttpsUrl(?string $value): ?string
+    {
+        $candidate = trim((string) $value);
+
+        if ($candidate === '') {
+            return null;
+        }
+
+        if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $candidate) !== 1) {
+            $candidate = 'https://'.$candidate;
+        }
+
+        if (! str_starts_with(strtolower($candidate), 'https://')) {
+            return null;
+        }
+
+        $parts = parse_url($candidate);
+
+        if (! is_array($parts) || ! filled($parts['host'] ?? null)) {
+            return null;
+        }
+
+        return $candidate;
+    }
+
+    public function hasStoredSquareAccessToken(): bool
+    {
+        return false;
+    }
+
+    public function hasStoredSquareWebhookSignatureKey(): bool
+    {
+        return false;
     }
 
     public function mailReplyTo(): ?string
@@ -106,6 +205,11 @@ final class ShopIntegrationCredentials
     public function transactionalEmailConfigured(): bool
     {
         return app(\App\Ark\Mail\OutboundTransactionalMail::class)->isReady();
+    }
+
+    public function emailConfigured(): bool
+    {
+        return $this->transactionalEmailConfigured();
     }
 
     public function openaiApiKey(): ?string

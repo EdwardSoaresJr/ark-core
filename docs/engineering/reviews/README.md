@@ -6,9 +6,9 @@ Architecture and scope reviews — **engineering judgment**, not ADRs.
 |----------|----------|
 | [adr/](../adr/) | Frozen decisions (what we chose) |
 | [reviews/](.) | Review records (why we approved, what we worried about) |
-| [IMPLEMENTATION_LOG.md](../IMPLEMENTATION_LOG.md) | What shipped |
+| Git history | What shipped |
 
-ADRs are immutable once accepted. Reviews are append-only records of human and agent review at a point in time.
+ADRs are immutable once accepted. Reviews are written when a person actually reviews architecture or scope — not after every change.
 
 ## When to Write a Review
 

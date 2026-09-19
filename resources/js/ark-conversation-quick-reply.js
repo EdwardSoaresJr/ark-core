@@ -7,7 +7,7 @@ import {
     depositDeliveryBusyLabel,
     withWorksheetBusy,
 } from './ark-worksheet-busy';
-import { deliveryChannelBlockReason, deliveryHttpErrorMessage, deliveryPayload } from './ark-delivery-errors';
+import { deliveryChannelBlockReason, deliveryHttpErrorMessage, deliveryPayload, deliverySentCopy } from './ark-delivery-errors';
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -85,6 +85,8 @@ export function arkConversationQuickReply(config = {}) {
         afterHoursKind: null,
         pendingEstimateTiming: null,
         pendingEstimateScheduledFor: null,
+        platformBacked: config.platformBacked ?? false,
+        sendIdempotencyKey: null,
 
         init() {
             this.bindRealtime();
@@ -180,8 +182,18 @@ export function arkConversationQuickReply(config = {}) {
         bindDeliveryMenuDismiss() {
             const releaseListeners = () => {
                 document.removeEventListener('click', onDocumentClick);
+                document.removeEventListener('keydown', onKeyDown);
                 window.removeEventListener('scroll', onScroll, true);
             };
+
+            const anyComposerMenuOpen = () => (
+                this.estimateMenuOpen
+                || this.paymentMenuOpen
+                || this.depositMenuOpen
+                || this.moreMenuOpen
+                || this.smsSendMenuOpen
+                || this.isActionsMenuOpen()
+            );
 
             const onDocumentClick = (event) => {
                 if (! this.$el.isConnected) {
@@ -190,11 +202,12 @@ export function arkConversationQuickReply(config = {}) {
                     return;
                 }
 
-                if (! this.estimateMenuOpen && ! this.paymentMenuOpen && ! this.depositMenuOpen && ! this.moreMenuOpen && ! this.smsSendMenuOpen) {
+                if (! anyComposerMenuOpen()) {
                     return;
                 }
 
                 const roots = [
+                    this.$refs.actionsMenu,
                     this.$refs.estimateMenu,
                     this.$refs.estimateMenuPanel,
                     this.$refs.paymentMenu,
@@ -214,6 +227,20 @@ export function arkConversationQuickReply(config = {}) {
                 }
 
                 this.closeDeliveryMenus();
+                this.closeActionsMenu();
+            };
+
+            const onKeyDown = (event) => {
+                if (event.key !== 'Escape' || ! this.$el.isConnected) {
+                    return;
+                }
+
+                if (! anyComposerMenuOpen()) {
+                    return;
+                }
+
+                this.closeDeliveryMenus();
+                this.closeActionsMenu();
             };
 
             const onScroll = () => {
@@ -229,7 +256,82 @@ export function arkConversationQuickReply(config = {}) {
             };
 
             document.addEventListener('click', onDocumentClick);
+            document.addEventListener('keydown', onKeyDown);
             window.addEventListener('scroll', onScroll, true);
+        },
+
+        isActionsMenuOpen() {
+            const actions = this.$refs.actionsMenu;
+
+            return !!(actions && actions.open);
+        },
+
+        onActionsMenuToggle(event) {
+            if (event.target !== this.$refs.actionsMenu) {
+                return;
+            }
+
+            if (! event.target.open) {
+                return;
+            }
+
+            this.closeDeliveryMenus();
+            this.syncActionsMenuPosition();
+        },
+
+        closeActionsMenu() {
+            const actions = this.$refs.actionsMenu;
+
+            if (actions?.open) {
+                actions.removeAttribute('open');
+            }
+        },
+
+        syncActionsMenuPosition() {
+            this.$nextTick(() => {
+                const details = this.$refs.actionsMenu;
+                const panel = details?.querySelector('.ops-comms-actions__panel');
+                const summary = details?.querySelector('summary');
+
+                if (! panel || ! summary) {
+                    return;
+                }
+
+                panel.classList.remove('ops-comms-actions__panel--down');
+                panel.style.left = '0';
+                panel.style.right = 'auto';
+                panel.style.maxHeight = '';
+                panel.style.overflowY = '';
+
+                const triggerRect = summary.getBoundingClientRect();
+                const needed = Math.max(panel.scrollHeight, panel.offsetHeight, 120);
+                const spaceAbove = triggerRect.top - 12;
+                const spaceBelow = window.innerHeight - triggerRect.bottom - 12;
+                const openDown = spaceAbove < needed && spaceBelow > spaceAbove;
+
+                if (openDown) {
+                    panel.classList.add('ops-comms-actions__panel--down');
+                }
+
+                const room = openDown ? spaceBelow : spaceAbove;
+
+                if (needed > room) {
+                    panel.style.maxHeight = `${Math.max(room, 160)}px`;
+                    panel.style.overflowY = 'auto';
+                }
+
+                const panelRect = panel.getBoundingClientRect();
+
+                if (panelRect.right > window.innerWidth - 8) {
+                    panel.style.left = 'auto';
+                    panel.style.right = '0';
+                }
+
+                if (panel.getBoundingClientRect().left < 8) {
+                    panel.style.left = '0';
+                    panel.style.right = 'auto';
+                }
+            });
         },
 
         syncDeliveryMenuPosition(triggerRef, styleKey) {
@@ -241,19 +343,26 @@ export function arkConversationQuickReply(config = {}) {
                 }
 
                 const rect = trigger.getBoundingClientRect();
-                const left = Math.round(rect.left);
                 const minWidth = Math.max(Math.round(rect.width), 112);
+                const margin = 8;
+                const estimatedHeight = 200;
+                let left = Math.round(rect.left);
+                left = Math.min(
+                    Math.max(margin, left),
+                    Math.max(margin, window.innerWidth - minWidth - margin),
+                );
 
                 // Composers sit near the bottom of the viewport; open upward
                 // when there is not enough room below the trigger.
-                if (window.innerHeight - rect.bottom < 200) {
-                    const bottom = Math.round(window.innerHeight - rect.top + 4);
-                    this[styleKey] = `top:auto;bottom:${bottom}px;left:${left}px;min-width:${minWidth}px;`;
+                if (window.innerHeight - rect.bottom < estimatedHeight) {
+                    const bottom = Math.max(margin, Math.round(window.innerHeight - rect.top + 4));
+                    this[styleKey] = `top:auto;bottom:${bottom}px;left:${left}px;min-width:${minWidth}px;max-height:calc(100vh - ${bottom + margin}px);overflow-y:auto;`;
 
                     return;
                 }
 
-                this[styleKey] = `top:${Math.round(rect.bottom + 4)}px;left:${left}px;min-width:${minWidth}px;`;
+                const top = Math.round(rect.bottom + 4);
+                this[styleKey] = `top:${top}px;left:${left}px;min-width:${minWidth}px;max-height:calc(100vh - ${top + margin}px);overflow-y:auto;`;
             });
         },
 
@@ -419,6 +528,93 @@ export function arkConversationQuickReply(config = {}) {
             }
 
             this.hasConversationHistory = true;
+        },
+
+        prependPlatformMessage(platformMessage) {
+            if (! platformMessage || typeof platformMessage !== 'object') {
+                return;
+            }
+
+            const publicId = platformMessage.public_id ?? null;
+            let refreshedCanonical = false;
+
+            for (const listId of this.messagesListIds) {
+                const list = document.getElementById(listId);
+
+                if (! list) {
+                    continue;
+                }
+
+                if (list.dataset.timelineRefresh === 'comms-tab') {
+                    if (! refreshedCanonical && typeof window.arkReloadRepairOrderWorkspaceTab === 'function') {
+                        window.arkReloadRepairOrderWorkspaceTab('comms');
+                        refreshedCanonical = true;
+                    }
+
+                    continue;
+                }
+
+                if (publicId && list.querySelector(`[data-platform-message-id="${publicId}"]`)) {
+                    continue;
+                }
+
+                list.querySelector('[data-conversation-empty]')?.remove();
+
+                const direction = platformMessage.direction ?? 'outbound';
+                const headline = this.escapeHtml(
+                    platformMessage.direction_label ?? (direction === 'outbound' ? 'Sent' : 'Received'),
+                );
+                const body = this.escapeHtml(platformMessage.body ?? '');
+                const idAttr = publicId ? ` data-platform-message-id="${this.escapeHtml(String(publicId))}"` : '';
+                const occurredAt = this.escapeHtml(String(platformMessage.occurred_at ?? ''));
+                const occurredAttr = occurredAt !== '' ? ` data-occurred-at="${occurredAt}"` : '';
+                const isCommsThread = list.classList.contains('ops-comms-workspace__thread-body');
+                const isHubRelationship = listId === 'conversation-messages-relationship';
+
+                if (isHubRelationship) {
+                    list.insertAdjacentHTML('afterbegin', `
+                        <div data-conversation-row data-filter="text"${idAttr}${occurredAttr}>
+                            <div class="px-3 py-2 text-xs leading-4 text-slate-700">
+                                <p class="font-bold text-slate-950">${headline}</p>
+                                <p class="mt-0.5 whitespace-pre-wrap text-slate-600">${body}</p>
+                            </div>
+                        </div>
+                    `);
+
+                    continue;
+                }
+
+                const bubbleClass = direction === 'outbound'
+                    ? 'ops-comms-workspace__bubble--outbound'
+                    : 'ops-comms-workspace__bubble--inbound';
+                const meta = [
+                    platformMessage.direction_label ?? (direction === 'outbound' ? 'Sent' : 'Received'),
+                    platformMessage.channel_label ?? 'SMS',
+                    platformMessage.occurred_at_label ?? '',
+                ].filter(Boolean).join(' · ');
+
+                list.insertAdjacentHTML(isCommsThread ? 'beforeend' : 'afterbegin', `
+                    <article class="ops-comms-workspace__bubble ${bubbleClass}"${idAttr}>
+                        <p class="ops-comms-workspace__bubble-meta">${this.escapeHtml(meta)}</p>
+                        <p class="ops-comms-workspace__bubble-body">${body}</p>
+                    </article>
+                `);
+
+                if (isCommsThread) {
+                    list.scrollTop = list.scrollHeight;
+                }
+            }
+
+            this.hasConversationHistory = true;
+        },
+
+        escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
         },
 
         resolveRepairOrderActionUrl(field) {
@@ -616,6 +812,7 @@ export function arkConversationQuickReply(config = {}) {
                 return;
             }
 
+            this.closeActionsMenu();
             this.paymentMenuOpen = false;
             this.depositMenuOpen = false;
             this.moreMenuOpen = false;
@@ -633,6 +830,7 @@ export function arkConversationQuickReply(config = {}) {
                 return;
             }
 
+            this.closeActionsMenu();
             this.estimateMenuOpen = false;
             this.depositMenuOpen = false;
             this.moreMenuOpen = false;
@@ -650,6 +848,7 @@ export function arkConversationQuickReply(config = {}) {
                 return;
             }
 
+            this.closeActionsMenu();
             this.estimateMenuOpen = false;
             this.paymentMenuOpen = false;
             this.moreMenuOpen = false;
@@ -675,6 +874,7 @@ export function arkConversationQuickReply(config = {}) {
                 return;
             }
 
+            this.closeActionsMenu();
             this.estimateMenuOpen = false;
             this.paymentMenuOpen = false;
             this.depositMenuOpen = false;
@@ -692,6 +892,7 @@ export function arkConversationQuickReply(config = {}) {
                 return;
             }
 
+            this.closeActionsMenu();
             this.estimateMenuOpen = false;
             this.paymentMenuOpen = false;
             this.depositMenuOpen = false;
@@ -907,11 +1108,13 @@ export function arkConversationQuickReply(config = {}) {
                     this.applyEstimateSchedule(data);
 
                     if (data?.scheduled) {
+                        arkOpsToast(data?.message || 'Estimate scheduled.', 3200);
+
                         return;
                     }
 
                     this.prependDeliveries(data);
-                    this.toastAwaitingApproval(data);
+                    this.toastEstimateSent(chosenDelivery, data);
                 }, this.$el);
             } catch {
                 this.error = isScheduled
@@ -922,12 +1125,15 @@ export function arkConversationQuickReply(config = {}) {
             }
         },
 
-        toastAwaitingApproval(data) {
-            const toast = data?.awaiting_approval?.toast;
+        toastEstimateSent(delivery, data) {
+            const approvalToast = data?.awaiting_approval?.toast;
+            let text = deliverySentCopy('Estimate', delivery);
 
-            if (typeof toast === 'string' && toast.trim() !== '') {
-                arkOpsToast(toast, data?.awaiting_approval?.moved ? 2800 : 3600);
+            if (typeof approvalToast === 'string' && approvalToast.trim() !== '') {
+                text = `${text} ${approvalToast}`;
             }
+
+            arkOpsToast(text, data?.awaiting_approval?.moved ? 3200 : 2800);
 
             if (data?.awaiting_approval?.moved) {
                 window.dispatchEvent(new CustomEvent('ark:repair-order-status-changed', {
@@ -1104,6 +1310,7 @@ export function arkConversationQuickReply(config = {}) {
                     }
 
                     this.prependDeliveries(data);
+                    arkOpsToast(deliverySentCopy('Payment link', chosenDelivery), 2800);
                 }, this.$el);
             } catch {
                 this.error = 'Payment link could not be sent. Check your connection and try again.';
@@ -1165,6 +1372,7 @@ export function arkConversationQuickReply(config = {}) {
                     }
 
                     this.prependDeliveries(data);
+                    arkOpsToast(deliverySentCopy('Deposit request', chosenDelivery), 2800);
                 }, this.$el);
             } catch {
                 this.error = 'Deposit request could not be sent. Check your connection and try again.';
@@ -1226,6 +1434,7 @@ export function arkConversationQuickReply(config = {}) {
                     }
 
                     this.prependDeliveries(data);
+                    arkOpsToast('Inspection link sent via SMS.', 2800);
                 }, this.$el);
             } catch {
                 this.error = 'Inspection link could not be sent. Check your connection and try again.';
@@ -1282,6 +1491,7 @@ export function arkConversationQuickReply(config = {}) {
                     }
 
                     this.prependDeliveries(data);
+                    arkOpsToast(`${action?.label ?? 'Message'} sent.`, 2800);
                 }, this.$el);
             } catch {
                 this.error = `${action?.label ?? 'Message'} could not be sent. Check your connection and try again.`;
@@ -1344,12 +1554,16 @@ export function arkConversationQuickReply(config = {}) {
 
             this.sending = true;
             this.error = '';
+            this.sendIdempotencyKey = this.sendIdempotencyKey
+                ?? `composer:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
 
             const formData = new FormData();
 
             if (trimmedBody !== '') {
                 formData.append('body', trimmedBody);
             }
+
+            formData.append('idempotency_key', this.sendIdempotencyKey);
 
             if (timing !== 'now' || scheduledFor) {
                 formData.append('timing', 'tomorrow_morning');
@@ -1431,18 +1645,32 @@ export function arkConversationQuickReply(config = {}) {
                             this.focusReplyInput();
                         }
 
+                        arkOpsToast(data?.message || 'Reply scheduled.', 3200);
+
                         return;
                     }
 
                     if (data?.html) {
                         this.prependMessage(data.html, data?.message_id, data?.filter ?? 'text');
+                    } else if (data?.platform_message || data?.platform_authoritative) {
+                        this.prependPlatformMessage(data.platform_message ?? {
+                            direction: 'outbound',
+                            direction_label: 'Sent',
+                            channel_label: 'SMS',
+                            body: trimmedBody,
+                            public_id: data?.platform_message?.public_id ?? data?.provider_message_sid ?? null,
+                            occurred_at_label: 'Just now',
+                        });
                     }
 
                     this.body = '';
                     this.clearAttachment();
                     this.nudgeKey = '';
                     this.entityKey = '';
+                    this.sendIdempotencyKey = null;
                     window.ARK?.workspace?.setDirty?.(false);
+
+                    arkOpsToast(this.channel === 'messenger' ? 'Message sent.' : 'Message sent via SMS.', 2400);
 
                     if (! this.keepOpenAfterSend && ! this.alwaysOpen) {
                         this.open = false;

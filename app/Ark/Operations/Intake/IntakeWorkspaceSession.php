@@ -79,10 +79,16 @@ final class IntakeWorkspaceSession
             $params[self::QUERY_KEY] = $workspaceId;
         }
 
-        $leadId = $fromInput ? $request->integer('lead_id') : $request->integer('lead_id');
+        $leadId = $request->integer('lead_id');
 
         if ($leadId > 0) {
             $params['lead_id'] = $leadId;
+        }
+
+        $appointmentId = $request->integer('appointment_id');
+
+        if ($appointmentId > 0) {
+            $params['appointment_id'] = $appointmentId;
         }
 
         return $params;

@@ -135,20 +135,26 @@ export function arkVehicleDecode(config = {}) {
     return {
         decoding: false,
         message: '',
+        messageIsError: false,
+        fail(text) {
+            this.message = text;
+            this.messageIsError = true;
+        },
         async decodePlate(event) {
             const form = event.currentTarget.closest('form');
             const plate = form?.querySelector('[name="plate"]')?.value || '';
             const plateState = form?.querySelector('[name="plate_state"]')?.value || '';
 
             this.message = '';
+            this.messageIsError = false;
 
             if (plate.trim().length < 2) {
-                this.message = 'Enter a license plate to decode.';
+                this.fail('Enter a license plate to decode.');
                 return;
             }
 
-            if (plateState.trim().length < 2) {
-                this.message = 'Enter the plate state (e.g. CO).';
+            if (plateState.trim().length !== 2) {
+                this.fail('Enter the 2-letter plate state, like CO.');
                 return;
             }
 
@@ -169,18 +175,19 @@ export function arkVehicleDecode(config = {}) {
                     }),
                 });
 
-                const payload = await response.json();
+                const payload = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    this.message = payload.message || 'Vehicle could not be decoded from that plate.';
+                    this.fail(payload.message || payload.errors?.decode?.[0] || 'Vehicle could not be decoded from that plate.');
                     return;
                 }
 
                 applyDecodedVehicleFields(form, payload);
 
                 this.message = 'Plate decoded. Review before saving.';
+                this.messageIsError = false;
             } catch {
-                this.message = 'Plate decode is unavailable right now.';
+                this.fail('Plate decode is unavailable right now.');
             } finally {
                 this.decoding = false;
             }
@@ -190,9 +197,10 @@ export function arkVehicleDecode(config = {}) {
             const vin = form?.querySelector('[name="vin"]')?.value || '';
 
             this.message = '';
+            this.messageIsError = false;
 
             if (vin.trim().length < 11) {
-                this.message = 'Enter at least 11 VIN characters to decode.';
+                this.fail('Enter at least 11 VIN characters to decode.');
                 return;
             }
 
@@ -210,18 +218,19 @@ export function arkVehicleDecode(config = {}) {
                     body: JSON.stringify({ vin }),
                 });
 
-                const payload = await response.json();
+                const payload = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    this.message = payload.message || 'Vehicle could not be decoded.';
+                    this.fail(payload.message || payload.errors?.decode?.[0] || 'Vehicle could not be decoded.');
                     return;
                 }
 
                 applyDecodedVehicleFields(form, payload);
 
                 this.message = 'Vehicle decoded. Review before saving.';
+                this.messageIsError = false;
             } catch {
-                this.message = 'Vehicle decode is unavailable right now.';
+                this.fail('Vehicle decode is unavailable right now.');
             } finally {
                 this.decoding = false;
             }
@@ -251,7 +260,7 @@ export function arkVehicleDecode(config = {}) {
             }
 
             event.preventDefault();
-            this.message = 'Enter a VIN, plate, or year, make, and model before saving.';
+            this.fail('Enter a VIN, plate, or year, make, and model before saving.');
         },
     };
 }

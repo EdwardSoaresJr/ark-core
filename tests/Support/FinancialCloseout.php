@@ -36,6 +36,8 @@ function financialCloseoutRepairOrder(
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => $status,
+        'mileage_in' => 120000,
+        'mileage_out' => 120050,
         'concern_summary' => 'Financial closeout test.',
     ]);
 

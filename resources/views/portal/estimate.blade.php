@@ -101,10 +101,22 @@
             @endif
 
             @if (is_array($portalAuthorization))
+                @php
+                    $approvedAmountLabel = $portalAuthorization['approved_amount'] ?? null;
+                    $vehicleLabel = $repairOrder->vehicle->display_name;
+                    $thankYouLead = filled($customerFirstName ?? null)
+                        ? 'Thank you, '.$customerFirstName.' —'
+                        : 'Thank you —';
+                    $justSubmittedIntro = filled($approvedAmountLabel)
+                        ? $thankYouLead.' we received your approval for '.$approvedAmountLabel.' in repairs for your '.$vehicleLabel.'.'
+                        : $thankYouLead.' we received your approval for your '.$vehicleLabel.'.';
+                @endphp
                 @include('portal.partials._authorization-record', [
                     'record' => \App\Ark\Operations\Portal\PortalCustomerAuthorizationPresentation::fromSessionFlash($portalAuthorization),
-                    'title' => 'Your choices were saved',
-                    'intro' => 'Thank you — we recorded what you approved, deferred, and declined.',
+                    'title' => ($authorizationFromSession ?? false) ? 'You’re all set' : 'We have your approval',
+                    'intro' => ($authorizationFromSession ?? false)
+                        ? $justSubmittedIntro
+                        : 'Thanks — your estimate choices are already with us.',
                     'class' => 'mt-6',
                 ])
                 @if ($showDeposit && filled($depositAmountLabel))
@@ -113,11 +125,6 @@
                         'payingRemaining' => $payingRemaining,
                         'class' => 'mt-4',
                     ])
-                @endif
-                @if ($depositCollected)
-                    <p class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-                        Payment received. The shop has been notified.
-                    </p>
                 @endif
                 @include('portal.partials._authorization-next-steps', [
                     'shopPhone' => $shopPhone,
@@ -128,7 +135,8 @@
             @elseif ($latestRecordedApproval && ! $canAuthorize)
                 @include('portal.partials._authorization-record', [
                     'record' => \App\Ark\Operations\Portal\PortalCustomerAuthorizationPresentation::fromApprovalEvent($latestRecordedApproval),
-                    'title' => 'Approval on file',
+                    'title' => 'We have your approval',
+                    'intro' => 'We’ve recorded the work you authorized with your advisor.',
                     'class' => 'mt-6',
                 ])
                 @if ($showDeposit && filled($depositAmountLabel))
@@ -147,7 +155,7 @@
             @elseif ($presentedWorkIsFullyApproved && ! $canAuthorize)
                 <div class="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                     <p class="font-semibold">Work approved</p>
-                    <p class="mt-1">Your advisor recorded approval for the services below. Call the shop if anything looks wrong.</p>
+                    <p class="mt-1">We’ve recorded the work you authorized with your advisor.</p>
                 </div>
                 @include('portal.partials._authorization-next-steps', [
                     'shopPhone' => $shopPhone,
@@ -155,6 +163,60 @@
                     'depositAmount' => $depositAmountLabel,
                     'payingRemaining' => $payingRemaining,
                 ])
+            @endif
+
+            @php
+                $notice = is_array($paymentNotice ?? null) ? $paymentNotice : null;
+                $noticeKind = $notice['kind'] ?? null;
+            @endphp
+            @if ($noticeKind === 'complete')
+                <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <p class="font-semibold">{{ $notice['title'] }}</p>
+                    @if (filled($notice['body'] ?? null))
+                        <p class="mt-1">{{ $notice['body'] }}</p>
+                    @endif
+                    @if (filled($shopDisplayName ?? null))
+                        <p class="mt-2">
+                            {{ $shopDisplayName }} has your approval and payment. We’ll take it from here and keep you updated along the way.
+                        </p>
+                    @endif
+                </div>
+            @elseif ($noticeKind === 'partial')
+                <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <p class="font-semibold">{{ $notice['title'] }}</p>
+                    @if (filled($notice['body'] ?? null))
+                        <p class="mt-1">{{ $notice['body'] }}</p>
+                    @endif
+                    @if (filled($notice['remaining_line'] ?? null))
+                        <p class="mt-2 font-semibold tabular-nums text-emerald-950">{{ $notice['remaining_line'] }}</p>
+                    @endif
+                </div>
+            @elseif ($noticeKind === 'balance_due')
+                <p class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">
+                    {{ $notice['title'] }}
+                </p>
+            @elseif ($depositCollected)
+                <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <p class="font-semibold">Payment received</p>
+                    <p class="mt-1">Thank you — we received your payment.</p>
+                </div>
+            @endif
+
+            @if (
+                filled($shopHeadline ?? null)
+                && (
+                    is_array($portalAuthorization)
+                    || ($latestRecordedApproval && ! $canAuthorize)
+                    || ($presentedWorkIsFullyApproved && ! $canAuthorize)
+                    || $noticeKind === 'complete'
+                    || $noticeKind === 'partial'
+                )
+            )
+                <p class="mt-4 text-center text-xs leading-5 text-slate-500">
+                    <span class="font-semibold text-slate-700">{{ $shopDisplayName }}</span>
+                    <span class="mx-1.5 text-slate-300" aria-hidden="true">·</span>
+                    {{ $shopHeadline }}
+                </p>
             @endif
         </div>
 
@@ -174,6 +236,11 @@
                 @include('portal.partials._estimate-summary-panel', [
                     'totalsBreakdown' => $totalsBreakdown,
                     'approvalForecast' => $approvalForecast,
+                ])
+
+                @include('partials.public.financing-note', [
+                    'class' => 'mt-5',
+                    'showProgramButtons' => true,
                 ])
             </div>
 
@@ -198,6 +265,7 @@
                         @include('portal.partials._estimate-deposit-panel', [
                             'token' => $token,
                             'portalAuthorization' => $portalAuthorization,
+                            'square' => $square,
                             'staffPreview' => $staffPreview ?? false,
                             'payingRemaining' => $payingRemaining,
                         ])
@@ -228,6 +296,7 @@
                         @include('portal.partials._estimate-deposit-panel', [
                             'token' => $token,
                             'portalAuthorization' => $portalAuthorization,
+                            'square' => $square,
                             'staffPreview' => $staffPreview ?? false,
                             'payingRemaining' => $payingRemaining,
                         ])
@@ -271,6 +340,10 @@
                                     'approvalForecast' => $approvalForecast,
                                 ])
                             </div>
+                            @include('partials.public.financing-note', [
+                                'class' => 'mt-4',
+                                'showProgramButtons' => true,
+                            ])
                         </div>
                     @endif
 
@@ -303,6 +376,10 @@
                             'approvalForecast' => $approvalForecast,
                         ])
                     </div>
+
+                    @include('partials.public.financing-note', [
+                        'showProgramButtons' => true,
+                    ])
                 </aside>
             </div>
 

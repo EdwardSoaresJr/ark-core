@@ -1,7 +1,15 @@
 <x-operations.app title="Shop Settings">
     <section
         x-data="{
-            active: @js($initialSection) || new URLSearchParams(window.location.search).get('section') || localStorage.getItem('ark:shop-settings:section') || 'general',
+            active: (() => {
+                const candidate = @js($initialSection) || new URLSearchParams(window.location.search).get('section') || localStorage.getItem('ark:shop-settings:section') || 'general';
+
+                if (candidate === 'dragon-memory') {
+                    return 'general';
+                }
+
+                return candidate;
+            })(),
             financialTab: (() => {
                 const fromUrl = new URLSearchParams(window.location.search).get('financial-tab');
 
@@ -18,6 +26,15 @@
                 return stored;
             })(),
             printingTab: localStorage.getItem('ark:shop-settings:printing-tab') || 'printers',
+            communicationsTab: (() => {
+                const fromUrl = new URLSearchParams(window.location.search).get('communications-tab');
+
+                if (fromUrl) {
+                    return fromUrl;
+                }
+
+                return localStorage.getItem('ark:shop-settings:communications-tab') || 'general';
+            })(),
             workflowTab: (() => {
                 const fromUrl = new URLSearchParams(window.location.search).get('workflow-tab');
 
@@ -46,6 +63,13 @@
             setPrintingTab(tab) {
                 this.printingTab = tab;
                 localStorage.setItem('ark:shop-settings:printing-tab', tab);
+            },
+            setCommunicationsTab(tab) {
+                this.communicationsTab = tab;
+                localStorage.setItem('ark:shop-settings:communications-tab', tab);
+                const url = new URL(window.location.href);
+                url.searchParams.set('communications-tab', tab);
+                window.history.replaceState({}, '', url);
             },
             setWorkflowTab(tab) {
                 this.workflowTab = tab;
@@ -166,9 +190,6 @@
                 @if (session('status'))
                     <p class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900">{{ session('status') }}</p>
                 @endif
-                @if (session('warning'))
-                    <p class="border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">{{ session('warning') }}</p>
-                @endif
             </div>
             @if ($errors->any())
                 <div class="mt-2 border border-rose-200 bg-rose-50 px-3 py-2">
@@ -189,8 +210,9 @@
                 <nav class="grid gap-1 text-sm">
                     <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
                     <button type="button" @click="setActive('financial')" :class="active === 'financial' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Financial Rules</button>
-                    <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
-                    <button type="button" @click="setActive('customer-messaging')" :class="active === 'customer-messaging' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Customer Messaging</button>
+                    <button type="button" @click="setActive('payments')" :class="active === 'payments' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Square Payments</button>
+                    <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
+                    <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
                     <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
                     <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
                     <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
@@ -201,7 +223,6 @@
                     @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
                         <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
                     @endcan
-                    <button type="button" @click="setActive('dragon-memory')" :class="active === 'dragon-memory' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Dragon Memory</button>
                 </nav>
             </aside>
 
@@ -305,9 +326,6 @@
                             </label>
                         </div>
                     </div>
-
-                    @include('operations.settings.partials.shop-profile-hours')
-
                     <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
                         <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
                             Save General
@@ -543,7 +561,7 @@
                             );
                         @endphp
                         <p class="text-xs leading-5 text-slate-500">
-                            Default deposit amount on the repair order financial rail. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
+                            Default deposit amount on the repair order financial rail and Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
                         </p>
                         <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" class="grid gap-4 md:grid-cols-2">
                             @csrf
@@ -993,10 +1011,23 @@
                     </div>
                 </section>
 
+                @include('operations.settings.partials.square-payments-settings', [
+                    'settings' => $settings,
+                    'platformPaymentsCapture' => $platformPaymentsCapture ?? false,
+                ])
 
-                @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
+                @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
 
-                @include('operations.settings.partials.customer-messaging-settings', ['settings' => $settings])
+                @include('operations.settings.partials.telephony-settings', [
+                    'settings' => $settings,
+                    'telephonyHealth' => $telephonyHealth,
+                    'telephonyEndpoints' => $telephonyEndpoints,
+                    'telephonyEndpointTypes' => $telephonyEndpointTypes,
+                    'telephonyExtensions' => $telephonyExtensions,
+                    'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
+                    'staff' => $staff,
+                    'platformMailSend' => $platformMailSend ?? false,
+                ])
 
                 <section x-show="active === 'overhead'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
@@ -1158,8 +1189,8 @@
                 <section x-show="active === 'workflow'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Workflow Defaults</p>
-                        <h2 class="text-base font-black text-slate-950">Check In defaults and RO lifecycle</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide check-in posture and the repair order status catalog that drives workboards and lifecycle moves.</p>
+                        <h2 class="text-base font-black text-slate-950">Check In defaults and Job Board</h2>
+                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide check-in posture, Job Board lanes, and the repair order statuses that fill those lanes.</p>
                     </div>
 
                     <div class="mt-4 grid gap-px border border-slate-300 bg-slate-300 text-sm sm:grid-cols-4">
@@ -1174,7 +1205,7 @@
                             @click="setWorkflowTab('statuses')"
                             :class="workflowTab === 'statuses' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
                             class="px-3 py-2 text-left font-semibold"
-                        >RO statuses</button>
+                        >Job Board</button>
                         <button
                             type="button"
                             @click="setWorkflowTab('inspections')"
@@ -1199,8 +1230,13 @@
 
                     <div x-show="workflowTab === 'statuses'" x-cloak>
                         <div class="mt-4 border-b border-slate-100 pb-2">
-                            <h3 class="text-sm font-black text-slate-950">RO status catalog</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">LNP workflow matrix — display names, workboard lanes, and role-gated lifecycle moves.</p>
+                            <h3 class="text-sm font-black text-slate-950">Job Board</h3>
+                            <p class="mt-0.5 text-xs text-slate-500">Set up the shop queues and the statuses that live in each one. Attention stays derived — it is not a lane or a status color.</p>
+                        </div>
+                        @include('operations.settings.partials.job-board-lanes')
+                        <div class="mt-8 border-b border-slate-100 pb-2">
+                            <h3 class="text-sm font-black text-slate-950">RO statuses</h3>
+                            <p class="mt-0.5 text-xs text-slate-500">Configured operational state for each vehicle. Status color is independent of lane color and of ARK attention.</p>
                         </div>
                         @include('operations.settings.partials.ro-status-catalog')
                     </div>
@@ -1347,10 +1383,6 @@
                 @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
                     @include('operations.settings.partials.staff')
                 @endcan
-
-                @include('operations.settings.partials.dragon-memory', [
-                    'dragonMemories' => $dragonMemories ?? collect(),
-                ])
 
                 @include('operations.settings.partials.runtime-health', [
                     'telephonyHealth' => $telephonyHealth,

@@ -2,9 +2,6 @@
 
 namespace App\Ark\Operations\Messaging;
 
-use App\Ark\Mail\OutboundTransactionalMail;
-use App\Ark\Mail\TransactionalMailException;
-use App\Ark\Mail\TransactionalMailOperation;
 use App\Ark\Operations\Communications\CommunicationEventRecorder;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
@@ -13,9 +10,13 @@ use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Platform\Mail\ArkMailClient;
+use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Mail\DepositRequestCustomerMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 final class SendDepositRequestEmailDelivery
 {
@@ -23,7 +24,7 @@ final class SendDepositRequestEmailDelivery
         private readonly DepositPortalLinkContext $depositLink,
         private readonly ConversationRecorder $conversations,
         private readonly CommunicationEventRecorder $communicationEvents,
-        private readonly OutboundTransactionalMail $outboundMail,
+        private readonly ArkMailClient $mail,
     ) {}
 
     public function send(
@@ -35,23 +36,17 @@ final class SendDepositRequestEmailDelivery
         $context = $this->depositLink->forRepairOrder($repairOrder, $amountCents);
         $settings = ShopSettings::current();
         $shopName = $settings->shop_name ?: config('app.name', 'ARK-SMS');
-
-        $mailResult = $this->outboundMail->sendMailable(
-            TransactionalMailOperation::DepositRequestSend,
-            $recipientEmail,
-            new DepositRequestCustomerMail(
-                repairOrder: $repairOrder,
-                shopName: $shopName,
-                portalUrl: $context['url'],
-                amountDisplay: $context['amount_display'],
-            ),
-            'deposit-request-'.$repairOrder->repair_order_id.'-'.$amountCents.'-'.Str::uuid(),
-            'repair_order',
-            (string) $repairOrder->repair_order_id,
+        $mailable = new DepositRequestCustomerMail(
+            repairOrder: $repairOrder,
+            shopName: $shopName,
+            portalUrl: $context['url'],
+            amountDisplay: $context['amount_display'],
         );
 
-        if (! $mailResult->ok()) {
-            throw new TransactionalMailException($mailResult);
+        if (ManagedMailGate::platformSend()) {
+            $this->sendViaPlatform($mailable, $repairOrder, $recipientEmail);
+        } else {
+            Mail::to($recipientEmail)->send($mailable);
         }
 
         $summary = 'Deposit request emailed to '.$recipientEmail.'. Amount '.$context['amount_display'].'.';
@@ -74,5 +69,32 @@ final class SendDepositRequestEmailDelivery
         );
 
         return $message;
+    }
+
+    private function sendViaPlatform(
+        DepositRequestCustomerMail $mailable,
+        RepairOrder $repairOrder,
+        string $recipientEmail,
+    ): void {
+        $result = $this->mail->sendTransactional([
+            'operation' => 'deposit_request.send',
+            'to' => $recipientEmail,
+            'subject' => (string) $mailable->envelope()->subject,
+            'html_body' => $mailable->render(),
+            'idempotency_key' => 'deposit-request-send-'.Str::uuid(),
+            'domain_object_type' => 'repair_order',
+            'domain_object_id' => (string) $repairOrder->id,
+            'metadata' => [
+                'repair_order_id' => $repairOrder->id,
+            ],
+        ]);
+
+        if (($result['ok'] ?? false) !== true) {
+            throw new RuntimeException(
+                is_string($result['message'] ?? null)
+                    ? $result['message']
+                    : 'Deposit request email could not be sent.',
+            );
+        }
     }
 }

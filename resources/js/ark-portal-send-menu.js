@@ -1,5 +1,6 @@
 import { portalSendBusyLabel, withWorksheetBusy } from './ark-worksheet-busy';
-import { deliveryChannelBlockReason, deliveryHttpErrorMessage, deliveryPayload } from './ark-delivery-errors';
+import { deliveryChannelBlockReason, deliveryHttpErrorMessage, deliveryPayload, deliverySentCopy } from './ark-delivery-errors';
+import { arkOpsToast } from './ark-ops-toast';
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -239,11 +240,8 @@ export function arkPortalSendMenu(config = {}) {
                         return;
                     }
 
-                    const channels = delivery === 'both'
-                        ? 'SMS and email'
-                        : (delivery === 'email' ? 'Email' : 'SMS');
-
-                    this.success = `Portal link sent via ${channels}.`;
+                    this.success = deliverySentCopy('Estimate', delivery);
+                    arkOpsToast(this.success, 2800);
 
                     if (typeof window.arkReloadRepairOrderWorkspaceTab === 'function') {
                         await window.arkReloadRepairOrderWorkspaceTab('comms');

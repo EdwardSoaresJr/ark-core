@@ -6,9 +6,8 @@ use App\Ark\Operations\LaborGuides\Rte\RteLaborHoursBasis;
 use App\Ark\Operations\LaborGuides\Rte\RteShopLaborHoursProjection;
 
 /**
- * Level 2 labor match attribution — guide row through doctrine layers to final hours.
- *
- * Observation only. Does not change matching, hours, or doctrine.
+ * Explains how a labor guide row became the hours on the line.
+ * Read-only. Does not change matching or hours.
  */
 final class LaborMatchAttributionProjection
 {

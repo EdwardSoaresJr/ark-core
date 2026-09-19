@@ -23,6 +23,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Database\Seeders\ShopSettingsSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -367,6 +368,45 @@ test('advisor can email paperwork from the viewer with attachment', function () 
         ->assertSee('Email log', false)
         ->assertSee('dana@example.test', false)
         ->assertSee('Here is your warranty paperwork.', false);
+});
+
+test('hosted document email uses platform mail', function () {
+    $admin = actingAsLearnCurrentStaff(ArkRole::Admin);
+    [$customer, $repairOrder] = documentsFixture();
+    $customer->forceFill(['email' => 'dana@example.test'])->save();
+
+    $document = app(StoreDocumentAction::class)->handle(
+        $customer,
+        UploadedFile::fake()->create('warranty.pdf', 40, 'application/pdf'),
+        $admin,
+        DocumentType::Warranty,
+        'ASC Vehicle Protection Plan',
+        repairOrder: $repairOrder,
+    );
+
+    Storage::disk('local')->put($document->storage_path, '%PDF-1.4 warranty');
+
+    enableHostedPlatformMail();
+    fakeHostedPlatformMail();
+    Mail::fake();
+
+    $this->actingAs($admin)
+        ->from(route('operations.customers.documents.viewer', [$customer, $document]))
+        ->post(route('operations.customers.documents.email', [$customer, $document]), [
+            'message' => 'Here is your warranty paperwork.',
+        ])
+        ->assertRedirect(route('operations.customers.documents.viewer', [$customer, $document]))
+        ->assertSessionHas('status', 'Document emailed to dana@example.test.');
+
+    Mail::assertNothingSent();
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        $body = $request->data();
+
+        return $request->url() === 'https://cloud.test/api/v1/services/mail/messages/transactional'
+            && ($body['operation'] ?? null) === 'document.send'
+            && ($body['to'] ?? null) === 'dana@example.test'
+            && filled($body['attachments'][0]['content_base64'] ?? null);
+    });
 });
 
 test('email requires recipient when customer has no email on file', function () {

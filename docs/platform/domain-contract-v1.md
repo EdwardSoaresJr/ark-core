@@ -2,7 +2,7 @@
 
 **Status:** Locked — stancl / Shop provisioning prep  
 **Date:** 2026-07-19  
-**Companions:** [shop-authority-v1.md](shop-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md) · [shop-identity-v1.md](shop-identity-v1.md) (HTTP vs SIP; deployment autonomy) · ark-surfaces.mdc
+**Companions:** [shop-authority-v1.md](shop-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md) · [shop-identity-v1.md](shop-identity-v1.md) (HTTP vs SIP; deployment autonomy) · [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc)
 
 This contract defines **who each hostname is for**. It does not prescribe Coolify topology or SIP registrars.
 
@@ -24,7 +24,7 @@ Provisioning provisions a Shop. Billing bills a Shop. Communications and operati
 ## Audiences (three hosts, three jobs)
 
 ```text
-I want ARK          →  autorepairkeeper.com          (ARK Platform — the product)
+I want ARK          →  autorepairkeeper.com          (ARK Cloud — the product)
 I manage ARK        →  app.autorepairkeeper.com      (Auth + Cloud dashboard — Phase 2+)
 I work here         →  {shop}.arksms.com             (shop workspace)
 I'm a customer      →  {custom domain}  (or trial preview)
@@ -40,7 +40,7 @@ I'm a customer      →  {custom domain}  (or trial preview)
 | --- | --- |
 | **Domain** | `autorepairkeeper.com` (+ `www` → apex) |
 | **Audience** | Prospective customers + new owners |
-| **Owns** | ARK Platform product — Home · Features · Pricing · Resources · Login · Trial · Become · Arrive · Cloud dashboard (Phase 1) |
+| **Owns** | ARK Cloud product — Home · Features · Pricing · Resources · Login · Trial · Become · Arrive · Cloud dashboard (Phase 1) |
 | **Stancl** | Central domain — not a Shop |
 
 No Shop routing. No operations. No customer portal.
@@ -68,10 +68,10 @@ No public login. No Shop staff login. If an internal admin UI is needed later, i
 | --- | --- |
 | **Domain** | `{shop}.arksms.com` |
 | **Audience** | Shop staff |
-| **Owns** | Operations · Repair Orders · Communications · Customers · Vehicles · Scheduling · APIs · Mobile · Reverb · Authentication |
+| **Owns** | Operations · Repair Orders · Communications · Customers · Vehicles · Scheduling · APIs · Mobile · Reverb · Authentication · tokenized Core customer links (`/go/…`, estimate / pay / inspection / repair-portal tokens) |
 | **Stancl** | Primary tenant domain |
 
-Examples: `demo-auto.arksms.com`, `joesauto.arksms.com`.
+Examples: `lugsnplugs.arksms.com`, `joesauto.arksms.com`.
 
 There is no required `app.` prefix. The Shop slug **is** the operations host.
 
@@ -83,14 +83,16 @@ There is no required `app.` prefix. The Shop slug **is** the operations host.
 
 | | |
 | --- | --- |
-| **Domain** | Custom domain (e.g. `demo-auto.test`) |
+| **Domain** | Custom domain (e.g. `lugsnplugs.com`) |
 | **Audience** | Customers |
-| **Owns** | Website · Customer Portal · Appointment requests · SEO · Reviews · Public repair pages |
+| **Owns** | Website · signed-in customer account · Appointment requests · SEO · Reviews · public lead intake |
 | **Stancl** | **Public Domain** on the same Shop — not another tenant |
 
 Product vocabulary: **Public Domain** (not “alias”). Alias is Stancl’s implementation detail.
 
-Staff traffic and customer traffic are never the same hostname.
+The Public Domain is optional. Tokenized Core operational links are generated on the Operations Domain so a shop does not need a website to text an estimate. Already-sent Public Domain `/go` links may keep resolving.
+
+Staff workspace and the public website are never the same hostname.
 
 ---
 
@@ -129,8 +131,8 @@ Everything hangs off one Shop:
 
 ```text
 Create Shop
-  → Slug                  demo-auto
-  → Operations Domain     demo-auto.arksms.com
+  → Slug                  lugsnplugs
+  → Operations Domain     lugsnplugs.arksms.com
   → Public Domain         (optional — custom or trial preview)
   → Deployment Profile    Shared | Dedicated | …
   → Provision
@@ -140,8 +142,8 @@ Conceptual model:
 
 ```text
 Shop
-├── Operations Domain     demo-auto.arksms.com
-├── Public Domain         demo-auto.test  (or demo-auto-preview.arksms.com)
+├── Operations Domain     lugsnplugs.arksms.com
+├── Public Domain         lugsnplugs.com  (or lugsnplugs-preview.arksms.com)
 └── Deployment Profile    Shared Cluster A
 ```
 
@@ -178,14 +180,14 @@ Tenant wildcard:
 
 ---
 
-## Migration note (Demo Auto Repair today → v1)
+## Migration note (LugsNPlugs today → v1)
 
 | Today | Domain Contract v1 |
 | --- | --- |
-| `app.demo-auto.test` | `demo-auto.arksms.com` (Operations Domain) |
-| `demo-auto.test` | Public Domain (unchanged role) |
-| `portal.demo-auto.test` | Collapse into Public Domain (redirect period OK) |
-| `learn.demo-auto.test` | Move toward `learn.autorepairkeeper.com` (central) |
+| `app.lugsnplugs.com` | `lugsnplugs.arksms.com` (Operations Domain) |
+| `lugsnplugs.com` | Public Domain (unchanged role) |
+| `portal.lugsnplugs.com` | Collapse into Public Domain (redirect period OK) |
+| `learn.lugsnplugs.com` | Move toward `learn.autorepairkeeper.com` (central) |
 | `platform.autorepairkeeper.com` | Unchanged (Platform) |
 
 `SurfaceRouting` / `SURFACE_DOMAINS_*` should eventually express Operations Domain + Public Domain per Shop rather than hard-coded `app.` / `portal.` env pairs.
@@ -200,4 +202,4 @@ Tenant wildcard:
 - `SHOP_BASE_URL` for HTTP voice capabilities
 - SIP registrar ≠ product hostname
 
-Domain Contract v1 **narrows** the public product model: portal and customer website belong on the **Public Domain**, not under the Operations Domain path tree. Operations Domain owns staff + APIs + Reverb + auth.
+Domain Contract v1: the shop website and signed-in customer account belong on the **Public Domain** when the shop has one. Tokenized Core operational links belong on the **Operations Domain** (`CoreApplicationOrigin`). Operations Domain also owns staff + APIs + Reverb + auth.

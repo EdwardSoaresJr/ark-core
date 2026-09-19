@@ -30,6 +30,7 @@ class AdvisorIntakeStoreController
             'visit_mode' => ['required', Rule::in(['waiting_here', 'drop_off', 'needs_shuttle', 'tow_incoming'])],
             'billing_class' => ['nullable', Rule::in($billingClassNames)],
             'lead_id' => ['nullable', 'integer', 'exists:leads,id'],
+            'appointment_id' => ['nullable', 'integer', 'exists:appointments,id'],
         ]);
 
         $visitMode = $request->input('visit_mode');

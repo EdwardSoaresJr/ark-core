@@ -8,6 +8,7 @@
         'parts' => 'repair-order-rail-tab-parts',
         'history' => 'repair-order-rail-tab-history',
         'inspect' => 'repair-order-rail-tab-inspect',
+        'recommendations' => 'repair-order-rail-tab-recommendations',
         default => null,
     };
 @endphp

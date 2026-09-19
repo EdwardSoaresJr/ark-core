@@ -62,7 +62,7 @@
             </button>
         </div>
     </div>
-    <p x-show="message" x-text="message" class="ops-intake-vehicle-add-message"></p>
+    <p x-show="message" x-text="message" class="ops-intake-vehicle-add-message" :class="messageIsError ? 'ops-intake-vehicle-add-message--error' : ''"></p>
     <div class="ops-intake-fields ops-intake-fields--2">
         <div class="ops-intake-field">
             <label for="intake-vehicle-year" class="ops-index-field-label">Year</label>

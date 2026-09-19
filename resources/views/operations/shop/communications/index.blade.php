@@ -20,12 +20,12 @@
     };
 @endphp
 
-<x-operations.app title="Communications">
+<x-operations.app title="Stations &amp; Phones">
     <div class="mx-auto max-w-2xl space-y-4 px-4 py-4">
         <header class="space-y-3 border-b border-slate-200 pb-4">
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                    <h1 class="text-xl font-black text-slate-950">Communications</h1>
+                    <h1 class="text-xl font-black text-slate-950">Stations &amp; Phones</h1>
                     <p class="mt-1 text-xs leading-5 text-slate-600">
                         @if ($shop['voice_posture'] === 'setup')
                             Name the places where work happens — then plug in phones.
@@ -51,9 +51,9 @@
                 <p class="rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">{{ session('status') }}</p>
             @endif
 
-            @if ($errors->has('device') || $errors->has('mac_address') || $errors->has('name') || $errors->has('model') || $errors->has('extension'))
+            @if ($errors->has('device') || $errors->has('mac_address') || $errors->has('name') || $errors->has('model'))
                 <div class="rounded-sm border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                    @foreach (['device', 'mac_address', 'name', 'model', 'workstation_id', 'extension'] as $field)
+                    @foreach (['device', 'mac_address', 'name', 'model', 'workstation_id'] as $field)
                         @error($field)
                             <p class="font-semibold">{{ $message }}</p>
                         @enderror

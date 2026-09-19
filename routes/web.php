@@ -10,6 +10,7 @@ use App\Ark\Dragon\ServiceAdvisor\Http\RequestLineNoteRewriteController;
 use App\Ark\Dragon\ServiceAdvisor\Http\RequestServiceAdvisorRewriteController;
 use App\Ark\Dragon\ServiceAdvisor\Http\RequestVisitReasonRewriteController;
 use App\Ark\Dragon\ServiceAdvisor\Http\RevertServiceAdvisorRewriteController;
+use App\Ark\Operations\Appointments\AppointmentAssignController;
 use App\Ark\Operations\Appointments\AppointmentConfirmationSmsController;
 use App\Ark\Operations\Appointments\AppointmentCreateController;
 use App\Ark\Operations\Appointments\AppointmentIndexController;
@@ -50,7 +51,12 @@ use App\Ark\Operations\Communications\CommunicationsWorkspaceFragmentController;
 use App\Ark\Operations\Communications\CommunicationWorkboardFragmentController;
 use App\Ark\Operations\Communications\DestroyCommunicationDeviceController;
 use App\Ark\Operations\Communications\DownloadCommunicationDeviceConfigController;
+use App\Ark\Operations\Communications\FollowUpConversationController;
 use App\Ark\Operations\Communications\GenerateCommunicationDeviceConfigController;
+use App\Ark\Operations\Communications\ConversationWorkController;
+use App\Ark\Operations\Communications\PlatformConversationWorkController;
+use App\Ark\Operations\Communications\MarkPlatformConversationReadController;
+use App\Ark\Operations\Communications\SendPlatformConversationMessageController;
 use App\Ark\Operations\Communications\OperationalCommunicationStoreController;
 use App\Ark\Operations\Communications\ReopenConversationController;
 use App\Ark\Operations\Communications\StoreCallSessionNoteController;
@@ -59,6 +65,7 @@ use App\Ark\Operations\Communications\StoreConversationInternalNoteController;
 use App\Ark\Operations\Communications\ToggleSmsIntelligenceCoachingFollowUpController;
 use App\Ark\Operations\Communications\UpdateCommunicationsIncomingRoutingController;
 use App\Ark\Operations\Communications\VoiceCapabilityHealthController;
+use App\Ark\Operations\Contribution\ContributeInspectionPhotoController;
 use App\Ark\Operations\Conversations\CallerLookupController;
 use App\Ark\Operations\Conversations\ConversationAttachmentShowController;
 use App\Ark\Operations\Conversations\LinkMessengerConversationController;
@@ -174,6 +181,16 @@ use App\Ark\Operations\Printing\PartsLabelPrintController;
 use App\Ark\Operations\Printing\PrintRoutingController;
 use App\Ark\Operations\Printing\QzPrintingPocController;
 use App\Ark\Operations\Printing\QzTraySignController;
+use App\Ark\Operations\Recommendations\AddRecommendationToEstimateController;
+use App\Ark\Operations\Recommendations\CreateInspectionRecommendationController;
+use App\Ark\Operations\Recommendations\CreateRepairOrderRecommendationController;
+use App\Ark\Operations\Recommendations\DismissRecommendationController;
+use App\Ark\Operations\Recommendations\PresentRecommendationController;
+use App\Ark\Operations\Recommendations\RecordRecommendationDecisionController;
+use App\Ark\Operations\Recommendations\ResolveRecommendationController;
+use App\Ark\Operations\Recommendations\SetRecommendationFollowUpController;
+use App\Ark\Operations\RepairOrders\AddDeferredConcernToEstimateController;
+use App\Ark\Operations\RepairOrders\EstimateToolbarDefaultController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationRevokeController;
 use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernBillingPostureController;
@@ -331,6 +348,8 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/appearance', [ProfileController::class, 'updateAppearance'])->name('profile.appearance.update');
         Route::patch('/profile/display-theme', [DisplayThemeController::class, 'update'])->name('profile.display-theme.update');
+        Route::post('/app/estimate-toolbar/default', EstimateToolbarDefaultController::class)
+            ->name('operations.estimate-toolbar.default');
         Route::patch('/profile/workstation-pin', [ProfileController::class, 'updateWorkstationPin'])->name('profile.workstation-pin.update');
         Route::post('/profile/dev-role/technician', [DevRolePretendController::class, 'technician'])->name('dev-role-pretend.technician');
         Route::post('/profile/dev-role/clear', [DevRolePretendController::class, 'clear'])->name('dev-role-pretend.clear');
@@ -438,6 +457,21 @@ SurfaceRouting::appRoutes(function (): void {
 
             Route::post('/app/communications/conversations/{conversation}/assign', AssignConversationController::class)
                 ->name('operations.communications.conversations.assign');
+
+            Route::post('/app/communications/conversations/{conversation}/follow-up', FollowUpConversationController::class)
+                ->name('operations.communications.conversations.follow-up');
+
+            Route::post('/app/communications/conversations/{conversation}/work', ConversationWorkController::class)
+                ->name('operations.communications.conversations.work');
+
+            Route::post('/app/communications/platform-conversations/{platformConversation}/work', PlatformConversationWorkController::class)
+                ->name('operations.communications.platform-conversations.work');
+
+            Route::post('/app/communications/platform-conversations/{platformConversation}/read', MarkPlatformConversationReadController::class)
+                ->name('operations.communications.platform-conversations.read');
+
+            Route::post('/app/communications/platform-conversations/{platformConversation}/messages', SendPlatformConversationMessageController::class)
+                ->name('operations.communications.platform-conversations.messages');
 
             Route::post('/app/communications/conversations/{conversation}/reopen', ReopenConversationController::class)
                 ->name('operations.communications.conversations.reopen');
@@ -570,6 +604,9 @@ SurfaceRouting::appRoutes(function (): void {
 
                 Route::patch('/app/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
                     ->name('operations.appointments.reschedule');
+
+                Route::patch('/app/appointments/{appointment}/assign', AppointmentAssignController::class)
+                    ->name('operations.appointments.assign');
 
                 Route::patch('/app/appointments/{appointment}/status', AppointmentStatusController::class)
                     ->name('operations.appointments.status');
@@ -1089,6 +1126,34 @@ SurfaceRouting::appRoutes(function (): void {
             ->whereIn('tab', RepairOrderWorkspaceTabPresenter::TABS)
             ->name('operations.repair-orders.workspace-tabs.show');
 
+        Route::post('/app/repair-orders/{repairOrder}/recommendations', CreateRepairOrderRecommendationController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.store');
+
+        Route::post('/app/repair-orders/{repairOrder}/recommendations/{recommendation}/present', PresentRecommendationController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.present');
+
+        Route::post('/app/repair-orders/{repairOrder}/recommendations/{recommendation}/decision', RecordRecommendationDecisionController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.decision');
+
+        Route::post('/app/repair-orders/{repairOrder}/recommendations/{recommendation}/add-to-estimate', AddRecommendationToEstimateController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.add-to-estimate');
+
+        Route::post('/app/repair-orders/{repairOrder}/recommendations/{recommendation}/follow-up', SetRecommendationFollowUpController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.follow-up');
+
+        Route::post('/app/repair-orders/{repairOrder}/recommendations/{recommendation}/resolve', ResolveRecommendationController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.resolve');
+
+        Route::post('/app/repair-orders/{repairOrder}/recommendations/{recommendation}/dismiss', DismissRecommendationController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.recommendations.dismiss');
+
         Route::get('/app/repair-orders/{repairOrder}/print-key-tag', KeyTagPrintController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
             ->name('operations.repair-orders.print-key-tag');
@@ -1392,6 +1457,10 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::RepairOrdersLifecycle->value)
             ->name('operations.repair-orders.inspection.items.update');
 
+        Route::post('/app/repair-orders/{repairOrder}/inspection/items/{item}/recommendations', CreateInspectionRecommendationController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::RepairOrdersLifecycle->value)
+            ->name('operations.repair-orders.inspection.items.recommendations.store');
+
         Route::post('/app/repair-orders/{repairOrder}/inspection/items/{item}/measurements', RepairOrderInspectionMeasurementStoreController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::RepairOrdersLifecycle->value)
             ->name('operations.repair-orders.inspection.measurements.store');
@@ -1411,6 +1480,10 @@ SurfaceRouting::appRoutes(function (): void {
         Route::delete('/app/repair-orders/{repairOrder}/inspection/photos/{photo}', RepairOrderInspectionPhotoDestroyController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::RepairOrdersLifecycle->value)
             ->name('operations.repair-orders.inspection.photos.destroy');
+
+        Route::post('/app/repair-orders/{repairOrder}/inspection/photos/{photo}/contribute', ContributeInspectionPhotoController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::SettingsManage->value)
+            ->name('operations.repair-orders.inspection.photos.contribute');
 
         Route::post('/app/repair-orders/{repairOrder}/worksheet-sessions/heartbeat', [RepairOrderWorksheetSessionController::class, 'heartbeat'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
@@ -1447,6 +1520,10 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/concerns', RepairOrderConcernStoreController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.concerns.store');
+
+        Route::post('/app/repair-orders/{repairOrder}/deferred-work/{concern}/add-to-estimate', AddDeferredConcernToEstimateController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.deferred-work.add-to-estimate');
 
         Route::patch('/app/repair-orders/{repairOrder}/concerns/{concern}/move', RepairOrderConcernMoveController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

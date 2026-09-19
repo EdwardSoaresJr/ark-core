@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Platform\Communications\ManagedCommunicationsGate;
 use Illuminate\Support\Carbon;
 
 final class CustomerSmsSendEligibility
@@ -34,8 +35,8 @@ final class CustomerSmsSendEligibility
             return 'Customer does not have a phone number on file.';
         }
 
-        if (! $this->twilioConfigured) {
-            return 'ARK Texting is not connected.';
+        if (! $this->twilioConfigured && ! ManagedCommunicationsGate::platformSend()) {
+            return 'Shop messaging is disabled.';
         }
 
         if (! $this->consentStatus()->allowsOutboundSms()) {
@@ -44,6 +45,20 @@ final class CustomerSmsSendEligibility
 
         if ($this->capability !== null && ! $this->capability->sms_capable) {
             return $this->capability->blockReason();
+        }
+
+        return null;
+    }
+
+    /** Consent / phone checks only — used when Platform owns transport. */
+    public function consentBlockReason(): ?string
+    {
+        if (! filled($this->customer->phone)) {
+            return 'Customer does not have a phone number on file.';
+        }
+
+        if (! $this->consentStatus()->allowsOutboundSms()) {
+            return 'Customer has opted out of text messages. Call the customer or use email.';
         }
 
         return null;
@@ -70,7 +85,7 @@ final class CustomerSmsSendEligibility
         $errorCode = trim((string) ($this->customer->last_sms_error_code ?? ''));
 
         if ($errorCode !== '') {
-            return "Recent text delivery failed ({$errorCode}). Verify the customer's phone number before texting again.";
+            return "Recent text delivery failed (Twilio {$errorCode}). Verify the customer's phone number before texting again.";
         }
 
         return 'Recent text delivery failed. Verify the customer\'s phone number before texting again.';

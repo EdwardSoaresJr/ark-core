@@ -18,6 +18,7 @@ class PortalInvoicePayShowController
         Request $request,
         string $token,
         ResolveCustomerPayTokenAction $resolve,
+        CardPresentCaptureProjection $capture,
         BalanceDueCalculator $balanceDue,
         PortalVehicleRecordsLink $vehicleRecordsLink,
     ): View {
@@ -29,6 +30,8 @@ class PortalInvoicePayShowController
             ->with(['customer', 'vehicle'])
             ->firstOrFail();
 
+        abort_unless($capture->portalPayEnabled(), 503);
+
         /** @var Customer|null $portalCustomer */
         $portalCustomer = Auth::guard('portal')->user();
 
@@ -36,8 +39,6 @@ class PortalInvoicePayShowController
         $shopPhone = PhoneNumber::display($shop->phone) ?: null;
         $shopPhoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: null;
         $vehicleRecords = $vehicleRecordsLink->forVehicle($portalCustomer, $repairOrder->vehicle);
-
-        // View/balance link only. Managed online card capture belongs to ARK Platform Payments (future).
 
         if ($accessToken->isDepositRequest()) {
             $amountCents = (int) $accessToken->amount_cents;
@@ -55,9 +56,11 @@ class PortalInvoicePayShowController
                 'balanceDue' => $amountDisplay,
                 'balanceDueCents' => $amountCents,
                 'balanceDueDecimal' => number_format($amountCents / 100, 2, '.', ''),
-                'pageTitle' => $remaining ? 'Remaining balance' : 'Deposit requested',
+                'pageTitle' => $remaining ? 'Pay remaining balance' : 'Pay your deposit',
                 'amountLabel' => $remaining ? 'Remaining balance' : 'Deposit requested',
+                'payButtonLabel' => 'Pay '.$amountDisplay,
                 'token' => $token,
+                'square' => $capture->publicConfig(),
                 'vehicleRecordsLink' => $vehicleRecords,
                 'shopPhone' => $shopPhone,
                 'shopPhoneTel' => $shopPhoneTel,
@@ -79,9 +82,11 @@ class PortalInvoicePayShowController
             'balanceDue' => $balanceDisplay,
             'balanceDueCents' => $balance->balanceDueCents,
             'balanceDueDecimal' => number_format($balance->balanceDueCents / 100, 2, '.', ''),
-            'pageTitle' => 'Invoice balance',
+            'pageTitle' => 'Pay your invoice',
             'amountLabel' => 'Balance due',
+            'payButtonLabel' => 'Pay '.$balanceDisplay,
             'token' => $token,
+            'square' => $capture->publicConfig(),
             'vehicleRecordsLink' => $vehicleRecords,
             'shopPhone' => $shopPhone,
             'shopPhoneTel' => $shopPhoneTel,

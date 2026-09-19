@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Messaging;
 
+use App\Ark\Operations\Communications\CommunicationsAccentColor;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopCustomerHoursPresentation;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -31,6 +32,13 @@ final class MessageActionsSettings
         $raw = $shop->message_actions;
 
         return is_array($raw) ? $raw : [];
+    }
+
+    public static function color(MessageActionKey $action, ?ShopSettings $shop = null): string
+    {
+        $colors = self::current($shop)['colors'] ?? null;
+
+        return CommunicationsAccentColor::normalize(is_array($colors) ? ($colors[$action->value] ?? null) : null);
     }
 
     public static function canSend(MessageActionKey $action, ?ShopSettings $shop = null): bool

@@ -3,6 +3,9 @@
 namespace App\Ark\Operations\RepairOrders\Status;
 
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Workboard\JobBoardLane;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalogDefaults;
 use App\Ark\Runtime\Authorization\ArkRole;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -82,32 +85,33 @@ final class RepairOrderStatusCatalogUpdater
             ]);
         }
 
-        $laneKey = trim((string) ($payload['advisor_lane_key'] ?? 'shop_floor'));
+        $laneKey = $this->normalizedLaneKey(
+            (string) ($payload['advisor_lane_key'] ?? JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS),
+            $slug,
+        );
 
-        if ($laneKey === 'custom') {
-            $laneKey = $slug;
-        }
-
-        if (! in_array($laneKey, RepairOrderStatusCatalogDefaults::advisorLaneKeys(), true) && $laneKey !== $slug) {
+        if ($laneKey === null) {
             throw ValidationException::withMessages([
-                'create.advisor_lane_key' => 'Choose a valid advisor lane.',
+                'create.advisor_lane_key' => 'Choose a valid Job Board lane.',
             ]);
         }
 
         $maxSort = (int) RepairOrderStatusDefinition::query()->max('sort_order');
 
+        $mileage = $this->mileageFlagsFromPayload($payload);
+
         $status = RepairOrderStatusDefinition::query()->create([
             'slug' => $slug,
             'name' => $name,
             'is_system' => false,
-            'requires_mileage_in' => false,
-            'requires_mileage_out' => false,
+            'requires_mileage_in' => $mileage['in'],
+            'requires_mileage_out' => $mileage['out'],
             'dashboard_group_slug' => 'custom',
             'dashboard_group_name' => 'Custom',
             'advisor_lane_key' => $laneKey,
             'show_on_advisor_board' => filter_var($payload['show_on_advisor_board'] ?? true, FILTER_VALIDATE_BOOLEAN),
             'show_on_technician_board' => filter_var($payload['show_on_technician_board'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'is_terminal' => false,
+            'is_terminal' => filter_var($payload['is_terminal'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'requires_variant' => false,
             'enforce_standard_close_rules' => false,
             'active' => true,
@@ -115,6 +119,16 @@ final class RepairOrderStatusCatalogUpdater
             'customer_status_copy' => null,
             'color' => RepairOrderStatusColor::normalize($payload['color'] ?? RepairOrderStatusColor::SECONDARY),
         ]);
+
+        if ($status->is_terminal) {
+            $status->forceFill([
+                'advisor_lane_key' => null,
+                'show_on_advisor_board' => false,
+                'show_on_technician_board' => false,
+            ])->save();
+        } elseif ($laneKey === $slug) {
+            $this->ensureOwnLane($status);
+        }
 
         $fromSlugs = collect($payload['from_slugs'] ?? ['in_progress', 'approved'])
             ->map(static fn (mixed $slug): string => (string) $slug)
@@ -219,16 +233,24 @@ final class RepairOrderStatusCatalogUpdater
             ]);
         }
 
-        if (! $status->is_system && array_key_exists('advisor_lane_key', $payload)) {
-            $laneKey = trim((string) ($payload['advisor_lane_key']));
+        if (array_key_exists('advisor_lane_key', $payload) && ! $status->is_terminal) {
+            $laneKey = $this->normalizedLaneKey((string) $payload['advisor_lane_key'], $status->slug);
 
-            if ($laneKey === 'custom') {
-                $laneKey = $status->slug;
+            if ($laneKey === null) {
+                throw ValidationException::withMessages([
+                    "statuses.{$slug}.advisor_lane_key" => 'Choose a valid Job Board lane.',
+                ]);
             }
 
-            if ($laneKey !== '' && (in_array($laneKey, RepairOrderStatusCatalogDefaults::advisorLaneKeys(), true) || $laneKey === $status->slug)) {
-                $status->advisor_lane_key = $laneKey;
+            if ($laneKey === $status->slug) {
+                $this->ensureOwnLane($status);
             }
+
+            $status->advisor_lane_key = $laneKey;
+        }
+
+        if (! $status->is_system && array_key_exists('is_terminal', $payload)) {
+            $status->is_terminal = filter_var($payload['is_terminal'], FILTER_VALIDATE_BOOLEAN);
         }
 
         if (array_key_exists('color', $payload) && filled($payload['color'])) {
@@ -243,6 +265,10 @@ final class RepairOrderStatusCatalogUpdater
             $status->color = $color;
         }
 
+        if (array_key_exists('sort_order', $payload) && $payload['sort_order'] !== null && $payload['sort_order'] !== '') {
+            $status->sort_order = max(0, (int) $payload['sort_order']);
+        }
+
         $status->fill([
             'name' => isset($payload['name']) ? trim((string) $payload['name']) : $status->name,
             'show_on_advisor_board' => array_key_exists('show_on_advisor_board', $payload)
@@ -251,14 +277,64 @@ final class RepairOrderStatusCatalogUpdater
             'show_on_technician_board' => array_key_exists('show_on_technician_board', $payload)
                 ? filter_var($payload['show_on_technician_board'], FILTER_VALIDATE_BOOLEAN)
                 : $status->show_on_technician_board,
+            'requires_mileage_in' => array_key_exists('requires_mileage_in', $payload)
+                ? filter_var($payload['requires_mileage_in'], FILTER_VALIDATE_BOOLEAN)
+                : $status->requires_mileage_in,
+            'requires_mileage_out' => array_key_exists('requires_mileage_out', $payload)
+                ? filter_var($payload['requires_mileage_out'], FILTER_VALIDATE_BOOLEAN)
+                : $status->requires_mileage_out,
         ]);
+
+        $this->applyMileageRequirement($status, $payload, "statuses.{$slug}.mileage_requirement");
 
         if ($status->is_terminal) {
             $status->show_on_advisor_board = false;
             $status->show_on_technician_board = false;
+            $status->advisor_lane_key = null;
         }
 
         $status->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function applyMileageRequirement(RepairOrderStatusDefinition $status, array $payload, string $errorKey): void
+    {
+        if (! array_key_exists('mileage_requirement', $payload)) {
+            return;
+        }
+
+        $flags = $this->mileageFlagsFromPayload($payload, $errorKey);
+        $status->requires_mileage_in = $flags['in'];
+        $status->requires_mileage_out = $flags['out'];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{in: bool, out: bool}
+     */
+    private function mileageFlagsFromPayload(array $payload, string $errorKey = 'mileage_requirement'): array
+    {
+        if (! array_key_exists('mileage_requirement', $payload) || $payload['mileage_requirement'] === null || $payload['mileage_requirement'] === '') {
+            return [
+                'in' => filter_var($payload['requires_mileage_in'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'out' => filter_var($payload['requires_mileage_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ];
+        }
+
+        $choice = (string) $payload['mileage_requirement'];
+
+        if (! in_array($choice, ['none', 'in', 'out', 'both'], true)) {
+            throw ValidationException::withMessages([
+                $errorKey => 'Choose none, mileage in, mileage out, or both.',
+            ]);
+        }
+
+        return [
+            'in' => $choice === 'in' || $choice === 'both',
+            'out' => $choice === 'out' || $choice === 'both',
+        ];
     }
 
     /**
@@ -398,5 +474,46 @@ final class RepairOrderStatusCatalogUpdater
                 'role' => $role,
             ]);
         }
+    }
+
+    private function normalizedLaneKey(string $laneKey, string $slug): ?string
+    {
+        $laneKey = trim($laneKey);
+
+        if ($laneKey === '' || $laneKey === 'custom') {
+            $laneKey = $slug;
+        }
+
+        $mapped = JobBoardLaneCatalogDefaults::homeLaneKey($laneKey);
+
+        if ($mapped === $slug || $laneKey === $slug) {
+            return $slug;
+        }
+
+        if ($mapped !== null && app(JobBoardLaneCatalog::class)->acceptsStatusLaneKey($mapped)) {
+            return $mapped;
+        }
+
+        return null;
+    }
+
+    private function ensureOwnLane(RepairOrderStatusDefinition $status): void
+    {
+        if (JobBoardLane::query()->where('key', $status->slug)->exists()) {
+            return;
+        }
+
+        $maxSort = (int) JobBoardLane::query()->max('sort_order');
+
+        JobBoardLane::query()->create([
+            'key' => $status->slug,
+            'name' => $status->name,
+            'color' => RepairOrderStatusColor::normalize($status->color),
+            'sort_order' => $maxSort + 1,
+            'active' => true,
+            'is_system' => false,
+        ]);
+
+        app(JobBoardLaneCatalog::class)->forgetCache();
     }
 }

@@ -6,9 +6,8 @@ use App\Ark\Operations\Labor\LaborEngineMatchSource;
 use App\Ark\Operations\LaborGuides\Rte\RteLaborVehicleEngineProfile;
 
 /**
- * Read-only vehicle match visibility for labor, parts, and future estimate surfaces.
- *
- * Observation only — does not change matching, doctrine, or authority.
+ * Read-only vehicle match fields for labor and parts lookup.
+ * Does not change matching.
  */
 final class VehicleMatchProjection
 {

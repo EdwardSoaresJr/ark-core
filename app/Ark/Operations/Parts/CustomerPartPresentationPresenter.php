@@ -72,16 +72,14 @@ final class CustomerPartPresentationPresenter
         $inventory = trim((string) ($line['description'] ?? ''));
         $source = CustomerDescriptionSource::tryFromStored($line['customer_description_source'] ?? null);
 
-        if ($explicit !== '' && $source?->isManual()) {
-            return $explicit;
+        $manual = $source?->isManual() ? $explicit : '';
+
+        if ($manual !== '') {
+            return $manual;
         }
 
         if ($policy->labelsLocked) {
-            if ($explicit !== '') {
-                return $explicit;
-            }
-
-            return $inventory;
+            return $explicit !== '' ? $explicit : $inventory;
         }
 
         return match ($policy->descriptionMode) {
@@ -90,10 +88,10 @@ final class CustomerPartPresentationPresenter
                 ? $explicit
                 : ($inventory !== '' ? $inventory : ''),
             CustomerPartDescriptionMode::CleanedWithBrand => $this->withBrand(
-                $this->cleanedLabel($line, $siblingPartDescriptions, $explicit),
+                $this->cleanedLabel($line, $siblingPartDescriptions),
                 $inventory,
             ),
-            CustomerPartDescriptionMode::Cleaned => $this->cleanedLabel($line, $siblingPartDescriptions, $explicit),
+            CustomerPartDescriptionMode::Cleaned => $this->cleanedLabel($line, $siblingPartDescriptions),
         };
     }
 
@@ -101,12 +99,8 @@ final class CustomerPartPresentationPresenter
      * @param  array<string, mixed>  $line
      * @param  list<string>  $siblingPartDescriptions
      */
-    private function cleanedLabel(array $line, array $siblingPartDescriptions, string $explicit): string
+    private function cleanedLabel(array $line, array $siblingPartDescriptions): string
     {
-        if ($explicit !== '') {
-            return $explicit;
-        }
-
         return $this->descriptionPresenter->presentFromSnapshotLine($line, $siblingPartDescriptions);
     }
 

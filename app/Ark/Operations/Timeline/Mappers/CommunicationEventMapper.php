@@ -22,6 +22,7 @@ final class CommunicationEventMapper
             OperationalCommunicationType::CustomerReply => OperationalEventTone::Customer,
             OperationalCommunicationType::EstimateSent,
             OperationalCommunicationType::InvoiceSent,
+            OperationalCommunicationType::InspectionSent,
             OperationalCommunicationType::ApprovalFollowUp => OperationalEventTone::Shop,
             default => OperationalEventTone::Neutral,
         };
@@ -55,6 +56,7 @@ final class CommunicationEventMapper
             OperationalCommunicationType::EstimateViewed => OperationalEventKind::EstimateViewed,
             OperationalCommunicationType::EstimateSent => OperationalEventKind::EstimateSent,
             OperationalCommunicationType::InvoiceSent => OperationalEventKind::EstimateSent,
+            OperationalCommunicationType::InspectionSent => OperationalEventKind::Inspection,
             OperationalCommunicationType::ApprovalFollowUp => OperationalEventKind::Approval,
             default => OperationalEventKind::Logged,
         };
@@ -65,7 +67,8 @@ final class CommunicationEventMapper
         return match ($type) {
             OperationalCommunicationType::EstimateViewed,
             OperationalCommunicationType::EstimateSent,
-            OperationalCommunicationType::InvoiceSent => 'portal',
+            OperationalCommunicationType::InvoiceSent,
+            OperationalCommunicationType::InspectionSent => 'portal',
             OperationalCommunicationType::ApprovalFollowUp => 'portal',
             default => 'logged',
         };
@@ -77,6 +80,7 @@ final class CommunicationEventMapper
             OperationalCommunicationType::EstimateViewed,
             OperationalCommunicationType::EstimateSent => 'estimate',
             OperationalCommunicationType::InvoiceSent => 'payment',
+            OperationalCommunicationType::InspectionSent => 'inspection',
             OperationalCommunicationType::ApprovalFollowUp => 'approval',
             default => 'logged',
         };

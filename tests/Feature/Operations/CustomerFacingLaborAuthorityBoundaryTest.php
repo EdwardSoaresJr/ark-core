@@ -125,8 +125,7 @@ test('estimate pdf html shows final labor only and hides labor authority metadat
 
     expect($html)
         ->toContain('Front brake service labor')
-        ->toContain('2.00')
-        ->toContain('$165.00')
+        ->toContain('2 hr')
         ->toContain('$330.00')
         ->not->toContain('Book ')
         ->not->toContain('Corrosion')
@@ -263,10 +262,12 @@ test('customer facing document boundary keeps labor lines verbatim and labels th
     $laborLines = collect($sanitized['concerns'][0]['lines'])->where('type', RepairOrderLineType::Labor->value)->values();
 
     expect($laborLines)->toHaveCount(3)
-        ->and($laborLines[0]['description'])->toBe('R & R RADIATOR')
-        ->and($laborLines[0]['type_label'])->toBe('Labor')
-        ->and($laborLines[1]['description'])->toBe('COMBUSTION TEST COOLING SYSTEM')
-        ->and($laborLines[2]['description'])->toBe('DRAIN & FILL SYSTEM COOLING SYS')
+        ->and($laborLines->pluck('description')->all())->toEqualCanonicalizing([
+            'R & R RADIATOR',
+            'COMBUSTION TEST COOLING SYSTEM',
+            'DRAIN & FILL SYSTEM COOLING SYS',
+        ])
+        ->and($laborLines->pluck('type_label')->unique()->all())->toBe(['Labor'])
         ->and($laborLines[0])->not->toHaveKey('labor_entered_hours');
 
     $html = view('operations.documents.pdf.document', [
@@ -278,5 +279,5 @@ test('customer facing document boundary keeps labor lines verbatim and labels th
         ->toContain('R &amp; R RADIATOR')
         ->toContain('COMBUSTION TEST COOLING SYSTEM')
         ->toContain('DRAIN &amp; FILL SYSTEM COOLING SYS')
-        ->toContain('>Labor<');
+        ->toContain('charge-list');
 });

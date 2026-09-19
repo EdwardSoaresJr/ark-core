@@ -24,11 +24,18 @@ final class NoteAudience
 
     public static function defaultsFromShop(): self
     {
-        return new self(
-            advisor: true,
-            technician: false,
-            customer: ! (bool) ShopSettings::current()->default_notes_private,
-        );
+        $settings = ShopSettings::current();
+        $advisor = (bool) ($settings->default_notes_visible_to_advisor ?? true);
+        $technician = (bool) ($settings->default_notes_visible_to_technician ?? false);
+        $customer = $settings->default_notes_visible_to_customer === null
+            ? ! (bool) $settings->default_notes_private
+            : (bool) $settings->default_notes_visible_to_customer;
+
+        if (! $advisor && ! $technician && ! $customer) {
+            $advisor = true;
+        }
+
+        return new self($advisor, $technician, $customer);
     }
 
     public static function fromLegacyPrivate(bool $isPrivate): self

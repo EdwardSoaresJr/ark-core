@@ -1,9 +1,9 @@
 .header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 2.45in;
-    gap: 0.24in;
-    align-items: start;
-    padding: 0 0 0.09in;
+    gap: 0.28in;
+    align-items: center;
+    padding: 0.04in 0 0.14in;
     border-bottom: 1px solid #cbd5e1;
 }
 
@@ -15,8 +15,9 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    width: 1.45in;
-    height: 0.65in;
+    width: 1.85in;
+    height: 0.82in;
+    padding: 0.04in 0;
     background: #ffffff;
     color: #334155;
     font-size: 14px;
@@ -44,7 +45,7 @@
 }
 
 .eyebrow {
-    margin: 0 0 0.05in;
+    margin: 0 0 0.03in;
     color: #64748b;
     font-size: 9px;
     font-weight: 700;
@@ -55,15 +56,22 @@
 .identity-band {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.1in;
-    padding: 0.075in 0;
+    gap: 0.12in;
+    padding: 0.08in 0 0.06in;
     border-bottom: 1px solid #e2e8f0;
 }
 
 .identity-col h3 {
-    margin: 0.03in 0 0.04in;
-    font-size: 12px;
+    margin: 0.01in 0 0.03in;
+    font-size: 13px;
     line-height: 1.25;
+}
+
+.identity-col .muted {
+    font-size: 9.5px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #475569;
 }
 
 .identity-address-locality {

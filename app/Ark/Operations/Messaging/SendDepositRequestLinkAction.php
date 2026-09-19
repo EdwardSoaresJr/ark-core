@@ -2,9 +2,14 @@
 
 namespace App\Ark\Operations\Messaging;
 
+use App\Ark\Operations\Communications\CommunicationEventRecorder;
+use App\Ark\Operations\Communications\OperationalCommunicationChannel;
+use App\Ark\Operations\Communications\OperationalCommunicationDirection;
+use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Portal\CreatePortalShortLinkAction;
+use App\Ark\Operations\Portal\PortalShortLinkPurpose;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
 use RuntimeException;
@@ -15,10 +20,11 @@ final class SendDepositRequestLinkAction
         private readonly DepositPortalLinkContext $depositLink,
         private readonly CreatePortalShortLinkAction $shortLinks,
         private readonly SendOutboundMessageAction $sender,
+        private readonly CommunicationEventRecorder $communicationEvents,
     ) {}
 
     /**
-     * @return array{message: ConversationMessage, url: string, amount_display: string}
+     * @return array{message: ?ConversationMessage, url: string, amount_display: string}
      */
     public function execute(
         RepairOrder $repairOrder,
@@ -40,6 +46,8 @@ final class SendDepositRequestLinkAction
         $shortUrl = $this->shortLinks->execute(
             $context['url'],
             $context['token']->token->expires_at,
+            $repairOrder,
+            PortalShortLinkPurpose::Deposit,
         );
 
         $body = PortalSmsLinkBody::deposit(
@@ -54,6 +62,16 @@ final class SendDepositRequestLinkAction
             body: $body,
             repairOrder: $repairOrder,
             conversation: $conversation,
+        );
+
+        $this->communicationEvents->record(
+            $repairOrder,
+            OperationalCommunicationType::InvoiceSent,
+            OperationalCommunicationChannel::Sms,
+            OperationalCommunicationDirection::Outbound,
+            'Deposit request texted to customer. Amount '.$context['amount_display'].'.',
+            actor: $actor,
+            message: $result['message'],
         );
 
         return [

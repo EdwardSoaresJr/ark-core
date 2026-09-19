@@ -7,12 +7,15 @@ use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\MessageActionContract;
 use App\Ark\Operations\Messaging\MessageActionKey;
-use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Messaging\SendOutboundMessageAction;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Platform\Communications\ArkCommunicationsClient;
+use App\Ark\Platform\Communications\ManagedCommunicationsGate;
 use App\Models\User;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -104,7 +107,7 @@ final class AppointmentSmsDelivery
             return 'No phone number on this appointment.';
         }
 
-        if (! $this->credentials->twilioConfigured() || ! $this->transport->isConfigured()) {
+        if (! ManagedCommunicationsGate::platformSend() && ! $this->credentials->twilioConfigured()) {
             return 'ARK Texting is not connected.';
         }
 
@@ -152,8 +155,46 @@ final class AppointmentSmsDelivery
 
         $phone = (string) AppointmentBookingIdentity::displayPhone($appointment);
         $normalized = PhoneNumber::normalize($phone) ?? $phone;
+
+        if (ManagedCommunicationsGate::platformSend()) {
+            $platform = app(ArkCommunicationsClient::class)->sendConversationMessage(
+                toPhone: $normalized,
+                body: $body,
+                idempotencyKey: 'core-appt-'.(string) Str::uuid(),
+                domainObjectType: 'appointment',
+                domainObjectId: (string) $appointment->id,
+                coreActorUserId: (int) $actor->id,
+            );
+
+            if (! ($platform['ok'] ?? false)) {
+                throw new RuntimeException(
+                    (string) ($platform['message'] ?? 'ARK Communications could not send the message.'),
+                );
+            }
+
+            if (! ManagedCommunicationsGate::coreMirrorEnabled()) {
+                return;
+            }
+
+            $providerSid = (string) ($platform['provider_message_id'] ?? '');
+            if ($providerSid === '') {
+                $providerSid = 'platform:'.($platform['message_id'] ?? Str::uuid());
+            }
+
+            $conversation = $this->conversations->forPhone($normalized);
+            $this->recorder->recordOutboundSmsToConversation(
+                conversation: $conversation,
+                actor: $actor,
+                body: $body,
+                providerMessageSid: $providerSid,
+                repairOrder: $appointment->repairOrder,
+                metadata: $metadata,
+            );
+
+            return;
+        }
+
         $result = $this->transport->send($normalized, $body);
-        // ConversationResolver::forPhone firstOrCreates by phone — no prior thread required.
         $conversation = $this->conversations->forPhone($normalized);
 
         $this->recorder->recordOutboundSmsToConversation(

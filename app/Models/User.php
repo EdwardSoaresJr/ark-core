@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Ark\Operations\Labor\TechnicianFloorWageSuggestion;
 use App\Ark\Operations\Labor\TechnicianLaborPayBasis;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\ShopExcellence\OwnerWorkspaceAccess;
+use App\Ark\Operations\Workstations\OperatorPinVerifier;
+use App\Ark\Platform\Shop;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Ark\Runtime\Authorization\DevRolePretend;
 use App\Ark\Runtime\Identity\Oidc\UserProductAccess;
@@ -13,6 +15,7 @@ use App\Ark\Runtime\Preferences\AccentColor;
 use App\Ark\Runtime\Preferences\AccentTheme;
 use App\Ark\Runtime\Preferences\DisplayTheme;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,8 +28,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'phone', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
-#[Hidden(['password', 'remember_token', 'operator_pin_hash'])]
+#[Fillable(['name', 'email', 'phone', 'partstech_username', 'accent_theme', 'accent_color', 'display_theme', 'schedule_board_view', 'default_parts_catalog', 'default_labor_guide', 'parts_catalog_links', 'labor_cost_cents', 'labor_pay_basis', 'flag_rate_cents', 'floor_rate_cents', 'workday_hours', 'scheduling_hours', 'auto_clock_enabled', 'auto_lunch_minutes'])]
+#[Hidden(['password', 'remember_token', 'partstech_password', 'operator_pin_hash'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -42,10 +45,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'partstech_password' => 'encrypted',
             'is_active' => 'boolean',
             'is_master_admin' => 'boolean',
             'workday_hours' => 'decimal:2',
             'scheduling_hours' => 'array',
+            'parts_catalog_links' => 'array',
             'cloud_funnel_draft' => 'array',
             'password_set_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
@@ -221,7 +226,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function floorWageNeedsReview(): bool
     {
-        return \App\Ark\Operations\Labor\TechnicianFloorWageSuggestion::needsReview($this->floor_rate_cents);
+        return TechnicianFloorWageSuggestion::needsReview($this->floor_rate_cents);
     }
 
     /**
@@ -235,6 +240,16 @@ class User extends Authenticatable implements MustVerifyEmail
             ->filter()
             ->values()
             ->all();
+    }
+
+    public function hasStoredPartsTechPassword(): bool
+    {
+        return filled($this->partstech_password);
+    }
+
+    public function usesPersonalPartsTechLogin(): bool
+    {
+        return filled(trim((string) $this->partstech_username)) && $this->hasStoredPartsTechPassword();
     }
 
     /**
@@ -262,7 +277,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function setOperatorPin(string $pin): void
     {
         $this->forceFill([
-            'operator_pin_hash' => app(\App\Ark\Operations\Workstations\OperatorPinVerifier::class)->hash($pin),
+            'operator_pin_hash' => app(OperatorPinVerifier::class)->hash($pin),
         ])->save();
     }
 
@@ -292,7 +307,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function ownedShop(): HasOne
     {
-        return $this->hasOne(\App\Ark\Platform\Shop::class, 'owner_user_id');
+        return $this->hasOne(Shop::class, 'owner_user_id');
     }
 
     /**

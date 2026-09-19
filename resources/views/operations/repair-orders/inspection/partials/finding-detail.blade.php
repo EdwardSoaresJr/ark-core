@@ -65,6 +65,19 @@
     <div class="ops-inspection-detail__section">
         <p class="ops-inspection-detail__section-label">Photos &amp; video</p>
         @if ($item->photos->isNotEmpty())
+            @php
+                $canContributeEvidence = auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
+                    || auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value);
+                $contributePages = $canContributeEvidence
+                    ? collect(\App\Ark\Operations\Leads\Public\CommonProblemRegistry::all())
+                        ->map(fn (array $problem): array => [
+                            'slug' => (string) $problem['slug'],
+                            'title' => (string) $problem['title'],
+                        ])
+                        ->sortBy('title')
+                        ->values()
+                    : collect();
+            @endphp
             <div class="ops-inspection-detail__photos">
                 @foreach ($item->photos as $photo)
                     <div class="ops-inspection-detail__photo">
@@ -108,6 +121,42 @@
                             @endif
                         </div>
                         <p class="ops-inspection-detail__photo-label">{{ $photo->purposeLabel() }}</p>
+                        @if ($canContributeEvidence && $photo->isImage())
+                            <details class="ops-contribute-evidence">
+                                <summary class="ops-inspection-link-btn">Use on Website</summary>
+                                <form
+                                    method="post"
+                                    action="{{ route('operations.repair-orders.inspection.photos.contribute', [$repairOrder, $photo]) }}"
+                                    class="ops-contribute-evidence__form"
+                                >
+                                    @csrf
+                                    <p class="ops-contribute-evidence__title">Publish Evidence</p>
+                                    <p class="ops-contribute-evidence__photo">Photo: ✔</p>
+                                    <label class="ops-inspection-field">
+                                        <span class="ops-inspection-field__label">Page</span>
+                                        <select name="common_problem_slug" required class="ops-inspection-field__input">
+                                            <option value="">Select page…</option>
+                                            @foreach ($contributePages as $page)
+                                                <option value="{{ $page['slug'] }}">{{ $page['title'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+                                    <label class="ops-inspection-field">
+                                        <span class="ops-inspection-field__label">Caption</span>
+                                        <input
+                                            type="text"
+                                            name="caption"
+                                            value="{{ $photo->purposeLabel() }}"
+                                            maxlength="500"
+                                            class="ops-inspection-field__input"
+                                        >
+                                    </label>
+                                    <div class="ops-contribute-evidence__actions">
+                                        <button type="submit" class="ops-inspection-btn ops-inspection-btn--secondary">Contribute</button>
+                                    </div>
+                                </form>
+                            </details>
+                        @endif
                     </div>
                 @endforeach
             </div>
@@ -135,4 +184,17 @@
             </form>
         @endif
     </div>
+
+    @if ($canEdit && in_array($item->observed_state?->value, ['fail', 'needs_attention', 'monitor'], true))
+        <form method="post" action="{{ route('operations.repair-orders.inspection.items.recommendations.store', [$repairOrder, $item]) }}" class="ops-inspection-detail__section">
+            @csrf
+            <p class="ops-inspection-detail__section-label">Recommendation</p>
+            <input type="hidden" name="title" value="{{ $item->label }}">
+            @if ($item->observed_state?->value === 'fail')
+                <input type="hidden" name="safety_related" value="1">
+                <input type="hidden" name="due_kind" value="now">
+            @endif
+            <button type="submit" class="ops-inspection-btn ops-inspection-btn--secondary">Create recommendation</button>
+        </form>
+    @endif
 </div>

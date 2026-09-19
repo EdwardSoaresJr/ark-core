@@ -42,7 +42,7 @@ final readonly class ShopDisplayBoardProjection
         ]);
 
         $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard($repairOrders);
-        $cardSurfaces = $homeCardSurfaces->mapForHomeBoard($repairOrders, $homeBoardColumns);
+        $cardSurfaces = $homeCardSurfaces->mapForHomeBoard($repairOrders, $homeBoardColumns, $repairOrderTotals);
 
         $attentionZones = $attentionBoardProjection->zones(
             $repairOrders,

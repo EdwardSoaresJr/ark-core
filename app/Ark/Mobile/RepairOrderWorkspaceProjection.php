@@ -32,7 +32,9 @@ final class RepairOrderWorkspaceProjection
         private readonly EnsureInspectionAction $ensureInspection,
         private readonly ApplyInspectionTemplateAction $applyInspectionTemplate,
         private readonly MobileEstimateProjection $estimate,
+        private readonly MobileSquarePaymentProjection $squarePayment,
         private readonly MobileManualPaymentProjection $manualPayment,
+        private readonly MobileSquareDepositProjection $squareDeposit,
         private readonly MobileManualDepositProjection $manualDeposit,
         private readonly MobileManualRefundProjection $manualRefund,
         private readonly MobileLedgerProjection $ledger,
@@ -61,8 +63,16 @@ final class RepairOrderWorkspaceProjection
             && ! $repairOrder->isTerminal();
         $canEditEstimate = $canManageConcerns;
 
+        $squarePayment = $showMoney
+            ? $this->squarePayment->control($repairOrder, $viewer, $profile)
+            : null;
+
         $manualPayment = $showMoney
             ? $this->manualPayment->control($repairOrder, $viewer, $profile)
+            : null;
+
+        $squareDeposit = $showMoney
+            ? $this->squareDeposit->control($repairOrder, $viewer, $profile)
             : null;
 
         $manualDeposit = $showMoney
@@ -92,14 +102,18 @@ final class RepairOrderWorkspaceProjection
                 $technicianAssignment,
                 $canManageConcerns,
                 $canEditEstimate,
+                $squarePayment,
                 $manualPayment,
+                $squareDeposit,
                 $manualDeposit,
                 $manualRefund,
                 $ledger,
             ),
             'lifecycle' => $this->lifecycleControl($repairOrder, $viewer, $profile),
             'technician_assignment' => $technicianAssignment,
+            'square_payment' => $squarePayment,
             'manual_payment' => $manualPayment,
+            'square_deposit' => $squareDeposit,
             'manual_deposit' => $manualDeposit,
             'manual_refund' => $manualRefund,
             'ledger' => $ledger,
@@ -153,8 +167,7 @@ final class RepairOrderWorkspaceProjection
             $sections[] = $this->section('concerns', 'Concerns', 'Customer concerns and production');
         }
 
-        // Money belongs to advisors/owners, not technicians (technician-scope
-        // doctrine — technicians do not own financials).
+        // Estimate lines and totals are for advisors/owners, not technicians.
         if ($profile !== 'technician' && $viewer->can(ArkCapability::RepairOrdersView->value)) {
             $sections[] = $this->section('estimate', 'Estimate', 'Line items, pricing, and totals');
         }
@@ -225,7 +238,9 @@ final class RepairOrderWorkspaceProjection
         ?array $technicianAssignment,
         bool $canManageConcerns,
         bool $canEditEstimate,
+        ?array $squarePayment,
         ?array $manualPayment,
+        ?array $squareDeposit,
         ?array $manualDeposit,
         ?array $manualRefund,
         ?array $ledger,
@@ -304,6 +319,11 @@ final class RepairOrderWorkspaceProjection
             $this->command('preview_inspection', 'Preview inspection', 'action', $canPreviewInspection, [
                 'action' => 'preview_inspection',
             ]),
+            ($squareDeposit['can_charge_terminal'] ?? false)
+                ? $this->command('charge_deposit_terminal', 'Collect deposit', 'action', true, [
+                    'action' => 'charge_deposit_terminal',
+                ])
+                : null,
             ($manualDeposit['can_record'] ?? false)
                 ? $this->command('record_deposit', 'Record deposit', 'action', true, [
                     'action' => 'record_deposit',
@@ -312,6 +332,11 @@ final class RepairOrderWorkspaceProjection
             $this->command('send_payment', 'Send payment', 'action', $balanceOutstanding, [
                 'action' => 'send_payment',
             ]),
+            ($squarePayment['can_charge_terminal'] ?? false)
+                ? $this->command('charge_terminal', 'Charge reader', 'action', true, [
+                    'action' => 'charge_terminal',
+                ])
+                : null,
             ($manualPayment['can_record'] ?? false)
                 ? $this->command('record_payment', 'Record payment', 'action', true, [
                     'action' => 'record_payment',

@@ -382,50 +382,53 @@
             @csrf
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="block text-[11px] font-medium text-slate-500">
-                Concern
-                <div
-                    class="ark-ro-mention mt-1"
-                    x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))"
-                >
+            <div
+                class="ark-ro-mention space-y-3"
+                x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))"
+            >
+                <label class="block text-[11px] font-medium text-slate-500">
+                    Concern
                     <input
                         name="summary"
                         x-ref="field"
                         value="{{ old('summary', $concern->summary) }}"
                         required
                         placeholder="The problem — e.g. Overheating, brake noise. Type @RO for a previous visit."
-                        class="w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
+                        class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
                         @input="onInput()"
                         @keydown="onKeydown($event)"
                     >
                     @include('operations.repair-orders.partials.repair-order-mention-suggest')
+                </label>
+                <label class="block text-[11px] font-medium text-slate-500">
+                    Recommendation intent
+                    @include('operations.repair-orders.partials.recommendation-intent-select', [
+                        'selected' => old('recommendation_intent', $concern->recommendationIntent()->value),
+                        'inputId' => 'workspace-concern-intent-'.$concern->id,
+                        'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                    ])
+                </label>
+                <div class="grid gap-3 md:grid-cols-2">
+                    <label class="block text-[11px] font-medium text-slate-500">
+                        Customer states
+                        <textarea name="customer_states" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What the customer reported…">{{ old('customer_states', $concern->customer_states) }}</textarea>
+                    </label>
+                    <label class="block text-[11px] font-medium text-slate-500">
+                        Verified findings
+                        <textarea name="verified_findings" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What was verified…">{{ old('verified_findings', $concern->verified_findings) }}</textarea>
+                    </label>
+                    <label class="block text-[11px] font-medium text-slate-500">
+                        DTCs, if present
+                        <textarea name="dtcs_summary" rows="2" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="e.g. P0303 current">{{ old('dtcs_summary', $concern->dtcs_summary) }}</textarea>
+                    </label>
+                    <label class="block text-[11px] font-medium text-slate-500">
+                        Recommendation
+                        <textarea name="recommendation" rows="2" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="Recommended repair…">{{ old('recommendation', $concern->recommendation) }}</textarea>
+                    </label>
                 </div>
-            </label>
-            <label class="block text-[11px] font-medium text-slate-500">
-                Recommendation intent
-                @include('operations.repair-orders.partials.recommendation-intent-select', [
-                    'selected' => old('recommendation_intent', $concern->recommendationIntent()->value),
-                    'inputId' => 'workspace-concern-intent-'.$concern->id,
-                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
+                    'visitInsert' => 'insertChip',
                 ])
-            </label>
-            <div class="grid gap-3 md:grid-cols-2">
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Customer states
-                    <textarea name="customer_states" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What the customer reported…">{{ old('customer_states', $concern->customer_states) }}</textarea>
-                </label>
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Verified findings
-                    <textarea name="verified_findings" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What was verified…">{{ old('verified_findings', $concern->verified_findings) }}</textarea>
-                </label>
-                <label class="block text-[11px] font-medium text-slate-500">
-                    DTCs, if present
-                    <textarea name="dtcs_summary" rows="2" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="e.g. P0303 current">{{ old('dtcs_summary', $concern->dtcs_summary) }}</textarea>
-                </label>
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Recommendation
-                    <textarea name="recommendation" rows="2" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="Recommended repair…">{{ old('recommendation', $concern->recommendation) }}</textarea>
-                </label>
             </div>
         </form>
     </div>

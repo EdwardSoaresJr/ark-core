@@ -19,8 +19,7 @@ test('canonical repair order exposes full presentation workspace tabs', function
         ->assertDontSee('ops-ro-workspace-tabs--builder-only', false)
         ->assertSee("selectTab('comms')", false)
         ->assertSee("selectTab('inspect')", false)
-        ->assertSee("selectTab('parts')", false)
-        ->assertSee("selectTab('portal')", false)
+        ->assertSee("selectTab('recommendations')", false)
         ->assertSee("selectTab('history')", false);
 });
 

@@ -76,7 +76,7 @@ class RepairOrderLifecycleTransition
             && $repairOrder->assigned_technician_id === null
             && ! $repairOrder->hasRepairActionOwner()
         ) {
-            return 'Assign a Repair Action owner before starting work.';
+            return 'Assign a technician before moving to '.$this->statusCatalog->labelForSlug($toStatusSlug).'.';
         }
 
         $hasUnresolvedApprovedParts = $selectCache !== null
@@ -98,7 +98,31 @@ class RepairOrderLifecycleTransition
                 : 'Approved parts are not ready yet. Receive or install parts before moving forward, or set status to Waiting Parts.';
         }
 
-        return null;
+        return $this->mileageBlockingReason($repairOrder, $toStatusSlug);
+    }
+
+    private function mileageBlockingReason(RepairOrder $repairOrder, string $toStatusSlug): ?string
+    {
+        $definition = $this->statusCatalog->definitionForSlug($toStatusSlug);
+
+        if ($definition === null) {
+            return null;
+        }
+
+        $needsIn = $definition->requires_mileage_in && $repairOrder->mileage_in === null;
+        $needsOut = $definition->requires_mileage_out && $repairOrder->mileage_out === null;
+
+        if (! $needsIn && ! $needsOut) {
+            return null;
+        }
+
+        $missing = match (true) {
+            $needsIn && $needsOut => 'mileage in and mileage out',
+            $needsIn => 'mileage in',
+            default => 'mileage out',
+        };
+
+        return 'Enter '.$missing.' before moving to '.$this->statusCatalog->labelForSlug($toStatusSlug).'.';
     }
 
     public function move(

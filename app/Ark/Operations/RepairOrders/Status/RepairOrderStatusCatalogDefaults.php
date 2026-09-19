@@ -3,6 +3,8 @@
 namespace App\Ark\Operations\RepairOrders\Status;
 
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalogDefaults;
 use App\Ark\Runtime\Authorization\ArkRole;
 
 final class RepairOrderStatusCatalogDefaults
@@ -12,13 +14,7 @@ final class RepairOrderStatusCatalogDefaults
      */
     public static function advisorLaneKeys(): array
     {
-        return [
-            'waiting_approval',
-            'waiting_parts',
-            'shop_floor',
-            'quality_check',
-            'ready_pickup',
-        ];
+        return app(JobBoardLaneCatalog::class)->knownKeys();
     }
 
     /**
@@ -26,38 +22,15 @@ final class RepairOrderStatusCatalogDefaults
      */
     public static function advisorLaneTemplates(): array
     {
-        return [
-            [
-                'key' => 'waiting_approval',
-                'label' => 'Waiting Approval',
-                'description' => 'Customer authorization pressure',
-                'tone' => 'approval',
-            ],
-            [
-                'key' => 'waiting_parts',
-                'label' => 'Waiting Parts',
-                'description' => 'Procurement blockers on approved work',
-                'tone' => 'blocked',
-            ],
-            [
-                'key' => 'shop_floor',
-                'label' => 'Shop Floor',
-                'description' => 'Authorized and active bay work in the building',
-                'tone' => 'motion',
-            ],
-            [
-                'key' => 'quality_check',
-                'label' => 'Quality Check',
-                'description' => 'Final checks before advisor handoff',
-                'tone' => 'ready',
-            ],
-            [
-                'key' => 'ready_pickup',
-                'label' => 'Ready Pickup',
-                'description' => 'Complete, invoice, and pickup release',
-                'tone' => 'ready',
-            ],
-        ];
+        return collect(app(JobBoardLaneCatalog::class)->all())
+            ->map(fn (array $lane): array => [
+                'key' => $lane['key'],
+                'label' => $lane['name'],
+                'description' => 'Job Board lane',
+                'tone' => JobBoardLaneCatalogDefaults::defaultTone($lane['color']),
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -159,18 +132,18 @@ final class RepairOrderStatusCatalogDefaults
     public static function statusDefinitions(): array
     {
         return [
-            self::status('draft', 'Draft', lane: null, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 0, color: 'dark', customerCopy: 'We’re still putting together your estimate.', advisorBoard: false),
-            self::status('estimate', 'Building Estimate', lane: null, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 1, color: 'secondary', customerCopy: 'We’re preparing your estimate.', advisorBoard: false),
-            self::status('waiting_approval', 'Waiting Approval', lane: 'waiting_approval', group: 'new_arrivals_intake', groupName: 'Estimates', sort: 2, color: 'warning', customerCopy: 'Your estimate is ready. Reply APPROVE to proceed or NO to decline.'),
-            self::status('approved', 'Approved', lane: 'shop_floor', group: 'work_in_progress', groupName: 'Work in progress', sort: 3, color: 'primary', customerCopy: 'Your estimate is approved. We’re moving forward.', technicianBoard: true),
-            self::status('waiting_parts', 'Waiting Parts', lane: 'waiting_parts', group: 'work_in_progress', groupName: 'Work in progress', sort: 4, color: 'info', customerCopy: 'We’re waiting on parts to arrive.', technicianBoard: true),
-            self::status('in_progress', 'In Progress', lane: 'shop_floor', group: 'work_in_progress', groupName: 'Work in progress', sort: 5, color: 'primary', requiresMileageIn: true, customerCopy: 'Your vehicle is currently being worked on.', technicianBoard: true),
-            self::status('quality_check', 'Quality Check', lane: 'quality_check', group: 'work_in_progress', groupName: 'Work in progress', sort: 6, color: 'info', requiresMileageOut: true, customerCopy: 'We’re wrapping up final checks.', technicianBoard: true),
-            self::status('completed', 'Completed', lane: 'ready_pickup', group: 'finalizing-and-pickup', groupName: 'Finalizing & pickup', sort: 7, color: 'success', requiresMileageOut: true, customerCopy: 'Repairs are completed.'),
-            self::status('invoiced', 'Invoiced', lane: 'ready_pickup', group: 'completed', groupName: 'Completed', sort: 8, color: 'success', customerCopy: 'Your invoice is ready.'),
-            self::status('ready_pickup', 'Ready for Pickup', lane: 'ready_pickup', group: 'finalizing-and-pickup', groupName: 'Finalizing & pickup', sort: 9, color: 'success', requiresMileageOut: true, customerCopy: 'Your vehicle is ready for pickup.'),
+            self::status('draft', 'Draft', lane: JobBoardLaneCatalogDefaults::ESTIMATES, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 0, color: 'dark', customerCopy: 'We’re still putting together your estimate.'),
+            self::status('estimate', 'Building Estimate', lane: JobBoardLaneCatalogDefaults::ESTIMATES, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 1, color: 'secondary', customerCopy: 'We’re preparing your estimate.'),
+            self::status('waiting_approval', 'Waiting Approval', lane: JobBoardLaneCatalogDefaults::WAITING_APPROVAL, group: 'new_arrivals_intake', groupName: 'Estimates', sort: 2, color: 'warning', customerCopy: 'Your estimate is ready. Reply APPROVE to proceed or NO to decline.'),
+            self::status('approved', 'Approved', lane: JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS, group: 'work_in_progress', groupName: 'Work in progress', sort: 3, color: 'primary', customerCopy: 'Your estimate is approved. We’re moving forward.', technicianBoard: true),
+            self::status('waiting_parts', 'Waiting Parts', lane: JobBoardLaneCatalogDefaults::PARTS, group: 'work_in_progress', groupName: 'Work in progress', sort: 4, color: 'info', customerCopy: 'We’re waiting on parts to arrive.', technicianBoard: true),
+            self::status('in_progress', 'In Progress', lane: JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS, group: 'work_in_progress', groupName: 'Work in progress', sort: 5, color: 'primary', requiresMileageIn: true, customerCopy: 'Your vehicle is currently being worked on.', technicianBoard: true),
+            self::status('quality_check', 'Quality Check', lane: JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS, group: 'work_in_progress', groupName: 'Work in progress', sort: 6, color: 'info', requiresMileageOut: true, customerCopy: 'We’re wrapping up final checks.', technicianBoard: true),
+            self::status('completed', 'Completed', lane: JobBoardLaneCatalogDefaults::COMPLETED, group: 'finalizing-and-pickup', groupName: 'Completed', sort: 7, color: 'success', requiresMileageOut: true, customerCopy: 'Repairs are completed.'),
+            self::status('invoiced', 'Invoiced', lane: JobBoardLaneCatalogDefaults::COMPLETED, group: 'completed', groupName: 'Completed', sort: 8, color: 'success', customerCopy: 'Your invoice is ready.'),
+            self::status('ready_pickup', 'Ready for Pickup', lane: JobBoardLaneCatalogDefaults::COMPLETED, group: 'finalizing-and-pickup', groupName: 'Finalizing & pickup', sort: 9, color: 'success', requiresMileageOut: true, customerCopy: 'Your vehicle is ready for pickup.'),
             self::status('closed', 'Closed', lane: null, sort: 10, terminal: true, requiresVariant: true, enforceCloseRules: true, advisorBoard: false, color: 'dark', customerCopy: 'This visit is closed.'),
-            self::status('ready_for_work', 'Ready for Work', lane: 'shop_floor', group: 'work_in_progress', groupName: 'Work in progress', sort: 13, color: 'primary', customerCopy: 'Approved work is ready for the bay.', technicianBoard: true),
+            self::status('ready_for_work', 'Ready for Work', lane: JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS, group: 'work_in_progress', groupName: 'Work in progress', sort: 13, color: 'primary', customerCopy: 'Approved work is ready for the bay.', technicianBoard: true),
         ];
     }
 
@@ -393,6 +366,9 @@ final class RepairOrderStatusCatalogDefaults
 
     public static function sync(RepairOrderStatusCatalog $catalog): void
     {
+        JobBoardLaneCatalogDefaults::sync();
+        app(JobBoardLaneCatalog::class)->forgetCache();
+
         foreach (self::statusDefinitions() as $definition) {
             RepairOrderStatusDefinition::query()->updateOrCreate(
                 ['slug' => $definition['slug']],

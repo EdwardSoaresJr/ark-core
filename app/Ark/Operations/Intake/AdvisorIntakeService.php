@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Intake;
 
+use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
@@ -36,6 +37,7 @@ class AdvisorIntakeService
      *     billing_class?: string|null,
      *     tow_incoming?: bool,
      *     appointment?: bool,
+     *     appointment_id?: int|null,
      * }  $data
      */
     public function create(array $data, ?User $actor): RepairOrder
@@ -104,7 +106,49 @@ class AdvisorIntakeService
                 ],
             );
 
+            $this->linkAppointmentFromIntake($repairOrder, $data);
+
             return $repairOrder->fresh(['customer', 'vehicle', 'assignedTechnician', 'concerns']);
         });
+    }
+
+    /**
+     * @param  array{appointment_id?: int|null}  $data
+     */
+    private function linkAppointmentFromIntake(RepairOrder $repairOrder, array $data): void
+    {
+        $appointmentId = isset($data['appointment_id']) ? (int) $data['appointment_id'] : 0;
+
+        if ($appointmentId <= 0) {
+            return;
+        }
+
+        $appointment = Appointment::query()
+            ->whereKey($appointmentId)
+            ->lockForUpdate()
+            ->first();
+
+        if ($appointment === null) {
+            return;
+        }
+
+        if ($appointment->repair_order_id !== null
+            && (int) $appointment->repair_order_id !== (int) $repairOrder->id) {
+            return;
+        }
+
+        if ($appointment->customer_id !== null
+            && (int) $appointment->customer_id !== (int) $repairOrder->customer_id) {
+            return;
+        }
+
+        if ($appointment->vehicle_id !== null
+            && (int) $appointment->vehicle_id !== (int) $repairOrder->vehicle_id) {
+            return;
+        }
+
+        $appointment->forceFill([
+            'repair_order_id' => $repairOrder->id,
+        ])->save();
     }
 }

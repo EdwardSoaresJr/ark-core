@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 final class RepairOrderWorkspaceTabPresenter
 {
     /** @var list<string> */
-    public const TABS = ['comms', 'portal', 'auth', 'parts', 'history', 'inspect'];
+    public const TABS = ['comms', 'portal', 'auth', 'parts', 'history', 'inspect', 'recommendations'];
 
     public function __construct(
         private readonly EstimateTotalsCalculator $calculator,
@@ -62,6 +62,10 @@ final class RepairOrderWorkspaceTabPresenter
                 ...$shared,
                 ...$this->inspectData($request, $repairOrder),
             ],
+            'recommendations' => [
+                ...$shared,
+                ...$this->recommendationsData($repairOrder),
+            ],
             default => $shared,
         };
     }
@@ -91,6 +95,10 @@ final class RepairOrderWorkspaceTabPresenter
                     ->latest()
                     ->limit(8),
             ],
+            'recommendations' => [
+                'customer',
+                'vehicle',
+            ],
             default => [],
         };
 
@@ -112,6 +120,20 @@ final class RepairOrderWorkspaceTabPresenter
                 ->for($repairOrder, $request->user()),
             'canRecordFindings' => \App\Ark\Operations\Inspections\InspectionCaptureLinks::canRecord($request->user(), $repairOrder),
             'identity' => OperationalIdentityPresenter::forRepairOrder($repairOrder, includeStaffPosture: true),
+            'recommendationAwareness' => \App\Ark\Operations\Recommendations\RecommendationAwarenessProjection::forRepairOrder($repairOrder),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function recommendationsData(RepairOrder $repairOrder): array
+    {
+        $repairOrder->loadMissing(['customer', 'vehicle']);
+
+        return [
+            'recommendationsWorkspace' => \App\Ark\Operations\Recommendations\RepairOrderRecommendationsWorkspaceProjection::for($repairOrder),
+            'canManageRecommendations' => auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value) ?? false,
         ];
     }
 
@@ -123,10 +145,12 @@ final class RepairOrderWorkspaceTabPresenter
         $repairOrder->loadMissing(['customer']);
 
         $linkedMessages = $this->conversationTimeline->forRepairOrder($repairOrder, 1);
+        $timelineEvents = $this->unifiedTimeline->forRepairOrderRelationship($repairOrder, 50);
 
         return [
-            'timelineEvents' => $this->unifiedTimeline->forRepairOrderRelationship($repairOrder, 50),
-            'hasConversationHistory' => $linkedMessages->isNotEmpty(),
+            'timelineEvents' => $timelineEvents,
+            'hasConversationHistory' => $linkedMessages->isNotEmpty()
+                || $timelineEvents->contains(fn ($event): bool => $event->hubFilter() === 'text'),
             'customerCallContext' => $repairOrder->customer
                 ? $this->callContextResolver->resolveForCustomer($repairOrder->customer)
                 : null,

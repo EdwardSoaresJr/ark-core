@@ -47,13 +47,12 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         || ($canUseProductionShell && ! auth()->user()?->can('operations.access'));
     $hasRecordsNav = (auth()->user()?->can('customers.manage') ?? false)
         || (auth()->user()?->can('repair_orders.view') ?? false);
-    $hasBusinessNav = $canAccessBusinessWorkspace
-        || auth()->user()?->can('settings.manage');
-    $hasPlatformNav = ($canUseProductionShell || $usesAdvisorWorkSurface)
-        || auth()->user()?->can('settings.manage');
-    $hasSystemNav = auth()->user()?->can('settings.manage') ?? false;
+    $canManageSettings = auth()->user()?->can('settings.manage') ?? false;
+    $hasBusinessNav = $canAccessBusinessWorkspace || $canManageSettings;
+    $showArkademyNav = $canUseProductionShell || $usesAdvisorWorkSurface;
+    $hasSystemNav = $showArkademyNav || $canManageSettings;
     $commsChannelTabs = app(CommsChannelStripResolver::class)->tabsFor(auth()->user(), $previousLastSeenAt);
-    $showTopbarCommsStrip = $commsChannelTabs !== [];
+    $showTopbarCommsStrip = $commsChannelTabs !== [] && ! request()->routeIs('operations.communications.*');
     $workstationPresence = WorkstationPresence::resolve(request());
 @endphp
 <!DOCTYPE html>
@@ -103,8 +102,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                         return prefersDark ? 'dark' : 'light';
                     }
 
-                    // No server preference and no legacy storage: light (not OS dark).
-                    return legacyTheme === 'dark' ? 'dark' : 'light';
+                    return legacyTheme === 'dark' || (!legacyTheme && prefersDark) ? 'dark' : 'light';
                 })();
 
                 const applyTheme = (theme) => {
@@ -309,14 +307,14 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                 </a>
                             @endcan
                             @if ($canAccessOwnerWorkspace)
-                                <a href="{{ route('operations.owner.bookend') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
+                                <a href="{{ route('operations.owner.day-review') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.day-review', 'operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
                                         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
                                             <path d="M4 15.5h12M5.5 13V8M10 13V4.5M14.5 13v-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                                             <path d="M3.5 3.5l13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.35" />
                                         </svg>
                                     </span>
-                                    <span>Bookend</span>
+                                    <span>Day Review</span>
                                 </a>
                                 <a href="{{ route('operations.owner.technician-production.index') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.technician-production.*') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
@@ -330,10 +328,10 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                         </div>
                     @endif
 
-                    @if ($hasPlatformNav)
+                    @if ($hasSystemNav)
                         <div class="ops-rail-section">
-                            <p class="ops-rail-section__label">Platform</p>
-                            @if ($canUseProductionShell || $usesAdvisorWorkSurface)
+                            <p class="ops-rail-section__label">System</p>
+                            @if ($showArkademyNav)
                                 <a href="{{ \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl() }}" class="ops-rail-link {{ ! \App\Ark\Operations\Learn\ArkademyUrls::isCutover() && request()->routeIs('operations.learn.*') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
                                         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
@@ -345,7 +343,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                     <span>{{ \App\Support\Branding\Branding::learnName() }}</span>
                                 </a>
                             @endif
-                            @can('settings.manage')
+                            @if ($canManageSettings)
                                 <a href="{{ route('operations.shop.communications') }}" class="ops-rail-link {{ request()->routeIs('operations.shop.*') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
                                         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
@@ -353,16 +351,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                             <path d="M7 8h6M7 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
                                         </svg>
                                     </span>
-                                    <span>Voice</span>
+                                    <span>Stations &amp; Phones</span>
                                 </a>
-                            @endcan
-                        </div>
-                    @endif
-
-                    @if ($hasSystemNav)
-                        <div class="ops-rail-section">
-                            <p class="ops-rail-section__label">System</p>
-                            @can('settings.manage')
                                 <a href="{{ route('operations.settings.shop.edit') }}" class="ops-rail-link {{ request()->routeIs('operations.settings.*') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
                                         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
@@ -372,7 +362,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                     </span>
                                     <span>Settings</span>
                                 </a>
-                            @endcan
+                            @endif
                         </div>
                     @endif
                 </nav>

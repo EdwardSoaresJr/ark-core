@@ -10,7 +10,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 
 /**
- * Attaches doctrine-visible labor explanations to RTE search payloads.
+ * Attaches labor-hour explanations to RTE search payloads.
  */
 final class RteLaborExplanationAttacher
 {

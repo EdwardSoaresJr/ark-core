@@ -19,7 +19,7 @@ Follow-up: **Can we prove it on the floor?** If yes → flip the certification r
 - If **one** → the platform got better.
 - If **none** → the shop probably didn't, regardless of how much code shipped.
 
-Notebook + loop: [operator-notebook.md](../product/operator-notebook.md) · Litmus: ark-pr-doctrine-review.mdc
+Notebook + loop: [operator-notebook.md](../product/operator-notebook.md) · Litmus: [ark-pr-doctrine-review.mdc](../../.cursor/rules/ark-pr-doctrine-review.mdc)
 
 ## The loop
 
@@ -120,4 +120,3 @@ Harder to copy than feature checklists.
 1. Verify on the floor.
 2. Add a row to the roadmap table (step removed + certification).
 3. When a certification is fully earned, flip 🔴 → 🟢 in the status table.
-4. Optional one line in [IMPLEMENTATION_LOG.md](./IMPLEMENTATION_LOG.md).

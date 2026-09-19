@@ -8,7 +8,7 @@ final class RepairTimeEngine
 
     public static function buttonTooltip(): string
     {
-        return 'Search '.self::NAME.' labor times for this vehicle';
+        return 'Search labor times for this vehicle';
     }
 
     public static function panelTitle(): string

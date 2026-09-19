@@ -62,4 +62,23 @@ final readonly class OperationalEventEntry
 
         return is_string($filter) && $filter !== '' ? $filter : 'logged';
     }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    public function withMetadata(array $metadata): self
+    {
+        return new self(
+            source: $this->source,
+            kind: $this->kind,
+            occurredAt: $this->occurredAt,
+            headline: $this->headline,
+            body: $this->body,
+            actor: $this->actor,
+            tone: $this->tone,
+            links: $this->links,
+            metadata: array_merge($this->metadata, $metadata),
+            subject: $this->subject,
+        );
+    }
 }

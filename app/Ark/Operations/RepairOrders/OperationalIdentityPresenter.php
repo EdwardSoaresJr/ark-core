@@ -36,7 +36,11 @@ final class OperationalIdentityPresenter
                 self::customerContactFromCustomer($repairOrder->customer),
                 includeReferral: $includeReferral,
             ),
-            'vehicle' => self::vehicleColumn($repairOrder->vehicle, $repairOrder, compactMileage: true),
+            'vehicle' => self::vehicleColumn(
+                $repairOrder->vehicle,
+                $repairOrder,
+                includeMileage: false,
+            ),
             'visit' => self::visitColumn(
                 repairOrderId: $repairOrder->repair_order_id,
                 statusLabel: $repairOrder->statusDisplayLabel(),
@@ -47,6 +51,7 @@ final class OperationalIdentityPresenter
                     ? self::staffWorkflowPosture($repairOrder)
                     : null,
                 documentLabel: $documentLabel,
+                mileageLines: self::visitMileageLines($repairOrder),
             ),
         ];
     }
@@ -91,7 +96,10 @@ final class OperationalIdentityPresenter
                 $customer['name'] ?? 'Customer',
                 self::customerContactFromSnapshot($customer),
             ),
-            'vehicle' => self::vehicleColumnFromSnapshot($vehicle, compactMileage: $customerFacing),
+            'vehicle' => self::vehicleColumnFromSnapshot(
+                $vehicle,
+                includeMileage: false,
+            ),
             'visit' => self::visitColumn(
                 repairOrderId: (int) ($repairOrder['repair_order_id'] ?? 0),
                 statusLabel: $statusLabel,
@@ -102,6 +110,8 @@ final class OperationalIdentityPresenter
                     ? null
                     : self::documentWorkflowPosture($snapshot),
                 documentLabel: $documentLabel,
+                customerDocument: $customerFacing,
+                mileageLines: self::customerVisitMileageLines($vehicle),
             ),
         ];
     }
@@ -187,8 +197,12 @@ final class OperationalIdentityPresenter
     /**
      * @return array{title: string, subtitle: ?string, lines: list<array{label: string, value: string}>}
      */
-    private static function vehicleColumn(Vehicle $vehicle, ?RepairOrder $repairOrder = null, bool $compactMileage = false): array
-    {
+    private static function vehicleColumn(
+        Vehicle $vehicle,
+        ?RepairOrder $repairOrder = null,
+        bool $compactMileage = false,
+        bool $includeMileage = true,
+    ): array {
         return self::vehicleColumnFromSnapshot([
             'display_name' => $vehicle->display_name,
             'nickname' => $vehicle->nickname,
@@ -200,15 +214,18 @@ final class OperationalIdentityPresenter
             'mileage' => $vehicle->legacyOdometerReading(),
             'color' => $vehicle->color,
             'engine' => $vehicle->engine_display ?: $vehicle->engine,
-        ], $compactMileage);
+        ], $compactMileage, $includeMileage);
     }
 
     /**
      * @param  array<string, mixed>  $vehicle
      * @return array{title: string, subtitle: ?string, lines: list<array{label: string, value: string}>}
      */
-    private static function vehicleColumnFromSnapshot(array $vehicle, bool $compactMileage = false): array
-    {
+    private static function vehicleColumnFromSnapshot(
+        array $vehicle,
+        bool $compactMileage = false,
+        bool $includeMileage = true,
+    ): array {
         $lines = [];
 
         if (filled($vehicle['vin'] ?? null) || filled($vehicle['normalized_vin'] ?? null)) {
@@ -223,8 +240,10 @@ final class OperationalIdentityPresenter
             $lines[] = ['label' => 'Plate', 'value' => $plateLine];
         }
 
-        foreach (self::mileageLines($vehicle, $compactMileage) as $mileageLine) {
-            $lines[] = $mileageLine;
+        if ($includeMileage) {
+            foreach (self::mileageLines($vehicle, $compactMileage) as $mileageLine) {
+                $lines[] = $mileageLine;
+            }
         }
 
         return [
@@ -282,7 +301,7 @@ final class OperationalIdentityPresenter
     }
 
     /**
-     * @return array{title: string, lines: list<array{label: string, value: string}>, posture: ?string}
+     * @return array{title: string, lines: list<array{label: string, value: string}>, posture: ?string, status_badge: ?string}
      */
     private static function visitColumn(
         int $repairOrderId,
@@ -292,10 +311,18 @@ final class OperationalIdentityPresenter
         ?string $technicianLabel,
         ?string $workflowPosture,
         ?string $documentLabel,
+        bool $customerDocument = false,
+        array $mileageLines = [],
     ): array {
-        $lines = [
-            ['label' => 'Status', 'value' => $statusLabel],
-        ];
+        $lines = [];
+
+        if (! $customerDocument && $documentLabel === null) {
+            $lines[] = ['label' => 'Status', 'value' => $statusLabel];
+        }
+
+        foreach ($mileageLines as $mileageLine) {
+            $lines[] = $mileageLine;
+        }
 
         if ($preparedAt !== null) {
             $lines[] = [
@@ -308,25 +335,72 @@ final class OperationalIdentityPresenter
             $lines[] = ['label' => 'Advisor', 'value' => $advisorName];
         }
 
-        $lines[] = [
-            'label' => 'Technician',
-            'value' => self::technicianDisplayLabel($technicianLabel),
-        ];
+        if (! $customerDocument || ! self::isPlaceholderTechnician($technicianLabel)) {
+            $lines[] = [
+                'label' => 'Technician',
+                'value' => self::technicianDisplayLabel($technicianLabel),
+            ];
+        }
 
-        $title = $documentLabel === null
+        $title = $customerDocument
             ? 'RO #'.$repairOrderId
-            : $documentLabel.' · RO #'.$repairOrderId;
+            : ($documentLabel === null
+                ? 'RO #'.$repairOrderId
+                : $documentLabel.' · RO #'.$repairOrderId);
 
         return [
             'title' => $title,
             'lines' => $lines,
             'posture' => $workflowPosture,
+            'status_badge' => $customerDocument ? $statusLabel : null,
         ];
     }
 
     /**
      * @return list<array{label: string, value: string}>
      */
+    private static function visitMileageLines(RepairOrder $repairOrder): array
+    {
+        return self::customerVisitMileageLines([
+            'mileage_in' => $repairOrder->resolvedMileageIn(),
+            'mileage_out' => $repairOrder->resolvedMileageOut(),
+            'mileage' => $repairOrder->vehicle?->legacyOdometerReading(),
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $vehicle
+     * @return list<array{label: string, value: string}>
+     */
+    private static function customerVisitMileageLines(array $vehicle): array
+    {
+        $mileageIn = self::numericMileage($vehicle['mileage_in'] ?? $vehicle['mileage'] ?? $vehicle['mileage_display'] ?? null);
+        $mileageOut = self::numericMileage($vehicle['mileage_out'] ?? null);
+
+        if ($mileageIn === null && $mileageOut === null) {
+            return [];
+        }
+
+        if ($mileageOut === null || $mileageIn === $mileageOut) {
+            return [[
+                'label' => 'Mileage',
+                'value' => self::formatMileage($mileageIn ?? $mileageOut),
+            ]];
+        }
+
+        if ($mileageIn === null) {
+            return [[
+                'label' => 'Mileage',
+                'value' => self::formatMileage($mileageOut),
+            ]];
+        }
+
+        return [
+            ['label' => 'Mileage in', 'value' => self::formatMileage($mileageIn)],
+            ['label' => 'Mileage out', 'value' => self::formatMileage($mileageOut)],
+        ];
+    }
+
     private static function mileageLines(array $vehicle, bool $compact = false): array
     {
         $mileageIn = $vehicle['mileage_in'] ?? $vehicle['mileage'] ?? $vehicle['mileage_display'] ?? null;
@@ -349,6 +423,15 @@ final class OperationalIdentityPresenter
                 'value' => self::formatMileageDisplay($mileageOut),
             ],
         ];
+    }
+
+    private static function numericMileage(mixed $mileage): ?int
+    {
+        if ($mileage === null || $mileage === '') {
+            return null;
+        }
+
+        return is_numeric($mileage) ? (int) $mileage : null;
     }
 
     private static function formatMileageDisplay(mixed $mileage): string
@@ -487,7 +570,14 @@ final class OperationalIdentityPresenter
 
     private static function isPlaceholderTechnician(?string $technicianLabel): bool
     {
-        return in_array($technicianLabel, [null, '', 'Unassigned tech', 'Unassigned technician', 'Needs owner'], true);
+        return in_array($technicianLabel, [
+            null,
+            '',
+            'Unassigned',
+            'Unassigned tech',
+            'Unassigned technician',
+            'Needs owner',
+        ], true);
     }
 
     /**

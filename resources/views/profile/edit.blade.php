@@ -5,6 +5,8 @@
             'appearance' => 'Appearance',
             'password' => 'Password',
             'workstation-pin' => 'Station PIN',
+            'partstech' => 'PartsTech',
+            'catalogs' => 'Catalogs',
         ];
     @endphp
 
@@ -34,10 +36,10 @@
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">
                     <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">User Settings</p>
-                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">Staff identity, appearance, password, and station PIN — each tab saves independently.</p>
+                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">Staff identity, appearance, password, station PIN, PartsTech seat, and catalog defaults — each tab saves independently.</p>
                 </div>
 
-                @if (session('status') === 'profile-updated' || session('status') === 'appearance-updated' || session('status') === 'password-updated' || session('status') === 'workstation-pin-updated')
+                @if (session('status') === 'profile-updated' || session('status') === 'appearance-updated' || session('status') === 'password-updated' || session('status') === 'partstech-updated' || session('status') === 'workstation-pin-updated' || session('status') === 'catalogs-updated')
                     <p
                         x-data="{ show: true }"
                         x-show="show"
@@ -72,6 +74,16 @@
                         </dd>
                     </div>
                     <div>
+                        <dt class="text-[10px] font-bold uppercase tracking-wide text-slate-400">PartsTech</dt>
+                        <dd class="mt-0.5 text-xs text-slate-700">
+                            @if ($user->usesPersonalPartsTechLogin())
+                                Personal · {{ $user->partstech_username }}
+                            @else
+                                Shop default login
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
                         <dt class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Station PIN</dt>
                         <dd class="mt-0.5 text-xs text-slate-700">
                             {{ $user->hasOperatorPin() ? 'Configured' : 'Not set — create at station or ask admin' }}
@@ -85,7 +97,7 @@
             </aside>
 
             <div class="min-w-0 border border-slate-300 bg-white">
-                <div class="grid gap-px border-b border-slate-300 bg-slate-300 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                <div class="grid gap-px border-b border-slate-300 bg-slate-300 text-sm sm:grid-cols-3 lg:grid-cols-6">
                     @foreach ($profileTabs as $tabKey => $tabLabel)
                         <button
                             type="button"
@@ -111,6 +123,14 @@
 
                     <div x-show="tab === 'workstation-pin'" x-cloak>
                         @include('profile.partials.update-workstation-pin-form')
+                    </div>
+
+                    <div x-show="tab === 'partstech'" x-cloak>
+                        @include('profile.partials.update-partstech-credentials-form')
+                    </div>
+
+                    <div x-show="tab === 'catalogs'" x-cloak>
+                        @include('profile.partials.update-parts-catalogs-form')
                     </div>
                 </div>
             </div>

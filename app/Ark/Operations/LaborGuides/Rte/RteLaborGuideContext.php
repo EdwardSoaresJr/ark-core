@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\LaborGuides\Rte;
 
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use Illuminate\Support\Str;
 
 final class RteLaborGuideContext
 {
@@ -26,7 +25,7 @@ final class RteLaborGuideContext
     public function forRepairOrder(RepairOrder $repairOrder, ?int $concernId = null): array
     {
         if (! $this->availability->available()) {
-            return $this->blocked(RepairTimeEngine::NAME.' data is not imported on this environment.');
+            return $this->blocked('Labor times are not imported on this environment.');
         }
 
         $repairOrder->loadMissing('vehicle');
@@ -37,7 +36,7 @@ final class RteLaborGuideContext
         $model = filled($vehicle?->model) ? (string) $vehicle->model : null;
 
         if ($year === null || ! filled($model)) {
-            return $this->blocked('Add vehicle year, make, and model before using '.RepairTimeEngine::NAME.'.');
+            return $this->blocked('Add vehicle year, make, and model before looking up labor times.');
         }
 
         $candidates = $this->vehicles->candidates($year, $make, $model)
@@ -51,7 +50,7 @@ final class RteLaborGuideContext
             ->all();
 
         if ($candidates === []) {
-            return $this->blocked('No '.RepairTimeEngine::NAME.' vehicle match for '.$this->vehicleLabel($year, $make, $model).'.');
+            return $this->blocked('No labor-time vehicle match for '.$this->vehicleLabel($year, $make, $model).'.');
         }
 
         $engineProfile = RteLaborVehicleEngineProfile::forVehicle(

@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Vehicles;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Vehicles\VehicleIdentityInput;
+use App\Ark\Vehicles\PartsTechDecodeException;
 use App\Ark\Vehicles\VehicleIntelligenceManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,8 +47,15 @@ class VehicleVinDecodeController
             $failureMessage = 'Vehicle could not be decoded from that VIN.';
             $aggregateSeed = $vin;
         } else {
-            $decoded = $manager->decodePlate($plate, $plateState);
-            $failureMessage = 'Vehicle could not be decoded from that plate. Plate decode is not available.';
+            try {
+                $decoded = $manager->decodePlate($plate, $plateState);
+            } catch (PartsTechDecodeException $exception) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
+            $failureMessage = 'Vehicle could not be decoded from that plate.';
             $aggregateSeed = $plate.'|'.$plateState;
         }
 

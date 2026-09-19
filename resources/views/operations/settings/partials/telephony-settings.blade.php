@@ -70,6 +70,7 @@
 
     $telephonyExtensions = $telephonyExtensions ?? collect();
     $telephonyExtensionDeviceTypes = $telephonyExtensionDeviceTypes ?? \App\Ark\Operations\Telephony\TelephonyExtensionDeviceType::cases();
+    $platformVoiceManaged = \App\Ark\Platform\PlatformConnection::current()->isConnected();
 @endphp
 
 <section x-show="active === 'communications'" x-cloak>
@@ -81,6 +82,17 @@
                 Business phone, SMS, email, Messenger, and call routing.
             </p>
         </div>
+
+        @if ($platformVoiceManaged)
+            <div class="border border-slate-300 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-700">
+                <p class="font-semibold text-slate-950">Phone settings are managed in ARK Cloud</p>
+                <p class="mt-1">
+                    Inbound schedule, SIP, fallback, recording disclosure, and after-hours greetings run on Platform Voice.
+                    Core keeps call history and shop workflow — not phone configuration.
+                    <a href="https://cloud.arksms.com" class="font-semibold text-slate-950 underline" target="_blank" rel="noopener">Open ARK Cloud</a>
+                </p>
+            </div>
+        @endif
 
         <div class="grid gap-px border border-slate-300 bg-slate-300 text-sm sm:grid-cols-4 lg:grid-cols-8">
             @foreach ([
@@ -104,8 +116,29 @@
             @endforeach
         </div>
 
+        @if ($platformVoiceManaged && in_array($communicationsTab, ['hours', 'recording', 'ring'], true))
+            <div class="border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+                <p class="font-semibold">This phone control moved to ARK Cloud</p>
+                <p class="mt-1 text-xs leading-5">
+                    @if ($communicationsTab === 'hours')
+                        Voice open/closed schedule is configured under Phone settings in ARK Cloud. Shop hours for appointments stay in Operations settings where needed — they do not drive live call routing for Hosted Voice.
+                    @elseif ($communicationsTab === 'recording')
+                        Recording, disclosure, and greetings for inbound calls are configured in ARK Cloud Phone settings. Call-intelligence API keys below remain shop operational tooling when used.
+                    @else
+                        SIP destinations and PSTN fallback for Hosted Voice are configured in ARK Cloud Phone settings. Local endpoint lists here do not control Platform dial.
+                    @endif
+                </p>
+                <p class="mt-2">
+                    <a href="https://cloud.arksms.com" class="font-semibold underline" target="_blank" rel="noopener">Manage phone in ARK Cloud</a>
+                </p>
+            </div>
+        @endif
+
         @if ($communicationsTab === 'email')
-            @include('operations.settings.partials.customer-email-settings', ['settings' => $settings])
+            @include('operations.settings.partials.postmark-email-settings', [
+                'settings' => $settings,
+                'platformMailSend' => $platformMailSend ?? false,
+            ])
         @elseif ($communicationsTab === 'messenger')
             @include('operations.settings.partials.communications-channels-settings', ['settings' => $settings])
         @elseif ($communicationsTab === 'mobile')
@@ -113,6 +146,8 @@
                 'settings' => $settings,
                 'telephonyHealth' => $telephonyHealth,
             ])
+        @elseif ($platformVoiceManaged && in_array($communicationsTab, ['hours', 'recording', 'ring'], true))
+            {{-- Hosted Voice: managed phone config is Platform-only. Banner above is the editor. --}}
         @else
         <form
             method="POST"
@@ -174,27 +209,72 @@
                     'toneClasses' => $toneClasses,
                 ])
 
+                @include('operations.settings.partials.quick-reply-templates-settings')
+
                 @include('operations.settings.partials.message-actions-settings', ['settings' => $settings])
 
                 <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
                     <div class="border-b border-slate-200 pb-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Messaging &amp; voice transport</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Messaging account</p>
                         <p class="mt-1 text-xs leading-5 text-slate-500">
-                            Outbound SMS and voice calling require a messaging/voice transport implementation. Stock ARK Core does not ship with one configured.
+                            @if ($platformVoiceManaged)
+                                Customer conversation SMS is sent through ARK Communications.
+                                These credentials remain for Voice and other shop SMS (appointments, codes) that still use the shop Twilio account.
+                            @else
+                                Twilio account for SMS, MMS, and your business number. Saved encrypted — leave secret fields blank to keep the current value.
+                            @endif
+                            {{ $telephonyHealth->credentialSourceLabel() }}.
                         </p>
+                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                            <label class="block">
+                                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Account SID</span>
+                                <input
+                                    type="text"
+                                    name="twilio_account_sid"
+                                    value="{{ old('twilio_account_sid', $settings->twilio_account_sid) }}"
+                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                                    placeholder="AC…"
+                                    autocomplete="off"
+                                >
+                            </label>
+                            <label class="block">
+                                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Auth token</span>
+                                <input
+                                    type="password"
+                                    name="twilio_auth_token"
+                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                                    placeholder="{{ ($shopIntegrations ?? null)?->hasStoredTwilioAuthToken() ? 'Saved — leave blank to keep' : 'Primary auth token' }}"
+                                    autocomplete="new-password"
+                                >
+                            </label>
+                        </div>
                     </div>
 
-                    <label class="block max-w-md">
-                        <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Business number</span>
-                        <input
-                            type="text"
-                            name="telephony_inbound_number"
-                            value="{{ old('telephony_inbound_number', $settings->telephony_inbound_number) }}"
-                            class="mt-1 h-9 w-full rounded-sm border-slate-300 text-sm text-slate-800"
-                            placeholder="+1 (719) 555-0100"
-                        >
-                        <span class="mt-1 block text-[11px] leading-4 text-slate-500">The number customers call and see on outbound shop calls.</span>
-                    </label>
+                    @if ($platformVoiceManaged)
+                        <div class="max-w-md text-xs leading-5 text-slate-600">
+                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Business number</p>
+                            <p class="mt-1">
+                                Shop line is provisioned in ARK Cloud Phone settings
+                                @if (filled($settings->telephony_inbound_number))
+                                    <span class="font-mono text-slate-800">({{ $settings->telephony_inbound_number }} — display only)</span>
+                                @endif
+                                .
+                                <a href="https://cloud.arksms.com" class="font-semibold underline" target="_blank" rel="noopener">Open ARK Cloud</a>
+                            </p>
+                        </div>
+                    @else
+                        <label class="block max-w-md">
+                            <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Business number</span>
+                            <input
+                                type="text"
+                                name="telephony_inbound_number"
+                                value="{{ old('telephony_inbound_number', $settings->telephony_inbound_number) }}"
+                                class="mt-1 h-9 w-full rounded-sm border-slate-300 text-sm text-slate-800"
+                                placeholder="+1 (719) 555-0100"
+                            >
+                            <span class="mt-1 block text-[11px] leading-4 text-slate-500">The number customers call and see on outbound shop calls.</span>
+                        </label>
+                    @endif
                 </div>
 
                 <div
@@ -640,7 +720,7 @@
                                 @error('telephony_call_flow.caller_ring_promo_url')
                                     <p class="mt-1 text-[11px] text-rose-700">{{ $message }}</p>
                                 @enderror
-                                <p class="mt-1 text-[11px] leading-4 text-slate-500">Tip: upload to your website, S3, or a public media host. Keep clips short — they loop until an advisor answers.</p>
+                                <p class="mt-1 text-[11px] leading-4 text-slate-500">Tip: upload to your website, S3, or Twilio Assets. Keep clips short — they loop until an advisor answers.</p>
                             </div>
                         </fieldset>
                     </div>

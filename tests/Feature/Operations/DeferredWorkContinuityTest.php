@@ -23,9 +23,9 @@ test('customer vehicle hub retains deferred work as vehicle continuity', functio
         ->assertOk()
         ->assertSee('future-work item')
         ->assertSee('$420.00')
-        ->assertSee('Immediate attention item should be revisited calmly.')
+        ->assertSee('Safety/drivability recommendation should be revisited calmly.')
         ->assertSee('RO #'.$priorRepairOrder->repair_order_id.' · 1 Deferred')
-        ->assertSee('Revisit immediate attention item at next contact')
+        ->assertSee('Revisit safety/drivability recommendation at next contact')
         ->assertDontSee('sales lead')
         ->assertDontSee('campaign');
 });
@@ -80,7 +80,7 @@ test('current deferred work feeds queue pressure and document snapshots', functi
 
     expect($repairOrder->fresh()->futureWorkSummary())->toBe('1 Deferred')
         ->and($repairOrder->fresh()->futureWorkSubtotalCents())->toBe(26000)
-        ->and($repairOrder->fresh()->futureWorkNextAction())->toBe('Schedule maintenance at next service');
+        ->and($repairOrder->fresh()->futureWorkNextAction())->toBe('Schedule maintenance due at next service');
 
     $this->post(route('operations.repair-orders.estimate-documents.store', $repairOrder))
         ->assertRedirect();
@@ -90,7 +90,7 @@ test('current deferred work feeds queue pressure and document snapshots', functi
     expect($document->snapshot_json['repair_order']['future_work_count'])->toBe(1)
         ->and($document->snapshot_json['repair_order']['future_work_subtotal'])->toBe('$260.00')
         ->and($document->snapshot_json['repair_order']['future_work_summary'])->toBe('1 Deferred')
-        ->and($document->snapshot_json['repair_order']['future_work_next_action'])->toBe('Schedule maintenance at next service')
+        ->and($document->snapshot_json['repair_order']['future_work_next_action'])->toBe('Schedule maintenance due at next service')
         ->and($document->snapshot_json['totals']['total_cents'])->toBe(0);
 
     $this->get(route('operations.repair-orders.estimate-documents.show', [$repairOrder, $document]))
@@ -102,6 +102,60 @@ test('current deferred work feeds queue pressure and document snapshots', functi
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Deferred');
+});
+
+test('repair order concern authoring shows prior deferred work for this vehicle', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    [$customer, $vehicle, $priorRepairOrder] = deferredWorkVehicleFixture();
+    $current = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Oil service',
+        'opened_at' => now(),
+    ]);
+    $deferred = $priorRepairOrder->concerns()->where('disposition', RepairOrderConcernDisposition::Deferred)->first();
+
+    $this->get(route('operations.repair-orders.show', $current))
+        ->assertOk()
+        ->assertSee('ark-vehicle-memory', false)
+        ->assertSee('Front lower control arm bushings cracked.', false)
+        ->assertSee('form="deferred-add-concern-'.$deferred->id.'"', false)
+        ->assertSee(route('operations.repair-orders.deferred-work.add-to-estimate', [$current, $deferred]), false);
+});
+
+test('adding deferred work copies it onto this estimate without changing the prior repair order', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$customer, $vehicle, $priorRepairOrder] = deferredWorkVehicleFixture();
+    $current = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Oil service',
+        'opened_at' => now(),
+    ]);
+    $source = $priorRepairOrder->concerns()->where('disposition', RepairOrderConcernDisposition::Deferred)->first();
+
+    $this->post(route('operations.repair-orders.deferred-work.add-to-estimate', [$current, $source]))
+        ->assertRedirect();
+
+    $copied = $current->fresh('concerns.lines')->concerns->firstWhere('summary', $source->summary);
+
+    expect($copied)->not->toBeNull()
+        ->and($copied->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and((int) $copied->lines->sum('total_cents'))->toBe(42000)
+        ->and($source->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Deferred)
+        ->and($source->fresh()->repair_order_id)->toBe($priorRepairOrder->id);
+
+    $this->post(route('operations.repair-orders.deferred-work.add-to-estimate', [$current, $source]))
+        ->assertRedirect();
+
+    expect($current->fresh()->concerns()->where('summary', $source->summary)->count())->toBe(1);
 });
 
 /**

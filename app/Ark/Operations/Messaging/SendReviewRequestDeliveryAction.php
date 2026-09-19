@@ -65,19 +65,45 @@ final class SendReviewRequestDeliveryAction
             $messages[] = $this->email->send($repairOrder, $actor, $email);
         }
 
-        if ($messages === []) {
+        $attempted = $mode->includesSms() || $mode->includesEmail();
+        $messages = array_values(array_filter(
+            $messages,
+            fn (mixed $message): bool => $message instanceof ConversationMessage,
+        ));
+
+        if (! $attempted) {
             throw new RuntimeException('Choose text, email, or both to send a review request.');
         }
 
         $this->markLegacyProjection($repairOrder, $actor);
 
-        $channels = collect($messages)->map(fn (ConversationMessage $message): string => $message->channel->value)->all();
-
         return [
             'messages' => $messages,
             'already_sent' => false,
-            'status_label' => 'Review Requested · '.$this->authority->summarizeChannels($channels),
+            'status_label' => $this->sentStatusLabel($mode, $mode->includesEmail()
+                ? strtolower(trim($recipientEmail ?? $repairOrder->customer?->email ?? ''))
+                : ''),
         ];
+    }
+
+    private function sentStatusLabel(OutboundDeliveryMode $mode, string $email): string
+    {
+        $sms = $mode->includesSms();
+        $emailSent = $mode->includesEmail();
+
+        if ($sms && $emailSent) {
+            return $email !== ''
+                ? 'Review request sent by text and email to '.$email.'.'
+                : 'Review request sent by text and email.';
+        }
+
+        if ($emailSent) {
+            return $email !== ''
+                ? 'Review request sent by email to '.$email.'.'
+                : 'Review request sent by email.';
+        }
+
+        return 'Review request sent by text.';
     }
 
     private function markLegacyProjection(RepairOrder $repairOrder, User $actor): void

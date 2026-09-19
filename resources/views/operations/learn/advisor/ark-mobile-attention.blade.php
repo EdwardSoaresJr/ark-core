@@ -1,8 +1,9 @@
+@php($opsUrl = route('operations.index'))
 <div class="ops-learn-prose">
     <h3>ARK Mobile is a projection — not a phone app</h3>
     <p><strong>ARK Mobile</strong> is the phone-first staff app for advisors and technicians on the lot. It reads the same authority as desktop ARK — repair orders, conversations, intake, and Attention — through <code>/api/mobile/*</code> only.</p>
     <p>Mobile is <strong>not</strong> Twilio, Asterisk, or a SIP client. Outbound texts and push notifications are sent by ARK on the server; the app never talks to telephony providers directly.</p>
-    <p>Sign in with your normal staff account (same email as <a href="{{ route('operations.index') }}">app.demo-auto.test</a>). Technicians see assigned work; advisors see shop comms and intake when permitted.</p>
+    <p>Sign in with your normal staff account (same email as <a href="{{ $opsUrl }}">{{ parse_url($opsUrl, PHP_URL_HOST) }}</a>). Technicians see assigned work; advisors see shop comms and intake when permitted.</p>
 
     <h3>Attention tab (advisors)</h3>
     <p>The <strong>Attention</strong> tab is the mobile slice of morning triage — not a full desktop Work replacement.</p>

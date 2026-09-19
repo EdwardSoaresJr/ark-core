@@ -9,7 +9,7 @@ test('document footer merges global recommendation and retail disclaimers into i
             'global_disclaimer' => 'Estimate is based on visible conditions. Final cost may change.',
             'customer_type' => 'Retail',
             'customer_type_disclaimer' => 'This estimate reflects repairs recommended based on our inspection.',
-            'authorization_language' => "By approving this estimate, I authorize Demo Auto Repair.\n\nI agree to pay for authorized work.",
+            'authorization_language' => "By approving this estimate, I authorize LugsNPlugs.\n\nI agree to pay for authorized work.",
         ],
         'settings' => [
             'recommendation_disclaimer' => 'Recommendations are based on verified findings. Further testing may change the repair path.',
@@ -50,21 +50,23 @@ test('document footer keeps fleet terms separate from important information', fu
         ))->toBeFalse();
 });
 
-test('pdf important information compresses long disclaimer lists for presentation', function () {
+test('pdf important information joins shop disclaimers instead of substituting generic copy', function () {
     $presenter = app(DocumentFooterPresenter::class);
 
     expect($presenter->pdfImportantInformationBullets([
         'Line one.',
         'Line two.',
         'Line three.',
-    ]))->toHaveCount(3)
-        ->and($presenter->pdfImportantInformationBullets([
+        'Line four.',
+        'Line five.',
+    ]))->toHaveCount(5)
+        ->and($presenter->pdfImportantInformationDisclosure([
             'Line one.',
             'Line two.',
             'Line three.',
             'Line four.',
-            'Line five.',
-        ]))->toHaveCount(4);
+            'Line five',
+        ]))->toBe('Line one. Line two. Line three. Line four. Line five.');
 });
 
 test('footer total label reads approved total when estimate has approved scopes', function () {

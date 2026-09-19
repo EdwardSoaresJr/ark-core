@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
-#[Fillable(['public_id', 'repair_order_id', 'encounter_id', 'customer_id', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -41,28 +41,12 @@ class RepairOrder extends Model
         // Shop-facing number is the route key. Never persist (or leave) null —
         // a null repair_order_id breaks route() on index and every show link.
         static::saving(function (RepairOrder $repairOrder): void {
-            if ($repairOrder->public_id === null || $repairOrder->public_id === '') {
-                $repairOrder->public_id = (string) \Illuminate\Support\Str::uuid();
-            }
-
             if ($repairOrder->repair_order_id !== null) {
                 return;
             }
 
             $repairOrder->repair_order_id = static::nextShopRepairOrderId();
         });
-    }
-
-    /** Immutable installation-scoped identity for Cloud Starter grants. */
-    public function ensurePublicId(): string
-    {
-        if (filled($this->public_id)) {
-            return (string) $this->public_id;
-        }
-
-        $this->forceFill(['public_id' => (string) \Illuminate\Support\Str::uuid()])->save();
-
-        return (string) $this->public_id;
     }
 
     /** Next shop-facing RO number; continues legacy/import sequence and is not tied to the PK. */
@@ -108,6 +92,11 @@ class RepairOrder extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function growthSession(): BelongsTo
+    {
+        return $this->belongsTo(\App\Ark\Growth\Models\GrowthSession::class);
     }
 
     public function encounter(): BelongsTo
@@ -368,9 +357,19 @@ class RepairOrder extends Model
     }
 
     /**
-     * Distinct Repair Action owner names for posture display.
-     * Repair Actions own technician work — not assigned_technician_id.
+     * Who is doing the work. Split-job owners when those exist; otherwise the assigned technician.
      */
+    public function technicianOwnershipLabel(): string
+    {
+        $this->loadMissing('assignedTechnician');
+
+        $assigned = trim((string) ($this->assignedTechnician?->name ?? ''));
+
+        return $this->repairActionOwnerSummary()
+            ?? ($assigned !== '' ? $assigned : null)
+            ?? 'Needs owner';
+    }
+
     public function repairActionOwnerSummary(): ?string
     {
         $this->loadMissing('concerns.workGroups.ownerUser');
@@ -405,11 +404,6 @@ class RepairOrder extends Model
         return $this->concerns
             ->flatMap(fn (RepairOrderConcern $concern) => $concern->workGroups)
             ->contains(fn (RepairOrderWorkGroup $group): bool => $group->hasOwner());
-    }
-
-    public function technicianOwnershipLabel(): string
-    {
-        return $this->repairActionOwnerSummary() ?? 'Needs owner';
     }
 
     public function resolvedMileageIn(): ?int

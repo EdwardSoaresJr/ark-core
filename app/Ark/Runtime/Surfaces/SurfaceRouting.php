@@ -38,7 +38,55 @@ final class SurfaceRouting
         return filled($host) ? (string) $host : null;
     }
 
-    /** Company product host — ARK Platform (marketing + trial + cloud dashboard). */
+    public static function publicWwwHost(): ?string
+    {
+        $host = self::publicHost();
+
+        return $host !== null ? 'www.'.$host : null;
+    }
+
+    /**
+     * Primary public host plus aliases (and preview when set).
+     *
+     * @return list<string>
+     */
+    public static function publicHosts(): array
+    {
+        $hosts = [];
+        $primary = self::publicHost();
+        if ($primary !== null) {
+            $hosts[] = $primary;
+        }
+
+        foreach ((array) config('surfaces.public_aliases', []) as $alias) {
+            $alias = strtolower(trim((string) $alias));
+            if ($alias !== '') {
+                $hosts[] = $alias;
+            }
+        }
+
+        $preview = self::previewHost();
+        if ($preview !== null) {
+            $hosts[] = $preview;
+        }
+
+        return array_values(array_unique($hosts));
+    }
+
+    public static function isPublicHost(string $host): bool
+    {
+        return in_array(strtolower($host), self::publicHosts(), true);
+    }
+
+    /** Hosted preview public surface ({slug}-preview.arksms.com) before custom Public Domain. */
+    public static function previewHost(): ?string
+    {
+        $host = config('surfaces.preview');
+
+        return filled($host) ? (string) $host : null;
+    }
+
+    /** Company product host — ARK Cloud (marketing + trial + cloud dashboard). */
     public static function companyHost(): ?string
     {
         $host = config('surfaces.company');
@@ -114,7 +162,9 @@ final class SurfaceRouting
     public static function portalRoutes(Closure $routes): void
     {
         if (self::publicEnabled()) {
-            Route::domain((string) self::publicHost())->group($routes);
+            foreach (self::publicHosts() as $host) {
+                Route::domain($host)->group($routes);
+            }
 
             return;
         }
@@ -128,10 +178,46 @@ final class SurfaceRouting
         $routes();
     }
 
+    public static function coreOperationalRoutes(Closure $routes): void
+    {
+        if (! self::enabled()) {
+            $routes();
+
+            return;
+        }
+
+        Route::domain(self::appHost())->group($routes);
+
+        if (self::publicEnabled()) {
+            foreach (self::publicHosts() as $host) {
+                if (strcasecmp($host, self::appHost()) === 0) {
+                    continue;
+                }
+
+                Route::domain($host)->group($routes);
+            }
+
+            return;
+        }
+
+        if (strcasecmp(self::portalHost(), self::appHost()) !== 0) {
+            Route::domain(self::portalHost())->group($routes);
+        }
+    }
+
     public static function publicRoutes(Closure $routes): void
     {
         if (self::publicEnabled()) {
-            Route::domain((string) self::publicHost())->group($routes);
+            foreach (self::publicHosts() as $host) {
+                Route::domain($host)->group($routes);
+            }
+
+            return;
+        }
+
+        $preview = self::previewHost();
+        if (filled($preview)) {
+            Route::domain((string) $preview)->group($routes);
 
             return;
         }

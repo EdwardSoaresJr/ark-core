@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Platform\Communications\ManagedCommunicationsGate;
+use App\Ark\Platform\Communications\PlatformCommunicationsInboxProjection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,6 +17,32 @@ class CommunicationsWorkspaceFragmentController
         $section = $request->string('section', 'inbox')->toString();
         if ($section === 'attention') {
             $section = 'inbox';
+        }
+
+        $incomingSignature = $request->string('signature')->toString();
+
+        if ($section === 'inbox' && ManagedCommunicationsGate::platformInbox()) {
+            $filter = $request->string('filter')->toString();
+            if ($filter === '') {
+                $filter = 'needs';
+            }
+
+            $workspace = app(PlatformCommunicationsInboxProjection::class)->inbox(
+                $request->user(),
+                $request->string('platform_conversation')->toString() ?: null,
+                $filter,
+                $request->string('owner')->toString() ?: 'everyone',
+            );
+            $pollSignature = (string) ($workspace['poll_signature'] ?? '');
+
+            if ($incomingSignature !== '' && $pollSignature !== '' && hash_equals($pollSignature, $incomingSignature)) {
+                return response()->json([
+                    'signature' => $pollSignature,
+                    'unchanged' => true,
+                ]);
+            }
+
+            return $this->workspacePayload($workspace, $section, (string) ($workspace['list_filter'] ?? $filter));
         }
 
         $filter = $request->string('filter')->toString();
@@ -32,15 +60,31 @@ class CommunicationsWorkspaceFragmentController
             $filter = 'needs';
         }
 
+        $conversationId = $request->integer('conversation') ?: null;
+        $leadId = $request->integer('lead') ?: null;
+        $callSessionId = $request->integer('call') ?: null;
+
+        if ($section === 'inbox') {
+            $pollSignature = $projection->pollSignature($filter, $conversationId, $leadId, $callSessionId);
+
+            if ($incomingSignature !== '' && hash_equals($pollSignature, $incomingSignature)) {
+                return response()->json([
+                    'signature' => $pollSignature,
+                    'unchanged' => true,
+                ]);
+            }
+        }
+
         $workspace = match ($section) {
             'inbox' => $projection->inbox(
                 $request->user(),
-                $request->integer('conversation') ?: null,
-                $request->integer('lead') ?: null,
-                $request->integer('call') ?: null,
+                $conversationId,
+                $leadId,
+                $callSessionId,
                 $turn !== '' ? $turn : null,
                 $this->previousLastSeenAt($request),
                 $filter,
+                $request->string('owner')->toString() ?: 'everyone',
             ),
             'history' => $projection->history(
                 $request,
@@ -50,7 +94,14 @@ class CommunicationsWorkspaceFragmentController
             default => abort(404),
         };
 
-        $listFilter = $workspace['list_filter'] ?? $filter;
+        return $this->workspacePayload($workspace, $section, (string) ($workspace['list_filter'] ?? $filter));
+    }
+
+    /**
+     * @param  array<string, mixed>  $workspace
+     */
+    private function workspacePayload(array $workspace, string $section, string $listFilter): JsonResponse
+    {
         $listTitle = match (true) {
             $section === 'history' => 'History',
             $listFilter === 'waiting' => 'Waiting',
@@ -60,7 +111,8 @@ class CommunicationsWorkspaceFragmentController
         };
 
         return response()->json([
-            'signature' => $this->signature($workspace),
+            'signature' => (string) ($workspace['poll_signature'] ?? $this->signature($workspace)),
+            'unchanged' => false,
             'list_count' => (int) ($workspace['list_count'] ?? 0),
             'list' => view('operations.communications.workspace.partials.list-panel', [
                 'title' => $listTitle,
@@ -69,9 +121,12 @@ class CommunicationsWorkspaceFragmentController
                 'selected' => $workspace['selected'],
                 'listFilter' => $listFilter,
                 'filterCounts' => $workspace['filter_counts'] ?? null,
+                'ownerFilter' => $workspace['owner_filter'] ?? 'everyone',
+                'ownerCounts' => $workspace['owner_counts'] ?? null,
                 'turnFilter' => $workspace['turn_filter'] ?? null,
                 'turnCounts' => $workspace['turn_counts'] ?? null,
                 'section' => $section,
+                'platformBacked' => (bool) ($workspace['platform_backed'] ?? false),
             ])->render(),
             'thread' => view('operations.communications.workspace.partials.thread-panel', [
                 'thread' => $workspace['thread'],
@@ -82,6 +137,7 @@ class CommunicationsWorkspaceFragmentController
                 'context' => $workspace['context'],
                 'selected' => $workspace['selected'],
                 'section' => $section,
+                'nextActions' => $workspace['thread']['identity']['actions'] ?? [],
             ])->render(),
         ]);
     }

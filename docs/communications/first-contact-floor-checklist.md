@@ -48,7 +48,7 @@ Full timeline → [first-contact-report.md](first-contact-report.md).
 - [ ] Extension assigned to workstation (Shop → Communications → Assign extension)
 - [ ] Device show page shows **Provision URL**, **Current** projection, fingerprint
 - [ ] Admin projection preview matches expected Poly `.cfg` (extension, host, no credentials in UI)
-- [ ] `ASTERISK_PROVISIONING_HOST` / `telephony.asterisk.provisioning.host` = `voice.demo-auto.test`
+- [ ] `ASTERISK_PROVISIONING_HOST` / `telephony.asterisk.provisioning.host` = `voice.lugsnplugs.com`
 - [ ] PJSIP password for extension exists (env map or `telephony_extensions.secret`)
 
 ---
@@ -70,7 +70,7 @@ MAC `AA:BB:CC:DD:EE:FF` → URL `/provision/AABBCCDDEEFF.cfg`
 - [ ] Factory reset VVX350
 - [ ] Disable Poly ZTP / cloud provisioning (if enabled)
 - [ ] DHCP provides network + DNS
-- [ ] Provisioning server URL points at ARK: `https://app.demo-auto.test/provision/` (Poly custom server)
+- [ ] Provisioning server URL points at ARK: `https://lugsnplugs.arksms.com/provision/` (Poly custom server)
 
 ---
 

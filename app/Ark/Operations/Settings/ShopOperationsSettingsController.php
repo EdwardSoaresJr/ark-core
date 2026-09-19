@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Operations\Printing\KeyTagPrintGate;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -84,13 +85,42 @@ public function updateWorkflow(Request $request): RedirectResponse
             'default_visit_mode' => ['required', Rule::enum(RepairOrderVisitMode::class)],
             'default_recommendation_intent' => ['required', Rule::enum(RecommendationIntent::class)],
             'default_notes_private' => ['nullable', 'boolean'],
+            'default_notes_visible_to_advisor' => ['nullable', 'boolean'],
+            'default_notes_visible_to_technician' => ['nullable', 'boolean'],
+            'default_notes_visible_to_customer' => ['nullable', 'boolean'],
+            'key_tag_mileage_requirement' => ['nullable', Rule::in([KeyTagPrintGate::NONE, KeyTagPrintGate::MILEAGE_IN])],
         ]);
 
-        ShopSettings::current()->update([
+        $payload = [
             'default_visit_mode' => $data['default_visit_mode'],
             'default_recommendation_intent' => $data['default_recommendation_intent'],
-            'default_notes_private' => $request->boolean('default_notes_private'),
-        ]);
+        ];
+
+        if (
+            $request->exists('default_notes_visible_to_advisor')
+            || $request->exists('default_notes_visible_to_technician')
+            || $request->exists('default_notes_visible_to_customer')
+        ) {
+            $advisor = $request->boolean('default_notes_visible_to_advisor');
+            $technician = $request->boolean('default_notes_visible_to_technician');
+            $customer = $request->boolean('default_notes_visible_to_customer');
+            if (! $advisor && ! $technician && ! $customer) {
+                $advisor = true;
+            }
+
+            $payload['default_notes_visible_to_advisor'] = $advisor;
+            $payload['default_notes_visible_to_technician'] = $technician;
+            $payload['default_notes_visible_to_customer'] = $customer;
+            $payload['default_notes_private'] = ! $customer;
+        } else {
+            $payload['default_notes_private'] = $request->boolean('default_notes_private');
+        }
+
+        if ($request->exists('key_tag_mileage_requirement')) {
+            $payload['key_tag_mileage_requirement'] = $data['key_tag_mileage_requirement'] ?? KeyTagPrintGate::NONE;
+        }
+
+        ShopSettings::current()->update($payload);
 
         $this->syncOpenEstimateDocuments();
 
@@ -160,6 +190,8 @@ public function updateWorkflow(Request $request): RedirectResponse
         } else {
             $effectiveSchedulingHours = $settings->schedulingHours();
         }
+
+        $windowWarnings = [];
 
         if ($request->has('appointment_request_availability')) {
             $weekly = [];
@@ -245,7 +277,7 @@ public function updateWorkflow(Request $request): RedirectResponse
             ->route('operations.settings.shop.edit', ['section' => 'operations'])
             ->with('status', 'Operations settings saved.');
 
-        if (($windowWarnings ?? []) !== []) {
+        if ($windowWarnings !== []) {
             $redirect->with('warning', $windowWarnings[0]);
         }
 

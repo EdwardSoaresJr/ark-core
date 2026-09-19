@@ -5,8 +5,8 @@ namespace App\Ark\Operations\Messaging;
 use App\Ark\Operations\Attention\AdvisorNudgeResponseKind;
 use App\Ark\Operations\Attention\RecordAdvisorNudgeResponseAction;
 use App\Ark\Operations\Communications\CancelScheduledOutboundMessagesAction;
-use App\Ark\Operations\Communications\ScheduleOutboundSmsReplyAction;
 use App\Ark\Operations\Communications\ScheduledOutboundSmsProjection;
+use App\Ark\Operations\Communications\ScheduleOutboundSmsReplyAction;
 use App\Ark\Operations\Communications\TomorrowMorningSchedule;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerHubCommsTimeline;
@@ -139,6 +139,26 @@ class SendConversationMessageController
                 nudgeKey: (string) $validated['nudge_key'],
                 response: AdvisorNudgeResponseKind::Acted,
             );
+        }
+
+        if ($message === null) {
+            return response()->json([
+                'message_id' => null,
+                'provider_message_sid' => $result['provider_message_sid'] ?? null,
+                'provider_message_id' => $result['provider_message_sid'] ?? null,
+                'platform_authoritative' => true,
+                'platform_message' => [
+                    'direction' => 'outbound',
+                    'direction_label' => 'Sent',
+                    'channel_label' => 'SMS',
+                    'body' => (string) ($validated['body'] ?? ''),
+                    'occurred_at' => now()->utc()->toIso8601String(),
+                    'occurred_at_label' => 'Just now',
+                    'public_id' => $result['provider_message_sid'] ?? null,
+                ],
+                'scheduled' => false,
+                'message' => 'Message sent.',
+            ]);
         }
 
         return response()->json([

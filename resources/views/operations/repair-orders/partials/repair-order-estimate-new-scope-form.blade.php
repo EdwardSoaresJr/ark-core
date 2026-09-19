@@ -62,26 +62,9 @@
             @error('observed_summary')
                 <p class="ops-field-error mt-1 text-xs font-medium text-rose-700" data-concern-error>{{ $message }}</p>
             @enderror
-            @php
-                $mentionSuggestions = $priorVisitMentions['suggestions'] ?? [];
-            @endphp
-            @if ($mentionSuggestions !== [])
-                <div class="ark-ro-mention__chips">
-                    <p class="ark-ro-mention__hint">Previous visits — click or type @RO</p>
-                    @foreach ($mentionSuggestions as $visit)
-                        <button
-                            type="button"
-                            class="ark-ro-mention__chip{{ ! empty($visit['same_vehicle']) ? ' ark-ro-mention__chip--same' : '' }}"
-                            @click="insertPriorVisit({{ \Illuminate\Support\Js::from($visit) }})"
-                        >
-                            <span class="ark-ro-mention__chip-label">{{ $visit['label'] }}</span>
-                            @if (($visit['detail'] ?? '') !== '')
-                                <span class="ark-ro-mention__chip-detail">{{ $visit['detail'] }}</span>
-                            @endif
-                        </button>
-                    @endforeach
-                </div>
-            @endif
+            @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
+                'visitInsert' => 'insertPriorVisit',
+            ])
             <div
                 class="ops-worksheet-entry-intake__suggestions ark-ro-mention__menu"
                 x-show="mentionOpen && mentionMatches.length > 0"

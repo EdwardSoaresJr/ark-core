@@ -2,7 +2,10 @@
 
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Documents\EstimateSnapshotBuilder;
+use App\Ark\Operations\RepairOrders\NoteAudience;
+use App\Ark\Operations\RepairOrders\RecommendationIntent;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
@@ -168,7 +171,8 @@ test('customer estimate snapshot excludes private note lines from pdf html', fun
         ->toContain('Customer-facing note.')
         ->and($html)
         ->not->toContain('Staff reminder only.')
-        ->toContain('Customer-facing note.');
+        ->toContain('Customer-facing note.')
+        ->toContain('Technician Findings');
 });
 
 test('pdf concern header does not render retired advisor note field as supporting text', function () {
@@ -266,7 +270,7 @@ NOTE;
     ])->render();
 
     expect($pdfHtml)
-        ->toContain('ops-note-body')
+        ->toContain('Technician Findings')
         ->toContain('Tire Tread Depths')
         ->toContain('Front Driver: 2/32&quot;')
         ->toContain('Brake Pad Measurements');
@@ -426,6 +430,52 @@ test('advisor can edit note audience and text from review mode', function () {
 /**
  * @return array{0: RepairOrder, 1: RepairOrderConcern}
  */
+test('check in defaults set the same note views as a repair order', function () {
+    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+
+    $this->actingAs($admin)
+        ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
+        ->get(route('operations.settings.shop.edit', [
+            'section' => 'workflow',
+            'workflow-tab' => 'defaults',
+        ]))
+        ->assertOk()
+        ->assertSee('Visible to', false)
+        ->assertSee('Tech Sheet', false)
+        ->assertDontSee('New notes default to Advisor only');
+
+    $this->actingAs($admin)->patch(route('operations.settings.shop.workflow.update'), [
+        'default_visit_mode' => RepairOrderVisitMode::DropOff->value,
+        'default_recommendation_intent' => RecommendationIntent::Maintenance->value,
+        'default_notes_visible_to_advisor' => '1',
+        'default_notes_visible_to_technician' => '1',
+        'default_notes_visible_to_customer' => '0',
+    ])->assertRedirect();
+
+    $defaults = NoteAudience::defaultsFromShop();
+
+    expect($defaults->advisor)->toBeTrue()
+        ->and($defaults->technician)->toBeTrue()
+        ->and($defaults->customer)->toBeFalse();
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    [$repairOrder, $concern] = repairOrderForNotePrivacy();
+
+    $this->actingAs($advisor)->post(route('operations.repair-orders.lines.store', $repairOrder), [
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Note->value,
+        'description' => 'Starts with the shop note views.',
+        'unit_price' => '0',
+        'quantity' => '1',
+    ])->assertRedirect();
+
+    $note = RepairOrderLine::query()->where('repair_order_id', $repairOrder->id)->sole();
+
+    expect($note->visible_to_advisor)->toBeTrue()
+        ->and($note->visible_to_technician)->toBeTrue()
+        ->and($note->visible_to_customer)->toBeFalse();
+});
+
 function repairOrderForNotePrivacy(): array
 {
     $customer = Customer::query()->create([

@@ -662,6 +662,8 @@ function repairOrderWithPartForProcurement(string $customerName = 'Parts Custome
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => RepairOrderStatus::Approved,
+        'mileage_in' => 120000,
+        'mileage_out' => 120050,
         'concern_summary' => 'Approved brake work waiting on parts.',
     ]);
 

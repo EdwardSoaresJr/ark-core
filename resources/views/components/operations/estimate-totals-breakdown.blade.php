@@ -40,11 +40,11 @@
 
 @if (($breakdown['fees_cents'] ?? 0) > 0)
     @if ($isStaff)
-        <div class="ops-total-row py-1.5"><dt class="text-slate-500">Fees</dt><dd class="font-semibold tabular-nums text-slate-950">{{ $breakdown['fees'] }}</dd></div>
+        <div class="ops-total-row py-1.5"><dt class="text-slate-500">{{ $breakdown['fees_label'] ?? 'Fees' }}</dt><dd class="font-semibold tabular-nums text-slate-950">{{ $breakdown['fees'] }}</dd></div>
     @elseif ($isPdf)
-        <div class="totals-row"><span>Fees</span><strong>{{ $breakdown['fees'] }}</strong></div>
+        <div class="totals-row"><span>{{ $breakdown['fees_label'] ?? 'Fees' }}</span><strong>{{ $breakdown['fees'] }}</strong></div>
     @else
-        <div class="flex items-center justify-between gap-3"><dt class="text-slate-600">Fees</dt><dd class="font-semibold tabular-nums text-slate-950">{{ $breakdown['fees'] }}</dd></div>
+        <div class="flex items-center justify-between gap-3"><dt class="text-slate-600">{{ $breakdown['fees_label'] ?? 'Fees' }}</dt><dd class="font-semibold tabular-nums text-slate-950">{{ $breakdown['fees'] }}</dd></div>
     @endif
 @endif
 

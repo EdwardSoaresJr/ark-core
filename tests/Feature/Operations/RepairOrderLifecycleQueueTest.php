@@ -7,14 +7,12 @@ use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
-use App\Ark\Operations\RepairOrders\RepairActionOwnerType;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
-use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -289,15 +287,7 @@ test('assigned work can move into progress and snapshot execution posture', func
     $this->app->bind(PdfRenderer::class, FakeLifecyclePdfRenderer::class);
 
     $repairOrder = repairOrderForLifecycleQueue(status: RepairOrderStatus::ReadyForWork);
-    $line = lineForLifecycleQueue($repairOrder);
-
-    RepairOrderWorkGroup::query()->create([
-        'repair_order_concern_id' => $line->repair_order_concern_id,
-        'title' => 'Lifecycle work',
-        'position' => 1,
-        'owner_type' => RepairActionOwnerType::Technician,
-        'owner_user_id' => $technician->id,
-    ]);
+    lineForLifecycleQueue($repairOrder);
 
     $this->patch(route('operations.repair-orders.technician-assignment.update', $repairOrder), [
         'assigned_technician_id' => $technician->id,
@@ -463,6 +453,8 @@ test('repair order index includes terminal repair orders excluded from the live 
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
+    expect(route('operations.repair-orders.index', absolute: false))->toBe('/app/repair-orders');
+
     repairOrderForLifecycleQueue(status: RepairOrderStatus::Closed, customerName: 'Archive Customer');
 
     $this->get(route('operations.index'))
@@ -474,6 +466,43 @@ test('repair order index includes terminal repair orders excluded from the live 
         ->assertSee('Repair Orders')
         ->assertSee('Archive Customer')
         ->assertSee('Closed');
+});
+
+test('repair order index cards link vehicle customer and ro separately', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(actingAsLearnCurrentAdvisor());
+
+    $repairOrder = repairOrderForLifecycleQueue(status: RepairOrderStatus::Estimate, customerName: 'Split Click Customer');
+    $customerUrl = route('operations.customers.show', $repairOrder->customer);
+    $vehicleUrl = route('operations.customers.show', [
+        'customer' => $repairOrder->customer,
+        'vehicle' => $repairOrder->vehicle_id,
+    ]);
+    $roUrl = route('operations.repair-orders.show', $repairOrder);
+    $documentsUrl = route('operations.customers.show', [
+        'customer' => $repairOrder->customer,
+        'tab' => 'documents',
+    ]);
+
+    $this->get(route('operations.repair-orders.index'))
+        ->assertOk()
+        ->assertSee('Split Click Customer', false)
+        ->assertSee($customerUrl, false)
+        ->assertSee($vehicleUrl, false)
+        ->assertSee($roUrl, false)
+        ->assertSee($documentsUrl, false)
+        ->assertSee('ops-ro-card-docs-link', false)
+        ->assertSee('ops-ro-card-identity-link', false)
+        ->assertSee('ops-ro-card-rest-link', false)
+        ->assertDontSee('ops-ro-card-stretch', false);
+});
+
+test('legacy repair order index path redirects under /app', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(actingAsLearnCurrentAdvisor());
+
+    $this->get('/repair-orders')
+        ->assertRedirect('/app/repair-orders');
 });
 
 test('repair order index searches retrieval fields and paginates results', function () {
@@ -537,8 +566,9 @@ test('operations home survives dense active queue without full estimate graph de
     $this->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Blocked Parts', false)
-        ->assertSee('Waiting Parts', false)
-        ->assertSee('Dense 45', false);
+        ->assertSee('Needs parts', false)
+        ->assertSee('ops-job-card__activity', false)
+        ->assertSee('Dense 1', false);
 });
 
 function repairOrderForLifecycleQueue(RepairOrderStatus $status, string $customerName = 'Lifecycle Customer'): RepairOrder
@@ -563,6 +593,8 @@ function repairOrderForLifecycleQueue(RepairOrderStatus $status, string $custome
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => $status,
+        'mileage_in' => 120000,
+        'mileage_out' => 120050,
         'concern_summary' => 'Customer states vehicle needs attention.',
     ]);
 }

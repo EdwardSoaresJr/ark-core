@@ -15,10 +15,11 @@ export function arkCustomerHubComms(config = {}) {
         updatesUrl: config.updatesUrl ?? '',
         messagesListId: config.messagesListId ?? 'conversation-messages-relationship',
         latestMessageId: 0,
+        latestOccurredAt: new Date(0).toISOString(),
         pollTimer: null,
 
         init() {
-            this.refreshLatestMessageId();
+            this.refreshLatestCursor();
             this.syncRowVisibility();
             this.bindRealtime();
             this.bindComposerIngest();
@@ -94,7 +95,7 @@ export function arkCustomerHubComms(config = {}) {
             return 'No communications recorded for this customer yet.';
         },
 
-        refreshLatestMessageId() {
+        refreshLatestCursor() {
             const list = document.getElementById(this.messagesListId);
 
             if (! list) {
@@ -106,6 +107,18 @@ export function arkCustomerHubComms(config = {}) {
                 .filter((id) => ! Number.isNaN(id) && id > 0);
 
             this.latestMessageId = ids.length > 0 ? Math.max(...ids) : 0;
+
+            const stamps = [...list.querySelectorAll('[data-occurred-at]')]
+                .map((node) => Date.parse(node.getAttribute('data-occurred-at') ?? ''))
+                .filter((value) => ! Number.isNaN(value));
+
+            this.latestOccurredAt = stamps.length > 0
+                ? new Date(Math.max(...stamps)).toISOString()
+                : new Date(0).toISOString();
+        },
+
+        refreshLatestMessageId() {
+            this.refreshLatestCursor();
         },
 
         syncRowVisibility() {
@@ -170,6 +183,7 @@ export function arkCustomerHubComms(config = {}) {
                 try {
                     const url = new URL(this.updatesUrl, window.location.origin);
                     url.searchParams.set('since_message_id', String(this.latestMessageId));
+                    url.searchParams.set('since_occurred_at', this.latestOccurredAt || new Date(0).toISOString());
 
                     const response = await fetch(url.toString(), {
                         headers: {
@@ -200,8 +214,20 @@ export function arkCustomerHubComms(config = {}) {
 
         ingestTimelineItem(item) {
             const messageId = Number(item?.message_id ?? 0);
+            const platformMessageId = item?.platform_message_id ? String(item.platform_message_id) : '';
             const html = item?.html ?? '';
             const rowFilter = item?.filter ?? 'text';
+            const occurredAt = item?.occurred_at ? String(item.occurred_at) : '';
+
+            if (platformMessageId !== '') {
+                if (html === '') {
+                    return;
+                }
+
+                this.prependTimelineRow(html, 0, rowFilter, platformMessageId, occurredAt);
+
+                return;
+            }
 
             if (messageId <= 0) {
                 if (rowFilter !== this.filter && this.filter !== 'all') {
@@ -221,18 +247,22 @@ export function arkCustomerHubComms(config = {}) {
                 return;
             }
 
-            this.prependTimelineRow(html, messageId, rowFilter);
+            this.prependTimelineRow(html, messageId, rowFilter, null, occurredAt);
             this.latestMessageId = Math.max(this.latestMessageId, messageId);
         },
 
-        prependTimelineRow(html, messageId, rowFilter) {
+        prependTimelineRow(html, messageId, rowFilter, platformMessageId = null, occurredAt = '') {
             const list = document.getElementById(this.messagesListId);
 
             if (! list) {
                 return;
             }
 
-            if (list.querySelector(`[data-conversation-message-id="${messageId}"]`)) {
+            if (platformMessageId && list.querySelector(`[data-platform-message-id="${platformMessageId}"]`)) {
+                return;
+            }
+
+            if (messageId && list.querySelector(`[data-conversation-message-id="${messageId}"]`)) {
                 return;
             }
 
@@ -246,6 +276,25 @@ export function arkCustomerHubComms(config = {}) {
             wrapper.setAttribute('data-conversation-row', '');
             wrapper.setAttribute('data-filter', rowFilter);
             wrapper.style.display = this.matches(rowFilter) ? '' : 'none';
+
+            if (platformMessageId) {
+                wrapper.setAttribute('data-platform-message-id', platformMessageId);
+            }
+
+            if (occurredAt !== '') {
+                wrapper.setAttribute('data-occurred-at', occurredAt);
+
+                const parsed = Date.parse(occurredAt);
+
+                if (! Number.isNaN(parsed)) {
+                    const iso = new Date(parsed).toISOString();
+
+                    if (this.latestOccurredAt === '' || parsed > Date.parse(this.latestOccurredAt)) {
+                        this.latestOccurredAt = iso;
+                    }
+                }
+            }
+
             wrapper.innerHTML = html;
 
             list.insertAdjacentElement('afterbegin', wrapper);

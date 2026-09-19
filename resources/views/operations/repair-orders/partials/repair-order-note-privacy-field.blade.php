@@ -5,6 +5,10 @@
         'customer' => false,
     ];
     $inputId = $inputId ?? 'note-audience-'.uniqid();
+    $fields = $fields ?? [];
+    $advisorField = $fields['advisor'] ?? 'visible_to_advisor';
+    $technicianField = $fields['technician'] ?? 'visible_to_technician';
+    $customerField = $fields['customer'] ?? 'visible_to_customer';
 @endphp
 
 <div
@@ -28,9 +32,9 @@
     }"
     class="ops-note-privacy-field space-y-1.5"
 >
-    <input type="hidden" name="visible_to_advisor" :value="advisor ? '1' : '0'">
-    <input type="hidden" name="visible_to_technician" :value="technician ? '1' : '0'">
-    <input type="hidden" name="visible_to_customer" :value="customer ? '1' : '0'">
+    <input type="hidden" name="{{ $advisorField }}" :value="advisor ? '1' : '0'">
+    <input type="hidden" name="{{ $technicianField }}" :value="technician ? '1' : '0'">
+    <input type="hidden" name="{{ $customerField }}" :value="customer ? '1' : '0'">
 
     <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Visible to</p>
 

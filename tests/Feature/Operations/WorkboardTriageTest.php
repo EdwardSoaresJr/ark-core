@@ -34,6 +34,8 @@ test('advisor home board renders kanban columns with dense cards', function () {
         ->assertSee('Search job board', false)
         ->assertDontSee('ops-advisor-home-cockpit', false)
         ->assertSee('Estimates', false)
+        ->assertSee('Waiting Approval', false)
+        ->assertSee('Waiting Parts', false)
         ->assertSee('Work in Progress', false)
         ->assertSee('Completed', false)
         ->assertSee('ops-advisor-home-board', false)
@@ -56,7 +58,7 @@ test('advisor home board includes intake statuses in estimates column', function
         ->assertSee('Triage Draft', false);
 });
 
-test('advisor home board shows every active repair order without card cap', function () {
+test('advisor home board caps visible cards per column with inventory overflow', function () {
     $advisor = actingAsLearnCurrentAdvisor();
 
     foreach (range(1, 30) as $index) {
@@ -67,9 +69,11 @@ test('advisor home board shows every active repair order without card cap', func
     $response = $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertDontSee('+5 more in inventory');
+        ->assertSee('+18 more', false);
 
-    expect(substr_count($response->getContent(), 'id="ops-card-ro-'))->toBe(30);
+    expect(substr_count($response->getContent(), 'id="ops-card-ro-'))->toBe(
+        WorkboardSwimlaneCatalog::HOME_BOARD_VISIBLE_CARD_LIMIT,
+    );
 });
 
 test('advisor home board surfaces observation signal instead of raw comms event copy', function () {
@@ -102,7 +106,7 @@ test('advisor home board surfaces observation signal instead of raw comms event 
 
     expect($response->status())->toBe(200);
     expect($response->getContent())->toContain('Obs Signal');
-    expect($response->getContent())->toContain('Waiting Approval');
+    expect($response->getContent())->toContain('Viewed');
     expect($response->getContent())->not->toContain('Customer opened estimate portal again');
 
     Carbon::setTestNow();
@@ -323,11 +327,14 @@ test('repair order index supports customer waiting attention inventory filter', 
 test('advisor home board shows empty state when shop is clear', function () {
     $advisor = actingAsLearnCurrentAdvisor();
 
-    $this->actingAs($advisor)
+    $response = $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
         ->assertDontSee('ops-advisor-home-cockpit', false)
-        ->assertSee('Nothing here', false);
+        ->assertSee('Estimates', false)
+        ->assertSee('Work in Progress', false);
+
+    expect(substr_count($response->getContent(), 'id="ops-card-ro-'))->toBe(0);
 });
 
 test('repair order index supports needs attention inventory filter', function () {
@@ -403,5 +410,5 @@ test('advisor home board surfaces parts pressure on ready for work cards', funct
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Parts Pressure', false);
+        ->assertSee('Needs parts', false);
 });

@@ -61,4 +61,9 @@ class Shop extends Model
     {
         return $this->hasMany(ProvisioningRequest::class);
     }
+
+    public function websiteSite(): HasOne
+    {
+        return $this->hasOne(\App\Ark\Platform\Website\WebsiteSite::class, 'platform_shop_id');
+    }
 }

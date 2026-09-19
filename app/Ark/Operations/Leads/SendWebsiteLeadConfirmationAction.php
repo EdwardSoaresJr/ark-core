@@ -2,6 +2,9 @@
 
 namespace App\Ark\Operations\Leads;
 
+use App\Ark\Mail\ArkMailClient;
+use App\Ark\Mail\TransactionalMailEnvelope;
+use App\Ark\Mail\TransactionalMailOperation;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationRecorder;
@@ -11,6 +14,7 @@ use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Mail\WebsiteLeadConfirmationMail;
 use App\Support\Mail\ShopMailBranding;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +29,7 @@ class SendWebsiteLeadConfirmationAction
         private readonly ShopIntegrationCredentials $credentials,
         private readonly LeadConfirmationAuditConversation $confirmationAudit,
         private readonly ResolvePhoneSmsCapabilityAction $smsCapability,
+        private readonly ArkMailClient $mail,
     ) {}
 
     public function execute(Lead $lead): void
@@ -108,14 +113,36 @@ class SendWebsiteLeadConfirmationAction
 
         try {
             $viewData = WebsiteLeadConfirmationCopy::emailViewData($lead);
-
-            Mail::to($email)->send(new WebsiteLeadConfirmationMail(
+            $mailable = new WebsiteLeadConfirmationMail(
                 shopName: ShopMailBranding::shopName(),
                 subjectLine: WebsiteLeadConfirmationCopy::emailSubject($lead),
                 intro: $viewData['intro'],
                 responseHint: $viewData['response_hint'],
                 phoneDisplay: $viewData['phone_display'],
-            ));
+            );
+
+            if (ManagedMailGate::platformSend() && $this->mail->isConfigured()) {
+                $result = $this->mail->send(TransactionalMailEnvelope::fromMailable(
+                    operation: TransactionalMailOperation::CustomerTransactionalMessage,
+                    recipientEmail: $email,
+                    mailable: $mailable,
+                    idempotencyKey: 'website-lead-confirmation-'.$lead->uuid,
+                    domainObjectType: 'lead',
+                    domainObjectId: (string) $lead->uuid,
+                ));
+
+                if (! $result->ok()) {
+                    Log::warning('website_lead_confirmation_email_failed', [
+                        'lead_id' => $lead->id,
+                        'reason_code' => $result->reasonCode,
+                        'message' => $result->message,
+                    ]);
+
+                    return;
+                }
+            } else {
+                Mail::to($email)->send($mailable);
+            }
 
             $emailConversation = $this->emailConversation($email);
 

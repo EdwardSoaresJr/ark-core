@@ -17,14 +17,12 @@
                 $inspectionPosture->templateName,
             ])->filter()->implode(' · ');
         @endphp
-        <button
-            type="button"
-            class="ops-visit-signal ops-visit-signal--inspection"
+        <div
+            class="ops-visit-signal ops-visit-signal--inspection ops-visit-signal--passive"
             data-inspection-posture="{{ $inspectionPosture->key }}"
-            title="{{ $inspectionTitle }} — open Inspection"
-            onclick="window.arkSelectRepairOrderWorkspaceTab?.('inspect')"
+            title="{{ $inspectionTitle }}"
         >
-            <span class="ops-visit-signal__label">Insp</span>
+            <span class="ops-visit-signal__label">Inspection</span>
             <span class="ops-visit-signal__value">{{ $inspectionPosture->headline }}</span>
             @if (filled($inspectionPosture->detail))
                 <span class="ops-visit-signal__meta">{{ $inspectionPosture->detail }}</span>
@@ -34,7 +32,7 @@
             @if (filled($inspectionPosture->templateName))
                 <span class="ops-visit-signal__note">{{ $inspectionPosture->templateName }}</span>
             @endif
-        </button>
+        </div>
     @else
         <button
             type="button"

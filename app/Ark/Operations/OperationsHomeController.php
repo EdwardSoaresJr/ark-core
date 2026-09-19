@@ -3,19 +3,15 @@
 namespace App\Ark\Operations;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\Flow\OperationalFlowProjectionBuilder;
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\Today\AdvisorHomeAttentionBoardProjection;
 use App\Ark\Operations\Today\AdvisorHomeCardSurfaceProjection;
 use App\Ark\Operations\Today\AdvisorHomeCockpitProjection;
-use App\Ark\Operations\Today\AdvisorTodayProjection;
-use App\Ark\Operations\Today\AdvisorTodayRecommendationEngine;
-use App\Ark\Operations\Today\AdvisorTodayShopRadarBuilder;
-use App\Ark\Operations\Today\TodayCommitmentsProjection;
-use App\Ark\Operations\Today\TodayPipelineProjection;
+use App\Ark\Operations\Workboard\WorkboardTriageCard;
+use App\Ark\Operations\Workboard\WorkboardTriageLaneProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageRepairOrderQuery;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class OperationsHomeController
@@ -25,56 +21,45 @@ class OperationsHomeController
         WorkboardTriageRepairOrderQuery $repairOrderQuery,
         WorkboardTriageProjection $workboardTriage,
         EstimateTotalsCalculator $totalsCalculator,
-        AdvisorTodayRecommendationEngine $recommendationEngine,
-        AdvisorTodayShopRadarBuilder $shopRadarBuilder,
-        TodayPipelineProjection $pipelineProjection,
-        TodayCommitmentsProjection $commitmentsProjection,
-        OperationalFlowProjectionBuilder $flowProjectionBuilder,
         AdvisorHomeCardSurfaceProjection $homeCardSurfaces,
-        AdvisorHomeAttentionBoardProjection $attentionBoardProjection,
     ): View {
-        $user = $request->user();
         $repairOrders = $repairOrderQuery->forAdvisor();
-
-        $morningBrief = AdvisorTodayProjection::resolve(
-            $repairOrderQuery,
-            $recommendationEngine,
-            $shopRadarBuilder,
-            $pipelineProjection,
-            $commitmentsProjection,
-            $flowProjectionBuilder,
-            $user,
-            repairOrders: $repairOrders,
+        $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard($repairOrders);
+        $visibleRepairOrders = new \Illuminate\Database\Eloquent\Collection(
+            $this->visibleRepairOrders($homeBoardColumns)->all(),
         );
 
-        $repairOrderTotals = $repairOrders->mapWithKeys(fn (RepairOrder $repairOrder): array => [
+        $repairOrderTotals = $visibleRepairOrders->mapWithKeys(fn (RepairOrder $repairOrder): array => [
             $repairOrder->id => $totalsCalculator->totalsFor($repairOrder),
         ]);
 
-        $homeBoardColumns = $workboardTriage->forAdvisorHomeBoard($repairOrders);
-        $cardSurfaces = $homeCardSurfaces->mapForHomeBoard($repairOrders, $homeBoardColumns);
-
-        $attentionZones = $attentionBoardProjection->zones(
-            $repairOrders,
-            $cardSurfaces,
-            $repairOrderTotals,
-            recommendedRepairOrderId: ($morningBrief->briefRecommendations()[0] ?? null)?->repairOrderId,
-        );
+        $cardSurfaces = $homeCardSurfaces->mapForHomeBoard($visibleRepairOrders, $homeBoardColumns, $repairOrderTotals);
 
         return view('operations.home', [
-            'morningBrief' => $morningBrief,
-            'cockpit' => AdvisorHomeCockpitProjection::resolve(
-                $morningBrief,
+            'cockpit' => AdvisorHomeCockpitProjection::forJobBoard(
                 $homeBoardColumns,
                 $repairOrderTotals,
-                $attentionZones,
+                $repairOrders->count(),
             ),
-            'attentionZones' => $attentionZones,
+            'attentionZones' => [],
             'homeBoardColumns' => $homeBoardColumns,
             'homeCardSurfaces' => $cardSurfaces,
             'homeBoardTechnicians' => $homeCardSurfaces->technicianOptions($repairOrders),
             'repairOrderTotals' => $repairOrderTotals,
             'activeRepairOrderCount' => $repairOrders->count(),
         ]);
+    }
+
+    /**
+     * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
+     * @return Collection<int, RepairOrder>
+     */
+    private function visibleRepairOrders(array $homeBoardColumns): Collection
+    {
+        return collect($homeBoardColumns)
+            ->flatMap(fn (WorkboardTriageLaneProjection $column): array => $column->visibleCards)
+            ->map(fn (WorkboardTriageCard $card): RepairOrder => $card->repairOrder)
+            ->unique(fn (RepairOrder $repairOrder): int => $repairOrder->id)
+            ->values();
     }
 }

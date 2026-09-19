@@ -2,7 +2,7 @@
     $vehicle = $repairOrder->vehicle;
     $serviceLaneLayout = $serviceLaneLayout ?? false;
     $hideMileageLines = $hideMileageLines ?? true;
-    $mileageLineLabels = ['Mileage'];
+    $mileageLineLabels = ['Mileage', 'Mileage in', 'Mileage out'];
 @endphp
 
 <div class="ops-identity-present" data-identity-present="vehicle">

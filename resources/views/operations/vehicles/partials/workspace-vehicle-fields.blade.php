@@ -39,7 +39,7 @@
         <span x-show="decoding" x-cloak>Decoding…</span>
     </button>
 </div>
-<p x-show="message" x-text="message" class="text-xs text-slate-500"></p>
+<p x-show="message" x-text="message" class="text-xs font-semibold" :class="messageIsError ? 'text-rose-700' : 'text-slate-600'"></p>
 <div class="grid gap-2 sm:grid-cols-3">
     <label class="block text-[11px] font-medium text-slate-500">
         Year

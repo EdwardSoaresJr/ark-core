@@ -9,15 +9,9 @@ class TelephonyEndpointMatcher
 {
     public function resolveForUser(User $user): ?TelephonyEndpoint
     {
-        return TelephonyEndpoint::query()
-            ->where('enabled', true)
-            ->where('user_id', $user->id)
-            ->where('type', '!=', TelephonyEndpointType::MobileApp->value)
-            ->orderBy('position')
-            ->orderBy('id')
-            ->get()
-            ->sortBy(fn (TelephonyEndpoint $endpoint): int => $endpoint->type === TelephonyEndpointType::Sip ? 0 : 1)
-            ->first(fn (TelephonyEndpoint $endpoint): bool => $endpoint->dialDestination() !== '');
+        return $this->resolvePersonalSipFor($user)
+            ?? $this->resolveGeneralSipPhone()
+            ?? $this->resolvePersonalNonSipFor($user);
     }
 
     public function callbackEndpointIdFor(User $user): int
@@ -63,6 +57,57 @@ class TelephonyEndpointMatcher
     public function canReceiveMobileCallback(User $user): bool
     {
         return filled($this->mobileCallbackDestinationFor($user));
+    }
+
+    private function resolvePersonalSipFor(User $user): ?TelephonyEndpoint
+    {
+        return $this->firstDialable(
+            TelephonyEndpoint::query()
+                ->where('enabled', true)
+                ->where('user_id', $user->id)
+                ->where('type', TelephonyEndpointType::Sip->value)
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get(),
+        );
+    }
+
+    private function resolveGeneralSipPhone(): ?TelephonyEndpoint
+    {
+        return $this->firstDialable(
+            TelephonyEndpoint::query()
+                ->where('enabled', true)
+                ->whereNull('user_id')
+                ->where('type', TelephonyEndpointType::Sip->value)
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get(),
+        );
+    }
+
+    private function resolvePersonalNonSipFor(User $user): ?TelephonyEndpoint
+    {
+        return $this->firstDialable(
+            TelephonyEndpoint::query()
+                ->where('enabled', true)
+                ->where('user_id', $user->id)
+                ->where('type', '!=', TelephonyEndpointType::MobileApp->value)
+                ->where('type', '!=', TelephonyEndpointType::Sip->value)
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get(),
+        );
+    }
+
+    private function firstDialable(iterable $endpoints): ?TelephonyEndpoint
+    {
+        foreach ($endpoints as $endpoint) {
+            if ($endpoint->dialDestination() !== '') {
+                return $endpoint;
+            }
+        }
+
+        return null;
     }
 
     private function resolveCellEndpointFor(User $user): ?TelephonyEndpoint

@@ -74,6 +74,7 @@ final class CallLibraryQuery
                     ->orWhere(function ($inbound): void {
                         $inbound->where('direction', CallSessionDirection::Inbound)
                             ->whereNull('answered_at')
+                            ->whereNull('recording_url')
                             ->whereIn('status', [CallSessionStatus::Completed, CallSessionStatus::Failed]);
                     });
             }),
@@ -112,7 +113,8 @@ final class CallLibraryQuery
                     $scoped->where('status', CallSessionStatus::Missed)
                         ->orWhere(function ($inbound): void {
                             $inbound->where('direction', CallSessionDirection::Inbound)
-                                ->whereNull('answered_at');
+                                ->whereNull('answered_at')
+                                ->whereNull('recording_url');
                         });
                 })
                 ->count(),

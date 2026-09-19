@@ -105,6 +105,16 @@ test('manufacturer number and supplier appear only when enabled', function () {
         ->and($shown['customer_part_vendor'])->toBe('WorldPac');
 });
 
+test('cleaned policy regenerates stale generated part labels', function () {
+    $presented = presentPartLine([
+        'description' => 'B1-Spring Pad',
+        'customer_description' => 'Pad',
+        'customer_description_source' => CustomerDescriptionSource::Generated->value,
+    ], partPresentationPolicy());
+
+    expect($presented['customer_part_description'])->toBe('B1-Spring Pad');
+});
+
 test('locked historical labels prefer stored wording without re-normalizing', function () {
     $presented = presentPartLine([
         'description' => 'Champion Spark Plug Copper Plus',

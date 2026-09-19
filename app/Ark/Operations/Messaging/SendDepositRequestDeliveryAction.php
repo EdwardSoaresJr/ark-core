@@ -20,7 +20,7 @@ final class SendDepositRequestDeliveryAction
 
     /**
      * @return array{
-     *     messages: list<ConversationMessage>,
+     *     messages: list<ConversationMessage|null>,
      *     deposit_url: ?string,
      *     amount_display: ?string,
      * }

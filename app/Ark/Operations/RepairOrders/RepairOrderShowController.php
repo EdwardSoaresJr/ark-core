@@ -133,6 +133,7 @@ class RepairOrderShowController
                 $repairOrder->vehicle_id,
             ),
             ...InspectionWorkspaceTabBadgeProjection::for($repairOrder, $request->user()),
+            'recommendationAwareness' => \App\Ark\Operations\Recommendations\RecommendationAwarenessProjection::forRepairOrder($repairOrder),
         ]);
     }
 }

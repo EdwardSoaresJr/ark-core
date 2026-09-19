@@ -100,18 +100,15 @@
                                         @endif
                                         <span class="ops-ro-next-action">{{ $nextAction === 'Review' ? 'Open work order' : $nextAction }}</span>
                                         @php
-                                            $laneInspectionCoverage = \App\Ark\Operations\Inspections\InspectionCoverageProjection::for($repairOrder, auth()->user());
+                                            $canRecordInspection = \App\Ark\Operations\Inspections\InspectionCaptureLinks::canRecord(auth()->user(), $repairOrder);
                                         @endphp
-                                        @if ($laneInspectionCoverage['can_record'] && ! $repairOrder->isTerminal())
+                                        @if ($canRecordInspection && ! $repairOrder->isTerminal())
                                             <a
-                                                href="{{ $laneInspectionCoverage['capture_url'] }}"
+                                                href="{{ \App\Ark\Operations\Inspections\InspectionCaptureLinks::captureUrl($repairOrder) }}"
                                                 class="ops-ro-finding-link"
                                                 x-on:click.stop
                                                 data-inspection-capture-cta
-                                                data-capture-surface="{{ $laneInspectionCoverage['capture_surface'] }}"
-                                                data-desktop-walk-url="{{ $laneInspectionCoverage['walk_url'] }}"
-                                                data-tablet-url="{{ $laneInspectionCoverage['tablet_url'] }}"
-                                            >{{ $laneInspectionCoverage['cta_label'] }}</a>
+                                            >Record finding</a>
                                         @endif
                                     </div>
                                 </a>

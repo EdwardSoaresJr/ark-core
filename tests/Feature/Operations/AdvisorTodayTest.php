@@ -33,6 +33,8 @@ test('advisor home renders customer first attention cockpit', function () {
         ->assertSee('Search job board', false)
         ->assertDontSee('+ Create Repair Order', false)
         ->assertSee('Estimates', false)
+        ->assertSee('Waiting Approval', false)
+        ->assertSee('Waiting Parts', false)
         ->assertSee('Work in Progress', false)
         ->assertSee('Completed', false)
         ->assertDontSee('Active Cars', false)
@@ -69,7 +71,7 @@ test('advisor today surfaces explainable recommendation for estimate viewed', fu
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Waiting Approval', false)
+        ->assertSee('Viewed', false)
         ->assertSee('RO #'.$repairOrder->repair_order_id, false)
         ->assertSee('Today Rec', false);
 
@@ -331,9 +333,13 @@ test('today pipeline sums operational money buckets and links to repair orders',
         ->and($metrics[TodayPipelineInventoryQuery::COLLECTED_THIS_MONTH]->amountCents)->toBe(217_620);
 
     $this->actingAs($advisor)
-        ->get('/app/today')
+        ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Shop Dashboard', false);
+        ->assertSee('Estimates', false)
+        ->assertSee('Waiting Approval', false)
+        ->assertSee('Waiting Parts', false)
+        ->assertSee('Work in Progress', false)
+        ->assertSee('Completed', false);
 
     $this->actingAs($advisor)
         ->get($metrics[TodayPipelineInventoryQuery::AWAITING_APPROVAL]->inventoryUrl)

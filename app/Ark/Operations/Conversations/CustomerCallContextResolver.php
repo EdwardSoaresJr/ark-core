@@ -238,26 +238,8 @@ class CustomerCallContextResolver
 
     private function matchCustomer(string $normalizedPhone): ?Customer
     {
-        $exact = Customer::query()
-            ->where('phone', $normalizedPhone)
-            ->first();
-
-        if ($exact) {
-            return $exact;
-        }
-
-        $needle = strlen($normalizedPhone) > 10
-            ? substr($normalizedPhone, -10)
-            : $normalizedPhone;
-
-        if (strlen($needle) < 7) {
-            return null;
-        }
-
         return Customer::query()
-            ->whereNotNull('phone')
-            ->where('phone', 'like', '%'.$needle.'%')
-            ->orderByDesc('updated_at')
+            ->where('phone', $normalizedPhone)
             ->first();
     }
 }

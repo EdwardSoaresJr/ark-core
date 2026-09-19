@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Messaging;
 
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
+use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\Payments\CreateCustomerDepositPayTokenAction;
 use App\Ark\Operations\Payments\CustomerPayTokenResult;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -13,6 +14,7 @@ use RuntimeException;
 final class DepositPortalLinkContext
 {
     public function __construct(
+        private readonly CardPresentCaptureProjection $capture,
         private readonly BalanceDueCalculator $balanceDue,
         private readonly RepairOrderDepositRecordingGuard $depositGuard,
         private readonly CreateCustomerDepositPayTokenAction $depositTokens,
@@ -49,6 +51,10 @@ final class DepositPortalLinkContext
     public function forRepairOrder(RepairOrder $repairOrder, int $amountCents): array
     {
         $repairOrder->loadMissing('customer');
+
+        if (! $this->capture->portalPayEnabled()) {
+            throw new RuntimeException('Customer portal payments are not enabled.');
+        }
 
         if ($repairOrder->isTerminal()) {
             throw new RuntimeException('Closed repair orders cannot send deposit requests.');

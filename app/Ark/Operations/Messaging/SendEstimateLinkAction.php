@@ -6,8 +6,11 @@ use App\Ark\Operations\Communications\CommunicationEventRecorder;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
+use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Portal\CreateOrReuseEstimateAccessTokenAction;
 use App\Ark\Operations\Portal\CreatePortalShortLinkAction;
+use App\Ark\Operations\Portal\PortalShortLinkPurpose;
 use App\Ark\Operations\RepairOrders\MarkEstimateAwaitingCustomerApprovalAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
@@ -25,7 +28,7 @@ class SendEstimateLinkAction
 
     /**
      * @return array{
-     *     message: \App\Ark\Operations\Conversations\ConversationMessage,
+     *     message: ?ConversationMessage,
      *     url: string,
      *     token_reused: bool,
      *     awaiting_approval: array{
@@ -41,7 +44,7 @@ class SendEstimateLinkAction
     public function execute(
         RepairOrder $repairOrder,
         User $actor,
-        ?\App\Ark\Operations\Conversations\Conversation $conversation = null,
+        ?Conversation $conversation = null,
         ?string $recipientPhone = null,
     ): array {
         $repairOrder->loadMissing('customer');
@@ -61,6 +64,8 @@ class SendEstimateLinkAction
         $shortUrl = $this->shortLinks->execute(
             $url,
             $accessToken->token->expires_at,
+            $repairOrder,
+            PortalShortLinkPurpose::Estimate,
         );
 
         $body = PortalSmsLinkBody::estimate($shortUrl);

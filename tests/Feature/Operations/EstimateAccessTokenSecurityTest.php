@@ -8,12 +8,16 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
+use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -64,9 +68,16 @@ test('estimate token lookup uses sha256 hash comparison', function () {
 });
 
 test('resending estimate link creates a new token row without invalidating prior links', function () {
-    bindFakeOutboundSms();
+    Http::fake([
+        'https://api.twilio.com/*' => Http::response([
+            'sid' => 'SMestimate-security',
+            'status' => 'queued',
+        ], 201),
+    ]);
 
-        
+    config()->set('services.twilio.auth_token', 'test-token');
+    config()->set('services.twilio.account_sid', 'ACtestaccount');
+
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -121,6 +132,18 @@ function estimateTokenSecurityRepairOrder(): RepairOrder
         'phone' => '7195556060',
         'customer_type' => 'Retail',
     ]);
+
+    PhoneSmsCapability::query()->updateOrCreate(
+        ['normalized_phone' => PhoneNumber::normalize('7195556060')],
+        [
+            'valid' => true,
+            'line_type' => 'mobile',
+            'carrier_name' => 'Test',
+            'sms_capable' => true,
+            'reason' => null,
+            'checked_at' => now(),
+        ],
+    );
 
     $vehicle = Vehicle::query()->create([
         'customer_id' => $customer->id,

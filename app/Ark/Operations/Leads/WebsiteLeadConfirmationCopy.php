@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Leads;
 
+use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Telephony\TelephonyBusinessHoursLabel;
@@ -14,14 +15,21 @@ final class WebsiteLeadConfirmationCopy
         $shopName = ShopMailBranding::shopName();
         $responseHint = self::responseTimeHint();
         $firstName = self::firstName($lead);
+        $appointmentRequest = PublicAppointmentRequest::isBookSurfaceFromLead($lead);
 
         $greeting = filled($firstName) ? "Hi {$firstName}, " : '';
 
-        $body = sprintf(
-            '%s%s: We received your request. A service advisor will review it and follow up soon.',
-            $greeting,
-            $shopName,
-        );
+        $body = $appointmentRequest
+            ? sprintf(
+                '%s%s: We received your appointment request. We’ll confirm the appointment time with you soon.',
+                $greeting,
+                $shopName,
+            )
+            : sprintf(
+                '%s%s: We received your request. A service advisor will review it and follow up soon.',
+                $greeting,
+                $shopName,
+            );
 
         if (filled($responseHint)) {
             $body .= ' '.$responseHint;
@@ -34,7 +42,13 @@ final class WebsiteLeadConfirmationCopy
 
     public static function emailSubject(?Lead $lead = null): string
     {
-        return sprintf('%s — request received', ShopMailBranding::shopName());
+        $shopName = ShopMailBranding::shopName();
+
+        if ($lead instanceof Lead && PublicAppointmentRequest::isBookSurfaceFromLead($lead)) {
+            return sprintf('%s — appointment request received', $shopName);
+        }
+
+        return sprintf('%s — request received', $shopName);
     }
 
     /**
@@ -43,12 +57,18 @@ final class WebsiteLeadConfirmationCopy
     public static function emailViewData(Lead $lead): array
     {
         $shop = ShopSettings::current();
+        $appointmentRequest = PublicAppointmentRequest::isBookSurfaceFromLead($lead);
 
         return [
-            'intro' => sprintf(
-                '%s we received your vehicle concern and a service advisor will review it soon.',
-                filled(self::firstName($lead)) ? self::firstName($lead).',' : 'Hi,',
-            ),
+            'intro' => $appointmentRequest
+                ? sprintf(
+                    '%s we received your appointment request and will confirm the appointment time with you soon.',
+                    filled(self::firstName($lead)) ? self::firstName($lead).',' : 'Hi,',
+                )
+                : sprintf(
+                    '%s we received your vehicle concern and a service advisor will review it soon.',
+                    filled(self::firstName($lead)) ? self::firstName($lead).',' : 'Hi,',
+                ),
             'response_hint' => self::responseTimeHint(),
             'phone_display' => PhoneNumber::display($shop->phone),
         ];

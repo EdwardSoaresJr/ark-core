@@ -6,6 +6,7 @@
     'nudgeKey' => null,
     'entityKey' => null,
     'initialBody' => null,
+    'actionsMenu' => false,
 ])
 
 @php
@@ -15,7 +16,8 @@
     use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 
     $integrations = app(ShopIntegrationCredentials::class);
-    $canSend = $integrations->messagingConfigured();
+    $canSend = \App\Ark\Platform\Communications\ManagedCommunicationsGate::platformSend()
+        || $integrations->twilioConfigured();
     $autoOpen = request()->query('compose') === 'text';
     $canSchedule = OperationsFeatures::appointmentsEnabled();
     $scheduleHref = $canSchedule
@@ -48,7 +50,38 @@
             ]))"
             {{ $attributes->class(['border-t border-slate-200 bg-slate-50/40'])->except('id') }}
         >
-            @if ($scheduleHref || filled($callHref))
+            @if ($actionsMenu)
+                <div class="flex flex-wrap items-center gap-2 px-3 py-2" aria-label="Conversation commands">
+                    <details
+                        class="ops-comms-actions"
+                        x-ref="actionsMenu"
+                        @toggle="onActionsMenuToggle($event)"
+                        @click.outside="closeActionsMenu()"
+                    >
+                        <summary class="ops-comms-actions__summary">Actions</summary>
+                        <div class="ops-comms-actions__panel">
+                            @if (filled($callHref))
+                                <a href="{{ $callHref }}" class="ops-comms-actions__item">Call</a>
+                            @endif
+                            @if ($scheduleHref)
+                                <a href="{{ $scheduleHref }}" class="ops-comms-actions__item">Schedule</a>
+                            @endif
+                            @if ($canSend)
+                                <label class="ops-comms-actions__item">
+                                    Attach file
+                                    <input
+                                        x-ref="attachmentInput"
+                                        type="file"
+                                        class="hidden"
+                                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                        @change="pickAttachment($event)"
+                                    >
+                                </label>
+                            @endif
+                        </div>
+                    </details>
+                </div>
+            @elseif ($scheduleHref || filled($callHref))
                 <div class="flex flex-wrap items-center gap-2 px-3 py-2" aria-label="Conversation commands">
                     @if (filled($callHref))
                         <a
@@ -78,16 +111,18 @@
                         @keydown.ctrl.enter.prevent="send()"
                     ></textarea>
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <label class="h-8 cursor-pointer rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold leading-8 text-slate-700 hover:border-slate-400 hover:text-slate-950">
-                            Attach file
-                            <input
-                                x-ref="attachmentInput"
-                                type="file"
-                                class="hidden"
-                                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
-                                @change="pickAttachment($event)"
-                            >
-                        </label>
+                        @unless ($actionsMenu)
+                            <label class="h-8 cursor-pointer rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold leading-8 text-slate-700 hover:border-slate-400 hover:text-slate-950">
+                                Attach file
+                                <input
+                                    x-ref="attachmentInput"
+                                    type="file"
+                                    class="hidden"
+                                    accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                    @change="pickAttachment($event)"
+                                >
+                            </label>
+                        @endunless
                         <button
                             type="button"
                             @click="send()"

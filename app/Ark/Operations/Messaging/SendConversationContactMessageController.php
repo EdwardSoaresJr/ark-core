@@ -22,6 +22,7 @@ class SendConversationContactMessageController
     ): JsonResponse {
         $validated = $request->validate([
             'body' => ['nullable', 'string', 'max:1600'],
+            'idempotency_key' => ['nullable', 'string', 'max:120'],
             'nudge_key' => ['nullable', 'string', 'max:64'],
             'entity_key' => ['nullable', 'string', 'max:64'],
             'attachment' => [
@@ -37,6 +38,7 @@ class SendConversationContactMessageController
                 actor: $request->user(),
                 body: (string) ($validated['body'] ?? ''),
                 attachment: $request->file('attachment'),
+                idempotencyKey: $validated['idempotency_key'] ?? null,
             );
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
@@ -53,9 +55,20 @@ class SendConversationContactMessageController
             );
         }
 
+        if ($message === null) {
+            return response()->json([
+                'message_id' => null,
+                'provider_message_sid' => $result['provider_message_sid'],
+                'platform_authoritative' => true,
+                'platform_message' => $result['platform_message'] ?? null,
+                'message' => 'Message sent.',
+            ]);
+        }
+
         return response()->json([
             'message_id' => $message->id,
             'provider_message_sid' => $result['provider_message_sid'],
+            'platform_message' => $result['platform_message'] ?? null,
             'message' => $presenter->present($message),
             'html' => $renderer->render($message, 'border-t border-slate-100'),
         ]);

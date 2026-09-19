@@ -2,37 +2,7 @@
 
 **Product:** ARK Companion: Communications — advisor communications command center. Not ARK Mobile, not ARKv2 on a smaller screen.
 
-**Phase:** **Companion v1 frozen** — observation sprint (Era 4). Mission stable; improvements come from the floor.
-
-**Pocket notebook:** [`companion-pocket-notebook.md`](companion-pocket-notebook.md) — living log. No solutions; Friday clusters become backlog.
-
-**Product identity (frozen):** [`../ecosystem/ark-product-identity-v1.md`](../ecosystem/ark-product-identity-v1.md) — ARK = operating system · ARKv2 = operations · Companion = communications
-
-**Mission (frozen):** [`MISSION.md`](MISSION.md) — read this first.
-
-**Design philosophy:** Every tap should reduce uncertainty for the advisor.
-
-**Product doctrine:** [../communications/communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md)
-
-**Doctrine: ** doctrine `ark-companion-communications.mdc`
-
-**Floor test:** [`../mobile/companion-sprint-1-run-the-shop.md`](../mobile/companion-sprint-1-run-the-shop.md)
-
----
-
-## How to guide implementation now
-
-**Stop building Companion features.** Fix production breaks only.
-
-Improvements come from [`companion-pocket-notebook.md`](companion-pocket-notebook.md) — clustered Friday observations, not vision sessions.
-
-| Now | Not now |
-| --- | --- |
-| Log friction while using Companion on the floor | Milestone 8 feature ideas |
-| Cluster notebook entries on Fridays | "Could be prettier" polish passes |
-| Ship fixes when a cluster repeats | Architecture essays |
-
----
+**Phase:** Companion v1 is frozen. Fix production breaks only. Floor notes: [`companion-pocket-notebook.md`](companion-pocket-notebook.md).
 
 ## Build milestones (v1 complete)
 
@@ -43,8 +13,6 @@ Foundation shipped M1–M7. See [`MISSION.md`](MISSION.md) and [`09-production-f
 | 1–6 | Inbox → Operational Context | ✅ |
 | 7 | Production feel | ✅ built |
 | — | **Floor observation** | 🔄 [`companion-pocket-notebook.md`](companion-pocket-notebook.md) |
-
-Engineering tracker: [`../engineering/CURRENT_MILESTONE.md`](../engineering/CURRENT_MILESTONE.md)
 
 ---
 

@@ -145,7 +145,7 @@ class PortalEstimateAuthorizeController
                 'deposit_amount_cents' => $depositAmountCents,
                 'deposit_amount' => Money::ofMinor($depositAmountCents, 'USD')->formatTo('en_US'),
                 'approved_by' => $approval->approved_by,
-                'approved_at_label' => ShopDisplayTimezone::format($approval->approved_at),
+                'approved_at_label' => ShopDisplayTimezone::format($approval->approved_at, 'M j, Y \a\t g:i A'),
                 'source' => $approval->source->value,
             ]);
     }

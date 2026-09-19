@@ -2,10 +2,10 @@
     /** @var list<string> $missing */
 @endphp
 
-<x-operations.app title="Voice">
+<x-operations.app title="Stations &amp; Phones">
     <div class="mx-auto max-w-3xl space-y-4 px-4 py-4">
         <header class="space-y-2 border-b border-slate-200 pb-4">
-            <h1 class="text-xl font-black text-slate-950">Voice</h1>
+            <h1 class="text-xl font-black text-slate-950">Stations &amp; Phones</h1>
             <p class="text-sm font-semibold text-amber-700">Database setup required</p>
         </header>
 

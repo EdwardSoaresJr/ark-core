@@ -8,7 +8,6 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Timeline\OperationalTimeline;
 use App\Ark\Operations\Work\AdvisorWorkProjection;
-use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -52,20 +51,12 @@ class CustomerShowController
             default => 'vehicles',
         };
 
-        $hubVehicleDeepLinkId = $request->integer('vehicle');
         $hubInitialTask = null;
         $hubInitialContext = [];
 
         if (old('_vehicle_id')) {
             $hubInitialTask = 'hub-vehicle';
             $hubInitialContext = ['vehicleId' => (int) old('_vehicle_id')];
-        } elseif (
-            $hubVehicleDeepLinkId > 0
-            && $request->user()?->can(ArkCapability::VehiclesManage->value)
-            && $customer->vehicles->contains('id', $hubVehicleDeepLinkId)
-        ) {
-            $hubInitialTask = 'hub-vehicle';
-            $hubInitialContext = ['vehicleId' => $hubVehicleDeepLinkId];
         }
 
         $showVehicleRail = $request->has('vehicle')

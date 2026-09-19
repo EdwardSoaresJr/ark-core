@@ -187,14 +187,16 @@ final readonly class RepairOrderFooterProjection
         );
 
         if (ShopPrintingSettings::isEnabled()) {
+            $keyTagBlocked = \App\Ark\Operations\Printing\KeyTagPrintGate::blockedReason($repairOrder);
             $actions[] = RepairOrderFooterAction::link(
                 key: 'key_tag',
                 label: 'Print Key Tag',
                 href: route('operations.repair-orders.print-key-tag', $repairOrder),
                 opensInNewTab: false,
-                title: 'Print the key tag',
+                title: $keyTagBlocked ?? 'Print the key tag',
                 isPrint: true,
                 printDocument: 'key_tag',
+                blockedReason: $keyTagBlocked,
             );
             $actions[] = RepairOrderFooterAction::link(
                 key: 'oil_sticker',

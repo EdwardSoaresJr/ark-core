@@ -18,7 +18,7 @@ final class SendReviewRequestSmsAction
         RepairOrder $repairOrder,
         User $actor,
         ?Conversation $conversation = null,
-    ): ConversationMessage {
+    ): ?ConversationMessage {
         $repairOrder->loadMissing('customer');
 
         if ($repairOrder->customer === null) {

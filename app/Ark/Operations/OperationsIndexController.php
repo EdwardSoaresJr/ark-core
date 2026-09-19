@@ -34,8 +34,8 @@ class OperationsIndexController
                 'customer',
                 'vehicle',
                 'assignedTechnician:id,name',
-                'communicationEvents:id,repair_order_id,event_type,channel,direction,summary,occurred_at,created_at',
                 'lines.concern:id,disposition',
+                'concerns.workGroups.ownerUser:id,name',
             ])
             ->whereIn('status', $queueStatuses)
             ->latest()

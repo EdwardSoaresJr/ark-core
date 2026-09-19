@@ -79,9 +79,8 @@ class EstimateDocumentService
     {
         $path = $this->renderer->renderEstimate($document);
 
-        // Issued final invoices and legacy import rows are immutable evidence —
-        // never rewrite snapshot_json for PDF metadata.
-        if ($document->isIssuedInvoice() || $this->isLegacyImportFrozen($document)) {
+        // Issued final invoices are immutable evidence — never rewrite snapshot_json for PDF metadata.
+        if ($document->isIssuedInvoice()) {
             $document->forceFill([
                 'needs_pdf_refresh' => false,
                 'pdf_refreshed_at' => now(),
@@ -184,6 +183,20 @@ class EstimateDocumentService
         return $this->ensurePdfGenerated($document);
     }
 
+    public function attachablePdfForRepairOrder(RepairOrder $repairOrder): ?EstimateDocument
+    {
+        $document = EstimateDocument::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->where('document_type', 'estimate')
+            ->first();
+
+        if ($document === null || ! $this->pdfExists($document)) {
+            return null;
+        }
+
+        return $document;
+    }
+
     private function ensurePdfGenerated(EstimateDocument $document): EstimateDocument
     {
         $document->loadMissing('repairOrder');
@@ -274,7 +287,13 @@ class EstimateDocumentService
 
     private function isLegacyImportFrozen(EstimateDocument $document): bool
     {
-        return data_get($document->snapshot_json, 'schema_version') === 'legacy_import';
+        if (data_get($document->snapshot_json, 'schema_version') === 'legacy_import') {
+            return true;
+        }
+
+        $document->loadMissing('repairOrder');
+
+        return $document->repairOrder?->estimateDocumentIsFrozen() === true;
     }
 
     private function frozenEstimateApprovalPresentationDrifted(EstimateDocument $document): bool

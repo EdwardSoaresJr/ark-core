@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'initiated_by',
     'customer_access_token_id',
     'estimate_access_token_id',
+    'public_id',
     'initiated_at',
     'completed_at',
 ])]

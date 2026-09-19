@@ -218,24 +218,7 @@ final class ConversationRelationshipTimelineResolver
             return null;
         }
 
-        $exact = Customer::query()->where('phone', $normalizedPhone)->first();
-
-        if ($exact instanceof Customer) {
-            return $exact;
-        }
-
-        $needle = strlen($normalizedPhone) > 10
-            ? substr($normalizedPhone, -10)
-            : $normalizedPhone;
-
-        if (strlen($needle) < 7) {
-            return null;
-        }
-
-        return Customer::query()
-            ->where('phone', 'like', '%'.$needle)
-            ->orderByDesc('updated_at')
-            ->first();
+        return Customer::query()->where('phone', $normalizedPhone)->first();
     }
 
     /**

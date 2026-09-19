@@ -1,6 +1,6 @@
 # Firebase Mobile Push Setup Doctrine
 
-**Status:** v1 — Demo Auto Repair reference implementation  
+**Status:** v1 — LugsNPlugs reference implementation  
 **Sequence:** Authority → Observation → Transport (when proven) → **Setup wiring** (this doc)
 
 **Companions:** [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) · [ark-operator-continuity-doctrine.md](./ark-operator-continuity-doctrine.md) · [firebase-push-setup-checklist.md](./firebase-push-setup-checklist.md)
@@ -40,7 +40,7 @@ ARK SMS sends push via `FirebasePushTransport` → FCM HTTP v1. Flutter register
 ```bash
 cd arksmsv2
 ./infra/scripts/firebase-mobile-push-setup.sh \
-  --project-id demo-auto-ark-mobile \
+  --project-id lugsnplugs-ark-mobile \
   --service-account ~/Downloads/*-firebase-adminsdk-*.json \
   --google-services ~/Downloads/google-services.json \
   --google-service-info ~/Downloads/GoogleService-Info.plist \
@@ -49,15 +49,15 @@ cd arksmsv2
 
 `ark-mobile` defaults to a sibling checkout (`../ark-mobile` relative to `arksmsv2`). Override with `--ark-mobile-dir` when layout differs.
 
-**Alternative:** `./infra/coolify/ensure-demo-auto-firebase-push.sh` — idempotent production wiring (preferred for ops).
+**Alternative:** `./infra/coolify/ensure-lugsnplugs-firebase-push.sh` — idempotent production wiring (preferred for ops).
 
-## Production wiring (Demo Auto Repair)
+## Production wiring (LugsNPlugs)
 
 | Item | Value |
 | --- | --- |
-| Firebase project | `demo-auto-ark-mobile` |
-| Android package | `com.arksms.ark_mobile` |
-| iOS bundle ID | `com.arksms.arkMobile` |
+| Firebase project | `lugsnplugs-ark-mobile` |
+| Android package | `com.lugsnplugs.ark_mobile` |
+| iOS bundle ID | `com.lugsnplugs.arkMobile` |
 | Server operational check | `php artisan ark:mobile-push:verify` |
 | Host credentials file | `/data/ark-shared/storage/app/private/firebase-mobile-service-account.json` |
 | Container env | `FIREBASE_CREDENTIALS=/app/storage/app/private/firebase-mobile-service-account.json` |
@@ -65,7 +65,7 @@ cd arksmsv2
 | Shop toggle only | `mobile_push.enabled` — dispatch on/off per shop |
 | Settings surface | `/app/settings/shop?section=communications&communications-tab=mobile` |
 
-**Do not** point `FIREBASE_CREDENTIALS` at `/data/ark-shared/...` host paths inside the container — use `/app/storage/app/private/...`. Run `infra/coolify/ensure-demo-auto-firebase-push.sh` after env-lock or deploy if push breaks.
+**Do not** point `FIREBASE_CREDENTIALS` at `/data/ark-shared/...` host paths inside the container — use `/app/storage/app/private/...`. Run `infra/coolify/ensure-lugsnplugs-firebase-push.sh` after env-lock or deploy if push breaks.
 
 Production enablement stores credentials on the **mounted platform file**, not in shop settings JSON. Shop settings hold only the dispatch toggle.
 
@@ -111,7 +111,7 @@ If any of those stop, Firebase has leaked across the authority boundary — that
 - Committing `google-services.json`, `GoogleService-Info.plist`, or Admin SDK JSON
 - Using Firebase Auth, Firestore, Realtime Database, Functions, Analytics, or Remote Config as ARK authority
 - Treating FCM token as device authority (token is a transport hint on `mobile_devices`)
-- Enabling push before observation justified transport (see Pressure First) — **Demo Auto Repair exception:** Portable Station Phase 1 operational cert earned transport for advisor continuity
+- Enabling push before observation justified transport (see Pressure First) — **LugsNPlugs exception:** Portable Station Phase 1 operational cert earned transport for advisor continuity
 
 ## Agent checklist
 
@@ -122,11 +122,10 @@ When touching mobile push setup:
 3. Use `firebase-mobile-push-setup.sh` for repeatability
 4. Verify `isOperational()` after production changes
 5. Document APNs gap explicitly if iOS untested
-6. Append `IMPLEMENTATION_LOG.md` when production push state changes
 
 ## Related
 
 - `infra/scripts/firebase-mobile-push-setup.sh`
 - `ark-mobile/docs/firebase-transport-only.md`
 - `docs/product/certifications/portable-station-phase-1.md`
-- doctrine `ark-firebase-mobile-push-setup.mdc`
+- `.cursor/rules/ark-firebase-mobile-push-setup.mdc`

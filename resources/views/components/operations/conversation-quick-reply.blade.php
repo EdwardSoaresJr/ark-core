@@ -18,6 +18,9 @@
     'nudgeKey' => null,
     'entityKey' => null,
     'initialBody' => null,
+    'actionsMenu' => false,
+    'sendUrl' => null,
+    'platformBacked' => false,
 ])
 
 @php
@@ -33,6 +36,7 @@
     use App\Ark\Operations\OperationsFeatures;
     use App\Ark\Operations\RepairOrders\RepairOrder;
 
+    $square = app(App\Ark\Operations\Payments\CardPresentCaptureProjection::class);
     $integrations = app(App\Ark\Operations\Settings\ShopIntegrationCredentials::class);
     $sendProjectionService = app(RepairOrderConversationSendProjection::class);
     $smsScheduleProjection = app(ScheduledOutboundSmsProjection::class);
@@ -123,16 +127,16 @@
         $canEmailEstimate = $hasEstimateContext && collect($repairOrderOptions)->contains(
             fn (array $option): bool => ($option['estimate']['can_email'] ?? false),
         );
-        $canSmsPayment = $hasPaymentContext && collect($repairOrderOptions)->contains(
+        $canSmsPayment = $square->portalPayEnabled() && $hasPaymentContext && collect($repairOrderOptions)->contains(
             fn (array $option): bool => ($option['payment']['can_sms'] ?? false),
         );
-        $canEmailPayment = $hasPaymentContext && collect($repairOrderOptions)->contains(
+        $canEmailPayment = $square->portalPayEnabled() && $hasPaymentContext && collect($repairOrderOptions)->contains(
             fn (array $option): bool => ($option['payment']['can_email'] ?? false),
         );
-        $canSmsDeposit = $hasDepositContext && collect($repairOrderOptions)->contains(
+        $canSmsDeposit = $square->portalPayEnabled() && $hasDepositContext && collect($repairOrderOptions)->contains(
             fn (array $option): bool => ($option['deposit']['can_sms'] ?? false),
         );
-        $canEmailDeposit = $hasDepositContext && collect($repairOrderOptions)->contains(
+        $canEmailDeposit = $square->portalPayEnabled() && $hasDepositContext && collect($repairOrderOptions)->contains(
             fn (array $option): bool => ($option['deposit']['can_email'] ?? false),
         );
         $canSmsInspection = $hasInspectionContext && collect($repairOrderOptions)->contains(
@@ -144,8 +148,8 @@
     }
 
     $showEstimateActions = $hasEstimateContext;
-    $showPaymentActions = $hasPaymentContext;
-    $showDepositActions = $hasDepositContext;
+    $showPaymentActions = $square->portalPayEnabled() && $hasPaymentContext;
+    $showDepositActions = $square->portalPayEnabled() && $hasDepositContext;
     $showInspectionActions = $hasInspectionContext;
     $canSendEstimate = $showEstimateActions;
     $canSendPayment = $showPaymentActions;
@@ -162,6 +166,7 @@
             $messageActions[] = [
                 'key' => $action->value,
                 'label' => $action->label(),
+                'color' => MessageActionsSettings::color($action),
                 'url' => route('operations.customers.conversation-actions.send', [
                     'customer' => $customer,
                     'messageAction' => $action->value,
@@ -187,7 +192,7 @@
     $callHref = PhoneNumber::telUri($customer->phone);
     $showSmsComposer = $canSendSms;
     $showSmsUnavailableNotice = filled($customer->phone)
-        && $integrations->messagingConfigured()
+        && $integrations->twilioConfigured()
         && ! $canSendSms
         && filled($smsBlockedReason);
     $showCommsToolbar = $showSmsComposer
@@ -214,8 +219,13 @@
             @endif
             data-ark-workspace-dirty="off"
             data-ark-conversation-composer
+            @if ($platformBacked)
+                data-platform-backed="1"
+            @endif
             x-data="arkConversationQuickReply(@js([
-                'sendUrl' => route('operations.customers.conversation-messages.store', $customer),
+                'sendUrl' => filled($sendUrl)
+                    ? $sendUrl
+                    : route('operations.customers.conversation-messages.store', $customer),
                 'repairOrderId' => $repairOrderId,
                 'sendEstimateUrl' => $sendEstimateUrl,
                 'cancelScheduledEstimateUrl' => $cancelScheduledEstimateUrl,
@@ -257,6 +267,7 @@
                 'nudgeKey' => $nudgeKey,
                 'entityKey' => $entityKey,
                 'initialBody' => $initialBody,
+                'platformBacked' => (bool) $platformBacked,
             ]))"
             {{ $attributes->class(['border-t border-slate-200 bg-slate-50/40'])->except('id') }}
         >
@@ -343,8 +354,57 @@
                     >Cancel</button>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2 px-3 py-2" aria-label="Conversation commands">
-                @if ($callHref)
+            <div @class(['ops-comms-composer-stack', 'ops-comms-composer-stack--compact' => $actionsMenu])>
+            <div @class(['flex flex-wrap items-center gap-2 px-3 py-2', 'ops-comms-composer-stack__tools' => $actionsMenu, 'justify-between' => $actionsMenu]) aria-label="Conversation commands">
+                @if ($actionsMenu)
+                    <details
+                        class="ops-comms-actions"
+                        x-ref="actionsMenu"
+                        @toggle="onActionsMenuToggle($event)"
+                        @click.outside="closeActionsMenu()"
+                    >
+                        <summary class="ops-comms-actions__summary">Actions</summary>
+                        <div class="ops-comms-actions__panel">
+                            @if ($callHref)
+                                <a href="{{ $callHref }}" class="ops-comms-actions__item">Call</a>
+                            @endif
+                            @if ($canSendEstimate)
+                                <button type="button" class="ops-comms-actions__item" :disabled="sending" @click.stop="sendEstimate('sms')">Send Estimate</button>
+                            @endif
+                            @if ($canSendInspection)
+                                <button type="button" class="ops-comms-actions__item" :disabled="sending" @click.stop="sendInspectionLink()">Send Inspection</button>
+                            @endif
+                            @if ($scheduleHref)
+                                <a href="{{ $scheduleHref }}" class="ops-comms-actions__item">Schedule</a>
+                            @endif
+                            @if ($canSendPayment)
+                                <button type="button" class="ops-comms-actions__item" :disabled="sending" @click.stop="sendPaymentLink('sms')">Send Pay Link</button>
+                            @endif
+                            @if ($showSmsComposer)
+                                <label class="ops-comms-actions__item">
+                                    Attach file
+                                    <input
+                                        x-ref="attachmentInput"
+                                        type="file"
+                                        class="hidden"
+                                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                        @change="pickAttachment($event)"
+                                    >
+                                </label>
+                            @endif
+                            @foreach ($messageActions as $messageAction)
+                                <button
+                                    type="button"
+                                    class="ops-comms-actions__item"
+                                    @if (($messageAction['color'] ?? 'neutral') !== 'neutral') style="box-shadow: inset 3px 0 0 {{ \App\Ark\Operations\Communications\CommunicationsAccentColor::swatch($messageAction['color']) }}" @endif
+                                    :disabled="sending"
+                                    @click.stop="sendMessageAction(@js($messageAction['key']))"
+                                >{{ $messageAction['label'] }}</button>
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
+                @if (! $actionsMenu && $callHref)
                     <a
                         href="{{ $callHref }}"
                         class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
@@ -408,6 +468,7 @@
                         </template>
                     </div>
                 @endif
+                @if (! $actionsMenu)
                 @if (($canSendEstimate || $canSendPayment || $canSendDeposit) && $sendEstimateUrl === null && $sendPaymentUrl === null && $sendDepositUrl === null && count($repairOrderOptions) > 1)
                     <select
                         x-model="selectedRepairOrderId"
@@ -640,6 +701,7 @@
                                         type="button"
                                         role="menuitem"
                                         class="ops-comms-menu__item"
+                                        @if (($messageAction['color'] ?? 'neutral') !== 'neutral') style="box-shadow: inset 3px 0 0 {{ \App\Ark\Operations\Communications\CommunicationsAccentColor::swatch($messageAction['color']) }}" @endif
                                         :disabled="sending"
                                         @click.stop="moreMenuOpen = false; sendMessageAction(@js($messageAction['key']))"
                                     >{{ $messageAction['label'] }}</button>
@@ -683,6 +745,7 @@
                         Remove
                     </button>
                 @endif
+                @endif
             </div>
 
             <div x-show="vinWarningOpen" x-cloak class="ops-estimate-vin-warning mx-3 mb-2">
@@ -705,7 +768,14 @@
                 </div>
             </div>
 
-            <div x-show="showSmsComposer && open" x-cloak class="grid gap-1.5 border-t border-slate-200 px-3 py-2">
+            <div
+                x-show="showSmsComposer && open"
+                x-cloak
+                @class([
+                    'grid gap-1.5 border-t border-slate-200 px-3 py-2',
+                    'ops-comms-composer-stack__input' => $actionsMenu,
+                ])
+            >
                 <textarea
                     x-ref="replyBody"
                     x-model="body"
@@ -725,6 +795,7 @@
                     @endif
                 </div>
                 <p x-show="error" x-cloak class="text-xs font-semibold text-rose-700" x-text="error"></p>
+            </div>
             </div>
             <div x-show="error && ! open" x-cloak class="mx-3 mb-2 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs text-rose-950" role="alert">
                 <p class="font-semibold">Could not send</p>

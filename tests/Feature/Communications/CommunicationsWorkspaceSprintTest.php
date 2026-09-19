@@ -1,18 +1,21 @@
 <?php
 
+use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Communications\CommunicationsNeedsYou;
 use App\Ark\Operations\Communications\CommunicationsQueueResolver;
-use App\Ark\Operations\Communications\CommunicationEvent;
+use App\Ark\Operations\Communications\CommunicationsWorkspaceContextBuilder;
+use App\Ark\Operations\Communications\CommunicationsWorkspaceIdentityProjection;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationMessage;
-use App\Ark\Operations\Conversations\ConversationWaitingOn;
 use App\Ark\Operations\Conversations\ConversationResolver;
+use App\Ark\Operations\Conversations\ConversationWaitingOn;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Events\OperationalEventName;
+use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Leads\Lead;
-use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\Leads\LeadState;
 use App\Ark\Operations\Recommendations\RecommendationResolution;
@@ -31,11 +34,14 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
+use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->seed(RepairOrderStatusCatalogSeeder::class);
-    bindFakeOutboundSms();
+    fakeCommsWorkspaceTwilio();
+    config()->set('services.twilio.auth_token', 'test-token');
+    config()->set('services.twilio.account_sid', 'ACtest');
     config()->set('broadcasting.default', 'null');
 
     ShopSettings::current()->update([
@@ -44,39 +50,48 @@ beforeEach(function (): void {
     ]);
 });
 
+function fakeCommsWorkspaceTwilio(string $messageSid = 'SMworkspace001'): void
+{
+    Http::fake([
+        'lookups.twilio.com/*' => Http::response([
+            'calling_country_code' => '1',
+            'country_code' => 'US',
+            'phone_number' => '+17195551234',
+            'national_format' => '(719) 555-1234',
+            'valid' => true,
+            'validation_errors' => null,
+            'line_type_intelligence' => [
+                'error_code' => null,
+                'mobile_country_code' => '310',
+                'mobile_network_code' => '260',
+                'carrier_name' => 'T-Mobile USA',
+                'type' => 'mobile',
+            ],
+        ], 200),
+        'https://api.twilio.com/*' => Http::response([
+            'sid' => $messageSid,
+            'status' => 'queued',
+        ], 201),
+    ]);
+}
+
 function commsWorkspaceAdvisor(): User
 {
     return actingAsLearnCurrentAdvisor();
 }
 
-/**
- * @param  array{concern: string, phone: string, first_name?: string, last_name?: string, email?: string}  $data
- */
-function recordWebsiteLeadForWorkspace(array $data): Lead
-{
-    $name = trim(implode(' ', array_filter([
-        $data['first_name'] ?? null,
-        $data['last_name'] ?? null,
-    ])));
-
-    return app(LeadRecorder::class)->recordWebsiteSubmission([
-        'concern' => $data['concern'],
-        'contact_phone' => $data['phone'],
-        'contact_name' => $name !== '' ? $name : null,
-        'contact_email' => $data['email'] ?? null,
-        'source' => LeadSource::Website,
-    ]);
-}
-
 test('website lead appears in needs attention with turn label', function (): void {
     $advisor = commsWorkspaceAdvisor();
 
-    $lead = recordWebsiteLeadForWorkspace([
+    $this->post(route('public.leads.store'), [
         'concern' => 'Brakes squeal when stopping.',
         'phone' => '719-555-0142',
         'first_name' => 'Jason',
         'last_name' => 'Smith',
-    ]);
+        'source' => LeadSource::Website->value,
+    ])->assertRedirect();
+
+    $lead = Lead::query()->firstOrFail();
     $conversation = Conversation::query()->findOrFail($lead->conversation_id);
 
     expect($conversation->waiting_on)->toBe(ConversationWaitingOn::Shop);
@@ -94,16 +109,19 @@ test('website lead appears in needs attention with turn label', function (): voi
 test('new ro from unmatched website lead carries lead_id so intake prefills name', function (): void {
     $advisor = commsWorkspaceAdvisor();
 
-    $lead = recordWebsiteLeadForWorkspace([
+    $this->post(route('public.leads.store'), [
         'concern' => 'Need front and rear brakes.',
         'phone' => '719-555-0166',
         'email' => 'kyle@example.test',
         'first_name' => 'Kyle',
         'last_name' => 'Kight',
-    ]);
+        'source' => LeadSource::Website->value,
+    ])->assertRedirect();
+
+    $lead = Lead::query()->firstOrFail();
     $conversation = Conversation::query()->findOrFail($lead->conversation_id);
 
-    $identity = app(\App\Ark\Operations\Communications\CommunicationsWorkspaceIdentityProjection::class)
+    $identity = app(CommunicationsWorkspaceIdentityProjection::class)
         ->forConversation($conversation, lead: $lead);
 
     $newRo = collect($identity['actions'])->firstWhere('key', 'new_ro');
@@ -113,11 +131,11 @@ test('new ro from unmatched website lead carries lead_id so intake prefills name
         ->and($identity['known_customer'])->toBeFalse()
         ->and($newRo['url'] ?? null)->toContain('lead_id='.$lead->id);
 
-    $context = app(\App\Ark\Operations\Communications\CommunicationsWorkspaceContextBuilder::class)
+    $context = app(CommunicationsWorkspaceContextBuilder::class)
         ->forConversation($conversation);
 
-    expect($context['sections']['customer']['Email'] ?? null)->toBe('kyle@example.test')
-        ->and($context['link_status'] ?? null)->toBe('Lead linked');
+    expect($context['sections']['who']['Email'] ?? null)->toBe('kyle@example.test')
+        ->and($context['link_status'] ?? null)->toBe('Lead');
 
     $this->actingAs($advisor)
         ->followingRedirects()
@@ -128,19 +146,21 @@ test('new ro from unmatched website lead carries lead_id so intake prefills name
         ->assertSee('kyle@example.test', false);
 });
 
-test('advisor reply moves conversation to waiting on customer and records first contact', function (): void {
+test('advisor reply records first contact and keeps Needs attention until follow-up', function (): void {
     $advisor = commsWorkspaceAdvisor();
 
-    $lead = recordWebsiteLeadForWorkspace([
+    $this->post(route('public.leads.store'), [
         'concern' => 'Check engine light is on.',
         'phone' => '719-555-0199',
         'first_name' => 'Maria',
         'last_name' => 'Lopez',
-    ]);
+        'source' => LeadSource::Website->value,
+    ])->assertRedirect();
+
+    $lead = Lead::query()->firstOrFail();
     $conversation = Conversation::query()->findOrFail($lead->conversation_id);
 
-    bindFakeOutboundSms('SMleadreply001');
-    seedMobileSmsCapability('7195550199');
+    fakeCommsWorkspaceTwilio('SMleadreply001');
     $this->travel(2)->seconds();
 
     $this->actingAs($advisor)
@@ -152,27 +172,29 @@ test('advisor reply moves conversation to waiting on customer and records first 
     $conversation->refresh();
     $lead->refresh();
 
-    expect($conversation->waiting_on)->toBe(ConversationWaitingOn::Customer)
+    expect($conversation->waiting_on)->toBe(ConversationWaitingOn::Shop)
         ->and($lead->first_contacted_at)->not->toBeNull();
 
     $queue = app(CommunicationsQueueResolver::class)->resolveAttention($advisor);
 
-    expect(collect($queue['needs_attention'])->pluck('conversation_id'))->not->toContain($conversation->id);
+    expect(collect($queue['needs_attention'])->pluck('conversation_id'))->toContain($conversation->id);
 });
 
 test('customer inbound sms returns conversation to needs attention', function (): void {
     $advisor = commsWorkspaceAdvisor();
 
-    $lead = recordWebsiteLeadForWorkspace([
+    $this->post(route('public.leads.store'), [
         'concern' => 'Need an oil change.',
         'phone' => '719-555-0200',
         'first_name' => 'Sam',
         'last_name' => 'Rivera',
-    ]);
+        'source' => LeadSource::Website->value,
+    ])->assertRedirect();
+
+    $lead = Lead::query()->firstOrFail();
     $conversation = Conversation::query()->findOrFail($lead->conversation_id);
 
-    bindFakeOutboundSms('SMleadreply002');
-    seedMobileSmsCapability('7195550200');
+    fakeCommsWorkspaceTwilio('SMleadreply002');
     $this->travel(2)->seconds();
 
     $this->actingAs($advisor)
@@ -181,7 +203,15 @@ test('customer inbound sms returns conversation to needs attention', function ()
         ])
         ->assertOk();
 
-    ingestInboundSms('7195550200', 'Thursday morning works.', 'SMcustomerreply001');
+    config()->set('services.twilio.auth_token', null);
+
+    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
+        'MessageSid' => 'SMcustomerreply001',
+        'From' => '+17195550200',
+        'To' => '+17195559999',
+        'Body' => 'Thursday morning works.',
+        'NumMedia' => '0',
+    ])->assertOk();
 
     expect(Lead::query()->where('conversation_id', $conversation->id)->count())->toBe(1);
 
@@ -197,12 +227,15 @@ test('customer inbound sms returns conversation to needs attention', function ()
 test('lead selection redirects to conversation thread', function (): void {
     $advisor = commsWorkspaceAdvisor();
 
-    $lead = recordWebsiteLeadForWorkspace([
+    $this->post(route('public.leads.store'), [
         'concern' => 'AC not cold.',
         'phone' => '719-555-0301',
         'first_name' => 'Taylor',
         'last_name' => 'Reed',
-    ]);
+        'source' => LeadSource::Website->value,
+    ])->assertRedirect();
+
+    $lead = Lead::query()->firstOrFail();
 
     $response = $this->actingAs($advisor)
         ->get(CommunicationsNeedsYou::url(['lead' => $lead->id]));
@@ -217,12 +250,15 @@ test('lead selection redirects to conversation thread', function (): void {
 test('send estimate from conversation thread stays on same conversation', function (): void {
     $advisor = commsWorkspaceAdvisor();
 
-    $lead = recordWebsiteLeadForWorkspace([
+    $this->post(route('public.leads.store'), [
         'concern' => 'Brake pedal soft.',
         'phone' => '719-555-0302',
         'first_name' => 'Chris',
         'last_name' => 'Allen',
-    ]);
+        'source' => LeadSource::Website->value,
+    ])->assertRedirect();
+
+    $lead = Lead::query()->firstOrFail();
     $conversation = Conversation::query()->findOrFail($lead->conversation_id);
 
     $customer = Customer::query()->create([
@@ -260,8 +296,7 @@ test('send estimate from conversation thread stays on same conversation', functi
         'repair_order_id' => $repairOrder->id,
     ]);
 
-    bindFakeOutboundSms('SMestthread001');
-    seedMobileSmsCapability('7195550302');
+    fakeCommsWorkspaceTwilio('SMestthread001');
 
     $response = $this->actingAs($advisor)
         ->postJson(route('operations.communications.conversations.send-estimate', $conversation))
@@ -306,8 +341,7 @@ test('conversation thread send payment records sms on the active conversation', 
         'repair_order_id' => $repairOrder->id,
     ]);
 
-    bindFakeOutboundSms('SMpaythread001');
-    seedMobileSmsCapability('7195550404');
+    fakeCommsWorkspaceTwilio('SMpaythread001');
 
     $response = $this->actingAs($advisor)
         ->postJson(route('operations.communications.conversations.send-payment', $conversation), [
@@ -393,8 +427,8 @@ test('estimate approval after conversation send retires today estimate follow-up
 
     $repairOrder->forceFill(['status' => RepairOrderStatus::Approved])->save();
 
-    app(\App\Ark\Operations\Events\OperationalEventRecorder::class)->record(
-        \App\Ark\Operations\Events\OperationalEventName::RepairOrderLifecycleChanged,
+    app(OperationalEventRecorder::class)->record(
+        OperationalEventName::RepairOrderLifecycleChanged,
         $repairOrder->fresh(),
         actor: $advisor,
         payload: [

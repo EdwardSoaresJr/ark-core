@@ -45,7 +45,14 @@
 
     <div id="conversation-messages-relationship" class="divide-y divide-slate-100">
         @forelse ($hubCommsTimeline as $event)
-            <div data-conversation-row data-filter="{{ $event->hubFilter() }}">
+            <div
+                data-conversation-row
+                data-filter="{{ $event->hubFilter() }}"
+                @if (filled($event->metadata['platform_message_public_id'] ?? null))
+                    data-platform-message-id="{{ $event->metadata['platform_message_public_id'] }}"
+                @endif
+                data-occurred-at="{{ $event->occurredAt->utc()->toIso8601String() }}"
+            >
                 @include('operations.timeline.partials.hub-event-row', ['event' => $event])
             </div>
         @empty

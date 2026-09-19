@@ -2,6 +2,8 @@
 
 use App\Ark\Operations\Portal\CreatePortalShortLinkAction;
 use App\Ark\Operations\Portal\PortalShortLink;
+use App\Ark\Operations\Portal\PortalShortLinkPurpose;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Support\Carbon;
 
 test('portal short link redirects to destination', function () {
@@ -19,6 +21,29 @@ test('portal short link reuses active destination', function () {
 
     expect($action->execute($destination))->toBe($action->execute($destination))
         ->and(PortalShortLink::query()->count())->toBe(1);
+});
+
+test('portal short link reuses one code per repair order purpose', function () {
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::Estimate);
+    $action = app(CreatePortalShortLinkAction::class);
+    $first = route('portal.estimates.show', ['token' => str_repeat('d', 64)]);
+    $second = route('portal.estimates.show', ['token' => str_repeat('e', 64)]);
+
+    $firstUrl = $action->execute($first, null, $repairOrder, PortalShortLinkPurpose::Estimate);
+    $secondUrl = $action->execute($second, null, $repairOrder, PortalShortLinkPurpose::Estimate);
+    $paymentUrl = $action->execute(
+        route('portal.invoice-pay.show', ['token' => str_repeat('f', 64)]),
+        null,
+        $repairOrder,
+        PortalShortLinkPurpose::Payment,
+    );
+
+    expect($secondUrl)->toBe($firstUrl)
+        ->and($paymentUrl)->not->toBe($firstUrl)
+        ->and(PortalShortLink::query()->count())->toBe(2);
+
+    $this->get(route('portal.short.redirect', ['code' => (string) str($firstUrl)->after('/go/')]))
+        ->assertRedirect($second);
 });
 
 test('expired portal short link is not found', function () {

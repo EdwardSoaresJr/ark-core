@@ -25,6 +25,7 @@ final class CustomerFacingDocumentBoundary
         private readonly CustomerPartPresentationPolicyResolver $partPresentationPolicyResolver,
         private readonly CustomerPartPresentationProfileResolver $partPresentationProfileResolver,
         private readonly CustomerFacingEstimateStatus $estimateStatus,
+        private readonly CustomerDocumentScopeNarrative $scopeNarrative,
     ) {}
 
     /** @var list<string> */
@@ -175,12 +176,58 @@ final class CustomerFacingDocumentBoundary
         }
 
         $snapshot['concerns'] = $concerns;
+        $snapshot = $this->scopeNarrative->present($snapshot);
 
         if (isset($snapshot['repair_order']) && is_array($snapshot['repair_order'])) {
             $snapshot['repair_order']['status_label'] = $this->estimateStatus->labelForSnapshot($snapshot);
         }
 
+        $snapshot['pdf_work_section_label'] = $this->workSectionLabel($snapshot);
+        $snapshot = $this->presentVisitNarrative($snapshot);
+
         return $snapshot;
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return array<string, mixed>
+     */
+    private function presentVisitNarrative(array $snapshot): array
+    {
+        $raw = trim((string) data_get($snapshot, 'intake.visit_reason', ''));
+        $preferredVisit = null;
+        $concern = $raw;
+
+        if ($raw !== '' && preg_match('/^Preferred visit:\s*(.+)$/im', $raw, $match) === 1) {
+            $preferredVisit = trim($match[1]);
+            $concern = trim((string) preg_replace('/^Preferred visit:\s*.+$/im', '', $raw));
+        }
+
+        $snapshot['customer_visit'] = [
+            'concern' => $concern !== '' ? $concern : null,
+            'preferred_visit' => $preferredVisit !== '' ? $preferredVisit : null,
+        ];
+
+        return $snapshot;
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     */
+    private function workSectionLabel(array $snapshot): string
+    {
+        $documentType = (string) ($snapshot['document_type'] ?? 'estimate');
+        $concerns = collect($snapshot['concerns'] ?? [])->filter(fn (mixed $concern): bool => is_array($concern));
+
+        if ($documentType === 'invoice') {
+            return 'Work Performed';
+        }
+
+        if ($concerns->isNotEmpty() && $concerns->every(fn (array $concern): bool => ($concern['disposition'] ?? '') === RepairOrderConcernDisposition::Approved->value)) {
+            return 'Approved Work';
+        }
+
+        return 'Recommended Work';
     }
 
     /**

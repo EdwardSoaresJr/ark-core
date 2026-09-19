@@ -24,19 +24,148 @@
 
         .document {
             width: 100%;
+            min-height: 10.05in;
+            display: flex;
+            flex-direction: column;
         }
 
         @include('operations.documents.partials._pdf-header-styles')
 
         @include('operations.documents.partials._pdf-concern-chrome')
 
-        .document-title {
+        .concern-status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.02in 0.08in;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            white-space: nowrap;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .concern-status-pill--approved {
+            border-color: #86efac;
+            background: #ecfdf5;
+            color: #166534;
+        }
+
+        .visit-concern-body {
             margin-top: 0.04in;
+            white-space: pre-line;
+            color: #334155;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
+        .recommendation {
+            margin-top: 0.12in;
+        }
+
+        .concern {
+            overflow: visible;
+            break-inside: auto;
+            page-break-inside: auto;
+        }
+
+        .concern-header-status {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.04in;
+        }
+
+        .narrative-stack {
+            padding: 0.08in 0.11in 0 0.12in;
+        }
+
+        .findings-panel {
+            margin-top: 0.06in;
+            padding: 0.08in 0.1in;
+            border: 1px solid #dbeafe;
+            background: #f8fafc;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .findings-body {
             color: #0f172a;
-            font-size: 20px;
-            font-weight: 900;
-            letter-spacing: -0.02em;
-            line-height: 1.05;
+            font-size: 10.5px;
+            font-weight: 500;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        .charge-list {
+            margin-top: 0.04in;
+            padding: 0.04in 0.11in 0.05in 0.12in;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .charge-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.12in;
+            align-items: baseline;
+            padding: 0.035in 0;
+        }
+
+        .charge-desc {
+            min-width: 0;
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 650;
+            line-height: 1.35;
+        }
+
+        .charge-qty {
+            margin-left: 0.06in;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .charge-heading {
+            margin: 0.06in 0 0.02in;
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .charge-detail {
+            margin-top: 0.01in;
+            color: #64748b;
+            font-size: 9.5px;
+            font-weight: 600;
+        }
+
+        .charge-amount {
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .charge-row--total {
+            margin-top: 0.04in;
+            padding-top: 0.06in;
+            border-top: 1px solid #94a3b8;
+        }
+
+        .charge-row--total .charge-desc,
+        .charge-row--total .charge-amount {
+            font-size: 12px;
+            font-weight: 800;
         }
 
         h1,
@@ -447,7 +576,11 @@
         }
 
         .document-footer {
-            margin-top: 0.12in;
+            margin-top: 0.1in;
+            padding-top: 0.06in;
+            border-top: 1px solid #94a3b8;
+            break-inside: auto;
+            page-break-inside: auto;
         }
 
         .footer-notes {
@@ -503,44 +636,44 @@
         }
 
         .footer-decision-area {
-            border: 1px solid #94a3b8;
-            padding: 0.09in 0.1in 0.08in;
-            break-inside: avoid;
-            page-break-inside: avoid;
+            padding: 0;
+            border: 0;
+            break-inside: auto;
+            page-break-inside: auto;
         }
 
         .footer-decision-heading {
-            display: flex;
-            align-items: center;
-            gap: 0.1in;
-            margin: 0 0 0.08in;
+            margin: 0;
             color: #0f172a;
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: 800;
             letter-spacing: 0.1em;
-            line-height: 1;
+            line-height: 1.15;
             text-transform: uppercase;
         }
 
-        .footer-decision-heading::after {
-            content: '';
-            flex: 1 1 auto;
-            height: 1px;
-            background: #cbd5e1;
+        .footer-summary-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.1in;
+            margin: 0 0 0.04in;
         }
 
         .footer-decision-body {
             display: grid;
-            grid-template-columns: minmax(0, 1.15fr) 2.45in;
-            gap: 0.14in;
+            grid-template-columns: minmax(0, 1.2fr) 2.2in;
+            gap: 0.1in;
             align-items: start;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
         .footer-decision-totals .totals {
             border: 0;
             border-left: 1px solid #cbd5e1;
             background: transparent;
-            padding: 0 0 0 0.12in;
+            padding: 0 0 0 0.1in;
         }
 
         .footer-decision-totals .totals--with-forecast {
@@ -640,10 +773,10 @@
         }
 
         .totals-row.final {
-            margin-top: 0.04in;
-            padding-top: 0.06in;
+            margin-top: 0.03in;
+            padding-top: 0.04in;
             border-top: 1px solid #94a3b8;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 800;
             color: #0f172a;
         }
@@ -712,44 +845,24 @@
         .closing-authorization {
             margin: 0;
             color: #334155;
-            font-size: 8.5px;
-            font-weight: 500;
-            line-height: 1.4;
-        }
-
-        .closing-approval {
-            margin-top: 0.08in;
-            padding-top: 0.07in;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .closing-status-row {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 0.1in;
-        }
-
-        .closing-status-label {
-            color: #64748b;
             font-size: 8px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            font-weight: 500;
+            line-height: 1.3;
         }
 
         .closing-status-value {
             color: #0f172a;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             letter-spacing: -0.01em;
+            white-space: nowrap;
         }
 
         .closing-signature-row {
             display: grid;
             grid-template-columns: minmax(0, 1.4fr) minmax(0.85in, 0.85fr);
-            gap: 0.12in;
-            margin-top: 0.1in;
+            gap: 0.1in;
+            margin-top: 0.06in;
         }
 
         .closing-signature-field {
@@ -851,6 +964,61 @@
             background: #dc2626;
         }
 
+        .footer-disclosure {
+            margin: 0.06in 0 0;
+            padding-top: 0.05in;
+            border-top: 1px solid #e2e8f0;
+            color: #475569;
+            font-size: 7.5px;
+            font-weight: 500;
+            line-height: 1.35;
+        }
+
+        .footer-disclosure span {
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .repair-portal-ad {
+            display: flex;
+            align-items: center;
+            gap: 0.1in;
+            margin-top: 0.05in;
+            padding-top: 0.05in;
+            border-top: 1px solid #e2e8f0;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .repair-portal-ad img {
+            display: block;
+            flex: 0 0 64px;
+            width: 64px;
+            height: 64px;
+        }
+
+        .repair-portal-ad-copy {
+            min-width: 0;
+        }
+
+        .repair-portal-ad-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 8.5px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .repair-portal-ad-detail {
+            margin: 0.02in 0 0;
+            color: #475569;
+            font-size: 8px;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
         .contact-line {
             margin-top: 0.02in;
         }
@@ -870,14 +1038,13 @@
         ])
 
         @php
-            $pdfVisitReason = trim((string) ($snapshot['intake']['visit_reason'] ?? ''));
+            $pdfVisitConcern = trim((string) ($snapshot['customer_visit']['concern'] ?? $snapshot['intake']['visit_reason'] ?? ''));
         @endphp
 
-        @if ($pdfVisitReason !== '')
+        @if ($pdfVisitConcern !== '')
             <section class="section">
-                <p class="eyebrow">Reason for Visit</p>
-                <p style="margin-top: 0.04in; color: #64748b; font-size: 9px; font-weight: 700;">Customer reported:</p>
-                <p style="margin-top: 0.04in; white-space: pre-line; color: #334155; font-size: 10px; line-height: 1.45;">{{ $pdfVisitReason }}</p>
+                <p class="eyebrow">Customer Concern</p>
+                <p class="visit-concern-body">{{ $pdfVisitConcern }}</p>
             </section>
         @endif
 
@@ -902,10 +1069,6 @@
                     })
                     ->values();
             @endphp
-
-            @if ($orderedConcerns->isNotEmpty())
-                <p class="eyebrow" style="margin-bottom: 0.08in;">Recommended Work</p>
-            @endif
 
             @foreach ($orderedConcerns as $concern)
                 @php

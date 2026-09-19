@@ -2,17 +2,29 @@
 
 namespace App\Ark\Platform\Http;
 
+use App\Ark\Install\InstallationIdentity;
+use App\Ark\Mobile\Push\NotifyMobileLifecyclePushAction;
 use App\Ark\Operations\Communications\CommsInterruptBroadcast;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
+use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\InboundConversationPayload;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsConsentStatus;
 use App\Ark\Operations\Messaging\InboundSmsConversationIngress;
+use App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Operations\Telephony\Events\CallSessionUpdated;
-use App\Ark\Operations\Telephony\Events\IncomingCallReceived;
-use App\Ark\Install\InstallationIdentity;
+use App\Ark\Operations\Telephony\CallSession;
+use App\Ark\Operations\Telephony\CallSessionMediaCaptureStatus;
+use App\Ark\Operations\Telephony\CallSessionRecorder;
+use App\Ark\Operations\Telephony\CallSessionStatus;
+use App\Ark\Operations\Telephony\IncomingCallContextBroadcaster;
+use App\Ark\Operations\Telephony\IncomingCallPayload;
+use App\Ark\Operations\Telephony\Media\CallSessionMediaMetadata;
+use App\Ark\Operations\Telephony\ProcessIncomingCallAction;
+use App\Ark\Operations\Telephony\TelephonyProviderType;
+use App\Ark\Platform\Communications\ManagedCommunicationsGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +37,9 @@ final class FabricIngressController
     public function __construct(
         private readonly CommsInterruptBroadcast $interruptBroadcast,
         private readonly InboundSmsConversationIngress $smsIngress,
+        private readonly ProcessIncomingCallAction $incomingCalls,
+        private readonly CallSessionRecorder $callSessions,
+        private readonly IncomingCallContextBroadcaster $callBroadcaster,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -46,11 +61,72 @@ final class FabricIngressController
         return match ((string) $data['operation']) {
             'voice.incoming.started' => $this->voiceIncomingStarted($payload),
             'voice.incoming.ended' => $this->voiceIncomingEnded($payload),
+            'voice.recording.available' => $this->voiceRecordingAvailable($payload, voicemail: false),
+            'voice.voicemail.available' => $this->voiceRecordingAvailable($payload, voicemail: true),
             'sms.incoming.received' => $this->smsIncomingReceived($payload),
             'sms.conversation.updated' => $this->smsConversationUpdated($payload),
+            'sms.delivery.updated' => $this->smsDeliveryUpdated($payload),
             'payments.capture.updated' => $this->paymentsCaptureUpdated($payload),
             default => response()->json(['ok' => false, 'error' => 'unknown_operation'], 422),
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function voiceRecordingAvailable(array $payload, bool $voicemail): JsonResponse
+    {
+        $callSid = (string) ($payload['provider_call_sid'] ?? '');
+        $recordingUrl = (string) ($payload['recording_url'] ?? '');
+        $recordingSid = (string) ($payload['recording_sid'] ?? '');
+        $duration = (int) ($payload['duration_seconds'] ?? 0);
+
+        if ($callSid === '' || $recordingUrl === '') {
+            return response()->json(['ok' => false, 'error' => 'invalid_recording_payload'], 422);
+        }
+
+        $session = CallSession::query()
+            ->where('provider_call_sid', $callSid)
+            ->first();
+
+        if ($session === null) {
+            Log::warning('ark_voice.fabric.recording_session_missing', [
+                'provider_call_sid' => $callSid,
+                'voicemail' => $voicemail,
+            ]);
+
+            return response()->json(['ok' => true, 'applied' => false]);
+        }
+
+        $metadata = CallSessionMediaMetadata::forTwilioWebhook(
+            $recordingUrl,
+            $duration,
+            $recordingSid !== '' ? $recordingSid : null,
+        );
+
+        if ($voicemail) {
+            $session->forceFill([
+                'voicemail_url' => $recordingUrl,
+                'voicemail_sid' => $recordingSid !== '' ? $recordingSid : null,
+                'voicemail_duration_seconds' => $duration > 0 ? $duration : null,
+                'voicemail_capture_status' => CallSessionMediaCaptureStatus::Available,
+                'voicemail_capture_error' => null,
+                'voicemail_media_metadata' => $metadata,
+            ])->saveQuietly();
+
+            app(NotifyMobileLifecyclePushAction::class)->forVoicemail($session->fresh());
+        } else {
+            $session->forceFill([
+                'recording_url' => $recordingUrl,
+                'recording_sid' => $recordingSid !== '' ? $recordingSid : null,
+                'recording_duration_seconds' => $duration > 0 ? $duration : null,
+                'recording_capture_status' => CallSessionMediaCaptureStatus::Available,
+                'recording_capture_error' => null,
+                'recording_media_metadata' => $metadata,
+            ])->saveQuietly();
+        }
+
+        return response()->json(['ok' => true, 'applied' => true, 'call_session_id' => $session->id]);
     }
 
     /**
@@ -63,12 +139,12 @@ final class FabricIngressController
 
         $attempt = null;
         if ($attemptId !== '') {
-            $attempt = \App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt::query()
+            $attempt = PaymentCaptureAttempt::query()
                 ->where('public_id', $attemptId)
                 ->first();
         }
         if ($attempt === null && $idempotencyKey !== '') {
-            $attempt = \App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt::query()
+            $attempt = PaymentCaptureAttempt::query()
                 ->where('idempotency_key', $idempotencyKey)
                 ->first();
         }
@@ -82,7 +158,7 @@ final class FabricIngressController
             return response()->json(['ok' => true, 'applied' => false]);
         }
 
-        app(\App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction::class)
+        app(ApplyPaymentCaptureResultAction::class)
             ->apply($attempt, $payload);
 
         return response()->json(['ok' => true, 'applied' => true]);
@@ -93,11 +169,22 @@ final class FabricIngressController
      */
     private function voiceIncomingStarted(array $payload): JsonResponse
     {
-        $interrupt = $this->callInterrupt($payload);
-        IncomingCallReceived::dispatch($interrupt);
-        $this->interruptBroadcast->show('call', $interrupt);
+        $callPayload = $this->incomingCallPayloadFromFabric($payload, preferStatus: CallSessionStatus::Ringing);
+        if ($callPayload === null) {
+            Log::warning('ark_voice.fabric.inbound_invalid', [
+                'keys' => array_keys($payload),
+            ]);
 
-        return response()->json(['ok' => true]);
+            return response()->json(['ok' => false, 'error' => 'invalid_voice_payload'], 422);
+        }
+
+        $result = $this->incomingCalls->execute($callPayload);
+
+        return response()->json([
+            'ok' => true,
+            'ingested' => $result['created'],
+            'call_session_id' => $result['session']?->id,
+        ]);
     }
 
     /**
@@ -105,16 +192,62 @@ final class FabricIngressController
      */
     private function voiceIncomingEnded(array $payload): JsonResponse
     {
-        $interrupt = $this->callInterrupt($payload);
-        $this->interruptBroadcast->clear(
-            'call',
-            CommsInterruptBroadcast::interruptKey('call', $interrupt),
-        );
-        CallSessionUpdated::dispatch(array_merge($interrupt, [
-            'is_actively_live' => false,
-        ]));
+        $status = CallSessionStatus::fromTwilioStatus((string) ($payload['call_status'] ?? 'completed'));
+        if ($status === CallSessionStatus::Ringing) {
+            $status = CallSessionStatus::Completed;
+        }
 
-        return response()->json(['ok' => true]);
+        $callPayload = $this->incomingCallPayloadFromFabric($payload, preferStatus: $status);
+        if ($callPayload === null) {
+            return response()->json(['ok' => false, 'error' => 'invalid_voice_payload'], 422);
+        }
+
+        $updated = $this->callSessions->updateStatus($callPayload);
+        if ($updated === null) {
+            // Late status with no prior started event — still record for Calls history.
+            [$session] = $this->callSessions->record($callPayload);
+            $this->callBroadcaster->broadcastUpdate($session, null);
+
+            return response()->json(['ok' => true, 'call_session_id' => $session->id]);
+        }
+
+        [$session] = $updated;
+        $this->callBroadcaster->broadcastUpdate($session, null);
+
+        return response()->json(['ok' => true, 'call_session_id' => $session->id]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function incomingCallPayloadFromFabric(array $payload, CallSessionStatus $preferStatus): ?IncomingCallPayload
+    {
+        $providerCallSid = (string) ($payload['provider_call_sid'] ?? $payload['CallSid'] ?? '');
+        $fromPhone = (string) ($payload['from_phone'] ?? $payload['From'] ?? '');
+        $toPhone = (string) ($payload['to_phone'] ?? $payload['To'] ?? '');
+
+        if ($providerCallSid === '' || $fromPhone === '') {
+            // Legacy interrupt-shaped payloads
+            if (array_key_exists('call_session_id', $payload) && filled($payload['display_phone'] ?? null)) {
+                return null; // handled by legacy path — keep null to force callers to use callInterrupt
+            }
+
+            return null;
+        }
+
+        $normalizedFrom = PhoneNumber::normalize($fromPhone) ?? preg_replace('/\D+/', '', $fromPhone) ?? '';
+        $normalizedTo = PhoneNumber::normalize($toPhone);
+
+        return new IncomingCallPayload(
+            provider: TelephonyProviderType::Twilio,
+            providerCallSid: $providerCallSid,
+            fromNumber: $fromPhone,
+            toNumber: $toPhone,
+            normalizedFrom: (string) $normalizedFrom,
+            normalizedTo: $normalizedTo,
+            status: $preferStatus,
+            rawPayload: $payload,
+        );
     }
 
     /**
@@ -146,11 +279,13 @@ final class FabricIngressController
             providerMessageId: $providerMessageId,
             channel: OperationalCommunicationChannel::Sms,
             body: $body,
-            media: [],
+            media: $this->normalizeFabricMedia($payload['media'] ?? []),
             metadata: array_filter([
                 'to_number' => $toPhone !== '' ? $toPhone : null,
                 'source' => 'ark_platform_texting',
                 'opt_out' => $optOut ? true : null,
+                'message_public_id' => $payload['message_public_id'] ?? null,
+                'conversation_public_id' => $payload['conversation_public_id'] ?? null,
             ], fn (mixed $v): bool => $v !== null),
         );
 
@@ -162,7 +297,22 @@ final class FabricIngressController
         }
 
         if ($message === null) {
-            return response()->json(['ok' => true, 'ingested' => false]);
+            // Stage 10: no Core mirror — still raise interrupt from Platform payload.
+            $snippet = trim($body);
+            if (mb_strlen($snippet) > 120) {
+                $snippet = mb_substr($snippet, 0, 117).'…';
+            }
+            $this->interruptBroadcast->show('sms', [
+                'kind' => 'sms',
+                'conversation_message_id' => null,
+                'platform_message_public_id' => $payload['message_public_id'] ?? null,
+                'snippet' => $snippet !== '' ? $snippet : '(text message)',
+                'display_phone' => PhoneNumber::display($fromPhone) ?? $fromPhone,
+                'customer_id' => $result['context']?->customer?->id,
+                'customer_name' => $result['context']?->customer?->name,
+            ]);
+
+            return response()->json(['ok' => true, 'ingested' => false, 'mirrored' => false]);
         }
 
         $snippet = trim($body);
@@ -203,6 +353,70 @@ final class FabricIngressController
         $this->interruptBroadcast->update($kind, $interrupt);
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function smsDeliveryUpdated(array $payload): JsonResponse
+    {
+        if (! ManagedCommunicationsGate::coreMirrorEnabled()) {
+            return response()->json(['ok' => true, 'applied' => false, 'reason' => 'core_mirror_off']);
+        }
+
+        $providerMessageId = (string) ($payload['provider_message_id'] ?? '');
+        $deliveryStatus = (string) ($payload['delivery_status'] ?? '');
+
+        if ($providerMessageId === '' || $deliveryStatus === '') {
+            return response()->json(['ok' => false, 'error' => 'invalid_delivery_payload'], 422);
+        }
+
+        $message = ConversationMessage::query()
+            ->where(function ($query) use ($providerMessageId): void {
+                $query->where('metadata->provider_message_id', $providerMessageId)
+                    ->orWhere('metadata->twilio_message_sid', $providerMessageId);
+            })
+            ->first();
+
+        if ($message === null) {
+            return response()->json(['ok' => true, 'applied' => false]);
+        }
+
+        $metadata = is_array($message->metadata) ? $message->metadata : [];
+        $metadata['delivery_status'] = $deliveryStatus;
+        $metadata['platform_delivery_updated_at'] = now()->toIso8601String();
+        $message->forceFill(['metadata' => $metadata])->saveQuietly();
+
+        return response()->json(['ok' => true, 'applied' => true, 'conversation_message_id' => $message->id]);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function normalizeFabricMedia(mixed $media): array
+    {
+        if (! is_array($media)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($media as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $url = trim((string) ($item['url'] ?? $item['provider_url'] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+            $out[] = [
+                'url' => $url,
+                'content_type' => (string) ($item['content_type'] ?? 'application/octet-stream'),
+                'provider_media_sid' => $item['provider_media_sid'] ?? null,
+                'byte_size' => $item['byte_size'] ?? null,
+            ];
+        }
+
+        return $out;
     }
 
     private function markCustomerOptedOut(Customer $customer): void

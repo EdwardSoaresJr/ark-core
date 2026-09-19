@@ -15,6 +15,7 @@ final readonly class RepairOrderFooterAction
         public ?string $modalTask = null,
         public bool $isPrint = false,
         public ?string $printDocument = null,
+        public ?string $blockedReason = null,
     ) {}
 
     public static function none(): self
@@ -49,6 +50,7 @@ final readonly class RepairOrderFooterAction
         ?string $title = null,
         bool $isPrint = false,
         ?string $printDocument = null,
+        ?string $blockedReason = null,
     ): self {
         return new self(
             key: $key,
@@ -59,6 +61,7 @@ final readonly class RepairOrderFooterAction
             opensInNewTab: $opensInNewTab,
             isPrint: $isPrint,
             printDocument: $printDocument,
+            blockedReason: $blockedReason,
         );
     }
 }

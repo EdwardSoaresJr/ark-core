@@ -7,6 +7,7 @@ use App\Ark\Operations\Appointments\AppointmentCapacityEnforcement;
 use App\Ark\Operations\Appointments\AppointmentRequestAvailability;
 use App\Ark\Operations\Appointments\AppointmentSlotMinutes;
 use App\Ark\Operations\Appointments\SchedulingHours;
+use App\Ark\Operations\Communications\CommunicationsQuickReplyTemplates;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Parts\CustomerPartDescriptionMode;
@@ -63,7 +64,11 @@ use InvalidArgumentException;
     'estimate_validity_days',
     'default_recommendation_intent',
     'default_notes_private',
+    'default_notes_visible_to_advisor',
+    'default_notes_visible_to_technician',
+    'default_notes_visible_to_customer',
     'default_visit_mode',
+    'key_tag_mileage_requirement',
     'default_estimate_state',
     'qz_printing_enabled',
     'qz_printing_key_tag_printer',
@@ -92,9 +97,16 @@ use InvalidArgumentException;
     'mobile_push_firebase_service_account',
     'communications_channels',
     'message_actions',
-                            'square_application_id',
+    'quick_reply_templates',
+    'square_application_id',
     'square_location_id',
     'square_environment',
+    'repairlink_url',
+    'repairlink_enabled',
+    'nexpart_url',
+    'nexpart_enabled',
+    'parts_catalog_links',
+    'parts_catalog_button_colors',
     'postmark_reply_to',
     'postmark_reply_to_name',
     'ark_mail_status',
@@ -388,6 +400,14 @@ TEXT;
         'mobile_push_firebase_service_account' => 'encrypted',
         'communications_channels' => 'array',
         'message_actions' => 'array',
+        'quick_reply_templates' => 'array',
+        'default_notes_visible_to_advisor' => 'boolean',
+        'default_notes_visible_to_technician' => 'boolean',
+        'default_notes_visible_to_customer' => 'boolean',
+        'repairlink_enabled' => 'boolean',
+        'nexpart_enabled' => 'boolean',
+        'parts_catalog_links' => 'array',
+        'parts_catalog_button_colors' => 'array',
         'messenger_app_secret' => 'encrypted',
         'square_access_token' => 'encrypted',
         'square_webhook_signature_key' => 'encrypted',
@@ -555,9 +575,19 @@ TEXT;
             'estimate_validity_days' => 30,
             'default_recommendation_intent' => 'maintenance',
             'default_notes_private' => true,
+            'default_notes_visible_to_advisor' => true,
+            'default_notes_visible_to_technician' => false,
+            'default_notes_visible_to_customer' => false,
             'default_visit_mode' => RepairOrderVisitMode::DropOff->value,
+            'key_tag_mileage_requirement' => 'none',
             'default_estimate_state' => RepairOrderStatus::Estimate->value,
             'learn_training_gate_enabled' => false,
+            'repairlink_url' => null,
+            'repairlink_enabled' => false,
+            'nexpart_url' => null,
+            'nexpart_enabled' => false,
+            'parts_catalog_links' => null,
+            'parts_catalog_button_colors' => null,
             'appointments_enabled' => false,
             'shop_memory' => \App\Ark\ShopMemory\ShopMemoryProviderCatalog::defaultSettings(),
             'appointment_slot_minutes' => 30,
@@ -566,6 +596,7 @@ TEXT;
             'appointment_capacity_enforcement' => AppointmentCapacityEnforcement::Warn->value,
             'scheduling_hours' => null,
             'appointment_request_availability' => null,
+            'quick_reply_templates' => CommunicationsQuickReplyTemplates::defaults(),
         ];
     }
 

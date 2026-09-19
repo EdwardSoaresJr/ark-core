@@ -4,6 +4,7 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use App\Notifications\StaffInvitationNotification;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 
@@ -28,6 +29,28 @@ test('admin inviting staff sends setup email and leaves password unset', functio
         ->and($advisor->needsPasswordSetup())->toBeTrue();
 
     Notification::assertSentTo($advisor, StaffInvitationNotification::class);
+});
+
+test('connected shop still invites staff through laravel notifications', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    enableHostedPlatformMail();
+    fakeHostedPlatformMail();
+    Notification::fake();
+
+    $admin = actingAsLearnCurrentStaff(ArkRole::Admin);
+
+    $this->actingAs($admin)
+        ->post(route('operations.settings.staff.store'), [
+            'name' => 'Hosted Advisor',
+            'email' => 'hosted-advisor@ark.test',
+            'roles' => [ArkRole::Advisor->value],
+        ])
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'staff']));
+
+    $advisor = User::query()->where('email', 'hosted-advisor@ark.test')->firstOrFail();
+
+    Notification::assertSentTo($advisor, StaffInvitationNotification::class);
+    Http::assertNotSent(fn ($request): bool => str_contains($request->url(), '/api/v1/services/mail/messages/transactional'));
 });
 
 test('invited staff can use signed link to set password and reach operations', function () {

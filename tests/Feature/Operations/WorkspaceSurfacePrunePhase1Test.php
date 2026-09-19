@@ -80,7 +80,18 @@ test('staff with admin permissions see full operations left rail destinations', 
         ->assertSee(route('operations.customers.search'), false)
         ->assertSee(route('operations.vehicles.search'), false)
         ->assertSee(route('operations.shop.communications'), false)
-        ->assertDontSee('Website</span>', false);
+        ->assertSee('Stations &amp; Phones', false)
+        ->assertDontSee('ops-rail-section__label">Platform</p>', false)
+        ->assertFalse(\Illuminate\Support\Facades\Route::has('website.manage'))
+        ->assertFalse(\Illuminate\Support\Facades\Route::has('growth.dashboard'))
+        ->assertDontSee('>Website</span>', false)
+        ->assertDontSee('>Growth</span>', false);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.settings.shop.edit'))
+        ->assertOk()
+        ->assertDontSee('>Website</a>', false)
+        ->assertDontSee('>Growth</a>', false);
 });
 
 test('communications section nav lists inbox calls and history in that order', function (): void {

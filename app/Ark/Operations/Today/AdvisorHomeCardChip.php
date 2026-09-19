@@ -7,5 +7,6 @@ final readonly class AdvisorHomeCardChip
     public function __construct(
         public string $label,
         public string $tone,
+        public ?string $statusColor = null,
     ) {}
 }

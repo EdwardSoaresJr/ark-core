@@ -9,15 +9,24 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
-        
+    config()->set('services.twilio.auth_token', 'test-token');
+    config()->set('services.twilio.account_sid', 'ACtestaccount');
+
     ShopSettings::current()->update([
-        'shop_name' => 'Demo Auto Repair',
+        'shop_name' => 'LugsNPlugs',
         'telephony_inbound_number' => '7195559999',
+        'twilio_account_sid' => 'ACtestaccount',
+        'twilio_auth_token' => 'test-token',
     ]);
 });
 
 test('customer can access portal with sms code', function () {
-    bindFakeOutboundSms();
+    Http::fake([
+        'https://api.twilio.com/*' => Http::response([
+            'sid' => 'SMportal001',
+            'status' => 'queued',
+        ], 201),
+    ]);
 
     $customer = portalAccessCustomer(phone: '7195551212');
 
@@ -84,13 +93,29 @@ test('customer can access portal with email code', function () {
     ])->assertRedirect(route('portal.home'));
 });
 
+test('connected shop still sends portal sign-in codes through laravel mail', function () {
+    enableHostedPlatformMail();
+    fakeHostedPlatformMail();
+    Mail::fake();
+
+    portalAccessCustomer(email: 'molly@example.test');
+
+    $this->post(route('portal.access.challenges.store'), [
+        'contact' => 'molly@example.test',
+    ])->assertRedirect(route('portal.access.verify'));
+
+    Mail::assertSent(PortalAccessCodeMail::class, fn (PortalAccessCodeMail $mail): bool => $mail->hasTo('molly@example.test'));
+
+    Http::assertNotSent(fn ($request): bool => str_contains($request->url(), '/api/v1/services/mail/messages/transactional'));
+    Http::assertNotSent(fn ($request): bool => str_contains($request->url(), '/starter/'));
+});
+
 test('unknown contact still redirects to verify without revealing absence', function () {
     Mail::fake();
 
     Http::fake([
         'https://api.twilio.com/*' => Http::response(['sid' => 'SMnone', 'status' => 'queued'], 201),
     ]);
-    bindFakeOutboundSms();
 
     $this->post(route('portal.access.challenges.store'), [
         'contact' => 'unknown@example.test',

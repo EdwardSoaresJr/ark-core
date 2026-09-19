@@ -8,6 +8,7 @@ use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Evidence\EvidenceProjection;
 use App\Ark\Operations\Evidence\RecordEvidenceCustomerPresentedAction;
+use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Contracts\View\View;
@@ -21,6 +22,7 @@ final class PortalEstimatePage
         private readonly PortalEstimateSnapshot $snapshot,
         private readonly PortalEstimateAuthorization $authorization,
         private readonly EstimateDocumentService $documents,
+        private readonly CardPresentCaptureProjection $capture,
         private readonly CustomerFacingEstimateStatus $estimateStatus,
         private readonly PortalVehicleRecordsLink $vehicleRecordsLink,
         private readonly PortalEstimatePreparedOn $preparedOn,
@@ -73,8 +75,11 @@ final class PortalEstimatePage
             session('portal_authorization'),
         );
         $portalAuthorization = $depositState['portalAuthorization'];
+        $authorizationFromSession = $depositState['authorizationFromSession'];
         $depositCollected = $depositState['depositCollected'];
         $payingRemaining = $depositState['payingRemaining'];
+        $collectionSummary = $depositState['collectionSummary'];
+        $paymentNotice = $depositState['paymentNotice'];
 
         $snapshot = $this->snapshot->forRepairOrder($repairOrder);
         $document = EstimateDocument::query()
@@ -113,6 +118,9 @@ final class PortalEstimatePage
             $this->recordEvidencePresented->handle($repairOrder, $presented);
         }
 
+        $customerFirstName = trim((string) ($repairOrder->customer->first_name ?? ''));
+        $publicSurface = \App\Ark\Operations\Leads\Public\PublicSurfaceSettings::current();
+
         return view('portal.estimate', [
             'repairOrder' => $repairOrder,
             'snapshot' => $snapshot,
@@ -133,10 +141,17 @@ final class PortalEstimatePage
             'latestRecordedApproval' => $this->authorization->latestRecordedApproval($repairOrder),
             'presentedWorkIsFullyApproved' => $this->authorization->presentedWorkIsFullyApproved($repairOrder),
             'portalAuthorization' => $portalAuthorization,
-            'depositEnabled' => true,
+            'authorizationFromSession' => $authorizationFromSession,
+            'depositEnabled' => $this->capture->portalPayEnabled(),
             'depositCollected' => $depositCollected,
             'payingRemaining' => $payingRemaining,
+            'collectionSummary' => $collectionSummary,
+            'paymentNotice' => $paymentNotice,
+            'square' => $this->capture->publicConfig(),
             'customerName' => trim($repairOrder->customer->first_name.' '.$repairOrder->customer->last_name),
+            'customerFirstName' => $customerFirstName !== '' ? $customerFirstName : null,
+            'shopDisplayName' => ShopSettings::current()->displayName(),
+            'shopHeadline' => filled($publicSurface['headline'] ?? null) ? (string) $publicSurface['headline'] : null,
             'customerStatusLabel' => $this->estimateStatus->labelForRepairOrder($repairOrder),
             'signatureRequired' => ShopSettings::current()->portalSignatureRequired(),
             'authorizationLanguage' => ShopSettings::current()->authorizationLanguage(),

@@ -8,15 +8,14 @@ use App\Ark\Operations\Commitments\OperationalCommitment;
 use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
-use App\Ark\Operations\Financial\BalanceDueResult;
-use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\Inspections\InspectionCaptureLinks;
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleSelectProjection;
-use App\Ark\Operations\RepairOrders\RepairOrderLine;
-use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
+use App\Ark\Operations\RepairOrders\EstimateTotals;
+use App\Ark\Operations\Workboard\WorkboardCardActivityProjection;
+use App\Ark\Operations\Workboard\WorkboardCardGlance;
+use App\Ark\Operations\Workboard\WorkboardCardGlanceProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageCard;
 use App\Ark\Operations\Workboard\WorkboardTriageLaneProjection;
 use Illuminate\Support\Collection;
@@ -28,14 +27,17 @@ final class AdvisorHomeCardSurfaceProjection
 {
     public function __construct(
         private readonly BalanceDueCalculator $balanceDueCalculator,
+        private readonly WorkboardCardGlanceProjection $cardGlance,
+        private readonly WorkboardCardActivityProjection $cardActivity,
     ) {}
 
     /**
      * @param  Collection<int, RepairOrder>  $repairOrders
      * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
+     * @param  Collection<int, EstimateTotals>|null  $repairOrderTotals
      * @return array<int, AdvisorHomeCardSurface>
      */
-    public function mapForHomeBoard(Collection $repairOrders, array $homeBoardColumns): array
+    public function mapForHomeBoard(Collection $repairOrders, array $homeBoardColumns, ?Collection $repairOrderTotals = null): array
     {
         if ($repairOrders->isEmpty()) {
             return [];
@@ -44,12 +46,16 @@ final class AdvisorHomeCardSurfaceProjection
         $cardsByRepairOrderId = $this->cardsByRepairOrderId($homeBoardColumns);
         $columnKeyByRepairOrderId = $this->columnKeyByRepairOrderId($homeBoardColumns);
         $balances = $this->balanceDueCalculator->mapForRepairOrders($repairOrders);
-        $commitments = $this->nextOpenCommitmentsByRepairOrderId(
-            $repairOrders->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())->all()
-        );
-        $appointments = $this->nextActiveAppointmentsForRepairOrders($repairOrders);
-        $estimateEvents = $this->latestEstimateEventsByRepairOrderId(
-            $repairOrders->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())->all()
+        $commitments = $this->nextOpenCommitmentsByRepairOrderId($repairOrders->modelKeys());
+        $appointments = $this->cardActivity->appointmentsFor($repairOrders);
+        $estimateEvents = $this->latestEstimateEventsByRepairOrderId($repairOrders->modelKeys());
+        $activities = $this->cardActivity->map($repairOrders, $appointments);
+        $glances = $this->cardGlance->map(
+            $repairOrders,
+            $cardsByRepairOrderId,
+            $repairOrderTotals ?? collect(),
+            $balances,
+            $columnKeyByRepairOrderId,
         );
         $surfaces = [];
 
@@ -60,20 +66,6 @@ final class AdvisorHomeCardSurfaceProjection
                 continue;
             }
 
-            $balance = $balances[$repairOrder->id] ?? new BalanceDueResult(
-                hasIssuedInvoice: false,
-                invoiceTotalCents: 0,
-                depositsAppliedCents: 0,
-                paymentsAppliedCents: 0,
-                refundsAppliedCents: 0,
-                adjustmentsCents: 0,
-                creditsAppliedCents: 0,
-                writeOffsCents: 0,
-                balanceDueCents: 0,
-                unappliedDepositsCents: 0,
-                invoiceStatus: InvoiceStatus::Issued,
-            );
-
             $customerHubUrl = $repairOrder->customer_id !== null
                 ? route('operations.customers.show', $repairOrder->customer_id)
                 : null;
@@ -81,7 +73,18 @@ final class AdvisorHomeCardSurfaceProjection
                 ? $repairOrder->customer->display_phone
                 : null;
 
-            $chip = $this->resolveChip($repairOrder, $card, $balance);
+            $glance = $glances[$repairOrder->id] ?? null;
+            $chip = $this->resolveChip($repairOrder, $glance);
+            $attention = $glance instanceof WorkboardCardGlance
+                ? $this->attentionWithSurface($glance->attention, $commitments[$repairOrder->id] ?? null, $appointments[$repairOrder->id] ?? null)
+                : 'normal';
+            $exception = $this->exceptionSlot(
+                $card,
+                $glance,
+                $commitments[$repairOrder->id] ?? null,
+                $appointments[$repairOrder->id] ?? null,
+                $columnKeyByRepairOrderId[$repairOrder->id] ?? '',
+            );
 
             $surfaces[$repairOrder->id] = new AdvisorHomeCardSurface(
                 chip: $chip,
@@ -90,10 +93,7 @@ final class AdvisorHomeCardSurfaceProjection
                 promiseLabel: $this->promiseLabel($commitments[$repairOrder->id] ?? null),
                 promiseTone: $this->promiseTone($commitments[$repairOrder->id] ?? null),
                 vehicleOnSite: (bool) ($repairOrder->waiting_here || $repairOrder->drop_off),
-                laborProgress: $this->laborProgress(
-                    $repairOrder,
-                    $columnKeyByRepairOrderId[$repairOrder->id] ?? null,
-                ),
+                laborProgress: null,
                 customerHubUrl: $customerHubUrl,
                 textCustomerUrl: $customerHubUrl !== null && filled($customerPhone)
                     ? $customerHubUrl.'?compose=text#customer-communication'
@@ -103,11 +103,26 @@ final class AdvisorHomeCardSurfaceProjection
                     : null,
                 estimateEventLabel: $estimateEvents[$repairOrder->id]['label'] ?? null,
                 estimateEventKind: $estimateEvents[$repairOrder->id]['kind'] ?? null,
-                statusMoves: $this->statusMoves($repairOrder),
+                statusMoves: [],
                 concernLabel: $this->concernLabel($card),
-                nextMoveLabel: $card->nextMoveLabel($chip->label),
+                nextMoveLabel: $glance instanceof WorkboardCardGlance ? $glance->nextLabel : $card->nextMoveLabel($chip->label),
                 scheduleLabel: $this->scheduleLabel($appointments[$repairOrder->id] ?? null),
                 scheduleTone: $this->scheduleTone($appointments[$repairOrder->id] ?? null),
+                whyLabel: $glance?->whyLabel,
+                moneyLabel: $glance?->moneyLabel,
+                moneyCaption: $glance?->moneyCaption,
+                waitAgeLabel: $glance?->ageLabel,
+                waitingOnCustomerDecision: $glance?->waitingOnCustomerDecision ?? false,
+                operationalStatus: $glance?->operationalStatus,
+                clockLabel: $glance?->clockLabel,
+                attention: $attention,
+                statusRestatesLane: false,
+                configuredStatusColor: $glance?->configuredStatusColor,
+                activityMarks: $activities[$repairOrder->id] ?? WorkboardCardActivityProjection::idle(),
+                exceptionLabel: $exception['label'],
+                exceptionExtraCount: $exception['extra'],
+                exceptionTone: $exception['tone'],
+                exceptionItems: $exception['items'],
             );
         }
 
@@ -173,27 +188,87 @@ final class AdvisorHomeCardSurfaceProjection
     }
 
     /**
-     * Same choices as the RO lifecycle select (status + close), including disabled rows.
-     * Close choices that need confirmation deep-link to the RO workspace.
-     *
-     * @return list<array{
-     *     value: string,
-     *     label: string,
-     *     disabled: bool,
-     *     blockedReason: ?string,
-     *     needsRoConfirmation: bool
-     * }>
+     * @return array{label: ?string, extra: int, tone: string}
      */
-    private function statusMoves(RepairOrder $repairOrder): array
-    {
-        if ($repairOrder->isTerminal()) {
-            return [];
+    private function exceptionSlot(
+        WorkboardTriageCard $card,
+        ?WorkboardCardGlance $glance,
+        ?OperationalCommitment $commitment,
+        ?Appointment $appointment,
+        string $columnKey,
+    ): array {
+        $candidates = [];
+
+        if ($card->countsAsOverduePickup) {
+            $candidates[] = ['Pickup overdue', 'critical', 40];
         }
 
-        return RepairOrderLifecycleSelectProjection::forCatalogTargets(
-            $repairOrder,
-            auth()->user(),
-        )->boardMoves();
+        if ($this->scheduleTone($appointment) === 'missed') {
+            $candidates[] = ['Missed appointment', 'critical', 35];
+        }
+
+        if ($this->promiseTone($commitment) === 'overdue') {
+            $candidates[] = ['Promise overdue', 'critical', 30];
+        }
+
+        if ($glance?->whyLabel === 'Deferred work due') {
+            $candidates[] = ['Follow-up overdue', 'attention', 25];
+        }
+
+        $ageHours = $this->ageHours($glance?->ageLabel ?? '');
+
+        if (($glance?->waitingOnCustomerDecision ?? false) && $ageHours >= 48) {
+            $candidates[] = ['Follow-up overdue', 'attention', 20];
+        }
+
+        if ($columnKey === 'parts' && $ageHours >= 48) {
+            $candidates[] = ['Parts overdue', 'attention', 15];
+        }
+
+        if ($card->repairOrder->partsPressure()->showsChip()) {
+            $candidates[] = ['Needs parts', 'attention', 16];
+        }
+
+        usort($candidates, fn (array $left, array $right): int => $right[2] <=> $left[2]);
+
+        if ($candidates === []) {
+            return ['label' => null, 'extra' => 0, 'tone' => 'none', 'items' => []];
+        }
+
+        $uniqueLabels = [];
+
+        foreach ($candidates as $candidate) {
+            $uniqueLabels[$candidate[0]] = $candidate;
+        }
+
+        $ordered = array_values($uniqueLabels);
+
+        return [
+            'label' => $ordered[0][0],
+            'extra' => max(0, count($ordered) - 1),
+            'tone' => $ordered[0][1],
+            'items' => array_map(
+                fn (array $candidate): array => ['label' => $candidate[0], 'tone' => $candidate[1]],
+                $ordered,
+            ),
+        ];
+    }
+
+    private function ageHours(string $ageLabel): int
+    {
+        if (preg_match('/(\d+)\s*w/i', $ageLabel, $match) === 1) {
+            return (int) $match[1] * 168;
+        }
+
+        if (preg_match('/(\d+)\s*d/i', $ageLabel, $match) === 1) {
+            return (int) $match[1] * 24;
+        }
+
+        if (preg_match('/(\d+)\s*h/i', $ageLabel, $match) === 1) {
+            return (int) $match[1];
+        }
+
+        return 0;
     }
 
     private function concernLabel(WorkboardTriageCard $card): ?string
@@ -205,137 +280,6 @@ final class AdvisorHomeCardSurfaceProjection
         }
 
         return $headline;
-    }
-
-    private function laborProgress(RepairOrder $repairOrder, ?string $homeColumnKey): ?AdvisorHomeLaborProgress
-    {
-        if (! in_array($homeColumnKey, ['work_in_progress', 'parts'], true)) {
-            return null;
-        }
-
-        $billedHours = $this->billedApprovedLaborHours($repairOrder);
-
-        if ($billedHours <= 0) {
-            return null;
-        }
-
-        $completedHours = $this->completedApprovedLaborHours($repairOrder);
-        $percent = $billedHours > 0
-            ? (int) round(($completedHours / $billedHours) * 100)
-            : 0;
-
-        if ($percent === 0) {
-            return null;
-        }
-
-        return new AdvisorHomeLaborProgress(
-            completedHours: $completedHours,
-            billedHours: $billedHours,
-            percent: min(100, max(0, $percent)),
-            label: sprintf('%.1f of %.1f hrs complete', $completedHours, $billedHours),
-        );
-    }
-
-    private function completedApprovedLaborHours(RepairOrder $repairOrder): float
-    {
-        $total = 0.0;
-
-        foreach ($repairOrder->lines as $line) {
-            if (! $line instanceof RepairOrderLine || ! $line->type->isLabor()) {
-                continue;
-            }
-
-            $concern = $line->concern;
-
-            if ($concern === null
-                || $concern->disposition !== RepairOrderConcernDisposition::Approved
-                || ! $concern->productionStatus()->countsLaborComplete()) {
-                continue;
-            }
-
-            $hours = $line->labor_billed_hours ?? $line->quantity;
-            $total += (float) $hours;
-        }
-
-        return round($total, 2);
-    }
-
-    private function billedApprovedLaborHours(RepairOrder $repairOrder): float
-    {
-        $total = 0.0;
-
-        foreach ($repairOrder->lines as $line) {
-            if (! $line instanceof RepairOrderLine || ! $line->type->isLabor()) {
-                continue;
-            }
-
-            if ($line->concern?->disposition !== RepairOrderConcernDisposition::Approved) {
-                continue;
-            }
-
-            $hours = $line->labor_billed_hours ?? $line->quantity;
-            $total += (float) $hours;
-        }
-
-        return round($total, 2);
-    }
-
-    /**
-     * Next active appointment per board RO.
-     * Prefer the appointment linked to this RO. Floor bookings often sit on the vehicle
-     * with repair_order_id null (or an old closed RO) — still project onto the open card.
-     *
-     * @param  Collection<int, RepairOrder>  $repairOrders
-     * @return array<int, Appointment>
-     */
-    private function nextActiveAppointmentsForRepairOrders(Collection $repairOrders): array
-    {
-        if ($repairOrders->isEmpty()) {
-            return [];
-        }
-
-        $repairOrderIds = $repairOrders->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())->all();
-        $vehicleIds = $repairOrders->pluck('vehicle_id')->filter()->unique()->values()->all();
-
-        $linked = [];
-        $byVehicle = [];
-
-        $appointments = Appointment::query()
-            ->whereIn('status', [
-                AppointmentStatus::Scheduled,
-                AppointmentStatus::Confirmed,
-                AppointmentStatus::Arrived,
-            ])
-            ->where(function ($query) use ($repairOrderIds, $vehicleIds): void {
-                $query->whereIn('repair_order_id', $repairOrderIds);
-
-                if ($vehicleIds !== []) {
-                    $query->orWhereIn('vehicle_id', $vehicleIds);
-                }
-            })
-            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', [AppointmentStatus::Arrived->value])
-            ->orderBy('starts_at')
-            ->orderBy('id')
-            ->get();
-
-        foreach ($appointments as $appointment) {
-            if ($appointment->repair_order_id !== null) {
-                $linked[(int) $appointment->repair_order_id] ??= $appointment;
-            }
-
-            if ($appointment->vehicle_id !== null) {
-                $byVehicle[(int) $appointment->vehicle_id] ??= $appointment;
-            }
-        }
-
-        $mapped = [];
-
-        foreach ($repairOrders as $repairOrder) {
-            $mapped[$repairOrder->id] = $linked[$repairOrder->id]
-                ?? ($repairOrder->vehicle_id !== null ? ($byVehicle[(int) $repairOrder->vehicle_id] ?? null) : null);
-        }
-
-        return array_filter($mapped);
     }
 
     private function scheduleLabel(?Appointment $appointment): ?string
@@ -455,21 +399,42 @@ final class AdvisorHomeCardSurfaceProjection
 
     private function resolveChip(
         RepairOrder $repairOrder,
-        WorkboardTriageCard $card, // kept for call-site/reflection compatibility
-        BalanceDueResult $balance,
+        ?WorkboardCardGlance $glance = null,
     ): AdvisorHomeCardChip {
-        // Financial end-state still outranks lifecycle copy on Completed cards.
-        if ($balance->hasIssuedInvoice && $balance->balanceDueCents > 0) {
-            return new AdvisorHomeCardChip('Balance Due', 'alert');
+        if ($glance instanceof WorkboardCardGlance) {
+            return new AdvisorHomeCardChip(
+                $glance->operationalStatus,
+                'quiet',
+                $glance->configuredStatusColor,
+            );
         }
 
-        if ($repairOrder->readyToPost()) {
-            return new AdvisorHomeCardChip('Ready to Post', 'ready');
-        }
-
-        // Status pill is the lifecycle control — label must match the RO status
-        // (and Move-to choices), not sticky pressure copy that survives column moves.
         return $this->lifecycleChip($repairOrder);
+    }
+
+    /**
+     * @param  WorkboardCardGlance::ATTENTION_*  $attention
+     */
+    private function attentionWithSurface(string $attention, ?OperationalCommitment $commitment, ?Appointment $appointment): string
+    {
+        $rank = [
+            WorkboardCardGlance::ATTENTION_NORMAL => 0,
+            WorkboardCardGlance::ATTENTION_WATCH => 1,
+            WorkboardCardGlance::ATTENTION_ATTENTION => 2,
+            WorkboardCardGlance::ATTENTION_CRITICAL => 3,
+        ];
+
+        $current = $rank[$attention] ?? 0;
+
+        if ($this->promiseTone($commitment) === 'overdue') {
+            $current = max($current, $rank[WorkboardCardGlance::ATTENTION_CRITICAL]);
+        }
+
+        if ($appointment !== null && $this->scheduleTone($appointment) === 'missed') {
+            $current = max($current, $rank[WorkboardCardGlance::ATTENTION_WATCH]);
+        }
+
+        return array_flip($rank)[$current] ?? WorkboardCardGlance::ATTENTION_NORMAL;
     }
 
     private function lifecycleChip(RepairOrder $repairOrder): AdvisorHomeCardChip

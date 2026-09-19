@@ -6,15 +6,16 @@ use App\Ark\Operations\Attention\CommunicationsAttentionNudgeProjection;
 use App\Ark\Operations\Attention\ConversationAttentionCandidateBuilder;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
+use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
+use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Conversations\CustomerCallContext;
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Leads\ConversationLeadResolver;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadConfirmationAuditConversation;
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionStatus;
 use App\Ark\Operations\Telephony\InboundCallerDisplayPhone;
@@ -52,6 +53,7 @@ final class CommunicationsWorkspaceProjection
         private readonly CommunicationsHistoryQuery $historyQuery,
         private readonly LeadConfirmationAuditConversation $confirmationAudit,
         private readonly ConversationLeadResolver $conversationLeadResolver,
+        private readonly CommunicationsRelationshipContextResolver $relationshipContext,
     ) {}
 
     /**
@@ -119,13 +121,14 @@ final class CommunicationsWorkspaceProjection
         ?string $turnFilter = null,
         ?Carbon $previousLastSeenAt = null,
         ?string $listFilter = null,
+        ?string $ownerFilter = null,
     ): array {
         if ($viewer === null || ! SchemaPresence::hasTable('conversations')) {
             return $this->emptySection('inbox');
         }
 
         $filter = $this->normalizeListFilter($listFilter, $turnFilter);
-        $filterCounts = $this->cheapFilterCounts($viewer, $previousLastSeenAt);
+        $filterCounts = $this->cheapFilterCounts($viewer, $previousLastSeenAt, $filter);
 
         $listItems = match ($filter) {
             'waiting' => $this->waitingListItems(),
@@ -136,7 +139,15 @@ final class CommunicationsWorkspaceProjection
 
         $listItems = $this->listDedupe->dedupe($listItems);
         $listItems = $this->enrichListIdentities($listItems);
-        $listItems = $this->withListPreviews($listItems);
+        $presentation = app(CommunicationsInboxPresentation::class);
+        $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
+        $listItems = $presentation->decorateList($listItems);
+        $ownerCounts = [
+            'everyone' => count($listItems),
+            'mine' => count(array_filter($listItems, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === (int) $viewer->id)),
+            'unassigned' => count(array_filter($listItems, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === 0)),
+        ];
+        $listItems = $presentation->applyOwnerFilter($listItems, $ownerFilter, $viewer);
 
         $selectedKey = match (true) {
             $conversationId !== null => 'conversation:'.$conversationId,
@@ -145,10 +156,20 @@ final class CommunicationsWorkspaceProjection
             default => null,
         };
 
-        [$listItems, $selected] = $this->resolveSelectionWithList($listItems, $selectedKey, 'inbox');
-        $thread = $this->threadForSelection($selected, 'inbox');
-        $context = $this->contextForSelection($selected);
-        [$context, $thread] = $this->enrichSelectedAttention($selected, $viewer, $context, $thread);
+        [$listItems, $selected] = $this->resolveSelectionWithList($listItems, $selectedKey, 'inbox', autoSelect: false);
+
+        $thread = null;
+        $context = null;
+        if ($selected !== null) {
+            $thread = $this->threadForSelection($selected, 'inbox');
+            $context = $this->contextForSelection($selected);
+            [$context, $thread] = $this->enrichSelectedAttention($selected, $viewer, $context, $thread);
+            $thread = $presentation->decorateThread($thread, $selected);
+            $context = $presentation->decorateContext($context, $selected, $filter, $ownerFilter);
+            if (is_array($thread) && is_array($context['work'] ?? null)) {
+                $thread['decision']['work'] = $context['work'];
+            }
+        }
 
         return [
             'section' => 'inbox',
@@ -157,8 +178,14 @@ final class CommunicationsWorkspaceProjection
             'selected' => $selected,
             'thread' => $thread,
             'context' => $context,
+            'poll_signature' => $this->pollSignature($filter, $conversationId, $leadId, $callSessionId),
             'list_filter' => $filter,
             'filter_counts' => $filterCounts,
+            'list_shown' => count($listItems),
+            'list_total' => $this->listTotalForFilter($filter, $filterCounts, count($listItems)),
+            'list_truncated' => $this->listTotalForFilter($filter, $filterCounts, count($listItems)) > count($listItems),
+            'owner_filter' => $ownerFilter,
+            'owner_counts' => $ownerCounts,
             // Compatibility aliases for older nav / deep links.
             'turn_filter' => match ($filter) {
                 'waiting' => 'customer',
@@ -178,19 +205,21 @@ final class CommunicationsWorkspaceProjection
      */
     private function needsAttentionListItems(User $viewer, ?Carbon $previousLastSeenAt): array
     {
-        $queue = $this->queueResolver->resolveAttention($viewer, $previousLastSeenAt);
-        $rows = is_array($queue['needs_attention'] ?? null) ? $queue['needs_attention'] : [];
-        $rows = $this->attentionDedupe->dedupe($rows);
+        $items = $this->inboxConversationItems('needs');
+        $liveCalls = array_values(array_filter(
+            $this->inboxCallItems(),
+            fn (array $item): bool => in_array($item['call_status'] ?? '', [
+                CallSessionStatus::Ringing->value,
+                CallSessionStatus::Answered->value,
+            ], true),
+        ));
 
-        $listItems = [];
+        $listItems = $this->threadCallRowsIntoConversations(array_merge($liveCalls, $items));
 
-        foreach (array_values($rows) as $index => $row) {
-            $listItems[] = $this->attentionListItem($row, $index, 'shop');
-        }
-
-        $listItems = $this->threadCallRowsIntoConversations($listItems);
-
-        usort($listItems, fn (array $left, array $right): int => ($right['pressure_score'] ?? 0) <=> ($left['pressure_score'] ?? 0));
+        usort($listItems, fn (array $left, array $right): int => strcmp(
+            (string) ($right['sort_at'] ?? ''),
+            (string) ($left['sort_at'] ?? ''),
+        ));
 
         return $listItems;
     }
@@ -253,7 +282,7 @@ final class CommunicationsWorkspaceProjection
      */
     private function waitingListItems(): array
     {
-        $items = $this->inboxConversationItems(ConversationWaitingOn::Customer);
+        $items = $this->inboxConversationItems('waiting');
 
         usort($items, fn (array $left, array $right): int => strcmp(
             (string) ($right['sort_at'] ?? ''),
@@ -302,40 +331,18 @@ final class CommunicationsWorkspaceProjection
             ->where('status', ConversationStatus::Resolved->value)
             ->with([
                 'owner:id,name',
-                'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1),
+                'messages' => fn ($query) => $query->orderByDesc('occurred_at')->orderByDesc('id')->limit(1),
+                'messages.attachments',
             ])
             ->orderByDesc('updated_at')
             ->limit(40)
             ->get()
-            ->map(function (Conversation $conversation): array {
-                $presented = $this->conversationPresenter->present($conversation, 'waiting_customer');
-                $key = 'conversation:'.$conversation->id;
-                $phone = $conversation->contact_surface === ConversationContactSurface::Phone
-                    ? (PhoneNumber::display((string) $conversation->contact_address) ?? (string) $conversation->contact_address)
-                    : null;
-
-                return [
-                    'key' => $key,
-                    'kind' => 'conversation',
-                    'headline' => (string) ($presented['headline'] ?? $phone ?? 'Unknown contact'),
-                    'subtitle' => $phone ?? '',
-                    'phone' => $phone,
-                    'snippet' => (string) ($presented['snippet'] ?? ''),
-                    'channel_label' => (string) ($presented['channel_label'] ?? 'Message'),
-                    'reason' => 'Resolved',
-                    'turn' => 'customer',
-                    'needs_attention' => false,
-                    'age_label' => (string) ($presented['posture_age_label'] ?? ''),
-                    'pressure_score' => null,
-                    'assigned_label' => filled($conversation->owner?->name) ? (string) $conversation->owner->name : null,
-                    'customer_id' => $presented['customer_id'] ?? null,
-                    'normalized_phone' => $conversation->contact_surface === ConversationContactSurface::Phone
-                        ? (string) $conversation->contact_address
-                        : null,
-                    'select_url' => route('operations.communications.inbox', $this->selectionQuery($key, filter: 'resolved')),
-                    'sort_at' => ($conversation->updated_at)?->toIso8601String() ?? '',
-                ];
-            })
+            ->map(fn (Conversation $conversation): array => $this->cheapConversationQueueItem(
+                $conversation,
+                lead: null,
+                filter: 'resolved',
+                resolved: true,
+            ))
             ->all();
     }
 
@@ -506,78 +513,36 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function inboxConversationItems(?ConversationWaitingOn $waitingOn = null): array
+    private function inboxConversationItems(?string $lane = null): array
     {
         $query = Conversation::query()
-            ->where('status', ConversationStatus::Open->value)
             ->with([
                 'owner:id,name',
-                'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1),
+                'messages' => fn ($query) => $query->orderByDesc('occurred_at')->orderByDesc('id')->limit(1),
+                'messages.attachments',
             ])
-            ->orderByDesc('updated_at')
-            ->limit(40);
+            ->orderByDesc('updated_at');
 
-        if ($waitingOn !== null) {
-            $query->where('waiting_on', $waitingOn->value);
+        if ($lane !== null) {
+            app(ConversationWork::class)->applyLane($query, $lane);
+        } else {
+            $query->where('status', ConversationStatus::Open->value);
         }
 
         return $query
             ->get()
             ->reject(fn (Conversation $conversation): bool => $this->confirmationAudit->suppressFromShopTurn($conversation))
-            ->pipe(function ($conversations) {
+            ->pipe(function ($conversations) use ($lane) {
                 $leadsByConversationId = $this->conversationLeadResolver->mapForConversations($conversations);
 
-                return $conversations->map(function (Conversation $conversation) use ($leadsByConversationId): array {
-                    $presented = $this->conversationPresenter->present(
-                        $conversation,
-                        $conversation->waiting_on === ConversationWaitingOn::Shop ? 'needs_shop' : 'waiting_customer',
-                    );
-                    $key = 'conversation:'.$conversation->id;
-                    $ownerName = $conversation->owner?->name;
-                    $turnReason = app(ConversationTurnReason::class)->for($conversation);
+                return $conversations->map(function (Conversation $conversation) use ($leadsByConversationId, $lane): array {
                     $turn = $conversation->waiting_on === ConversationWaitingOn::Shop ? 'shop' : 'customer';
-                    $shopHint = trim(implode(' · ', array_filter([
-                        (string) ($presented['vehicle_label'] ?? ''),
-                        (string) ($presented['ro_label'] ?? $presented['context_summary'] ?? ''),
-                    ])));
 
-                    $phone = (string) ($presented['display_phone'] ?? '');
-                    $headline = (string) ($presented['headline'] ?? '');
-                    if ($headline === '' || in_array(strtolower($headline), ['unknown', 'unknown caller', 'unknown contact'], true)) {
-                        $headline = $phone !== '' ? $phone : 'Unknown contact';
-                    }
-
-                    $lead = $leadsByConversationId[$conversation->id] ?? null;
-                    $originLabel = $lead instanceof Lead ? $lead->source->opportunityLabel() : null;
-                    $channelLabel = $originLabel
-                        ?? (string) ($presented['channel_label'] ?? 'Message');
-
-                    return [
-                        'key' => $key,
-                        'kind' => 'conversation',
-                        'headline' => $headline,
-                        'subtitle' => $phone,
-                        'phone' => $phone !== '' ? $phone : null,
-                        'shop_hint' => $shopHint !== '' ? $shopHint : null,
-                        'snippet' => (string) ($presented['snippet'] ?? ''),
-                        'channel_label' => $channelLabel,
-                        'origin_label' => $originLabel,
-                        'reason' => (string) ($turnReason['turn_label'] ?? $presented['waiting_on_label'] ?? 'Open'),
-                        'turn' => $turn,
-                        'needs_attention' => $turn === 'shop',
-                        'age_label' => (string) ($presented['posture_age_label'] ?? ''),
-                        'pressure_score' => null,
-                        'assigned_label' => filled($ownerName) ? (string) $ownerName : null,
-                        'customer_id' => $presented['customer_id'] ?? null,
-                        'normalized_phone' => $conversation->contact_surface === ConversationContactSurface::Phone
-                            ? (string) $conversation->contact_address
-                            : null,
-                        'select_url' => route('operations.communications.inbox', $this->selectionQuery(
-                            $key,
-                            filter: $turn === 'shop' ? 'needs' : 'waiting',
-                        )),
-                        'sort_at' => ($conversation->posture_changed_at ?? $conversation->updated_at)?->toIso8601String() ?? '',
-                    ];
+                    return $this->cheapConversationQueueItem(
+                        $conversation,
+                        $leadsByConversationId[$conversation->id] ?? null,
+                        filter: $lane ?? ($turn === 'shop' ? 'needs' : 'waiting'),
+                    );
                 });
             })
             ->all();
@@ -637,6 +602,7 @@ final class CommunicationsWorkspaceProjection
                         'operations.communications.inbox',
                         $this->selectionQuery($key, $handled ? 'customer' : 'shop'),
                     ),
+                    'call_status' => $session->status->value,
                     'sort_at' => $session->started_at?->toIso8601String() ?? '',
                 ];
             })
@@ -647,10 +613,14 @@ final class CommunicationsWorkspaceProjection
      * @param  list<array<string, mixed>>  $listItems
      * @return array{0: list<array<string, mixed>>, 1: array<string, mixed>|null}
      */
-    private function resolveSelectionWithList(array $listItems, ?string $selectedKey, string $section): array
+    /**
+     * @param  list<array<string, mixed>>  $listItems
+     * @return array{0: list<array<string, mixed>>, 1: array<string, mixed>|null}
+     */
+    private function resolveSelectionWithList(array $listItems, ?string $selectedKey, string $section, bool $autoSelect = true): array
     {
         if ($selectedKey === null) {
-            return [$listItems, $listItems[0] ?? null];
+            return [$listItems, $autoSelect ? ($listItems[0] ?? null) : null];
         }
 
         foreach ($listItems as $item) {
@@ -675,7 +645,7 @@ final class CommunicationsWorkspaceProjection
             return [$listItems, $synthesized];
         }
 
-        return [$listItems, $listItems[0] ?? null];
+        return [$listItems, $autoSelect ? ($listItems[0] ?? null) : null];
     }
 
     /**
@@ -871,12 +841,10 @@ final class CommunicationsWorkspaceProjection
             : (string) $conversation->contact_address;
 
         $composerContext = $this->contextBuilder->conversationComposerContext($conversation);
-        $turnReason = app(ConversationTurnReason::class)->for($conversation, $composerContext['lead'] ?? null);
         $identity = $this->identityProjection->forConversation(
             $conversation,
             callContext: null,
             lead: $composerContext['lead'] ?? null,
-            turnReason: (string) ($turnReason['turn_label'] ?? null),
         );
 
         return [
@@ -1144,20 +1112,38 @@ final class CommunicationsWorkspaceProjection
         }
 
         $context = is_array($context) ? $context : [];
+        $kind = (string) ($selected['kind'] ?? '');
+        $isShopTurn = (bool) ($context['turn']['is_shop_turn'] ?? false);
+        $isCall = $kind === 'call';
 
-        if (($selected['kind'] ?? '') === 'conversation') {
+        if ($kind === 'conversation' && $isShopTurn) {
             $conversationId = (int) Str::after((string) ($selected['key'] ?? ''), 'conversation:');
             $candidate = $this->attentionCandidateBuilder->forConversationId($conversationId);
 
             if ($candidate !== null) {
-                $context['attention'] = [
-                    'pressure_score' => $candidate->pressureScore,
-                    'reasons' => $candidate->reasons,
-                ];
+                $reasons = array_values(array_filter(
+                    $candidate->reasons,
+                    fn (string $reason): bool => ! str_starts_with($reason, 'Customer waiting'),
+                ));
+
+                if ($reasons !== []) {
+                    $context['attention'] = [
+                        'pressure_score' => $candidate->pressureScore,
+                        'reasons' => $reasons,
+                    ];
+                }
             }
         }
 
         $nudge = $this->nudges->forSelection($selected, $viewer);
+
+        if (is_array($nudge) && ($nudge['key'] ?? '') === 'conversation.waiting_response') {
+            $nudge = null;
+        }
+
+        if (is_array($nudge) && ! $isShopTurn && ! $isCall && ! str_starts_with((string) ($nudge['key'] ?? ''), 'call.')) {
+            $nudge = null;
+        }
 
         if ($nudge !== null) {
             $context['nudge'] = $nudge;
@@ -1178,7 +1164,7 @@ final class CommunicationsWorkspaceProjection
 
         $insight = $this->analysisInsight->forSelection($selected);
 
-        if ($this->analysisInsight->shouldShowAlongsideNudge($nudge ?? null, $insight)) {
+        if (($isShopTurn || $isCall) && $this->analysisInsight->shouldShowAlongsideNudge($nudge ?? null, $insight)) {
             $insight['entity_key'] = (string) ($selected['key'] ?? '');
             $context['analysis_insight'] = $insight;
         }
@@ -1287,32 +1273,47 @@ final class CommunicationsWorkspaceProjection
      */
     private function enrichListIdentities(array $listItems): array
     {
-        $phones = [];
+        $conversationIds = [];
+        $nonConversationPhones = [];
 
         foreach ($listItems as $item) {
-            $phones[] = (string) ($item['normalized_phone'] ?? $item['phone'] ?? '');
+            if (($item['kind'] ?? '') === 'conversation') {
+                $conversationIds[] = (int) Str::after((string) ($item['key'] ?? ''), 'conversation:');
+            } else {
+                $nonConversationPhones[] = (string) ($item['normalized_phone'] ?? $item['phone'] ?? '');
+            }
         }
 
-        $contexts = $this->callContextResolver->mapForAttentionList($phones);
+        $contexts = $nonConversationPhones === []
+            ? []
+            : $this->callContextResolver->mapForAttentionList($nonConversationPhones);
+        $conversations = $conversationIds === []
+            ? collect()
+            : Conversation::query()->whereIn('id', array_values(array_filter($conversationIds)))->get();
+        $relationships = $this->relationshipContext->mapForConversations($conversations);
 
-        return array_map(function (array $item) use ($contexts): array {
+        return array_map(function (array $item) use ($contexts, $relationships): array {
             $normalized = PhoneNumber::normalize((string) ($item['normalized_phone'] ?? $item['phone'] ?? ''));
             $context = $normalized !== null ? ($contexts[$normalized] ?? null) : null;
-            $identity = $this->identityProjection->forListRow($item, $context);
+            $conversationId = ($item['kind'] ?? '') === 'conversation'
+                ? (int) Str::after((string) ($item['key'] ?? ''), 'conversation:')
+                : 0;
+            $relationship = $conversationId > 0 ? ($relationships[$conversationId] ?? null) : null;
+            $identity = $this->identityProjection->forListRow($item, $context, $relationship);
 
-            $item['headline'] = (string) ($identity['name'] ?? $item['headline'] ?? 'Unknown contact');
+            $item['headline'] = (string) ($identity['name'] ?? $item['headline'] ?? 'Unmatched');
             $item['phone'] = $identity['phone'] ?? $item['phone'] ?? null;
             $item['subtitle'] = $identity['phone'] ?? $item['subtitle'] ?? '';
             $item['email'] = $identity['email'] ?? null;
             $item['known_customer'] = (bool) ($identity['known_customer'] ?? false);
-            $item['link_status'] = (string) ($identity['link_status'] ?? '');
-            $item['vehicle_label'] = $identity['vehicle_label'] ?? $item['vehicle_label'] ?? null;
-            $item['ro_label'] = $identity['ro_label'] ?? $item['ro_label'] ?? null;
-            $item['ro_status'] = $identity['ro_status'] ?? $item['ro_status'] ?? null;
-            $item['shop_hint'] = trim(implode(' · ', array_filter([
-                (string) ($item['vehicle_label'] ?? ''),
-                (string) (($item['ro_label'] ?? '').(filled($item['ro_status'] ?? null) ? ' · '.$item['ro_status'] : '')),
-            ]))) ?: ($item['shop_hint'] ?? null);
+            $item['link_status'] = (string) ($identity['link_status'] ?? 'Unmatched');
+            $item['vehicle_label'] = $identity['vehicle_label'] ?? null;
+            $item['ro_label'] = $identity['ro_label'] ?? null;
+            $item['ro_status'] = $identity['ro_status'] ?? null;
+            $item['visit_source'] = $identity['visit_source'] ?? CommunicationsVisitSource::None->value;
+            $item['visit_label'] = $identity['visit_label'] ?? 'No current visit';
+            $item['turn_label'] = $identity['turn_label'] ?? ($item['reason'] ?? '');
+            $item['shop_hint'] = $this->listVisitHint($identity);
             $item['customer_id'] = $identity['customer_id'] ?? $item['customer_id'] ?? null;
             $item['normalized_phone'] = $identity['normalized_phone'] ?? $item['normalized_phone'] ?? null;
 
@@ -1321,29 +1322,48 @@ final class CommunicationsWorkspaceProjection
     }
 
     /**
-     * @return array{all: int, needs: int, waiting: int, resolved: int}
+     * @param  array<string, mixed>  $identity
      */
-    private function cheapFilterCounts(?User $viewer, ?Carbon $previousLastSeenAt): array
+    private function listVisitHint(array $identity): string
     {
-        $turnCounts = $this->cheapTurnCounts();
-        $needs = $turnCounts['shop'];
+        $source = (string) ($identity['visit_source'] ?? CommunicationsVisitSource::None->value);
 
-        if ($viewer !== null) {
-            $queue = $this->queueResolver->resolveAttention($viewer, $previousLastSeenAt);
-            $rows = is_array($queue['needs_attention'] ?? null) ? $queue['needs_attention'] : [];
-            $needs = count($this->attentionDedupe->dedupe($rows));
+        if ($source === CommunicationsVisitSource::Multiple->value) {
+            return 'Multiple open visits';
         }
 
-        $resolved = SchemaPresence::hasTable('conversations')
-            ? (int) Conversation::query()->where('status', ConversationStatus::Resolved->value)->count()
-            : 0;
+        $parts = array_filter([
+            (string) ($identity['vehicle_label'] ?? ''),
+            (string) ($identity['ro_label'] ?? ''),
+            (string) ($identity['ro_status'] ?? ''),
+            $source === CommunicationsVisitSource::Inferred->value ? 'Inferred' : null,
+        ]);
 
-        return [
-            'all' => $needs + $turnCounts['customer'],
-            'needs' => $needs,
-            'waiting' => $turnCounts['customer'],
-            'resolved' => $resolved,
-        ];
+        return $parts !== [] ? implode(' · ', $parts) : 'No current visit';
+    }
+
+    /**
+     * @param  array{all: int, needs: int, waiting: int, resolved: int}  $filterCounts
+     */
+    private function listTotalForFilter(string $filter, array $filterCounts, int $shown): int
+    {
+        $total = match ($filter) {
+            'waiting' => (int) ($filterCounts['waiting'] ?? $shown),
+            'needs' => (int) ($filterCounts['needs'] ?? $shown),
+            'all' => (int) ($filterCounts['all'] ?? $shown),
+            'resolved' => (int) ($filterCounts['resolved'] ?? $shown),
+            default => $shown,
+        };
+
+        return max($shown, $total);
+    }
+
+    /**
+     * @return array{all: int, needs: int, waiting: int, resolved: int}
+     */
+    private function cheapFilterCounts(?User $viewer, ?Carbon $previousLastSeenAt, string $filter = 'needs'): array
+    {
+        return app(ConversationWork::class)->counts();
     }
 
     private function conversationKeyForCallSession(int $callSessionId): ?string
@@ -1462,6 +1482,142 @@ final class CommunicationsWorkspaceProjection
     }
 
     /**
+     * Cheap queue row — conversation + latest message + batched identity later.
+     * Does not call WorkboardPresenter / CustomerCallContextResolver::resolve().
+     *
+     * @return array<string, mixed>
+     */
+    private function cheapConversationQueueItem(
+        Conversation $conversation,
+        ?Lead $lead,
+        string $filter,
+        bool $resolved = false,
+    ): array {
+        /** @var ConversationMessage|null $latest */
+        $latest = $conversation->messages->first();
+        $key = 'conversation:'.$conversation->id;
+        $ownerName = $conversation->owner?->name;
+        $turn = $resolved
+            ? 'customer'
+            : ($conversation->waiting_on === ConversationWaitingOn::Shop ? 'shop' : 'customer');
+        $phone = $conversation->contact_surface === ConversationContactSurface::Phone
+            ? (PhoneNumber::display((string) $conversation->contact_address) ?? (string) $conversation->contact_address)
+            : null;
+        $headline = $phone ?: ((string) $conversation->contact_address !== '' ? (string) $conversation->contact_address : 'Unmatched');
+        $originLabel = $lead instanceof Lead ? $lead->source->opportunityLabel() : null;
+        $ageAt = $resolved
+            ? $conversation->updated_at
+            : ($conversation->posture_changed_at ?? $conversation->updated_at);
+
+        return [
+            'key' => $key,
+            'kind' => 'conversation',
+            'headline' => $headline,
+            'subtitle' => $phone ?? '',
+            'phone' => $phone,
+            'shop_hint' => null,
+            'snippet' => $this->queueSnippet($latest),
+            'channel_label' => $originLabel ?? $this->queueChannelLabel($latest),
+            'origin_label' => $originLabel,
+            'reason' => $resolved ? 'Resolved' : ($conversation->waiting_on?->label() ?? 'Open'),
+            'turn' => $turn,
+            'needs_attention' => ! $resolved && $turn === 'shop',
+            'age_label' => $ageAt?->diffForHumans(short: true) ?? '',
+            'pressure_score' => null,
+            'assigned_label' => filled($ownerName) ? (string) $ownerName : null,
+            'customer_id' => null,
+            'normalized_phone' => $conversation->contact_surface === ConversationContactSurface::Phone
+                ? (string) $conversation->contact_address
+                : null,
+            'select_url' => route('operations.communications.inbox', $this->selectionQuery($key, filter: $filter)),
+            'sort_at' => $ageAt?->toIso8601String() ?? '',
+        ];
+    }
+
+    private function queueSnippet(?ConversationMessage $latest): string
+    {
+        if ($latest === null) {
+            return '';
+        }
+
+        $body = trim((string) $latest->body);
+        if ($body === '' || $body === '(attachment)') {
+            $attachments = $latest->relationLoaded('attachments') ? $latest->attachments : collect();
+            $body = match (true) {
+                $attachments->isEmpty() => '',
+                $attachments->count() > 1 => $attachments->count().' attachments',
+                default => 'Attachment',
+            };
+        }
+
+        return Str::limit($body, 140);
+    }
+
+    private function queueChannelLabel(?ConversationMessage $latest): string
+    {
+        if ($latest === null) {
+            return 'Message';
+        }
+
+        if ($latest->channel === OperationalCommunicationChannel::Sms
+            && $latest->relationLoaded('attachments')
+            && $latest->attachments->isNotEmpty()) {
+            return 'MMS';
+        }
+
+        return $latest->channel?->label() ?? 'Message';
+    }
+
+    /**
+     * Lightweight poll stamp — aggregates only, never list presenters or timelines.
+     */
+    public function pollSignature(
+        string $filter,
+        ?int $conversationId = null,
+        ?int $leadId = null,
+        ?int $callSessionId = null,
+    ): string {
+        $parts = [
+            $filter,
+            (string) Conversation::query()->where('status', ConversationStatus::Open->value)->count(),
+            (string) (Conversation::query()->where('status', ConversationStatus::Open->value)->max('updated_at') ?? ''),
+            SchemaPresence::hasTable('conversation_messages')
+                ? (string) (ConversationMessage::query()->max('id') ?? 0)
+                : '0',
+            SchemaPresence::hasTable('call_sessions')
+                ? (string) (CallSession::query()->max('id') ?? 0)
+                : '0',
+            SchemaPresence::hasTable('call_sessions')
+                ? (string) (CallSession::query()->max('updated_at') ?? '')
+                : '',
+            (string) ($conversationId ?? 0),
+            (string) ($leadId ?? 0),
+            (string) ($callSessionId ?? 0),
+        ];
+
+        if ($conversationId !== null && $conversationId > 0) {
+            $parts[] = (string) (Conversation::query()->whereKey($conversationId)->value('updated_at') ?? '');
+            $parts[] = SchemaPresence::hasTable('conversation_messages')
+                ? (string) (ConversationMessage::query()->where('conversation_id', $conversationId)->max('id') ?? 0)
+                : '0';
+        }
+
+        if ($callSessionId !== null && $callSessionId > 0) {
+            $session = CallSession::query()->select(['id', 'status', 'updated_at', 'worked_at', 'answered_at'])->find($callSessionId);
+            $parts[] = (string) ($session?->status?->value ?? '');
+            $parts[] = (string) ($session?->updated_at ?? '');
+            $parts[] = (string) ($session?->worked_at ?? '');
+            $parts[] = (string) ($session?->answered_at ?? '');
+        }
+
+        if ($leadId !== null && $leadId > 0 && SchemaPresence::hasTable('leads')) {
+            $parts[] = (string) (Lead::query()->whereKey($leadId)->value('updated_at') ?? '');
+        }
+
+        return md5(implode('|', $parts));
+    }
+
+    /**
      * @return array{
      *     section: string,
      *     list_items: list<array<string, mixed>>,
@@ -1482,6 +1638,7 @@ final class CommunicationsWorkspaceProjection
             'selected' => null,
             'thread' => null,
             'context' => null,
+            'poll_signature' => '',
             'list_filter' => 'needs',
             'filter_counts' => ['all' => 0, 'needs' => 0, 'waiting' => 0, 'resolved' => 0],
             'turn_filter' => null,

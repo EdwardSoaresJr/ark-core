@@ -33,6 +33,27 @@ test('staff can void a payment from the financial rail', function () {
         ->and($entry->fresh()->voided_at)->not->toBeNull();
 });
 
+test('ledger queries treat method as payment_method', function () {
+    $repairOrder = financialCloseoutRepairOrder();
+    issueFinalInvoiceFor($repairOrder);
+    payRepairOrderInFull($repairOrder);
+
+    $rows = RepairOrderLedgerEntry::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->orderByDesc('id')
+        ->get(['id', 'entry_type', 'amount_cents', 'voided_at', 'reference', 'recorded_at', 'method']);
+
+    expect($rows)->not->toBeEmpty()
+        ->and($rows->first()->payment_method)->toBe(PaymentMethod::Cash)
+        ->and($rows->first()->method)->toBe(PaymentMethod::Cash)
+        ->and(
+            RepairOrderLedgerEntry::query()
+                ->where('repair_order_id', $repairOrder->id)
+                ->where('method', PaymentMethod::Cash)
+                ->exists()
+        )->toBeTrue();
+});
+
 test('staff can record a refund from the financial rail', function () {
     $repairOrder = financialCloseoutRepairOrder();
     issueFinalInvoiceFor($repairOrder);

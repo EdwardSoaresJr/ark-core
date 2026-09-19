@@ -22,6 +22,14 @@ export function deliveryHttpErrorMessage(response, data = {}, fallback = 'Delive
     return fallback;
 }
 
+export function deliverySentCopy(noun, delivery) {
+    const channels = delivery === 'both'
+        ? 'SMS and email'
+        : (delivery === 'email' ? 'email' : 'SMS');
+
+    return `${noun} sent via ${channels}.`;
+}
+
 export function deliveryPayload(delivery, customerEmail = '', extra = {}) {
     const payload = { delivery, ...extra };
 

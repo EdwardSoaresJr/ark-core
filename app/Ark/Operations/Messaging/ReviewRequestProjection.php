@@ -27,6 +27,7 @@ final class ReviewRequestProjection
      *     sent_at: ?Carbon,
      *     sent_channels: list<string>,
      *     no_contact_message: ?string,
+     *     recipient_email: ?string,
      *     review_url: string,
      *     contact_url: string,
      *     preview_sms_body: string,
@@ -46,7 +47,12 @@ final class ReviewRequestProjection
             $canText = CustomerSmsSendEligibility::for($customer, $this->credentials)->canSend();
         }
 
-        $canEmail = $customer !== null && filled($customer->email);
+        $canEmail = $customer !== null
+            && filled($customer->email)
+            && $this->credentials->emailConfigured();
+        $recipientEmail = $customer !== null && filled($customer->email)
+            ? strtolower(trim((string) $customer->email))
+            : null;
 
         $alreadySent = $this->authority->alreadySent($repairOrder);
         $historyEntries = $this->authority->historyEntries($repairOrder);
@@ -107,6 +113,7 @@ final class ReviewRequestProjection
             'sent_at' => $sentAt,
             'sent_channels' => $channels,
             'no_contact_message' => $noContactMessage,
+            'recipient_email' => $recipientEmail,
             'review_url' => $reviewUrl,
             'contact_url' => $contactUrl,
             'preview_sms_body' => ReviewRequestCopy::smsBody($reviewUrl, $shopName),

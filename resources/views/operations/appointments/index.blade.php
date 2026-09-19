@@ -8,6 +8,7 @@
             'day' => $w['focus_date'],
             'view' => $boardView,
             'lens' => ($w['lens'] ?? 'agenda') !== 'agenda' ? ($w['lens'] ?? null) : null,
+            'allocate' => ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day') ? ($w['allocate'] ?? null) : null,
         ], fn ($v) => $v !== null && $v !== '');
     @endphp
 
@@ -47,6 +48,9 @@
                         @if (($w['lens'] ?? 'agenda') !== 'agenda')
                             <input type="hidden" name="lens" value="{{ $w['lens'] }}">
                         @endif
+                        @if ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day')
+                            <input type="hidden" name="allocate" value="{{ $w['allocate'] }}">
+                        @endif
                         @foreach ($w['view_options'] ?? [] as $option)
                             <button
                                 type="submit"
@@ -63,6 +67,24 @@
                     <a href="{{ route('operations.schedule') }}" class="ops-page-link ops-page-link--primary">Schedule</a>
                 </div>
             </div>
+            @if ($boardView === 'week')
+                <div class="ops-day-lens" role="navigation" aria-label="Week allocation">
+                    @foreach ($w['allocate_options'] ?? [] as $option)
+                        <a
+                            href="{{ route('operations.appointments.index', array_filter([
+                                'day' => $w['focus_date'],
+                                'view' => 'week',
+                                'allocate' => $option['key'] !== 'day' ? $option['key'] : null,
+                                'lens' => ($w['lens'] ?? 'agenda') !== 'agenda' ? ($w['lens'] ?? null) : null,
+                            ])) }}"
+                            class="ops-day-lens__chip {{ ! empty($option['selected']) ? 'ops-day-lens__chip--selected' : '' }}"
+                            @if (! empty($option['selected'])) aria-current="true" @endif
+                        >
+                            <span class="ops-day-lens__label">{{ $option['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
             @if (! empty($w['chips']) && count($w['chips']) > 1)
                 <div class="ops-day-lens" role="navigation" aria-label="Day schedule perspectives">
                     @foreach ($w['chips'] as $chip)
@@ -71,6 +93,7 @@
                                 'day' => $w['focus_date'],
                                 'view' => $boardView,
                                 'lens' => $chip['key'] !== 'agenda' ? $chip['key'] : null,
+                                'allocate' => ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day') ? ($w['allocate'] ?? null) : null,
                             ])) }}"
                             class="ops-day-lens__chip {{ ! empty($chip['selected']) ? 'ops-day-lens__chip--selected' : '' }}"
                             @if (! empty($chip['selected'])) aria-current="true" @endif

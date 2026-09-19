@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Portal;
 
 use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Approvals\ApprovalSource;
+use App\Ark\Operations\Financial\BalanceDueResult;
 use App\Ark\Operations\Financial\RepairOrderDefaultDepositCalculator;
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -27,8 +28,17 @@ final class PortalEstimateDepositProjection
      * @param  array<string, mixed>|null  $sessionFlash
      * @return array{
      *     portalAuthorization: array<string, mixed>|null,
+     *     authorizationFromSession: bool,
      *     depositCollected: bool,
      *     payingRemaining: bool,
+     *     collectionSummary: ?string,
+     *     paymentNotice: ?array{
+     *         kind: 'complete'|'partial'|'balance_due',
+     *         title: string,
+     *         body: string|null,
+     *         remaining_line: string|null,
+     *         received_amount: string|null,
+     *     },
      * }
      */
     public function forAccessToken(
@@ -36,8 +46,11 @@ final class PortalEstimateDepositProjection
         EstimateAccessToken $accessToken,
         ?array $sessionFlash,
     ): array {
-        $unappliedDeposits = $repairOrder->balanceDue()->unappliedDepositsCents;
+        $balance = $repairOrder->balanceDue();
+        $unappliedDeposits = $balance->unappliedDepositsCents;
         $payingRemainingBase = $unappliedDeposits > 0;
+        $paymentNotice = $this->paymentNotice($repairOrder, $balance);
+        $collectionSummary = $this->legacyCollectionSummary($paymentNotice);
 
         if (is_array($sessionFlash) && isset($sessionFlash['approval_id'])) {
             $payload = $this->withLiveCharge($repairOrder, $sessionFlash);
@@ -45,8 +58,15 @@ final class PortalEstimateDepositProjection
 
             return [
                 'portalAuthorization' => $payload,
-                'depositCollected' => $fullyCollected && $payingRemainingBase,
+                'authorizationFromSession' => true,
+                'depositCollected' => $this->paymentReceived(
+                    $balance->hasIssuedInvoice,
+                    $balance->isPaid(),
+                    $fullyCollected && $payingRemainingBase,
+                ),
                 'payingRemaining' => $payingRemainingBase && ! $fullyCollected,
+                'collectionSummary' => $collectionSummary,
+                'paymentNotice' => $paymentNotice,
             ];
         }
 
@@ -55,9 +75,16 @@ final class PortalEstimateDepositProjection
         if (! $approval instanceof ApprovalEvent) {
             return [
                 'portalAuthorization' => null,
-                'depositCollected' => $payingRemainingBase
-                    && $this->depositGuard->remainingAllowedDepositCents($repairOrder) === 0,
+                'authorizationFromSession' => false,
+                'depositCollected' => $this->paymentReceived(
+                    $balance->hasIssuedInvoice,
+                    $balance->isPaid(),
+                    $payingRemainingBase
+                        && $this->depositGuard->remainingAllowedDepositCents($repairOrder, $balance) === 0,
+                ),
                 'payingRemaining' => false,
+                'collectionSummary' => $collectionSummary,
+                'paymentNotice' => $paymentNotice,
             ];
         }
 
@@ -66,8 +93,15 @@ final class PortalEstimateDepositProjection
 
         return [
             'portalAuthorization' => $payload,
-            'depositCollected' => $fullyCollected,
+            'authorizationFromSession' => false,
+            'depositCollected' => $this->paymentReceived(
+                $balance->hasIssuedInvoice,
+                $balance->isPaid(),
+                $fullyCollected && $payingRemainingBase,
+            ),
             'payingRemaining' => $payingRemainingBase && ! $fullyCollected,
+            'collectionSummary' => $collectionSummary,
+            'paymentNotice' => $paymentNotice,
         ];
     }
 
@@ -94,6 +128,141 @@ final class PortalEstimateDepositProjection
     private function fullyCollected(?array $payload): bool
     {
         return $payload === null || (int) ($payload['deposit_amount_cents'] ?? 0) <= 0;
+    }
+
+    /**
+     * "Payment received" requires ledger money. An issued invoice zeros the
+     * remaining deposit charge, which is not the same as the customer paying.
+     */
+    private function paymentReceived(bool $invoiceIssued, bool $invoicePaid, bool $depositCollected): bool
+    {
+        return $invoiceIssued ? $invoicePaid : $depositCollected;
+    }
+
+    /**
+     * @return array{
+     *     kind: 'complete'|'partial'|'balance_due',
+     *     title: string,
+     *     body: string|null,
+     *     remaining_line: string|null,
+     *     received_amount: string|null,
+     * }|null
+     */
+    private function paymentNotice(RepairOrder $repairOrder, BalanceDueResult $balance): ?array
+    {
+        if ($balance->hasIssuedInvoice) {
+            $paidCents = max(0, $balance->paymentsAppliedCents + $balance->depositsAppliedCents);
+            $dueCents = $balance->balanceDueCents;
+
+            if ($paidCents > 0 && $dueCents <= 0) {
+                return $this->completePaymentNotice($paidCents);
+            }
+
+            if ($paidCents > 0 && $dueCents > 0) {
+                return $this->partialPaymentNotice(
+                    $paidCents,
+                    sprintf('%s remaining', Money::ofMinor($dueCents, 'USD')->formatTo('en_US')),
+                );
+            }
+
+            if ($dueCents > 0) {
+                return [
+                    'kind' => 'balance_due',
+                    'title' => sprintf('Balance due %s.', Money::ofMinor($dueCents, 'USD')->formatTo('en_US')),
+                    'body' => null,
+                    'remaining_line' => null,
+                    'received_amount' => null,
+                ];
+            }
+
+            return null;
+        }
+
+        $paidCents = max(0, $balance->unappliedDepositsCents);
+        $dueCents = $this->depositGuard->remainingAllowedDepositCents($repairOrder, $balance);
+
+        if ($paidCents > 0 && $dueCents <= 0) {
+            return $this->completePaymentNotice($paidCents);
+        }
+
+        if ($paidCents > 0 && $dueCents > 0) {
+            return $this->partialPaymentNotice(
+                $paidCents,
+                sprintf('%s remaining', Money::ofMinor($dueCents, 'USD')->formatTo('en_US')),
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{
+     *     kind: 'complete',
+     *     title: string,
+     *     body: string,
+     *     remaining_line: null,
+     *     received_amount: string,
+     * }
+     */
+    private function completePaymentNotice(int $paidCents): array
+    {
+        $amount = Money::ofMinor($paidCents, 'USD')->formatTo('en_US');
+
+        return [
+            'kind' => 'complete',
+            'title' => 'Payment received',
+            'body' => sprintf('Thank you — we received your %s payment.', $amount),
+            'remaining_line' => null,
+            'received_amount' => $amount,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     kind: 'partial',
+     *     title: string,
+     *     body: string,
+     *     remaining_line: string,
+     *     received_amount: string,
+     * }
+     */
+    private function partialPaymentNotice(int $paidCents, string $remainingLine): array
+    {
+        $amount = Money::ofMinor($paidCents, 'USD')->formatTo('en_US');
+
+        return [
+            'kind' => 'partial',
+            'title' => 'Partial payment received',
+            'body' => sprintf('Thank you — we received your %s payment.', $amount),
+            'remaining_line' => $remainingLine,
+            'received_amount' => $amount,
+        ];
+    }
+
+    /**
+     * @param  array{
+     *     kind: 'complete'|'partial'|'balance_due',
+     *     title: string,
+     *     body: string|null,
+     *     remaining_line: string|null,
+     *     received_amount: string|null,
+     * }|null  $paymentNotice
+     */
+    private function legacyCollectionSummary(?array $paymentNotice): ?string
+    {
+        if ($paymentNotice === null || $paymentNotice['kind'] === 'complete') {
+            return null;
+        }
+
+        if ($paymentNotice['kind'] === 'balance_due') {
+            return $paymentNotice['title'];
+        }
+
+        return trim(sprintf(
+            '%s %s',
+            $paymentNotice['body'] ?? '',
+            $paymentNotice['remaining_line'] ?? '',
+        ));
     }
 
     private function latestPayablePortalApproval(RepairOrder $repairOrder): ?ApprovalEvent

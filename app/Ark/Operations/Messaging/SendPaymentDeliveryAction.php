@@ -17,7 +17,7 @@ final class SendPaymentDeliveryAction
 
     /**
      * @return array{
-     *     messages: list<ConversationMessage>,
+     *     messages: list<ConversationMessage|null>,
      *     payment_url: ?string,
      *     balance_due_display: ?string,
      * }

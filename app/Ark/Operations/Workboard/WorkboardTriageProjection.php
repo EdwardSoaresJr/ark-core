@@ -41,7 +41,9 @@ final class WorkboardTriageProjection
      */
     private function beginCardPass(Collection $repairOrders): void
     {
-        $fingerprint = $repairOrders->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())->implode(',');
+        $fingerprint = $repairOrders
+            ->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())
+            ->implode(',');
 
         if ($this->cardPassFingerprint === $fingerprint) {
             return;
@@ -71,46 +73,71 @@ final class WorkboardTriageProjection
 
     public function forAdvisorHomeBoard(Collection $repairOrders): array
     {
-        $cardsById = $this->allTriageCardsForRepairOrders($repairOrders)
-            ->keyBy(fn (WorkboardTriageCard $card): int => $card->repairOrder->id);
-
-        /** @var array<string, Collection<int, WorkboardTriageCard>> $cardsByColumn */
-        $cardsByColumn = collect(WorkboardSwimlaneCatalog::advisorHomeBoardColumns())
+        /** @var array<string, Collection<int, RepairOrder>> $repairOrdersByColumn */
+        $repairOrdersByColumn = collect(WorkboardSwimlaneCatalog::advisorHomeBoardColumns())
             ->mapWithKeys(fn (array $column): array => [$column['key'] => collect()])
             ->all();
 
         foreach ($repairOrders as $repairOrder) {
             $columnKey = WorkboardSwimlaneCatalog::homeBoardColumnKeyForRepairOrder($repairOrder);
 
-            if ($columnKey === null) {
+            if ($columnKey === null || ! isset($repairOrdersByColumn[$columnKey])) {
                 continue;
             }
 
-            $card = $cardsById->get($repairOrder->id);
-
-            if ($card instanceof WorkboardTriageCard) {
-                $cardsByColumn[$columnKey]->push($card);
-            }
+            $repairOrdersByColumn[$columnKey]->push($repairOrder);
         }
 
+        $visibleLimit = WorkboardSwimlaneCatalog::HOME_BOARD_VISIBLE_CARD_LIMIT;
+        $candidateRepairOrders = collect();
+
+        foreach ($repairOrdersByColumn as $columnRepairOrders) {
+            // Project the oldest open work first so stale cards stay on the board.
+            $candidateRepairOrders = $candidateRepairOrders->merge(
+                $columnRepairOrders
+                    ->sortBy(fn (RepairOrder $repairOrder): int => $repairOrder->updated_at->getTimestamp())
+                    ->take($visibleLimit)
+                    ->values(),
+            );
+        }
+
+        $candidateRepairOrders = $candidateRepairOrders
+            ->unique(fn (RepairOrder $repairOrder): int => $repairOrder->id)
+            ->values();
+
+        $cardsById = $this->allTriageCardsForRepairOrders($candidateRepairOrders)
+            ->keyBy(fn (WorkboardTriageCard $card): int => $card->repairOrder->id);
+
         return collect(WorkboardSwimlaneCatalog::advisorHomeBoardColumns())
-            ->map(function (array $column) use ($cardsByColumn): WorkboardTriageLaneProjection {
-                $laneCards = ($cardsByColumn[$column['key']] ?? collect())
+            ->map(function (array $column) use ($repairOrdersByColumn, $cardsById, $visibleLimit): WorkboardTriageLaneProjection {
+                $columnRepairOrders = $repairOrdersByColumn[$column['key']] ?? collect();
+                $laneCards = $columnRepairOrders
+                    ->map(fn (RepairOrder $repairOrder): ?WorkboardTriageCard => $cardsById->get($repairOrder->id))
+                    ->filter()
                     ->sortBy([
                         ['pressureScore', 'desc'],
                         ['ageMinutes', 'desc'],
                     ])
                     ->values();
 
+                $visibleCards = $laneCards->take($visibleLimit)->all();
+                $hiddenCount = max(0, $columnRepairOrders->count() - count($visibleCards));
+                $inventoryUrl = $columnRepairOrders->isNotEmpty()
+                    ? WorkboardSwimlaneCatalog::inventoryUrlForHomeColumn($column['key'])
+                    : null;
+
                 return new WorkboardTriageLaneProjection(
                     key: $column['key'],
                     label: $column['label'],
                     tone: $column['tone'],
-                    totalCount: $laneCards->count(),
-                    visibleCards: $laneCards->all(),
-                    hiddenCount: 0,
-                    viewAllUrl: null,
-                    inventoryUrl: WorkboardSwimlaneCatalog::inventoryUrlForHomeColumn($column['key']),
+                    totalCount: $columnRepairOrders->count(),
+                    visibleCards: $visibleCards,
+                    hiddenCount: $hiddenCount,
+                    viewAllUrl: $inventoryUrl !== null && $hiddenCount > 0
+                        ? $inventoryUrl
+                        : null,
+                    inventoryUrl: $inventoryUrl,
+                    color: $column['color'] ?? 'secondary',
                 );
             })
             ->all();
@@ -269,7 +296,9 @@ final class WorkboardTriageProjection
      */
     public function allTriageCardsForRepairOrders(Collection $repairOrders): Collection
     {
-        $fingerprint = $repairOrders->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())->implode(',');
+        $fingerprint = $repairOrders
+            ->map(fn (RepairOrder $repairOrder): int|string => $repairOrder->getKey())
+            ->implode(',');
 
         if ($this->memoizedCards !== null && $this->memoizedCardsFingerprint === $fingerprint) {
             return $this->memoizedCards;
@@ -854,7 +883,7 @@ final class WorkboardTriageProjection
             customerWaitingUrl: $customerWaitingCount > 0
                 ? ($customerWaitingCount > WorkboardSwimlaneCatalog::VISIBLE_CARD_LIMIT
                     ? WorkboardAttentionInventoryQuery::inventoryUrl('customer_waiting')
-                    : route('operations.index').'#ops-home-col-estimates')
+                    : route('operations.index').'#ops-home-col-waiting_approval')
                 : null,
             unassignedUrl: $unassignedCount > 0
                 ? route('operations.repair-orders.index', ['unassigned' => '1'])

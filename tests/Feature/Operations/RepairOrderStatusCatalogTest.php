@@ -59,11 +59,11 @@ test('advisor workboard exposes consolidated shop pressure lanes from catalog', 
 
     expect($catalog->advisorWorkboardLanes())->toHaveCount(5)
         ->and(collect($catalog->advisorWorkboardLanes())->pluck('label')->all())->toBe([
+            'Estimates',
             'Waiting Approval',
             'Waiting Parts',
-            'Shop Floor',
-            'Quality Check',
-            'Ready Pickup',
+            'Work in Progress',
+            'Completed',
         ]);
 });
 
@@ -348,10 +348,16 @@ test('shop workflow settings expose the repair order status catalog', function (
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'workflow', 'workflow-tab' => 'statuses']))
         ->assertOk()
-        ->assertSee('RO status catalog')
+        ->assertSee('RO statuses')
+        ->assertSee('Job Board lanes')
         ->assertSee('Waiting Approval')
         ->assertSee('Paid')
         ->assertSee('Save status catalog')
+        ->assertSee('Mileage required', false)
+        ->assertSee('>Mileage in</option>', false)
+        ->assertSee('>Mileage out</option>', false)
+        ->assertSee('>Both</option>', false)
+        ->assertSee('name="statuses[in_progress][mileage_requirement]"', false)
         ->assertSee('name="statuses[waiting_approval][color]"', false)
         ->assertSee('Waiting')
         ->assertSee('In motion')
@@ -473,16 +479,12 @@ test('technicians see a filtered workboard for assigned bay work', function () {
 
     $assigned = statusCatalogRepairOrder(RepairOrderStatus::InProgress);
     $assigned->update(['concern_summary' => 'TECH-ASSIGNED-BAY-WORK']);
-    statusCatalogLine($assigned);
-    $assigned->forceFill(['assigned_technician_id' => $technician->id])->save();
-    statusCatalogWorkGroup($assigned, $technician);
+    statusCatalogOwnedLine($assigned, $technician);
 
     $otherTech = User::factory()->create()->assignRole(ArkRole::Technician->value);
     $foreignBay = statusCatalogRepairOrder(RepairOrderStatus::InProgress);
     $foreignBay->update(['concern_summary' => 'TECH-FOREIGN-BAY-WORK']);
-    statusCatalogLine($foreignBay);
-    $foreignBay->forceFill(['assigned_technician_id' => $otherTech->id])->save();
-    statusCatalogWorkGroup($foreignBay, $otherTech);
+    statusCatalogOwnedLine($foreignBay, $otherTech);
 
     $draft = statusCatalogRepairOrder(RepairOrderStatus::Draft);
     $draft->update(['concern_summary' => 'TECH-HIDDEN-DRAFT-WORK']);
@@ -503,15 +505,11 @@ test('admins can preview bay view for a chosen technician', function () {
 
     $assigned = statusCatalogRepairOrder(RepairOrderStatus::InProgress);
     $assigned->update(['concern_summary' => 'ADMIN-PREVIEW-MINE']);
-    statusCatalogLine($assigned);
-    $assigned->forceFill(['assigned_technician_id' => $technician->id])->save();
-    statusCatalogWorkGroup($assigned, $technician);
+    statusCatalogOwnedLine($assigned, $technician);
 
     $foreignBay = statusCatalogRepairOrder(RepairOrderStatus::InProgress);
     $foreignBay->update(['concern_summary' => 'ADMIN-PREVIEW-THEIRS']);
-    statusCatalogLine($foreignBay);
-    $foreignBay->forceFill(['assigned_technician_id' => $otherTech->id])->save();
-    statusCatalogWorkGroup($foreignBay, $otherTech);
+    statusCatalogOwnedLine($foreignBay, $otherTech);
 
     $this->actingAs($admin)
         ->get(route('operations.workboard', [
@@ -612,6 +610,76 @@ test('admin can add a custom lifecycle move from settings', function () {
     ))->toBeTrue();
 });
 
+test('job board mileage requirement blocks the move and names what is missing', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $technician = User::factory()->create(['name' => 'Bay Tech'])->assignRole(ArkRole::Technician->value);
+    $this->actingAs($advisor);
+
+    $repairOrder = statusCatalogRepairOrder(RepairOrderStatus::Approved);
+    statusCatalogLine($repairOrder);
+    $repairOrder->forceFill([
+        'assigned_technician_id' => $technician->id,
+        'mileage_in' => null,
+        'mileage_out' => null,
+    ])->save();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => RepairOrderStatus::InProgress->value,
+    ])->assertRedirect()
+        ->assertSessionHasErrors(['lifecycle' => 'Enter mileage in before moving to In Progress.']);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Enter mileage in before moving to In Progress.', false)
+        ->assertDontSee('value="in_progress" disabled', false);
+
+    $repairOrder->forceFill([
+        'mileage_in' => 44168,
+        'status' => RepairOrderStatus::QualityCheck,
+    ])->save();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder->fresh()), [
+        'status' => RepairOrderStatus::Completed->value,
+    ])->assertRedirect()
+        ->assertSessionHasErrors(['lifecycle' => 'Enter mileage out before moving to Completed.']);
+
+    $repairOrder->forceFill(['mileage_out' => 44200])->save();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder->fresh()), [
+        'status' => RepairOrderStatus::Completed->value,
+    ])->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::Completed))->toBeTrue();
+});
+
+test('job board settings save mileage requirements on a status', function () {
+    $admin = actingAsLearnCurrentStaff(ArkRole::Admin);
+    $this->actingAs($admin);
+
+    $this->from(route('operations.settings.shop.edit', ['section' => 'workflow', 'workflow-tab' => 'statuses']))
+        ->patch(route('operations.settings.shop.status-catalog.update'), [
+            'statuses' => [
+                RepairOrderStatus::InProgress->value => [
+                    'name' => 'In Progress',
+                    'show_on_advisor_board' => '1',
+                    'show_on_technician_board' => '1',
+                    'mileage_requirement' => 'both',
+                ],
+            ],
+        ])
+        ->assertRedirect();
+
+    app(RepairOrderStatusCatalog::class)->forgetCache();
+
+    $definition = RepairOrderStatusDefinition::query()
+        ->where('slug', RepairOrderStatus::InProgress->value)
+        ->firstOrFail();
+
+    expect($definition->requires_mileage_in)->toBeTrue()
+        ->and($definition->requires_mileage_out)->toBeTrue();
+});
+
 function statusCatalogRepairOrder(RepairOrderStatus $status): RepairOrder
 {
     $customer = Customer::query()->create([
@@ -633,11 +701,13 @@ function statusCatalogRepairOrder(RepairOrderStatus $status): RepairOrder
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => $status,
+        'mileage_in' => 120000,
+        'mileage_out' => 120050,
         'concern_summary' => 'Status catalog regression coverage.',
     ])->fresh();
 }
 
-function statusCatalogLine(RepairOrder $repairOrder): void
+function statusCatalogLine(RepairOrder $repairOrder): RepairOrderConcern
 {
     $concern = RepairOrderConcern::query()->create([
         'repair_order_id' => $repairOrder->id,
@@ -655,17 +725,21 @@ function statusCatalogLine(RepairOrder $repairOrder): void
         'subtotal_cents' => 10000,
         'total_cents' => 10000,
     ]);
+
+    return $concern;
 }
 
-function statusCatalogWorkGroup(RepairOrder $repairOrder, User $owner): void
+function statusCatalogOwnedLine(RepairOrder $repairOrder, User $technician): void
 {
-    $concern = $repairOrder->concerns()->firstOrFail();
+    $concern = statusCatalogLine($repairOrder);
 
     RepairOrderWorkGroup::query()->create([
         'repair_order_concern_id' => $concern->id,
-        'title' => $concern->summary,
+        'title' => 'Inspection',
         'position' => 1,
         'owner_type' => RepairActionOwnerType::Technician,
-        'owner_user_id' => $owner->id,
+        'owner_user_id' => $technician->id,
     ]);
+
+    $repairOrder->forceFill(['assigned_technician_id' => $technician->id])->save();
 }

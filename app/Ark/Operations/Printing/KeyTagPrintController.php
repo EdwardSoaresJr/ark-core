@@ -19,6 +19,11 @@ final class KeyTagPrintController
 
     public function __invoke(Request $request, RepairOrder $repairOrder): Response
     {
+        $blocked = KeyTagPrintGate::blockedReason($repairOrder);
+        if ($blocked !== null) {
+            abort(422, $blocked);
+        }
+
         $this->logPrintJob($request, $repairOrder);
 
         $bytes = $this->renderer->renderPdfBytesForRepairOrder($repairOrder);

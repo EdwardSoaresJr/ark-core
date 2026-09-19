@@ -13,12 +13,13 @@ final class ConversationDeliveryJsonResponse
     ) {}
 
     /**
-     * @param  list<ConversationMessage>  $messages
+     * @param  list<ConversationMessage|null>  $messages
      * @param  array<string, mixed>  $extra
      */
     public function make(array $messages, array $extra = []): JsonResponse
     {
         $deliveries = collect($messages)
+            ->filter(fn (mixed $message): bool => $message instanceof ConversationMessage)
             ->map(function (ConversationMessage $message): array {
                 return [
                     'message_id' => $message->id,

@@ -7,7 +7,7 @@
 <x-operations.app :title="$user->name.' · Shop'">
     <div class="mx-auto max-w-3xl space-y-4 px-4 py-4">
         <header class="space-y-1 border-b border-slate-200 pb-3">
-            <a href="{{ route('operations.shop.communications') }}" class="text-xs font-semibold text-sky-700">← Voice</a>
+            <a href="{{ route('operations.shop.communications') }}" class="text-xs font-semibold text-sky-700">← Stations &amp; Phones</a>
             <h1 class="text-xl font-black text-slate-950">{{ $user->name }}</h1>
             @if (session('status'))
                 <p class="text-sm font-semibold text-emerald-700">{{ session('status') }}</p>
@@ -48,25 +48,6 @@
                         name="name"
                         required
                         placeholder="Front Desk VVX450"
-                        class="w-full rounded-sm border-slate-300 text-sm"
-                    >
-                </label>
-                <label class="block space-y-1">
-                    <span class="text-xs font-semibold text-slate-700">MAC address</span>
-                    <input
-                        type="text"
-                        name="mac_address"
-                        required
-                        placeholder="48:25:67:30:75:7F"
-                        class="w-full rounded-sm border-slate-300 font-mono text-sm uppercase"
-                    >
-                </label>
-                <label class="block space-y-1">
-                    <span class="text-xs font-semibold text-slate-700">Model</span>
-                    <input
-                        type="text"
-                        name="model"
-                        placeholder="VVX450"
                         class="w-full rounded-sm border-slate-300 text-sm"
                     >
                 </label>

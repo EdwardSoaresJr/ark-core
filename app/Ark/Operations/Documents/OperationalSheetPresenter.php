@@ -69,6 +69,7 @@ final class OperationalSheetPresenter
         $repairOrder->loadMissing([
             'customer',
             'vehicle',
+            'assignedTechnician',
             'concerns.lines',
             'concerns.workGroups.lines',
             'concerns.workGroups.ownerUser',
@@ -85,6 +86,7 @@ final class OperationalSheetPresenter
 
         $technicianName = $owner?->name
             ?? $this->techPackagesOwnerFallbackName($packages)
+            ?? $repairOrder->assignedTechnician?->name
             ?? 'Unassigned';
 
         $packagesForSheet = array_map(static function (array $package): array {
@@ -142,7 +144,7 @@ final class OperationalSheetPresenter
      */
     private function techPackages(RepairOrder $repairOrder, ?User $owner): array
     {
-        return $this->approvedWorkGroups($repairOrder)
+        $groupPackages = $this->approvedWorkGroups($repairOrder)
             ->filter(function (RepairOrderWorkGroup $group) use ($owner): bool {
                 if ($owner === null) {
                     return true;
@@ -151,9 +153,63 @@ final class OperationalSheetPresenter
                 return $group->isOwnedByUserId((int) $owner->id);
             })
             ->map(fn (RepairOrderWorkGroup $group): array => $this->techPackageBlock($group))
-            ->filter(fn (array $package): bool => $package['labor'] !== [] || ($package['sublets'] ?? []) !== [] || $package['parts'] !== [] || $package['work_notes'] !== [])
-            ->values()
-            ->all();
+            ->filter(fn (array $package): bool => $this->packageHasWork($package))
+            ->values();
+
+        $assignedTechnicianId = $repairOrder->assigned_technician_id !== null
+            ? (int) $repairOrder->assigned_technician_id
+            : null;
+
+        $ungroupedPackages = $this->approvedConcerns($repairOrder)
+            ->map(function (RepairOrderConcern $concern) use ($owner, $assignedTechnicianId, $repairOrder): ?array {
+                $lines = $concern->lines
+                    ->filter(fn (RepairOrderLine $line): bool => $line->repair_order_work_group_id === null
+                        && $line->shouldDisplayOnEstimateWorksheet());
+
+                if ($lines->isEmpty()) {
+                    return null;
+                }
+
+                if ($owner !== null && $assignedTechnicianId !== (int) $owner->id) {
+                    return null;
+                }
+
+                return $this->techPackageFromLines(
+                    title: (string) ($concern->summary ?: 'Approved work'),
+                    concern: $concern,
+                    lines: RepairOrderLineWorksheetOrder::sort($lines),
+                    ownerName: $repairOrder->assignedTechnician?->name,
+                    status: RepairActionStatus::Pending,
+                    latestUpdate: null,
+                    updatedAt: null,
+                );
+            })
+            ->filter(fn (?array $package): bool => $package !== null && $this->packageHasWork($package))
+            ->values();
+
+        return $groupPackages->concat($ungroupedPackages)->values()->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $package
+     */
+    private function packageHasWork(array $package): bool
+    {
+        return $package['labor'] !== []
+            || ($package['sublets'] ?? []) !== []
+            || $package['parts'] !== []
+            || $package['work_notes'] !== [];
+    }
+
+    /**
+     * @return Collection<int, RepairOrderConcern>
+     */
+    private function approvedConcerns(RepairOrder $repairOrder): Collection
+    {
+        return $repairOrder->concerns
+            ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved)
+            ->sortBy('position')
+            ->values();
     }
 
     /**
@@ -161,9 +217,7 @@ final class OperationalSheetPresenter
      */
     private function approvedWorkGroups(RepairOrder $repairOrder): Collection
     {
-        return $repairOrder->concerns
-            ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved)
-            ->sortBy('position')
+        return $this->approvedConcerns($repairOrder)
             ->flatMap(fn (RepairOrderConcern $concern): Collection => $concern->workGroups->sortBy('position')->values())
             ->values();
     }
@@ -173,11 +227,39 @@ final class OperationalSheetPresenter
      */
     private function techPackageBlock(RepairOrderWorkGroup $workGroup): array
     {
-        $concern = $workGroup->concern;
-        $lines = RepairOrderLineWorksheetOrder::sort(
-            $workGroup->lines->filter(fn (RepairOrderLine $line): bool => $line->shouldDisplayOnEstimateWorksheet())
-        );
+        $status = $workGroup->status instanceof RepairActionStatus
+            ? $workGroup->status
+            : RepairActionStatus::Pending;
 
+        return $this->techPackageFromLines(
+            title: $workGroup->title,
+            concern: $workGroup->concern,
+            lines: RepairOrderLineWorksheetOrder::sort(
+                $workGroup->lines->filter(fn (RepairOrderLine $line): bool => $line->shouldDisplayOnEstimateWorksheet())
+            ),
+            ownerName: $workGroup->ownerUser?->name,
+            status: $status,
+            latestUpdate: $workGroup->latest_update,
+            updatedAt: $workGroup->updated_at?->timezone(config('app.timezone'))->format('g:i A'),
+            laborCountSource: $workGroup->lines,
+        );
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderLine>  $lines
+     * @param  Collection<int, RepairOrderLine>|null  $laborCountSource
+     * @return array<string, mixed>
+     */
+    private function techPackageFromLines(
+        string $title,
+        ?RepairOrderConcern $concern,
+        Collection $lines,
+        ?string $ownerName,
+        RepairActionStatus $status,
+        ?string $latestUpdate,
+        ?string $updatedAt,
+        ?Collection $laborCountSource = null,
+    ): array {
         $noteLines = $lines
             ->filter(fn (RepairOrderLine $line): bool => $line->type === RepairOrderLineType::Note && $line->isVisibleToTechnician())
             ->values();
@@ -194,23 +276,23 @@ final class OperationalSheetPresenter
             ->filter(fn (RepairOrderLine $line): bool => $line->type === RepairOrderLineType::Sublet)
             ->values();
 
-        $laborCount = LaborDescriptionPresentation::laborCountInGroup($workGroup->lines);
+        $laborCount = LaborDescriptionPresentation::laborCountInGroup($laborCountSource ?? $lines);
 
         $labor = $laborLines
-            ->map(function (RepairOrderLine $line) use ($workGroup, $laborCount): array {
+            ->map(function (RepairOrderLine $line) use ($title, $laborCount): array {
                 $hours = $this->formatQuantity((float) $line->quantity);
                 $suppress = LaborDescriptionPresentation::shouldSuppressWorksheetDescription(
                     $line,
-                    $workGroup->title,
+                    $title,
                     $laborCount,
                 );
 
                 if ($suppress) {
                     return [
-                        'description' => $workGroup->title,
+                        'description' => $title,
                         'quantity' => $hours,
-                        'operation_title' => $workGroup->title,
-                        'label' => sprintf('%s — %s hrs', $workGroup->title, $hours),
+                        'operation_title' => $title,
+                        'label' => sprintf('%s — %s hrs', $title, $hours),
                         'hours_only_label' => sprintf('%s hrs', $hours),
                         'suppress_duplicate' => true,
                     ];
@@ -219,7 +301,7 @@ final class OperationalSheetPresenter
                 return [
                     'description' => $line->description,
                     'quantity' => $hours,
-                    'operation_title' => $workGroup->title,
+                    'operation_title' => $title,
                     'label' => sprintf('%s — %s hrs', $line->description, $hours),
                     'hours_only_label' => sprintf('%s hrs', $hours),
                     'suppress_duplicate' => false,
@@ -282,17 +364,14 @@ final class OperationalSheetPresenter
         }
 
         $hoursRaw = (float) $laborLines->sum(fn (RepairOrderLine $line): float => (float) $line->quantity);
-        $status = $workGroup->status instanceof RepairActionStatus
-            ? $workGroup->status
-            : RepairActionStatus::Pending;
 
         return [
-            'title' => $workGroup->title,
-            'owner_name' => $workGroup->ownerUser?->name,
+            'title' => $title,
+            'owner_name' => $ownerName,
             'status' => $status->value,
             'status_label' => $status->label(),
-            'latest_update' => $workGroup->latest_update,
-            'updated_at' => $workGroup->updated_at?->timezone(config('app.timezone'))->format('g:i A'),
+            'latest_update' => $latestUpdate,
+            'updated_at' => $updatedAt,
             'concern_summary' => $concern?->summary,
             'work_notes' => $workNotes,
             'labor' => $labor,

@@ -8,11 +8,15 @@ use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 require_once __DIR__.'/Support/FinancialAuthorityFixture.php';
@@ -25,6 +29,10 @@ require_once __DIR__.'/Support/QueryBudgetFixtures.php';
 require_once __DIR__.'/Support/SmsConsentTestHelpers.php';
 require_once __DIR__.'/Support/InboundSmsTestHelpers.php';
 require_once __DIR__.'/Support/MessagingTransportTestHelpers.php';
+require_once __DIR__.'/Support/HostedTransactionalSms.php';
+require_once __DIR__.'/Support/HostedPlatformPayments.php';
+require_once __DIR__.'/Support/HostedPlatformParts.php';
+require_once __DIR__.'/Support/HostedPlatformMail.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -38,7 +46,22 @@ require_once __DIR__.'/Support/MessagingTransportTestHelpers.php';
 */
 
 pest()->extend(TestCase::class)
-    ->use(LazilyRefreshDatabase::class)
+    ->use(RefreshDatabase::class)
+    ->beforeEach(function (): void {
+        if (! Schema::hasTable('shop_settings') || ! Schema::hasColumn('shop_settings', 'shop_timezone')) {
+            return;
+        }
+
+        ShopSettings::forgetCurrent();
+
+        $settings = ShopSettings::current();
+
+        if (! filled($settings->shop_timezone)) {
+            $settings->update(['shop_timezone' => ShopSettings::INSTALL_DEFAULT_TIMEZONE]);
+        }
+
+        ShopDisplayTimezone::apply();
+    })
     ->in('Feature');
 
 pest()->extend(TestCase::class)
@@ -179,6 +202,53 @@ function decisionPressureRepairOrder(
     }
 
     return $repairOrder->fresh(['customer', 'vehicle', 'lines', 'concerns']);
+}
+
+function workspaceTabRepairOrder(bool $withPart = false): RepairOrder
+{
+    $customer = Customer::query()->create([
+        'first_name' => 'Tab',
+        'last_name' => 'Loader',
+        'phone' => '555-0199',
+        'email' => 'tab.loader@example.test',
+    ]);
+
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2018,
+        'make' => 'Honda',
+        'model' => 'Pilot',
+    ]);
+
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Brake noise',
+    ]);
+
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Brakes',
+        'disposition' => RepairOrderConcernDisposition::Approved,
+        'position' => 1,
+    ]);
+
+    if ($withPart) {
+        RepairOrderLine::query()->create([
+            'repair_order_id' => $repairOrder->id,
+            'repair_order_concern_id' => $concern->id,
+            'type' => RepairOrderLineType::Part,
+            'description' => 'Front brake pads',
+            'quantity' => '1.00',
+            'unit_price_cents' => 12000,
+            'part_cost_cents' => 6000,
+            'subtotal_cents' => 12000,
+            'total_cents' => 12000,
+        ]);
+    }
+
+    return $repairOrder->fresh(['customer', 'vehicle', 'concerns.lines', 'lines']);
 }
 
 function repairOrderForEstimateWorkspace(string $customerType = 'Retail'): RepairOrder

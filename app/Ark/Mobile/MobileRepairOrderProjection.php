@@ -40,8 +40,7 @@ final class MobileRepairOrderProjection
         $status = $repairOrder->status;
         $vehicle = $repairOrder->vehicle;
         $recordedItems = $this->recordedItems($repairOrder);
-        // Technicians do not own financials (technician-scope doctrine), so the
-        // money payload is omitted entirely — not just hidden in the UI.
+        // Technicians do not receive estimate money in this payload.
         $showMoney = $this->userPresenter->repairOrderWorkspaceProfile($viewer) !== 'technician';
 
         return [

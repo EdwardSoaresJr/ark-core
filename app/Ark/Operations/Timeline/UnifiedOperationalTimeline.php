@@ -9,6 +9,9 @@ use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Realtime\SessionEvent;
 use App\Ark\Operations\Realtime\SessionEventType;
+use App\Ark\Operations\Approvals\ApprovalEvent;
+use App\Ark\Operations\Communications\CommunicationEvent;
+use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\InboundCallerDisplayPhone;
@@ -18,6 +21,7 @@ use App\Ark\Operations\Timeline\Mappers\CommunicationEventMapper;
 use App\Ark\Operations\Timeline\Mappers\ConversationMessageEventMapper;
 use App\Ark\Operations\Timeline\Mappers\OperationalEventEntryMapper;
 use App\Ark\Operations\Timeline\Mappers\SessionEventTimelineMapper;
+use App\Ark\Platform\Communications\PlatformSmsTimelineProjection;
 use Illuminate\Support\Collection;
 
 /**
@@ -34,6 +38,7 @@ final class UnifiedOperationalTimeline
         private readonly ApprovalEventEntryMapper $approvalEventMapper,
         private readonly InboundCallerDisplayPhone $callerDisplayPhone,
         private readonly ConversationRelationshipTimelineResolver $relationshipTimelineResolver,
+        private readonly PlatformSmsTimelineProjection $platformSms,
     ) {}
 
     /**
@@ -117,11 +122,11 @@ final class UnifiedOperationalTimeline
     {
         $scope = $this->relationshipTimelineResolver->resolveForCustomer($customer, $normalizedPhone, $limit);
 
-        if ($this->scopeIsEmpty($scope)) {
-            return collect();
-        }
+        $entries = $this->scopeIsEmpty($scope)
+            ? collect()
+            : $this->composeRelationshipTimeline($scope, $limit);
 
-        return $this->composeRelationshipTimeline($scope, $limit);
+        return $this->withPlatformSms($entries, $customer, $normalizedPhone, $limit);
     }
 
     /**
@@ -151,11 +156,20 @@ final class UnifiedOperationalTimeline
     {
         $scope = $this->relationshipTimelineResolver->resolveForRepairOrder($repairOrder, $limit);
 
-        if ($this->scopeIsEmpty($scope)) {
-            return collect();
+        $entries = $this->scopeIsEmpty($scope)
+            ? collect()
+            : $this->composeRelationshipTimeline($scope, $limit);
+
+        $customer = $repairOrder->customer;
+        $normalizedPhone = $customer !== null
+            ? PhoneNumber::normalize((string) $customer->phone)
+            : null;
+
+        if ($customer instanceof Customer) {
+            $entries = $this->withPlatformSms($entries, $customer, $normalizedPhone, $limit);
         }
 
-        return $this->composeRelationshipTimeline($scope, $limit)
+        return $entries
             ->sortBy(fn (OperationalEventEntry $entry): int => $entry->occurredAt->timestamp)
             ->values();
     }
@@ -170,7 +184,7 @@ final class UnifiedOperationalTimeline
 
         foreach ($scope['call_sessions'] as $callSession) {
             foreach ($this->entriesForCallSession($callSession) as $entry) {
-                $entries->push($entry);
+                $entries->push($this->withVisitAttribution($entry, $callSession->repairOrder));
             }
         }
 
@@ -183,24 +197,52 @@ final class UnifiedOperationalTimeline
                 continue;
             }
 
-            $entries->push($this->communicationEventMapper->map($communicationEvent));
+            $entries->push($this->withVisitAttribution(
+                $this->communicationEventMapper->map($communicationEvent),
+                $communicationEvent->repairOrder,
+            ));
         }
 
         foreach ($scope['operational_events'] as $operationalEvent) {
             $mapped = $this->operationalEventMapper->map($operationalEvent);
 
             if ($mapped instanceof OperationalEventEntry) {
-                $entries->push($mapped);
+                $entries->push($this->withVisitAttribution(
+                    $mapped,
+                    $this->repairOrderForOperationalEvent($operationalEvent),
+                ));
             }
         }
 
         foreach ($scope['approval_events'] as $approvalEvent) {
             foreach ($this->approvalEventMapper->map($approvalEvent) as $approvalEntry) {
-                $entries->push($approvalEntry);
+                $entries->push($this->withVisitAttribution($approvalEntry, $approvalEvent->visit));
             }
         }
 
         return $entries
+            ->sortByDesc(fn (OperationalEventEntry $entry): int => $entry->occurredAt->timestamp)
+            ->take($limit)
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, OperationalEventEntry>  $entries
+     * @return Collection<int, OperationalEventEntry>
+     */
+    private function withPlatformSms(Collection $entries, Customer $customer, ?string $normalizedPhone, int $limit): Collection
+    {
+        $platform = $this->platformSms->forCustomer($customer, $normalizedPhone, $limit);
+
+        if ($platform->isEmpty()) {
+            return $entries
+                ->sortByDesc(fn (OperationalEventEntry $entry): int => $entry->occurredAt->timestamp)
+                ->take($limit)
+                ->values();
+        }
+
+        return $entries
+            ->concat($platform)
             ->sortByDesc(fn (OperationalEventEntry $entry): int => $entry->occurredAt->timestamp)
             ->take($limit)
             ->values();
@@ -231,6 +273,36 @@ final class UnifiedOperationalTimeline
         return $entries
             ->sortBy(fn (OperationalEventEntry $entry): int => $entry->occurredAt->timestamp)
             ->values();
+    }
+
+    private function withVisitAttribution(OperationalEventEntry $entry, mixed $repairOrder): OperationalEventEntry
+    {
+        if (! $repairOrder instanceof RepairOrder) {
+            return $entry;
+        }
+
+        $repairOrder->loadMissing('vehicle');
+        $vehicle = $repairOrder->vehicle;
+        $vehicleLabel = $vehicle !== null
+            ? trim("{$vehicle->year} {$vehicle->make} {$vehicle->model}")
+            : null;
+
+        return $entry->withMetadata([
+            'visit_ro_id' => $repairOrder->id,
+            'visit_ro_number' => $repairOrder->repair_order_id,
+            'visit_label' => 'RO #'.$repairOrder->repair_order_id,
+            'visit_vehicle_label' => $vehicleLabel !== '' ? $vehicleLabel : null,
+            'visit_lifecycle_label' => $repairOrder->statusDisplayLabel(),
+        ]);
+    }
+
+    private function repairOrderForOperationalEvent(OperationalEvent $event): ?RepairOrder
+    {
+        if ($event->aggregate_type !== RepairOrder::class) {
+            return null;
+        }
+
+        return RepairOrder::query()->with('vehicle')->find($event->aggregate_id);
     }
 
     /**

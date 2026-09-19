@@ -10,6 +10,7 @@ use App\Ark\Operations\Commitments\CommitmentStatus;
 use App\Ark\Operations\Commitments\CommitmentType;
 use App\Ark\Operations\Commitments\OperationalCommitment;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
@@ -48,6 +49,23 @@ test('advisor home shows compact brief and full active repair order board', func
         'concern_summary' => 'Brake noise when stopping.',
     ]);
 
+    $concern = \App\Ark\Operations\RepairOrders\RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Brake noise when stopping.',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'position' => 1,
+    ]);
+
+    $repairOrder->lines()->create([
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Brake inspection',
+        'quantity' => '1.00',
+        'unit_price_cents' => 902_700,
+        'subtotal_cents' => 902_700,
+        'total_cents' => 902_700,
+    ]);
+
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
@@ -55,16 +73,30 @@ test('advisor home shows compact brief and full active repair order board', func
         ->assertDontSee('Biggest Pending', false)
         ->assertDontSee('ops-advisor-home-cockpit', false)
         ->assertSee('Estimates', false)
+        ->assertSee('Waiting Approval', false)
+        ->assertSee('Waiting Parts', false)
         ->assertSee('Work in Progress', false)
         ->assertSee('Completed', false)
         ->assertSee('Search job board', false)
         ->assertDontSee('+ Create Repair Order', false)
         ->assertSee('John Smith', false)
         ->assertSee('2018 Ram 2500', false)
-        ->assertSee('Waiting Approval', false)
-        ->assertSee('ops-job-card__chip--warn', false)
-        ->assertSee('Brake noise when stopping', false)
-        ->assertSee('Follow up', false)
+        ->assertSee('Estimate — Ready', false)
+        ->assertSee('ops-job-card__mark--ready', false)
+        ->assertSee('ops-job-card__mark-icon', false)
+        ->assertSee('ops-job-card__activity', false)
+        ->assertDontSee('ops-job-card__chip--warn', false)
+        ->assertSee('$9,027', false)
+        ->assertSee('pending', false)
+        ->assertSee('ops-job-card__mark--none', false)
+        ->assertDontSee('ops-job-card__exception-mark', false)
+        ->assertDontSee('ops-job-card__total--empty', false)
+        ->assertDontSee('! Missed appointment', false)
+        ->assertDontSee('! Follow-up overdue', false)
+        ->assertDontSee('! Needs parts', false)
+        ->assertDontSee('! Pickup overdue', false)
+        ->assertDontSee('Waiting on decision · not sent', false)
+        ->assertDontSee('RO created', false)
         ->assertDontSee('No Promise Time', false)
         ->assertSee('+ Check In', false)
         ->assertDontSee('All ROs', false)
@@ -114,15 +146,28 @@ test('advisor home waiting approval column holds customer-decision repair orders
     $response = $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Estimates', false);
+        ->assertSee('Waiting Approval', false);
 
     preg_match('/id="ops-home-col-waiting_approval"(.*?)id="ops-home-col-parts"/s', $response->getContent(), $matches);
-    expect($matches[1] ?? '')->toContain('ops-card-ro-'.$hot->repair_order_id);
+    expect($matches[1] ?? '')
+        ->toContain('ops-card-ro-'.$hot->repair_order_id)
+        ->toContain('Waiting Approval')
+        ->toContain('Estimate — Viewed')
+        ->toContain('4d')
+        ->toContain('pending')
+        ->toContain('data-workboard-decision="1"')
+        ->toContain('ops-job-card__activity')
+        ->toContain('ops-job-card__mark--engaged')
+        ->toContain('ops-job-card__mark-badge')
+        ->toContain('ops-job-card__exception')
+        ->not->toContain('RO created')
+        ->not->toContain('ops-job-card__status-menu')
+        ->not->toContain('Move to');
 
     Carbon::setTestNow();
 });
 
-test('home card menu offers status moves and patches lifecycle from the board', function () {
+test('home card does not offer status mutation', function () {
     $repairOrder = decisionPressureRepairOrder(
         firstName: 'Board',
         lastName: 'Move',
@@ -132,20 +177,13 @@ test('home card menu offers status moves and patches lifecycle from the board', 
 
     $advisor = actingAsLearnCurrentAdvisor();
 
-    expect(app(\App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog::class)
-        ->allowedTargetSlugs(RepairOrderStatus::WaitingApproval->value, $advisor))
-        ->toBe(['estimate', 'approved']);
-
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Move to', false)
-        ->assertSee(route('operations.repair-orders.lifecycle.update', $repairOrder), false)
-        ->assertSee('Building Estimate', false)
-        ->assertSee('Closed — Paid', false)
-        ->assertSee('Closed — Lost', false)
-        ->assertSee('lifecycle=closed%3Alost', false)
-        ->assertDontSee('Sort by: Pressure', false);
+        ->assertDontSee('Move to', false)
+        ->assertDontSee('ops-job-card__status-menu', false)
+        ->assertDontSee('Change status', false)
+        ->assertSee('Waiting Approval', false);
 
     $this->from(route('operations.index'))
         ->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
@@ -156,7 +194,7 @@ test('home card menu offers status moves and patches lifecycle from the board', 
     expect($repairOrder->fresh()->status->is(RepairOrderStatus::Estimate))->toBeTrue();
 });
 
-test('waiting approval cards surface waiting approval status chip', function () {
+test('waiting approval cards surface configured status not estimate overlay', function () {
     decisionPressureRepairOrder(
         firstName: 'Auth',
         lastName: 'Chip',
@@ -164,12 +202,17 @@ test('waiting approval cards surface waiting approval status chip', function () 
         lineCents: 250_000,
     );
 
-    $this->actingAs(actingAsLearnCurrentAdvisor())
+    $html = $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Auth Chip', false)
-        ->assertSee('Waiting Approval', false)
-        ->assertSee('ops-job-card__chip--warn', false);
+        ->getContent();
+
+    expect($html)
+        ->toContain('ops-job-card__chip-label">Waiting Approval')
+        ->toContain('Estimate — Ready')
+        ->not->toContain('ops-job-card__chip-label">Not Sent')
+        ->not->toContain('ops-job-card__chip--warn');
 });
 
 test('home card status chip tracks lifecycle after a board move', function () {
@@ -192,7 +235,7 @@ test('home card status chip tracks lifecycle after a board move', function () {
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('Building Estimate', false)
+        ->assertSee('Building', false)
         ->assertDontSee('Requires Authorization', false);
 });
 
@@ -221,7 +264,10 @@ test('in progress cards hide empty labor progress and empty promise time', funct
         ->assertDontSee('No Promise Time', false)
         ->assertSee('Search job board', false)
         ->assertSee('All employees', false)
-        ->assertSee('RO created', false);
+        ->assertDontSee('RO created', false)
+        ->assertSee('ops-job-card__clock', false)
+        ->assertSee('ops-job-card__activity', false)
+        ->assertSee('ops-job-card__exception', false);
 });
 
 test('in progress cards surface labor progress once hours are complete', function () {
@@ -245,8 +291,8 @@ test('in progress cards surface labor progress once hours are complete', functio
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('hrs complete', false)
-        ->assertSee('100%', false);
+        ->assertDontSee('hrs complete', false)
+        ->assertDontSee('ops-job-card__progress', false);
 });
 
 test('home card surfaces the next appointment on the job board', function () {
@@ -275,8 +321,8 @@ test('home card surfaces the next appointment on the job board', function () {
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Edwin Scheduled', false)
-        ->assertSee('Appointment · Today 2:00 PM', false)
-        ->assertSee('ops-job-card__schedule', false);
+        ->assertSee('Scheduled — Today 2:00 PM', false)
+        ->assertDontSee('Appointment · Today 2:00 PM', false);
 
     Carbon::setTestNow();
 });
@@ -307,12 +353,13 @@ test('home card surfaces a vehicle appointment even when the RO is not linked', 
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Edwin Bedburdick', false)
-        ->assertSee('Appointment · Tomorrow 9:00 AM', false);
+        ->assertSee('Scheduled — Tomorrow 9:00 AM', false)
+        ->assertDontSee('Appointment · Tomorrow 9:00 AM', false);
 
     Carbon::setTestNow();
 });
 
-test('home card puts RO identity left and status chip right without a more menu', function () {
+test('home card anchors RO number upper left before vehicle and customer', function () {
     $repairOrder = decisionPressureRepairOrder(
         firstName: 'Quick',
         lastName: 'Actions',
@@ -325,8 +372,9 @@ test('home card puts RO identity left and status chip right without a more menu'
     $response = $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('ops-job-card__identity', false)
-        ->assertSee('ops-job-card__status-menu', false)
+        ->assertSee('ops-job-card__scan', false)
+        ->assertSee('ops-job-card__status', false)
+        ->assertDontSee('ops-job-card__status-menu', false)
         ->assertDontSee('aria-label="More actions"', false)
         ->assertDontSee('Customer hub', false);
 
@@ -337,15 +385,27 @@ test('home card puts RO identity left and status chip right without a more menu'
     $cardStart = strpos($html, 'id="ops-card-ro-'.$repairOrder->repair_order_id.'"');
     $cardHtml = $cardStart === false ? '' : substr($html, $cardStart, 8000);
     $roPos = strpos($cardHtml, 'ops-job-card__ro');
-    $statusPos = strpos($cardHtml, 'ops-job-card__status-menu');
+    $vehiclePos = strpos($cardHtml, 'ops-job-card__vehicle');
+    $customerPos = strpos($cardHtml, 'ops-job-card__customer-link');
+    $statusPos = strpos($cardHtml, 'ops-job-card__status');
+    $activityPos = strpos($cardHtml, 'ops-job-card__activity');
+    $exceptionPos = strpos($cardHtml, 'ops-job-card__exception');
 
     expect($cardHtml)->toContain($builderUrl)
         ->and($cardHtml)->toContain('href="'.e($customerHubUrl).'"')
-        ->and($cardHtml)->toContain('href="'.e($commsUrl).'"')
+        ->and($cardHtml)->not->toContain('href="'.e($commsUrl).'"')
         ->and($cardHtml)->toContain('ops-job-card__customer-link')
         ->and($roPos)->not->toBeFalse()
+        ->and($vehiclePos)->not->toBeFalse()
+        ->and($customerPos)->not->toBeFalse()
         ->and($statusPos)->not->toBeFalse()
-        ->and($roPos)->toBeLessThan($statusPos);
+        ->and($activityPos)->not->toBeFalse()
+        ->and($exceptionPos)->not->toBeFalse()
+        ->and($roPos)->toBeLessThan($exceptionPos)
+        ->and($exceptionPos)->toBeLessThan($vehiclePos)
+        ->and($vehiclePos)->toBeLessThan($customerPos)
+        ->and($customerPos)->toBeLessThan($statusPos)
+        ->and($statusPos)->toBeLessThan($activityPos);
 });
 
 test('home card surfaces promise time on the meta row', function () {
@@ -372,7 +432,58 @@ test('home card surfaces promise time on the meta row', function () {
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Promise Customer', false)
-        ->assertSee('Due ', false);
+        ->assertSee('ops-job-card__exception', false)
+        ->assertDontSee('Promise overdue', false);
+
+    Carbon::setTestNow();
+});
+
+test('home card plus-count names the other attention items', function () {
+    Carbon::setTestNow(ShopDisplayTimezone::parseLocal('2026-08-24 09:00')->utc());
+
+    $repairOrder = decisionPressureRepairOrder(
+        firstName: 'Gary',
+        lastName: 'Baca',
+        status: RepairOrderStatus::WaitingApproval,
+        lineCents: 180_100,
+        disposition: RepairOrderConcernDisposition::Approved,
+    );
+
+    $repairOrder->lines()->create([
+        'repair_order_concern_id' => $repairOrder->concerns()->first()?->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'Axle seal',
+        'quantity' => '1.00',
+        'unit_price_cents' => 9800,
+        'part_cost_cents' => 5300,
+        'procurement_state' => PartProcurementState::Backordered,
+        'subtotal_cents' => 9800,
+        'total_cents' => 9800,
+    ]);
+
+    Appointment::query()->create([
+        'customer_id' => $repairOrder->customer_id,
+        'vehicle_id' => $repairOrder->vehicle_id,
+        'repair_order_id' => $repairOrder->id,
+        'created_by_user_id' => actingAsLearnCurrentAdvisor()->id,
+        'advisor_user_id' => actingAsLearnCurrentAdvisor()->id,
+        'starts_at' => ShopDisplayTimezone::parseLocal('2026-08-23 09:00')->utc(),
+        'ends_at' => ShopDisplayTimezone::parseLocal('2026-08-23 10:00')->utc(),
+        'concern' => 'Comeback',
+        'status' => AppointmentStatus::Scheduled,
+    ]);
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.index'))
+        ->assertOk()
+        ->assertSee('Missed appointment', false)
+        ->assertSee('+1', false)
+        ->assertSee('Also: Needs parts', false)
+        ->assertSee('ops-job-card__mark--attention', false)
+        ->assertSee('ops-job-card__mark-badge--alert', false)
+        ->assertSee('ops-job-card__mark--ready', false)
+        ->assertSee('ops-job-card__exception-list', false)
+        ->assertSee('ops-job-card__exception-list-item', false);
 
     Carbon::setTestNow();
 });

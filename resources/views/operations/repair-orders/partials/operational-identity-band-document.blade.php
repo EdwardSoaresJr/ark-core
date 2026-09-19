@@ -4,7 +4,7 @@
 
     $identity = $identity ?? App\Ark\Operations\RepairOrders\OperationalIdentityPresenter::forRepairOrder($repairOrder);
     $visitMode = RepairOrderVisitMode::fromRepairOrder($repairOrder);
-    $mileageLineLabels = ['Mileage'];
+    $mileageLineLabels = ['Mileage', 'Mileage in', 'Mileage out'];
     $canEditMileage = $identityVariant === 'staff'
         && isset($repairOrder)
         && auth()->user()?->can(ArkCapability::RepairOrdersManage->value);
@@ -123,7 +123,7 @@
             @include('operations.repair-orders.partials.repair-order-identity-vehicle-inline', [
                 'repairOrder' => $repairOrder,
                 'identity' => $identity,
-                'hideMileageLines' => $showMileageInlineEditor,
+                'hideMileageLines' => true,
             ])
         @else
             @if ($vehicleProfileHref && isset($repairOrder) && $identityVariant === 'staff')
@@ -144,7 +144,7 @@
             @endif
             <dl class="mt-1.5 space-y-0.5">
                 @foreach ($identity['vehicle']['lines'] as $line)
-                    @if ($showMileageInlineEditor && in_array($line['label'], $mileageLineLabels, true))
+                    @if (in_array($line['label'], $mileageLineLabels, true))
                         @continue
                     @endif
                     <div class="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-x-2 text-xs leading-4">
@@ -159,12 +159,6 @@
                     </div>
                 @endforeach
             </dl>
-        @endif
-        @if ($showMileageInlineEditor)
-            @include('operations.repair-orders.partials.repair-order-mileage-inline', [
-                'repairOrder' => $repairOrder,
-                'estimateVersion' => $estimateVersion,
-            ])
         @endif
     </section>
 
@@ -186,8 +180,17 @@
                 'inspectionPosture' => $inspectionPosture,
             ])
         @endif
+        @if ($showMileageInlineEditor)
+            @include('operations.repair-orders.partials.repair-order-mileage-inline', [
+                'repairOrder' => $repairOrder,
+                'estimateVersion' => $estimateVersion,
+            ])
+        @endif
         <dl class="mt-1.5 space-y-0.5">
             @foreach ($identity['visit']['lines'] as $line)
+                @if ($showMileageInlineEditor && in_array($line['label'], $mileageLineLabels, true))
+                    @continue
+                @endif
                 <div class="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-x-2 text-xs leading-4">
                     <dt class="font-semibold text-slate-500">{{ $line['label'] }}</dt>
                     <dd class="min-w-0 font-semibold text-slate-800 break-words">{{ $line['value'] }}</dd>

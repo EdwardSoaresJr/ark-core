@@ -34,7 +34,20 @@ test('customer part description presenter derives repair focused labels from inv
     ['Dorman OE Solutions Engine Coolant Thermostat Housing Assembly', 'Thermostat Housing'],
     ['MOOG Suspension Control Arm and Ball Joint Assembly', 'Control Arm and Ball Joint Assembly'],
     ['Dorman Front Left Upper Control Arm and Ball Joint Assembly', 'Front Left Upper Control Arm and Ball Joint Assembly'],
+    ['B1-Spring Pad', 'B1-Spring Pad'],
+    ['Upper Spring Plate', 'Upper Spring Plate'],
+    ['Upper Spring Pad', 'Upper Spring Pad'],
 ]);
+
+test('customer part description presenter ignores stale generated labels', function () {
+    $presenter = new CustomerPartDescriptionPresenter;
+
+    expect($presenter->present(partLine(
+        description: 'B1-Spring Pad',
+        customerDescription: 'Pad',
+        source: \App\Ark\Operations\Parts\CustomerDescriptionSource::Generated,
+    )))->toBe('B1-Spring Pad');
+});
 
 test('customer part description presenter ignores coolant compatibility boilerplate on real parts', function (string $inventory, string $expected) {
     $presenter = new CustomerPartDescriptionPresenter;
@@ -96,11 +109,15 @@ test('customer part description presenter leaves non part lines unchanged', func
     expect($presenter->present($line))->toBe('Replace water pump');
 });
 
-function partLine(string $description, ?string $customerDescription = null): RepairOrderLine
-{
+function partLine(
+    string $description,
+    ?string $customerDescription = null,
+    ?\App\Ark\Operations\Parts\CustomerDescriptionSource $source = null,
+): RepairOrderLine {
     return new RepairOrderLine([
         'type' => RepairOrderLineType::Part,
         'description' => $description,
         'customer_description' => $customerDescription,
+        'customer_description_source' => $source,
     ]);
 }

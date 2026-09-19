@@ -21,6 +21,7 @@ class AppointmentScheduleBoardViewController
             'day' => $request->string('day')->toString() ?: null,
             'view' => $view->value,
             'lens' => $request->filled('lens') ? (string) $request->string('lens') : null,
+            'allocate' => $request->filled('allocate') ? (string) $request->string('allocate') : null,
         ]));
     }
 }

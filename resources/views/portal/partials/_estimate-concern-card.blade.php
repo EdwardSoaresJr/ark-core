@@ -36,7 +36,7 @@
         <div class="flex items-start justify-between gap-4">
             <div class="min-w-0 flex-1">
                 <p class="text-[10px] font-bold uppercase tracking-[0.12em] {{ $intent->intentLabelClass() }}">{{ $priorityLabel }}</p>
-                <p class="mt-1 text-[15px] font-semibold leading-snug text-slate-950 sm:text-base">{{ $concern['summary'] }}</p>
+                <p class="mt-1 text-[15px] font-semibold leading-snug text-slate-950 sm:text-base">{{ $concern['customer_title'] ?? $concern['summary'] }}</p>
 
                 @if ($showDispositionLabel)
                     <p @class([
@@ -49,7 +49,7 @@
                     ])>{{ $concern['disposition_label'] }}</p>
                 @endif
             </div>
-            <p class="shrink-0 text-base font-black tabular-nums text-slate-950">{{ $concern['subtotal'] ?? '' }}</p>
+            <p class="shrink-0 text-base font-black tabular-nums text-slate-950">{{ $concern['charge_subtotal'] ?? $concern['subtotal'] ?? '' }}</p>
         </div>
 
         @php
@@ -60,11 +60,12 @@
         @php
             $visitReason = trim((string) ($snapshot['intake']['visit_reason'] ?? ''));
             $customerStates = trim((string) ($concern['customer_states'] ?? ''));
-            $findings = trim((string) ($concern['verified_findings'] ?? ''));
-            $dtcs = trim((string) ($concern['dtcs_summary'] ?? ''));
-            $recommendation = trim((string) ($concern['recommendation'] ?? ''));
+            $findings = trim((string) ($concern['customer_findings'] ?? $concern['verified_findings'] ?? ''));
+            $dtcs = trim((string) ($concern['customer_dtcs'] ?? $concern['dtcs_summary'] ?? ''));
+            $recommendation = trim((string) ($concern['customer_recommendation'] ?? $concern['recommendation'] ?? ''));
             $duplicateCustomerStates = $customerStates !== ''
                 && in_array(mb_strtolower($customerStates), array_values(array_filter([
+                    mb_strtolower(trim((string) ($concern['customer_title'] ?? $concern['summary'] ?? ''))),
                     mb_strtolower(trim((string) ($concern['summary'] ?? ''))),
                     mb_strtolower($visitReason),
                 ])), true);

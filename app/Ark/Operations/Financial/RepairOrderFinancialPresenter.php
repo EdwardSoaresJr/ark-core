@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
+use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderPosting;
@@ -19,6 +20,7 @@ final class RepairOrderFinancialPresenter
         private readonly EstimateTotalsCalculator $totalsCalculator,
         private readonly RepairOrderDefaultDepositCalculator $defaultDepositCalculator,
         private readonly RepairOrderDepositRecordingGuard $depositGuard,
+        private readonly CardPresentCaptureProjection $cardCapture,
     ) {}
 
     /**
@@ -183,6 +185,15 @@ final class RepairOrderFinancialPresenter
                 PaymentMethod::Card,
                 PaymentMethod::Check,
             ],
+            'square' => $this->cardCapture->publicConfig(),
+            'canChargeWithSquare' => $this->canRecordPayment($repairOrder, $balance) && (
+                $this->cardCapture->terminalEnabled() || $this->cardCapture->keyedEnabled()
+            ),
+            'canChargeDepositWithSquare' => $canRecordDeposit
+                && $this->depositGuard->remainingAllowedDepositCents($repairOrder, $balance, $position) > 0
+                && (
+                $this->cardCapture->terminalEnabled() || $this->cardCapture->keyedEnabled()
+            ),
             'canManageLedgerEntries' => $this->canManageLedgerEntries($repairOrder),
             'canRecordRefund' => $this->canRecordRefund($repairOrder, $balance),
             'canWaiveBalance' => $this->canWaiveBalance($repairOrder, $balance),

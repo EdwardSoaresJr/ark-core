@@ -19,7 +19,8 @@
             @mousedown="steerInterruptFocus($event)"
             @keydown.enter.prevent="activateInterruptPrimary($event)"
         >
-            <div x-show="activeCall !== null" class="ops-incoming-call-pop__card">
+            <template x-if="activeCall">
+            <div class="ops-incoming-call-pop__card">
                     <div class="ops-incoming-call-pop__head">
                         <div class="min-w-0">
                             <p class="ops-incoming-call-pop__eyebrow" x-text="callEyebrow()"></p>
@@ -137,6 +138,7 @@
                         >Mark Handled</button>
                     </div>
             </div>
+            </template>
         </div>
 
         <div
@@ -151,7 +153,8 @@
             @mousedown="steerInterruptFocus($event)"
             @keydown.enter.prevent="activateInterruptPrimary($event)"
         >
-            <div x-show="activeMessage !== null" class="ops-incoming-message-pop__card">
+            <template x-if="activeMessage">
+            <div class="ops-incoming-message-pop__card">
                     <div class="ops-incoming-call-pop__head">
                         <div class="min-w-0">
                             <p class="ops-incoming-message-pop__eyebrow" x-text="channelLabel()"></p>
@@ -291,6 +294,7 @@
                         >Dismiss</button>
                     </div>
             </div>
+            </template>
         </div>
     </div>
 @endcan

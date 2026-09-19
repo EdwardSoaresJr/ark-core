@@ -402,7 +402,10 @@ test('invoice pdf html groups approved concerns under severity intent headers', 
         ->toContain('concern--intent-maintenance')
         ->toContain('concern-priority-badge--maintenance')
         ->not->toContain('concern-intent-group')
-        ->toContain('Approved brakes');
+        ->toContain('Approved brakes')
+        ->not->toContain('Reason for Visit')
+        ->not->toContain('Work Performed')
+        ->not->toContain('Approved Work</p>');
 });
 
 test('invoice pdf rendering includes payment history and balance due', function () {

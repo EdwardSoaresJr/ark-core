@@ -14,8 +14,10 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\RteLaborGuideFixtures;
 
+uses(RefreshDatabase::class);
 
 test('rte vehicle resolver matches model name to car description', function (): void {
     RteLaborGuideFixtures::seedSmoke();
@@ -1584,7 +1586,8 @@ test('estimate edit shows rte guide button when rte data is imported even if veh
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Repair Time Engine', false);
+        ->assertSee('Labor Guide', false)
+        ->assertDontSee('Repair Time Engine', false);
 });
 
 test('estimate edit shows rte guide button for matching vehicle', function (): void {
@@ -1596,7 +1599,8 @@ test('estimate edit shows rte guide button for matching vehicle', function (): v
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Repair Time Engine', false);
+        ->assertSee('Labor Guide', false)
+        ->assertDontSee('Repair Time Engine', false);
 });
 
 test('rte labor search warns about diagnostic overlap when ro already has diagnostic labor', function (): void {

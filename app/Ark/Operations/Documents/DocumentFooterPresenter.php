@@ -22,6 +22,41 @@ final class DocumentFooterPresenter
     ];
 
     /**
+     * Shop-configured disclaimers as one PDF line — do not substitute generic copy.
+     *
+     * @param  list<string>  $bullets
+     */
+    public function pdfImportantInformationDisclosure(array $bullets): ?string
+    {
+        $sentences = collect($bullets)
+            ->map(fn (mixed $bullet): string => trim((string) $bullet))
+            ->filter()
+            ->map(function (string $bullet): string {
+                return preg_match('/[.!?]$/u', $bullet) === 1 ? $bullet : $bullet.'.';
+            })
+            ->values()
+            ->all();
+
+        if ($sentences === []) {
+            return null;
+        }
+
+        return implode(' ', $sentences);
+    }
+
+    /**
+     * @param  list<string>  $bullets
+     * @return list<string>
+     */
+    public function pdfImportantInformationBullets(array $bullets): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (mixed $bullet): string => trim((string) $bullet),
+            $bullets,
+        )));
+    }
+
+    /**
      * @param  array<string, mixed>  $snapshot
      * @return array{
      *     important_information: list<string>,
@@ -40,26 +75,6 @@ final class DocumentFooterPresenter
      *     total_label: string
      * }
      */
-    /**
-     * Presentation-only PDF summary when the full disclaimer list is too tall.
-     *
-     * @param  list<string>  $bullets
-     * @return list<string>
-     */
-    public function pdfImportantInformationBullets(array $bullets): array
-    {
-        if (count($bullets) <= 4) {
-            return $bullets;
-        }
-
-        return [
-            'Findings and pricing reflect inspection today. Additional work may be discovered during repair or disassembly.',
-            'Parts availability, labor, and pricing may change within the estimate validity period.',
-            'Approved work is covered by shop warranty unless noted. Customer-supplied and used parts may carry no warranty.',
-            'Further testing or recommendations may change the repair path and require separate customer authorization.',
-        ];
-    }
-
     public function present(array $snapshot): array
     {
         $documents = is_array($snapshot['documents'] ?? null) ? $snapshot['documents'] : [];

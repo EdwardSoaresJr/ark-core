@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['shop.identity' => 'test.demo-auto.local']);
+    config(['shop.identity' => 'test.lugsnplugs.local']);
     config(['dragon.provider' => 'fake']);
 });
 
@@ -248,7 +248,7 @@ test('company memory taught on staff chat is recallable from a new Shop Glass co
             'message' => 'Remember that we require loaded charging-system evidence before condemning an alternator.',
         ])->assertOk();
 
-    $issued = StationDeviceToken::issue('glass-memory-cert', 'test.demo-auto.local');
+    $issued = StationDeviceToken::issue('glass-memory-cert', 'test.lugsnplugs.local');
     $fake = app(FakeDragonProvider::class);
     $fake->script = [
         new DragonModelTurn(null, [[
@@ -298,7 +298,7 @@ test('sensitive junk is rejected as durable memory', function (): void {
     expect(DragonAgentMemory::query()->count())->toBe(0);
 });
 
-test('authorized staff can inspect and forget memory in settings', function (): void {
+test('authorized staff no longer inspect memory in shop settings', function (): void {
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
     $memory = DragonAgentMemory::query()->create([
         'fact_key' => 'taught:'.Str::uuid(),
@@ -312,7 +312,9 @@ test('authorized staff can inspect and forget memory in settings', function (): 
     $this->actingAs($admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'dragon-memory']))
         ->assertOk()
-        ->assertSee('Use evidence-first diagnostic explanations.', false);
+        ->assertDontSee('Dragon Memory', false)
+        ->assertDontSee('Use evidence-first diagnostic explanations.', false)
+        ->assertDontSee('Hosted Dragon', false);
 
     $this->actingAs($admin)
         ->post(route('operations.settings.shop.dragon-memory.forget', $memory))
@@ -334,7 +336,7 @@ test('advisor cannot write company-wide memory', function (): void {
 
 test('location remember uses the current workstation not a model-chosen id', function (): void {
     [$user, $token] = memoryAdmin();
-    $here = memoryWorkstation('Demo City');
+    $here = memoryWorkstation('Colorado Springs');
     $other = memoryWorkstation('Downtown');
     $here->forceFill(['current_operator_user_id' => $user->id])->save();
 

@@ -19,6 +19,7 @@ class AppointmentIndexController
 
         $view = ScheduleBoardPreference::resolve($request)->value;
         $lens = DayLens::parse($request->filled('lens') ? (string) $request->string('lens') : null);
+        $allocate = WeekAllocate::parse($request->filled('allocate') ? (string) $request->string('allocate') : null);
 
         $workspace = app(SchedulingWorkspaceProjection::class)->resolve(
             $day,
@@ -27,6 +28,7 @@ class AppointmentIndexController
             $request->user(),
             false,
             $lens,
+            $allocate,
         );
 
         $requestDayStatus = app(AppointmentRequestAvailabilityProjection::class)

@@ -1,63 +1,74 @@
 @php
     use App\Ark\Runtime\Authorization\ArkCapability;
 
-    /** @var string $section */
-    $listFilter = $listFilter ?? request()->string('filter')->toString() ?: null;
-    $turnFilter = $turnFilter ?? request()->string('turn')->toString() ?: null;
-    $activeKey = match (true) {
-        $section === 'history' => 'else',
-        $section === 'calls' => 'calls',
-        $section === 'internal' => 'internal',
-        default => 'inbox',
-    };
-
-    $sections = [
+    $listFilter = $listFilter ?? request()->string('filter')->toString() ?: 'needs';
+    $ownerFilter = $ownerFilter ?? 'everyone';
+    $filterCounts = is_array($filterCounts ?? null) ? $filterCounts : [];
+    $selection = array_filter([
+        'conversation' => request()->integer('conversation') ?: null,
+        'lead' => request()->integer('lead') ?: null,
+        'call' => request()->integer('call') ?: null,
+        'platform_conversation' => request()->string('platform_conversation')->toString() ?: null,
+        'owner' => $ownerFilter !== 'everyone' ? $ownerFilter : null,
+    ]);
+    $lanes = [
         [
-            'key' => 'inbox',
-            'label' => 'Inbox',
-            'href' => route('operations.communications.inbox', ['filter' => 'needs']),
-            'permission' => ArkCapability::OperationsAccess->value,
-            'count' => is_array($filterCounts ?? null) ? (int) (($filterCounts['needs'] ?? null) ?? ($turnCounts['shop'] ?? 0)) : null,
+            'key' => 'needs',
+            'label' => 'Needs attention',
+            'title' => 'Shop action is due now — reply, overdue follow-up, or unresolved call',
+            'count' => $filterCounts['needs'] ?? null,
         ],
         [
-            'key' => 'calls',
-            'label' => 'Calls & VM',
-            'href' => route('operations.communications.calls'),
-            'permission' => ArkCapability::OperationsAccess->value,
-            'count' => null,
+            'key' => 'waiting',
+            'label' => 'Waiting',
+            'title' => 'Open — awaiting a customer reply or a follow-up that is not due yet',
+            'count' => $filterCounts['waiting'] ?? null,
         ],
-        // Archive last. Internal team channels have no tab: internal notes
-        // live inside each conversation; shop chat is a future capability
-        // that must earn its surface (routes remain reachable).
         [
-            'key' => 'else',
-            'label' => 'History',
-            'href' => route('operations.communications.history'),
-            'permission' => ArkCapability::OperationsAccess->value,
-            'count' => null,
+            'key' => 'resolved',
+            'label' => 'Resolved',
+            'title' => 'Finished communication work',
+            'count' => $filterCounts['resolved'] ?? null,
         ],
     ];
 @endphp
 
 <nav class="ops-comms-workspace__nav" aria-label="Communications sections">
     <ul class="ops-comms-workspace__nav-list">
-        @foreach ($sections as $navSection)
-            @can($navSection['permission'])
+        @if ($section === 'inbox')
+            @foreach ($lanes as $lane)
                 <li>
                     <a
-                        href="{{ $navSection['href'] }}"
+                        href="{{ route('operations.communications.inbox', array_merge($selection, ['filter' => $lane['key']])) }}"
+                        title="{{ $lane['title'] }}"
                         @class([
                             'ops-comms-workspace__nav-link',
-                            'ops-comms-workspace__nav-link--active' => $activeKey === $navSection['key'],
+                            'ops-comms-workspace__nav-link--active' => $listFilter === $lane['key'],
                         ])
                     >
-                        <span>{{ $navSection['label'] }}</span>
-                        @if (($navSection['count'] ?? null) !== null && (int) $navSection['count'] > 0)
-                            <span class="ops-comms-workspace__nav-count">{{ $navSection['count'] }}</span>
+                        <span>{{ $lane['label'] }}</span>
+                        @if (($lane['count'] ?? null) !== null)
+                            <span class="ops-comms-workspace__nav-count">{{ $lane['count'] }}</span>
                         @endif
                     </a>
                 </li>
+            @endforeach
+        @else
+            @can(ArkCapability::OperationsAccess->value)
+                <li>
+                    <a href="{{ route('operations.communications.inbox', ['filter' => 'needs']) }}" class="ops-comms-workspace__nav-link">
+                        <span>Needs attention</span>
+                    </a>
+                </li>
             @endcan
-        @endforeach
+        @endif
+        @can(ArkCapability::OperationsAccess->value)
+            <li>
+                <a href="{{ route('operations.communications.calls') }}" @class(['ops-comms-workspace__nav-link', 'ops-comms-workspace__nav-link--active' => $section === 'calls'])>Calls & VM</a>
+            </li>
+            <li>
+                <a href="{{ route('operations.communications.history') }}" @class(['ops-comms-workspace__nav-link', 'ops-comms-workspace__nav-link--active' => $section === 'history'])>History</a>
+            </li>
+        @endcan
     </ul>
 </nav>

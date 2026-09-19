@@ -8,7 +8,7 @@ test('password can be updated', function () {
 
     $response = $this
         ->actingAs($user)
-        ->from('/profile')
+        ->from(route('profile.edit'))
         ->put('/app/password', [
             'current_password' => 'password',
             'password' => 'new-password',
@@ -27,7 +27,7 @@ test('correct password must be provided to update password', function () {
 
     $response = $this
         ->actingAs($user)
-        ->from('/profile')
+        ->from(route('profile.edit'))
         ->put('/app/password', [
             'current_password' => 'wrong-password',
             'password' => 'new-password',
@@ -36,5 +36,5 @@ test('correct password must be provided to update password', function () {
 
     $response
         ->assertSessionHasErrorsIn('updatePassword', 'current_password')
-        ->assertRedirect('/profile');
+        ->assertRedirect(route('profile.edit'));
 });

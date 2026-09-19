@@ -1,5 +1,6 @@
 @php
     $authorViaModal = (bool) ($authorViaModal ?? false);
+    $scopePositionLoop = $loop;
 @endphp
 <div class="ops-scope-settings">
     <div class="ops-scope-settings__controls">
@@ -21,12 +22,31 @@
             'authorViaModal' => $authorViaModal,
         ])
         <div class="ops-scope-header-toolbar-actions">
+            @if (($partsCatalogs ?? []) !== [])
+                @php
+                    $selectedPartsCatalog = collect($partsCatalogs)->firstWhere('key', $partsCatalogDefault ?? null)
+                        ?? ($partsCatalogs[0] ?? null);
+                @endphp
+                <button
+                    type="button"
+                    class="ops-scope-settings__partstech"
+                    @click="openPartsCatalog(partsCatalogSelected()?.key, false, {{ $concern->id }})"
+                    :disabled="partsCatalogSelected()?.kind === 'partstech'
+                        ? (partstechCatalogOpening || partstechPullLoading || ! partsCatalogSelected()?.can_open)
+                        : ! partsCatalogSelected()?.can_open"
+                    :title="partsCatalogSelected()
+                        ? ('Open ' + partsCatalogSelected().label + ' for this scope.')
+                        : ''"
+                >
+                    <span x-text="partsCatalogSelected()?.label">{{ $selectedPartsCatalog['label'] ?? '' }}</span>
+                </button>
+            @endif
             <form method="POST" action="{{ route('operations.repair-orders.concerns.move', [$repairOrder, $concern]) }}" data-refresh-scope="worksheet" data-continuity-focus="#concern-{{ $concern->id }} button[name='move-up']" @submit.prevent="submitWorksheetForm($event)">
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="direction" value="up">
-                <button type="submit" name="move-up" @disabled($loop->first) class="ops-scope-settings__move" aria-label="Move scope up">
+                <button type="submit" name="move-up" @disabled($scopePositionLoop->first) class="ops-scope-settings__move" aria-label="Move scope up">
                     ↑
                 </button>
             </form>
@@ -35,7 +55,7 @@
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="direction" value="down">
-                <button type="submit" name="move-down" @disabled($loop->last) class="ops-scope-settings__move" aria-label="Move scope down">
+                <button type="submit" name="move-down" @disabled($scopePositionLoop->last) class="ops-scope-settings__move" aria-label="Move scope down">
                     ↓
                 </button>
             </form>

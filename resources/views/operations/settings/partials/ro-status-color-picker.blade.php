@@ -25,7 +25,7 @@
 
     <button
         type="button"
-        class="flex w-full min-w-[10rem] items-center gap-2 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-left text-sm text-slate-950 hover:border-slate-400"
+        class="flex w-full min-w-0 items-center gap-2 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-left text-sm text-slate-950 hover:border-slate-400"
         @click="open = !open"
         :aria-expanded="open.toString()"
         aria-haspopup="listbox"
@@ -45,7 +45,7 @@
         x-show="open"
         x-cloak
         @click.outside="open = false"
-        class="absolute left-0 z-30 mt-1 w-full min-w-[11rem] overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg"
+        class="absolute left-0 z-30 mt-1 w-full overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg"
         role="listbox"
     >
         <template x-for="option in options" :key="option.key">

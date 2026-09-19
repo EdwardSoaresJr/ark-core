@@ -133,8 +133,8 @@ test('review renders estimate version token and collaboration hooks', function (
         ->assertSee(RepairOrderConcurrency::FIELD)
         ->assertSee('data-worksheet-root')
         ->assertSee('arkWorksheetContinuity')
-        ->assertSee('id="estimate-lines"', false)
-        ->assertSee('estimate-builder-rail', false)
+        ->assertSee('estimate-details')
+        ->assertSee('estimate-review-rail')
         ->assertSee('worksheet-sessions');
 });
 
@@ -165,41 +165,40 @@ test('review and builder workspace tabs live in the main column with builder fir
         ->assertSee('repair-order-workspace-tabs')
         ->assertSee('arkRoWorkspaceTabs')
         ->assertSee('Estimate')
-        ->assertSee('Comms')
-        ->assertSee('Inspect')
-        ->assertSee('data-workspace-tab-panel="comms"', false)
+        ->assertSee('Communications')
+        ->assertSee('Inspection')
+        ->assertSee('Recommendations')
+        ->assertSee('communication-rail')
         ->assertDontSee('repair-order-rail-tabs');
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Comms')
-        ->assertSee('Portal')
+        ->assertSee('Communications')
+        ->assertSee('communication-rail', false)
+        ->assertSee('Customer View')
+        ->assertSee('portal-rail', false)
         ->assertDontSee('ops-review-toolbar-section--trailing', false)
         ->assertSee('data-workspace-tab-panel="comms"', false)
         ->assertSee('workspace-tabs', false)
         ->assertDontSee('id="communication-rail"', false)
         ->assertDontSee("selectTab('send')", false)
-        ->assertSee('Auth')
+        ->assertSee('Authorization')
         ->assertSee('History')
         ->assertSee('data-workspace-tab-panel="history"', false)
         ->assertDontSee('Vehicle History', false)
         ->assertDontSee('Relationship Context')
         ->assertDontSee('Customer relationship projection');
 
-    $this->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'comms']))
-        ->assertOk()
-        ->assertSee('id="communication-rail"', false);
-
     $this->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'portal']))
         ->assertOk()
-        ->assertSee('Copy customer links', false)
-        ->assertSee('id="portal-rail"', false);
+        ->assertSee('Preview customer estimate');
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('repair-order-workspace-tabs')
+        ->assertDontSee('ops-ro-workspace-tabs--builder-only', false)
         ->assertSee('Building Estimate')
-        ->assertDontSee('Authorization History');
+        ->assertSee("selectTab('comms')", false);
 });
 
 /**

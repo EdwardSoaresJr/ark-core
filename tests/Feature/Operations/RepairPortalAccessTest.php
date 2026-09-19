@@ -120,6 +120,7 @@ test('estimate pdf snapshot includes repair portal advertisement with qr', funct
 
     expect($snapshot['repair_portal'] ?? null)->toBeArray()
         ->and($snapshot['repair_portal']['cta'])->toBe('View your vehicle online')
+        ->and($snapshot['repair_portal']['callout'])->toContain('Vehicle Portal')
         ->and($snapshot['repair_portal']['qr_data_uri'])->toStartWith('data:image/svg+xml;base64,')
         ->and($snapshot['repair_portal']['url'])->toContain('/r/')
         ->and(RepairOrderPortalAccess::query()->where('repair_order_id', $repairOrder->id)->active()->count())->toBe(1);

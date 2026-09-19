@@ -1,9 +1,13 @@
 <?php
 
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Inspections\ApplyInspectionTemplateAction;
+use App\Ark\Operations\Inspections\DefaultInspectionTemplateCatalog;
+use App\Ark\Operations\Inspections\EnsureInspectionAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Mail\PortalAccessCodeMail;
 use Illuminate\Support\Facades\Mail;
 
@@ -101,9 +105,9 @@ test('repair order inspection show get has no mutations', function () {
     $repairOrder = repairOrderForQueryBudget();
     $advisor = actingAsLearnCurrentAdvisor();
 
-    $inspection = app(\App\Ark\Operations\Inspections\EnsureInspectionAction::class)->execute($repairOrder, $advisor);
-    \App\Ark\Operations\Inspections\DefaultInspectionTemplateCatalog::seedIfMissing();
-    app(\App\Ark\Operations\Inspections\ApplyInspectionTemplateAction::class)->execute(
+    $inspection = app(EnsureInspectionAction::class)->execute($repairOrder, $advisor);
+    DefaultInspectionTemplateCatalog::seedIfMissing();
+    app(ApplyInspectionTemplateAction::class)->execute(
         $repairOrder,
         $inspection,
         actor: $advisor,
@@ -118,7 +122,7 @@ test('repair order inspection show get has no mutations', function () {
 
 test('portal vehicle detail stays within query budget', function () {
     Mail::fake();
-    ShopSettings::current()->update(['shop_name' => 'Demo Auto Repair']);
+    ShopSettings::current()->update(['shop_name' => 'LugsNPlugs']);
 
     $customer = portalCustomerForQueryBudget();
     $vehicle = $customer->vehicles()->firstOrFail();
@@ -155,10 +159,22 @@ test('customer hub stays within query budget', function () {
     assertOkWithinQueryBudget(route('operations.customers.show', $customer), 95);
 });
 
+test('communications waiting inbox stays within query budget without opening a conversation', function () {
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->withSession([
+            WorkstationPresence::SESSION_BIND_DISMISSED => true,
+        ]);
+
+    assertOkWithinQueryBudget(
+        route('operations.communications.inbox', ['filter' => 'waiting']),
+        80,
+    );
+});
+
 test('communications inbox stays within query budget', function () {
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->withSession([
-            \App\Ark\Operations\Workstations\WorkstationPresence::SESSION_BIND_DISMISSED => true,
+            WorkstationPresence::SESSION_BIND_DISMISSED => true,
         ]);
 
     assertOkWithinQueryBudget(

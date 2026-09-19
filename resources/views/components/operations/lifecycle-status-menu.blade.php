@@ -3,6 +3,7 @@
     'repairOrderId' => null,
     'label',
     'tone' => 'neutral',
+    'statusColor' => null,
     'statusMoves' => [],
     'confirmBaseUrl' => null,
     'align' => 'right',
@@ -29,6 +30,7 @@
                 'ops-job-card__chip',
                 'ops-job-card__chip--button',
                 'ops-job-card__chip--' . $tone,
+                'ops-job-card__chip--status-'.$statusColor => filled($statusColor),
             ])
             @click.stop="toggleMenu()"
             :aria-expanded="menuOpen"
@@ -58,8 +60,12 @@
                             role="menuitem"
                             disabled
                             class="ops-comms-menu__item ops-job-card__menu-move-button ops-job-card__menu-move-button--disabled"
-                            title="{{ $move['blockedReason'] ?? 'Not available' }}"
-                        >{{ $move['label'] }}</button>
+                        >
+                            <span class="ops-job-card__menu-move-label">{{ $move['label'] }}</span>
+                            @if (filled($move['blockedReason'] ?? null))
+                                <span class="ops-job-card__menu-move-reason">{{ $move['blockedReason'] }}</span>
+                            @endif
+                        </button>
                     @elseif ($move['needsRoConfirmation'] ?? false)
                         <a
                             href="{{ $confirmBaseUrl }}?lifecycle={{ urlencode($move['value']) }}"
@@ -88,6 +94,7 @@
     <span @class([
         'ops-job-card__chip',
         'ops-job-card__chip--' . $tone,
+        'ops-job-card__chip--status-'.$statusColor => filled($statusColor),
     ]) {{ $attributes }}>
         <span class="ops-job-card__chip-label">{{ $label }}</span>
     </span>

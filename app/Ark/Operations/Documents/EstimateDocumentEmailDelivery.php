@@ -15,12 +15,14 @@ use App\Ark\Operations\Portal\CreateOrReuseEstimateAccessTokenAction;
 use App\Ark\Operations\RepairOrders\MarkEstimateAwaitingCustomerApprovalAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Mail\OutboundTransactionalMail;
-use App\Ark\Mail\TransactionalMailException;
-use App\Ark\Mail\TransactionalMailOperation;
+use App\Ark\Platform\Mail\ArkMailClient;
+use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Mail\EstimateCustomerMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 
 class EstimateDocumentEmailDelivery
@@ -33,8 +35,7 @@ class EstimateDocumentEmailDelivery
         private readonly CommunicationEventRecorder $communicationEvents,
         private readonly CreateOrReuseEstimateAccessTokenAction $estimateTokens,
         private readonly MarkEstimateAwaitingCustomerApprovalAction $markAwaitingApproval,
-        private readonly OutboundTransactionalMail $outboundMail,
-        private readonly \App\Ark\Platform\StarterClient $starter,
+        private readonly ArkMailClient $mail,
     ) {}
 
     /**
@@ -54,14 +55,18 @@ class EstimateDocumentEmailDelivery
     {
         $repairOrder->loadMissing(['customer', 'vehicle']);
 
-        try {
-            $document = $this->documents->resolveForRepairOrder($repairOrder, $actor);
-        } catch (Throwable) {
-            throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
-        }
+        $document = $this->documents->attachablePdfForRepairOrder($repairOrder);
 
-        if (! $this->documents->hasViewablePdf($document)) {
-            throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
+        if ($document === null) {
+            try {
+                $document = $this->documents->resolveForRepairOrder($repairOrder, $actor);
+            } catch (Throwable) {
+                throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
+            }
+
+            if (! $this->documents->hasViewablePdf($document)) {
+                throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
+            }
         }
 
         $settings = ShopSettings::current();
@@ -71,48 +76,20 @@ class EstimateDocumentEmailDelivery
         $accessToken = $this->estimateTokens->execute($repairOrder, $actor);
         $portalUrl = route('portal.estimates.show', ['token' => $accessToken->plainToken]);
 
-        $idempotencyKey = 'estimate-'.$repairOrder->repair_order_id.'-'.Str::uuid();
+        $mailable = new EstimateCustomerMail(
+            repairOrder: $repairOrder,
+            totals: $totals,
+            shopName: $shopName,
+            portalUrl: $portalUrl,
+            pdfPath: $document->pdf_path,
+            pdfFilename: $pdfFilename,
+            staffNote: filled($staffNote) ? trim($staffNote) : null,
+        );
 
-        if ($this->starter->isAvailable()) {
-            $mailResult = $this->starter->sendEstimateReady(
-                $repairOrder,
-                $recipientEmail,
-                $portalUrl,
-                $idempotencyKey,
-            );
+        if (ManagedMailGate::platformSend()) {
+            $this->sendViaPlatform($mailable, $repairOrder, $document, $recipientEmail, $pdfFilename);
         } else {
-            $mailable = new EstimateCustomerMail(
-                repairOrder: $repairOrder,
-                totals: $totals,
-                shopName: $shopName,
-                portalUrl: $portalUrl,
-                pdfPath: $document->pdf_path,
-                pdfFilename: $pdfFilename,
-                staffNote: filled($staffNote) ? trim($staffNote) : null,
-            );
-
-            $attachments = [];
-            if (filled($document->pdf_path) && is_file($document->pdf_path)) {
-                $attachments[] = [
-                    'filename' => $pdfFilename,
-                    'mime' => 'application/pdf',
-                    'path' => $document->pdf_path,
-                ];
-            }
-
-            $mailResult = $this->outboundMail->sendMailable(
-                TransactionalMailOperation::EstimateSend,
-                $recipientEmail,
-                $mailable,
-                $idempotencyKey,
-                'repair_order',
-                (string) $repairOrder->repair_order_id,
-                $attachments,
-            );
-        }
-
-        if (! $mailResult->ok()) {
-            throw new TransactionalMailException($mailResult);
+            Mail::to($recipientEmail)->send($mailable);
         }
 
         $summary = 'Estimate emailed to '.$recipientEmail.' with portal review link.';
@@ -157,5 +134,46 @@ class EstimateDocumentEmailDelivery
             'message' => $message,
             'awaiting_approval' => $awaitingApproval,
         ];
+    }
+
+    private function sendViaPlatform(
+        EstimateCustomerMail $mailable,
+        RepairOrder $repairOrder,
+        EstimateDocument $document,
+        string $recipientEmail,
+        string $pdfFilename,
+    ): void {
+        $pdf = Storage::disk('local')->get($document->pdf_path);
+
+        if (! is_string($pdf) || $pdf === '') {
+            throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
+        }
+
+        $result = $this->mail->sendTransactional([
+            'operation' => 'estimate.send',
+            'to' => $recipientEmail,
+            'subject' => (string) $mailable->envelope()->subject,
+            'html_body' => $mailable->render(),
+            'attachments' => [[
+                'filename' => $pdfFilename,
+                'mime' => 'application/pdf',
+                'content_base64' => base64_encode($pdf),
+            ]],
+            'idempotency_key' => 'estimate-send-'.Str::uuid(),
+            'domain_object_type' => 'repair_order',
+            'domain_object_id' => (string) $repairOrder->id,
+            'metadata' => [
+                'repair_order_id' => $repairOrder->id,
+                'estimate_document_id' => $document->id,
+            ],
+        ]);
+
+        if (($result['ok'] ?? false) !== true) {
+            throw new RuntimeException(
+                is_string($result['message'] ?? null)
+                    ? $result['message']
+                    : 'Estimate email could not be sent.',
+            );
+        }
     }
 }

@@ -51,19 +51,17 @@
                 @foreach ($lifecycleSelect->statusOptions as $option)
                     <option
                         value="{{ $option['value'] }}"
-                        @disabled($option['disabled'])
-                        @if ($option['blockedReason'] !== null) title="{{ $option['blockedReason'] }}" data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                        @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
                     >
-                        {{ $option['label'] }}
+                        {{ $option['label'] }}@if (filled($option['blockedReason'])) — {{ $option['blockedReason'] }}@endif
                     </option>
                 @endforeach
                 @foreach ($lifecycleSelect->closeOptions as $option)
                     <option
                         value="{{ $option['value'] }}"
-                        @disabled($option['blockedReason'] !== null)
-                        @if ($option['blockedReason'] !== null) title="{{ $option['blockedReason'] }}" data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                        @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
                     >
-                        {{ $option['label'] }}
+                        {{ $option['label'] }}@if (filled($option['blockedReason'])) — {{ $option['blockedReason'] }}@endif
                     </option>
                 @endforeach
                 @if ($lifecycleSelect->showLostCloseOption)

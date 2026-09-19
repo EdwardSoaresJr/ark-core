@@ -43,6 +43,7 @@ Everything HTTP belongs beneath the shop. Set via `SHOP_BASE_URL`.
 | Device registration webhook | `/voice/device-registration` |
 | Microbrowser | `/voice/device-screen/{token}` |
 | Health | `/voice/health` |
+| Tokenized customer links | `/go/…`, `/portal/estimates/…`, `/portal/pay/…`, `/portal/inspections/…` |
 
 These are product capabilities. Operators never type URLs.
 
@@ -52,8 +53,8 @@ SIP is transport. Phones register to a **SIP registrar hostname** defined by dep
 
 Examples (all valid, all deployment-specific):
 
-- `voice.demo-auto.test` (production voice cutover today)
-- `app.demo-auto.test:5060` (same hostname as shop, different protocol)
+- `voice.lugsnplugs.com` (LugsNPlugs Production Cutover today)
+- `app.lugsnplugs.com:5060` (same hostname as shop, different protocol)
 - `shop1.arksms.com:5060` (future fleet default)
 
 Operators never see the registrar. Customers never configure it. ARK never presents it in operator UI.
@@ -106,13 +107,13 @@ When DNS allows, the simplest deployment uses **one hostname, two protocols**:
 
 No extra subdomains. No global SIP proxy. Same VPS, same certificate strategy for HTTP; SIP on port 5060.
 
-production voice cutover may temporarily use a separate `VOICE_SIP_REGISTRAR` until SIP is routed through the shop hostname.
+LugsNPlugs Production Cutover may temporarily use a separate `VOICE_SIP_REGISTRAR` until SIP is routed through the shop hostname.
 
 ## White label
 
 White labeling changes HTTP identity only (`shop1.com/voice`). Transport configuration updates independently if DNS requires it.
 
-## Identity drift test
+## Cursor drift test
 
 **Reject:**
 

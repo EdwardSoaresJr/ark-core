@@ -14,20 +14,7 @@ use App\Ark\Operations\Telephony\CallSessionStatus;
 use Carbon\CarbonInterface;
 
 /**
- * H0 communication-event precedence.
- *
- * Turn is computed from the newest unresolved inbound customer communication —
- * transport-agnostic. SMS, CallSession, voicemail, and portal-originated inbound
- * messages are all InboundCustomerCommunication projections.
- *
- * Resolution (shop action) after an inbound's operational occurrence:
- * - Advisor outbound SMS / Messenger
- * - Advisor marks inbound call / voicemail handled (worked_at)
- * - Advisor outbound call completed
- *
- * Explicit: an inbound call may be resolved by outbound SMS (shop answered the need).
- *
- * @see docs/communications/ark-conversations-v1.md
+ * Newest unanswered inbound customer event. Waiting and resolved are stored on Conversation.
  */
 final class ConversationTurnPrecedence
 {
@@ -37,7 +24,7 @@ final class ConversationTurnPrecedence
             return ConversationWaitingOn::Shop;
         }
 
-        return ConversationWaitingOn::Customer;
+        return $conversation->waiting_on ?? ConversationWaitingOn::Shop;
     }
 
     public function newestUnresolvedInboundOccurredAt(Conversation $conversation): ?CarbonInterface

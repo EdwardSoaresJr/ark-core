@@ -96,6 +96,9 @@
                 @csrf
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="delivery" value="email">
+                @if (filled($reviewRequest['recipient_email'] ?? null))
+                    <input type="hidden" name="email" value="{{ $reviewRequest['recipient_email'] }}">
+                @endif
                 @if ($closePaid)
                     <input type="hidden" name="close_paid" value="1">
                 @endif
@@ -116,6 +119,9 @@
                 @csrf
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="delivery" value="both">
+                @if (filled($reviewRequest['recipient_email'] ?? null))
+                    <input type="hidden" name="email" value="{{ $reviewRequest['recipient_email'] }}">
+                @endif
                 @if ($closePaid)
                     <input type="hidden" name="close_paid" value="1">
                 @endif

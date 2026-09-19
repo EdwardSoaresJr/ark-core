@@ -64,7 +64,7 @@ final class RepairOrderStatusColor
             self::DARK => 'Slate',
             self::SECONDARY => 'Neutral',
             self::WARNING => 'Waiting',
-            self::INFO => 'Attention',
+            self::INFO => 'Info',
             self::PRIMARY => 'In motion',
             self::SUCCESS => 'Ready',
         };

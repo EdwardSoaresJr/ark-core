@@ -104,14 +104,26 @@
             >
                 @foreach ($footer->utilities as $action)
                     @if ($action->key === 'key_tag')
-                        <button
-                            type="button"
-                            role="menuitem"
-                            class="ops-ro-footer__menu-item"
-                            @click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
-                        >
-                            {{ $action->label }}
-                        </button>
+                        @if (filled($action->blockedReason))
+                            <button
+                                type="button"
+                                role="menuitem"
+                                class="ops-ro-footer__menu-item"
+                                @click="open = false; window.alert(@js($action->blockedReason))"
+                            >
+                                {{ $action->label }}
+                                <span class="mt-0.5 block text-[11px] font-normal leading-4 text-slate-500">{{ $action->blockedReason }}</span>
+                            </button>
+                        @else
+                            <button
+                                type="button"
+                                role="menuitem"
+                                class="ops-ro-footer__menu-item"
+                                @click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
+                            >
+                                {{ $action->label }}
+                            </button>
+                        @endif
                     @elseif ($action->key === 'oil_sticker')
                         <button
                             type="button"

@@ -5,9 +5,10 @@ use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Today\AdvisorHomeCardSurfaceProjection;
+use App\Ark\Operations\Workboard\WorkboardCardGlance;
 use App\Ark\Operations\Workboard\WorkboardTriageCard;
 
-test('home card chip prefers balance due over lifecycle posture', function () {
+test('home card chip uses configured status not balance due overlay', function () {
     $repairOrder = new RepairOrder;
     $repairOrder->forceFill([
         'id' => 10,
@@ -15,35 +16,17 @@ test('home card chip prefers balance due over lifecycle posture', function () {
         'status' => RepairOrderStatus::ReadyPickup->value,
     ]);
 
-    $card = new WorkboardTriageCard(
-        repairOrder: $repairOrder,
-        vehicleLabel: '2013 Dodge Journey',
-        concernSummary: 'Brakes',
-        concernHeadline: 'Brakes',
-        signalLabel: null,
-        signalTone: 'neutral',
-        ageLabel: '2d',
-        ageMinutes: 2880,
-        pressureScore: 0,
-        countsAsNeedsAttention: false,
-        countsAsCustomerWaiting: false,
-        countsAsUnassigned: false,
-        countsAsOverduePickup: false,
-        href: '/ro/10',
-    );
-
-    $balance = new BalanceDueResult(
-        hasIssuedInvoice: true,
-        invoiceTotalCents: 75_000,
-        depositsAppliedCents: 0,
-        paymentsAppliedCents: 0,
-        refundsAppliedCents: 0,
-        adjustmentsCents: 0,
-        creditsAppliedCents: 0,
-        writeOffsCents: 0,
-        balanceDueCents: 75_000,
-        unappliedDepositsCents: 0,
-        invoiceStatus: InvoiceStatus::Issued,
+    $glance = new WorkboardCardGlance(
+        whyLabel: 'Ready for pickup',
+        nextLabel: 'Collect balance',
+        moneyLabel: '$750',
+        moneyCaption: 'due',
+        ageLabel: '5h',
+        waitingOnCustomerDecision: false,
+        operationalStatus: 'Ready for Pickup',
+        clockLabel: '5h',
+        attention: 'normal',
+        configuredStatusColor: 'success',
     );
 
     $method = new ReflectionMethod(AdvisorHomeCardSurfaceProjection::class, 'resolveChip');
@@ -52,12 +35,12 @@ test('home card chip prefers balance due over lifecycle posture', function () {
     $chip = $method->invoke(
         app(AdvisorHomeCardSurfaceProjection::class),
         $repairOrder,
-        $card,
-        $balance,
+        $glance,
     );
 
-    expect($chip->label)->toBe('Balance Due')
-        ->and($chip->tone)->toBe('alert');
+    expect($chip->label)->toBe('Ready for Pickup')
+        ->and($chip->tone)->toBe('quiet')
+        ->and($chip->statusColor)->toBe('success');
 });
 
 test('home card next move follows up waiting approval without repeating age or chip', function () {

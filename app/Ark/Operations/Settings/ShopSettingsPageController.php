@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\Settings;
 
-use App\Ark\Dragon\Agent\DragonAgentMemory;
 use App\Ark\Operations\Diagnostics\OperationalClockProjection;
 use App\Ark\Operations\EstimatePricing\LaborPoliciesMatrixProjection;
 use App\Ark\Operations\EstimatePricing\LaborPolicyResolverPreview;
@@ -28,14 +27,9 @@ class ShopSettingsPageController
 {
     public function edit(Request $request): View|RedirectResponse
     {
-        if ($request->query('section') === 'communications') {
-            $tab = $request->query('communications-tab');
-
-            if ($tab === 'email' || $tab === 'ark-voice') {
-                return redirect()->route('operations.settings.shop.edit', ['section' => 'ark-cloud']);
-            }
-
-            return redirect()->route('operations.settings.shop.edit', ['section' => 'customer-messaging']);
+        if ($request->query('section') === 'communications'
+            && $request->query('communications-tab') === 'ark-voice') {
+            return redirect()->route('operations.shop.communications');
         }
 
         if ($request->query('section') === 'public-surface') {
@@ -43,7 +37,7 @@ class ShopSettingsPageController
         }
 
         $initialSection = $request->query('section');
-        $allowedSections = ['general', 'financial', 'payments', 'ark-cloud', 'customer-messaging', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'dragon-memory', 'runtime-health'];
+        $allowedSections = ['general', 'financial', 'payments', 'partstech', 'communications', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
 
         if (! in_array($initialSection, $allowedSections, true)) {
             $initialSection = $request->old('_member') !== null || $request->old('roles') !== null
@@ -68,6 +62,7 @@ class ShopSettingsPageController
             'excellenceTargets' => ShopExcellenceTargets::current(),
             'excellenceTargetReview' => ShopExcellenceTargets::lastTargetReview(),
             'statusCatalogFormData' => app(RepairOrderStatusCatalog::class)->settingsFormData(),
+            'jobBoardLanes' => app(\App\Ark\Operations\Workboard\JobBoardLaneCatalog::class)->all(),
             'inspectionTemplates' => InspectionTemplateCatalog::settingsFormData(),
             'workTemplates' => \App\Ark\Operations\WorkTemplates\WorkTemplate::query()
                 ->with('lines')
@@ -86,11 +81,8 @@ class ShopSettingsPageController
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-            'dragonMemories' => DragonAgentMemory::query()
-                ->with(['workstation', 'user'])
-                ->orderByDesc('id')
-                ->limit(200)
-                ->get(),
+            'platformPaymentsCapture' => \App\Ark\Platform\Payments\ManagedPaymentsGate::platformCapture(),
+            'platformMailSend' => \App\Ark\Platform\Mail\ManagedMailGate::platformSend(),
         ]);
     }
 }

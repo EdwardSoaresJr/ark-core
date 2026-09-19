@@ -130,6 +130,21 @@ test('worksheet heartbeat does not report drift for the advisors own estimate ed
         ->assertJsonPath('conflict', null);
 });
 
+test('worksheet heartbeat accepts the repair order workspace surface', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create(['name' => 'Maria Advisor'])->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    $repairOrder = presenceRepairOrderFixture();
+
+    $this->postJson(route('operations.repair-orders.worksheet-sessions.heartbeat', $repairOrder), [
+        'session_token' => 'tab-workspace-1',
+        'surface' => 'repair_order',
+        'opened_estimate_version' => $repairOrder->estimate_version,
+    ])->assertOk()
+        ->assertJsonPath('lease_valid', true);
+});
+
 function presenceRepairOrderFixture(): RepairOrder
 {
     $customer = Customer::query()->create([

@@ -204,8 +204,8 @@ test('stale waiting parts stays in active work without actionable attention reas
 
 test('building estimate stays in active work', function () {
     $repairOrder = decisionPressureRepairOrder(
-        firstName: 'Alex',
-        lastName: 'Rivera',
+        firstName: 'Edward',
+        lastName: 'Soares',
         status: RepairOrderStatus::Estimate,
         lineCents: 25_616,
     );
@@ -228,8 +228,8 @@ test('building estimate stays in active work', function () {
     $needsAction = collect($zones)->first(fn ($zone) => $zone->key === AdvisorHomeAttentionZoneKey::NeedsAction);
     $activeWork = collect($zones)->first(fn ($zone) => $zone->key === AdvisorHomeAttentionZoneKey::ActiveWork);
 
-    expect(collect($needsAction?->rows)->pluck('customerName'))->not->toContain('Alex Rivera')
-        ->and(collect($activeWork?->rows)->pluck('customerName'))->toContain('Alex Rivera');
+    expect(collect($needsAction?->rows)->pluck('customerName'))->not->toContain('Edward Soares')
+        ->and(collect($activeWork?->rows)->pluck('customerName'))->toContain('Edward Soares');
 });
 
 test('attention reason explains why approved repair order is in needs action', function () {
@@ -306,11 +306,16 @@ test('advisor home renders customer first attention cockpit', function () {
         ->assertDontSee('Biggest Pending', false)
         ->assertDontSee('ops-advisor-home-cockpit', false)
         ->assertSee('Estimates', false)
+        ->assertSee('Waiting Approval', false)
+        ->assertSee('Waiting Parts', false)
         ->assertSee('Work in Progress', false)
         ->assertSee('Completed', false)
         ->assertSee('John Smith', false)
         ->assertSee('2018 Ram 2500', false)
-        ->assertSee('Waiting Approval', false)
+        ->assertSee('$0', false)
+        ->assertSee('Estimate — None', false)
+        ->assertSee('Scheduled — None', false)
+        ->assertDontSee('ops-job-card__exception-mark', false)
         ->assertSee('Search job board', false)
         ->assertSee('ops-advisor-home__sticky-head', false);
 });

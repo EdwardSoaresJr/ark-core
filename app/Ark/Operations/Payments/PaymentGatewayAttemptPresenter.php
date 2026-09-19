@@ -6,6 +6,10 @@ use Brick\Money\Money;
 
 final class PaymentGatewayAttemptPresenter
 {
+    public function __construct(
+        private readonly CardPresentCaptureProjection $capture,
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -21,6 +25,7 @@ final class PaymentGatewayAttemptPresenter
             'square_payment_id' => $attempt->square_payment_id,
             'failure_reason' => $attempt->failure_reason,
             'completed_at' => $attempt->completed_at?->toIso8601String(),
+            'square' => $this->capture->publicConfig(),
         ];
     }
 

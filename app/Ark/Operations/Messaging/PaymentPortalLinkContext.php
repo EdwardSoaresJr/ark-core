@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Messaging;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\Payments\CreateCustomerPayTokenAction;
 use App\Ark\Operations\Payments\CustomerDocumentAccessToken;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -16,6 +17,7 @@ final class PaymentPortalLinkContext
     public function __construct(
         private readonly BalanceDueCalculator $balanceDue,
         private readonly CreateCustomerPayTokenAction $payTokens,
+        private readonly CardPresentCaptureProjection $capture,
     ) {}
 
     /**
@@ -24,6 +26,10 @@ final class PaymentPortalLinkContext
     public function forRepairOrder(RepairOrder $repairOrder): array
     {
         $repairOrder->loadMissing('customer');
+
+        if (! $this->capture->portalPayEnabled()) {
+            throw new RuntimeException('Customer portal payments are not enabled.');
+        }
 
         $balance = $this->balanceDue->forRepairOrder($repairOrder);
 

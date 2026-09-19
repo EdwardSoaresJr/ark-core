@@ -258,6 +258,10 @@ export function arkRteLaborGuide(config = {}) {
         },
 
         hoursForJob(job, basis) {
+            if (! job || typeof job !== 'object') {
+                return null;
+            }
+
             const totalKey = `total_${basis}_hr`;
 
             if (this.includeAddOns && job[totalKey] !== null && job[totalKey] !== undefined) {

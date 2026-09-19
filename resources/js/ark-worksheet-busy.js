@@ -1,8 +1,9 @@
 const TAB_BUSY_LABELS = {
     builder: 'Loading estimate…',
     inspect: 'Loading inspection…',
+    recommendations: 'Loading recommendations…',
     comms: 'Refreshing communications…',
-    portal: 'Refreshing portal…',
+    portal: 'Refreshing customer view…',
     auth: 'Refreshing authorization…',
     parts: 'Refreshing parts…',
     history: 'Loading history…',

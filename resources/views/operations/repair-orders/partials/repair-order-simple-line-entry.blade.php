@@ -239,11 +239,14 @@
             <input type="hidden" name="type" value="note">
             <input type="hidden" name="unit_price" value="0">
             <input type="hidden" name="quantity" value="1">
+            @php
+                $noteDefaults = \App\Ark\Operations\RepairOrders\NoteAudience::defaultsFromShop();
+            @endphp
             @include('operations.repair-orders.partials.repair-order-note-privacy-field', [
                 'audience' => [
-                    'advisor' => true,
-                    'technician' => false,
-                    'customer' => ! (bool) ($defaultNotesPrivate ?? true),
+                    'advisor' => $noteDefaults->advisor,
+                    'technician' => $noteDefaults->technician,
+                    'customer' => $noteDefaults->customer,
                 ],
             ])
         </div>

@@ -10,6 +10,9 @@ final class WorkboardSwimlaneCatalog
 {
     public const VISIBLE_CARD_LIMIT = 3;
 
+    /** Advisor Job Board columns — keep the board scannable; inventory holds the rest. */
+    public const HOME_BOARD_VISIBLE_CARD_LIMIT = 12;
+
     public const PICKUP_RECENT_DAYS = 3;
 
     /**
@@ -103,13 +106,20 @@ final class WorkboardSwimlaneCatalog
      */
     public static function advisorTriageQueueSlugs(): array
     {
-        return collect(self::advisorSwimlanes())
+        $slugs = collect(self::advisorSwimlanes())
             ->flatMap(fn (array $swimlane): array => collect($swimlane['lanes'])
                 ->flatMap(fn (array $lane): array => $lane['slugs'])
                 ->all())
             ->unique()
-            ->values()
-            ->all();
+            ->values();
+
+        $catalog = app(RepairOrderStatusCatalog::class);
+
+        if ($catalog->isBooted()) {
+            $slugs = $slugs->merge($catalog->advisorBoardSlugs());
+        }
+
+        return $slugs->unique()->values()->all();
     }
 
     public static function laneKeyForRepairOrder(RepairOrder $repairOrder): ?string
@@ -252,55 +262,51 @@ final class WorkboardSwimlaneCatalog
     }
 
     /**
-     * Advisor home (/app) — five visible shop columns.
+     * Advisor home (/app) — configured Job Board lanes. Defaults are the five shop queues.
      *
-     * @return list<array{key: string, label: string, tone: string}>
+     * @return list<array{key: string, label: string, tone: string, color: string}>
      */
     public static function advisorHomeBoardColumns(): array
     {
-        return [
-            ['key' => 'estimates', 'label' => 'Estimates', 'tone' => 'motion'],
-            ['key' => 'waiting_approval', 'label' => 'Waiting Approval', 'tone' => 'approval'],
-            ['key' => 'parts', 'label' => 'Waiting Parts', 'tone' => 'blocked'],
-            ['key' => 'work_in_progress', 'label' => 'Work in Progress', 'tone' => 'motion'],
-            ['key' => 'completed', 'label' => 'Completed', 'tone' => 'ready'],
-        ];
+        return app(JobBoardLaneCatalog::class)->homeBoardColumns();
     }
 
     public static function homeBoardColumnKeyForRepairOrder(RepairOrder $repairOrder): ?string
     {
-        $laneKey = self::laneKeyForRepairOrder($repairOrder);
-
-        return match ($laneKey) {
-            'needs_diagnosis', 'building_estimate' => 'estimates',
-            'waiting_approval' => 'waiting_approval',
-            'waiting_parts' => 'parts',
-            'shop_floor', 'quality_check' => 'work_in_progress',
-            'ready_pickup' => 'completed',
-            default => null,
-        };
+        return app(JobBoardLaneCatalog::class)->columnKeyForRepairOrder($repairOrder);
     }
 
     public static function inventoryUrlForHomeColumn(string $columnKey): ?string
     {
         return match ($columnKey) {
-            'estimates' => route('operations.repair-orders.index', [
+            JobBoardLaneCatalogDefaults::ESTIMATES => route('operations.repair-orders.index', [
                 'status' => RepairOrderStatus::Estimate->value,
             ]),
-            'waiting_approval' => route('operations.repair-orders.index', [
+            JobBoardLaneCatalogDefaults::WAITING_APPROVAL => route('operations.repair-orders.index', [
                 'status' => RepairOrderStatus::WaitingApproval->value,
             ]),
-            'parts' => route('operations.repair-orders.index', [
+            JobBoardLaneCatalogDefaults::PARTS => route('operations.repair-orders.index', [
                 'status' => RepairOrderStatus::WaitingParts->value,
             ]),
-            'work_in_progress' => route('operations.repair-orders.index', [
+            JobBoardLaneCatalogDefaults::WORK_IN_PROGRESS => route('operations.repair-orders.index', [
                 'lane' => 'shop_floor',
             ]),
-            'completed' => route('operations.repair-orders.index', [
+            JobBoardLaneCatalogDefaults::COMPLETED => route('operations.repair-orders.index', [
                 'status' => RepairOrderStatus::ReadyPickup->value,
                 'pickup' => 'all',
             ]),
-            default => null,
+            default => self::inventoryUrlForConfiguredLane($columnKey),
         };
+    }
+
+    private static function inventoryUrlForConfiguredLane(string $columnKey): ?string
+    {
+        $slug = app(JobBoardLaneCatalog::class)->defaultStatusSlugForLane($columnKey);
+
+        if ($slug === null) {
+            return null;
+        }
+
+        return route('operations.repair-orders.index', ['status' => $slug]);
     }
 }

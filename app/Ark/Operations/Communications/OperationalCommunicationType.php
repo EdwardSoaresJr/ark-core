@@ -6,6 +6,7 @@ enum OperationalCommunicationType: string
 {
     case EstimateSent = 'estimate_sent';
     case InvoiceSent = 'invoice_sent';
+    case InspectionSent = 'inspection_sent';
     case EstimateViewed = 'estimate_viewed';
     case ApprovalFollowUp = 'approval_follow_up';
     case CustomerReply = 'customer_reply';
@@ -24,6 +25,7 @@ enum OperationalCommunicationType: string
         return match ($this) {
             self::EstimateSent => 'Estimate sent',
             self::InvoiceSent => 'Invoice sent',
+            self::InspectionSent => 'Inspection sent',
             self::EstimateViewed => 'Estimate viewed',
             self::ApprovalFollowUp => 'Approval follow-up',
             self::CustomerReply => 'Customer replied',

@@ -965,9 +965,20 @@
     </script>
 
     @php
+        $partsTechLauncher = app(App\Ark\Operations\Parts\PartsTechCatalogLauncher::class);
+        $partstechPoNumber = $partsTechLauncher->poNumber($repairOrder);
+        $partstechPrepareUrl = $partsTechLauncher->usesRemoteCartPreparation(auth()->user())
+            ? route('operations.repair-orders.partstech.prepare', $repairOrder)
+            : '';
+        $canImportPartstechQuote = $partsTechLauncher->usesRemoteCartPreparation(auth()->user());
         $repairOrder->loadMissing('customer');
-        $shopSettings = App\Ark\Operations\Settings\ShopSettings::current();
-        $defaultPartsMatrixKey = $shopSettings->defaultPartsMatrix()['key'];
+        $partstechShopSettings = App\Ark\Operations\Settings\ShopSettings::current();
+        $defaultPartsMatrixKey = $partstechShopSettings->defaultPartsMatrix()['key'];
+        $partstechCatalogUrl = $partsTechLauncher->launchUrl($repairOrder);
+        $partstechBlockedReason = $partsTechLauncher->blockedReason($repairOrder);
+        $partstechCatalogWarning = $partsTechLauncher->catalogWarning($repairOrder);
+        $partsCatalogs = app(App\Ark\Operations\Parts\PartsCatalogConnections::class)
+            ->forRepairOrder($repairOrder, auth()->user());
         $laborGuideConcernId = $repairOrder->concerns->count() === 1
             ? $repairOrder->concerns->first()->id
             : null;
@@ -980,6 +991,24 @@
             ])
             ->values()
             ->all();
+        $laborGuides = app(App\Ark\Operations\LaborGuides\LaborGuideConnections::class)
+            ->forRepairOrder($repairOrder, $laborGuideConcernId, $rteLaborGuide);
+        $estimateToolbarPersistUrl = route('operations.estimate-toolbar.default');
+        $partsCatalogDefault = App\Ark\Runtime\Preferences\EstimateToolbarPreference::resolve(
+            auth()->user(),
+            App\Ark\Runtime\Preferences\EstimateToolbarPreference::KIND_PARTS,
+            collect($partsCatalogs)
+                ->filter(fn (array $catalog): bool => ($catalog['mode'] ?? 'catalog') === 'catalog' && $catalog['can_open'])
+                ->pluck('key')
+                ->all()
+                ?: collect($partsCatalogs)->filter(fn (array $catalog): bool => $catalog['can_open'])->pluck('key')->all()
+                ?: array_column($partsCatalogs, 'key'),
+        );
+        $laborGuideDefault = App\Ark\Runtime\Preferences\EstimateToolbarPreference::resolve(
+            auth()->user(),
+            App\Ark\Runtime\Preferences\EstimateToolbarPreference::KIND_LABOR,
+            array_column($laborGuides, 'key'),
+        );
     @endphp
     <section
         data-worksheet-root
@@ -1007,9 +1036,137 @@
         }), {
             partsMatrices: @js($partsMatrices),
             defaultPartsMatrixKey: @js($defaultPartsMatrixKey),
+            partstechCatalogUrl: @js($partstechCatalogUrl),
+            partstechPrepareUrl: @js($partstechPrepareUrl),
+            partstechPoNumber: @js($partstechPoNumber),
+            partstechCatalogWarning: @js($partstechCatalogWarning),
+            partstechNotice: '',
+            partstechCartLocked: false,
+            partstechBlockingReference: '',
+            partstechCatalogOpening: false,
+            partstechPullLoading: false,
+            partstechPullStatus: '',
+            partstechPreferredConcernId: '',
+            partstechCatalogWindow: null,
+            partstechPoWatchTimer: null,
+            partstechLastStampedOrders: 0,
+            partstechPoWatchUntil: 0,
+            partstechOpenedCatalogUrl: '',
+            partstechPoCopied: false,
             laborGuideNotice: '',
+            partsCatalogMenu: false,
+            partsCatalogDefaultKey: @js($partsCatalogDefault),
+            partsCatalogSelectedKey: @js($partsCatalogDefault),
+            partsCatalogItems: @js($partsCatalogs),
+            partsCatalogActionLabel: '',
+            laborGuideMenu: false,
+            laborGuideDefaultKey: @js($laborGuideDefault),
+            laborGuideItems: @js($laborGuides),
+            estimateToolbarPersistUrl: @js($estimateToolbarPersistUrl),
+            estimateContext: @js(($partsBlockingCount ?? 0) > 0 ? 'parts' : null),
             clearLaborGuideNotice() {
                 this.laborGuideNotice = '';
+            },
+            partsCatalogSelected() {
+                const catalogs = this.partsCatalogItems.filter((item) => item.mode === 'catalog');
+
+                if (catalogs.length) {
+                    return catalogs.find((item) => item.key === this.partsCatalogSelectedKey) || catalogs[0] || null;
+                }
+
+                return this.partsCatalogItems.find((item) => item.key === this.partsCatalogSelectedKey) || this.partsCatalogItems[0] || null;
+            },
+            partsCatalogByKey(key) {
+                return this.partsCatalogItems.find((item) => item.key === key) || null;
+            },
+            activatePartsCatalogItem(item) {
+                if (! item) {
+                    return;
+                }
+
+                if (item.mode === 'link') {
+                    this.openPartsCatalog(item.key);
+                    this.partsCatalogMenu = false;
+
+                    return;
+                }
+
+                this.selectPartsCatalog(item.key);
+            },
+            selectPartsCatalog(key) {
+                if (! this.partsCatalogByKey(key)) {
+                    return;
+                }
+
+                this.partsCatalogSelectedKey = key;
+                this.partsCatalogMenu = false;
+            },
+            laborGuidePrimary() {
+                return this.laborGuideItems.find((item) => item.key === this.laborGuideDefaultKey) || this.laborGuideItems[0] || null;
+            },
+            laborGuideSecondary() {
+                const key = this.laborGuidePrimary()?.key;
+
+                return this.laborGuideItems.filter((item) => item.key !== key);
+            },
+            runLaborGuideItem(item) {
+                if (! item) {
+                    return;
+                }
+
+                this.laborGuideMenu = false;
+
+                if (item.kind === 'rte') {
+                    this.openRteLaborGuide();
+
+                    return;
+                }
+
+                if (item.labor_guide) {
+                    this.openLaborGuide(
+                        item.labor_guide.url,
+                        item.labor_guide.vin,
+                        item.labor_guide.notice,
+                        item.labor_guide.windowName,
+                    );
+                }
+            },
+            setEstimateToolbarDefault(kind, key) {
+                if (kind === 'parts_catalog') {
+                    this.partsCatalogDefaultKey = key;
+                    this.partsCatalogSelectedKey = key;
+                    this.partsCatalogMenu = false;
+                } else {
+                    this.laborGuideDefaultKey = key;
+                    this.laborGuideMenu = false;
+                }
+
+                const token = document.querySelector('meta[name=csrf-token]')?.content || '';
+
+                fetch(this.estimateToolbarPersistUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ kind, key }),
+                }).catch(() => {});
+            },
+            initEstimateContextFromHash() {
+                const hash = (window.location.hash || '').replace(/^#/, '');
+
+                if (hash === 'auth' || hash === 'authorization-rail') {
+                    this.estimateContext = 'auth';
+                } else if (hash === 'portal' || hash === 'portal-rail' || hash === 'customer-view') {
+                    this.estimateContext = 'portal';
+                } else if (hash === 'parts' || hash === 'parts-rail') {
+                    this.estimateContext = 'parts';
+                }
+            },
+            toggleEstimateContext(name) {
+                this.estimateContext = this.estimateContext === name ? null : name;
             },
             focusCreateScope() {
                 window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', {
@@ -1018,6 +1175,249 @@
                         invokeEl: document.querySelector('[data-workspace-modal-trigger=add-work]'),
                     },
                 }));
+            },
+            openPartsCatalog(key, forceCartSwitch = false, concernId = null) {
+                const catalog = this.partsCatalogByKey(key);
+                this.partsCatalogActionLabel = catalog?.label || '';
+
+                if (key === 'partstech') {
+                    return this.openPartsTechCatalog(forceCartSwitch, concernId);
+                }
+
+                if (catalog?.launch) {
+                    this.openLaborGuide(
+                        catalog.launch.url,
+                        catalog.launch.vin,
+                        catalog.launch.notice,
+                        catalog.launch.windowName || (catalog.mode === 'link' ? '_blank' : null),
+                    );
+                }
+            },
+            pullPartsCatalogQuote(key) {
+                if (key !== 'partstech' || this.partsCatalogSelectedKey !== 'partstech') {
+                    return;
+                }
+
+                const catalog = this.partsCatalogByKey(key);
+                this.partsCatalogActionLabel = catalog?.cart_label || catalog?.label || '';
+
+                this.$dispatch(
+                    'ark:partstech-pull-quote',
+                    this.partstechPreferredConcernId ? { concernId: this.partstechPreferredConcernId } : {},
+                );
+            },
+            partsTechCatalogUrlWithConcern(catalogUrl, concernId) {
+                if (! catalogUrl || ! concernId) {
+                    return catalogUrl;
+                }
+
+                try {
+                    const url = new URL(catalogUrl);
+
+                    url.searchParams.set('concern_id', String(concernId));
+
+                    return url.toString();
+                } catch {
+                    return catalogUrl;
+                }
+            },
+            async openPartsTechCatalog(forceCartSwitch = false, concernId = null) {
+                if (! this.partstechCatalogUrl || this.partstechCatalogOpening || this.partstechPullLoading) {
+                    return;
+                }
+
+                this.partstechPreferredConcernId = concernId != null && concernId !== ''
+                    ? String(concernId)
+                    : '';
+
+                this.partstechPoCopied = false;
+
+                if (this.partstechPoNumber) {
+                    try {
+                        await navigator.clipboard.writeText(this.partstechPoNumber);
+                        this.partstechPoCopied = true;
+                    } catch {
+                        this.partstechPoCopied = false;
+                    }
+                }
+
+                let catalogUrl = this.partstechCatalogUrl;
+                const preferredConcernId = this.partstechPreferredConcernId || null;
+
+                let stampedOrderCount = 0;
+
+                if (this.partstechPrepareUrl) {
+                    this.partstechCatalogOpening = true;
+
+                    try {
+                        const response = await fetch(this.partstechPrepareUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                Accept: 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                            },
+                            body: JSON.stringify({
+                                force_cart_switch: forceCartSwitch,
+                                concern_id: preferredConcernId,
+                            }),
+                        });
+
+                        const payload = await response.json().catch(() => ({}));
+
+                        if (payload?.cart_locked) {
+                            this.partstechCartLocked = true;
+                            this.partstechBlockingReference = payload?.blocking_cart_reference || '';
+                            this.partstechNotice = payload?.message || 'PartsTech is busy on another repair order.';
+
+                            return;
+                        }
+
+                        if (! response.ok && ! payload?.catalog_url) {
+                            this.partstechNotice = payload?.message || 'PartsTech Catalog is unavailable.';
+
+                            return;
+                        }
+
+                        this.partstechCartLocked = false;
+                        this.partstechBlockingReference = '';
+
+                        if (payload?.catalog_url) {
+                            catalogUrl = payload.catalog_url;
+                        }
+
+                        stampedOrderCount = Number(payload?.stamped_order_count || 0);
+
+                        if (! response.ok || payload?.prepared === false) {
+                            const loginHint = payload?.partstech_login
+                                ? 'Sign into PartsTech in your browser as ' + payload.partstech_login + '. '
+                                : 'Sign into PartsTech using the same login ARK uses for your profile (or shop default). ';
+
+                            this.partstechNotice = payload?.message || (loginHint + 'Confirm PO shows ' + (this.partstechPoNumber || 'R{RO}') + ' after ARK prepares the cart.');
+                        } else {
+                            const notices = [];
+
+                            if (payload?.partstech_login) {
+                                const seat = payload?.partstech_login_source === 'user'
+                                    ? 'Using your PartsTech account (' + payload.partstech_login + ')'
+                                    : 'Using the shop PartsTech account (' + payload.partstech_login + ')';
+                                notices.push(seat + ' · PO ' + (payload.cart_reference || this.partstechPoNumber || 'R{RO}'));
+                            }
+
+                            if (Array.isArray(payload?.warnings)) {
+                                payload.warnings.forEach((warning) => {
+                                    if (warning) {
+                                        notices.push(warning);
+                                    }
+                                });
+                            }
+
+                            this.partstechNotice = notices.join(' ');
+                        }
+                    } catch {
+                        this.partstechNotice = 'Could not reach ARK to prepare the PartsTech cart. Opening catalog anyway.';
+                    } finally {
+                        this.partstechCatalogOpening = false;
+                    }
+                }
+
+                catalogUrl = this.partsTechCatalogUrlWithConcern(catalogUrl, preferredConcernId);
+
+                if (this.partstechCatalogWarning && ! this.partstechCartLocked && ! this.partstechNotice) {
+                    this.partstechNotice = this.partstechCatalogWarning;
+                }
+
+                if (! this.partstechCartLocked) {
+                    this.partstechNotice = this.partsTechPastePoNotice(this.partstechNotice);
+                }
+
+                this.partstechOpenedCatalogUrl = catalogUrl;
+                this.partstechLastStampedOrders = stampedOrderCount;
+                this.partstechCatalogWindow = window.open(catalogUrl, 'ark-partstech-catalog');
+                this.startPartsTechPoWatch();
+            },
+            partsTechPastePoNotice(existing) {
+                const po = this.partstechPoNumber || 'R{RO}';
+                const paste = this.partstechPoCopied
+                    ? po + ' is copied. Paste it into PartsTech PO Number if the box is empty. After the first part, refresh PartsTech once if it still is.'
+                    : 'Copy ' + po + ' and paste it into PartsTech PO Number. After the first part, refresh PartsTech once if the box is still empty.';
+
+                return existing ? (existing + ' ' + paste) : paste;
+            },
+            startPartsTechPoWatch() {
+                this.stopPartsTechPoWatch();
+
+                if (! this.partstechPrepareUrl) {
+                    return;
+                }
+
+                this.partstechPoWatchUntil = Date.now() + (4 * 60 * 1000);
+                this.partstechPoWatchTimer = window.setInterval(() => {
+                    this.syncPartsTechCheckoutPo();
+                }, 1500);
+            },
+            stopPartsTechPoWatch() {
+                if (this.partstechPoWatchTimer) {
+                    window.clearInterval(this.partstechPoWatchTimer);
+                    this.partstechPoWatchTimer = null;
+                }
+            },
+            async syncPartsTechCheckoutPo() {
+                if (Date.now() > this.partstechPoWatchUntil) {
+                    this.stopPartsTechPoWatch();
+                    return;
+                }
+
+                if (this.partstechCatalogWindow && this.partstechCatalogWindow.closed) {
+                    this.stopPartsTechPoWatch();
+                    return;
+                }
+
+                if (! this.partstechPrepareUrl || this.partstechCatalogOpening) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(this.partstechPrepareUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+                        },
+                        body: JSON.stringify({
+                            stamp_only: true,
+                            concern_id: this.partstechPreferredConcernId || null,
+                        }),
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+
+                    if (payload?.cart_locked) {
+                        this.stopPartsTechPoWatch();
+                        return;
+                    }
+
+                    const stamped = Number(payload?.stamped_order_count || 0);
+
+                    if (stamped > this.partstechLastStampedOrders) {
+                        this.partstechLastStampedOrders = stamped;
+                        const po = this.partstechPoNumber || 'R{RO}';
+                        this.partstechNotice = po + ' is on the PartsTech order. Refresh the PartsTech tab if PO Number is still empty.';
+                    }
+                } catch {
+                    // Keep watching while the catalog tab is open.
+                }
+            },
+            async switchPartsTechToThisRo() {
+                await this.openPartsTechCatalog(true, this.partstechPreferredConcernId || null);
+            },
+            clearPartstechNotice() {
+                this.partstechNotice = '';
+                this.partstechCartLocked = false;
+                this.partstechBlockingReference = '';
             },
             openLaborGuideFromTrigger(trigger) {
                 if (! trigger?.dataset?.laborGuide) {
@@ -1060,6 +1460,16 @@
                     }));
                 }
 
+                if (windowName === '_blank') {
+                    const opened = window.open(url, '_blank');
+
+                    if (opened) {
+                        opened.opener = null;
+                    }
+
+                    return;
+                }
+
                 window.open(url, windowName || 'ark-labor-guide', 'noopener,noreferrer');
             },
             rteLabor: window.arkRteLaborGuide(@js([
@@ -1082,9 +1492,12 @@
                 this.rteLabor.openPanel();
             },
         })"
-        x-init="initWorksheetCollaboration()"
+        x-init="initWorksheetCollaboration(); initEstimateContextFromHash()"
         class="ops-estimate-workspace ops-estimate-workspace--builder"
+        @ark:partstech-warning.window="partstechNotice = $event.detail.message || ''; partstechCartLocked = Boolean($event.detail.cartLocked)"
+        @ark:partstech-pull-quote-state.window="partstechPullLoading = Boolean($event.detail?.loading); partstechPullStatus = $event.detail?.status || ''"
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
+        @keydown.escape.window="partsCatalogMenu = false; laborGuideMenu = false"
     >
         @include('operations.repair-orders.partials.worksheet-busy-overlay')
 
@@ -1098,11 +1511,13 @@
             @if (session('status'))
                 @php
                     $worksheetStatus = (string) session('status');
-                    $worksheetStatusSaved = strcasecmp($worksheetStatus, 'Saved') === 0;
+                    $worksheetStatusSuccess = strcasecmp($worksheetStatus, 'Saved') === 0
+                        || str_contains(strtolower($worksheetStatus), 'sent')
+                        || str_contains(strtolower($worksheetStatus), 'emailed');
                 @endphp
                 <div
                     data-worksheet-server-status
-                    class="{{ $worksheetStatusSaved
+                    class="{{ $worksheetStatusSuccess
                         ? 'border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950'
                         : 'border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950' }}"
                 >
@@ -1119,6 +1534,27 @@
                     {{ $errors->first('lifecycle') }}
                 </div>
             @endif
+        </div>
+
+        <div x-show="partstechNotice" x-cloak class="border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <p x-text="partstechNotice"></p>
+                    <p x-show="partstechCartLocked" x-cloak class="mt-1 text-xs font-medium leading-4 text-amber-950">
+                        PartsTech is currently working with <span x-text="partstechBlockingReference || 'another RO'"></span>. Switch to this RO if you are done with that cart, or pull that quote first.
+                    </p>
+                    <button
+                        x-show="partstechCartLocked"
+                        x-cloak
+                        type="button"
+                        class="mt-2 rounded-sm bg-amber-900 px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-amber-50 hover:bg-amber-950"
+                        @click="switchPartsTechToThisRo()"
+                    >
+                        Switch PartsTech to this RO
+                    </button>
+                </div>
+                <button type="button" class="shrink-0 text-xs font-bold uppercase tracking-[0.08em] text-amber-800 hover:text-amber-950" @click="clearPartstechNotice()">Dismiss</button>
+            </div>
         </div>
 
         <div x-show="laborGuideNotice" x-cloak class="border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-950">
@@ -1144,15 +1580,6 @@
 
             <div id="review-toolbar" class="ops-review-actions">
                 <div class="ops-review-toolbar">
-                    @include('operations.repair-orders.partials.repair-order-estimate-toolbar-actions', [
-                        'repairOrder' => $repairOrder,
-                        'mode' => 'edit',
-                        'isTerminal' => $isTerminal,
-                        'showConcernStore' => false,
-                        'laborGuideConcernId' => $laborGuideConcernId,
-                        'rteLaborGuide' => $rteLaborGuide,
-                    ])
-
                     @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
                         'repairOrder' => $repairOrder,
                     ])
@@ -1202,6 +1629,18 @@
                     ])
                 </div>
 
+                <div
+                    x-show="partstechCatalogOpening || partstechPullLoading"
+                    x-cloak
+                    class="ops-partstech-busy-strip"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <span class="ops-partstech-loader shrink-0" aria-hidden="true"></span>
+                    <span x-text="partstechCatalogOpening
+                        ? ('Preparing ' + (partsCatalogActionLabel || 'PartsTech') + ' cart…')
+                        : (partstechPullStatus || ('Pulling ' + (partsCatalogActionLabel || 'PT Cart') + '…'))"></span>
+                </div>
             </div>
         </div>
 
@@ -1218,7 +1657,23 @@
                     :approvedConcerns="$approvedConcerns"
                     :priorVehicleFutureWorkCount="$priorVehicleFutureWorkCount"
                     :recordedFindingCount="$recordedFindingCount ?? 0"
+                    :recommendationOpenCount="$recommendationAwareness['open_count'] ?? 0"
+                    :recommendationSafetyCount="$recommendationAwareness['safety_count'] ?? 0"
                 >
+                @include('operations.repair-orders.partials.repair-order-estimate-toolbar-actions', [
+                    'repairOrder' => $repairOrder,
+                    'mode' => 'edit',
+                    'isTerminal' => $isTerminal,
+                    'showConcernStore' => (bool) ($canAuthorRepairOrder ?? false),
+                    'partsCatalogs' => $partsCatalogs,
+                    'partsCatalogDefault' => $partsCatalogDefault,
+                    'laborGuides' => $laborGuides,
+                    'laborGuideDefault' => $laborGuideDefault,
+                    'estimateToolbarPersistUrl' => $estimateToolbarPersistUrl,
+                    'laborGuideConcernId' => $laborGuideConcernId,
+                    'rteLaborGuide' => $rteLaborGuide,
+                ])
+
                 @include('operations.repair-orders.partials.repair-order-visit-reason', [
                     'repairOrder' => $repairOrder,
                     'isTerminal' => $isTerminal,
@@ -1232,6 +1687,16 @@
                             'totals' => $totals,
                         ])
                     </div>
+
+                    @include('operations.repair-orders.partials.repair-order-estimate-context-strip', [
+                        'repairOrder' => $repairOrder,
+                        'totals' => $totals,
+                        'isTerminal' => $isTerminal,
+                        'estimateVersion' => $estimateVersion,
+                        'recommendationAwareness' => $recommendationAwareness ?? null,
+                        'partsBlockingCount' => $partsBlockingCount ?? 0,
+                        'partsReadinessCounts' => $partsReadinessCounts ?? [],
+                    ])
 
                     @if (($engineOilServices ?? collect())->isNotEmpty())
                         @include('operations.maintenance.partials.engine-oil-panel', [
@@ -1287,11 +1752,29 @@
                         'laborCategories' => $laborCategories,
                         'defaultLaborRate' => $defaultLaborRate,
                         'defaultNotesPrivate' => $defaultNotesPrivate,
-                        'shopSettings' => $shopSettings,
+                        'partstechShopSettings' => $partstechShopSettings,
                         'technicians' => $technicians ?? collect(),
                     ])
 
                     <div class="ops-worksheet-concerns">
+                        @if ($canImportPartstechQuote)
+                            @include('operations.repair-orders.partials.repair-order-partstech-import', [
+                                'repairOrder' => $repairOrder,
+                                'estimateVersion' => $estimateVersion,
+                                'partstechPoNumber' => $partstechPoNumber,
+                                'partstechPrepareUrl' => $partstechPrepareUrl,
+                                'canImportQuote' => true,
+                            ])
+                        @elseif ($partsTechLauncher->usesPlatform() && ! $isTerminal)
+                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
+                                {{ $partsTechLauncher->blockedReason($repairOrder) }}
+                            </p>
+                        @elseif ($partsTechLauncher->configured() && ! $isTerminal)
+                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
+                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}" class="font-semibold underline decoration-slate-400 hover:text-slate-900">Settings → PartsTech</a>.
+                            </p>
+                        @endif
+
                         @if (! $isTerminal)
                             @include('operations.repair-orders.partials.repair-order-dealer-quote-capture', [
                                 'repairOrder' => $repairOrder,
@@ -1307,8 +1790,8 @@
                         @forelse ($worksheetConcerns as $concern)
                             @php
                                 $concernPartsMatrixKey = $concern->billing_posture
-                                    ->defaultPartsMatrix($shopSettings)['key'];
-                                $concernLaborDefaults = $shopSettings->laborDefaultsForConcern(
+                                    ->defaultPartsMatrix($partstechShopSettings)['key'];
+                                $concernLaborDefaults = $partstechShopSettings->laborDefaultsForConcern(
                                     $concern->billing_posture,
                                     $repairOrder->customer,
                                 );
@@ -1357,6 +1840,8 @@
                                                 'estimateVersion' => $estimateVersion,
                                                 'concernDefaultLaborRate' => $concernDefaultLaborRate,
                                                 'canMoveScopeToNewRo' => ! ($financial['hasIssuedInvoice'] ?? false),
+                                                'partsCatalogs' => $partsCatalogs,
+                                                'partsCatalogDefault' => $partsCatalogDefault,
                                                 'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
                                             ])
                                         </x-slot:toolbar>

@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>What you are deploying</h3>
-    <p><strong>ARK Mobile</strong> is the Flutter staff app for advisors and technicians on the lot. Package ID: <code>com.arksms.ark_mobile</code>. It talks to the same ARK backend as desktop — default API host <code>https://app.demo-auto.test</code>.</p>
+    <p><strong>ARK Mobile</strong> is the Flutter staff app for advisors and technicians on the lot. Package ID: <code>com.lugsnplugs.ark_mobile</code>. It talks to the same ARK backend as desktop — API host is the shop operations URL (LugsNPlugs: <code>https://lugsnplugs.arksms.com</code>).</p>
     <p>This guide covers getting a <strong>native Android build</strong> onto shop devices. OBD / iCar Pro scanning requires the installed app — it does not work in a mobile browser.</p>
 
     <h3>Recommended path — sideload release APK</h3>
@@ -48,7 +48,7 @@
     <h3>Publish this guide to BookStack</h3>
     <p>After catalog changes deploy to production, post-deploy runs:</p>
     <p><code>php artisan ark:arkademy:import-bookstack --force</code></p>
-    <p>Staff can then read this on <a href="https://learn.demo-auto.test">learn.demo-auto.test</a> under <strong>Shop In A Box → Admin</strong>.</p>
+    <p>Staff can then read this on <a href="https://learn.lugsnplugs.com">learn.lugsnplugs.com</a> under <strong>Shop In A Box → Admin</strong>.</p>
 
     <h3>Related</h3>
     <p>Advisor lot workflows: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-check-in']) }}">Mobile check-in and OBD</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-attention']) }}">ARK Mobile Attention</a>.</p>

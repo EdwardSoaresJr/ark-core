@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Commands;
 
+use App\Ark\Operations\Printing\KeyTagPrintGate;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Support\Facades\Route;
@@ -214,16 +215,18 @@ final class RegisterCoreOperationsCommands
     {
         $noRo = 'Open a repair order first.';
 
+        $keyTagBlocked = KeyTagPrintGate::blockedReason($repairOrder);
+
         $registry->register(new OperationsCommand(
             id: 'ops.print-key-tag',
             title: 'Print Key Tag',
             group: 'Operations',
             keywords: ['print', 'key', 'tag'],
             permission: ArkCapability::RepairOrdersView->value,
-            url: $repairOrder !== null
+            url: $repairOrder !== null && $keyTagBlocked === null
                 ? route('operations.repair-orders.print-key-tag', $repairOrder)
                 : null,
-            disabledReason: $repairOrder === null ? $noRo : null,
+            disabledReason: $repairOrder === null ? $noRo : $keyTagBlocked,
         ));
 
         $registry->register(new OperationsCommand(

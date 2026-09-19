@@ -27,6 +27,14 @@
                 <p class="mt-1 text-xs text-slate-600">Assigned: {{ $control['assigned_technician_name'] }}</p>
             @endif
 
+            @if (($recommendationAwareness['headline'] ?? null))
+                <button
+                    type="button"
+                    class="mt-2 text-left text-xs font-semibold {{ ($recommendationAwareness['strong'] ?? false) ? 'text-rose-800' : 'text-slate-700' }}"
+                    @click="window.arkSelectRepairOrderWorkspaceTab && window.arkSelectRepairOrderWorkspaceTab('recommendations')"
+                >{{ $recommendationAwareness['headline'] }}</button>
+            @endif
+
             @if ($canRecord && ! ($repairOrder->isTerminal() ?? false))
                 <div class="mt-2">
                     @include('operations.repair-orders.inspection.partials.builder-template-select', [
@@ -60,6 +68,11 @@
                     title="Force bay layout — for handing a tablet to the technician"
                 >Bay layout</a>
             </div>
+
+            @include('operations.repair-orders.partials.inspection-portal-link', [
+                'repairOrder' => $repairOrder,
+                'isTerminal' => $isTerminal ?? false,
+            ])
 
             <div
                 class="ops-inspection-handoff mt-4 border-t border-slate-200 pt-3"

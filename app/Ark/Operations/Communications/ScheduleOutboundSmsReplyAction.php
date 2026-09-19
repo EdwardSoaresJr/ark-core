@@ -10,6 +10,7 @@ use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use App\Ark\Platform\Communications\ManagedCommunicationsGate;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use RuntimeException;
@@ -43,7 +44,7 @@ final class ScheduleOutboundSmsReplyAction
             throw new RuntimeException('Message is too long to schedule.');
         }
 
-        if (! $this->credentials->twilioConfigured()) {
+        if (! ManagedCommunicationsGate::platformSend() && ! $this->credentials->twilioConfigured()) {
             throw new RuntimeException('Shop messaging is disabled.');
         }
 

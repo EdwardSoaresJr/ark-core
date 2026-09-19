@@ -21,7 +21,6 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
-use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Support\Facades\Storage;
 
 test('advisor can create a living estimate document snapshot from current repair order state', function () {
@@ -162,8 +161,8 @@ test('estimate pdf identity band shows customer address when on file', function 
     [$repairOrder] = repairOrderForEstimateDocumentSnapshot();
 
     $repairOrder->customer->update([
-        'address_line_1' => '100 Main Street Suite A',
-        'city' => 'Demo City',
+        'address_line_1' => '3445 Chelton Loop N D',
+        'city' => 'Colorado Springs',
         'state' => 'CO',
         'postal_code' => '80909',
     ]);
@@ -179,12 +178,12 @@ test('estimate pdf identity band shows customer address when on file', function 
     ])->render();
 
     expect($identityHtml)
-        ->toContain('Address: 100 Main Street Suite A')
-        ->toContain('Demo City, CO 80909')
-        ->not->toContain('Address: 100 Main Street Suite A · Demo City, CO 80909');
+        ->toContain('Address: 3445 Chelton Loop N D')
+        ->toContain('Colorado Springs, CO 80909')
+        ->not->toContain('Address: 3445 Chelton Loop N D · Colorado Springs, CO 80909');
 });
 
-test('estimate pdf identity band shows unassigned technician when none assigned', function () {
+test('estimate pdf identity band omits unassigned technician', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
@@ -200,7 +199,10 @@ test('estimate pdf identity band shows unassigned technician when none assigned'
         'variant' => 'pdf',
     ])->render();
 
-    expect($identityHtml)->toContain('Technician: Unassigned');
+    expect($identityHtml)
+        ->not->toContain('Technician:')
+        ->not->toContain('Needs owner')
+        ->not->toContain('Unassigned');
 });
 
 test('estimate pdf identity band shows repair order mileage in and out', function () {
@@ -230,7 +232,9 @@ test('estimate pdf identity band shows repair order mileage in and out', functio
     ])->render();
 
     expect($identityHtml)
-        ->toContain('Mileage: 165,604 / 165,892');
+        ->toContain('Mileage in: 165,604')
+        ->toContain('Mileage out: 165,892')
+        ->not->toContain('Mileage: 165,604 / 165,892');
 });
 
 test('view pdf route creates living estimate document without create pdf form', function () {
@@ -725,7 +729,6 @@ test('refreshing current estimate reuses row and updates snapshot after dirty ch
 
 test('terminal repair order statuses snapshot a final pdf that no longer auto refreshes', function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    $this->seed(RepairOrderStatusCatalogSeeder::class);
     Storage::fake('local');
 
     $this->app->bind(PdfRenderer::class, FakeEstimatePdfRenderer::class);
@@ -748,8 +751,7 @@ test('terminal repair order statuses snapshot a final pdf that no longer auto re
     payRepairOrderInFull($repairOrder->fresh());
 
     $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
-        'status' => 'closed:paid',
-        'review_request_sent' => '1',
+        'status' => RepairOrderStatus::Closed->value,
     ])->assertRedirect();
 
     $closedDocument = $document->fresh();

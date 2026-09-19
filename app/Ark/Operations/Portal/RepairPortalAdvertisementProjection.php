@@ -27,6 +27,7 @@ final class RepairPortalAdvertisementProjection
      *     headline: string,
      *     cta: string,
      *     bullets: list<string>,
+     *     callout: string,
      *     has_shared_evidence: bool,
      *     photo_count: int,
      *     video_count: int
@@ -54,6 +55,7 @@ final class RepairPortalAdvertisementProjection
         $hasShared = ($photoCount + $videoCount) > 0;
         $hasInspection = InspectionFindingCardProjection::recordedCountForRepairOrder($repairOrder) > 0;
 
+        $headline = 'Vehicle Portal';
         $bullets = ($hasShared || $hasInspection)
             ? array_values(array_filter([
                 $photoCount > 0 ? $photoCount.' '.($photoCount === 1 ? 'Photo' : 'Photos') : null,
@@ -70,13 +72,37 @@ final class RepairPortalAdvertisementProjection
         return [
             'public_code' => $access->public_code,
             'url' => $url,
-            'qr_data_uri' => CustomerReportQrCode::svgDataUri($url, 96),
-            'headline' => 'Vehicle Portal',
+            'qr_data_uri' => CustomerReportQrCode::svgDataUri($url, 64),
+            'headline' => $headline,
             'cta' => 'View your vehicle online',
             'bullets' => $bullets,
+            'callout' => $this->callout($headline, $bullets),
             'has_shared_evidence' => $hasShared,
             'photo_count' => $photoCount,
             'video_count' => $videoCount,
         ];
+    }
+
+    /**
+     * @param  list<string>  $bullets
+     */
+    private function callout(string $headline, array $bullets): string
+    {
+        $parts = array_values(array_filter(array_map(
+            static fn (string $bullet): string => rtrim(trim($bullet), '.'),
+            $bullets,
+        )));
+
+        if ($parts === []) {
+            return $headline;
+        }
+
+        if (count($parts) === 1) {
+            return $headline.' — '.$parts[0].'.';
+        }
+
+        $last = array_pop($parts);
+
+        return $headline.' — '.implode(', ', $parts).' & '.$last.'.';
     }
 }

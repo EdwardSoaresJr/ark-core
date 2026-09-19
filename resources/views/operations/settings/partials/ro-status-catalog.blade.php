@@ -1,11 +1,12 @@
 @php
     use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
-    use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogDefaults;
     use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor;
+    use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
     use App\Ark\Runtime\Authorization\ArkRole;
 
     $statusFilterOptions = app(RepairOrderStatusCatalog::class)->filterOptions();
     $statusColorOptions = RepairOrderStatusColor::options();
+    $laneCatalog = app(JobBoardLaneCatalog::class);
 
     $transitionRoles = [
         ArkRole::Admin->value,
@@ -17,34 +18,42 @@
         ->mapWithKeys(fn (ArkRole $role): array => [$role->value => $role->label()])
         ->all();
 
-    $compatSlugs = ['ready_for_work', 'ready_pickup'];
-
-    $advisorLaneOptions = collect(RepairOrderStatusCatalogDefaults::advisorLaneTemplates())
-        ->mapWithKeys(fn (array $lane): array => [$lane['key'] => $lane['label']])
+    $advisorLaneOptions = collect($laneCatalog->all())
+        ->mapWithKeys(fn (array $lane): array => [$lane['key'] => $lane['name']])
         ->put('custom', 'Own lane (status name)')
         ->all();
 
-    $resolveGroup = static function (array $status) use ($compatSlugs): string {
-        if (in_array($status['slug'], $compatSlugs, true)) {
-            return 'Compatibility';
-        }
+    $knownLaneKeys = $laneCatalog->knownKeys();
 
-        if ($status['slug'] === 'closed') {
+    $resolveGroup = static function (array $status) use ($laneCatalog): string {
+        if ($status['is_terminal'] ?? false) {
             return 'Terminal';
         }
 
-        if (! ($status['is_system'] ?? true)) {
-            return 'Custom';
-        }
+        $laneKey = $status['advisor_lane_key'] ?? '';
 
-        return $status['dashboard_group_name'] ?? 'Other';
+        return $laneCatalog->labelForKey((string) $laneKey) ?? 'Unassigned';
     };
-
-    $groupOrder = ['Estimates', 'Work in progress', 'Finalizing & pickup', 'Completed', 'Custom', 'Terminal', 'Compatibility'];
 
     $statusGroups = collect($statusCatalogFormData)
         ->groupBy($resolveGroup)
-        ->sortBy(fn ($items, string $group): int => array_search($group, $groupOrder, true) ?: 99);
+        ->sortBy(function ($items, string $group) use ($laneCatalog): int {
+            if ($group === 'Terminal') {
+                return 900;
+            }
+
+            if ($group === 'Unassigned') {
+                return 800;
+            }
+
+            foreach ($laneCatalog->homeBoardColumns() as $index => $column) {
+                if ($column['label'] === $group) {
+                    return $index;
+                }
+            }
+
+            return 500;
+        });
 @endphp
 
 @if ($statusCatalogFormData === [])
@@ -57,7 +66,7 @@
         @method('PATCH')
 
         <p class="text-xs leading-5 text-slate-500">
-            Rename statuses, set board colors, control workboard visibility, and choose who may use each lifecycle move. A move is on when at least one role is checked — uncheck every role to turn it off. Admin and advisor start checked by default; technician only on sensible bay moves.
+            Each block below is one status. Set its name, lane, and whether mileage in, mileage out, or both must be entered before a repair order can move there.
         </p>
 
         <section class="border border-slate-200 bg-white">
@@ -144,7 +153,7 @@
                         class="mt-1 w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
                     >
                         @foreach ($advisorLaneOptions as $laneKey => $laneLabel)
-                            <option value="{{ $laneKey }}" @selected(old('create.advisor_lane_key', 'shop_floor') === $laneKey)>{{ $laneLabel }}</option>
+                            <option value="{{ $laneKey }}" @selected(old('create.advisor_lane_key', 'work_in_progress') === $laneKey)>{{ $laneLabel }}</option>
                         @endforeach
                     </select>
                 </label>
@@ -167,6 +176,15 @@
                         <input type="checkbox" name="create[show_on_technician_board]" value="0" class="rounded border-slate-300 text-slate-800">
                         Technician board
                     </label>
+                    <label class="block text-[11px] font-medium text-slate-500">
+                        Mileage required
+                        <select name="create[mileage_requirement]" class="mt-1 w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950">
+                            <option value="none" @selected(old('create.mileage_requirement', 'none') === 'none')>None</option>
+                            <option value="in" @selected(old('create.mileage_requirement') === 'in')>Mileage in</option>
+                            <option value="out" @selected(old('create.mileage_requirement') === 'out')>Mileage out</option>
+                            <option value="both" @selected(old('create.mileage_requirement') === 'both')>Both</option>
+                        </select>
+                    </label>
                 </div>
             </div>
             @error('create.name')
@@ -181,70 +199,102 @@
         </section>
 
         @foreach ($statusGroups as $groupName => $statuses)
-            <section @class([
-                'border border-slate-200',
-                'border-dashed border-slate-300 bg-slate-50/40' => $groupName === 'Compatibility',
-            ])>
-                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+            <section class="space-y-2">
+                <div class="flex flex-wrap items-end justify-between gap-2 px-0.5">
                     <div>
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ $groupName }}</p>
-                        @if ($groupName === 'Compatibility')
-                            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Legacy status strings on imported repair orders. Prefer the primary statuses above for new workflow.</p>
-                        @endif
-                        @if ($groupName === 'Custom')
-                            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Shop-defined workflow statuses. Slug keys are fixed after creation.</p>
+                        @if ($groupName === 'Terminal')
+                            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Off the Job Board. Closed visits can still have pickup or payment work. This is not the Completed lane.</p>
                         @endif
                     </div>
                     <span class="text-[11px] font-semibold text-slate-400">{{ $statuses->count() }} {{ str()->plural('status', $statuses->count()) }}</span>
                 </div>
 
-                <div class="divide-y divide-slate-100">
+                <div class="space-y-3">
                     @foreach ($statuses as $status)
-                        <article @class(['px-3 py-3', 'opacity-80' => ! $status['active']])>
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div class="min-w-[12rem] flex-1">
-                                    <div class="flex flex-wrap items-end gap-3">
-                                        <label class="block min-w-[12rem] flex-1 text-[11px] font-medium text-slate-500">
-                                            Display name
-                                            <input
-                                                type="text"
-                                                name="statuses[{{ $status['slug'] }}][name]"
-                                                value="{{ old('statuses.'.$status['slug'].'.name', $status['name']) }}"
-                                                maxlength="64"
-                                                class="mt-1 w-full max-w-sm rounded-md border border-slate-300 px-2.5 py-1.5 text-sm font-semibold text-slate-950"
-                                            >
-                                        </label>
-                                        <div class="block min-w-[10rem] text-[11px] font-medium text-slate-500">
-                                            Color
-                                            @include('operations.settings.partials.ro-status-color-picker', [
-                                                'name' => 'statuses['.$status['slug'].'][color]',
-                                                'value' => old('statuses.'.$status['slug'].'.color', $status['color'] ?? RepairOrderStatusColor::SECONDARY),
-                                                'options' => $statusColorOptions,
-                                            ])
-                                        </div>
-                                    </div>
-                                    <p class="mt-1 font-mono text-[10px] text-slate-400">{{ $status['slug'] }}</p>
-                                    @if (! ($status['is_system'] ?? true))
-                                        <label class="mt-2 block text-[11px] font-medium text-slate-500">
-                                            Advisor lane
-                                            <select
-                                                name="statuses[{{ $status['slug'] }}][advisor_lane_key]"
-                                                class="mt-1 w-full max-w-sm rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
-                                            >
-                                                @foreach ($advisorLaneOptions as $laneKey => $laneLabel)
-                                                    @php
-                                                        $selectedLane = old('statuses.'.$status['slug'].'.advisor_lane_key', $status['advisor_lane_key'] ?? 'shop_floor');
-                                                        $optionValue = $laneKey === 'custom' ? 'custom' : $laneKey;
-                                                    @endphp
-                                                    <option value="{{ $optionValue }}" @selected($selectedLane === $laneKey || ($laneKey === 'custom' && ! in_array($selectedLane, array_keys($advisorLaneOptions), true)))>{{ $laneLabel }}</option>
-                                                @endforeach
-                                            </select>
-                                        </label>
-                                    @endif
+                        @php
+                            $mileageRequirement = old(
+                                'statuses.'.$status['slug'].'.mileage_requirement',
+                                match (true) {
+                                    ($status['requires_mileage_in'] ?? false) && ($status['requires_mileage_out'] ?? false) => 'both',
+                                    (bool) ($status['requires_mileage_in'] ?? false) => 'in',
+                                    (bool) ($status['requires_mileage_out'] ?? false) => 'out',
+                                    default => 'none',
+                                },
+                            );
+                            $allowedMoves = collect($status['transitions'])->filter(
+                                fn (array $transition): bool => (bool) ($transition['active'] ?? false),
+                            )->count();
+                        @endphp
+                        <article @class([
+                            'overflow-hidden rounded-sm border border-slate-300 bg-white',
+                            'opacity-80' => ! $status['active'],
+                        ])>
+                            <div class="flex flex-wrap items-end gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <label class="block min-w-[14rem] flex-1 text-[11px] font-medium text-slate-500">
+                                    Status
+                                    <input
+                                        type="text"
+                                        name="statuses[{{ $status['slug'] }}][name]"
+                                        value="{{ old('statuses.'.$status['slug'].'.name', $status['name']) }}"
+                                        maxlength="64"
+                                        class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-semibold text-slate-950"
+                                    >
+                                </label>
+                                <div class="block w-44 text-[11px] font-medium text-slate-500">
+                                    Color
+                                    @include('operations.settings.partials.ro-status-color-picker', [
+                                        'name' => 'statuses['.$status['slug'].'][color]',
+                                        'value' => old('statuses.'.$status['slug'].'.color', $status['color'] ?? RepairOrderStatusColor::SECONDARY),
+                                        'options' => $statusColorOptions,
+                                    ])
                                 </div>
+                                <p class="pb-2 font-mono text-[10px] text-slate-400">{{ $status['slug'] }}</p>
+                            </div>
 
+                            <div class="grid gap-3 px-3 py-3 sm:grid-cols-2 xl:grid-cols-4">
                                 @unless ($status['is_terminal'])
-                                    <div class="flex flex-wrap gap-4 pt-5 text-xs font-medium text-slate-600">
+                                    <label class="block text-[11px] font-medium text-slate-500">
+                                        Job Board lane
+                                        <select
+                                            name="statuses[{{ $status['slug'] }}][advisor_lane_key]"
+                                            class="mt-1 w-full rounded-sm border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
+                                        >
+                                            @foreach ($advisorLaneOptions as $laneKey => $laneLabel)
+                                                @php
+                                                    $selectedLane = old('statuses.'.$status['slug'].'.advisor_lane_key', $status['advisor_lane_key'] ?? 'work_in_progress');
+                                                    $optionValue = $laneKey === 'custom' ? 'custom' : $laneKey;
+                                                @endphp
+                                                <option value="{{ $optionValue }}" @selected($selectedLane === $laneKey || ($laneKey === 'custom' && ! in_array($selectedLane, $knownLaneKeys, true)))>{{ $laneLabel }}</option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+                                    <label class="block max-w-[6rem] text-[11px] font-medium text-slate-500">
+                                        Order
+                                        <input
+                                            type="number"
+                                            name="statuses[{{ $status['slug'] }}][sort_order]"
+                                            value="{{ old('statuses.'.$status['slug'].'.sort_order', $status['sort_order'] ?? 0) }}"
+                                            min="0"
+                                            max="999"
+                                            class="mt-1 w-full rounded-sm border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
+                                        >
+                                    </label>
+                                @endunless
+                                <label class="block text-[11px] font-medium text-slate-500">
+                                    Mileage required
+                                    <select
+                                        name="statuses[{{ $status['slug'] }}][mileage_requirement]"
+                                        class="mt-1 w-full rounded-sm border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
+                                    >
+                                        <option value="none" @selected($mileageRequirement === 'none')>None</option>
+                                        <option value="in" @selected($mileageRequirement === 'in')>Mileage in</option>
+                                        <option value="out" @selected($mileageRequirement === 'out')>Mileage out</option>
+                                        <option value="both" @selected($mileageRequirement === 'both')>Both</option>
+                                    </select>
+                                </label>
+                                <div class="flex flex-col justify-end gap-2 pb-1 text-xs font-medium text-slate-600">
+                                    @unless ($status['is_terminal'])
                                         <label class="inline-flex items-center gap-2">
                                             <input type="hidden" name="statuses[{{ $status['slug'] }}][show_on_advisor_board]" value="0">
                                             <input
@@ -267,12 +317,25 @@
                                             >
                                             Technician board
                                         </label>
-                                    </div>
-                                @endunless
+                                    @endunless
+                                    @if (! ($status['is_system'] ?? true))
+                                        <label class="inline-flex items-center gap-2">
+                                            <input type="hidden" name="statuses[{{ $status['slug'] }}][is_terminal]" value="0">
+                                            <input
+                                                type="checkbox"
+                                                name="statuses[{{ $status['slug'] }}][is_terminal]"
+                                                value="1"
+                                                @checked(old('statuses.'.$status['slug'].'.is_terminal', $status['is_terminal']))
+                                                class="rounded border-slate-300 text-slate-800"
+                                            >
+                                            Hide from Job Board
+                                        </label>
+                                    @endif
+                                </div>
                             </div>
 
                             @if ($status['variants'] !== [])
-                                <div class="mt-3 flex flex-wrap gap-4">
+                                <div class="flex flex-wrap gap-4 border-t border-slate-200 px-3 py-3">
                                     @foreach ($status['variants'] as $variant)
                                         <label class="block min-w-[10rem] text-[11px] font-medium text-slate-500">
                                             Close — {{ $variant['key'] }}
@@ -281,10 +344,10 @@
                                                 name="variants[{{ $variant['id'] }}][name]"
                                                 value="{{ old('variants.'.$variant['id'].'.name', $variant['name']) }}"
                                                 maxlength="64"
-                                                class="mt-1 w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
+                                                class="mt-1 w-full rounded-sm border border-slate-300 px-2.5 py-1.5 text-sm text-slate-950"
                                             >
                                             @if ($variant['bypass_standard_close_rules'])
-                                                <span class="mt-1 block text-[10px] font-semibold text-amber-700">Bypasses standard close rules</span>
+                                                <span class="mt-1 block text-[10px] font-semibold text-amber-700">Skips the usual close checks</span>
                                             @endif
                                         </label>
                                     @endforeach
@@ -292,40 +355,46 @@
                             @endif
 
                             @if ($status['transitions'] !== [])
-                                <div class="mt-3 overflow-x-auto">
-                                    <table class="min-w-full border-collapse text-left text-[11px]">
-                                        <thead>
-                                            <tr class="border-b border-slate-200 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                                                <th class="py-1.5 pr-3 font-bold">Move to</th>
-                                                @foreach ($transitionRoles as $role)
-                                                    <th class="px-2 py-1.5 text-center font-bold">{{ $roleLabels[$role] ?? $role }}</th>
-                                                @endforeach
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-100">
-                                            @foreach ($status['transitions'] as $transition)
-                                                @php
-                                                    $transitionKey = $transition['form_key'];
-                                                    $oldRoles = old('transitions.'.$transitionKey.'.roles', $transition['roles']);
-                                                @endphp
-                                                <tr @class(['text-slate-400' => $oldRoles === []])>
-                                                    <td class="py-2 pr-3 font-semibold text-slate-800">{{ $transition['to_name'] }}</td>
+                                <details class="border-t border-slate-200">
+                                    <summary class="cursor-pointer px-3 py-2 text-xs font-semibold text-slate-700">
+                                        Who can move this
+                                        <span class="font-medium text-slate-400">{{ $allowedMoves }}</span>
+                                    </summary>
+                                    <div class="overflow-x-auto px-3 pb-3">
+                                        <table class="min-w-full border-collapse text-left text-[11px]">
+                                            <thead>
+                                                <tr class="border-b border-slate-200 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                                    <th class="py-1.5 pr-3 font-bold">Move to</th>
                                                     @foreach ($transitionRoles as $role)
-                                                        <td class="px-2 py-2 text-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                name="transitions[{{ $transitionKey }}][roles][]"
-                                                                value="{{ $role }}"
-                                                                @checked(in_array($role, $oldRoles, true))
-                                                                class="rounded border-slate-300 text-slate-800"
-                                                            >
-                                                        </td>
+                                                        <th class="px-2 py-1.5 text-center font-bold">{{ $roleLabels[$role] ?? $role }}</th>
                                                     @endforeach
                                                 </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                                @foreach ($status['transitions'] as $transition)
+                                                    @php
+                                                        $transitionKey = $transition['form_key'];
+                                                        $oldRoles = old('transitions.'.$transitionKey.'.roles', $transition['roles']);
+                                                    @endphp
+                                                    <tr @class(['text-slate-400' => $oldRoles === []])>
+                                                        <td class="py-2 pr-3 font-semibold text-slate-800">{{ $transition['to_name'] }}</td>
+                                                        @foreach ($transitionRoles as $role)
+                                                            <td class="px-2 py-2 text-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="transitions[{{ $transitionKey }}][roles][]"
+                                                                    value="{{ $role }}"
+                                                                    @checked(in_array($role, $oldRoles, true))
+                                                                    class="rounded border-slate-300 text-slate-800"
+                                                                >
+                                                            </td>
+                                                        @endforeach
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
                             @endif
                         </article>
                     @endforeach

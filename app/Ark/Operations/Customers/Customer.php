@@ -63,6 +63,11 @@ class Customer extends Model implements AuthenticatableContract
         return $this->hasMany(RepairOrder::class);
     }
 
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(\App\Ark\Operations\Recommendations\Recommendation::class);
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(\App\Ark\Operations\Documents\Document::class);

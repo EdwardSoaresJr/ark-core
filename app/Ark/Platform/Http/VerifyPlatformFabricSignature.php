@@ -2,8 +2,8 @@
 
 namespace App\Ark\Platform\Http;
 
-use App\Ark\Platform\PlatformConnection;
 use App\Ark\Install\InstallationIdentity;
+use App\Ark\Platform\PlatformConnection;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -46,8 +46,8 @@ final class VerifyPlatformFabricSignature
         $expected = hash_hmac('sha256', implode("\n", [
             $timestamp,
             $nonce,
-            'POST',
-            self::PATH,
+            strtoupper($request->getMethod()),
+            '/'.ltrim($request->path(), '/'),
             hash('sha256', $rawBody),
         ]), (string) $platform->credential());
 

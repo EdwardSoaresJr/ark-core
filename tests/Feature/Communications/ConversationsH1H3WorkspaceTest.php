@@ -99,8 +99,9 @@ test('h3 compose anywhere opens conversation thread for customer', function (): 
         ->assertSee('Molly Compose', false)
         ->assertSee('(719) 555-2002', false)
         ->assertSee('molly.compose@example.com', false)
-        ->assertSee('Shop Context', false)
+        ->assertSee('Work actions', false)
         ->assertSee('Conversation', false)
+        ->assertSee('Actions', false)
         ->assertSee('Call', false)
         ->assertSee('Schedule', false);
 });

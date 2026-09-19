@@ -9,9 +9,8 @@ Architecture documents are **reviewed**. Implementation documents are **updated*
 | `ARCHITECTURE.md` | Architecture review required |
 | `adr/` | Immutable once accepted — supersede, never edit |
 | `STANDARDS.md` | Architecture review required |
-| `CURRENT_MILESTONE.md` | Update as milestones change |
-| `ACTIVE_PR.md` | Update every PR |
-| `IMPLEMENTATION_LOG.md` | Append only |
+| `CURRENT_MILESTONE.md` | Keep current and short |
+| `ACTIVE_PR.md` | Keep current and short |
 
 Treat `docs/engineering/adr/` and permanent architecture docs like a core domain model: almost never change without intentional architecture review. A CODEOWNERS rule (or team convention) should protect these paths.
 
@@ -55,18 +54,31 @@ Domain canonical architecture (e.g. `docs/communications/ark-voice-endpoint-arch
 - Do not build task queues, MCP servers, daemons, or orchestration before the manual process is stable and repeated pain is observed.
 - The filter for every proposed feature: **What repeated pain does this remove today?** If it cannot answer, it waits.
 
-## Engineering discipline
+## ARK Forge (Agent 2)
 
-- Do not continue into the next milestone unbidden.
-- Stop after completing the requested change set.
+ARK Forge is an **engineering workbench** — observability, workspace, task running (earned later). The dashboard is one projection.
+
+| Layer | Role |
+|-------|------|
+| Git + `docs/engineering/` | Engineering truth |
+| **Forge Core** | Workstation capability truth — capability graph, never product domain |
+| **Workbench (Flutter)** | Views only — projection + capability invoke |
+
+Agent 2 bounded context: **ARK Forge only.** Do not pull ARK Voice into Forge reviews. Agent 1 ships product code and ignores Forge.
+
+Friction notebook: [forge-observation-notebook.md](research/forge-observation-notebook.md). Record friction, not solutions.
+
+## Implementation discipline
+
+- Stop after the requested change.
 - Do not redesign frozen architecture.
-- Document architectural deviations in [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) when that log is present in the working tree.
+- Put surprising deviations in the PR description. Do not keep a parallel implementation diary.
 
 ## Customer shell contract
 
 **Status:** Stable — do not revisit without compelling reason. Product doctrine: [ark-website-doctrine-v1.md](../platform/ark-website-doctrine-v1.md).
 
-**Rule:** No customer-facing page may bypass `x-customer.shell` without an **explicit documented exception** in the PR or implementation log.
+**Rule:** No customer-facing page may bypass `x-customer.shell` without an **explicit documented exception** in the PR.
 
 Delegates are allowed — they must render through the shell:
 

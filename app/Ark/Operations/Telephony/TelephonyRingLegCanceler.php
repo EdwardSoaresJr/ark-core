@@ -6,7 +6,7 @@ class TelephonyRingLegCanceler
 {
     public function __construct(
         private readonly TelephonyRingState $ringState,
-        private readonly OutboundVoiceCallControl $twilio,
+        private readonly TwilioVoiceApi $twilio,
     ) {}
 
     public function cancelCompetingLegs(string $parentCallSid, int $answeredEndpointId): void
@@ -56,18 +56,23 @@ class TelephonyRingLegCanceler
             ->where('provider_call_sid', $parentCallSid)
             ->first();
 
-        $endpoint = TelephonyEndpoint::query()->find($endpointId);
-
-        if ($session === null || $endpoint?->user_id === null || $session->owned_by_user_id !== null) {
+        if ($session === null) {
             return;
         }
 
-        $session->forceFill([
-            'owned_by_user_id' => $endpoint->user_id,
-            'owned_at' => now(),
+        $endpoint = TelephonyEndpoint::query()->find($endpointId);
+
+        $updates = [
             'status' => CallSessionStatus::Answered,
             'answered_at' => $session->answered_at ?? now(),
-        ])->save();
+        ];
+
+        if ($endpoint?->user_id !== null && $session->owned_by_user_id === null) {
+            $updates['owned_by_user_id'] = $endpoint->user_id;
+            $updates['owned_at'] = now();
+        }
+
+        $session->forceFill($updates)->save();
 
         app(IncomingCallContextBroadcaster::class)->broadcastForParentCallSid($parentCallSid);
     }

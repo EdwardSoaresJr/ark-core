@@ -8,12 +8,14 @@ use App\Ark\Operations\Conversations\ConversationParticipantResolver;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Mail\OutboundTransactionalMail;
-use App\Ark\Mail\TransactionalMailException;
-use App\Ark\Mail\TransactionalMailOperation;
+use App\Ark\Platform\Mail\ArkMailClient;
+use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Mail\DocumentCustomerMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 final class DocumentEmailDelivery
 {
@@ -23,7 +25,7 @@ final class DocumentEmailDelivery
         private readonly ConversationRecorder $conversations,
         private readonly ConversationResolver $conversationResolver,
         private readonly ConversationParticipantResolver $participants,
-        private readonly OutboundTransactionalMail $outboundMail,
+        private readonly ArkMailClient $mail,
     ) {}
 
     public function send(
@@ -57,34 +59,10 @@ final class DocumentEmailDelivery
             staffNote: $note,
         );
 
-        $attachments = [];
-        if (filled($document->storage_path)) {
-            $full = storage_path('app/'.$document->storage_path);
-            // local disk may store under storage/app/private or storage/app
-            if (! is_file($full)) {
-                $full = \Illuminate\Support\Facades\Storage::disk('local')->path($document->storage_path);
-            }
-            if (is_file($full)) {
-                $attachments[] = [
-                    'filename' => $attachmentFilename,
-                    'mime' => $document->content_type ?: 'application/octet-stream',
-                    'path' => $full,
-                ];
-            }
-        }
-
-        $mailResult = $this->outboundMail->sendMailable(
-            TransactionalMailOperation::DocumentSend,
-            $recipientEmail,
-            $mailable,
-            'document-'.$document->id.'-'.Str::uuid(),
-            'document',
-            (string) $document->id,
-            $attachments,
-        );
-
-        if (! $mailResult->ok()) {
-            throw new TransactionalMailException($mailResult);
+        if (ManagedMailGate::platformSend()) {
+            $this->sendViaPlatform($mailable, $document, $recipientEmail, $attachmentFilename);
+        } else {
+            Mail::to($recipientEmail)->send($mailable);
         }
 
         $summary = sprintf(
@@ -132,6 +110,46 @@ final class DocumentEmailDelivery
                 'customer_id' => $customer->id,
             ],
         );
+    }
+
+    private function sendViaPlatform(
+        DocumentCustomerMail $mailable,
+        Document $document,
+        string $recipientEmail,
+        string $attachmentFilename,
+    ): void {
+        $bytes = Storage::disk('local')->get($document->storage_path);
+
+        if (! is_string($bytes) || $bytes === '') {
+            throw new RuntimeException('This document could not be attached to the email.');
+        }
+
+        $result = $this->mail->sendTransactional([
+            'operation' => 'document.send',
+            'to' => $recipientEmail,
+            'subject' => (string) $mailable->envelope()->subject,
+            'html_body' => $mailable->render(),
+            'attachments' => [[
+                'filename' => $attachmentFilename,
+                'mime' => $document->content_type ?: 'application/octet-stream',
+                'content_base64' => base64_encode($bytes),
+            ]],
+            'idempotency_key' => 'document-send-'.Str::uuid(),
+            'domain_object_type' => 'document',
+            'domain_object_id' => (string) $document->id,
+            'metadata' => array_filter([
+                'document_id' => $document->id,
+                'repair_order_id' => $document->repair_order_id,
+            ]),
+        ]);
+
+        if (($result['ok'] ?? false) !== true) {
+            throw new RuntimeException(
+                is_string($result['message'] ?? null)
+                    ? $result['message']
+                    : 'Document email could not be sent.',
+            );
+        }
     }
 
     private function attachmentFilename(Document $document): string

@@ -129,8 +129,8 @@
                             class="font-medium text-slate-800"
                         >
                             Engine assumption:
-                            <span x-text="rteLabor.vehicleMatch.engine_assumption.label"></span>
-                            <span class="font-normal text-slate-600" x-text="` (${rteLabor.vehicleMatch.engine_assumption.source})`"></span>
+                            <span x-text="rteLabor.vehicleMatch?.engine_assumption?.label"></span>
+                            <span class="font-normal text-slate-600" x-text="rteLabor.vehicleMatch?.engine_assumption?.source ? ` (${rteLabor.vehicleMatch.engine_assumption.source})` : ''"></span>
                         </p>
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald-900">Recommended</p>
-                            <p class="text-sm font-semibold text-slate-950" x-text="rteLabor.suggestedLabor.title"></p>
+                            <p class="text-sm font-semibold text-slate-950" x-text="rteLabor.suggestedLabor?.title"></p>
 
                             <template x-if="rteLabor.packageExplanation('avg')">
                                 <div class="mt-1.5 space-y-1">
@@ -386,44 +386,44 @@
                             class="border-b border-sky-200 bg-sky-50/70 align-middle"
                         >
                             <td class="px-3 py-2 sm:px-4 sm:py-2.5">
-                                <p class="font-semibold text-slate-900" x-text="rteLabor.recommendedJob.job_desc || rteLabor.recommendedJob.lab_id"></p>
+                                <p class="font-semibold text-slate-900" x-text="rteLabor.recommendedJob?.job_desc || rteLabor.recommendedJob?.lab_id"></p>
                                 <p
                                     class="mt-0.5 text-[11px] text-slate-600"
-                                    x-show="rteLabor.recommendedJob.variant_label"
-                                    x-text="rteLabor.recommendedJob.variant_label"
+                                    x-show="rteLabor.recommendedJob?.variant_label"
+                                    x-text="rteLabor.recommendedJob?.variant_label"
                                 ></p>
                             </td>
                             <td class="px-1 py-2 text-right tabular-nums text-slate-700 sm:py-2.5">
-                                <span x-text="rteLabor.formatHours(rteLabor.hoursForJob(rteLabor.recommendedJob, 'lo'))"></span>
+                                <span x-text="rteLabor.recommendedJob ? rteLabor.formatHours(rteLabor.hoursForJob(rteLabor.recommendedJob, 'lo')) : ''"></span>
                             </td>
                             <td class="px-1 py-2 text-right tabular-nums font-semibold text-slate-900 sm:py-2.5">
-                                <span x-text="rteLabor.formatHours(rteLabor.hoursForJob(rteLabor.recommendedJob, 'avg'))"></span>
+                                <span x-text="rteLabor.recommendedJob ? rteLabor.formatHours(rteLabor.hoursForJob(rteLabor.recommendedJob, 'avg')) : ''"></span>
                             </td>
                             <td class="px-1 py-2 text-right tabular-nums text-slate-700 sm:py-2.5">
-                                <span x-text="rteLabor.formatHours(rteLabor.hoursForJob(rteLabor.recommendedJob, 'hi'))"></span>
+                                <span x-text="rteLabor.recommendedJob ? rteLabor.formatHours(rteLabor.hoursForJob(rteLabor.recommendedJob, 'hi')) : ''"></span>
                             </td>
                             <td class="px-3 py-2 sm:py-2.5">
                                 <div class="flex flex-col gap-1">
                                     <button
                                         type="button"
                                         class="w-full rounded-sm border border-slate-300 px-2 py-1 text-center text-[11px] font-semibold tabular-nums text-slate-700 hover:bg-slate-100"
-                                        :disabled="rteLabor.applying || ! rteLabor.hoursForJob(rteLabor.recommendedJob, 'lo')"
+                                        :disabled="rteLabor.applying || ! rteLabor.recommendedJob || ! rteLabor.hoursForJob(rteLabor.recommendedJob, 'lo')"
                                         @click="rteLabor.applyJob(rteLabor.recommendedJob, 'lo')"
-                                        x-text="rteLabor.applyButtonLabel('lo', rteLabor.hoursForJob(rteLabor.recommendedJob, 'lo'))"
+                                        x-text="rteLabor.applyButtonLabel('lo', rteLabor.recommendedJob ? rteLabor.hoursForJob(rteLabor.recommendedJob, 'lo') : null)"
                                     ></button>
                                     <button
                                         type="button"
                                         class="w-full rounded-sm border border-sky-700 bg-sky-700 px-2 py-1 text-center text-[11px] font-semibold tabular-nums text-white hover:bg-sky-800"
-                                        :disabled="rteLabor.applying || ! rteLabor.hoursForJob(rteLabor.recommendedJob, 'avg')"
+                                        :disabled="rteLabor.applying || ! rteLabor.recommendedJob || ! rteLabor.hoursForJob(rteLabor.recommendedJob, 'avg')"
                                         @click="rteLabor.applyJob(rteLabor.recommendedJob, 'avg')"
-                                        x-text="rteLabor.applyButtonLabel('avg', rteLabor.hoursForJob(rteLabor.recommendedJob, 'avg'))"
+                                        x-text="rteLabor.applyButtonLabel('avg', rteLabor.recommendedJob ? rteLabor.hoursForJob(rteLabor.recommendedJob, 'avg') : null)"
                                     ></button>
                                     <button
                                         type="button"
                                         class="w-full rounded-sm border border-slate-300 px-2 py-1 text-center text-[11px] font-semibold tabular-nums text-slate-700 hover:bg-slate-100"
-                                        :disabled="rteLabor.applying || ! rteLabor.hoursForJob(rteLabor.recommendedJob, 'hi')"
+                                        :disabled="rteLabor.applying || ! rteLabor.recommendedJob || ! rteLabor.hoursForJob(rteLabor.recommendedJob, 'hi')"
                                         @click="rteLabor.applyJob(rteLabor.recommendedJob, 'hi')"
-                                        x-text="rteLabor.applyButtonLabel('hi', rteLabor.hoursForJob(rteLabor.recommendedJob, 'hi'))"
+                                        x-text="rteLabor.applyButtonLabel('hi', rteLabor.recommendedJob ? rteLabor.hoursForJob(rteLabor.recommendedJob, 'hi') : null)"
                                     ></button>
                                 </div>
                             </td>

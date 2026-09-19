@@ -51,6 +51,15 @@
                             <p class="mt-0.5 text-xs text-slate-500">Powertrain not recorded</p>
                         @endif
 
+                        @php
+                            $vehicleRecommendationAwareness = \App\Ark\Operations\Recommendations\RecommendationAwarenessProjection::forVehicle($vehicle);
+                        @endphp
+                        @if ($vehicleRecommendationAwareness['headline'])
+                            <p class="mt-1 text-xs {{ $vehicleRecommendationAwareness['strong'] ? 'font-semibold text-rose-800' : 'font-semibold text-slate-700' }}">
+                                {{ $vehicleRecommendationAwareness['headline'] }}
+                            </p>
+                        @endif
+
                         <p class="ops-meta mt-1">
                             Plate {{ $vehicle->plate ?: 'n/a' }}@if ($vehicle->plate_state) / {{ $vehicle->plate_state }} @endif
                             <span class="mx-1 text-slate-300">•</span>

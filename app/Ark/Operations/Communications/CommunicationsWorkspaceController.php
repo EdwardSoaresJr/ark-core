@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Platform\Communications\ManagedCommunicationsGate;
+use App\Ark\Platform\Communications\PlatformCommunicationsInboxProjection;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,26 @@ class CommunicationsWorkspaceController
     {
         if ($redirect = $leadRedirect->forRequest($request, 'operations.communications.inbox')) {
             return $redirect;
+        }
+
+        if (ManagedCommunicationsGate::platformInbox()) {
+            $filter = $request->string('filter')->toString();
+
+            if ($filter === '') {
+                return redirect()->to(CommunicationsNeedsYou::url($request->query()));
+            }
+
+            $workspace = app(PlatformCommunicationsInboxProjection::class)
+                ->inbox(
+                    $request->user(),
+                    $request->string('platform_conversation')->toString() ?: null,
+                    $filter,
+                    $request->string('owner')->toString() ?: 'everyone',
+                );
+
+            return view('operations.communications.workspace.inbox', [
+                'workspace' => $workspace,
+            ]);
         }
 
         $filter = $request->string('filter')->toString();
@@ -60,6 +82,7 @@ class CommunicationsWorkspaceController
                 $turn !== '' ? $turn : null,
                 $this->previousLastSeenAt($request),
                 $filter,
+                $request->string('owner')->toString() ?: 'everyone',
             ),
         ]);
     }

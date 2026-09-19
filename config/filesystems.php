@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Durable media disk (Complete Hosted)
+    |--------------------------------------------------------------------------
+    |
+    | Authoritative shop media should use this disk name in application code
+    | once stores are cut over. Default remains "local" (storage/app/private).
+    | Hosted: set ARK_MEDIA_DISK=s3 and configure the s3 disk for R2/S3.
+    | See docs/deployment/ark-complete-hosted-storage-doctrine-v1.md
+    |
+    */
+    'media_disk' => env('ARK_MEDIA_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -47,11 +60,16 @@ return [
             'report' => false,
         ],
 
+        /*
+         * S3-compatible durable media (Cloudflare R2, AWS S3, MinIO, B2, …).
+         * R2: set AWS_ENDPOINT to the account endpoint; AWS_URL optional for public CDN.
+         * Path-style: AWS_USE_PATH_STYLE_ENDPOINT=true when the provider requires it.
+         */
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
+            'region' => env('AWS_DEFAULT_REGION', 'auto'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),

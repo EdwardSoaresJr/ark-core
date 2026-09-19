@@ -1,7 +1,7 @@
 # Technical Debt
 
 **Purpose:** What must eventually disappear.  
-**Companion:** [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) records what changed; this file records what still violates target architecture.
+**Purpose (continued):** This file records what still violates the target architecture. Git records what shipped.
 
 **Rule:** Do not build on items listed here. New work routes through the replacement named in each entry.
 

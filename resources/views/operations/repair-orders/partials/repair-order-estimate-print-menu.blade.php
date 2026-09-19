@@ -3,6 +3,7 @@
     $issuedInvoice = ($financial ?? null)['invoice'] ?? null;
     $estimatePdfUrl = route('operations.repair-orders.estimate.pdf', $repairOrder);
     $keyTagUrl = route('operations.repair-orders.print-key-tag', $repairOrder);
+    $keyTagBlocked = \App\Ark\Operations\Printing\KeyTagPrintGate::blockedReason($repairOrder);
     $oilStickerUrl = route('operations.repair-orders.print-oil-change-sticker', $repairOrder);
     $hasInspectionFindings = App\Ark\Operations\Inspections\InspectionFindingCardProjection::recordedCountForRepairOrder($repairOrder) > 0;
     $inspectionPdfUrl = route('operations.repair-orders.inspection.pdf', $repairOrder);
@@ -37,14 +38,26 @@
             @click.stop
         >
             @if ($showShopPrintActions)
-                <button
-                    type="button"
-                    role="menuitem"
-                    class="ops-comms-menu__item"
-                    @click.stop="closeMenu(); window.arkPrintDocument(window.ARK_PRINTERS.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
-                >
-                    Print Key Tag
-                </button>
+                @if (filled($keyTagBlocked))
+                    <button
+                        type="button"
+                        role="menuitem"
+                        class="ops-comms-menu__item"
+                        @click.stop="closeMenu(); window.alert(@js($keyTagBlocked))"
+                    >
+                        Print Key Tag
+                        <span class="mt-0.5 block text-[11px] font-normal leading-4 text-slate-500">{{ $keyTagBlocked }}</span>
+                    </button>
+                @else
+                    <button
+                        type="button"
+                        role="menuitem"
+                        class="ops-comms-menu__item"
+                        @click.stop="closeMenu(); window.arkPrintDocument(window.ARK_PRINTERS.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
+                    >
+                        Print Key Tag
+                    </button>
+                @endif
 
                 <button
                     type="button"

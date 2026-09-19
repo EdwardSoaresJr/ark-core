@@ -6,10 +6,10 @@ use App\Ark\Operations\Communications\ScheduledOutboundEstimateProjection;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
+use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
-use App\Ark\Mail\OutboundTransactionalMail;
 use App\Ark\Operations\Vehicles\VehicleIdentityPressure;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
@@ -18,10 +18,10 @@ final class RepairOrderConversationSendProjection
 {
     public function __construct(
         private readonly ShopIntegrationCredentials $credentials,
+        private readonly CardPresentCaptureProjection $capture,
         private readonly BalanceDueCalculator $balanceDue,
         private readonly DepositPortalLinkContext $depositLink,
         private readonly ScheduledOutboundEstimateProjection $scheduledOutbound,
-        private readonly OutboundTransactionalMail $outboundMail,
     ) {}
 
     /**
@@ -187,8 +187,8 @@ final class RepairOrderConversationSendProjection
             return 'You do not have permission to email estimates.';
         }
 
-        if (! $this->outboundMail->isReady()) {
-            return 'Email isn’t configured yet. Connect ARK Email in Settings → Email.';
+        if (! $this->credentials->emailConfigured()) {
+            return 'Shop email is not configured.';
         }
 
         $email = strtolower(trim((string) ($repairOrder->customer?->email ?? '')));
@@ -242,6 +242,10 @@ final class RepairOrderConversationSendProjection
 
     private function paymentSendBlockReason(RepairOrder $repairOrder): ?string
     {
+        if (! $this->capture->portalPayEnabled()) {
+            return 'Customer portal payments are not enabled.';
+        }
+
         $balance = $this->balanceDue->forRepairOrder($repairOrder);
 
         if (! $balance->hasIssuedInvoice) {
@@ -261,8 +265,8 @@ final class RepairOrderConversationSendProjection
             return 'You do not have permission to email payment links.';
         }
 
-        if (! $this->outboundMail->isReady()) {
-            return 'Email isn’t configured yet. Connect ARK Email in Settings → Email.';
+        if (! $this->credentials->emailConfigured()) {
+            return 'Shop email is not configured. Check Settings → Integrations.';
         }
 
         $email = strtolower(trim((string) ($repairOrder->customer?->email ?? '')));
@@ -324,6 +328,10 @@ final class RepairOrderConversationSendProjection
 
     private function depositSendBlockReason(RepairOrder $repairOrder): ?string
     {
+        if (! $this->capture->portalPayEnabled()) {
+            return 'Customer portal payments are not enabled.';
+        }
+
         if ($repairOrder->isTerminal()) {
             return 'Closed repair orders cannot send deposit requests.';
         }
@@ -347,8 +355,8 @@ final class RepairOrderConversationSendProjection
             return 'You do not have permission to email deposit requests.';
         }
 
-        if (! $this->outboundMail->isReady()) {
-            return 'Email isn’t configured yet. Connect ARK Email in Settings → Email.';
+        if (! $this->credentials->emailConfigured()) {
+            return 'Shop email is not configured. Check Settings → Integrations.';
         }
 
         $email = strtolower(trim((string) ($repairOrder->customer?->email ?? '')));

@@ -7,21 +7,18 @@
 
 <div class="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
     <p class="font-semibold text-slate-950">What happens next</p>
-    <ul class="mt-2 list-disc space-y-1 pl-5 leading-6">
+    <div class="mt-2 space-y-2 leading-6">
         @if ($showDeposit && filled($depositAmount))
-            <li>
+            <p>
                 @if ($payingRemaining)
-                    <span class="font-semibold text-slate-950">Pay the remaining {{ $depositAmount }} below</span>
-                    whenever you are ready.
+                    A {{ $depositAmount }} remaining balance is needed before we can finish scheduling.
                 @else
-                    <span class="font-semibold text-slate-950">Pay your {{ $depositAmount }} deposit below</span>
-                    so we can schedule the work you approved.
+                    A {{ $depositAmount }} deposit is needed before we can schedule the approved work.
                 @endif
-            </li>
+            </p>
         @endif
-        <li>Your advisor reviews the services you approved.</li>
-        <li>We’ll text you about scheduling, or if we need anything else.</li>
-    </ul>
+        <p>We’ll review your approval and get everything moving. We’ll text you with updates or if we need anything else.</p>
+    </div>
 
     @include('portal.partials._shop-contact-card', [
         'shopPhone' => $shopPhone,

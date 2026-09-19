@@ -27,6 +27,8 @@ test('work surface renders active repair order board as advisor home', function 
         ->assertDontSee('Active Cars', false)
         ->assertDontSee('ops-advisor-home-cockpit', false)
         ->assertSee('Estimates', false)
+        ->assertSee('Waiting Approval', false)
+        ->assertSee('Waiting Parts', false)
         ->assertSee('Work in Progress', false)
         ->assertSee('Completed', false)
         ->assertDontSee('Customer Decisions')
@@ -107,5 +109,5 @@ test('advisor home board shows waiting approval repair orders with estimate tota
         ->assertOk()
         ->assertSee('RO #'.$repairOrder->repair_order_id, false)
         ->assertSee('Triage Surface', false)
-        ->assertSee('$987.65');
+        ->assertSee('$988', false);
 });

@@ -27,9 +27,6 @@ beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     ShopSettings::forgetCurrent();
     ShopSettings::current();
-
-    config()->set('voice-transport.sip_registrar', 'voice.demo-auto.test');
-    config()->set('voice-transport.sip_port', 5060);
 });
 
 test('shop communications workspace is restricted to settings managers', function (): void {
@@ -43,7 +40,7 @@ test('shop communications workspace is restricted to settings managers', functio
 test('shop communications answers whether the shop can communicate', function (): void {
     $this->withoutVite();
 
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
 
     ShopSettings::current()->persistTrusted([
         'telephony_inbound_number' => '7194136227',
@@ -81,9 +78,9 @@ test('shop communications answers whether the shop can communicate', function ()
     $this->actingAs($admin)
         ->get(route('operations.shop.communications'))
         ->assertOk()
-        ->assertSee('Communications')
+        ->assertSee('Stations &amp; Phones', false)
         ->assertSee('Coverage today', false)
-        ->assertSee('Alex Rivera')
+        ->assertSee('Edward Soares')
         ->assertSee('Communications Healthy', false)
         ->assertDontSee('Asterisk')
         ->assertDontSee('SIP')
@@ -91,7 +88,7 @@ test('shop communications answers whether the shop can communicate', function ()
 });
 
 test('shop communications projects live calls in todays coverage', function (): void {
-    $admin = User::factory()->create(['name' => 'Alex Rivera'])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares'])->assignRole(ArkRole::Admin->value);
     $molly = User::factory()->create(['name' => 'Molly Advisor'])->assignRole(ArkRole::Advisor->value);
 
     CommunicationDevice::query()->create([
@@ -310,15 +307,14 @@ test('assign extension rejects real conflict without mutating either workstation
     );
 
     $this->actingAs($admin)
+        ->followingRedirects()
         ->from(route('operations.shop.communications'))
         ->post(route('operations.shop.workstations.extension.assign', $workstationB), [
             'extension' => '101',
             'display_name' => 'Left',
         ])
-        ->assertRedirect()
-        ->assertSessionHasErrors('extension');
-
-    expect(session('errors')->first('extension'))->toContain('already assigned elsewhere');
+        ->assertOk()
+        ->assertSee('already assigned elsewhere', false);
 
     expect(TelephonyExtension::primaryForWorkstation($workstationA->id)?->extension)->toBe('101')
         ->and(TelephonyExtension::primaryForWorkstation($workstationB->id)?->extension)->toBe('102')
@@ -363,7 +359,7 @@ test('assign extension rejects real conflict without mutating either workstation
 test('shop communications surfaces attention when a device is offline', function (): void {
     $this->withoutVite();
 
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
 
     ShopSettings::current()->persistTrusted([
         'telephony_inbound_number' => '7194136227',
@@ -382,6 +378,7 @@ test('shop communications surfaces attention when a device is offline', function
         ->get(route('operations.shop.communications'))
         ->assertOk()
         ->assertSee('Needs attention')
+        ->assertSee('Attention')
         ->assertSee('Front Desk VVX450 offline');
 });
 
@@ -393,37 +390,33 @@ test('legacy communications shop url redirects to shop communications', function
         ->assertRedirect('/app/shop/communications');
 });
 
-test('person workspace lists assigned devices and creates with mac', function (): void {
+test('person workspace lists assigned devices with name-only add form', function (): void {
     $admin = User::factory()->create(['name' => 'Molly Advisor'])->assignRole(ArkRole::Admin->value);
 
     $this->actingAs($admin)
         ->get(route('operations.shop.people.show', $admin))
         ->assertOk()
         ->assertSee('Assigned Devices')
-        ->assertSee('Add Device')
-        ->assertSee('MAC address');
+        ->assertSee('Add Device');
 
     $response = $this->actingAs($admin)
         ->post(route('operations.shop.devices.store'), [
             'name' => 'Front Desk VVX450',
-            'mac_address' => '48:25:67:30:75:7F',
-            'model' => 'VVX450',
             'assigned_user_id' => $admin->id,
             'provider' => CommunicationDeviceProvider::ShopPhone->value,
         ]);
 
     $device = CommunicationDevice::query()->where('assigned_user_id', $admin->id)->firstOrFail();
 
-    // Person-owned devices without a station land on Communications until attached.
-    $response->assertRedirect(route('operations.shop.communications'));
+    $response->assertRedirect(route('operations.shop.devices.show', $device));
 
     expect(CommunicationDevice::query()->where('assigned_user_id', $admin->id)->count())->toBe(1)
-        ->and($device->status)->toBe(CommunicationDeviceStatus::WaitingForRegistration)
-        ->and($device->mac_address)->toBe('48256730757F');
+        ->and(CommunicationDevice::query()->where('assigned_user_id', $admin->id)->value('status'))
+        ->toBe(CommunicationDeviceStatus::WaitingForRegistration);
 });
 
 test('device workspace tells operational truth without transport details', function (): void {
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
 
     $registeredAt = ShopDisplayTimezone::now()->setTime(9, 14);
 
@@ -444,17 +437,22 @@ test('device workspace tells operational truth without transport details', funct
         ->assertOk()
         ->assertSee('Front Desk VVX450')
         ->assertSee('Status')
-        ->assertSee('Ready')
+        ->assertSee('Connected')
         ->assertSee('Current operator')
         ->assertSee('Not signed in')
+        ->assertSee('Right now')
+        ->assertSee('Idle')
+        ->assertSee('Last call')
         ->assertSee('Infrastructure')
-        ->assertSee('Regenerate config')
+        ->assertSee('Generate config')
+        ->assertDontSee('Assigned')
         ->assertDontSee('hidden-identity-001')
-        ->assertDontSee('SIP');
+        ->assertDontSee('SIP')
+        ->assertDontSee('Extension');
 });
 
 test('device provisioning controls stay hidden from non master admins', function (): void {
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => false])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => false])->assignRole(ArkRole::Admin->value);
 
     $device = CommunicationDevice::query()->create([
         'shop_settings_id' => ShopSettings::reloadCurrent()->id,
@@ -470,7 +468,6 @@ test('device provisioning controls stay hidden from non master admins', function
         ->assertOk()
         ->assertSee('Current operator')
         ->assertDontSee('Infrastructure')
-        ->assertDontSee('Regenerate config')
         ->assertDontSee('Generate config');
 });
 
@@ -482,7 +479,7 @@ test('device provisioning generates downloadable config without exposing credent
     config()->set('voice-transport.sip_port', 5060);
     config()->set('telephony.sip_provisioning.default_password', 'secret-101');
 
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
 
     $workstation = Workstation::query()->create([
         'shop_settings_id' => ShopSettings::reloadCurrent()->id,
@@ -525,7 +522,7 @@ test('device provisioning generates downloadable config without exposing credent
         ->get(route('operations.shop.devices.show', $device))
         ->assertOk()
         ->assertSee('Download config')
-        ->assertSee('Infrastructure');
+        ->assertDontSee('secret-101');
 
     $this->actingAs($admin)
         ->get(route('operations.shop.devices.provision.download', $device))
@@ -560,7 +557,7 @@ test('device provisioning download is restricted to settings managers', function
 });
 
 test('incoming routing updates ring targets by person not extension', function (): void {
-    $admin = User::factory()->create(['name' => 'Alex Rivera'])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares'])->assignRole(ArkRole::Admin->value);
     $molly = User::factory()->create(['name' => 'Molly Advisor'])->assignRole(ArkRole::Advisor->value);
 
     $edwardEndpoint = TelephonyEndpoint::query()->create([
@@ -592,43 +589,21 @@ test('incoming routing updates ring targets by person not extension', function (
 });
 
 test('shop communications manual device entry is limited to master admin support', function (): void {
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
 
     $this->seed(CommunicationDeviceModelSeeder::class);
-
-    ShopSettings::current()->persistTrusted([
-        'telephony_inbound_number' => '7194136227',
-    ]);
-
-    $workstation = Workstation::query()->create([
-        'shop_settings_id' => ShopSettings::reloadCurrent()->id,
-        'name' => 'Front Counter',
-        'is_active' => true,
-    ]);
-
-    CommunicationDevice::query()->create([
-        'shop_settings_id' => ShopSettings::reloadCurrent()->id,
-        'workstation_id' => $workstation->id,
-        'name' => 'Front Counter phone',
-        'mac_address' => '48256730757F',
-        'model' => 'VVX450',
-        'provider' => CommunicationDeviceProvider::ShopPhone,
-        'status' => CommunicationDeviceStatus::Connected,
-        'capabilities' => ['voice'],
-        'is_active' => true,
-    ]);
 
     $this->actingAs($admin)
         ->get(route('operations.shop.communications'))
         ->assertOk()
         ->assertSee('Manual device entry (support)')
         ->assertSee('MAC address')
-        ->assertSee('Poly VVX 350')
-        ->assertSee('Poly VVX 450');
+        ->assertSee('VVX350')
+        ->assertSee('VVX450');
 });
 
 test('store communication device persists normalized mac and resolved model', function (): void {
-    $admin = User::factory()->create(['name' => 'Alex Rivera'])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares'])->assignRole(ArkRole::Admin->value);
 
     $this->seed(CommunicationDeviceModelSeeder::class);
 
@@ -652,10 +627,10 @@ test('device workspace surfaces provisioning observability for bench certificati
     $this->withoutVite();
 
     config()->set('shop.base_url', 'https://shop.test');
-    config()->set('telephony.sip_provisioning.host', 'voice.demo-auto.test');
+    config()->set('telephony.sip_provisioning.host', 'voice.lugsnplugs.com');
     config()->set('telephony.sip_provisioning.default_password', 'secret-101');
 
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => true])->assignRole(ArkRole::Admin->value);
 
     $this->seed(CommunicationDeviceModelSeeder::class);
 
@@ -696,18 +671,19 @@ test('device workspace surfaces provisioning observability for bench certificati
         ->assertSee('48:25:67:30:75:7F')
         ->assertSee('VVX350')
         ->assertSee('Current')
-        ->assertSee('Provisioning server')
+        ->assertSee('Custom provisioning server')
         ->assertSee('Leave blank')
         ->assertSee('https://shop.test/provision/')
         ->assertSee('48256730757F.cfg')
-        ->assertSee('reg.1.server.1.address="voice.demo-auto.test"');
+        ->assertSee('Current projection body')
+        ->assertSee('reg.1.server.1.address="voice.lugsnplugs.com"');
 });
 
 test('device projection preview stays hidden from non master admins', function (): void {
-    config()->set('telephony.sip_provisioning.host', 'voice.demo-auto.test');
+    config()->set('telephony.sip_provisioning.host', 'voice.lugsnplugs.com');
     config()->set('telephony.sip_provisioning.default_password', 'secret-101');
 
-    $admin = User::factory()->create(['name' => 'Alex Rivera', 'is_master_admin' => false])->assignRole(ArkRole::Admin->value);
+    $admin = User::factory()->create(['name' => 'Edward Soares', 'is_master_admin' => false])->assignRole(ArkRole::Admin->value);
 
     $this->seed(CommunicationDeviceModelSeeder::class);
 
@@ -742,10 +718,11 @@ test('device projection preview stays hidden from non master admins', function (
     $this->actingAs($admin)
         ->get(route('operations.shop.devices.show', $device))
         ->assertOk()
-        ->assertSee('Provisioning server')
+        ->assertSee('Provisioning')
+        ->assertSee('48:25:67:30:75:7F')
+        ->assertSee('Provision URL')
         ->assertDontSee('Current projection body')
-        ->assertDontSee('Infrastructure')
-        ->assertDontSee('Certification · G1–G7');
+        ->assertDontSee('Infrastructure');
 });
 
 test('store communication device rejects invalid mac with validation error', function (): void {

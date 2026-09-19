@@ -10,12 +10,12 @@
             'review' => 'Review',
             'authorize' => 'Approve',
             'pay_deposit' => $payingRemaining ? 'Pay remaining' : 'Pay deposit',
-            'done' => 'Done',
+            'done' => 'All set',
         ]
         : [
             'review' => 'Review',
             'authorize' => 'Approve',
-            'done' => 'Done',
+            'done' => 'All set',
         ];
     $order = array_keys($steps);
     $currentIndex = array_search($current, $order, true);

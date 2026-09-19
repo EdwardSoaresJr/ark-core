@@ -2,9 +2,15 @@
 
 namespace App\Ark\Operations\Messaging;
 
+use App\Ark\Operations\Communications\CommunicationEventRecorder;
+use App\Ark\Operations\Communications\OperationalCommunicationChannel;
+use App\Ark\Operations\Communications\OperationalCommunicationDirection;
+use App\Ark\Operations\Communications\OperationalCommunicationType;
+use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
 use App\Ark\Operations\Portal\CreateOrReuseInspectionAccessTokenAction;
 use App\Ark\Operations\Portal\CreatePortalShortLinkAction;
+use App\Ark\Operations\Portal\PortalShortLinkPurpose;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
 use RuntimeException;
@@ -15,10 +21,11 @@ class SendInspectionLinkAction
         private readonly CreateOrReuseInspectionAccessTokenAction $tokens,
         private readonly CreatePortalShortLinkAction $shortLinks,
         private readonly SendOutboundMessageAction $sender,
+        private readonly CommunicationEventRecorder $communicationEvents,
     ) {}
 
     /**
-     * @return array{message: \App\Ark\Operations\Conversations\ConversationMessage, url: string, token_reused: bool}
+     * @return array{message: ?ConversationMessage, url: string, token_reused: bool}
      */
     public function execute(RepairOrder $repairOrder, User $actor): array
     {
@@ -45,6 +52,8 @@ class SendInspectionLinkAction
         $shortUrl = $this->shortLinks->execute(
             $url,
             $accessToken->token->expires_at,
+            $repairOrder,
+            PortalShortLinkPurpose::Inspection,
         );
 
         $body = PortalSmsLinkBody::inspection($shortUrl);
@@ -54,6 +63,16 @@ class SendInspectionLinkAction
             actor: $actor,
             body: $body,
             repairOrder: $repairOrder,
+        );
+
+        $this->communicationEvents->record(
+            $repairOrder,
+            OperationalCommunicationType::InspectionSent,
+            OperationalCommunicationChannel::Sms,
+            OperationalCommunicationDirection::Outbound,
+            'Inspection portal link texted to customer.',
+            actor: $actor,
+            message: $result['message'],
         );
 
         return [

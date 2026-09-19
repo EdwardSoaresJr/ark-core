@@ -40,9 +40,11 @@
     36 => 'Pest\\Laravel\\PestServiceProvider',
     37 => 'Spatie\\Permission\\PermissionServiceProvider',
     38 => 'App\\Providers\\AppServiceProvider',
-    39 => 'App\\Providers\\HorizonServiceProvider',
-    40 => 'App\\Providers\\ShopMemoryServiceProvider',
-    41 => 'App\\Ark\\Dragon\\Agent\\DragonAgentServiceProvider',
+    39 => 'App\\Providers\\BookingSurfaceServiceProvider',
+    40 => 'App\\Providers\\HorizonServiceProvider',
+    41 => 'App\\Providers\\ShopMemoryServiceProvider',
+    42 => 'App\\Ark\\Dragon\\Agent\\DragonAgentServiceProvider',
+    43 => 'App\\Ark\\Platform\\Website\\PlatformWebsiteServiceProvider',
   ),
   'eager' => 
   array (
@@ -68,9 +70,11 @@
     19 => 'Pest\\Laravel\\PestServiceProvider',
     20 => 'Spatie\\Permission\\PermissionServiceProvider',
     21 => 'App\\Providers\\AppServiceProvider',
-    22 => 'App\\Providers\\HorizonServiceProvider',
-    23 => 'App\\Providers\\ShopMemoryServiceProvider',
-    24 => 'App\\Ark\\Dragon\\Agent\\DragonAgentServiceProvider',
+    22 => 'App\\Providers\\BookingSurfaceServiceProvider',
+    23 => 'App\\Providers\\HorizonServiceProvider',
+    24 => 'App\\Providers\\ShopMemoryServiceProvider',
+    25 => 'App\\Ark\\Dragon\\Agent\\DragonAgentServiceProvider',
+    26 => 'App\\Ark\\Platform\\Website\\PlatformWebsiteServiceProvider',
   ),
   'deferred' => 
   array (

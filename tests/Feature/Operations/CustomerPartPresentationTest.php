@@ -162,7 +162,7 @@ test('customer facing boundary derives customer part descriptions and strips inv
         ->and($explicitLine['customer_part_description'])->toBe('Coolant');
 });
 
-test('grouped repair action pdf shows labor and part badges and hides column type labels', function () {
+test('grouped repair action pdf shows customer charges without part and labor type rows', function () {
     [$repairOrder, $concern] = repairOrderForCustomerPartPresentation();
 
     $workGroup = RepairOrderWorkGroup::query()->create([
@@ -224,28 +224,12 @@ test('grouped repair action pdf shows labor and part badges and hides column typ
     ])->render();
 
     expect($html)
-        ->toContain('repair-action-group')
         ->toContain('Replace Water Pump')
-        ->toContain('line-type-badge--labor')
-        ->toContain('line-type-badge--part')
-        ->toContain('>Labor<')
-        ->toContain('>Part<')
         ->toContain('Water Pump')
         ->toContain('Coolant')
-        ->not->toContain('Gates 43527 Water Pump')
-        ->toContain('.repair-action-group {')
-        ->toContain('border: none')
-        ->toContain('.repair-action-header {')
-        ->toContain('background: transparent')
-        ->toContain('.repair-action-title {')
-        ->toContain('color: #0f172a')
-        ->toContain('text-transform: none')
-        ->toContain('.line-type-badge--labor {')
-        ->not->toContain('background: #f1f5f9')
-        ->not->toContain('border: 1px solid #dbe3ec')
-        ->not->toContain('border: 1px solid #a7f3d0')
-        ->not->toContain('>LABOR<')
-        ->not->toContain('>PART<');
+        ->toContain('charge-list')
+        ->toContain('2.75 hr')
+        ->not->toContain('Gates 43527 Water Pump');
 });
 test('estimate pdf html shows customer part descriptions and hides inventory metadata', function () {
     [$repairOrder, $concern] = repairOrderForCustomerPartPresentation();

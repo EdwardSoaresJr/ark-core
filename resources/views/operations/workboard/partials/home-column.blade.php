@@ -8,6 +8,8 @@
 
 <section
     id="ops-home-col-{{ $column->key }}"
+    data-lane-key="{{ $column->key }}"
+    data-lane-color="{{ $column->color }}"
     @class([
         'ops-job-board-column',
         'ops-advisor-home-board__column',
@@ -45,5 +47,11 @@
             ])
         @empty
         @endforelse
+
+        @if ($column->hiddenCount > 0 && $column->viewAllUrl)
+            <a href="{{ $column->viewAllUrl }}" class="ops-workboard-lane__more">
+                +{{ $column->hiddenCount }} more
+            </a>
+        @endif
     </div>
 </section>

@@ -2,13 +2,17 @@
 
 namespace App\Ark\Operations\Portal;
 
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 class PortalShortLink extends Model
 {
     protected $fillable = [
         'code',
+        'repair_order_id',
+        'purpose',
         'destination_url',
         'expires_at',
     ];
@@ -20,7 +24,13 @@ class PortalShortLink extends Model
     {
         return [
             'expires_at' => 'datetime',
+            'purpose' => PortalShortLinkPurpose::class,
         ];
+    }
+
+    public function repairOrder(): BelongsTo
+    {
+        return $this->belongsTo(RepairOrder::class);
     }
 
     public function isActive(?Carbon $at = null): bool

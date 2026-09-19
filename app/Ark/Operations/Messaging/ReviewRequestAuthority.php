@@ -98,7 +98,7 @@ final class ReviewRequestAuthority
         $repairOrder->loadMissing('reviewRequestRecordedBy');
 
         return [[
-            'channel_label' => 'Recorded',
+            'channel_label' => 'Sent',
             'when_label' => $this->whenLabel($repairOrder->review_request_recorded_at),
             'by_label' => $repairOrder->reviewRequestRecordedBy?->name,
         ]];

@@ -14,12 +14,14 @@ use App\Ark\Operations\Financial\FinancialDocumentType;
 use App\Ark\Operations\Payments\CreateCustomerPayTokenAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Mail\OutboundTransactionalMail;
-use App\Ark\Mail\TransactionalMailException;
-use App\Ark\Mail\TransactionalMailOperation;
+use App\Ark\Platform\Mail\ArkMailClient;
+use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Mail\InvoiceCustomerMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 
 class InvoiceDocumentEmailDelivery
@@ -31,8 +33,7 @@ class InvoiceDocumentEmailDelivery
         private readonly OperationalEventRecorder $events,
         private readonly ConversationRecorder $conversations,
         private readonly CommunicationEventRecorder $communicationEvents,
-        private readonly OutboundTransactionalMail $outboundMail,
-        private readonly \App\Ark\Platform\StarterClient $starter,
+        private readonly ArkMailClient $mail,
     ) {}
 
     public function send(RepairOrder $repairOrder, User $actor, string $recipientEmail, ?string $staffNote = null): void
@@ -65,58 +66,29 @@ class InvoiceDocumentEmailDelivery
         }
 
         $payUrl = null;
-        $viewToken = $this->payTokens->execute($repairOrder, $invoice);
-        $viewUrl = route('portal.invoice-pay.show', ['token' => $viewToken->plainToken]);
 
-        if ($balance->balanceDueCents > 0) {
-            $payUrl = $viewUrl;
+        if (\App\Ark\Platform\Payments\ManagedPaymentsGate::platformCapture() && $balance->balanceDueCents > 0) {
+            $token = $this->payTokens->execute($repairOrder, $invoice);
+            $payUrl = route('portal.invoice-pay.show', ['token' => $token->plainToken]);
         }
 
         $settings = ShopSettings::current();
         $shopName = $settings->shop_name ?: config('app.name', 'ARK-SMS');
         $pdfFilename = sprintf('invoice-ro-%d.pdf', $repairOrder->repair_order_id);
-        $idempotencyKey = 'invoice-'.$repairOrder->repair_order_id.'-'.Str::uuid();
+        $mailable = new InvoiceCustomerMail(
+            repairOrder: $repairOrder,
+            balanceDueCents: $balance->balanceDueCents,
+            shopName: $shopName,
+            pdfPath: $invoice->pdf_path,
+            pdfFilename: $pdfFilename,
+            staffNote: filled($staffNote) ? trim($staffNote) : null,
+            payUrl: $payUrl,
+        );
 
-        if ($this->starter->isAvailable()) {
-            $mailResult = $this->starter->sendFinalInvoiceReady(
-                $repairOrder,
-                $recipientEmail,
-                $viewUrl,
-                $idempotencyKey,
-            );
+        if (ManagedMailGate::platformSend()) {
+            $this->sendViaPlatform($mailable, $repairOrder, $invoice, $recipientEmail, $pdfFilename);
         } else {
-            $mailable = new InvoiceCustomerMail(
-                repairOrder: $repairOrder,
-                balanceDueCents: $balance->balanceDueCents,
-                shopName: $shopName,
-                pdfPath: $invoice->pdf_path,
-                pdfFilename: $pdfFilename,
-                staffNote: filled($staffNote) ? trim($staffNote) : null,
-                payUrl: $payUrl,
-            );
-
-            $attachments = [];
-            if (filled($invoice->pdf_path) && is_file($invoice->pdf_path)) {
-                $attachments[] = [
-                    'filename' => $pdfFilename,
-                    'mime' => 'application/pdf',
-                    'path' => $invoice->pdf_path,
-                ];
-            }
-
-            $mailResult = $this->outboundMail->sendMailable(
-                TransactionalMailOperation::InvoiceSend,
-                $recipientEmail,
-                $mailable,
-                $idempotencyKey,
-                'repair_order',
-                (string) $repairOrder->repair_order_id,
-                $attachments,
-            );
-        }
-
-        if (! $mailResult->ok()) {
-            throw new TransactionalMailException($mailResult);
+            Mail::to($recipientEmail)->send($mailable);
         }
 
         $summary = 'Final invoice emailed to '.$recipientEmail.'.';
@@ -161,5 +133,46 @@ class InvoiceDocumentEmailDelivery
         );
 
         $invoice->markPresentedToCustomer();
+    }
+
+    private function sendViaPlatform(
+        InvoiceCustomerMail $mailable,
+        RepairOrder $repairOrder,
+        EstimateDocument $invoice,
+        string $recipientEmail,
+        string $pdfFilename,
+    ): void {
+        $pdf = Storage::disk('local')->get($invoice->pdf_path);
+
+        if (! is_string($pdf) || $pdf === '') {
+            throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
+        }
+
+        $result = $this->mail->sendTransactional([
+            'operation' => 'invoice.send',
+            'to' => $recipientEmail,
+            'subject' => (string) $mailable->envelope()->subject,
+            'html_body' => $mailable->render(),
+            'attachments' => [[
+                'filename' => $pdfFilename,
+                'mime' => 'application/pdf',
+                'content_base64' => base64_encode($pdf),
+            ]],
+            'idempotency_key' => 'invoice-send-'.Str::uuid(),
+            'domain_object_type' => 'repair_order',
+            'domain_object_id' => (string) $repairOrder->id,
+            'metadata' => [
+                'repair_order_id' => $repairOrder->id,
+                'invoice_document_id' => $invoice->id,
+            ],
+        ]);
+
+        if (($result['ok'] ?? false) !== true) {
+            throw new RuntimeException(
+                is_string($result['message'] ?? null)
+                    ? $result['message']
+                    : 'Invoice email could not be sent.',
+            );
+        }
     }
 }

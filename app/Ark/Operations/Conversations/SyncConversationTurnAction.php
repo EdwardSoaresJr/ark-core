@@ -27,20 +27,20 @@ final class SyncConversationTurnAction
 
         $waitingOn = $this->precedence->waitingOn($conversation);
         $wasResolved = $conversation->status === ConversationStatus::Resolved;
+        $reopen = $wasResolved && $this->precedence->newestUnresolvedInboundOccurredAt($conversation) !== null;
 
         $attributes = [
             'waiting_on' => $waitingOn,
             'posture_changed_at' => now(),
         ];
 
-        if ($waitingOn === ConversationWaitingOn::Shop && $wasResolved) {
+        if ($reopen) {
             $attributes['status'] = ConversationStatus::Open;
             $attributes['resolved_at'] = null;
             $attributes['reopen_count'] = $conversation->reopen_count + 1;
         }
 
-        $dirty = $conversation->waiting_on !== $waitingOn
-            || ($waitingOn === ConversationWaitingOn::Shop && $wasResolved);
+        $dirty = $conversation->waiting_on !== $waitingOn || $reopen;
 
         if (! $dirty) {
             return $conversation;

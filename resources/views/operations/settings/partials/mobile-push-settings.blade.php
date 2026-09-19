@@ -8,12 +8,8 @@
     $arkVoiceConfigured = $mobileDevices->arkVoiceConfigured();
     $pushEnabled = (bool) old('mobile_push.enabled', $mobilePush->enabled);
     $resolvedProjectId = $mobilePush->resolvedProjectId();
-        $clientWebhookRows = $telephonyHealth->mobileVoiceClientWebhookRows();
-    $mobileDevices = \App\Ark\Mobile\MobileStaffDevicesProjection::forCurrentShop();
-    $mobileDeviceRows = $mobileDevices->rows();
-    $arkVoiceConfigured = $mobileDevices->arkVoiceConfigured();
-    $pushEnabled = (bool) old('mobile_push.enabled', $mobilePush->enabled);
-    $resolvedProjectId = $mobilePush->resolvedProjectId();
+    $hasStoredApiKeySecret = filled($settings->twilio_api_key_secret);
+    $clientWebhookRows = $telephonyHealth->mobileVoiceClientWebhookRows();
 
     $toneClasses = [
         'success' => 'border-emerald-200 bg-emerald-50 text-emerald-900',
@@ -24,6 +20,7 @@
 
     $pushTone = $mobilePush->isOperational() ? 'success' : ($mobilePush->enabled ? 'warning' : 'muted');
     $voiceTone = $arkVoiceConfigured ? 'success' : 'warning';
+    $platformVoiceManaged = \App\Ark\Platform\PlatformConnection::current()->isConnected();
 @endphp
 
 <form
@@ -48,13 +45,19 @@
             <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$voiceTone] ?? $toneClasses['muted'] }}">
                 <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">ARK Phone</p>
                 <p class="mt-1 text-sm font-black">
-                    {{ $arkVoiceConfigured ? 'Ready' : 'Not ready' }}
+                    @if ($platformVoiceManaged)
+                        Managed in ARK Cloud
+                    @else
+                        {{ $arkVoiceConfigured ? 'Ready' : 'Not ready' }}
+                    @endif
                 </p>
                 <p class="mt-1 text-[11px] leading-4 opacity-80">
-                    @if ($arkVoiceConfigured)
-                        In-app voice is ready.
+                    @if ($platformVoiceManaged)
+                        Inbound Voice and phone credentials are configured under Phone settings in ARK Cloud. Device list and push below remain shop operational tooling.
+                    @elseif ($arkVoiceConfigured)
+                        Twilio Client is configured. In-app calls use the Companion call screen.
                     @else
-                        In-app voice requires a voice transport implementation. Stock ARK Core does not ship with one configured.
+                        Save Twilio Voice API Key + TwiML App below, or run <span class="font-mono">php artisan ark:telephony:ensure-mobile-voice</span> on the server.
                     @endif
                 </p>
             </div>
@@ -127,17 +130,152 @@
         @endif
     </div>
 
-        <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
+    @if (! $platformVoiceManaged)
+    <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
         <div class="border-b border-slate-200 pb-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">In-app voice</p>
-            <h3 class="mt-1 text-sm font-black text-slate-950">Voice transport</h3>
+            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Twilio Client</p>
+            <h3 class="mt-1 text-sm font-black text-slate-950">In-app calling credentials</h3>
             <p class="mt-1 text-xs leading-5 text-slate-500">
-                In-app calling requires a voice transport implementation. Stock ARK Core does not ship with voice credentials or provider fields.
+                Required for ARK Phone / Companion in-app voice after Twilio-native transport. Secrets are encrypted — leave blank to keep the current value.
             </p>
         </div>
-    </div>
 
-<div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Voice API Key SID</span>
+                <input
+                    type="text"
+                    name="twilio_api_key_sid"
+                    value="{{ old('twilio_api_key_sid', $settings->twilio_api_key_sid) }}"
+                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                    placeholder="SK…"
+                    autocomplete="off"
+                >
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Voice API Key secret</span>
+                <input
+                    type="password"
+                    name="twilio_api_key_secret"
+                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                    placeholder="{{ $hasStoredApiKeySecret ? 'Saved — leave blank to keep' : 'Shown once when created' }}"
+                    autocomplete="new-password"
+                >
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Voice TwiML App SID</span>
+                <input
+                    type="text"
+                    name="twilio_voice_twiml_app_sid"
+                    value="{{ old('twilio_voice_twiml_app_sid', $settings->twilio_voice_twiml_app_sid) }}"
+                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                    placeholder="AP…"
+                    autocomplete="off"
+                >
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Twilio FCM credential SID</span>
+                <input
+                    type="text"
+                    name="twilio_fcm_credential_sid"
+                    value="{{ old('twilio_fcm_credential_sid', $settings->twilio_fcm_credential_sid) }}"
+                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                    placeholder="CR…"
+                    autocomplete="off"
+                >
+                <span class="mt-1 block text-[11px] leading-4 text-slate-500">Android inbound wake via Twilio Voice SDK. Auto-provisioned when Firebase service account is on the server.</span>
+            </label>
+            <label class="block">
+                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Twilio iOS VoIP push credential SID</span>
+                <input
+                    type="text"
+                    name="twilio_apns_voip_credential_sid"
+                    value="{{ old('twilio_apns_voip_credential_sid', $settings->twilio_apns_voip_credential_sid) }}"
+                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                    placeholder="CR…"
+                    autocomplete="off"
+                >
+                <span class="mt-1 block text-[11px] leading-4 text-slate-500">iPhone locked-screen wake via PushKit. Apple: VoIP Services Certificate → export .p12 → cert.pem + key.pem. Twilio: Push Credentials → Type APN → Sandbox on for Debug → paste only the CR… SID here. Never paste .p12, PEM, or private key into ARK. Use a separate non-sandbox credential for TestFlight/Release.</span>
+            </label>
+        </div>
+
+        <div class="grid gap-2 sm:grid-cols-3">
+            <div class="rounded-sm border border-slate-200 bg-white px-2.5 py-2">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">TwiML App SID</p>
+                <p class="mt-0.5 text-xs font-semibold {{ $telephonyHealth->mobileVoiceTwimlAppPresent() ? 'text-emerald-700' : 'text-amber-700' }}">
+                    {{ $telephonyHealth->mobileVoiceTwimlAppPresent() ? 'Present' : 'Missing' }}
+                </p>
+            </div>
+            <div class="rounded-sm border border-slate-200 bg-white px-2.5 py-2">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">iOS VoIP push SID</p>
+                <p class="mt-0.5 text-xs font-semibold {{ $telephonyHealth->mobileVoiceIosVoipPushCredentialPresent() ? 'text-emerald-700' : 'text-amber-700' }}">
+                    {{ $telephonyHealth->mobileVoiceIosVoipPushCredentialPresent() ? 'Present' : 'Missing' }}
+                </p>
+            </div>
+            <div class="rounded-sm border border-slate-200 bg-white px-2.5 py-2">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Client inbound</p>
+                <p class="mt-0.5 text-xs font-semibold {{ $telephonyHealth->mobileVoiceClientInboundEnabled() ? 'text-emerald-700' : 'text-amber-700' }}">
+                    {{ $telephonyHealth->mobileVoiceClientInboundEnabled() ? 'Enabled' : 'Blocked' }}
+                </p>
+            </div>
+        </div>
+
+        <div
+            class="divide-y divide-slate-200 rounded-sm border border-slate-200 bg-white"
+            x-data="{
+                copiedLabel: null,
+                async copyUrl(url, label) {
+                    try {
+                        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                            await navigator.clipboard.writeText(url);
+                        } else {
+                            window.prompt('Copy URL:', url);
+                            return;
+                        }
+                        this.copiedLabel = label;
+                        window.setTimeout(() => { this.copiedLabel = null; }, 2000);
+                    } catch (error) {
+                        window.prompt('Copy URL:', url);
+                    }
+                },
+            }"
+        >
+            <p class="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">TwiML App webhooks</p>
+            @foreach ($clientWebhookRows as $webhook)
+                <button
+                    type="button"
+                    @click="copyUrl(@js($webhook['url']), @js($webhook['label']))"
+                    class="flex w-full items-center gap-2 px-2 py-1.5 text-left transition hover:bg-slate-50"
+                    title="{{ $webhook['hint'] }} — click to copy"
+                >
+                    <span class="w-28 shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ $webhook['label'] }}</span>
+                    <span class="min-w-0 flex-1 truncate font-mono text-[11px] text-slate-700">{{ $webhook['url'] }}</span>
+                    <span
+                        class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400"
+                        x-show="copiedLabel !== @js($webhook['label'])"
+                    >Copy</span>
+                    <span
+                        class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-emerald-700"
+                        x-show="copiedLabel === @js($webhook['label'])"
+                        x-cloak
+                    >Copied</span>
+                </button>
+            @endforeach
+        </div>
+    </div>
+    @else
+    <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-3 text-xs leading-5 text-slate-600">
+        <p class="font-semibold text-slate-950">In-app calling credentials</p>
+        <p class="mt-1">
+            Twilio Client / TwiML App / VoIP push SIDs for Hosted Voice are managed in ARK Cloud — not edited here.
+            <a href="https://cloud.arksms.com" class="font-semibold underline" target="_blank" rel="noopener">Open ARK Cloud</a>
+        </p>
+    </div>
+    @endif
+
+    <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
+        <div class="border-b border-slate-200 pb-2">
+            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Push</p>
             <h3 class="mt-1 text-sm font-black text-slate-950">Shop dispatch toggle</h3>
             <p class="mt-1 text-xs leading-5 text-slate-500">
                 Firebase credentials are platform infrastructure — mounted on the server, not configured per shop.

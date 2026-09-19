@@ -8,6 +8,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -36,6 +37,22 @@ class RepairOrderLedgerEntry extends Model
             'recorded_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
+    }
+
+    public function newEloquentBuilder($query): RepairOrderLedgerEntryQuery
+    {
+        return new RepairOrderLedgerEntryQuery($query);
+    }
+
+    /**
+     * @return Attribute<PaymentMethod|null, PaymentMethod|string|null>
+     */
+    protected function method(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): mixed => $this->payment_method,
+            set: fn (mixed $value): array => ['payment_method' => $value],
+        );
     }
 
     /**

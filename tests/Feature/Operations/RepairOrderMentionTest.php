@@ -2,6 +2,7 @@
 
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Workstations\WorkstationPresence;
@@ -142,4 +143,72 @@ test('repair order visit reason does not link another customer shop number', fun
         ->getContent();
 
     expect($html)->not->toContain('href="'.route('operations.repair-orders.show', 2400).'"');
+});
+
+test('repair order concern authoring suggests only this vehicle previous visits', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $customer = Customer::query()->create([
+        'first_name' => 'Fleet',
+        'last_name' => 'Owner',
+        'phone' => '555-2403',
+    ]);
+    $thisVehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2021,
+        'make' => 'Hyundai',
+        'model' => 'Elantra',
+    ]);
+    $otherVehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2006,
+        'make' => 'Dodge',
+        'model' => 'Dakota',
+    ]);
+    RepairOrder::query()->create([
+        'repair_order_id' => 1478,
+        'customer_id' => $customer->id,
+        'vehicle_id' => $thisVehicle->id,
+        'status' => RepairOrderStatus::Closed,
+        'concern_summary' => 'Tune up spark plugs',
+        'visit_reason' => 'Tune up spark plugs',
+        'opened_at' => now()->subMonth(),
+    ]);
+    RepairOrder::query()->create([
+        'repair_order_id' => 1640,
+        'customer_id' => $customer->id,
+        'vehicle_id' => $otherVehicle->id,
+        'status' => RepairOrderStatus::Closed,
+        'concern_summary' => 'Vehicle shut off and had to be towed',
+        'visit_reason' => 'Vehicle shut off and had to be towed',
+        'opened_at' => now()->subWeek(),
+    ]);
+    $current = RepairOrder::query()->create([
+        'repair_order_id' => 1700,
+        'customer_id' => $customer->id,
+        'vehicle_id' => $thisVehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Transmission Drain & Fill',
+        'opened_at' => now(),
+    ]);
+    RepairOrderConcern::query()->create([
+        'repair_order_id' => $current->id,
+        'summary' => 'Transmission Drain & Fill',
+        'position' => 1,
+    ]);
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $current))
+        ->assertOk()
+        ->assertSee('Previous visits', false)
+        ->assertSee('Deferred', false)
+        ->assertSee('None for this vehicle', false)
+        ->assertSee('RO 1478', false)
+        ->assertSee('Tune up spark plugs', false)
+        ->assertDontSee('Vehicle shut off and had to be towed', false)
+        ->getContent();
+
+    $panelStart = strpos($html, 'data-workspace-modal-form="concern-narrative"');
+    expect($panelStart)->not->toBeFalse();
+    $panel = substr($html, $panelStart, 16000);
+    expect(strpos($panel, 'Recommendation intent'))->toBeLessThan(strpos($panel, 'ark-vehicle-memory'));
 });

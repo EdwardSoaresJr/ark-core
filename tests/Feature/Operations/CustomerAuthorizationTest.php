@@ -218,7 +218,7 @@ test('estimate pdf includes per-concern customer decision marks only', function 
         ->not->toContain('I approve all recommended repairs listed above')
         ->not->toContain('Per-concern selections control authorized scope');
 
-    $pendingScope = (string) Str::of($html)->after('A/C not cold')->before('</article>');
+    $pendingScope = (string) Str::of($html)->after('A/C performance diagnostic')->before('</article>');
 
     expect($pendingScope)->toContain('Customer decision');
 
@@ -227,7 +227,7 @@ test('estimate pdf includes per-concern customer decision marks only', function 
     expect($footer)->not->toHaveKey('show_approve_all_recommended');
 });
 
-test('estimate pdf scope header keeps amount top right and shows approval inline with intent', function () {
+test('estimate pdf scope header uses service title, status pills, and service total', function () {
     [$repairOrder, $recommendedConcern, $approvedConcern] = repairOrderForCustomerAuthorization();
 
     $recommendedConcern->update(['recommendation_intent' => 'diagnostic']);
@@ -257,34 +257,38 @@ test('estimate pdf scope header keeps amount top right and shows approval inline
     ])->render();
 
     expect($html)
-        ->toContain('concern-header-total')
+        ->toContain('A/C performance diagnostic')
+        ->toContain('concern-status-pill')
         ->toContain('concern-priority-badge--immediate_attention">Immediate Attention</p>')
-        ->toContain('concern-priority-badge--diagnostic">Diagnostic</p>')
         ->toContain('concern-priority-badge--plan_soon">Plan Soon</p>')
-        ->toContain('concern-header-decision--approved')
-        ->toContain('concern-header-decision-mark">✓</span>')
-        ->toContain('concern-header-decision--deferred')
-        ->toContain('concern-header-decision--recommended')
+        ->toContain('concern-status-pill--approved')
+        ->toContain('concern-status-pill--deferred')
+        ->toContain('concern-status-pill--recommended')
         ->toContain('concern-header-status')
+        ->toContain('Work subtotal')
+        ->toContain('identity-band')
+        ->not->toContain('document-title-row')
+        ->not->toContain('document-status-pill')
         ->not->toContain('concern-intent-group')
         ->not->toContain('Draft overheating diagnostic')
         ->not->toContain('concern-header-decision">Draft</span>')
-        ->not->toContain('Estimated Work');
+        ->not->toContain('Estimated Work')
+        ->not->toContain('Recommended Work')
+        ->not->toContain('Approved Work</p>');
 
     $approvedScope = (string) Str::of($html)->after('Prior approved brake work')->before('</article>')->value();
 
     expect($approvedScope)
-        ->toContain('concern-header-total')
         ->toContain('concern-header-status')
-        ->toContain('concern-header-decision--approved')
-        ->toContain('concern-header-decision-mark">✓</span>')
+        ->toContain('concern-status-pill--approved')
+        ->toContain('Work subtotal')
         ->not->toContain('Customer decision')
         ->not->toContain('concern-header-intent">Immediate Attention</span>');
 
-    $pendingScope = (string) Str::of($html)->after('A/C not cold')->before('</article>');
+    $pendingScope = (string) Str::of($html)->after('A/C performance diagnostic')->before('</article>');
 
     expect($pendingScope)
-        ->toContain('concern-header-decision--recommended')
+        ->toContain('concern-status-pill--recommended')
         ->toContain('Pending')
         ->not->toContain('concern-header-decision--recommended">Recommended')
         ->toContain('Customer decision');

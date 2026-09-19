@@ -16,5 +16,6 @@ final readonly class WorkboardTriageLaneProjection
         public int $hiddenCount,
         public ?string $viewAllUrl,
         public ?string $inventoryUrl,
+        public string $color = 'secondary',
     ) {}
 }

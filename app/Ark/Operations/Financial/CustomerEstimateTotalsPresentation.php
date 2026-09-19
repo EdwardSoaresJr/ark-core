@@ -13,7 +13,7 @@ final class CustomerEstimateTotalsPresentation
 {
     public static function customerTaxLabel(ShopSettings $settings): string
     {
-        $label = $settings->taxLabel();
+        $label = self::presentCustomerTaxLabel($settings->taxLabel());
 
         if (! $settings->tax_enabled) {
             return $label;
@@ -86,9 +86,9 @@ final class CustomerEstimateTotalsPresentation
             ? (int) $totals['subtotal_before_tax_cents']
             : max(0, $laborCents + $partsCents + $feesCents - $standingDiscountCents);
 
-        $taxLabel = $totals['customer_tax_label']
+        $taxLabel = self::presentCustomerTaxLabel((string) ($totals['customer_tax_label']
             ?? $totals['tax_label']
-            ?? 'Tax';
+            ?? 'Tax'));
 
         $standingDiscountLabel = $totals['standing_discount_label']
             ?? StandingDiscountPresentation::label($customerType, $standingDiscountCents)
@@ -139,12 +139,24 @@ final class CustomerEstimateTotalsPresentation
             'standing_discount' => $formatter($standingDiscountCents),
             'subtotal_before_tax' => $formatter($subtotalBeforeTaxCents),
             'tax' => $formatter($taxCents),
+            'fees_label' => 'Shop supplies',
             'total' => $formatter($totalCents),
             'show_subtotal_before_tax' => $taxCents > 0,
             'discount_note' => $standingDiscountCents > 0
                 ? 'Discount applied at shop rates.'
                 : null,
         ];
+    }
+
+    private static function presentCustomerTaxLabel(string $label): string
+    {
+        $trimmed = trim($label);
+
+        if ($trimmed === '') {
+            return 'Tax';
+        }
+
+        return (string) preg_replace('/^C\/S Tax\b/i', 'Sales tax', $trimmed);
     }
 
     private static function formatCents(int $cents): string

@@ -4,14 +4,7 @@ use App\Ark\Operations\Communications\CommunicationEventRecorder;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
-use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
-use App\Ark\Operations\RepairOrders\RepairOrderLine;
-use App\Ark\Operations\RepairOrders\RepairOrderLineType;
-use App\Ark\Operations\RepairOrders\RepairOrderStatus;
-use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
@@ -27,7 +20,7 @@ test('estimate review page does not render lazy tab panels on first paint', func
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('data-workspace-tab-panel="comms"', false)
-        ->assertSee('data-workspace-tab-panel="portal"', false)
+        ->assertSee('data-workspace-tab-panel="recommendations"', false)
         ->assertDontSee('id="communication-rail"', false)
         ->assertDontSee('Estimate activity', false);
 });
@@ -42,7 +35,7 @@ test('estimate review renders declined concern scopes without error', function (
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
         ->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
-        ->assertSee('ops-review-concern--declined', false);
+        ->assertSee('ops-worksheet-concern--declined', false);
 });
 
 test('workspace tab endpoint returns comms panel html on demand', function () {
@@ -106,50 +99,3 @@ test('workspace tab endpoint returns parts panel html on demand', function () {
         ->assertSee('Part Lines', false)
         ->assertSee('Front brake pads', false);
 });
-
-function workspaceTabRepairOrder(bool $withPart = false): RepairOrder
-{
-    $customer = Customer::query()->create([
-        'first_name' => 'Tab',
-        'last_name' => 'Loader',
-        'phone' => '555-0199',
-        'email' => 'tab.loader@example.test',
-    ]);
-
-    $vehicle = Vehicle::query()->create([
-        'customer_id' => $customer->id,
-        'year' => 2018,
-        'make' => 'Honda',
-        'model' => 'Pilot',
-    ]);
-
-    $repairOrder = RepairOrder::query()->create([
-        'customer_id' => $customer->id,
-        'vehicle_id' => $vehicle->id,
-        'status' => RepairOrderStatus::Estimate,
-        'concern_summary' => 'Brake noise',
-    ]);
-
-    $concern = RepairOrderConcern::query()->create([
-        'repair_order_id' => $repairOrder->id,
-        'summary' => 'Brakes',
-        'disposition' => RepairOrderConcernDisposition::Approved,
-        'position' => 1,
-    ]);
-
-    if ($withPart) {
-        RepairOrderLine::query()->create([
-            'repair_order_id' => $repairOrder->id,
-            'repair_order_concern_id' => $concern->id,
-            'type' => RepairOrderLineType::Part,
-            'description' => 'Front brake pads',
-            'quantity' => '1.00',
-            'unit_price_cents' => 12000,
-            'part_cost_cents' => 6000,
-            'subtotal_cents' => 12000,
-            'total_cents' => 12000,
-        ]);
-    }
-
-    return $repairOrder->fresh(['customer', 'vehicle', 'concerns.lines', 'lines']);
-}

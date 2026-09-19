@@ -14,6 +14,14 @@ use App\Ark\Operations\Documents\DocumentFooterPresenter;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateSnapshotBuilder;
 use App\Ark\Operations\Documents\PdfRenderer;
+use App\Ark\Operations\Financial\LedgerEntryType;
+use App\Ark\Operations\Financial\PaymentMethod;
+use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
+use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
+use App\Ark\Operations\Payments\FakeSquarePaymentsClient;
+use App\Ark\Operations\Payments\PaymentCaptureSurface;
+use App\Ark\Operations\Payments\PaymentGatewayAttemptStatus;
 use App\Ark\Operations\Portal\EstimateAccessToken;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -68,9 +76,9 @@ test('portal customer can approve recommended concerns', function () {
 
     $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
         ->assertOk()
-        ->assertSee('Your choices were saved')
+        ->assertSee('You’re all set')
         ->assertSee('What happens next')
-        ->assertSee('Done')
+        ->assertSee('All set')
         ->assertDontSee('Submit authorization');
 });
 
@@ -82,7 +90,7 @@ test('portal shows read-only approval notice when presented work is already appr
     $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
         ->assertOk()
         ->assertSee('Work approved')
-        ->assertSee('Your advisor recorded approval for the services below')
+        ->assertSee('We’ve recorded the work you authorized with your advisor.')
         ->assertSee('Approved', false)
         ->assertDontSee('Confirm authorization')
         ->assertDontSee('Authorize estimate')
@@ -112,7 +120,8 @@ test('portal shows authorization source when staff recorded approval in shop', f
 
     $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
         ->assertOk()
-        ->assertSee('Approval on file')
+        ->assertSee('We have your approval')
+        ->assertSee('We’ve recorded the work you authorized with your advisor.')
         ->assertSee('Approved by')
         ->assertSee('Morgan Brown')
         ->assertSee('Phone')
@@ -355,6 +364,351 @@ test('customer portal open after advisor preview still records estimate viewed o
         ->and($event->channel)->toBe(OperationalCommunicationChannel::Website)
         ->and($event->conversation_message_id)->not->toBeNull()
         ->and($token->fresh()->last_viewed_at)->not->toBeNull();
+});
+
+test('portal estimate deposit completes after authorization', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => true,
+    ]);
+
+    $fakeSquare = new FakeSquarePaymentsClient;
+    $this->app->instance(FakeSquarePaymentsClient::class, $fakeSquare);
+    $this->app->bind(SquarePaymentsClient::class, fn () => $fakeSquare);
+
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $approval = ApprovalEvent::query()->sole();
+
+    $initiate = $this->postJson(route('portal.estimates.deposits.store', ['token' => portalAuthorizationPlainToken()]), [
+        'approval_id' => $approval->id,
+    ])->assertOk();
+
+    $attemptId = $initiate->json('attempt.id');
+
+    $this->postJson(route('portal.estimates.deposits.complete', [
+        'token' => portalAuthorizationPlainToken(),
+        'attempt' => $attemptId,
+    ]), [
+        'source_id' => 'cnon:portal-deposit',
+    ])->assertOk()
+        ->assertJsonPath('attempt.status', PaymentGatewayAttemptStatus::Completed->value)
+        ->assertJsonPath('attempt.capture_surface', PaymentCaptureSurface::PortalEstimateDeposit->value);
+
+    expect(RepairOrderLedgerEntry::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->where('entry_type', LedgerEntryType::Deposit)
+        ->exists())->toBeTrue();
+});
+
+test('portal estimate still collects remaining balance after a deposit is on file', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => true,
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+        'shop_fee_enabled' => false,
+        'tax_enabled' => false,
+    ]);
+
+    $fakeSquare = new FakeSquarePaymentsClient;
+    $this->app->instance(FakeSquarePaymentsClient::class, $fakeSquare);
+    $this->app->bind(SquarePaymentsClient::class, fn () => $fakeSquare);
+
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $recommendedConcern->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'A/C compressor',
+        'quantity' => '1.00',
+        'unit_price_cents' => 10000,
+        'part_cost_cents' => 5000,
+    ]);
+
+    app(\App\Ark\Operations\Financial\EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $approval = ApprovalEvent::query()->sole();
+
+    $first = $this->postJson(route('portal.estimates.deposits.store', ['token' => portalAuthorizationPlainToken()]), [
+        'approval_id' => $approval->id,
+    ])->assertOk();
+
+    $this->postJson(route('portal.estimates.deposits.complete', [
+        'token' => portalAuthorizationPlainToken(),
+        'attempt' => $first->json('attempt.id'),
+    ]), [
+        'source_id' => 'cnon:portal-deposit',
+    ])->assertOk();
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('Pay remaining balance')
+        ->assertSee('Pay remaining')
+        ->assertSee('Partial payment received')
+        ->assertSee('remaining')
+        ->assertDontSee('has your approval and payment')
+        ->assertDontSee('The shop has been notified')
+        ->assertDontSee('A deposit has already been collected');
+
+    $second = $this->postJson(route('portal.estimates.deposits.store', ['token' => portalAuthorizationPlainToken()]), [
+        'approval_id' => $approval->id,
+    ])->assertOk();
+
+    expect((int) $second->json('attempt.amount_cents'))->toBeGreaterThan(0)
+        ->and((int) $second->json('attempt.amount_cents'))->not->toBe((int) $first->json('attempt.amount_cents'));
+
+    $this->postJson(route('portal.estimates.deposits.complete', [
+        'token' => portalAuthorizationPlainToken(),
+        'attempt' => $second->json('attempt.id'),
+    ]), [
+        'source_id' => 'cnon:portal-remaining',
+    ])->assertOk()
+        ->assertJsonPath('attempt.status', PaymentGatewayAttemptStatus::Completed->value);
+
+    expect(RepairOrderLedgerEntry::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->where('entry_type', LedgerEntryType::Deposit)
+        ->count())->toBe(2);
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('Payment received')
+        ->assertSee('we received your')
+        ->assertSee('has your approval and payment')
+        ->assertDontSee('The shop has been notified')
+        ->assertDontSee('Partial payment received');
+});
+
+test('portal estimate does not claim payment received when an invoice is issued without ledger money', function () {
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    issueFinalInvoiceFor($repairOrder->fresh());
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('You’re all set')
+        ->assertSee('Balance due')
+        ->assertDontSee('has your approval and payment')
+        ->assertDontSee('The shop has been notified')
+        ->assertDontSee('Partial payment received');
+});
+
+test('portal estimate reflects a partial invoice payment then paid in full', function () {
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    issueFinalInvoiceFor($repairOrder->fresh());
+
+    app(RecordLedgerEntryAction::class)->recordPayment(
+        $repairOrder->fresh(),
+        100,
+        PaymentMethod::Cash,
+    );
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('Partial payment received')
+        ->assertSee('$1.00')
+        ->assertSee('remaining')
+        ->assertDontSee('has your approval and payment')
+        ->assertDontSee('The shop has been notified');
+
+    payRepairOrderInFull($repairOrder->fresh());
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('Payment received')
+        ->assertSee('we received your')
+        ->assertSee('has your approval and payment')
+        ->assertDontSee('The shop has been notified')
+        ->assertDontSee('Balance due $', false);
+});
+
+test('portal estimate deposit initiate returns json when portal pay is disabled', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => false,
+    ]);
+
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $approval = ApprovalEvent::query()->sole();
+
+    $this->postJson(route('portal.estimates.deposits.store', ['token' => portalAuthorizationPlainToken()]), [
+        'approval_id' => $approval->id,
+    ])->assertStatus(503)
+        ->assertJsonPath('message', 'Online deposits are not enabled.');
+});
+
+test('staff portal preview disables live card deposit', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => true,
+    ]);
+
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.repair-orders.portal-preview', $repairOrder))
+        ->assertOk()
+        ->assertSee('Step 3 — Pay deposit')
+        ->assertSee('Card deposit is disabled in staff preview')
+        ->assertDontSee('arkPortalEstimateDeposit', false);
+});
+
+test('portal estimate deposit complete url keeps zeros inside the access token', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => true,
+    ]);
+
+    [$repairOrder, $tokenModel, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $plainToken = 'abc0def0'.str_repeat('a', 56);
+
+    $tokenModel->forceFill([
+        'token_hash' => EstimateAccessToken::hashPlainToken($plainToken),
+    ])->save();
+
+    $this->post(route('portal.estimates.authorize', ['token' => $plainToken]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $html = $this->get(route('portal.estimates.show', ['token' => $plainToken]))
+        ->assertOk()
+        ->assertSee('Step 3 — Pay deposit', false)
+        ->getContent();
+
+    // @js() escapes path slashes as \/
+    expect($html)->toContain('abc0def0')
+        ->and($html)->toContain('__ATTEMPT__\\/complete')
+        ->and($html)->not->toContain('abc__ATTEMPT__def__ATTEMPT__');
+});
+
+test('portal estimate deposit panel persists after session flash expires', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => true,
+    ]);
+
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommendedConcern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('Next step: pay your deposit')
+        ->assertSee('Step 3 — Pay deposit')
+        ->assertSee('Paying the deposit does not approve any extra repairs');
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('Next step: pay your deposit')
+        ->assertSee('Step 3 — Pay deposit');
+});
+
+test('portal estimate shows authorize instructions when deposit is enabled', function () {
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+
+    ShopSettings::current()->update([
+        'square_enabled' => true,
+        'square_portal_pay_enabled' => true,
+    ]);
+
+    portalAuthorizationRepairOrder();
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee('How to approve your estimate')
+        ->assertSee('pay it on the next step')
+        ->assertSee('Pay deposit')
+        ->assertSee('portal-estimate-stepper--4', false)
+        ->assertSee('--portal-estimate-steps: 4', false);
 });
 
 test('estimate email includes portal review link', function () {

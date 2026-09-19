@@ -53,6 +53,11 @@ class Vehicle extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(\App\Ark\Operations\Recommendations\Recommendation::class);
+    }
+
     public function repairOrders(): HasMany
     {
         return $this->hasMany(RepairOrder::class);

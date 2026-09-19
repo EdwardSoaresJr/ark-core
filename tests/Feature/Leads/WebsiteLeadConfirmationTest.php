@@ -134,3 +134,93 @@ test('website lead confirmation can be disabled', function (): void {
     Http::assertNothingSent();
     Mail::assertNothingSent();
 });
+
+test('connected shop sends website confirmation through platform mail only', function (): void {
+    enableHostedPlatformMail();
+    Mail::fake();
+    Http::fake(function (\Illuminate\Http\Client\Request $request) {
+        if (str_contains($request->url(), '/api/v1/services/mail/messages/transactional')) {
+            return Http::response([
+                'ok' => true,
+                'status' => 'provider_sent',
+                'message_id' => 'mail-lead-1',
+            ], 200);
+        }
+
+        return Http::response(['unexpected' => $request->url()], 599);
+    });
+    bindFakeOutboundSms();
+
+    $lead = app(LeadRecorder::class)->recordWebsiteSubmission([
+        'concern' => 'AC is not cold.',
+        'contact_name' => 'Riley Chen',
+        'contact_phone' => '7195550148',
+        'contact_email' => 'riley@example.test',
+        'contact_preference' => LeadContactPreference::Email,
+        'source' => LeadSource::Website,
+    ]);
+
+    app(SendWebsiteLeadConfirmationAction::class)->execute($lead->fresh());
+
+    Mail::assertNothingSent();
+
+    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        if (! str_contains($request->url(), '/api/v1/services/mail/messages/transactional')) {
+            return false;
+        }
+
+        $body = $request->data();
+        if ($body === []) {
+            $decoded = json_decode($request->body(), true);
+            $body = is_array($decoded) ? $decoded : [];
+        }
+
+        return ($body['operation'] ?? null) === 'customer.transactional_message'
+            && ($body['to'] ?? null) === 'riley@example.test'
+            && str_starts_with((string) ($body['idempotency_key'] ?? ''), 'website-lead-confirmation-')
+            && ($body['domain_object_type'] ?? null) === 'lead';
+    });
+
+    expect(
+        ConversationMessage::query()
+            ->where('channel', OperationalCommunicationChannel::Email)
+            ->where('metadata->website_lead_confirmation', true)
+            ->exists()
+    )->toBeTrue();
+});
+
+test('platform mail rejection does not fall back to local mail', function (): void {
+    enableHostedPlatformMail();
+    Mail::fake();
+    Http::fake(function (\Illuminate\Http\Client\Request $request) {
+        if (str_contains($request->url(), '/api/v1/services/mail/messages/transactional')) {
+            return Http::response([
+                'ok' => false,
+                'reason_code' => 'quota_exceeded',
+                'message' => 'Monthly included send allowance exceeded.',
+            ], 422);
+        }
+
+        return Http::response(['unexpected' => $request->url()], 599);
+    });
+    bindFakeOutboundSms();
+
+    $lead = app(LeadRecorder::class)->recordWebsiteSubmission([
+        'concern' => 'Needs brakes.',
+        'contact_name' => 'Sam Patel',
+        'contact_phone' => '7195550149',
+        'contact_email' => 'sam@example.test',
+        'contact_preference' => LeadContactPreference::Email,
+        'source' => LeadSource::Website,
+    ]);
+
+    app(SendWebsiteLeadConfirmationAction::class)->execute($lead->fresh());
+
+    Mail::assertNothingSent();
+
+    expect(
+        ConversationMessage::query()
+            ->where('channel', OperationalCommunicationChannel::Email)
+            ->exists()
+    )->toBeFalse();
+});

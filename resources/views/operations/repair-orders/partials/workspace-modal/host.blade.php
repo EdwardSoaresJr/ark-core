@@ -573,6 +573,10 @@
             'technicians' => $technicians ?? collect(),
         ])
 
+        @unless ($isTerminal)
+            @include('operations.repair-orders.partials.repair-order-deferred-add-forms')
+        @endunless
+
         {{-- Edit existing line --}}
         @if ($editingLineId)
             @php
