@@ -17145,27 +17145,36 @@
     }
 
     .ops-ro-card--approval::before,
-    .ops-queue-card--approval::before {
+    .ops-queue-card--approval::before,
+    .ops-ro-index-card.ops-ro-card--approval::before {
         background: theme('colors.orange.500');
     }
 
     .ops-ro-card--blocked::before,
-    .ops-queue-card--blocked::before {
+    .ops-queue-card--blocked::before,
+    .ops-ro-index-card.ops-ro-card--blocked::before {
         background: theme('colors.amber.500');
     }
 
     .ops-ro-card--motion::before,
-    .ops-queue-card--motion::before {
+    .ops-queue-card--motion::before,
+    .ops-ro-index-card.ops-ro-card--motion::before {
         background: theme('colors.sky.500');
     }
 
     .ops-ro-card--ready::before,
-    .ops-queue-card--ready::before {
+    .ops-queue-card--ready::before,
+    .ops-ro-index-card.ops-ro-card--ready::before {
         background: theme('colors.emerald.500');
     }
 
     .ops-ro-card--move::before,
-    .ops-queue-card--move::before {
+    .ops-queue-card--move::before,
+    .ops-ro-index-card.ops-ro-card--move::before {
+        background: theme('colors.slate.400');
+    }
+
+    .ops-ro-index-card.ops-ro-card--closed::before {
         background: theme('colors.slate.400');
     }
 
@@ -23805,6 +23814,108 @@ html.dark .ops-printing-cmd,
     .ops-job-card__mark:hover .ops-job-card__tip,
     .ops-job-card__mark:focus-visible .ops-job-card__tip {
         display: block;
+    }
+
+    .ops-ro-index-card {
+        position: relative;
+        padding-left: 0.5625rem;
+    }
+
+    .ops-ro-index-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 3px;
+        background: theme('colors.slate.400');
+    }
+
+    .ops-ro-index-card.ops-ro-card--approval {
+        border-color: theme('colors.orange.200');
+        background: theme('colors.orange.50');
+    }
+
+    .ops-ro-index-card.ops-ro-card--blocked {
+        border-color: theme('colors.amber.300');
+        background: theme('colors.amber.50');
+    }
+
+    .ops-ro-index-card.ops-ro-card--motion {
+        border-color: theme('colors.sky.200');
+        background: theme('colors.sky.50');
+    }
+
+    .ops-ro-index-card.ops-ro-card--ready {
+        border-color: theme('colors.emerald.200');
+        background: theme('colors.emerald.50');
+    }
+
+    .ops-ro-index-card .ops-ro-concern {
+        margin: 0;
+        -webkit-line-clamp: 1;
+        font-size: 0.6875rem;
+        line-height: 1rem;
+    }
+
+    .ops-ro-index-card .ops-status-chip {
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: 58%;
+    }
+
+    .ops-ro-index-card.ops-ro-card--approval .ops-job-card__activity {
+        border-top-color: theme('colors.orange.200');
+        background: theme('colors.orange.100');
+    }
+
+    .ops-ro-index-card.ops-ro-card--blocked .ops-job-card__activity {
+        border-top-color: theme('colors.amber.200');
+        background: theme('colors.amber.100');
+    }
+
+    .ops-ro-index-card.ops-ro-card--motion .ops-job-card__activity {
+        border-top-color: theme('colors.sky.200');
+        background: theme('colors.sky.100');
+    }
+
+    .ops-ro-index-card.ops-ro-card--ready .ops-job-card__activity {
+        border-top-color: theme('colors.emerald.200');
+        background: theme('colors.emerald.100');
+    }
+
+    .ops-job-card__scan a.ops-job-card__vehicle,
+    .ops-job-card__scan a.ops-job-card__customer-link {
+        text-decoration: none;
+    }
+
+    .ops-job-card__scan a.ops-job-card__vehicle:hover,
+    .ops-job-card__scan a.ops-job-card__customer-link:hover,
+    .ops-job-card__scan a.ops-job-card__vehicle:focus-visible,
+    .ops-job-card__scan a.ops-job-card__customer-link:focus-visible {
+        color: theme('colors.sky.800');
+        outline: none;
+    }
+
+    a.ops-ro-index-action {
+        color: theme('colors.slate.600');
+        text-decoration: none;
+    }
+
+    a.ops-ro-index-action:hover,
+    a.ops-ro-index-action:focus-visible {
+        color: theme('colors.sky.800');
+        background: color-mix(in srgb, currentColor 12%, white);
+        outline: none;
+    }
+
+    .ops-index-card-chips {
+        display: flex;
+        min-width: 0;
+        flex-shrink: 1;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.25rem;
     }
 
     .ops-job-card__mark-icon,

@@ -59,46 +59,102 @@
             <div class="ops-ro-retrieval-grid">
                 @forelse ($vehicles as $vehicle)
                     @php
+                        $displayTz = config('app.display_timezone');
                         $activeRepairOrder = $vehicle->repairOrders->first();
                         $cardTone = $activeRepairOrder ? $activeRepairOrder->status->indexTone() : 'move';
                         $customer = $vehicle->customer;
-                        $hubUrl = route('operations.customers.show', [
-                            'customer' => $customer,
-                            'vehicle' => $vehicle->id,
-                        ]);
+                        $hubUrl = $customer
+                            ? route('operations.customers.show', [
+                                'customer' => $customer,
+                                'vehicle' => $vehicle->id,
+                            ])
+                            : null;
+                        $customerUrl = $customer
+                            ? route('operations.customers.show', $customer)
+                            : null;
+                        $documentsUrl = $customer
+                            ? route('operations.customers.show', [
+                                'customer' => $customer,
+                                'tab' => 'documents',
+                            ])
+                            : null;
+                        $roShowUrl = ($activeRepairOrder && filled($activeRepairOrder->repair_order_id))
+                            ? route('operations.repair-orders.show', $activeRepairOrder)
+                            : null;
                         $plateLabel = trim(collect([$vehicle->plate, $vehicle->plate_state])->filter()->implode(' '));
                         $vinTail = filled($vehicle->vin) ? substr($vehicle->vin, -8) : null;
+                        $identityBits = collect([$plateLabel !== '' ? $plateLabel : null, $vinTail ? 'VIN '.$vinTail : null])
+                            ->filter()
+                            ->implode(' · ');
+                        $chipLabel = $activeRepairOrder
+                            ? $activeRepairOrder->statusDisplayLabel()
+                            : 'No open RO';
+                        $clockLabel = $activeRepairOrder
+                            ? 'RO #'.$activeRepairOrder->repair_order_id.' · Updated '.$activeRepairOrder->updated_at->timezone($displayTz)->format('M j, g:i A')
+                            : $vehicle->repair_orders_count.' '.Str::plural('RO', $vehicle->repair_orders_count).' on file · Updated '.$vehicle->updated_at->timezone($displayTz)->format('M j, g:i A');
+                        $indexActions = [
+                            [
+                                'href' => $hubUrl,
+                                'key' => 'vehicle',
+                                'label' => $vehicle->display_name,
+                            ],
+                            [
+                                'href' => $documentsUrl,
+                                'key' => 'documents',
+                                'label' => $customer ? 'Documents for '.$customer->name : 'Documents',
+                            ],
+                            [
+                                'href' => $customerUrl,
+                                'key' => 'customer',
+                                'label' => $customer?->name ?? 'Customer',
+                            ],
+                            [
+                                'href' => $roShowUrl,
+                                'key' => 'ro',
+                                'label' => $activeRepairOrder
+                                    ? 'RO #'.$activeRepairOrder->repair_order_id
+                                    : 'Repair order',
+                            ],
+                        ];
                     @endphp
-                    <div class="ops-ro-card ops-ro-card--{{ $cardTone }}">
-                        <a href="{{ $hubUrl }}" class="ops-ro-card-body-link">
-                            <div class="ops-ro-card-top">
-                                <div class="ops-ro-card-primary min-w-0">
-                                    <p class="ops-ro-vehicle" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</p>
-                                    <p class="ops-ro-subline truncate">
-                                        <span class="ops-ro-customer">{{ $customer?->name ?? 'Unknown customer' }}</span>
-                                    </p>
+                    <div class="ops-job-card-wrap">
+                        <article class="ops-job-card ops-ro-index-card ops-ro-card--{{ $cardTone }}">
+                            <div class="ops-job-card__scan">
+                                <div class="ops-job-card__head">
+                                    @if ($hubUrl !== null)
+                                        <a href="{{ $hubUrl }}" class="ops-job-card__ro truncate" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</a>
+                                    @else
+                                        <span class="ops-job-card__ro truncate" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</span>
+                                    @endif
+                                    <span class="ops-index-card-chips">
+                                        @include('operations.repair-orders.partials.repair-order-vehicle-identity-pressure-chip', ['vehicle' => $vehicle])
+                                        <span class="ops-status-chip ops-status-chip--{{ $cardTone }}">{{ $chipLabel }}</span>
+                                    </span>
                                 </div>
-                                @include('operations.repair-orders.partials.repair-order-vehicle-identity-pressure-chip', ['vehicle' => $vehicle])
+                                @if ($customerUrl !== null)
+                                    <p class="ops-job-card__customer">
+                                        <a href="{{ $customerUrl }}" class="ops-job-card__customer-link">
+                                            {{ $customer?->name ?? 'Unknown customer' }}
+                                        </a>
+                                    </p>
+                                @else
+                                    <p class="ops-job-card__customer">
+                                        <span class="ops-job-card__customer-link ops-job-card__customer-link--static">
+                                            {{ $customer?->name ?? 'Unknown customer' }}
+                                        </span>
+                                    </p>
+                                @endif
+                                <p class="ops-ro-concern truncate">
+                                    {{ $identityBits !== '' ? $identityBits : 'No plate or VIN on file' }}
+                                </p>
                             </div>
 
-                            <p class="ops-ro-subline truncate">
-                                @if ($plateLabel !== '')
-                                    <span>{{ $plateLabel }}</span>
-                                @endif
-                                @if ($plateLabel !== '' && $vinTail)
-                                    <span class="ops-ro-sep">·</span>
-                                @endif
-                                @if ($vinTail)
-                                    <span class="ops-vin-display">VIN {{ $vinTail }}</span>
-                                @elseif ($plateLabel === '')
-                                    <span class="text-slate-400">No plate or VIN on file</span>
-                                @endif
-                            </p>
-                        </a>
-                        @include('operations.vehicles.partials.vehicle-search-card-footnote', [
-                            'vehicle' => $vehicle,
-                            'activeRepairOrder' => $activeRepairOrder,
-                        ])
+                            <div class="ops-job-card__status-row">
+                                <span class="ops-job-card__clock tabular-nums">{{ $clockLabel }}</span>
+                            </div>
+
+                            @include('operations.partials.index-card-actions', ['indexActions' => $indexActions])
+                        </article>
                     </div>
                 @empty
                     <div class="ops-index-empty ops-ro-retrieval-empty">

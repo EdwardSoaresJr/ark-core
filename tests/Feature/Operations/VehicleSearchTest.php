@@ -4,9 +4,11 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Vehicles\Vehicle;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Database\Seeders\RepairOrderStatusCatalogSeeder;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
+    $this->seed(RepairOrderStatusCatalogSeeder::class);
 });
 
 test('customer index loads customers without a search query', function () {
@@ -184,5 +186,78 @@ test('vehicle search card shows active repair order footnote', function () {
         ->get(route('operations.vehicles.search', ['q' => 'PILOT1']))
         ->assertOk()
         ->assertSee('RO #'.$repairOrder->repair_order_id)
-        ->assertSee($repairOrder->status->label());
+        ->assertSee($repairOrder->status->label())
+        ->assertSee(route('operations.customers.show', ['customer' => $customer, 'tab' => 'documents']), false)
+        ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
+        ->assertSee('ops-job-card__activity', false)
+        ->assertSee('ops-ro-index-action', false)
+        ->assertSee('ops-status-chip', false)
+        ->assertSee('class="ops-job-card__customer-link"', false);
+});
+
+test('vehicle search cards link vehicle customer documents and ro separately', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $customer = Customer::query()->create([
+        'first_name' => 'Split',
+        'last_name' => 'Vehicle',
+        'phone' => '555-0102',
+    ]);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2018,
+        'make' => 'Mazda',
+        'model' => 'CX-5',
+        'plate' => 'SPLIT1',
+    ]);
+    $repairOrder = \App\Ark\Operations\RepairOrders\RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Alignment',
+    ]);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.vehicles.search', ['q' => 'SPLIT1']))
+        ->assertOk()
+        ->assertSee(route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]), false)
+        ->assertSee(route('operations.customers.show', $customer), false)
+        ->assertSee(route('operations.customers.show', ['customer' => $customer, 'tab' => 'documents']), false)
+        ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
+        ->assertDontSee('ops-ro-card-body-link', false);
+});
+
+test('customer search cards link vehicle customer documents and ro separately', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $customer = Customer::query()->create([
+        'first_name' => 'Split',
+        'last_name' => 'Customer',
+        'phone' => '555-0103',
+    ]);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2016,
+        'make' => 'Subaru',
+        'model' => 'Outback',
+        'plate' => 'SPLIT2',
+    ]);
+    $repairOrder = \App\Ark\Operations\RepairOrders\RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::Estimate,
+        'concern_summary' => 'Brakes',
+    ]);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.customers.search', ['q' => '555-0103']))
+        ->assertOk()
+        ->assertSee('Split Customer')
+        ->assertSee(route('operations.customers.show', $customer), false)
+        ->assertSee(route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]), false)
+        ->assertSee(route('operations.customers.show', ['customer' => $customer, 'tab' => 'documents']), false)
+        ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
+        ->assertSee('ops-job-card__activity', false)
+        ->assertSee('ops-status-chip', false)
+        ->assertSee('class="ops-job-card__vehicle truncate"', false)
+        ->assertDontSee('ops-ro-card-body-link', false)
+        ->assertDontSee('ops-job-card__chip--quiet', false);
 });
