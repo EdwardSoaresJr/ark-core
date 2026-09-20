@@ -26,6 +26,16 @@ enum RepairOrderStatus: string
         return self::tryFrom($slug) ?? self::Draft;
     }
 
+    public function is(self|string $status): bool
+    {
+        return RepairOrderWorkflowStatus::from($this)->is($status);
+    }
+
+    public function enum(): self
+    {
+        return $this;
+    }
+
     public static function isWaitingCustomerApproval(self|RepairOrderWorkflowStatus|string $status): bool
     {
         return RepairOrderWorkflowStatus::from($status)->is(self::WaitingApproval);

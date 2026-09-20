@@ -32,8 +32,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
-#[Fillable(['growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -41,12 +42,27 @@ class RepairOrder extends Model
         // Shop-facing number is the route key. Never persist (or leave) null —
         // a null repair_order_id breaks route() on index and every show link.
         static::saving(function (RepairOrder $repairOrder): void {
+            if ($repairOrder->public_id === null || $repairOrder->public_id === '') {
+                $repairOrder->public_id = (string) Str::uuid();
+            }
+
             if ($repairOrder->repair_order_id !== null) {
                 return;
             }
 
             $repairOrder->repair_order_id = static::nextShopRepairOrderId();
         });
+    }
+
+    public function ensurePublicId(): string
+    {
+        if (filled($this->public_id)) {
+            return (string) $this->public_id;
+        }
+
+        $this->forceFill(['public_id' => (string) Str::uuid()])->save();
+
+        return (string) $this->public_id;
     }
 
     /** Next shop-facing RO number; continues legacy/import sequence and is not tied to the PK. */
