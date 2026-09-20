@@ -3,6 +3,8 @@
 namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -250,6 +252,9 @@ final class RepairOrderFinancialPresenter
             'suggestedDepositSatisfied' => $suggestedDepositSatisfied,
             'suggestedDepositHint' => $this->suggestedDepositHint($defaultDeposit),
             'suggestedDepositBreakdown' => $this->depositWorkspaceBreakdown($depositWorkspaceLines),
+            'canTakePaymentCapture' => $this->canRecordPayment($repairOrder, $balance) || $canRecordDeposit,
+            'paymentCaptureReadiness' => app(PaymentCaptureReadinessProjection::class)->current(),
+            'paymentCaptureAttempts' => $this->paymentCaptureAttempts($repairOrder),
         ];
     }
 
@@ -502,6 +507,28 @@ final class RepairOrderFinancialPresenter
             LedgerEntryType::StoreCreditIssuance => 'Store credit issued',
             LedgerEntryType::StoreCreditApplication => 'Store credit applied',
         };
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function paymentCaptureAttempts(RepairOrder $repairOrder): array
+    {
+        return PaymentCaptureAttempt::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->latest('id')
+            ->limit(8)
+            ->get()
+            ->map(fn (PaymentCaptureAttempt $attempt): array => [
+                'id' => $attempt->id,
+                'amount' => $this->formatCents($attempt->amount_cents),
+                'statusLabel' => $attempt->status->label(),
+                'context' => $attempt->context_kind->value,
+                'method' => $attempt->capture_method->value,
+                'needsReconciliation' => $attempt->status->isAmbiguous(),
+                'isOpen' => $attempt->status->isOpen(),
+            ])
+            ->all();
     }
 
     private function formatCents(int $cents): string
