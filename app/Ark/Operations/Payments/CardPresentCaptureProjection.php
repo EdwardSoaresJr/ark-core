@@ -6,8 +6,7 @@ use App\Ark\Platform\Payments\ArkPaymentsClient;
 use App\Ark\Platform\Payments\ManagedPaymentsGate;
 
 /**
- * Staff card-present buttons and Web Payments SDK public config.
- * Hosted reads Platform readiness; self-host reads Core Square settings.
+ * Staff card-present buttons and Web Payments SDK public config from Platform.
  */
 final class CardPresentCaptureProjection
 {

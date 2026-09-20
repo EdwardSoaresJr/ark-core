@@ -26,15 +26,15 @@ final class InitiatePortalDepositRequestAction
         $repairOrder->ensureOpenForEditing();
 
         abort_if($repairOrder->isTerminal(), 422, 'Deposits cannot be collected on closed repair orders.');
+        abort_unless(ManagedPaymentsGate::platformCapture(), 422, 'Card capture is not connected.');
 
-        $managed = ManagedPaymentsGate::platformCapture();
         $idempotencyKey = (string) Str::uuid();
 
         return PaymentGatewayAttempt::query()->create([
             'repair_order_id' => $repairOrder->id,
             'customer_id' => $repairOrder->customer_id,
             'financial_document_id' => null,
-            'gateway' => $managed ? PaymentGateway::Managed : PaymentGateway::Square,
+            'gateway' => PaymentGateway::Managed,
             'capture_surface' => PaymentCaptureSurface::PortalDepositRequest,
             'amount_cents' => (int) $accessToken->amount_cents,
             'currency' => 'USD',

@@ -55,7 +55,7 @@ An ownership decision does not authorize an implementation change.
 | --- | --- | --- | --- |
 | Customer, vehicle, repair order, estimate lines, inspection | Core | `app/Ark/Operations` | None |
 | Invoice, amount due, payment recorded on the repair order | Core | Ledger. Capture result is applied in Core after Platform or legacy Square returns it | None |
-| Charge button and amount | Core | `InitiateSquarePaymentAction` starts the attempt, then hands managed capture to Platform | Class name still says Square. Behavior on the managed path is correct |
+| Charge button and amount | Core | `InitiatePaymentCaptureAction` starts the attempt and hands capture to Platform | None |
 | Staff, permissions, stations as “which desk” | Core | Runtime ACL, Stations & Phones | None |
 | Shop behavior (tax, status mileage, note defaults, canned reply text) | Core | Settings | None |
 | Job board, appointments, printing | Core | Operations | None |
@@ -70,7 +70,7 @@ An ownership decision does not authorize an implementation change.
 | Reader list for managed capture | Platform | `CardPresentCaptureProjection` reads Platform devices when capture is managed | None | Locked |
 | Whether this shop allows online pay, email pay, or a deposit | Core. Shop rule. Not the Square account | Toggles sit next to provider fields. Hosted card config forces email pay off inside `CardPresentCaptureProjection` | Rule and provider config are mixed in one form. Do not move the shop rule to Platform to “clean up Square” | Locked |
 | Mobile charge button and invoice pay link | Core owns the shop action. When capture is managed, “can we take a card” comes from Platform capability, not from a Core token | Both still call `SquareConfiguration`, which is true only if the Core token exists | Violation of the locked rule. Leave the code until a later decision | Locked |
-| Legacy self-hosted Square | Compatibility exception only | `SquareApiPaymentsClient` when `platformCapture()` is false. `POST /webhooks/square` can still complete an attempt if the signature key matches | Fallback stays until a separate decision. It is not the normal Settings experience | Locked as exception |
+| Legacy self-hosted Square | Removed | Core no longer contacts Square when Platform is disconnected. Record Payment remains | None | Closed |
 
 No payment code, credentials, settings, or fallback behavior changes are authorized.
 

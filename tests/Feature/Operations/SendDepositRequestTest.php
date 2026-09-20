@@ -10,21 +10,19 @@ use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
 use App\Ark\Operations\Messaging\RepairOrderConversationSendProjection;
-use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
 use App\Ark\Operations\Payments\CreateCustomerDepositPayTokenAction;
 use App\Ark\Operations\Payments\CreateCustomerPayTokenAction;
 use App\Ark\Operations\Payments\CustomerDocumentAccessToken;
-use App\Ark\Operations\Portal\PortalShortLink;
-use App\Ark\Operations\Payments\FakeSquarePaymentsClient;
 use App\Ark\Operations\Payments\PaymentCaptureSurface;
 use App\Ark\Operations\Payments\PaymentGatewayAttemptStatus;
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Portal\PortalShortLink;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Mail\DepositRequestCustomerMail;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
@@ -43,10 +41,6 @@ beforeEach(function () {
         'square_portal_pay_enabled' => true,
         'square_keyed_enabled' => true,
     ]);
-
-    $this->fakeSquare = new FakeSquarePaymentsClient;
-    $this->app->instance(FakeSquarePaymentsClient::class, $this->fakeSquare);
-    $this->app->bind(SquarePaymentsClient::class, fn () => $this->fakeSquare);
 });
 
 function seedSmsCapablePhone(string $phone = '7195558080'): void
@@ -215,7 +209,7 @@ test('hosted deposit request email uses platform mail', function () {
         ->assertOk();
 
     Mail::assertNothingSent();
-    Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+    Http::assertSent(function (Request $request): bool {
         $body = $request->data();
 
         return $request->url() === 'https://cloud.test/api/v1/services/mail/messages/transactional'
