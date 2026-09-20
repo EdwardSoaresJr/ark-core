@@ -7,7 +7,7 @@
         'danger' => 'border-rose-200 bg-rose-50 text-rose-900',
         'muted' => 'border-slate-200 bg-slate-50 text-slate-700',
     ];
-    $platformVoiceManaged = \App\Ark\Platform\PlatformConnection::current()->isConnected();
+    $platformVoiceManaged = (bool) ($platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady());
 @endphp
 
 @if (auth()->user()?->isMasterAdmin())

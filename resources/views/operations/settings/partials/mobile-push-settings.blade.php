@@ -20,7 +20,7 @@
 
     $pushTone = $mobilePush->isOperational() ? 'success' : ($mobilePush->enabled ? 'warning' : 'muted');
     $voiceTone = $arkVoiceConfigured ? 'success' : 'warning';
-    $platformVoiceManaged = \App\Ark\Platform\PlatformConnection::current()->isConnected();
+    $platformVoiceManaged = (bool) ($platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady());
 @endphp
 
 <form

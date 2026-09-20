@@ -20,6 +20,7 @@ use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Ark\Operations\Telephony\TelephonyRingSchedule;
 use App\Ark\Operations\Telephony\TelephonyStaffPhoneForRing;
 use App\Ark\Platform\PlatformConnection;
+use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -243,7 +244,7 @@ class ShopCommunicationsSettingsController
 
         $callFlowInput = is_array($data['telephony_call_flow'] ?? null) ? $data['telephony_call_flow'] : [];
         $existingFlow = TelephonyCallFlowSettings::fromShopSettings(ShopSettings::current())->toArray();
-        $platformVoiceManaged = PlatformConnection::current()->isConnected();
+        $platformVoiceManaged = ManagedVoiceGate::platformVoiceReady();
 
         // Hosted Voice: phone schedule/recording/greetings/dial timeout are Platform-authored.
         if ($platformVoiceManaged && in_array($communicationsTab, ['hours', 'recording', 'ring'], true)) {
@@ -458,7 +459,7 @@ class ShopCommunicationsSettingsController
 
         $settings = ShopSettings::current();
         $existing = MobilePushSettings::fromShopSettings($settings);
-        $platformVoiceManaged = PlatformConnection::current()->isConnected();
+        $platformVoiceManaged = ManagedVoiceGate::platformVoiceReady();
         $settingsUpdates = [
             'mobile_push' => [
                 'enabled' => $request->boolean(

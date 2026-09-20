@@ -14,6 +14,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
+use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -33,6 +34,7 @@ require_once __DIR__.'/Support/HostedTransactionalSms.php';
 require_once __DIR__.'/Support/HostedPlatformPayments.php';
 require_once __DIR__.'/Support/HostedPlatformParts.php';
 require_once __DIR__.'/Support/HostedPlatformMail.php';
+require_once __DIR__.'/Support/HostedPlatformVoice.php';
 require_once __DIR__.'/Support/RteWorksheetFixture.php';
 
 /*
@@ -54,6 +56,7 @@ pest()->extend(TestCase::class)
         }
 
         ShopSettings::forgetCurrent();
+        ManagedVoiceGate::resetMemo();
 
         $settings = ShopSettings::current();
 

@@ -17,7 +17,12 @@ use App\Ark\Operations\Telephony\TelephonyEndpointType;
 use App\Ark\Operations\Telephony\TelephonyExtension;
 use App\Ark\Operations\Telephony\TelephonyExtensionDeviceType;
 use App\Ark\Operations\Telephony\TelephonyHealth;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Workstations\Workstation;
+use App\Ark\Operations\WorkTemplates\WorkTemplate;
+use App\Ark\Platform\Mail\ManagedMailGate;
+use App\Ark\Platform\Payments\ManagedPaymentsGate;
+use App\Ark\Platform\Voice\ManagedVoiceGate;
 use App\Ark\Runtime\Authorization\ArkRole;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -62,9 +67,9 @@ class ShopSettingsPageController
             'excellenceTargets' => ShopExcellenceTargets::current(),
             'excellenceTargetReview' => ShopExcellenceTargets::lastTargetReview(),
             'statusCatalogFormData' => app(RepairOrderStatusCatalog::class)->settingsFormData(),
-            'jobBoardLanes' => app(\App\Ark\Operations\Workboard\JobBoardLaneCatalog::class)->all(),
+            'jobBoardLanes' => app(JobBoardLaneCatalog::class)->all(),
             'inspectionTemplates' => InspectionTemplateCatalog::settingsFormData(),
-            'workTemplates' => \App\Ark\Operations\WorkTemplates\WorkTemplate::query()
+            'workTemplates' => WorkTemplate::query()
                 ->with('lines')
                 ->orderByRaw('retired_at is not null')
                 ->orderBy('position')
@@ -81,8 +86,9 @@ class ShopSettingsPageController
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-            'platformPaymentsCapture' => \App\Ark\Platform\Payments\ManagedPaymentsGate::platformCapture(),
-            'platformMailSend' => \App\Ark\Platform\Mail\ManagedMailGate::platformSend(),
+            'platformPaymentsCapture' => ManagedPaymentsGate::platformCapture(),
+            'platformMailSend' => ManagedMailGate::platformSend(),
+            'platformVoiceManaged' => ManagedVoiceGate::platformVoiceReady(),
         ]);
     }
 }

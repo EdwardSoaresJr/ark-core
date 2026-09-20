@@ -1027,6 +1027,7 @@
                     'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
                     'staff' => $staff,
                     'platformMailSend' => $platformMailSend ?? false,
+                    'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
                 ])
 
                 <section x-show="active === 'overhead'" x-cloak>

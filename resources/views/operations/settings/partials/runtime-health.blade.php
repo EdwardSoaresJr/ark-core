@@ -116,6 +116,7 @@
         @include('operations.settings.partials.communications-infrastructure', [
             'telephonyHealth' => $telephonyHealth,
             'settings' => $settings,
+            'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
         ])
     @endisset
 </section>
