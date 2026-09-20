@@ -19,7 +19,10 @@ use App\Ark\Operations\Learn\LearnArkProgressResolver;
 use App\Ark\Operations\Messaging\Events\ConversationMessageReceived;
 use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
 use App\Ark\Operations\Parts\NotConfiguredPartsCatalogLauncher;
+use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
+use App\Ark\Operations\Parts\PartsTechHttpClient;
 use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
+use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -67,6 +70,13 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
+        $this->app->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {
+            $resolver = $app->make(PartsTechCredentialsResolver::class);
+            $credentials = $resolver->forUser(auth()->user());
+
+            return new PartsTechHttpClient($credentials);
+        });
+        $this->app->scoped(PartsTechPlatformGateway::class);
         $this->app->scoped(ShopIntegrationCredentials::class, fn (): ShopIntegrationCredentials => ShopIntegrationCredentials::forCurrentShop());
         $this->app->bind(OutboundSmsTransport::class, PlatformOutboundSmsTransport::class);
         $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);

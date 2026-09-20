@@ -166,6 +166,8 @@ use App\Ark\Operations\OperationsHomeController;
 use App\Ark\Operations\OperationsIndexController;
 use App\Ark\Operations\Parts\DealerQuoteShowController;
 use App\Ark\Operations\Parts\RepairOrderDealerQuoteCaptureController;
+use App\Ark\Operations\Parts\RepairOrderPartsTechCatalogController;
+use App\Ark\Operations\Parts\RepairOrderPartsTechQuoteImportController;
 use App\Ark\Operations\Portal\PortalCustomerActivityInterruptDismissController;
 use App\Ark\Operations\Portal\RepairOrderEstimatePortalLinkController;
 use App\Ark\Operations\Portal\RepairOrderInspectionPortalLinkController;
@@ -344,16 +346,29 @@ SurfaceRouting::appRoutes(function (): void {
     })->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::middleware('auth')->group(function () {
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::patch('/profile/appearance', [ProfileController::class, 'updateAppearance'])->name('profile.appearance.update');
-        Route::patch('/profile/display-theme', [DisplayThemeController::class, 'update'])->name('profile.display-theme.update');
+        Route::get('/app/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/app/profile/appearance', [ProfileController::class, 'updateAppearance'])->name('profile.appearance.update');
+        Route::patch('/app/profile/display-theme', [DisplayThemeController::class, 'update'])->name('profile.display-theme.update');
+        Route::patch('/app/profile/partstech', [ProfileController::class, 'updatePartsTech'])->name('profile.partstech.update');
+        Route::patch('/app/profile/catalogs', [ProfileController::class, 'updateCatalogs'])->name('profile.catalogs.update');
+        Route::patch('/app/profile/workstation-pin', [ProfileController::class, 'updateWorkstationPin'])->name('profile.workstation-pin.update');
         Route::post('/app/estimate-toolbar/default', EstimateToolbarDefaultController::class)
             ->name('operations.estimate-toolbar.default');
-        Route::patch('/profile/workstation-pin', [ProfileController::class, 'updateWorkstationPin'])->name('profile.workstation-pin.update');
-        Route::post('/profile/dev-role/technician', [DevRolePretendController::class, 'technician'])->name('dev-role-pretend.technician');
-        Route::post('/profile/dev-role/clear', [DevRolePretendController::class, 'clear'])->name('dev-role-pretend.clear');
+        Route::post('/app/profile/dev-role/technician', [DevRolePretendController::class, 'technician'])->name('dev-role-pretend.technician');
+        Route::post('/app/profile/dev-role/clear', [DevRolePretendController::class, 'clear'])->name('dev-role-pretend.clear');
     });
+
+    Route::any('/profile/{path?}', function (?string $path = null) {
+        $target = '/app/profile'.(filled($path) ? '/'.$path : '');
+        $query = request()->getQueryString();
+
+        if (is_string($query) && $query !== '') {
+            $target .= '?'.$query;
+        }
+
+        return redirect()->to($target, request()->isMethodSafe() ? 301 : 307);
+    })->where('path', '.*');
 
     Route::middleware(['auth', 'permission:'.StaffFrontDoor::STAFF_SHELL_PERMISSION])->group(function () {
         Route::get('/app/today', TodayController::class)
@@ -1588,6 +1603,19 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/lines/pricing-preview', RepairOrderLinePricingPreviewController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.lines.pricing-preview');
+
+        Route::post('/app/repair-orders/{repairOrder}/partstech/prepare', [RepairOrderPartsTechCatalogController::class, 'prepare'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.partstech.prepare');
+        Route::get('/app/repair-orders/{repairOrder}/partstech', [RepairOrderPartsTechCatalogController::class, 'redirect'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.partstech');
+        Route::get('/app/repair-orders/{repairOrder}/partstech/import-quote/preview', [RepairOrderPartsTechQuoteImportController::class, 'preview'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.partstech.import.preview');
+        Route::post('/app/repair-orders/{repairOrder}/partstech/import-quote', [RepairOrderPartsTechQuoteImportController::class, 'store'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.partstech.import');
 
         Route::post('/app/repair-orders/{repairOrder}/dealer-quotes/analyze', [RepairOrderDealerQuoteCaptureController::class, 'analyze'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

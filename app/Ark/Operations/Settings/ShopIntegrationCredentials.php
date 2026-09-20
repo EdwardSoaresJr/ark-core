@@ -64,12 +64,12 @@ final class ShopIntegrationCredentials
 
     public function partsTechApiKey(): ?string
     {
-        return $this->resolve($this->settings->partstech_api_key ?? null, null);
+        return $this->resolve($this->settings->partstech_api_key ?? null, config('services.partstech.api_key'));
     }
 
     public function partsTechPassword(): ?string
     {
-        return $this->resolve($this->settings->partstech_password ?? null, null);
+        return $this->resolve($this->settings->partstech_password ?? null, config('services.partstech.password'));
     }
 
     public function partsTechCatalogConfigured(): bool
@@ -106,6 +106,14 @@ final class ShopIntegrationCredentials
             || filled($this->settings->partstech_username ?? null)
         ) {
             return 'database';
+        }
+
+        if (
+            filled(config('services.partstech.username'))
+            || filled(config('services.partstech.password'))
+            || filled(config('services.partstech.api_key'))
+        ) {
+            return 'env';
         }
 
         return 'none';
@@ -179,7 +187,21 @@ final class ShopIntegrationCredentials
             return null;
         }
 
-        return $candidate;
+        if (isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+
+        $host = strtolower((string) $parts['host']);
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+        $path = (string) ($parts['path'] ?? '');
+
+        if ($host === '' || str_contains($host, ' ')) {
+            return null;
+        }
+
+        $url = rtrim('https://'.$host.$port.$path, '/');
+
+        return $url !== 'https://' ? $url : null;
     }
 
     public function hasStoredSquareAccessToken(): bool

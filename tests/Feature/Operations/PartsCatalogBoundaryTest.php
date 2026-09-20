@@ -32,10 +32,14 @@ test('platform parts catalog driver binds without exposing partstech credentials
         ->and($credentials->partsTechCredentialSource())->toBe('none');
 });
 
-test('parts catalog routes are not registered in stock core', function () {
-    expect(\Illuminate\Support\Facades\Route::has('operations.repair-orders.partstech'))->toBeFalse()
-        ->and(\Illuminate\Support\Facades\Route::has('operations.settings.shop.partstech.update'))->toBeFalse()
-        ->and(\Illuminate\Support\Facades\Route::has('profile.partstech.update'))->toBeFalse();
+test('parts catalog routes are registered without shop-wide PartsTech secrets', function () {
+    expect(\Illuminate\Support\Facades\Route::has('operations.repair-orders.partstech'))->toBeTrue()
+        ->and(\Illuminate\Support\Facades\Route::has('operations.repair-orders.partstech.prepare'))->toBeTrue()
+        ->and(\Illuminate\Support\Facades\Route::has('operations.settings.shop.partstech.update'))->toBeTrue()
+        ->and(\Illuminate\Support\Facades\Route::has('profile.partstech.update'))->toBeTrue()
+        ->and(\Illuminate\Support\Facades\Schema::hasColumn('shop_settings', 'partstech_password'))->toBeFalse()
+        ->and(\Illuminate\Support\Facades\Schema::hasColumn('shop_settings', 'partstech_api_key'))->toBeFalse()
+        ->and(\Illuminate\Support\Facades\Schema::hasColumn('shop_settings', 'partstech_username'))->toBeFalse();
 });
 
 test('vehicle intelligence decodes vin via nhtsa only in stock core', function () {

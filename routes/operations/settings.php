@@ -2,6 +2,8 @@
 
 use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Import\ShopCsv\ShopCsvImportController;
+use App\Ark\Operations\Payments\SquareTerminalDeviceCodeController;
+use App\Ark\Operations\Workboard\JobBoardLaneSettingsController;
 use App\Ark\Operations\Appointments\RemoveScheduleBayController;
 use App\Ark\Operations\Appointments\StoreScheduleBayController;
 use App\Ark\Operations\Appointments\UpdateScheduleBayController;
@@ -69,6 +71,24 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/payments', [ShopIntegrationSettingsController::class, 'updatePayments'])
         ->name('operations.settings.shop.payments.update');
 
+    Route::post('/app/settings/shop/payments/square-terminal-device-code', [SquareTerminalDeviceCodeController::class, 'store'])
+        ->name('operations.settings.shop.payments.square-terminal-device-code.store');
+
+    Route::get('/app/settings/shop/payments/square-terminal-device-code/{deviceCodeId}', [SquareTerminalDeviceCodeController::class, 'show'])
+        ->name('operations.settings.shop.payments.square-terminal-device-code.show');
+
+    Route::patch('/app/settings/shop/partstech', [ShopIntegrationSettingsController::class, 'updatePartsTech'])
+        ->name('operations.settings.shop.partstech.update');
+
+    Route::patch('/app/settings/shop/repairlink', [ShopIntegrationSettingsController::class, 'updateRepairLink'])
+        ->name('operations.settings.shop.repairlink.update');
+
+    Route::patch('/app/settings/shop/nexpart', [ShopIntegrationSettingsController::class, 'updateNexpart'])
+        ->name('operations.settings.shop.nexpart.update');
+
+    Route::patch('/app/settings/shop/catalog-links', [ShopIntegrationSettingsController::class, 'updateCatalogLinks'])
+        ->name('operations.settings.shop.catalog-links.update');
+
     Route::patch('/app/settings/shop/email', [ShopIntegrationSettingsController::class, 'updateEmail'])
         ->name('operations.settings.shop.email.update');
 
@@ -108,6 +128,9 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/customer-messaging', [ShopCommunicationsSettingsController::class, 'updateCustomerMessaging'])
         ->name('operations.settings.shop.customer-messaging.update');
 
+    Route::patch('/app/settings/shop/telephony', [ShopCommunicationsSettingsController::class, 'updateTelephony'])
+        ->name('operations.settings.shop.telephony.update');
+
     Route::post('/app/settings/telephony/test-incoming-call', SimulateIncomingCallController::class)
         ->name('operations.settings.telephony.test-incoming-call');
 
@@ -137,6 +160,9 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
 
     Route::post('/app/settings/shop/operational-profile', [ShopOperationsSettingsController::class, 'applyOperationalProfile'])
         ->name('operations.settings.shop.operational-profile.apply');
+
+    Route::patch('/app/settings/shop/job-board-lanes', JobBoardLaneSettingsController::class)
+        ->name('operations.settings.shop.job-board-lanes.update');
 
     Route::patch('/app/settings/shop/status-catalog', RepairOrderStatusCatalogSettingsController::class)
         ->name('operations.settings.shop.status-catalog.update');
