@@ -1,0 +1,77 @@
+# NOTICE
+
+ARK — shop management software for independent repair shops.
+
+**Copyright (C) 2026 Edward Soares Jr.**
+
+ARK is licensed under the GNU Affero General Public License
+version 3 only (`AGPL-3.0-only`). See the file `LICENSE` in the repository root.
+
+Additional copyright may belong to contributors who submit changes under the
+same license. Third-party components retain their own copyrights and licenses
+(see below).
+
+## Project license (project decision — not legal advice)
+
+ARK (this repository, excluding third-party components) is licensed under the
+**GNU Affero General Public License version 3 only** (`AGPL-3.0-only`).
+
+This NOTICE documents third-party materials that ARK uses or optionally
+installs. It is a **project licensing decision record**, not legal advice.
+ARK’s AGPL license does **not** relicense third-party packages; those packages
+remain under their own licenses.
+
+Brand and naming: see `TRADEMARKS.md`.
+
+---
+
+## Preline UI (`preline` npm dependency)
+
+ARK’s operator UI may load Preline UI (MIT **and** Preline UI Fair Use License).
+
+- Author: Preline Labs Ltd.
+- Website: https://preline.co
+- Repository: https://github.com/htmlstreamofficial/preline
+
+Redistribution of Preline (including when bundled into ARK frontend assets)
+must retain Preline’s MIT copyright notice and the Preline UI Fair Use License
+terms. ARK uses Preline as UI infrastructure for an end-user shop product; it
+is not redistributed as a competing Preline-compatible UI kit.
+
+Full Preline license text ships with the npm package (`node_modules/preline/LICENSE`
+after `npm install`) and is also published at https://preline.co/docs/license.html.
+
+---
+
+## `smalot/pdfparser` (Composer — LGPL-3.0)
+
+Used unmodified via Composer for dealer-quote PDF text extraction
+(`DealerQuoteTextExtractor`). Source is available from Packagist / the
+upstream project. LGPL obligations for this library apply to the library itself.
+
+---
+
+## Nette (`nette/schema`, `nette/utils`) — transitive via League CommonMark
+
+Pulled transitively through `league/commonmark` → `league/config`. Upstream
+packages are dual-licensed (BSD-3-Clause **or** GPL). ARK consumes them as
+unmodified Composer dependencies through League’s stack; retain upstream
+license texts from `vendor/` when redistributing a built tree.
+
+---
+
+## Payments
+
+ARK Core records external and manual payments on the repair-order ledger.
+Managed card processors are not bundled with Core. Online processor connectivity
+belongs to ARK Cloud Payments (future). See `docs/platform/ark-payments-boundary-v1.md`.
+
+---
+
+## Other Composer / npm dependencies
+
+Additional open-source packages are declared in `composer.json` / `composer.lock`
+and `package.json` / `package-lock.json`. Their license metadata is recorded
+in those lockfiles and in each package’s own LICENSE files under `vendor/` or
+`node_modules/` after install. This NOTICE highlights the notices most relevant
+to ARK’s redistribution posture rather than duplicating every lockfile entry.

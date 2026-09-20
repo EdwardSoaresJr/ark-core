@@ -1,0 +1,111 @@
+{
+  "version": "0.1",
+  "description": "Edward's real Demo Auto Repair shop-owner phrases — routing/behavior expectations, not exact wording.",
+  "cases": [
+    {
+      "id": "landon_have",
+      "utterance": "What does Landon have?",
+      "expected_intent": "technician_work",
+      "expected_route": "technician_work",
+      "expected_entity": "Landon",
+      "must_use_ark": true,
+      "must_not_use_knowledge": true,
+      "forbidden_denial_class": ["no_ark_access", "limited_ark"]
+    },
+    {
+      "id": "landon_got",
+      "utterance": "What's Landon got?",
+      "expected_intent": "technician_work",
+      "expected_route": "technician_work",
+      "expected_entity": "Landon",
+      "must_use_ark": true,
+      "must_not_use_knowledge": true,
+      "forbidden_denial_class": ["no_ark_access", "limited_ark"]
+    },
+    {
+      "id": "going_on_today",
+      "utterance": "What's going on today?",
+      "expected_intent": "shop_summary",
+      "expected_route": "shop_summary",
+      "must_use_ark": true,
+      "must_not_use_knowledge": true,
+      "forbidden_denial_class": ["no_ark_access", "limited_ark"]
+    },
+    {
+      "id": "shop_look",
+      "utterance": "How does the shop look?",
+      "expected_intent": "shop_summary",
+      "expected_route": "shop_summary",
+      "must_use_ark": true,
+      "must_not_use_knowledge": true,
+      "forbidden_denial_class": ["no_ark_access"]
+    },
+    {
+      "id": "subaru",
+      "utterance": "Tell me about the Subaru.",
+      "expected_intent": "vehicle_or_ro_lookup",
+      "expected_route": ["vehicle_or_ro_lookup", "repair_order_lookup"],
+      "must_use_ark": true,
+      "must_not_use_knowledge": true,
+      "forbidden_denial_class": ["no_ark_access"]
+    },
+    {
+      "id": "outback",
+      "utterance": "What's up with the Outback?",
+      "expected_intent": "vehicle_or_ro_lookup",
+      "expected_route": ["vehicle_or_ro_lookup", "repair_order_lookup"],
+      "must_use_ark": true,
+      "must_not_use_knowledge": true
+    },
+    {
+      "id": "molly_waiting",
+      "utterance": "What's waiting on Molly?",
+      "expected_intent": "advisor_focus",
+      "expected_route": "advisor_focus",
+      "expected_entity": "Molly",
+      "must_use_ark": true,
+      "must_not_use_knowledge": true
+    },
+    {
+      "id": "molly_focus",
+      "utterance": "What should Molly focus on?",
+      "expected_intent": "advisor_focus",
+      "expected_route": "advisor_focus",
+      "expected_entity": "Molly",
+      "must_use_ark": true,
+      "must_not_use_knowledge": true
+    },
+    {
+      "id": "see_in_ark",
+      "utterance": "What can you see in ARK?",
+      "expected_intent": "ark_capability_inquiry",
+      "expected_route": "capability_inquiry",
+      "must_use_ark": false,
+      "forbidden_denial_class": ["ask_sales_team", "invented_tools"]
+    },
+    {
+      "id": "ark_tools",
+      "utterance": "What ARK tools do you have?",
+      "expected_intent": "ark_capability_inquiry",
+      "expected_route": "capability_inquiry",
+      "must_use_ark": false,
+      "forbidden_denial_class": ["invented_tools"]
+    },
+    {
+      "id": "sales_today",
+      "utterance": "How much did we do in sales today?",
+      "expected_intent": "unsupported_data_question",
+      "expected_route": "unsupported_ark_surface",
+      "unsupported_data": "sales_totals",
+      "forbidden_denial_class": ["no_ark_access", "ask_sales_team"]
+    },
+    {
+      "id": "changed_yesterday",
+      "utterance": "What's changed since yesterday?",
+      "expected_intent": "unsupported_data_question",
+      "expected_route": "unsupported_ark_surface",
+      "unsupported_data": "event_change_history",
+      "forbidden_denial_class": ["no_ark_access", "fake_history"]
+    }
+  ]
+}

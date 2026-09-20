@@ -1,0 +1,61 @@
+# Vultr / public VPS overlay — HTTPS via Caddy + small-host memory tuning.
+#
+# Usage:
+#   export ARK_DOMAIN=ark.yourshop.com
+#   export ARK_ADMIN_EMAIL=you@yourshop.com
+#   docker compose -f docker-compose.yml -f docker-compose.vultr.yml up -d --build
+#
+# Requires DNS A record for ARK_DOMAIN → this server, and ports 80/443 open.
+
+services:
+  mysql:
+    # Public VPS: MySQL stays on the Compose network only (no host :3307).
+    ports: !override []
+    volumes:
+      - ./docker/mysql/small-vps.cnf:/etc/mysql/conf.d/small-vps.cnf:ro
+    command:
+      - --innodb-buffer-pool-size=256M
+      - --innodb-buffer-pool-instances=1
+      - --performance-schema=OFF
+      - --max-connections=50
+
+  redis:
+    command:
+      - redis-server
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --save
+      - "60"
+      - "1000"
+
+  app:
+    # Do not publish :8088 on the host when Caddy terminates HTTPS.
+    ports: !override []
+    environment:
+      APP_URL: https://${ARK_DOMAIN}
+      SHOP_BASE_URL: https://${ARK_DOMAIN}
+      REVERB_SCHEME: https
+      REVERB_PORT: "443"
+      REVERB_HOST: ${ARK_DOMAIN}
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ARK_DOMAIN: ${ARK_DOMAIN:?Set ARK_DOMAIN to your hostname, e.g. ark.yourshop.com}
+      ARK_ADMIN_EMAIL: ${ARK_ADMIN_EMAIL:-admin@example.com}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ark_caddy_data:/data
+      - ark_caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  ark_caddy_data:
+  ark_caddy_config:

@@ -1,0 +1,131 @@
+# Self-host stack.
+#
+#   docker compose up -d --build
+#   open http://localhost:8088 → /setup
+#
+# Services:
+#   install-bootstrap — generates per-install secrets before MySQL starts
+#   mysql             — application database (durable volume)
+#   redis             — cache, sessions, queues (Horizon)
+#   app               — nginx, php-fpm, Horizon, Reverb, scheduler
+#
+# Durable shop state (backup/restore these together):
+#   ark_mysql   — MySQL operational database
+#   ark_secrets — per-install APP_KEY, DB passwords, Reverb credentials
+#   ark_storage — uploaded media, install identity, persisted files
+#
+# Ephemeral runtime (do not treat as irreplaceable shop truth):
+#   ark_redis   — cache / optional session+queue transport; safe to rebuild empty
+#   containers, compiled views, logs
+#
+# See docs/installation/portable-state.md
+#
+# Database username is `ark`. Passwords are generated on first boot and are
+# not listed here. The setup wizard uses the runtime connection automatically.
+#
+# Public VPS overlay (HTTPS, no published MySQL port): docker-compose.vultr.yml
+
+services:
+  install-bootstrap:
+    image: alpine:3.20
+    restart: "no"
+    volumes:
+      - ark_secrets:/ark/secrets
+      - ark_mysql:/var/lib/mysql
+      - ./docker/selfhost/bootstrap-install-secrets.sh:/ark/bootstrap-install-secrets.sh:ro
+    command: ["/bin/sh", "/ark/bootstrap-install-secrets.sh"]
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ark
+      MYSQL_USER: ark
+    ports:
+      # Host-side tools only — app uses mysql:3306 on the Compose network
+      - "3307:3306"
+    volumes:
+      - ark_mysql:/var/lib/mysql
+      - ark_secrets:/run/ark/secrets:ro
+      - ./docker/selfhost/mysql-with-secrets.sh:/ark/mysql-with-secrets.sh:ro
+      - ./docker/selfhost/mysql-healthcheck.sh:/ark/mysql-healthcheck.sh:ro
+    entrypoint: ["/bin/sh", "/ark/mysql-with-secrets.sh"]
+    command: ["mysqld"]
+    depends_on:
+      install-bootstrap:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/ark/mysql-healthcheck.sh"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - ark_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-compose}
+    ports:
+      # Prefer 8088: host 8080 is commonly taken by other local tools.
+      - "8088:80"
+    environment:
+      APP_NAME: ARK
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8088
+      SHOP_BASE_URL: http://localhost:8088
+      ARK_MANAGED_DATABASE: "true"
+
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: ark
+      DB_USERNAME: ark
+
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      BROADCAST_CONNECTION: reverb
+
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: "9090"
+      REVERB_BROADCAST_HOST: 127.0.0.1
+      REVERB_BROADCAST_PORT: "9090"
+      REVERB_SCHEME: http
+      REVERB_PORT: "8088"
+
+      LOG_CHANNEL: stderr
+
+      PDF_NODE_BINARY: /usr/bin/node
+      PDF_NPM_BINARY: /usr/bin/npm
+      PUPPETEER_CACHE_DIR: /app/puppeteer-cache
+      PDF_NO_SANDBOX: "true"
+    volumes:
+      - ark_storage:/app/storage
+      - ark_secrets:/run/ark/secrets:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  ark_secrets:
+  ark_mysql:
+  ark_redis:
+  ark_storage:

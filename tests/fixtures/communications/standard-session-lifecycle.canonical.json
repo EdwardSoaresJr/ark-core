@@ -1,0 +1,25 @@
+[
+  {
+    "type": "session_started",
+    "payload": {}
+  },
+  {
+    "type": "session_answered",
+    "payload": {}
+  },
+  {
+    "type": "session_transferred",
+    "payload": {
+      "from_user_name": "Alex Rivera",
+      "to_user_name": "Molly Advisor"
+    }
+  },
+  {
+    "type": "session_held",
+    "payload": {}
+  },
+  {
+    "type": "session_ended",
+    "payload": {}
+  }
+]

@@ -1,0 +1,12 @@
+# Memory-conscious MySQL defaults for small self-host VPS (≈2 GB RAM).
+# Loaded only when using docker-compose.vultr.yml.
+
+[mysqld]
+innodb_buffer_pool_size=256M
+innodb_buffer_pool_instances=1
+performance_schema=OFF
+max_connections=50
+table_open_cache=200
+tmp_table_size=32M
+max_heap_table_size=32M
+skip_name_resolve=ON

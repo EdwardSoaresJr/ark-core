@@ -1,0 +1,13 @@
+{
+	email {$ARK_ADMIN_EMAIL}
+}
+
+{$ARK_DOMAIN} {
+	encode gzip
+	reverse_proxy app:80 {
+		transport http {
+			read_timeout 10m
+			write_timeout 10m
+		}
+	}
+}

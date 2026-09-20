@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  OPTIONAL — not installed by default.
+
+  Ephemeral posture (recommended): use start-build-session.sh / stop-build-session.sh instead.
+
+  To install always-on runner:
+    1. Edit paths below if RUNNER_DIR differs
+    2. cp com.github.ark.builder.plist.example ~/Library/LaunchAgents/com.github.ark.builder.plist
+    3. launchctl load ~/Library/LaunchAgents/com.github.ark.builder.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.github.ark.builder</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>open -a Docker &amp;&amp; sleep 30 &amp;&amp; cd $HOME/actions-runner &amp;&amp; ./run.sh</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>$HOME/ARK/github-runner/ark-build-01/runner.log</string>
+    <key>StandardErrorPath</key>
+    <string>$HOME/actions-runner/launchd.err.log</string>
+</dict>
+</plist>

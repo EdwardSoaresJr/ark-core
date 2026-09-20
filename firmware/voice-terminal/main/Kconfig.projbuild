@@ -1,0 +1,42 @@
+menu "ARK Voice Terminal"
+
+    config ARK_WIFI_SSID
+        string "Shop Wi-Fi SSID"
+
+    config ARK_WIFI_PASSWORD
+        string "Shop Wi-Fi password"
+        default ""
+
+    config ARK_LAB_URL
+        string "Lab utterance URL"
+        default "http://192.168.1.10/api/voice/lab/utterance"
+
+    config ARK_LAB_SECRET
+        string "VOICE_LAB_SECRET"
+        default ""
+
+    config ARK_MIC_NAME
+        string "Mic id for X-Voice-Mic"
+        default "sph0645"
+
+    config ARK_I2S_BCLK_GPIO
+        int "I2S BCLK GPIO"
+        default 15
+
+    config ARK_I2S_WS_GPIO
+        int "I2S WS GPIO"
+        default 16
+
+    config ARK_I2S_SD_GPIO
+        int "I2S SD GPIO"
+        default 17
+
+    config ARK_PTT_GPIO
+        int "PTT GPIO (active low)"
+        default 6
+
+    config ARK_LED_GPIO
+        int "Status LED GPIO"
+        default 48
+
+endmenu

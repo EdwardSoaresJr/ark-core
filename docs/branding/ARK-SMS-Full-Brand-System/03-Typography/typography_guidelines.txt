@@ -1,0 +1,28 @@
+ARK-SMS TYPOGRAPHY SYSTEM
+
+Primary Font Recommendation:
+Inter (Preferred)
+Fallback: system-ui, -apple-system, BlinkMacSystemFont
+
+Hierarchy:
+
+ARK-SMS (Brand Headline)
+Weight: 700 (Bold)
+Letter-spacing: Normal
+
+AUTO REPAIR KEEPER
+Weight: 500 (Medium)
+Letter-spacing: +2 to +4
+
+SHOP MANAGEMENT SYSTEM
+Weight: 300 (Light)
+Letter-spacing: +20
+
+Body Text:
+Weight: 400
+Line-height: 1.5 – 1.7
+
+RULES:
+• Avoid automotive “block” fonts.
+• Maintain generous whitespace.
+• Never distort logo typography.
