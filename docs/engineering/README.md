@@ -9,6 +9,6 @@
 | [adr/](adr/) | Accepted decisions — do not edit; supersede |
 | [TECHNICAL_DEBT.md](TECHNICAL_DEBT.md) | Known debt to retire |
 
-| [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md) | Public ARK is canonical Core; `arksmsv2` is legacy |
+| [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md) | Public ARK is canonical Core; production runs it; `arksmsv2` is a fallback |
 
-Do not develop Core in `arksmsv2`. Confirm this tree with `./scripts/assert-canonical-core-repo.sh`.
+Do not develop Core in `arksmsv2`. Confirm this tree with `./scripts/assert-canonical-core-repo.sh`. Production images require `SOURCE_COMMIT`.
