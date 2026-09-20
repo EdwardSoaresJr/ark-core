@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\Payments;
 
-use App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction;
 use App\Ark\Platform\Payments\ArkPaymentsClient;
 use App\Ark\Platform\PlatformConnection;
 use RuntimeException;
@@ -12,7 +11,6 @@ final class RequestPlatformPaymentCaptureAction
     public function __construct(
         private readonly ArkPaymentsClient $payments,
         private readonly CardPresentCaptureProjection $capture,
-        private readonly ApplyPaymentCaptureResultAction $apply,
     ) {}
 
     public function execute(PaymentGatewayAttempt $attempt, ?string $sourceToken = null): PaymentGatewayAttempt
@@ -68,14 +66,24 @@ final class RequestPlatformPaymentCaptureAction
 
         $status = strtolower((string) ($result['status'] ?? ''));
         if ($status === 'failed') {
-            $applied = $this->apply->apply($attempt->refresh(), $result);
+            $attempt->forceFill([
+                'status' => PaymentGatewayAttemptStatus::Failed,
+                'failure_reason' => (string) ($result['message'] ?? $result['reason_code'] ?? 'Card capture failed.'),
+                'completed_at' => now(),
+            ])->save();
             throw new SquarePaymentRequestException(
-                (string) ($applied->failure_reason ?? $result['message'] ?? 'Card capture failed.')
+                (string) ($attempt->failure_reason ?? 'Card capture failed.')
             );
         }
 
         if (in_array($status, ['cancelled', 'canceled'], true)) {
-            return $this->apply->apply($attempt->refresh(), $result);
+            $attempt->forceFill([
+                'status' => PaymentGatewayAttemptStatus::Canceled,
+                'failure_reason' => (string) ($result['message'] ?? $result['reason_code'] ?? 'Card capture canceled.'),
+                'completed_at' => now(),
+            ])->save();
+
+            return $attempt->refresh();
         }
 
         $refs = is_array($result['provider_refs'] ?? null) ? $result['provider_refs'] : [];
@@ -85,7 +93,12 @@ final class RequestPlatformPaymentCaptureAction
         }
 
         if ($status === 'succeeded') {
-            return $this->apply->apply($attempt->refresh(), $result);
+            $attempt->forceFill([
+                'status' => PaymentGatewayAttemptStatus::Completed,
+                'completed_at' => now(),
+            ])->save();
+
+            return $attempt->refresh();
         }
 
         if ($status === 'reconciliation_required') {

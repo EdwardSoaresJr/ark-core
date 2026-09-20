@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\Payments;
 
-use App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction;
 use App\Ark\Platform\Payments\ArkPaymentsClient;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +10,6 @@ final class PollPlatformPaymentCaptureAction
 {
     public function __construct(
         private readonly ArkPaymentsClient $payments,
-        private readonly ApplyPaymentCaptureResultAction $apply,
     ) {}
 
     public function execute(PaymentGatewayAttempt $attempt, ?User $actor = null): PaymentGatewayAttempt
@@ -31,6 +29,27 @@ final class PollPlatformPaymentCaptureAction
             return $attempt;
         }
 
-        return $this->apply->apply($attempt, $result);
+        $status = strtolower((string) ($result['status'] ?? ''));
+
+        if ($status === 'succeeded') {
+            $attempt->forceFill([
+                'status' => PaymentGatewayAttemptStatus::Completed,
+                'completed_at' => now(),
+            ])->save();
+        } elseif ($status === 'failed') {
+            $attempt->forceFill([
+                'status' => PaymentGatewayAttemptStatus::Failed,
+                'failure_reason' => (string) ($result['message'] ?? $result['reason_code'] ?? 'Card capture failed.'),
+                'completed_at' => now(),
+            ])->save();
+        } elseif (in_array($status, ['cancelled', 'canceled'], true)) {
+            $attempt->forceFill([
+                'status' => PaymentGatewayAttemptStatus::Canceled,
+                'failure_reason' => (string) ($result['message'] ?? $result['reason_code'] ?? 'Card capture canceled.'),
+                'completed_at' => now(),
+            ])->save();
+        }
+
+        return $attempt->refresh();
     }
 }

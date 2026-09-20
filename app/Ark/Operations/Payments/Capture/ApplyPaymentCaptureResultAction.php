@@ -2,108 +2,113 @@
 
 namespace App\Ark\Operations\Payments\Capture;
 
-use App\Ark\Operations\Payments\PaymentGatewayAttempt;
-use App\Ark\Operations\Payments\PaymentGatewayAttemptStatus;
-use App\Ark\Operations\Payments\SquareAttemptCompleter;
-use Illuminate\Support\Facades\Log;
+use App\Ark\Operations\Financial\BalanceDueCalculator;
+use App\Ark\Operations\Financial\PaymentMethod;
+use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * Applies a verified Cloud capture result to Core financial authority — once.
+ */
 final class ApplyPaymentCaptureResultAction
 {
     public function __construct(
-        private readonly SquareAttemptCompleter $completer,
+        private readonly RecordLedgerEntryAction $ledger,
+        private readonly BalanceDueCalculator $balanceDue,
     ) {}
 
     /**
-     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $result
      */
-    public function apply(PaymentGatewayAttempt $attempt, array $payload): PaymentGatewayAttempt
+    public function apply(PaymentCaptureAttempt $attempt, array $result): PaymentCaptureAttempt
     {
-        $status = strtolower((string) ($payload['status'] ?? ''));
-        $providerPaymentId = trim((string) ($payload['provider_payment_id'] ?? ''));
-        $amountCents = (int) ($payload['amount_cents'] ?? $attempt->amount_cents);
-        $reason = is_string($payload['reason_code'] ?? null) ? (string) $payload['reason_code'] : null;
-        $message = is_string($payload['message'] ?? null) ? (string) $payload['message'] : $reason;
-        $refs = is_array($payload['provider_refs'] ?? null) ? $payload['provider_refs'] : [];
-        $checkoutId = isset($refs['terminal_checkout_id']) ? (string) $refs['terminal_checkout_id'] : null;
+        return DB::transaction(function () use ($attempt, $result) {
+            /** @var PaymentCaptureAttempt $locked */
+            $locked = PaymentCaptureAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
 
-        if ($checkoutId !== null && $checkoutId !== '' && $attempt->square_checkout_id === null) {
-            $attempt->forceFill(['square_checkout_id' => $checkoutId])->save();
-            $attempt = $attempt->refresh();
-        }
+            $status = PaymentCaptureAttemptStatus::tryFrom((string) ($result['status'] ?? ''))
+                ?? $locked->status;
 
-        return match ($status) {
-            'succeeded' => $this->succeed($attempt, $providerPaymentId, $amountCents),
-            'failed' => $this->fail($attempt, $message ?? 'Card capture failed.'),
-            'cancelled', 'canceled' => $this->cancel($attempt, $message ?? 'Card capture canceled.'),
-            default => $attempt->refresh(),
-        };
+            $locked->cloud_capture_id = (string) ($result['capture_id'] ?? $locked->cloud_capture_id);
+            $locked->provider = (string) ($result['provider'] ?? $locked->provider ?? 'platform');
+            $locked->provider_payment_id = isset($result['provider_payment_id'])
+                ? (string) $result['provider_payment_id']
+                : $locked->provider_payment_id;
+            if (isset($result['provider_refs']) && is_array($result['provider_refs'])) {
+                $locked->provider_refs = $result['provider_refs'];
+            }
+            if (isset($result['reason_code']) && $status !== PaymentCaptureAttemptStatus::Succeeded) {
+                $locked->failure_reason = (string) $result['reason_code'];
+            }
+
+            if ($locked->hasLedgerEntry()) {
+                $locked->status = PaymentCaptureAttemptStatus::Succeeded;
+                $locked->completed_at ??= now();
+                $locked->save();
+
+                return $locked->fresh();
+            }
+
+            if ($status === PaymentCaptureAttemptStatus::Succeeded) {
+                $entryId = $this->recordMoney($locked);
+                $locked->ledger_entry_id = $entryId;
+                $locked->status = PaymentCaptureAttemptStatus::Succeeded;
+                $locked->completed_at = now();
+                $locked->failure_reason = null;
+                $locked->save();
+
+                return $locked->fresh(['ledgerEntry']);
+            }
+
+            $locked->status = $status;
+            if (in_array($status, [
+                PaymentCaptureAttemptStatus::Failed,
+                PaymentCaptureAttemptStatus::Cancelled,
+            ], true)) {
+                $locked->completed_at = now();
+            }
+            $locked->save();
+
+            return $locked->fresh();
+        });
     }
 
-    private function succeed(
-        PaymentGatewayAttempt $attempt,
-        string $providerPaymentId,
-        int $amountCents,
-    ): PaymentGatewayAttempt {
-        if ($attempt->status === PaymentGatewayAttemptStatus::Completed) {
-            return $attempt;
+    private function recordMoney(PaymentCaptureAttempt $attempt): int
+    {
+        $repairOrder = RepairOrder::query()->findOrFail($attempt->repair_order_id);
+        $repairOrder->ensureOpenForEditing();
+        $actor = $attempt->initiated_by
+            ? User::query()->find($attempt->initiated_by)
+            : null;
+        $reference = 'capture:'.$attempt->public_id;
+
+        if ($attempt->context_kind === PaymentCaptureContextKind::Deposit) {
+            $entry = $this->ledger->recordDeposit(
+                $repairOrder,
+                $attempt->amount_cents,
+                PaymentMethod::Card,
+                $actor,
+                $reference,
+            );
+
+            return $entry->id;
         }
 
-        if ($providerPaymentId === '') {
-            Log::warning('ark_payments.capture.succeeded_without_provider_id', [
-                'attempt_id' => $attempt->id,
-            ]);
+        $entries = $this->ledger->recordPayment(
+            $repairOrder,
+            $attempt->amount_cents,
+            PaymentMethod::Card,
+            $actor,
+            $reference,
+        );
 
-            return $attempt;
-        }
-
-        if ($amountCents !== $attempt->amount_cents) {
-            Log::warning('ark_payments.capture.amount_mismatch', [
-                'attempt_id' => $attempt->id,
-                'expected_cents' => $attempt->amount_cents,
-                'reported_cents' => $amountCents,
-            ]);
-
-            return $attempt;
-        }
-
-        return $this->completer->execute($attempt, $providerPaymentId, $amountCents);
+        return $entries[0]->id;
     }
 
-    private function fail(PaymentGatewayAttempt $attempt, string $reason): PaymentGatewayAttempt
+    public function balanceAfter(RepairOrder $repairOrder): int
     {
-        if ($attempt->status === PaymentGatewayAttemptStatus::Completed) {
-            return $attempt;
-        }
-
-        if ($attempt->status->isTerminal()) {
-            return $attempt;
-        }
-
-        $attempt->forceFill([
-            'status' => PaymentGatewayAttemptStatus::Failed,
-            'failure_reason' => $reason,
-            'completed_at' => now(),
-        ])->save();
-
-        return $attempt->refresh();
-    }
-
-    private function cancel(PaymentGatewayAttempt $attempt, string $reason): PaymentGatewayAttempt
-    {
-        if ($attempt->status === PaymentGatewayAttemptStatus::Completed) {
-            return $attempt;
-        }
-
-        if ($attempt->status->isTerminal()) {
-            return $attempt;
-        }
-
-        $attempt->forceFill([
-            'status' => PaymentGatewayAttemptStatus::Canceled,
-            'failure_reason' => $reason,
-            'completed_at' => now(),
-        ])->save();
-
-        return $attempt->refresh();
+        return $this->balanceDue->forRepairOrder($repairOrder->fresh())->balanceDueCents;
     }
 }
