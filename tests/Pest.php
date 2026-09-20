@@ -33,6 +33,7 @@ require_once __DIR__.'/Support/HostedTransactionalSms.php';
 require_once __DIR__.'/Support/HostedPlatformPayments.php';
 require_once __DIR__.'/Support/HostedPlatformParts.php';
 require_once __DIR__.'/Support/HostedPlatformMail.php';
+require_once __DIR__.'/Support/RteWorksheetFixture.php';
 
 /*
 |--------------------------------------------------------------------------
