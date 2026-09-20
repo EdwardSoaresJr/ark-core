@@ -43,6 +43,7 @@
                 <h2 class="mt-1 text-lg font-black text-slate-950">Parts catalog</h2>
                 <p class="mt-1 text-xs leading-5 text-slate-500">
                     This shop does not store a shop-wide PartsTech password. Connect ARK Platform for shop catalog access. Optional personal seats stay on each person’s profile (avatar menu → Profile).
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold text-slate-700 underline">Connect in ARK Platform</a>
                 </p>
             </div>
             <form method="POST" action="{{ route('operations.settings.shop.partstech.update') }}" class="max-w-xs">

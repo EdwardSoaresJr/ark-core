@@ -43,7 +43,9 @@
                 <div class="border-b border-slate-200 pb-2">
                     <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Email reply-to</p>
                     <p class="mt-1 text-xs leading-5 text-slate-500">
-                        Customer replies to estimate and invoice email go here. Connect ARK Email in ARK Platform to send outbound email.
+                        Customer replies to estimate and invoice email go here.
+                        <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold underline">Connect ARK Email in ARK Platform</a>
+                        to send outbound email.
                     </p>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">

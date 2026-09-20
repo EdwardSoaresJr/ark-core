@@ -16,6 +16,7 @@
                 <p class="mt-1 text-xs leading-5 text-slate-500">
                     Connect ARK Payments to take cards in ARK. You can always record a card, cash, or check taken at the counter.
                     Merchant credentials and reader pairing are not configured in Core.
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold text-slate-700 underline">Connect in ARK Platform</a>
                 </p>
             @endif
         </div>

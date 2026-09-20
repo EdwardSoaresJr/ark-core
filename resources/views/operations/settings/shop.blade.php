@@ -214,6 +214,7 @@
                     <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
                     <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
                     <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
+                    <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
                     <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
                     <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
                     <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
@@ -1029,6 +1030,8 @@
                     'platformMailSend' => $platformMailSend ?? false,
                     'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
                 ])
+
+                @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
 
                 <section x-show="active === 'overhead'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">

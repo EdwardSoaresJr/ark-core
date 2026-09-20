@@ -15,6 +15,7 @@
         @unless ($mailReady)
             <p class="mt-2 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
                 Outbound customer email is not connected. You can still set reply-to. Messages will not send until ARK Email is connected.
+                <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold underline">Connect in ARK Platform</a>
             </p>
         @endunless
     </div>

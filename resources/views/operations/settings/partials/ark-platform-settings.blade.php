@@ -30,7 +30,7 @@
             <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">ARK Platform</p>
             <h2 class="text-base font-black text-slate-950">Managed ARK services</h2>
             <p class="mt-0.5 text-xs leading-5 text-slate-500">
-                Connect this Box to ARK Platform for Email, Texting, Voice, and other managed services. Core keeps shop operations; Cloud owns service configuration.
+                Connect this Box to ARK Platform for Email, Texting, Voice, and other managed services. Shop work stays in ARK. Service accounts are managed in ARK Platform.
             </p>
         </div>
 
@@ -105,7 +105,7 @@
                     <form method="POST" action="{{ route('operations.settings.shop.ark-cloud.connect-manual') }}" class="mt-2">
                         @csrf
                         <button type="submit" class="inline-flex min-h-8 items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                            Generate pairing code
+                            Create pairing code
                         </button>
                     </form>
                 </details>
