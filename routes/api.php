@@ -68,6 +68,9 @@ use App\Ark\Mobile\Http\MobileRepairOrderLifecycleController;
 use App\Ark\Mobile\Http\MobileRepairOrderLineDestroyController;
 use App\Ark\Mobile\Http\MobileRepairOrderLineStoreController;
 use App\Ark\Mobile\Http\MobileRepairOrderLineUpdateController;
+use App\Ark\Mobile\Http\MobileRepairOrderPaymentCaptureCancelController;
+use App\Ark\Mobile\Http\MobileRepairOrderPaymentCaptureRefreshController;
+use App\Ark\Mobile\Http\MobileRepairOrderPaymentCaptureStoreController;
 use App\Ark\Mobile\Http\MobileRepairOrderPaymentStoreController;
 use App\Ark\Mobile\Http\MobileRepairOrderRefundStoreController;
 use App\Ark\Mobile\Http\MobileRepairOrderShowController;
@@ -179,6 +182,12 @@ Route::prefix('mobile')->name('api.mobile.')->group(function (): void {
             ->name('repair-orders.inspection-portal-preview');
         Route::patch('/repair-orders/{repairOrder}/payment', MobileRepairOrderPaymentStoreController::class)
             ->name('repair-orders.payment.store');
+        Route::post('/repair-orders/{repairOrder}/payment-capture', MobileRepairOrderPaymentCaptureStoreController::class)
+            ->name('repair-orders.payment-capture.store');
+        Route::post('/repair-orders/{repairOrder}/payment-capture/{attempt}/refresh', MobileRepairOrderPaymentCaptureRefreshController::class)
+            ->name('repair-orders.payment-capture.refresh');
+        Route::delete('/repair-orders/{repairOrder}/payment-capture/{attempt}', MobileRepairOrderPaymentCaptureCancelController::class)
+            ->name('repair-orders.payment-capture.destroy');
         Route::patch('/repair-orders/{repairOrder}/deposit', MobileRepairOrderDepositStoreController::class)
             ->name('repair-orders.deposit.store');
         Route::patch('/repair-orders/{repairOrder}/refund', MobileRepairOrderRefundStoreController::class)

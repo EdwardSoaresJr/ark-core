@@ -151,6 +151,26 @@ final class InitiatePaymentCaptureAction
         return $this->applyResult->apply($attempt, $response['body']);
     }
 
+    public function cancelFromCloud(PaymentCaptureAttempt $attempt): PaymentCaptureAttempt
+    {
+        if ($attempt->hasLedgerEntry() || ! $attempt->status->isOpen()) {
+            return $attempt;
+        }
+
+        $response = $this->client->cancelCapture($attempt->idempotency_key);
+
+        if (($response['unavailable'] ?? false) === true) {
+            return $attempt;
+        }
+
+        $payload = $response['body'];
+        if (! isset($payload['status'])) {
+            $payload['status'] = PaymentCaptureAttemptStatus::Cancelled->value;
+        }
+
+        return $this->applyResult->apply($attempt, $payload);
+    }
+
     private function assertMayCapture(RepairOrder $repairOrder, int $amountCents, PaymentCaptureContextKind $kind): void
     {
         abort_if($repairOrder->isTerminal(), 422, 'Cannot capture payment on a closed repair order.');

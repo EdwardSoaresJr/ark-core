@@ -32,9 +32,9 @@ final class RepairOrderWorkspaceProjection
         private readonly EnsureInspectionAction $ensureInspection,
         private readonly ApplyInspectionTemplateAction $applyInspectionTemplate,
         private readonly MobileEstimateProjection $estimate,
-        private readonly MobileSquarePaymentProjection $squarePayment,
+        private readonly MobilePaymentCaptureProjection $paymentCapture,
         private readonly MobileManualPaymentProjection $manualPayment,
-        private readonly MobileSquareDepositProjection $squareDeposit,
+        private readonly MobilePaymentCaptureDepositProjection $paymentCaptureDeposit,
         private readonly MobileManualDepositProjection $manualDeposit,
         private readonly MobileManualRefundProjection $manualRefund,
         private readonly MobileLedgerProjection $ledger,
@@ -63,16 +63,16 @@ final class RepairOrderWorkspaceProjection
             && ! $repairOrder->isTerminal();
         $canEditEstimate = $canManageConcerns;
 
-        $squarePayment = $showMoney
-            ? $this->squarePayment->control($repairOrder, $viewer, $profile)
+        $paymentCapture = $showMoney
+            ? $this->paymentCapture->control($repairOrder, $viewer, $profile)
             : null;
 
         $manualPayment = $showMoney
             ? $this->manualPayment->control($repairOrder, $viewer, $profile)
             : null;
 
-        $squareDeposit = $showMoney
-            ? $this->squareDeposit->control($repairOrder, $viewer, $profile)
+        $paymentCaptureDeposit = $showMoney
+            ? $this->paymentCaptureDeposit->control($repairOrder, $viewer, $profile)
             : null;
 
         $manualDeposit = $showMoney
@@ -102,18 +102,20 @@ final class RepairOrderWorkspaceProjection
                 $technicianAssignment,
                 $canManageConcerns,
                 $canEditEstimate,
-                $squarePayment,
+                $paymentCapture,
                 $manualPayment,
-                $squareDeposit,
+                $paymentCaptureDeposit,
                 $manualDeposit,
                 $manualRefund,
                 $ledger,
             ),
             'lifecycle' => $this->lifecycleControl($repairOrder, $viewer, $profile),
             'technician_assignment' => $technicianAssignment,
-            'square_payment' => $squarePayment,
+            'payment_capture' => $paymentCapture,
+            'payment_capture_deposit' => $paymentCaptureDeposit,
+            'square_payment' => $paymentCapture,
             'manual_payment' => $manualPayment,
-            'square_deposit' => $squareDeposit,
+            'square_deposit' => $paymentCaptureDeposit,
             'manual_deposit' => $manualDeposit,
             'manual_refund' => $manualRefund,
             'ledger' => $ledger,
@@ -238,9 +240,9 @@ final class RepairOrderWorkspaceProjection
         ?array $technicianAssignment,
         bool $canManageConcerns,
         bool $canEditEstimate,
-        ?array $squarePayment,
+        ?array $paymentCapture,
         ?array $manualPayment,
-        ?array $squareDeposit,
+        ?array $paymentCaptureDeposit,
         ?array $manualDeposit,
         ?array $manualRefund,
         ?array $ledger,
@@ -319,7 +321,7 @@ final class RepairOrderWorkspaceProjection
             $this->command('preview_inspection', 'Preview inspection', 'action', $canPreviewInspection, [
                 'action' => 'preview_inspection',
             ]),
-            ($squareDeposit['can_charge_terminal'] ?? false)
+            ($paymentCaptureDeposit['can_charge_terminal'] ?? false)
                 ? $this->command('charge_deposit_terminal', 'Collect deposit', 'action', true, [
                     'action' => 'charge_deposit_terminal',
                 ])
@@ -332,7 +334,7 @@ final class RepairOrderWorkspaceProjection
             $this->command('send_payment', 'Send payment', 'action', $balanceOutstanding, [
                 'action' => 'send_payment',
             ]),
-            ($squarePayment['can_charge_terminal'] ?? false)
+            ($paymentCapture['can_charge_terminal'] ?? false)
                 ? $this->command('charge_terminal', 'Charge reader', 'action', true, [
                     'action' => 'charge_terminal',
                 ])
