@@ -25,7 +25,7 @@ function enablePlatformConnection(?string $shopPublicId = null): string
     return $installationUuid;
 }
 
-function fakePlatformVoiceStatus(string $voiceStatus, ?string $voiceStatusLabel = null): void
+function fakePlatformVoiceStatus(string $voiceStatus, ?string $voiceStatusLabel = null, string $runtimeOwner = 'core'): void
 {
     ManagedVoiceGate::resetMemo();
 
@@ -41,6 +41,7 @@ function fakePlatformVoiceStatus(string $voiceStatus, ?string $voiceStatusLabel 
                     'status' => $voiceStatus,
                     'status_label' => $voiceStatusLabel ?? ($voiceStatus === 'active' ? 'Active' : 'Not enabled'),
                     'detail' => null,
+                    'runtime_owner' => $runtimeOwner,
                 ],
             ],
         ], 200),
