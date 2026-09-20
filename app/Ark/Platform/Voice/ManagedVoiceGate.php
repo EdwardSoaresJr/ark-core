@@ -5,10 +5,6 @@ namespace App\Ark\Platform\Voice;
 use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\PlatformStatusClient;
 
-/**
- * Settings visibility for Platform-managed Voice.
- * A connected box is not enough; Voice must be an active Platform service.
- */
 final class ManagedVoiceGate
 {
     private static ?bool $memo = null;
@@ -33,7 +29,7 @@ final class ManagedVoiceGate
                 continue;
             }
 
-            return self::$memo = in_array((string) ($row['status'] ?? ''), ['active', 'connected'], true);
+            return self::$memo = strtolower(trim((string) ($row['runtime_owner'] ?? ''))) === 'platform';
         }
 
         return self::$memo = false;

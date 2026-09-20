@@ -121,6 +121,9 @@ final class PlatformStatusClient
                 'status' => (string) $row['status'],
                 'status_label' => (string) $row['status_label'],
                 'detail' => isset($row['detail']) && is_string($row['detail']) ? $row['detail'] : null,
+                'runtime_owner' => isset($row['runtime_owner']) && is_string($row['runtime_owner'])
+                    ? strtolower(trim($row['runtime_owner']))
+                    : null,
             ];
         }
 

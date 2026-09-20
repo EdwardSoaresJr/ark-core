@@ -29,7 +29,7 @@ function enableHostedPlatformMail(?string $shopPublicId = null): string
         'cloud.test/api/v1/status' => Http::response([
             'ok' => true,
             'services' => [
-                ['key' => 'voice', 'label' => 'ARK Voice', 'status' => 'not_enabled', 'status_label' => 'Not enabled', 'detail' => null],
+                ['key' => 'voice', 'label' => 'ARK Voice', 'status' => 'not_enabled', 'status_label' => 'Not enabled', 'detail' => null, 'runtime_owner' => 'core'],
             ],
         ], 200),
     ]);
