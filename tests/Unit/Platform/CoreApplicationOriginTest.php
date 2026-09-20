@@ -1,9 +1,6 @@
 <?php
 
 use App\Ark\Platform\CoreApplicationOrigin;
-use Tests\TestCase;
-
-uses(TestCase::class);
 
 it('uses the operations host even when a website domain is configured', function (): void {
     config()->set([

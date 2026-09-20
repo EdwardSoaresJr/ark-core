@@ -6,10 +6,6 @@ use App\Ark\Operations\Parts\PartsTechShopReference;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Vehicles\Vehicle;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-
-uses(TestCase::class, RefreshDatabase::class);
 
 test('parts tech cart items ignore quantity-zero stubs left after a cleared cart', function () {
     $cart = [
