@@ -1,16 +1,12 @@
-# ARK
-
-**Shop management software for independent auto repair shops.**
+# ARK Core — Open-Source Automotive Repair Shop Management Software
 
 **Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
 
-ARK is shop management software built around the way an automotive repair shop actually operates. It handles repair orders, customers, vehicles, estimates, inspections, scheduling, communications, and the day-to-day workflows between advisors and technicians.
+ARK Core is self-hosted shop management software for independent auto repair shops. It handles repair orders, customers, vehicles, estimates, invoices, inspections, scheduling, and the day-to-day work between advisors and technicians.
 
-Under the hood, ARK is designed around clear sources of truth, predictable system behavior, and server-side business rules rather than duplicating important logic throughout the application.
+This repository is the **canonical public Core**. Confirm identity with `./scripts/assert-canonical-core-repo.sh` (Git root + `origin`, not the folder name).
 
-This repository contains the **public open-source distribution of ARK**. It is the **canonical Core** repository. Confirm identity with `./scripts/assert-canonical-core-repo.sh` (Git root + `origin`, not the folder name).
-
-ARK Platform is a separate repository. The private `arksmsv2` tree is legacy and must not receive new Core development.
+ARK Platform (`EdwardSoaresJr/ark-platform`) is a separate repository for commercial service execution. The private `arksmsv2` tree is a preserved fallback and must not receive new Core development.
 
 It is a clean public snapshot and does not include private shop data, production credentials or infrastructure, licensed automotive datasets, or private Dragon knowledge sources.
 
@@ -84,8 +80,8 @@ composer test:serial     # single-process diagnostic
 MySQL · Redis · app (nginx, PHP-FPM, Horizon, Reverb, scheduler) · persistent storage
 
 ```bash
-git clone https://github.com/EdwardSoaresJr/ark.git
-cd ark
+git clone https://github.com/EdwardSoaresJr/ark-core.git
+cd ark-core
 docker compose up -d --build
 ```
 
@@ -179,6 +175,6 @@ The licensing information in this repository describes the project's licensing c
 
 ## Status
 
-ARK is publicly available at:
+ARK Core is publicly available at:
 
-https://github.com/EdwardSoaresJr/ark
+https://github.com/EdwardSoaresJr/ark-core

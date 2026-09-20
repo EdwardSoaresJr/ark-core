@@ -33,10 +33,10 @@ Do not use Coolify Deploy.
 Source: `ark` repo `32f33049` on `recovery/shared-core-from-arksmsv2` after the cutover-blocker commits.
 
 ```bash
-IMAGE=ghcr.io/edwardsoaresjr/ark ./infra/build-runner/mac/publish-ghcr-ark.sh
+IMAGE=ghcr.io/edwardsoaresjr/ark-core ./infra/build-runner/mac/publish-ghcr-ark.sh
 ```
 
-Pin compose `core.image` to the printed digest (`ghcr.io/edwardsoaresjr/ark@sha256:…`). Leave Foundry, MySQL, Redis, Traefik, and `lnp-core-ops-router` unchanged.
+Pin compose `core.image` to the printed digest (`ghcr.io/edwardsoaresjr/ark-core@sha256:…`). Leave Foundry, MySQL, Redis, Traefik, and `lnp-core-ops-router` unchanged.
 
 Set on Core only:
 

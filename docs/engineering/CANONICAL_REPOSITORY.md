@@ -1,6 +1,6 @@
 # Canonical Core repository
 
-**Public ARK** (`https://github.com/EdwardSoaresJr/ark.git`) is the canonical Core development repository.
+**ARK Core** (`https://github.com/EdwardSoaresJr/ark-core.git`) is the canonical Core development repository.
 
 ARK Platform remains a separate repository (`https://github.com/EdwardSoaresJr/ark-platform.git`).
 
@@ -18,7 +18,7 @@ The check uses the Git root and `origin` remote URL. Directory names are not ide
 
 | Work | Repository |
 | --- | --- |
-| Shop Core (repair orders, estimates, inspections, scheduling, documents, Core website records) | This repo (`EdwardSoaresJr/ark`) |
+| Shop Core (repair orders, estimates, inspections, scheduling, documents, Core website records) | This repo (`EdwardSoaresJr/ark-core`) |
 | Control plane, managed services, website editor UI | `EdwardSoaresJr/ark-platform` |
 | Legacy LugsNPlugs production image only | `arksmsv2` — no new Core features |
 
