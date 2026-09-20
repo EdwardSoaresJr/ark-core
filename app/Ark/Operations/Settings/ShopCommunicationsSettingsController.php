@@ -2,15 +2,15 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Mail\ArkMailIdentityClient;
+use App\Ark\Mobile\Push\MobilePushSettings;
 use App\Ark\Operations\Communications\CommunicationsAccentColor;
 use App\Ark\Operations\Communications\CommunicationsQuickReplyTemplates;
-use App\Ark\Mobile\Push\MobilePushSettings;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Messaging\MessageActionKey;
 use App\Ark\Operations\Messaging\Messenger\MetaMessengerMessageTag;
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Mail\ArkMailIdentityClient;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Operations\Telephony\TelephonyCallerRingtone;
 use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
@@ -24,6 +24,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class ShopCommunicationsSettingsController
@@ -167,13 +168,6 @@ class ShopCommunicationsSettingsController
         $this->normalizeWeeklyHoursClocks($request);
 
         $data = $request->validate([
-            'twilio_account_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_auth_token' => ['nullable', 'string', 'max:128'],
-            'twilio_api_key_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_api_key_secret' => ['nullable', 'string', 'max:128'],
-            'twilio_voice_twiml_app_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_fcm_credential_sid' => ['nullable', 'string', 'max:64'],
-            'twilio_apns_voip_credential_sid' => ['nullable', 'string', 'max:64'],
             'telephony_inbound_number' => ['nullable', 'string', 'max:32'],
             'telephony_provider' => ['nullable', Rule::enum(TelephonyProviderType::class)],
             'telephony_call_flow' => ['nullable', 'array'],
@@ -392,16 +386,7 @@ class ShopCommunicationsSettingsController
                     ? trim((string) $data['telephony_inbound_number'])
                     : null;
                 $settingsUpdates['telephony_provider'] = TelephonyProviderType::Twilio->value;
-                $settingsUpdates['twilio_api_key_sid'] = $this->nullableTrimmedString($data['twilio_api_key_sid'] ?? null);
-                $this->mergeSecretField($settingsUpdates, 'twilio_api_key_secret', $data['twilio_api_key_secret'] ?? null);
-                $settingsUpdates['twilio_voice_twiml_app_sid'] = $this->nullableTrimmedString($data['twilio_voice_twiml_app_sid'] ?? null);
-                $settingsUpdates['twilio_fcm_credential_sid'] = $this->nullableTrimmedString($data['twilio_fcm_credential_sid'] ?? null);
-                $settingsUpdates['twilio_apns_voip_credential_sid'] = $this->nullableTrimmedString($data['twilio_apns_voip_credential_sid'] ?? null);
             }
-
-            // Account SID/token remain until SMS/playback leave Core (Communications migration).
-            $settingsUpdates['twilio_account_sid'] = $this->nullableTrimmedString($data['twilio_account_sid'] ?? null);
-            $this->mergeSecretField($settingsUpdates, 'twilio_auth_token', $data['twilio_auth_token'] ?? null);
 
             $messageActionsInput = is_array($data['message_actions'] ?? null) ? $data['message_actions'] : [];
             $colorInput = is_array($messageActionsInput['colors'] ?? null) ? $messageActionsInput['colors'] : [];
@@ -434,7 +419,7 @@ class ShopCommunicationsSettingsController
                 ?: 'gpt-4o-mini';
         }
 
-        $settings->persistTrusted($settingsUpdates);
+        $settings->persistTrusted($this->existingShopSettingColumns($settingsUpdates));
         ShopDisplayTimezone::apply();
 
         if ($communicationsTab === 'ring' && ! $platformVoiceManaged) {
@@ -491,7 +476,7 @@ class ShopCommunicationsSettingsController
             $settingsUpdates['twilio_apns_voip_credential_sid'] = $this->nullableTrimmedString($request->input('twilio_apns_voip_credential_sid'));
         }
 
-        $settings->persistTrusted($settingsUpdates);
+        $settings->persistTrusted($this->existingShopSettingColumns($settingsUpdates));
         Cache::forget('mobile:fcm:access_token');
 
         return redirect()
@@ -570,5 +555,18 @@ class ShopCommunicationsSettingsController
                 'communications-tab' => 'messenger',
             ])
             ->with('status', 'Messenger settings saved.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $updates
+     * @return array<string, mixed>
+     */
+    private function existingShopSettingColumns(array $updates): array
+    {
+        return array_filter(
+            $updates,
+            fn (mixed $value, string $key): bool => Schema::hasColumn('shop_settings', $key),
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 }

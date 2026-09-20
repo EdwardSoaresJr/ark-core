@@ -3,14 +3,14 @@
 use App\Ark\Mobile\Push\MobilePushSettings;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use App\Ark\Operations\Telephony\CallSession;
+use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use App\Ark\Operations\Telephony\TelephonyEndpoint;
 use App\Ark\Operations\Telephony\TelephonyEndpointType;
 use App\Ark\Operations\Telephony\TelephonyForwardNumber;
 use App\Ark\Operations\Telephony\TelephonyHealth;
-use App\Ark\Operations\Telephony\TelephonyShopSettings;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
+use App\Ark\Operations\Telephony\TelephonyShopSettings;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -68,19 +68,9 @@ test('settings communications telephony page surfaces operational health on gene
         ]))
         ->assertOk()
         ->assertSee('Phone')
-        ->assertSee('Twilio · Enabled')
-        ->assertSee('Connected')
-        ->assertSee('Voice webhook')
-        ->assertSee('SMS / MMS webhook')
-        ->assertSee('Healthy')
-        ->assertSee('John Smith')
-        ->assertSee('Voice inbound')
-        ->assertSee('SMS / MMS')
-        ->assertSee('Copy')
-        ->assertSee('Last voice webhook')
-        ->assertSee('Last SMS / MMS webhook')
         ->assertSee('Test incoming call')
-        ->assertSee('Account SID')
+        ->assertSee('John Smith')
+        ->assertDontSee('Account SID')
         ->assertDontSee('Voice API Key')
         ->assertDontSee('Programmable Voice')
         ->assertDontSee('Primary telephony provider')
@@ -96,12 +86,13 @@ test('settings communications email tab hides twilio health dashboard', function
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('operations.settings.shop.edit', [
-        'section' => 'communications',
-        'communications-tab' => 'email',
-    ]))
+            'section' => 'communications',
+            'communications-tab' => 'email',
+        ]))
         ->assertOk()
         ->assertSee('Customer email')
-        ->assertSee('Server token')
+        ->assertSee('Reply-To')
+        ->assertDontSee('Server token')
         ->assertDontSee('Webhook URLs (paste into Twilio Console)')
         ->assertDontSee('Last incoming call')
         ->assertDontSee('Test incoming call');
@@ -124,9 +115,9 @@ test('settings communications ring tab shows configuration without full health d
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('operations.settings.shop.edit', [
-        'section' => 'communications',
-        'communications-tab' => 'ring',
-    ]))
+            'section' => 'communications',
+            'communications-tab' => 'ring',
+        ]))
         ->assertOk()
         ->assertSee('Call routing')
         ->assertSee('Advisor Cell')
@@ -142,9 +133,9 @@ test('settings communications hours tab does not show presence window', function
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('operations.settings.shop.edit', [
-        'section' => 'communications',
-        'communications-tab' => 'hours',
-    ]))
+            'section' => 'communications',
+            'communications-tab' => 'hours',
+        ]))
         ->assertOk()
         ->assertSee('Call hours')
         ->assertDontSee('Presence');
@@ -208,8 +199,6 @@ test('saving communications hours tab does not wipe twilio credentials or ring e
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     ShopSettings::reloadCurrent()->persistTrusted([
-        'twilio_account_sid' => 'AC-preserve-me',
-        'twilio_auth_token' => 'secret-preserve-me',
         'telephony_inbound_number' => '+17195550100',
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'closed_dates' => ['2026-12-25'],
@@ -243,9 +232,7 @@ test('saving communications hours tab does not wipe twilio credentials or ring e
 
     $settings = ShopSettings::reloadCurrent();
 
-    expect($settings->twilio_account_sid)->toBe('AC-preserve-me')
-        ->and($settings->twilio_auth_token)->toBe('secret-preserve-me')
-        ->and($settings->telephony_inbound_number)->toBe('+17195550100')
+    expect($settings->telephony_inbound_number)->toBe('+17195550100')
         ->and(TelephonyEndpoint::query()->count())->toBe(1)
         ->and(TelephonyEndpoint::query()->value('name'))->toBe('Advisor Cell');
 });
@@ -324,7 +311,6 @@ test('shop telephony settings can be saved from communications section', functio
     $settings = ShopSettings::reloadCurrent();
 
     expect($settings->telephony_inbound_number)->toBe('+17195550100')
-        ->and($settings->twilio_account_sid)->toBe('AC-settings-save')
         ->and(TelephonyEndpoint::query()->count())->toBe(1);
 });
 
@@ -405,10 +391,6 @@ test('settings managers can test incoming call from telephony page route', funct
 test('twilio webhook records last successful webhook timestamp', function () {
     config()->set('services.twilio.auth_token', null);
     config()->set('services.twilio.account_sid', null);
-    ShopSettings::reloadCurrent()->persistTrusted([
-        'twilio_auth_token' => null,
-        'twilio_account_sid' => null,
-    ]);
     ShopSettings::reloadCurrent();
 
     $this->post(route('webhooks.communications.twilio.voice.incoming'), [

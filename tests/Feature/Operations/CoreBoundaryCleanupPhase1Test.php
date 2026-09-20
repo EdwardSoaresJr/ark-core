@@ -4,6 +4,7 @@ use App\Ark\Dragon\Agent\DragonAgentMemory;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
+use App\Support\Branding\Branding;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Str;
 
@@ -22,7 +23,7 @@ test('core rail keeps arkademy and stations without a platform heading', functio
         ->assertSee('ops-rail-section__label">System</p>', false)
         ->assertSee('Stations &amp; Phones', false)
         ->assertSee(route('operations.shop.communications'), false)
-        ->assertSee(\App\Support\Branding\Branding::learnName(), false)
+        ->assertSee(Branding::learnName(), false)
         ->assertSee('Communications', false);
 });
 
@@ -64,5 +65,5 @@ test('hosted square settings hide provider secrets and keep capture surfaces', f
         ->assertDontSee('name="square_application_id"', false)
         ->assertDontSee('Generate pairing code', false)
         ->assertDontSee('Save Square API credentials here', false)
-        ->assertDontSee(route('webhooks.square'), false);
+        ->assertDontSee('Webhook URL', false);
 });

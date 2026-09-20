@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\Settings;
 
-use App\Ark\Platform\PlatformConnection;
 use App\Ark\Mail\ArkMailActivationClient;
 use App\Ark\Mail\ArkMailIdentityClient;
 use App\Ark\Operations\Documents\EstimateDocumentService;
@@ -11,14 +10,15 @@ use App\Ark\Operations\Parts\PartsCatalogButtonColor;
 use App\Ark\Operations\Parts\PartsCatalogLinks;
 use App\Ark\Operations\Parts\PartsCatalogProvider;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
-use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Platform\PlatformConnection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ShopIntegrationSettingsController
 {
-    use Concerns\InteractsWithShopSettingsPersistence;
+    use InteractsWithShopSettingsPersistence;
+
     public function __construct(
         private readonly EstimateDocumentService $estimateDocumentService,
         private readonly EstimateTotalsCalculator $estimateTotalsCalculator,
@@ -34,11 +34,27 @@ class ShopIntegrationSettingsController
         return $this->estimateTotalsCalculator;
     }
 
-public function updatePayments(Request $request): RedirectResponse
+    public function updatePayments(Request $request): RedirectResponse
     {
+        $data = $request->validate([
+            'square_terminal_device_id' => ['nullable', 'string', 'max:128'],
+            'square_terminal_enabled' => ['nullable', 'boolean'],
+            'square_keyed_enabled' => ['nullable', 'boolean'],
+            'square_portal_pay_enabled' => ['nullable', 'boolean'],
+            'square_email_pay_enabled' => ['nullable', 'boolean'],
+        ]);
+
+        ShopSettings::current()->persistTrusted([
+            'square_terminal_device_id' => $this->nullableTrimmedString($data['square_terminal_device_id'] ?? null),
+            'square_terminal_enabled' => $request->boolean('square_terminal_enabled'),
+            'square_keyed_enabled' => $request->boolean('square_keyed_enabled'),
+            'square_portal_pay_enabled' => $request->boolean('square_portal_pay_enabled'),
+            'square_email_pay_enabled' => $request->boolean('square_email_pay_enabled'),
+        ]);
+
         return redirect()
-            ->route('operations.settings.shop.edit')
-            ->with('status', 'Card processor settings are not configured in Core. Record external payments on the repair order. Managed processors belong to ARK Platform Payments.');
+            ->route('operations.settings.shop.edit', ['section' => 'payments'])
+            ->with('status', 'Payment capture surfaces saved.');
     }
 
     public function updateEmail(Request $request): RedirectResponse
@@ -54,7 +70,10 @@ public function updatePayments(Request $request): RedirectResponse
         ]);
 
         $redirect = redirect()
-            ->route('operations.settings.shop.edit', ['section' => 'customer-messaging'])
+            ->route('operations.settings.shop.edit', [
+                'section' => 'communications',
+                'communications-tab' => 'email',
+            ])
             ->with('status', 'Email settings saved.');
 
         if (PlatformConnection::current()->isConnected()) {
