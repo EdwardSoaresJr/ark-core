@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Ark\Install\DeferredMigrationLoader;
 use App\Ark\Communications\Provisioning\ProvisionBuilder;
 use App\Ark\Mobile\Push\DispatchMobilePushForInboundMessage;
 use App\Ark\Mobile\Push\DispatchMobilePushForOperationalEvent;
@@ -134,6 +135,10 @@ class AppServiceProvider extends ServiceProvider
         ));
 
         $this->app->bind(PushTransport::class, FirebasePushTransport::class);
+
+        foreach (DeferredMigrationLoader::paths() as $path) {
+            $this->loadMigrationsFrom($path);
+        }
 
         $this->app->scoped(OperationsCommandRegistry::class, function ($app): OperationsCommandRegistry {
             $registry = new OperationsCommandRegistry;

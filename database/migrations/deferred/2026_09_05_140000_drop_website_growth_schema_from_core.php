@@ -5,9 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Website / Growth marketing schema does not belong in Core after extraction.
- * Drops CMS/analytics tables, shop_settings marketing blobs, and orphaned
- * growth_session_id FKs on operational tables (parent Growth product is gone).
+ * Fresh public installs only. Not loaded when ARK_PRESERVE_WEBSITE_GROWTH_SCHEMA=true.
  */
 return new class extends Migration
 {
@@ -65,6 +63,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Website / Growth product schema is not restored into Core.
+        //
     }
 };

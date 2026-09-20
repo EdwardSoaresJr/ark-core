@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('payment_capture_attempts')) {
+            return;
+        }
+
         Schema::create('payment_capture_attempts', function (Blueprint $table) {
             $table->id();
             $table->uuid('public_id')->unique();
