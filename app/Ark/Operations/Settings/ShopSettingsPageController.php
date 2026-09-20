@@ -42,7 +42,7 @@ class ShopSettingsPageController
         }
 
         $initialSection = $request->query('section');
-        $allowedSections = ['general', 'financial', 'payments', 'partstech', 'communications', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
+        $allowedSections = ['general', 'financial', 'payments', 'partstech', 'communications', 'ark-cloud', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
 
         if (! in_array($initialSection, $allowedSections, true)) {
             $initialSection = $request->old('_member') !== null || $request->old('roles') !== null

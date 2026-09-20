@@ -11,6 +11,7 @@ use App\Ark\Operations\Parts\PartsCatalogLinks;
 use App\Ark\Operations\Parts\PartsCatalogProvider;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Platform\PlatformConnection;
+use App\Ark\Platform\PlatformConnectOrchestrator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -87,9 +88,12 @@ class ShopIntegrationSettingsController
     }
 
     /** @deprecated Use ShopPlatformSettingsController — redirects preserved for old links. */
-    public function enableArkMail(Request $request, ArkMailActivationClient $activation): RedirectResponse
+    public function enableArkMail(Request $request): RedirectResponse
     {
-        return app(ShopPlatformSettingsController::class)->connect($request, $activation);
+        return app(ShopPlatformSettingsController::class)->connect(
+            $request,
+            app(PlatformConnectOrchestrator::class),
+        );
     }
 
     /** @deprecated Use ShopPlatformSettingsController */
