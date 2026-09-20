@@ -12,7 +12,7 @@ class PortalInvoicePayCompleteController
         string $token,
         PaymentGatewayAttempt $attempt,
         ResolveCustomerPayTokenAction $resolve,
-        CompleteSquareKeyedPaymentAction $complete,
+        CompletePortalKeyedPaymentAction $complete,
         PaymentGatewayAttemptPresenter $presenter,
         CardPresentCaptureProjection $capture,
     ): JsonResponse {

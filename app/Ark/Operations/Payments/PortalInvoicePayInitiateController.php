@@ -11,7 +11,7 @@ class PortalInvoicePayInitiateController
         Request $request,
         string $token,
         ResolveCustomerPayTokenAction $resolve,
-        InitiateSquarePaymentAction $initiatePayment,
+        InitiatePortalInvoicePaymentAction $initiatePayment,
         InitiatePortalDepositRequestAction $initiateDeposit,
         PaymentGatewayAttemptPresenter $presenter,
         CardPresentCaptureProjection $capture,
@@ -26,12 +26,7 @@ class PortalInvoicePayInitiateController
 
         $attempt = $accessToken->isDepositRequest()
             ? $initiateDeposit->execute($repairOrder, $accessToken)
-            : $initiatePayment->execute(
-                $repairOrder,
-                PaymentCaptureSurface::Portal,
-                actor: null,
-                accessToken: $accessToken,
-            );
+            : $initiatePayment->execute($repairOrder, $accessToken);
 
         return response()->json([
             'attempt' => $presenter->forAttempt($attempt),

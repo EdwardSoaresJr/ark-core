@@ -12,8 +12,10 @@ use App\Ark\Operations\Conversations\InboundConversationPayload;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsConsentStatus;
 use App\Ark\Operations\Messaging\InboundSmsConversationIngress;
+use App\Ark\Operations\Payments\ApplyPaymentGatewayCaptureResultAction;
 use App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
+use App\Ark\Operations\Payments\PaymentGatewayAttempt;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionMediaCaptureStatus;
@@ -149,7 +151,26 @@ final class FabricIngressController
                 ->first();
         }
 
-        if ($attempt === null) {
+        if ($attempt !== null) {
+            app(ApplyPaymentCaptureResultAction::class)
+                ->apply($attempt, $payload);
+
+            return response()->json(['ok' => true, 'applied' => true]);
+        }
+
+        $gatewayAttempt = null;
+        if ($attemptId !== '') {
+            $gatewayAttempt = PaymentGatewayAttempt::query()
+                ->where('public_id', $attemptId)
+                ->first();
+        }
+        if ($gatewayAttempt === null && $idempotencyKey !== '') {
+            $gatewayAttempt = PaymentGatewayAttempt::query()
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+        }
+
+        if ($gatewayAttempt === null) {
             Log::warning('ark_payments.fabric.attempt_not_found', [
                 'capture_attempt_public_id' => $attemptId,
                 'idempotency_key' => $idempotencyKey,
@@ -158,8 +179,8 @@ final class FabricIngressController
             return response()->json(['ok' => true, 'applied' => false]);
         }
 
-        app(ApplyPaymentCaptureResultAction::class)
-            ->apply($attempt, $payload);
+        app(ApplyPaymentGatewayCaptureResultAction::class)
+            ->apply($gatewayAttempt, $payload);
 
         return response()->json(['ok' => true, 'applied' => true]);
     }

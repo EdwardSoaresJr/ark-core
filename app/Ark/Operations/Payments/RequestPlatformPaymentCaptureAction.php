@@ -11,6 +11,7 @@ final class RequestPlatformPaymentCaptureAction
     public function __construct(
         private readonly ArkPaymentsClient $payments,
         private readonly CardPresentCaptureProjection $capture,
+        private readonly ApplyPaymentGatewayCaptureResultAction $apply,
     ) {}
 
     public function execute(PaymentGatewayAttempt $attempt, ?string $sourceToken = null): PaymentGatewayAttempt
@@ -20,12 +21,12 @@ final class RequestPlatformPaymentCaptureAction
         if ($method === 'terminal') {
             $deviceRef = $this->capture->readyDevices()[0]['device_ref'] ?? null;
             if ($deviceRef === null) {
-                throw new SquarePaymentRequestException('No card reader is ready.');
+                throw new RuntimeException('No card reader is ready.');
             }
         } else {
             $deviceRef = null;
             if ($sourceToken === null || $sourceToken === '') {
-                throw new SquarePaymentRequestException('A card token is required.');
+                throw new RuntimeException('A card token is required.');
             }
         }
 
@@ -61,50 +62,35 @@ final class RequestPlatformPaymentCaptureAction
                 'completed_at' => now(),
             ])->save();
 
-            throw new SquarePaymentRequestException($reason);
+            throw new RuntimeException($reason);
         }
 
         $status = strtolower((string) ($result['status'] ?? ''));
         if ($status === 'failed') {
-            $attempt->forceFill([
-                'status' => PaymentGatewayAttemptStatus::Failed,
-                'failure_reason' => (string) ($result['message'] ?? $result['reason_code'] ?? 'Card capture failed.'),
-                'completed_at' => now(),
-            ])->save();
-            throw new SquarePaymentRequestException(
-                (string) ($attempt->failure_reason ?? 'Card capture failed.')
+            $applied = $this->apply->apply($attempt->refresh(), $result);
+            throw new RuntimeException(
+                (string) ($applied->failure_reason ?? $result['message'] ?? 'Card capture failed.')
             );
         }
 
         if (in_array($status, ['cancelled', 'canceled'], true)) {
-            $attempt->forceFill([
-                'status' => PaymentGatewayAttemptStatus::Canceled,
-                'failure_reason' => (string) ($result['message'] ?? $result['reason_code'] ?? 'Card capture canceled.'),
-                'completed_at' => now(),
-            ])->save();
-
-            return $attempt->refresh();
-        }
-
-        $refs = is_array($result['provider_refs'] ?? null) ? $result['provider_refs'] : [];
-        $checkoutId = isset($refs['terminal_checkout_id']) ? (string) $refs['terminal_checkout_id'] : null;
-        if ($checkoutId !== null && $checkoutId !== '') {
-            $attempt->forceFill(['square_checkout_id' => $checkoutId])->save();
+            return $this->apply->apply($attempt->refresh(), $result);
         }
 
         if ($status === 'succeeded') {
-            $attempt->forceFill([
-                'status' => PaymentGatewayAttemptStatus::Completed,
-                'completed_at' => now(),
-            ])->save();
-
-            return $attempt->refresh();
+            return $this->apply->apply($attempt->refresh(), $result);
         }
 
         if ($status === 'reconciliation_required') {
             throw new RuntimeException(
                 (string) ($result['message'] ?? 'Card capture needs to be checked before retrying.')
             );
+        }
+
+        $refs = is_array($result['provider_refs'] ?? null) ? $result['provider_refs'] : [];
+        $checkoutId = isset($refs['terminal_checkout_id']) ? (string) $refs['terminal_checkout_id'] : null;
+        if ($checkoutId !== null && $checkoutId !== '') {
+            $attempt->forceFill(['square_checkout_id' => $checkoutId])->save();
         }
 
         return $attempt->refresh();

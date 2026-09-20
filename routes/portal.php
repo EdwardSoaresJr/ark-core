@@ -1,5 +1,9 @@
 <?php
 
+use App\Ark\Operations\Payments\PortalEstimateDepositCompleteController;
+use App\Ark\Operations\Payments\PortalEstimateDepositInitiateController;
+use App\Ark\Operations\Payments\PortalInvoicePayCompleteController;
+use App\Ark\Operations\Payments\PortalInvoicePayInitiateController;
 use App\Ark\Operations\Payments\PortalInvoicePayShowController;
 use App\Ark\Operations\Portal\PortalAccessChallengeStoreController;
 use App\Ark\Operations\Portal\PortalAccessShowController;
@@ -156,6 +160,22 @@ SurfaceRouting::portalRoutes(function (): void {
             Route::post('/portal/estimates/{token}/authorize', PortalEstimateAuthorizeController::class)
                 ->name('portal.estimates.authorize');
             Route::post('/estimates/{token}/authorize', PortalEstimateAuthorizeController::class);
+
+            Route::post('/portal/estimates/{token}/deposits', PortalEstimateDepositInitiateController::class)
+                ->name('portal.estimates.deposits.store');
+            Route::post('/estimates/{token}/deposits', PortalEstimateDepositInitiateController::class);
+
+            Route::post('/portal/estimates/{token}/deposits/{attempt}/complete', PortalEstimateDepositCompleteController::class)
+                ->name('portal.estimates.deposits.complete');
+            Route::post('/estimates/{token}/deposits/{attempt}/complete', PortalEstimateDepositCompleteController::class);
+
+            Route::post('/portal/pay/{token}/attempts', PortalInvoicePayInitiateController::class)
+                ->name('portal.invoice-pay.attempts.store');
+            Route::post('/pay/{token}/attempts', PortalInvoicePayInitiateController::class);
+
+            Route::post('/portal/pay/{token}/attempts/{attempt}/complete', PortalInvoicePayCompleteController::class)
+                ->name('portal.invoice-pay.attempts.complete');
+            Route::post('/pay/{token}/attempts/{attempt}/complete', PortalInvoicePayCompleteController::class);
         });
     });
 });

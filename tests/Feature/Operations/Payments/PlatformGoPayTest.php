@@ -4,7 +4,18 @@ use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\Approvals\ApprovalEvent;
+use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Payments\CreateCustomerDepositPayTokenAction;
 use App\Ark\Operations\Payments\CreateCustomerPayTokenAction;
+use App\Ark\Operations\Portal\EstimateAccessToken;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcern;
+use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Payments\PaymentCaptureSurface;
 use App\Ark\Operations\Payments\PaymentGateway;
 use App\Ark\Operations\Payments\PaymentGatewayAttempt;
@@ -48,7 +59,7 @@ function fakeHostedGoPayPlatform(?callable $onCapture = null): void
             expect($json['capture_method'])->toBe('keyed')
                 ->and($json)->not->toHaveKey('square_access_token')
                 ->and($json)->not->toHaveKey('location_id')
-                ->and($json['context']['kind'])->toBe('payment');
+                ->and($json['context']['kind'])->toBeIn(['payment', 'deposit']);
 
             if ($onCapture !== null) {
                 return $onCapture($json);
@@ -376,4 +387,110 @@ test('hosted repair order still offers charge card on reader after go pay wiring
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
         ->assertSee('Charge card on reader');
+});
+
+test('hosted deposit request charges through Platform keyed capture and posts deposit ledger once', function () {
+    fakeHostedGoPayPlatform();
+
+    $repairOrder = financialCloseoutRepairOrder();
+    $token = app(CreateCustomerDepositPayTokenAction::class)
+        ->execute($repairOrder, 25000);
+
+    $this->get(route('portal.invoice-pay.show', ['token' => $token->plainToken]))
+        ->assertOk()
+        ->assertSee('Pay your deposit')
+        ->assertSee('Deposit requested');
+
+    $initiate = $this->postJson(route('portal.invoice-pay.attempts.store', ['token' => $token->plainToken]))
+        ->assertOk()
+        ->assertJsonPath('attempt.capture_surface', PaymentCaptureSurface::PortalDepositRequest->value)
+        ->assertJsonPath('attempt.amount_cents', 25000);
+
+    $attempt = PaymentGatewayAttempt::query()->find($initiate->json('attempt.id'));
+    expect($attempt?->gateway)->toBe(PaymentGateway::Managed);
+
+    $this->postJson(route('portal.invoice-pay.attempts.complete', [
+        'token' => $token->plainToken,
+        'attempt' => $attempt->id,
+    ]), [
+        'source_id' => 'cnon:go-deposit',
+    ])->assertOk()
+        ->assertJsonPath('attempt.status', PaymentGatewayAttemptStatus::Completed->value);
+
+    expect(RepairOrderLedgerEntry::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->where('entry_type', LedgerEntryType::Deposit)
+        ->count())->toBe(1);
+});
+
+test('hosted estimate deposit charges through Platform keyed capture after authorization', function () {
+    fakeHostedGoPayPlatform();
+
+    $customer = Customer::query()->create([
+        'first_name' => 'Morgan',
+        'last_name' => 'Brown',
+        'phone' => '555-0144',
+        'email' => 'customer@example.test',
+        'customer_type' => 'Retail',
+    ]);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2013,
+        'make' => 'Chevrolet',
+        'model' => 'Tahoe',
+    ]);
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::WaitingApproval,
+        'concern_summary' => 'A/C not cold',
+    ]);
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'A/C not cold',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'position' => 1,
+    ]);
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'A/C performance diagnostic',
+        'quantity' => '1.00',
+        'unit_price_cents' => 15593,
+    ]);
+    $plainToken = str_repeat('c', 64);
+    EstimateAccessToken::createForPlainToken($repairOrder, $plainToken);
+
+    $this->post(route('portal.estimates.authorize', ['token' => $plainToken]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $concern->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect();
+
+    $approval = ApprovalEvent::query()->sole();
+
+    $initiate = $this->postJson(route('portal.estimates.deposits.store', ['token' => $plainToken]), [
+        'approval_id' => $approval->id,
+    ])->assertOk()
+        ->assertJsonPath('attempt.capture_surface', PaymentCaptureSurface::PortalEstimateDeposit->value);
+
+    $attempt = PaymentGatewayAttempt::query()->find($initiate->json('attempt.id'));
+    expect($attempt?->gateway)->toBe(PaymentGateway::Managed)
+        ->and($attempt?->amount_cents)->toBeGreaterThan(0);
+
+    $this->postJson(route('portal.estimates.deposits.complete', [
+        'token' => $plainToken,
+        'attempt' => $attempt->id,
+    ]), [
+        'source_id' => 'cnon:go-estimate-deposit',
+    ])->assertOk()
+        ->assertJsonPath('attempt.status', PaymentGatewayAttemptStatus::Completed->value)
+        ->assertJsonPath('message', 'Thank you — we received your '.$initiate->json('attempt.amount').' deposit.');
+
+    expect(RepairOrderLedgerEntry::query()
+        ->where('repair_order_id', $repairOrder->id)
+        ->where('entry_type', LedgerEntryType::Deposit)
+        ->count())->toBe(1);
 });

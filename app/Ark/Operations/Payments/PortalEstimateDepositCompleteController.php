@@ -13,7 +13,7 @@ class PortalEstimateDepositCompleteController
         string $token,
         PaymentGatewayAttempt $attempt,
         ResolveEstimateAccessTokenAction $resolve,
-        CompleteSquareKeyedPaymentAction $complete,
+        CompletePortalKeyedPaymentAction $complete,
         PaymentGatewayAttemptPresenter $presenter,
         CardPresentCaptureProjection $capture,
     ): JsonResponse {
