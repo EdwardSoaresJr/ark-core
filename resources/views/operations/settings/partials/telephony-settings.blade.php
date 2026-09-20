@@ -135,9 +135,8 @@
         @endif
 
         @if ($communicationsTab === 'email')
-            @include('operations.settings.partials.postmark-email-settings', [
+            @include('operations.settings.partials.communications-email-settings', [
                 'settings' => $settings,
-                'platformMailSend' => $platformMailSend ?? false,
             ])
         @elseif ($communicationsTab === 'messenger')
             @include('operations.settings.partials.communications-channels-settings', ['settings' => $settings])
@@ -215,39 +214,18 @@
 
                 <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
                     <div class="border-b border-slate-200 pb-3">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Messaging account</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Texting</p>
                         <p class="mt-1 text-xs leading-5 text-slate-500">
-                            @if ($platformVoiceManaged)
-                                Customer conversation SMS is sent through ARK Communications.
-                                These credentials remain for Voice and other shop SMS (appointments, codes) that still use the shop Twilio account.
-                            @else
-                                Twilio account for SMS, MMS, and your business number. Saved encrypted — leave secret fields blank to keep the current value.
-                            @endif
-                            {{ $telephonyHealth->credentialSourceLabel() }}.
+                            Customer texts are sent through ARK Texting when this shop is connected.
+                            This shop does not store a messaging provider account.
                         </p>
-                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                            <label class="block">
-                                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Account SID</span>
-                                <input
-                                    type="text"
-                                    name="twilio_account_sid"
-                                    value="{{ old('twilio_account_sid', $settings->twilio_account_sid) }}"
-                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                                    placeholder="AC…"
-                                    autocomplete="off"
-                                >
-                            </label>
-                            <label class="block">
-                                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Auth token</span>
-                                <input
-                                    type="password"
-                                    name="twilio_auth_token"
-                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                                    placeholder="{{ ($shopIntegrations ?? null)?->hasStoredTwilioAuthToken() ? 'Saved — leave blank to keep' : 'Primary auth token' }}"
-                                    autocomplete="new-password"
-                                >
-                            </label>
-                        </div>
+                        <p class="mt-2 text-xs font-semibold text-slate-800">
+                            @if (($shopIntegrations ?? null)?->messagingConfigured())
+                                ARK Texting is connected.
+                            @else
+                                ARK Texting is not connected. The composer still works; messages will not send until the service is connected.
+                            @endif
+                        </p>
                     </div>
 
                     @if ($platformVoiceManaged)

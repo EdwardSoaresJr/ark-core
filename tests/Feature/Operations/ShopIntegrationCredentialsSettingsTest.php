@@ -2,17 +2,14 @@
 
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Operations\Telephony\TelephonyHealth;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\Schema;
 
-test('communications settings save twilio credentials encrypted in shop settings', function () {
+test('communications settings ignore submitted twilio account credentials', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
-
-    config()->set('services.twilio.account_sid', null);
-    config()->set('services.twilio.auth_token', null);
 
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.telephony.update'), [
@@ -27,23 +24,25 @@ test('communications settings save twilio credentials encrypted in shop settings
         ]));
 
     $settings = ShopSettings::current()->fresh();
-
-    expect($settings->twilio_account_sid)->toBe('AC-settings-test')
-        ->and($settings->twilio_auth_token)->toBe('secret-twilio-token');
-
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioConfigured())->toBeTrue()
-        ->and(TelephonyHealth::forCurrentShop()->credentialsConfigured())->toBeTrue();
+    expect($settings->telephony_inbound_number)->toBe('+17195550100')
+        ->and($credentials->twilioAccountSid())->toBeNull()
+        ->and($credentials->hasStoredTwilioAuthToken())->toBeFalse();
 });
 
-test('payments settings save square credentials encrypted in shop settings', function () {
+test('payments settings save capture surfaces without merchant credentials', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
-    config()->set('services.square.application_id', null);
-    config()->set('services.square.access_token', null);
-    config()->set('services.square.location_id', null);
+    ShopSettings::current()->persistTrusted([
+        'square_application_id' => 'sq0idp-existing',
+        'square_access_token' => 'existing-token',
+        'square_location_id' => 'LOC-EXISTING',
+        'square_webhook_signature_key' => 'wh-existing',
+        'square_environment' => 'production',
+        'square_enabled' => true,
+    ]);
 
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.payments.update'), [
@@ -52,7 +51,8 @@ test('payments settings save square credentials encrypted in shop settings', fun
             'square_location_id' => 'LOC-TEST',
             'square_webhook_signature_key' => 'wh-test-key',
             'square_environment' => 'sandbox',
-            'square_enabled' => '1',
+            'square_enabled' => '0',
+            'square_terminal_device_id' => 'DEVICE-PREFERRED',
             'square_terminal_enabled' => '1',
             'square_keyed_enabled' => '1',
             'square_portal_pay_enabled' => '1',
@@ -62,16 +62,17 @@ test('payments settings save square credentials encrypted in shop settings', fun
 
     $settings = ShopSettings::current()->fresh();
 
-    expect($settings->square_application_id)->toBe('sq0idp-test-app')
-        ->and($settings->square_access_token)->toBe('sq-test-access-token')
-        ->and($settings->square_location_id)->toBe('LOC-TEST')
-        ->and($settings->square_webhook_signature_key)->toBe('wh-test-key')
-        ->and($settings->square_environment)->toBe('sandbox');
-
-    expect(ShopIntegrationCredentials::forCurrentShop()->squareConfigured())->toBeTrue();
+    expect($settings->square_application_id)->toBe('sq0idp-existing')
+        ->and($settings->square_access_token)->toBe('existing-token')
+        ->and($settings->square_location_id)->toBe('LOC-EXISTING')
+        ->and($settings->square_webhook_signature_key)->toBe('wh-existing')
+        ->and($settings->square_environment)->toBe('production')
+        ->and((bool) $settings->square_enabled)->toBeTrue()
+        ->and($settings->square_terminal_device_id)->toBe('DEVICE-PREFERRED')
+        ->and((bool) $settings->square_terminal_enabled)->toBeTrue();
 });
 
-test('payments settings leave blank secrets unchanged', function () {
+test('payments settings leave leftover merchant secrets unchanged', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
@@ -100,19 +101,19 @@ test('payments settings leave blank secrets unchanged', function () {
 });
 
 test('shop integration credentials fall back to env when database is empty', function () {
-    ShopSettings::current()->persistTrusted([
-        'twilio_account_sid' => null,
-        'twilio_auth_token' => null,
+    $cleared = [
         'square_application_id' => null,
         'square_access_token' => null,
         'square_location_id' => null,
         'square_webhook_signature_key' => null,
         'square_environment' => null,
-        'partstech_username' => null,
-        'partstech_api_key' => null,
-        'partstech_password' => null,
-        'postmark_token' => null,
-    ]);
+    ];
+
+    if (Schema::hasColumn('shop_settings', 'postmark_token')) {
+        $cleared['postmark_token'] = null;
+    }
+
+    ShopSettings::current()->persistTrusted($cleared);
 
     config()->set('services.twilio.account_sid', 'AC-env-only');
     config()->set('services.twilio.auth_token', 'token-env-only');
@@ -125,40 +126,11 @@ test('shop integration credentials fall back to env when database is empty', fun
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioCredentialSource())->toBe('env')
-        ->and($credentials->squareCredentialSource())->toBe('env')
-        ->and($credentials->partsTechCredentialSource())->toBe('env')
-        ->and($credentials->postmarkCredentialSource())->toBe('env');
+    expect($credentials->twilioAccountSid())->toBeNull()
+        ->and($credentials->twilioCredentialSource())->toBe('none');
 });
 
-test('partstech settings save credentials encrypted in shop settings', function () {
-    $this->seed(ArkAuthorizationSeeder::class);
-    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
-
-    config()->set('services.partstech.username', null);
-    config()->set('services.partstech.password', null);
-    config()->set('services.partstech.api_key', null);
-
-    $this->actingAs($admin)
-        ->patch(route('operations.settings.shop.partstech.update'), [
-            'partstech_base_url' => 'https://partstech.test',
-            'partstech_username' => 'ark-shop',
-            'partstech_api_key' => 'api-key-secret',
-            'partstech_password' => 'shop-password',
-        ])
-        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'partstech']));
-
-    $settings = ShopSettings::current()->fresh();
-    $credentials = ShopIntegrationCredentials::forCurrentShop();
-
-    expect($settings->partstech_username)->toBe('ark-shop')
-        ->and($settings->partstech_api_key)->toBe('api-key-secret')
-        ->and($settings->partstech_password)->toBe('shop-password')
-        ->and($credentials->partsTechCatalogConfigured())->toBeTrue()
-        ->and($credentials->partsTechQuoteImportConfigured())->toBeTrue();
-});
-
-test('email settings save postmark credentials encrypted in shop settings', function () {
+test('email settings save shop reply-to without postmark credentials', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
@@ -176,14 +148,16 @@ test('email settings save postmark credentials encrypted in shop settings', func
         ]));
 
     $settings = ShopSettings::current()->fresh();
-    $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($settings->postmark_token)->toBe('postmark-server-token')
-        ->and($settings->postmark_reply_to)->toBe('service@example.com')
-        ->and($credentials->postmarkConfigured())->toBeTrue();
+    expect($settings->postmark_reply_to)->toBe('service@example.com')
+        ->and($settings->postmark_reply_to_name)->toBe('Example Shop');
+
+    if (Schema::hasColumn('shop_settings', 'postmark_token')) {
+        expect($settings->postmark_token)->not->toBe('postmark-server-token');
+    }
 });
 
-test('hosted email settings hide postmark credentials', function () {
+test('hosted email settings hide postmark credentials and keep reply-to', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
@@ -194,62 +168,70 @@ test('hosted email settings hide postmark credentials', function () {
         'communications-tab' => 'email',
     ]))
         ->assertOk()
-        ->assertSee('managed by ARK Platform', false)
-        ->assertSee('sent through ARK Mail', false)
+        ->assertSee('Customer email')
+        ->assertSee('Reply-To')
+        ->assertSee('name="postmark_reply_to"', false)
+        ->assertSee('Save reply-to settings', false)
         ->assertDontSee('name="postmark_token"', false)
-        ->assertDontSee('name="postmark_reply_to"', false)
         ->assertDontSee('Postmark email', false)
-        ->assertDontSee('Server token', false)
-        ->assertDontSee('Save email settings', false);
+        ->assertDontSee('Server token', false);
 });
 
-test('hosted email settings leave leftover postmark secrets unchanged', function () {
+test('hosted email settings save reply-to and leave leftover postmark secrets unchanged', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     enableHostedPlatformMail();
 
+    if (Schema::hasColumn('shop_settings', 'postmark_token')) {
+        ShopSettings::current()->persistTrusted([
+            'postmark_token' => 'leftover-shop-postmark',
+        ]);
+    }
+
     $this->actingAs($admin)
         ->patch(route('operations.settings.shop.email.update'), [
             'postmark_token' => 'should-not-save-token',
-            'postmark_reply_to' => 'should-not-save@example.com',
-            'postmark_reply_to_name' => 'Should Not Save',
+            'postmark_reply_to' => 'service@example.com',
+            'postmark_reply_to_name' => 'Example Shop',
             'postmark_message_stream_id' => 'should-not-save-stream',
         ])
         ->assertRedirect(route('operations.settings.shop.edit', [
             'section' => 'communications',
             'communications-tab' => 'email',
-        ]))
-        ->assertSessionHas('status', 'Customer email is managed by ARK Mail.');
+        ]));
 
     $settings = ShopSettings::current()->fresh();
 
-    expect($settings->postmark_token)->toBe('leftover-shop-postmark')
-        ->and($settings->postmark_reply_to)->toBeNull()
-        ->and($settings->postmark_reply_to_name)->toBeNull()
-        ->and($settings->postmark_message_stream_id)->toBeNull();
+    expect($settings->postmark_reply_to)->toBe('service@example.com')
+        ->and($settings->postmark_reply_to_name)->toBe('Example Shop');
+
+    if (Schema::hasColumn('shop_settings', 'postmark_token')) {
+        expect($settings->postmark_token)->toBe('leftover-shop-postmark');
+    }
 });
 
-test('integration settings pages show credential fields', function () {
+test('integration settings pages omit dead provider credentials', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'communications']))
         ->assertOk()
-        ->assertSee('Messaging account')
-        ->assertSee('Account SID')
-        ->assertSee('Auth token');
+        ->assertSee('Texting')
+        ->assertDontSee('Account SID')
+        ->assertDontSee('Auth token');
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()
-        ->assertSee('Application ID')
-        ->assertSee('Access token')
-        ->assertSee('Webhook signature key');
+        ->assertSee('Preferred terminal')
+        ->assertSee('Counter terminal')
+        ->assertDontSee('Application ID')
+        ->assertDontSee('Access token')
+        ->assertDontSee('Webhook signature key');
 
     $this->get(route('operations.settings.shop.edit', ['section' => 'partstech']))
         ->assertOk()
         ->assertSee('PartsTech')
-        ->assertSee('Shop username')
         ->assertSee('RepairLink')
         ->assertSee('Launch URL');
 
@@ -259,10 +241,11 @@ test('integration settings pages show credential fields', function () {
     ]))
         ->assertOk()
         ->assertSee('Customer email')
-        ->assertSee('Server token');
+        ->assertSee('Reply-To')
+        ->assertDontSee('Server token');
 });
 
-test('shop integration credentials prefer database values over env fallback', function () {
+test('shop integration credentials prefer database square values over env fallback', function () {
     config()->set('services.twilio.account_sid', 'AC-from-env');
     config()->set('services.twilio.auth_token', 'token-from-env');
     config()->set('services.square.application_id', 'sq-env-app');
@@ -272,8 +255,6 @@ test('shop integration credentials prefer database values over env fallback', fu
     config()->set('services.square.environment', 'sandbox');
 
     ShopSettings::current()->persistTrusted([
-        'twilio_account_sid' => 'AC-from-db',
-        'twilio_auth_token' => 'token-from-db',
         'square_application_id' => 'sq-db-app',
         'square_access_token' => 'sq-db-token',
         'square_location_id' => 'LOC-DB',
@@ -281,15 +262,15 @@ test('shop integration credentials prefer database values over env fallback', fu
         'square_environment' => 'production',
     ]);
 
+    $settings = ShopSettings::current()->fresh();
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioAccountSid())->toBe('AC-from-db')
-        ->and($credentials->twilioCredentialSource())->toBe('database')
-        ->and($credentials->squareEnvironment())->toBe('production')
-        ->and($credentials->squareCredentialSource())->toBe('database');
+    expect($credentials->twilioAccountSid())->toBeNull()
+        ->and($settings->square_environment)->toBe('production')
+        ->and($settings->square_application_id)->toBe('sq-db-app');
 });
 
-test('hosted payments settings keep square secrets and save capture surfaces only', function () {
+test('hosted payments settings keep square secrets and save capture surfaces', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
@@ -317,7 +298,7 @@ test('hosted payments settings keep square secrets and save capture surfaces onl
             'square_webhook_signature_key' => 'wh-should-not-save',
             'square_environment' => 'sandbox',
             'square_enabled' => '0',
-            'square_terminal_device_id' => 'DEVICE-SHOULD-NOT-SAVE',
+            'square_terminal_device_id' => 'DEVICE-PREFERRED',
             'square_terminal_enabled' => '1',
             'square_keyed_enabled' => '1',
             'square_portal_pay_enabled' => '1',
@@ -333,7 +314,7 @@ test('hosted payments settings keep square secrets and save capture surfaces onl
         ->and($settings->square_webhook_signature_key)->toBe('wh-existing')
         ->and($settings->square_environment)->toBe('production')
         ->and((bool) $settings->square_enabled)->toBeTrue()
-        ->and($settings->square_terminal_device_id)->toBe('DEVICE-EXISTING')
+        ->and($settings->square_terminal_device_id)->toBe('DEVICE-PREFERRED')
         ->and((bool) $settings->square_terminal_enabled)->toBeTrue()
         ->and((bool) $settings->square_keyed_enabled)->toBeTrue()
         ->and((bool) $settings->square_portal_pay_enabled)->toBeTrue()
