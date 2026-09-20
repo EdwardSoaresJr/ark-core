@@ -2,6 +2,7 @@
 
 use App\Ark\Install\InstallationIdentity;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -23,6 +24,17 @@ function enableHostedPlatformMail(?string $shopPublicId = null): string
         'ark_mail_from_email' => 'shop@example.test',
         'ark_mail_status' => 'connected',
     ]);
+
+    Http::fake([
+        'cloud.test/api/v1/status' => Http::response([
+            'ok' => true,
+            'services' => [
+                ['key' => 'voice', 'label' => 'ARK Voice', 'status' => 'not_enabled', 'status_label' => 'Not enabled', 'detail' => null],
+            ],
+        ], 200),
+    ]);
+
+    ManagedVoiceGate::resetMemo();
 
     return $installationUuid;
 }

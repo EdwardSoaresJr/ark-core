@@ -70,7 +70,7 @@
 
     $telephonyExtensions = $telephonyExtensions ?? collect();
     $telephonyExtensionDeviceTypes = $telephonyExtensionDeviceTypes ?? \App\Ark\Operations\Telephony\TelephonyExtensionDeviceType::cases();
-    $platformVoiceManaged = \App\Ark\Platform\PlatformConnection::current()->isConnected();
+    $platformVoiceManaged = (bool) ($platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady());
 @endphp
 
 <section x-show="active === 'communications'" x-cloak>
@@ -144,6 +144,7 @@
             @include('operations.settings.partials.mobile-push-settings', [
                 'settings' => $settings,
                 'telephonyHealth' => $telephonyHealth,
+                'platformVoiceManaged' => $platformVoiceManaged,
             ])
         @elseif ($platformVoiceManaged && in_array($communicationsTab, ['hours', 'recording', 'ring'], true))
             {{-- Hosted Voice: managed phone config is Platform-only. Banner above is the editor. --}}

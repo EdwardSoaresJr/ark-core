@@ -4,6 +4,7 @@ use App\Ark\Install\InstallationIdentity;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Platform\Http\VerifyPlatformFabricSignature;
 use App\Ark\Platform\PlatformConnection;
+use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -35,6 +36,17 @@ function enableHostedPlatformPayments(?string $shopPublicId = null): string
         'square_portal_pay_enabled' => false,
         'square_email_pay_enabled' => false,
     ]);
+
+    Http::fake([
+        'cloud.test/api/v1/status' => Http::response([
+            'ok' => true,
+            'services' => [
+                ['key' => 'voice', 'label' => 'ARK Voice', 'status' => 'not_enabled', 'status_label' => 'Not enabled', 'detail' => null],
+            ],
+        ], 200),
+    ]);
+
+    ManagedVoiceGate::resetMemo();
 
     return $installationUuid;
 }
