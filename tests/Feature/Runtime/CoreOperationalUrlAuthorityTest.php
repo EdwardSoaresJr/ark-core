@@ -13,7 +13,6 @@ beforeEach(function (): void {
         'LEARN_DOMAIN' => 'learn.lugsnplugs.test',
         'APP_URL' => 'https://app.lugsnplugs.test',
         'SHOP_BASE_URL' => 'https://app.lugsnplugs.test',
-        'BOOKSTACK_CUTOVER' => 'false',
     ];
 
     foreach ($vars as $key => $value) {
@@ -24,8 +23,6 @@ beforeEach(function (): void {
     }
 
     $this->refreshApplication();
-
-    config(['bookstack.cutover' => false]);
 });
 
 test('core origin ignores the public website domain', function (): void {

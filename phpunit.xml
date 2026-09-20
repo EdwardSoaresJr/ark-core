@@ -38,6 +38,5 @@
         <env name="SURFACE_DOMAINS_ENABLED" value="false"/>
         <env name="DRAGON_PROVIDER" value="fake"/>
         <ini name="memory_limit" value="512M"/>
-        <env name="BOOKSTACK_CUTOVER" value="false" force="true"/>
     </php>
 </phpunit>

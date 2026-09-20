@@ -1,13 +1,13 @@
 <?php
 
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\ShopExcellence\OwnerOperationalPulse;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Mail\OwnerDailyDigestMail;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Mail;
-
 
 beforeEach(function () {
     ShopSettings::current()->persistTrusted([
@@ -108,7 +108,7 @@ test('owner digest command skips when disabled in shop excellence targets', func
 test('owner digest includes sales posted cash and reconciliation summary', function () {
     $this->seed(ArkAuthorizationSeeder::class);
 
-    $digest = app(\App\Ark\Operations\ShopExcellence\OwnerOperationalPulse::class)->dailyDigest();
+    $digest = app(OwnerOperationalPulse::class)->dailyDigest();
 
     expect($digest)->toHaveKeys(['headlines', 'priorities', 'reconciliation', 'financial_url'])
         ->and(collect($digest['headlines'])->pluck('label')->all())->toContain('Sales Posted', 'Cash Collected')
@@ -117,7 +117,6 @@ test('owner digest includes sales posted cash and reconciliation summary', funct
 
 test('advisors can read client retention and financial literacy guides', function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config(['bookstack.cutover' => false]);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     completeRequiredLearnFor($advisor);
     $this->actingAs($advisor);

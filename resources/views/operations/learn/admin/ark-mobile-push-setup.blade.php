@@ -38,11 +38,6 @@
     <p>Send inbound test SMS to shop line → operations advisors with registered devices should receive push (queued job + FCM HTTP v1).</p>
     <p>Check Laravel logs for FCM warnings if delivery fails — stale tokens are cleared automatically.</p>
 
-    <h3>Sync ARKademy to BookStack</h3>
-    <p>After catalog changes deploy, run on production app container:</p>
-    <p><code>php artisan ark:arkademy:import-bookstack --force</code></p>
-    <p>Imports Blade catalog into <a href="https://learn.demo-auto.test">learn.demo-auto.test</a> and updates <code>arkademy_content_registry</code>.</p>
-
     <h3>Related</h3>
     <p>Install app on devices first: <a href="{{ route('operations.learn.show', ['role' => 'admin', 'article' => 'ark-mobile-android-deploy']) }}">ARK Mobile Android deploy</a>.</p>
     <p>Advisor mobile usage: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-attention']) }}">ARK Mobile Attention</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-check-in']) }}">Mobile check-in and OBD</a>.</p>

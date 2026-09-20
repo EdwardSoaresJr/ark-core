@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Ark\Operations\Learn\ArkademyUrls;
 use App\Ark\Runtime\Surfaces\SurfaceRouting;
 use Closure;
 use Illuminate\Http\Request;
@@ -38,7 +37,7 @@ class RedirectCrossSurfaceRequests
             return $next($request);
         }
 
-        if ($host === SurfaceRouting::learnHost() && ! ArkademyUrls::isCutover()) {
+        if ($host === SurfaceRouting::learnHost()) {
             $suffix = $request->path() === '/' ? '' : '/'.$request->path();
 
             return redirect()->to(

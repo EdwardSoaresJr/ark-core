@@ -64,21 +64,6 @@ return [
             ]) : [],
         ],
 
-        'bookstack' => [
-            'driver' => 'mysql',
-            'host' => env('BOOKSTACK_DB_HOST'),
-            'port' => env('BOOKSTACK_DB_PORT', '3306'),
-            'database' => env('BOOKSTACK_DB_DATABASE'),
-            'username' => env('BOOKSTACK_DB_USERNAME'),
-            'password' => env('BOOKSTACK_DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-        ],
-
         'arksms_legacy' => [
             'driver' => 'mysql',
             'host' => env('ARKSMS_LEGACY_HOST', '127.0.0.1'),

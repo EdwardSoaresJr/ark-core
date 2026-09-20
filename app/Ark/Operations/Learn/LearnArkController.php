@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Learn;
 
+use App\Ark\Runtime\Authorization\ArkCapability;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,20 +17,6 @@ class LearnArkController
     public function index(Request $request): View|RedirectResponse
     {
         $user = $request->user();
-
-        if (ArkademyUrls::isCutover()) {
-            $next = $this->progress->nextRequiredArticle($user)
-                ?? LearnArkCatalog::defaultArticleFor($user);
-
-            if ($next !== null) {
-                return redirect()->away(ArkademyUrls::pageUrlOrHome(
-                    $next['section']->key,
-                    $next['slug'],
-                ));
-            }
-
-            return redirect()->away(ArkademyUrls::homeUrl());
-        }
 
         $default = $this->progress->nextRequiredArticle($user)
             ?? LearnArkCatalog::defaultArticleFor($user);
@@ -45,10 +33,6 @@ class LearnArkController
 
     public function show(Request $request, string $role, string $article): View|RedirectResponse
     {
-        if (ArkademyUrls::isCutover()) {
-            return redirect()->away(ArkademyUrls::pageUrlOrHome($role, $article));
-        }
-
         $user = $request->user();
         $resolved = LearnArkCatalog::articleFor($user, $role, $article);
 
@@ -63,7 +47,7 @@ class LearnArkController
      * @param  array{section: LearnArkSection, slug: string, title: string, summary: string, view: string}|null  $article
      * @return array<string, mixed>
      */
-    private function viewData(\App\Models\User $user, ?array $article): array
+    private function viewData(User $user, ?array $article): array
     {
         $visibleSections = LearnArkCatalog::visibleSectionsFor($user);
         $articlesByRole = LearnArkCatalog::articlesByRole();
@@ -94,7 +78,7 @@ class LearnArkController
                     ->orderBy('slot')
                     ->get()
                 : collect(),
-            'canManageLearnMedia' => $user->can(\App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value),
+            'canManageLearnMedia' => $user->can(ArkCapability::SettingsManage->value),
             'trainingSummary' => $this->progress->summaryFor($user),
             'trainingProgress' => $this->progress->requiredProgressFor($user),
             'completedArticleKeys' => $completedArticleKeys,

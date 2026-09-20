@@ -2,7 +2,6 @@
 
 namespace App\Ark\Runtime\Ecosystem;
 
-use App\Ark\Operations\Learn\ArkademyUrls;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Ark\Runtime\Identity\Oidc\OidcProduct;
 use App\Ark\Runtime\Identity\Oidc\OidcProductAccessResolver;
@@ -80,7 +79,7 @@ final class EcosystemSwitcherProjection
         return $user->isMasterAdmin() || $user->hasRole('admin');
     }
 
-  /**
+    /**
      * @return array{id: string, label: string, url: string, external: bool, current: bool}
      */
     private function item(EcosystemProduct $product, string $url, bool $current): array
@@ -96,13 +95,6 @@ final class EcosystemSwitcherProjection
 
     private function arkademyHomeUrl(): string
     {
-        if (ArkademyUrls::isCutover()) {
-            return ArkademyUrls::homeUrl();
-        }
-
-        $base = rtrim((string) config('ark-ecosystem.arkademy_url'), '/');
-        $slug = (string) config('ark-ecosystem.shelf_slug', 'shop-in-a-box');
-
-        return "{$base}/shelves/{$slug}";
+        return route('operations.learn.index');
     }
 }

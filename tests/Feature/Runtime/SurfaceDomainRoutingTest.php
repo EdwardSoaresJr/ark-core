@@ -11,7 +11,6 @@ beforeEach(function (): void {
         'PUBLIC_DOMAIN' => 'lugsnplugs.test',
         'LEARN_DOMAIN' => 'learn.lugsnplugs.test',
         'APP_URL' => 'https://app.lugsnplugs.test',
-        'BOOKSTACK_CUTOVER' => 'false',
     ];
 
     foreach ($vars as $key => $value) {
@@ -22,8 +21,6 @@ beforeEach(function (): void {
     }
 
     $this->refreshApplication();
-
-    config(['bookstack.cutover' => false]);
 });
 
 test('portal estimate links use the Core application origin when a public website domain is set', function (): void {

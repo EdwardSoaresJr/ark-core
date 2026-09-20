@@ -6,8 +6,8 @@ return [
     | Ecosystem display theme cookie domain
     |--------------------------------------------------------------------------
     |
-    | Shared across ARK surfaces (app, learn, portal) so BookStack can honor
-    | ARK user light/dark preference before OIDC session sync is complete.
+    | Shared across ARK surfaces (app, learn, portal) so a later standalone
+    | ARKademy host can honor the same light/dark preference.
     |
     */
     'cookie_domain' => env('ARK_ECOSYSTEM_COOKIE_DOMAIN', env('SESSION_DOMAIN')),
@@ -19,9 +19,7 @@ return [
     */
     'operations_url' => rtrim((string) env('ARK_OPERATIONS_URL', env('APP_URL', 'http://localhost')), '/'),
 
-    'arkademy_url' => rtrim((string) env('ARK_ARKADEMY_URL', env('BOOKSTACK_URL', 'https://learn.demo-auto.test')), '/'),
+    'arkademy_url' => rtrim((string) env('ARK_ARKADEMY_URL', env('APP_URL', 'http://localhost')), '/'),
 
     'platform_url' => rtrim((string) env('ARK_PLATFORM_URL', 'https://platform.autorepairkeeper.com'), '/'),
-
-    'shelf_slug' => env('BOOKSTACK_SHELF_SLUG', 'shop-in-a-box'),
 ];

@@ -43,18 +43,4 @@ php artisan config:clear --no-interaction >/dev/null 2>&1 || true
 php artisan route:clear --no-interaction >/dev/null 2>&1 || true
 php artisan view:clear --no-interaction >/dev/null 2>&1 || true
 
-if [[ "${BOOKSTACK_CUTOVER:-false}" == "true" ]] \
-    && [[ -n "${BOOKSTACK_API_TOKEN_ID:-}" ]] \
-    && [[ -n "${BOOKSTACK_API_TOKEN_SECRET:-}" ]]; then
-    echo "[ark-post-deploy] syncing ARKademy catalog to BookStack..."
-    php artisan ark:arkademy:import-bookstack --force --no-interaction || {
-        echo "[ark-post-deploy] BookStack import failed (non-fatal)." >&2
-    }
-    php artisan ark:bookstack:lockdown --no-interaction || {
-        echo "[ark-post-deploy] BookStack lockdown failed (non-fatal)." >&2
-    }
-else
-    echo "[ark-post-deploy] BookStack sync skipped (cutover or API token not configured)."
-fi
-
 echo "[ark-post-deploy] complete."
