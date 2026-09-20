@@ -23,6 +23,7 @@ Canonical product architecture stays in domain docs. Engineering docs track proc
 | [adr/](adr/) | Immutable once accepted — new ADRs supersede old ones |
 | [STANDARDS.md](STANDARDS.md) | Rarely changes |
 | [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md) | Changes frequently |
+| [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md) | Public ARK is canonical Core |
 | [ACTIVE_PR.md](ACTIVE_PR.md) | Changes every PR |
 | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) | Append only |
 | [reviews/](reviews/) | Append per review — engineering judgment, not ADRs |
