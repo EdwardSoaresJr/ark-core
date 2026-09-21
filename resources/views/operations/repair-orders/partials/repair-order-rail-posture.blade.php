@@ -11,7 +11,7 @@
             )
             : (
                 (($financial['oweTodayCents'] ?? 0) > 0)
-                    ? 'Owe today '.($financial['oweToday'] ?? $financial['projectedBalance'])
+                    ? ($financial['positionAmountLabel'] ?? 'Estimate balance').' '.($financial['oweToday'] ?? $financial['projectedBalance'])
                     : $financial['workflowHint']
             ))
         : ($isDock ? 'Totals in the right rail.' : 'Totals stay in the panel below while you work.');

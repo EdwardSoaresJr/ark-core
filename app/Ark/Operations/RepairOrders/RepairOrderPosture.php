@@ -59,6 +59,8 @@ final class RepairOrderPosture
             $repairOrder->status->is(RepairOrderStatus::ReadyPickup) && ! $repairOrder->isPaid() => 'Collect balance before releasing vehicle',
             $repairOrder->status->is(RepairOrderStatus::ReadyPickup) && $repairOrder->isPaid() => 'Release vehicle and close repair order',
             $repairOrder->isTerminal() => 'Archived from active queue',
+            $repairOrder->status->is(RepairOrderStatus::WaitingParts) && ($partsBlockingCount > 0 || $repairOrder->hasUnresolvedApprovedParts()) => 'Order approved parts',
+            $repairOrder->status->is(RepairOrderStatus::WaitingParts) => 'Review parts readiness',
             $approvedConcerns->isNotEmpty() && $repairOrder->hasUnresolvedApprovedParts() => 'Order approved parts',
             $approvedConcerns->isNotEmpty() => 'Release approved work to production',
             $deferredConcerns->isNotEmpty() => 'Retain deferred work for follow-up',

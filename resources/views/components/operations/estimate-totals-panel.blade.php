@@ -27,7 +27,11 @@
     $showDepositDiagnosticsRow = $showDepositPartsRow;
 @endphp
 
-<div {{ $attributes->class(['ops-review-panel']) }}>
+<div {{ $attributes->class(['ops-review-panel', 'card', 'ark-tabler-ro__totals']) }}>
+    <div class="ark-tabler-ro-total-hero">
+        <span class="ark-tabler-ro-total-hero__label">Estimate Total</span>
+        <strong class="ark-tabler-ro-total-hero__value">{{ $totals->format($totals->totalCents()) }}</strong>
+    </div>
     <div class="ops-review-panel-header">
         <p class="ops-eyebrow">Estimate Total</p>
     </div>

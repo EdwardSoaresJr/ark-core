@@ -1,4 +1,4 @@
-@props(['title' => null, 'printing' => false])
+@props(['title' => null, 'printing' => false, 'tabler' => false])
 
 @php
 use App\Ark\Operations\Communications\AdvisorCommsPressure;
@@ -56,7 +56,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
     $workstationPresence = WorkstationPresence::resolve(request());
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full" @foreach ($accentHtml as $attribute => $value) {{ $attribute }}="{{ $value }}" @endforeach>
+    <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full{{ $tabler ? ' ark-tabler' : '' }}" @if ($tabler) data-bs-theme="light" @endif @foreach ($accentHtml as $attribute => $value) {{ $attribute }}="{{ $value }}" @endforeach>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -88,8 +88,11 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
 
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @if ($tabler)
+            @vite(['resources/css/tabler.css', 'resources/js/tabler.js'])
+        @endif
     </head>
-    <body class="min-h-screen overflow-x-hidden bg-slate-100 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">
+    <body class="min-h-screen overflow-x-hidden bg-slate-100 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100 {{ $tabler ? 'ark-tabler-body' : '' }}">
         <script>
             (() => {
                 const serverTheme = @json($displayTheme);
@@ -108,6 +111,9 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                 const applyTheme = (theme) => {
                     const isDark = theme === 'dark';
                     document.documentElement.classList.toggle('dark', isDark);
+                    if (document.documentElement.classList.contains('ark-tabler')) {
+                        document.documentElement.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+                    }
                     localStorage.setItem('ark_theme', theme);
                     localStorage.removeItem('hs_theme');
                 };

@@ -1,4 +1,4 @@
-<x-operations.app title="Repair Order - RO #{{ $repairOrder->repair_order_id }}" :printing="true">
+<x-operations.app title="Repair Order - RO #{{ $repairOrder->repair_order_id }}" :printing="true" :tabler="true">
     @php
         $isTerminal = $repairOrder->isTerminal();
         $statusCatalog = app(\App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog::class);
@@ -1493,7 +1493,7 @@
             },
         })"
         x-init="initWorksheetCollaboration(); initEstimateContextFromHash()"
-        class="ops-estimate-workspace ops-estimate-workspace--builder"
+        class="ops-estimate-workspace ops-estimate-workspace--builder ark-tabler-ro"
         @ark:partstech-warning.window="partstechNotice = $event.detail.message || ''; partstechCartLocked = Boolean($event.detail.cartLocked)"
         @ark:partstech-pull-quote-state.window="partstechPullLoading = Boolean($event.detail?.loading); partstechPullStatus = $event.detail?.status || ''"
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
@@ -1503,7 +1503,7 @@
 
         <div id="worksheet-status-flash">
             @if (session('error'))
-                <div class="border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+                <div class="alert alert-danger" role="alert">
                     {{ session('error') }}
                 </div>
             @endif
@@ -1518,8 +1518,9 @@
                 <div
                     data-worksheet-server-status
                     class="{{ $worksheetStatusSuccess
-                        ? 'border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950'
-                        : 'border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950' }}"
+                        ? 'alert alert-success'
+                        : 'alert alert-warning' }}"
+                    role="status"
                 >
                     {{ $worksheetStatus }}
                 </div>
@@ -1530,13 +1531,13 @@
             @endif
 
             @if ($errors->has('lifecycle'))
-                <div class="border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+                <div class="alert alert-danger" role="alert">
                     {{ $errors->first('lifecycle') }}
                 </div>
             @endif
         </div>
 
-        <div x-show="partstechNotice" x-cloak class="border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+        <div x-show="partstechNotice" x-cloak class="alert alert-warning" role="status">
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <p x-text="partstechNotice"></p>
@@ -1557,7 +1558,7 @@
             </div>
         </div>
 
-        <div x-show="laborGuideNotice" x-cloak class="border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-950">
+        <div x-show="laborGuideNotice" x-cloak class="alert alert-info" role="status">
             <div class="flex items-start justify-between gap-3">
                 <p x-text="laborGuideNotice"></p>
                 <button type="button" class="text-xs font-bold uppercase tracking-[0.08em] text-sky-800 hover:text-sky-950" @click="clearLaborGuideNotice()">Dismiss</button>
@@ -1570,82 +1571,37 @@
             'repairOrder' => $repairOrder,
         ])
 
-        <div class="ops-review-shell">
-            @include('operations.repair-orders.partials.operational-identity-band', [
-                'repairOrder' => $repairOrder,
-                'identityVariant' => 'staff',
-                'estimateVersion' => $estimateVersion,
-                'totals' => $totals,
-            ])
+        <div class="container-fluid px-3 px-xl-4 ark-tabler-ro__page">
+        <x-operations.tabler-ro-header
+            :repair-order="$repairOrder"
+            :totals="$totals"
+            :estimate-version="$estimateVersion"
+            :is-terminal="$isTerminal"
+            :can-author-repair-order="$canAuthorRepairOrder ?? false"
+            :financial="$financial"
+            :customer-documents-count="($customerDocuments ?? collect())->count()"
+            :lifecycle-options="$lifecycleOptions"
+            :close-variant-options="$closeVariantOptions"
+            :technicians="$technicians"
+            :solo-owner-shop="$soloOwnerShop"
+            :balance-projection="$balanceProjection ?? null"
+        />
 
-            <div id="review-toolbar" class="ops-review-actions">
-                <div class="ops-review-toolbar">
-                    @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
-                        'repairOrder' => $repairOrder,
-                    ])
-
-                    @unless ($isTerminal)
-                        @if ($canAuthorRepairOrder ?? false)
-                            <div class="ops-review-toolbar-section">
-                                <div class="ops-review-toolbar-row">
-                                    <button
-                                        type="button"
-                                        class="ops-review-action"
-                                        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'review-estimate-notes', context: {}, invokeEl: $event.currentTarget } }))"
-                                    >
-                                        Review Estimate Notes
-                                    </button>
-                                </div>
-                            </div>
-                        @endif
-                    @endunless
-
-                    @include('operations.repair-orders.partials.repair-order-toolbar-print-slot', [
-                        'repairOrder' => $repairOrder,
-                        'financial' => $financial,
-                        'customerDocumentsCount' => ($customerDocuments ?? collect())->count(),
-                        'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
-                        'isTerminal' => $isTerminal,
-                    ])
-
-                    @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
-                        'repairOrder' => $repairOrder,
-                        'isTerminal' => $isTerminal,
-                        'lifecycleOptions' => $lifecycleOptions,
-                        'closeVariantOptions' => $closeVariantOptions,
-                        'technicians' => $technicians,
-                        'soloOwnerShop' => $soloOwnerShop,
-                        'estimateVersion' => $estimateVersion,
-                        'financial' => $financial,
-                        'balanceProjection' => $balanceProjection ?? null,
-                        'mode' => 'edit',
-                    ])
-
-                    @include('operations.repair-orders.partials.repair-order-toolbar-mode-slot', [
-                        'repairOrder' => $repairOrder,
-                        'mode' => 'edit',
-                        'isTerminal' => $isTerminal,
-                        'registerModeShortcut' => false,
-                    ])
-                </div>
-
-                <div
-                    x-show="partstechCatalogOpening || partstechPullLoading"
-                    x-cloak
-                    class="ops-partstech-busy-strip"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span class="ops-partstech-loader shrink-0" aria-hidden="true"></span>
-                    <span x-text="partstechCatalogOpening
-                        ? ('Preparing ' + (partsCatalogActionLabel || 'PartsTech') + ' cart…')
-                        : (partstechPullStatus || ('Pulling ' + (partsCatalogActionLabel || 'PT Cart') + '…'))"></span>
-                </div>
-            </div>
+        <div
+            x-show="partstechCatalogOpening || partstechPullLoading"
+            x-cloak
+            class="alert alert-info"
+            role="status"
+            aria-live="polite"
+        >
+            <span class="ops-partstech-loader shrink-0" aria-hidden="true"></span>
+            <span x-text="partstechCatalogOpening
+                ? ('Preparing ' + (partsCatalogActionLabel || 'PartsTech') + ' cart…')
+                : (partstechPullStatus || ('Pulling ' + (partsCatalogActionLabel || 'PT Cart') + '…'))"></span>
         </div>
 
-        <div class="ops-estimate-layout">
-            <div class="ops-estimate-main min-w-0">
+        <div class="row g-3">
+            <div class="col-lg-8 col-xl-9 ops-estimate-main">
                 <x-operations.repair-order-workspace-tabs
                     workspaceMode="review"
                     :repairOrder="$repairOrder"
@@ -1721,10 +1677,10 @@
                         $evidenceItemsCount = ($evidenceGallery['items'] ?? collect())->count();
                     @endphp
                     @if ($evidenceItemsCount > 0)
-                        <div class="ops-builder-evidence-entry mb-4 flex flex-wrap gap-2">
+                        <div class="mb-3">
                             <button
                                 type="button"
-                                class="ops-builder-evidence-entry__btn"
+                                class="btn btn-outline-primary btn-sm"
                                 data-workspace-modal-trigger="evidence"
                                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'evidence', invokeEl: $event.currentTarget } }))"
                             >
@@ -1732,10 +1688,6 @@
                             </button>
                         </div>
                     @endif
-
-                    @unless ($isTerminal)
-                        {{-- Add Work lives on the contextual footer — one primary CTA per viewport. --}}
-                    @endunless
 
                     @include('operations.repair-orders.partials.workspace-modal.host', [
                         'repairOrder' => $repairOrder,
@@ -1766,12 +1718,12 @@
                                 'canImportQuote' => true,
                             ])
                         @elseif ($partsTechLauncher->usesPlatform() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
+                            <p class="text-secondary small">
                                 {{ $partsTechLauncher->blockedReason($repairOrder) }}
                             </p>
                         @elseif ($partsTechLauncher->configured() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
-                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}" class="font-semibold underline decoration-slate-400 hover:text-slate-900">Settings → PartsTech</a>.
+                            <p class="text-secondary small">
+                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
                             </p>
                         @endif
 
@@ -1783,8 +1735,6 @@
                         @endif
 
                         @php
-                            // Priority order (Diagnostic → … → Plan Soon), then advisor position.
-                            // Each concern carries its own priority badge — no group wrappers.
                             $worksheetConcerns = App\Ark\Operations\RepairOrders\RecommendationIntent::sortedModels($repairOrder->concerns);
                         @endphp
                         @forelse ($worksheetConcerns as $concern)
@@ -1798,84 +1748,32 @@
                                 $concernDefaultLaborRate = $concernLaborDefaults['rate'];
                                 $concernDefaultLaborCategoryKey = $concernLaborDefaults['category_key'];
                             @endphp
-                            <section id="concern-{{ $concern->id }}" class="ops-worksheet-concern {{ $concern->recommendationIntent()->worksheetScopeClass() }} ops-worksheet-concern--{{ $concern->disposition->value }} scroll-mt-24">
-                                <x-operations.scope-header
-                                    :title="$concern->summary"
-                                    :total="$totals->format($totals->concernSubtotalCents($concern->id))"
-                                    :eyebrow="($isTerminal || ! $concern->shouldSurfaceRecommendationStatus())
-                                        ? $concern->recommendationIntent()->staffLabel()
-                                        : null"
-                                    :eyebrow-class="$concern->recommendationIntent()->intentLabelClass()"
-                                >
-                                    <x-slot:subline>
-                                        @include('operations.repair-orders.partials.repair-order-concern-meaning-subline', [
-                                            'concern' => $concern,
-                                        ])
-                                    </x-slot:subline>
-                                    <x-slot:status>
-                                        @include('operations.repair-orders.partials.repair-order-concern-disposition-decision', [
-                                            'concern' => $concern,
-                                        ])
-                                    </x-slot:status>
-                                    @unless ($isTerminal)
-                                        <x-slot:toolbar>
-                                            @include('operations.repair-orders.partials.repair-order-concern-disposition-control', [
-                                                'repairOrder' => $repairOrder,
-                                                'concern' => $concern,
-                                                'isTerminal' => $isTerminal,
-                                                'estimateVersion' => $estimateVersion,
-                                                'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
-                                            ])
-                                            @include('operations.repair-orders.partials.repair-order-concern-production-status-control', [
-                                                'repairOrder' => $repairOrder,
-                                                'concern' => $concern,
-                                                'isTerminal' => $isTerminal,
-                                                'estimateVersion' => $estimateVersion,
-                                                'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
-                                            ])
-                                            @include('operations.repair-orders.partials.repair-order-concern-scope-settings', [
-                                                'repairOrder' => $repairOrder,
-                                                'concern' => $concern,
-                                                'isTerminal' => $isTerminal,
-                                                'estimateVersion' => $estimateVersion,
-                                                'concernDefaultLaborRate' => $concernDefaultLaborRate,
-                                                'canMoveScopeToNewRo' => ! ($financial['hasIssuedInvoice'] ?? false),
-                                                'partsCatalogs' => $partsCatalogs,
-                                                'partsCatalogDefault' => $partsCatalogDefault,
-                                                'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
-                                            ])
-                                        </x-slot:toolbar>
-                                    @endunless
-                                </x-operations.scope-header>
-
-                                @include('operations.repair-orders.partials.repair-order-concern-narrative-card', [
-                                    'repairOrder' => $repairOrder,
-                                    'concern' => $concern,
-                                    'isTerminal' => $isTerminal,
-                                    'estimateVersion' => $estimateVersion,
-                                ])
-
-                                @include('operations.repair-orders.partials.repair-order-concern-work-section', [
-                                    'repairOrder' => $repairOrder,
-                                    'concern' => $concern,
-                                    'isTerminal' => $isTerminal,
-                                    'editingLineId' => $editingLineId,
-                                    'totals' => $totals,
-                                    'taxLabel' => $taxLabel,
-                                    'estimateVersion' => $estimateVersion,
-                                    'concernDefaultLaborRate' => $concernDefaultLaborRate,
-                                    'concernDefaultLaborCategoryKey' => $concernDefaultLaborCategoryKey,
-                                    'concernPartsMatrixKey' => $concernPartsMatrixKey,
-                                    'partsMatrices' => $partsMatrices,
-                                    'laborCategories' => $laborCategories,
-                                    'defaultLaborRate' => $defaultLaborRate,
-                                    'defaultNotesPrivate' => $defaultNotesPrivate,
-                                    'technicians' => $technicians ?? collect(),
-                                ])
-                            </section>
+                            @include('operations.repair-orders.partials.tabler-concern-workspace', [
+                                'repairOrder' => $repairOrder,
+                                'concern' => $concern,
+                                'totals' => $totals,
+                                'isTerminal' => $isTerminal,
+                                'estimateVersion' => $estimateVersion,
+                                'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
+                                'financial' => $financial,
+                                'concernDefaultLaborRate' => $concernDefaultLaborRate,
+                                'concernDefaultLaborCategoryKey' => $concernDefaultLaborCategoryKey,
+                                'concernPartsMatrixKey' => $concernPartsMatrixKey,
+                                'partsMatrices' => $partsMatrices,
+                                'laborCategories' => $laborCategories,
+                                'defaultLaborRate' => $defaultLaborRate,
+                                'defaultNotesPrivate' => $defaultNotesPrivate,
+                                'technicians' => $technicians ?? collect(),
+                                'editingLineId' => $editingLineId,
+                                'taxLabel' => $taxLabel,
+                                'partsCatalogs' => $partsCatalogs,
+                                'partsCatalogDefault' => $partsCatalogDefault,
+                            ])
                         @empty
                             @if ($isTerminal)
-                                <div class="rounded-sm border border-dashed border-slate-300 bg-white px-4 py-4 text-sm text-slate-600">No scopes on this estimate.</div>
+                                <div class="empty">
+                                    <p class="empty-title">No scopes on this estimate.</p>
+                                </div>
                             @endif
                         @endforelse
 
@@ -1884,60 +1782,145 @@
                 </x-operations.repair-order-workspace-tabs>
             </div>
 
-            <aside id="estimate-builder-rail" class="ops-review-rail ops-review-rail--pinned">
-                <x-operations.estimate-totals-panel
-                    id="estimate-total-panel"
-                    class="ops-review-rail-totals-pinned"
-                    :totals="$totals"
-                    :tax-label="$taxLabel"
-                    :financial="$financial['showFinancialRail'] ? $financial : null"
-                    :repair-order="$repairOrder"
-                    :approval-forecast="$approvalForecast ?? null"
-                >
-                    @if ($financial['showFinancialRail'])
-                        @include('operations.repair-orders.partials.financial-payment-strip', [
-                            'repairOrder' => $repairOrder,
-                            'financial' => $financial,
-                            'estimateVersion' => $estimateVersion,
-                        ])
-                    @else
-                        <p class="text-xs leading-5 text-slate-600">
-                            {{ session('status') ? session('status').' Totals refreshed.' : ($repairOrder->lines->isNotEmpty() ? 'Review concerns and line totals before approval.' : 'Add at least one estimate line before approval review.') }}
-                        </p>
-                    @endif
-                </x-operations.estimate-totals-panel>
-
-                <div class="ops-review-rail__scroll">
-                    @include('operations.repair-orders.partials.repair-order-rail-posture', [
-                        'postureLayout' => 'rail',
-                        'repairOrder' => $repairOrder,
-                        'nextAction' => $nextAction ?? null,
-                        'approvalPosture' => $approvalPosture ?? null,
-                        'approvedConcerns' => $approvedConcerns ?? collect(),
-                        'deferredConcerns' => $deferredConcerns ?? collect(),
-                        'recommendedConcerns' => $recommendedConcerns ?? collect(),
-                        'lastApprovalEvent' => $lastApprovalEvent ?? null,
-                        'financial' => $financial ?? [],
-                        'partsBlockingCount' => $partsBlockingCount ?? 0,
-                    ])
-
-                    @include('operations.repair-orders.partials.operational-journey-card', [
-                        'operationalJourney' => $operationalJourney ?? null,
-                        'journeyComparison' => $journeyComparison ?? null,
-                    ])
-
-                    @if ($financial['showFinancialRail'])
-                        @include('operations.repair-orders.partials.financial-rail')
-                    @endif
-
-                    @include('operations.repair-orders.partials.repair-order-lifecycle-panel')
-
-                    @include('operations.work.partials.advisor-work-context-panel', [
-                        'followUps' => $openFollowUps ?? [],
-                        'tasks' => $openTasks ?? [],
-                    ])
-                </div>
+            <aside id="estimate-builder-rail" class="col-lg-4 col-xl-3 ops-review-rail">
+                @include('operations.repair-orders.partials.tabler-financial-center', [
+                    'repairOrder' => $repairOrder,
+                    'totals' => $totals,
+                    'financial' => $financial ?? [],
+                    'nextAction' => $nextAction ?? null,
+                    'approvalPosture' => $approvalPosture ?? null,
+                    'approvedConcerns' => $approvedConcerns ?? collect(),
+                    'recommendedConcerns' => $recommendedConcerns ?? collect(),
+                    'deferredConcerns' => $deferredConcerns ?? collect(),
+                    'isTerminal' => $isTerminal,
+                ])
             </aside>
+        </div>
+
+        <div class="row g-3 mt-1" id="ark-tabler-payment">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Payment &amp; settlement</h3>
+                        <div class="card-actions d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-secondary">Estimate total</span>
+                            <strong class="text-yellow">{{ $totals->format($totals->totalCents()) }}</strong>
+                            @if ($financial['showFinancialRail'] ?? false)
+                                <span class="text-secondary">·</span>
+                                <span class="text-secondary">{{ $financial['positionAmountLabel'] ?? 'Estimate balance' }}</span>
+                                <strong>{{ $financial['oweToday'] ?? $financial['projectedBalance'] ?? '—' }}</strong>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {{-- Keep panel in DOM for AJAX refresh targets. --}}
+                        <div class="d-none" aria-hidden="true">
+                            <x-operations.estimate-totals-panel
+                                id="estimate-total-panel"
+                                class="border-0 shadow-none mb-0"
+                                :totals="$totals"
+                                :tax-label="$taxLabel"
+                                :financial="$financial['showFinancialRail'] ? $financial : null"
+                                :repair-order="$repairOrder"
+                                :approval-forecast="$approvalForecast ?? null"
+                            />
+                        </div>
+                        @if ($financial['showFinancialRail'])
+                            @php
+                                $paymentPositionLabel = $financial['positionAmountLabel'] ?? 'Estimate balance';
+                                $paymentPositionAmount = $financial['oweToday'] ?? $financial['projectedBalance'] ?? null;
+                            @endphp
+                            <div class="row g-3 align-items-start">
+                                <div class="col-lg-4 col-xl-3">
+                                    <div class="card card-sm ark-tabler-ro__payment-summary">
+                                        <div class="card-body">
+                                            <div class="subheader">{{ $paymentPositionLabel }}</div>
+                                            <div class="display-6 fw-bold text-yellow mb-3">{{ $paymentPositionAmount ?? '—' }}</div>
+                                            <div class="datagrid">
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title">Estimate total</div>
+                                                    <div class="datagrid-content">{{ $totals->format($totals->totalCents()) }}</div>
+                                                </div>
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title">Labor</div>
+                                                    <div class="datagrid-content">{{ $totals->format($totals->laborCents()) }}</div>
+                                                </div>
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title">Parts</div>
+                                                    <div class="datagrid-content">{{ $totals->format($totals->partsCents()) }}</div>
+                                                </div>
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title">Fees</div>
+                                                    <div class="datagrid-content">{{ $totals->format($totals->feesCents()) }}</div>
+                                                </div>
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title">Tax</div>
+                                                    <div class="datagrid-content">{{ $totals->format($totals->taxCents()) }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-secondary small mt-3 pt-3 border-top">
+                                                @if ($financial['hasIssuedInvoice'] ?? false)
+                                                    Invoice {{ $financial['invoiceStatusLabel'] ?? 'issued' }}
+                                                @else
+                                                    Invoice not issued
+                                                @endif
+                                                @if (($financial['unappliedDepositsCents'] ?? 0) > 0)
+                                                    · Deposits {{ $financial['unappliedDeposits'] }}
+                                                @endif
+                                            </div>
+                                            @if (filled($financial['workflowHint'] ?? null))
+                                                <p class="text-secondary small mt-2 mb-0">{{ $financial['workflowHint'] }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-8 col-xl-9">
+                                    <div class="ark-tabler-ro__payment-forms">
+                                        @include('operations.repair-orders.partials.financial-payment-strip', [
+                                            'repairOrder' => $repairOrder,
+                                            'financial' => $financial,
+                                            'estimateVersion' => $estimateVersion,
+                                            'formsOnly' => true,
+                                        ])
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-secondary mb-0">
+                                {{ session('status') ? session('status').' Totals refreshed.' : ($repairOrder->lines->isNotEmpty() ? 'Review concerns and line totals before approval.' : 'Add at least one estimate line before approval review.') }}
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-none">
+            @include('operations.repair-orders.partials.repair-order-rail-posture', [
+                'postureLayout' => 'rail',
+                'repairOrder' => $repairOrder,
+                'nextAction' => $nextAction ?? null,
+                'approvalPosture' => $approvalPosture ?? null,
+                'approvedConcerns' => $approvedConcerns ?? collect(),
+                'deferredConcerns' => $deferredConcerns ?? collect(),
+                'recommendedConcerns' => $recommendedConcerns ?? collect(),
+                'lastApprovalEvent' => $lastApprovalEvent ?? null,
+                'financial' => $financial ?? [],
+                'partsBlockingCount' => $partsBlockingCount ?? 0,
+            ])
+            @include('operations.repair-orders.partials.operational-journey-card', [
+                'operationalJourney' => $operationalJourney ?? null,
+                'journeyComparison' => $journeyComparison ?? null,
+            ])
+            @if ($financial['showFinancialRail'])
+                @include('operations.repair-orders.partials.financial-rail')
+            @endif
+            @include('operations.repair-orders.partials.repair-order-lifecycle-panel')
+            @include('operations.work.partials.advisor-work-context-panel', [
+                'followUps' => $openFollowUps ?? [],
+                'tasks' => $openTasks ?? [],
+            ])
+        </div>
         </div>
 
         @include('operations.repair-orders.partials.repair-order-rte-labor-panel', [

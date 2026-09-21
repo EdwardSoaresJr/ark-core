@@ -19,9 +19,9 @@
         : null;
 @endphp
 
-@include('operations.repair-orders._line-composition', [
+@include('operations.repair-orders.partials.tabler-line-row', [
     'line' => $line,
-    'displayDescription' => $worksheetLineTitle,
+    'lineTitle' => $worksheetLineTitle ?? $line->description,
     'suppressLaborDescription' => $suppressLaborDescription,
     'repairOrder' => $repairOrder,
     'totals' => $totals,

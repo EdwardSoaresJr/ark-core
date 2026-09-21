@@ -128,8 +128,8 @@ export function arkRoWorkspaceTabs(config = {}) {
 
         tabClass(name) {
             return this.tab === name
-                ? 'ops-ro-workspace-tab ops-ro-workspace-tab--active'
-                : 'ops-ro-workspace-tab';
+                ? 'nav-link active ops-ro-workspace-tab ops-ro-workspace-tab--active'
+                : 'nav-link ops-ro-workspace-tab';
         },
 
         panelShellClass(name) {

@@ -37,7 +37,7 @@
                 aria-haspopup="menu"
                 title="Other labor guides"
             >
-                ▾
+                <span class="ark-tabler-ro__split-caret" aria-hidden="true"></span>
             </button>
         </div>
         <div

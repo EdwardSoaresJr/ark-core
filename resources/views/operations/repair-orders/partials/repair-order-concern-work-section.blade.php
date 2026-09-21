@@ -104,20 +104,31 @@
 
         <div class="ops-repair-action__lines">
             @if ($workGroupLines->isNotEmpty())
-                @include('operations.repair-orders.partials.repair-order-line-ledger-head')
+                @include('operations.repair-orders.partials.tabler-lines-table-open')
+                @foreach ($workGroupLines as $line)
+                    @include('operations.repair-orders.partials.repair-order-concern-line-row', [
+                        'line' => $line,
+                        'workGroup' => $workGroup,
+                        'workGroupLaborCount' => $workGroupLaborCount,
+                    ])
+                @endforeach
+                @include('operations.repair-orders.partials.tabler-lines-table-close')
             @endif
-            @foreach ($workGroupLines as $line)
-                @include('operations.repair-orders.partials.repair-order-concern-line-row', [
-                    'line' => $line,
-                    'workGroup' => $workGroup,
-                    'workGroupLaborCount' => $workGroupLaborCount,
-                ])
-            @endforeach
         </div>
 
         @unless ($isTerminal)
             @php
-                $composeButtons = collect($allowedComposerTypes)->map(function ($type) {
+                $composeTypeOrder = [
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor->value => 10,
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Part->value => 20,
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet->value => 30,
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Note->value => 40,
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Fee->value => 50,
+                ];
+                $composeButtons = collect($allowedComposerTypes)
+                    ->sortBy(fn ($type) => $composeTypeOrder[$type->value] ?? 99)
+                    ->values()
+                    ->map(function ($type) {
                     $value = $type->value;
                     $ariaLabel = match ($type) {
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => 'Add Labor',
@@ -135,7 +146,6 @@
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Fee => 'Fee',
                         default => $type->staffLabel(),
                     };
-                    // Full class strings — Tailwind purges @layer component selectors not seen in content.
                     [$icon, $btnClass] = match ($type) {
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => ['labor', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--labor'],
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Part => ['part', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--part'],
@@ -149,6 +159,16 @@
                 });
             @endphp
             <div class="ops-repair-action__compose-actions">
+                <button
+                    type="button"
+                    class="ops-repair-action__compose-btn ops-repair-action__compose-btn--saved-work"
+                    aria-label="Add Common Job"
+                    title="Add Common Job to this concern"
+                    @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'saved-work', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
+                >
+                    @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'saved-work'])
+                    <span class="ops-repair-action__compose-label">Common Job</span>
+                </button>
                 @foreach ($composeButtons as $composeButton)
                     <button
                         type="button"
@@ -178,55 +198,51 @@
 
 <div class="ops-worksheet-lines">
     @if ($displayLines->isNotEmpty())
-        @include('operations.repair-orders.partials.repair-order-line-ledger-head', [
-            'ledgerHeadLabel' => $concernUsesRepairActions ? 'Standalone scope lines' : 'Scope lines',
+        @include('operations.repair-orders.partials.tabler-lines-table-open', [
+            'ledgerHeadLabel' => $concernUsesRepairActions ? 'Standalone scope lines' : 'Description',
         ])
+        @foreach ($displayLines as $line)
+            @include('operations.repair-orders.partials.repair-order-concern-line-row', [
+                'line' => $line,
+            ])
+        @endforeach
+        @include('operations.repair-orders.partials.tabler-lines-table-close')
     @endif
-
-    @foreach ($displayLines as $line)
-        @include('operations.repair-orders.partials.repair-order-concern-line-row', [
-            'line' => $line,
-        ])
-    @endforeach
 </div>
-
-@unless ($isTerminal)
-    @if ($concernUsesRepairActions)
-        <div class="ops-repair-action__add-row ops-repair-action__add-row--footer">
-            <button
-                type="button"
-                class="ops-repair-action__add-btn"
-                aria-label="Add Common Job"
-                title="Add Common Job to this concern"
-                @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'saved-work', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
-            >
-                + Common Job
-            </button>
-        </div>
-    @endif
-@endunless
 
 @unless ($isTerminal)
     @if ($concernUsesRepairActions && $concernWorkGroups->isEmpty())
         {{-- No Repair Action yet — deepest context is the concern. --}}
-        <div class="ops-repair-action__add-row ops-repair-action__add-row--footer ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
+        <div class="ops-repair-action__compose-actions ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
             <button
                 type="button"
-                class="ops-repair-action__add-btn"
+                class="ops-repair-action__compose-btn ops-repair-action__compose-btn--saved-work"
                 aria-label="Add Common Job"
                 title="Add Common Job to this concern"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'saved-work', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
             >
-                + Common Job
+                @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'saved-work'])
+                <span class="ops-repair-action__compose-label">Common Job</span>
             </button>
             <button
                 type="button"
-                class="ops-repair-action__add-btn"
+                class="ops-repair-action__compose-btn ops-repair-action__compose-btn--note"
                 aria-label="Add Note"
                 title="Add Note"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'note', context: { lineType: 'note', concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
             >
-                + Note
+                @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'note'])
+                <span class="ops-repair-action__compose-label">Note</span>
+            </button>
+            <button
+                type="button"
+                class="ops-repair-action__compose-btn ops-repair-action__compose-btn--evidence"
+                aria-label="Add Photo"
+                title="Add Photo"
+                @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'evidence', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
+            >
+                @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'evidence'])
+                <span class="ops-repair-action__compose-label">Photo</span>
             </button>
         </div>
     @elseif (! $concernUsesRepairActions)
@@ -235,8 +251,8 @@
             $scopeComposeTypes = [
                 App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor,
                 App\Ark\Operations\RepairOrders\RepairOrderLineType::Part,
-                App\Ark\Operations\RepairOrders\RepairOrderLineType::Note,
                 App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet,
+                App\Ark\Operations\RepairOrders\RepairOrderLineType::Note,
             ];
             $scopeComposeButtons = collect($scopeComposeTypes)->map(function ($type) {
                 $value = $type->value;

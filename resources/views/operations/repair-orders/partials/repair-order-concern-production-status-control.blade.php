@@ -17,6 +17,7 @@
     <button
         type="button"
         class="ops-builder-present-chip"
+        data-tone="{{ $concern->productionStatus()->value }}"
         style="{{ $productionToneStyle }}"
         title="Production status"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-production', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
@@ -43,6 +44,7 @@
                 id="concern-production-status-{{ $concern->id }}"
                 name="production_status"
                 class="ops-production-status-select"
+                data-tone="{{ $concern->productionStatus()->value }}"
                 style="{{ $productionToneStyle }}"
                 onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
             >

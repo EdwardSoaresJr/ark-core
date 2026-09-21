@@ -22,7 +22,7 @@ beforeEach(function (): void {
     $this->seed(RepairOrderStatusCatalogSeeder::class);
 });
 
-test('presenter pre-invoice with deposit exposes owe today without claiming settlement paid', function () {
+test('presenter pre-invoice with deposit exposes estimate balance without claiming settlement paid', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $this->actingAs($advisor);
 
@@ -39,6 +39,7 @@ test('presenter pre-invoice with deposit exposes owe today without claiming sett
     $presenter = app(RepairOrderFinancialPresenter::class)->for($repairOrder, $totals);
 
     expect($presenter['hasIssuedInvoice'])->toBeFalse()
+        ->and($presenter['positionAmountLabel'])->toBe('Estimate balance')
         ->and($presenter['oweTodayCents'])->toBe(10000)
         ->and($presenter['oweToday'])->toBe('$100.00')
         ->and($presenter['settlementBalanceDueCents'])->toBe(0)
@@ -54,7 +55,7 @@ test('presenter pre-invoice with deposit exposes owe today without claiming sett
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Owe today')
+        ->assertSee('Estimate balance')
         ->assertSee('$100.00')
         ->assertDontSee('Settlement paid')
         ->assertSee('Invoice not issued');

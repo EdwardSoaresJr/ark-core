@@ -61,7 +61,7 @@
 @endphp
 
 <div @class([
-    'ops-ro-identity-band grid bg-slate-50 md:grid-cols-3',
+    'ops-ro-identity-band bg-slate-50',
     'border-b border-slate-200' => ! ($embeddedInServiceLaneBand ?? false),
     'bg-white' => in_array($identityVariant, ['document', 'document-pdf'], true),
 ]) @if (empty($embeddedInServiceLaneBand)) id="ro-identity-band" @endif>

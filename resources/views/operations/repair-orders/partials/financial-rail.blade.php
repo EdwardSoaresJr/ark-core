@@ -167,7 +167,7 @@
                     </div>
                     @if ($financial['oweTodayDiffersFromSettlement'] ?? false)
                         <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Owe today</dt>
+                            <dt class="text-slate-500">{{ $financial['positionAmountLabel'] ?? 'Owe today' }}</dt>
                             <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
                         </div>
                     @endif
@@ -177,12 +177,12 @@
                         <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['unappliedDeposits'] }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Owe today</dt>
+                        <dt class="font-bold text-slate-700">{{ $financial['positionAmountLabel'] ?? 'Estimate balance' }}</dt>
                         <dd class="font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
                     </div>
                 @else
                     <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Owe today</dt>
+                        <dt class="font-bold text-slate-700">{{ $financial['positionAmountLabel'] ?? 'Estimate balance' }}</dt>
                         <dd class="font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
                     </div>
                 @endif

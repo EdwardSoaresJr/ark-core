@@ -40,7 +40,7 @@
 <div
     id="repair-order-workspace-tabs"
     {{ $attributes->class([
-        'ops-ro-workspace-tabs ops-review-panel min-w-0 scroll-mt-6',
+        'ops-ro-workspace-tabs ops-review-panel card min-w-0 scroll-mt-6',
         'ops-ro-workspace-tabs--builder-only' => ! $showTabNav,
     ]) }}
     x-data="arkRoWorkspaceTabs({
@@ -53,11 +53,12 @@
     })"
 >
     @if ($showTabNav)
-    <nav class="ops-ro-workspace-tabs__nav" aria-label="Repair order workspace" role="tablist">
+    <div class="card-header">
+    <nav class="ops-ro-workspace-tabs__nav nav nav-tabs card-header-tabs" aria-label="Repair order workspace" role="tablist">
         <button
             type="button"
             role="tab"
-            class="ops-ro-workspace-tab"
+            class="nav-link ops-ro-workspace-tab"
             :class="tabClass('builder')"
             x-on:click="selectTab('builder')"
             :aria-selected="tab === 'builder'"
@@ -68,7 +69,7 @@
             <button
                 type="button"
                 role="tab"
-                class="ops-ro-workspace-tab"
+                class="nav-link ops-ro-workspace-tab"
                 :class="tabClass('inspect')"
                 x-on:click="selectTab('inspect')"
                 :aria-selected="tab === 'inspect'"
@@ -83,7 +84,7 @@
             <button
                 type="button"
                 role="tab"
-                class="ops-ro-workspace-tab"
+                class="nav-link ops-ro-workspace-tab"
                 :class="tabClass('recommendations')"
                 x-on:click="selectTab('recommendations')"
                 :aria-selected="tab === 'recommendations'"
@@ -101,7 +102,7 @@
             <button
                 type="button"
                 role="tab"
-                class="ops-ro-workspace-tab"
+                class="nav-link ops-ro-workspace-tab"
                 :class="tabClass('comms')"
                 x-on:click="selectTab('comms')"
                 :aria-selected="tab === 'comms'"
@@ -113,7 +114,7 @@
             <button
                 type="button"
                 role="tab"
-                class="ops-ro-workspace-tab"
+                class="nav-link ops-ro-workspace-tab"
                 :class="tabClass('history')"
                 x-on:click="selectTab('history')"
                 :aria-selected="tab === 'history'"
@@ -125,9 +126,10 @@
             </button>
         @endif
     </nav>
+    </div>
     @endif
 
-    <div class="ops-ro-workspace-tabs__panels">
+    <div class="ops-ro-workspace-tabs__panels card-body">
         <div x-show="tab === 'builder'" role="tabpanel">
             {{ $slot }}
         </div>

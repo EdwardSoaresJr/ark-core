@@ -18,6 +18,7 @@
     <button
         type="button"
         class="ops-builder-present-chip"
+        data-tone="{{ $concern->disposition->value }}"
         style="{{ $dispositionToneStyle }}"
         title="Customer decision"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-disposition', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
@@ -41,6 +42,7 @@
                 id="concern-disposition-{{ $concern->id }}"
                 name="disposition"
                 class="ops-disposition-select"
+                data-tone="{{ $concern->disposition->value }}"
                 style="{{ $dispositionToneStyle }}"
                 onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
             >

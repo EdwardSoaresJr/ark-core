@@ -126,11 +126,12 @@ final class RepairOrderFinancialPresenter
                 : null,
             'collectionWaiverLabel' => $this->collectionDisposition($repairOrder)->waiverCustomerLabel(),
             'excludesFromPostedSales' => $this->collectionDisposition($repairOrder)->excludesFromPostedSales(),
-            // Owe today — FinancialPositionProjection
+            // Position — FinancialPositionProjection (label depends on invoice state)
             'oweTodayCents' => $oweTodayCents,
             'oweToday' => $this->formatCents($oweTodayCents),
             'oweTodayDecimal' => $this->decimalCents($oweTodayCents),
             'oweTodayDiffersFromSettlement' => $oweTodayDiffersFromSettlement,
+            'positionAmountLabel' => $balance->hasIssuedInvoice ? 'Owe today' : 'Estimate balance',
             // Settlement — BalanceDueResult (issued invoice contract)
             'settlementBalanceDueCents' => $settlementBalanceDueCents,
             'settlementBalanceDue' => $balance->hasIssuedInvoice

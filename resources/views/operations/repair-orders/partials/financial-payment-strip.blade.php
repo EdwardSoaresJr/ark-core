@@ -5,6 +5,8 @@
     $hasSettlementDue = $hasIssuedInvoice && $settlementBalanceDueCents > 0;
     $oweTodayCents = (int) ($financial['oweTodayCents'] ?? $financial['customerOwesTodayCents'] ?? 0);
     $oweTodayDiffers = (bool) ($financial['oweTodayDiffersFromSettlement'] ?? false);
+    $positionAmountLabel = $financial['positionAmountLabel']
+        ?? ($hasIssuedInvoice ? 'Owe today' : 'Estimate balance');
     $tone = match (true) {
         $hasSettlementDue => 'ops-financial-payment-strip--due',
         $hasIssuedInvoice && $isPaid => 'ops-financial-payment-strip--paid',
@@ -12,9 +14,11 @@
         default => '',
     };
     $recentLedger = ($financial['ledgerEntries'] ?? collect())->reject(fn (array $entry): bool => $entry['isVoided'] ?? false)->take(3);
+    $formsOnly = (bool) ($formsOnly ?? false);
 @endphp
 
 <div id="financial-payment-panel" class="ops-financial-payment-strip {{ $tone }}">
+    @unless ($formsOnly)
     @if ($hasIssuedInvoice)
         <div class="ops-financial-payment-strip__balance">
             <div class="min-w-0">
@@ -33,7 +37,7 @@
                     @endif
                 </p>
                 @if ($oweTodayDiffers)
-                    <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Owe today</p>
+                    <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $positionAmountLabel }}</p>
                     <p class="text-sm font-bold tabular-nums text-slate-700">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</p>
                 @endif
             </div>
@@ -55,7 +59,7 @@
     @elseif (($financial['unappliedDepositsCents'] ?? 0) > 0)
         <div class="ops-financial-payment-strip__balance">
             <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Owe today</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $positionAmountLabel }}</p>
                 <p class="mt-0.5 text-2xl font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</p>
             </div>
             <div class="shrink-0 text-right text-xs font-semibold leading-4 text-slate-600">
@@ -71,7 +75,7 @@
     @elseif ($oweTodayCents > 0)
         <div class="ops-financial-payment-strip__balance">
             <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Owe today</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $positionAmountLabel }}</p>
                 <p class="mt-0.5 text-2xl font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</p>
             </div>
             <div class="shrink-0 text-right text-xs font-semibold leading-4 text-slate-600">
@@ -86,6 +90,7 @@
             <p class="text-xs font-semibold leading-4 text-slate-700">{{ $financial['workflowHint'] }}</p>
         </div>
     @endif
+    @endunless
 
     @error('invoice')
         <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
@@ -143,7 +148,7 @@
         @if ($financial['canWaiveBalance'] ?? false)
             <a
                 href="#waive-balance"
-                class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-amber-300 bg-amber-50 px-3 text-xs font-bold text-amber-950 hover:border-amber-400"
+                class="btn btn-outline-warning w-100 ark-tabler-ro__waive-btn"
             >
                 Waive balance
             </a>
