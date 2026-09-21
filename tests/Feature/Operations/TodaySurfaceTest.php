@@ -202,7 +202,8 @@ test('shop dashboard chart ranks volume first and marks the peak cluster', funct
     expect($peakKeys)->toEqual([
         RepairOrderStatus::Estimate->value,
         RepairOrderStatus::WaitingApproval->value,
-    ]);
+    ])
+        ->and($dash->concentrationLine)->toBe('4 of 5 in Building Estimate and Waiting Approval');
 
     foreach ($dash->chartRows as $index => $row) {
         if ($index > 0) {
@@ -213,8 +214,17 @@ test('shop dashboard chart ranks volume first and marks the peak cluster', funct
     $this->actingAs($advisor)
         ->get(route('operations.today'))
         ->assertOk()
-        ->assertSee('ops-shop-dash-lane--peak', false)
-        ->assertSee('Car count by status')
+        ->assertSee('4 of 5 in Building Estimate and Waiting Approval')
+        ->assertSee('Estimates to finish')
+        ->assertSee('Awaiting customer decision')
+        ->assertSee('Open estimates')
+        ->assertSee('Review approvals')
+        ->assertSee('Pending recommendations')
+        ->assertSee('ops-shop-dash-next__item', false)
+        ->assertSee('ops-shop-dash-rest__item', false)
+        ->assertSee('Sales by status')
+        ->assertDontSee('Car count by status')
+        ->assertDontSee('ops-shop-dash-next__track', false)
         ->assertDontSee('title="Phone"', false)
         ->assertDontSee('title="Open matching repair orders"', false);
 });

@@ -1,6 +1,25 @@
 @php
     $dashboard = $today->shopDashboard;
     $sections = $today->nonEmptySections();
+    $actionKeys = [
+        App\Ark\Operations\RepairOrders\RepairOrderStatus::Estimate->value,
+        App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval->value,
+    ];
+    $actionRows = $dashboard === null ? [] : array_values(array_filter(
+        $dashboard->statusRows,
+        static fn (array $row): bool => in_array($row['key'], $actionKeys, true),
+    ));
+    if ($actionRows === [] && $dashboard !== null) {
+        $actionRows = array_values(array_filter(
+            $dashboard->chartRows,
+            static fn (array $row): bool => (bool) $row['peak'],
+        ));
+    }
+    $shownKeys = array_column($actionRows, 'key');
+    $restRows = $dashboard === null ? [] : array_values(array_filter(
+        $dashboard->statusRows,
+        static fn (array $row): bool => ! in_array($row['key'], $shownKeys, true),
+    ));
 @endphp
 
 <x-operations.app title="Today">
@@ -27,66 +46,97 @@
                     </nav>
                 </div>
 
-                <div class="ops-shop-dash-kpis" role="list" aria-label="Shop KPIs">
-                    @foreach ($dashboard->kpis as $kpi)
-                        @if (filled($kpi['url'] ?? null))
-                            <a
-                                href="{{ $kpi['url'] }}"
-                                class="ops-shop-dash-kpi ops-shop-dash-kpi--link"
-                                role="listitem"
-                                aria-label="{{ $kpi['label'] }} {{ $kpi['value'] }}. Open matching repair orders"
-                            >
-                                <span class="ops-shop-dash-kpi__label">{{ $kpi['label'] }}</span>
-                                <span class="ops-shop-dash-kpi__value">{{ $kpi['value'] }}</span>
-                                @if (filled($kpi['hint'] ?? null))
-                                    <span class="ops-shop-dash-kpi__hint">{{ $kpi['hint'] }}</span>
-                                @endif
-                            </a>
-                        @else
-                            <div class="ops-shop-dash-kpi" role="listitem">
-                                <span class="ops-shop-dash-kpi__label">{{ $kpi['label'] }}</span>
-                                <span class="ops-shop-dash-kpi__value">{{ $kpi['value'] }}</span>
-                                @if (filled($kpi['hint'] ?? null))
-                                    <span class="ops-shop-dash-kpi__hint">{{ $kpi['hint'] }}</span>
-                                @endif
+                <section class="ops-shop-dash-focus" aria-label="What needs you">
+                    <div class="ops-shop-dash-focus__head">
+                        <h2 class="ops-shop-dash-focus__title">
+                            {{ $dashboard->concentrationLine ?? 'Open cars' }}
+                        </h2>
+                    </div>
+                    @if ($dashboard->statusRows === [])
+                        <p class="ops-shop-dash-focus__empty">No open cars on the board.</p>
+                    @else
+                        @if ($actionRows !== [])
+                            <div class="ops-shop-dash-next" role="list">
+                                @foreach ($actionRows as $row)
+                                    @php
+                                        $actionTitle = match ($row['key']) {
+                                            App\Ark\Operations\RepairOrders\RepairOrderStatus::Estimate->value => 'Estimates to finish',
+                                            App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval->value => 'Awaiting customer decision',
+                                            default => $row['label'],
+                                        };
+                                        $actionCta = match ($row['key']) {
+                                            App\Ark\Operations\RepairOrders\RepairOrderStatus::Estimate->value => 'Open estimates',
+                                            App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval->value => 'Review approvals',
+                                            default => 'Open matching ROs',
+                                        };
+                                    @endphp
+                                    <a
+                                        href="{{ $row['status_url'] }}"
+                                        class="ops-shop-dash-next__item"
+                                        role="listitem"
+                                        aria-label="{{ $actionTitle }}: {{ $row['car_count'] }} {{ $row['car_count'] === 1 ? 'car' : 'cars' }}, {{ $row['pending_label'] }} pending. {{ $actionCta }}"
+                                    >
+                                        <span class="ops-shop-dash-next__kicker">{{ $actionTitle }}</span>
+                                        <span class="ops-shop-dash-next__count">{{ $row['car_count'] }}</span>
+                                        <span class="ops-shop-dash-next__money">{{ $row['pending_label'] }}</span>
+                                        <span class="ops-shop-dash-next__hint">Pending recommendations</span>
+                                        <span class="ops-shop-dash-next__cta">
+                                            {{ $actionCta }}
+                                            <span class="ops-shop-dash-next__go" aria-hidden="true">→</span>
+                                        </span>
+                                    </a>
+                                @endforeach
                             </div>
                         @endif
-                    @endforeach
-                </div>
-
-                <section class="ops-shop-dash-chart" aria-label="Car count by status">
-                    <div class="ops-shop-dash-chart__head">
-                        <h2 class="ops-shop-dash-chart__title">Car count by status</h2>
-                        <p class="ops-shop-dash-chart__note">{{ $dashboard->footnote }}</p>
-                    </div>
-                    @if ($dashboard->chartRows === [])
-                        <p class="ops-shop-dash-chart__empty">No open cars on the board.</p>
-                    @else
-                        <div class="ops-shop-dash-lanes">
-                            @foreach ($dashboard->chartRows as $row)
-                                <a
-                                    href="{{ $row['status_url'] }}"
-                                    @class([
-                                        'ops-shop-dash-lane',
-                                        'ops-shop-dash-lane--peak' => $row['peak'],
-                                    ])
-                                    aria-label="{{ $row['label'] }}: {{ $row['car_count'] }} {{ $row['car_count'] === 1 ? 'car' : 'cars' }}"
-                                >
-                                    <span class="ops-shop-dash-lane__label">{{ $row['label'] }}</span>
-                                    <span class="ops-shop-dash-lane__count">{{ $row['car_count'] }}</span>
-                                    <span class="ops-shop-dash-lane__track">
-                                        <span
-                                            class="ops-shop-dash-lane__fill"
-                                            style="width: {{ max(3, $row['bar_pct']) }}%"
-                                        ></span>
-                                    </span>
-                                </a>
-                            @endforeach
-                        </div>
+                        @if ($restRows !== [])
+                            <div class="ops-shop-dash-rest" role="list" aria-label="Also on the board">
+                                @foreach ($restRows as $row)
+                                    <a
+                                        href="{{ $row['status_url'] }}"
+                                        class="ops-shop-dash-rest__item"
+                                        role="listitem"
+                                        aria-label="{{ $row['label'] }}: {{ $row['car_count'] }} {{ $row['car_count'] === 1 ? 'car' : 'cars' }}. Open matching repair orders"
+                                    >
+                                        <span class="ops-shop-dash-rest__count">{{ $row['car_count'] }}</span>
+                                        <span class="ops-shop-dash-rest__label">{{ $row['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
                     @endif
                 </section>
 
-                <section class="ops-shop-dash-table-wrap" aria-label="Sales by status">
+                <section class="ops-shop-dash-finance" aria-label="Financial performance">
+                    <div class="ops-shop-dash-kpis" role="list" aria-label="Shop KPIs">
+                        @foreach ($dashboard->kpis as $kpi)
+                            @if (filled($kpi['url'] ?? null))
+                                <a
+                                    href="{{ $kpi['url'] }}"
+                                    class="ops-shop-dash-kpi ops-shop-dash-kpi--link"
+                                    role="listitem"
+                                    aria-label="{{ $kpi['label'] }} {{ $kpi['value'] }}. Open matching repair orders"
+                                >
+                                    <span class="ops-shop-dash-kpi__label">{{ $kpi['label'] }}</span>
+                                    <span class="ops-shop-dash-kpi__value">{{ $kpi['value'] }}</span>
+                                    @if (filled($kpi['hint'] ?? null))
+                                        <span class="ops-shop-dash-kpi__hint">{{ $kpi['hint'] }}</span>
+                                    @endif
+                                </a>
+                            @else
+                                <div class="ops-shop-dash-kpi" role="listitem">
+                                    <span class="ops-shop-dash-kpi__label">{{ $kpi['label'] }}</span>
+                                    <span class="ops-shop-dash-kpi__value">{{ $kpi['value'] }}</span>
+                                    @if (filled($kpi['hint'] ?? null))
+                                        <span class="ops-shop-dash-kpi__hint">{{ $kpi['hint'] }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <div class="ops-shop-dash-table-wrap">
+                    <h2 class="ops-shop-dash-table-wrap__title">Sales by status</h2>
+                    <p class="ops-shop-dash-table-wrap__note">{{ $dashboard->footnote }}</p>
                     <table class="ops-shop-dash-table">
                         <thead>
                             <tr>
@@ -145,6 +195,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </section>
             </div>
         </section>
