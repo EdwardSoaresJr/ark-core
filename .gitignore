@@ -20,6 +20,7 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/backups/
 /storage/pail
 /storage/app/private/**
 !/storage/app/private/.gitignore
