@@ -67,6 +67,7 @@ final readonly class ShopDashboardProjection
         public array $kpis,
         public array $statusRows,
         public array $chartRows,
+        public ?string $concentrationLine,
         public string $jobBoardUrl,
         public string $openQueueUrl,
         public string $pendingUrl,

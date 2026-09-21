@@ -175,12 +175,13 @@ final class ShopDashboardProjectionBuilder
             ],
             statusRows: $statusRows,
             chartRows: $chartRows,
+            concentrationLine: $this->concentrationLine($statusRows, $carCount),
             jobBoardUrl: route('operations.index'),
             openQueueUrl: $openQueueUrl,
             pendingUrl: $pendingUrl,
             declinedUrl: $declinedUrl,
             approvedUrl: $approvedUrl,
-            footnote: 'Click a number to open matching ROs · Posted sales live on Reports / Day Review',
+            footnote: 'Posted sales live on Reports / Day Review',
         );
     }
 
@@ -290,6 +291,47 @@ final class ShopDashboardProjectionBuilder
         );
 
         return $chartRows;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $statusRows
+     */
+    private function concentrationLine(array $statusRows, int $carCount): ?string
+    {
+        $actionKeys = [
+            RepairOrderStatus::Estimate->value,
+            RepairOrderStatus::WaitingApproval->value,
+        ];
+        $focusRows = array_values(array_filter(
+            $statusRows,
+            static fn (array $row): bool => in_array($row['key'], $actionKeys, true),
+        ));
+
+        if ($focusRows === []) {
+            $focusRows = array_values(array_filter(
+                $statusRows,
+                static fn (array $row): bool => (bool) $row['peak'],
+            ));
+        }
+
+        if ($focusRows === [] || $carCount < 1) {
+            return null;
+        }
+
+        $count = 0;
+        $labels = [];
+        foreach ($focusRows as $row) {
+            $count += (int) $row['car_count'];
+            $labels[] = (string) $row['label'];
+        }
+
+        $joined = match (count($labels)) {
+            1 => $labels[0],
+            2 => $labels[0].' and '.$labels[1],
+            default => implode(', ', array_slice($labels, 0, -1)).', and '.$labels[array_key_last($labels)],
+        };
+
+        return $count.' of '.$carCount.' in '.$joined;
     }
 
     private function inventoryUrl(
