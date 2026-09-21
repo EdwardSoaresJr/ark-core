@@ -2,6 +2,8 @@
 
 **ARK Core** (`https://github.com/EdwardSoaresJr/ark-core.git`) is the canonical Core development repository.
 
+What Core is, versus Platform and separate products: [docs/PRODUCT_BOUNDARY.md](../PRODUCT_BOUNDARY.md).
+
 ARK Platform remains a separate repository (`https://github.com/EdwardSoaresJr/ark-platform.git`).
 
 `arksmsv2` is a legacy private tree. It must receive no new Core development. LugsNPlugs production may keep running from its current Core image until an explicit public-ARK cutover.

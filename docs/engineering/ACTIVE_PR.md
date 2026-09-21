@@ -1,5 +1,7 @@
 # Active PR
 
+Maintainer working notes — not product documentation.
+
 **Track:** Estimate companion historical backfill  
 **Status:** Implementation  
 **Surface:** `ark:estimate-companions:backfill` · closed/posted ROs

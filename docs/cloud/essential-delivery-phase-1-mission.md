@@ -1,9 +1,11 @@
 # Essential Delivery — Phase 1 Mission (Core)
 
+Maintainer delivery notes for a demo box. Not a public Core install guide.
+
 **Status:** PHASE 1 COMPLETE ✅  
 **Companion (Cloud):** `ark-cloud/docs/essential-delivery-phase-1-mission.md`  
 **Shipped:** Core `44db4f9` on `demo.autorepairkeeper.com` only  
-**Transport accepted:** 2026-09-03 · demo paired Box · Postmark delivery to `esoares9483@gmail.com`
+**Transport accepted:** 2026-09-03 · demo paired Box · Postmark delivery verified (recipient address removed from public docs)
 
 ## Invariants (locked)
 

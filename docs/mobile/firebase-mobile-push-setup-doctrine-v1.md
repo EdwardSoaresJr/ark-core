@@ -1,5 +1,7 @@
 # Firebase Mobile Push Setup Doctrine
 
+Maintainer transport-wiring notes. Not a public Core install guide.
+
 **Status:** v1 — LugsNPlugs reference implementation  
 **Sequence:** Authority → Observation → Transport (when proven) → **Setup wiring** (this doc)
 

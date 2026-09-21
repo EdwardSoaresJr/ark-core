@@ -1,69 +1,77 @@
 # Installing ARK
 
-ARK is self-hosted web software. The normal path:
+ARK Core is self-hosted shop software. **Docker Compose is the recommended, verified path.**
 
-1. Deploy ARK to a web server (or start the PHP/Laravel stack locally)
-2. Visit the ARK URL in a browser
-3. Complete the **first-run setup wizard** at `/setup`
-4. Enter ARK with the administrator you created
+1. Start the Compose stack
+2. Open the ARK URL
+3. Complete **first-run setup** at `/setup`
+4. Sign in with the administrator you created
 
-You should **not** need to hand-edit a giant `.env` for a typical install.
+You should not hand-edit a large `.env` for a typical Compose install.
+
+What the installer does **not** do: load demo tickets, enable email/SMS/card capture, or turn on Dragon.
 
 ## Prerequisites
 
-- PHP 8.3+ with extensions required by Composer (`pdo_mysql`, `mbstring`, `openssl`, …)
+**Compose (recommended):** Docker with Compose v2. The app image includes PHP, nginx, Horizon, Reverb, and the scheduler.
+
+**Native PHP (advanced):**
+
+- PHP 8.3+ with Composer extensions (`pdo_mysql`, `mbstring`, `openssl`, …)
+- Node.js and npm (`npm install` and `npm run build` — assets are not committed)
 - MySQL 8 (empty database)
 - Writable `storage/` and `bootstrap/cache/`
-- Composer dependencies installed (`composer install`)
 
-Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Reverb support). Native LAMP/LEMP installs can start thinner for first-run, then add Redis before enabling realtime telephony and background jobs.
+Redis is required in Compose. Native installs can start with file drivers, then add Redis before relying on queues and realtime.
 
-## Bootstrap vs application configuration
+## Bootstrap vs shop configuration
 
 | Layer | Examples | Where it lives |
 | --- | --- | --- |
-| Bootstrap | `APP_KEY`, `APP_URL`, `DB_*` | Environment / `.env` (allowlisted writer only) |
-| Application | shop name, timezone, phone | `ShopSettings` (database) |
-| Integrations | Mail, telephony, labor guides | Optional — Settings after install |
+| Bootstrap | `APP_KEY`, `APP_URL`, `DB_*` | Environment / `.env` |
+| Shop | name, timezone, phone | Settings (database) |
+| Managed services | Email, SMS, card capture, hosted voice | ARK Platform after install |
+| Licensed data | Labor-guide CSVs | Import yourself; never bundled |
 
 ## Two deployment modes
 
 **Writable:** ARK can update `.env` during setup.
 
-**Immutable (Docker/K8s/platform):** Compose/Coolify inject `DB_*` (and usually `APP_URL`). Docker Compose generates `APP_KEY`, the application database password, the MySQL root password, and Reverb secrets on first boot when they are not already stored. The wizard verifies the runtime database and continues.
+**Immutable (Docker):** Compose injects `DB_*` and usually `APP_URL`. First boot generates `APP_KEY`, database passwords, and Reverb secrets onto a volume when they are not already stored. The wizard verifies the runtime database and continues.
 
 ## After install
 
 - `/setup` is **locked**. There is no `?force=` reopen.
-- Configure Dragon, telephony, and mail under **Settings** when ready. Record external payments on the repair order; managed processors belong to ARK Platform Payments.
-- Licensed labor-guide data is never bundled. Import only what you are licensed to use.
+- Configure shop identity, hours, financial rules, workflow, documents, staff, and printing under **Settings**.
+- Connect **ARK Platform** only if you need customer email, texting, in-app card capture, or hosted voice.
+- Record payments taken at the counter on the repair order. Managed card processors are not a Core Settings form.
+- Stock Core has no working Dragon model provider. Dragon Memory in Settings does not enable an assistant.
+- Licensed labor-guide data is never bundled. Import only what you are licensed to use (`ark:rte-import`).
 
 ## Operator commands
 
 ```bash
 php artisan ark:install-status
-php artisan ark:install-recover --force   # clears interrupted IN_PROGRESS only — never unlocks INSTALLED
+php artisan ark:install-recover --force   # interrupted IN_PROGRESS only — never unlocks INSTALLED
 ```
 
 ## Cloud VPS beginner guide
 
-Step-by-step for a small Ubuntu cloud server, Docker, HTTPS (Caddy), and `/setup`:
+Ubuntu, Docker, HTTPS (Caddy), `/setup`:
 
 → **[vultr.md](./vultr.md)**
 
-**1 GB RAM** is the supported starter/minimum for a small shop (use swap). **2 GB RAM** is recommended when you want extra headroom during updates, imports, photos, and heavier use.
+**1 GB RAM** is the supported starter/minimum for a small shop (use swap). **2 GB RAM** is recommended when you want extra headroom.
 
 ## Docker Compose (recommended)
-
-Self-host stack — same runtime shape production uses:
 
 | Service | Role |
 | --- | --- |
 | `mysql` | Application database (volume `ark_mysql`) |
-| `redis` | Cache and optional session/queue transport (volume `ark_redis` — **ephemeral**, not shop truth) |
-| `app` | Production Dockerfile: nginx, PHP-FPM, **Horizon**, **Reverb**, **scheduler** (volume `ark_storage`) |
+| `redis` | Cache and optional session/queue transport (volume `ark_redis` — **ephemeral**) |
+| `app` | nginx, PHP-FPM, Horizon, Reverb, scheduler (volume `ark_storage`) |
 
-Durable state boundary (backup/restore): **`ark_mysql` + `ark_secrets` + `ark_storage`**. See **[portable-state.md](./portable-state.md)**.
+Durable backup/restore: **`ark_mysql` + `ark_secrets` + `ark_storage`**. See **[portable-state.md](./portable-state.md)**.
 
 ```bash
 docker compose up -d --build
@@ -71,14 +79,28 @@ docker compose up -d --build
 
 Then open **http://localhost:8088/setup**.
 
-The Database step should show **Connected** for a normal Compose install. You do not type Docker-internal MySQL credentials.
+The Database step should show **Connected**. You do not type Docker-internal MySQL credentials.
 
-First boot generates unique database and realtime secrets onto a dedicated volume. Recreating containers keeps those secrets. `docker compose down -v` is a new installation and generates new secrets.
+First boot writes unique secrets onto a volume. Recreating containers keeps them. `docker compose down -v` is a new installation.
 
-Compose uses Redis for cache, sessions, Horizon, and Reverb. Advanced PHP installs can start thinner, then add Redis before enabling realtime telephony and background jobs.
+## Native PHP
 
-## Advanced installation
+```bash
+composer install
+npm install
+npm run build
+cp .env.example .env
+php artisan key:generate
+```
 
-Native PHP / Apache / Nginx (LAMP or LEMP), manual queue workers, and the reduced `docker/selfhost/Dockerfile` Apache image are documented for operators who know why they want them. They are **not** the default path. Prefer Compose unless you are intentionally running a custom stack.
+Point `DB_*` at an empty MySQL database (or let `/setup` write them on a writable host), then `php artisan serve` and open `/setup`.
+
+Optional development seed (not first-run): `php artisan db:seed` may create `admin@ark.test` / `password`. Production installs use the wizard admin only.
 
 See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md).
+
+## Advanced
+
+Native Apache/Nginx, manual queue workers, and `docker/selfhost/Dockerfile` are for operators who already know why they want them. Prefer Compose.
+
+Product boundaries: [../PRODUCT_BOUNDARY.md](../PRODUCT_BOUNDARY.md).

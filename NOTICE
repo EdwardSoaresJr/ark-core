@@ -64,7 +64,8 @@ license texts from `vendor/` when redistributing a built tree.
 
 ARK Core records external and manual payments on the repair-order ledger.
 Managed card processors are not bundled with Core. Online processor connectivity
-belongs to ARK Cloud Payments (future). See `docs/platform/ark-payments-boundary-v1.md`.
+belongs to ARK Platform Payments. See `docs/platform/ark-payments-boundary-v1.md`
+and `docs/PRODUCT_BOUNDARY.md`.
 
 ---
 

@@ -1,7 +1,7 @@
 # Technical Debt
 
 **Purpose:** What must eventually disappear.  
-**Purpose (continued):** This file records what still violates the target architecture. Git records what shipped.
+**Companion:** Git history records what changed; this file records what still violates the intended Core/Platform split.
 
 **Rule:** Do not build on items listed here. New work routes through the replacement named in each entry.
 
@@ -111,6 +111,27 @@
 **Replacement:** Explicit Coolify app container name (or label) in shop runtime profile and deploy docs.
 
 **Remove when:** Every migrate/artisan one-liner names the target container deterministically.
+
+---
+
+## Leftover Twilio / Square residue (unresolved)
+
+**Status:** Open. Documentation in this hygiene pass does **not** resolve it.
+
+Stock Core **supported** paths (verified in code):
+
+- Outbound SMS → `PlatformOutboundSmsTransport` (ARK Platform Texting). Comment in that class: stock Core never talks to Twilio for send.
+- Voice → `TelephonyProviderManager` always returns `NotConfiguredTelephonyProvider`.
+- Card capture inside ARK → not a stock Core Settings integration. Staff record external payments on the repair-order ledger.
+
+Residue that remains in this tree:
+
+- `ShopIntegrationCredentials::twilioConfigured()` and related Twilio-named accessors (send path is Platform; the name is leftover)
+- `PaymentGateway::Square`, `shop_settings.square_*` columns, and historical `payment_gateway_attempts`
+- `MobileCallRecordingPlaybackController` still performs HTTP basic auth to a recording URL, but account SID/token are hard-null so playback 404s
+- Feature tests still stub `https://api.twilio.com/*`
+
+Do not document Twilio or Square as supported stock-Core integrations. Do not delete this entry because the README was corrected. Remove the entry only when the residue is gone or a later accepted ADR on this repository records a different decision.
 
 ---
 
