@@ -1,4 +1,13 @@
-<div class="ops-board-shell ops-cal-agenda">
+<div
+    class="ops-board-shell ops-cal-agenda"
+    x-data="arkScheduleAppointmentPopover"
+    :style="{ '--ops-cal-pop-top': popTop + 'px', '--ops-cal-pop-left': popLeft + 'px' }"
+    @click="close()"
+    @click.outside="close()"
+    @keydown.escape.window="close()"
+    @scroll.window="reposition()"
+    @resize.window="reposition()"
+>
     @if (($w['total_count'] ?? 0) === 0)
         <div class="border-b border-slate-100 px-3 py-2">
             <p class="text-sm font-semibold text-slate-800">No appointments yet.</p>

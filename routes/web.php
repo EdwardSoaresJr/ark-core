@@ -10,6 +10,7 @@ use App\Ark\Dragon\ServiceAdvisor\Http\RequestLineNoteRewriteController;
 use App\Ark\Dragon\ServiceAdvisor\Http\RequestServiceAdvisorRewriteController;
 use App\Ark\Dragon\ServiceAdvisor\Http\RequestVisitReasonRewriteController;
 use App\Ark\Dragon\ServiceAdvisor\Http\RevertServiceAdvisorRewriteController;
+use App\Ark\Operations\Appointments\AppointmentAssignController;
 use App\Ark\Operations\Appointments\AppointmentConfirmationSmsController;
 use App\Ark\Operations\Appointments\AppointmentCreateController;
 use App\Ark\Operations\Appointments\AppointmentIndexController;
@@ -568,6 +569,9 @@ SurfaceRouting::appRoutes(function (): void {
 
                 Route::patch('/app/appointments/{appointment}/reschedule', AppointmentRescheduleController::class)
                     ->name('operations.appointments.reschedule');
+
+                Route::patch('/app/appointments/{appointment}/assign', AppointmentAssignController::class)
+                    ->name('operations.appointments.assign');
 
                 Route::patch('/app/appointments/{appointment}/status', AppointmentStatusController::class)
                     ->name('operations.appointments.status');

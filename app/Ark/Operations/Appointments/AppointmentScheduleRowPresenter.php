@@ -43,6 +43,7 @@ final class AppointmentScheduleRowPresenter
      *     customer_url: string,
      *     call_url: string|null,
      *     text_url: string|null,
+     *     repair_order_number: string|null,
      *     repair_order_url: string|null,
      *     show_url: string,
      *     create_url: string|null,
@@ -73,8 +74,11 @@ final class AppointmentScheduleRowPresenter
             : null;
 
         $arrival = null;
+        $repairOrderNumber = null;
         if ($appointment->repairOrder !== null) {
             $arrival = RepairOrderVisitMode::fromRepairOrder($appointment->repairOrder);
+            $shopNumber = $appointment->repairOrder->repair_order_id;
+            $repairOrderNumber = filled($shopNumber) ? (string) $shopNumber : null;
         }
 
         $workstationLabel = $appointment->workstation !== null
@@ -121,6 +125,7 @@ final class AppointmentScheduleRowPresenter
             'customer_url' => $customerUrl,
             'call_url' => $hasPhone ? 'tel:'.$phoneDigits : null,
             'text_url' => $textUrl,
+            'repair_order_number' => $repairOrderNumber,
             'repair_order_url' => $appointment->repair_order_id !== null
                 ? route('operations.repair-orders.show', $appointment->repairOrder)
                 : null,

@@ -390,14 +390,14 @@ test('unassigned appointments appear on the agenda scheduler', function () {
         ->and($agenda['lane_rows'][0]['cards'][0]['column_index'])->toBe(0)
         ->and($agenda['lane_rows'][0]['cards'][0]['column_count'])->toBe(3);
 
-    $this->actingAs($advisor)
+        $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-06-10', 'view' => 'day']))
         ->assertOk()
         ->assertDontSee('Technicians', false)
         ->assertDontSee('>Bays<', false)
         ->assertSee('Unassigned plan', false)
-        ->assertSee('ops-cal-card__detail', false)
-        ->assertSee('Open to reschedule', false);
+        ->assertSee('arkScheduleAppointmentPopover', false)
+        ->assertSee('ops-cal-month__popover', false);
 
     Carbon::setTestNow();
 });

@@ -90,6 +90,40 @@ final class AppointmentScheduleGuard
     }
 
     /**
+     * Assignment-only updates keep existing start/end times — do not re-check hours.
+     *
+     * @return array{technician_user_id: int|null, workstation_id: int|null, _schedule_warnings: list<string>}
+     */
+    public function assertAssignmentChange(
+        Appointment $appointment,
+        ?int $technicianUserId,
+        ?int $workstationId,
+    ): array {
+        if ($technicianUserId === 0) {
+            $technicianUserId = null;
+        }
+        if ($workstationId === 0) {
+            $workstationId = null;
+        }
+
+        $this->assertOptionalWorkstation($workstationId, $appointment);
+
+        $warnings = $this->assignmentOverlapWarnings(
+            $appointment->starts_at,
+            $appointment->ends_at,
+            $technicianUserId,
+            $workstationId,
+            $appointment->id,
+        );
+
+        return [
+            'technician_user_id' => $technicianUserId,
+            'workstation_id' => $workstationId,
+            '_schedule_warnings' => $warnings,
+        ];
+    }
+
+    /**
      * @return list<string>
      */
     private function assignmentOverlapWarnings(

@@ -14948,9 +14948,10 @@
         overflow-x: auto;
     }
 
-    /* Hover detail expands past the card — don't clip while inspecting. */
+    /* Detail popover expands past the card — don't clip while open/inspecting. */
     .ops-cal-day__lanes:has(.ops-cal-card:hover),
-    .ops-cal-day__lanes:has(.ops-cal-card:focus-within) {
+    .ops-cal-day__lanes:has(.ops-cal-card:focus-within),
+    .ops-cal-day__lanes:has(.ops-cal-appt-event--open) {
         overflow: visible;
     }
 
@@ -14961,7 +14962,8 @@
     }
 
     .ops-cal-lane:has(.ops-cal-card:hover),
-    .ops-cal-lane:has(.ops-cal-card:focus-within) {
+    .ops-cal-lane:has(.ops-cal-card:focus-within),
+    .ops-cal-lane:has(.ops-cal-appt-event--open) {
         z-index: 5;
         overflow: visible;
     }
@@ -15026,6 +15028,11 @@
 
     .ops-cal-card__body {
         display: block;
+        width: 100%;
+        margin: 0;
+        border: 0;
+        background: transparent;
+        text-align: left;
         flex: 1 1 auto;
         min-height: 0;
         padding: 0.25rem 0.35rem;
@@ -15034,6 +15041,21 @@
         color: inherit;
         overflow: hidden;
         cursor: pointer;
+        font: inherit;
+    }
+
+    .ops-cal-card.ops-cal-appt-event--open {
+        z-index: 45;
+        overflow: visible;
+    }
+
+    .ops-cal-card__ro {
+        display: block;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: theme('colors.sky.800');
+        line-height: 1.15;
     }
 
     .ops-cal-card__customer {
@@ -15207,16 +15229,31 @@
 
     .ops-cal-week__item {
         display: flex;
+        width: 100%;
         gap: 0.35rem;
+        margin: 0;
         padding: 0.15rem 0;
+        border: 0;
+        background: transparent;
+        text-align: left;
         text-decoration: none;
         color: inherit;
+        font: inherit;
         font-size: 0.6875rem;
         line-height: 1.25;
+        cursor: pointer;
     }
 
     .ops-cal-week__item:hover {
         color: theme('colors.sky.800');
+    }
+
+    .ops-cal-week__event {
+        position: relative;
+    }
+
+    .ops-cal-week__event.ops-cal-appt-event--open {
+        z-index: 5;
     }
 
     .ops-cal-week__item-time {
@@ -15255,9 +15292,224 @@
         background: theme('colors.sky.50');
     }
 
+    .ops-cal-week-alloc {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .ops-cal-week-alloc__scroll {
+        max-height: min(72vh, 46rem);
+        overflow: auto;
+    }
+
+    .ops-cal-week-alloc__grid {
+        display: grid;
+        grid-template-columns: minmax(7.5rem, 9.5rem) repeat(7, minmax(7.5rem, 1fr));
+        gap: 1px;
+        min-width: 64rem;
+        background: theme('colors.slate.200');
+        border: 1px solid theme('colors.slate.200');
+    }
+
+    .ops-cal-week-alloc__corner,
+    .ops-cal-week-alloc__day-head,
+    .ops-cal-week-alloc__resource,
+    .ops-cal-week-alloc__cell {
+        background: #fff;
+    }
+
+    .ops-cal-week-alloc__corner,
+    .ops-cal-week-alloc__day-head {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        padding: 0.4rem 0.45rem;
+        background: theme('colors.slate.50');
+    }
+
+    .ops-cal-week-alloc__corner {
+        left: 0;
+        z-index: 4;
+    }
+
+    .ops-cal-week-alloc__day-head {
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid theme('colors.slate.200');
+    }
+
+    .ops-cal-week-alloc__day-head:hover {
+        background: theme('colors.slate.100');
+    }
+
+    .ops-cal-week-alloc__day-head--over {
+        background: theme('colors.amber.50');
+    }
+
+    .ops-cal-week-alloc__day-head--beyond {
+        background: theme('colors.rose.50');
+    }
+
+    .ops-cal-week-alloc__day-label {
+        font-size: 0.6875rem;
+        font-weight: 800;
+        color: theme('colors.slate.800');
+    }
+
+    .ops-cal-week-alloc__resource {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        padding: 0.45rem 0.5rem;
+        border-right: 1px solid theme('colors.slate.200');
+        background: theme('colors.slate.50');
+        align-self: stretch;
+    }
+
+    .ops-cal-week-alloc__resource--unassigned {
+        background: theme('colors.amber.50');
+    }
+
+    .ops-cal-week-alloc__resource-name {
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: theme('colors.slate.950');
+        line-height: 1.2;
+    }
+
+    .ops-cal-week-alloc__resource-meta {
+        margin: 0.15rem 0 0;
+        font-size: 0.625rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: theme('colors.slate.500');
+    }
+
+    .ops-cal-week-alloc__cell {
+        min-height: 4.5rem;
+        padding: 0.25rem;
+        vertical-align: top;
+    }
+
+    .ops-cal-week-alloc__cell--focus {
+        background: theme('colors.sky.50');
+    }
+
+    .ops-cal-week-alloc__list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .ops-cal-week-alloc__empty {
+        padding: 0.35rem 0.2rem;
+        font-size: 0.625rem;
+        color: theme('colors.slate.300');
+        text-align: center;
+    }
+
+    .ops-cal-week-alloc__event {
+        position: relative;
+    }
+
+    .ops-cal-week-alloc__event.ops-cal-appt-event--open {
+        z-index: 5;
+    }
+
+    .ops-cal-week-alloc__event-btn {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.05rem;
+        margin: 0;
+        padding: 0.2rem 0.25rem;
+        border: 0;
+        border-radius: 0.25rem;
+        background: theme('colors.sky.50');
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .ops-cal-week-alloc__event-btn:hover,
+    .ops-cal-week-alloc__event-btn:focus-visible {
+        background: theme('colors.sky.100');
+        outline: 1px solid theme('colors.sky.400');
+    }
+
+    .ops-cal-week-alloc__event-time {
+        font-size: 0.5625rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: theme('colors.slate.500');
+    }
+
+    .ops-cal-week-alloc__event-name {
+        max-width: 100%;
+        font-size: 0.625rem;
+        font-weight: 800;
+        color: theme('colors.slate.900');
+        line-height: 1.2;
+    }
+
+    .ops-cal-week-alloc__event-vehicle,
+    .ops-cal-week-alloc__event-concern {
+        max-width: 100%;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        color: theme('colors.slate.600');
+        line-height: 1.2;
+    }
+
+    .ops-cal-appt-assign {
+        margin-top: 0.55rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid theme('colors.slate.100');
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .ops-cal-appt-assign__title {
+        margin: 0;
+        font-size: 0.625rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: theme('colors.slate.500');
+    }
+
+    .ops-cal-appt-assign__field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: theme('colors.slate.500');
+    }
+
+    .ops-cal-appt-assign__field select {
+        width: 100%;
+        padding: 0.3rem 0.4rem;
+        border: 1px solid theme('colors.slate.300');
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: normal;
+        color: theme('colors.slate.900');
+        background: #fff;
+    }
+
     .ops-cal-month {
         padding: 0.45rem;
-        overflow-x: auto;
+        overflow: visible;
     }
 
     .ops-cal-month__head,
@@ -15267,6 +15519,14 @@
         gap: 1px;
         min-width: 48rem;
         background: theme('colors.slate.200');
+    }
+
+    .ops-cal-month__week {
+        position: relative;
+    }
+
+    .ops-cal-month__week:has(.ops-cal-appt-event--open) {
+        z-index: 5;
     }
 
     .ops-cal-month__head {
@@ -15285,12 +15545,13 @@
     }
 
     .ops-cal-month__day {
+        position: relative;
         min-height: 6.5rem;
         padding: 0.35rem 0.4rem;
         background: #fff;
         text-decoration: none;
         color: inherit;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .ops-cal-month__day:hover {
@@ -15308,10 +15569,23 @@
         z-index: 1;
     }
 
+    .ops-cal-month__day-chrome {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.35rem;
+    }
+
     .ops-cal-month__date {
         font-size: 0.75rem;
         font-weight: 800;
         color: theme('colors.slate.800');
+        text-decoration: none;
+    }
+
+    .ops-cal-month__date:hover {
+        color: theme('colors.sky.700');
+        text-decoration: underline;
     }
 
     .ops-cal-month__day--outside .ops-cal-month__date {
@@ -15319,19 +15593,208 @@
     }
 
     .ops-cal-month__count {
-        float: right;
         font-size: 0.6875rem;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
         color: theme('colors.slate.500');
+        max-width: 70%;
+        text-align: right;
+        line-height: 1.2;
+    }
+
+    .ops-cal-month__count--pressure {
+        color: theme('colors.amber.800');
+        background: theme('colors.amber.100');
+        padding: 0.05rem 0.3rem;
+        border-radius: 0.25rem;
+    }
+
+    .ops-cal-month__day--over {
+        background: color-mix(in srgb, theme('colors.amber.50') 70%, white);
+    }
+
+    .ops-cal-month__day--beyond {
+        background: color-mix(in srgb, theme('colors.rose.50') 65%, white);
+        box-shadow: inset 0 0 0 1px theme('colors.rose.200');
+    }
+
+    .ops-cal-month__day--beyond .ops-cal-month__count--pressure {
+        color: theme('colors.rose.900');
+        background: theme('colors.rose.100');
     }
 
     .ops-cal-month__list {
         margin: 0.25rem 0 0;
         padding: 0;
         list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .ops-cal-month__day:has(.ops-cal-appt-event--open) {
+        z-index: 6;
+    }
+
+    .ops-cal-month__event {
+        position: relative;
+    }
+
+    .ops-cal-month__event.ops-cal-appt-event--open {
+        z-index: 7;
+    }
+
+    .ops-cal-month__event-btn {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.05rem;
+        margin: 0;
+        padding: 0.2rem 0.25rem;
+        border: 0;
+        border-radius: 0.25rem;
+        background: theme('colors.sky.50');
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .ops-cal-month__event-btn:hover,
+    .ops-cal-month__event-btn:focus-visible {
+        background: theme('colors.sky.100');
+        outline: 1px solid theme('colors.sky.400');
+    }
+
+    .ops-cal-month__event-headline {
+        display: block;
+        max-width: 100%;
         font-size: 0.625rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: theme('colors.slate.900');
+        line-height: 1.2;
+    }
+
+    .ops-cal-month__event-vehicle {
+        display: block;
+        max-width: 100%;
+        font-size: 0.5625rem;
+        font-weight: 600;
         color: theme('colors.slate.600');
+        line-height: 1.2;
+    }
+
+    .ops-cal-month__event-time {
+        display: block;
+        font-size: 0.5625rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: theme('colors.slate.500');
+        line-height: 1.2;
+    }
+
+    .ops-cal-month__more {
+        margin: 0.1rem 0 0;
+        font-size: 0.5625rem;
+        font-weight: 700;
+    }
+
+    .ops-cal-month__more a {
+        color: theme('colors.sky.700');
+        text-decoration: none;
+    }
+
+    .ops-cal-month__more a:hover {
+        text-decoration: underline;
+    }
+
+    .ops-cal-month__popover {
+        /* Fixed escapes board overflow / later-week paint order.
+           Position via --ops-cal-pop-* on the board root; visibility via .ops-cal-appt-event--open. */
+        position: fixed;
+        display: none;
+        z-index: 50;
+        top: var(--ops-cal-pop-top, 0px);
+        left: var(--ops-cal-pop-left, 0px);
+        width: min(16rem, calc(100vw - 1rem));
+        padding: 0.55rem 0.6rem 0.6rem;
+        border: 1px solid theme('colors.slate.200');
+        border-radius: 0.4rem;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+    }
+
+    .ops-cal-month__popover:has(.ops-cal-appt-assign) {
+        width: min(18rem, calc(100vw - 1rem));
+    }
+
+    .ops-cal-appt-event--open > .ops-cal-month__popover {
+        display: block;
+    }
+
+    .ops-cal-month__popover-ro {
+        margin: 0;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: theme('colors.sky.800');
+    }
+
+    .ops-cal-month__popover-name {
+        margin: 0.15rem 0 0;
+        font-size: 0.8125rem;
+        font-weight: 800;
+        color: theme('colors.slate.950');
+    }
+
+    .ops-cal-month__popover-concern {
+        margin: 0.25rem 0 0;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: theme('colors.slate.700');
+        line-height: 1.35;
+    }
+
+    .ops-cal-month__popover-line {
+        margin: 0.2rem 0 0;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: theme('colors.slate.600');
+        line-height: 1.35;
+    }
+
+    .ops-cal-month__popover-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.55rem;
+    }
+
+    .ops-cal-month__popover-action {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.45rem;
+        border: 1px solid theme('colors.slate.300');
+        border-radius: 0.3rem;
+        background: #fff;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        color: theme('colors.slate.800');
+        text-decoration: none;
+    }
+
+    .ops-cal-month__popover-action:hover {
+        background: theme('colors.slate.50');
+    }
+
+    .ops-cal-month__popover-action--primary {
+        border-color: theme('colors.sky.500');
+        background: theme('colors.sky.600');
+        color: #fff;
+    }
+
+    .ops-cal-month__popover-action--primary:hover {
+        background: theme('colors.sky.700');
     }
 
     .ops-cal-horizon {

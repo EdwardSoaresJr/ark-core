@@ -29,10 +29,17 @@ final class SchedulingWorkspaceProjection
         ?User $viewer = null,
         bool $showEmptyLanes = false,
         string|DayLens|null $lens = null,
+        string|WeekAllocate|null $allocate = null,
     ): array {
         $board = ScheduleBoardView::parse($view);
         $lanes = 'agenda';
         $selectedLens = $lens instanceof DayLens ? $lens : DayLens::parse(is_string($lens) ? $lens : null);
+        $weekAllocate = $allocate instanceof WeekAllocate
+            ? $allocate
+            : WeekAllocate::parse(is_string($allocate) ? $allocate : null);
+        if ($board !== ScheduleBoardView::Week) {
+            $weekAllocate = WeekAllocate::Day;
+        }
 
         $timezone = ShopDisplayTimezone::resolve();
         $focus = Carbon::parse($focusDay->toDateString(), $timezone)->startOfDay();
@@ -109,6 +116,18 @@ final class SchedulingWorkspaceProjection
         }
         $gridMinutes = max(60, (int) $open->diffInMinutes($close));
         $capacityView = $board === ScheduleBoardView::Day ? 'day' : 'week';
+        $capacityRail = $this->capacity->resolve($focus, $capacityView);
+
+        $weekDays = $this->weekDays($weekStart, $visibleRangeCards, 7);
+        $monthWeeks = $this->monthWeeks($monthStart, $visibleRangeCards);
+        if ($board === ScheduleBoardView::Month) {
+            $monthWeeks = $this->attachMonthDayLoad($monthWeeks);
+        }
+
+        $weekAllocation = null;
+        if ($board === ScheduleBoardView::Week && $weekAllocate->isResource()) {
+            $weekAllocation = $this->weekAllocationBoard($weekAllocate, $weekStart, $visibleRangeCards);
+        }
 
         return [
             'view' => $board->value,
@@ -121,6 +140,15 @@ final class SchedulingWorkspaceProjection
                 ScheduleBoardView::cases(),
             ),
             'lanes' => $lanes,
+            'allocate' => $weekAllocate->value,
+            'allocate_options' => array_map(
+                fn (WeekAllocate $option): array => [
+                    'key' => $option->value,
+                    'label' => $option->label(),
+                    'selected' => $option === $weekAllocate,
+                ],
+                WeekAllocate::cases(),
+            ),
             'lens' => $selectedLens->key(),
             'chips' => $chips,
             'focus_date' => $focusDate,
@@ -141,12 +169,14 @@ final class SchedulingWorkspaceProjection
             'cards' => $visibleDayCards,
             'total_count' => count($visibleRangeCards),
             'agenda_count' => count($dayCards),
-            'capacity_rail' => $this->capacity->resolve($focus, $capacityView),
+            'capacity_rail' => $capacityRail,
             'create_base_url' => route('operations.schedule'),
-            'week_days' => $this->weekDays($weekStart, $visibleRangeCards, 7),
-            'month_weeks' => $this->monthWeeks($monthStart, $visibleRangeCards),
+            'week_days' => $weekDays,
+            'week_allocation' => $weekAllocation,
+            'month_weeks' => $monthWeeks,
             'week_label' => 'Week of '.$weekStart->format('M j, Y'),
             'lens_label' => (string) ($selectedChip['label'] ?? 'Agenda'),
+            'assign_options' => $this->assignOptions(),
         ];
     }
 
@@ -536,6 +566,201 @@ final class SchedulingWorkspaceProjection
         }
 
         return $indexed;
+    }
+
+    /**
+     * @return array{technicians: list<array{id: int, name: string}>, workstations: list<array{id: int, label: string}>}
+     */
+    private function assignOptions(): array
+    {
+        return [
+            'technicians' => $this->staff->technicians()
+                ->map(fn (User $technician): array => [
+                    'id' => (int) $technician->id,
+                    'name' => (string) $technician->name,
+                ])
+                ->values()
+                ->all(),
+            'workstations' => $this->staff->schedulableWorkstations()
+                ->map(fn ($bay): array => [
+                    'id' => (int) $bay->id,
+                    'label' => $bay->displayLocation(),
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * Resource rows × day columns for week allocation. Unassigned is always a visible lane.
+     *
+     * @param  list<array<string, mixed>>  $cards
+     * @return array{
+     *     mode: string,
+     *     day_headers: list<array{date: string, day_label: string, capacity_status: string|null}>,
+     *     rows: list<array{
+     *         key: string,
+     *         label: string,
+     *         resource_id: int|null,
+     *         week_count: int,
+     *         labor_hours: float,
+     *         labor_label: string,
+     *         days: list<array{date: string, count: int, cards: list<array<string, mixed>>}>
+     *     }>
+     * }
+     */
+    private function weekAllocationBoard(WeekAllocate $mode, Carbon $weekStart, array $cards): array
+    {
+        $dayHeaders = [];
+        for ($i = 0; $i < 7; $i++) {
+            $day = $weekStart->copy()->addDays($i);
+            $snapshot = $this->capacity->daySnapshot($day);
+            $dayHeaders[] = [
+                'date' => $day->toDateString(),
+                'day_label' => $day->format('D j'),
+                'capacity_status' => $snapshot['status'],
+            ];
+        }
+
+        $resources = $this->allocationResources($mode);
+        $rows = [];
+
+        foreach ($resources as $resource) {
+            $laneCards = array_values(array_filter(
+                $cards,
+                function (array $card) use ($mode, $resource): bool {
+                    if ($resource['resource_id'] === null) {
+                        return $mode === WeekAllocate::Technician
+                            ? empty($card['technician_user_id'])
+                            : empty($card['workstation_id']);
+                    }
+
+                    return $mode === WeekAllocate::Technician
+                        ? (int) ($card['technician_user_id'] ?? 0) === $resource['resource_id']
+                        : (int) ($card['workstation_id'] ?? 0) === $resource['resource_id'];
+                },
+            ));
+
+            $days = [];
+            $laborHours = 0.0;
+            foreach ($dayHeaders as $header) {
+                $dayCards = array_values(array_filter(
+                    $laneCards,
+                    fn (array $card): bool => str_starts_with((string) $card['starts_at'], $header['date']),
+                ));
+                foreach ($dayCards as $card) {
+                    $laborHours += $this->cardLaborHours($card);
+                }
+                $days[] = [
+                    'date' => $header['date'],
+                    'count' => count($dayCards),
+                    'cards' => $dayCards,
+                ];
+            }
+
+            $laborHours = round($laborHours, 2);
+            $rows[] = [
+                'key' => $resource['key'],
+                'label' => $resource['label'],
+                'resource_id' => $resource['resource_id'],
+                'week_count' => count($laneCards),
+                'labor_hours' => $laborHours,
+                'labor_label' => $this->hoursLabel($laborHours),
+                'days' => $days,
+            ];
+        }
+
+        return [
+            'mode' => $mode->value,
+            'day_headers' => $dayHeaders,
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * @return list<array{key: string, label: string, resource_id: int|null}>
+     */
+    private function allocationResources(WeekAllocate $mode): array
+    {
+        $resources = [[
+            'key' => $mode === WeekAllocate::Technician ? 'tech-none' : 'ws-none',
+            'label' => 'Unassigned',
+            'resource_id' => null,
+        ]];
+
+        if ($mode === WeekAllocate::Technician) {
+            foreach ($this->staff->technicians() as $technician) {
+                $resources[] = [
+                    'key' => 'tech-'.$technician->id,
+                    'label' => (string) $technician->name,
+                    'resource_id' => (int) $technician->id,
+                ];
+            }
+
+            return $resources;
+        }
+
+        foreach ($this->staff->schedulableWorkstations() as $bay) {
+            $resources[] = [
+                'key' => 'ws-'.$bay->id,
+                'label' => $bay->displayLocation(),
+                'resource_id' => (int) $bay->id,
+            ];
+        }
+
+        return $resources;
+    }
+
+    /**
+     * @param  array<string, mixed>  $card
+     */
+    private function cardLaborHours(array $card): float
+    {
+        if (filled($card['estimated_labor_hours'] ?? null)) {
+            return round((float) $card['estimated_labor_hours'], 2);
+        }
+
+        return max(0.25, round(((int) ($card['duration_minutes'] ?? 0)) / 60, 2));
+    }
+
+    private function hoursLabel(float $hours): string
+    {
+        return rtrim(rtrim(number_format($hours, 2, '.', ''), '0'), '.').'h';
+    }
+
+    /**
+     * Soft-capacity cue for month cells — does not change the 3-card summary cap.
+     *
+     * @param  list<array{days: list<array<string, mixed>>}>  $weeks
+     * @return list<array{days: list<array<string, mixed>>}>
+     */
+    private function attachMonthDayLoad(array $weeks): array
+    {
+        foreach ($weeks as $wi => $week) {
+            foreach ($week['days'] as $di => $day) {
+                $snapshot = $this->capacity->daySnapshot(Carbon::parse($day['date']));
+                $count = (int) ($day['count'] ?? 0);
+                $weeks[$wi]['days'][$di]['load_status'] = $snapshot['status'];
+                $weeks[$wi]['days'][$di]['load_label'] = $this->monthLoadLabel($count, $snapshot['status']);
+                $weeks[$wi]['days'][$di]['load_pressure'] = in_array($snapshot['status'], ['overpacked', 'beyond_target'], true);
+            }
+        }
+
+        return $weeks;
+    }
+
+    private function monthLoadLabel(int $count, string $status): ?string
+    {
+        if ($count <= 0) {
+            return null;
+        }
+
+        return match ($status) {
+            'beyond_target' => $count.' · over target',
+            'overpacked' => $count.' · over base',
+            'unavailable' => (string) $count,
+            default => $count === 1 ? '1 appt' : $count.' appts',
+        };
     }
 
     /**

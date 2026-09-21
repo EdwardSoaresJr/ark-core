@@ -4,6 +4,7 @@
 ])
 
 @php
+    $appointmentId = (int) ($card['id'] ?? 0);
     $top = (int) round(($card['minutes_from_open'] ?? 0) * $pxPerMinute);
     $height = max(32, (int) round(($card['duration_minutes'] ?? 30) * $pxPerMinute));
     $hasComms = filled($card['call_url'] ?? null) || filled($card['text_url'] ?? null);
@@ -16,11 +17,17 @@
 <article
     class="ops-cal-card {{ $hasComms ? 'ops-cal-card--comms' : '' }}"
     style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ number_format($leftPct, 4, '.', '') }}% + 0.15rem); width: calc({{ number_format($widthPct, 4, '.', '') }}% - 0.3rem); right: auto;"
+    :class="{ 'ops-cal-appt-event--open': openAppointmentId === {{ $appointmentId }} }"
 >
-    <a
-        href="{{ $card['show_url'] }}?edit=1"
+    <button
+        type="button"
         class="ops-cal-card__body"
+        @click.stop="toggle({{ $appointmentId }}, $event.currentTarget)"
+        :aria-expanded="(openAppointmentId === {{ $appointmentId }}).toString()"
     >
+        @if (filled($card['repair_order_number'] ?? null))
+            <span class="ops-cal-card__ro">#{{ $card['repair_order_number'] }}</span>
+        @endif
         <span class="ops-cal-card__customer">{{ $card['customer_name'] }}</span>
         @if ($card['vehicle_label'])
             <p class="ops-cal-card__vehicle">{{ $card['vehicle_label'] }}</p>
@@ -36,9 +43,9 @@
             @endif
             <span>· {{ $card['status_label'] }}</span>
         </p>
-    </a>
+    </button>
     @if ($hasComms)
-        <div class="ops-cal-card__comms">
+        <div class="ops-cal-card__comms" @click.stop>
             @if (! empty($card['call_url']))
                 <a href="{{ $card['call_url'] }}" class="ops-cal-card__comms-link">Call</a>
             @endif
@@ -47,25 +54,8 @@
             @endif
         </div>
     @endif
-    {{-- Always available on hover — readable when columns are packed tight. --}}
-    <div class="ops-cal-card__detail" role="tooltip">
-        <p class="ops-cal-card__detail-name">{{ $card['customer_name'] }}</p>
-        @if ($card['vehicle_label'])
-            <p class="ops-cal-card__detail-line">{{ $card['vehicle_label'] }}</p>
-        @endif
-        <p class="ops-cal-card__detail-concern">{{ $card['concern'] }}</p>
-        <p class="ops-cal-card__detail-line">
-            {{ $card['time_label'] }}–{{ $card['ends_label'] }}
-            @if ($card['estimated_labor_label'])
-                · {{ $card['estimated_labor_label'] }} scheduled
-            @endif
-        </p>
-        <p class="ops-cal-card__detail-line">
-            {{ $card['status_label'] }}
-            @if ($card['arrival_type_label'])
-                · {{ $card['arrival_type_label'] }}
-            @endif
-        </p>
-        <p class="ops-cal-card__detail-hint">Open to reschedule</p>
-    </div>
+
+    @include('operations.appointments.partials.appointment-detail-popover', [
+        'card' => $card,
+    ])
 </article>

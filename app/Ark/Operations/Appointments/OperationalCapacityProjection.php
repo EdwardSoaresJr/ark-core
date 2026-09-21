@@ -16,6 +16,23 @@ final class OperationalCapacityProjection
     ) {}
 
     /**
+     * Lightweight per-day capacity status for month / week headers.
+     *
+     * @return array{date: string, status: string, scheduled_hours: float, base_hours: float|null}
+     */
+    public function daySnapshot(Carbon $day): array
+    {
+        $snapshot = $this->calculator->forDay($day);
+
+        return [
+            'date' => $snapshot->date,
+            'status' => $snapshot->status(),
+            'scheduled_hours' => $snapshot->scheduledHours,
+            'base_hours' => $snapshot->baseCapacityHours,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function resolve(Carbon $focusDay, string $view = 'day'): array
