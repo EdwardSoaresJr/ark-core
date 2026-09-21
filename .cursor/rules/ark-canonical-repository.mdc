@@ -1,0 +1,24 @@
+---
+description: Public ARK Core is the only Core development repository — verify before editing
+alwaysApply: true
+---
+
+# Canonical Core repository
+
+This workspace is public ARK Core.
+
+- Origin: `https://github.com/EdwardSoaresJr/ark-core.git`
+- Local checkout: `/Users/edwardsoares/Herd/ark-public-staging`
+- Any branch in this repository is valid
+
+Before modifying files, run `./scripts/assert-canonical-core-repo.sh`.
+
+If the Git root or origin is `arksmsv2` or `ark-cloud` / `ark-platform`, **stop**. Report the mismatch. Do not switch repositories automatically. Do not edit.
+
+| Work | Repository |
+| --- | --- |
+| Shared Core | this repo |
+| Platform | `/Users/edwardsoares/Herd/ark-cloud` (`EdwardSoaresJr/ark-platform`) |
+| Preserved fallback | `/Users/edwardsoares/Herd/arksmsv2` — no new Core work |
+
+Open this repository as the Cursor workspace. Do not open the parent `Herd` directory.
