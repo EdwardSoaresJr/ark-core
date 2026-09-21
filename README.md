@@ -6,8 +6,6 @@ ARK Core is self-hosted shop management software for independent auto repair sho
 
 This repository is the **canonical public Core**. Confirm identity with `./scripts/assert-canonical-core-repo.sh` (Git root + `origin`, not the folder name).
 
-ARK Platform (`EdwardSoaresJr/ark-platform`) is a separate repository for commercial service execution. The private `arksmsv2` tree is a preserved fallback and must not receive new Core development.
-
 It is a clean public snapshot and does not include private shop data, production credentials or infrastructure, licensed automotive datasets, or private Dragon knowledge sources.
 
 ## What you get
@@ -27,7 +25,7 @@ Some parts of the environment used to operate and develop ARK cannot or should n
 
 * Production deployment runbooks or infrastructure configuration
 * Credentials, backups, or live secrets
-* Real-Time Labor Guide (RTE) or other licensed automotive datasets
+* Labor Guides or other licensed automotive datasets
 * Private Dragon knowledge imports or ARKademy data
 * Republished third-party training material
 
