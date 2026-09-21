@@ -129,22 +129,26 @@
 
     .ops-rail-brand {
         display: block;
-        padding: 0 0 0.5rem;
+        padding: 0.125rem 0 0.625rem;
         margin-bottom: 0.125rem;
         border-bottom: 2px solid color-mix(in srgb, var(--ops-accent-500) 52%, transparent);
         line-height: 0;
+        flex-shrink: 0;
     }
 
     .ops-rail-brand-logo-wrap {
         display: block;
-        overflow: hidden;
-        height: 1.875rem;
+        overflow: visible;
+        height: auto;
     }
 
     .ops-rail-brand-logo {
         display: block;
         width: 100%;
+        max-width: 100%;
         height: auto;
+        object-fit: contain;
+        object-position: left center;
     }
 
     .ops-rail-version {
