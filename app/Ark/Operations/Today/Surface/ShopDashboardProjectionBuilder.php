@@ -21,11 +21,11 @@ use Brick\Money\Money;
  */
 final class ShopDashboardProjectionBuilder
 {
-    /**
-     * Display order for status lanes (Tekmetric-like left-to-right flow).
-     *
-     * @var list<string>
-     */
+        /**
+         * Display order for status lanes (intake → production → pickup).
+         *
+         * @var list<string>
+         */
     private const STATUS_ORDER = [
         RepairOrderStatus::Draft->value,
         RepairOrderStatus::Estimate->value,
@@ -111,6 +111,9 @@ final class ShopDashboardProjectionBuilder
             $statusRows[] = $this->statusRow($statusKey, $bucket, $maxCars);
         }
 
+        $statusRows = $this->markPeakRows($statusRows);
+        $chartRows = $this->chartRowsByVolume($statusRows);
+
         $today = OperationalReportDateScope::shopNow();
         $openQueueUrl = $this->inventoryUrl();
         $pendingUrl = $this->inventoryUrl(disposition: RepairOrderConcernDisposition::Recommended);
@@ -118,7 +121,9 @@ final class ShopDashboardProjectionBuilder
         $approvedUrl = $this->inventoryUrl(disposition: RepairOrderConcernDisposition::Approved);
 
         return new ShopDashboardProjection(
-            rangeLabel: 'Open queue · '.OperationalReportDateScope::shopDateString($today),
+            rangeLabel: 'Open queue',
+            asOfLabel: OperationalReportDateScope::shopRangeLabel($today, $today),
+            asOfDate: OperationalReportDateScope::shopDateString($today),
             carCount: $carCount,
             pendingCents: $pendingCents,
             declinedCents: $declinedCents,
@@ -169,6 +174,7 @@ final class ShopDashboardProjectionBuilder
                 ],
             ],
             statusRows: $statusRows,
+            chartRows: $chartRows,
             jobBoardUrl: route('operations.index'),
             openQueueUrl: $openQueueUrl,
             pendingUrl: $pendingUrl,
@@ -190,8 +196,10 @@ final class ShopDashboardProjectionBuilder
      *     pending_label: string,
      *     declined_label: string,
      *     approved_label: string,
+     *     aro_cents: int,
      *     aro_label: string,
      *     bar_pct: float,
+     *     peak: bool,
      *     status_url: string,
      *     pending_url: string,
      *     declined_url: string,
@@ -215,8 +223,10 @@ final class ShopDashboardProjectionBuilder
             'pending_label' => $this->money($bucket['pending_cents']),
             'declined_label' => $this->money($bucket['declined_cents']),
             'approved_label' => $this->money($approved),
+            'aro_cents' => $aro,
             'aro_label' => $this->money($aro),
             'bar_pct' => round(($cars / max(1, $maxCars)) * 100, 1),
+            'peak' => false,
             'status_url' => $this->inventoryUrl(status: $status),
             'pending_url' => $this->inventoryUrl(
                 status: $status,
@@ -231,6 +241,55 @@ final class ShopDashboardProjectionBuilder
                 disposition: RepairOrderConcernDisposition::Approved,
             ),
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $statusRows
+     * @return list<array<string, mixed>>
+     */
+    private function markPeakRows(array $statusRows): array
+    {
+        $counts = array_map(static fn (array $row): int => (int) $row['car_count'], $statusRows);
+        $maxCars = $counts !== [] ? max($counts) : 0;
+        $second = 0;
+        rsort($counts);
+        foreach ($counts as $count) {
+            if ($count < $maxCars) {
+                $second = $count;
+                break;
+            }
+        }
+
+        $emphasizePeak = $maxCars > 1 && $maxCars > $second;
+
+        foreach ($statusRows as $index => $row) {
+            $statusRows[$index]['peak'] = $emphasizePeak && (int) $row['car_count'] === $maxCars;
+        }
+
+        return $statusRows;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $statusRows
+     * @return list<array<string, mixed>>
+     */
+    private function chartRowsByVolume(array $statusRows): array
+    {
+        $orderIndex = array_flip(self::STATUS_ORDER);
+        $chartRows = $statusRows;
+        usort(
+            $chartRows,
+            static function (array $left, array $right) use ($orderIndex): int {
+                $byCount = (int) $right['car_count'] <=> (int) $left['car_count'];
+                if ($byCount !== 0) {
+                    return $byCount;
+                }
+
+                return ($orderIndex[$left['key']] ?? 999) <=> ($orderIndex[$right['key']] ?? 999);
+            },
+        );
+
+        return $chartRows;
     }
 
     private function inventoryUrl(
