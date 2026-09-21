@@ -55,7 +55,9 @@ COPY resources ./resources
 COPY public ./public
 ARG GIT_SHA=unknown
 RUN echo "vite build ${GIT_SHA}" && npm run build \
-    && npm prune --omit=dev
+    && npm prune --omit=dev \
+    && test -f /app/public/js/ark/qz-tray.js \
+    && test -f /app/public/vendor/qz/qz-tray.js
 
 # Layer 4: Application code — changes often; refresh autoload only (no npm/composer re-download)
 # NOTE: One COPY with multiple dirs flattens contents into /app/ (breaks bootstrap/app.php).
