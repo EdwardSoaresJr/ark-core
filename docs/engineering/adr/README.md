@@ -24,5 +24,7 @@ History is preserved. Superseded ADRs remain in the directory with their status 
 | [ADR-0005](ADR-0005-authorities-are-stable-projections-are-disposable.md) | Authorities are stable; projections are disposable |
 | [ADR-0005](ADR-0005-twilio-native-voice-transport.md) | Twilio native voice transport (see ADR-0006 for SIP naming) |
 | [ADR-0006](ADR-0006-programmable-voice-sip-domain-not-elastic-sip-trunking.md) | Programmable Voice SIP domain — not Elastic SIP Trunking |
+| [ADR-0007](ADR-0007-stock-core-voice-transport-boundary.md) | Stock Core voice transport boundary |
+| [ADR-0008](ADR-0008-core-platform-commercial-execution.md) | Core owns shop work; Platform owns commercial execution |
 
 **Canonical architecture:** [docs/communications/ark-voice-endpoint-architecture-v1.md](../../communications/ark-voice-endpoint-architecture-v1.md)
