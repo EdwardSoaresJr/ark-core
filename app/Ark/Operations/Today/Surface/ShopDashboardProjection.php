@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Today\Surface;
 
 /**
- * Tekmetric-style shop dashboard — open-queue disposition money + status lanes.
+ * Open-queue shop dashboard — disposition money + status lanes.
  * Disposable projection; rebuild from RepairOrder + estimate line authority.
  */
 final readonly class ShopDashboardProjection
@@ -20,16 +20,39 @@ final readonly class ShopDashboardProjection
      *     pending_label: string,
      *     declined_label: string,
      *     approved_label: string,
+     *     aro_cents: int,
      *     aro_label: string,
      *     bar_pct: float,
+     *     peak: bool,
      *     status_url: string,
      *     pending_url: string,
      *     declined_url: string,
      *     approved_url: string
      * }>  $statusRows
+     * @param  list<array{
+     *     key: string,
+     *     label: string,
+     *     car_count: int,
+     *     pending_cents: int,
+     *     declined_cents: int,
+     *     approved_cents: int,
+     *     pending_label: string,
+     *     declined_label: string,
+     *     approved_label: string,
+     *     aro_cents: int,
+     *     aro_label: string,
+     *     bar_pct: float,
+     *     peak: bool,
+     *     status_url: string,
+     *     pending_url: string,
+     *     declined_url: string,
+     *     approved_url: string
+     * }>  $chartRows
      */
     public function __construct(
         public string $rangeLabel,
+        public string $asOfLabel,
+        public string $asOfDate,
         public int $carCount,
         public int $pendingCents,
         public int $declinedCents,
@@ -43,6 +66,8 @@ final readonly class ShopDashboardProjection
         public string $aroLabel,
         public array $kpis,
         public array $statusRows,
+        public array $chartRows,
+        public ?string $concentrationLine,
         public string $jobBoardUrl,
         public string $openQueueUrl,
         public string $pendingUrl,
