@@ -30,7 +30,7 @@
                     ])
                 >
                     <div class="ops-board-snapshot-metric-head">
-                        <p class="ops-board-snapshot-label" title="{{ $tab['label'] }}">{{ $tab['label'] }}</p>
+                        <p class="ops-board-snapshot-label">{{ $tab['label'] }}</p>
                         <p class="ops-board-snapshot-value {{ $tab['count'] > 0 ? 'ops-board-snapshot-value--active' : '' }}">{{ $tab['count'] }}</p>
                     </div>
                     <p class="ops-board-snapshot-hint">

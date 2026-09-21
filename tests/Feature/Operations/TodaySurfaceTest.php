@@ -167,6 +167,58 @@ test('shop dashboard close ratio uses approved over total written', function () 
     ]);
 });
 
+test('shop dashboard chart ranks volume first and marks the peak cluster', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+
+    repairOrderForCommunication(RepairOrderStatus::Estimate, 'Estimate One');
+    repairOrderForCommunication(RepairOrderStatus::Estimate, 'Estimate Two');
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Approval One');
+    repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Approval Two');
+    repairOrderForCommunication(RepairOrderStatus::InProgress, 'Progress One');
+
+    $dash = app(TodayProjectionBuilder::class)->forUser($advisor)->shopDashboard;
+
+    expect($dash)->not->toBeNull()
+        ->and($dash->rangeLabel)->toBe('Open queue')
+        ->and($dash->asOfLabel)->not->toBeEmpty()
+        ->and($dash->asOfDate)->toBe('2026-06-27');
+
+    $chartKeys = array_column($dash->chartRows, 'key');
+    $statusKeys = array_column($dash->statusRows, 'key');
+
+    expect($chartKeys[0])->toBe(RepairOrderStatus::Estimate->value)
+        ->and($chartKeys[1])->toBe(RepairOrderStatus::WaitingApproval->value)
+        ->and(array_search(RepairOrderStatus::Estimate->value, $statusKeys, true))
+        ->toBeLessThan(array_search(RepairOrderStatus::InProgress->value, $statusKeys, true));
+
+    $peakKeys = array_column(
+        array_values(array_filter(
+            $dash->chartRows,
+            static fn (array $row): bool => $row['peak'],
+        )),
+        'key',
+    );
+
+    expect($peakKeys)->toEqual([
+        RepairOrderStatus::Estimate->value,
+        RepairOrderStatus::WaitingApproval->value,
+    ]);
+
+    foreach ($dash->chartRows as $index => $row) {
+        if ($index > 0) {
+            expect($row['car_count'])->toBeLessThanOrEqual($dash->chartRows[$index - 1]['car_count']);
+        }
+    }
+
+    $this->actingAs($advisor)
+        ->get(route('operations.today'))
+        ->assertOk()
+        ->assertSee('ops-shop-dash-lane--peak', false)
+        ->assertSee('Car count by status')
+        ->assertDontSee('title="Phone"', false)
+        ->assertDontSee('title="Open matching repair orders"', false);
+});
+
 test('repair order index filters open queue by disposition for dashboard drill-down', function () {
     $advisor = actingAsLearnCurrentAdvisor();
 
