@@ -1,6 +1,6 @@
 # Core–Platform ownership contract
 
-**Status:** Ownership finalized 2026-09-18. Not a license to move, delete, or deploy anything.  
+**Status:** Ownership finalized 2026-09-18. Commercial-execution rule locked 2026-09-20 ([ADR-0008](../engineering/adr/ADR-0008-core-platform-commercial-execution.md)). Implementation is not complete. This lock authorizes no extraction, deletion, deployment, or production change.  
 **Live shop:** LugsNPlugs. Core image: `f3e82498`.  
 **Map of the repo:** [core-as-shop-sms-chatgpt-brief.md](core-as-shop-sms-chatgpt-brief.md). This file is the contract. Future work obeys it. It is not a task list.
 
@@ -22,6 +22,10 @@ A fallback is not ownership. A locked row is not permission to change code.
 **Core** is the single-shop operating system. It is the authority for shop records: customer, vehicle, repair order, estimate, inspection, invoice, repair-order ledger, and shop workflow. When Communications is connected, Core owns shop conversation workflow: advisor assignment, attention, waiting, follow-ups, and resolution. A shop must be able to run Core without purchasing Communications or any other managed Platform service. Without that product, Core does not receive Platform communications history.
 
 **Platform** is the control plane, the managed-service provider, and the Communications product. It owns shop creation, hosting, deployment administration, domains, subscriptions, entitlements, provider accounts, and execution of managed services. It owns canonical communications history. Communications is a paid product and must run without a Core installation. It does not become a second repair-order system. When connected to Core, it uses Core’s workflow. It does not create a competing one.
+
+Core may talk to Platform. Core may not be Square, Twilio, Postmark, or PartsTech. Thin authenticated clients and fabric ingress stay in Core. Provider credentials, provider HTTP, provider webhooks, and entitlement checks for those services stay in Platform. A Core fallback that calls the provider when Platform is absent is not ownership.
+
+Cloud is Platform’s API host, not a third product.
 
 One Hosted shop is one Core installation on its own machine. Core is not multi-tenant. That hosting rule is already accepted in `docs/deployment/ark-complete-hosted-hosting-model-v1.md`.
 
@@ -128,9 +132,9 @@ Core stays single-shop and usable without Platform.
 | Communications without Core | Message history, call history, delivery records, provider execution | Repair orders, the shop ledger, Core workflow |
 | Hosted shop with Communications connected | Core shop records and Core workflow, Platform history | Platform does not replace the repair order. Core does not replace the history |
 
-Self-hosted provider keys are a compatibility path for standalone Core. They are not the Settings experience for a shop whose capture, SMS, or mail is managed.
+Self-hosted provider keys in Core are leftover compatibility, not a product ([ADR-0008](../engineering/adr/ADR-0008-core-platform-commercial-execution.md)). They are not the Settings experience for a shop whose capture, SMS, or mail is managed.
 
-Existing standalone fallbacks remain until a separate decision addresses each one. This contract does not retire them.
+Existing standalone fallbacks remain until a per-provider cut after the Platform path is what the floor uses. This contract does not retire them.
 
 ---
 
@@ -138,6 +142,8 @@ Existing standalone fallbacks remain until a separate decision addresses each on
 
 - No extraction, migration, deletion, credential change, or deployment.
 - No payment, Voice, PartsTech, mail, or website code change.
+- No hostname or DNS change. Hostnames are a separate workstream.
+- No isolated Settings UI or Voice-ownership gating mixed into extraction. Hiding a credential form is not removing a provider path.
 - No commit of the uncommitted website closeout.
 - No new provider interface, second ledger, or second message history.
 - No move of shop business rules to Platform because a provider setting sits beside them.
@@ -175,3 +181,20 @@ These are mechanism questions. They do not reopen who owns history or workflow.
 - **Reconnect.** Core workflow is authoritative again. Platform history is authoritative again. Neither side replays the outage into the other’s store.
 
 Existing Core `ConversationMessage` and `CallSession` rows stay until a separate compatibility contract defines them as projections or leftovers. This design does not migrate or delete them.
+
+---
+
+## 7. Separation complete — locked criterion
+
+Hostnames do not enforce this contract. `app.arksms.com`, `cloud.arksms.com`, and a later `api.arksms.com` are naming. Settings UI is not this contract.
+
+**No fallback.** No Platform means no managed service, not a Core provider fallback. Ordinary shop operations remain available. Disabling or disconnecting Platform must not cause Core to contact Square, Twilio, Postmark, or PartsTech.
+
+**Migration.** For each provider independently: prove the Platform path is what the shop uses, verify it, then remove the Core provider path. A listed gap is not a delete.
+
+Separation is complete only when **both** pass:
+
+1. **Code audit** — credentials, adapters, webhooks, and entitlement for monetized services live only in Platform. Core has no execute path to those providers after Platform is off.
+2. **Standalone Core tests** — without Platform, Core opens a repair order and records an external payment, and does not contact a commercial provider to do that.
+
+Known mismatches stay listed in ADR-0008. This section does not start a cleanup sprint.
