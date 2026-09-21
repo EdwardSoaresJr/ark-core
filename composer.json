@@ -1,11 +1,12 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "edwardsoaresjr/ark",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Self-hosted automotive shop management software (ARK Core)",
     "keywords": [
-        "laravel",
-        "framework"
+        "automotive",
+        "repair-shop",
+        "ark"
     ],
     "license": "AGPL-3.0-only",
     "require": {

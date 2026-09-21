@@ -2,6 +2,8 @@
 
 **Public ARK** (`https://github.com/EdwardSoaresJr/ark.git`) is the canonical Core development repository. Production runs public Core.
 
+What Core is, versus Platform and separate products: [docs/PRODUCT_BOUNDARY.md](../PRODUCT_BOUNDARY.md).
+
 ARK Platform remains a separate repository (`https://github.com/EdwardSoaresJr/ark-platform.git`, local checkout `ark-cloud`).
 
 `arksmsv2` is a preserved private fallback. It must receive no new Core development. Keep it for rollback and possible future licensing, not everyday work.

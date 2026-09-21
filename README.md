@@ -1,39 +1,58 @@
 # ARK
 
-**Shop management software for independent auto repair shops.**
+**Self-hosted automotive shop management software for independent repair shops.**
 
 **Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
 
-ARK is shop management software built around the way an automotive repair shop actually operates. It handles repair orders, customers, vehicles, estimates, inspections, scheduling, communications, and the day-to-day workflows between advisors and technicians.
+This repository is **ARK Core**: repair orders, customers, vehicles, estimates, inspections, scheduling, and the advisor/technician workflows around them. Business rules stay on the server.
 
-Under the hood, ARK is designed around clear sources of truth, predictable system behavior, and server-side business rules rather than duplicating important logic throughout the application.
+It does **not** include private shop data, production secrets, licensed automotive datasets, or a working AI assistant.
 
-This repository contains the **public open-source distribution of ARK**.
+Product boundaries: [`docs/PRODUCT_BOUNDARY.md`](docs/PRODUCT_BOUNDARY.md).
 
-It is a clean public snapshot and does not include private shop data, production credentials or infrastructure, licensed automotive datasets, or private Dragon knowledge sources.
+## What works standalone
 
-## What you get
+A fresh Core install with no Platform connection can run the shop:
 
-* **ARK Web** — the Laravel-based core shop management system (operations, portal, installer)
-* Database migrations, automated tests, and configuration examples
-* Synthetic/demo shop seed data
-* **Dragon runtime** with support for your own model provider credentials
-* Labor-guide import interfaces for integrating supported external data sources
-* Server-side **API contracts** for mobile and third-party clients (`/api/mobile`, station pairing, and related endpoints)
+- Customers, vehicles, repair orders, estimates, inspections
+- Scheduling
+- Recording payments taken outside ARK (cash, check, card at a counter terminal)
+- NHTSA VIN decode
+- Customer portal for viewing estimates and inspections
+- First-run setup at `/setup`
 
-Marketing website / SEO / Growth tools are not part of Core. See `docs/platform/ark-core-website-boundary.md`.
+## Optional
 
-## What is not included
+These need something you bring, or ARK Platform:
 
-Some parts of the environment used to operate and develop ARK cannot or should not be distributed publicly. This repository does not include:
+| Need | What to use |
+| --- | --- |
+| Send customer email | ARK Platform → ARK Email |
+| Send customer SMS | ARK Platform → ARK Texting |
+| Take cards inside ARK | ARK Platform → ARK Payments |
+| Hosted voice / ringing phones | ARK Platform Voice |
+| Labor times in estimates | Import a **licensed** labor-guide CSV (`ark:rte-import`). Data is not bundled. |
+| AllData / ProDemand | Optional browser launch URLs. Not an API integration. |
 
-* Production deployment runbooks or infrastructure configuration
-* Credentials, backups, or live secrets
-* Real-Time Labor Guide (RTE) or other licensed automotive datasets
-* Private Dragon knowledge imports or ARKademy data
-* Republished third-party training material
+Core does not advertise a complete communications or payment stack without Platform. You can still write the RO and record money taken at the counter.
 
-**Open the engine. Bring your own fuel.**
+## Separate
+
+Not in this repository:
+
+- **ARK Platform** — managed services and control plane
+- **Foundry** — shop website / CMS
+- **Desk, Tech, Companion, Shop Glass** — client apps (Core publishes API contracts only)
+- **Licensed labor-guide datasets**
+- **A usable Dragon assistant** — see below
+
+## Unavailable in stock Core
+
+**Dragon.** Agent code exists (tools, memory tables, tests). Stock Core ships no model provider and no Settings screen to attach one. Default `DRAGON_PROVIDER=none`. `fake` is for automated tests. Settings → Dragon Memory does not enable an assistant.
+
+## Experimental
+
+Voice lab firmware (`firmware/voice-terminal`) and related lab endpoints are off unless you enable them on purpose. They are not production telephony.
 
 ## See ARK in action
 
@@ -53,33 +72,31 @@ Some parts of the environment used to operate and develop ARK cannot or should n
 
 ![ARK Customer Estimate](docs/images/ark-estimate-customer.png)
 
-### Customer communication built into the workflow
+### Customer communication in the workflow
 
 ![ARK Communications](docs/images/ark-communications.png)
 
+The communications **workspace** is in Core. Sending SMS or email still requires Platform (or remains unavailable).
+
 ## Requirements
 
-ARK can be run with Docker Compose or directly on a compatible PHP environment.
+- PHP 8.3+ (see `composer.json`; the Docker image uses PHP 8.4)
+- Composer for native PHP installs
+- Node.js and npm to build Vite assets (native PHP only — Docker builds them)
+- MySQL 8
+- Redis — required for Docker Compose (cache, sessions, queues, Horizon)
 
-* PHP 8.3+ — match the version requirements in `composer.json`
-* Composer when running directly on the host
-* Node.js and npm for Vite assets
-* MySQL 8 for the application database
-* Redis — required for the Docker Compose runtime (cache, sessions, queues, Horizon)
-
-Automated tests use isolated SQLite (`:memory:` per process) through Pest/PHPUnit. Tests do not use your application MySQL database.
+Automated tests use isolated SQLite (`:memory:`). They do not use your shop MySQL database.
 
 ```bash
 composer test:parallel   # fast full suite (8 workers)
 composer test:serial     # single-process diagnostic
-./scripts/test-fast.sh   # same as test:parallel; TEST_PROCESSES=8
+./scripts/test-fast.sh   # same as test:parallel
 ```
 
-## Quick start with Docker Compose
+## Quick start (Docker Compose)
 
-**Recommended.** Compose boots the same runtime architecture ARK runs in production:
-
-MySQL · Redis · app (nginx, PHP-FPM, Horizon, Reverb, scheduler) · persistent storage
+**This is the verified path.**
 
 ```bash
 git clone https://github.com/EdwardSoaresJr/ark.git
@@ -87,96 +104,78 @@ cd ark
 docker compose up -d --build
 ```
 
-Then open:
+Open **http://localhost:8088/setup**
 
-**http://localhost:8088/setup**
+The wizard uses the database Compose created. You should not type Docker-internal credentials.
 
-The setup wizard uses the database Compose already created. You should not need to type database credentials.
+First-run creates **your** administrator. It does not load demo tickets.
 
-Cloud VPS with HTTPS: [`docs/installation/vultr.md`](docs/installation/vultr.md).
+HTTPS on a small VPS: [`docs/installation/vultr.md`](docs/installation/vultr.md).  
+Moving hosts: [`docs/installation/portable-state.md`](docs/installation/portable-state.md).  
+Details: [`docs/installation/README.md`](docs/installation/README.md).
 
-**Moving hosts:** durable shop state is MySQL + persistent `storage/` + installation secrets. See [`docs/installation/portable-state.md`](docs/installation/portable-state.md).
+## Native PHP (advanced)
 
-See `docs/installation/README.md` for what the stack includes and for advanced (non-Docker) installation.
-
-## Quick start with local PHP
+Prefer Compose unless you already run PHP, MySQL, and a process manager.
 
 ```bash
 composer install
+npm install
+npm run build
 cp .env.example .env
-
-# You may configure APP_KEY and DB_* manually,
-# or allow /setup to guide configuration on writable installs.
 php artisan key:generate
+```
 
-# Point DB_* at an empty MySQL database, then:
+Create an **empty** MySQL database, set `DB_*` in `.env` (or let `/setup` write them on a writable install), then:
+
+```bash
 php artisan serve
 ```
 
-Open the application URL in your browser. If ARK has not been installed yet, it will direct you to **`/setup`**.
+Open the app URL. Uninstalled Core redirects to **`/setup`**.
 
-Environment-based bootstrap configuration is also available for advanced deployments, but the setup wizard is the normal installation path.
+`public/build` is not committed. Skipping `npm run build` leaves the UI without compiled assets.
 
-Development seeders may create example staff accounts such as `admin@ark.test`. These accounts are for development and demonstration use only. A normal production installation creates its own administrator during setup.
+## Demo data (optional, development only)
 
-## Optional integrations and ARK Services
+The installer does **not** seed a demo shop.
 
-ARK Core operates as a complete shop management system without third-party integrations or ARK Platform.
+On a development database you may run `php artisan db:seed`. That can create example staff such as `admin@ark.test` (password `password`). Do not use those accounts in production.
 
-Optional integrations include:
+## After install
 
-* External / manual payment recording (ledger)
-* ARK Email and other managed services through **ARK Platform** pairing
-* External labor-guide imports
-* NHTSA VIN decode (built in)
+`/setup` locks. There is no browser reopen.
 
-First-party client applications (Desk, Tech, Companion, and similar) are separate products and are not included in this repository. Third-party developers can build alternative clients against the Core API contracts documented under `docs/` and exposed at `/api/mobile`.
+Then in **Settings**:
 
-Features that depend on an integration or managed service remain disabled or clearly report that configuration is required when credentials are not available.
+- Shop identity, financial rules, workflow, documents, staff, printing
+- **ARK Platform** — connect if you want email, texting, card capture, or hosted voice
+- Customer messaging defaults (snippets, review URL) — sending still needs Platform
+- Dragon Memory — only relevant if a model provider exists; stock Core has none
 
-Configure only the integrations and services you intend to use.
+Record external payments on the repair order. Do not paste Twilio, Square, Postmark, or OpenAI tokens into Core.
 
-### Dragon
+## Architecture (short)
 
-Dragon runtime ships with Core. Configure model providers through **Settings → Dragon** after install, or use `DRAGON_PROVIDER=fake` in development and tests.
+- One database per Core install — not shared-database `shop_id` tenancy
+- Workstations are desks in a shop, not tenants
+- Financial totals stay server-side
+- Maintainer notes live under `docs/engineering/` and are not the product manual
 
-Stock Core does not include private shop knowledge sources or proprietary knowledge imports.
-
-## Architecture
-
-A few architectural rules are important when working on ARK:
-
-* **Database per tenant** — ARK does not use a shared-database `shop_id` tenancy model.
-* **Workstations and stations** represent physical locations within a shop, not separate tenants.
-* **Authoritative services own business truth.** Projections and views present that information rather than independently recreating it.
-* **Financial calculations stay server-side.** Important totals should come from authoritative calculators instead of being duplicated in client-side JavaScript.
-
-These boundaries are intentional and should be preserved when extending the application.
-
-See `docs/engineering/` for additional architecture and engineering documentation. Some historical documentation may still reference the shop environment where ARK was originally developed and tested.
+See [`docs/PRODUCT_BOUNDARY.md`](docs/PRODUCT_BOUNDARY.md) and [`docs/README.md`](docs/README.md).
 
 ## License
 
 **Copyright (C) 2026 Edward Soares Jr.**
 
-ARK is open-source software licensed under the **GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`).
+GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). See `LICENSE` and `NOTICE`.
 
-See:
+Naming: `TRADEMARKS.md`. Security reports: `SECURITY.md`. Contributions: `CONTRIBUTING.md`.
 
-* `LICENSE`
-* `NOTICE`
+You may modify and fork ARK under the AGPL. Modified distributions should not be presented as the official ARK distribution without permission.
 
-Core records external payments on the ledger. Managed processor connectivity is
-not part of this repository — see `docs/platform/ark-payments-boundary-v1.md`.
-
-For project naming and branding guidelines, see `TRADEMARKS.md`.
-
-You may modify and fork ARK under the terms of the AGPL. Modified distributions should not be presented as the official ARK distribution without permission.
-
-The licensing information in this repository describes the project's licensing choices and is not legal advice.
+This licensing information is not legal advice.
 
 ## Status
-
-ARK is publicly available at:
 
 https://github.com/EdwardSoaresJr/ark

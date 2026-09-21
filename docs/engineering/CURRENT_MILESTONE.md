@@ -1,5 +1,7 @@
 # Milestone
 
+Maintainer working board — not product documentation. See [PRODUCT_BOUNDARY.md](../PRODUCT_BOUNDARY.md).
+
 Canonical Core development is this public ARK repository. Confirm with `./scripts/assert-canonical-core-repo.sh`. Production runs public Core. `arksmsv2` is a preserved fallback, not a development destination. See [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md).
 
 **ARK Sellable Track — frozen board**

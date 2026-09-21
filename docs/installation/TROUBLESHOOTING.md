@@ -42,9 +42,11 @@ Then revisit `/setup`. This never clears a completed install.
 
 Correct after success. There is no browser unlock. Operator recovery is out of band (restore from backup / new empty database + new install).
 
-## Dragon / Square / telephony / mail unavailable
+## Email, SMS, card capture, or voice unavailable
 
-Expected when skipped. Configure later in Settings. Core RO/customer/vehicle workflows must not require them.
+Expected on a stock install. Connect ARK Platform for those services. Core repair-order, customer, and vehicle workflows must not require them.
+
+Dragon is not a usable assistant in stock Core (no model provider). Dragon Memory in Settings does not enable one.
 
 ## Labor guide missing
 

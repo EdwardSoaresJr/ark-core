@@ -1,5 +1,7 @@
 # Firebase Mobile Push Setup Doctrine
 
+Maintainer transport-wiring notes. Not a public Core install guide.
+
 **Status:** v1 — Demo Auto Repair reference implementation  
 **Sequence:** Authority → Observation → Transport (when proven) → **Setup wiring** (this doc)
 

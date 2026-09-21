@@ -1,5 +1,7 @@
 # Milestone 1: First Contact — Floor Checklist
 
+Maintainer certification notes for a specific shop bench. Not required to install public Core.
+
 **Definition of done:** A factory-reset VVX350 obtains its complete configuration from ARK, registers with Asterisk, and appears as **Connected** without manual phone configuration beyond pointing it at the provisioning server.
 
 **Not in scope for this milestone:** firmware management, claim flow, ARI, dynamic PJSIP, BLF, paging, call routing.
