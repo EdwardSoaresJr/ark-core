@@ -14,13 +14,63 @@ A git push is not a release. Each target has its own deploy and verification res
 | Demo | `https://demo.arksms.com` | Docker Compose at `/opt/ark` on `104.238.144.183` | Disabled |
 | LNP Production | `https://lugsnplugs.arksms.com` | Compose recreate-core on `149.28.249.13` | **Disabled** |
 
-Last verified image on Demo and LNP:
+Last image observed with the QZ Tray client still inside it:
 
 ```text
 ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
 ```
 
-Publish to `ghcr.io/edwardsoaresjr/ark-core`. Current live images do not contain `/app/.ark-source-commit`; the next published image must.
+That image does not contain the current sidebar. Do not deploy it to restore printing.
+
+LNP Core running now (read-only, 2026-09-22):
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:f113969e71f21e3aeb110bab84719ba9ca4e728b390971f971c22e44284c7283
+```
+
+Source commit `38334bd8127c4c9a41c50e6cf4fea83ac60a175a`. The QZ client is not in this image. An earlier sidebar image `sha256:04b199b4…` (`ba386cce`) is not what the shop is running.
+
+Publish to `ghcr.io/edwardsoaresjr/ark-core`. Pin the digest. Do not deploy a floating tag.
+
+## QZ label printing
+
+A Core image build fails if `public/vendor/qz/qz-tray.js` or `public/js/ark/qz-tray.js` is missing. `.dockerignore` ignores `/vendor` and keeps `public/vendor`. `scripts/assert-canonical-core-publish.sh` refuses to publish a tree that drops either file or the Dockerfile check. `/up` returning 200 does not accept a release. `scripts/qz-label-smoke.sh` must see both script URLs return 200.
+
+The browser loads `/vendor/qz/qz-tray.js` from the image. `QZ_CERTIFICATE_PATH` and `QZ_PRIVATE_KEY_PATH` live on `/data/ark-shared/storage` via the core volume mounts. An image recreate does not replace them.
+
+Required sequence:
+
+1. Pre-deployment baseline: `scripts/qz-label-smoke.sh` against the shop URL, with `QZ_SMOKE_COOKIE` from an admin session.
+2. Pull the approved digest on the LNP host. Change only the `core` image pin. Recreate only `core`.
+3. Run the smoke script again. Inside the container, `php artisan ark:printing:qz-check` must pass.
+4. In a browser, start a key-tag print and confirm QZ Tray loads without a script error.
+5. On LNP, Edward confirms a physical label. Automated checks do not replace that.
+
+If step 3 or 4 fails, the release is not accepted. Put the `core` image pin back to the digest that was running before this release:
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:f113969e71f21e3aeb110bab84719ba9ca4e728b390971f971c22e44284c7283
+```
+
+That rollback keeps the current sidebar and leaves printing broken. The older digest `sha256:40562971…` still contains the QZ client and does not contain this sidebar. Do not use it unless Edward explicitly chooses that tradeoff.
+
+Core-only recreate, after the digest is pulled onto the host (`pull_policy: never`):
+
+```text
+cd /data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u
+docker compose up -d --no-deps --force-recreate core
+```
+
+Do not recreate `lnp-mysql`, `lnp-redis`, `foundry`, `traefik`, or `ops-router`. Do not run compose against the whole file. Leave `/data/ark-shared/storage` and the core env file in place. Do not roll back the database.
+
+Persistent environment, not image layers:
+
+- `QZ_CERTIFICATE_PATH`
+- `QZ_PRIVATE_KEY_PATH`
+- `QZ_PRIVATE_KEY_PASSPHRASE` when the key is encrypted
+- `QZ_SIGNATURE_ALGORITHM` (`sha512`)
+
+Do not print the private key in logs, health responses, or test output.
 
 `demo.autorepairkeeper.com` is retired. GoDaddy DNS was deleted. It is not a deployment target.
 
@@ -34,10 +84,10 @@ A successful heartbeat is inventory check-in. It is **not** deploy success. Curr
 
 ## Observed (read-only)
 
-- Demo is running that digest in `ark-app-1`. No Coolify application. Platform shop pairing is empty.
+- Demo Compose is at `/opt/ark` on `104.238.144.183`, container `ark-app-1`. No Coolify application. Platform shop pairing is empty.
 - Demo installation UUID **assigned** (not written on the box): `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`. Write with `php artisan ark:installation-identity write --uuid=…`. Pair later. Do not invent a Coolify application id.
 - Demo Compose backups exist at `/var/backups/ark-box`. Latest stamp includes `storage.tar.gz` (gzip ok). `restore-box.sh` can restore that archive. SQL restore has been tested. File-volume restore is coded, not certified.
-- LNP is running that digest in `b38otdn2epypspy0jadbgfl0-core` on `149.28.249.13`. Installation UUID `7d115599-cae5-4a10-a4cf-4ebe11af47ed` matches Platform adopt.
+- LNP Core is `b38otdn2epypspy0jadbgfl0-core` on `149.28.249.13`, pinned to the running digest in the live inventory above. Installation UUID `7d115599-cae5-4a10-a4cf-4ebe11af47ed` matches Platform adopt.
 - Adopted host `144.202.74.190` timed out on SSH. Do not deploy there. Inventory correction is `hosting:reconcile-observed-host` after ownership confirmation — not re-adopt, not Coolify Deploy. Do not run it until explicitly approved.
 - LNP backup/rollback: [LNP_BACKUP_AND_ROLLBACK.md](LNP_BACKUP_AND_ROLLBACK.md).
 

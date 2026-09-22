@@ -33,6 +33,25 @@ if [[ "$wanted" != "$head" ]]; then
   exit 1
 fi
 
+for qz_client in public/vendor/qz/qz-tray.js public/js/ark/qz-tray.js; do
+  if [[ ! -s "$qz_client" ]]; then
+    echo "REFUSING: QZ Tray client missing from this source tree: $qz_client" >&2
+    echo "The image build must fail closed. Do not publish a Core image without it." >&2
+    exit 1
+  fi
+done
+
+if ! grep -q 'test -f /app/public/vendor/qz/qz-tray.js' Dockerfile \
+  || ! grep -q 'test -f /app/public/js/ark/qz-tray.js' Dockerfile; then
+  echo "REFUSING: Dockerfile does not fail the build when the QZ client is missing." >&2
+  exit 1
+fi
+
+if ! grep -qx '/vendor' .dockerignore || ! grep -qx '!public/vendor' .dockerignore; then
+  echo "REFUSING: .dockerignore would drop public/vendor from the image." >&2
+  exit 1
+fi
+
 branch="$(git branch --show-current 2>/dev/null || true)"
 echo "Public Core publish identity ok"
 echo "  IMAGE=$IMAGE"

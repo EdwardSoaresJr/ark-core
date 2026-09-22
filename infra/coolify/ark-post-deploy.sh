@@ -43,4 +43,10 @@ php artisan config:clear --no-interaction >/dev/null 2>&1 || true
 php artisan route:clear --no-interaction >/dev/null 2>&1 || true
 php artisan view:clear --no-interaction >/dev/null 2>&1 || true
 
+echo "[ark-post-deploy] checking QZ label printing..."
+if ! php artisan ark:printing:qz-check --no-interaction; then
+    echo "[ark-post-deploy] QZ label printing check failed. Do not accept this release." >&2
+    exit 1
+fi
+
 echo "[ark-post-deploy] complete."
