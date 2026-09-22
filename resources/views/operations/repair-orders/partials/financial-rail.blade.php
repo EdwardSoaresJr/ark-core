@@ -4,20 +4,21 @@
         'partially_paid', 'invoice_issued' => 'border-amber-300',
         default => 'border-slate-300',
     };
+    $historyItems = $financial['paymentHistoryItems'] ?? [];
+    $openWaive = $errors->has('disposition') || $errors->has('reason');
 @endphp
 
-<div id="financial-rail" class="ops-review-panel {{ $tone }} scroll-mt-6 border-x-0 border-b-0">
+<div
+    id="financial-rail"
+    class="ops-review-panel {{ $tone }} scroll-mt-6 border-x-0 border-b-0"
+    x-show="moreOpen"
+    x-cloak
+>
     <div class="ops-review-panel-header">
-        <p class="ops-eyebrow">Closeout</p>
+        <p class="ops-eyebrow">More</p>
     </div>
 
-    <div class="ops-financial-rail-primary grid gap-2 p-3 text-sm">
-        <div class="min-w-0">
-            <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Payment status</p>
-            <p class="mt-0.5 font-black text-slate-950">{{ $financial['workflowLabel'] }}</p>
-            <p class="mt-1 text-xs font-semibold leading-4 text-slate-600">{{ $financial['workflowHint'] }}</p>
-        </div>
-
+    <div class="grid gap-2 p-3 text-sm">
         @if (($financial['invoiceNeedsRefresh'] ?? false) && ($financial['hasIssuedInvoice'] ?? false))
             <div class="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-4 text-amber-950" role="status">
                 <p class="font-bold">
@@ -84,131 +85,36 @@
                 </form>
             @endif
         @endcan
-    </div>
 
-    <details class="ops-financial-rail-closeout border-t border-slate-200" open>
-        <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-slate-600 hover:bg-slate-50">
-            Ledger &amp; documents
-        </summary>
-        <div class="grid gap-2 border-t border-slate-100 p-3 text-sm">
-            <dl class="divide-y divide-slate-100 rounded-sm border border-slate-200 bg-white text-sm">
-                <div class="flex items-center justify-between gap-3 px-3 py-2">
-                    <dt class="text-slate-500">Estimate total</dt>
-                    <dd class="font-semibold tabular-nums text-slate-950">{{ $financial['estimateTotal'] }}</dd>
-                </div>
-                <div class="flex items-center justify-between gap-3 px-3 py-2">
-                    <dt class="text-slate-500">Invoice</dt>
-                    <dd class="font-semibold text-slate-950">{{ $financial['invoiceStatusLabel'] }}</dd>
-                </div>
-                @if ($financial['hasIssuedInvoice'])
-                    @if (($financial['waivedCents'] ?? 0) > 0 || ($financial['excludesFromPostedSales'] ?? false))
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Would have cost</dt>
-                            <dd class="font-black tabular-nums text-slate-950">{{ $financial['wouldHaveCost'] }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Collected</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['collected'] }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Waived · {{ $financial['collectionDispositionLabel'] }}</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['waived'] }}</dd>
-                        </div>
-                        @if ($financial['collectionDispositionReason'] ?? null)
-                            <div class="px-3 py-2 text-xs font-semibold leading-4 text-slate-600">
-                                {{ $financial['collectionDispositionReason'] }}
-                            </div>
-                        @endif
-                    @else
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Invoice total</dt>
-                            <dd class="font-black tabular-nums text-slate-950">{{ $financial['invoiceTotal'] }}</dd>
-                        </div>
-                    @endif
-                    @if ($financial['depositsApplied'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Deposits</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['depositsApplied'] }}</dd>
-                        </div>
-                    @endif
-                    @if ($financial['paymentsApplied'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Payments</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['paymentsApplied'] }}</dd>
-                        </div>
-                    @endif
-                    @if (($financial['refundsApplied'] ?? '$0.00') !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Refunds</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">+{{ $financial['refundsApplied'] }}</dd>
-                        </div>
-                    @endif
-                    @if ($financial['creditsApplied'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Store credit applied</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['creditsApplied'] }}</dd>
-                        </div>
-                    @endif
-                    @if (($financial['writeOffs'] ?? '$0.00') !== '$0.00' && ! (($financial['waivedCents'] ?? 0) > 0 || ($financial['excludesFromPostedSales'] ?? false)))
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Write-offs</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['writeOffs'] }}</dd>
-                        </div>
-                    @endif
-                    @if ($financial['adjustments'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Adjustments</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['adjustments'] }}</dd>
-                        </div>
-                    @endif
-                    <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Settlement balance</dt>
-                        <dd class="font-black tabular-nums text-slate-950">{{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}</dd>
-                    </div>
-                    @if ($financial['oweTodayDiffersFromSettlement'] ?? false)
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Owe today</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
-                        </div>
-                    @endif
-                @elseif ($financial['unappliedDeposits'] !== '$0.00')
-                    <div class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-slate-500">Deposits on file</dt>
-                        <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['unappliedDeposits'] }}</dd>
-                    </div>
-                    <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Owe today</dt>
-                        <dd class="font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
-                    </div>
-                @else
-                    <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Owe today</dt>
-                        <dd class="font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
-                    </div>
-                @endif
-            </dl>
+        @if ($financial['storeCreditBalanceCents'] > 0)
+            <p class="text-xs font-semibold leading-4 text-slate-600">
+                Customer store credit on file: {{ $financial['storeCreditBalance'] }}.
+            </p>
+        @endif
 
-            @if ($financial['storeCreditBalanceCents'] > 0)
-                <p class="text-xs font-semibold leading-4 text-slate-600">
-                    Customer store credit on file: {{ $financial['storeCreditBalance'] }}.
-                </p>
-            @endif
+        @if ($financial['hasStoreCreditIssuance'])
+            <p class="text-xs font-semibold leading-4 text-emerald-800">
+                Overpayment was issued to customer store credit. Invoice balance remains at zero.
+            </p>
+        @endif
 
-            @if ($financial['hasStoreCreditIssuance'])
-                <p class="text-xs font-semibold leading-4 text-emerald-800">
-                    Overpayment was issued to customer store credit. Invoice balance remains at zero.
-                </p>
-            @endif
+        @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
+            @unless ($financial['financialRailReadOnly'] ?? false)
+                @include('operations.repair-orders.partials.invoice-email-form', [
+                    'repairOrder' => $repairOrder,
+                    'financial' => $financial,
+                    'estimateVersion' => $estimateVersion,
+                ])
 
-            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
-                @unless ($financial['financialRailReadOnly'] ?? false)
-                    @include('operations.repair-orders.partials.invoice-email-form', [
-                        'repairOrder' => $repairOrder,
-                        'financial' => $financial,
-                        'estimateVersion' => $estimateVersion,
-                    ])
-
-                    @if ($financial['canWaiveBalance'] ?? false)
+                @if ($financial['canWaiveBalance'] ?? false)
+                    <div>
+                        <button
+                            type="button"
+                            class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-amber-300 bg-amber-50 px-3 text-xs font-bold text-amber-950 hover:border-amber-400"
+                            @click="morePanel = morePanel === 'waive' ? null : 'waive'"
+                        >
+                            Waive balance
+                        </button>
                         <form
                             id="waive-balance"
                             method="POST"
@@ -216,7 +122,10 @@
                             data-refresh-scope="rail"
                             data-continuity-focus="#waive-reason-{{ $repairOrder->repair_order_id }}"
                             @submit.prevent="submitWorksheetForm($event)"
-                            class="grid gap-2 border border-amber-200 bg-amber-50/50 p-3 scroll-mt-6"
+                            class="mt-2 grid gap-2 border border-amber-200 bg-amber-50/50 p-3 scroll-mt-6"
+                            x-show="morePanel === 'waive'"
+                            x-cloak
+                            @if ($openWaive) x-init="morePanel = 'waive'" @endif
                         >
                             @csrf
                             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-amber-900">Waive balance</p>
@@ -260,16 +169,27 @@
                                 Waive remaining balance
                             </button>
                         </form>
-                    @endif
+                    </div>
+                @endif
 
-                    @if ($financial['canRecordRefund'] ?? false)
+                @if ($financial['canRecordRefund'] ?? false)
+                    <div>
+                        <button
+                            type="button"
+                            class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-bold text-slate-800 hover:border-slate-400"
+                            @click="morePanel = morePanel === 'refund' ? null : 'refund'"
+                        >
+                            Record refund
+                        </button>
                         <form
                             method="POST"
                             action="{{ route('operations.repair-orders.refund.store', $repairOrder) }}"
                             data-refresh-scope="rail"
                             data-continuity-focus="#refund-amount-{{ $repairOrder->repair_order_id }}"
                             @submit.prevent="submitWorksheetForm($event)"
-                            class="grid gap-2 border border-slate-200 bg-white p-3"
+                            class="mt-2 grid gap-2 border border-slate-200 bg-white p-3"
+                            x-show="morePanel === 'refund'"
+                            x-cloak
                         >
                             @csrf
                             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Record Refund</p>
@@ -299,55 +219,62 @@
                                 Record Refund
                             </button>
                         </form>
-                    @endif
-                @endunless
-            @endcan
-
-            @if ($financial['invoice'])
-                <a
-                    href="{{ route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $financial['invoice']]) }}"
-                    target="_blank"
-                    rel="noopener"
-                    class="inline-flex min-h-9 w-full items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
-                >
-                    Final Invoice PDF
-                </a>
-            @endif
-
-            @if ($financial['closeoutBlockingReason'] && $repairOrder->status === App\Ark\Operations\RepairOrders\RepairOrderStatus::ReadyPickup)
-                <p class="text-xs font-semibold leading-4 text-amber-900">{{ $financial['closeoutBlockingReason'] }}</p>
-            @elseif ($financial['canClose'])
-                <p class="text-xs font-semibold leading-4 text-emerald-800">Eligible to close after customer handoff.</p>
-            @endif
-
-            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
-                @if ($financial['canPost'])
-                    <p class="text-[11px] font-semibold leading-4 text-slate-500">
-                        @if ($financial['excludesFromPostedSales'] ?? false)
-                            Closing posts the job for history. {{ $financial['collectionDispositionLabel'] }} work is not counted in Sales Posted.
-                        @else
-                            Posts this job into sales reporting. Closing as Paid posts automatically — use this when the job is sold but not closed yet.
-                        @endif
-                    </p>
-                @elseif ($financial['isPosted'])
-                    <p class="text-xs font-semibold leading-4 {{ ($financial['excludesFromPostedSales'] ?? false) ? 'text-slate-700' : 'text-emerald-800' }}">
-                        Posted {{ $financial['postedAtLabel'] }}
-                        @if ($financial['excludesFromPostedSales'] ?? false)
-                            · {{ $financial['collectionDispositionLabel'] }} — not counted in Sales Posted.
-                        @else
-                            · included in Sales Posted.
-                        @endif
-                    </p>
-                @elseif (($financial['postBlockingReason'] ?? null) && $financial['hasIssuedInvoice'] && ($financial['isPaid'] ?? (($financial['settlementBalanceDueCents'] ?? 1) === 0)))
-                    <p class="text-xs font-semibold leading-4 text-slate-500">{{ $financial['postBlockingReason'] }}</p>
+                    </div>
                 @endif
-            @endcan
+            @endunless
+        @endcan
 
-            @if ($financial['ledgerEntries']->isNotEmpty())
-                <div class="border-t border-slate-200 pt-2">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Payment History</p>
-                    <div class="mt-2 divide-y divide-slate-100">
-                        @foreach ($financial['ledgerEntries'] as $entry)
+        @if ($financial['invoice'])
+            <a
+                href="{{ route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $financial['invoice']]) }}"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex min-h-9 w-full items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
+            >
+                Final Invoice PDF
+            </a>
+        @endif
+
+        @if ($financial['closeoutBlockingReason'] && $repairOrder->status === App\Ark\Operations\RepairOrders\RepairOrderStatus::ReadyPickup)
+            <p class="text-xs font-semibold leading-4 text-amber-900">{{ $financial['closeoutBlockingReason'] }}</p>
+        @elseif ($financial['canClose'])
+            <p class="text-xs font-semibold leading-4 text-emerald-800">Eligible to close after customer handoff.</p>
+        @endif
+
+        @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
+            @if ($financial['canPost'])
+                <p class="text-[11px] font-semibold leading-4 text-slate-500">
+                    @if ($financial['excludesFromPostedSales'] ?? false)
+                        Closing posts the job for history. {{ $financial['collectionDispositionLabel'] }} work is not counted in Sales Posted.
+                    @else
+                        Posts this job into sales reporting. Closing as Paid posts automatically — use this when the job is sold but not closed yet.
+                    @endif
+                </p>
+            @elseif ($financial['isPosted'])
+                <p class="text-xs font-semibold leading-4 {{ ($financial['excludesFromPostedSales'] ?? false) ? 'text-slate-700' : 'text-emerald-800' }}">
+                    Posted {{ $financial['postedAtLabel'] }}
+                    @if ($financial['excludesFromPostedSales'] ?? false)
+                        · {{ $financial['collectionDispositionLabel'] }} — not counted in Sales Posted.
+                    @else
+                        · included in Sales Posted.
+                    @endif
+                </p>
+            @elseif (($financial['postBlockingReason'] ?? null) && $financial['hasIssuedInvoice'] && ($financial['isPaid'] ?? (($financial['settlementBalanceDueCents'] ?? 1) === 0)))
+                <p class="text-xs font-semibold leading-4 text-slate-500">{{ $financial['postBlockingReason'] }}</p>
+            @endif
+        @endcan
+
+        @if ($historyItems !== [])
+            <div class="border-t border-slate-200 pt-2" x-data="arkPaymentCapture({
+                publicConfig: null,
+                refreshUrlTemplate: @js(route('operations.repair-orders.payment-capture.refresh', [$repairOrder, '__ID__'])),
+                cancelUrlTemplate: @js(route('operations.repair-orders.payment-capture.cancel', [$repairOrder, '__ID__'])),
+            })">
+                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Payment History</p>
+                <div class="mt-2 divide-y divide-slate-100">
+                    @foreach ($historyItems as $item)
+                        @if (($item['kind'] ?? '') === 'ledger')
+                            @php $entry = $item['entry']; @endphp
                             <div class="py-2 text-xs leading-4 {{ $entry['isVoided'] ? 'opacity-50' : '' }}">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
@@ -390,10 +317,48 @@
                                     @endif
                                 @endcan
                             </div>
-                        @endforeach
-                    </div>
+                        @elseif (($item['kind'] ?? '') === 'capture' && is_array($item['attempt'] ?? null))
+                            @php $attempt = $item['attempt']; @endphp
+                            <div class="py-2 text-xs leading-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-slate-950">
+                                            Card capture
+                                            · {{ $attempt['methodLabel'] ?? $attempt['method'] }}
+                                            · {{ $attempt['statusLabel'] }}
+                                        </p>
+                                        <p class="mt-0.5 text-slate-500">
+                                            {{ $attempt['initiatedAt'] ?? 'Pending' }}
+                                            · {{ $attempt['context'] }}
+                                        </p>
+                                        <p class="mt-0.5 font-semibold text-slate-600">Not a payment — does not change balance due.</p>
+                                        @if ($attempt['needsReconciliation'])
+                                            <p class="mt-0.5 font-semibold text-amber-900">Do not re-charge this amount until resolved.</p>
+                                        @endif
+                                    </div>
+                                    <p class="shrink-0 font-black tabular-nums text-slate-700">{{ $attempt['amount'] }}</p>
+                                </div>
+                                @if ($attempt['isOpen'])
+                                    <div class="mt-2 flex gap-2">
+                                        <button
+                                            type="button"
+                                            class="text-[11px] font-bold text-sky-800 hover:underline"
+                                            @click="checkStatus({{ (int) $attempt['id'] }})"
+                                        >Check status</button>
+                                        @if ($attempt['canCancel'] ?? false)
+                                            <button
+                                                type="button"
+                                                class="text-[11px] font-bold text-slate-700 hover:underline"
+                                                @click="cancelAttempt({{ (int) $attempt['id'] }})"
+                                            >Cancel request</button>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
                 </div>
-            @endif
-        </div>
-    </details>
+            </div>
+        @endif
+    </div>
 </div>

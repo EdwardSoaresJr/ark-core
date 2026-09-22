@@ -112,7 +112,8 @@ test('square terminal payment updates financial posture on repair order page', f
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
-        ->assertSee('Paid / ready to close')
+        ->assertSee('Paid')
+        ->assertSee('Eligible to close')
         ->assertSee('Ready to release')
         ->assertSee('$0.00')
         ->assertDontSee('Collect balance before release');

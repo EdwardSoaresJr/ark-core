@@ -362,8 +362,10 @@ export const arkWorksheetContinuity = (config = {}) => {
             });
         },
 
-        async refreshScope(scope) {
-            if (this.worksheetBusyPending) {
+        async refreshScope(scope, options = {}) {
+            const quiet = options.quiet === true;
+
+            if (! quiet && this.worksheetBusyPending) {
                 return;
             }
 
@@ -373,7 +375,7 @@ export const arkWorksheetContinuity = (config = {}) => {
             const url = new URL(window.location.href);
             url.hash = '';
 
-            await this.refreshWorksheet(url.toString(), anchor);
+            await this.refreshWorksheet(url.toString(), anchor, { quiet });
         },
 
         surfaceWorksheetMessage(message, { tone = 'warn' } = {}) {
@@ -518,7 +520,8 @@ export const arkWorksheetContinuity = (config = {}) => {
             this.surfaceWorksheetSaved();
         },
 
-        async refreshWorksheet(url, anchor) {
+        async refreshWorksheet(url, anchor, options = {}) {
+            const quiet = options.quiet === true;
             const scrollAnchor = anchor instanceof HTMLFormElement
                 ? this.scrollAnchor(anchor)
                 : this.scopedWorksheetTarget(anchor);
@@ -530,11 +533,13 @@ export const arkWorksheetContinuity = (config = {}) => {
                 : anchor?.dataset?.refreshScope;
             const workspaceTab = refreshScope ? workspaceTabReloadMap[refreshScope] : null;
 
-            if (document.activeElement instanceof HTMLElement) {
+            if (! quiet && document.activeElement instanceof HTMLElement) {
                 document.activeElement.blur();
             }
 
-            this.beginWorksheetBusy();
+            if (! quiet) {
+                this.beginWorksheetBusy();
+            }
 
             try {
                 if (
@@ -558,7 +563,9 @@ export const arkWorksheetContinuity = (config = {}) => {
                     }
 
                     this.restoreFocus(focusTarget);
-                    this.revealWorksheetStatus();
+                    if (! quiet) {
+                        this.revealWorksheetStatus();
+                    }
 
                     return;
                 }
@@ -586,11 +593,15 @@ export const arkWorksheetContinuity = (config = {}) => {
                 this.restoreOpenState(anchor);
                 this.restoreAnchor(anchorId, anchorTop);
                 this.restoreFocus(focusTarget);
-                this.revealWorksheetStatus();
+                if (! quiet) {
+                    this.revealWorksheetStatus();
+                }
             } catch {
                 window.location.href = url;
             } finally {
-                this.endWorksheetBusy();
+                if (! quiet) {
+                    this.endWorksheetBusy();
+                }
             }
         },
 

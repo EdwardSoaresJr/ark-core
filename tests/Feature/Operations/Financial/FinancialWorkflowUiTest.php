@@ -69,7 +69,7 @@ test('financial rail surfaces deposit capture before ready pickup', function () 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Record deposit in ledger')
-        ->assertSee('Pre-invoice')
+        ->assertSee('Not issued')
         ->assertDontSee('Generate Final Invoice');
 });
 
@@ -88,7 +88,7 @@ test('estimate totals panel shows balance due when deposit is on file', function
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
         ->assertSee('Deposit on file')
-        ->assertSee('Balance Due')
+        ->assertSee('Balance due')
         ->assertSee('−$50.00')
         ->assertSee('$100.00');
 });
@@ -108,7 +108,7 @@ test('estimate totals panel shows balance due after partial payment', function (
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
         ->assertSee('Payments')
-        ->assertSee('Settlement balance')
+        ->assertSee('Balance due')
         ->assertSee('−$60.00')
         ->assertSee('$90.00');
 });
@@ -253,7 +253,7 @@ test('partial payment posture surfaces on ro review', function () {
         ->assertOk()
         ->assertSee('Partially paid')
         ->assertSee('$100.00')
-        ->assertSee('Settlement balance');
+        ->assertSee('Balance due');
 });
 
 test('paid posture surfaces when balance is zero', function () {
@@ -266,7 +266,7 @@ test('paid posture surfaces when balance is zero', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
-        ->assertSee('Paid / ready to close')
+        ->assertSee('Paid')
         ->assertSee('Eligible to close')
         ->assertDontSee('Record Payment');
 });
@@ -328,7 +328,7 @@ test('financial rail renders calculator balance not estimate total as balance du
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
         ->assertSee('$90.00')
-        ->assertSee('Settlement balance');
+        ->assertSee('Balance due');
 });
 
 test('mark paid route requires amount and uses ledger entries', function () {
