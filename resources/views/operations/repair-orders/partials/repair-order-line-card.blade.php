@@ -31,6 +31,8 @@
     $contextLines = $isViewMode
         ? RepairOrderLineItemPresentation::viewContextLines($line)
         : RepairOrderLineItemPresentation::editContextLines($line);
+    $needsAuthorization = isset($linesNeedingAuthorization)
+        && collect($linesNeedingAuthorization)->contains(fn ($unauthorizedLine): bool => (int) $unauthorizedLine->id === (int) $line->id);
 @endphp
 
 <div @class([
@@ -82,6 +84,9 @@
             <div class="ops-line-card__head">
                 <div class="min-w-0 flex-1">
                     <span class="ops-line-type ops-line-type--{{ $line->type->value }}">{{ $line->type->staffLabel() }}</span>
+                    @if ($needsAuthorization)
+                        <span class="text-[11px] font-semibold text-amber-950">Needs authorization</span>
+                    @endif
                     <p class="ops-line-card__title truncate">{{ $lineTitle }}</p>
                 </div>
                 <p class="ops-line-card__total shrink-0 tabular-nums md:hidden">{{ $totals->format($line->total_cents) }}</p>

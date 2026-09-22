@@ -1893,6 +1893,7 @@
                     :financial="$financial['showFinancialRail'] ? $financial : null"
                     :repair-order="$repairOrder"
                     :approval-forecast="$approvalForecast ?? null"
+                    :lines-needing-authorization="$linesNeedingAuthorization ?? collect()"
                 >
                     @if ($financial['showFinancialRail'])
                         @include('operations.repair-orders.partials.financial-payment-strip', [

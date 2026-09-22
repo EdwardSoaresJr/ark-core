@@ -11,6 +11,7 @@ use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -40,6 +41,12 @@ final class MobileConcernDestroyController
 
         if ($concern->lines()->exists()) {
             throw new HttpException(422, 'Delete or move concern lines before deleting the concern.');
+        }
+
+        $authorizationBlock = app(WorkCompletionAuthorization::class)->concernDeletionBlockedReason($concern);
+
+        if ($authorizationBlock !== null) {
+            throw new HttpException(422, $authorizationBlock);
         }
 
         $payload = [

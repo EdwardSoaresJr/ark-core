@@ -2,24 +2,25 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\Documents\DocumentProjection;
+use App\Ark\Operations\Evidence\EvidenceProjection;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\RepairOrderFinancialPresenter;
 use App\Ark\Operations\Inspections\InspectionWorkspaceTabBadgeProjection;
-use App\Ark\Operations\Documents\DocumentProjection;
-use App\Ark\Operations\Evidence\EvidenceProjection;
 use App\Ark\Operations\Maintenance\MaintenanceService;
 use App\Ark\Operations\Maintenance\MaintenanceServiceKind;
 use App\Ark\Operations\Maintenance\MaintenanceServiceStatus;
+use App\Ark\Operations\Recommendations\RecommendationAwarenessProjection;
+use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Staff\SoloShopOperations;
+use App\Ark\Operations\Work\AdvisorWorkProjection;
 use App\Ark\Operations\WorkAuthorization\WorkAuthorization;
 use App\Ark\Operations\WorkAuthorization\WorkAuthorizationPackageType;
 use App\Ark\Operations\WorkAuthorization\WorkAuthorizationStatus;
+use App\Ark\Operations\Workspace\WorkspaceTabSupport;
 use App\Ark\Orientation\Orientation;
 use App\Ark\Orientation\OrientationDensity;
-use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Operations\Staff\SoloShopOperations;
-use App\Ark\Operations\Workspace\WorkspaceTabSupport;
-use App\Ark\Operations\Work\AdvisorWorkProjection;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class RepairOrderShowController
         ApprovalForecastProjection $approvalForecast,
         EvidenceProjection $evidenceProjection,
         DocumentProjection $documentProjection,
+        WorkCompletionAuthorization $authorization,
     ): View {
         if (RepairOrderProductionLandingGate::applies($request->user())) {
             return app(RepairOrderProductionLandingController::class)($request, $repairOrder);
@@ -103,6 +105,7 @@ class RepairOrderShowController
             'attachableDocuments' => $documentProjection->attachableForRepairOrder($repairOrder),
             ...RepairOrderPosture::for($repairOrder),
             'totals' => $totals,
+            'linesNeedingAuthorization' => $authorization->linesRequiringAuthorization($repairOrder),
             'approvalForecast' => $approvalForecast->for($repairOrder),
             'balanceProjection' => $balanceProjection,
             'financial' => $financialPresenter->for($repairOrder, $totals, $balanceProjection),
@@ -133,7 +136,7 @@ class RepairOrderShowController
                 $repairOrder->vehicle_id,
             ),
             ...InspectionWorkspaceTabBadgeProjection::for($repairOrder, $request->user()),
-            'recommendationAwareness' => \App\Ark\Operations\Recommendations\RecommendationAwarenessProjection::forRepairOrder($repairOrder),
+            'recommendationAwareness' => RecommendationAwarenessProjection::forRepairOrder($repairOrder),
         ]);
     }
 }

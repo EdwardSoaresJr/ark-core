@@ -10,6 +10,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Operations\Settings\ShopSettings;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
@@ -137,9 +138,21 @@ class EstimateTotalsCalculator
      */
     private function approvedInvoiceableLines(RepairOrder $repairOrder): Collection
     {
+        $repairOrder->loadMissing(['lines.concern']);
+        $coveredLaborAndParts = app(WorkCompletionAuthorization::class)->customerApprovedLaborAndPartIdSet($repairOrder);
+
         return $repairOrder->lines
-            ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved
-                && ! $line->type->isNote())
+            ->filter(function (RepairOrderLine $line) use ($coveredLaborAndParts): bool {
+                if ($line->concern?->disposition !== RepairOrderConcernDisposition::Approved || $line->type->isNote()) {
+                    return false;
+                }
+
+                if ($line->isPart() || $line->type->isLabor()) {
+                    return isset($coveredLaborAndParts[(int) $line->id]);
+                }
+
+                return true;
+            })
             ->values();
     }
 

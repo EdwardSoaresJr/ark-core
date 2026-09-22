@@ -4,6 +4,7 @@
     'financial' => null,
     'repairOrder' => null,
     'approvalForecast' => null,
+    'linesNeedingAuthorization' => null,
 ])
 
 @php
@@ -25,6 +26,10 @@
         && ($financial['suggestedDepositParts'] ?? null)
         && ($financial['suggestedDepositDiagnostics'] ?? null);
     $showDepositDiagnosticsRow = $showDepositPartsRow;
+    $linesNeedingAuthorization = collect($linesNeedingAuthorization ?? []);
+    $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum(
+        fn ($line): int => (int) ($line->total_cents ?? 0),
+    );
 @endphp
 
 <div {{ $attributes->class(['ops-review-panel']) }}>
@@ -83,6 +88,23 @@
             <dt>Total</dt>
             <dd class="font-bold tabular-nums text-slate-950">{{ $totals->format($totals->totalCents()) }}</dd>
         </div>
+        @if ($linesNeedingAuthorization->isNotEmpty())
+            <div class="py-2">
+                <div class="ops-total-row">
+                    <dt class="text-amber-950">Needs authorization</dt>
+                    <dd class="font-semibold tabular-nums text-amber-950">{{ $totals->format($needsAuthorizationCents) }}</dd>
+                </div>
+                <ul class="mt-1 space-y-0.5 text-xs leading-4 text-amber-950">
+                    @foreach ($linesNeedingAuthorization as $unauthorizedLine)
+                        <li class="flex items-baseline justify-between gap-3">
+                            <span class="min-w-0">{{ $unauthorizedLine->description }}</span>
+                            <span class="shrink-0 tabular-nums">{{ $totals->format((int) $unauthorizedLine->total_cents) }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                <p class="mt-1 text-[11px] leading-4 text-slate-500">On the estimate. Not in approved sales until the customer approves these lines.</p>
+            </div>
+        @endif
         @if ($showSuggestedDeposit)
             @if ($showDepositPartsRow)
                 <div class="ops-total-row py-1.5">

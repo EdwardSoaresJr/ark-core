@@ -26,12 +26,14 @@ use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusTransition;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusTransitionRole;
 use App\Ark\Operations\RepairOrders\UnresolvedAuthorizationReport;
 use App\Ark\Operations\RepairOrders\UpdateConcernDispositionAction;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Auth\Access\AuthorizationException as AccessDenied;
+use Illuminate\Database\QueryException;
 
 const DIAGNOSTIC_EXCEPTION_NOTE = 'Front brake diagnosis only. The repair itself stays recommended until the customer decides.';
 
@@ -90,6 +92,15 @@ test('an approved concern installs only the lines in that approval and keeps app
     $added = addPart($repairOrder, $concern, 'Caliper');
     $added->update(['procurement_state' => PartProcurementState::Received]);
 
+    expect(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($approvedBefore)
+        ->and(app(EstimateTotalsCalculator::class)->totalsFor($repairOrder->fresh())->totalCents())->toBe($approvedBefore + 8068);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Caliper', false)
+        ->assertSee('Needs authorization', false)
+        ->assertSee('On the estimate. Not in approved sales until the customer approves these lines.', false);
+
     $this->from(route('operations.repair-orders.show', $repairOrder))
         ->patch(route('operations.repair-orders.lines.procurement.update', [$repairOrder, $added]), [
             'procurement_state' => PartProcurementState::Installed->value,
@@ -99,6 +110,13 @@ test('an approved concern installs only the lines in that approval and keeps app
     expect($added->fresh()->procurement_state)->not->toBe(PartProcurementState::Installed);
 
     approveConcern($repairOrder, $concern->fresh(), $advisor);
+
+    expect(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($approvedBefore + 8068);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Caliper', false)
+        ->assertDontSee('Needs authorization');
 
     $added->update(['procurement_state' => PartProcurementState::Received]);
 
@@ -426,7 +444,8 @@ test('partial approval installs the approved concern and leaves the other concer
     $added = addPart($repairOrder, $approvedConcern, 'Hardware added after partial approval');
     $added->update(['procurement_state' => PartProcurementState::Received]);
     $approvedAfterAdd = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents();
-    expect($approvedAfterAdd)->toBe(16136);
+    expect($approvedAfterAdd)->toBe($approvedCents)
+        ->and(app(EstimateTotalsCalculator::class)->totalsFor($repairOrder->fresh())->totalCents())->toBe($approvedCents + 8068);
 
     $this->actingAs($advisor)
         ->from(route('operations.repair-orders.show', $repairOrder))
@@ -541,6 +560,99 @@ test('an inconsistent repair order stays open while a separate approved repair o
     expect($inconsistent->fresh()->status->value)->toBe(RepairOrderStatus::ReadyPickup->value)
         ->and($inconsistentConcern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
         ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($inconsistent->fresh())->totalCents())->toBe(0);
+});
+
+test('an exception allows added work without increasing approved sales', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $this->actingAs($advisor);
+    approveConcern($repairOrder, $concern, $advisor);
+    $part->update(['procurement_state' => PartProcurementState::Received]);
+
+    $approvedBefore = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents();
+    $added = addPart($repairOrder, $concern, 'Hardware added after approval');
+    $added->update(['procurement_state' => PartProcurementState::Received]);
+
+    $this->post(route('operations.repair-orders.concerns.authorization-exceptions.store', [$repairOrder, $concern]), [
+        'reason' => 'diagnostic',
+        'note' => 'Hardware needed to finish the diagnosis. The customer has not approved this line.',
+        'line_ids' => [$added->id],
+    ])->assertRedirect();
+
+    $this->patch(route('operations.repair-orders.lines.procurement.update', [$repairOrder, $added]), [
+        'procurement_state' => PartProcurementState::Installed->value,
+    ])->assertRedirect();
+
+    $approvedAfter = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents();
+    $invoiceAfter = app(EstimateTotalsCalculator::class)->totalsForApprovedWork($repairOrder->fresh())->totalCents();
+
+    expect($added->fresh()->procurement_state)->toBe(PartProcurementState::Installed)
+        ->and($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and($approvedAfter)->toBe($approvedBefore)
+        ->and($invoiceAfter)->toBe($approvedAfter)
+        ->and(app(EstimateTotalsCalculator::class)->totalsFor($repairOrder->fresh())->totalCents())->toBeGreaterThan($approvedAfter);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Hardware added after approval', false)
+        ->assertSee('Needs authorization', false);
+});
+
+test('authorization history survives concern deletion', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $this->actingAs($advisor);
+    approveConcern($repairOrder, $concern, $advisor);
+    $part->delete();
+
+    $scopeId = ApprovedWorkScope::query()->value('id');
+
+    $this->delete(route('operations.repair-orders.concerns.destroy', [$repairOrder, $concern]))
+        ->assertStatus(422);
+
+    $this->deleteJson(route('operations.repair-orders.concerns.destroy', [$repairOrder, $concern]))
+        ->assertStatus(422)
+        ->assertJsonPath('message', WorkCompletionAuthorization::CONCERN_DELETE_BLOCKED);
+
+    expect(fn () => RepairOrderConcern::query()->whereKey($concern->id)->delete())->toThrow(QueryException::class);
+
+    $exceptionConcern = addConcern($repairOrder, 'Diagnostic only');
+    $exceptionPart = addPart($repairOrder, $exceptionConcern, 'Scan tool');
+    app(RecordAuthorizationExceptionAction::class)->execute(
+        $repairOrder,
+        $exceptionConcern,
+        [$exceptionPart->id],
+        AuthorizationExceptionReason::Diagnostic,
+        DIAGNOSTIC_EXCEPTION_NOTE,
+        $advisor,
+    );
+    $exceptionPart->delete();
+    $exceptionId = AuthorizationException::query()->value('id');
+
+    $this->deleteJson(route('operations.repair-orders.concerns.destroy', [$repairOrder, $exceptionConcern]))
+        ->assertStatus(422)
+        ->assertJsonPath('message', WorkCompletionAuthorization::CONCERN_DELETE_BLOCKED);
+
+    expect(fn () => RepairOrderConcern::query()->whereKey($exceptionConcern->id)->delete())->toThrow(QueryException::class);
+
+    $token = $advisor->createToken('phone')->plainTextToken;
+
+    $this->withToken($token)
+        ->deleteJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/concerns/'.$concern->id)
+        ->assertStatus(422)
+        ->assertJsonPath('message', WorkCompletionAuthorization::CONCERN_DELETE_BLOCKED);
+
+    $empty = addConcern($repairOrder, 'Empty follow-up');
+
+    $this->actingAs($advisor)
+        ->delete(route('operations.repair-orders.concerns.destroy', [$repairOrder, $empty]))
+        ->assertRedirect();
+
+    expect(RepairOrderConcern::query()->whereKey($concern->id)->exists())->toBeTrue()
+        ->and(RepairOrderConcern::query()->whereKey($exceptionConcern->id)->exists())->toBeTrue()
+        ->and(RepairOrderConcern::query()->whereKey($empty->id)->exists())->toBeFalse()
+        ->and(ApprovedWorkScope::query()->whereKey($scopeId)->exists())->toBeTrue()
+        ->and(AuthorizationException::query()->whereKey($exceptionId)->exists())->toBeTrue();
 });
 
 test('authorization exceptions are append-only and the worksheet says they are not customer consent', function () {
