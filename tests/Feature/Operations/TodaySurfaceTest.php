@@ -63,9 +63,10 @@ test('advisor today is shop dashboard without pressure theater', function () {
         ->assertSee('Shop Dashboard')
         ->assertSee('Car Count')
         ->assertSee('Pending Sales')
-        ->assertSee('Declined Sales')
+        ->assertSee('Declined ($)')
         ->assertSee('Approved Sales')
-        ->assertSee('ARO')
+        ->assertSee('Approved sales per open RO')
+        ->assertDontSee('>ARO<', false)
         ->assertSee('Close Ratio')
         ->assertSee(e($pendingDrill), false)
         ->assertSee(e($statusDrill), false)
@@ -162,9 +163,10 @@ test('shop dashboard close ratio uses approved over total written', function () 
         'Pending Sales',
         'Declined Sales',
         'Approved Sales',
-        'ARO',
+        'Approved sales per open RO',
         'Close Ratio',
-    ]);
+    ])
+        ->and($dash->kpis[4]['hint'])->toBe('Approved sales ÷ open repair orders');
 });
 
 test('shop dashboard chart ranks volume first and marks the peak cluster', function () {
@@ -214,19 +216,42 @@ test('shop dashboard chart ranks volume first and marks the peak cluster', funct
     $this->actingAs($advisor)
         ->get(route('operations.today'))
         ->assertOk()
-        ->assertSee('4 of 5 in Building Estimate and Waiting Approval')
+        ->assertSee('5 open repair orders by current status')
+        ->assertSee('Repair order workflow')
         ->assertSee('Estimates to finish')
-        ->assertSee('Awaiting customer decision')
+        ->assertSee('Awaiting decision')
+        ->assertSee('Approved work')
+        ->assertSee('Ready for pickup')
         ->assertSee('Open estimates')
         ->assertSee('Review approvals')
-        ->assertSee('Pending recommendations')
+        ->assertSee('View approved jobs')
+        ->assertSee('View pickup queue')
+        ->assertSee('Recommendations awaiting estimates')
+        ->assertSee('Pending customer recommendations')
+        ->assertSee('Not an amount due')
+        ->assertSee('Approved sales includes all approved dollars on open repair orders. The cards highlight approved work still in the shop and work on pickup-ready repair orders.')
+        ->assertDontSee('The cards split in-shop work from pickup')
         ->assertSee('ops-shop-dash-next__item', false)
-        ->assertSee('ops-shop-dash-rest__item', false)
+        ->assertSee('ops-shop-dash-flow__item', false)
         ->assertSee('Sales by status')
+        ->assertSee('Approved / RO')
+        ->assertDontSee('Average RO')
+        ->assertDontSee('Awaiting customer decision')
+        ->assertDontSee('ops-shop-dash-rest__item', false)
         ->assertDontSee('Car count by status')
         ->assertDontSee('ops-shop-dash-next__track', false)
         ->assertDontSee('title="Phone"', false)
         ->assertDontSee('title="Open matching repair orders"', false);
+
+    $pickupQueue = route('operations.repair-orders.index', ['pickup' => 'all']);
+    $approvedJobs = route('operations.repair-orders.index', [
+        'open' => '1',
+        'disposition' => RepairOrderConcernDisposition::Approved->value,
+    ]);
+
+    $this->get(route('operations.today'))
+        ->assertSee(e($pickupQueue), false)
+        ->assertSee(e($approvedJobs), false);
 });
 
 test('repair order index filters open queue by disposition for dashboard drill-down', function () {

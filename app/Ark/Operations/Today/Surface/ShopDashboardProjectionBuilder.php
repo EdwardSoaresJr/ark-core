@@ -157,13 +157,13 @@ final class ShopDashboardProjectionBuilder
                 [
                     'label' => 'Approved Sales',
                     'value' => $this->money($approvedCents),
-                    'hint' => 'Approved invoiceable work',
+                    'hint' => 'All approved work on open repair orders',
                     'url' => $approvedUrl,
                 ],
                 [
-                    'label' => 'ARO',
+                    'label' => 'Approved sales per open RO',
                     'value' => $this->money($aroCents),
-                    'hint' => 'Approved ÷ car count',
+                    'hint' => 'Approved sales ÷ open repair orders',
                     'url' => $approvedUrl,
                 ],
                 [
