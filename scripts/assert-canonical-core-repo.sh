@@ -18,7 +18,7 @@ report() {
   echo "Git root: $root" >&2
   echo "origin:   ${remote:-<none>}" >&2
   echo "branch:   ${branch:-<detached>}" >&2
-  echo "Expected origin: https://github.com/EdwardSoaresJr/ark.git" >&2
+  echo "Expected origin: https://github.com/EdwardSoaresJr/ark-core.git" >&2
 }
 
 case "$remote" in
@@ -38,7 +38,8 @@ esac
 
 canonical_remote_ok=0
 case "$remote" in
-  *github.com/EdwardSoaresJr/ark.git|*github.com:EdwardSoaresJr/ark.git)
+  *github.com/EdwardSoaresJr/ark.git|*github.com:EdwardSoaresJr/ark.git|\
+  *github.com/EdwardSoaresJr/ark-core.git|*github.com:EdwardSoaresJr/ark-core.git)
     canonical_remote_ok=1
     ;;
 esac

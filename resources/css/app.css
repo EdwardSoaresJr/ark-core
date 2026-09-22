@@ -387,6 +387,7 @@
 
     .ops-main-shell:has(.ops-estimate-workspace) {
         --ops-ro-footer-offset: 5.5rem;
+        --ops-ro-rail-chrome-inset: 22rem;
     }
 
     .ops-main-shell:has(.ops-workspace-tabs.is-visible) {
@@ -10164,8 +10165,16 @@
             display: flex;
             flex-direction: column;
             gap: 0.375rem;
-            max-height: calc(100dvh - var(--ops-sticky-stack-offset) - var(--ops-ro-footer-offset, 5.5rem));
-            overflow: hidden;
+            max-height: calc(
+                100dvh
+                - var(--ops-sticky-stack-offset)
+                - var(--ops-ro-footer-offset, 5.5rem)
+                - var(--ops-ro-rail-chrome-inset, 22rem)
+            );
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-bottom: 0.5rem;
         }
 
         .ops-review-rail-totals-pinned {
@@ -10176,10 +10185,9 @@
         }
 
         .ops-review-rail__scroll {
-            flex: 1 1 auto;
+            flex: 0 0 auto;
             min-height: 0;
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: visible;
             display: grid;
             gap: 0.375rem;
             padding-bottom: 0.25rem;
