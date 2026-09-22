@@ -2,8 +2,6 @@
 
 namespace App\Ark\Operations\Reports;
 
-use App\Ark\Operations\Financial\LedgerEntryType;
-use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\Labor\ShopOverheadSnapshot;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -11,6 +9,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Reports\Standards\ReportingStandardsV1;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use App\Ark\Runtime\Authorization\ArkRole;
@@ -23,6 +22,9 @@ use Illuminate\Support\Facades\DB;
 
 class OperationalReportRangeMetrics
 {
+    /** @var array<string, int>|null */
+    private ?array $postedComponents = null;
+
     public function __construct(
         private readonly Carbon $from,
         private readonly Carbon $to,
@@ -34,13 +36,18 @@ class OperationalReportRangeMetrics
     public function kpis(): array
     {
         $targets = ShopExcellenceTargets::current();
-        $carCount = $this->carCount();
         $postedCount = $this->postedCount();
+        $components = $this->components();
+        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
+            $components['labor_cents'],
+            $components['parts_cents'],
+            $components['sublet_cents'],
+            $components['fee_cents'],
+            $components['discount_cents'],
+        );
         $salesPostedCents = $this->postedSalesCents();
         $cashCollectedCents = $this->cashCollectedCents();
-        $totalValueCents = $this->totalValueCents();
-        $aroCents = $carCount > 0 ? (int) round($totalValueCents / $carCount) : 0;
-        $approvedRoCount = $this->approvedRepairOrderCount();
+        $aroCents = ReportingStandardsV1::aroCents($salesCents, $postedCount);
         $unpaidPickupCount = $this->unpaidPickupCount();
         $unpaidPickupCents = $this->unpaidPickupCents();
         $laborSoldCents = $this->laborSoldCents();
@@ -48,52 +55,54 @@ class OperationalReportRangeMetrics
         $partsGpCents = $this->partsGrossProfitCents();
         $partsSalesCents = $this->partsSalesCents();
         $feesSoldCents = $this->feesSoldCents();
-        $partsMarginPercent = $this->marginPercent($partsGpCents, $partsSalesCents);
+        $partsComplete = $components['parts_sales_missing_cost_cents'] === 0;
+        $laborComplete = $components['labor_sales_missing_cost_cents'] === 0;
+        $partsMarginPercent = $partsComplete ? $this->marginPercent($partsGpCents, $partsSalesCents) : null;
         $laborCostCents = $this->laborCostCents();
-        $laborGpCents = $laborSoldCents - $laborCostCents;
-        $laborMarginPercent = $this->marginPercent($laborGpCents, $laborSoldCents);
+        $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
+        $laborMarginPercent = $laborComplete ? $this->marginPercent($laborGpCents, $laborSoldCents) : null;
         $effectiveLaborRateCents = $laborHours > 0 ? (int) round($laborSoldCents / $laborHours) : null;
+        $laborRateComplete = ! ($laborSoldCents > 0 && $laborHours <= 0);
         $mix = $this->partsLaborMixLabel($laborSoldCents, $partsSalesCents);
         $laborMixPercent = $this->laborMixPercent($laborSoldCents, $partsSalesCents);
         $deferredCents = $this->deferredOpportunityCents();
         $elrFloor = $targets['effective_labor_rate_floor_cents'] ?? $targets['posted_labor_rate_cents'];
 
         return [
-            $this->kpi('Sales Posted', $this->money($salesPostedCents), $postedCount.' posted · Tekmetric EOD'),
-            $this->kpi('Cash Collected', $this->money($cashCollectedCents), 'payments + deposits · Tekmetric cashiered'),
-            $this->kpi('Car Count', (string) $carCount, 'ROs opened in range'),
+            $this->kpi('Sales Posted', $this->money($salesPostedCents), 'Posted invoice total, tax included'),
+            $this->kpi('Cash Collected', $this->money($cashCollectedCents), 'Receipts minus refunds'),
+            $this->kpi('Car count', (string) $postedCount, 'Posted repair orders'),
             $this->kpi(
                 'ARO',
-                $this->money($aroCents),
-                'open + closed value · target '.$this->money($targets['aro_target_cents']),
-                ShopExcellenceTargets::toneForMinimum($aroCents, $targets['aro_target_cents']),
-            ),
-            $this->kpi(
-                'Approval Rate',
-                $carCount > 0 ? (string) round(($approvedRoCount / $carCount) * 100).'%' : '0%',
-                $approvedRoCount.' with approved work',
+                $postedCount > 0 ? $this->money($aroCents) : 'n/a',
+                'Sales ÷ car count · target '.$this->money($targets['aro_target_cents']),
+                ShopExcellenceTargets::toneForMinimum($postedCount > 0 ? $aroCents : null, $targets['aro_target_cents']),
             ),
             $this->kpi('Unpaid Pickups', $this->money($unpaidPickupCents), $unpaidPickupCount.' awaiting collection'),
-            $this->kpi('Labor Sold', $this->money($laborSoldCents), number_format($laborHours, 1).' billed hours'),
-            $this->kpi('Parts Sold', $this->money($partsSalesCents), 'posted parts revenue'),
+            $this->kpi('Labor sales', $this->money($laborSoldCents), number_format($laborHours, 1).' billed hours'),
+            $this->kpi('Parts sales', $this->money($partsSalesCents), 'Posted parts, before tax'),
             $this->kpi(
-                'Effective Labor Rate',
-                $effectiveLaborRateCents !== null ? $this->money($effectiveLaborRateCents).'/hr' : 'n/a',
-                $elrFloor !== null
-                    ? 'posted sales · ELR floor '.$this->money($elrFloor).'/hr'
-                    : 'posted sales / billed hours',
-                ShopExcellenceTargets::toneForMinimum($effectiveLaborRateCents, $elrFloor),
+                'Effective labor rate',
+                $laborRateComplete
+                    ? ($effectiveLaborRateCents !== null ? $this->money($effectiveLaborRateCents).'/hr' : 'n/a')
+                    : ReportingStandardsV1::INCOMPLETE_DATA,
+                'Labor sales ÷ billed hours'.($elrFloor !== null ? ' · floor '.$this->money($elrFloor).'/hr' : ''),
+                $laborRateComplete ? ShopExcellenceTargets::toneForMinimum($effectiveLaborRateCents, $elrFloor) : null,
             ),
             $this->kpi(
-                'Parts Margin',
-                $partsMarginPercent !== null ? $partsMarginPercent.'%' : 'n/a',
-                'target '.$targets['parts_margin_target_percent'].'% · known costs',
-                ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']),
+                'Parts gross profit margin',
+                ReportingStandardsV1::percentOrIncomplete($partsComplete, $partsMarginPercent),
+                $partsComplete
+                    ? 'Parts sales − parts cost · target '.$targets['parts_margin_target_percent'].'%'
+                    : $this->money($components['parts_sales_missing_cost_cents']).' parts sales have no cost',
+                $partsComplete ? ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']) : null,
             ),
             $this->kpi(
-                'Labor Margin',
-                $laborMarginPercent !== null ? $laborMarginPercent.'%' : 'n/a',
-                $laborCostCents > 0 ? 'closed labor GP' : 'assign labor cost for margin',
+                'Labor gross profit margin',
+                ReportingStandardsV1::percentOrIncomplete($laborComplete, $laborMarginPercent),
+                $laborComplete
+                    ? ($laborCostCents > 0 ? 'Labor sales − loaded labor cost' : 'Assign a loaded labor cost to measure this')
+                    : $this->money($components['labor_sales_missing_cost_cents']).' labor sales have no loaded cost',
             ),
             $this->kpi(
                 'Parts/Labor Mix',
@@ -101,7 +110,13 @@ class OperationalReportRangeMetrics
                 'target '.$targets['parts_sales_target_percent'].'/'.$targets['labor_sales_target_percent'].' sales',
                 ShopExcellenceTargets::toneForMixPercent($laborMixPercent, $targets['labor_sales_target_percent']),
             ),
-            $this->kpi('Parts GP', $this->money($partsGpCents), 'known part costs only'),
+            $this->kpi(
+                'Parts gross profit',
+                $partsComplete ? $this->money($partsGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
+                $partsComplete
+                    ? 'Parts sales − parts cost'
+                    : $this->money($components['parts_sales_missing_cost_cents']).' parts sales have no cost',
+            ),
             $this->kpi('Fees Sold', $this->money($feesSoldCents), 'shop fees and supplies on posted ROs'),
             $this->kpi('Deferred Opportunity', $this->money($deferredCents), 'deferred work'),
         ];
@@ -118,10 +133,20 @@ class OperationalReportRangeMetrics
         $partsSalesCents = $this->partsSalesCents();
         $laborSoldCents = $this->laborSoldCents();
         $laborCostCents = $this->laborCostCents();
-        $laborGpCents = $laborSoldCents - $laborCostCents;
-        $closedGpCents = $partsGpCents + $laborGpCents;
-        $salesPostedCents = $this->postedSalesCents();
-        $grossMarginPercent = $this->marginPercent($closedGpCents, $salesPostedCents);
+        $components = $this->components();
+        $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
+        $closedGpCents = $partsGpCents + $laborGpCents + $components['fee_cents'];
+        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
+            $components['labor_cents'],
+            $components['parts_cents'],
+            $components['sublet_cents'],
+            $components['fee_cents'],
+            $components['discount_cents'],
+        );
+        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
+            && $components['labor_sales_missing_cost_cents'] === 0
+            && $components['sublet_cents'] === 0;
+        $grossMarginPercent = $costsComplete ? $this->marginPercent($closedGpCents, $salesCents) : null;
         $backorderedCount = $this->backorderedRepairOrderCount();
         $deferredRoCount = $this->dispositionRepairOrderCount(RepairOrderConcernDisposition::Deferred);
         $efficiencyPercent = $this->shopEfficiencyPercent();
@@ -133,18 +158,20 @@ class OperationalReportRangeMetrics
         $supplemental = [
             $this->kpi(
                 'Closed GP',
-                $this->money($closedGpCents),
-                'closed labor + known parts GP',
+                $costsComplete ? $this->money($closedGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
+                $costsComplete ? 'Gross profit on posted sales' : 'Cost is missing on posted sales',
             ),
             $this->kpi(
-                'Gross Margin',
-                $grossMarginPercent !== null ? $grossMarginPercent.'%' : 'n/a',
-                $salesPostedCents > 0 ? 'posted GP / posted sales' : 'no posted sales in range',
+                'Gross profit margin',
+                ReportingStandardsV1::percentOrIncomplete($costsComplete, $grossMarginPercent),
+                $costsComplete ? 'Gross profit ÷ sales' : 'Incomplete data. Cost is missing on posted sales.',
             ),
             $this->kpi(
                 'Labor GP',
-                $this->money($laborGpCents),
-                $laborCostCents > 0 ? 'closed labor gross profit' : 'assign labor cost for GP',
+                $components['labor_sales_missing_cost_cents'] === 0 ? $this->money($laborGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
+                $components['labor_sales_missing_cost_cents'] === 0
+                    ? 'Labor sales − loaded labor cost'
+                    : $this->money($components['labor_sales_missing_cost_cents']).' labor sales have no loaded cost',
             ),
             $this->kpi(
                 'RO Pipeline',
@@ -162,9 +189,9 @@ class OperationalReportRangeMetrics
                 $deferredRoCount > 0 ? 'ROs with deferred concerns' : 'no deferred write-ups',
             ),
             $this->kpi(
-                'Shop Efficiency',
-                $efficiencyPercent !== null ? $efficiencyPercent.'%' : 'n/a',
-                $efficiencyPercent !== null ? 'closed billed hours / tech capacity' : 'no shop open days in range',
+                'Labor productivity',
+                $efficiencyPercent !== null ? $efficiencyPercent.'%' : ($this->laborHours() > 0 ? ReportingStandardsV1::INCOMPLETE_DATA : 'n/a'),
+                'Billed hours ÷ available hours',
             ),
         ];
 
@@ -216,7 +243,6 @@ class OperationalReportRangeMetrics
         return $this->dayReviewKpis();
     }
 
-
     /**
      * @return array{label: string, value: string, hint: string, tone: 'good'|'warn'|null}
      */
@@ -267,38 +293,42 @@ class OperationalReportRangeMetrics
      */
     public function financialRows(): array
     {
-        $rows = OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->groupBy('repair_order_lines.type')
-            ->select('repair_order_lines.type')
-            ->selectRaw('COALESCE(SUM(repair_order_lines.total_cents), 0) as sales_cents')
-            ->selectRaw('COALESCE(SUM(part_cost_cents), 0) as cost_cents')
-            ->get()
-            ->keyBy('type');
+        $components = $this->components();
+        $partsComplete = $components['parts_sales_missing_cost_cents'] === 0;
+        $laborComplete = $components['labor_sales_missing_cost_cents'] === 0;
 
-        return collect([
-            'Labor' => RepairOrderLineType::Labor,
-            'Parts' => RepairOrderLineType::Part,
-            'Fees' => RepairOrderLineType::Fee,
-        ])->map(function (RepairOrderLineType $type, string $category) use ($rows): array {
-            $row = $rows->get($type->value);
-            $salesCents = (int) ($row->sales_cents ?? 0);
-            $costCents = match ($type) {
-                RepairOrderLineType::Part => (int) ($row->cost_cents ?? 0),
-                RepairOrderLineType::Labor => $this->laborCostCents(),
-                default => 0,
-            };
-            $gpCents = $salesCents - $costCents;
+        return [
+            $this->financialCategoryRow('Labor', $components['labor_cents'], $laborComplete ? $this->laborCostCents() : null),
+            $this->financialCategoryRow('Parts', $components['parts_cents'], $partsComplete ? $this->partsCostCents() : null),
+            $this->financialCategoryRow('Sublet', $components['sublet_cents'], $components['sublet_cents'] === 0 ? 0 : null),
+            $this->financialCategoryRow('Other', $components['fee_cents'], 0),
+        ];
+    }
 
+    /**
+     * @return array{category: string, sales: string, cost: string, gp: string, margin: string}
+     */
+    private function financialCategoryRow(string $category, int $salesCents, ?int $costCents): array
+    {
+        if ($costCents === null) {
             return [
                 'category' => $category,
                 'sales' => $this->money($salesCents),
-                'cost' => $costCents > 0 ? $this->money($costCents) : 'n/a',
-                'gp' => $this->money($gpCents),
-                'margin' => $salesCents > 0 ? (string) round(($gpCents / $salesCents) * 100).'%' : '0%',
+                'cost' => ReportingStandardsV1::INCOMPLETE_DATA,
+                'gp' => ReportingStandardsV1::INCOMPLETE_DATA,
+                'margin' => ReportingStandardsV1::INCOMPLETE_DATA,
             ];
-        })->values()->all();
+        }
+
+        $gpCents = $salesCents - $costCents;
+
+        return [
+            'category' => $category,
+            'sales' => $this->money($salesCents),
+            'cost' => $this->money($costCents),
+            'gp' => $this->money($gpCents),
+            'margin' => ReportingStandardsV1::percentOrIncomplete(true, $this->marginPercent($gpCents, $salesCents)),
+        ];
     }
 
     /**
@@ -447,7 +477,6 @@ class OperationalReportRangeMetrics
         $rows = $technicianIds
             ->map(function (int $technicianId) use (
                 $activeByTechnicianId,
-                $activeLaborCentsByRepairOrder,
                 $closedHoursByTechnician,
                 $closedLaborCentsByTechnician,
                 $techniciansById,
@@ -628,46 +657,35 @@ class OperationalReportRangeMetrics
             ->values();
     }
 
+    /**
+     * @return array<string, int>
+     */
+    private function components(): array
+    {
+        return $this->postedComponents ??= OperationalReportTotals::postedSalesComponents($this->from, $this->to);
+    }
+
     private function laborSoldCents(): int
     {
-        return (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Labor)
-            ->sum('repair_order_lines.subtotal_cents');
+        return $this->components()['labor_cents'];
     }
 
     private function laborHours(): float
     {
-        return (float) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
+        return (float) OperationalReportTotals::postedApprovedLineQuery($this->from, $this->to)
             ->where('repair_order_lines.type', RepairOrderLineType::Labor)
-            ->sum('repair_order_lines.quantity');
+            ->selectRaw('COALESCE(SUM('.OperationalReportTotals::billedHoursSql().'), 0) as hours')
+            ->value('hours');
     }
 
     private function partsSalesCents(): int
     {
-        return (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Part)
-            ->sum('repair_order_lines.subtotal_cents');
+        return $this->components()['parts_cents'];
     }
 
     private function feesSoldCents(): int
     {
-        $totals = OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->selectRaw(
-                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as fee_line_cents',
-                [RepairOrderLineType::Fee->value],
-            )
-            ->selectRaw('COALESCE(SUM(repair_order_lines.shop_fee_cents), 0) as allocated_shop_fee_cents')
-            ->first();
-
-        return (int) ($totals->fee_line_cents ?? 0) + (int) ($totals->allocated_shop_fee_cents ?? 0);
+        return $this->components()['fee_cents'];
     }
 
     private function shopEfficiencyPercent(): ?int
@@ -695,12 +713,7 @@ class OperationalReportRangeMetrics
 
     private function partsGrossProfitCents(): int
     {
-        return (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->where('repair_order_lines.type', RepairOrderLineType::Part)
-            ->selectRaw('COALESCE(SUM(subtotal_cents - COALESCE(part_cost_cents, 0)), 0) as gp_cents')
-            ->value('gp_cents');
+        return $this->components()['parts_gp_cents'];
     }
 
     private function laborCostCents(): int
@@ -754,18 +767,28 @@ class OperationalReportRangeMetrics
     public function marginHealthRows(): array
     {
         $targets = ShopExcellenceTargets::current();
-        $carCount = $this->carCount();
-        $totalValueCents = $this->totalValueCents();
-        $aroCents = $carCount > 0 ? (int) round($totalValueCents / $carCount) : 0;
+        $components = $this->components();
+        $postedCount = $this->postedCount();
+        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
+            $components['labor_cents'],
+            $components['parts_cents'],
+            $components['sublet_cents'],
+            $components['fee_cents'],
+            $components['discount_cents'],
+        );
+        $aroCents = ReportingStandardsV1::aroCents($salesCents, $postedCount);
         $laborSoldCents = $this->laborSoldCents();
         $laborHours = $this->laborHours();
         $partsGpCents = $this->partsGrossProfitCents();
         $partsSalesCents = $this->partsSalesCents();
-        $partsMarginPercent = $this->marginPercent($partsGpCents, $partsSalesCents);
+        $partsComplete = $components['parts_sales_missing_cost_cents'] === 0;
+        $laborComplete = $components['labor_sales_missing_cost_cents'] === 0;
+        $partsMarginPercent = $partsComplete ? $this->marginPercent($partsGpCents, $partsSalesCents) : null;
         $laborCostCents = $this->laborCostCents();
-        $laborGpCents = $laborSoldCents - $laborCostCents;
-        $laborMarginPercent = $this->marginPercent($laborGpCents, $laborSoldCents);
-        $effectiveLaborRateCents = $laborHours > 0 ? (int) round($laborSoldCents / $laborHours) : null;
+        $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
+        $laborMarginPercent = $laborComplete ? $this->marginPercent($laborGpCents, $laborSoldCents) : null;
+        $laborRateComplete = ! ($laborSoldCents > 0 && $laborHours <= 0);
+        $effectiveLaborRateCents = $laborRateComplete && $laborHours > 0 ? (int) round($laborSoldCents / $laborHours) : null;
         $laborMixPercent = $this->laborMixPercent($laborSoldCents, $partsSalesCents);
         $partsMixPercent = $laborMixPercent !== null ? 100 - $laborMixPercent : null;
         $postedRateCents = $targets['posted_labor_rate_cents'];
@@ -773,16 +796,18 @@ class OperationalReportRangeMetrics
 
         $rows = [
             $this->marginHealthRow(
-                'Average repair order',
-                $carCount > 0 ? $this->money($aroCents) : 'n/a',
+                'ARO',
+                $postedCount > 0 ? $this->money($aroCents) : 'n/a',
                 $this->money($targets['aro_target_cents']),
-                $carCount > 0 ? $this->compareCentsPosture($aroCents, $targets['aro_target_cents']) : 'No ROs opened in range',
-                ShopExcellenceTargets::toneForMinimum($carCount > 0 ? $aroCents : null, $targets['aro_target_cents']),
-                'Better inspections and write-up discipline raise ARO without more bays',
+                $postedCount > 0 ? $this->compareCentsPosture($aroCents, $targets['aro_target_cents']) : 'No repair orders posted in range',
+                ShopExcellenceTargets::toneForMinimum($postedCount > 0 ? $aroCents : null, $targets['aro_target_cents']),
+                'Sales ÷ car count on posted repair orders',
             ),
             $this->marginHealthRow(
                 'Effective labor rate',
-                $effectiveLaborRateCents !== null ? $this->money($effectiveLaborRateCents).'/hr' : 'n/a',
+                $laborRateComplete
+                    ? ($effectiveLaborRateCents !== null ? $this->money($effectiveLaborRateCents).'/hr' : 'n/a')
+                    : ReportingStandardsV1::INCOMPLETE_DATA,
                 $elrFloor !== null ? $this->money($elrFloor).'/hr floor' : 'Set posted rate in targets',
                 $this->elrPosture($effectiveLaborRateCents, $postedRateCents, $elrFloor),
                 ShopExcellenceTargets::toneForMinimum($effectiveLaborRateCents, $elrFloor),
@@ -797,18 +822,22 @@ class OperationalReportRangeMetrics
                 'Raise in small steps at least once per year',
             ),
             $this->marginHealthRow(
-                'Parts margin',
-                $partsMarginPercent !== null ? $partsMarginPercent.'%' : 'n/a',
+                'Parts gross profit margin',
+                ReportingStandardsV1::percentOrIncomplete($partsComplete, $partsMarginPercent),
                 $targets['parts_margin_target_percent'].'%',
-                $this->comparePercentPosture($partsMarginPercent, $targets['parts_margin_target_percent']),
-                ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']),
+                $partsComplete
+                    ? $this->comparePercentPosture($partsMarginPercent, $targets['parts_margin_target_percent'])
+                    : $this->money($components['parts_sales_missing_cost_cents']).' parts sales have no cost',
+                $partsComplete ? ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']) : null,
                 'Follow the parts matrix — advisors do not discount margin away',
             ),
             $this->marginHealthRow(
-                'Labor margin',
-                $laborMarginPercent !== null ? $laborMarginPercent.'%' : 'n/a',
+                'Labor gross profit margin',
+                ReportingStandardsV1::percentOrIncomplete($laborComplete, $laborMarginPercent),
                 'Loaded cost model',
-                $laborCostCents > 0 ? 'Closed labor GP on assigned tech cost' : 'Assign labor cost on staff for margin',
+                $laborComplete
+                    ? ($laborCostCents > 0 ? 'Closed labor GP on assigned tech cost' : 'Assign labor cost on staff for margin')
+                    : $this->money($components['labor_sales_missing_cost_cents']).' labor sales have no loaded cost',
                 null,
                 'Staff Settings → loaded labor cost per technician',
             ),
@@ -871,9 +900,19 @@ class OperationalReportRangeMetrics
         $partsGpCents = $this->partsGrossProfitCents();
         $laborSoldCents = $this->laborSoldCents();
         $laborCostCents = $this->laborCostCents();
-        $laborGpCents = $laborSoldCents - $laborCostCents;
+        $components = $this->components();
+        $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
         $feesSoldCents = $this->feesSoldCents();
-        $serviceRevenueCents = $partsSalesCents + $laborSoldCents + $feesSoldCents;
+        $serviceRevenueCents = ReportingStandardsV1::preTaxServiceSalesCents(
+            $components['labor_cents'],
+            $components['parts_cents'],
+            $components['sublet_cents'],
+            $components['fee_cents'],
+            $components['discount_cents'],
+        );
+        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
+            && $components['labor_sales_missing_cost_cents'] === 0
+            && $components['sublet_cents'] === 0;
         $taxCollectedCents = $this->closedTaxCollectedCents();
         $totalCollectedCents = $this->cashCollectedCents();
         $cashOnPostedRepairOrdersCents = OperationalReportTotals::cashCollectedCentsForRepairOrders(
@@ -883,8 +922,8 @@ class OperationalReportRangeMetrics
         );
         $postedSalesCents = $this->postedSalesCents();
         $cogsCents = $partsCostCents + $laborCostCents;
-        $grossProfitCents = $partsGpCents + $laborGpCents + $feesSoldCents;
-        $grossMarginPercent = $this->marginPercent($grossProfitCents, $serviceRevenueCents);
+        $grossProfitCents = $partsGpCents + $laborGpCents + $feesSoldCents + $components['sublet_cents'];
+        $grossMarginPercent = $costsComplete ? $this->marginPercent($grossProfitCents, $serviceRevenueCents) : null;
 
         $monthlyFixedCents = ShopExcellenceTargets::monthlyFixedCostsCents();
         $monthlyAdvisorPayrollCents = $this->monthlyAdvisorPayrollCents();
@@ -923,11 +962,11 @@ class OperationalReportRangeMetrics
             $this->ownerPlLine('Labor sales', $laborSoldCents, $serviceRevenueCents, true),
             $this->ownerPlLine('Shop fees sold', $feesSoldCents, $serviceRevenueCents, true),
             $this->ownerPlLine('Sales tax collected', $taxCollectedCents, $serviceRevenueCents, true, 'normal', null, 'Pass-through liability — not shop revenue'),
-            $this->ownerPlLine('Cost of goods sold', $cogsCents, $serviceRevenueCents, false, 'subtotal'),
-            $this->ownerPlLine('Parts cost', $partsCostCents, $serviceRevenueCents, true),
-            $this->ownerPlLine('Labor cost (assigned tech loaded rate)', $laborCostCents, $serviceRevenueCents, true, 'normal', null, 'Staff Settings loaded cost × billed hours'),
-            $this->ownerPlLine('Gross profit', $grossProfitCents, $serviceRevenueCents, false, 'subtotal', null, $grossMarginPercent !== null ? $grossMarginPercent.'% gross margin on service revenue' : null),
-            $this->ownerPlLine('Cash collected', $totalCollectedCents, 0, false, 'normal', null, 'All payments + deposits dated in range — full cash drawer; can include unposted ROs and legacy carryover payments'),
+            $this->ownerPlLine('Cost of goods sold', $cogsCents, $serviceRevenueCents, false, 'subtotal', null, null, $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Parts cost', $partsCostCents, $serviceRevenueCents, true, 'normal', null, null, $components['parts_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Labor cost (assigned tech loaded rate)', $laborCostCents, $serviceRevenueCents, true, 'normal', null, 'Staff Settings loaded cost × billed hours', $components['labor_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Gross profit', $grossProfitCents, $serviceRevenueCents, false, 'subtotal', null, $grossMarginPercent !== null ? $grossMarginPercent.'% gross profit margin' : ($costsComplete ? null : 'Missing cost is not treated as zero.'), $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Cash collected', $totalCollectedCents, 0, false, 'normal', null, 'Receipts minus refunds on the payment date'),
             $this->ownerPlLine('Cash on posted ROs', $cashOnPostedRepairOrdersCents, 0, false, 'normal', null, 'Payments in range tied to ROs posted this period'),
             $this->ownerPlLine('Sales posted', $postedSalesCents, 0, false, 'normal', null, 'Posted invoice totals in range — Tekmetric RO summary'),
         ];
@@ -969,6 +1008,8 @@ class OperationalReportRangeMetrics
                 false,
                 'total',
                 ($operatingIncomeCents ?? 0) >= 0 ? 'good' : 'warn',
+                null,
+                $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA,
             );
         } else {
             $plLines[] = $this->ownerPlLine(
@@ -1092,11 +1133,12 @@ class OperationalReportRangeMetrics
         string $emphasis = 'normal',
         ?string $tone = null,
         ?string $note = null,
+        ?string $percentOverride = null,
     ): array {
         return [
             'label' => $label,
             'amount' => $this->money($amountCents),
-            'percent' => $this->percentOfRevenueLabel($amountCents, $revenueCents),
+            'percent' => $percentOverride ?? $this->percentOfRevenueLabel($amountCents, $revenueCents),
             'indent' => $indent,
             'emphasis' => $emphasis,
             'tone' => $tone,
@@ -1123,11 +1165,10 @@ class OperationalReportRangeMetrics
 
     private function partsCostCents(): int
     {
-        return (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
+        return (int) OperationalReportTotals::postedApprovedLineQuery($this->from, $this->to)
             ->where('repair_order_lines.type', RepairOrderLineType::Part)
-            ->selectRaw('COALESCE(SUM(COALESCE(repair_order_lines.part_cost_cents, 0)), 0) as cost_cents')
+            ->whereNotNull('repair_order_lines.part_cost_cents')
+            ->selectRaw('COALESCE(SUM(ROUND(repair_order_lines.quantity * repair_order_lines.part_cost_cents)), 0) as cost_cents')
             ->value('cost_cents');
     }
 
@@ -1141,6 +1182,7 @@ class OperationalReportRangeMetrics
      *     posture: string,
      *     tone: 'good'|'warn',
      *     gross_margin_percent: int|null,
+     *     margin_label: string,
      *     monthly_fixed_label: string,
      *     monthly_break_even_sales_label: string|null,
      *     range_days: int,
@@ -1158,13 +1200,39 @@ class OperationalReportRangeMetrics
         $rangeDays = max(1, (int) $this->from->copy()->startOfDay()->diffInDays($this->to->copy()->startOfDay()) + 1);
         $proratedFixedCents = (int) round($monthlyFixedCents * ($rangeDays / 30.437));
 
+        $components = $this->components();
+        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
+            && $components['labor_sales_missing_cost_cents'] === 0
+            && $components['sublet_cents'] === 0;
         $partsGpCents = $this->partsGrossProfitCents();
-        $laborGpCents = $this->laborSoldCents() - $this->laborCostCents();
-        $grossProfitCents = $partsGpCents + $laborGpCents;
-        $salesPostedCents = $this->postedSalesCents();
-        $grossMarginPercent = $salesPostedCents > 0
-            ? (int) round(($grossProfitCents / $salesPostedCents) * 100)
+        $laborGpCents = ($this->laborSoldCents() - $components['labor_sales_missing_cost_cents']) - $this->laborCostCents();
+        $grossProfitCents = $partsGpCents + $laborGpCents + $components['fee_cents'];
+        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
+            $components['labor_cents'],
+            $components['parts_cents'],
+            $components['sublet_cents'],
+            $components['fee_cents'],
+            $components['discount_cents'],
+        );
+        $grossMarginPercent = $costsComplete && $salesCents > 0
+            ? (int) round(($grossProfitCents / $salesCents) * 100)
             : null;
+
+        if (! $costsComplete) {
+            return [
+                'gross_profit_label' => ReportingStandardsV1::INCOMPLETE_DATA,
+                'prorated_fixed_label' => $this->money($proratedFixedCents),
+                'surplus_label' => ReportingStandardsV1::INCOMPLETE_DATA,
+                'posture' => 'Cost is missing on posted sales',
+                'tone' => 'warn',
+                'gross_margin_percent' => null,
+                'margin_label' => ReportingStandardsV1::INCOMPLETE_DATA,
+                'monthly_fixed_label' => $this->money($monthlyFixedCents),
+                'monthly_break_even_sales_label' => null,
+                'range_days' => $rangeDays,
+                'action' => 'Enter the missing parts and labor costs before reading break-even',
+            ];
+        }
 
         $surplusCents = $grossProfitCents - $proratedFixedCents;
         $tone = $surplusCents >= 0 ? 'good' : 'warn';
@@ -1183,11 +1251,12 @@ class OperationalReportRangeMetrics
             'posture' => $posture,
             'tone' => $tone,
             'gross_margin_percent' => $grossMarginPercent,
+            'margin_label' => $grossMarginPercent !== null ? $grossMarginPercent.'% of sales' : 'No posted sales',
             'monthly_fixed_label' => $this->money($monthlyFixedCents),
             'monthly_break_even_sales_label' => $monthlyBreakEvenSalesLabel,
             'range_days' => $rangeDays,
             'action' => $surplusCents >= 0
-                ? 'Reconcile with bookkeeper P&L — ARK GP is closed labor + known parts only'
+                ? 'Reconcile with the bookkeeper P&L'
                 : 'Raise margin levers or trim fixed costs — see Margin Health rows above',
         ];
     }

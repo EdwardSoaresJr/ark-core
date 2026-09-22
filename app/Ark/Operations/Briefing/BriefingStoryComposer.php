@@ -4,7 +4,6 @@ namespace App\Ark\Operations\Briefing;
 
 use App\Ark\Operations\Reports\EndOfDayReportProjection;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
-use App\Ark\Operations\Reports\OperationalReportRangeMetrics;
 use App\Models\User;
 
 /**
@@ -40,37 +39,26 @@ final class BriefingStoryComposer
      */
     public function yesterdaySummary(BriefingContext $context): array
     {
-        $metrics = new OperationalReportRangeMetrics($context->yesterdayFrom, $context->yesterdayTo);
-        $kpis = collect($metrics->kpis());
         $eod = EndOfDayReportProjection::resolve($context->yesterdayFrom, $context->yesterdayTo);
         $effectiveness = collect($eod->salesEffectiveness);
 
         $summary = [];
 
-        $revenue = $kpis->firstWhere('label', 'Sales Posted');
-        if (is_array($revenue)) {
+        $sales = collect($eod->roSummary)->firstWhere('label', 'Sales');
+        if (is_array($sales)) {
             $summary[] = [
-                'label' => 'Revenue',
-                'value' => (string) $revenue['value'],
-                'hint' => $revenue['hint'] ?? null,
+                'label' => 'Sales',
+                'value' => (string) $sales['value'],
+                'hint' => 'Labor, parts, sublet, and other, minus discounts. Tax is not included.',
             ];
         }
 
-        $postedRos = $effectiveness->firstWhere('label', 'Total ROs');
+        $postedRos = $effectiveness->firstWhere('label', 'Car count');
         if (is_array($postedRos)) {
             $summary[] = [
-                'label' => 'Completed repair orders',
+                'label' => 'Car count',
                 'value' => (string) $postedRos['value'],
-                'hint' => $postedRos['hint'] ?? 'Posted in range',
-            ];
-        }
-
-        $approvalRate = $kpis->firstWhere('label', 'Approval Rate');
-        if (is_array($approvalRate)) {
-            $summary[] = [
-                'label' => 'Approval rate',
-                'value' => (string) $approvalRate['value'],
-                'hint' => $approvalRate['hint'] ?? null,
+                'hint' => $postedRos['hint'] ?? 'Posted repair orders',
             ];
         }
 

@@ -8,6 +8,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 final class OperationalReportPaymentReconciliation
 {
@@ -99,7 +100,7 @@ final class OperationalReportPaymentReconciliation
         $deltaCents = $reconciledCents - $postedRoSummary['total_cents'];
 
         $rows = [
-            $this->row('total_cashiered', 'Total cashiered', $totalCashiered, 'Payments + deposits dated in range', 'base'),
+            $this->row('total_cashiered', 'Total cashiered', $totalCashiered, 'Payments and deposits, minus refunds, dated in range', 'base'),
             $this->row('advance_pay', 'Advance pay', $advancePay, 'Payments on ROs not posted in this range', 'subtract', subtractDisplay: true),
             $this->row('previous_advanced_pay', 'Previous advanced pay', $previousAdvancedPay, 'Pre-range payments on ROs posted in this range', 'add'),
             $this->row('cleared_from_ar', 'Cleared from A/R', $clearedFromAr, 'Payments in range on ROs posted before this range', 'subtract', subtractDisplay: true),
@@ -169,7 +170,10 @@ final class OperationalReportPaymentReconciliation
     {
         $aggregates = (clone $query)
             ->select('repair_order_ledger_entries.repair_order_id')
-            ->selectRaw('COALESCE(SUM(repair_order_ledger_entries.amount_cents), 0) as amount_cents')
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_ledger_entries.entry_type = ? THEN -repair_order_ledger_entries.amount_cents ELSE repair_order_ledger_entries.amount_cents END), 0) as amount_cents',
+                [LedgerEntryType::Refund->value],
+            )
             ->selectRaw('MIN(repair_order_ledger_entries.recorded_at) as first_recorded_at')
             ->selectRaw('MAX(repair_order_ledger_entries.recorded_at) as last_recorded_at')
             ->groupBy('repair_order_ledger_entries.repair_order_id')
@@ -262,10 +266,10 @@ final class OperationalReportPaymentReconciliation
     /**
      * Payments on ROs posted in range but excluded from {@see OperationalReportDateScope::salesPostedBetween()}.
      *
-     * @param  \Illuminate\Support\Collection<int, int>  $salesPostedIds
+     * @param  Collection<int, int>  $salesPostedIds
      * @return array{cents: int, details: list<array{repair_order_id: int, repair_order_pk: int, customer: string, vehicle: string, amount: string, payment_at: string, posted_at: string|null}>}
      */
-    private function legacyCarryoverPaymentsBucket(\Illuminate\Support\Collection $salesPostedIds): array
+    private function legacyCarryoverPaymentsBucket(Collection $salesPostedIds): array
     {
         $postedInRangeIds = RepairOrder::query()
             ->whereNotNull('posted_at')
@@ -311,6 +315,7 @@ final class OperationalReportPaymentReconciliation
             ->whereIn('repair_order_ledger_entries.entry_type', [
                 LedgerEntryType::Payment,
                 LedgerEntryType::Deposit,
+                LedgerEntryType::Refund,
             ])
             ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_ledger_entries.repair_order_id');
     }

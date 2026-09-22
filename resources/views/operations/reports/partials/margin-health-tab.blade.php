@@ -57,7 +57,7 @@
                 <div class="bg-white px-3 py-2">
                     <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Closed GP</p>
                     <p class="mt-1 text-lg font-black tabular-nums text-slate-950">{{ $breakEvenSummary['gross_profit_label'] }}</p>
-                    <p class="mt-0.5 text-[11px] text-slate-400">{{ $breakEvenSummary['gross_margin_percent'] !== null ? $breakEvenSummary['gross_margin_percent'].'% of posted sales' : 'No posted sales' }}</p>
+                    <p class="mt-0.5 text-[11px] text-slate-400">{{ $breakEvenSummary['margin_label'] }}</p>
                 </div>
                 <div class="bg-white px-3 py-2">
                     <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Prorated fixed</p>

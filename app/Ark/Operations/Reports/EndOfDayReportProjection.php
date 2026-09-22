@@ -6,11 +6,11 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\Reports\Standards\ReportingStandardsV1;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Tekmetric-style End of Day card — one authoritative answer for posted sales truth.
@@ -48,33 +48,33 @@ final readonly class EndOfDayReportProjection
         $reconciliation = (new OperationalReportPaymentReconciliation($from, $to))->summary();
         $targets = ShopExcellenceTargets::current();
 
+        $components = OperationalReportTotals::postedSalesComponents($from, $to);
         $postedCount = self::postedCount($from, $to);
-        $postedSalesCents = self::postedSalesCents($from, $to);
         $hoursSold = self::postedLaborHours($from, $to);
         $hoursPresented = self::presentedLaborHours($from, $to);
-        $laborSoldCents = self::lineSubtotalCents($from, $to, RepairOrderLineType::Labor);
-        $partsGpCents = self::partsGrossProfitCents($from, $to);
+        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
+            $components['labor_cents'],
+            $components['parts_cents'],
+            $components['sublet_cents'],
+            $components['fee_cents'],
+            $components['discount_cents'],
+        );
+        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
+            && $components['labor_sales_missing_cost_cents'] === 0
+            && $components['sublet_cents'] === 0;
         $laborCostCents = OperationalReportTotals::closedLaborCostCents($from, $to);
-        $laborGpCents = $laborSoldCents - $laborCostCents;
-        $closedGpCents = $partsGpCents + $laborGpCents;
+        $knownLaborSalesCents = $components['labor_cents'] - $components['labor_sales_missing_cost_cents'];
+        $grossProfitCents = $components['parts_gp_cents'] + ($knownLaborSalesCents - $laborCostCents) + $components['fee_cents'];
+        $grossMarginPercent = ReportingStandardsV1::grossMarginPercent($salesCents, $salesCents - $grossProfitCents);
 
-        $effectiveLaborRateCents = $hoursSold > 0 ? (int) round($laborSoldCents / $hoursSold) : null;
+        $effectiveLaborRateCents = $hoursSold > 0 ? (int) round($components['labor_cents'] / $hoursSold) : null;
         $closeRatioPercent = $hoursPresented > 0
-            ? round(($hoursSold / $hoursPresented) * 100, 2)
+            ? (int) round(($hoursSold / $hoursPresented) * 100)
             : null;
-        $avgRoSalesCents = $postedCount > 0 ? (int) round($postedSalesCents / $postedCount) : 0;
-        $avgRoProfitCents = $postedCount > 0 ? (int) round($closedGpCents / $postedCount) : 0;
-        $avgRoMarginPercent = $postedSalesCents > 0
-            ? (int) round(($closedGpCents / $postedSalesCents) * 100)
-            : null;
-        $grossSalesPerHourCents = $hoursSold > 0 ? (int) round($postedSalesCents / $hoursSold) : null;
-        $grossProfitPerHourCents = $hoursSold > 0 ? (int) round($closedGpCents / $hoursSold) : null;
-
-        $feesCents = self::feesCents($from, $to);
-        $discountsCents = self::discountsCents($from, $to);
-        $taxCents = self::taxCents($from, $to);
-        $serviceSalesCents = max(0, $postedSalesCents - $taxCents);
-        $subtotalCents = $serviceSalesCents + $feesCents - $discountsCents;
+        $aroCents = ReportingStandardsV1::aroCents($salesCents, $postedCount);
+        $avgRoProfitCents = $costsComplete && $postedCount > 0 ? (int) round($grossProfitCents / $postedCount) : null;
+        $salesPerHourCents = $hoursSold > 0 ? (int) round($salesCents / $hoursSold) : null;
+        $grossProfitPerHourCents = $costsComplete && $hoursSold > 0 ? (int) round($grossProfitCents / $hoursSold) : null;
 
         $fromLabel = OperationalReportDateScope::shopDateString($from);
         $toLabel = OperationalReportDateScope::shopDateString($to);
@@ -85,45 +85,63 @@ final readonly class EndOfDayReportProjection
             fromDate: $fromLabel,
             toDate: $toLabel,
             salesEffectiveness: [
-                self::metric('Total ROs', (string) $postedCount, 'Posted in range'),
-                self::metric('Hours Presented', number_format($hoursPresented, 2).' total', 'Labor on opened estimates'),
-                self::metric('Hours Sold', number_format($hoursSold, 2).' total', 'Billed labor on posted ROs'),
+                self::metric('Car count', (string) $postedCount, 'Posted repair orders'),
+                self::metric('Hours presented', number_format($hoursPresented, 2).' total', 'Labor hours presented on posted repair orders, including work still waiting'),
+                self::metric('Hours sold', number_format($hoursSold, 2).' total', 'Billed hours on approved labor'),
                 self::metric(
-                    'Close Ratio',
-                    $closeRatioPercent !== null ? number_format($closeRatioPercent, 2).'%' : 'n/a',
-                    'Hours sold ÷ hours presented',
+                    'Closing ratio (hours)',
+                    ReportingStandardsV1::percentOrIncomplete($hoursPresented > 0 || $hoursSold <= 0, $closeRatioPercent),
+                    'Billed hours ÷ hours presented. Pending work is included.',
                 ),
                 self::metric(
-                    'Effective Labor Rate',
-                    $effectiveLaborRateCents !== null ? self::money($effectiveLaborRateCents).'/hr' : 'n/a',
+                    'Effective labor rate',
+                    $components['labor_cents'] > 0 && $hoursSold <= 0
+                        ? ReportingStandardsV1::INCOMPLETE_DATA
+                        : ($effectiveLaborRateCents !== null ? self::money($effectiveLaborRateCents).'/hr' : 'n/a'),
                     $targets['posted_labor_rate_cents'] !== null
-                        ? 'Posted rate '.self::money($targets['posted_labor_rate_cents']).'/hr'
-                        : 'Labor sold ÷ hours sold',
+                        ? 'Labor sales ÷ billed hours. Door rate '.self::money($targets['posted_labor_rate_cents']).'/hr'
+                        : 'Labor sales ÷ billed hours',
                 ),
             ],
             shopMetrics: [
-                self::shopMetric('Avg RO (Sales)', self::money($avgRoSalesCents)),
-                self::shopMetric('Avg RO (Profit)', self::money($avgRoProfitCents)),
+                self::shopMetric('ARO', self::money($aroCents)),
                 self::shopMetric(
-                    'Avg RO (Profit Margin)',
-                    $avgRoMarginPercent !== null ? $avgRoMarginPercent.'%' : 'n/a',
+                    'Gross profit / RO',
+                    $avgRoProfitCents !== null
+                        ? self::money($avgRoProfitCents)
+                        : ($costsComplete ? 'n/a' : ReportingStandardsV1::INCOMPLETE_DATA),
                 ),
                 self::shopMetric(
-                    'Gross Sales',
-                    $grossSalesPerHourCents !== null ? self::money($grossSalesPerHourCents).'/hr' : 'n/a',
+                    'Gross profit margin',
+                    ReportingStandardsV1::percentOrIncomplete($costsComplete, $costsComplete ? $grossMarginPercent : null),
                 ),
                 self::shopMetric(
-                    'Gross Profit',
-                    $grossProfitPerHourCents !== null ? self::money($grossProfitPerHourCents).'/hr' : 'n/a',
+                    'Sales / hour',
+                    $salesPerHourCents !== null ? self::money($salesPerHourCents).'/hr' : 'n/a',
+                ),
+                self::shopMetric(
+                    'Gross profit / hour',
+                    $grossProfitPerHourCents !== null
+                        ? self::money($grossProfitPerHourCents).'/hr'
+                        : ($costsComplete ? 'n/a' : ReportingStandardsV1::INCOMPLETE_DATA),
                 ),
             ],
             roSummary: [
-                self::summaryRow('Sales', self::money($serviceSalesCents)),
-                self::summaryRow('Fees', self::money($feesCents)),
-                self::summaryRow('Discounts', '-'.self::money($discountsCents), $discountsCents > 0 ? 'subtract' : null),
-                self::summaryRow('Subtotal', self::money($subtotalCents), 'total'),
-                self::summaryRow('Sales Tax', self::money($taxCents)),
-                self::summaryRow('Posted Total', $reconciliation['posted_ro_summary']['total'], 'total'),
+                self::summaryRow('Labor', self::money($components['labor_cents'])),
+                self::summaryRow('Parts', self::money($components['parts_cents'])),
+                self::summaryRow('Sublet', self::money($components['sublet_cents'])),
+                self::summaryRow('Other', self::money($components['fee_cents'])),
+                self::summaryRow('Discounts', '-'.self::money($components['discount_cents']), $components['discount_cents'] > 0 ? 'subtract' : null),
+                self::summaryRow('Sales', self::money($salesCents), 'total'),
+                self::summaryRow('Sales tax', self::money($components['tax_cents'])),
+                self::summaryRow('Posted total', self::money(ReportingStandardsV1::postedSalesCents(
+                    $components['labor_cents'],
+                    $components['parts_cents'],
+                    $components['sublet_cents'],
+                    $components['fee_cents'],
+                    $components['discount_cents'],
+                    $components['tax_cents'],
+                )), 'total'),
             ],
             salesBreakdown: self::salesBreakdownRows($from, $to),
             reconciliation: [
@@ -178,13 +196,6 @@ final readonly class EndOfDayReportProjection
         return OperationalReportDateScope::salesPostedBetween(RepairOrder::query(), $from, $to)->count();
     }
 
-    private static function postedSalesCents(Carbon $from, Carbon $to): int
-    {
-        return OperationalReportTotals::postedSalesCents(
-            OperationalReportDateScope::salesPostedBetween(RepairOrder::query(), $from, $to)->pluck('id'),
-        );
-    }
-
     private static function postedLaborHours(Carbon $from, Carbon $to): float
     {
         return self::postedLineQuery($from, $to)
@@ -198,52 +209,15 @@ final readonly class EndOfDayReportProjection
         return (float) RepairOrderLine::query()
             ->join('repair_order_concerns', 'repair_order_concerns.id', '=', 'repair_order_lines.repair_order_concern_id')
             ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applyOpenedBetweenOnJoinedRepairOrders($query, $from, $to))
+            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesPostedBetweenOnJoinedRepairOrders($query, $from, $to))
             ->whereIn('repair_order_concerns.disposition', [
                 RepairOrderConcernDisposition::Recommended,
                 RepairOrderConcernDisposition::Approved,
+                RepairOrderConcernDisposition::Declined,
             ])
             ->where('repair_order_lines.type', RepairOrderLineType::Labor)
             ->selectRaw('COALESCE(SUM('.self::laborHoursExpression().'), 0) as hours')
             ->value('hours');
-    }
-
-    private static function lineSubtotalCents(Carbon $from, Carbon $to, RepairOrderLineType $type): int
-    {
-        return (int) self::postedLineQuery($from, $to)
-            ->where('repair_order_lines.type', $type)
-            ->sum('repair_order_lines.subtotal_cents');
-    }
-
-    private static function feesCents(Carbon $from, Carbon $to): int
-    {
-        $feeLines = (int) self::postedLineQuery($from, $to)
-            ->where('repair_order_lines.type', RepairOrderLineType::Fee)
-            ->sum('repair_order_lines.subtotal_cents');
-        $allocatedShopFees = (int) self::postedLineQuery($from, $to)
-            ->sum('repair_order_lines.shop_fee_cents');
-
-        return $feeLines + $allocatedShopFees;
-    }
-
-    private static function discountsCents(Carbon $from, Carbon $to): int
-    {
-        return (int) self::postedLineQuery($from, $to)
-            ->sum('repair_order_lines.standing_discount_cents');
-    }
-
-    private static function taxCents(Carbon $from, Carbon $to): int
-    {
-        return (int) self::postedLineQuery($from, $to)
-            ->sum('repair_order_lines.tax_cents');
-    }
-
-    private static function partsGrossProfitCents(Carbon $from, Carbon $to): int
-    {
-        return (int) self::postedLineQuery($from, $to)
-            ->where('repair_order_lines.type', RepairOrderLineType::Part)
-            ->selectRaw('COALESCE(SUM(subtotal_cents - COALESCE(part_cost_cents, 0)), 0) as gp_cents')
-            ->value('gp_cents');
     }
 
     private static function categorySubtotalCents(
@@ -284,9 +258,7 @@ final readonly class EndOfDayReportProjection
 
     private static function laborHoursExpression(): string
     {
-        return Schema::hasColumn('repair_order_lines', 'labor_billed_hours')
-            ? 'COALESCE(repair_order_lines.labor_billed_hours, repair_order_lines.quantity)'
-            : 'repair_order_lines.quantity';
+        return OperationalReportTotals::billedHoursSql();
     }
 
     /**

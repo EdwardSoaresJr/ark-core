@@ -74,7 +74,7 @@
         <div class="overflow-hidden border border-slate-300 bg-white">
             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Technician Production</p>
-                <p class="text-xs text-slate-400">Closed labor sold, queue load, and billed-hour efficiency vs shop open days (Communications hours)</p>
+                <p class="text-xs text-slate-400">Labor productivity is billed hours ÷ available hours. Labor efficiency is billed hours ÷ actual hours and is not shown here.</p>
             </div>
             <div class="divide-y divide-slate-100">
                 @foreach ($technicianRows as $row)
@@ -83,7 +83,7 @@
                             <div>
                                 <p class="font-black text-slate-950">{{ $row['technician'] }}</p>
                                 <p class="mt-0.5 text-xs text-slate-500">{{ $row['assigned'] }} assigned · {{ $row['active'] }} active · {{ $row['blockers'] }} blockers · {{ $row['hours'] }} hrs on board</p>
-                                <p class="mt-0.5 text-xs font-semibold text-slate-600">{{ $row['efficiency'] }} efficiency · {{ $row['efficiency_hint'] }}</p>
+                                <p class="mt-0.5 text-xs font-semibold text-slate-600">{{ $row['efficiency'] }} labor productivity · billed hours ÷ available hours · {{ $row['efficiency_hint'] }}</p>
                             </div>
                             <div class="text-right">
                                 <p class="font-black tabular-nums text-slate-950">{{ $row['labor'] }}</p>

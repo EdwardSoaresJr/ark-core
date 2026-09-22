@@ -5,7 +5,6 @@ namespace App\Ark\Operations\ShopExcellence;
 use App\Ark\Operations\Reports\EndOfDayReportProjection;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\Reports\OperationalReportPaymentReconciliation;
-use App\Ark\Operations\Reports\OperationalReportRangeMetrics;
 use App\Ark\Operations\Reports\ShopBehaviorPulse;
 use Illuminate\Support\Carbon;
 
@@ -53,10 +52,9 @@ final class OwnerOperationalPulse
         $reconciliation = (new OperationalReportPaymentReconciliation($from, $to))->summary();
         $eod = EndOfDayReportProjection::resolve($from, $to);
         $headlineLabels = [
-            'Total ROs',
-            'Effective Labor Rate',
-            'Avg RO (Sales)',
-            'Gross Profit',
+            'Car count',
+            'Effective labor rate',
+            'ARO',
         ];
 
         $fromLabel = OperationalReportDateScope::shopDateString($from);

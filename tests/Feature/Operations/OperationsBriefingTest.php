@@ -6,12 +6,20 @@ use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
+use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcern;
+use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionDirection;
 use App\Ark\Operations\Telephony\CallSessionStatus;
+use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Workstations\Workstation;
 use App\Ark\Operations\Workstations\WorkstationBrowserBinding;
 use App\Ark\Operations\Workstations\WorkstationBrowserRoster;
@@ -20,6 +28,7 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 beforeEach(function (): void {
@@ -39,10 +48,7 @@ function briefingAdvisor(): User
     return $advisor;
 }
 
-/**
- * @param  TestCase  $test
- */
-function briefingGet(TestCase $test, User $advisor): \Illuminate\Testing\TestResponse
+function briefingGet(TestCase $test, User $advisor): TestResponse
 {
     $workstation = Workstation::query()->create([
         'shop_settings_id' => ShopSettings::reloadCurrent()->id,
@@ -70,7 +76,7 @@ it('renders briefing empty state with yesterday summary', function (): void {
     expect($briefing->greeting)->toBe('Good morning, Alex.')
         ->and($briefing->hasAttentionItems)->toBeFalse()
         ->and(collect($briefing->yesterdaySummary)->pluck('label')->all())
-        ->toContain('Revenue', 'Completed repair orders', 'Approval rate');
+        ->toContain('Sales', 'Car count');
 
     // Advisor Today is Shop Dashboard (no briefing greeting cards).
     briefingGet($this, $advisor)
@@ -170,8 +176,8 @@ it('includes revenue summary from operational report projections', function (): 
     $briefing = app(OperationsBriefingProjection::class)->forUser($advisor);
 
     expect(collect($briefing->yesterdaySummary)->pluck('label')->all())
-        ->toContain('Revenue', 'Completed repair orders', 'Approval rate')
-        ->and(collect($briefing->yesterdaySummary)->firstWhere('label', 'Revenue')['value'])
+        ->toContain('Sales', 'Car count')
+        ->and(collect($briefing->yesterdaySummary)->firstWhere('label', 'Sales')['value'])
         ->not->toBe('$0.00');
 });
 
@@ -230,24 +236,24 @@ function briefingYesterdayInstant(): Carbon
     return OperationalReportDateScope::shopNow()->copy()->subDay()->setTime(10, 30)->timezone(config('app.timezone'));
 }
 
-function briefingPostedRepairOrder(string $customerName, Carbon $postedAt): \App\Ark\Operations\RepairOrders\RepairOrder
+function briefingPostedRepairOrder(string $customerName, Carbon $postedAt): RepairOrder
 {
     [$firstName, $lastName] = array_pad(explode(' ', $customerName, 2), 2, 'Customer');
 
-    $customer = \App\Ark\Operations\Customers\Customer::query()->create([
+    $customer = Customer::query()->create([
         'first_name' => $firstName,
         'last_name' => $lastName,
         'phone' => '555-0100',
     ]);
 
-    $vehicle = \App\Ark\Operations\Vehicles\Vehicle::query()->create([
+    $vehicle = Vehicle::query()->create([
         'customer_id' => $customer->id,
         'year' => 2020,
         'make' => 'Toyota',
         'model' => 'Camry',
     ]);
 
-    $repairOrder = \App\Ark\Operations\RepairOrders\RepairOrder::query()->create([
+    $repairOrder = RepairOrder::query()->create([
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => RepairOrderStatus::Closed,
@@ -257,21 +263,21 @@ function briefingPostedRepairOrder(string $customerName, Carbon $postedAt): \App
         'posted_at' => $postedAt,
         'paid_at' => $postedAt,
         'updated_at' => $postedAt,
-        'payment_status' => \App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus::Paid,
+        'payment_status' => RepairOrderPaymentStatus::Paid,
     ]);
 
-    $concern = \App\Ark\Operations\RepairOrders\RepairOrderConcern::query()->create([
+    $concern = RepairOrderConcern::query()->create([
         'repair_order_id' => $repairOrder->id,
         'summary' => 'Approved service',
-        'disposition' => \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Approved,
+        'disposition' => RepairOrderConcernDisposition::Approved,
         'recommendation_intent' => 'maintenance',
         'position' => 1,
     ]);
 
-    \App\Ark\Operations\RepairOrders\RepairOrderLine::query()->create([
+    RepairOrderLine::query()->create([
         'repair_order_id' => $repairOrder->id,
         'repair_order_concern_id' => $concern->id,
-        'type' => \App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor,
+        'type' => RepairOrderLineType::Labor,
         'description' => 'Labor line',
         'quantity' => '2.00',
         'unit_price_cents' => 15000,
@@ -279,10 +285,10 @@ function briefingPostedRepairOrder(string $customerName, Carbon $postedAt): \App
         'total_cents' => 30000,
     ]);
 
-    \App\Ark\Operations\RepairOrders\RepairOrderLine::query()->create([
+    RepairOrderLine::query()->create([
         'repair_order_id' => $repairOrder->id,
         'repair_order_concern_id' => $concern->id,
-        'type' => \App\Ark\Operations\RepairOrders\RepairOrderLineType::Part,
+        'type' => RepairOrderLineType::Part,
         'description' => 'Part line',
         'quantity' => '1.00',
         'unit_price_cents' => 20000,

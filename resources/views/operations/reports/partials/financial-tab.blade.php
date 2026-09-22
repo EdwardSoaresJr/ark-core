@@ -4,7 +4,7 @@
     <div class="overflow-hidden border border-slate-300 bg-white">
         <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Financial Mix</p>
-            <p class="text-xs text-slate-400">Server-grounded sales, known costs, and GP posture</p>
+            <p class="text-xs text-slate-400">Posted sales before tax. Margin stays Incomplete data when cost is missing.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-100 text-sm">

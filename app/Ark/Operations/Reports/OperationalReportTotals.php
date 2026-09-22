@@ -175,14 +175,11 @@ class OperationalReportTotals
 
     public static function cashCollectedCents(Carbon $from, Carbon $to): int
     {
-        return (int) RepairOrderLedgerEntry::query()
-            ->active()
-            ->whereIn('entry_type', [
-                LedgerEntryType::Payment,
-                LedgerEntryType::Deposit,
-            ])
-            ->whereBetween('recorded_at', [$from, $to])
-            ->sum('amount_cents');
+        return self::netCashCents(
+            RepairOrderLedgerEntry::query()
+                ->active()
+                ->whereBetween('recorded_at', [$from, $to]),
+        );
     }
 
     /**
@@ -196,15 +193,118 @@ class OperationalReportTotals
             return 0;
         }
 
-        return (int) RepairOrderLedgerEntry::query()
-            ->active()
-            ->whereIn('repair_order_id', $ids)
+        return self::netCashCents(
+            RepairOrderLedgerEntry::query()
+                ->active()
+                ->whereIn('repair_order_id', $ids)
+                ->whereBetween('recorded_at', [$from, $to]),
+        );
+    }
+
+    /**
+     * Payments and deposits minus refunds. Voided entries are already excluded by the caller.
+     *
+     * @param  Builder<RepairOrderLedgerEntry>  $query
+     */
+    public static function netCashCents(Builder $query): int
+    {
+        return (int) $query
             ->whereIn('entry_type', [
                 LedgerEntryType::Payment,
                 LedgerEntryType::Deposit,
+                LedgerEntryType::Refund,
             ])
-            ->whereBetween('recorded_at', [$from, $to])
-            ->sum('amount_cents');
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN entry_type = ? THEN -amount_cents ELSE amount_cents END), 0) as net_cents',
+                [LedgerEntryType::Refund->value],
+            )
+            ->value('net_cents');
+    }
+
+    /**
+     * @return array{
+     *     labor_cents: int,
+     *     parts_cents: int,
+     *     sublet_cents: int,
+     *     fee_cents: int,
+     *     discount_cents: int,
+     *     tax_cents: int,
+     *     parts_gp_cents: int,
+     *     parts_sales_missing_cost_cents: int,
+     *     labor_sales_missing_cost_cents: int
+     * }
+     */
+    public static function postedSalesComponents(Carbon $from, Carbon $to): array
+    {
+        $row = self::postedApprovedLineQuery($from, $to)
+            ->leftJoin('users as assigned_technicians', 'assigned_technicians.id', '=', 'repair_orders.assigned_technician_id')
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as labor_cents',
+                [RepairOrderLineType::Labor->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as parts_cents',
+                [RepairOrderLineType::Part->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as sublet_cents',
+                [RepairOrderLineType::Sublet->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as fee_line_cents',
+                [RepairOrderLineType::Fee->value],
+            )
+            ->selectRaw('COALESCE(SUM(repair_order_lines.shop_fee_cents), 0) as shop_fee_cents')
+            ->selectRaw('COALESCE(SUM(repair_order_lines.standing_discount_cents), 0) as discount_cents')
+            ->selectRaw('COALESCE(SUM(repair_order_lines.tax_cents), 0) as tax_cents')
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? AND repair_order_lines.part_cost_cents IS NULL THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as parts_sales_missing_cost_cents',
+                [RepairOrderLineType::Part->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? AND repair_order_lines.part_cost_cents IS NOT NULL THEN repair_order_lines.subtotal_cents - ROUND(repair_order_lines.quantity * repair_order_lines.part_cost_cents) ELSE 0 END), 0) as parts_gp_cents',
+                [RepairOrderLineType::Part->value],
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? AND (repair_orders.assigned_technician_id IS NULL OR assigned_technicians.labor_cost_cents IS NULL) THEN repair_order_lines.subtotal_cents ELSE 0 END), 0) as labor_sales_missing_cost_cents',
+                [RepairOrderLineType::Labor->value],
+            )
+            ->first();
+
+        return [
+            'labor_cents' => (int) ($row->labor_cents ?? 0),
+            'parts_cents' => (int) ($row->parts_cents ?? 0),
+            'sublet_cents' => (int) ($row->sublet_cents ?? 0),
+            'fee_cents' => (int) ($row->fee_line_cents ?? 0) + (int) ($row->shop_fee_cents ?? 0),
+            'discount_cents' => (int) ($row->discount_cents ?? 0),
+            'tax_cents' => (int) ($row->tax_cents ?? 0),
+            'parts_gp_cents' => (int) ($row->parts_gp_cents ?? 0),
+            'parts_sales_missing_cost_cents' => (int) ($row->parts_sales_missing_cost_cents ?? 0),
+            'labor_sales_missing_cost_cents' => (int) ($row->labor_sales_missing_cost_cents ?? 0),
+        ];
+    }
+
+    /**
+     * @return Builder<RepairOrderLine>
+     */
+    public static function postedApprovedLineQuery(Carbon $from, Carbon $to): Builder
+    {
+        return RepairOrderLine::query()
+            ->join('repair_order_concerns', 'repair_order_concerns.id', '=', 'repair_order_lines.repair_order_concern_id')
+            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
+            ->where('repair_order_concerns.disposition', RepairOrderConcernDisposition::Approved)
+            ->whereIn('repair_order_lines.type', [
+                RepairOrderLineType::Labor,
+                RepairOrderLineType::Part,
+                RepairOrderLineType::Fee,
+                RepairOrderLineType::Sublet,
+            ])
+            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesPostedBetweenOnJoinedRepairOrders($query, $from, $to));
+    }
+
+    public static function billedHoursSql(): string
+    {
+        return self::laborHoursExpression();
     }
 
     /**

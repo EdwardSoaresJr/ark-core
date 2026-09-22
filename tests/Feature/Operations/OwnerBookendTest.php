@@ -27,8 +27,10 @@ test('admins can open owner day review workspace', function () {
         ->assertSee('RO Summary', false)
         ->assertSee('Sales after Discounts', false)
         ->assertSee('Tomorrow\'s queue pressure', false)
-        ->assertSee('Total ROs', false)
-        ->assertSee('Effective Labor Rate', false)
+        ->assertSee('Car count', false)
+        ->assertSee('Effective labor rate', false)
+        ->assertSee('Closing ratio (hours)', false)
+        ->assertSee('Pending work is included', false)
         ->assertSee('Sales Posted', false)
         ->assertSee('Cash Collected', false);
 

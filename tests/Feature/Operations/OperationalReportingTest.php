@@ -5,7 +5,6 @@ use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -14,6 +13,8 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Reports\EndOfDayReportProjection;
+use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use App\Ark\Operations\Vehicles\Vehicle;
@@ -49,22 +50,22 @@ test('financial users see operational reporting without dashboard theater', func
         ->assertSee('End of Day card')
         ->assertSee('Sales Posted')
         ->assertSee('$550.00')
-        ->assertSee('Car Count')
+        ->assertSee('Car count')
         ->assertSee('ARO')
-        ->assertSee('Approval Rate')
+        ->assertDontSee('Approval Rate')
         ->assertSee('Unpaid Pickups')
         ->assertSee('$180.00')
-        ->assertSee('Labor Sold')
+        ->assertSee('Labor sales')
         ->assertSee('2.0 billed hours')
-        ->assertSee('Parts Sold')
+        ->assertSee('Parts sales')
         ->assertSee('$200.00')
         ->assertSee('Fees Sold')
         ->assertSee('$50.00')
-        ->assertSee('Effective Labor Rate')
-        ->assertSee('Parts Margin')
+        ->assertSee('Effective labor rate')
+        ->assertSee('Parts gross profit margin')
         ->assertSee('Parts/Labor Mix')
-        ->assertSee('Labor Margin')
-        ->assertSee('Parts GP')
+        ->assertSee('Labor gross profit margin')
+        ->assertSee('Parts gross profit')
         ->assertSee('$110.00')
         ->assertSee('Deferred Opportunity')
         ->assertSee('$120.00')
@@ -82,12 +83,12 @@ test('end of day report projection surfaces tekmetric style sections for posted 
         operationalReportingShopToday(),
     );
 
-    $eod = \App\Ark\Operations\Reports\EndOfDayReportProjection::resolve($from, $to);
+    $eod = EndOfDayReportProjection::resolve($from, $to);
 
     expect(collect($eod->salesEffectiveness)->pluck('label')->all())
-        ->toContain('Total ROs', 'Hours Sold', 'Effective Labor Rate')
+        ->toContain('Car count', 'Hours sold', 'Effective labor rate', 'Closing ratio (hours)')
         ->and(collect($eod->roSummary)->pluck('label')->all())
-        ->toContain('Posted Total')
+        ->toContain('Sales', 'Posted total')
         ->and(collect($eod->salesBreakdown)->pluck('category')->all())
         ->toContain('Labor', 'Parts');
 });
@@ -125,7 +126,7 @@ test('operational report surfaces pressure production financial mix and deferred
         ->assertSee('Financial Mix')
         ->assertSee('Labor')
         ->assertSee('Parts')
-        ->assertSee('known part costs only')
+        ->assertSee('Incomplete data')
         ->assertSee('Deferred Work Opportunity')
         ->assertSee('Deferred work')
         ->assertSee('Recent Posts')
@@ -428,7 +429,7 @@ test('technician efficiency uses closed billed hours against weekday workday cap
         'tab' => 'production',
     ]))
         ->assertOk()
-        ->assertSee('75% efficiency')
+        ->assertSee('75% labor productivity')
         ->assertSee('6.0 billed / 8.0 hr capacity');
 });
 
@@ -453,7 +454,7 @@ test('technician efficiency honors custom workday hours override', function () {
         'tab' => 'production',
     ]))
         ->assertOk()
-        ->assertSee('50% efficiency')
+        ->assertSee('50% labor productivity')
         ->assertSee('5.0 billed / 10.0 hr capacity');
 });
 
@@ -480,7 +481,7 @@ test('operational report defaults and weekday capacity follow shop display timez
     ]))
         ->assertOk()
         ->assertSee('Jun 1, 2026–Jun 5, 2026')
-        ->assertSee('15% efficiency');
+        ->assertSee('15% labor productivity');
 
     $this->get(route('operations.reports.operational', [
         'from' => operationalReportingShopToday(),
@@ -488,7 +489,7 @@ test('operational report defaults and weekday capacity follow shop display timez
         'tab' => 'production',
     ]))
         ->assertOk()
-        ->assertSee('75% efficiency');
+        ->assertSee('75% labor productivity');
 
     $this->get(route('operations.reports.operational', [
         'from' => now()->toDateString(),
@@ -515,9 +516,9 @@ test('operational report executive pulse calculates effective labor rate and par
         'to' => operationalReportingShopToday(),
     ]))
         ->assertOk()
-        ->assertSee('Effective Labor Rate')
+        ->assertSee('Effective labor rate')
         ->assertSee('$150.00/hr')
-        ->assertSee('Parts Margin')
+        ->assertSee('Parts gross profit margin')
         ->assertSee('55%')
         ->assertSee('Parts/Labor Mix')
         ->assertSee('40% parts · 60% labor');
@@ -542,7 +543,7 @@ test('operational report margin health tab compares metrics to shop targets', fu
         ->assertOk()
         ->assertSee('Margin Health')
         ->assertSee('Effective labor rate')
-        ->assertSee('Parts margin')
+        ->assertSee('Parts gross profit margin')
         ->assertSee('55%')
         ->assertSee('Follow the parts matrix');
 });
@@ -712,7 +713,7 @@ test('operational intelligence sections surface queue approval liability and con
         ->assertSee('Courtesy')
         ->assertSee('Total Non-Billable')
         ->assertSee('Recommendation Conversion')
-        ->assertSee('Safety / Drivability')
+        ->assertSee('Immediate Attention')
         ->assertSee('$85.00')
         ->assertDontSee('Financial Mix')
         ->assertDontSee('Technician Production');
