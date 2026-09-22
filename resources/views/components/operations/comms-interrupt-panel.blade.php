@@ -1,5 +1,5 @@
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-    <div x-data="arkCommsInterrupt()" x-init="init()">
+    <div x-data="arkCommsInterrupt()">
         <div
             x-show="(activeCall !== null || activeMessage !== null) && attentionGateEnabled()"
             x-cloak

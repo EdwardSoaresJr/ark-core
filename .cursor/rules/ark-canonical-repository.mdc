@@ -1,5 +1,5 @@
 ---
-description: Public ARK is the only Core development repository — verify before editing
+description: Public ARK Core is the only Core development repository — verify before editing
 alwaysApply: true
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: true
 
 This workspace is public ARK Core.
 
-- Origin: `https://github.com/EdwardSoaresJr/ark.git`
+- Origin: `https://github.com/EdwardSoaresJr/ark-core.git`
 - Local checkout: `/Users/edwardsoares/Herd/ark-public-staging`
 - Any branch in this repository is valid
 

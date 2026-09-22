@@ -97,24 +97,48 @@ export function arkCallQueue(bootstrap = null) {
         summary: initial.summary,
         queueUrl: initial.queue_url,
         loading: false,
+        stopped: false,
+        refreshInFlight: false,
+        refreshQueued: false,
         pollTimer: null,
+        onRefresh: null,
+        onResize: null,
         panelStyle: '',
 
         init() {
+            this.stopped = false;
             this.bindItemActions();
-            this.refresh();
-            this.pollTimer = window.setInterval(() => this.refresh(), 5000);
-            this.bindRealtime();
-
-            document.addEventListener('ark:call-queue-refresh', () => {
-                this.refresh();
-            });
-
-            window.addEventListener('resize', () => {
+            this.onRefresh = () => this.refresh();
+            this.onResize = () => {
                 if (this.open) {
                     this.positionPanel();
                 }
-            });
+            };
+            document.addEventListener('ark:call-queue-refresh', this.onRefresh);
+            window.addEventListener('resize', this.onResize);
+            this.bindRealtime();
+            this.refresh();
+            this.pollTimer = window.setInterval(() => this.refresh(), 5000);
+        },
+
+        destroy() {
+            this.stopped = true;
+            this.refreshQueued = false;
+
+            if (this.pollTimer !== null) {
+                window.clearInterval(this.pollTimer);
+                this.pollTimer = null;
+            }
+
+            if (this.onRefresh) {
+                document.removeEventListener('ark:call-queue-refresh', this.onRefresh);
+                this.onRefresh = null;
+            }
+
+            if (this.onResize) {
+                window.removeEventListener('resize', this.onResize);
+                this.onResize = null;
+            }
         },
 
         bindRealtime() {
@@ -172,16 +196,33 @@ export function arkCallQueue(bootstrap = null) {
         },
 
         async refresh() {
+            if (this.stopped) {
+                return;
+            }
+
+            if (this.refreshInFlight) {
+                this.refreshQueued = true;
+
+                return;
+            }
+
             const url = queueUrl();
 
             if (url === '') {
                 return;
             }
 
+            this.refreshInFlight = true;
             this.loading = true;
 
             try {
-                const response = await fetch(url, {
+                const requestUrl = new URL(url, window.location.origin);
+
+                if (this.$refs.itemsRoot) {
+                    requestUrl.searchParams.set('include_html', '1');
+                }
+
+                const response = await fetch(requestUrl.toString(), {
                     headers: {
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
@@ -189,11 +230,16 @@ export function arkCallQueue(bootstrap = null) {
                     credentials: 'same-origin',
                 });
 
-                if (! response.ok) {
+                if (this.stopped || ! response.ok) {
                     return;
                 }
 
                 const data = await response.json();
+
+                if (this.stopped) {
+                    return;
+                }
+
                 const payload = normalizeQueuePayload(data);
                 this.calls = payload.calls;
                 this.items = payload.items;
@@ -210,6 +256,14 @@ export function arkCallQueue(bootstrap = null) {
                 // Queue polling is a calm backup when realtime misses.
             } finally {
                 this.loading = false;
+                this.refreshInFlight = false;
+
+                if (this.stopped || ! this.refreshQueued) {
+                    return;
+                }
+
+                this.refreshQueued = false;
+                queueMicrotask(() => this.refresh());
             }
         },
 

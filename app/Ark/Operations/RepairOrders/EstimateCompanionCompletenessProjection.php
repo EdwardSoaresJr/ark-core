@@ -58,12 +58,25 @@ final class EstimateCompanionCompletenessProjection
                 'headline' => null,
                 'advisor_detail' => null,
                 'send_blocked_message' => null,
+                'dismissed' => false,
             ];
         }
 
         $labels = implode(' and ', $missing);
         $headline = 'This job is missing '.$labels;
         $detail = 'The shop usually includes '.$labels.' on this kind of job. Add them before the customer sees the estimate, or continue if they are already covered.';
+
+        if ($this->isDismissed($repairOrder)) {
+            return [
+                'is_timing_job' => true,
+                'needs_attention' => false,
+                'missing' => $missing,
+                'headline' => null,
+                'advisor_detail' => null,
+                'send_blocked_message' => null,
+                'dismissed' => true,
+            ];
+        }
 
         return [
             'is_timing_job' => true,
@@ -72,6 +85,7 @@ final class EstimateCompanionCompletenessProjection
             'headline' => $headline,
             'advisor_detail' => $detail,
             'send_blocked_message' => $headline.'. Add them, or continue anyway if they are already covered off the ticket.',
+            'dismissed' => false,
         ];
     }
 
@@ -94,6 +108,18 @@ final class EstimateCompanionCompletenessProjection
             'headline' => null,
             'advisor_detail' => null,
             'send_blocked_message' => null,
+            'dismissed' => false,
         ];
+    }
+
+    private function isDismissed(RepairOrder $repairOrder): bool
+    {
+        $stored = (string) ($repairOrder->companion_suggestion_dismissed_hash ?? '');
+
+        if ($stored === '') {
+            return false;
+        }
+
+        return hash_equals($stored, EstimateCompanionSuggestionFingerprint::for($repairOrder));
     }
 }

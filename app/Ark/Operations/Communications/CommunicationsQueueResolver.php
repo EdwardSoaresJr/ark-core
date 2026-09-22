@@ -62,7 +62,7 @@ class CommunicationsQueueResolver
 
     /**
      * Actionable queue without the recent-activity feed — used for layout pressure,
-     * comms gate, and interrupt polling so every page load does not scan 70+ rows.
+     * comms gate, and call-queue polling so those paths do not scan 70+ rows.
      *
      * @return array{
      *     count: int,
