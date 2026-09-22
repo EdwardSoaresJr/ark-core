@@ -32,11 +32,11 @@ Publish to `ghcr.io/edwardsoaresjr/ark-core`.
 
 A parallel branch used one-minute check-ins plus `ARK_IMAGE_DIGEST` and a source-commit file. Those reporting fields are on this branch. The schedule stays five minutes. Platform `BoxHealth` already treats three five-minute misses as Delayed.
 
-A successful heartbeat is inventory check-in. It is **not** deploy success. `desired` is not current. Current requires an observed image digest and `/up`. Each target’s `deployed.image` is the live pin; `desired.pending_change: false` means do not promote.
+A successful heartbeat is inventory check-in. It is **not** deploy success and it does **not** close Systems release verification. `desired` is not current. Operator `/up` on Demo is not `deploy_verified`. Each target’s `deployed.image` is the live pin; `desired.pending_change: false` means do not promote.
 
 ## Observed (read-only)
 
-- Demo `ark-app-1` is on `sha256:f4abe244…` / `a42b5c64`. No Coolify application. Paired to Platform shop `cd95693f-fea7-4c90-81f5-49f691bd4d79`.
+- Demo `ark-app-1` is on `sha256:f4abe244…` / `a42b5c64`. No Coolify application. Paired to Platform shop `cd95693f-fea7-4c90-81f5-49f691bd4d79`. Systems still shows release verification pending.
 - Demo installation UUID **written**: `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`. Compose box slug `demo`. Do not invent a Coolify application id.
 - Demo Compose backups exist at `/var/backups/ark-box`. Latest stamp includes `storage.tar.gz` (gzip ok). `restore-box.sh` can restore that archive. SQL restore has been tested. File-volume restore is coded, not certified.
 - LNP is still on `sha256:40562971…` in `b38otdn2epypspy0jadbgfl0-core` on `149.28.249.13`. Installation UUID `7d115599-cae5-4a10-a4cf-4ebe11af47ed` matches Platform adopt.

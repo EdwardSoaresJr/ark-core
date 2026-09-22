@@ -25,7 +25,7 @@ Core, Platform, Foundry, and Companion releases stay separate. A Core release do
 
 Platform `BoxHealth` Delayed/Offline windows assume a five-minute interval. Keep five minutes.
 
-Heartbeat is check-in. Deploy success is observed digest **and** `/up`. `HostedSystemSyncProjection.deploy_verified` stays false until both are supplied independently of heartbeat.
+Heartbeat is check-in. It does not close Systems release verification. `HostedSystemSyncProjection.deploy_verified` stays false until provider image/digest and `health_path_ok` are supplied independently of heartbeat.
 
 ## Verified inventory (read-only 2026-09-22)
 
@@ -42,8 +42,9 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 - Coolify application: **none**
 - Installation UUID **written:** `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`
 - Pairing: connected. Compose box slug `demo` registered without a Coolify id.
+- Systems: **release verification pending** (`deploy_verified` false). Do not treat heartbeat or operator `/up` as that proof.
 - Backup: `/var/backups/ark-box`. Pre-recreate stamp `20260922T045145Z` is the previous `sha256:40562971…` image. SQL restore tested. File-volume restore has not been certified. **Not** Platform managed backup.
-- Do not republish or recreate this app because older notes said pending.
+- Do not republish or recreate this app to change documentation or the Systems label.
 
 ### LNP Production
 
@@ -127,7 +128,7 @@ Do not:
 | --- | --- | --- |
 | **0** | Inventory and operator contract | Off |
 | **1** | Heartbeat reports commit / Laravel / PHP / digest; identity + recovery docs | Off |
-| **1b** | Reporting-only Demo image; verify commit, digest, `/up` | **Done** — do not repeat |
+| **1b** | Reporting-only Demo image on the box | **Done** — Systems verification still pending; do not repeat the deploy |
 | **2** | Fleet dashboard shows actual running releases | Off |
 | **3** | Enable deploy only for a box with verified adapter, observation, and rollback | Per box; LNP last |
 | **4** | Staged one / selected / pilot / fleet + rollback eligibility | Explicit approval |
@@ -150,3 +151,4 @@ Do not:
 - Combine the first Fleet reporting image with unrelated Laravel patches
 - Treat Demo Compose backups as Platform managed backup
 - Treat a heartbeat as deploy success
+- Treat operator `/up` or a heartbeat as Systems release verification

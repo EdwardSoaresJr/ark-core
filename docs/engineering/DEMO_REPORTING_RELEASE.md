@@ -36,7 +36,13 @@ MySQL, Redis, Caddy, and Foundry were not recreated.
 | Pairing | connected (`shop_public_id` `cd95693f-fea7-4c90-81f5-49f691bd4d79`) |
 | Platform box | slug `demo`, Coolify application none, host `ark-demo-compose` / `104.238.144.183` |
 
-Heartbeat recorded on Platform at `2026-09-22T04:55:15Z`: commit `a42b5c64…`, Laravel 13.29.0, PHP 8.4.25, digest `sha256:f4abe244…`. A heartbeat is inventory only; deploy proof is digest + `/up` + source commit.
+Heartbeat recorded on Platform at `2026-09-22T04:55:15Z`: commit `a42b5c64…`, Laravel 13.29.0, PHP 8.4.25, digest `sha256:f4abe244…`. That is inventory only.
+
+## Systems projection
+
+Platform Systems still reports independent **release verification pending**. `deploy_verified` is false. Operator digest + `/up` on the box did not close that. Trusted Compose observation (provider image and `health_path_ok`) is later work. Do not redeploy Demo or Platform to change this label.
+
+This reporting-release record is frozen.
 
 ## Recovery
 

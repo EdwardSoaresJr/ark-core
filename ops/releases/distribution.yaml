@@ -80,8 +80,11 @@ targets:
       image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
       source_commit: a42b5c6408a0f1590e8e68eefe422e78a575ae0e
       observed_at: "2026-09-22T04:55:15Z"
-      health_path_ok: true
+      operator_up: 200
       source_commit_in_image: present
+    systems:
+      release_verification: pending
+      deploy_verified: false
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
     installation_uuid: 5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6
     installation_uuid_status: written
@@ -108,8 +111,9 @@ targets:
       - storage
       - env
     notes: >
-      Reporting image is live. Do not republish a42b5c64 or recreate app
-      because older notes said pending. Never copy production data here.
+      Reporting image is live on the box. Systems release verification stays
+      pending until trusted Compose observation exists. A heartbeat is not
+      that proof. Do not republish or recreate to change the Systems label.
 
   lnp-production:
     product: core
@@ -226,6 +230,7 @@ verification:
   never_mark_current_from_desired_alone: true
   never_mark_current_from_heartbeat_alone: true
   desired_pending_change_is_not_authorization: true
+  heartbeat_is_not_systems_release_verification: true
 
 rollback:
   application_image: retain_previous_digest
