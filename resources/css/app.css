@@ -85,6 +85,12 @@
         --ops-hub-rail-width: 360px;
     }
 
+    @media (min-width: 1440px) {
+        :root {
+            --ops-estimate-rail-width: 380px;
+        }
+    }
+
     @media (min-width: 1800px) {
         :root {
             --ops-workspace-max: 1920px;
@@ -2871,6 +2877,13 @@
     @media (min-width: 1024px) {
         .ops-estimate-layout {
             grid-template-columns: minmax(0, 1fr) var(--ops-estimate-rail-width);
+        }
+
+        .ops-review-rail {
+            width: var(--ops-estimate-rail-width);
+            min-width: var(--ops-estimate-rail-width);
+            max-width: var(--ops-estimate-rail-width);
+            justify-self: stretch;
         }
 
         .ops-hub-layout.ops-hub-layout--rail-open {
