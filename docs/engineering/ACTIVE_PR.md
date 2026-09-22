@@ -24,6 +24,7 @@ Repeat [LNP_PERFORMANCE_BASELINE.md](LNP_PERFORMANCE_BASELINE.md) after each app
 ## Closed
 
 - Platform observe image `0d5f640` / `sha256:23d8e3d4ade3bc5c2877edacd6dd19a8cf4fe2ddaab3468976b6329ddb8e8acd` — do not republish or recreate Platform for Demo
+- Isolated `e2910fd` image `sha256:630a7601…` — sidecar tests only; not deployed; do not use it to redo Demo observation
 - Demo reporting-only Core `a42b5c64` / `sha256:f4abe244…` — do not republish or recreate. Systems **Verified**.
 - Checklist: [DEMO_REPORTING_RELEASE.md](DEMO_REPORTING_RELEASE.md)
 
@@ -34,4 +35,5 @@ Repeat [LNP_PERFORMANCE_BASELINE.md](LNP_PERFORMANCE_BASELINE.md) after each app
 - Laravel 13.32
 - Call-queue poller (`cf169e76` remains frozen)
 - RO schema/query/Blade optimization
+- Isolated `e2910fd` / `sha256:630a7601…` Platform image
 - Another Demo or Platform image rebuild
