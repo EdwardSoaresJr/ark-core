@@ -25,7 +25,7 @@ test('desktop financial sidebar stays 360px until 1440px then locks 380px on the
         ->toContain('.ops-review-rail--pinned')
         ->toContain('position: sticky')
         ->toContain('var(--ops-ro-footer-offset')
-        ->toContain('--ops-ro-rail-chrome-inset: 22rem')
+        ->not->toContain('--ops-ro-rail-chrome-inset')
         ->toContain('overflow-y: auto');
 
     expect($css)->toMatch(
