@@ -41,8 +41,21 @@
             $timingFluidsCheck = app(\App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection::class)->for($repairOrder);
         @endphp
         @if ($timingFluidsCheck['needs_attention'] ?? false)
-            <div class="mx-3 mb-2 rounded-sm border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-950">
-                <p class="font-semibold">{{ $timingFluidsCheck['headline'] }}</p>
+            <div
+                class="mx-3 mb-2 rounded-sm border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-950"
+                x-data="arkDismissCompanionSuggestion({
+                    url: @js(route('operations.repair-orders.companion-suggestion.dismiss', $repairOrder))
+                })"
+            >
+                <div class="flex items-start justify-between gap-2">
+                    <p class="font-semibold">{{ $timingFluidsCheck['headline'] }}</p>
+                    <button
+                        type="button"
+                        class="shrink-0 text-[11px] font-bold text-amber-900/80 hover:text-amber-950 disabled:opacity-50"
+                        :disabled="busy"
+                        @click="dismiss()"
+                    >Dismiss</button>
+                </div>
                 <p class="mt-0.5 leading-4">{{ $timingFluidsCheck['advisor_detail'] }}</p>
             </div>
         @endif

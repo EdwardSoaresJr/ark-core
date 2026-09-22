@@ -22,9 +22,17 @@ function loadSquareSdk(url) {
     });
 }
 
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
+function isWaitingStatus(status) {
+    return status === 'pending' || status === 'accepted';
+}
+
 /**
- * Take Payment rail — Terminal or Square Web Payments tokenized keyed entry.
- * Core never sees PAN/CVV; only source_token from Square.js.
+ * Take Payment rail — Terminal or Square Web Payments tokenized manual entry.
+ * Does not go through the worksheet save overlay.
  */
 export function arkPaymentCapture(config = {}) {
     return {
@@ -33,10 +41,32 @@ export function arkPaymentCapture(config = {}) {
         deviceRef: config.defaultDevice ?? '',
         sourceToken: '',
         cardContainerId: config.cardContainerId ?? 'ark-payment-capture-card',
+        refreshUrlTemplate: config.refreshUrlTemplate ?? '',
+        cancelUrlTemplate: config.cancelUrlTemplate ?? '',
         card: null,
         cardReady: false,
         cardError: '',
+        statusMessage: '',
         busy: false,
+        waitingOnTerminal: false,
+        openAttemptId: config.openAttemptId ?? null,
+        pollTimer: null,
+
+        init() {
+            if (this.openAttemptId) {
+                this.waitingOnTerminal = true;
+                this.statusMessage = 'Sent to the terminal.';
+                this.startPolling(this.openAttemptId);
+            }
+        },
+
+        destroy() {
+            this.stopPolling();
+        },
+
+        attemptUrl(template, attemptId) {
+            return String(template || '').replace('__ID__', String(attemptId));
+        },
 
         async openKeyed() {
             this.method = 'keyed';
@@ -49,7 +79,7 @@ export function arkPaymentCapture(config = {}) {
 
         async initializeCard() {
             if (! this.publicConfig?.application_id || ! this.publicConfig?.location_id) {
-                this.cardError = 'Card entry is not configured.';
+                this.cardError = 'Manual entry is not configured.';
                 return;
             }
 
@@ -80,8 +110,13 @@ export function arkPaymentCapture(config = {}) {
         },
 
         async prepareAndSubmit(event) {
+            if (this.busy || this.waitingOnTerminal) {
+                return;
+            }
+
             this.busy = true;
             this.cardError = '';
+            this.statusMessage = '';
 
             try {
                 if (this.method === 'keyed' && this.publicConfig) {
@@ -101,31 +136,167 @@ export function arkPaymentCapture(config = {}) {
                     }
                     this.sourceToken = tokenResult.token;
                 } else if (this.method === 'keyed' && ! this.publicConfig) {
-                    // Stub / non-Square transport: placeholder token for local seam tests only.
                     this.sourceToken = this.sourceToken || 'tok_stub_phase1';
                 } else {
                     this.sourceToken = '';
                 }
 
-                // Walk up to the RO worksheet Alpine scope (nested x-data).
-                let el = event.target;
-                let submitted = false;
-                while (el) {
-                    const data = window.Alpine?.$data?.(el);
-                    if (data && typeof data.submitWorksheetForm === 'function') {
-                        await data.submitWorksheetForm(event);
-                        submitted = true;
-                        break;
-                    }
-                    el = el.parentElement;
+                const form = event.target;
+                const body = new FormData(form);
+                body.set('capture_method', this.method);
+                body.set('device_ref', this.method === 'terminal' ? this.deviceRef : '');
+                body.set('source_token', this.sourceToken);
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body,
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': body.get('_token') || csrfToken(),
+                    },
+                });
+
+                const payload = await response.json().catch(() => ({}));
+
+                if (! response.ok) {
+                    this.cardError = payload.message
+                        || payload.errors?.capture?.[0]
+                        || 'Payment could not start.';
+                    return;
                 }
-                if (! submitted) {
-                    event.target.submit();
+
+                const status = payload.attempt?.status ?? '';
+                this.openAttemptId = payload.attempt?.id ?? null;
+                this.statusMessage = payload.message || '';
+
+                if (this.method === 'terminal' && isWaitingStatus(status) && this.openAttemptId) {
+                    this.waitingOnTerminal = true;
+                    this.statusMessage = payload.message || 'Sent to the terminal.';
+                    this.startPolling(this.openAttemptId);
+                } else {
+                    this.waitingOnTerminal = false;
+                    this.stopPolling();
                 }
+
+                await this.refreshFinancialRail();
             } catch {
                 this.cardError = 'Payment could not start.';
             } finally {
                 this.busy = false;
+            }
+        },
+
+        startPolling(attemptId) {
+            this.stopPolling();
+            this.pollTimer = window.setInterval(() => {
+                this.checkStatus(attemptId, { quiet: true });
+            }, 2500);
+        },
+
+        stopPolling() {
+            if (this.pollTimer !== null) {
+                window.clearInterval(this.pollTimer);
+                this.pollTimer = null;
+            }
+        },
+
+        async checkStatus(attemptId, options = {}) {
+            const url = this.attemptUrl(this.refreshUrlTemplate, attemptId);
+            if (! url) {
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                });
+                const payload = await response.json().catch(() => ({}));
+                const status = payload.attempt?.status ?? '';
+
+                if (! isWaitingStatus(status)) {
+                    this.stopPolling();
+                    this.waitingOnTerminal = false;
+                    this.openAttemptId = null;
+                    this.statusMessage = payload.message || '';
+                    await this.refreshFinancialRail();
+                    return;
+                }
+
+                if (! options.quiet) {
+                    this.statusMessage = payload.message || 'Still waiting on the terminal.';
+                }
+            } catch {
+                if (! options.quiet) {
+                    this.cardError = 'Could not check payment status.';
+                }
+            }
+        },
+
+        async cancelAttempt(attemptId) {
+            const url = this.attemptUrl(this.cancelUrlTemplate, attemptId);
+            if (! url || this.busy) {
+                return;
+            }
+
+            this.busy = true;
+            this.cardError = '';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                });
+                const payload = await response.json().catch(() => ({}));
+                const status = payload.attempt?.status ?? '';
+
+                if (! response.ok) {
+                    this.cardError = payload.message || 'Could not cancel the payment request.';
+                    return;
+                }
+
+                if (! isWaitingStatus(status)) {
+                    this.stopPolling();
+                    this.waitingOnTerminal = false;
+                    this.openAttemptId = null;
+                }
+
+                this.statusMessage = payload.message || 'Payment request cancelled.';
+                await this.refreshFinancialRail();
+            } catch {
+                this.cardError = 'Could not cancel the payment request.';
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        async refreshFinancialRail() {
+            let el = this.$el;
+
+            while (el) {
+                const data = window.Alpine?.$data?.(el);
+
+                if (data && typeof data.refreshScope === 'function') {
+                    await data.refreshScope('rail', { quiet: true });
+                    return;
+                }
+
+                el = el.parentElement;
             }
         },
     };

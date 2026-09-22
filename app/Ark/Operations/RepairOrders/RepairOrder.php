@@ -34,7 +34,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'companion_suggestion_dismissed_hash', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void

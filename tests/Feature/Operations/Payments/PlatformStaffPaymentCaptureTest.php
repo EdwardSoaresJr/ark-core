@@ -98,7 +98,9 @@ test('staff terminal capture records one ledger payment through payment-capture'
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Take payment', false)
-        ->assertSee('Terminal', false);
+        ->assertSee('Terminal', false)
+        ->assertSee('>Manual</button>', false)
+        ->assertDontSee('>Card entry</button>', false);
 
     $initiate = $this->actingAs($advisor)
         ->postJson(route('operations.repair-orders.payment-capture.store', $repairOrder), [
@@ -132,4 +134,88 @@ test('staff terminal capture records one ledger payment through payment-capture'
 
     expect($repairOrder->fresh()->ledgerEntries()->where('entry_type', 'payment')->count())->toBe(1)
         ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0);
+});
+
+test('staff can cancel a waiting terminal capture without recording a payment', function () {
+    $repairOrder = financialCloseoutRepairOrder();
+    app(GenerateInvoiceSnapshotAction::class)->execute($repairOrder);
+    $advisor = staffPaymentCaptureAdvisor();
+    $amountCents = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents;
+
+    Http::fake(function (\Illuminate\Http\Client\Request $request) use ($amountCents) {
+        $body = json_decode($request->body(), true) ?: [];
+
+        if (str_contains($request->url(), '/payments/readiness')) {
+            return Http::response([
+                'ok' => true,
+                'provider' => 'stub',
+                'status' => 'connected',
+                'supports_terminal' => true,
+                'supports_keyed' => true,
+                'supports_portal' => false,
+                'available_devices' => [
+                    ['device_ref' => 'stub-front-counter', 'label' => 'Front Counter', 'ready' => true],
+                ],
+                'public_config' => null,
+            ], 200);
+        }
+
+        if (str_contains($request->url(), '/cancel')) {
+            $attempt = PaymentCaptureAttempt::query()->latest('id')->first();
+
+            return Http::response([
+                'ok' => true,
+                'status' => 'cancelled',
+                'capture_id' => (string) Str::uuid(),
+                'capture_attempt_public_id' => $attempt?->public_id,
+                'idempotency_key' => $attempt?->idempotency_key,
+                'amount_cents' => $amountCents,
+                'reason_code' => 'cancelled',
+            ], 200);
+        }
+
+        if ($request->method() === 'POST' && str_contains($request->url(), '/payments/captures')) {
+            return Http::response([
+                'ok' => true,
+                'status' => 'pending',
+                'capture_id' => (string) Str::uuid(),
+                'capture_attempt_public_id' => $body['capture_attempt_public_id'] ?? '',
+                'idempotency_key' => $body['idempotency_key'] ?? '',
+                'amount_cents' => $amountCents,
+                'currency' => 'USD',
+                'context_kind' => 'payment',
+                'capture_method' => 'terminal',
+                'provider' => 'stub',
+                'provider_payment_id' => null,
+            ], 200);
+        }
+
+        return Http::response(['ok' => false], 404);
+    });
+
+    $attemptId = $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.payment-capture.store', $repairOrder), [
+            'amount' => number_format($amountCents / 100, 2, '.', ''),
+            'context_kind' => 'payment',
+            'capture_method' => 'terminal',
+            'device_ref' => 'stub-front-counter',
+        ])
+        ->assertOk()
+        ->json('attempt.id');
+
+    $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Cancel request', false)
+        ->assertSee('Waiting on terminal', false);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.payment-capture.cancel', [$repairOrder, $attemptId]))
+        ->assertOk()
+        ->assertJsonPath('attempt.status', PaymentCaptureAttemptStatus::Cancelled->value);
+
+    $attempt = PaymentCaptureAttempt::query()->find($attemptId);
+    expect($attempt?->status)->toBe(PaymentCaptureAttemptStatus::Cancelled)
+        ->and($attempt?->ledger_entry_id)->toBeNull()
+        ->and($repairOrder->fresh()->ledgerEntries()->where('entry_type', 'payment')->count())->toBe(0);
 });

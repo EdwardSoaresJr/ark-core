@@ -153,7 +153,7 @@ final class InitiatePaymentCaptureAction
 
     public function cancelFromCloud(PaymentCaptureAttempt $attempt): PaymentCaptureAttempt
     {
-        if ($attempt->hasLedgerEntry() || ! $attempt->status->isOpen()) {
+        if ($attempt->hasLedgerEntry() || ! $attempt->status->canCancel()) {
             return $attempt;
         }
 

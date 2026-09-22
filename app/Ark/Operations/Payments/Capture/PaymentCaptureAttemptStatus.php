@@ -28,6 +28,11 @@ enum PaymentCaptureAttemptStatus: string
         return in_array($this, [self::Accepted, self::Pending, self::ReconciliationRequired], true);
     }
 
+    public function canCancel(): bool
+    {
+        return $this === self::Accepted || $this === self::Pending;
+    }
+
     public function isAmbiguous(): bool
     {
         return $this === self::ReconciliationRequired;

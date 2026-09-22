@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureMethod;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
@@ -527,6 +528,8 @@ final class RepairOrderFinancialPresenter
                 'method' => $attempt->capture_method->value,
                 'needsReconciliation' => $attempt->status->isAmbiguous(),
                 'isOpen' => $attempt->status->isOpen(),
+                'canCancel' => $attempt->status->canCancel(),
+                'methodLabel' => $attempt->capture_method === PaymentCaptureMethod::Keyed ? 'Manual' : 'Terminal',
             ])
             ->all();
     }
