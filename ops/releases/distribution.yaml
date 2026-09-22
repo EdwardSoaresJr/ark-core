@@ -1,0 +1,173 @@
+# ARK Core release distribution
+#
+# Cursor and operators read this file before any Core release.
+# No secrets, tokens, or SSH keys belong here.
+#
+# Fleet deployment automation is disabled until each remote target has
+# verified infrastructure, authenticated observation, and a rollback path.
+
+schema_version: 1
+status: observation_required
+fleet_deploy_enabled: false
+
+products:
+  core:
+    name: ARK Core
+    image_repository: ghcr.io/edwardsoaresjr/ark-core
+    # Live Demo and LNP were verified on this digest. Do not treat
+    # ghcr.io/edwardsoaresjr/ark as the running release target.
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    publish_script: infra/build-runner/mac/publish-ghcr-ark.sh
+    publish_script_default_image: ghcr.io/edwardsoaresjr/ark
+    pin: commit_and_digest
+  platform:
+    name: ARK Platform
+    repository: EdwardSoaresJr/ark-platform
+    not_implied_by_core_release: true
+  foundry:
+    name: ARK Foundry
+    distribution: website_publication_only
+  companion:
+    name: ARK Companion
+    distribution: mobile_release_process
+
+# A git push is not a successful release. Each target has its own result.
+
+targets:
+  local-herd:
+    product: core
+    role: verification
+    adapter: herd_checkout
+    url: https://app.lugsnplugs.test
+    checkout: this Core worktree
+    deploy_enabled: false
+    notes: Confirm the correct checkout, database, assets, and browser behavior. Do not remote-deploy.
+
+  demo:
+    product: core
+    role: demonstration
+    adapter: docker_compose
+    url: https://demo.arksms.com
+    host: 104.238.144.183
+    compose:
+      root: /opt/ark
+      project: ark
+      files:
+        - docker-compose.yml
+        - docker-compose.vultr.yml
+        - docker-compose.image.yml
+        - docker-compose.demo.yml
+      image_pin_file: /opt/ark/docker-compose.image.yml
+      service: app
+      container: ark-app-1
+    coolify_application: none
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    deploy_enabled: false
+    preserve:
+      - database
+      - secrets
+      - storage
+      - env
+    notes: Dedicated Vultr VPS. Recreate app only after an approved pin. Never copy production data here.
+
+  lnp-production:
+    product: core
+    role: production
+    adapter: pending_verification
+    url: https://lugsnplugs.arksms.com
+    deploy_enabled: false
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    live:
+      host: 149.28.249.13
+      container: b38otdn2epypspy0jadbgfl0-core
+      compose_file: /data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml
+      compose_project: waqkg4rlh7rq9pdfwpnfij8u
+      service: core
+      observed_actuator: compose_recreate_core
+    platform_adopt:
+      host: 144.202.74.190
+      shop_public_id: b2f6f86f-0655-45b2-b665-e1eb9b2f1c9f
+      installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
+      box_slug: lugsnplugs
+      coolify_application_uuid: b38otdn2epypspy0jadbgfl0
+      status: stale_vs_live
+    approval: explicit_production
+    preserve:
+      - database
+      - secrets
+      - storage
+      - env
+      - tenant_isolation
+    notes: >
+      Do not Coolify Deploy. Do not enable Fleet automation. Live host 149 and
+      adopted host 144 conflict. Reconcile with read-only observation first.
+
+  hosted-fleet:
+    product: core
+    role: managed_installations
+    adapter: verified_per_box
+    members: []
+    deploy_enabled: false
+    notes: Add boxes only after observed host, adapter, image digest, and rollback path.
+
+retired:
+  demo-autorepairkeeper-com:
+    hostname: demo.autorepairkeeper.com
+    status: retired
+    not_a_deployment_target: true
+    dns: godaddy_a_record_deleted
+    successor: demo
+    leftover_redirect_config: infra/compose/demo-autorepairkeeper-redirect.traefik.yaml
+    notes: >
+      GoDaddy DNS for this name was deleted. Do not recreate it. Do not treat
+      this hostname, or any Coolify application invented for it, as Demo.
+
+profiles:
+  local-verify:
+    sequence: [local-herd]
+    remote_deploy: false
+  core-demo:
+    sequence: [local-herd, demo]
+    remote_deploy: false
+  core-full:
+    sequence: [local-herd, demo, lnp-production]
+    remote_deploy: false
+    production_approval: required
+  core-one:
+    sequence: selected
+    remote_deploy: false
+  core-pilot:
+    sequence: [local-herd, demo, selected_pilot]
+    remote_deploy: false
+  core-fleet:
+    sequence: [local-herd, demo, selected_pilot, hosted-fleet]
+    remote_deploy: false
+  platform-release:
+    product: platform
+    not_implied_by: core-full
+
+promotion:
+  order: [local-herd, demo, lnp-production, hosted-fleet]
+  halt_on_failure: true
+  unreachable_is_not_success: true
+  git_push_is_not_deploy: true
+
+verification:
+  health_path: /up
+  require_observed_digest: true
+  never_mark_current_from_desired_alone: true
+
+rollback:
+  application_image: retain_previous_digest
+  database: never_automatic
+  blocked_when: schema_incompatible_or_backup_unverified
+  lnp_enabled: false
+  demo_enabled: false
+
+unknown:
+  - Whether Platform LNP host 144.202.74.190 is retired leftover or a wrong deploy target
+  - LNP production actuator until live host, container, digest, compose project, and ownership agree
+  - Whether installation c9f3315a-8501-48dd-b228-b19aba78d0de is the live demo.arksms.com box
+  - Demo Vultr instance and plan identifiers
+  - How this tree's publish script (ghcr.io/edwardsoaresjr/ark) relates to live ark-core images
+  - Managed backup product (still not available)

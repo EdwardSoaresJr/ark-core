@@ -12,6 +12,7 @@
 !/.cursor/rules/
 /.cursor/rules/*
 !/.cursor/rules/ark-canonical-repository.mdc
+!/.cursor/rules/ark-deploy.mdc
 /.idea
 /.nova
 /.phpunit.cache
