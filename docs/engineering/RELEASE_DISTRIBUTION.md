@@ -24,22 +24,31 @@ Publish to `ghcr.io/edwardsoaresjr/ark-core`. Current live images do not contain
 
 `demo.autorepairkeeper.com` is retired. GoDaddy DNS was deleted. It is not a deployment target.
 
+## Heartbeat
+
+`fleet/phase-1-observation` schedules `ark:platform-heartbeat` every **five minutes** (`*/5 * * * *`). That is the live implementation on this branch.
+
+A parallel branch used one-minute check-ins plus `ARK_IMAGE_DIGEST` and a source-commit file. Those reporting fields are on this branch. The schedule stays five minutes. Platform `BoxHealth` already treats three five-minute misses as Delayed.
+
+A successful heartbeat is inventory check-in. It is **not** deploy success. Current requires an observed image digest and `/up`.
+
 ## Observed (read-only)
 
-- Demo is running that digest in `ark-app-1`. No Coolify application. Platform shop pairing is empty; installation UUID is unknown.
-- Demo Compose backups exist at `/var/backups/ark-box` (`/usr/local/sbin/ark-box-backup`). That is not Platform managed backup.
+- Demo is running that digest in `ark-app-1`. No Coolify application. Platform shop pairing is empty.
+- Demo installation UUID **assigned** (not written on the box): `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`. Write with `php artisan ark:installation-identity write --uuid=…`. Pair later. Do not invent a Coolify application id.
+- Demo Compose backups exist at `/var/backups/ark-box`. Latest stamp includes `storage.tar.gz` (gzip ok). `restore-box.sh` can restore that archive. SQL restore has been tested. File-volume restore is coded, not certified.
 - LNP is running that digest in `b38otdn2epypspy0jadbgfl0-core` on `149.28.249.13`. Installation UUID `7d115599-cae5-4a10-a4cf-4ebe11af47ed` matches Platform adopt.
-- Adopted host `144.202.74.190` timed out on SSH. Do not deploy there.
+- Adopted host `144.202.74.190` timed out on SSH. Do not deploy there. Inventory correction is `hosting:reconcile-observed-host` after ownership confirmation — not re-adopt, not Coolify Deploy. Do not run it until explicitly approved.
+- LNP backup/rollback: [LNP_BACKUP_AND_ROLLBACK.md](LNP_BACKUP_AND_ROLLBACK.md).
 
 ## Default sequence (when automation is later allowed)
 
-1. Publish an immutable Core image pinned to a commit and digest.
-2. Verify local Herd (correct checkout, database, assets, browser).
-3. Deploy and verify Demo (Compose recreate of `app` only). Preserve Demo data.
-4. After explicit production approval, deploy and verify LNP. Preserve shop data.
-5. Report which targets received the digest, which passed `/up`, and which remain behind.
+1. Publish a reporting-only Core image (commit file + digest). Do not mix that with unrelated Laravel patches.
+2. Verify local Herd.
+3. One controlled Demo Compose recreate of `app` only. Confirm reported commit/framework, digest, `/up`, and backup/rollback notes.
+4. After explicit production approval, consider LNP separately.
 
-Until each remote box has trustworthy heartbeat observation **and** a recorded rollback path, stop after publish + local verify unless Edward authorizes a specific remote recreate.
+Until each remote box has trustworthy observation **and** a recorded rollback path, stop after publish + local verify unless Edward authorizes a specific remote recreate.
 
 ## Safety
 
@@ -49,5 +58,6 @@ Until each remote box has trustworthy heartbeat observation **and** a recorded r
 - Do not adopt Demo as a Coolify app.
 - Do not treat Platform’s LNP host `144.202.74.190` as live.
 - A failed or unreachable target is not successful.
+- A heartbeat is not a successful deploy.
 - Core releases do not redeploy Platform, Foundry, or Companion.
 - Demo Compose backups exist on the box. Platform managed backup is still unavailable. Do not treat them as the same product.

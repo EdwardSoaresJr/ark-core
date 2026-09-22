@@ -7,7 +7,7 @@ use Illuminate\Foundation\Application;
 final class BoxRuntimeObservation
 {
     /**
-     * @return array{core_version: string, release: ?string, commit: ?string, laravel_version: string, php_version: string}
+     * @return array{core_version: string, release: ?string, commit: ?string, laravel_version: string, php_version: string, image_digest: ?string}
      */
     public static function payload(): array
     {
@@ -21,7 +21,25 @@ final class BoxRuntimeObservation
             'commit' => $commit,
             'laravel_version' => Application::VERSION,
             'php_version' => PHP_VERSION,
+            'image_digest' => self::imageDigest(),
         ];
+    }
+
+    /**
+     * @return non-empty-string|null
+     */
+    public static function imageDigest(): ?string
+    {
+        $digest = self::optionalString(config('app.image_digest'));
+        if ($digest === null) {
+            return null;
+        }
+
+        if (preg_match('/sha256:[a-f0-9]{64}/i', $digest, $match) !== 1) {
+            return null;
+        }
+
+        return strtolower($match[0]);
     }
 
     private static function coreVersion(?string $version, ?string $commit): string

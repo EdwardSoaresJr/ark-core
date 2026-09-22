@@ -9,11 +9,6 @@ final class BoxSourceCommit
      */
     public static function read(): ?string
     {
-        $configured = self::usable(config('app.commit'));
-        if ($configured !== null) {
-            return $configured;
-        }
-
         foreach (self::paths() as $path) {
             if (! is_readable($path)) {
                 continue;
@@ -25,7 +20,7 @@ final class BoxSourceCommit
             }
         }
 
-        return null;
+        return self::usable(config('app.commit'));
     }
 
     /**
@@ -33,10 +28,19 @@ final class BoxSourceCommit
      */
     public static function paths(): array
     {
-        return [
-            base_path('.ark-source-commit'),
-            '/app/.ark-source-commit',
-        ];
+        $configured = config('app.source_commit_file');
+        $paths = [];
+        if (is_string($configured) && trim($configured) !== '') {
+            $paths[] = trim($configured);
+        }
+
+        foreach ([base_path('.ark-source-commit'), '/app/.ark-source-commit'] as $path) {
+            if (! in_array($path, $paths, true)) {
+                $paths[] = $path;
+            }
+        }
+
+        return $paths;
     }
 
     /**

@@ -63,9 +63,11 @@ targets:
       container: ark-app-1
     coolify_application: none
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
-    installation_uuid: unknown
+    installation_uuid: 5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6
+    installation_uuid_status: assigned_not_written
     platform_paired: false
     source_commit_in_image: missing
+    heartbeat_interval: every_five_minutes
     backup:
       kind: compose_host
       platform_managed: false
@@ -75,6 +77,10 @@ targets:
         - infra/compose/restore-box.sh
         - infra/compose/pull-box-backup.sh
       root: /var/backups/ark-box
+      latest_stamp: /var/backups/ark-box/latest
+      sql_restore: tested
+      storage_archive: present
+      storage_restore: coded_uncertified
     deploy_enabled: false
     preserve:
       - database
@@ -113,6 +119,13 @@ targets:
     backup:
       kind: host_manual
       platform_managed: false
+      procedure: docs/engineering/LNP_BACKUP_AND_ROLLBACK.md
+      sql_stamps: /data/ark-shared/backups
+      compose_copies: /root/lnp-core-compose-backup-*.yml
+      image_tar: /root/lnp-core-rollback-e56b967e-2efa7a8281ab-20260920T134206Z.tar
+      compose_backup_script: absent
+      storage_volumes: not_in_sql_stamps
+      rollback_enabled: false
     approval: explicit_production
     preserve:
       - database
@@ -177,7 +190,13 @@ promotion:
 verification:
   health_path: /up
   require_observed_digest: true
+  heartbeat_is_not_deploy_proof: true
+  heartbeat_interval: "*/5 * * * *"
+  deploy_success_requires:
+    - observed_image_digest
+    - health_path_ok
   never_mark_current_from_desired_alone: true
+  never_mark_current_from_heartbeat_alone: true
 
 rollback:
   application_image: retain_previous_digest
@@ -187,8 +206,8 @@ rollback:
   demo_enabled: false
 
 unknown:
-  - Demo installation UUID (no installation_uuid file; Platform shop columns empty)
+  - Demo installation UUID is assigned in this file but not written on the box yet
   - Whether mail-cert installation c9f3315a-8501-48dd-b228-b19aba78d0de is live Demo
   - Demo Vultr instance and plan identifiers
-  - LNP Compose backup process (Demo has a tested host backup; LNP does not use that script yet)
+  - LNP application file-volume restore (SQL stamps exist; storage is not in those stamps)
   - Managed backup product (still not available)

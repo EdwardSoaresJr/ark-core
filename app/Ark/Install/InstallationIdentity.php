@@ -18,14 +18,29 @@ final class InstallationIdentity
         return InstallStorage::path(self::RELATIVE_PATH);
     }
 
-    public static function uuid(): string
+    /**
+     * @return non-empty-string|null
+     */
+    public static function read(): ?string
     {
         $path = self::path();
-        if (is_file($path)) {
-            $existing = trim((string) file_get_contents($path));
-            if (Str::isUuid($existing)) {
-                return $existing;
-            }
+        if (! is_file($path)) {
+            return null;
+        }
+
+        $existing = trim((string) file_get_contents($path));
+        if (! Str::isUuid($existing)) {
+            return null;
+        }
+
+        return $existing;
+    }
+
+    public static function uuid(): string
+    {
+        $existing = self::read();
+        if ($existing !== null) {
+            return $existing;
         }
 
         $uuid = (string) Str::uuid();

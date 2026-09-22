@@ -19,6 +19,14 @@ Self-hosted installations stay opt-in. Platform must not assume it can update th
 
 Core, Platform, Foundry, and Companion releases stay separate. A Core release does not redeploy Platform unless a future manifest names that dependency.
 
+## Heartbeat on this branch
+
+`fleet/phase-1-observation` runs `ark:platform-heartbeat` every five minutes. A one-minute schedule existed on `fleet/box-runtime-observation`; it was not merged. Image digest (`ARK_IMAGE_DIGEST`, sha256 only) and source-commit file preference from that work **are** on this branch.
+
+Platform `BoxHealth` Delayed/Offline windows assume a five-minute interval. Keep five minutes.
+
+Heartbeat is check-in. Deploy success is observed digest **and** `/up`. `HostedSystemSyncProjection.deploy_verified` stays false until both are supplied independently of heartbeat.
+
 ## Verified inventory (read-only 2026-09-22)
 
 ### Local Herd
@@ -32,8 +40,9 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 - Mechanism: **Docker Compose** at `/opt/ark` — container `ark-app-1` running
 - Image: `ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
 - Coolify application: **none**
-- Installation UUID: **unknown** (file missing; Platform shop pairing columns empty)
-- Backup: Compose host backups at `/var/backups/ark-box` via `/usr/local/sbin/ark-box-backup`. **Not** Platform managed backup.
+- Installation UUID **assigned, not written:** `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`
+- Pairing: not started. Register with Platform `hosting:register-compose-box` (no Coolify id). Write the UUID with Core `ark:installation-identity write`.
+- Backup: `/var/backups/ark-box` via `/usr/local/sbin/ark-box-backup`. SQL restore tested. `storage.tar.gz` is present and `restore-box.sh` can restore it; file-volume restore has not been certified. **Not** Platform managed backup.
 
 ### LNP Production
 
@@ -41,10 +50,11 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 - Live host: `149.28.249.13` (`ark-lugsnplugs-production`) — SSH reachable
 - Container: `b38otdn2epypspy0jadbgfl0-core` running the same digest
 - Compose: `/data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml` pins that digest on `core`
-- Installation UUID: `7d115599-cae5-4a10-a4cf-4ebe11af47ed` (matches Platform adopt)
+- Installation UUID: `7d115599-cae5-4a10-a4cf-4ebe11af47ed` (matches Platform adopt — ownership proven)
 - Adopted host `144.202.74.190`: SSH timed out — **unreachable**
+- Backup/rollback: [LNP_BACKUP_AND_ROLLBACK.md](../engineering/LNP_BACKUP_AND_ROLLBACK.md)
 
-**LNP automation stays disabled.** Do not Coolify Deploy. Do not target 144.
+**LNP automation stays disabled.** Do not Coolify Deploy. Do not target 144. Correct IPv4 only with `hosting:reconcile-observed-host --confirm-ownership=<uuid>` after explicit approval.
 
 ### Retired hostname
 
@@ -62,22 +72,20 @@ Publish to `ghcr.io/edwardsoaresjr/ark-core`. Those live images do not contain `
 
 ## Desired vs actual
 
-Platform already stores desired release on `hosted_shop_boxes.desired_state` and can record heartbeat `reported_version`. That is not enough.
-
 - Desired = the digest Platform wants
-- Actual = the digest observed on the running container, plus a signed Core heartbeat
+- Actual = the digest observed on the running container
+- Health = `GET /up`
+- Heartbeat = signed inventory check-in (commit, Laravel, PHP, optional digest)
 - Unreachable is not current
-- A successful deploy request is not current until observation matches
-
-Core heartbeat now reads `/app/.ark-source-commit` (and `APP_COMMIT`) and is scheduled every five minutes. Current live images still lack that file, so they will keep reporting `dev` until rebuilt.
+- A successful deploy request is not current until digest and `/up` match
 
 ## Adapters
 
 | Target | Adapter | Deploy |
 | --- | --- | --- |
 | Local Herd | Herd checkout | Never |
-| Demo | Docker Compose | Disabled until heartbeat + recorded rollback path |
-| LNP | Docker Compose on 149 | **Disabled** — Platform adopt host 144 is unreachable |
+| Demo | Docker Compose | Disabled |
+| LNP | Docker Compose on 149 | **Disabled** |
 | Future hosted boxes | Verified per box | Disabled until that box is observed |
 
 There is no default Coolify driver for every box.
@@ -92,9 +100,14 @@ Failed batches must not advance. Unreachable stays pending.
 
 Keep the previous immutable image digest. Application rollback is allowed only when the older image is compatible with the current schema. Never automatically roll back a database. Never roll back another shop’s data. Do not offer one-click LNP or Demo rollback until backups and compatibility are recorded.
 
-## Platform reuse (later, in `ark-platform`)
+LNP procedure is documented. Demo SQL restore is tested; Demo file-volume restore is uncertified.
 
-Reuse `HostedShopBox`, `ProvisionedCoreHost`, `HostedSystemDesiredState`, `HostedSystemSyncProjection`, `hosting:adopt-system`, `BoxHealth`, and the Systems list.
+## Platform commands (local / approved DB write only)
+
+| Command | Job |
+| --- | --- |
+| `hosting:register-compose-box` | Record Demo without a Coolify application id |
+| `hosting:reconcile-observed-host` | Move LNP host IPv4 after UUID ownership confirmation |
 
 Do not:
 
@@ -105,32 +118,32 @@ Do not:
 - Re-adopt LNP to “fix” the IP
 - Treat slice 4.4C as open
 
-Compose-hosted boxes need host/Compose observation, not a fake Coolify row.
-
 ## Sequence
 
 | Phase | Work | Deploy |
 | --- | --- | --- |
 | **0** | Inventory and operator contract | Off |
-| **1** | Heartbeat reports commit / Laravel / PHP; publish to ark-core; read-only host inspect | Off |
-| **2** | Fleet dashboard shows actual running releases after an image with source commit is deployed | Off |
-| **3** | Enable deploy only for a box with verified adapter, observation, and rollback (Demo Compose first; LNP last) | Per box |
+| **1** | Heartbeat reports commit / Laravel / PHP / digest; identity + recovery docs | Off |
+| **1b** | Reporting-only Demo image; verify commit, digest, `/up` | Demo only, when approved |
+| **2** | Fleet dashboard shows actual running releases | Off |
+| **3** | Enable deploy only for a box with verified adapter, observation, and rollback | Per box; LNP last |
 | **4** | Staged one / selected / pilot / fleet + rollback eligibility | Explicit approval |
 
 ## Unknown
 
-- Demo installation UUID and Platform pairing
 - Whether mail-cert installation `c9f3315a-8501-48dd-b228-b19aba78d0de` is live Demo
 - Demo Vultr instance/plan ids
 - Why adopted host `144.202.74.190` still exists in Platform (unreachable from this network)
-- LNP Compose backup process (Demo has a tested host backup; LNP does not use that script yet)
+- LNP file-volume restore
 - Managed backups (not available)
 
 ## Must not
 
 - Enable Fleet deploy
 - Change DNS
-- Mutate production or Demo
+- Mutate production or Demo in this phase
 - Invent Coolify IDs
 - Copy production data into Demo or local
+- Combine the first Fleet reporting image with unrelated Laravel patches
 - Treat Demo Compose backups as Platform managed backup
+- Treat a heartbeat as deploy success
