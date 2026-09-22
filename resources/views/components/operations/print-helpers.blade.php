@@ -44,13 +44,12 @@
     $arkUserIsAdminForPrintBanner = auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::SettingsManage->value) ?? false;
     $arkQzTrayScriptUrl = asset('vendor/qz/qz-tray.js');
     $arkQzLoadImmediately = false;
-    $arkPrintingQlForceRaster = filter_var(config('printing.ql_force_raster', false), FILTER_VALIDATE_BOOLEAN);
+    $arkPrintingQlForceRaster = filter_var(config('printing.ql_force_raster', true), FILTER_VALIDATE_BOOLEAN);
     $arkQlKeyTagLockReferenceRaster = filter_var(config('printing.ql_key_tag_lock_reference_raster', true), FILTER_VALIDATE_BOOLEAN);
     $arkQlKeyTagLockReferencePx = config('printing.ql_key_tag_lock_reference_px', [203 => ['w' => 496, 'h' => 304], 300 => ['w' => 732, 'h' => 450]]);
     $arkQlLabelReferenceMm = config('printing.ql_label_reference_mm', ['width' => 62.0, 'height' => 38.1]);
     $arkPrintingPrinterResolveUrl = route('operations.printing.printer');
-    $arkPdfJsVersion = '3.11.174';
-    $arkPdfJsDistBase = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@'.$arkPdfJsVersion.'/legacy/build/';
+    $arkPdfJsDistBase = asset('vendor/pdfjs').'/';
 @endphp
 {{-- QZ Tray: load qz-tray.js immediately only on Printer Setup Wizard; otherwise defer to first print (arkEnsureQzLoaded) so we do not websocket.connect on every admin page. --}}
 <script>
@@ -1208,8 +1207,7 @@ function arkNotifyPrintError(err) {
         console.error(code, err);
         if (window.toastr && typeof window.toastr.error === 'function') {
             window.toastr.error(
-                'Key tag image step failed (PDF.js → PNG). This only runs when PRINTING_QL_FORCE_RASTER=true. ' +
-                    'Allow the PDF toolkit CDN, disable blockers, or set PRINTING_QL_FORCE_RASTER=false so QZ prints the PDF directly. ' +
+                'The label image could not be prepared. Refresh the page and print again. ' +
                     (code === 'MAC_QL_RASTER'
                         ? 'On Mac: also set the Brother queue to 62 mm continuous and turn off fit-to-page.'
                         : '')

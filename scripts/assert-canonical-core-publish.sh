@@ -41,6 +41,14 @@ for qz_client in public/vendor/qz/qz-tray.js public/js/ark/qz-tray.js; do
   fi
 done
 
+for pdfjs in public/vendor/pdfjs/pdf.min.js public/vendor/pdfjs/pdf.worker.min.js; do
+  if [[ ! -s "$pdfjs" ]]; then
+    echo "REFUSING: local PDF.js missing from this source tree: $pdfjs" >&2
+    echo "Brother QL labels rasterize in the browser. Do not publish a Core image that loads PDF.js from a CDN." >&2
+    exit 1
+  fi
+done
+
 if ! grep -q 'test -f /app/public/vendor/qz/qz-tray.js' Dockerfile \
   || ! grep -q 'test -f /app/public/js/ark/qz-tray.js' Dockerfile; then
   echo "REFUSING: Dockerfile does not fail the build when the QZ client is missing." >&2

@@ -20,7 +20,7 @@ return [
 
     'default_printer' => 'HP LaserJet',
 
-    'ql_force_raster' => filter_var(env('PRINTING_QL_FORCE_RASTER', 'false'), FILTER_VALIDATE_BOOLEAN),
+    'ql_force_raster' => filter_var(env('PRINTING_QL_FORCE_RASTER', 'true'), FILTER_VALIDATE_BOOLEAN),
 
     'ql_label_reference_mm' => [
         'width' => 62.0,

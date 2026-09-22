@@ -54,8 +54,7 @@ final class LabelPdfRenderer
         $browser = Browsershot::html($html)
             ->paperSize($widthMm, $heightMm, 'mm')
             ->margins(0, 0, 0, 0)
-            ->showBackground()
-            ->waitUntilNetworkIdle();
+            ->showBackground();
 
         if ($nodeBinary = config('services.pdf.node_binary')) {
             $browser->setNodeBinary((string) $nodeBinary);

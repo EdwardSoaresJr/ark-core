@@ -65,12 +65,27 @@ test('the image build keeps the QZ Tray client the browser loads', function (): 
     $dockerfile = (string) file_get_contents(base_path('Dockerfile'));
 
     expect($dockerfile)->toContain('test -f /app/public/js/ark/qz-tray.js')
-        ->and($dockerfile)->toContain('test -f /app/public/vendor/qz/qz-tray.js');
+        ->and($dockerfile)->toContain('test -f /app/public/vendor/qz/qz-tray.js')
+        ->and($dockerfile)->toContain('test -f /app/public/vendor/pdfjs/pdf.min.js')
+        ->and($dockerfile)->toContain('test -f /app/public/vendor/pdfjs/pdf.worker.min.js');
+
+    $helpers = (string) file_get_contents(resource_path('views/components/operations/print-helpers.blade.php'));
+    $printing = (string) file_get_contents(base_path('config/printing.php'));
+    $renderer = (string) file_get_contents(app_path('Ark/Operations/Printing/LabelPdfRenderer.php'));
+
+    expect($helpers)->toContain("asset('vendor/pdfjs')")
+        ->and($helpers)->not->toContain('cdn.jsdelivr.net/npm/pdfjs-dist')
+        ->and($printing)->toContain("env('PRINTING_QL_FORCE_RASTER', 'true')")
+        ->and($renderer)->not->toContain('waitUntilNetworkIdle')
+        ->and(is_file(public_path('vendor/pdfjs/pdf.min.js')))->toBeTrue()
+        ->and(is_file(public_path('vendor/pdfjs/pdf.worker.min.js')))->toBeTrue();
 
     $publish = (string) file_get_contents(base_path('scripts/assert-canonical-core-publish.sh'));
 
     expect($publish)->toContain('public/vendor/qz/qz-tray.js')
         ->and($publish)->toContain('public/js/ark/qz-tray.js')
+        ->and($publish)->toContain('public/vendor/pdfjs/pdf.min.js')
+        ->and($publish)->toContain('public/vendor/pdfjs/pdf.worker.min.js')
         ->and($publish)->toContain('Dockerfile does not fail the build when the QZ client is missing');
 });
 
