@@ -63,9 +63,7 @@ test('call queue exposes recording and voicemail playback for missed calls', fun
         ->assertJsonPath('items.0.show_play_voicemail_action', false)
         ->assertJsonPath('items.0.dropdown_label', 'Call · Missed · Voicemail Caller');
 
-    expect($response->json('html'))
-        ->toContain('ops-queue-row')
-        ->toContain('Voicemail');
+    expect($response->json())->not->toHaveKey('html');
 });
 
 test('call queue does not expose play actions when media sources are unavailable', function () {
@@ -356,14 +354,21 @@ test('completed calls remain in queue until handled', function () {
 test('operations layout exposes hidden call queue poller without topbar attention affordance', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    $this->actingAs($advisor)
+    $response = $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
         ->assertDontSee('ops-call-queue__trigger', false)
         ->assertDontSee('ops-call-queue__label">Attention', false)
         ->assertSee('id="ark-call-queue-bootstrap"', false)
         ->assertSee('ops-call-queue--poller-only', false)
-        ->assertSee(route('operations.telephony.call-queue'), false);
+        ->assertSee(route('operations.telephony.call-queue'), false)
+        ->assertSee('x-data="arkCallQueue()"', false)
+        ->assertSee('x-data="arkCommsInterrupt()"', false);
+
+    $html = $response->getContent();
+
+    expect(preg_match('/x-data="arkCallQueue\(\)"[^>]*x-init="init\(\)"/', $html))->toBe(0)
+        ->and(preg_match('/x-data="arkCommsInterrupt\(\)"[^>]*x-init="init\(\)"/', $html))->toBe(0);
 });
 
 test('waiting sessions read does not reconcile stale live sessions', function () {

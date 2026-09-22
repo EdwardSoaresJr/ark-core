@@ -97,28 +97,75 @@ export function arkCallQueue(bootstrap = null) {
         summary: initial.summary,
         queueUrl: initial.queue_url,
         loading: false,
+        pollStarted: false,
         pollTimer: null,
+        refreshInFlight: false,
+        refreshQueued: false,
+        realtimeBound: false,
+        boundOnQueueRefresh: null,
+        boundOnResize: null,
         panelStyle: '',
 
         init() {
+            if (this.pollStarted) {
+                return;
+            }
+
+            this.pollStarted = true;
             this.bindItemActions();
-            this.refresh();
-            this.pollTimer = window.setInterval(() => this.refresh(), 5000);
             this.bindRealtime();
+            this.bindRefreshTriggers();
+            this.startPolling();
+            this.refresh();
+        },
 
-            document.addEventListener('ark:call-queue-refresh', () => {
-                this.refresh();
-            });
+        destroy() {
+            this.stopPolling();
+            this.unbindRefreshTriggers();
+            this.pollStarted = false;
+            this.realtimeBound = false;
+        },
 
-            window.addEventListener('resize', () => {
+        bindRefreshTriggers() {
+            this.boundOnQueueRefresh = () => this.refresh();
+            this.boundOnResize = () => {
                 if (this.open) {
                     this.positionPanel();
                 }
-            });
+            };
+
+            document.addEventListener('ark:call-queue-refresh', this.boundOnQueueRefresh);
+            window.addEventListener('resize', this.boundOnResize);
+        },
+
+        unbindRefreshTriggers() {
+            if (this.boundOnQueueRefresh !== null) {
+                document.removeEventListener('ark:call-queue-refresh', this.boundOnQueueRefresh);
+                this.boundOnQueueRefresh = null;
+            }
+
+            if (this.boundOnResize !== null) {
+                window.removeEventListener('resize', this.boundOnResize);
+                this.boundOnResize = null;
+            }
+        },
+
+        startPolling() {
+            this.stopPolling();
+            this.pollTimer = window.setInterval(() => this.refresh(), 5000);
+        },
+
+        stopPolling() {
+            if (this.pollTimer === null) {
+                return;
+            }
+
+            window.clearInterval(this.pollTimer);
+            this.pollTimer = null;
         },
 
         bindRealtime() {
-            if (! arkEchoEnabled()) {
+            if (this.realtimeBound || ! arkEchoEnabled()) {
                 return;
             }
 
@@ -127,6 +174,8 @@ export function arkCallQueue(bootstrap = null) {
             if (! echo) {
                 return;
             }
+
+            this.realtimeBound = true;
 
             echo.private('operations.comms-interrupts')
                 .listen('.comms.interrupt', () => {
@@ -172,6 +221,25 @@ export function arkCallQueue(bootstrap = null) {
         },
 
         async refresh() {
+            if (this.refreshInFlight) {
+                this.refreshQueued = true;
+
+                return;
+            }
+
+            this.refreshInFlight = true;
+
+            try {
+                do {
+                    this.refreshQueued = false;
+                    await this.fetchQueue();
+                } while (this.refreshQueued);
+            } finally {
+                this.refreshInFlight = false;
+            }
+        },
+
+        async fetchQueue() {
             const url = queueUrl();
 
             if (url === '') {
@@ -200,10 +268,6 @@ export function arkCallQueue(bootstrap = null) {
                 this.summary = payload.summary;
                 this.count = payload.count;
                 this.queueUrl = payload.queue_url;
-
-                if (typeof payload.html === 'string' && this.$refs.itemsRoot) {
-                    this.$refs.itemsRoot.innerHTML = payload.html;
-                }
 
                 notifyQueueChanged(payload);
             } catch {

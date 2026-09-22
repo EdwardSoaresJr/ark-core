@@ -12,12 +12,9 @@ class IncomingCallQueueController
 {
     public function __invoke(
         Request $request,
-        CallSessionQueue $callSessionQueue,
         CommunicationsQueueResolver $resolver,
         CommunicationsNavPressure $navPressure,
     ): JsonResponse {
-        $callSessionQueue->reconcileStaleLiveSessions();
-
         if (WorkstationPresence::resolve($request)->operationalPrivacyActive()) {
             $payload = $resolver->privacyGatedAttention();
 
@@ -26,14 +23,11 @@ class IncomingCallQueueController
                     ...$payload,
                     'nav_pressure_count' => 0,
                     'workboard_counts' => [],
-                    'html' => view('operations.communications.partials.call-queue-items-list', [
-                        'items' => [],
-                    ])->render(),
                 ])
                 ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
         }
 
-        $payload = $resolver->resolve($request->user());
+        $payload = $resolver->resolveAttention($request->user());
         $pressure = $navPressure->resolve($request->user());
 
         return response()
@@ -41,9 +35,6 @@ class IncomingCallQueueController
                 ...$payload,
                 'nav_pressure_count' => $pressure['nav_pressure_count'],
                 'workboard_counts' => $pressure['workboard_counts'],
-                'html' => view('operations.communications.partials.call-queue-items-list', [
-                    'items' => $payload['items'] ?? [],
-                ])->render(),
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }

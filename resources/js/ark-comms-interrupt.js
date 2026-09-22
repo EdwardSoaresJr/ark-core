@@ -204,17 +204,28 @@ export function arkCommsInterrupt() {
     return {
         activeCall: null,
         activeMessage: null,
+        pollStarted: false,
         pollTimer: null,
+        pollInFlight: false,
+        pollQueued: false,
+        realtimeBound: false,
         dismissedCallSessionIds: [],
         lastFocusedInterruptKey: '',
         ownedByOtherDismissTimer: null,
         ownedByOtherDismissSessionId: 0,
+        boundOnQueueChanged: null,
+        boundOnWorkstationPresenceGate: null,
 
         attentionGateEnabled() {
             return commsAttentionGateEnabled();
         },
 
         init() {
+            if (this.pollStarted) {
+                return;
+            }
+
+            this.pollStarted = true;
             requestBrowserNotificationPermission();
             this.bindRealtime();
             this.bindQueueWatch();
@@ -228,15 +239,35 @@ export function arkCommsInterrupt() {
             this.scheduleInterruptFocus();
         },
 
+        destroy() {
+            this.stopPolling();
+            this.clearOwnedByOtherDismissTimer();
+            this.unbindQueueWatch();
+            this.unbindWorkstationPresenceGate();
+            this.pollStarted = false;
+            this.realtimeBound = false;
+        },
+
         bindWorkstationPresenceGate() {
-            document.addEventListener('ark:workstation-presence-gate', (event) => {
+            this.boundOnWorkstationPresenceGate = (event) => {
                 if (event.detail?.active) {
                     this.clearOwnedByOtherDismissTimer();
                     this.activeCall = null;
                     this.activeMessage = null;
                     this.lastFocusedInterruptKey = '';
                 }
-            });
+            };
+
+            document.addEventListener('ark:workstation-presence-gate', this.boundOnWorkstationPresenceGate);
+        },
+
+        unbindWorkstationPresenceGate() {
+            if (this.boundOnWorkstationPresenceGate === null) {
+                return;
+            }
+
+            document.removeEventListener('ark:workstation-presence-gate', this.boundOnWorkstationPresenceGate);
+            this.boundOnWorkstationPresenceGate = null;
         },
 
         shouldSuppressInterrupt() {
@@ -286,7 +317,7 @@ export function arkCommsInterrupt() {
         },
 
         bindQueueWatch() {
-            document.addEventListener('ark:call-queue-changed', (event) => {
+            this.boundOnQueueChanged = (event) => {
                 const calls = Array.isArray(event.detail?.calls) ? event.detail.calls : [];
                 const activeSessionId = Number(this.activeCall?.call_session_id ?? 0);
                 const liveCall = calls.find((row) => isLiveCall(row) && isInboundCallInterrupt(row));
@@ -315,11 +346,22 @@ export function arkCommsInterrupt() {
                 if (Array.isArray(messages)) {
                     this.processMessages(messages, { announce: false });
                 }
-            });
+            };
+
+            document.addEventListener('ark:call-queue-changed', this.boundOnQueueChanged);
+        },
+
+        unbindQueueWatch() {
+            if (this.boundOnQueueChanged === null) {
+                return;
+            }
+
+            document.removeEventListener('ark:call-queue-changed', this.boundOnQueueChanged);
+            this.boundOnQueueChanged = null;
         },
 
         bindRealtime() {
-            if (! arkEchoEnabled()) {
+            if (this.realtimeBound || ! arkEchoEnabled()) {
                 return;
             }
 
@@ -328,6 +370,8 @@ export function arkCommsInterrupt() {
             if (! echo) {
                 return;
             }
+
+            this.realtimeBound = true;
 
             echo.private('operations.comms-interrupts')
                 .listen('.comms.interrupt', (payload) => {
@@ -357,30 +401,62 @@ export function arkCommsInterrupt() {
                 return;
             }
 
-            const poll = async () => {
-                try {
-                    const response = await fetch(url, {
-                        headers: {
-                            Accept: 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                        credentials: 'same-origin',
-                    });
-
-                    if (! response.ok) {
-                        return;
-                    }
-
-                    const data = await response.json();
-                    this.applySnapshot(data);
-                } catch {
-                    // Polling is the authoritative backup when websocket delivery fails.
-                }
-            };
-
-            poll();
+            this.stopPolling();
             const intervalMs = arkEchoEnabled() ? 15000 : 5000;
-            this.pollTimer = window.setInterval(poll, intervalMs);
+            this.pollTimer = window.setInterval(() => this.pollOnce(), intervalMs);
+            this.pollOnce();
+        },
+
+        stopPolling() {
+            if (this.pollTimer === null) {
+                return;
+            }
+
+            window.clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        },
+
+        async pollOnce() {
+            if (this.pollInFlight) {
+                this.pollQueued = true;
+
+                return;
+            }
+
+            const url = interruptUrl();
+
+            if (url === '') {
+                return;
+            }
+
+            this.pollInFlight = true;
+
+            try {
+                do {
+                    this.pollQueued = false;
+
+                    try {
+                        const response = await fetch(url, {
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            credentials: 'same-origin',
+                        });
+
+                        if (! response.ok) {
+                            continue;
+                        }
+
+                        const data = await response.json();
+                        this.applySnapshot(data);
+                    } catch {
+                        // Polling is the authoritative backup when websocket delivery fails.
+                    }
+                } while (this.pollQueued);
+            } finally {
+                this.pollInFlight = false;
+            }
         },
 
         handleInterruptEvent(payload) {
