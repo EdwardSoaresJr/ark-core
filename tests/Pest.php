@@ -31,6 +31,7 @@ require_once __DIR__.'/Support/SmsConsentTestHelpers.php';
 require_once __DIR__.'/Support/InboundSmsTestHelpers.php';
 require_once __DIR__.'/Support/MessagingTransportTestHelpers.php';
 require_once __DIR__.'/Support/HostedTransactionalSms.php';
+require_once __DIR__.'/Support/FabricSignedRequest.php';
 require_once __DIR__.'/Support/HostedPlatformPayments.php';
 require_once __DIR__.'/Support/HostedPlatformParts.php';
 require_once __DIR__.'/Support/HostedPlatformMail.php';

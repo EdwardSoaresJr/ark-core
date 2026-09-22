@@ -75,11 +75,30 @@ final class CommsInterruptBroadcast
     {
         return match ($kind) {
             'call' => 'call:'.((int) ($interrupt['call_session_id'] ?? 0)),
-            'sms', 'mms' => 'message:'.((int) ($interrupt['conversation_message_id'] ?? 0)),
+            'sms', 'mms' => self::smsInterruptKey($interrupt),
             'portal' => 'portal:'.((string) ($interrupt['portal_interrupt_key'] ?? '0')),
             'website_lead' => 'lead:'.((int) ($interrupt['lead_id'] ?? 0)),
             default => $kind.':'.((string) ($interrupt['id'] ?? '0')),
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $interrupt
+     */
+    private static function smsInterruptKey(array $interrupt): string
+    {
+        $coreId = (int) ($interrupt['conversation_message_id'] ?? 0);
+
+        if ($coreId > 0) {
+            return 'message:'.$coreId;
+        }
+
+        $platformId = HostedSmsInterrupt::publicId($interrupt['platform_message_public_id'] ?? null);
+
+        if ($platformId !== null) {
+            return 'message:platform:'.$platformId;
+        }
+
+        return 'message:0';
+    }
 }
