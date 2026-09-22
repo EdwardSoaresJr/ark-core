@@ -14,23 +14,32 @@ A git push is not a release. Each target has its own deploy and verification res
 | Demo | `https://demo.arksms.com` | Docker Compose at `/opt/ark` on `104.238.144.183` | Disabled |
 | LNP Production | `https://lugsnplugs.arksms.com` | Compose recreate-core on `149.28.249.13` | **Disabled** |
 
-Last image observed with the QZ Tray client still inside it:
+LNP Core accepted 2026-09-22. Shop confirmation: one physical label on one sticker, and the inbound SMS popup appeared. Fleet deployment automation stays disabled.
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+ghcr.io/edwardsoaresjr/ark-core@sha256:6f81679961b092ca23a2b073684bdabfc7a1242b2e9ee2ac1079f459d7c9b6c9
 ```
 
-That image does not contain the current sidebar. Do not deploy it to restore printing.
+Source commit `b6bfb8c1562466cb0fa516ecd62f7f9897668263` on `release/one-label-inbox-sms`. QZ client, one-label PDF printing, inbox layout, and the hosted SMS interrupt are in this image. Brother QL rasterization is not.
 
-LNP Core running now (read-only, 2026-09-22):
+Rollback if a label is wrong or the popup misbehaves. Compose backup on the host: `/root/lnp-core-compose-pre-combined-b6bfb8c15624.yml`.
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:f113969e71f21e3aeb110bab84719ba9ca4e728b390971f971c22e44284c7283
+ghcr.io/edwardsoaresjr/ark-core@sha256:67e8e577742d0121e10807502d0493f65b50766fae0da0afe0d216eab7cbdfe4
 ```
 
-Source commit `38334bd8127c4c9a41c50e6cf4fea83ac60a175a`. The QZ client is not in this image. An earlier sidebar image `sha256:04b199b4…` (`ba386cce`) is not what the shop is running.
+Source commit `ce8dd014097047e27433b65f19300d3eeb69ab32`. One label, PDF path, no inbox layout, no hosted SMS interrupt.
 
-Publish to `ghcr.io/edwardsoaresjr/ark-core`. Pin the digest. Do not deploy a floating tag.
+Do not redeploy these. Both force Brother QL raster, and a physical label ran across two stickers:
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:816385826054dc8a1c1da0b569737717be166359cd1d822e6a58eac1aa9644c2
+ghcr.io/edwardsoaresjr/ark-core@sha256:0ab8e2f5fb1e8eac13ffce4b7d757caa990cad9fd8de3292790f9b4e97d3f6eb
+```
+
+Communications workspace tests on this commit: 7 passed, 4 failed, 1 error. The failures are missing `ops-comms-workspace__thread-header`, missing `ops-comms-workspace__visit-strip`, and `Route [webhooks.communications.twilio.messaging.incoming] not defined`. Do not treat that suite as passing.
+
+Publish to `ghcr.io/edwardsoaresjr/ark-core`. Pin the digest. Do not deploy a floating tag. This release branch does not share history with `origin/main`. Do not merge them together.
 
 ## QZ label printing
 
@@ -46,13 +55,7 @@ Required sequence:
 4. In a browser, start a key-tag print and confirm QZ Tray loads without a script error.
 5. On LNP, Edward confirms a physical label. Automated checks do not replace that.
 
-If step 3 or 4 fails, the release is not accepted. Put the `core` image pin back to the digest that was running before this release:
-
-```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:f113969e71f21e3aeb110bab84719ba9ca4e728b390971f971c22e44284c7283
-```
-
-That rollback keeps the current sidebar and leaves printing broken. The older digest `sha256:40562971…` still contains the QZ client and does not contain this sidebar. Do not use it unless Edward explicitly chooses that tradeoff.
+If step 3 or 4 fails, the release is not accepted. Put the `core` image pin back to the rollback digest in the live inventory above.
 
 Core-only recreate, after the digest is pulled onto the host (`pull_policy: never`):
 
