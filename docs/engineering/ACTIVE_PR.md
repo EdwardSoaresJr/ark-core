@@ -10,6 +10,7 @@
 | Demo reporting | Verified by host inspect + `/up`, not heartbeat |
 | LNP reporting | Awaiting approval |
 | Fleet automation | Disabled |
+| Git consolidation | Separate from production · commit/push/integrate only · no deploys |
 
 Three performance streams stay separate. Do not mix them in one image or one recreate.
 
@@ -37,3 +38,5 @@ Repeat [LNP_PERFORMANCE_BASELINE.md](LNP_PERFORMANCE_BASELINE.md) after each app
 - RO schema/query/Blade optimization
 - Isolated `e2910fd` / `sha256:630a7601…` Platform image
 - Another Demo or Platform image rebuild
+
+Git consolidation may preserve, commit, push, and merge code. It does not authorize Demo, Platform, or LNP deploys.
