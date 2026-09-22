@@ -2,15 +2,11 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
-use App\Ark\Operations\Events\OperationalEventName;
-use App\Ark\Operations\Events\OperationalEventRecorder;
-use App\Ark\Operations\Labor\RecognizeConcernFlagProductionAction;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class RepairOrderConcernProductionStatusController
 {
@@ -19,8 +15,7 @@ class RepairOrderConcernProductionStatusController
         RepairOrder $repairOrder,
         RepairOrderConcern $concern,
         RepairOrderConcurrency $concurrency,
-        OperationalEventRecorder $events,
-        RecognizeConcernFlagProductionAction $recognizeFlagProduction,
+        UpdateConcernProductionStatusAction $updateProductionStatus,
     ): RedirectResponse|JsonResponse {
         abort_unless($concern->repair_order_id === $repairOrder->id, 404);
         abort_unless(
@@ -32,43 +27,18 @@ class RepairOrderConcernProductionStatusController
         $repairOrder->ensureOpenForEditing();
         $concurrency->guard($request, $repairOrder);
 
-        if (! $concern->tracksProduction()) {
-            throw ValidationException::withMessages([
-                'production_status' => 'Production status does not apply to deferred or declined scopes.',
-            ]);
-        }
-
-        $priorStatus = $concern->productionStatus()->value;
-
         $data = $request->validate([
             'production_status' => ['required', Rule::enum(ScopeProductionStatus::class)],
         ]);
 
-        $concern->update([
-            'production_status' => $data['production_status'],
-        ]);
-
-        $concern->refresh();
-
-        $sourceEvent = $events->record(
-            OperationalEventName::ConcernProductionStatusChanged,
+        $result = $updateProductionStatus->execute(
             $repairOrder,
-            actor: $request->user(),
-            payload: [
-                'concern_id' => $concern->id,
-                'prior_production_status' => $priorStatus,
-                'new_production_status' => $concern->productionStatus()->value,
-            ],
-        );
-
-        $recognition = $recognizeFlagProduction->handle(
-            $repairOrder->fresh(['assignedTechnician']),
-            $concern->fresh(['lines']),
-            ScopeProductionStatus::fromStored($priorStatus),
-            $concern->productionStatus(),
-            $sourceEvent,
+            $concern,
+            ScopeProductionStatus::from($data['production_status']),
             $request->user(),
         );
+        $concern->refresh();
+        $recognition = $result['recognition'];
 
         $statusMessage = 'Scope production status updated.';
         if ($recognition['status'] === 'deferred') {

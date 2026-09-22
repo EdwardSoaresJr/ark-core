@@ -27,6 +27,7 @@ final class UpdateConcernDispositionAction
         private readonly EstimateTotalsCalculator $totalsCalculator,
         private readonly RetreatRepairOrderAfterAuthorizationRevocationAction $retreatLifecycle,
         private readonly RefreshCustomerInvoiceAction $refreshInvoice,
+        private readonly RecordApprovedWorkScopeAction $approvedWorkScope,
     ) {}
 
     public function execute(
@@ -58,6 +59,8 @@ final class UpdateConcernDispositionAction
                 'new_disposition' => $concern->disposition->value,
             ],
         );
+
+        $this->approvedWorkScope->execute($concern->fresh(['lines']), $actor);
 
         $this->recordRepairOrderEstimateMutation($repairOrder, $actor);
         $this->totalsCalculator->recalculateRepairOrder($repairOrder->fresh());

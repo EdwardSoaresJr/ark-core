@@ -21,6 +21,7 @@ class RepairOrderLifecycleTransition
         private readonly RepairOrderCloseoutAuthority $closeout,
         private readonly SoloShopOperations $soloShop,
         private readonly RepairOrderStatusCatalog $statusCatalog,
+        private readonly WorkCompletionAuthorization $workAuthorization,
     ) {}
 
     public function blockingReason(
@@ -96,6 +97,12 @@ class RepairOrderLifecycleTransition
             return $detail !== null
                 ? "Approved parts are not ready yet ({$detail}). Receive or install parts before moving to {$this->statusCatalog->labelForSlug($toStatusSlug)}, or set status to Waiting Parts."
                 : 'Approved parts are not ready yet. Receive or install parts before moving forward, or set status to Waiting Parts.';
+        }
+
+        $authorizationReason = $this->workAuthorization->lifecycleBlockedReason($repairOrder, $toStatusSlug);
+
+        if ($authorizationReason !== null) {
+            return $authorizationReason;
         }
 
         return $this->mileageBlockingReason($repairOrder, $toStatusSlug);

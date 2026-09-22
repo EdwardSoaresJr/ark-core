@@ -201,6 +201,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernDispositionController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernMemorySuggestController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernMoveController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernMoveToNewRepairOrderController;
+use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationExceptionController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernProductionStatusController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernRecommendationIntentController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernStoreController;
@@ -1555,6 +1556,10 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/app/repair-orders/{repairOrder}/concerns/{concern}/production-status', RepairOrderConcernProductionStatusController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value.'|'.ArkCapability::ProductionAccess->value)
             ->name('operations.repair-orders.concerns.production-status');
+
+        Route::post('/app/repair-orders/{repairOrder}/concerns/{concern}/authorization-exceptions', RepairOrderAuthorizationExceptionController::class)
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.concerns.authorization-exceptions.store');
 
         Route::patch('/app/repair-orders/{repairOrder}/concerns/{concern}/billing-posture', RepairOrderConcernBillingPostureController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

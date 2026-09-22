@@ -6,10 +6,11 @@ use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\AdvanceRepairOrderAfterCustomerAuthorizationAction;
+use App\Ark\Operations\RepairOrders\RecordApprovedWorkScopeAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\RetreatRepairOrderAfterAuthorizationRevocationAction;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RetreatRepairOrderAfterAuthorizationRevocationAction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -21,6 +22,7 @@ final class RecordCustomerAuthorizationAction
         private readonly AdvanceRepairOrderAfterCustomerAuthorizationAction $advanceLifecycle,
         private readonly RetreatRepairOrderAfterAuthorizationRevocationAction $retreatLifecycle,
         private readonly StorePortalApprovalSignatureAction $signatures,
+        private readonly RecordApprovedWorkScopeAction $approvedWorkScope,
     ) {}
 
     /**
@@ -56,6 +58,7 @@ final class RecordCustomerAuthorizationAction
             $actor,
         ): ApprovalEvent {
             $this->applyConcernDispositions($repairOrder, $concernDispositions);
+            $this->recordApprovedScopes($repairOrder, $concernDispositions, $actor);
 
             $this->totalsCalculator->recalculateRepairOrder($repairOrder);
             $repairOrder->refresh()->load('concerns');
@@ -116,6 +119,27 @@ final class RecordCustomerAuthorizationAction
             }
 
             $concern->update(['disposition' => $nextDisposition]);
+        }
+    }
+
+    /**
+     * @param  array<int, string>  $concernDispositions
+     */
+    private function recordApprovedScopes(RepairOrder $repairOrder, array $concernDispositions, ?User $actor): void
+    {
+        $repairOrder->unsetRelation('concerns');
+        $repairOrder->load('concerns.lines');
+
+        foreach ($concernDispositions as $concernId => $disposition) {
+            if ((string) $disposition !== RepairOrderConcernDisposition::Approved->value) {
+                continue;
+            }
+
+            $concern = $repairOrder->concerns->firstWhere('id', (int) $concernId);
+
+            if ($concern instanceof RepairOrderConcern && $concern->disposition === RepairOrderConcernDisposition::Approved) {
+                $this->approvedWorkScope->execute($concern, $actor);
+            }
         }
     }
 

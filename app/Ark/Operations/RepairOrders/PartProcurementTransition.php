@@ -9,6 +9,7 @@ class PartProcurementTransition
 {
     public function __construct(
         private readonly OperationalEventRecorder $events,
+        private readonly WorkCompletionAuthorization $authorization,
     ) {}
 
     public function move(RepairOrder $repairOrder, RepairOrderLine $line, PartProcurementState $toState, ?User $actor = null): bool
@@ -31,6 +32,14 @@ class PartProcurementTransition
 
         if ($toState === PartProcurementState::Ordered && $line->part_source === PartLineSource::CustomerSupplied) {
             abort(422, 'Customer supplied parts are not ordered through the shop.');
+        }
+
+        if ($toState === PartProcurementState::Installed) {
+            $reason = $this->authorization->installBlockedReason($line);
+
+            if ($reason !== null) {
+                abort(422, $reason);
+            }
         }
 
         $line->update(['procurement_state' => $toState]);

@@ -17,6 +17,7 @@ use App\Ark\Mobile\Http\MobileAppointmentStoreController;
 use App\Ark\Mobile\Http\MobileAttentionIndexController;
 use App\Ark\Mobile\Http\MobileAuthLoginController;
 use App\Ark\Mobile\Http\MobileAuthLogoutController;
+use App\Ark\Mobile\Http\MobileAuthorizationExceptionController;
 use App\Ark\Mobile\Http\MobileCallMarkHandledController;
 use App\Ark\Mobile\Http\MobileCallRecordingPlaybackController;
 use App\Ark\Mobile\Http\MobileCallsIndexController;
@@ -208,6 +209,8 @@ Route::prefix('mobile')->name('api.mobile.')->group(function (): void {
             ->name('repair-orders.concerns.notes.store');
         Route::patch('/repair-orders/{repairOrder}/concerns/{concern}/production-status', MobileConcernProductionStatusController::class)
             ->name('repair-orders.concerns.production-status');
+        Route::post('/repair-orders/{repairOrder}/concerns/{concern}/authorization-exceptions', MobileAuthorizationExceptionController::class)
+            ->name('repair-orders.concerns.authorization-exceptions.store');
         Route::patch('/repair-orders/{repairOrder}/concerns/{concern}/disposition', MobileConcernDispositionController::class)
             ->name('repair-orders.concerns.disposition');
         Route::delete('/repair-orders/{repairOrder}/concerns/{concern}', MobileConcernDestroyController::class)
