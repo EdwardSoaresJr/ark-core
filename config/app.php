@@ -135,4 +135,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'version' => env('APP_VERSION'),
+    'release' => env('APP_RELEASE'),
+    'commit' => env('APP_COMMIT'),
+    'source_commit_file' => env('ARK_SOURCE_COMMIT_FILE', base_path('.ark-source-commit')),
+    'image_digest' => env('ARK_IMAGE_DIGEST'),
+
 ];

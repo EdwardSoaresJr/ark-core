@@ -117,5 +117,10 @@ RUN chmod +x /usr/local/bin/ark-entrypoint.sh \
         && sed -i 's/^;*clear_env.*/clear_env = no/' /usr/local/etc/php-fpm.d/www.conf \
         || echo 'clear_env = no' >> /usr/local/etc/php-fpm.d/www.conf)
 
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/EdwardSoaresJr/ark-core.git"
+LABEL org.opencontainers.image.revision="${GIT_SHA}"
+RUN printf '%s\n' "${GIT_SHA}" > /app/.ark-source-commit
+
 EXPOSE 80
 CMD ["/usr/local/bin/ark-entrypoint.sh"]

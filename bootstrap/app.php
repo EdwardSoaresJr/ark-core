@@ -187,4 +187,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ->everyFiveMinutes()
             ->withoutOverlapping()
             ->when(fn (): bool => OperationsFeatures::appointmentsEnabled());
+
+        $schedule->command('ark:platform-heartbeat')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
     })->create();
