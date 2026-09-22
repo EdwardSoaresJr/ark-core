@@ -35,26 +35,30 @@
         @endif
     </div>
 
-    <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
-        <label class="sr-only" for="deposit-amount-{{ $repairOrder->repair_order_id }}">Amount collected</label>
-        <input
-            id="deposit-amount-{{ $repairOrder->repair_order_id }}"
-            name="amount"
-            type="text"
-            inputmode="decimal"
-            value="{{ old('amount') }}"
-            required
-            autocomplete="off"
-            placeholder="{{ filled($financial['remainingSuggestedDepositDecimal'] ?? null) ? 'e.g. '.$financial['remainingSuggestedDepositDecimal'] : (filled($financial['remainingCollectableDepositDecimal'] ?? null) ? 'e.g. '.$financial['remainingCollectableDepositDecimal'] : '0.00') }}"
-            class="h-9 w-full rounded-sm border-slate-300 bg-white text-sm font-semibold tabular-nums text-slate-950"
-        >
-        <label class="sr-only" for="deposit-method-{{ $repairOrder->repair_order_id }}">Method</label>
-        <select id="deposit-method-{{ $repairOrder->repair_order_id }}" name="payment_method" required class="h-9 rounded-sm border-slate-300 bg-white text-sm font-semibold text-slate-700">
-            <option value="" disabled @selected(old('payment_method') === null)>Method</option>
-            @foreach ($financial['paymentMethods'] as $method)
-                <option value="{{ $method->value }}" @selected(old('payment_method') === $method->value)>{{ $method->label() }}</option>
-            @endforeach
-        </select>
+    <div class="ops-rail-payment-fields__pair">
+        <div class="min-w-0">
+            <label class="sr-only" for="deposit-amount-{{ $repairOrder->repair_order_id }}">Amount collected</label>
+            <input
+                id="deposit-amount-{{ $repairOrder->repair_order_id }}"
+                name="amount"
+                type="text"
+                inputmode="decimal"
+                value="{{ old('amount') }}"
+                required
+                autocomplete="off"
+                placeholder="{{ filled($financial['remainingSuggestedDepositDecimal'] ?? null) ? 'e.g. '.$financial['remainingSuggestedDepositDecimal'] : (filled($financial['remainingCollectableDepositDecimal'] ?? null) ? 'e.g. '.$financial['remainingCollectableDepositDecimal'] : '0.00') }}"
+                class="h-9 w-full min-w-0 rounded-sm border-slate-300 bg-white text-sm font-semibold tabular-nums text-slate-950"
+            >
+        </div>
+        <div class="min-w-0">
+            <label class="sr-only" for="deposit-method-{{ $repairOrder->repair_order_id }}">Method</label>
+            <select id="deposit-method-{{ $repairOrder->repair_order_id }}" name="payment_method" required class="h-9 w-full min-w-0 rounded-sm border-slate-300 bg-white text-sm font-semibold text-slate-700">
+                <option value="" disabled @selected(old('payment_method') === null)>Method</option>
+                @foreach ($financial['paymentMethods'] as $method)
+                    <option value="{{ $method->value }}" @selected(old('payment_method') === $method->value)>{{ $method->label() }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
 
     @error('amount')
@@ -71,7 +75,7 @@
         type="text"
         value="{{ old('reference') }}"
         placeholder="Reference / note (optional)"
-        class="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-700"
+        class="h-9 w-full min-w-0 rounded-sm border-slate-300 bg-white text-sm text-slate-700"
     >
     <button
         id="deposit-record-button-{{ $repairOrder->repair_order_id }}"

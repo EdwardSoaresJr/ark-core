@@ -10,26 +10,30 @@
     @method('PATCH')
     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
     <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Record Payment</p>
-    <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
-        <label class="sr-only" for="payment-amount-{{ $repairOrder->repair_order_id }}">Amount</label>
-        <input
-            id="payment-amount-{{ $repairOrder->repair_order_id }}"
-            name="amount"
-            type="text"
-            inputmode="decimal"
-            value="{{ old('amount', $financial['settlementBalanceDueDecimal'] ?? $financial['balanceDueDecimal']) }}"
-            required
-            class="h-9 rounded-sm border-slate-300 text-sm font-semibold tabular-nums text-slate-950"
-        >
-        <label class="sr-only" for="payment-method-{{ $repairOrder->repair_order_id }}">Method</label>
-        <select id="payment-method-{{ $repairOrder->repair_order_id }}" name="payment_method" required class="h-9 rounded-sm border-slate-300 text-sm font-semibold text-slate-700">
-            @foreach ($financial['paymentMethods'] as $method)
-                <option value="{{ $method->value }}" @selected(old('payment_method') === $method->value)>{{ $method->label() }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
-        <div>
+    <div class="ops-rail-payment-fields">
+        <div class="ops-rail-payment-fields__pair">
+            <div class="min-w-0">
+                <label class="sr-only" for="payment-amount-{{ $repairOrder->repair_order_id }}">Amount</label>
+                <input
+                    id="payment-amount-{{ $repairOrder->repair_order_id }}"
+                    name="amount"
+                    type="text"
+                    inputmode="decimal"
+                    value="{{ old('amount', $financial['settlementBalanceDueDecimal'] ?? $financial['balanceDueDecimal']) }}"
+                    required
+                    class="h-9 w-full min-w-0 rounded-sm border-slate-300 text-sm font-semibold tabular-nums text-slate-950"
+                >
+            </div>
+            <div class="min-w-0">
+                <label class="sr-only" for="payment-method-{{ $repairOrder->repair_order_id }}">Method</label>
+                <select id="payment-method-{{ $repairOrder->repair_order_id }}" name="payment_method" required class="h-9 w-full min-w-0 rounded-sm border-slate-300 text-sm font-semibold text-slate-700">
+                    @foreach ($financial['paymentMethods'] as $method)
+                        <option value="{{ $method->value }}" @selected(old('payment_method') === $method->value)>{{ $method->label() }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        <div class="ops-rail-payment-fields__full">
             <label class="sr-only" for="payment-paid-at-{{ $repairOrder->repair_order_id }}">Paid date</label>
             <input
                 id="payment-paid-at-{{ $repairOrder->repair_order_id }}"
@@ -39,10 +43,10 @@
                 max="{{ now()->timezone(config('app.display_timezone'))->toDateString() }}"
                 class="h-9 w-full rounded-sm border-slate-300 text-sm text-slate-700"
             >
+            <p class="text-[11px] font-semibold leading-4 text-slate-500">
+                Paid date — blank for today
+            </p>
         </div>
-        <p class="self-center text-[11px] font-semibold leading-4 text-slate-500 sm:col-span-1">
-            Paid date — blank for today
-        </p>
     </div>
     @error('paid_at')
         <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
@@ -54,7 +58,7 @@
         type="text"
         value="{{ old('reference') }}"
         placeholder="Reference / note (optional)"
-        class="h-9 rounded-sm border-slate-300 text-sm text-slate-700"
+        class="h-9 w-full min-w-0 rounded-sm border-slate-300 text-sm text-slate-700"
     >
     <p class="text-[11px] font-semibold leading-4 text-slate-500">
         Cash above balance due is treated as change given — not store credit. Prefer the exact amount due.
