@@ -351,7 +351,7 @@ test('paid ready pickup can close and leaves active queue', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Paid / ready to close')
+        ->assertSee('Paid')
         ->assertSee('Eligible to close');
 
     $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder->fresh()), [

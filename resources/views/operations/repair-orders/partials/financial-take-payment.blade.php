@@ -23,9 +23,12 @@
     );
     $openCaptureAttemptId = is_array($openCapture) ? ($openCapture['id'] ?? null) : null;
     $canTakePaymentCapture = $financial['canTakePaymentCapture'] ?? false;
+    $openAttempts = collect($captureAttempts)->filter(
+        fn (array $attempt): bool => (bool) ($attempt['isOpen'] ?? false),
+    )->values();
 @endphp
 
-@if ($canTakePaymentCapture || $captureAttempts !== [])
+@if ($canTakePaymentCapture || $openAttempts->isNotEmpty())
     <div
         class="space-y-3"
         x-data="arkPaymentCapture({
@@ -42,12 +45,12 @@
             <div class="border border-slate-200 bg-white p-3">
                 <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Take payment</p>
                 <p class="mt-1 text-xs leading-4 text-slate-600">
-                    Card capture via Platform. Record Payment remains available for cash, check, or external card.
+                    Card capture via Platform. Record external remains available for cash, check, or a card taken outside ARK.
                 </p>
 
                 @if (! ($readiness['ready'] ?? false))
                     <p class="mt-2 text-xs font-semibold text-amber-900">
-                        {{ $readiness['message'] ?? 'Card capture is not ready. Connect payments in Platform or use Record Payment.' }}
+                        {{ $readiness['message'] ?? 'Card capture is not ready. Connect payments in Platform or use Record external.' }}
                     </p>
                 @else
                     <form
@@ -154,38 +157,36 @@
             </div>
         @endif
 
-        @if ($captureAttempts !== [])
-            <div class="border border-slate-100 bg-slate-50/80 p-3">
-                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Recent captures</p>
-                <div class="mt-1 divide-y divide-slate-200">
-                    @foreach ($captureAttempts as $attempt)
+        @if ($openAttempts->isNotEmpty())
+            <div class="border border-amber-200 bg-amber-50/70 p-3">
+                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-amber-900">Open card capture</p>
+                <div class="mt-1 divide-y divide-amber-100">
+                    @foreach ($openAttempts as $attempt)
                         <div class="flex items-start justify-between gap-2 py-1.5 text-xs">
                             <div class="min-w-0">
                                 <p class="font-bold text-slate-900">
                                     {{ $attempt['amount'] }}
                                     · {{ $attempt['statusLabel'] }}
                                 </p>
-                                <p class="text-slate-500">{{ $attempt['context'] }} · {{ $attempt['methodLabel'] ?? $attempt['method'] }}</p>
+                                <p class="text-slate-500">{{ $attempt['methodLabel'] ?? $attempt['method'] }}</p>
                                 @if ($attempt['needsReconciliation'])
                                     <p class="mt-0.5 font-semibold text-amber-900">Do not re-charge this amount until resolved.</p>
                                 @endif
                             </div>
-                            @if ($attempt['isOpen'])
-                                <div class="flex shrink-0 flex-col items-end gap-1">
+                            <div class="flex shrink-0 flex-col items-end gap-1">
+                                <button
+                                    type="button"
+                                    class="text-[11px] font-bold text-sky-800 hover:underline"
+                                    @click="checkStatus({{ (int) $attempt['id'] }})"
+                                >Check status</button>
+                                @if ($attempt['canCancel'] ?? false)
                                     <button
                                         type="button"
-                                        class="text-[11px] font-bold text-sky-800 hover:underline"
-                                        @click="checkStatus({{ (int) $attempt['id'] }})"
-                                    >Check status</button>
-                                    @if ($attempt['canCancel'] ?? false)
-                                        <button
-                                            type="button"
-                                            class="text-[11px] font-bold text-slate-700 hover:underline"
-                                            @click="cancelAttempt({{ (int) $attempt['id'] }})"
-                                        >Cancel request</button>
-                                    @endif
-                                </div>
-                            @endif
+                                        class="text-[11px] font-bold text-slate-700 hover:underline"
+                                        @click="cancelAttempt({{ (int) $attempt['id'] }})"
+                                    >Cancel request</button>
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>
