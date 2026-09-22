@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Messaging;
 
+use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationIngress;
 use App\Ark\Operations\Conversations\ConversationMessage;
@@ -33,7 +34,7 @@ final class InboundSmsConversationIngress implements ConversationIngress
     ) {}
 
     /**
-     * @return array{message: ?ConversationMessage, context: ?CustomerCallContext, created: bool}
+     * @return array{message: ?ConversationMessage, context: ?CustomerCallContext, created: bool, conversation: ?Conversation}
      */
     public function ingest(InboundConversationPayload $payload, array $extraMetadata = []): array
     {
@@ -41,17 +42,23 @@ final class InboundSmsConversationIngress implements ConversationIngress
             $context = $payload->isProcessable()
                 ? $this->callContextResolver->resolve($payload->contactKey)
                 : null;
+            $conversation = null;
 
             if ($payload->isProcessable()) {
                 $conversation = $this->conversationWork->ensureForPhone($payload->contactKey, $context?->customer);
                 $this->conversationWork->markNeedsAttention($conversation);
             }
 
-            return ['message' => null, 'context' => $context, 'created' => false];
+            return [
+                'message' => null,
+                'context' => $context,
+                'created' => false,
+                'conversation' => $conversation,
+            ];
         }
 
         if (! $payload->isProcessable() || $payload->contactSurface !== ConversationContactSurface::Phone) {
-            return ['message' => null, 'context' => null, 'created' => false];
+            return ['message' => null, 'context' => null, 'created' => false, 'conversation' => null];
         }
 
         $existing = $this->findExistingMessage($payload->providerMessageId);
@@ -60,6 +67,7 @@ final class InboundSmsConversationIngress implements ConversationIngress
                 'message' => $existing,
                 'context' => $this->callContextResolver->resolve($payload->contactKey),
                 'created' => false,
+                'conversation' => $existing->conversation,
             ];
         }
 
@@ -113,6 +121,7 @@ final class InboundSmsConversationIngress implements ConversationIngress
             'message' => $message,
             'context' => $context,
             'created' => true,
+            'conversation' => $message->conversation,
         ];
     }
 
