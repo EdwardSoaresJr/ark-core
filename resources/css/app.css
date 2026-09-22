@@ -17401,7 +17401,13 @@
     .ops-comms-workspace__grid--inbox {
         border-top: 1px solid theme('colors.slate.200');
         border-radius: 0.375rem;
-        grid-template-columns: minmax(16rem, 24%) minmax(0, 1fr) minmax(16rem, 22%);
+        grid-template-columns: minmax(12.5rem, 19%) minmax(0, 1fr) minmax(16rem, 27%);
+    }
+
+    .ops-comms-workspace__grid--inbox > .ops-comms-workspace__list,
+    .ops-comms-workspace__grid--inbox > .ops-comms-workspace__thread,
+    .ops-comms-workspace__grid--inbox > .ops-comms-workspace__context {
+        min-width: 0;
     }
 
     .ops-comms-workspace--inbox { gap: 0; }
@@ -17451,8 +17457,8 @@
         color: theme('colors.white');
     }
 
-    .ops-comms-inbox__owners { display: flex; gap: 0.25rem; padding: 0.6rem 0.75rem 0.25rem; }
-    .ops-comms-inbox__owner { border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 700; color: theme('colors.slate.600'); text-decoration: none; }
+    .ops-comms-inbox__owners { display: flex; flex-wrap: wrap; gap: 0.25rem; min-width: 0; padding: 0.5rem 0.5rem 0.25rem; }
+    .ops-comms-inbox__owner { border-radius: 999px; padding: 0.2rem 0.45rem; font-size: 0.75rem; font-weight: 700; color: theme('colors.slate.600'); text-decoration: none; white-space: nowrap; }
     .ops-comms-inbox__owner--active { background: theme('colors.slate.900'); color: theme('colors.white'); }
     .ops-comms-inbox__card {
         display: grid;
@@ -17474,11 +17480,13 @@
         background: theme('colors.slate.200'); font-size: 0.6875rem; font-weight: 700;
     }
     .ops-comms-inbox__card-body { display: grid; gap: 0.15rem; min-width: 0; }
-    .ops-comms-inbox__card-top, .ops-comms-inbox__card-meta { display: flex; align-items: center; gap: 0.35rem; }
+    .ops-comms-inbox__card-top, .ops-comms-inbox__card-meta { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
     .ops-comms-inbox__card-top { justify-content: space-between; }
-    .ops-comms-inbox__name { font-size: 0.875rem; font-weight: 700; }
+    .ops-comms-inbox__name { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; font-weight: 700; }
     .ops-comms-inbox__age, .ops-comms-inbox__phone, .ops-comms-inbox__preview, .ops-comms-inbox__ro { font-size: 0.75rem; color: theme('colors.slate.500'); }
-    .ops-comms-inbox__preview { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ops-comms-inbox__age { flex-shrink: 0; }
+    .ops-comms-inbox__phone, .ops-comms-inbox__preview, .ops-comms-inbox__ro { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ops-comms-inbox__badge, .ops-comms-inbox__owner-mark { flex-shrink: 0; }
     .ops-comms-inbox__badge { border-radius: 999px; padding: 0.05rem 0.4rem; font-size: 0.6875rem; font-weight: 700; }
     .ops-comms-inbox__badge--needs { background: theme('colors.rose.100'); color: theme('colors.rose.800'); }
     .ops-comms-inbox__badge--waiting { background: theme('colors.amber.100'); color: theme('colors.amber.800'); }
@@ -17519,7 +17527,7 @@
     .ops-comms-inbox__rail-form { display: grid; gap: 0.375rem; }
 
     @media (max-width: 1100px) {
-        .ops-comms-workspace__grid--inbox { grid-template-columns: minmax(16rem, 32%) minmax(0, 1fr); }
+        .ops-comms-workspace__grid.ops-comms-workspace__grid--inbox { grid-template-columns: minmax(16rem, 32%) minmax(0, 1fr); }
         .ops-comms-workspace--inbox .ops-comms-workspace__context { display: none; }
         .ops-comms-workspace--inbox.is-context-open .ops-comms-workspace__context {
             display: flex; position: absolute; top: 3.5rem; right: 0.5rem; bottom: 0.5rem; z-index: 20;
@@ -17530,7 +17538,7 @@
     }
 
     @media (max-width: 760px) {
-        .ops-comms-workspace__grid--inbox { grid-template-columns: minmax(0, 1fr); }
+        .ops-comms-workspace__grid.ops-comms-workspace__grid--inbox { grid-template-columns: minmax(0, 1fr); }
         .ops-comms-workspace--inbox:not(.is-thread-open) .ops-comms-workspace__thread,
         .ops-comms-workspace--inbox:not(.is-thread-open) .ops-comms-workspace__context { display: none; }
         .ops-comms-workspace--inbox.is-thread-open .ops-comms-workspace__list { display: none; }
