@@ -51,6 +51,7 @@ export function arkPaymentCapture(config = {}) {
         waitingOnTerminal: false,
         openAttemptId: config.openAttemptId ?? null,
         pollTimer: null,
+        pollToken: 0,
 
         init() {
             if (this.openAttemptId) {
@@ -191,12 +192,14 @@ export function arkPaymentCapture(config = {}) {
 
         startPolling(attemptId) {
             this.stopPolling();
+            const token = ++this.pollToken;
             this.pollTimer = window.setInterval(() => {
-                this.checkStatus(attemptId, { quiet: true });
+                this.checkStatus(attemptId, { quiet: true, token });
             }, 2500);
         },
 
         stopPolling() {
+            this.pollToken += 1;
             if (this.pollTimer !== null) {
                 window.clearInterval(this.pollTimer);
                 this.pollTimer = null;
@@ -204,6 +207,7 @@ export function arkPaymentCapture(config = {}) {
         },
 
         async checkStatus(attemptId, options = {}) {
+            const token = options.token ?? this.pollToken;
             const url = this.attemptUrl(this.refreshUrlTemplate, attemptId);
             if (! url) {
                 return;
@@ -220,7 +224,13 @@ export function arkPaymentCapture(config = {}) {
                         'X-CSRF-TOKEN': csrfToken(),
                     },
                 });
+                if (token !== this.pollToken) {
+                    return;
+                }
                 const payload = await response.json().catch(() => ({}));
+                if (token !== this.pollToken) {
+                    return;
+                }
                 const status = payload.attempt?.status ?? '';
 
                 if (! isWaitingStatus(status)) {
@@ -236,6 +246,9 @@ export function arkPaymentCapture(config = {}) {
                     this.statusMessage = payload.message || 'Still waiting on the terminal.';
                 }
             } catch {
+                if (token !== this.pollToken) {
+                    return;
+                }
                 if (! options.quiet) {
                     this.cardError = 'Could not check payment status.';
                 }
@@ -248,8 +261,10 @@ export function arkPaymentCapture(config = {}) {
                 return;
             }
 
+            this.stopPolling();
             this.busy = true;
             this.cardError = '';
+            this.statusMessage = 'Cancelling…';
 
             try {
                 const response = await fetch(url, {
@@ -267,19 +282,24 @@ export function arkPaymentCapture(config = {}) {
 
                 if (! response.ok) {
                     this.cardError = payload.message || 'Could not cancel the payment request.';
+                    this.startPolling(attemptId);
                     return;
                 }
 
                 if (! isWaitingStatus(status)) {
-                    this.stopPolling();
                     this.waitingOnTerminal = false;
                     this.openAttemptId = null;
+                    this.statusMessage = payload.message || 'Payment request cancelled.';
+                    await this.refreshFinancialRail();
+                    return;
                 }
 
-                this.statusMessage = payload.message || 'Payment request cancelled.';
-                await this.refreshFinancialRail();
+                this.waitingOnTerminal = true;
+                this.statusMessage = payload.message || 'The terminal is still holding the request.';
+                this.startPolling(attemptId);
             } catch {
                 this.cardError = 'Could not cancel the payment request.';
+                this.startPolling(attemptId);
             } finally {
                 this.busy = false;
             }

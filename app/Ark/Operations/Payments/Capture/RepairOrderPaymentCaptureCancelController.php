@@ -26,7 +26,7 @@ final class RepairOrderPaymentCaptureCancelController
                 : 'The terminal already completed.',
             PaymentCaptureAttemptStatus::Failed => 'Payment capture failed. No ledger payment recorded.',
             PaymentCaptureAttemptStatus::ReconciliationRequired => 'Still needs reconciliation.',
-            PaymentCaptureAttemptStatus::Pending, PaymentCaptureAttemptStatus::Accepted => 'Still waiting on the terminal.',
+            PaymentCaptureAttemptStatus::Pending, PaymentCaptureAttemptStatus::Accepted => 'The terminal is still holding the request. Cancel again if it stays up.',
         };
 
         if ($request->wantsJson()) {
