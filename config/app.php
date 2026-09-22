@@ -135,4 +135,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'version' => env('APP_VERSION'),
+    'release' => env('APP_RELEASE'),
+    'commit' => env('APP_COMMIT'),
+
 ];

@@ -11,19 +11,19 @@ Read [`ops/releases/distribution.yaml`](../../ops/releases/distribution.yaml) an
 
 - Local Herd — `https://app.lugsnplugs.test` — verify this checkout
 - Demo — `https://demo.arksms.com` — Docker Compose at `/opt/ark` on `104.238.144.183`. No Coolify application.
-- LNP Production — `https://lugsnplugs.arksms.com` — documented live host `149.28.249.13`. Platform adopt host `144.202.74.190` conflicts.
+- LNP Production — `https://lugsnplugs.arksms.com` — live host `149.28.249.13`. Adopted host `144.202.74.190` is unreachable. Compose recreate-core. Deploy disabled.
 
 Last verified image:
 
 `ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
 
-Do not treat `ghcr.io/edwardsoaresjr/ark` as the running release.
+Publish to `ghcr.io/edwardsoaresjr/ark-core`.
 
 `demo.autorepairkeeper.com` is retired. GoDaddy DNS was deleted. Not a deploy target.
 
 ## Closed
 
-Fleet deployment automation is **disabled**. Do not Coolify Deploy LNP. Do not invent Coolify IDs for Demo. Do not enable an LNP actuator until read-only observation reconciles 144 vs 149.
+Fleet deployment automation is **disabled**. Do not Coolify Deploy LNP. Do not invent Coolify IDs for Demo. Do not use host `144.202.74.190`.
 
 A git push is not a successful release. Pin commit and digest. Do not copy production data into Demo or local. Do not change DNS unless explicitly asked.
 

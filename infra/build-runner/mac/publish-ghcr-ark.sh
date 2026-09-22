@@ -14,7 +14,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 # shellcheck source=lib/ark-builder-env.sh
 source "$SCRIPT_DIR/lib/ark-builder-env.sh"
 
-IMAGE="${IMAGE:-ghcr.io/edwardsoaresjr/ark}"
+IMAGE="${IMAGE:-ghcr.io/edwardsoaresjr/ark-core}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 
 cd "$REPO_ROOT"

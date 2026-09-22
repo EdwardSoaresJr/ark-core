@@ -26,10 +26,10 @@ Do not create a private Core fork. If the commercial cloud is later shut down, P
 
 ## Production images
 
-Publish only from this repository, with an explicit commit:
+Publish only from this repository, with an explicit commit, to **`ghcr.io/edwardsoaresjr/ark-core`**:
 
 ```bash
 SOURCE_COMMIT=$(git rev-parse HEAD) ./infra/build-runner/mac/publish-ghcr-ark.sh
 ```
 
-The image records that commit (`org.opencontainers.image.revision` and `/app/.ark-source-commit`). Builds from `arksmsv2` are rejected.
+The image records that commit (`org.opencontainers.image.revision` and `/app/.ark-source-commit`). Builds from `arksmsv2` are rejected. Do not publish live Core to `ghcr.io/edwardsoaresjr/ark`.

@@ -14,11 +14,10 @@ products:
   core:
     name: ARK Core
     image_repository: ghcr.io/edwardsoaresjr/ark-core
-    # Live Demo and LNP were verified on this digest. Do not treat
-    # ghcr.io/edwardsoaresjr/ark as the running release target.
+    # Live Demo and LNP were verified on this digest. Publish to ark-core only.
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
     publish_script: infra/build-runner/mac/publish-ghcr-ark.sh
-    publish_script_default_image: ghcr.io/edwardsoaresjr/ark
+    publish_script_default_image: ghcr.io/edwardsoaresjr/ark-core
     pin: commit_and_digest
   platform:
     name: ARK Platform
@@ -49,6 +48,8 @@ targets:
     adapter: docker_compose
     url: https://demo.arksms.com
     host: 104.238.144.183
+    hostname: demo
+    observed_at: "2026-09-22T03:46:00Z"
     compose:
       root: /opt/ark
       project: ark
@@ -62,6 +63,18 @@ targets:
       container: ark-app-1
     coolify_application: none
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    installation_uuid: unknown
+    platform_paired: false
+    source_commit_in_image: missing
+    backup:
+      kind: compose_host
+      platform_managed: false
+      host_script: /usr/local/sbin/ark-box-backup
+      repo_scripts:
+        - infra/compose/backup-box.sh
+        - infra/compose/restore-box.sh
+        - infra/compose/pull-box-backup.sh
+      root: /var/backups/ark-box
     deploy_enabled: false
     preserve:
       - database
@@ -73,24 +86,33 @@ targets:
   lnp-production:
     product: core
     role: production
-    adapter: pending_verification
+    adapter: docker_compose
     url: https://lugsnplugs.arksms.com
     deploy_enabled: false
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    observed_at: "2026-09-22T03:46:00Z"
     live:
       host: 149.28.249.13
+      hostname: ark-lugsnplugs-production
+      reachable: true
       container: b38otdn2epypspy0jadbgfl0-core
       compose_file: /data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml
       compose_project: waqkg4rlh7rq9pdfwpnfij8u
       service: core
       observed_actuator: compose_recreate_core
+      installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
+      source_commit_in_image: missing
     platform_adopt:
       host: 144.202.74.190
+      reachable: false
       shop_public_id: b2f6f86f-0655-45b2-b665-e1eb9b2f1c9f
       installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
       box_slug: lugsnplugs
       coolify_application_uuid: b38otdn2epypspy0jadbgfl0
-      status: stale_vs_live
+      status: stale_unreachable
+    backup:
+      kind: host_manual
+      platform_managed: false
     approval: explicit_production
     preserve:
       - database
@@ -99,8 +121,8 @@ targets:
       - env
       - tenant_isolation
     notes: >
-      Do not Coolify Deploy. Do not enable Fleet automation. Live host 149 and
-      adopted host 144 conflict. Reconcile with read-only observation first.
+      Live shop is 149. Adopted Platform host 144 timed out on SSH and must not
+      be a deploy target. Do not Coolify Deploy. Fleet automation stays off.
 
   hosted-fleet:
     product: core
@@ -165,9 +187,8 @@ rollback:
   demo_enabled: false
 
 unknown:
-  - Whether Platform LNP host 144.202.74.190 is retired leftover or a wrong deploy target
-  - LNP production actuator until live host, container, digest, compose project, and ownership agree
-  - Whether installation c9f3315a-8501-48dd-b228-b19aba78d0de is the live demo.arksms.com box
+  - Demo installation UUID (no installation_uuid file; Platform shop columns empty)
+  - Whether mail-cert installation c9f3315a-8501-48dd-b228-b19aba78d0de is live Demo
   - Demo Vultr instance and plan identifiers
-  - How this tree's publish script (ghcr.io/edwardsoaresjr/ark) relates to live ark-core images
+  - LNP Compose backup process (Demo has a tested host backup; LNP does not use that script yet)
   - Managed backup product (still not available)

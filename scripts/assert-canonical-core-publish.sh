@@ -8,9 +8,9 @@ cd "$root"
 
 "$root/scripts/assert-canonical-core-repo.sh" >/dev/null
 
-IMAGE="${IMAGE:-ghcr.io/edwardsoaresjr/ark}"
-if [[ "$IMAGE" != "ghcr.io/edwardsoaresjr/ark" ]]; then
-  echo "REFUSING: public Core publishes only to ghcr.io/edwardsoaresjr/ark" >&2
+IMAGE="${IMAGE:-ghcr.io/edwardsoaresjr/ark-core}"
+if [[ "$IMAGE" != "ghcr.io/edwardsoaresjr/ark-core" ]]; then
+  echo "REFUSING: public Core publishes only to ghcr.io/edwardsoaresjr/ark-core" >&2
   echo "IMAGE=$IMAGE" >&2
   exit 1
 fi

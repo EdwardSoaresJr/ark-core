@@ -1,6 +1,6 @@
 # ARK Fleet — release distribution v1
 
-**Status:** Inventory corrected · Fleet deploy **disabled**  
+**Status:** Phase 1 observation · Fleet deploy **disabled**  
 **Operator contract:** [RELEASE_DISTRIBUTION.md](../engineering/RELEASE_DISTRIBUTION.md) · [`ops/releases/distribution.yaml`](../../ops/releases/distribution.yaml)
 
 Platform will eventually distribute approved Core releases to hosted ARK Boxes, show what each box is actually running, and roll back a bad image without touching shop data. That work is not enabled yet.
@@ -19,7 +19,7 @@ Self-hosted installations stay opt-in. Platform must not assume it can update th
 
 Core, Platform, Foundry, and Companion releases stay separate. A Core release does not redeploy Platform unless a future manifest names that dependency.
 
-## Verified inventory (2026-09-21)
+## Verified inventory (read-only 2026-09-22)
 
 ### Local Herd
 
@@ -28,45 +28,37 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 ### Demo
 
 - URL: `https://demo.arksms.com`
-- Host: `104.238.144.183`
-- Mechanism: **Docker Compose** at `/opt/ark`
-- Files: `docker-compose.yml`, `docker-compose.vultr.yml`, `docker-compose.image.yml`, `docker-compose.demo.yml`
-- Project: `ark`
-- Service / container: `app` / `ark-app-1`
-- Image pin: `/opt/ark/docker-compose.image.yml`
-- Coolify application: **none** — do not invent one
+- Host: `104.238.144.183` (`hostname=demo`)
+- Mechanism: **Docker Compose** at `/opt/ark` — container `ark-app-1` running
+- Image: `ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
+- Coolify application: **none**
+- Installation UUID: **unknown** (file missing; Platform shop pairing columns empty)
+- Backup: Compose host backups at `/var/backups/ark-box` via `/usr/local/sbin/ark-box-backup`. **Not** Platform managed backup.
 
 ### LNP Production
 
 - URL: `https://lugsnplugs.arksms.com`
-- Documented live host: `149.28.249.13`
-- Live container: `b38otdn2epypspy0jadbgfl0-core`
-- Observed ship method on that host: pin compose image, recreate `core` only
-- Compose path on that host: `/data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml`
+- Live host: `149.28.249.13` (`ark-lugsnplugs-production`) — SSH reachable
+- Container: `b38otdn2epypspy0jadbgfl0-core` running the same digest
+- Compose: `/data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml` pins that digest on `core`
+- Installation UUID: `7d115599-cae5-4a10-a4cf-4ebe11af47ed` (matches Platform adopt)
+- Adopted host `144.202.74.190`: SSH timed out — **unreachable**
 
-Platform adopt record (conflicts with live):
-
-- Host `144.202.74.190`
-- Coolify app `b38otdn2epypspy0jadbgfl0`
-- Shop `b2f6f86f-0655-45b2-b665-e1eb9b2f1c9f`
-- Installation `7d115599-cae5-4a10-a4cf-4ebe11af47ed`
-- Box slug `lugsnplugs`
-
-**LNP automation stays disabled.** Deploying the adopted Coolify app could change the wrong machine.
+**LNP automation stays disabled.** Do not Coolify Deploy. Do not target 144.
 
 ### Retired hostname
 
-`demo.autorepairkeeper.com` is not a target. GoDaddy DNS for it was deleted. A leftover Traefik redirect file may still exist in-repo. Do not change DNS in follow-up work unless explicitly asked.
+`demo.autorepairkeeper.com` is not a target. GoDaddy DNS for it was deleted.
 
 ### Image
 
-Live Demo and LNP were verified on:
+Live Demo and LNP run:
 
 ```text
 ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
 ```
 
-This tree’s publish script still defaults to `ghcr.io/edwardsoaresjr/ark`. That name is **not** the live release target. Resolve the publish-name mismatch in a later change; do not silently retarget Fleet to `ark`.
+Publish to `ghcr.io/edwardsoaresjr/ark-core`. Those live images do not contain `/app/.ark-source-commit` or OCI revision labels. Heartbeat will report real commits only after a new image built with `GIT_SHA` is deployed.
 
 ## Desired vs actual
 
@@ -77,15 +69,15 @@ Platform already stores desired release on `hosted_shop_boxes.desired_state` and
 - Unreachable is not current
 - A successful deploy request is not current until observation matches
 
-Core heartbeat today reports `dev` because version config is unset and `ark:platform-heartbeat` is not scheduled. `/app/.ark-source-commit` is written at image build and not loaded. Phase 1 must fix that before any dashboard is treated as truth.
+Core heartbeat now reads `/app/.ark-source-commit` (and `APP_COMMIT`) and is scheduled every five minutes. Current live images still lack that file, so they will keep reporting `dev` until rebuilt.
 
 ## Adapters
 
 | Target | Adapter | Deploy |
 | --- | --- | --- |
 | Local Herd | Herd checkout | Never |
-| Demo | Docker Compose | Disabled until observation + rollback path |
-| LNP | Pending verification | **Disabled** until 144 vs 149 reconcile |
+| Demo | Docker Compose | Disabled until heartbeat + recorded rollback path |
+| LNP | Docker Compose on 149 | **Disabled** — Platform adopt host 144 is unreachable |
 | Future hosted boxes | Verified per box | Disabled until that box is observed |
 
 There is no default Coolify driver for every box.
@@ -119,26 +111,26 @@ Compose-hosted boxes need host/Compose observation, not a fake Coolify row.
 
 | Phase | Work | Deploy |
 | --- | --- | --- |
-| **0** | This inventory and operator contract | Off |
-| **1** | Heartbeat reports commit/digest; schedule check-in; persist reported vs observed | Off |
-| **1b** | Read-only Demo Compose inspect; read-only LNP 144 vs 149 reconcile | Off |
-| **2** | Fleet dashboard shows actual running releases | Off |
+| **0** | Inventory and operator contract | Off |
+| **1** | Heartbeat reports commit / Laravel / PHP; publish to ark-core; read-only host inspect | Off |
+| **2** | Fleet dashboard shows actual running releases after an image with source commit is deployed | Off |
 | **3** | Enable deploy only for a box with verified adapter, observation, and rollback (Demo Compose first; LNP last) | Per box |
 | **4** | Staged one / selected / pilot / fleet + rollback eligibility | Explicit approval |
 
 ## Unknown
 
-- Whether `144.202.74.190` is leftover Coolify metadata or a dangerous wrong target
-- LNP actuator until live host, container, digest, compose project, and ownership agree
-- Whether installation `c9f3315a-8501-48dd-b228-b19aba78d0de` is live Demo
+- Demo installation UUID and Platform pairing
+- Whether mail-cert installation `c9f3315a-8501-48dd-b228-b19aba78d0de` is live Demo
 - Demo Vultr instance/plan ids
-- Publish image name `ark` vs live `ark-core`
+- Why adopted host `144.202.74.190` still exists in Platform (unreachable from this network)
+- LNP Compose backup process (Demo has a tested host backup; LNP does not use that script yet)
 - Managed backups (not available)
 
-## Must not (this phase and until observation)
+## Must not
 
 - Enable Fleet deploy
 - Change DNS
 - Mutate production or Demo
 - Invent Coolify IDs
 - Copy production data into Demo or local
+- Treat Demo Compose backups as Platform managed backup
