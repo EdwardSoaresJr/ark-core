@@ -1,0 +1,32 @@
+# Legacy company hostname → live demo Box.
+# Copy to /data/coolify/proxy/dynamic/ on the Platform Traefik host.
+http:
+  middlewares:
+    ark-demo-legacy-redirect:
+      redirectRegex:
+        regex: "^https?://demo\\.autorepairkeeper\\.com(.*)"
+        replacement: "https://demo.arksms.com${1}"
+        permanent: true
+  routers:
+    ark-demo-legacy-http:
+      entryPoints:
+        - http
+      rule: Host(`demo.autorepairkeeper.com`)
+      middlewares:
+        - ark-demo-legacy-redirect
+      service: ark-demo-legacy-noop
+      priority: 2000
+    ark-demo-legacy-https:
+      entryPoints:
+        - https
+      rule: Host(`demo.autorepairkeeper.com`)
+      middlewares:
+        - ark-demo-legacy-redirect
+      service: ark-demo-legacy-noop
+      tls:
+        certResolver: letsencrypt
+      priority: 2000
+  services:
+    ark-demo-legacy-noop:
+      loadBalancer:
+        servers: {}

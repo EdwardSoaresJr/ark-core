@@ -36,22 +36,17 @@ These are runtime convenience. They rebuild after restore:
 
 `docker compose down` keeps durable volumes. `docker compose down -v` **destroys** durable state and starts a new installation with new secrets.
 
-## Backup (operator procedure today)
+## Backup
 
-1. Quiesce writes if you need a strict point-in-time snapshot (stop the `app` service or put the shop in maintenance).
-2. Archive the durable volumes or their contents:
-   - `ark_mysql`
-   - `ark_secrets`
-   - `ark_storage`
-3. Record the ARK version / git SHA you are running (image tag or `GIT_SHA` build arg).
+Compose Boxes use `infra/compose/backup-box.sh` (MySQL dump + `ark_secrets` + `ark_storage`) and `infra/compose/restore-box.sh`. Redis, images, and logs are omitted.
+
+Off-box copy: `infra/compose/pull-box-backup.sh` from a host that can SSH to the Box.
 
 Restore onto a fresh host:
 
-1. Clone this repository and start Compose with the **same** durable volumes attached.
-2. Do **not** run `install-bootstrap` against an empty secrets file when MySQL data already exists — bootstrap detects existing MySQL without secrets and fails closed.
+1. Place the three durable pieces, then start Compose. Do **not** run `install-bootstrap` against empty secrets when MySQL data already exists — bootstrap fails closed.
+2. Or import with `RESTORE_CONFIRM=yes infra/compose/restore-box.sh /path/to/stamp` (`ARK_RESTORE_SECRETS=yes` on a new host).
 3. Open the shop URL and verify customers, repair orders, and media.
-
-Automated backup/restore tooling and ARK Platform “Move to managed hosting” are future product paths. The boundary above is what those tools must preserve.
 
 ## Installation identity
 
