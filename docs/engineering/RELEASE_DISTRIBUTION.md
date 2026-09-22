@@ -48,6 +48,8 @@ A successful heartbeat is inventory check-in. It is **not** deploy success. Curr
 3. One controlled Demo Compose recreate of `app` only. Confirm reported commit/framework, digest, `/up`, and backup/rollback notes.
 4. After explicit production approval, consider LNP separately.
 
+Reporting-only Demo candidate (not published): [DEMO_REPORTING_RELEASE.md](DEMO_REPORTING_RELEASE.md). Source commit `a42b5c6408a0f1590e8e68eefe422e78a575ae0e`. Fleet deploy stays disabled.
+
 Until each remote box has trustworthy observation **and** a recorded rollback path, stop after publish + local verify unless Edward authorizes a specific remote recreate.
 
 ## Safety
