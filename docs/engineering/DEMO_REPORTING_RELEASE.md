@@ -1,10 +1,10 @@
 # Demo reporting-only release
 
-**Status:** Deployed on Demo Compose · Fleet deploy still disabled  
+**Status:** Closed · verified  
 **Target:** Demo Compose `104.238.144.183` (`https://demo.arksms.com`) only  
-**Not targets:** LNP `149.28.249.13`, adopted host `144.202.74.190`, `demo.autorepairkeeper.com`
+**Not targets:** LNP `149.28.249.13`, `144.202.74.190`, `demo.autorepairkeeper.com`
 
-Do not republish this image. Do not recreate Demo `app` because this file used to say pending. Do not deploy Platform again for reporting fields.
+Do not republish this image. Do not recreate Demo `app`. Platform observe is already live (`sha256:23d8e3d4…`). LNP is a separate production gate: [LNP_REPORTING_READINESS.md](LNP_REPORTING_READINESS.md).
 
 ## Live Core (Demo)
 
@@ -24,9 +24,9 @@ Do not republish this image. Do not recreate Demo `app` because this file used t
 
 MySQL, Redis, Caddy, and Foundry were not recreated.
 
-## Platform (already live — do not redeploy)
+## Platform (observe image live — do not redeploy for this Core record)
 
-`https://cloud.arksms.com` (`216.128.139.225`, `/up` 200). Coolify application **`2chd519pq55trejg7y7msgl4`**. Image `ghcr.io/edwardsoaresjr/ark-cloud:325dc922228e85562927783ceba38d706087d714`. Digest `sha256:c5a48ae0834d2678ef65bcd034f00249e2906e10b8f24e3dc688c6ec8a9e5242`. Laravel 13.29.0. Migration `2026_09_22_041000_add_runtime_observation_to_installations` has **Ran**.
+`https://cloud.arksms.com` (`216.128.139.225`, `/up` 200). Coolify application **`2chd519pq55trejg7y7msgl4`**. Image `0d5f640` / `sha256:23d8e3d4ade3bc5c2877edacd6dd19a8cf4fe2ddaab3468976b6329ddb8e8acd`. Rollback `sha256:c5a48ae0834d2678ef65bcd034f00249e2906e10b8f24e3dc688c6ec8a9e5242`. Laravel 13.29.0.
 
 ## Identity (written)
 
@@ -40,13 +40,13 @@ Heartbeat recorded on Platform at `2026-09-22T04:55:15Z`: commit `a42b5c64…`, 
 
 ## Systems projection
 
-Platform Systems still reports independent **release verification pending**. `deploy_verified` is false. Operator digest + `/up` on the box did not close that. Trusted Compose observation (provider image and `health_path_ok`) is later work. Do not redeploy Demo or Platform to change this label.
+Heartbeat recorded Laravel 13.29.0, PHP 8.4.25, commit `a42b5c64…`, and digest `sha256:f4abe244…`. That is inventory. Independent RepoDigest + `/up` 200 set `deploy_verified`. Systems **Verified**. Do not repeat Demo verification.
 
 This reporting-release record is frozen.
 
 ## Recovery
 
-Pre-recreate stamp `/var/backups/ark-box/20260922T045145Z` is the previous Demo image `sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`. SQL gzip-ok. File-volume restore remains uncertified. LNP stamps are SQL + compose only.
+Pre-recreate stamp `/var/backups/ark-box/20260922T045145Z` is the previous Demo image `sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`. SQL gzip-ok. File-volume restore remains uncertified.
 
 ## Rollback (image only)
 

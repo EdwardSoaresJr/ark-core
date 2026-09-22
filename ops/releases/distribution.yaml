@@ -29,11 +29,12 @@ products:
       url: https://cloud.arksms.com
       host: 216.128.139.225
       coolify_application: 2chd519pq55trejg7y7msgl4
-      image: ghcr.io/edwardsoaresjr/ark-cloud:325dc922228e85562927783ceba38d706087d714
-      digest: sha256:c5a48ae0834d2678ef65bcd034f00249e2906e10b8f24e3dc688c6ec8a9e5242
+      image: ghcr.io/edwardsoaresjr/ark-cloud@sha256:23d8e3d4ade3bc5c2877edacd6dd19a8cf4fe2ddaab3468976b6329ddb8e8acd
+      digest: sha256:23d8e3d4ade3bc5c2877edacd6dd19a8cf4fe2ddaab3468976b6329ddb8e8acd
+      commit: 0d5f640da803ee826b0d6f654a920392c3de5b32
       laravel: "13.29.0"
-      migration_2026_09_22_041000: ran
-    notes: Independent of Core. Do not redeploy because Core docs changed.
+      rollback_digest: sha256:c5a48ae0834d2678ef65bcd034f00249e2906e10b8f24e3dc688c6ec8a9e5242
+    notes: Independent of Core. Observe image is live. Do not redeploy because Core docs changed.
   foundry:
     name: ARK Foundry
     distribution: website_publication_only
@@ -83,8 +84,11 @@ targets:
       operator_up: 200
       source_commit_in_image: present
     systems:
-      release_verification: pending
-      deploy_verified: false
+      release_verification: verified
+      deploy_verified: true
+      source: compose_host_inspect
+      observed_digest: sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
+      media_type: index
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
     installation_uuid: 5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6
     installation_uuid_status: written
@@ -111,9 +115,9 @@ targets:
       - storage
       - env
     notes: >
-      Reporting image is live on the box. Systems release verification stays
-      pending until trusted Compose observation exists. A heartbeat is not
-      that proof. Do not republish or recreate to change the Systems label.
+      Reporting image is live. Systems Verified from independent Compose
+      inspect plus /up, not heartbeat. Do not republish or recreate Demo
+      to change the Systems label.
 
   lnp-production:
     product: core
@@ -122,11 +126,12 @@ targets:
     url: https://lugsnplugs.arksms.com
     deploy_enabled: false
     desired:
-      image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
-      pending_change: false
+      image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
+      pending_change: true
+      previous_release: ghcr.io/edwardsoaresjr/arksmsv2:production
     deployed:
       image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
-      observed_at: "2026-09-22T03:46:00Z"
+      observed_at: "2026-09-22T05:01:00Z"
       source_commit_in_image: missing
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
     live:
@@ -140,23 +145,27 @@ targets:
       observed_actuator: compose_recreate_core
       installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
       source_commit_in_image: missing
+      heartbeat_scheduled: false
     platform_adopt:
-      host: 144.202.74.190
-      reachable: false
+      host: 149.28.249.13
+      reachable: true
       shop_public_id: b2f6f86f-0655-45b2-b665-e1eb9b2f1c9f
       installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
       box_slug: lugsnplugs
       coolify_application_uuid: b38otdn2epypspy0jadbgfl0
-      status: stale_unreachable
+      previous_public_ipv4: 144.202.74.190
+      status: reconciled_observed_runtime_host
     backup:
       kind: host_manual
       platform_managed: false
       procedure: docs/engineering/LNP_BACKUP_AND_ROLLBACK.md
       sql_stamps: /data/ark-shared/backups
+      reporting_readiness_stamp: /data/ark-shared/backups/lnp-reporting-readiness-20260922T050035Z
       compose_copies: /root/lnp-core-compose-backup-*.yml
-      image_tar: /root/lnp-core-rollback-e56b967e-2efa7a8281ab-20260920T134206Z.tar
+      image_tar: /data/ark-shared/backups/lnp-reporting-readiness-20260922T050035Z/core-image-40562971.tar.gz
       compose_backup_script: absent
-      storage_volumes: not_in_sql_stamps
+      storage_archive: storage-app.tar.gz
+      storage_restore: extract_tested_live_uncertified
       rollback_enabled: false
     approval: explicit_production
     preserve:
@@ -166,8 +175,10 @@ targets:
       - env
       - tenant_isolation
     notes: >
-      Live shop is 149. Adopted Platform host 144 timed out on SSH and must not
-      be a deploy target. Do not Coolify Deploy. Fleet automation stays off.
+      Live shop is 40562971. Platform desired release is the Demo-verified
+      reporting digest f4abe244 (pending_change, not authorization). Do not
+      recreate core until explicit LNP approval. Do not use 144. Do not
+      Coolify Deploy. Fleet automation stays off.
 
   hosted-fleet:
     product: core
@@ -242,5 +253,5 @@ rollback:
 unknown:
   - Whether mail-cert installation c9f3315a-8501-48dd-b228-b19aba78d0de is live Demo
   - Demo Vultr instance and plan identifiers
-  - LNP application file-volume restore (SQL stamps exist; storage is not in those stamps)
+  - LNP live bind-mount restore of storage-app (archive extract tested; live restore uncertified)
   - Managed backup product (still not available)

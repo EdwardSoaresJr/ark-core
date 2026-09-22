@@ -1,18 +1,37 @@
 # Active PR
 
-**Track:** Reporting-release paperwork  
-**Status:** Frozen  
-**Surface:** Docs only
+**Track:** LNP reporting readiness  
+**Status:** Demo independently verified. LNP prepared, not deployed.  
+**Surface:** Production inventory, backup, and UI baseline only
 
-Platform `325dc92` and Demo `a42b5c64` are live on the box. Do not repeat those deploys. Systems still shows Demo release verification pending; a heartbeat does not close that.
+| Stream | Status |
+| --- | --- |
+| Platform observation | Live `0d5f640` / `sha256:23d8e3d4…` · rollback `sha256:c5a48ae…` |
+| Demo reporting | Verified by host inspect + `/up`, not heartbeat |
+| LNP reporting | Awaiting approval |
+| Fleet automation | Disabled |
 
-Record: [DEMO_REPORTING_RELEASE.md](DEMO_REPORTING_RELEASE.md) · [`ops/releases/distribution.yaml`](../../ops/releases/distribution.yaml)
+Three performance streams stay separate. Do not mix them in one image or one recreate.
 
-## Next (separately gated)
+| Stream | Status | Doc |
+| --- | --- | --- |
+| Reporting-only LNP | Prepared · not authorized | [LNP_REPORTING_READINESS.md](LNP_REPORTING_READINESS.md) |
+| Call-queue poller | Frozen (`cf169e76`) | — |
+| RO request-time | Brief only · not started | [RO_REQUEST_TIME.md](RO_REQUEST_TIME.md) |
 
-- Reconcile LNP’s stale host record against live `149.28.249.13`
-- Establish LNP file-volume backup and rollback
-- Capture authenticated Attention and RO Builder traces before the poller
-- Trusted Compose observation for Systems `deploy_verified`
+Repeat [LNP_PERFORMANCE_BASELINE.md](LNP_PERFORMANCE_BASELINE.md) after each approved stream.
 
-Fleet automation stays disabled. This paperwork does not authorize Platform, Demo, LNP, poller, or Laravel 13.32 deploys.
+## Closed
+
+- Platform observe image `0d5f640` / `sha256:23d8e3d4ade3bc5c2877edacd6dd19a8cf4fe2ddaab3468976b6329ddb8e8acd` — do not republish or recreate Platform for Demo
+- Demo reporting-only Core `a42b5c64` / `sha256:f4abe244…` — do not republish or recreate. Systems **Verified**.
+- Checklist: [DEMO_REPORTING_RELEASE.md](DEMO_REPORTING_RELEASE.md)
+
+## Out of scope
+
+- Recreate LNP `core`
+- Coolify Deploy / Fleet automation / DNS
+- Laravel 13.32
+- Call-queue poller (`cf169e76` remains frozen)
+- RO schema/query/Blade optimization
+- Another Demo or Platform image rebuild
