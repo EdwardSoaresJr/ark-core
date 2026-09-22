@@ -138,6 +138,10 @@ test('staff terminal capture records one ledger payment through payment-capture'
 
 test('staff can cancel a waiting terminal capture without recording a payment', function () {
     $repairOrder = financialCloseoutRepairOrder();
+    $repairOrder->forceFill(['repair_order_id' => (int) $repairOrder->id + 8000])->save();
+    $repairOrder = $repairOrder->fresh();
+    expect($repairOrder->repair_order_id)->not->toBe((int) $repairOrder->id);
+
     app(GenerateInvoiceSnapshotAction::class)->execute($repairOrder);
     $advisor = staffPaymentCaptureAdvisor();
     $amountCents = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents;
@@ -207,7 +211,15 @@ test('staff can cancel a waiting terminal capture without recording a payment', 
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Cancel request', false)
-        ->assertSee('Waiting on terminal', false);
+        ->assertSee('Waiting on terminal', false)
+        ->assertSee(
+            'repair-orders\\/'.$repairOrder->repair_order_id.'\\/payment-capture\\/__ID__\\/cancel',
+            false,
+        )
+        ->assertDontSee(
+            'repair-orders\\/'.$repairOrder->id.'\\/payment-capture',
+            false,
+        );
 
     $this->actingAs($advisor)
         ->postJson(route('operations.repair-orders.payment-capture.cancel', [$repairOrder, $attemptId]))

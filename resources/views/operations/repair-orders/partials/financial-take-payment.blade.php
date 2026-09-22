@@ -34,8 +34,8 @@
             defaultDevice: @js($defaultDevice),
             cardContainerId: 'ark-payment-capture-card-{{ $repairOrder->id }}',
             openAttemptId: @js($openCaptureAttemptId),
-            refreshUrlTemplate: @js(url('/app/repair-orders/'.$repairOrder->id.'/payment-capture/__ID__/refresh')),
-            cancelUrlTemplate: @js(url('/app/repair-orders/'.$repairOrder->id.'/payment-capture/__ID__/cancel')),
+            refreshUrlTemplate: @js(route('operations.repair-orders.payment-capture.refresh', [$repairOrder, '__ID__'])),
+            cancelUrlTemplate: @js(route('operations.repair-orders.payment-capture.cancel', [$repairOrder, '__ID__'])),
         })"
     >
         @if ($canTakePaymentCapture)
