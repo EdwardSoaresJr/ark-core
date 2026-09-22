@@ -6,8 +6,13 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
-# Private IDE / agent workflow — not part of the public product
-/.cursor/
+# Private IDE / agent workflow — not part of the public product.
+# Keep the Core identity rule cloneable so new Cursor sessions see it.
+/.cursor/*
+!/.cursor/rules/
+/.cursor/rules/*
+!/.cursor/rules/ark-canonical-repository.mdc
+!/.cursor/rules/ark-deploy.mdc
 /.idea
 /.nova
 /.phpunit.cache
@@ -20,7 +25,6 @@
 /public/hot
 /public/storage
 /storage/*.key
-/storage/backups/
 /storage/pail
 /storage/app/private/**
 !/storage/app/private/.gitignore

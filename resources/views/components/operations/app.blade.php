@@ -332,7 +332,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                         <div class="ops-rail-section">
                             <p class="ops-rail-section__label">System</p>
                             @if ($showArkademyNav)
-                                <a href="{{ \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl() }}" class="ops-rail-link {{ ! \App\Ark\Operations\Learn\ArkademyUrls::isCutover() && request()->routeIs('operations.learn.*') ? 'ops-rail-link--active' : '' }}">
+                                <a href="{{ \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl() }}" class="ops-rail-link {{ request()->routeIs('operations.learn.*') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">
                                         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
                                             <path d="M3.5 4.5h13v11h-13v-11z" stroke="currentColor" stroke-width="1.4" />

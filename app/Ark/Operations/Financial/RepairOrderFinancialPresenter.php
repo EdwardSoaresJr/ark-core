@@ -4,8 +4,6 @@ namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
-use App\Ark\Operations\Payments\Capture\PaymentCaptureAttemptStatus;
-use App\Ark\Operations\Payments\Capture\PaymentCaptureMethod;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\EstimateTotals;
@@ -92,7 +90,6 @@ final class RepairOrderFinancialPresenter
             && ! $repairOrder->isTerminal();
         $oweTodayDiffersFromSettlement = $balance->hasIssuedInvoice
             && $oweTodayCents !== $settlementBalanceDueCents;
-        $captureAttempts = $this->paymentCaptureAttempts($repairOrder);
 
         return [
             'workflowPosture' => $workflowPosture,
@@ -103,13 +100,6 @@ final class RepairOrderFinancialPresenter
             'invoiceStatusLabel' => $balance->hasIssuedInvoice
                 ? $balance->invoiceStatus->label()
                 : 'Not issued',
-            'invoiceIssuedOutsideCloseout' => $balance->hasIssuedInvoice
-                && ! $repairOrder->status->isOneOf([
-                    RepairOrderStatus::ReadyPickup,
-                    RepairOrderStatus::Invoiced,
-                    RepairOrderStatus::Completed,
-                    RepairOrderStatus::Closed,
-                ]),
             'estimateTotal' => $this->formatCents($estimateTotals->totalCents()),
             'invoiceTotal' => $balance->hasIssuedInvoice
                 ? $this->formatCents($balance->invoiceTotalCents)
@@ -264,8 +254,7 @@ final class RepairOrderFinancialPresenter
             'suggestedDepositBreakdown' => $this->depositWorkspaceBreakdown($depositWorkspaceLines),
             'canTakePaymentCapture' => $this->canRecordPayment($repairOrder, $balance) || $canRecordDeposit,
             'paymentCaptureReadiness' => app(PaymentCaptureReadinessProjection::class)->current(),
-            'paymentCaptureAttempts' => $captureAttempts,
-            'paymentHistoryItems' => $this->paymentHistoryItems($ledgerEntries, $captureAttempts),
+            'paymentCaptureAttempts' => $this->paymentCaptureAttempts($repairOrder),
         ];
     }
 
@@ -442,27 +431,27 @@ final class RepairOrderFinancialPresenter
             return 'closed';
         }
 
-        if ($balance->hasIssuedInvoice) {
-            if ($balance->balanceDueCents === 0) {
-                return 'paid_ready_to_close';
-            }
-
-            if ($balance->invoiceStatus === InvoiceStatus::PartiallyPaid) {
-                return 'partially_paid';
-            }
-
-            return 'invoice_issued';
-        }
-
         if (! $repairOrder->status->is(RepairOrderStatus::ReadyPickup)) {
             return $balance->unappliedDepositsCents > 0
                 ? 'pre_invoice_with_deposits'
                 : 'pre_invoice';
         }
 
-        return $balance->unappliedDepositsCents > 0
-            ? 'ready_for_final_invoice_with_deposits'
-            : 'ready_for_final_invoice';
+        if (! $balance->hasIssuedInvoice) {
+            return $balance->unappliedDepositsCents > 0
+                ? 'ready_for_final_invoice_with_deposits'
+                : 'ready_for_final_invoice';
+        }
+
+        if ($balance->balanceDueCents === 0) {
+            return 'paid_ready_to_close';
+        }
+
+        if ($balance->invoiceStatus === InvoiceStatus::PartiallyPaid) {
+            return 'partially_paid';
+        }
+
+        return 'invoice_issued';
     }
 
     private function workflowLabel(string $workflowPosture): string
@@ -528,60 +517,18 @@ final class RepairOrderFinancialPresenter
         return PaymentCaptureAttempt::query()
             ->where('repair_order_id', $repairOrder->id)
             ->latest('id')
-            ->limit(12)
+            ->limit(8)
             ->get()
-            ->map(fn (PaymentCaptureAttempt $attempt): array => $this->captureAttemptPresentation($attempt))
+            ->map(fn (PaymentCaptureAttempt $attempt): array => [
+                'id' => $attempt->id,
+                'amount' => $this->formatCents($attempt->amount_cents),
+                'statusLabel' => $attempt->status->label(),
+                'context' => $attempt->context_kind->value,
+                'method' => $attempt->capture_method->value,
+                'needsReconciliation' => $attempt->status->isAmbiguous(),
+                'isOpen' => $attempt->status->isOpen(),
+            ])
             ->all();
-    }
-
-    /**
-     * Ledger money first, then card-capture attempts that did not become payments.
-     *
-     * @param  Collection<int, array<string, mixed>>  $ledgerEntries
-     * @param  list<array<string, mixed>>  $captureAttempts
-     * @return list<array<string, mixed>>
-     */
-    private function paymentHistoryItems(Collection $ledgerEntries, array $captureAttempts): array
-    {
-        $ledgerItems = $ledgerEntries
-            ->map(fn (array $entry): array => [
-                'kind' => 'ledger',
-                'entry' => $entry,
-                'attempt' => null,
-            ]);
-
-        $captureItems = collect($captureAttempts)
-            ->reject(fn (array $attempt): bool => (bool) ($attempt['countsAsPayment'] ?? false))
-            ->map(fn (array $attempt): array => [
-                'kind' => 'capture',
-                'entry' => null,
-                'attempt' => $attempt,
-            ]);
-
-        return $ledgerItems
-            ->concat($captureItems)
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function captureAttemptPresentation(PaymentCaptureAttempt $attempt): array
-    {
-        return [
-            'id' => $attempt->id,
-            'amount' => $this->formatCents($attempt->amount_cents),
-            'statusLabel' => $attempt->status->label(),
-            'context' => $attempt->context_kind->value,
-            'method' => $attempt->capture_method->value,
-            'needsReconciliation' => $attempt->status->isAmbiguous(),
-            'isOpen' => $attempt->status->isOpen(),
-            'canCancel' => $attempt->status->canCancel(),
-            'countsAsPayment' => $attempt->hasLedgerEntry() && $attempt->status === PaymentCaptureAttemptStatus::Succeeded,
-            'methodLabel' => $attempt->capture_method === PaymentCaptureMethod::Keyed ? 'Manual' : 'Terminal',
-            'initiatedAt' => $attempt->initiated_at?->timezone(config('app.display_timezone'))->format('M j, g:i A'),
-        ];
     }
 
     private function formatCents(int $cents): string

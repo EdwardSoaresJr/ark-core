@@ -134,8 +134,8 @@ Both commands should print a version.
 ## 6. Download ARK
 
 ```bash
-git clone https://github.com/EdwardSoaresJr/ark-core.git
-cd ark-core
+git clone https://github.com/EdwardSoaresJr/ark.git
+cd ark
 ```
 
 ---

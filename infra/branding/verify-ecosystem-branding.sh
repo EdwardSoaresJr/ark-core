@@ -40,12 +40,6 @@ check_http "ARK V2 favicon asset" "https://lugsnplugs.arksms.com/assets/ARK_SMS_
 check_http "ARK V2 apple-touch" "https://lugsnplugs.arksms.com/assets/ARK_SMS_FINAL_DROP_IN_PACK/ios/ark-180x180.png"
 
 echo ""
-echo "=== ARKademy (learn.lugsnplugs.com) ==="
-check "ARKademy ARK favicon in head" "https://learn.lugsnplugs.com/login" '/theme/arkademy/favicon/favicon\.ico'
-check_http "ARKademy theme favicon" "https://learn.lugsnplugs.com/theme/arkademy/favicon/favicon.ico"
-check_http "ARKademy apple-touch" "https://learn.lugsnplugs.com/theme/arkademy/favicon/ark-180x180.png"
-
-echo ""
 echo "=== Arkify (platform.autorepairkeeper.com) ==="
 check "Arkify ARK favicon in head" "https://platform.autorepairkeeper.com/login" '/ark/favicon\.ico|ark/favicon'
 check_http "Arkify favicon asset" "https://platform.autorepairkeeper.com/ark/favicon.ico"

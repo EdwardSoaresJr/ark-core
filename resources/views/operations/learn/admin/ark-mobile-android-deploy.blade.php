@@ -45,11 +45,6 @@
     <h3>Push notifications</h3>
     <p>Push is optional and currently deferred for floor observation. When enabled, configure Firebase per <a href="{{ route('operations.learn.show', ['role' => 'admin', 'article' => 'ark-mobile-push-setup']) }}">ARK Mobile push setup</a>.</p>
 
-    <h3>Publish this guide to BookStack</h3>
-    <p>After catalog changes deploy to production, post-deploy runs:</p>
-    <p><code>php artisan ark:arkademy:import-bookstack --force</code></p>
-    <p>Staff can then read this on <a href="https://learn.lugsnplugs.com">learn.lugsnplugs.com</a> under <strong>Shop In A Box → Admin</strong>.</p>
-
     <h3>Related</h3>
     <p>Advisor lot workflows: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-check-in']) }}">Mobile check-in and OBD</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-attention']) }}">ARK Mobile Attention</a>.</p>
     <p>Technician production: <a href="{{ route('operations.learn.show', ['role' => 'technician', 'article' => 'ark-mobile-concern-workspace']) }}">Concern workspace on mobile</a>.</p>

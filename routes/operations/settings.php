@@ -1,6 +1,9 @@
 <?php
 
+use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Import\ShopCsv\ShopCsvImportController;
+use App\Ark\Operations\Payments\SquareTerminalDeviceCodeController;
+use App\Ark\Operations\Workboard\JobBoardLaneSettingsController;
 use App\Ark\Operations\Appointments\RemoveScheduleBayController;
 use App\Ark\Operations\Appointments\StoreScheduleBayController;
 use App\Ark\Operations\Appointments\UpdateScheduleBayController;
@@ -8,18 +11,15 @@ use App\Ark\Operations\Inspections\InspectionTemplateSettingsController;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogSettingsController;
 use App\Ark\Operations\Settings\DragonMemorySettingsController;
 use App\Ark\Operations\Settings\LaborPolicySettingsController;
+use App\Ark\Operations\Settings\ShopPlatformSettingsController;
 use App\Ark\Operations\Settings\ShopCommunicationsSettingsController;
 use App\Ark\Operations\Settings\ShopFinancialSettingsController;
 use App\Ark\Operations\Settings\ShopGeneralSettingsController;
 use App\Ark\Operations\Settings\ShopIntegrationSettingsController;
 use App\Ark\Operations\Settings\ShopOperationsSettingsController;
-use App\Ark\Operations\Settings\ShopPlatformSettingsController;
 use App\Ark\Operations\Settings\ShopSettingsPageController;
 use App\Ark\Operations\Staff\StaffMemberController;
 use App\Ark\Operations\Telephony\SimulateIncomingCallController;
-use App\Ark\Operations\Workboard\JobBoardLaneSettingsController;
-use App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController;
-use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +70,12 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
 
     Route::patch('/app/settings/shop/payments', [ShopIntegrationSettingsController::class, 'updatePayments'])
         ->name('operations.settings.shop.payments.update');
+
+    Route::post('/app/settings/shop/payments/square-terminal-device-code', [SquareTerminalDeviceCodeController::class, 'store'])
+        ->name('operations.settings.shop.payments.square-terminal-device-code.store');
+
+    Route::get('/app/settings/shop/payments/square-terminal-device-code/{deviceCodeId}', [SquareTerminalDeviceCodeController::class, 'show'])
+        ->name('operations.settings.shop.payments.square-terminal-device-code.show');
 
     Route::patch('/app/settings/shop/partstech', [ShopIntegrationSettingsController::class, 'updatePartsTech'])
         ->name('operations.settings.shop.partstech.update');
@@ -164,15 +170,15 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/inspection-templates', InspectionTemplateSettingsController::class)
         ->name('operations.settings.shop.inspection-templates.update');
 
-    Route::post('/app/settings/shop/work-templates', [WorkTemplateSettingsController::class, 'store'])
+    Route::post('/app/settings/shop/work-templates', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'store'])
         ->name('operations.settings.shop.work-templates.store');
-    Route::put('/app/settings/shop/work-templates/{workTemplate}', [WorkTemplateSettingsController::class, 'update'])
+    Route::put('/app/settings/shop/work-templates/{workTemplate}', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'update'])
         ->name('operations.settings.shop.work-templates.update');
-    Route::post('/app/settings/shop/work-templates/{workTemplate}/duplicate', [WorkTemplateSettingsController::class, 'duplicate'])
+    Route::post('/app/settings/shop/work-templates/{workTemplate}/duplicate', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'duplicate'])
         ->name('operations.settings.shop.work-templates.duplicate');
-    Route::patch('/app/settings/shop/work-templates/{workTemplate}/retire', [WorkTemplateSettingsController::class, 'retire'])
+    Route::patch('/app/settings/shop/work-templates/{workTemplate}/retire', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'retire'])
         ->name('operations.settings.shop.work-templates.retire');
-    Route::patch('/app/settings/shop/work-templates/{workTemplate}/restore', [WorkTemplateSettingsController::class, 'restore'])
+    Route::patch('/app/settings/shop/work-templates/{workTemplate}/restore', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'restore'])
         ->name('operations.settings.shop.work-templates.restore');
 
     Route::patch('/app/settings/shop/excellence', [ShopOperationsSettingsController::class, 'updateExcellence'])

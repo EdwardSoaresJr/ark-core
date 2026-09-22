@@ -167,12 +167,9 @@ test('platform heartbeat is scheduled every five minutes', function (): void {
         ->assertSuccessful();
 });
 
-test('Dockerfile records source commit and keeps QZ Tray build checks', function (): void {
-    $dockerfile = (string) file_get_contents(base_path('Dockerfile'));
+test('public core publish identity is ark-core', function (): void {
+    $script = (string) file_get_contents(base_path('scripts/assert-canonical-core-publish.sh'));
 
-    expect($dockerfile)->toContain('org.opencontainers.image.source="https://github.com/EdwardSoaresJr/ark-core.git"')
-        ->and($dockerfile)->toContain('org.opencontainers.image.revision="${GIT_SHA}"')
-        ->and($dockerfile)->toContain("/app/.ark-source-commit")
-        ->and($dockerfile)->toContain('test -f /app/public/js/ark/qz-tray.js')
-        ->and($dockerfile)->toContain('test -f /app/public/vendor/qz/qz-tray.js');
+    expect($script)->toContain('ghcr.io/edwardsoaresjr/ark-core')
+        ->and($script)->not->toContain('ghcr.io/edwardsoaresjr/ark"');
 });

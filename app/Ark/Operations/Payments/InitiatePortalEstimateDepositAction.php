@@ -39,15 +39,15 @@ final class InitiatePortalEstimateDepositAction
         );
 
         abort_if($depositAmountCents <= 0, 422, 'Nothing left to collect on this estimate.');
-        abort_unless(ManagedPaymentsGate::platformCapture(), 422, 'Card capture is not connected.');
 
+        $managed = ManagedPaymentsGate::platformCapture();
         $idempotencyKey = (string) Str::uuid();
 
         return PaymentGatewayAttempt::query()->create([
             'repair_order_id' => $repairOrder->id,
             'customer_id' => $repairOrder->customer_id,
             'financial_document_id' => null,
-            'gateway' => PaymentGateway::Managed,
+            'gateway' => $managed ? PaymentGateway::Managed : PaymentGateway::Square,
             'capture_surface' => PaymentCaptureSurface::PortalEstimateDeposit,
             'amount_cents' => $depositAmountCents,
             'currency' => 'USD',

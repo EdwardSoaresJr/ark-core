@@ -1,4 +1,10 @@
 import { getArkEcho, arkEchoEnabled } from './ark-echo';
+import {
+    coreConversationId,
+    interruptMessageKey,
+    isPlatformOnlySmsInterrupt,
+    smsMessageIdentity,
+} from './ark-comms-sms-interrupt-identity';
 
 function interruptUrl() {
     return document.querySelector('meta[name="ark-comms-interrupt-url"]')?.content ?? '';
@@ -51,7 +57,9 @@ function readCallQueueBootstrap() {
 }
 
 function isCacheBackedInterrupt(message) {
-    return message?.kind === 'portal' || message?.kind === 'website_lead';
+    return message?.kind === 'portal'
+        || message?.kind === 'website_lead'
+        || isPlatformOnlySmsInterrupt(message);
 }
 
 function unreadMessageId(row) {
@@ -67,11 +75,17 @@ function unreadMessageId(row) {
         return row?.lead_interrupt_key ?? (row?.lead_id ? `lead:${row.lead_id}` : '');
     }
 
-    if (row?.kind !== 'sms' && row?.kind !== 'mms') {
+    const identity = smsMessageIdentity(row);
+
+    if (identity === '') {
         return 0;
     }
 
-    return Number(row.conversation_message_id ?? row.message_id ?? 0);
+    if (identity.startsWith('core:')) {
+        return Number(identity.slice(5));
+    }
+
+    return identity;
 }
 
 function commsAttentionGateEnabled() {
@@ -206,6 +220,7 @@ export function arkCommsInterrupt() {
         activeMessage: null,
         pollTimer: null,
         dismissedCallSessionIds: [],
+        dismissedMessageKeys: [],
         lastFocusedInterruptKey: '',
         ownedByOtherDismissTimer: null,
         ownedByOtherDismissSessionId: 0,
@@ -253,6 +268,20 @@ export function arkCommsInterrupt() {
 
         wasCallDismissed(callSessionId) {
             return this.dismissedCallSessionIds.includes(Number(callSessionId));
+        },
+
+        rememberDismissedMessage(messageKey) {
+            const key = String(messageKey ?? '');
+
+            if (key !== '' && key !== '0' && ! this.dismissedMessageKeys.includes(key)) {
+                this.dismissedMessageKeys.push(key);
+            }
+        },
+
+        wasMessageDismissed(messageKey) {
+            const key = String(messageKey ?? '');
+
+            return key !== '' && this.dismissedMessageKeys.includes(key);
         },
 
         bootstrapPendingInterrupts() {
@@ -357,6 +386,9 @@ export function arkCommsInterrupt() {
                 return;
             }
 
+            // Hosted Platform-only SMS is not in Core unread polling. This
+            // interval cannot recover a missed realtime popup; it must not
+            // clear one that is already showing (see isCacheBackedInterrupt).
             const poll = async () => {
                 try {
                     const response = await fetch(url, {
@@ -414,7 +446,7 @@ export function arkCommsInterrupt() {
                     ? (interrupt.portal_interrupt_key ?? '')
                     : kind === 'website_lead'
                         ? (interrupt.lead_interrupt_key ?? '')
-                        : Number(interrupt.conversation_message_id ?? 0));
+                        : (smsMessageIdentity(interrupt) || Number(interrupt.conversation_message_id ?? 0)));
             }
         },
 
@@ -478,25 +510,22 @@ export function arkCommsInterrupt() {
                     continue;
                 }
 
-                const activeKey = this.activeMessage?.kind === 'portal'
-                    ? String(this.activeMessage.portal_interrupt_key ?? this.activeMessage.message_id ?? '')
-                    : this.activeMessage?.kind === 'website_lead'
-                        ? String(this.activeMessage.lead_interrupt_key ?? this.activeMessage.message_id ?? '')
-                        : String(Number(this.activeMessage?.message_id ?? 0));
-                const rowKey = row?.kind === 'portal'
-                    ? String(messageId)
-                    : row?.kind === 'website_lead'
-                        ? String(messageId)
-                        : String(Number(messageId));
+                const presented = {
+                    ...row,
+                    message_id: messageId,
+                };
+                const activeKey = interruptMessageKey(this.activeMessage);
+                const rowKey = interruptMessageKey(presented);
+
+                if (this.wasMessageDismissed(rowKey)) {
+                    continue;
+                }
 
                 if (activeKey === rowKey && activeKey !== '0' && activeKey !== '') {
                     return;
                 }
 
-                this.presentMessage({
-                    message_id: messageId,
-                    ...row,
-                }, options);
+                this.presentMessage(presented, options);
 
                 return;
             }
@@ -592,11 +621,12 @@ export function arkCommsInterrupt() {
         showMessage(interrupt, messageId = 0) {
             const isPortal = interrupt?.kind === 'portal';
             const isWebsiteLead = interrupt?.kind === 'website_lead';
+            const smsIdentity = smsMessageIdentity(interrupt);
             const resolvedId = isPortal
                 ? String(messageId || interrupt?.portal_interrupt_key || '')
                 : isWebsiteLead
                     ? String(messageId || interrupt?.lead_interrupt_key || '')
-                    : Number(messageId || (interrupt?.conversation_message_id ?? 0));
+                    : (smsIdentity || messageId || 0);
 
             if (interrupt?.state !== 'unread') {
                 return;
@@ -610,10 +640,16 @@ export function arkCommsInterrupt() {
                 return;
             }
 
-            this.presentMessage({
-                message_id: isPortal ? resolvedId : resolvedId,
+            const presented = {
                 ...interrupt,
-            });
+                message_id: resolvedId,
+            };
+
+            if (this.wasMessageDismissed(interruptMessageKey(presented))) {
+                return;
+            }
+
+            this.presentMessage(presented);
         },
 
         presentMessage(message, options = {}) {
@@ -621,16 +657,13 @@ export function arkCommsInterrupt() {
                 return;
             }
 
-            const messageKey = message.kind === 'portal'
-                ? String(message.portal_interrupt_key ?? message.message_id ?? '')
-                : message.kind === 'website_lead'
-                    ? String(message.lead_interrupt_key ?? message.message_id ?? '')
-                    : String(Number(message.message_id ?? 0));
-            const activeKey = this.activeMessage?.kind === 'portal'
-                ? String(this.activeMessage.portal_interrupt_key ?? this.activeMessage.message_id ?? '')
-                : this.activeMessage?.kind === 'website_lead'
-                    ? String(this.activeMessage.lead_interrupt_key ?? this.activeMessage.message_id ?? '')
-                    : String(Number(this.activeMessage?.message_id ?? 0));
+            const messageKey = interruptMessageKey(message);
+            const activeKey = interruptMessageKey(this.activeMessage);
+
+            if (messageKey === '' || this.wasMessageDismissed(messageKey)) {
+                return;
+            }
+
             const isNew = activeKey !== messageKey;
             this.activeMessage = message;
 
@@ -664,7 +697,7 @@ export function arkCommsInterrupt() {
                     return `website_lead:${this.activeMessage.lead_interrupt_key ?? ''}`;
                 }
 
-                return `message:${Number(this.activeMessage.message_id ?? 0)}`;
+                return interruptMessageKey(this.activeMessage) || `message:${this.activeMessage.message_id ?? 0}`;
             }
 
             return '';
@@ -1004,15 +1037,16 @@ export function arkCommsInterrupt() {
         },
 
         async markMessageRead() {
-            const conversationId = Number(this.activeMessage?.conversation_id ?? 0);
+            const messageKey = interruptMessageKey(this.activeMessage);
 
-            if (! conversationId) {
-                this.activeMessage = null;
+            this.rememberDismissedMessage(messageKey);
 
-                return;
+            const conversationId = coreConversationId(this.activeMessage);
+
+            if (conversationId) {
+                await this.markConversationRead(conversationId);
             }
 
-            await this.markConversationRead(conversationId);
             this.activeMessage = null;
             this.notifyQueueRefresh();
         },
@@ -1048,7 +1082,10 @@ export function arkCommsInterrupt() {
                 return;
             }
 
-            const conversationId = Number(this.activeMessage?.conversation_id ?? 0);
+            const messageKey = interruptMessageKey(this.activeMessage);
+            const conversationId = coreConversationId(this.activeMessage);
+
+            this.rememberDismissedMessage(messageKey);
 
             if (conversationId) {
                 void this.markConversationRead(conversationId);
@@ -1072,12 +1109,13 @@ export function arkCommsInterrupt() {
 
         async markConversationRead(conversationId) {
             const template = markReadUrlTemplate();
+            const numericId = Number(conversationId);
 
-            if (! conversationId || template === '') {
+            if (! Number.isFinite(numericId) || numericId <= 0 || template === '') {
                 return;
             }
 
-            const url = template.replace('__CONVERSATION__', String(conversationId));
+            const url = template.replace('__CONVERSATION__', String(numericId));
 
             try {
                 await fetch(url, {

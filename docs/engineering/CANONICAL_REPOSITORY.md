@@ -1,10 +1,10 @@
 # Canonical Core repository
 
-**ARK Core** (`https://github.com/EdwardSoaresJr/ark-core.git`) is the canonical Core development repository.
+**Public ARK** (`https://github.com/EdwardSoaresJr/ark.git`) is the canonical Core development repository. Production runs public Core.
 
-ARK Platform remains a separate repository (`https://github.com/EdwardSoaresJr/ark-platform.git`).
+ARK Platform remains a separate repository (`https://github.com/EdwardSoaresJr/ark-platform.git`, local checkout `ark-cloud`).
 
-`arksmsv2` is a legacy private tree. It must receive no new Core development. LugsNPlugs production may keep running from its current Core image until an explicit public-ARK cutover.
+`arksmsv2` is a preserved private fallback. It must receive no new Core development. Keep it for rollback and possible future licensing, not everyday work.
 
 ## Identify this tree
 
@@ -12,14 +12,24 @@ ARK Platform remains a separate repository (`https://github.com/EdwardSoaresJr/a
 ./scripts/assert-canonical-core-repo.sh
 ```
 
-The check uses the Git root and `origin` remote URL. Directory names are not identity.
+The check uses the Git root and `origin` remote URL. Directory names are not identity. Any branch in this repository is valid.
 
 ## Where to work
 
 | Work | Repository |
 | --- | --- |
-| Shop Core (repair orders, estimates, inspections, scheduling, documents, Core website records) | This repo (`EdwardSoaresJr/ark-core`) |
+| Shop Core (repair orders, estimates, inspections, scheduling, documents, Core website records) | This repo (`EdwardSoaresJr/ark`) |
 | Control plane, managed services, website editor UI | `EdwardSoaresJr/ark-platform` |
-| Legacy LugsNPlugs production image only | `arksmsv2` — no new Core features |
+| Emergency restore / private fallback only | `arksmsv2` — no new Core features |
 
 Do not create a private Core fork. If the commercial cloud is later shut down, Platform can relocate into Docker beside Core.
+
+## Production images
+
+Publish only from this repository, with an explicit commit, to **`ghcr.io/edwardsoaresjr/ark-core`**:
+
+```bash
+SOURCE_COMMIT=$(git rev-parse HEAD) ./infra/build-runner/mac/publish-ghcr-ark.sh
+```
+
+The image records that commit (`org.opencontainers.image.revision` and `/app/.ark-source-commit`). Builds from `arksmsv2` are rejected. Do not publish live Core to `ghcr.io/edwardsoaresjr/ark`.

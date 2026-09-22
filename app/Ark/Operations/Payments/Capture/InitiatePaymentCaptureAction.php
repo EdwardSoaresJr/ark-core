@@ -153,34 +153,22 @@ final class InitiatePaymentCaptureAction
 
     public function cancelFromCloud(PaymentCaptureAttempt $attempt): PaymentCaptureAttempt
     {
-        $updated = $attempt;
-
-        for ($try = 0; $try < 3; $try++) {
-            $updated = $updated->fresh() ?? $updated;
-
-            if ($updated->hasLedgerEntry() || ! $updated->status->canCancel()) {
-                return $updated;
-            }
-
-            if ($try > 0) {
-                usleep(200_000);
-            }
-
-            $response = $this->client->cancelCapture($updated->idempotency_key);
-
-            if (($response['unavailable'] ?? false) === true) {
-                continue;
-            }
-
-            $payload = $response['body'];
-            if (! isset($payload['status'])) {
-                $payload['status'] = PaymentCaptureAttemptStatus::Cancelled->value;
-            }
-
-            $updated = $this->applyResult->apply($updated, $payload);
+        if ($attempt->hasLedgerEntry() || ! $attempt->status->isOpen()) {
+            return $attempt;
         }
 
-        return $updated;
+        $response = $this->client->cancelCapture($attempt->idempotency_key);
+
+        if (($response['unavailable'] ?? false) === true) {
+            return $attempt;
+        }
+
+        $payload = $response['body'];
+        if (! isset($payload['status'])) {
+            $payload['status'] = PaymentCaptureAttemptStatus::Cancelled->value;
+        }
+
+        return $this->applyResult->apply($attempt, $payload);
     }
 
     private function assertMayCapture(RepairOrder $repairOrder, int $amountCents, PaymentCaptureContextKind $kind): void

@@ -1,8 +1,6 @@
 # Milestone
 
-Canonical Core development is this public ARK repository. See [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md).
-
-Local recovery from the legacy `arksmsv2` tree is on branch `recovery/shared-core-from-arksmsv2`. Do not push or deploy until an explicit cutover.
+Canonical Core development is this public ARK repository. Confirm with `./scripts/assert-canonical-core-repo.sh`. Production runs public Core. `arksmsv2` is a preserved fallback, not a development destination. See [CANONICAL_REPOSITORY.md](CANONICAL_REPOSITORY.md).
 
 ---
 

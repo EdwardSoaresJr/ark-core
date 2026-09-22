@@ -61,9 +61,8 @@ final class MobileUserPresenter
     }
 
     /**
-     * ARKademy is consumed, not rebuilt: the app links to the existing BookStack
-     * instance. Access + URL reuse the ecosystem switcher authority so mobile and
-     * web agree on who sees ARKademy and where it lives (per-shop configuration).
+     * ARKademy is Core Learn. Access and URL reuse the ecosystem switcher so
+     * mobile and web agree on who sees guides and where they live.
      *
      * @return array{arkademy_enabled: bool, arkademy_url: string|null}
      */

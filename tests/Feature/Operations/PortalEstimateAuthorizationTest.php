@@ -14,11 +14,12 @@ use App\Ark\Operations\Documents\DocumentFooterPresenter;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateSnapshotBuilder;
 use App\Ark\Operations\Documents\PdfRenderer;
-use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
+use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
+use App\Ark\Operations\Payments\FakeSquarePaymentsClient;
 use App\Ark\Operations\Payments\PaymentCaptureSurface;
 use App\Ark\Operations\Payments\PaymentGatewayAttemptStatus;
 use App\Ark\Operations\Portal\EstimateAccessToken;
@@ -33,8 +34,6 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Mail\EstimateCustomerMail;
 use Database\Seeders\ArkAuthorizationSeeder;
-use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -368,30 +367,19 @@ test('customer portal open after advisor preview still records estimate viewed o
 });
 
 test('portal estimate deposit completes after authorization', function () {
-    enableHostedPlatformPayments();
-    Http::fake(function (Request $request) {
-        expect($request->url())->not->toContain('squareup');
-
-        if (str_contains($request->url(), '/readiness')) {
-            return Http::response(platformPaymentReadinessPayload(), 200);
-        }
-
-        if ($request->method() === 'POST' && str_contains($request->url(), '/captures')) {
-            $json = $request->data();
-
-            return Http::response(platformCaptureKeyedSucceededPayload(
-                $json['idempotency_key'],
-                $json['capture_attempt_public_id'],
-                $json['amount_cents'],
-            ), 200);
-        }
-
-        return Http::response(['ok' => true], 200);
-    });
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
 
     ShopSettings::current()->update([
+        'square_enabled' => true,
         'square_portal_pay_enabled' => true,
     ]);
+
+    $fakeSquare = new FakeSquarePaymentsClient;
+    $this->app->instance(FakeSquarePaymentsClient::class, $fakeSquare);
+    $this->app->bind(SquarePaymentsClient::class, fn () => $fakeSquare);
 
     [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -426,28 +414,13 @@ test('portal estimate deposit completes after authorization', function () {
 });
 
 test('portal estimate still collects remaining balance after a deposit is on file', function () {
-    enableHostedPlatformPayments();
-    Http::fake(function (Request $request) {
-        expect($request->url())->not->toContain('squareup');
-
-        if (str_contains($request->url(), '/readiness')) {
-            return Http::response(platformPaymentReadinessPayload(), 200);
-        }
-
-        if ($request->method() === 'POST' && str_contains($request->url(), '/captures')) {
-            $json = $request->data();
-
-            return Http::response(platformCaptureKeyedSucceededPayload(
-                $json['idempotency_key'],
-                $json['capture_attempt_public_id'],
-                $json['amount_cents'],
-            ), 200);
-        }
-
-        return Http::response(['ok' => true], 200);
-    });
+    config()->set('services.square.application_id', 'sq0idp-test-app');
+    config()->set('services.square.access_token', 'test-token');
+    config()->set('services.square.location_id', 'LOC123');
+    config()->set('services.square.webhook_signature_key', 'test-signature-key');
 
     ShopSettings::current()->update([
+        'square_enabled' => true,
         'square_portal_pay_enabled' => true,
         'default_deposit_enabled' => true,
         'default_deposit_include_parts' => true,
@@ -455,6 +428,10 @@ test('portal estimate still collects remaining balance after a deposit is on fil
         'shop_fee_enabled' => false,
         'tax_enabled' => false,
     ]);
+
+    $fakeSquare = new FakeSquarePaymentsClient;
+    $this->app->instance(FakeSquarePaymentsClient::class, $fakeSquare);
+    $this->app->bind(SquarePaymentsClient::class, fn () => $fakeSquare);
 
     [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -468,7 +445,7 @@ test('portal estimate still collects remaining balance after a deposit is on fil
         'part_cost_cents' => 5000,
     ]);
 
-    app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
+    app(\App\Ark\Operations\Financial\EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
 
     $this->post(route('portal.estimates.authorize', ['token' => portalAuthorizationPlainToken()]), [
         'confirmed_name' => 'Morgan Brown',

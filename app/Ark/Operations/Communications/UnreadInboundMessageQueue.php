@@ -14,7 +14,8 @@ class UnreadInboundMessageQueue
     ) {}
 
     /**
-     * Latest unread inbound message per conversation for the viewer.
+     * Latest unread inbound Core message per conversation for the viewer.
+     * Platform-only hosted SMS is not stored here.
      *
      * @return EloquentCollection<int, ConversationMessage>
      */

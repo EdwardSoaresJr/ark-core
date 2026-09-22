@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Cache;
  * Live interrupt projection for the topbar popup engine.
  *
  * Composes authoritative call + message stores. Not queue authority.
+ * Hosted SMS without a Core ConversationMessage is realtime-only; this
+ * resolver cannot recover those popups from unread Core messages.
  */
 class CommsInterruptResolver
 {

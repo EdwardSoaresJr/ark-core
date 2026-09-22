@@ -1,11 +1,12 @@
 <?php
 
-use App\Ark\Platform\PlatformConnection;
-use App\Ark\Platform\Http\VerifyPlatformFabricSignature;
 use App\Ark\Install\InstallationIdentity;
 use App\Ark\Operations\Communications\Events\CommsInterruptReceived;
+use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Telephony\Events\IncomingCallReceived;
+use App\Ark\Platform\Http\VerifyPlatformFabricSignature;
+use App\Ark\Platform\PlatformConnection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
@@ -24,35 +25,6 @@ beforeEach(function () {
         'ark_mail_status' => 'connected',
     ]);
 });
-
-/**
- * @return array{0: string, 1: array<string, string>}
- */
-function fabricSignedRequest(array $body, ?string $installationId = null, ?string $nonce = null, ?string $credential = null): array
-{
-    $raw = json_encode($body, JSON_THROW_ON_ERROR);
-    $timestamp = (string) time();
-    $nonce ??= Str::random(24);
-    $installationId ??= InstallationIdentity::uuid();
-    $credential ??= (string) PlatformConnection::current()->credential();
-
-    $signature = hash_hmac('sha256', implode("\n", [
-        $timestamp,
-        $nonce,
-        'POST',
-        VerifyPlatformFabricSignature::PATH,
-        hash('sha256', $raw),
-    ]), $credential);
-
-    return [$raw, [
-        'CONTENT_TYPE' => 'application/json',
-        'HTTP_ACCEPT' => 'application/json',
-        'HTTP_X_ARK_INSTALLATION_ID' => $installationId,
-        'HTTP_X_ARK_TIMESTAMP' => $timestamp,
-        'HTTP_X_ARK_NONCE' => $nonce,
-        'HTTP_X_ARK_SIGNATURE' => $signature,
-    ]];
-}
 
 test('fabric ingress rejects missing signature', function () {
     $body = [
@@ -226,6 +198,7 @@ test('fabric ingress rejects when cloud not connected', function () {
 });
 
 test('fabric sms.incoming.received persists conversation message then interrupts', function () {
+    config()->set('services.ark_platform.communications_core_mirror', true);
     Event::fake([CommsInterruptReceived::class]);
 
     $body = [
@@ -249,7 +222,7 @@ test('fabric sms.incoming.received persists conversation message then interrupts
         ->assertJsonPath('ok', true)
         ->assertJsonPath('ingested', true);
 
-    $message = \App\Ark\Operations\Conversations\ConversationMessage::query()
+    $message = ConversationMessage::query()
         ->where('metadata->provider_message_id', 'SMinbound-fabric-1')
         ->first();
 
@@ -264,6 +237,7 @@ test('fabric sms.incoming.received persists conversation message then interrupts
 });
 
 test('fabric sms inbound is idempotent on provider message id', function () {
+    config()->set('services.ark_platform.communications_core_mirror', true);
     Event::fake([CommsInterruptReceived::class]);
 
     $body = [
@@ -285,7 +259,7 @@ test('fabric sms inbound is idempotent on provider message id', function () {
         ->assertOk()
         ->assertJsonPath('ingested', false);
 
-    expect(\App\Ark\Operations\Conversations\ConversationMessage::query()
+    expect(ConversationMessage::query()
         ->where('metadata->provider_message_id', 'SMinbound-dup-1')
         ->count())->toBe(1);
 });

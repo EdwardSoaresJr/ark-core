@@ -51,12 +51,6 @@ final class ApplyPaymentCaptureResultAction
                 return $locked->fresh();
             }
 
-            if ($this->shouldKeepClosedStatus($locked->status, $status)) {
-                $locked->save();
-
-                return $locked->fresh();
-            }
-
             if ($status === PaymentCaptureAttemptStatus::Succeeded) {
                 $entryId = $this->recordMoney($locked);
                 $locked->ledger_entry_id = $entryId;
@@ -111,20 +105,6 @@ final class ApplyPaymentCaptureResultAction
         );
 
         return $entries[0]->id;
-    }
-
-    private function shouldKeepClosedStatus(
-        PaymentCaptureAttemptStatus $current,
-        PaymentCaptureAttemptStatus $incoming,
-    ): bool {
-        if (! in_array($current, [
-            PaymentCaptureAttemptStatus::Cancelled,
-            PaymentCaptureAttemptStatus::Failed,
-        ], true)) {
-            return false;
-        }
-
-        return $incoming !== PaymentCaptureAttemptStatus::Succeeded;
     }
 
     public function balanceAfter(RepairOrder $repairOrder): int

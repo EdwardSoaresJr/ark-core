@@ -4,8 +4,7 @@
 # Authoritative tags are immutable commit SHAs (+ digest). Convenience tags are
 # optional and non-authoritative.
 #
-#   ./infra/build-runner/mac/publish-ghcr-ark.sh
-#   IMAGE=ghcr.io/edwardsoaresjr/ark-core ./infra/build-runner/mac/publish-ghcr-ark.sh
+#   SOURCE_COMMIT=$(git rev-parse HEAD) ./infra/build-runner/mac/publish-ghcr-ark.sh
 #
 # Does not deploy Coolify. Does not touch LNP production or shadow hosts.
 set -euo pipefail
@@ -19,6 +18,7 @@ IMAGE="${IMAGE:-ghcr.io/edwardsoaresjr/ark-core}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 
 cd "$REPO_ROOT"
+"$REPO_ROOT/scripts/assert-canonical-core-publish.sh"
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
     echo "REFUSING: working tree has staged/unstaged changes. Commit or stash first." >&2
@@ -32,12 +32,13 @@ if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
     exit 1
 fi
 
-SHA="$(git rev-parse HEAD)"
-SHORT_SHA="$(git rev-parse --short=12 HEAD)"
+SHA="$(git rev-parse --verify "${SOURCE_COMMIT}^{commit}")"
+SHORT_SHA="$(git rev-parse --short=12 "$SHA")"
 
 echo "Publishing public Core ${SHA}"
 echo "  image: ${IMAGE}"
 echo "  platform: ${PLATFORM}"
+echo "  source-commit: ${SHA}"
 
 docker info >/dev/null 2>&1 || { echo "Start Docker Desktop first." >&2; exit 1; }
 "$SCRIPT_DIR/ensure-buildx.sh"

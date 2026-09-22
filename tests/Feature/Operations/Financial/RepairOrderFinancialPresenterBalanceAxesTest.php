@@ -54,10 +54,10 @@ test('presenter pre-invoice with deposit exposes owe today without claiming sett
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Balance due')
+        ->assertSee('Owe today')
         ->assertSee('$100.00')
         ->assertDontSee('Settlement paid')
-        ->assertSee('Not issued');
+        ->assertSee('Invoice not issued');
 });
 
 test('presenter issued unpaid invoice exposes settlement balance and isPaid false', function () {
@@ -83,7 +83,7 @@ test('presenter issued unpaid invoice exposes settlement balance and isPaid fals
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Balance due')
+        ->assertSee('Settlement balance')
         ->assertSee('$150.00')
         ->assertSee('Record Payment');
 });
@@ -125,7 +125,7 @@ test('presenter approved-work drift keeps named axes and settlement gates', func
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Balance due')
+        ->assertSee('Settlement balance')
         ->assertSee('Approved work changed');
 });
 
@@ -151,9 +151,9 @@ test('presenter fully paid issued invoice exposes zero settlement and isPaid tru
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Balance due')
+        ->assertSee('Settlement balance')
         ->assertSee('$0.00')
-        ->assertSee('Paid');
+        ->assertSee('Paid / ready to close');
 });
 
 test('presenter stale payment mirror does not change settlement or isPaid', function () {

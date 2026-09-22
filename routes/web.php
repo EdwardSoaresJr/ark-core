@@ -219,13 +219,11 @@ use App\Ark\Operations\RepairOrders\RepairOrderLifecycleController;
 use App\Ark\Operations\RepairOrders\RepairOrderLineDestroyController;
 use App\Ark\Operations\RepairOrders\RepairOrderLinePricingPreviewController;
 use App\Ark\Operations\RepairOrders\RepairOrderLineProcurementController;
-use App\Ark\Operations\RepairOrders\DismissEstimateCompanionSuggestionController;
 use App\Ark\Operations\RepairOrders\RepairOrderLineStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderLineUpdateController;
 use App\Ark\Operations\RepairOrders\RepairOrderMileageUpdateController;
 use App\Ark\Operations\RepairOrders\RepairOrderOperationalSheetController;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentController;
-use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureCancelController;
 use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureController;
 use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureStatusController;
 use App\Ark\Operations\RepairOrders\RepairOrderPostController;
@@ -1397,10 +1395,6 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.repair-orders.payment-capture.refresh');
 
-        Route::post('/app/repair-orders/{repairOrder}/payment-capture/{attempt}/cancel', RepairOrderPaymentCaptureCancelController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
-            ->name('operations.repair-orders.payment-capture.cancel');
-
         Route::post('/app/repair-orders/{repairOrder}/refund', RepairOrderLedgerRefundController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersCloseout->value)
             ->name('operations.repair-orders.refund.store');
@@ -1601,10 +1595,6 @@ SurfaceRouting::appRoutes(function (): void {
         Route::patch('/app/repair-orders/{repairOrder}/work-groups/{workGroup}/communication', RepairOrderWorkGroupCommunicationController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.work-groups.communication.update');
-
-        Route::post('/app/repair-orders/{repairOrder}/companion-suggestion/dismiss', DismissEstimateCompanionSuggestionController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.companion-suggestion.dismiss');
 
         Route::post('/app/repair-orders/{repairOrder}/lines', RepairOrderLineStoreController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

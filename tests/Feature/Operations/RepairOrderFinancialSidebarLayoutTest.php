@@ -24,7 +24,9 @@ test('desktop financial sidebar stays 360px until 1440px then locks 380px on the
         ->toContain('max-width: min(100%, var(--ops-estimate-rail-width))')
         ->toContain('.ops-review-rail--pinned')
         ->toContain('position: sticky')
-        ->toContain('var(--ops-ro-footer-offset');
+        ->toContain('var(--ops-ro-footer-offset')
+        ->not->toContain('--ops-ro-rail-chrome-inset')
+        ->toContain('overflow-y: auto');
 
     expect($css)->toMatch(
         '/:root \{\s*--ops-workspace-max: 1680px;\s*--ops-left-rail-width: 13rem;\s*--ops-estimate-rail-width: 360px;/'

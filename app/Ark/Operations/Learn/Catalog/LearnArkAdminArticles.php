@@ -58,7 +58,7 @@ final class LearnArkAdminArticles
             [
                 'slug' => 'ark-mobile-push-setup',
                 'title' => 'ARK Mobile push setup',
-                'summary' => 'Firebase FCM env, service account paths, and BookStack sync.',
+                'summary' => 'Firebase FCM env, service account paths, and shop dispatch.',
                 'view' => 'operations.learn.admin.ark-mobile-push-setup',
             ],
             [

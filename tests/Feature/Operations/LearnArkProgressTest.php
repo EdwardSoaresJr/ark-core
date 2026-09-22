@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\Learn\LearnArkCurriculum;
+use App\Ark\Operations\Learn\LearnArkProgressResolver;
 use App\Ark\Operations\Learn\LearnCheckpoint;
 use App\Ark\Operations\Learn\LearnCompletion;
 use App\Ark\Operations\Learn\LearnSession;
@@ -12,7 +13,6 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function () {
-    config(['bookstack.cutover' => false]);
     // Legacy setting may still be true in DB; global gate must not enforce.
     ShopSettings::current()->update(['learn_training_gate_enabled' => true]);
 });
@@ -273,7 +273,7 @@ test('stale article completions require staff to re-read updated guides', functi
 
     $this->actingAs($advisor);
 
-    expect(app(\App\Ark\Operations\Learn\LearnArkProgressResolver::class)->isCurrent($advisor))->toBeFalse();
+    expect(app(LearnArkProgressResolver::class)->isCurrent($advisor))->toBeFalse();
 
     $this->get(route('operations.learn.show', ['role' => 'advisor', 'article' => 'scopes-and-intent']))
         ->assertOk()
@@ -299,7 +299,7 @@ test('unchanged required guides stay current when another article version bumps'
         ]);
     }
 
-    $resolver = app(\App\Ark\Operations\Learn\LearnArkProgressResolver::class);
+    $resolver = app(LearnArkProgressResolver::class);
 
     expect($resolver->articleState($advisor, 'advisor:getting-started')['completed'])->toBeTrue()
         ->and($resolver->articleState($advisor, 'advisor:scopes-and-intent')['content_stale'])->toBeTrue()
@@ -327,7 +327,7 @@ test('new required guides only block staff who have not completed them', functio
         ]);
     }
 
-    $resolver = app(\App\Ark\Operations\Learn\LearnArkProgressResolver::class);
+    $resolver = app(LearnArkProgressResolver::class);
 
     expect($resolver->isCurrent($advisor))->toBeFalse()
         ->and($resolver->nextRequiredArticle($advisor)['article_key'])->toBe('advisor:comms-queue')

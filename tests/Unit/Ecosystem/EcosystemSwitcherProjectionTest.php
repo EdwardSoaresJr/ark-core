@@ -4,8 +4,6 @@ use App\Ark\Runtime\Ecosystem\EcosystemProduct;
 use App\Ark\Runtime\Ecosystem\EcosystemSwitcherProjection;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
-use Tests\TestCase;
-
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -13,9 +11,6 @@ beforeEach(function () {
         'ark-ecosystem.operations_url' => 'https://app.test',
         'ark-ecosystem.arkademy_url' => 'https://learn.test',
         'ark-ecosystem.platform_url' => 'https://platform.test',
-        'ark-ecosystem.shelf_slug' => 'shop-in-a-box',
-        'bookstack.cutover' => true,
-        'bookstack.base_url' => 'https://learn.test',
     ]);
 });
 

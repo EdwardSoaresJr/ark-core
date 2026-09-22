@@ -1,10 +1,16 @@
-# ARK Core — Open-Source Automotive Repair Shop Management Software
+# ARK
+
+**Shop management software for independent auto repair shops.**
 
 **Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
 
-ARK Core is self-hosted shop management software for independent auto repair shops. It handles repair orders, customers, vehicles, estimates, invoices, inspections, scheduling, and the day-to-day work between advisors and technicians.
+ARK is shop management software built around the way an automotive repair shop actually operates. It handles repair orders, customers, vehicles, estimates, inspections, scheduling, communications, and the day-to-day workflows between advisors and technicians.
 
-This repository is the **canonical public Core**. Confirm identity with `./scripts/assert-canonical-core-repo.sh` (Git root + `origin`, not the folder name).
+Under the hood, ARK is designed around clear sources of truth, predictable system behavior, and server-side business rules rather than duplicating important logic throughout the application.
+
+This repository contains the **public open-source distribution of ARK**. It is the **canonical Core** repository. Confirm identity with `./scripts/assert-canonical-core-repo.sh` (Git root + `origin`, not the folder name).
+
+ARK Platform is a separate repository. The private `arksmsv2` tree is legacy and must not receive new Core development.
 
 It is a clean public snapshot and does not include private shop data, production credentials or infrastructure, licensed automotive datasets, or private Dragon knowledge sources.
 
@@ -25,7 +31,7 @@ Some parts of the environment used to operate and develop ARK cannot or should n
 
 * Production deployment runbooks or infrastructure configuration
 * Credentials, backups, or live secrets
-* Labor Guides or other licensed automotive datasets
+* Real-Time Labor Guide (RTE) or other licensed automotive datasets
 * Private Dragon knowledge imports or ARKademy data
 * Republished third-party training material
 
@@ -78,8 +84,8 @@ composer test:serial     # single-process diagnostic
 MySQL · Redis · app (nginx, PHP-FPM, Horizon, Reverb, scheduler) · persistent storage
 
 ```bash
-git clone https://github.com/EdwardSoaresJr/ark-core.git
-cd ark-core
+git clone https://github.com/EdwardSoaresJr/ark.git
+cd ark
 docker compose up -d --build
 ```
 
@@ -173,6 +179,6 @@ The licensing information in this repository describes the project's licensing c
 
 ## Status
 
-ARK Core is publicly available at:
+ARK is publicly available at:
 
-https://github.com/EdwardSoaresJr/ark-core
+https://github.com/EdwardSoaresJr/ark

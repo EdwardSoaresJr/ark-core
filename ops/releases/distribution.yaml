@@ -1,0 +1,213 @@
+# ARK Core release distribution
+#
+# Cursor and operators read this file before any Core release.
+# No secrets, tokens, or SSH keys belong here.
+#
+# Fleet deployment automation is disabled until each remote target has
+# verified infrastructure, authenticated observation, and a rollback path.
+
+schema_version: 1
+status: observation_required
+fleet_deploy_enabled: false
+
+products:
+  core:
+    name: ARK Core
+    image_repository: ghcr.io/edwardsoaresjr/ark-core
+    # Live Demo and LNP were verified on this digest. Publish to ark-core only.
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    publish_script: infra/build-runner/mac/publish-ghcr-ark.sh
+    publish_script_default_image: ghcr.io/edwardsoaresjr/ark-core
+    pin: commit_and_digest
+  platform:
+    name: ARK Platform
+    repository: EdwardSoaresJr/ark-platform
+    not_implied_by_core_release: true
+  foundry:
+    name: ARK Foundry
+    distribution: website_publication_only
+  companion:
+    name: ARK Companion
+    distribution: mobile_release_process
+
+# A git push is not a successful release. Each target has its own result.
+
+targets:
+  local-herd:
+    product: core
+    role: verification
+    adapter: herd_checkout
+    url: https://app.lugsnplugs.test
+    checkout: this Core worktree
+    deploy_enabled: false
+    notes: Confirm the correct checkout, database, assets, and browser behavior. Do not remote-deploy.
+
+  demo:
+    product: core
+    role: demonstration
+    adapter: docker_compose
+    url: https://demo.arksms.com
+    host: 104.238.144.183
+    hostname: demo
+    observed_at: "2026-09-22T03:46:00Z"
+    compose:
+      root: /opt/ark
+      project: ark
+      files:
+        - docker-compose.yml
+        - docker-compose.vultr.yml
+        - docker-compose.image.yml
+        - docker-compose.demo.yml
+      image_pin_file: /opt/ark/docker-compose.image.yml
+      service: app
+      container: ark-app-1
+    coolify_application: none
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    installation_uuid: 5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6
+    installation_uuid_status: assigned_not_written
+    platform_paired: false
+    source_commit_in_image: missing
+    heartbeat_interval: every_five_minutes
+    backup:
+      kind: compose_host
+      platform_managed: false
+      host_script: /usr/local/sbin/ark-box-backup
+      repo_scripts:
+        - infra/compose/backup-box.sh
+        - infra/compose/restore-box.sh
+        - infra/compose/pull-box-backup.sh
+      root: /var/backups/ark-box
+      latest_stamp: /var/backups/ark-box/latest
+      sql_restore: tested
+      storage_archive: present
+      storage_restore: coded_uncertified
+    deploy_enabled: false
+    preserve:
+      - database
+      - secrets
+      - storage
+      - env
+    notes: Dedicated Vultr VPS. Recreate app only after an approved pin. Never copy production data here.
+
+  lnp-production:
+    product: core
+    role: production
+    adapter: docker_compose
+    url: https://lugsnplugs.arksms.com
+    deploy_enabled: false
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    observed_at: "2026-09-22T03:46:00Z"
+    live:
+      host: 149.28.249.13
+      hostname: ark-lugsnplugs-production
+      reachable: true
+      container: b38otdn2epypspy0jadbgfl0-core
+      compose_file: /data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml
+      compose_project: waqkg4rlh7rq9pdfwpnfij8u
+      service: core
+      observed_actuator: compose_recreate_core
+      installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
+      source_commit_in_image: missing
+    platform_adopt:
+      host: 144.202.74.190
+      reachable: false
+      shop_public_id: b2f6f86f-0655-45b2-b665-e1eb9b2f1c9f
+      installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
+      box_slug: lugsnplugs
+      coolify_application_uuid: b38otdn2epypspy0jadbgfl0
+      status: stale_unreachable
+    backup:
+      kind: host_manual
+      platform_managed: false
+      procedure: docs/engineering/LNP_BACKUP_AND_ROLLBACK.md
+      sql_stamps: /data/ark-shared/backups
+      compose_copies: /root/lnp-core-compose-backup-*.yml
+      image_tar: /root/lnp-core-rollback-e56b967e-2efa7a8281ab-20260920T134206Z.tar
+      compose_backup_script: absent
+      storage_volumes: not_in_sql_stamps
+      rollback_enabled: false
+    approval: explicit_production
+    preserve:
+      - database
+      - secrets
+      - storage
+      - env
+      - tenant_isolation
+    notes: >
+      Live shop is 149. Adopted Platform host 144 timed out on SSH and must not
+      be a deploy target. Do not Coolify Deploy. Fleet automation stays off.
+
+  hosted-fleet:
+    product: core
+    role: managed_installations
+    adapter: verified_per_box
+    members: []
+    deploy_enabled: false
+    notes: Add boxes only after observed host, adapter, image digest, and rollback path.
+
+retired:
+  demo-autorepairkeeper-com:
+    hostname: demo.autorepairkeeper.com
+    status: retired
+    not_a_deployment_target: true
+    dns: godaddy_a_record_deleted
+    successor: demo
+    leftover_redirect_config: infra/compose/demo-autorepairkeeper-redirect.traefik.yaml
+    notes: >
+      GoDaddy DNS for this name was deleted. Do not recreate it. Do not treat
+      this hostname, or any Coolify application invented for it, as Demo.
+
+profiles:
+  local-verify:
+    sequence: [local-herd]
+    remote_deploy: false
+  core-demo:
+    sequence: [local-herd, demo]
+    remote_deploy: false
+  core-full:
+    sequence: [local-herd, demo, lnp-production]
+    remote_deploy: false
+    production_approval: required
+  core-one:
+    sequence: selected
+    remote_deploy: false
+  core-pilot:
+    sequence: [local-herd, demo, selected_pilot]
+    remote_deploy: false
+  core-fleet:
+    sequence: [local-herd, demo, selected_pilot, hosted-fleet]
+    remote_deploy: false
+  platform-release:
+    product: platform
+    not_implied_by: core-full
+
+promotion:
+  order: [local-herd, demo, lnp-production, hosted-fleet]
+  halt_on_failure: true
+  unreachable_is_not_success: true
+  git_push_is_not_deploy: true
+
+verification:
+  health_path: /up
+  require_observed_digest: true
+  heartbeat_is_not_deploy_proof: true
+  heartbeat_interval: "*/5 * * * *"
+  deploy_success_requires:
+    - observed_image_digest
+    - health_path_ok
+  never_mark_current_from_desired_alone: true
+  never_mark_current_from_heartbeat_alone: true
+
+rollback:
+  application_image: retain_previous_digest
+  database: never_automatic
+  blocked_when: schema_incompatible_or_backup_unverified
+  lnp_enabled: false
+  demo_enabled: false
+
+unknown:
+  - Demo installation UUID is assigned in this file but not written on the box yet
+  - Whether mail-cert installation c9f3315a-8501-48dd-b228-b19aba78d0de is live Demo
+  - Demo Vultr instance and plan identifiers
+  - LNP application file-volume restore (SQL stamps exist; storage is not in those stamps)
+  - Managed backup product (still not available)

@@ -12,7 +12,6 @@ use Database\Seeders\ArkAuthorizationSeeder;
  * Learning remains available; progress data must survive; no admin escalation.
  */
 beforeEach(function () {
-    config(['bookstack.cutover' => false]);
     // Even if the legacy setting is on, the global gate must not enforce.
     ShopSettings::current()->update(['learn_training_gate_enabled' => true]);
 });

@@ -5,6 +5,7 @@ namespace App\Ark\Platform\Http;
 use App\Ark\Install\InstallationIdentity;
 use App\Ark\Mobile\Push\NotifyMobileLifecyclePushAction;
 use App\Ark\Operations\Communications\CommsInterruptBroadcast;
+use App\Ark\Operations\Communications\HostedSmsInterrupt;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationMessage;
@@ -312,51 +313,58 @@ final class FabricIngressController
 
         $result = $this->smsIngress->ingest($ingressPayload);
         $message = $result['message'];
+        $conversation = $result['conversation'] ?? $message?->conversation;
 
         if ($optOut && $result['context']?->customer) {
             $this->markCustomerOptedOut($result['context']->customer);
         }
 
-        if ($message === null) {
-            // Stage 10: no Core mirror — still raise interrupt from Platform payload.
-            $snippet = trim($body);
-            if (mb_strlen($snippet) > 120) {
-                $snippet = mb_substr($snippet, 0, 117).'…';
-            }
-            $this->interruptBroadcast->show('sms', [
-                'kind' => 'sms',
-                'conversation_message_id' => null,
-                'platform_message_public_id' => $payload['message_public_id'] ?? null,
-                'snippet' => $snippet !== '' ? $snippet : '(text message)',
-                'display_phone' => PhoneNumber::display($fromPhone) ?? $fromPhone,
-                'customer_id' => $result['context']?->customer?->id,
-                'customer_name' => $result['context']?->customer?->name,
+        if ($message !== null) {
+            return response()->json([
+                'ok' => true,
+                'ingested' => $result['created'],
+                'conversation_message_id' => $message->id,
+            ]);
+        }
+
+        $interrupt = HostedSmsInterrupt::fromPlatformInbound(
+            payload: $payload,
+            fromPhone: $fromPhone,
+            body: $body,
+            hasMedia: $ingressPayload->media !== [],
+            conversationId: $conversation?->id,
+            customerId: $result['context']?->customer?->id,
+            customerName: $result['context']?->customer?->name,
+        );
+
+        if ($interrupt === null) {
+            $reason = HostedSmsInterrupt::publicId($payload['message_public_id'] ?? null) === null
+                ? 'missing_message_identity'
+                : 'missing_conversation_identity';
+
+            Log::warning('hosted_sms.interrupt_rejected', [
+                'reason' => $reason,
+                'has_platform_message_id' => HostedSmsInterrupt::publicId($payload['message_public_id'] ?? null) !== null,
+                'has_conversation_id' => $conversation !== null,
+                'has_platform_conversation_id' => HostedSmsInterrupt::publicId($payload['conversation_public_id'] ?? null) !== null,
             ]);
 
-            return response()->json(['ok' => true, 'ingested' => false, 'mirrored' => false]);
+            return response()->json([
+                'ok' => true,
+                'ingested' => false,
+                'mirrored' => false,
+                'interrupt' => false,
+                'reason' => $reason,
+            ]);
         }
 
-        $snippet = trim($body);
-        if (mb_strlen($snippet) > 120) {
-            $snippet = mb_substr($snippet, 0, 117).'…';
-        }
-
-        $interrupt = [
-            'kind' => 'sms',
-            'conversation_message_id' => $message->id,
-            'conversation_id' => $message->conversation_id,
-            'snippet' => $snippet !== '' ? $snippet : '(text message)',
-            'display_phone' => PhoneNumber::display($fromPhone) ?? $fromPhone,
-            'customer_id' => $result['context']?->customer?->id,
-            'customer_name' => $result['context']?->customer?->name,
-        ];
-
-        $this->interruptBroadcast->show('sms', $interrupt);
+        $this->interruptBroadcast->show((string) $interrupt['kind'], $interrupt);
 
         return response()->json([
             'ok' => true,
-            'ingested' => $result['created'],
-            'conversation_message_id' => $message->id,
+            'ingested' => false,
+            'mirrored' => false,
+            'interrupt' => true,
         ]);
     }
 

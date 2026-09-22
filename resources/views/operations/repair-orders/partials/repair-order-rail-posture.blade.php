@@ -1,18 +1,24 @@
-{{-- Order status: workflow, authorization, and invoice as independent facts --}}
+{{-- Persistent Context: Financial · Approval · Communication · Workflow — existing posture only --}}
 @php
     $postureLayout = ($postureLayout ?? 'rail') === 'dock' ? 'dock' : 'rail';
     $isDock = $postureLayout === 'dock';
+    $financialHint = ($financial['showFinancialRail'] ?? false)
+        ? (($financial['hasIssuedInvoice'] ?? false)
+            ? (
+                ($financial['isPaid'] ?? false)
+                    ? 'Settlement paid'
+                    : 'Settlement balance '.($financial['settlementBalanceDue'] ?? $financial['balanceDue'])
+            )
+            : (
+                (($financial['oweTodayCents'] ?? 0) > 0)
+                    ? 'Owe today '.($financial['oweToday'] ?? $financial['projectedBalance'])
+                    : $financial['workflowHint']
+            ))
+        : ($isDock ? 'Totals in the right rail.' : 'Totals stay in the panel below while you work.');
+    $financialValue = ($financial['showFinancialRail'] ?? false)
+        ? $financial['workflowLabel']
+        : 'Estimate';
     $approvalHint = $approvedConcerns->count().' approved · '.$deferredConcerns->count().' deferred · '.$recommendedConcerns->count().' recommended';
-    $invoiceLabel = ($financial['showFinancialRail'] ?? false)
-        ? ($financial['invoiceStatusLabel'] ?? 'Not issued')
-        : 'Not issued';
-    $invoiceHint = match (true) {
-        ($financial['invoiceIssuedOutsideCloseout'] ?? false) => 'Invoice is issued while this order is still '.$repairOrder->statusDisplayLabel().'.',
-        ($financial['canGenerateInvoice'] ?? false) => 'Ready for final invoice',
-        ($financial['hasIssuedInvoice'] ?? false) && ($financial['isPaid'] ?? false) => 'Settlement paid',
-        ($financial['hasIssuedInvoice'] ?? false) => 'Balance due '.($financial['settlementBalanceDue'] ?? $financial['balanceDue']),
-        default => 'Final invoice issues at pickup',
-    };
 @endphp
 
 <div
@@ -24,9 +30,6 @@
     data-persistent-context="posture"
     data-posture-layout="{{ $postureLayout }}"
 >
-    <div class="ops-review-panel-header">
-        <p class="ops-eyebrow">Order status</p>
-    </div>
     <div class="ops-review-rail-posture__band">
         <div class="ops-review-rail-posture__row">
             <p class="ops-review-rail-posture__label">Workflow</p>
@@ -34,7 +37,7 @@
             <p class="ops-review-rail-posture__hint">{{ $nextAction }}</p>
         </div>
         <div class="ops-review-rail-posture__row">
-            <p class="ops-review-rail-posture__label">Authorization</p>
+            <p class="ops-review-rail-posture__label">Approval</p>
             <p class="ops-review-rail-posture__value">{{ $approvalPosture }}</p>
             <p class="ops-review-rail-posture__hint">{{ $approvalHint }}</p>
             @unless ($isDock)
@@ -48,9 +51,21 @@
             @endunless
         </div>
         <div class="ops-review-rail-posture__row">
-            <p class="ops-review-rail-posture__label">Invoice</p>
-            <p class="ops-review-rail-posture__value">{{ $invoiceLabel }}</p>
-            <p class="ops-review-rail-posture__hint">{{ $invoiceHint }}</p>
+            <p class="ops-review-rail-posture__label">Communication</p>
+            <p class="ops-review-rail-posture__value">{{ $repairOrder->communicationNextAction() }}</p>
+            <p class="ops-review-rail-posture__hint">{{ $repairOrder->communicationPostureLabel() }}</p>
         </div>
+        <div class="ops-review-rail-posture__row">
+            <p class="ops-review-rail-posture__label">Financial</p>
+            <p class="ops-review-rail-posture__value">{{ $financialValue }}</p>
+            <p class="ops-review-rail-posture__hint">{{ $financialHint }}</p>
+        </div>
+        @if ($partsBlockingCount > 0)
+            <div class="ops-review-rail-posture__row ops-review-rail-posture__row--parts">
+                <p class="ops-review-rail-posture__label">Parts</p>
+                <p class="ops-review-rail-posture__value">{{ $partsBlockingCount }} line{{ $partsBlockingCount === 1 ? '' : 's' }} blocking</p>
+                <p class="ops-review-rail-posture__hint">{{ $repairOrder->procurementReadinessSummary() }}</p>
+            </div>
+        @endif
     </div>
 </div>

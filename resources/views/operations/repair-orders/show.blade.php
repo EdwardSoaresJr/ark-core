@@ -1009,21 +1009,6 @@
             App\Ark\Runtime\Preferences\EstimateToolbarPreference::KIND_LABOR,
             array_column($laborGuides, 'key'),
         );
-        $openCaptureAttempt = collect($financial['paymentCaptureAttempts'] ?? [])->first(
-            fn (array $attempt): bool => (bool) ($attempt['isOpen'] ?? false) || (bool) ($attempt['canCancel'] ?? false),
-        );
-        $railPaymentAction = match (true) {
-            $errors->has('capture') => 'capture',
-            $errors->has('amount') || $errors->has('payment_method') || $errors->has('deposit_confirmed') || $errors->has('paid_at') => 'external',
-            is_array($openCaptureAttempt) => 'capture',
-            default => null,
-        };
-        $railMoreOpen = $errors->has('disposition') || $errors->has('reason') || $errors->has('refund');
-        $railMorePanel = match (true) {
-            $errors->has('disposition') || $errors->has('reason') => 'waive',
-            $errors->has('refund') => 'refund',
-            default => null,
-        };
     @endphp
     <section
         data-worksheet-root
@@ -1079,12 +1064,6 @@
             laborGuideItems: @js($laborGuides),
             estimateToolbarPersistUrl: @js($estimateToolbarPersistUrl),
             estimateContext: @js(($partsBlockingCount ?? 0) > 0 ? 'parts' : null),
-            paymentAction: @js($railPaymentAction),
-            moreOpen: @js($railMoreOpen),
-            morePanel: @js($railMorePanel),
-            togglePayment(action) {
-                this.paymentAction = this.paymentAction === action ? null : action;
-            },
             clearLaborGuideNotice() {
                 this.laborGuideNotice = '';
             },
@@ -1905,18 +1884,7 @@
                 </x-operations.repair-order-workspace-tabs>
             </div>
 
-            <aside
-                id="estimate-builder-rail"
-                class="ops-review-rail ops-review-rail--pinned"
-                x-init="
-                    if (window.location.hash === '#financial-rail' || window.location.hash === '#waive-balance') {
-                        moreOpen = true;
-                    }
-                    if (window.location.hash === '#waive-balance') {
-                        morePanel = 'waive';
-                    }
-                "
-            >
+            <aside id="estimate-builder-rail" class="ops-review-rail ops-review-rail--pinned">
                 <x-operations.estimate-totals-panel
                     id="estimate-total-panel"
                     class="ops-review-rail-totals-pinned"
@@ -1940,10 +1908,6 @@
                 </x-operations.estimate-totals-panel>
 
                 <div class="ops-review-rail__scroll">
-                    @include('operations.repair-orders.partials.repair-order-rail-next-actions', [
-                        'repairOrder' => $repairOrder,
-                    ])
-
                     @include('operations.repair-orders.partials.repair-order-rail-posture', [
                         'postureLayout' => 'rail',
                         'repairOrder' => $repairOrder,
@@ -1954,23 +1918,19 @@
                         'recommendedConcerns' => $recommendedConcerns ?? collect(),
                         'lastApprovalEvent' => $lastApprovalEvent ?? null,
                         'financial' => $financial ?? [],
+                        'partsBlockingCount' => $partsBlockingCount ?? 0,
                     ])
 
-                    @if (($operationalJourney ?? null)?->hasStory)
-                        <details class="ops-review-panel">
-                            <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-slate-600 hover:bg-slate-50">
-                                Operational journey
-                            </summary>
-                            @include('operations.repair-orders.partials.operational-journey-card', [
-                                'operationalJourney' => $operationalJourney ?? null,
-                                'journeyComparison' => $journeyComparison ?? null,
-                            ])
-                        </details>
-                    @endif
+                    @include('operations.repair-orders.partials.operational-journey-card', [
+                        'operationalJourney' => $operationalJourney ?? null,
+                        'journeyComparison' => $journeyComparison ?? null,
+                    ])
 
                     @if ($financial['showFinancialRail'])
                         @include('operations.repair-orders.partials.financial-rail')
                     @endif
+
+                    @include('operations.repair-orders.partials.repair-order-lifecycle-panel')
 
                     @include('operations.work.partials.advisor-work-context-panel', [
                         'followUps' => $openFollowUps ?? [],
@@ -1997,5 +1957,31 @@
             'recommendedConcerns' => $recommendedConcerns ?? null,
             'lastApprovalEvent' => $lastApprovalEvent ?? null,
         ])
+
+        <script>
+            (() => {
+                const fit = () => {
+                    const rail = document.getElementById('estimate-builder-rail');
+                    const bar = document.querySelector('.ops-ro-orientation-header--dock');
+                    if (!rail || !bar || window.innerWidth < 1024) {
+                        if (rail) {
+                            rail.style.maxHeight = '';
+                        }
+                        return;
+                    }
+
+                    const available = bar.getBoundingClientRect().top - rail.getBoundingClientRect().top;
+                    rail.style.maxHeight = Math.max(0, Math.floor(available)) + 'px';
+                };
+
+                fit();
+                document.addEventListener('scroll', fit, { passive: true, capture: true });
+                window.addEventListener('resize', fit);
+                const workspace = document.querySelector('.ops-estimate-workspace');
+                if (workspace) {
+                    new MutationObserver(fit).observe(workspace, { childList: true, subtree: true });
+                }
+            })();
+        </script>
     </section>
 </x-operations.app>
