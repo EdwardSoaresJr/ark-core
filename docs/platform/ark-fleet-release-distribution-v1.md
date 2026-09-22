@@ -38,18 +38,19 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 - URL: `https://demo.arksms.com`
 - Host: `104.238.144.183` (`hostname=demo`)
 - Mechanism: **Docker Compose** at `/opt/ark` — container `ark-app-1` running
-- Image: `ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
+- Image: `ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888` (`a42b5c64`)
 - Coolify application: **none**
-- Installation UUID **assigned, not written:** `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`
-- Pairing: not started. Register with Platform `hosting:register-compose-box` (no Coolify id). Write the UUID with Core `ark:installation-identity write`.
-- Backup: `/var/backups/ark-box` via `/usr/local/sbin/ark-box-backup`. SQL restore tested. `storage.tar.gz` is present and `restore-box.sh` can restore it; file-volume restore has not been certified. **Not** Platform managed backup.
+- Installation UUID **written:** `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`
+- Pairing: connected. Compose box slug `demo` registered without a Coolify id.
+- Backup: `/var/backups/ark-box`. Pre-recreate stamp `20260922T045145Z` is the previous `sha256:40562971…` image. SQL restore tested. File-volume restore has not been certified. **Not** Platform managed backup.
+- Do not republish or recreate this app because older notes said pending.
 
 ### LNP Production
 
 - URL: `https://lugsnplugs.arksms.com`
 - Live host: `149.28.249.13` (`ark-lugsnplugs-production`) — SSH reachable
-- Container: `b38otdn2epypspy0jadbgfl0-core` running the same digest
-- Compose: `/data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml` pins that digest on `core`
+- Container: `b38otdn2epypspy0jadbgfl0-core` on `sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
+- Compose: `/data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml` pins that LNP digest on `core`
 - Installation UUID: `7d115599-cae5-4a10-a4cf-4ebe11af47ed` (matches Platform adopt — ownership proven)
 - Adopted host `144.202.74.190`: SSH timed out — **unreachable**
 - Backup/rollback: [LNP_BACKUP_AND_ROLLBACK.md](../engineering/LNP_BACKUP_AND_ROLLBACK.md)
@@ -62,13 +63,15 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 
 ### Image
 
-Live Demo and LNP run:
+Demo:
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
 ```
 
-Publish to `ghcr.io/edwardsoaresjr/ark-core`. Those live images do not contain `/app/.ark-source-commit` or OCI revision labels. Heartbeat will report real commits only after a new image built with `GIT_SHA` is deployed.
+`/app/.ark-source-commit` is `a42b5c6408a0f1590e8e68eefe422e78a575ae0e`. LNP remains on `sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7` until separately approved.
+
+Publish to `ghcr.io/edwardsoaresjr/ark-core`.
 
 ## Desired vs actual
 
@@ -106,7 +109,7 @@ LNP procedure is documented. Demo SQL restore is tested; Demo file-volume restor
 
 | Command | Job |
 | --- | --- |
-| `hosting:register-compose-box` | Record Demo without a Coolify application id |
+| `hosting:register-compose-box` | Demo already recorded without a Coolify application id |
 | `hosting:reconcile-observed-host` | Move LNP host IPv4 after UUID ownership confirmation |
 
 Do not:
@@ -124,7 +127,7 @@ Do not:
 | --- | --- | --- |
 | **0** | Inventory and operator contract | Off |
 | **1** | Heartbeat reports commit / Laravel / PHP / digest; identity + recovery docs | Off |
-| **1b** | Reporting-only Demo image; verify commit, digest, `/up` | Demo only, when approved |
+| **1b** | Reporting-only Demo image; verify commit, digest, `/up` | **Done** — do not repeat |
 | **2** | Fleet dashboard shows actual running releases | Off |
 | **3** | Enable deploy only for a box with verified adapter, observation, and rollback | Per box; LNP last |
 | **4** | Staged one / selected / pilot / fleet + rollback eligibility | Explicit approval |

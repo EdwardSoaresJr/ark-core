@@ -14,8 +14,8 @@ products:
   core:
     name: ARK Core
     image_repository: ghcr.io/edwardsoaresjr/ark-core
-    # Live Demo and LNP were verified on this digest. Publish to ark-core only.
-    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    # No single current Core digest. Read each target's deployed.image.
+    last_verified_image: null
     publish_script: infra/build-runner/mac/publish-ghcr-ark.sh
     publish_script_default_image: ghcr.io/edwardsoaresjr/ark-core
     pin: commit_and_digest
@@ -23,6 +23,17 @@ products:
     name: ARK Platform
     repository: EdwardSoaresJr/ark-platform
     not_implied_by_core_release: true
+    desired:
+      pending_change: false
+    deployed:
+      url: https://cloud.arksms.com
+      host: 216.128.139.225
+      coolify_application: 2chd519pq55trejg7y7msgl4
+      image: ghcr.io/edwardsoaresjr/ark-cloud:325dc922228e85562927783ceba38d706087d714
+      digest: sha256:c5a48ae0834d2678ef65bcd034f00249e2906e10b8f24e3dc688c6ec8a9e5242
+      laravel: "13.29.0"
+      migration_2026_09_22_041000: ran
+    notes: Independent of Core. Do not redeploy because Core docs changed.
   foundry:
     name: ARK Foundry
     distribution: website_publication_only
@@ -49,7 +60,6 @@ targets:
     url: https://demo.arksms.com
     host: 104.238.144.183
     hostname: demo
-    observed_at: "2026-09-22T03:46:00Z"
     compose:
       root: /opt/ark
       project: ark
@@ -62,11 +72,21 @@ targets:
       service: app
       container: ark-app-1
     coolify_application: none
-    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+    desired:
+      image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
+      source_commit: a42b5c6408a0f1590e8e68eefe422e78a575ae0e
+      pending_change: false
+    deployed:
+      image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
+      source_commit: a42b5c6408a0f1590e8e68eefe422e78a575ae0e
+      observed_at: "2026-09-22T04:55:15Z"
+      health_path_ok: true
+      source_commit_in_image: present
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888
     installation_uuid: 5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6
-    installation_uuid_status: assigned_not_written
-    platform_paired: false
-    source_commit_in_image: missing
+    installation_uuid_status: written
+    platform_paired: true
+    shop_public_id: cd95693f-fea7-4c90-81f5-49f691bd4d79
     heartbeat_interval: every_five_minutes
     backup:
       kind: compose_host
@@ -87,7 +107,9 @@ targets:
       - secrets
       - storage
       - env
-    notes: Dedicated Vultr VPS. Recreate app only after an approved pin. Never copy production data here.
+    notes: >
+      Reporting image is live. Do not republish a42b5c64 or recreate app
+      because older notes said pending. Never copy production data here.
 
   lnp-production:
     product: core
@@ -95,8 +117,14 @@ targets:
     adapter: docker_compose
     url: https://lugsnplugs.arksms.com
     deploy_enabled: false
+    desired:
+      image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+      pending_change: false
+    deployed:
+      image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
+      observed_at: "2026-09-22T03:46:00Z"
+      source_commit_in_image: missing
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7
-    observed_at: "2026-09-22T03:46:00Z"
     live:
       host: 149.28.249.13
       hostname: ark-lugsnplugs-production
@@ -197,6 +225,7 @@ verification:
     - health_path_ok
   never_mark_current_from_desired_alone: true
   never_mark_current_from_heartbeat_alone: true
+  desired_pending_change_is_not_authorization: true
 
 rollback:
   application_image: retain_previous_digest
@@ -206,7 +235,6 @@ rollback:
   demo_enabled: false
 
 unknown:
-  - Demo installation UUID is assigned in this file but not written on the box yet
   - Whether mail-cert installation c9f3315a-8501-48dd-b228-b19aba78d0de is live Demo
   - Demo Vultr instance and plan identifiers
   - LNP application file-volume restore (SQL stamps exist; storage is not in those stamps)

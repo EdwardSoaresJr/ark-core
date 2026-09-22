@@ -13,9 +13,15 @@ Read [`ops/releases/distribution.yaml`](../../ops/releases/distribution.yaml) an
 - Demo — `https://demo.arksms.com` — Docker Compose at `/opt/ark` on `104.238.144.183`. No Coolify application.
 - LNP Production — `https://lugsnplugs.arksms.com` — live host `149.28.249.13`. Adopted host `144.202.74.190` is unreachable. Compose recreate-core. Deploy disabled.
 
-Last verified image:
+Demo last verified:
+
+`ghcr.io/edwardsoaresjr/ark-core@sha256:f4abe244858262dac653d821cd2c6b947ff4931e6766153fcfa29695f40e2888` (`a42b5c64`)
+
+LNP last verified (unchanged):
 
 `ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
+
+Platform is independent and already live: Coolify `2chd519pq55trejg7y7msgl4`, image `325dc922…`, digest `sha256:c5a48ae0834d2678ef65bcd034f00249e2906e10b8f24e3dc688c6ec8a9e5242`. Do not redeploy Platform for Core reporting.
 
 Publish to `ghcr.io/edwardsoaresjr/ark-core`.
 
@@ -23,7 +29,9 @@ Publish to `ghcr.io/edwardsoaresjr/ark-core`.
 
 ## Closed
 
-Fleet deployment automation is **disabled**. Do not Coolify Deploy LNP. Do not invent Coolify IDs for Demo. Do not use host `144.202.74.190`.
+Fleet deployment automation is **disabled**. `fleet_deploy_enabled` stays false. These inventory notes do not authorize Fleet automation, LNP deploy, poller, Laravel 13.32, or another Platform or Demo deploy.
+
+Do not Coolify Deploy LNP. Do not invent Coolify IDs for Demo. Do not use host `144.202.74.190`.
 
 A git push is not a successful release. Pin commit and digest. Do not copy production data into Demo or local. Do not change DNS unless explicitly asked.
 
