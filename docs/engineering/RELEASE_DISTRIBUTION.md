@@ -30,6 +30,14 @@ ghcr.io/edwardsoaresjr/ark-core@sha256:f113969e71f21e3aeb110bab84719ba9ca4e728b3
 
 Source commit `38334bd8127c4c9a41c50e6cf4fea83ac60a175a`. The QZ client is not in this image. An earlier sidebar image `sha256:04b199b4…` (`ba386cce`) is not what the shop is running.
 
+Candidate image, built and published, not deployed:
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:67e8e577742d0121e10807502d0493f65b50766fae0da0afe0d216eab7cbdfe4
+```
+
+Source commit `ce8dd014097047e27433b65f19300d3eeb69ab32`. Tag `ghcr.io/edwardsoaresjr/ark-core:ce8dd014097047e27433b65f19300d3eeb69ab32` points at that digest. Do not deploy `latest` or any other floating tag.
+
 Publish to `ghcr.io/edwardsoaresjr/ark-core`. Pin the digest. Do not deploy a floating tag.
 
 ## QZ label printing
