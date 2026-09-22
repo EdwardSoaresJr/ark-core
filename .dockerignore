@@ -2,7 +2,8 @@
 .github
 .cursor
 node_modules
-vendor
+/vendor
+!public/vendor
 .env
 .env.*
 !.env.example
