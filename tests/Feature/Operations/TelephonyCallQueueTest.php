@@ -1,11 +1,12 @@
 <?php
 
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionDirection;
+use App\Ark\Operations\Telephony\CallSessionQueue;
 use App\Ark\Operations\Telephony\CallSessionStatus;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
@@ -24,7 +25,7 @@ beforeEach(function () {
 });
 
 test('call queue exposes recording and voicemail playback for missed calls', function () {
-        
+
     $advisor = actingAsLearnCurrentAdvisor();
 
     $customer = Customer::query()->create([
@@ -50,7 +51,7 @@ test('call queue exposes recording and voicemail playback for missed calls', fun
     ]);
 
     $response = $this->actingAs($advisor)
-        ->getJson(route('operations.telephony.call-queue'));
+        ->getJson(route('operations.telephony.call-queue', ['include_html' => 1]));
 
     $response
         ->assertOk()
@@ -69,7 +70,7 @@ test('call queue exposes recording and voicemail playback for missed calls', fun
 });
 
 test('call queue does not expose play actions when media sources are unavailable', function () {
-        
+
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     CallSession::query()->create([
@@ -356,7 +357,7 @@ test('completed calls remain in queue until handled', function () {
 test('operations layout exposes hidden call queue poller without topbar attention affordance', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    $this->actingAs($advisor)
+    $response = $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
         ->assertDontSee('ops-call-queue__trigger', false)
@@ -364,6 +365,56 @@ test('operations layout exposes hidden call queue poller without topbar attentio
         ->assertSee('id="ark-call-queue-bootstrap"', false)
         ->assertSee('ops-call-queue--poller-only', false)
         ->assertSee(route('operations.telephony.call-queue'), false);
+
+    expect($response->getContent())
+        ->not->toMatch('/x-data="arkCallQueue\(\)"\s+x-init="init\(\)"/')
+        ->and($response->getContent())->not->toMatch('/x-data="arkCommsInterrupt\(\)"\s+x-init="init\(\)"/');
+});
+
+test('call queue poll omits list html and recent activity unless requested', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    CallSession::query()->create([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CApollslim001',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551097',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551097',
+        'status' => CallSessionStatus::Completed,
+        'started_at' => now()->subMinutes(30),
+        'ended_at' => now()->subMinutes(25),
+        'worked_at' => now()->subMinutes(20),
+    ]);
+
+    $this->actingAs($advisor)
+        ->getJson(route('operations.telephony.call-queue'))
+        ->assertOk()
+        ->assertJsonMissingPath('html')
+        ->assertJsonPath('recent_activity', []);
+});
+
+test('call queue poll does not reconcile stale live sessions', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    CallSession::query()->create([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CApollstale001',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551235',
+        'to_number' => '+17195559999',
+        'normalized_from' => '+17195551235',
+        'status' => CallSessionStatus::Ringing,
+        'started_at' => now()->subMinutes(30),
+    ]);
+
+    $this->actingAs($advisor)
+        ->getJson(route('operations.telephony.call-queue'))
+        ->assertOk()
+        ->assertJsonPath('summary.has_live_calls', false);
+
+    expect(CallSession::query()->where('provider_call_sid', 'CApollstale001')->value('status'))
+        ->toBe(CallSessionStatus::Ringing);
 });
 
 test('waiting sessions read does not reconcile stale live sessions', function () {
@@ -378,7 +429,7 @@ test('waiting sessions read does not reconcile stale live sessions', function ()
         'started_at' => now()->subMinutes(30),
     ]);
 
-    app(\App\Ark\Operations\Telephony\CallSessionQueue::class)->waitingSessions();
+    app(CallSessionQueue::class)->waitingSessions();
 
     expect(CallSession::query()->where('provider_call_sid', 'CAreadstale001')->value('status'))
         ->toBe(CallSessionStatus::Ringing);
@@ -434,7 +485,7 @@ test('call queue open ros url targets open repair orders when customer has multi
 });
 
 test('call queue api includes unread inbound sms in items and summary', function () {
-    
+
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $customer = Customer::query()->create([
@@ -445,7 +496,6 @@ test('call queue api includes unread inbound sms in items and summary', function
 
     ingestInboundSms('7195551234', 'Is my vehicle ready?', 'SMcallqueue001');
 
-        
     $this->actingAs($advisor)
         ->getJson(route('operations.telephony.call-queue'))
         ->assertOk()
@@ -468,7 +518,7 @@ test('operations layout exposes unified comms interrupt panel', function () {
 });
 
 test('operations layout bootstraps comms queue with unread sms', function () {
-    
+
     $advisor = actingAsLearnCurrentAdvisor();
 
     Customer::query()->create([
@@ -479,7 +529,6 @@ test('operations layout bootstraps comms queue with unread sms', function () {
 
     ingestInboundSms('7195551234', 'Where is my car?', 'SMlayout001');
 
-        
     $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()

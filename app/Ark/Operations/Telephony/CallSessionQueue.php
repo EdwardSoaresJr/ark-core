@@ -119,8 +119,6 @@ class CallSessionQueue
 
     /**
      * Close out live statuses that never received a terminal status callback.
-     *
-     * Must run from poll endpoints, scheduled jobs, or write actions — not page-render GET paths.
      */
     public function reconcileStaleLiveSessions(): void
     {

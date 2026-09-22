@@ -205,6 +205,7 @@ export function arkCommsInterrupt() {
         activeCall: null,
         activeMessage: null,
         pollTimer: null,
+        stopped: false,
         dismissedCallSessionIds: [],
         lastFocusedInterruptKey: '',
         ownedByOtherDismissTimer: null,
@@ -215,6 +216,7 @@ export function arkCommsInterrupt() {
         },
 
         init() {
+            this.stopped = false;
             requestBrowserNotificationPermission();
             this.bindRealtime();
             this.bindQueueWatch();
@@ -226,6 +228,17 @@ export function arkCommsInterrupt() {
 
             this.bootstrapPendingInterrupts();
             this.scheduleInterruptFocus();
+        },
+
+        destroy() {
+            this.stopped = true;
+
+            if (this.pollTimer !== null) {
+                window.clearInterval(this.pollTimer);
+                this.pollTimer = null;
+            }
+
+            this.clearOwnedByOtherDismissTimer();
         },
 
         bindWorkstationPresenceGate() {
@@ -287,6 +300,10 @@ export function arkCommsInterrupt() {
 
         bindQueueWatch() {
             document.addEventListener('ark:call-queue-changed', (event) => {
+                if (this.stopped) {
+                    return;
+                }
+
                 const calls = Array.isArray(event.detail?.calls) ? event.detail.calls : [];
                 const activeSessionId = Number(this.activeCall?.call_session_id ?? 0);
                 const liveCall = calls.find((row) => isLiveCall(row) && isInboundCallInterrupt(row));
@@ -357,7 +374,22 @@ export function arkCommsInterrupt() {
                 return;
             }
 
+            let inFlight = false;
+            let queued = false;
+
             const poll = async () => {
+                if (this.stopped) {
+                    return;
+                }
+
+                if (inFlight) {
+                    queued = true;
+
+                    return;
+                }
+
+                inFlight = true;
+
                 try {
                     const response = await fetch(url, {
                         headers: {
@@ -367,14 +399,28 @@ export function arkCommsInterrupt() {
                         credentials: 'same-origin',
                     });
 
-                    if (! response.ok) {
+                    if (this.stopped || ! response.ok) {
                         return;
                     }
 
                     const data = await response.json();
+
+                    if (this.stopped) {
+                        return;
+                    }
+
                     this.applySnapshot(data);
                 } catch {
                     // Polling is the authoritative backup when websocket delivery fails.
+                } finally {
+                    inFlight = false;
+
+                    if (this.stopped || ! queued) {
+                        return;
+                    }
+
+                    queued = false;
+                    queueMicrotask(poll);
                 }
             };
 
@@ -419,6 +465,10 @@ export function arkCommsInterrupt() {
         },
 
         applySnapshot(data) {
+            if (this.stopped) {
+                return;
+            }
+
             const call = data?.call;
             const activeSessionId = Number(this.activeCall?.call_session_id ?? 0);
 
