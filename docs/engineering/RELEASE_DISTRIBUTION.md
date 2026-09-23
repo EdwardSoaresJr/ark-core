@@ -14,7 +14,23 @@ A git push is not a release. Each target has its own deploy and verification res
 | Demo | `https://demo.arksms.com` | Docker Compose at `/opt/ark` on `104.238.144.183` | Disabled |
 | LNP Production | `https://lugsnplugs.arksms.com` | Compose recreate-core on `149.28.249.13` | **Disabled** |
 
-LNP Core accepted 2026-09-22. Shop confirmation: one physical label on one sticker, and the inbound SMS popup appeared. Fleet deployment automation stays disabled.
+Running 2026-09-23 on Demo and LNP. Local Herd is this checkout. Fleet deployment automation stays disabled.
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:741cd088847b739841e8fad22b6d437b403557bf63c1d726718fcecaeaec9017
+```
+
+Source commit `6a59a915a5c2dfc1250d76d3cf92d550fc528715` on `main`. `/up` returned 200 on local, Demo, and LNP. Only Demo `app` and LNP `core` were recreated.
+
+Immediate rollback is the image that was running before this recreate:
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:2e3ada9bc5e77525dd9bf60397ff4d3e265fb53f85e355770fd0a7ad817ebb69
+```
+
+Source commit `bbd46ff61064b59e64b17d47340d81f14039efbf`. Compose backups: `/root/demo-compose-image-pre-6a59a915.yml` and `/root/lnp-core-compose-pre-6a59a915.yml`.
+
+LNP Core accepted 2026-09-22. Shop confirmation: one physical label on one sticker, and the inbound SMS popup appeared.
 
 ```text
 ghcr.io/edwardsoaresjr/ark-core@sha256:6f81679961b092ca23a2b073684bdabfc7a1242b2e9ee2ac1079f459d7c9b6c9
