@@ -6,6 +6,8 @@
 
 ## Release set
 
+Frozen. Do not add or remove commits unless floor use exposes a problem.
+
 Oldest to newest. This is the release. Other commits on main are not part of it.
 
 1. `253ecc54` Remove repair order missing-item recommendations.
@@ -26,4 +28,4 @@ Use this Repair Order and Job Board during normal shop operation. Record actual 
 
 ## Release
 
-After floor acceptance, test this set together and prepare one controlled Core release. Do not deploy piecemeal.
+After floor acceptance, assemble exactly these seven commits from the accepted production lineage, run the combined release gate, and produce one immutable RC2 artifact. Do not release every commit ahead of origin. Do not deploy piecemeal.
