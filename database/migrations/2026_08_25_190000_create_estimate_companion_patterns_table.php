@@ -1,6 +1,5 @@
 <?php
 
-use App\Ark\Operations\RepairOrders\SeedEstimateCompanionPatterns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,8 +23,6 @@ return new class extends Migration
             $table->unique(['job_key', 'companion_key'], 'est_comp_job_companion_uq');
             $table->index('job_key', 'est_comp_job_key_idx');
         });
-
-        SeedEstimateCompanionPatterns::install();
     }
 
     public function down(): void

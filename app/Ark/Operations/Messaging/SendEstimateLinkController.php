@@ -3,8 +3,8 @@
 namespace App\Ark\Operations\Messaging;
 
 use App\Ark\Operations\Communications\CancelScheduledOutboundMessagesAction;
-use App\Ark\Operations\Communications\ScheduleOutboundEstimateAction;
 use App\Ark\Operations\Communications\ScheduledOutboundEstimateProjection;
+use App\Ark\Operations\Communications\ScheduleOutboundEstimateAction;
 use App\Ark\Operations\Communications\TomorrowMorningSchedule;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Runtime\Authorization\ArkCapability;
@@ -38,7 +38,6 @@ class SendEstimateLinkController
             ],
             'message' => ['nullable', 'string', 'max:500'],
             'acknowledge_missing_vin' => ['nullable', 'boolean'],
-            'acknowledge_timing_fluids' => ['nullable', 'boolean'],
         ]);
 
         $mode = OutboundDeliveryMode::tryFrom((string) ($data['delivery'] ?? OutboundDeliveryMode::Sms->value))
@@ -64,7 +63,6 @@ class SendEstimateLinkController
                     $data['message'] ?? null,
                     $request->boolean('acknowledge_missing_vin'),
                     scheduledFor: $scheduledFor,
-                    acknowledgeTimingFluids: $request->boolean('acknowledge_timing_fluids'),
                 );
 
                 $schedulePayload = $scheduleProjection->forRepairOrder($repairOrder->id);
@@ -88,7 +86,6 @@ class SendEstimateLinkController
                 $data['email'] ?? null,
                 $data['message'] ?? null,
                 $request->boolean('acknowledge_missing_vin'),
-                acknowledgeTimingFluids: $request->boolean('acknowledge_timing_fluids'),
             );
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);

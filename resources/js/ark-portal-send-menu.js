@@ -17,9 +17,6 @@ export function arkPortalSendMenu(config = {}) {
         sendBlockReason: config.sendBlockReason ?? '',
         missingVin: config.missingVin ?? false,
         vinBlockMessage: config.vinBlockMessage ?? 'Add the vehicle VIN before sending the estimate.',
-        timingFluidsMissing: config.timingFluidsMissing ?? false,
-        timingFluidsMessage: config.timingFluidsMessage ?? 'This job is missing companions the shop usually includes',
-        timingFluidsDetail: config.timingFluidsDetail ?? 'Add the usual companions on this job before the customer sees the estimate.',
         addVinUrl: config.addVinUrl ?? '#ro-identity-band',
         menuOpen: false,
         menuStyle: '',
@@ -28,8 +25,6 @@ export function arkPortalSendMenu(config = {}) {
         success: '',
         vinWarningOpen: false,
         vinAcknowledged: false,
-        fluidsWarningOpen: false,
-        fluidsAcknowledged: false,
         pendingDelivery: null,
 
         init() {
@@ -131,22 +126,12 @@ export function arkPortalSendMenu(config = {}) {
 
         cancelVinWarning() {
             this.vinWarningOpen = false;
-            this.fluidsWarningOpen = false;
             this.pendingDelivery = null;
         },
 
         continueWithoutVin() {
             this.vinAcknowledged = true;
             this.vinWarningOpen = false;
-
-            if (this.pendingDelivery) {
-                this.sendPortal(this.pendingDelivery);
-            }
-        },
-
-        continueWithoutTimingFluids() {
-            this.fluidsAcknowledged = true;
-            this.fluidsWarningOpen = false;
 
             if (this.pendingDelivery) {
                 this.sendPortal(this.pendingDelivery);
@@ -197,15 +182,6 @@ export function arkPortalSendMenu(config = {}) {
                 return;
             }
 
-            if (this.timingFluidsMissing && ! this.fluidsAcknowledged) {
-                this.pendingDelivery = delivery;
-                this.fluidsWarningOpen = true;
-                this.menuOpen = false;
-                this.error = this.timingFluidsMessage;
-
-                return;
-            }
-
             this.menuOpen = false;
             this.sending = true;
             this.error = '';
@@ -224,7 +200,6 @@ export function arkPortalSendMenu(config = {}) {
                         credentials: 'same-origin',
                         body: JSON.stringify(deliveryPayload(delivery, this.customerEmail, {
                             acknowledge_missing_vin: this.vinAcknowledged,
-                            acknowledge_timing_fluids: this.fluidsAcknowledged,
                         })),
                     });
 

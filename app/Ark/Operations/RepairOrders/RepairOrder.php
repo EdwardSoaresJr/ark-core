@@ -684,18 +684,10 @@ class RepairOrder extends Model
         return ! ($this->vehicle?->hasVin() ?? false);
     }
 
-    public function ensureEstimateSendAllowed(
-        bool $acknowledgeMissingVin = false,
-        bool $acknowledgeTimingFluids = false,
-    ): void {
+    public function ensureEstimateSendAllowed(bool $acknowledgeMissingVin = false): void
+    {
         if ($this->missingVehicleVin() && ! $acknowledgeMissingVin) {
             throw new \RuntimeException(VehicleIdentityPressure::NoVin->estimateSendBlockedMessage());
-        }
-
-        $fluids = (new EstimateCompanionCompletenessProjection)->for($this);
-
-        if (($fluids['needs_attention'] ?? false) && ! $acknowledgeTimingFluids) {
-            throw new \RuntimeException((string) ($fluids['send_blocked_message'] ?? 'Add the usual companions for this job before sending the estimate.'));
         }
     }
 

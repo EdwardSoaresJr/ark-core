@@ -1,15 +1,16 @@
 # Active PR
 
-**Track:** Estimate companion historical backfill  
+**Track:** Remove repair-order missing-item recommendations  
 **Status:** Implementation  
-**Surface:** `ark:estimate-companions:backfill` · closed/posted ROs
+**Surface:** Estimate totals, estimate send, advisor estimate tools
 
 ## Scope
 
-One-shot (repeatable with `--fresh`) learn from closed/posted tickets into `estimate_companion_patterns`. Timing oil/coolant remains the seed.
+Remove the estimate-companion catalog that warned a job was missing parts or labor the shop usually includes.
 
 ## Out of scope
 
-- Auto-adding lines
-- Embeddings / ML
-- Local MySQL wipe
+- VIN-missing send warning
+- Authorization and approval scope
+- Inspection findings
+- Production deploy

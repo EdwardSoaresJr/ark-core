@@ -19,7 +19,7 @@ final class EstimatesAdvisorContextTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Load structured estimate plus a rewrite or review check. Use when proposing customer-facing estimate language OR when reviewing an estimate for gaps (finding vs recommendation, missing measurements, unexplained diagnostic labor, missing companions this shop usually sells with the job). Returns a PROPOSAL / critique only. Never writes lines or prices. Do not second-guess pricing without authoritative pricing context.';
+        return 'Load structured estimate plus a rewrite or review check. Use when proposing customer-facing estimate language OR when reviewing an estimate for gaps (finding vs recommendation, missing measurements, unexplained diagnostic labor). Returns a PROPOSAL / critique only. Never writes lines or prices. Do not second-guess pricing without authoritative pricing context.';
     }
 
     public function parameters(): array
@@ -63,7 +63,6 @@ final class EstimatesAdvisorContextTool implements DragonAgentTool
                 'do_not_invent_safety_or_urgency',
                 'do_not_change_prices_or_lines',
                 'return_language_proposal_only',
-                'if_check_before_sending_needs_attention_tell_advisor_to_add_lines',
             ],
         ];
     }

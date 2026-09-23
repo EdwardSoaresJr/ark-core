@@ -28,10 +28,9 @@ final class ScheduleOutboundEstimateAction
         bool $acknowledgeMissingVin = false,
         ?Conversation $conversation = null,
         ?CarbonImmutable $scheduledFor = null,
-        bool $acknowledgeTimingFluids = false,
     ): ScheduledOutboundMessage {
         $repairOrder->loadMissing('customer');
-        $repairOrder->ensureEstimateSendAllowed($acknowledgeMissingVin, $acknowledgeTimingFluids);
+        $repairOrder->ensureEstimateSendAllowed($acknowledgeMissingVin);
 
         if ($repairOrder->customer === null) {
             throw new RuntimeException('Repair order does not have a customer.');
@@ -86,7 +85,6 @@ final class ScheduleOutboundEstimateAction
             'payload_json' => array_filter([
                 'staff_note' => filled($staffNote) ? trim($staffNote) : null,
                 'acknowledge_missing_vin' => $acknowledgeMissingVin ?: null,
-                'acknowledge_timing_fluids' => $acknowledgeTimingFluids ?: null,
             ], fn (mixed $value): bool => $value !== null),
             'requested_at' => $requestedAt,
         ]);

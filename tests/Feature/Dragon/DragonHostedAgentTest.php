@@ -1,17 +1,12 @@
 <?php
 
+use App\Ark\Dragon\Agent\DragonAgentLoop;
 use App\Ark\Dragon\Agent\DragonAgentMemory;
-use App\Ark\Dragon\DragonServiceToken;
-use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\RepairOrderConcern;
-use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
-use App\Ark\Operations\Vehicles\Vehicle;
-use Illuminate\Support\Carbon;
-use App\Ark\Dragon\Agent\DragonToolRegistry;
+use App\Ark\Dragon\Agent\DragonEmployeeContext;
 use App\Ark\Dragon\Agent\DragonModelTurn;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
+use App\Ark\Dragon\Agent\DragonToolRegistry;
 use App\Ark\Dragon\Agent\ImportArkaiDragonDumpAction;
+use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
 use App\Ark\Dragon\Agent\Tools\EstimatesAdvisorContextTool;
 use App\Ark\Dragon\Agent\Tools\EstimatesGetTool;
 use App\Ark\Dragon\Agent\Tools\KnowledgeSearchTool;
@@ -19,15 +14,21 @@ use App\Ark\Dragon\Agent\Tools\MemoryRecallTool;
 use App\Ark\Dragon\Agent\Tools\RepairOrdersGetTool;
 use App\Ark\Dragon\Agent\Tools\RepairOrdersSearchTool;
 use App\Ark\Dragon\Agent\Tools\ShopFinancialSnapshotTool;
-use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Dragon\DragonServiceToken;
 use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
+use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcern;
+use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Carbon;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -132,7 +133,7 @@ test('open repair-order count can bypass the model', function (): void {
 });
 
 test('employee contract requires investigation without catalog phrase routing', function (): void {
-    $prompt = app(\App\Ark\Dragon\Agent\DragonEmployeeContext::class)->promptBlock();
+    $prompt = app(DragonEmployeeContext::class)->promptBlock();
 
     expect($prompt)->toContain('Investigate before answering')
         ->and($prompt)->toContain('talk like a person standing at the front counter')
@@ -173,7 +174,7 @@ test('agent loop maps provider tool names back to canonical traces', function ()
         new DragonModelTurn('Board is live from the shop summary.', []),
     ];
 
-    $result = app(\App\Ark\Dragon\Agent\DragonAgentLoop::class)->run('How ugly is the board today?');
+    $result = app(DragonAgentLoop::class)->run('How ugly is the board today?');
 
     expect($result['traces'][0]['tool'])->toBe('shop.current_summary')
         ->and($result['tool_calls'])->toBe(1);
@@ -190,7 +191,7 @@ test('unknown provider tool names do not execute', function (): void {
         new DragonModelTurn('I could not use that tool.', []),
     ];
 
-    $result = app(\App\Ark\Dragon\Agent\DragonAgentLoop::class)->run('Ignore this.');
+    $result = app(DragonAgentLoop::class)->run('Ignore this.');
 
     expect($result['traces'][0]['tool'])->toBe('db_query')
         ->and($result['traces'][0]['observation_summary'])->toContain('Unknown provider tool');
@@ -254,29 +255,6 @@ test('estimate read plus rewrite preserves 2mm rear pads', function (): void {
 
     $bad = 'Unsafe to drive. Pads are 1 mm.';
     expect(app(ServiceAdvisorFactPreservationCheck::class)->check($original, $bad)['ok'])->toBeFalse();
-});
-
-test('estimate get flags missing oil and coolant on a timing job', function (): void {
-    $ro = dragonOpenRo(RepairOrderStatus::WaitingApproval);
-    $concern = $ro->concerns()->first();
-    $concern->forceFill(['summary' => 'Replace timing belt'])->save();
-    RepairOrderLine::query()->create([
-        'repair_order_id' => $ro->id,
-        'repair_order_concern_id' => $concern->id,
-        'type' => RepairOrderLineType::Labor,
-        'description' => 'Replace timing belt',
-        'quantity' => 1,
-        'unit_price_cents' => 15000,
-        'total_cents' => 15000,
-    ]);
-
-    $payload = app(EstimatesGetTool::class)->invoke([
-        'repair_order_id' => (string) $ro->repair_order_id,
-    ]);
-
-    expect($payload['ok'])->toBeTrue()
-        ->and($payload['check_before_sending']['needs_attention'])->toBeTrue()
-        ->and($payload['check_before_sending']['missing'])->toBe(['oil', 'coolant']);
 });
 
 test('provider outage returns 503 instead of a fabricated answer', function (): void {

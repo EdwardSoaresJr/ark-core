@@ -59,7 +59,6 @@ class DispatchScheduledOutboundEstimateJob implements ShouldQueue
 
         $payload = is_array($row->payload_json) ? $row->payload_json : [];
         $acknowledgeMissingVin = (bool) ($payload['acknowledge_missing_vin'] ?? false);
-        $acknowledgeTimingFluids = (bool) ($payload['acknowledge_timing_fluids'] ?? false);
         $staffNote = isset($payload['staff_note']) ? (string) $payload['staff_note'] : null;
         $conversation = $row->conversation_id !== null
             ? $row->conversation()->first()
@@ -75,7 +74,6 @@ class DispatchScheduledOutboundEstimateJob implements ShouldQueue
                 $acknowledgeMissingVin,
                 recipientPhone: $row->recipient_phone,
                 conversation: $conversation,
-                acknowledgeTimingFluids: $acknowledgeTimingFluids,
             );
 
             $row->forceFill([

@@ -78,8 +78,6 @@ export function arkConversationQuickReply(config = {}) {
         sendEstimateAddVinUrl: config.sendEstimateAddVinUrl ?? null,
         vinWarningOpen: false,
         vinAcknowledged: false,
-        fluidsWarningOpen: false,
-        fluidsAcknowledged: false,
         pendingEstimateDelivery: null,
         afterHoursPromptOpen: false,
         afterHoursKind: null,
@@ -97,8 +95,6 @@ export function arkConversationQuickReply(config = {}) {
             this.$watch('selectedRepairOrderId', () => {
                 this.vinAcknowledged = false;
                 this.vinWarningOpen = false;
-                this.fluidsAcknowledged = false;
-                this.fluidsWarningOpen = false;
                 this.pendingEstimateDelivery = null;
                 this.pendingEstimateTiming = null;
                 this.pendingEstimateScheduledFor = null;
@@ -694,20 +690,6 @@ export function arkConversationQuickReply(config = {}) {
                 ?? 'Add the vehicle VIN on this repair order before sending the estimate to the customer.';
         },
 
-        estimateTimingFluidsMissing() {
-            return this.resolveSendProjection('estimate')?.timing_fluids_missing ?? false;
-        },
-
-        estimateTimingFluidsMessage() {
-            return this.resolveSendProjection('estimate')?.timing_fluids_message
-                ?? 'This job is missing companions the shop usually includes';
-        },
-
-        estimateTimingFluidsDetail() {
-            return this.resolveSendProjection('estimate')?.timing_fluids_detail
-                ?? 'Add the usual companions on this job before the customer sees the estimate.';
-        },
-
         addVinUrl() {
             if (this.sendEstimateAddVinUrl) {
                 return this.sendEstimateAddVinUrl;
@@ -722,25 +704,9 @@ export function arkConversationQuickReply(config = {}) {
 
         cancelVinWarning() {
             this.vinWarningOpen = false;
-            this.fluidsWarningOpen = false;
             this.pendingEstimateDelivery = null;
             this.pendingEstimateTiming = null;
             this.pendingEstimateScheduledFor = null;
-        },
-
-        continueWithoutTimingFluids() {
-            this.fluidsAcknowledged = true;
-            this.fluidsWarningOpen = false;
-
-            if (this.pendingEstimateDelivery) {
-                const delivery = this.pendingEstimateDelivery;
-                const timing = this.pendingEstimateTiming ?? 'now';
-                const scheduledFor = this.pendingEstimateScheduledFor;
-                this.pendingEstimateDelivery = null;
-                this.pendingEstimateTiming = null;
-                this.pendingEstimateScheduledFor = null;
-                this.executeEstimateSend(delivery, timing, scheduledFor);
-            }
         },
 
         continueWithoutVin() {
@@ -1062,16 +1028,6 @@ export function arkConversationQuickReply(config = {}) {
                 return;
             }
 
-            if (this.estimateTimingFluidsMissing() && ! this.fluidsAcknowledged) {
-                this.pendingEstimateDelivery = chosenDelivery;
-                this.pendingEstimateTiming = timing;
-                this.pendingEstimateScheduledFor = scheduledFor;
-                this.fluidsWarningOpen = true;
-                this.closeDeliveryMenus();
-
-                return;
-            }
-
             this.closeDeliveryMenus();
             this.sending = true;
             this.error = '';
@@ -1088,7 +1044,6 @@ export function arkConversationQuickReply(config = {}) {
                 await withWorksheetBusy(busyLabel, async () => {
                     const { response, data } = await this.postDelivery(url, deliveryPayload(chosenDelivery, this.customerEmail, {
                         acknowledge_missing_vin: this.vinAcknowledged,
-                        acknowledge_timing_fluids: this.fluidsAcknowledged,
                         timing: isScheduled ? 'tomorrow_morning' : timing,
                         ...(scheduledFor ? { scheduled_for: scheduledFor } : {}),
                     }));

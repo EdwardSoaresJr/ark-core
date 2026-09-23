@@ -5,8 +5,6 @@
     $contactPreference = $repairOrder->customer->contact_preference;
     $canEmail = ! $isTerminal && $repairOrder->lines->isNotEmpty();
     $missingVin = $repairOrder->missingVehicleVin();
-    $timingFluids = app(\App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection::class)->for($repairOrder);
-    $timingFluidsMissing = (bool) ($timingFluids['needs_attention'] ?? false);
 @endphp
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
@@ -23,9 +21,6 @@
                 missingVin: @js($missingVin),
                 vinWarningOpen: false,
                 vinAcknowledged: false,
-                timingFluidsMissing: @js($timingFluidsMissing),
-                fluidsWarningOpen: false,
-                fluidsAcknowledged: false,
                 armConfirm() {
                     if (! this.$refs.emailInput.reportValidity()) {
                         return;
@@ -33,16 +28,6 @@
 
                     if (this.missingVin && ! this.vinAcknowledged) {
                         this.vinWarningOpen = true;
-                        this.fluidsWarningOpen = false;
-                        this.confirmSend = false;
-                        this.clearConfirmTimer();
-
-                        return;
-                    }
-
-                    if (this.timingFluidsMissing && ! this.fluidsAcknowledged) {
-                        this.fluidsWarningOpen = true;
-                        this.vinWarningOpen = false;
                         this.confirmSend = false;
                         this.clearConfirmTimer();
 
@@ -59,16 +44,10 @@
                 },
                 cancelVinWarning() {
                     this.vinWarningOpen = false;
-                    this.fluidsWarningOpen = false;
                 },
                 continueWithoutVin() {
                     this.vinAcknowledged = true;
                     this.vinWarningOpen = false;
-                    this.armConfirm();
-                },
-                continueWithoutTimingFluids() {
-                    this.fluidsAcknowledged = true;
-                    this.fluidsWarningOpen = false;
                     this.armConfirm();
                 },
                 cancelConfirm() {
@@ -104,7 +83,6 @@
             @csrf
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
             <input type="hidden" name="acknowledge_missing_vin" :value="vinAcknowledged ? 1 : 0">
-            <input type="hidden" name="acknowledge_timing_fluids" :value="fluidsAcknowledged ? 1 : 0">
             <div class="ops-estimate-email-form-intro">
                 <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Email estimate</p>
                 <p class="mt-0.5 text-xs leading-4 text-slate-500">Sends the current estimate PDF, portal review link, and optional note. Moves the RO to awaiting approval when sent from estimate posture.</p>
@@ -160,21 +138,6 @@
                     <div class="ops-estimate-vin-warning-actions">
                         <a href="#ro-identity-band" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add VIN</a>
                         <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutVin()">Continue anyway</button>
-                    </div>
-                </div>
-
-                <div
-                    x-show="fluidsWarningOpen"
-                    x-cloak
-                    class="ops-estimate-vin-warning"
-                >
-                    <p class="ops-estimate-vin-warning-title">{{ $timingFluids['headline'] ?? 'This job is missing companions the shop usually includes' }}</p>
-                    <p class="ops-estimate-vin-warning-copy">
-                        {{ $timingFluids['advisor_detail'] ?? 'Add them before the customer sees the estimate, or continue if they are already covered.' }}
-                    </p>
-                    <div class="ops-estimate-vin-warning-actions">
-                        <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add fluids</button>
-                        <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutTimingFluids()">Continue anyway</button>
                     </div>
                 </div>
 

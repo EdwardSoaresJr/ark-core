@@ -6,7 +6,6 @@ use App\Ark\Dragon\Agent\DragonAgentTool;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderEstimate;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
-use App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection;
 
 final class EstimatesGetTool implements DragonAgentTool
 {
@@ -19,7 +18,7 @@ final class EstimatesGetTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Read estimate structure for a repair order: line types, descriptions, hours, totals, approval/status, and check_before_sending (shop companion catalog — what usually rides with this job). Use before critiquing or sending. No customer identity, no payment records, no writes.';
+        return 'Read estimate structure for a repair order: line types, descriptions, hours, totals, and approval status. Use before critiquing or sending. No customer identity, no payment records, no writes.';
     }
 
     public function parameters(): array
@@ -89,8 +88,7 @@ final class EstimatesGetTool implements DragonAgentTool
                 'tax' => $totals->format($totals->taxCents()),
                 'total' => $totals->format($totals->totalCents()),
             ],
-            'check_before_sending' => (new EstimateCompanionCompletenessProjection)->for($repairOrder),
-            'note' => 'Proposal-only. Dragon must not apply estimate writes. If check_before_sending.needs_attention is true, say so in Check before sending. Companions come from this shop’s catalog (what usually rides with this job), not a hardcoded job list.',
+            'note' => 'Proposal-only. Dragon must not apply estimate writes.',
         ];
     }
 }

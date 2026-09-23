@@ -41,18 +41,6 @@
         'approvalForecast' => $approvalForecast,
     ])
 
-    @if ($repairOrder)
-        @php
-            $timingFluidsCheck = app(\App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection::class)->for($repairOrder);
-        @endphp
-        @if ($timingFluidsCheck['needs_attention'] ?? false)
-            <div class="mx-3 mb-2 rounded-sm border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-950">
-                <p class="font-semibold">{{ $timingFluidsCheck['headline'] }}</p>
-                <p class="mt-0.5 leading-4">{{ $timingFluidsCheck['advisor_detail'] }}</p>
-            </div>
-        @endif
-    @endif
-
     <dl class="divide-y divide-slate-100 px-3 py-1 text-sm">
         <div class="ops-total-row py-1.5">
             <dt class="text-slate-500">Labor</dt>

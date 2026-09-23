@@ -759,15 +759,6 @@
                 </div>
             </div>
 
-            <div x-show="fluidsWarningOpen" x-cloak class="ops-estimate-vin-warning mx-3 mb-2">
-                <p class="ops-estimate-vin-warning-title" x-text="estimateTimingFluidsMessage()"></p>
-                <p class="ops-estimate-vin-warning-copy" x-text="estimateTimingFluidsDetail()"></p>
-                <div class="ops-estimate-vin-warning-actions">
-                    <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add fluids</button>
-                    <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutTimingFluids()">Continue anyway</button>
-                </div>
-            </div>
-
             <div
                 x-show="showSmsComposer && open"
                 x-cloak

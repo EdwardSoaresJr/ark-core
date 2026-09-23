@@ -91,9 +91,6 @@
                             'sendBlockReason' => $estimateSend['send_block_reason'],
                             'missingVin' => $missingVin,
                             'vinBlockMessage' => $estimateSend['vin_block_message'],
-                            'timingFluidsMissing' => $estimateSend['timing_fluids_missing'] ?? false,
-                            'timingFluidsMessage' => $estimateSend['timing_fluids_message'] ?? null,
-                            'timingFluidsDetail' => $estimateSend['timing_fluids_detail'] ?? null,
                             'addVinUrl' => route('operations.repair-orders.show', $repairOrder).'#ro-identity-band',
                         ]))"
                     >
@@ -154,14 +151,6 @@
                             <div class="ops-estimate-vin-warning-actions">
                                 <a :href="addVinUrl" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add VIN</a>
                                 <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutVin()">Continue anyway</button>
-                            </div>
-                        </div>
-                        <div x-show="fluidsWarningOpen" x-cloak class="ops-estimate-vin-warning mt-2">
-                            <p class="ops-estimate-vin-warning-title" x-text="timingFluidsMessage"></p>
-                            <p class="ops-estimate-vin-warning-copy" x-text="timingFluidsDetail"></p>
-                            <div class="ops-estimate-vin-warning-actions">
-                                <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add fluids</button>
-                                <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutTimingFluids()">Continue anyway</button>
                             </div>
                         </div>
                         <div x-show="error" x-cloak class="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs text-rose-950" role="alert">

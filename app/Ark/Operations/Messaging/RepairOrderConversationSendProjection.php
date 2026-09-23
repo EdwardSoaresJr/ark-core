@@ -8,7 +8,6 @@ use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\EstimateCompanionCompletenessProjection;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Vehicles\VehicleIdentityPressure;
 use App\Ark\Runtime\Authorization\ArkCapability;
@@ -34,9 +33,6 @@ final class RepairOrderConversationSendProjection
      *         send_block_reason: ?string,
      *         missing_vin: bool,
      *         vin_block_message: string,
-     *         timing_fluids_missing: bool,
-     *         timing_fluids_message: ?string,
-     *         timing_fluids_detail: ?string,
      *     },
      *     payment: array{
      *         can_sms: bool,
@@ -87,28 +83,18 @@ final class RepairOrderConversationSendProjection
      *     send_block_reason: ?string,
      *     missing_vin: bool,
      *     vin_block_message: string,
-     *     timing_fluids_missing: bool,
-     *     timing_fluids_message: ?string,
-     *     timing_fluids_detail: ?string,
      * }
      */
     private function estimateChannels(RepairOrder $repairOrder, ?User $actor): array
     {
         $missingVin = $repairOrder->missingVehicleVin();
         $vinBlockMessage = VehicleIdentityPressure::NoVin->estimateSendBlockedMessage();
-        $fluids = (new EstimateCompanionCompletenessProjection)->for($repairOrder);
-        $timingFluidsMissing = (bool) ($fluids['needs_attention'] ?? false);
-        $timingFluidsMessage = $fluids['headline'] ?? null;
-        $timingFluidsDetail = $fluids['advisor_detail'] ?? null;
 
         if ($repairOrder->isTerminal()) {
             return $this->blockedEstimateChannels(
                 'Closed repair orders cannot send estimate links.',
                 $missingVin,
                 $vinBlockMessage,
-                $timingFluidsMissing,
-                $timingFluidsMessage,
-                $timingFluidsDetail,
             );
         }
 
@@ -117,9 +103,6 @@ final class RepairOrderConversationSendProjection
                 'Add at least one estimate line before sending the estimate.',
                 $missingVin,
                 $vinBlockMessage,
-                $timingFluidsMissing,
-                $timingFluidsMessage,
-                $timingFluidsDetail,
             );
         }
 
@@ -139,9 +122,6 @@ final class RepairOrderConversationSendProjection
             'send_block_reason' => null,
             'missing_vin' => $missingVin,
             'vin_block_message' => $vinBlockMessage,
-            'timing_fluids_missing' => $timingFluidsMissing,
-            'timing_fluids_message' => $timingFluidsMessage,
-            'timing_fluids_detail' => $timingFluidsDetail,
         ];
     }
 
@@ -154,18 +134,12 @@ final class RepairOrderConversationSendProjection
      *     send_block_reason: ?string,
      *     missing_vin: bool,
      *     vin_block_message: string,
-     *     timing_fluids_missing: bool,
-     *     timing_fluids_message: ?string,
-     *     timing_fluids_detail: ?string,
      * }
      */
     private function blockedEstimateChannels(
         string $sendBlockReason,
         bool $missingVin,
         string $vinBlockMessage,
-        bool $timingFluidsMissing,
-        ?string $timingFluidsMessage,
-        ?string $timingFluidsDetail,
     ): array {
         return [
             'can_sms' => false,
@@ -175,9 +149,6 @@ final class RepairOrderConversationSendProjection
             'send_block_reason' => $sendBlockReason,
             'missing_vin' => $missingVin,
             'vin_block_message' => $vinBlockMessage,
-            'timing_fluids_missing' => $timingFluidsMissing,
-            'timing_fluids_message' => $timingFluidsMessage,
-            'timing_fluids_detail' => $timingFluidsDetail,
         ];
     }
 

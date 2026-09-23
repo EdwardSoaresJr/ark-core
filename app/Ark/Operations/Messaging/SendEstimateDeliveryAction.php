@@ -6,7 +6,6 @@ use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Documents\EstimateDocumentEmailDelivery;
 use App\Ark\Operations\Documents\EstimatePdfUnavailableException;
-use App\Ark\Operations\RepairOrders\LearnEstimateCompanionPatternsAction;
 use App\Ark\Operations\RepairOrders\MarkEstimateAwaitingCustomerApprovalAction;
 use App\Ark\Operations\RepairOrders\RecordEstimateSentWithMissingVinAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -19,7 +18,6 @@ final class SendEstimateDeliveryAction
         private readonly SendEstimateLinkAction $sms,
         private readonly EstimateDocumentEmailDelivery $email,
         private readonly RecordEstimateSentWithMissingVinAction $recordMissingVinOverride,
-        private readonly LearnEstimateCompanionPatternsAction $learnCompanions,
     ) {}
 
     /**
@@ -46,9 +44,8 @@ final class SendEstimateDeliveryAction
         bool $acknowledgeMissingVin = false,
         ?string $recipientPhone = null,
         ?Conversation $conversation = null,
-        bool $acknowledgeTimingFluids = false,
     ): array {
-        $repairOrder->ensureEstimateSendAllowed($acknowledgeMissingVin, $acknowledgeTimingFluids);
+        $repairOrder->ensureEstimateSendAllowed($acknowledgeMissingVin);
 
         $messages = [];
         $estimateUrl = null;
@@ -98,12 +95,6 @@ final class SendEstimateDeliveryAction
         if ($messages === []) {
             throw new RuntimeException('Choose SMS, email, or both to send the estimate.');
         }
-
-        if ($acknowledgeTimingFluids) {
-            $this->learnCompanions->recordExceptions($repairOrder);
-        }
-
-        $this->learnCompanions->ingest($repairOrder);
 
         if ($acknowledgeMissingVin) {
             if ($mode->includesSms()) {

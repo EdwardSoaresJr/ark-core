@@ -7,26 +7,27 @@ use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Portal\EstimateAccessToken;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
-use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
-use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-        
+
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -71,6 +72,26 @@ test('send estimate creates access token and sends sms conversation message', fu
         ->and($repairOrder->fresh()->status->is(RepairOrderStatus::WaitingApproval))->toBeTrue()
         ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::EstimateSent)->exists())->toBeTrue()
         ->and($response->json('awaiting_approval.toast'))->toContain('Waiting Approval');
+});
+
+test('a radiator job sends without a missing-item warning', function () {
+    bindFakeOutboundSms();
+    seedMobileSmsCapability('7195558080');
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = estimateLinkRepairOrder();
+    $repairOrder->forceFill(['concern_summary' => 'Radiator replacement'])->save();
+    $repairOrder->concerns()->update(['summary' => 'Replace radiator']);
+    $repairOrder->lines()->update(['description' => 'Replace radiator']);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertDontSee('This job is missing', false);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder))
+        ->assertOk();
 });
 
 test('resending estimate link keeps waiting approval and reports already waiting', function (): void {
@@ -338,8 +359,8 @@ function estimateLinkRepairOrder(): RepairOrder
         'customer_type' => 'Retail',
     ]);
 
-    \App\Ark\Operations\Messaging\PhoneSmsCapability::query()->updateOrCreate(
-        ['normalized_phone' => \App\Ark\Operations\PhoneNumber::normalize('7195558080')],
+    PhoneSmsCapability::query()->updateOrCreate(
+        ['normalized_phone' => PhoneNumber::normalize('7195558080')],
         [
             'valid' => true,
             'line_type' => 'mobile',
@@ -387,42 +408,4 @@ function estimateLinkRepairOrder(): RepairOrder
     ]);
 
     return $repairOrder;
-}
-
-test('send estimate blocks timing job missing oil and coolant', function () {
-    bindFakeOutboundSms();
-    seedMobileSmsCapability('7195558080');
-
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-    $repairOrder = timingJobEstimateRepairOrder();
-
-    $response = $this->actingAs($advisor)
-        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder));
-
-    $response->assertStatus(422);
-    expect($response->json('message'))->toContain('This job is missing oil and coolant');
-});
-
-test('send estimate timing fluids override is allowed', function () {
-    bindFakeOutboundSms();
-    seedMobileSmsCapability('7195558080');
-
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-    $repairOrder = timingJobEstimateRepairOrder();
-
-    $this->actingAs($advisor)
-        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder), [
-            'acknowledge_timing_fluids' => true,
-        ])
-        ->assertOk();
-});
-
-function timingJobEstimateRepairOrder(): RepairOrder
-{
-    $repairOrder = estimateLinkRepairOrder();
-    $repairOrder->forceFill(['concern_summary' => 'Timing belt replacement'])->save();
-    $repairOrder->concerns()->update(['summary' => 'Replace timing belt']);
-    $repairOrder->lines()->update(['description' => 'Replace timing belt']);
-
-    return $repairOrder->fresh(['lines', 'concerns', 'vehicle', 'customer']);
 }
