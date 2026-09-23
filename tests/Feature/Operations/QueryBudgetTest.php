@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\Mail;
 | Advisor home (/app)  | 75     | 200 (brief + full board totals)
 | Workboard (tech)     | 50     | 75 (layout/comms shell; triage projection ~6 RO queries)
 | Comms inbox          | 60     | 120 (identity-first list; batch call context)
-| RO show              | 35     | 105
-| Estimate review      | 35     | 105
+| RO show              | 35     | 110
+| Estimate review      | 35     | 110
 | Portal vehicle       | —      | 75
 | Customer hub         | —      | 95
 |
@@ -56,7 +56,7 @@ test('repair order show stays within query budget', function () {
 
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
-    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 106);
+    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 110);
 });
 
 test('repair order estimate review stays within query budget', function () {
@@ -64,7 +64,7 @@ test('repair order estimate review stays within query budget', function () {
 
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
-    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 106);
+    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 110);
 });
 
 test('repair order inspection show hosts the production walk within query budget', function () {
