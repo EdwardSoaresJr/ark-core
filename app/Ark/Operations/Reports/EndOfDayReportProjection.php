@@ -25,6 +25,7 @@ final readonly class EndOfDayReportProjection
      * @param  array{
      *     reconciles: bool,
      *     sales_posted: string,
+     *     write_offs: string,
      *     cash_collected: string,
      *     delta_label: string
      * }  $reconciliation
@@ -52,29 +53,21 @@ final readonly class EndOfDayReportProjection
         $postedCount = self::postedCount($from, $to);
         $hoursSold = self::postedLaborHours($from, $to);
         $hoursPresented = self::presentedLaborHours($from, $to);
-        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
-            $components['labor_cents'],
-            $components['parts_cents'],
-            $components['sublet_cents'],
-            $components['fee_cents'],
-            $components['discount_cents'],
-        );
-        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
-            && $components['labor_sales_missing_cost_cents'] === 0
-            && $components['sublet_cents'] === 0;
-        $laborCostCents = OperationalReportTotals::closedLaborCostCents($from, $to);
-        $knownLaborSalesCents = $components['labor_cents'] - $components['labor_sales_missing_cost_cents'];
-        $grossProfitCents = $components['parts_gp_cents'] + ($knownLaborSalesCents - $laborCostCents) + $components['fee_cents'];
-        $grossMarginPercent = ReportingStandardsV1::grossMarginPercent($salesCents, $salesCents - $grossProfitCents);
+        $salesCents = $metrics->postedInvoiceSalesCents();
+        $costsComplete = $metrics->postedCostsAreMatched();
+        $grossProfitCents = $metrics->postedGrossProfitCents();
+        $grossMarginPercent = $grossProfitCents !== null
+            ? ReportingStandardsV1::grossMarginPercent($salesCents, $salesCents - $grossProfitCents)
+            : null;
 
         $effectiveLaborRateCents = $hoursSold > 0 ? (int) round($components['labor_cents'] / $hoursSold) : null;
         $closeRatioPercent = $hoursPresented > 0
             ? (int) round(($hoursSold / $hoursPresented) * 100)
             : null;
         $aroCents = ReportingStandardsV1::aroCents($salesCents, $postedCount);
-        $avgRoProfitCents = $costsComplete && $postedCount > 0 ? (int) round($grossProfitCents / $postedCount) : null;
+        $avgRoProfitCents = $grossProfitCents !== null && $postedCount > 0 ? (int) round($grossProfitCents / $postedCount) : null;
         $salesPerHourCents = $hoursSold > 0 ? (int) round($salesCents / $hoursSold) : null;
-        $grossProfitPerHourCents = $costsComplete && $hoursSold > 0 ? (int) round($grossProfitCents / $hoursSold) : null;
+        $grossProfitPerHourCents = $grossProfitCents !== null && $hoursSold > 0 ? (int) round($grossProfitCents / $hoursSold) : null;
 
         $fromLabel = OperationalReportDateScope::shopDateString($from);
         $toLabel = OperationalReportDateScope::shopDateString($to);
@@ -132,21 +125,15 @@ final readonly class EndOfDayReportProjection
                 self::summaryRow('Sublet', self::money($components['sublet_cents'])),
                 self::summaryRow('Other', self::money($components['fee_cents'])),
                 self::summaryRow('Discounts', '-'.self::money($components['discount_cents']), $components['discount_cents'] > 0 ? 'subtract' : null),
-                self::summaryRow('Sales', self::money($salesCents), 'total'),
-                self::summaryRow('Sales tax', self::money($components['tax_cents'])),
-                self::summaryRow('Posted total', self::money(ReportingStandardsV1::postedSalesCents(
-                    $components['labor_cents'],
-                    $components['parts_cents'],
-                    $components['sublet_cents'],
-                    $components['fee_cents'],
-                    $components['discount_cents'],
-                    $components['tax_cents'],
-                )), 'total'),
+                self::summaryRow('Posted invoice sales', self::money($salesCents), 'total'),
+                self::summaryRow('Sales tax', self::money($metrics->postedInvoiceTaxCents())),
+                self::summaryRow('Invoice total', self::money($metrics->postedInvoiceTotalCents()), 'total'),
             ],
             salesBreakdown: self::salesBreakdownRows($from, $to),
             reconciliation: [
                 'reconciles' => $reconciliation['reconciles'],
                 'sales_posted' => $reconciliation['posted_ro_summary']['total'],
+                'write_offs' => self::money($metrics->writeOffCents()),
                 'cash_collected' => (string) $reconciliationRows->firstWhere('key', 'total_cashiered')['amount'],
                 'delta_label' => $reconciliation['delta_label'],
             ],

@@ -1,7 +1,7 @@
 <x-mail::message>
 # Daily shop pulse
 
-**{{ $digest['range_label'] }}** — Sales Posted vs Cash Collected for the shop day.
+**{{ $digest['range_label'] }}** — Invoice total and cash collected for the shop day.
 
 @foreach ($digest['headlines'] as $line)
 **{{ $line['label'] }}:** {{ $line['value'] }}  

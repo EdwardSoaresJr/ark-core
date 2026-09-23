@@ -3,15 +3,15 @@
 namespace App\Ark\Operations\Reports;
 
 use App\Ark\Operations\Documents\EstimateDocument;
-use App\Ark\Operations\Financial\BalanceDueCalculator;
-use App\Ark\Operations\Financial\InvoiceSnapshotBuilder;
+use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\Financial\LedgerEntryType;
-use App\Ark\Operations\Financial\RepairOrderCollectionDisposition;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Ark\Operations\Reports\Standards\ReportingStandardsV1;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -29,7 +29,8 @@ class OperationalReportTotals
     }
 
     /**
-     * Posted sales total — matches Tekmetric EOD / payment reconciliation posted RO summary.
+     * Invoice total for posted repair orders. Tax is included. A missing invoice is zero.
+     * Courtesy, trade, and goodwill stay at the invoice total. Write-offs are a separate total.
      *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      */
@@ -39,7 +40,7 @@ class OperationalReportTotals
     }
 
     /**
-     * Posted sales per repair order — legacy import snapshot, issued invoice snapshot, or approved sold lines (incl. sublet).
+     * Frozen invoice total per repair order. Does not read today's repair-order lines.
      *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>
@@ -47,62 +48,49 @@ class OperationalReportTotals
     public static function postedSalesCentsByRepairOrderId(Collection|array $repairOrderIds): Collection
     {
         $ids = collect($repairOrderIds)->filter()->unique()->values();
+        $amounts = self::frozenInvoiceAmountsByRepairOrderId($ids);
 
-        if ($ids->isEmpty()) {
-            return collect();
-        }
-
-        $legacyTotals = self::legacyInvoiceTotalCentsByRepairOrderId($ids);
-        $calculator = app(BalanceDueCalculator::class);
-
-        $repairOrders = RepairOrder::query()
-            ->whereIn('id', $ids)
-            ->get()
-            ->keyBy('id');
-
-        $idsNeedingLineTotals = $ids
-            ->diff($legacyTotals->keys())
-            ->filter(function (int $repairOrderId) use ($calculator, $repairOrders): bool {
-                $repairOrder = $repairOrders->get($repairOrderId);
-
-                return $repairOrder !== null && $calculator->issuedInvoice($repairOrder) === null;
-            });
-
-        $lineTotalsByRepairOrder = $idsNeedingLineTotals->isEmpty()
-            ? collect()
-            : self::postedSoldLineQuery()
-                ->whereIn('repair_order_lines.repair_order_id', $idsNeedingLineTotals)
-                ->groupBy('repair_order_lines.repair_order_id')
-                ->select('repair_order_lines.repair_order_id')
-                ->selectRaw('COALESCE(SUM(repair_order_lines.total_cents), 0) as total_cents')
-                ->pluck('total_cents', 'repair_order_id')
-                ->map(fn (mixed $cents): int => (int) $cents);
-
-        return $ids->mapWithKeys(function (int $repairOrderId) use ($legacyTotals, $calculator, $repairOrders, $lineTotalsByRepairOrder): array {
-            $repairOrder = $repairOrders->get($repairOrderId);
-
-            if ($repairOrder === null) {
-                return [$repairOrderId => 0];
-            }
-
-            $disposition = RepairOrderCollectionDisposition::tryFromMixed($repairOrder->collection_disposition);
-
-            if ($disposition->excludesFromPostedSales()) {
-                return [$repairOrderId => 0];
-            }
-
-            if ($legacyTotals->has($repairOrderId)) {
-                return [$repairOrderId => (int) $legacyTotals[$repairOrderId]];
-            }
-
-            $invoice = $calculator->issuedInvoice($repairOrder);
-
-            if ($invoice !== null) {
-                return [$repairOrderId => InvoiceSnapshotBuilder::invoiceTotalCents($invoice->snapshot_json ?? [])];
-            }
-
-            return [$repairOrderId => (int) ($lineTotalsByRepairOrder[$repairOrderId] ?? 0)];
+        return $ids->mapWithKeys(function (int $repairOrderId) use ($amounts): array {
+            return [$repairOrderId => (int) ($amounts[$repairOrderId]['total_cents'] ?? 0)];
         });
+    }
+
+    /**
+     * Posted invoice sales, tax, and invoice total for repair orders posted in the range.
+     * A repair order with no invoice is not a mismatch. Lines match when every stored
+     * invoice still foots to today's approved pre-tax lines.
+     *
+     * @return array{sales_cents: int, tax_cents: int, total_cents: int, lines_match: bool}
+     */
+    public static function postedInvoiceFigures(Carbon $from, Carbon $to): array
+    {
+        $ids = OperationalReportDateScope::salesPostedBetween(RepairOrder::query(), $from, $to)->pluck('id');
+        $amounts = self::frozenInvoiceAmountsByRepairOrderId($ids);
+        $linePreTax = self::approvedPreTaxCentsByRepairOrderId($ids);
+
+        $linesMatch = $ids->every(function (int $repairOrderId) use ($amounts, $linePreTax): bool {
+            if (! $amounts->has($repairOrderId)) {
+                return true;
+            }
+
+            return (int) $amounts[$repairOrderId]['pre_tax_cents'] === (int) ($linePreTax[$repairOrderId] ?? 0);
+        });
+
+        return [
+            'sales_cents' => (int) $amounts->sum('pre_tax_cents'),
+            'tax_cents' => (int) $amounts->sum('tax_cents'),
+            'total_cents' => (int) $amounts->sum('total_cents'),
+            'lines_match' => $linesMatch,
+        ];
+    }
+
+    public static function writeOffCents(Carbon $from, Carbon $to): int
+    {
+        return (int) RepairOrderLedgerEntry::query()
+            ->active()
+            ->where('entry_type', LedgerEntryType::WriteOff)
+            ->whereBetween('recorded_at', [$from, $to])
+            ->sum('amount_cents');
     }
 
     /**
@@ -385,7 +373,116 @@ class OperationalReportTotals
     }
 
     /**
-     * Approved sold lines for posted sales fallback — includes sublet revenue.
+     * Approved labor, parts, sublet, and fees, including shop fees and standing discounts.
+     *
+     * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
+     * @return Collection<int, int>
+     */
+    private static function approvedPreTaxCentsByRepairOrderId(Collection|array $repairOrderIds): Collection
+    {
+        $ids = collect($repairOrderIds)->filter()->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return self::postedSoldLineQuery()
+            ->whereIn('repair_order_lines.repair_order_id', $ids)
+            ->groupBy('repair_order_lines.repair_order_id')
+            ->select('repair_order_lines.repair_order_id')
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
+                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
+                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
+                + COALESCE(SUM(CASE WHEN repair_order_lines.type = ? THEN repair_order_lines.subtotal_cents ELSE 0 END), 0)
+                + COALESCE(SUM(repair_order_lines.shop_fee_cents), 0)
+                - COALESCE(SUM(repair_order_lines.standing_discount_cents), 0) as pre_tax_cents',
+                [
+                    RepairOrderLineType::Labor->value,
+                    RepairOrderLineType::Part->value,
+                    RepairOrderLineType::Sublet->value,
+                    RepairOrderLineType::Fee->value,
+                ],
+            )
+            ->pluck('pre_tax_cents', 'repair_order_id')
+            ->map(fn (mixed $cents): int => (int) $cents);
+    }
+
+    /**
+     * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
+     * @return Collection<int, array{pre_tax_cents: int, tax_cents: int, total_cents: int}>
+     */
+    private static function frozenInvoiceAmountsByRepairOrderId(Collection|array $repairOrderIds): Collection
+    {
+        $ids = collect($repairOrderIds)->filter()->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $documents = EstimateDocument::query()
+            ->whereIn('repair_order_id', $ids)
+            ->where(function (Builder $query): void {
+                $query->whereNotNull('legacy_arksms_invoice_id')
+                    ->orWhere(function (Builder $query): void {
+                        $query->where('document_type', FinancialDocumentType::Invoice->value)
+                            ->where('status', '!=', InvoiceStatus::Voided->value);
+                    });
+            })
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('repair_order_id');
+
+        return $documents->mapWithKeys(function (Collection $group, int|string $repairOrderId): array {
+            $legacy = $group->first(
+                fn (EstimateDocument $document): bool => data_get($document->snapshot_json, 'schema_version') === 'legacy_import',
+            ) ?? $group->first(
+                fn (EstimateDocument $document): bool => $document->legacy_arksms_invoice_id !== null,
+            );
+
+            $issued = $group->first(function (EstimateDocument $document): bool {
+                return $document->document_type === FinancialDocumentType::Invoice
+                    && $document->status !== InvoiceStatus::Voided->value;
+            });
+
+            $amounts = self::invoiceAmountsFromSnapshot(($legacy ?? $issued)?->snapshot_json ?? []);
+
+            if ($amounts === null) {
+                return [];
+            }
+
+            return [(int) $repairOrderId => $amounts];
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     * @return array{pre_tax_cents: int, tax_cents: int, total_cents: int}|null
+     */
+    private static function invoiceAmountsFromSnapshot(array $snapshot): ?array
+    {
+        $totals = $snapshot['totals'] ?? null;
+
+        if (! is_array($totals) || ! array_key_exists('total_cents', $totals)) {
+            return null;
+        }
+
+        $totalCents = (int) $totals['total_cents'];
+        $taxCents = (int) ($totals['tax_cents'] ?? 0);
+
+        return [
+            'pre_tax_cents' => ReportingStandardsV1::postedInvoiceSalesCents(
+                array_key_exists('subtotal_before_tax_cents', $totals) ? (int) $totals['subtotal_before_tax_cents'] : null,
+                $totalCents,
+                $taxCents,
+            ),
+            'tax_cents' => $taxCents,
+            'total_cents' => $totalCents,
+        ];
+    }
+
+    /**
+     * Approved labor, parts, fees, and sublet.
      *
      * @return Builder<RepairOrderLine>
      */

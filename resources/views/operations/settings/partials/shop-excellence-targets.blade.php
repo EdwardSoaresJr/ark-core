@@ -8,7 +8,7 @@
     <div class="mt-4 max-w-3xl border border-slate-200 bg-slate-50 px-3 py-2">
         <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Posted sales</p>
         <p class="mt-1 text-xs leading-relaxed text-slate-600">
-            <strong class="font-semibold text-slate-800">Sales Posted</strong> uses <code class="text-[11px]">posted_at</code> — ROs you posted in the range (End of Day RO summary).
+            <strong class="font-semibold text-slate-800">Posted invoice sales</strong> uses the frozen invoice on repair orders posted in the range, before tax.
             <strong class="font-semibold text-slate-800">Cash Collected</strong> uses ledger payment/deposit dates (Payment Details / Total Cashiered).
             Deposits and partial payments never inflate posted sales until the RO is posted.
             Close — Paid posts automatically; paid ROs can also be posted from the repair order when ready.

@@ -25,6 +25,9 @@ class OperationalReportRangeMetrics
     /** @var array<string, int>|null */
     private ?array $postedComponents = null;
 
+    /** @var array{sales_cents: int, tax_cents: int, total_cents: int, lines_match: bool}|null */
+    private ?array $postedInvoice = null;
+
     public function __construct(
         private readonly Carbon $from,
         private readonly Carbon $to,
@@ -38,14 +41,8 @@ class OperationalReportRangeMetrics
         $targets = ShopExcellenceTargets::current();
         $postedCount = $this->postedCount();
         $components = $this->components();
-        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
-            $components['labor_cents'],
-            $components['parts_cents'],
-            $components['sublet_cents'],
-            $components['fee_cents'],
-            $components['discount_cents'],
-        );
-        $salesPostedCents = $this->postedSalesCents();
+        $invoice = $this->postedInvoice();
+        $salesCents = $invoice['sales_cents'];
         $cashCollectedCents = $this->cashCollectedCents();
         $aroCents = ReportingStandardsV1::aroCents($salesCents, $postedCount);
         $unpaidPickupCount = $this->unpaidPickupCount();
@@ -55,8 +52,8 @@ class OperationalReportRangeMetrics
         $partsGpCents = $this->partsGrossProfitCents();
         $partsSalesCents = $this->partsSalesCents();
         $feesSoldCents = $this->feesSoldCents();
-        $partsComplete = $components['parts_sales_missing_cost_cents'] === 0;
-        $laborComplete = $components['labor_sales_missing_cost_cents'] === 0;
+        $partsComplete = $invoice['lines_match'] && $components['parts_sales_missing_cost_cents'] === 0;
+        $laborComplete = $invoice['lines_match'] && $components['labor_sales_missing_cost_cents'] === 0;
         $partsMarginPercent = $partsComplete ? $this->marginPercent($partsGpCents, $partsSalesCents) : null;
         $laborCostCents = $this->laborCostCents();
         $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
@@ -69,13 +66,15 @@ class OperationalReportRangeMetrics
         $elrFloor = $targets['effective_labor_rate_floor_cents'] ?? $targets['posted_labor_rate_cents'];
 
         return [
-            $this->kpi('Sales Posted', $this->money($salesPostedCents), 'Posted invoice total, tax included'),
+            $this->kpi('Posted invoice sales', $this->money($salesCents), 'Frozen invoice, before tax'),
+            $this->kpi('Invoice total', $this->money($invoice['total_cents']), 'Frozen invoice sales plus tax'),
+            $this->kpi('Write-offs', $this->money($this->writeOffCents()), 'Recorded write-offs. Not a reduction of posted invoice sales.'),
             $this->kpi('Cash Collected', $this->money($cashCollectedCents), 'Receipts minus refunds'),
             $this->kpi('Car count', (string) $postedCount, 'Posted repair orders'),
             $this->kpi(
                 'ARO',
                 $postedCount > 0 ? $this->money($aroCents) : 'n/a',
-                'Sales ÷ car count · target '.$this->money($targets['aro_target_cents']),
+                'Posted invoice sales ÷ car count · target '.$this->money($targets['aro_target_cents']),
                 ShopExcellenceTargets::toneForMinimum($postedCount > 0 ? $aroCents : null, $targets['aro_target_cents']),
             ),
             $this->kpi('Unpaid Pickups', $this->money($unpaidPickupCents), $unpaidPickupCount.' awaiting collection'),
@@ -92,17 +91,23 @@ class OperationalReportRangeMetrics
             $this->kpi(
                 'Parts gross profit margin',
                 ReportingStandardsV1::percentOrIncomplete($partsComplete, $partsMarginPercent),
-                $partsComplete
-                    ? 'Parts sales − parts cost · target '.$targets['parts_margin_target_percent'].'%'
-                    : $this->money($components['parts_sales_missing_cost_cents']).' parts sales have no cost',
+                $this->matchedCostHint(
+                    $invoice['lines_match'],
+                    $components['parts_sales_missing_cost_cents'],
+                    'parts sales have no cost',
+                    'Parts sales − parts cost · target '.$targets['parts_margin_target_percent'].'%',
+                ),
                 $partsComplete ? ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']) : null,
             ),
             $this->kpi(
                 'Labor gross profit margin',
                 ReportingStandardsV1::percentOrIncomplete($laborComplete, $laborMarginPercent),
-                $laborComplete
-                    ? ($laborCostCents > 0 ? 'Labor sales − loaded labor cost' : 'Assign a loaded labor cost to measure this')
-                    : $this->money($components['labor_sales_missing_cost_cents']).' labor sales have no loaded cost',
+                $this->matchedCostHint(
+                    $invoice['lines_match'],
+                    $components['labor_sales_missing_cost_cents'],
+                    'labor sales have no loaded cost',
+                    $laborCostCents > 0 ? 'Labor sales − loaded labor cost' : 'Assign a loaded labor cost to measure this',
+                ),
             ),
             $this->kpi(
                 'Parts/Labor Mix',
@@ -113,9 +118,12 @@ class OperationalReportRangeMetrics
             $this->kpi(
                 'Parts gross profit',
                 $partsComplete ? $this->money($partsGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
-                $partsComplete
-                    ? 'Parts sales − parts cost'
-                    : $this->money($components['parts_sales_missing_cost_cents']).' parts sales have no cost',
+                $this->matchedCostHint(
+                    $invoice['lines_match'],
+                    $components['parts_sales_missing_cost_cents'],
+                    'parts sales have no cost',
+                    'Parts sales − parts cost',
+                ),
             ),
             $this->kpi('Fees Sold', $this->money($feesSoldCents), 'shop fees and supplies on posted ROs'),
             $this->kpi('Deferred Opportunity', $this->money($deferredCents), 'deferred work'),
@@ -129,24 +137,14 @@ class OperationalReportRangeMetrics
      */
     public function dayReviewKpis(): array
     {
-        $partsGpCents = $this->partsGrossProfitCents();
-        $partsSalesCents = $this->partsSalesCents();
+        $components = $this->components();
         $laborSoldCents = $this->laborSoldCents();
         $laborCostCents = $this->laborCostCents();
-        $components = $this->components();
         $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
-        $closedGpCents = $partsGpCents + $laborGpCents + $components['fee_cents'];
-        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
-            $components['labor_cents'],
-            $components['parts_cents'],
-            $components['sublet_cents'],
-            $components['fee_cents'],
-            $components['discount_cents'],
-        );
-        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
-            && $components['labor_sales_missing_cost_cents'] === 0
-            && $components['sublet_cents'] === 0;
-        $grossMarginPercent = $costsComplete ? $this->marginPercent($closedGpCents, $salesCents) : null;
+        $costsComplete = $this->postedCostsAreMatched();
+        $closedGpCents = $this->postedGrossProfitCents();
+        $salesCents = $this->postedInvoice()['sales_cents'];
+        $grossMarginPercent = $closedGpCents !== null ? $this->marginPercent($closedGpCents, $salesCents) : null;
         $backorderedCount = $this->backorderedRepairOrderCount();
         $deferredRoCount = $this->dispositionRepairOrderCount(RepairOrderConcernDisposition::Deferred);
         $efficiencyPercent = $this->shopEfficiencyPercent();
@@ -158,20 +156,25 @@ class OperationalReportRangeMetrics
         $supplemental = [
             $this->kpi(
                 'Closed GP',
-                $costsComplete ? $this->money($closedGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
-                $costsComplete ? 'Gross profit on posted sales' : 'Cost is missing on posted sales',
+                $closedGpCents !== null ? $this->money($closedGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
+                $costsComplete ? 'Posted invoice sales minus matched cost' : 'Cost cannot be matched to the posted invoice.',
             ),
             $this->kpi(
                 'Gross profit margin',
                 ReportingStandardsV1::percentOrIncomplete($costsComplete, $grossMarginPercent),
-                $costsComplete ? 'Gross profit ÷ sales' : 'Incomplete data. Cost is missing on posted sales.',
+                $costsComplete ? 'Gross profit ÷ posted invoice sales' : 'Cost cannot be matched to the posted invoice.',
             ),
             $this->kpi(
                 'Labor GP',
-                $components['labor_sales_missing_cost_cents'] === 0 ? $this->money($laborGpCents) : ReportingStandardsV1::INCOMPLETE_DATA,
-                $components['labor_sales_missing_cost_cents'] === 0
-                    ? 'Labor sales − loaded labor cost'
-                    : $this->money($components['labor_sales_missing_cost_cents']).' labor sales have no loaded cost',
+                $this->postedInvoice()['lines_match'] && $components['labor_sales_missing_cost_cents'] === 0
+                    ? $this->money($laborGpCents)
+                    : ReportingStandardsV1::INCOMPLETE_DATA,
+                $this->matchedCostHint(
+                    $this->postedInvoice()['lines_match'],
+                    $components['labor_sales_missing_cost_cents'],
+                    'labor sales have no loaded cost',
+                    'Labor sales − loaded labor cost',
+                ),
             ),
             $this->kpi(
                 'RO Pipeline',
@@ -294,14 +297,15 @@ class OperationalReportRangeMetrics
     public function financialRows(): array
     {
         $components = $this->components();
-        $partsComplete = $components['parts_sales_missing_cost_cents'] === 0;
-        $laborComplete = $components['labor_sales_missing_cost_cents'] === 0;
+        $linesMatch = $this->postedInvoice()['lines_match'];
+        $partsComplete = $linesMatch && $components['parts_sales_missing_cost_cents'] === 0;
+        $laborComplete = $linesMatch && $components['labor_sales_missing_cost_cents'] === 0;
 
         return [
             $this->financialCategoryRow('Labor', $components['labor_cents'], $laborComplete ? $this->laborCostCents() : null),
             $this->financialCategoryRow('Parts', $components['parts_cents'], $partsComplete ? $this->partsCostCents() : null),
-            $this->financialCategoryRow('Sublet', $components['sublet_cents'], $components['sublet_cents'] === 0 ? 0 : null),
-            $this->financialCategoryRow('Other', $components['fee_cents'], 0),
+            $this->financialCategoryRow('Sublet', $components['sublet_cents'], $linesMatch && $components['sublet_cents'] === 0 ? 0 : null),
+            $this->financialCategoryRow('Other', $components['fee_cents'], $linesMatch ? 0 : null),
         ];
     }
 
@@ -657,6 +661,69 @@ class OperationalReportRangeMetrics
             ->values();
     }
 
+    public function postedInvoiceSalesCents(): int
+    {
+        return $this->postedInvoice()['sales_cents'];
+    }
+
+    public function postedInvoiceTaxCents(): int
+    {
+        return $this->postedInvoice()['tax_cents'];
+    }
+
+    public function postedInvoiceTotalCents(): int
+    {
+        return $this->postedInvoice()['total_cents'];
+    }
+
+    public function writeOffCents(): int
+    {
+        return OperationalReportTotals::writeOffCents($this->from, $this->to);
+    }
+
+    public function postedGrossProfitCents(): ?int
+    {
+        if (! $this->postedCostsAreMatched()) {
+            return null;
+        }
+
+        return ReportingStandardsV1::grossProfitCents(
+            $this->postedInvoice()['sales_cents'],
+            $this->partsCostCents() + $this->laborCostCents(),
+        );
+    }
+
+    public function postedCostsAreMatched(): bool
+    {
+        $components = $this->components();
+
+        return $this->postedInvoice()['lines_match']
+            && $components['parts_sales_missing_cost_cents'] === 0
+            && $components['labor_sales_missing_cost_cents'] === 0
+            && $components['sublet_cents'] === 0;
+    }
+
+    /**
+     * @return array{sales_cents: int, tax_cents: int, total_cents: int, lines_match: bool}
+     */
+    private function postedInvoice(): array
+    {
+        return $this->postedInvoice ??= OperationalReportTotals::postedInvoiceFigures($this->from, $this->to);
+    }
+
+    private function matchedCostHint(bool $linesMatch, int $missingCents, string $missingLabel, string $completeHint): string
+    {
+        if (! $linesMatch) {
+            return 'Current lines do not match the posted invoice.';
+        }
+
+        if ($missingCents > 0) {
+            return $this->money($missingCents).' '.$missingLabel;
+        }
+
+        return $completeHint;
+    }
+
     /**
      * @return array<string, int>
      */
@@ -768,21 +835,15 @@ class OperationalReportRangeMetrics
     {
         $targets = ShopExcellenceTargets::current();
         $components = $this->components();
+        $invoice = $this->postedInvoice();
         $postedCount = $this->postedCount();
-        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
-            $components['labor_cents'],
-            $components['parts_cents'],
-            $components['sublet_cents'],
-            $components['fee_cents'],
-            $components['discount_cents'],
-        );
-        $aroCents = ReportingStandardsV1::aroCents($salesCents, $postedCount);
+        $aroCents = ReportingStandardsV1::aroCents($invoice['sales_cents'], $postedCount);
         $laborSoldCents = $this->laborSoldCents();
         $laborHours = $this->laborHours();
         $partsGpCents = $this->partsGrossProfitCents();
         $partsSalesCents = $this->partsSalesCents();
-        $partsComplete = $components['parts_sales_missing_cost_cents'] === 0;
-        $laborComplete = $components['labor_sales_missing_cost_cents'] === 0;
+        $partsComplete = $invoice['lines_match'] && $components['parts_sales_missing_cost_cents'] === 0;
+        $laborComplete = $invoice['lines_match'] && $components['labor_sales_missing_cost_cents'] === 0;
         $partsMarginPercent = $partsComplete ? $this->marginPercent($partsGpCents, $partsSalesCents) : null;
         $laborCostCents = $this->laborCostCents();
         $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
@@ -801,7 +862,7 @@ class OperationalReportRangeMetrics
                 $this->money($targets['aro_target_cents']),
                 $postedCount > 0 ? $this->compareCentsPosture($aroCents, $targets['aro_target_cents']) : 'No repair orders posted in range',
                 ShopExcellenceTargets::toneForMinimum($postedCount > 0 ? $aroCents : null, $targets['aro_target_cents']),
-                'Sales ÷ car count on posted repair orders',
+                'Posted invoice sales ÷ car count on posted repair orders',
             ),
             $this->marginHealthRow(
                 'Effective labor rate',
@@ -827,7 +888,7 @@ class OperationalReportRangeMetrics
                 $targets['parts_margin_target_percent'].'%',
                 $partsComplete
                     ? $this->comparePercentPosture($partsMarginPercent, $targets['parts_margin_target_percent'])
-                    : $this->money($components['parts_sales_missing_cost_cents']).' parts sales have no cost',
+                    : $this->matchedCostHint($invoice['lines_match'], $components['parts_sales_missing_cost_cents'], 'parts sales have no cost', ''),
                 $partsComplete ? ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']) : null,
                 'Follow the parts matrix — advisors do not discount margin away',
             ),
@@ -837,7 +898,7 @@ class OperationalReportRangeMetrics
                 'Loaded cost model',
                 $laborComplete
                     ? ($laborCostCents > 0 ? 'Closed labor GP on assigned tech cost' : 'Assign labor cost on staff for margin')
-                    : $this->money($components['labor_sales_missing_cost_cents']).' labor sales have no loaded cost',
+                    : $this->matchedCostHint($invoice['lines_match'], $components['labor_sales_missing_cost_cents'], 'labor sales have no loaded cost', ''),
                 null,
                 'Staff Settings → loaded labor cost per technician',
             ),
@@ -897,33 +958,24 @@ class OperationalReportRangeMetrics
 
         $partsSalesCents = $this->partsSalesCents();
         $partsCostCents = $this->partsCostCents();
-        $partsGpCents = $this->partsGrossProfitCents();
         $laborSoldCents = $this->laborSoldCents();
         $laborCostCents = $this->laborCostCents();
         $components = $this->components();
-        $laborGpCents = ($laborSoldCents - $components['labor_sales_missing_cost_cents']) - $laborCostCents;
         $feesSoldCents = $this->feesSoldCents();
-        $serviceRevenueCents = ReportingStandardsV1::preTaxServiceSalesCents(
-            $components['labor_cents'],
-            $components['parts_cents'],
-            $components['sublet_cents'],
-            $components['fee_cents'],
-            $components['discount_cents'],
-        );
-        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
-            && $components['labor_sales_missing_cost_cents'] === 0
-            && $components['sublet_cents'] === 0;
-        $taxCollectedCents = $this->closedTaxCollectedCents();
+        $invoice = $this->postedInvoice();
+        $serviceRevenueCents = $invoice['sales_cents'];
+        $costsComplete = $this->postedCostsAreMatched();
+        $taxCollectedCents = $invoice['tax_cents'];
         $totalCollectedCents = $this->cashCollectedCents();
         $cashOnPostedRepairOrdersCents = OperationalReportTotals::cashCollectedCentsForRepairOrders(
             $this->postedSalesRepairOrdersQuery()->pluck('id'),
             $this->from,
             $this->to,
         );
-        $postedSalesCents = $this->postedSalesCents();
+        $writeOffCents = $this->writeOffCents();
         $cogsCents = $partsCostCents + $laborCostCents;
-        $grossProfitCents = $partsGpCents + $laborGpCents + $feesSoldCents + $components['sublet_cents'];
-        $grossMarginPercent = $costsComplete ? $this->marginPercent($grossProfitCents, $serviceRevenueCents) : null;
+        $grossProfitCents = $this->postedGrossProfitCents();
+        $grossMarginPercent = $grossProfitCents !== null ? $this->marginPercent($grossProfitCents, $serviceRevenueCents) : null;
 
         $monthlyFixedCents = ShopExcellenceTargets::monthlyFixedCostsCents();
         $monthlyAdvisorPayrollCents = $this->monthlyAdvisorPayrollCents();
@@ -936,7 +988,7 @@ class OperationalReportRangeMetrics
         $proratedShopFixedCents = $proratedFixedCents !== null
             ? max(0, $proratedFixedCents - $proratedAdvisorPayrollCents)
             : null;
-        $operatingIncomeCents = $proratedFixedCents !== null
+        $operatingIncomeCents = $proratedFixedCents !== null && $grossProfitCents !== null
             ? $grossProfitCents - $proratedFixedCents
             : null;
 
@@ -957,18 +1009,19 @@ class OperationalReportRangeMetrics
             : null;
 
         $plLines = [
-            $this->ownerPlLine('Service revenue (pre-tax)', $serviceRevenueCents, $serviceRevenueCents, false, 'subtotal'),
-            $this->ownerPlLine('Parts sales', $partsSalesCents, $serviceRevenueCents, true),
-            $this->ownerPlLine('Labor sales', $laborSoldCents, $serviceRevenueCents, true),
+            $this->ownerPlLine('Posted invoice sales', $serviceRevenueCents, $serviceRevenueCents, false, 'subtotal', null, 'Frozen invoice, before tax. Not necessarily final recognized revenue.'),
+            $this->ownerPlLine('Parts sales', $partsSalesCents, $serviceRevenueCents, true, 'normal', null, $invoice['lines_match'] ? null : 'Current lines. Posted invoice sales is the frozen invoice.'),
+            $this->ownerPlLine('Labor sales', $laborSoldCents, $serviceRevenueCents, true, 'normal', null, $invoice['lines_match'] ? null : 'Current lines. Posted invoice sales is the frozen invoice.'),
             $this->ownerPlLine('Shop fees sold', $feesSoldCents, $serviceRevenueCents, true),
-            $this->ownerPlLine('Sales tax collected', $taxCollectedCents, $serviceRevenueCents, true, 'normal', null, 'Pass-through liability — not shop revenue'),
-            $this->ownerPlLine('Cost of goods sold', $cogsCents, $serviceRevenueCents, false, 'subtotal', null, null, $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA),
-            $this->ownerPlLine('Parts cost', $partsCostCents, $serviceRevenueCents, true, 'normal', null, null, $components['parts_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA),
-            $this->ownerPlLine('Labor cost (assigned tech loaded rate)', $laborCostCents, $serviceRevenueCents, true, 'normal', null, 'Staff Settings loaded cost × billed hours', $components['labor_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA),
-            $this->ownerPlLine('Gross profit', $grossProfitCents, $serviceRevenueCents, false, 'subtotal', null, $grossMarginPercent !== null ? $grossMarginPercent.'% gross profit margin' : ($costsComplete ? null : 'Missing cost is not treated as zero.'), $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Sales tax collected', $taxCollectedCents, $serviceRevenueCents, true, 'normal', null, 'Tax on the posted invoice. Not sales.'),
+            $this->ownerPlLine('Cost of goods sold', $cogsCents, $serviceRevenueCents, false, 'subtotal', null, null, $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA, $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Parts cost', $partsCostCents, $serviceRevenueCents, true, 'normal', null, null, $invoice['lines_match'] && $components['parts_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA, $invoice['lines_match'] && $components['parts_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Labor cost (assigned tech loaded rate)', $laborCostCents, $serviceRevenueCents, true, 'normal', null, 'Staff Settings loaded cost × billed hours', $invoice['lines_match'] && $components['labor_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA, $invoice['lines_match'] && $components['labor_sales_missing_cost_cents'] === 0 ? null : ReportingStandardsV1::INCOMPLETE_DATA),
+            $this->ownerPlLine('Gross profit', $grossProfitCents ?? 0, $serviceRevenueCents, false, 'subtotal', null, $grossMarginPercent !== null ? $grossMarginPercent.'% gross profit margin' : 'Cost cannot be matched to the posted invoice.', $grossProfitCents !== null ? null : ReportingStandardsV1::INCOMPLETE_DATA, $grossProfitCents !== null ? null : ReportingStandardsV1::INCOMPLETE_DATA),
             $this->ownerPlLine('Cash collected', $totalCollectedCents, 0, false, 'normal', null, 'Receipts minus refunds on the payment date'),
-            $this->ownerPlLine('Cash on posted ROs', $cashOnPostedRepairOrdersCents, 0, false, 'normal', null, 'Payments in range tied to ROs posted this period'),
-            $this->ownerPlLine('Sales posted', $postedSalesCents, 0, false, 'normal', null, 'Posted invoice totals in range — Tekmetric RO summary'),
+            $this->ownerPlLine('Cash on posted ROs', $cashOnPostedRepairOrdersCents, 0, false, 'normal', null, 'Payments and deposits in range on repair orders posted this period'),
+            $this->ownerPlLine('Write-offs', $writeOffCents, 0, false, 'normal', null, 'Recorded write-offs. Shown separately from posted invoice sales.'),
+            $this->ownerPlLine('Invoice total', $invoice['total_cents'], 0, false, 'normal', null, 'Frozen invoice sales plus tax'),
         ];
 
         if ($proratedFixedCents !== null) {
@@ -1010,6 +1063,7 @@ class OperationalReportRangeMetrics
                 ($operatingIncomeCents ?? 0) >= 0 ? 'good' : 'warn',
                 null,
                 $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA,
+                $costsComplete ? null : ReportingStandardsV1::INCOMPLETE_DATA,
             );
         } else {
             $plLines[] = $this->ownerPlLine(
@@ -1027,9 +1081,9 @@ class OperationalReportRangeMetrics
             [
                 'label' => 'Sales tax to remit',
                 'amount' => $this->money($taxCollectedCents),
-                'source' => 'Closed RO lines',
+                'source' => 'Posted invoice',
                 'tone' => $taxCollectedCents > 0 ? null : null,
-                'note' => 'Sum of tax_cents on approved sold lines — reconcile with POS / accountant filings',
+                'note' => 'Tax stored on the posted invoice.',
             ],
             [
                 'label' => 'Payroll tax reserve (est.)',
@@ -1134,10 +1188,11 @@ class OperationalReportRangeMetrics
         ?string $tone = null,
         ?string $note = null,
         ?string $percentOverride = null,
+        ?string $amountOverride = null,
     ): array {
         return [
             'label' => $label,
-            'amount' => $this->money($amountCents),
+            'amount' => $amountOverride ?? $this->money($amountCents),
             'percent' => $percentOverride ?? $this->percentOfRevenueLabel($amountCents, $revenueCents),
             'indent' => $indent,
             'emphasis' => $emphasis,
@@ -1153,14 +1208,6 @@ class OperationalReportRangeMetrics
         }
 
         return (int) round(($amountCents / $revenueCents) * 100).'%';
-    }
-
-    private function closedTaxCollectedCents(): int
-    {
-        return (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesClosedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->sum('repair_order_lines.tax_cents');
     }
 
     private function partsCostCents(): int
@@ -1200,37 +1247,26 @@ class OperationalReportRangeMetrics
         $rangeDays = max(1, (int) $this->from->copy()->startOfDay()->diffInDays($this->to->copy()->startOfDay()) + 1);
         $proratedFixedCents = (int) round($monthlyFixedCents * ($rangeDays / 30.437));
 
-        $components = $this->components();
-        $costsComplete = $components['parts_sales_missing_cost_cents'] === 0
-            && $components['labor_sales_missing_cost_cents'] === 0
-            && $components['sublet_cents'] === 0;
-        $partsGpCents = $this->partsGrossProfitCents();
-        $laborGpCents = ($this->laborSoldCents() - $components['labor_sales_missing_cost_cents']) - $this->laborCostCents();
-        $grossProfitCents = $partsGpCents + $laborGpCents + $components['fee_cents'];
-        $salesCents = ReportingStandardsV1::preTaxServiceSalesCents(
-            $components['labor_cents'],
-            $components['parts_cents'],
-            $components['sublet_cents'],
-            $components['fee_cents'],
-            $components['discount_cents'],
-        );
-        $grossMarginPercent = $costsComplete && $salesCents > 0
+        $costsComplete = $this->postedCostsAreMatched();
+        $grossProfitCents = $this->postedGrossProfitCents();
+        $salesCents = $this->postedInvoice()['sales_cents'];
+        $grossMarginPercent = $grossProfitCents !== null && $salesCents > 0
             ? (int) round(($grossProfitCents / $salesCents) * 100)
             : null;
 
-        if (! $costsComplete) {
+        if (! $costsComplete || $grossProfitCents === null) {
             return [
                 'gross_profit_label' => ReportingStandardsV1::INCOMPLETE_DATA,
                 'prorated_fixed_label' => $this->money($proratedFixedCents),
                 'surplus_label' => ReportingStandardsV1::INCOMPLETE_DATA,
-                'posture' => 'Cost is missing on posted sales',
+                'posture' => 'Cost cannot be matched to the posted invoice.',
                 'tone' => 'warn',
                 'gross_margin_percent' => null,
                 'margin_label' => ReportingStandardsV1::INCOMPLETE_DATA,
                 'monthly_fixed_label' => $this->money($monthlyFixedCents),
                 'monthly_break_even_sales_label' => null,
                 'range_days' => $rangeDays,
-                'action' => 'Enter the missing parts and labor costs before reading break-even',
+                'action' => 'Match cost to the posted invoice before reading break-even',
             ];
         }
 

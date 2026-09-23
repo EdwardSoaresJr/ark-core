@@ -96,8 +96,12 @@
 
     <section class="ops-eod-report__reconcile" aria-label="Cash reconciliation">
         <div class="ops-eod-report__reconcile-row">
-            <span>Sales Posted</span>
+            <span>Invoice total</span>
             <strong>{{ $eod->reconciliation['sales_posted'] }}</strong>
+        </div>
+        <div class="ops-eod-report__reconcile-row">
+            <span>Write-offs</span>
+            <strong>{{ $eod->reconciliation['write_offs'] }}</strong>
         </div>
         <div class="ops-eod-report__reconcile-row">
             <span>Cash Collected</span>

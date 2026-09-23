@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Documents\DocumentFooterPresenter;
 use App\Ark\Operations\Documents\InvoicePdfFinancialSnapshot;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -85,7 +86,7 @@ test('waiving remaining balance as trade preserves invoice total and clears bala
         ->assertSee('Trade');
 });
 
-test('courtesy and trade waived repair orders are excluded from posted sales cents', function () {
+test('courtesy and trade waivers keep the invoice and record the write-off separately', function () {
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
     $trade = financialCloseoutRepairOrder();
@@ -105,9 +106,9 @@ test('courtesy and trade waived repair orders are excluded from posted sales cen
         $retail->id,
     ]);
 
-    expect($posted[$trade->id])->toBe(0)
+    expect($posted[$trade->id])->toBe(15000)
         ->and($posted[$retail->id])->toBe(15000)
-        ->and(OperationalReportTotals::postedSalesCents([$trade->id, $retail->id]))->toBe(15000);
+        ->and(OperationalReportTotals::postedSalesCents([$trade->id, $retail->id]))->toBe(30000);
 });
 
 test('bad debt waiver remains in posted sales cents', function () {
@@ -140,7 +141,7 @@ test('invoice pdf snapshot includes courtesy waiver customer label', function ()
     expect($snapshot['financial']['collection_waiver_label'])->toBe('Courtesy — balance waived')
         ->and($snapshot['financial']['write_offs_cents'])->toBe(15000);
 
-    $snapshot['document_footer'] = app(\App\Ark\Operations\Documents\DocumentFooterPresenter::class)->present($snapshot);
+    $snapshot['document_footer'] = app(DocumentFooterPresenter::class)->present($snapshot);
 
     $html = view('operations.documents.partials._document-footer', [
         'variant' => 'pdf',

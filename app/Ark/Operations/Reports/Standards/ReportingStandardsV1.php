@@ -55,6 +55,19 @@ final class ReportingStandardsV1
         ) + $taxCents;
     }
 
+    /**
+     * Posted invoice sales. Uses the frozen pre-tax field when the invoice stored one.
+     * Older invoices use invoice total minus tax.
+     */
+    public static function postedInvoiceSalesCents(?int $subtotalBeforeTaxCents, int $invoiceTotalCents, int $taxCents): int
+    {
+        if ($subtotalBeforeTaxCents !== null) {
+            return $subtotalBeforeTaxCents;
+        }
+
+        return $invoiceTotalCents - $taxCents;
+    }
+
     public static function aroCents(int $preTaxServiceSalesCents, int $postedRepairOrderCount): int
     {
         if ($postedRepairOrderCount < 1) {

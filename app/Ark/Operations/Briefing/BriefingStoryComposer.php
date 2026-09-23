@@ -44,12 +44,12 @@ final class BriefingStoryComposer
 
         $summary = [];
 
-        $sales = collect($eod->roSummary)->firstWhere('label', 'Sales');
+        $sales = collect($eod->roSummary)->firstWhere('label', 'Posted invoice sales');
         if (is_array($sales)) {
             $summary[] = [
-                'label' => 'Sales',
+                'label' => 'Posted invoice sales',
                 'value' => (string) $sales['value'],
-                'hint' => 'Labor, parts, sublet, and other, minus discounts. Tax is not included.',
+                'hint' => 'Frozen invoice, before tax. Write-offs are separate.',
             ];
         }
 

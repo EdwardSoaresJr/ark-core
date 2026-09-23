@@ -93,7 +93,7 @@ final class ShopFinancialSnapshotTool implements DragonAgentTool
                 'to' => $window['to_local']->toDateString(),
             ],
             'definitions' => [
-                'posted_sales' => 'Operational Report “Sales Posted” — Tekmetric EOD posted ROs in range. Not cash in the drawer.',
+                'posted_sales' => 'Posted invoice sales — frozen invoice before tax on repair orders posted in range. Not cash, and not a write-off.',
                 'cash_collected' => 'Operational Report “Cash Collected” — payments + deposits cashiered in range.',
                 'waiting_approval_dollars' => 'Human-readable US dollars of Approval Forecast pending on ROs currently waiting approval. Do not confuse with pending_recommended_cents (pennies). Estimate language, not collected cash. Waiting-approval is live board, not limited to this range.',
                 'net_profit' => 'Not available. ARK Financial Authority is RED; Dragon will not invent P&L.',

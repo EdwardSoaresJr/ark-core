@@ -31,6 +31,7 @@ test('ro 1699 recommended work stays out of posted sales and the end of day summ
 
     $recommended = reportingStandardsConcern($repairOrder, RepairOrderConcernDisposition::Recommended, 2);
     reportingStandardsLine($repairOrder, $recommended, RepairOrderLineType::Labor, subtotalCents: 39_161);
+    freezePostedInvoiceSnapshot($repairOrder, 15_300, 1_120);
 
     $standardPreTax = ReportingStandardsV1::preTaxServiceSalesCents(10_000, 4_000, 1_500, 800, 1_000);
     $standardPosted = ReportingStandardsV1::postedSalesCents(10_000, 4_000, 1_500, 800, 1_000, 1_120);
@@ -44,11 +45,12 @@ test('ro 1699 recommended work stays out of posted sales and the end of day summ
 
     $summary = collect(EndOfDayReportProjection::resolve($from, $to)->roSummary);
 
-    expect($summary->firstWhere('label', 'Sales')['value'])->toBe('$153.00')
+    expect($summary->firstWhere('label', 'Posted invoice sales')['value'])->toBe('$153.00')
         ->and($summary->firstWhere('label', 'Other')['value'])->toBe('$8.00')
         ->and($summary->firstWhere('label', 'Discounts')['value'])->toBe('-$10.00')
         ->and($summary->firstWhere('label', 'Sales tax')['value'])->toBe('$11.20')
-        ->and($summary->firstWhere('label', 'Posted total')['value'])->toBe('$164.20');
+        ->and($summary->firstWhere('label', 'Invoice total')['value'])->toBe('$164.20')
+        ->and(collect($summary)->firstWhere('label', 'Posted invoice sales')['value'])->not->toBe('$544.61');
 });
 
 test('cash collected and the cashiered total subtract refunds', function () {

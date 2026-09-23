@@ -76,7 +76,7 @@ it('renders briefing empty state with yesterday summary', function (): void {
     expect($briefing->greeting)->toBe('Good morning, Alex.')
         ->and($briefing->hasAttentionItems)->toBeFalse()
         ->and(collect($briefing->yesterdaySummary)->pluck('label')->all())
-        ->toContain('Sales', 'Car count');
+        ->toContain('Posted invoice sales', 'Car count');
 
     // Advisor Today is Shop Dashboard (no briefing greeting cards).
     briefingGet($this, $advisor)
@@ -176,8 +176,8 @@ it('includes revenue summary from operational report projections', function (): 
     $briefing = app(OperationsBriefingProjection::class)->forUser($advisor);
 
     expect(collect($briefing->yesterdaySummary)->pluck('label')->all())
-        ->toContain('Sales', 'Car count')
-        ->and(collect($briefing->yesterdaySummary)->firstWhere('label', 'Sales')['value'])
+        ->toContain('Posted invoice sales', 'Car count')
+        ->and(collect($briefing->yesterdaySummary)->firstWhere('label', 'Posted invoice sales')['value'])
         ->not->toBe('$0.00');
 });
 
@@ -296,6 +296,8 @@ function briefingPostedRepairOrder(string $customerName, Carbon $postedAt): Repa
         'subtotal_cents' => 20000,
         'total_cents' => 20000,
     ]);
+
+    freezePostedInvoiceSnapshot($repairOrder, 50_000, 0);
 
     return $repairOrder->fresh();
 }

@@ -104,14 +104,14 @@ final class OperationalReportPaymentReconciliation
             $this->row('advance_pay', 'Advance pay', $advancePay, 'Payments on ROs not posted in this range', 'subtract', subtractDisplay: true),
             $this->row('previous_advanced_pay', 'Previous advanced pay', $previousAdvancedPay, 'Pre-range payments on ROs posted in this range', 'add'),
             $this->row('cleared_from_ar', 'Cleared from A/R', $clearedFromAr, 'Payments in range on ROs posted before this range', 'subtract', subtractDisplay: true),
-            $this->row('legacy_carryover', 'Legacy carryover excluded', $legacyCarryoverExcluded, 'Posted in range but opened before reporting floor — not in Sales Posted', 'subtract', subtractDisplay: true),
+            $this->row('legacy_carryover', 'Legacy carryover excluded', $legacyCarryoverExcluded, 'Posted in range but opened before the reporting floor — not in posted invoice sales', 'subtract', subtractDisplay: true),
         ];
 
         if ($postedToArCents !== 0) {
             $rows[] = $this->row('posted_to_ar', 'Posted to A/R', ['cents' => $postedToArCents, 'details' => []], 'A/R posting adds back when enabled', 'add');
         }
 
-        $rows[] = $this->row('reconciled', 'Reconciled to posted sales', ['cents' => $reconciledCents, 'details' => []], 'Should match posted invoice total below', 'total');
+        $rows[] = $this->row('reconciled', 'Reconciled to posted sales', ['cents' => $reconciledCents, 'details' => []], 'Should match the invoice total below. Write-offs are not cash.', 'total');
 
         return [
             'rows' => $rows,
@@ -289,17 +289,12 @@ final class OperationalReportPaymentReconciliation
 
     private function postedServiceSalesCents(): int
     {
-        return OperationalReportTotals::sumTotalCents(
-            OperationalReportDateScope::salesPostedBetween(RepairOrder::query(), $this->from, $this->to)->pluck('id'),
-        );
+        return OperationalReportTotals::postedInvoiceFigures($this->from, $this->to)['sales_cents'];
     }
 
     private function postedTaxCollectedCents(): int
     {
-        return (int) OperationalReportTotals::soldLineQuery()
-            ->join('repair_orders', 'repair_orders.id', '=', 'repair_order_lines.repair_order_id')
-            ->tap(fn (Builder $query): Builder => OperationalReportDateScope::applySalesPostedBetweenOnJoinedRepairOrders($query, $this->from, $this->to))
-            ->sum('repair_order_lines.tax_cents');
+        return OperationalReportTotals::postedInvoiceFigures($this->from, $this->to)['tax_cents'];
     }
 
     /**

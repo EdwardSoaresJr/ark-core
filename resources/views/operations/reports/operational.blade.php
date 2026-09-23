@@ -22,8 +22,8 @@
                             <a href="{{ $eodUrl }}" class="font-bold text-sky-800 underline decoration-sky-200 hover:text-sky-950">End of Day card</a>
                             for this shop day.
                         @endif
-                        <strong class="font-semibold text-slate-600">Sales Posted</strong> uses posted date.
-                        <strong class="font-semibold text-slate-600">Cash Collected</strong> uses payment/deposit dates.
+                        <strong class="font-semibold text-slate-600">Posted invoice sales</strong> uses the posted date and the frozen invoice.
+                        <strong class="font-semibold text-slate-600">Cash collected</strong> uses payment and deposit dates. Write-offs are separate.
                     </p>
                 </div>
 

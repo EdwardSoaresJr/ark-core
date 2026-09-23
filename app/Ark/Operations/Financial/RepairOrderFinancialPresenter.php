@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\Financial;
 
-use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
@@ -194,16 +193,16 @@ final class RepairOrderFinancialPresenter
             'canChargeDepositWithSquare' => $canRecordDeposit
                 && $this->depositGuard->remainingAllowedDepositCents($repairOrder, $balance, $position) > 0
                 && (
-                $this->cardCapture->terminalEnabled() || $this->cardCapture->keyedEnabled()
-            ),
+                    $this->cardCapture->terminalEnabled() || $this->cardCapture->keyedEnabled()
+                ),
             'canManageLedgerEntries' => $this->canManageLedgerEntries($repairOrder),
             'canRecordRefund' => $this->canRecordRefund($repairOrder, $balance),
             'canWaiveBalance' => $this->canWaiveBalance($repairOrder, $balance),
             'waiveDispositionOptions' => collect(RepairOrderCollectionDisposition::waiveOptions())
                 ->map(fn (RepairOrderCollectionDisposition $case): array => [
-                    'value' => $case->value,
-                    'label' => $case->label(),
-                ])
+                        'value' => $case->value,
+                        'label' => $case->label(),
+                    ])
                 ->values()
                 ->all(),
             'canEmailInvoice' => $repairOrder->status->is(RepairOrderStatus::ReadyPickup)
@@ -328,10 +327,10 @@ final class RepairOrderFinancialPresenter
         if ($repairOrder->isPosted()) {
             if ($this->collectionDisposition($repairOrder)->excludesFromPostedSales()) {
                 return $this->collectionDisposition($repairOrder)->label()
-                    .' · invoice still shows what this would have cost · not counted in Sales Posted.';
+                    .' · the invoice stays in posted invoice sales. The write-off is separate.';
             }
 
-            return 'Posted '.$repairOrder->posted_at?->timezone(config('app.display_timezone'))->format('M j, g:i A').' · counts in Sales Posted reporting.';
+            return 'Posted '.$repairOrder->posted_at?->timezone(config('app.display_timezone'))->format('M j, g:i A').' · included in posted invoice sales.';
         }
 
         if ($balance->hasIssuedInvoice && $balance->writeOffsCents > 0) {

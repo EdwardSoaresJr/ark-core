@@ -22,6 +22,7 @@ use Tests\TestCase;
 
 require_once __DIR__.'/Support/FinancialAuthorityFixture.php';
 require_once __DIR__.'/Support/FinancialCloseout.php';
+require_once __DIR__.'/Support/PostedInvoiceSnapshot.php';
 require_once __DIR__.'/Support/FlagRecognitionFixture.php';
 require_once __DIR__.'/Support/IdentityHeaderFixture.php';
 require_once __DIR__.'/Support/LearnArkTraining.php';

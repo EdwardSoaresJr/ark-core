@@ -2075,7 +2075,7 @@ test('admin can load owner operational report on mobile', function (): void {
                 'poll_after_seconds',
             ],
         ])
-        ->assertJsonPath('report.pulse.kpis.0.label', 'Sales Posted');
+        ->assertJsonPath('report.pulse.kpis.0.label', 'Posted invoice sales');
 
     $this->withToken($token)
         ->getJson('/api/mobile/me')

@@ -67,9 +67,9 @@ final class OwnerOperationalPulse
             'headlines' => array_merge(
                 [
                     [
-                        'label' => 'Sales Posted',
+                        'label' => 'Invoice total',
                         'value' => $eod->reconciliation['sales_posted'],
-                        'hint' => 'Posted invoice total',
+                        'hint' => 'Frozen invoice sales plus tax',
                         'tone' => null,
                     ],
                     [

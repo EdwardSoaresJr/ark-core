@@ -48,7 +48,7 @@ test('financial users see operational reporting without dashboard theater', func
         ->assertOk()
         ->assertSee('Executive Pulse')
         ->assertSee('End of Day card')
-        ->assertSee('Sales Posted')
+        ->assertSee('Posted invoice sales')
         ->assertSee('$550.00')
         ->assertSee('Car count')
         ->assertSee('ARO')
@@ -88,7 +88,7 @@ test('end of day report projection surfaces tekmetric style sections for posted 
     expect(collect($eod->salesEffectiveness)->pluck('label')->all())
         ->toContain('Car count', 'Hours sold', 'Effective labor rate', 'Closing ratio (hours)')
         ->and(collect($eod->roSummary)->pluck('label')->all())
-        ->toContain('Sales', 'Posted total')
+        ->toContain('Posted invoice sales', 'Invoice total')
         ->and(collect($eod->salesBreakdown)->pluck('category')->all())
         ->toContain('Labor', 'Parts');
 });
@@ -594,6 +594,7 @@ test('owner pl tab shows management p and l tax posture and net benchmark', func
     lineForOperationalReporting($repairOrder, $concern, RepairOrderLineType::Labor, 30000, quantity: '2.00', shopFeeCents: 1500);
     lineForOperationalReporting($repairOrder, $concern, RepairOrderLineType::Part, 20000, partCostCents: 9000, taxCents: 800, shopFeeCents: 500);
     lineForOperationalReporting($repairOrder, $concern, RepairOrderLineType::Fee, 5000);
+    freezePostedInvoiceSnapshot($repairOrder, 57_000, 800);
 
     $this->get(route('operations.reports.operational', [
         'from' => operationalReportingShopToday(),
@@ -602,7 +603,7 @@ test('owner pl tab shows management p and l tax posture and net benchmark', func
     ]))
         ->assertOk()
         ->assertSee('Owner P&amp;L', false)
-        ->assertSee('Service revenue (pre-tax)')
+        ->assertSee('Posted invoice sales')
         ->assertSee('Gross profit')
         ->assertSee('Operating expenses')
         ->assertSee('Operating income (est.)')
@@ -782,6 +783,7 @@ function operationalReportingFixture(User $technician): void
     lineForOperationalReporting($closed, $closedConcern, RepairOrderLineType::Labor, 30000, quantity: '2.00');
     lineForOperationalReporting($closed, $closedConcern, RepairOrderLineType::Part, 20000, partCostCents: 9000);
     lineForOperationalReporting($closed, $closedConcern, RepairOrderLineType::Fee, 5000);
+    freezePostedInvoiceSnapshot($closed, 55_000, 0);
 
     $waitingApproval = repairOrderForOperationalReporting('Approval Customer', RepairOrderStatus::WaitingApproval);
     $waitingConcern = concernForOperationalReporting($waitingApproval, RepairOrderConcernDisposition::Recommended);

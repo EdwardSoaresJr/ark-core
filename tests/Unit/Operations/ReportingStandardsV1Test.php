@@ -3,6 +3,11 @@
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\Reports\Standards\ReportingStandardsV1;
 
+test('an older invoice without a pre-tax field uses invoice total minus tax', function () {
+    expect(ReportingStandardsV1::postedInvoiceSalesCents(null, 16_420, 1_120))->toBe(15_300)
+        ->and(ReportingStandardsV1::postedInvoiceSalesCents(15_000, 16_420, 1_120))->toBe(15_000);
+});
+
 test('posted sales applies labor parts sublet fees discounts and tax once', function () {
     $preTax = ReportingStandardsV1::preTaxServiceSalesCents(
         laborCents: 10_000,
@@ -22,7 +27,9 @@ test('posted sales applies labor parts sublet fees discounts and tax once', func
 
     expect($preTax)->toBe(15_300)
         ->and($posted)->toBe(16_420)
-        ->and($posted)->toBe($preTax + 1_120);
+        ->and($posted)->toBe($preTax + 1_120)
+        ->and(ReportingStandardsV1::postedInvoiceSalesCents(15_300, 16_420, 1_120))->toBe(15_300)
+        ->and(ReportingStandardsV1::postedInvoiceSalesCents(null, 16_420, 1_120))->toBe(15_300);
 });
 
 test('aro uses posted pre-tax service sales and the open-queue average uses open repair orders', function () {

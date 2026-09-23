@@ -324,7 +324,7 @@
                 @if ($financial['canPost'])
                     <p class="text-[11px] font-semibold leading-4 text-slate-500">
                         @if ($financial['excludesFromPostedSales'] ?? false)
-                            Closing posts the job for history. {{ $financial['collectionDispositionLabel'] }} work is not counted in Sales Posted.
+                            Closing posts the job for history. The invoice stays in posted invoice sales. The write-off is reported separately.
                         @else
                             Posts this job into sales reporting. Closing as Paid posts automatically — use this when the job is sold but not closed yet.
                         @endif
@@ -333,9 +333,9 @@
                     <p class="text-xs font-semibold leading-4 {{ ($financial['excludesFromPostedSales'] ?? false) ? 'text-slate-700' : 'text-emerald-800' }}">
                         Posted {{ $financial['postedAtLabel'] }}
                         @if ($financial['excludesFromPostedSales'] ?? false)
-                            · {{ $financial['collectionDispositionLabel'] }} — not counted in Sales Posted.
+                            · {{ $financial['collectionDispositionLabel'] }} — invoice stays in posted invoice sales. Write-off is separate.
                         @else
-                            · included in Sales Posted.
+                            · included in posted invoice sales.
                         @endif
                     </p>
                 @elseif (($financial['postBlockingReason'] ?? null) && $financial['hasIssuedInvoice'] && ($financial['isPaid'] ?? (($financial['settlementBalanceDueCents'] ?? 1) === 0)))

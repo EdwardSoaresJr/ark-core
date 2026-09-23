@@ -5,11 +5,6 @@ use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\GenerateInvoiceSnapshotAction;
 use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
-use App\Ark\Operations\Reports\EndOfDayReportProjection;
-use App\Ark\Operations\Reports\OperationalReportDateScope;
-use App\Ark\Operations\Reports\OperationalReportPaymentReconciliation;
-use App\Ark\Operations\Reports\OperationalReportRangeMetrics;
-use App\Ark\Operations\Reports\OperationalReportTotals;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -17,10 +12,13 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Reports\EndOfDayReportProjection;
+use App\Ark\Operations\Reports\OperationalReportDateScope;
+use App\Ark\Operations\Reports\OperationalReportPaymentReconciliation;
+use App\Ark\Operations\Reports\OperationalReportRangeMetrics;
+use App\Ark\Operations\Reports\OperationalReportTotals;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
-use Tests\TestCase;
-
 
 test('sales posted excludes unpaid repair orders without posted_at', function () {
     $customer = Customer::query()->create([
@@ -226,7 +224,7 @@ test('posted sales includes sublet revenue and matches reconciliation and eod', 
 
     $reconciliation = (new OperationalReportPaymentReconciliation($from, $to))->summary();
     $metrics = new OperationalReportRangeMetrics($from, $to);
-    $salesPostedKpi = collect($metrics->kpis())->firstWhere('label', 'Sales Posted');
+    $salesPostedKpi = collect($metrics->kpis())->firstWhere('label', 'Posted invoice sales');
     $eod = EndOfDayReportProjection::resolve($from, $to);
 
     expect($reconciliation['posted_ro_summary_total_cents'])->toBe(19500)

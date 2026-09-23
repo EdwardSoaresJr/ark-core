@@ -31,7 +31,8 @@ test('admins can open owner day review workspace', function () {
         ->assertSee('Effective labor rate', false)
         ->assertSee('Closing ratio (hours)', false)
         ->assertSee('Pending work is included', false)
-        ->assertSee('Sales Posted', false)
+        ->assertSee('Invoice total', false)
+        ->assertSee('Write-offs', false)
         ->assertSee('Cash Collected', false);
 
     $this->get(route('operations.owner.bookend'))
@@ -113,7 +114,7 @@ test('owner digest includes sales posted cash and reconciliation summary', funct
     $digest = app(OwnerOperationalPulse::class)->dailyDigest();
 
     expect($digest)->toHaveKeys(['headlines', 'priorities', 'reconciliation', 'financial_url'])
-        ->and(collect($digest['headlines'])->pluck('label')->all())->toContain('Sales Posted', 'Cash Collected')
+        ->and(collect($digest['headlines'])->pluck('label')->all())->toContain('Invoice total', 'Cash Collected')
         ->and($digest['reconciliation'])->toHaveKeys(['reconciles', 'sales_posted', 'cash_collected', 'reconciled']);
 });
 

@@ -27,7 +27,8 @@ enum RepairOrderCollectionDisposition: string
     }
 
     /**
-     * Courtesy / trade / goodwill keep retail invoice history but must not inflate posted sales.
+     * Courtesy, trade, and goodwill. The invoice stays in posted invoice sales.
+     * The write-off is reported separately.
      */
     public function excludesFromPostedSales(): bool
     {

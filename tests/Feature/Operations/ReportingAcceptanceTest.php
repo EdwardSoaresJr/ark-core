@@ -46,11 +46,13 @@ test('the same posted range reports one car count sales aro and gross profit', f
     acceptanceLine($posted, $approved, RepairOrderLineType::Fee, 500);
     $recommended = acceptanceConcern($posted, RepairOrderConcernDisposition::Recommended, 2);
     acceptanceLine($posted, $recommended, RepairOrderLineType::Labor, 39_161);
+    freezePostedInvoiceSnapshot($posted, 27_500, 1_200);
 
     $reopened = acceptanceRepairOrder($from, 1802, RepairOrderStatus::InProgress, $technician->id);
     $reopenedWork = acceptanceConcern($reopened, RepairOrderConcernDisposition::Approved, 1);
     acceptanceLine($reopened, $reopenedWork, RepairOrderLineType::Labor, 5_000, quantity: '1.00');
     acceptanceLine($reopened, $reopenedWork, RepairOrderLineType::Part, 4_000, partCostCents: 1_500);
+    freezePostedInvoiceSnapshot($reopened, 9_000, 0);
 
     $lost = acceptanceRepairOrder($from, 1803, RepairOrderStatus::Closed, $technician->id, 'lost');
     $lostWork = acceptanceConcern($lost, RepairOrderConcernDisposition::Approved, 1);
@@ -72,14 +74,15 @@ test('the same posted range reports one car count sales aro and gross profit', f
 
     $salesCents = 36_500;
     $aroCents = 18_250;
-    $grossProfitCents = 21_000;
-    $grossProfitPerRepairOrderCents = 10_500;
-    $marginPercent = 58;
+    $grossProfitCents = 20_000;
+    $grossProfitPerRepairOrderCents = 10_000;
+    $marginPercent = 55;
     $cashCents = 12_100;
 
-    expect(ReportingStandardsV1::preTaxServiceSalesCents(25_000, 12_000, 0, 500, 1_000))->toBe($salesCents)
+    expect(ReportingStandardsV1::postedInvoiceSalesCents(36_500, 37_700, 1_200))->toBe($salesCents)
         ->and(ReportingStandardsV1::aroCents($salesCents, 2))->toBe($aroCents)
-        ->and(ReportingStandardsV1::grossMarginPercent($salesCents, $salesCents - $grossProfitCents))->toBe($marginPercent)
+        ->and(ReportingStandardsV1::grossProfitCents($salesCents, 16_500))->toBe($grossProfitCents)
+        ->and(ReportingStandardsV1::grossMarginPercent($salesCents, 16_500))->toBe($marginPercent)
         ->and(ReportingStandardsV1::cashCollectedCents(12_500, 400))->toBe($cashCents);
 
     $metrics = new OperationalReportRangeMetrics($from, $to);
@@ -107,16 +110,19 @@ test('the same posted range reports one car count sales aro and gross profit', f
 
     $sales = '$365.00';
     $aro = '$182.50';
-    $grossProfit = '$210.00';
-    $grossProfitPerRepairOrder = '$105.00';
+    $grossProfit = '$200.00';
+    $grossProfitPerRepairOrder = '$100.00';
     $cash = '$121.00';
 
     expect($effectiveness->firstWhere('label', 'Car count')['value'])->toBe('2')
         ->and($kpis->firstWhere('label', 'Car count')['value'])->toBe('2')
-        ->and($summary->firstWhere('label', 'Sales')['value'])->toBe($sales)
+        ->and($summary->firstWhere('label', 'Posted invoice sales')['value'])->toBe($sales)
+        ->and($summary->firstWhere('label', 'Invoice total')['value'])->toBe('$377.00')
         ->and($summary->firstWhere('label', 'Discounts')['value'])->toBe('-$10.00')
-        ->and($pl->firstWhere('label', 'Service revenue (pre-tax)')['amount'])->toBe($sales)
-        ->and(collect($briefing)->firstWhere('label', 'Sales')['value'])->toBe($sales)
+        ->and($pl->firstWhere('label', 'Posted invoice sales')['amount'])->toBe($sales)
+        ->and($pl->firstWhere('label', 'Write-offs')['amount'])->toBe('$7.00')
+        ->and($pl->firstWhere('label', 'Invoice total')['amount'])->toBe('$377.00')
+        ->and(collect($briefing)->firstWhere('label', 'Posted invoice sales')['value'])->toBe($sales)
         ->and(collect($briefing)->firstWhere('label', 'Car count')['value'])->toBe('2')
         ->and($shop->firstWhere('label', 'ARO')['value'])->toBe($aro)
         ->and($kpis->firstWhere('label', 'ARO')['value'])->toBe($aro)
@@ -133,7 +139,9 @@ test('the same posted range reports one car count sales aro and gross profit', f
         ->and($eod->reconciliation['cash_collected'])->toBe($cash)
         ->and($cashiered['amount'])->toBe($cash)
         ->and($pl->firstWhere('label', 'Cash collected')['amount'])->toBe($cash)
-        ->and($kpis->firstWhere('label', 'Sales Posted')['value'])->toBe('$377.00')
+        ->and($kpis->firstWhere('label', 'Posted invoice sales')['value'])->toBe($sales)
+        ->and($kpis->firstWhere('label', 'Invoice total')['value'])->toBe('$377.00')
+        ->and($kpis->firstWhere('label', 'Write-offs')['value'])->toBe('$7.00')
         ->and($financial->firstWhere('category', 'Labor')['sales'])->toBe('$250.00')
         ->and($financial->firstWhere('category', 'Parts')['sales'])->toBe('$120.00')
         ->and($financial->firstWhere('category', 'Other')['sales'])->toBe('$5.00')
@@ -171,7 +179,7 @@ test('the same posted range reports one car count sales aro and gross profit', f
 
     $this->get(route('operations.reports.operational', array_merge($range, ['tab' => 'owner-pl'])))
         ->assertOk()
-        ->assertSee('Service revenue (pre-tax)')
+        ->assertSee('Posted invoice sales')
         ->assertSee($sales)
         ->assertSee($grossProfit)
         ->assertSee($marginPercent.'%');
@@ -190,6 +198,7 @@ test('missing parts cost keeps gross profit incomplete on every report', functio
     $approved = acceptanceConcern($posted, RepairOrderConcernDisposition::Approved, 1);
     acceptanceLine($posted, $approved, RepairOrderLineType::Labor, 10_000, quantity: '1.00');
     acceptanceLine($posted, $approved, RepairOrderLineType::Part, 4_000);
+    freezePostedInvoiceSnapshot($posted, 14_000, 0);
 
     $metrics = new OperationalReportRangeMetrics($from, $to);
     $kpis = collect($metrics->kpis());
@@ -201,8 +210,9 @@ test('missing parts cost keeps gross profit incomplete on every report', functio
 
     expect(collect($eod->salesEffectiveness)->firstWhere('label', 'Car count')['value'])->toBe('1')
         ->and($kpis->firstWhere('label', 'Car count')['value'])->toBe('1')
-        ->and(collect($eod->roSummary)->firstWhere('label', 'Sales')['value'])->toBe('$140.00')
-        ->and($pl->firstWhere('label', 'Service revenue (pre-tax)')['amount'])->toBe('$140.00')
+        ->and(collect($eod->roSummary)->firstWhere('label', 'Posted invoice sales')['value'])->toBe('$140.00')
+        ->and($pl->firstWhere('label', 'Posted invoice sales')['amount'])->toBe('$140.00')
+        ->and($pl->firstWhere('label', 'Gross profit')['amount'])->toBe(ReportingStandardsV1::INCOMPLETE_DATA)
         ->and(collect($eod->shopMetrics)->firstWhere('label', 'ARO')['value'])->toBe('$140.00')
         ->and($kpis->firstWhere('label', 'ARO')['value'])->toBe('$140.00')
         ->and($shop->firstWhere('label', 'Gross profit margin')['value'])->toBe(ReportingStandardsV1::INCOMPLETE_DATA)
