@@ -1,15 +1,16 @@
 # Active PR
 
-**Track:** Repair order authorization exceptions  
+**Track:** Remove repair-order missing-item recommendations  
 **Status:** Implementation  
-**Surface:** Concern actions, exception dialog
+**Surface:** Estimate totals, estimate send, advisor estimate tools
 
 ## Scope
 
-Record a work exception from the concern More menu. The repair order no longer shows the exception worksheet inline.
+Remove the estimate-companion catalog that warned a job was missing parts or labor the shop usually includes.
 
 ## Out of scope
 
-- Approval-scope calculations and reporting
-- Missing-item recommendation removal
+- VIN-missing send warning
+- Authorization and approval scope
+- Inspection findings
 - Production deploy
