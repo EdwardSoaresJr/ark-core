@@ -1641,16 +1641,15 @@
                                                 Photos ({{ ($evidenceGallery['items'] ?? collect())->count() }})
                                             </button>
                                         @endif
+                                        <button
+                                            type="button"
+                                            class="ops-scope-more__item"
+                                            @click="$dispatch('ark:dealer-quote-capture-open')"
+                                        >
+                                            Import
+                                        </button>
                                     @endif
                                 @endunless
-
-                                @include('operations.repair-orders.partials.repair-order-toolbar-print-slot', [
-                                    'repairOrder' => $repairOrder,
-                                    'financial' => $financial,
-                                    'customerDocumentsCount' => ($customerDocuments ?? collect())->count(),
-                                    'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
-                                    'isTerminal' => $isTerminal,
-                                ])
 
                                 @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
                                     'repairOrder' => $repairOrder,
