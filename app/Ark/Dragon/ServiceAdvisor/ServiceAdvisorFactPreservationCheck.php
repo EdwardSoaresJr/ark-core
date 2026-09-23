@@ -176,7 +176,7 @@ final class ServiceAdvisorFactPreservationCheck
             return true;
         }
 
-        // Original lacked opposite — OK as long as original side still present (already checked).
+        // Original lacked opposite - OK as long as original side still present (already checked).
         return true;
     }
 

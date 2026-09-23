@@ -1,6 +1,6 @@
 # Repair Authority v1
 
-**Status:** Platform doctrine — convergence of Authority vs Projection, Pressure First, Earned Authority, and public Growth knowledge  
+**Status:** Platform doctrine - convergence of Authority vs Projection, Pressure First, Earned Authority, and public Growth knowledge  
 **Not:** A CMS model, a nav rename, or permission to retitle `CommonProblem*` in code  
 **Applies to:** Public problem/service pages · advisor guidance · future AI / Voice explanations of repairs
 
@@ -61,7 +61,7 @@ Each projection serves a different audience. **None owns truth.**
 
 ## Operational feedback
 
-Repair Orders enrich authorities — not authored marketing copy.
+Repair Orders enrich authorities - not authored marketing copy.
 
 ```text
 Concern
@@ -85,7 +85,7 @@ Authorities become more accurate through completed work.
 | --- | --- |
 | **Doctrine** | Repair Authority is the conceptual spine |
 | **Public** | Continue `/common-problems/` and current navigation |
-| **Implementation** | `CommonProblem*` remains the implementation vocabulary until multiple projections read the **same** authority record — not a parallel config |
+| **Implementation** | `CommonProblem*` remains the implementation vocabulary until multiple projections read the **same** authority record - not a parallel config |
 
 No implementation rename is planned before that condition is met.
 
@@ -97,7 +97,7 @@ Do **not** rename code, URLs, tables, or navigation because a broader name sound
 
 Rename **only** when multiple projections share the same underlying authority.
 
-Until then, the code is allowed to lag the doctrine. That is not debt — it is honesty.
+Until then, the code is allowed to lag the doctrine. That is not debt - it is honesty.
 
 ---
 

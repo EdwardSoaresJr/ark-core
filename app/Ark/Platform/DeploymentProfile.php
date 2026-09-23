@@ -3,7 +3,7 @@
 namespace App\Ark\Platform;
 
 /**
- * Infrastructure intent only — Shared | Dedicated.
+ * Infrastructure intent only - Shared | Dedicated.
  * Enterprise is a Subscription plan, not a deployment profile.
  *
  * @see docs/platform/cluster-assignment-authority-v1.md

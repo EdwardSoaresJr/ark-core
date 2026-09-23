@@ -114,7 +114,7 @@ final class ArrivalPostureProjection
                 return [$this->formatWhen($appointment->arrived_at), null];
             }
 
-            // Historical Arrived without evidence — do not imply starts_at was arrival time.
+            // Historical Arrived without evidence - do not imply starts_at was arrival time.
             $scheduled = $appointment->starts_at !== null
                 ? 'Scheduled '.$this->formatWhen($appointment->starts_at)
                 : null;
@@ -133,7 +133,7 @@ final class ArrivalPostureProjection
         $when = $instant !== null ? $this->formatWhen($instant) : null;
         $subtitle = $posture === 'scheduled' ? 'Vehicle has not arrived.' : null;
 
-        return [$when ?? '—', $subtitle];
+        return [$when ?? '-', $subtitle];
     }
 
     private function formatWhen(CarbonInterface $instant): string

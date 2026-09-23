@@ -347,7 +347,7 @@
             color: #cbd5e1;
         }
 
-        /* Repair is a section label inside the concern — never a nested panel. */
+        /* Repair is a section label inside the concern - never a nested panel. */
         .repair-action-group {
             margin-top: 0.07in;
             border: none;
@@ -370,7 +370,7 @@
             border: none;
         }
 
-        /* What we're selling — same visual weight family as the finding, not washed-out chrome. */
+        /* What we're selling - same visual weight family as the finding, not washed-out chrome. */
         .repair-action-title {
             margin: 0;
             color: #0f172a;
@@ -402,7 +402,7 @@
             min-width: 0;
         }
 
-        /* Quiet type labels — not bordered pills inside the concern frame. */
+        /* Quiet type labels - not bordered pills inside the concern frame. */
         .line-type-badge {
             display: inline-flex;
             flex-shrink: 0;
@@ -680,7 +680,7 @@
             background: transparent;
         }
 
-        /* Integrated into Estimate Summary — not a nested dashboard card. */
+        /* Integrated into Estimate Summary - not a nested dashboard card. */
         .approval-forecast-pdf {
             margin: 0 0 0.08in;
             padding: 0 0 0.07in;

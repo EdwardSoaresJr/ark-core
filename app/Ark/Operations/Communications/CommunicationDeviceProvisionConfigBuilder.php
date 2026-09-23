@@ -7,7 +7,7 @@ use App\Ark\Platform\VoiceTransportConfiguration;
 use RuntimeException;
 
 /**
- * Builds installer-facing device config. SIP details stay in the file — never operator UI.
+ * Builds installer-facing device config. SIP details stay in the file - never operator UI.
  *
  * HTTP URLs from shop identity; SIP from deployment transport configuration.
  */

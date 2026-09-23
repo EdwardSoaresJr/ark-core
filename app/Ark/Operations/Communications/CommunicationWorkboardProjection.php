@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Morning triage projection — composes calls, leads, and conversation posture lanes.
+ * Morning triage projection - composes calls, leads, and conversation posture lanes.
  *
  * Not message authority. Conversation and Lead remain authoritative stores.
  */
@@ -33,7 +33,7 @@ final class CommunicationWorkboardProjection
     ) {}
 
     /**
-     * Layout pressure only — counts without loading lead/conversation rows.
+     * Layout pressure only - counts without loading lead/conversation rows.
      *
      * @return array{
      *     calls_waiting: int,
@@ -57,7 +57,7 @@ final class CommunicationWorkboardProjection
             return $request->attributes->get($cacheKey);
         }
 
-        // Share Attention cache with ops layout — never hydrate needsShop() row presenters for counts.
+        // Share Attention cache with ops layout - never hydrate needsShop() row presenters for counts.
         $queue = $this->queueResolver->resolveAttention($viewer, $previousLastSeenAt);
         $queueSummary = is_array($queue['summary'] ?? null) ? $queue['summary'] : [];
         $callCount = (int) ($queueSummary['call_count'] ?? count(is_array($queue['calls'] ?? null) ? $queue['calls'] : []));

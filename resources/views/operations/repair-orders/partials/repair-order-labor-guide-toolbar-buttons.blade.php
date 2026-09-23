@@ -22,8 +22,8 @@
             'notice' => $notice,
             'windowName' => $windowName,
             'title' => $clipboardVin !== null
-                ? 'Open '.$provider->label().' — VIN copied for vehicle search'
-                : 'Open '.$provider->label().' — search by year, make, and model after sign-in',
+                ? 'Open '.$provider->label().' - VIN copied for vehicle search'
+                : 'Open '.$provider->label().' - search by year, make, and model after sign-in',
             'laborGuideJson' => $launchUrl !== null ? json_encode([
                 'url' => $launchUrl,
                 'vin' => $clipboardVin,

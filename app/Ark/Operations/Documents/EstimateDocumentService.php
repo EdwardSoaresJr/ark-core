@@ -79,7 +79,7 @@ class EstimateDocumentService
     {
         $path = $this->renderer->renderEstimate($document);
 
-        // Issued final invoices are immutable evidence — never rewrite snapshot_json for PDF metadata.
+        // Issued final invoices are immutable evidence - never rewrite snapshot_json for PDF metadata.
         if ($document->isIssuedInvoice()) {
             $document->forceFill([
                 'needs_pdf_refresh' => false,

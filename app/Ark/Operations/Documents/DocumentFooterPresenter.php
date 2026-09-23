@@ -22,7 +22,7 @@ final class DocumentFooterPresenter
     ];
 
     /**
-     * Shop-configured disclaimers as one PDF line — do not substitute generic copy.
+     * Shop-configured disclaimers as one PDF line - do not substitute generic copy.
      *
      * @param  list<string>  $bullets
      */

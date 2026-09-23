@@ -2,7 +2,7 @@
     <h3>Book by shop capacity</h3>
     <p>
         An appointment reserves <strong>time and expected work</strong> for the shop.
-        Technician, bay, and vehicle are optional planning fields. Assign them when you know —
+        Technician, bay, and vehicle are optional planning fields. Assign them when you know -
         not as a requirement to put the customer on the schedule.
     </p>
 
@@ -10,7 +10,7 @@
     <ul>
         <li>Choose day and time inside shop hours.</li>
         <li>Enter <strong>Scheduled work</strong> (labor hours) so capacity stays honest.</li>
-        <li>Leave <strong>Vehicle not set yet</strong> when the car isn’t known — set it when they arrive.</li>
+        <li>Leave <strong>Vehicle not set yet</strong> when the car isn’t known - set it when they arrive.</li>
         <li>Leave Bay and Technician as <strong>Unassigned</strong> when you do not know yet.</li>
     </ul>
 
@@ -23,7 +23,7 @@
 
     <h3>Day board</h3>
     <p>
-        <strong>Agenda</strong> lists every appointment. Technicians and Bays are optional views for planning —
+        <strong>Agenda</strong> lists every appointment. Technicians and Bays are optional views for planning -
         they never hide an Unassigned booking.
     </p>
 

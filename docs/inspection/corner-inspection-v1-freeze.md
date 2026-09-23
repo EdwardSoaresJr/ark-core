@@ -1,7 +1,7 @@
-# Demo Auto Repair Standard Vehicle Inspection — Corner Inspection v1.0
+# Demo Auto Repair Standard Vehicle Inspection - Corner Inspection v1.0
 
 **Status:** Frozen · Phase 2A · Permanent doctrine  
-**Scope:** Corner Inspection only — do not expand into Steering, Suspension, Under Vehicle, Under Hood, Exterior, or Road Test from this freeze.  
+**Scope:** Corner Inspection only - do not expand into Steering, Suspension, Under Vehicle, Under Hood, Exterior, or Road Test from this freeze.  
 **Authority companions:** [inspection-authority.md](inspection-authority.md) · Builder architecture freeze (session) · [inspection-workspace.md](inspection-workspace.md)
 
 ---
@@ -36,18 +36,18 @@ Complete everything at a corner before walking to the next.
 
 | Group | Role |
 | --- | --- |
-| **Tire** | Tread depth (32nds) + pressure (PSI) — measured, not inferred |
+| **Tire** | Tread depth (32nds) + pressure (PSI) - measured, not inferred |
 | **Wheel** | Visual |
 | **Brake assembly** | Pads (mm inner/outer) · Rotor (visual) · Caliper (visual) |
-| **Brake hose** | Visual — belongs to the corner, not a later section |
+| **Brake hose** | Visual - belongs to the corner, not a later section |
 
 Brand is ignored on Standard. No rotor thickness on Standard. No slide-pin teardown on Standard.
 
 ### Once per vehicle (Corner stage, after corners)
 
-- **Brake fluid** — level + condition (once)  
-- **Parking brake** — Green / Yellow / Red like other points  
-- **Rear axle type** — Disc / Drum gate before rear corner brake paths  
+- **Brake fluid** - level + condition (once)  
+- **Parking brake** - Green / Yellow / Red like other points  
+- **Rear axle type** - Disc / Drum gate before rear corner brake paths  
 
 Brake-fluid correlation prompts (pads healthy + fluid low → verify) are future observation helpers. They must **never diagnose**.
 
@@ -65,8 +65,8 @@ Technician workflow uses **Green · Yellow · Red**.
 
 Literal color names are **never** authority. Colors are shop projection labels from Builder metadata (`condition_palette: gyr`). Other shops may use different labels without a code deploy.
 
-**Green** — no expand.  
-**Yellow / Red** — expand: structured observation · technician note · photo.
+**Green** - no expand.  
+**Yellow / Red** - expand: structured observation · technician note · photo.
 
 Demo Auto Repair policy: Yellow and Red require photographs. That policy lives in Builder metadata (`photo_policy: when_not_green`), not hardcoded platform law.
 

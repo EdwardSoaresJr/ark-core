@@ -41,7 +41,7 @@ test('final invoice snapshot includes vehicle identity and technician', function
 
     $technician = User::factory()->create(['name' => 'Bay Tech'])->assignRole(ArkRole::Technician->value);
 
-    // Invoice technician attribution comes from Repair Action owners — not assigned_technician_id.
+    // Invoice technician attribution comes from Repair Action owners - not assigned_technician_id.
     $concern = $repairOrder->concerns()->firstOrFail();
     $workGroup = RepairOrderWorkGroup::query()->create([
         'repair_order_concern_id' => $concern->id,

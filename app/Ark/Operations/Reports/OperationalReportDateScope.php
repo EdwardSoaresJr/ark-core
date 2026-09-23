@@ -246,7 +246,7 @@ final class OperationalReportDateScope
 
     /**
      * Attribute sales for live shop work. Exclude only imported legacy carryover that
-     * opened before trustworthy reporting data — not every legacy customer record.
+     * opened before trustworthy reporting data - not every legacy customer record.
      *
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $scope
      */

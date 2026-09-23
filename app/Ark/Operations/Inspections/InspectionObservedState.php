@@ -25,7 +25,7 @@ enum InspectionObservedState: string
         };
     }
 
-    /** Technician checklist vocabulary — no authority jargon on mobile. */
+    /** Technician checklist vocabulary - no authority jargon on mobile. */
     public function checklistLabel(): string
     {
         return match ($this) {

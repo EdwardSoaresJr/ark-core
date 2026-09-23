@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Appointments;
 
 /**
  * Disposable read-model payload for Arrival Posture on an RO.
- * Rebuildable from Appointment authority — owns no persistence.
+ * Rebuildable from Appointment authority - owns no persistence.
  */
 final class ArrivalPosture
 {

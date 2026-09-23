@@ -106,7 +106,7 @@
         <div class="rounded-sm border border-sky-200 bg-sky-50 px-3 py-2">
             <p class="text-[10px] font-bold uppercase tracking-wide text-sky-700">Requested</p>
             <p class="mt-0.5 text-sm font-semibold text-slate-950">{{ $requestPreferenceDetail }}</p>
-            <p class="mt-1 text-[11px] text-slate-600">Choose an exact appointment time. Preference guides the options — it is not the confirmed appointment.</p>
+            <p class="mt-1 text-[11px] text-slate-600">Choose an exact appointment time. Preference guides the options - it is not the confirmed appointment.</p>
         </div>
     @endif
 
@@ -141,7 +141,7 @@
             </select>
             @if ($outsidePreference && $requestPreferenceDetail)
                 <span class="mt-0.5 block text-[11px] font-semibold text-amber-800">
-                    Outside customer request — {{ $requestPreferenceDetail }}.
+                    Outside customer request - {{ $requestPreferenceDetail }}.
                 </span>
             @endif
         </label>

@@ -11,7 +11,7 @@
     @endphp
 
     {{--
-      Contextual dock — next step, not a status dashboard.
+      Contextual dock - next step, not a status dashboard.
       Identity + situation stay quiet. Footer owns the action.
       Four-column posture lives in the right rail (Persistent Context).
     --}}
@@ -34,7 +34,7 @@
             </div>
 
             <div class="ops-ro-orientation-header__situation-inline">
-                {{-- Workflow status label — not orientation "Waiting on Diagnosis" (not every RO is diagnostic). --}}
+                {{-- Workflow status label - not orientation "Waiting on Diagnosis" (not every RO is diagnostic). --}}
                 <span
                     class="ops-ro-orientation-header__situation"
                     data-ro-dock-status

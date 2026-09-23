@@ -90,8 +90,8 @@ final class LaborGuideConnections
             'can_open' => $launchUrl !== null,
             'can_pull_quote' => false,
             'title' => $clipboardVin !== null
-                ? 'Open '.$provider->label().' — VIN copied for vehicle search'
-                : 'Open '.$provider->label().' — search by year, make, and model after sign-in',
+                ? 'Open '.$provider->label().' - VIN copied for vehicle search'
+                : 'Open '.$provider->label().' - search by year, make, and model after sign-in',
             'blocked_reason' => $launchUrl === null ? $this->launcher->blockedReason($repairOrder, $provider) : null,
             'labor_guide' => $launchUrl !== null ? [
                 'url' => $launchUrl,

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Shop deployment identity — single public origin for all shop capabilities.
+ * Shop deployment identity - single public origin for all shop capabilities.
  *
  * @see docs/platform/shop-identity-v1.md
  */
@@ -26,7 +26,7 @@ return [
     })(),
 
     /*
-    | Desk phone microbrowser (Poly VVX) — plain HTTP, token-gated read-only screen.
+    | Desk phone microbrowser (Poly VVX) - plain HTTP, token-gated read-only screen.
     | Legacy firmware cannot complete modern Let's Encrypt TLS handshakes.
     */
     'microbrowser_scheme' => env('SHOP_MICROBROWSER_SCHEME', 'http'),

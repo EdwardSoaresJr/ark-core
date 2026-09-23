@@ -9,7 +9,7 @@ use App\Models\User;
 /**
  * Keeps issued invoice authority aligned with living approved work until settlement.
  *
- * Deposits alone do not freeze — they reserve work, not settle the bill.
+ * Deposits alone do not freeze - they reserve work, not settle the bill.
  * Once the customer has been shown an invoice (email / PDF), further approved-work
  * changes require an explicit refresh so the prior snapshot stays auditable.
  */
@@ -41,7 +41,7 @@ final class RefreshLivingInvoiceSnapshotAction
         }
 
         if ($invoice->wasPresentedToCustomer()) {
-            // Customer already saw this bill — do not silently mutate.
+            // Customer already saw this bill - do not silently mutate.
             return false;
         }
 

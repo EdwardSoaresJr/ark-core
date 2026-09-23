@@ -1,7 +1,7 @@
 <?php
 
 /**
- * H0.3 — Break-it cases customers actually create.
+ * H0.3 - Break-it cases customers actually create.
  *
  * @see docs/communications/ark-conversations-v1.md
  */
@@ -56,7 +56,7 @@ test('H0 break-it: missed call after outbound SMS must not leave conflicting Tur
         'started_at' => now(),
     ]);
 
-    // Doctrine: Turn must recompute to Waiting on Shop — conflict = H0 fail.
+    // Doctrine: Turn must recompute to Waiting on Shop - conflict = H0 fail.
     ConversationsH0::assertSixOnes($customer, null, $advisor, 'Missed call after SMS');
 });
 

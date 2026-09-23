@@ -88,7 +88,7 @@
                 <p class="font-semibold text-slate-950">Phone settings are managed in ARK Cloud</p>
                 <p class="mt-1">
                     Inbound schedule, SIP, fallback, recording disclosure, and after-hours greetings run on Platform Voice.
-                    Core keeps call history and shop workflow — not phone configuration.
+                    Core keeps call history and shop workflow - not phone configuration.
                     <a href="https://cloud.arksms.com" class="font-semibold text-slate-950 underline" target="_blank" rel="noopener">Open ARK Cloud</a>
                 </p>
             </div>
@@ -121,7 +121,7 @@
                 <p class="font-semibold">This phone control moved to ARK Cloud</p>
                 <p class="mt-1 text-xs leading-5">
                     @if ($communicationsTab === 'hours')
-                        Voice open/closed schedule is configured under Phone settings in ARK Cloud. Shop hours for appointments stay in Operations settings where needed — they do not drive live call routing for Hosted Voice.
+                        Voice open/closed schedule is configured under Phone settings in ARK Cloud. Shop hours for appointments stay in Operations settings where needed - they do not drive live call routing for Hosted Voice.
                     @elseif ($communicationsTab === 'recording')
                         Recording, disclosure, and greetings for inbound calls are configured in ARK Cloud Phone settings. Call-intelligence API keys below remain shop operational tooling when used.
                     @else
@@ -236,7 +236,7 @@
                             <p class="mt-1">
                                 Shop line is provisioned in ARK Cloud Phone settings
                                 @if (filled($settings->telephony_inbound_number))
-                                    <span class="font-mono text-slate-800">({{ $settings->telephony_inbound_number }} — display only)</span>
+                                    <span class="font-mono text-slate-800">({{ $settings->telephony_inbound_number }} - display only)</span>
                                 @endif
                                 .
                                 <a href="https://cloud.arksms.com" class="font-semibold underline" target="_blank" rel="noopener">Open ARK Cloud</a>
@@ -448,7 +448,7 @@
 
                 <div class="rounded-sm border border-slate-200 bg-slate-50 p-3 space-y-3">
                     <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Missed Call Rescue</p>
-                    <p class="text-xs text-slate-500">Automatically text callers after a missed inbound call. Uses Conversation (system SMS) — not a separate inbox.</p>
+                    <p class="text-xs text-slate-500">Automatically text callers after a missed inbound call. Uses Conversation (system SMS) - not a separate inbox.</p>
                     <label class="flex items-start gap-2 text-sm text-slate-800">
                         <input type="hidden" name="telephony_call_flow[missed_call_rescue_enabled]" value="0">
                         <input
@@ -500,7 +500,7 @@
                                 name="telephony_call_flow[missed_call_rescue_text_closed]"
                                 rows="3"
                                 class="mt-1 w-full rounded-sm border-slate-300 text-sm text-slate-800"
-                                placeholder="Hey! This is @{{business.name}}. Sorry we missed your call — we're currently closed…"
+                                placeholder="Hey! This is @{{business.name}}. Sorry we missed your call - we're currently closed…"
                             >{{ old('telephony_call_flow.missed_call_rescue_text_closed', $callFlowConfig['missed_call_rescue_text_closed'] ?? '') }}</textarea>
                         </label>
                     </div>
@@ -563,7 +563,7 @@
                         $callFlowConfig['hours_bypass_numbers'] ?? [],
                     ))) }}</textarea>
                     <p class="mt-1 text-xs leading-5 text-slate-500">
-                        One phone number per line. These callers ring through when the shop is closed — for testing only. Everyone else still goes to voicemail.
+                        One phone number per line. These callers ring through when the shop is closed - for testing only. Everyone else still goes to voicemail.
                     </p>
                 </label>
             </div>
@@ -654,12 +654,12 @@
                                 value="{{ old('telephony_call_flow.cell_whisper_prompt', $callFlowConfig['cell_whisper_prompt'] ?? '') }}"
                                 class="mt-1 w-full rounded-sm border-slate-300 text-sm text-slate-800"
                             >
-                            <span class="mt-1 block text-[11px] leading-4 text-slate-500">Short phrase played when a cell endpoint rings before the advisor presses 1. Caller ID shows on the phone — leave blank to use "Call for {{ $settings->shop_name ?: 'shop name' }}". "Press 1 to accept" is added automatically.</span>
+                            <span class="mt-1 block text-[11px] leading-4 text-slate-500">Short phrase played when a cell endpoint rings before the advisor presses 1. Caller ID shows on the phone - leave blank to use "Call for {{ $settings->shop_name ?: 'shop name' }}". "Press 1 to accept" is added automatically.</span>
                         </label>
                         <fieldset class="mt-3 max-w-xl space-y-2">
                             <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Caller ringback</legend>
                             <p class="text-[11px] leading-4 text-slate-500">
-                                What inbound callers hear after the disclaimer while advisors ring — through cell screening and until someone answers.
+                                What inbound callers hear after the disclaimer while advisors ring - through cell screening and until someone answers.
                             </p>
                             <div class="mt-2 space-y-2">
                                 <label class="flex items-start gap-2 text-sm text-slate-800">
@@ -685,7 +685,7 @@
                                     >
                                     <span>
                                         <span class="font-semibold text-slate-900">Shop promo audio</span>
-                                        <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">Loop a hosted MP3 or WAV — specials, hours, or a short hold message. Must be a public HTTPS URL.</span>
+                                        <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">Loop a hosted MP3 or WAV - specials, hours, or a short hold message. Must be a public HTTPS URL.</span>
                                     </span>
                                 </label>
                             </div>
@@ -700,7 +700,7 @@
                                 @error('telephony_call_flow.caller_ring_promo_url')
                                     <p class="mt-1 text-[11px] text-rose-700">{{ $message }}</p>
                                 @enderror
-                                <p class="mt-1 text-[11px] leading-4 text-slate-500">Tip: upload to your website, S3, or Twilio Assets. Keep clips short — they loop until an advisor answers.</p>
+                                <p class="mt-1 text-[11px] leading-4 text-slate-500">Tip: upload to your website, S3, or Twilio Assets. Keep clips short - they loop until an advisor answers.</p>
                             </div>
                         </fieldset>
                     </div>
@@ -835,7 +835,7 @@
                                         </template>
                                         <template x-if="endpoint.type === 'sip'">
                                             <input type="hidden" :name="`endpoints[${index}][presence_timeout_minutes]`" value="30">
-                                            <span class="flex min-h-9 items-center text-[11px] font-semibold text-slate-400">—</span>
+                                            <span class="flex min-h-9 items-center text-[11px] font-semibold text-slate-400">-</span>
                                         </template>
                                     </div>
 

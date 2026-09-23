@@ -99,7 +99,7 @@ final class ArkMailActivationClient
             ]);
         }
 
-        // Essential Delivery is installation infrastructure after explicit Cloud connect — not at /setup.
+        // Essential Delivery is installation infrastructure after explicit Cloud connect - not at /setup.
         app(\App\Ark\Platform\EssentialDeliveryClient::class)->registerAtInstall($base);
 
         app(\App\Ark\Platform\PlatformStatusClient::class)->fetchAndPersistLocalMailProjection();

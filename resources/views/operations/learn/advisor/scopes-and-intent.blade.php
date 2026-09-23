@@ -41,10 +41,10 @@
 
     <p><strong>Repairs belong in repair actions</strong>, not in the scope title. If you write <em>Replace radiator</em> as the scope but also sell a water pump, the customer misreads the job.</p>
 
-    <p>Full writing guide: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'repair-actions']) }}">Repair actions — scope vs repair action vs labor</a>.</p>
+    <p>Full writing guide: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'repair-actions']) }}">Repair actions - scope vs repair action vs labor</a>.</p>
 
     <h3>Recommendation status</h3>
-    <p>Status is advisor posture — <strong>what action the customer should take</strong> about this condition. It is not part type, part source, or warranty.</p>
+    <p>Status is advisor posture - <strong>what action the customer should take</strong> about this condition. It is not part type, part source, or warranty.</p>
     <table class="ops-learn-table">
         <thead>
             <tr>
@@ -55,11 +55,11 @@
         <tbody>
             <tr>
                 <td>Immediate Attention</td>
-                <td>Safety, breakdown risk, or drivability — address before return or further driving</td>
+                <td>Safety, breakdown risk, or drivability - address before return or further driving</td>
             </tr>
             <tr>
                 <td>Plan Soon</td>
-                <td>Meaningful wear or failure risk — schedule in the near term</td>
+                <td>Meaningful wear or failure risk - schedule in the near term</td>
             </tr>
             <tr>
                 <td>Maintenance</td>
@@ -75,15 +75,15 @@
             </tr>
             <tr>
                 <td>Information Only</td>
-                <td>Observation or context — no repair recommendation yet</td>
+                <td>Observation or context - no repair recommendation yet</td>
             </tr>
         </tbody>
     </table>
 
-    <p>For OEM vs aftermarket, customer-supplied parts, performance upgrades, and line warranty notes, use <strong>part line fields</strong> on the part row — not recommendation status.</p>
+    <p>For OEM vs aftermarket, customer-supplied parts, performance upgrades, and line warranty notes, use <strong>part line fields</strong> on the part row - not recommendation status.</p>
 
     <h3>Disposition</h3>
-    <p><strong>Draft</strong> while building — hidden from customer PDF, portal, and email. <strong>Recommended</strong> when ready to present — customer chooses approve, defer, or decline on the portal.</p>
+    <p><strong>Draft</strong> while building - hidden from customer PDF, portal, and email. <strong>Recommended</strong> when ready to present - customer chooses approve, defer, or decline on the portal.</p>
     <p><strong>Approved</strong>, <strong>Deferred</strong>, and <strong>Declined</strong> track customer decisions. Deferred keeps honest follow-up revenue on file; declined means the customer does not want that work.</p>
     <p>Pre-approved scopes show read-only on the portal; customer status reflects visible scope state, not internal RO labels. See <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'customer-authorization']) }}">Customer authorization</a>.</p>
 

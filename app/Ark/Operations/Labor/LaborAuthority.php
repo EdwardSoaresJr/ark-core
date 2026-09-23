@@ -258,7 +258,7 @@ final class LaborAuthority
      * Target chain: Billing Class → Billing Posture → Pricing.
      *
      * TODO(migration): Delete category→posture inference once every labor resolve
-     * receives an explicit concern billing posture. Transitional only — do not freeze.
+     * receives an explicit concern billing posture. Transitional only - do not freeze.
      */
     private function resolveBillingPosture(array $data, string $categoryKey): ConcernBillingPosture
     {

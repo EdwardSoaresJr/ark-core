@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Station unlock must become a full session switch — one identity for auth, operator, and permissions.
+ * Station unlock must become a full session switch - one identity for auth, operator, and permissions.
  */
 final class SwitchWorkstationOperatorSessionAction
 {

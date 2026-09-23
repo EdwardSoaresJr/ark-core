@@ -208,7 +208,7 @@ test('portal estimate and pdf snapshot surface approval forecast for customers',
         ->not->toContain('Needs your approval')
         ->not->toContain('If you approve')
         ->not->toContain('Approval Forecast')
-        ->not->toContain('Conversation prep — not invoice authority');
+        ->not->toContain('Conversation prep - not invoice authority');
 
     $plainToken = str_repeat('f', 64);
     EstimateAccessToken::createForPlainToken($repairOrder, $plainToken, [
@@ -224,7 +224,7 @@ test('portal estimate and pdf snapshot surface approval forecast for customers',
         ->assertSee('Only work you approve will be performed', false)
         ->assertDontSee('Needs your approval', false)
         ->assertDontSee('Approval Forecast', false)
-        ->assertDontSee('Conversation prep — not invoice authority', false);
+        ->assertDontSee('Conversation prep - not invoice authority', false);
 });
 
 test('approval forecast uses plural recommendation wording when multiple recommendations are pending', function (): void {

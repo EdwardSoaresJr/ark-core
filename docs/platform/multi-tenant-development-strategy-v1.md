@@ -89,7 +89,7 @@ Only after those answers are consistently **yes** should Demo Auto Repair migrat
 
 When it happens, it should feel boring.
 
-The goal is that moving Demo Auto Repair is simply changing where it runs — not redesigning how it operates.
+The goal is that moving Demo Auto Repair is simply changing where it runs - not redesigning how it operates.
 
 ## Engineering guardrail
 

@@ -30,7 +30,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Local/testing only — fictional shop floor for Cloud marketing screenshots.
+ * Local/testing only - fictional shop floor for Cloud marketing screenshots.
  * Marker emails: cloud-shot+*@example.test · 555 phone numbers · RO shop numbers 4800+.
  */
 class CloudScreenshotStageSeeder extends Seeder
@@ -87,7 +87,7 @@ class CloudScreenshotStageSeeder extends Seeder
         });
     }
 
-    /** Local screenshot cast — realistic names, not “Demo Advisor / ARK Admin”. */
+    /** Local screenshot cast - realistic names, not “Demo Advisor / ARK Admin”. */
     private function polishStaffNamesForScreenshots(): void
     {
         User::query()->where('email', 'admin@ark.test')->update(['name' => 'Alex Rivera']);
@@ -334,7 +334,7 @@ class CloudScreenshotStageSeeder extends Seeder
         $this->totals->recalculateRepairOrder($repairOrder->refresh());
 
         try {
-            // Creator name appears as Advisor on the RO — use Marcus Hale, not ARK Admin.
+            // Creator name appears as Advisor on the RO - use Marcus Hale, not ARK Admin.
             $document = $this->documents->createOrRefresh($repairOrder->refresh(), $advisor);
             $this->documents->generatePdf($document);
         } catch (Throwable) {
@@ -376,13 +376,13 @@ class CloudScreenshotStageSeeder extends Seeder
 
         $thread = [
             [OperationalCommunicationDirection::Inbound, $customerParticipant, 'Can you send the estimate when it\'s ready?', 26 * 60],
-            [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Just sent it — front brakes and ignition coils. Tap the link anytime.', 25 * 60 + 54],
+            [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Just sent it - front brakes and ignition coils. Tap the link anytime.', 25 * 60 + 54],
             [OperationalCommunicationDirection::Inbound, $customerParticipant, 'Got it. Looking at it now.', 25 * 60 + 30],
             [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Any questions before you approve? Happy to walk through it.', 90],
-            [OperationalCommunicationDirection::Inbound, $customerParticipant, 'Looks good — go ahead on the coils. Hold the rear pads for now… wait, these are front pads, right?', 48],
-            [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Yes — front pads and rotors. Cabin filter is deferred unless you want it today.', 40],
+            [OperationalCommunicationDirection::Inbound, $customerParticipant, 'Looks good - go ahead on the coils. Hold the rear pads for now… wait, these are front pads, right?', 48],
+            [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Yes - front pads and rotors. Cabin filter is deferred unless you want it today.', 40],
             [OperationalCommunicationDirection::Inbound, $customerParticipant, 'Front brakes + coils. Skip the cabin filter. Thanks!', 12],
-            [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Perfect — we\'ll get the coils and front brakes moving. I\'ll text when parts land.', 5],
+            [OperationalCommunicationDirection::Outbound, $advisorParticipant, 'Perfect - we\'ll get the coils and front brakes moving. I\'ll text when parts land.', 5],
         ];
 
         foreach ($thread as [$direction, $participant, $body, $minutesAgo]) {
@@ -474,7 +474,7 @@ class CloudScreenshotStageSeeder extends Seeder
                 'first' => 'Priya', 'last' => 'Nguyen', 'phone' => '7195550155',
                 'vin' => 'KM8J33A46KU048460', 'year' => 2022, 'make' => 'Hyundai', 'model' => 'Tucson', 'color' => 'Green',
                 'status' => RepairOrderStatus::Approved, 'concern' => 'Timing chain rattle on cold start',
-                'summary' => 'Approved — waiting bay',
+                'summary' => 'Approved - waiting bay',
                 'tech' => true,
                 'lines' => [
                     ['Labor', 'Replace timing chain kit', '8.50', 16500],

@@ -28,7 +28,7 @@
                             <td class="px-3 py-2">{{ $cluster->status->label() }}</td>
                             <td class="px-3 py-2">{{ $cluster->accepting_new_shops ? 'Yes' : 'No' }}</td>
                             <td class="px-3 py-2 tabular-nums">{{ $cluster->deployments_count }}</td>
-                            <td class="px-3 py-2 text-slate-600">{{ $cluster->current_version ?: '—' }}</td>
+                            <td class="px-3 py-2 text-slate-600">{{ $cluster->current_version ?: '-' }}</td>
                             <td class="px-3 py-2 font-mono text-xs">{{ $cluster->deployment_target }}</td>
                             <td class="px-3 py-2 font-mono text-xs">{{ $cluster->ingress_endpoint }}</td>
                         </tr>

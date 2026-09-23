@@ -33,7 +33,7 @@ final class ApplyInspectionTemplateAction
             if ($inspection->inspection_template_id !== null
                 && (int) $inspection->inspection_template_id !== (int) $template->id
                 && ! $inspection->hasCapturedEvidence()) {
-                // Empty active checklist only — superseded history stays on the Inspection.
+                // Empty active checklist only - superseded history stays on the Inspection.
                 $inspection->items()
                     ->whereNull('superseded_at')
                     ->each(function (InspectionItem $item): void {
@@ -83,7 +83,7 @@ final class ApplyInspectionTemplateAction
                     $rows[] = [
                         'inspection_id' => $inspection->id,
                         'checklist_category_name' => $category->name,
-                        // Snapshot Builder walk placement at apply — walk must not re-read live Builder.
+                        // Snapshot Builder walk placement at apply - walk must not re-read live Builder.
                         'walk_section' => InspectionTemplatePointMeta::walkSection($templateItem),
                         'category' => InspectionItemCategory::General->value,
                         'label' => $templateItem->label,

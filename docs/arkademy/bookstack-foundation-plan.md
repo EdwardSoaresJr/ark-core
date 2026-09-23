@@ -2,7 +2,7 @@
 
 **Status:** Phase 1a complete. Validate platform before SSO or migration.
 
-**Principle:** ARK V2 remains the operating system and **identity authority**. BookStack is the **ARKademy projection** — training, SOPs, and shop documentation. Shop In A Box base content must be reusable across future shops without forking BookStack.
+**Principle:** ARK V2 remains the operating system and **identity authority**. BookStack is the **ARKademy projection** - training, SOPs, and shop documentation. Shop In A Box base content must be reusable across future shops without forking BookStack.
 
 ## Ecosystem authorities (Phase 1a milestone)
 
@@ -28,8 +28,8 @@ Distinct products, not one giant Laravel app. `arkademy_content_registry` lives 
 | Auth | Staff Breeze session + `OperationsAccess`; **no SSO/OIDC** |
 | Progress | MySQL (`learn_completions`, heartbeats, checkpoints, training gate) |
 | Theme | Per-user accent in ARK (`accent_theme`, default `ark2` / cerulean `#0099cc`) |
-| Shop branding | Logo/name only — no shop-level theme color |
-| Shop In A Box | **Not in repo** — greenfield concept |
+| Shop branding | Logo/name only - no shop-level theme color |
+| Shop In A Box | **Not in repo** - greenfield concept |
 
 Training gate, required curriculum (18 articles), and team progress **must stay in ARK** until a deliberate Phase 2 replaces them. BookStack does not provide equivalent operational gating.
 
@@ -40,29 +40,29 @@ Training gate, required curriculum (18 articles), and team progress **must stay 
 **Prioritization:** validate BookStack as ARKademy before marrying the ecosystem.
 
 ```
-Phase 1a — Deploy + brand + backup/update ops ✅ DONE
+Phase 1a - Deploy + brand + backup/update ops ✅ DONE
   learn.demo-auto.test → BookStack ARKademy
 
-Phase 1c — Canonical empty shelves (before any migration)
+Phase 1c - Canonical empty shelves (before any migration)
   Create structure, live with it ~1 day, dummy pages optional
   Do NOT migrate Blade articles until shelves feel right
 
-Validation gate — spend days inside BookStack
+Validation gate - spend days inside BookStack
   Question: Does this feel like a knowledge operating system, or a wiki?
   Yes → Phase 1b SSO
   No → stop and evaluate before building more
 
-Phase 1b — SSO (after validation)
+Phase 1b - SSO (after validation)
   ARK User → OIDC → BookStack user projection
 
-Phase 2+ — Registry sync, migration tooling, retire Blade ARKademy
+Phase 2+ - Registry sync, migration tooling, retire Blade ARKademy
 ```
 
 **Do not rush SSO.** Structure changes are cheap now; expensive after hundreds of pages.
 
-### Phase 1c canonical shelves (empty — create before migration)
+### Phase 1c canonical shelves (empty - create before migration)
 
-**Shop In A Box** (base — distributable)
+**Shop In A Box** (base - distributable)
 
 ```
 Shop In A Box
@@ -73,7 +73,7 @@ Shop In A Box
 └── ARK V2
 ```
 
-**Demo Auto Repair SOPs** (shop — private)
+**Demo Auto Repair SOPs** (shop - private)
 
 ```
 Demo Auto Repair SOPs
@@ -92,9 +92,9 @@ Local SOP → Proven in shop → Promote to Base
 
 Not everything written locally becomes base. Promotion is explicit, audited in ARK (`arkademy_content_registry`).
 
-### ARK content registry (day one — in ARK, not BookStack)
+### ARK content registry (day one - in ARK, not BookStack)
 
-Table: `arkademy_content_registry` — ARK owns what is **base** vs **shop** and what is **distributable**.
+Table: `arkademy_content_registry` - ARK owns what is **base** vs **shop** and what is **distributable**.
 
 See migration `2026_06_14_100000_create_arkademy_content_registry_table.php` and `infra/coolify/bookstack/README.md`.
 
@@ -109,7 +109,7 @@ Follow the **arkweb pattern**: separate Coolify application on `ark-demo-shop-pr
 | Coolify project | **ARK** |
 | App name | `arkademy` or `bookstack` |
 | Image | Official [BookStack Docker](https://www.bookstackapp.com/docs/admin/installation/#docker) (`lscr.io/linuxserver/bookstack` or `solidnerd/bookstack`) |
-| Domain | **`https://learn.demo-auto.test`** — BookStack becomes the real ARKademy host |
+| Domain | **`https://learn.demo-auto.test`** - BookStack becomes the real ARKademy host |
 | Database | New schema `bookstack` on existing **ark-mysql** (same as arkweb) |
 | Storage bind | `/data/ark-shared/bookstack-uploads` → BookStack `storage/uploads` |
 | Theme bind | `/data/ark-shared/bookstack-themes/arkademy` → `themes/arkademy` |
@@ -130,7 +130,7 @@ Before BookStack goes live:
 ### ARK integration surface (Phase 1)
 
 - Ops nav **ARKademy** link opens BookStack (new tab or same tab after SSO auto-init).
-- Keep `/app/learn/*` routes alive during transition — dual-run, not big-bang delete.
+- Keep `/app/learn/*` routes alive during transition - dual-run, not big-bang delete.
 - Document in `infra/coolify/DEPLOYMENT.md` (parallel to arkweb section).
 
 ### Do not
@@ -183,7 +183,7 @@ BookStack roles (suggested):
 | Viewer | `technician` | Read training + SOPs |
 | API / Content Admin | platform service account | Migration scripts only |
 
-### ARK OIDC issuer (new work — Phase 1b)
+### ARK OIDC issuer (new work - Phase 1b)
 
 BookStack needs an OIDC provider. Options ranked:
 
@@ -191,7 +191,7 @@ BookStack needs an OIDC provider. Options ranked:
 |--------|------|------|
 | **A. OIDC module in ARK V2** (Passport + OIDC bridge or dedicated package) | Single identity authority, no extra service | New ARK runtime surface; must maintain issuer |
 | **B. Authentik / Keycloak on Coolify** | Mature OIDC, admin UI | Second user directory unless federated from ARK |
-| **C. BookStack standard auth (interim)** | Fastest foundation deploy | Separate passwords — violates goal |
+| **C. BookStack standard auth (interim)** | Fastest foundation deploy | Separate passwords - violates goal |
 
 **Recommendation:** **A** for production. **C** only for a short-lived foundation spike (max 1–2 weeks) while OIDC issuer is built.
 
@@ -228,7 +228,7 @@ OIDC_REMOVE_FROM_GROUPS=false
 
 ---
 
-## 3. Theme — ARK blue default + user accent
+## 3. Theme - ARK blue default + user accent
 
 ### ARK blue (default)
 
@@ -243,21 +243,21 @@ From `tailwind.config.js` / `AccentTheme::Ark2`:
 
 ### BookStack theming (no fork)
 
-**Layer 1 — Settings → Customization (required)**
+**Layer 1 - Settings → Customization (required)**
 
 - App name: **ARKademy**
 - Logo: ARK / shop logo from `public/assets/ARK_SMS_FINAL_DROP_IN_PACK/` or shop upload
 - Primary color: `#0099cc`
 - Link color: `#007db3`
 
-**Layer 2 — Visual theme `APP_THEME=arkademy` (minimal)**
+**Layer 2 - Visual theme `APP_THEME=arkademy` (minimal)**
 
 Bind `themes/arkademy/` for:
 
 - Custom header partial (optional “Back to ARK” link to `app.demo-auto.test`)
-- Logo overrides only — avoid copying full BookStack views
+- Logo overrides only - avoid copying full BookStack views
 
-**Layer 3 — Custom HTML head (accent sync — Phase 1b)**
+**Layer 3 - Custom HTML head (accent sync - Phase 1b)**
 
 Inject CSS variables on login via logical theme `functions.php`:
 
@@ -273,7 +273,7 @@ Inject CSS variables on login via logical theme `functions.php`:
 | 1b | Per-user accent when launched from ARK (OIDC claim preferred over query string) |
 | 2 | Per-shop default accent in `shop_settings` (future multi-tenant) |
 
-BookStack settings pages do not apply custom HTML head — acceptable; staff live in content, not settings.
+BookStack settings pages do not apply custom HTML head - acceptable; staff live in content, not settings.
 
 ---
 
@@ -285,8 +285,8 @@ Map current role catalogs to BookStack hierarchy.
 
 | Shelf | Scope | Audience |
 |-------|-------|----------|
-| **Shop In A Box** | Base — shared across shops | All roles; curated by platform admin |
-| **Demo Auto Repair SOPs** | Shop — private | Staff; shop admin editors |
+| **Shop In A Box** | Base - shared across shops | All roles; curated by platform admin |
+| **Demo Auto Repair SOPs** | Shop - private | Staff; shop admin editors |
 
 Future shops: duplicate shelf template `Shop In A Box` via export/import; add `{Shop Name} SOPs` shelf locally.
 
@@ -326,13 +326,13 @@ Preserve slug in ARK metadata for redirects and training gate mapping.
 | `required` | Required for training gate (ARK authority) |
 | `legacy-key:{role}:{slug}` | Migration traceability |
 
-BookStack applies tags as CSS classes on `<body>` — useful for future styling, not authority.
+BookStack applies tags as CSS classes on `<body>` - useful for future styling, not authority.
 
 ### Permissions
 
 - **Shop In A Box shelf:** all roles read; only BookStack Admin (platform) edit
 - **Shop SOPs shelf:** all roles read; shop Admin/Editor edit
-- Avoid per-page permission sprawl — shelf + book level is enough initially
+- Avoid per-page permission sprawl - shelf + book level is enough initially
 
 ---
 
@@ -371,21 +371,21 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 
 **Promote to Shop In A Box**
 
-1. Shop admin proposes promotion (ARK UI — future).
+1. Shop admin proposes promotion (ARK UI - future).
 2. Platform admin approves → API moves/copies page to Shop In A Box book, adds `base-content` tag, updates registry `scope=base`.
 3. Optional: export hook for base package refresh across fleet.
 
-**Do not** rely on naming conventions alone — tags + registry must agree.
+**Do not** rely on naming conventions alone - tags + registry must agree.
 
 ### Multi-shop (future)
 
 - Each shop instance: own BookStack + own `{Shop} SOPs` shelf.
 - Base content: import ZIP or API push from golden **Shop In A Box** export.
-- ARK fleet admin (Autorepairkeeper platform) owns base export pipeline — not Demo Auto Repair shop admin.
+- ARK fleet admin (Autorepairkeeper platform) owns base export pipeline - not Demo Auto Repair shop admin.
 
 ---
 
-## 6. Migration path (later — not Phase 1)
+## 6. Migration path (later - not Phase 1)
 
 ### Inventory to migrate
 
@@ -397,23 +397,23 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 
 ### Recommended migration sequence
 
-1. **Structure only** — create shelves/books/chapters empty in BookStack
-2. **Pilot batch** — 3 articles (one per role) via script; validate HTML, images, video embeds
-3. **Automated export** — Blade → HTML (render in Laravel, POST to BookStack API)
-4. **Media** — upload attachments via API; rewrite image URLs
-5. **Registry backfill** — `legacy_key` on every migrated page
-6. **Training gate bridge** — ARK polls BookStack activity API or webhooks for required page IDs
-7. **Redirect layer** — `/app/learn/{role}/{article}` → BookStack URL (301 or ARK redirect controller)
-8. **Dual-run period** — both surfaces live; compare progress
-9. **Retire Blade** — remove catalogs, views, gate middleware targets BookStack only
+1. **Structure only** - create shelves/books/chapters empty in BookStack
+2. **Pilot batch** - 3 articles (one per role) via script; validate HTML, images, video embeds
+3. **Automated export** - Blade → HTML (render in Laravel, POST to BookStack API)
+4. **Media** - upload attachments via API; rewrite image URLs
+5. **Registry backfill** - `legacy_key` on every migrated page
+6. **Training gate bridge** - ARK polls BookStack activity API or webhooks for required page IDs
+7. **Redirect layer** - `/app/learn/{role}/{article}` → BookStack URL (301 or ARK redirect controller)
+8. **Dual-run period** - both surfaces live; compare progress
+9. **Retire Blade** - remove catalogs, views, gate middleware targets BookStack only
 
 ### API capabilities (BookStack)
 
 - REST API: shelves, books, chapters, pages CRUD
 - HTML content upload on create/update
 - Import/export ZIP for bulk shelf moves
-- Webhooks: page create/update — useful for registry sync
-- Activity API: last viewed — useful for training completion projection
+- Webhooks: page create/update - useful for registry sync
+- Activity API: last viewed - useful for training completion projection
 
 ### Keep in ARK (do not migrate to BookStack)
 
@@ -434,16 +434,16 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 | BookStack single-tenant | One instance per shop today; base content via export/import |
 | No custom fields in BookStack | ARK registry table for scope/promotion/required |
 | Per-user theme complexity | Phase 1b only; default ARK blue is sufficient for launch |
-| OIDC issuer scope creep | Minimal issuer — staff users only, no customer portal OIDC |
+| OIDC issuer scope creep | Minimal issuer - staff users only, no customer portal OIDC |
 | Content structure mistakes | No migration until shelves/books/tags signed off |
 | VPS RAM | BookStack is lighter than arksmsv2 build; still use bind mounts |
-| BookStack replaces operational truth | BookStack is documentation only — ARK keeps gate, roles, shop settings |
+| BookStack replaces operational truth | BookStack is documentation only - ARK keeps gate, roles, shop settings |
 
 ---
 
 ## 8. Phase 1 implementation tickets (when approved)
 
-### 1a — Deploy (no SSO yet)
+### 1a - Deploy (no SSO yet)
 
 - [ ] Coolify app on production server
 - [ ] MySQL schema + env
@@ -452,7 +452,7 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 - [ ] `infra/coolify/DEPLOYMENT.md` section
 - [ ] Remove learn domain from arksmsv2 FQDN (coordinate cutover)
 
-### 1b — SSO
+### 1b - SSO
 
 - [ ] ARK OIDC issuer (discovery, authorize, token, userinfo, JWKS)
 - [ ] BookStack OIDC client config
@@ -460,13 +460,13 @@ content_version  int   (maps to LearnArkCurriculum::VERSION idea)
 - [ ] ARK nav link update
 - [ ] Tests for OIDC token claims
 
-### 1c — Theme
+### 1c - Theme
 
 - [ ] `themes/arkademy` minimal theme
 - [ ] ARK blue customization settings
 - [ ] (Optional) accent claim / launch param
 
-### 1d — IA skeleton
+### 1d - IA skeleton
 
 - [ ] Create shelves/books/chapters (empty)
 - [ ] Tag taxonomy documented in BookStack

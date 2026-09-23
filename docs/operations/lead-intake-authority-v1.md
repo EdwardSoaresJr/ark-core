@@ -1,10 +1,10 @@
 # Lead Intake Authority v1
 
 **Status:** Active  
-**Internal names:** Lead Intake (authority) · **Public Surface** (the website — not a separate product)  
+**Internal names:** Lead Intake (authority) · **Public Surface** (the website - not a separate product)  
 **Retire:** ARK-WEB, Botble, marketing CMS as separate worlds.
 
-> **Freeze:** *Lead stays boring on purpose.* A Lead answers: Did somebody contact us? Have we responded? Did this become work? — not tasks, notes, pipelines, or scoring. If it sounds like Salesforce, reject it.
+> **Freeze:** *Lead stays boring on purpose.* A Lead answers: Did somebody contact us? Have we responded? Did this become work? - not tasks, notes, pipelines, or scoring. If it sounds like Salesforce, reject it.
 
 ## Problem
 
@@ -30,9 +30,9 @@ ARK's center of gravity is expanding from shop workflow alone to a full front-to
 Lead → Conversation → Customer → Vehicle → RO → Invoice → Retention
 ```
 
-A year ago the core was Customer · Vehicle · RO · Invoice. **Lead** and **Conversation** at the front, **Retention** at the back, make the system complete — customer acquisition and relationship continuity on the same doctrine as production and closeout.
+A year ago the core was Customer · Vehicle · RO · Invoice. **Lead** and **Conversation** at the front, **Retention** at the back, make the system complete - customer acquisition and relationship continuity on the same doctrine as production and closeout.
 
-**North star:** Every customer touch before an RO exists is visible somewhere in ARK. That is not "shop management" alone — it is the beginning of a **customer acquisition and retention system**.
+**North star:** Every customer touch before an RO exists is visible somewhere in ARK. That is not "shop management" alone - it is the beginning of a **customer acquisition and retention system**.
 
 ## Lead authority
 
@@ -63,11 +63,11 @@ That's it.
 
 | Authority | Truth |
 |-----------|--------|
-| **Conversation** | Relationship — what was said |
-| **Lead** | Opportunity — pre-RO potential work |
-| **Customer** | Identity — who they are |
+| **Conversation** | Relationship - what was said |
+| **Lead** | Opportunity - pre-RO potential work |
+| **Customer** | Identity - who they are |
 | **Vehicle** | Vehicle identity |
-| **Repair Order** | Work — lifecycle once converted |
+| **Repair Order** | Work - lifecycle once converted |
 
 Do not collapse these. Elegance is each layer answering one question.
 
@@ -75,7 +75,7 @@ Do not collapse these. Elegance is each layer answering one question.
 
 The dedicated **Leads index** (`/app/leads`) and ops-rail peer are **retired**. Advisors work open website/SMS opportunities from **Communications → Needs attention**. Lead disposal (Check In, Mark contacted, Lost, Spam) lives on the Comms context panel when `lead_id` is present.
 
-`operations.leads.index` remains as a **bookmark redirect** to Needs attention. Spam observation lives on **Website → Performance** (owner admin) — not advisor Inbox.
+`operations.leads.index` remains as a **bookmark redirect** to Needs attention. Spam observation lives on **Website → Performance** (owner admin) - not advisor Inbox.
 
 ### Anti-CRM guardrails
 
@@ -88,7 +88,7 @@ The danger is Lead becoming Salesforce for auto shops. **Reject** building on Le
 - Opportunity scoring, AI lead grading
 - Salesperson ownership as a CRM object (light `assigned_user_id` later is ops routing, not a sales org chart)
 
-Notes and messages belong on **Conversation**. Work belongs on **RO**. Lead tracks **opportunity state** and links — not a second inbox.
+Notes and messages belong on **Conversation**. Work belongs on **RO**. Lead tracks **opportunity state** and links - not a second inbox.
 
 If a feature sounds like a CRM, it probably does not belong on Lead.
 
@@ -116,7 +116,7 @@ If a feature sounds like a CRM, it probably does not belong on Lead.
 
 - work lifecycle once converted
 
-**Do not duplicate RO lifecycle inside Lead.** After conversion, estimate / approved / closed posture is read from RO projections — not copied into Lead.
+**Do not duplicate RO lifecycle inside Lead.** After conversion, estimate / approved / closed posture is read from RO projections - not copied into Lead.
 
 ## Lead states v1
 
@@ -127,9 +127,9 @@ If a feature sounds like a CRM, it probably does not belong on Lead.
 | `waiting_customer` | Ball in customer's court |
 | `scheduled` | Appointment / visit time set |
 | `arrived` | Vehicle on site or visit recognized |
-| `converted` | Linked to RO — lead job done |
+| `converted` | Linked to RO - lead job done |
 | `lost` | Closed without RO |
-| `spam` | Auto-flagged or advisor-marked junk — **excluded from lead pressure** |
+| `spam` | Auto-flagged or advisor-marked junk - **excluded from lead pressure** |
 
 No automation rules, auto-text, scoring, or CRM stages in v1.
 
@@ -137,7 +137,7 @@ No automation rules, auto-text, scoring, or CRM stages in v1.
 
 ## Lead spam observation (frozen)
 
-Public forms get customers, bots, and spam. Botble hid this; ARK surfaces it. **Do not add CAPTCHA first** — friction kills real leads.
+Public forms get customers, bots, and spam. Botble hid this; ARK surfaces it. **Do not add CAPTCHA first** - friction kills real leads.
 
 ### Capture on every website ingress (observation)
 
@@ -153,15 +153,15 @@ Public forms get customers, bots, and spam. Botble hid this; ARK surfaces it. **
 
 | Signal | Rule | Result |
 |--------|------|--------|
-| Honeypot (`company_website`) | Filled | Silent thanks — **no lead** |
-| `too_fast` | Submit &lt; 3s after render | Lead `state=spam` — **no conversation**, excluded from pressure |
+| Honeypot (`company_website`) | Filled | Silent thanks - **no lead** |
+| `too_fast` | Submit &lt; 3s after render | Lead `state=spam` - **no conversation**, excluded from pressure |
 | Rate limit | 10 POST / min / IP | HTTP 429 |
 
 Observe patterns on **Website → Performance → Spam observation** (owner admin) before adding rules. Do not put spam rows on advisor Inbox.
 
 ### Comms is not acquisition (spam corollary)
 
-If lead pressure fills with junk, advisors learn to ignore it — worse than the spam. Spam state must not pollute **Lead pressure** counts.
+If lead pressure fills with junk, advisors learn to ignore it - worse than the spam. Spam state must not pollute **Lead pressure** counts.
 
 ### Explicit non-goals
 
@@ -171,7 +171,7 @@ If lead pressure fills with junk, advisors learn to ignore it — worse than the
 
 ## Unknown Inbound Contact Rule (frozen)
 
-**Production evidence (2026-06):** `303-905-6841` texted *"Are you open on the weekends?"* — Conversation ✓ · Comms Attention ✓ · Advisor read ✓ · **Lead ✗**. ARK handled the message and lost the opportunity.
+**Production evidence (2026-06):** `303-905-6841` texted *"Are you open on the weekends?"* - Conversation ✓ · Comms Attention ✓ · Advisor read ✓ · **Lead ✗**. ARK handled the message and lost the opportunity.
 
 **Rule:** Unknown inbound contact = **Lead candidate**, regardless of channel.
 
@@ -183,7 +183,7 @@ If lead pressure fills with junk, advisors learn to ignore it — worse than the
 | Phone call | ✓ |
 | Google Business Messaging | ✓ (future) |
 
-**Not applicable:** known customer communications — those already have relationship context (Customer → Conversation → RO). No Lead required.
+**Not applicable:** known customer communications - those already have relationship context (Customer → Conversation → RO). No Lead required.
 
 ### Relationship-based ingress (not channel-based)
 
@@ -192,7 +192,7 @@ Known relationship                         Unknown relationship
 ──────────────────                         ────────────────────
 SMS / call / Messenger / web         →     SMS / call / Messenger / web
 Conversation                         →     Conversation (what was said)
-Customer context                     →     Lead (potential work — required)
+Customer context                     →     Lead (potential work - required)
 RO workflow                          →     Intake → Customer → RO
 ```
 
@@ -216,17 +216,17 @@ Two queues answer different questions:
 | **Comms / Attention** | Who needs a **response**? |
 | **Leads** | Who represents **potential work**? |
 
-They sometimes overlap. For strangers they **diverge** — and burying unknown SMS in Comms lets advisors **clear a message** without capturing an **opportunity**. That is exactly the message-87 failure mode.
+They sometimes overlap. For strangers they **diverge** - and burying unknown SMS in Comms lets advisors **clear a message** without capturing an **opportunity**. That is exactly the message-87 failure mode.
 
 **Explicit rejection:** The production finding does **not** justify building SMS Inbox, Messenger Inbox, or Call Inbox. The problem is not lack of an inbox. The problem is unknown opportunity did not enter **Lead Truth**.
 
 ## Public surface goal
 
-`demo-auto.example` is a **thin public surface inside ARK SMS** — not a brochure CMS.
+`demo-auto.example` is a **thin public surface inside ARK SMS** - not a brochure CMS.
 
 Homepage job: capture high-quality leads (concern + phone), not page views or blog traffic.
 
-Stack: Laravel, Blade, Tailwind, Alpine — same runtime as operations.
+Stack: Laravel, Blade, Tailwind, Alpine - same runtime as operations.
 
 ## Channel ingress
 
@@ -242,7 +242,7 @@ Stack: Laravel, Blade, Tailwind, Alpine — same runtime as operations.
 
 Website lead body lands as inbound `ConversationMessage` on `OperationalCommunicationChannel::Website`.
 
-### Phase 2 — ingress reconciliation
+### Phase 2 - ingress reconciliation
 
 **Problem (proven in production):** Website → Lead → worked. SMS → Conversation → forgotten. Those are not equivalent.
 
@@ -250,24 +250,24 @@ Website lead body lands as inbound `ConversationMessage` on `OperationalCommunic
 
 ```
 Unknown inbound (any channel)
-  → ConversationMessage / CallSession (authority — what happened)
-  → reconcile or open Lead (authority — potential work)
+  → ConversationMessage / CallSession (authority - what happened)
+  → reconcile or open Lead (authority - potential work)
   → same pipeline as website
 ```
 
-**Wording:** **Reconcile/open Lead** — not merely "create Lead." The same unknown contact may need separate opportunity rows per concern over time.
+**Wording:** **Reconcile/open Lead** - not merely "create Lead." The same unknown contact may need separate opportunity rows per concern over time.
 
-**Phase 2 design decision — one open Lead per concern (not per phone):**
+**Phase 2 design decision - one open Lead per concern (not per phone):**
 
 | Approach | Risk |
 |----------|------|
-| One open Lead per contact (phone / PSID) | Hides new opportunities inside an old lead — e.g. AC lead still "open" when brakes text arrives two weeks later |
+| One open Lead per contact (phone / PSID) | Hides new opportunities inside an old lead - e.g. AC lead still "open" when brakes text arrives two weeks later |
 | **One open Lead per concern** ✓ | Each distinct customer-stated need is its own pipeline row; same contact can have multiple open leads |
 
 Example:
 
 1. Customer texts: *"My AC isn't cold."* → **Lead #1** (`received`, concern = AC)
-2. Two weeks later: *"My brakes are grinding."* → **Lead #2** (`received`, concern = brakes) — **not** an update to Lead #1
+2. Two weeks later: *"My brakes are grinding."* → **Lead #2** (`received`, concern = brakes) - **not** an update to Lead #1
 
 Lead #1 may be `converted`, `lost`, or still open independently. Conversation timeline stays unified on the relationship; Lead rows track **opportunities**, not contact identity alone.
 
@@ -276,11 +276,11 @@ Lead #1 may be `converted`, `lost`, or still open independently. Conversation ti
 - New inbound customer message → new Lead when concern is materially distinct from existing **open** leads for that contact
 - Same concern thread → attach to existing open Lead; do not duplicate
 - Do not create Lead on every outbound shop message or RO lifecycle event
-- Reconcile from existing `ConversationRecorder` ingress — no parallel channel stores
+- Reconcile from existing `ConversationRecorder` ingress - no parallel channel stores
 - Unmatched call → Lead with `source=call`, concern from call context / summary
 - When customer has open RO for the same concern, link Lead to RO context; do not fork RO lifecycle
 
-Concern matching can start **advisor-visible** (simple: always new Lead on new inbound; advisor merges/lost) and tighten later — pressure-first. Do not over-automate dedup before floor observation.
+Concern matching can start **advisor-visible** (simple: always new Lead on new inbound; advisor merges/lost) and tighten later - pressure-first. Do not over-automate dedup before floor observation.
 
 This is **reconciliation**, not CRM. Conversation stays authoritative for messages; Lead stays authoritative for pre-RO opportunity state.
 
@@ -288,17 +288,17 @@ This is **reconciliation**, not CRM. Conversation stays authoritative for messag
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **2A** | Unknown SMS → Conversation → reconcile/open Lead | **Shipped** — `LeadReconciler` on `TwilioSmsIngress` |
+| **2A** | Unknown SMS → Conversation → reconcile/open Lead | **Shipped** - `LeadReconciler` on `TwilioSmsIngress` |
 | **2B** | Unknown Messenger → Lead | Next |
 | **2C** | Unknown call → Lead | Next |
 
-**2A validation:** Text shop from unknown number; confirm Lead authority with `source=sms` and concern from message body — visible on **Communications → Needs attention** when shop-turn — even if Comms row is marked read.
+**2A validation:** Text shop from unknown number; confirm Lead authority with `source=sms` and concern from message body - visible on **Communications → Needs attention** when shop-turn - even if Comms row is marked read.
 
 ### Growth measurement (Day Review / owner rhythm)
 
-Before Lead Truth, owner review skews to closed-work truth: revenue, GP, ARO — **how did the shop perform?** after the fact.
+Before Lead Truth, owner review skews to closed-work truth: revenue, GP, ARO - **how did the shop perform?** after the fact.
 
-After Lead Truth, the limiting factor becomes measurable **before** the month ends — **why didn't the shop perform?** while there is still time to act.
+After Lead Truth, the limiting factor becomes measurable **before** the month ends - **why didn't the shop perform?** while there is still time to act.
 
 | Metric | Question |
 |--------|----------|
@@ -309,9 +309,9 @@ After Lead Truth, the limiting factor becomes measurable **before** the month en
 | Converted % | Did it become an RO? |
 | Source mix | Which channels convert? |
 
-**Lead Leakage** (preferred over "lost leads" — leakage asks where flow stopped, not sales intent):
+**Lead Leakage** (preferred over "lost leads" - leakage asks where flow stopped, not sales intent):
 
-Count opportunities that **entered** a stage but never reached the next — funnel drop, not CRM disposition.
+Count opportunities that **entered** a stage but never reached the next - funnel drop, not CRM disposition.
 
 Example (monthly Day Review projection):
 
@@ -335,12 +335,12 @@ Phase 1 explicitly excluded Day Review changes. Add **Lead Leakage** projection 
 
 ## Prioritized next steps
 
-1. **Validate Phase 2A on sandbox/production** — unknown SMS → Lead → Communications Needs attention
-2. **Phase 2B** — Messenger unknown → reconcile/open Lead
-3. **Phase 2C** — unknown call → reconcile/open Lead
-4. **Google Business attribution** — source labeling + ingress when API exists
-5. **Day Review / owner growth projections** — after funnel is proven in observation
-6. **SEO / content engine** — last; not the growth bottleneck
+1. **Validate Phase 2A on sandbox/production** - unknown SMS → Lead → Communications Needs attention
+2. **Phase 2B** - Messenger unknown → reconcile/open Lead
+3. **Phase 2C** - unknown call → reconcile/open Lead
+4. **Google Business attribution** - source labeling + ingress when API exists
+5. **Day Review / owner growth projections** - after funnel is proven in observation
+6. **SEO / content engine** - last; not the growth bottleneck
 
 ## Intake connection
 
@@ -365,7 +365,7 @@ Website → Lead → Conversation → Intake → RO
 
 That is a bigger milestone than replacing Botble. Botble was a brochure; Lead Intake is **Lead Truth** at the front door.
 
-After sandbox validates the full chain (website → lead → conversation → intake → RO → converted), **stop talking about ARK-WEB**. The website is **Public Surface** — another ingress point into the same operating system, not a separate product alongside ARK-SMS, Botble, CMS, forms, and email notifications.
+After sandbox validates the full chain (website → lead → conversation → intake → RO → converted), **stop talking about ARK-WEB**. The website is **Public Surface** - another ingress point into the same operating system, not a separate product alongside ARK-SMS, Botble, CMS, forms, and email notifications.
 
 Architecture gets simpler; business capability gets larger.
 
@@ -383,7 +383,7 @@ Architecture gets simpler; business capability gets larger.
 
 ## Companion docs
 
-- `docs/deployment/demo-auto-public-surface-cutover-v1.md` — Botble → public surface cutover
-- `docs/communications-authority.md` — Conversation as relationship authority
-- `.cursor/rules/ark-no-encounters.mdc` — Encounter retired
-- `.cursor/rules/ark-pressure-first.mdc` — observe before automate
+- `docs/deployment/demo-auto-public-surface-cutover-v1.md` - Botble → public surface cutover
+- `docs/communications-authority.md` - Conversation as relationship authority
+- `.cursor/rules/ark-no-encounters.mdc` - Encounter retired
+- `.cursor/rules/ark-pressure-first.mdc` - observe before automate

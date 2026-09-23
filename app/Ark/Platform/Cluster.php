@@ -39,7 +39,7 @@ class Cluster extends Model
     }
 
     /**
-     * Observation — not a stored column.
+     * Observation - not a stored column.
      */
     public function currentShopCount(): int
     {

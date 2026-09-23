@@ -105,8 +105,8 @@
                     $approvedAmountLabel = $portalAuthorization['approved_amount'] ?? null;
                     $vehicleLabel = $repairOrder->vehicle->display_name;
                     $thankYouLead = filled($customerFirstName ?? null)
-                        ? 'Thank you, '.$customerFirstName.' —'
-                        : 'Thank you —';
+                        ? 'Thank you, '.$customerFirstName.' -'
+                        : 'Thank you -';
                     $justSubmittedIntro = filled($approvedAmountLabel)
                         ? $thankYouLead.' we received your approval for '.$approvedAmountLabel.' in repairs for your '.$vehicleLabel.'.'
                         : $thankYouLead.' we received your approval for your '.$vehicleLabel.'.';
@@ -116,7 +116,7 @@
                     'title' => ($authorizationFromSession ?? false) ? 'You’re all set' : 'We have your approval',
                     'intro' => ($authorizationFromSession ?? false)
                         ? $justSubmittedIntro
-                        : 'Thanks — your estimate choices are already with us.',
+                        : 'Thanks - your estimate choices are already with us.',
                     'class' => 'mt-6',
                 ])
                 @if ($showDeposit && filled($depositAmountLabel))
@@ -198,7 +198,7 @@
             @elseif ($depositCollected)
                 <div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                     <p class="font-semibold">Payment received</p>
-                    <p class="mt-1">Thank you — we received your payment.</p>
+                    <p class="mt-1">Thank you - we received your payment.</p>
                 </div>
             @endif
 
@@ -395,7 +395,7 @@
                                 <p class="text-xl font-black tabular-nums tracking-tight text-slate-950" x-text="approvedTotalLabel()"></p>
                             @else
                                 <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">{{ $totalsBreakdown['total_label'] ?? 'Total' }}</p>
-                                <p class="text-xl font-black tabular-nums tracking-tight text-slate-950">{{ $totalsBreakdown['total'] ?? '—' }}</p>
+                                <p class="text-xl font-black tabular-nums tracking-tight text-slate-950">{{ $totalsBreakdown['total'] ?? '-' }}</p>
                             @endif
                         </div>
                         @if ($showDeposit && filled($depositAmountLabel))

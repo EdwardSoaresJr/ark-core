@@ -96,7 +96,7 @@
                                     type="button"
                                     class="ops-inspection-detail__photo-trigger"
                                     data-ops-lightbox="{{ $evidenceUrl }}"
-                                    data-ops-lightbox-alt="{{ $item->label }} — {{ $photo->purposeLabel() }}"
+                                    data-ops-lightbox-alt="{{ $item->label }} - {{ $photo->purposeLabel() }}"
                                     aria-label="View {{ $photo->purposeLabel() }} photo"
                                 >
                                     <img src="{{ $evidenceUrl }}" alt="{{ $photo->purposeLabel() }}" class="ops-inspection-detail__photo-img">

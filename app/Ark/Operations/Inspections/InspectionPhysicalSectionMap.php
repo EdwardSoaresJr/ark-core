@@ -5,12 +5,12 @@ namespace App\Ark\Operations\Inspections;
 /**
  * Physical workflow grouping for the technician section walk.
  *
- * Projection only — does not rewrite template categories or InspectionItem identity.
+ * Projection only - does not rewrite template categories or InspectionItem identity.
  * Corner Inspection v1 is the first Standard stage (LF → LR → RR → RF).
  *
  * Placement authority (runtime):
- * - InspectionItem.walk_section — snapshotted from Builder at apply (Corner / new)
- * - checklist_category_name — legacy when walk_section is null
+ * - InspectionItem.walk_section - snapshotted from Builder at apply (Corner / new)
+ * - checklist_category_name - legacy when walk_section is null
  *
  * Walk never reads live Builder definitions for placement.
  * Unknown categories (e.g. PPI) fall through as one section per category name.

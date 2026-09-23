@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Phase 2 — Install Docker Desktop and ~/ARK layout.
+# Phase 2 - Install Docker Desktop and ~/ARK layout.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/ark-builder-env.sh
 source "$SCRIPT_DIR/lib/ark-builder-env.sh"
 
-echo "ARK build runner — install prerequisites"
+echo "ARK build runner - install prerequisites"
 echo "  ARK_HOME=$ARK_HOME"
 echo ""
 
@@ -26,7 +26,7 @@ if [[ -d /Applications/Docker.app ]]; then
     echo "Docker Desktop already installed."
 else
     brew install --cask docker
-    echo "Open Docker Desktop and configure resources — see docker-desktop-settings.md"
+    echo "Open Docker Desktop and configure resources - see docker-desktop-settings.md"
 fi
 
 if ! grep -q 'ark-build' "$HOME/.zprofile" 2>/dev/null; then

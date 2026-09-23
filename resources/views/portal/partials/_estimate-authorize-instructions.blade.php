@@ -9,7 +9,7 @@
         <li>
             For each repair, choose
             <span class="font-semibold text-slate-900">Approve</span> (do it now),
-            <span class="font-semibold text-slate-900">Defer</span> (not now — keep it for later),
+            <span class="font-semibold text-slate-900">Defer</span> (not now - keep it for later),
             or <span class="font-semibold text-slate-900">Decline</span> (do not do this work).
         </li>
         <li>Tap the blue button at the bottom to send your choices.</li>

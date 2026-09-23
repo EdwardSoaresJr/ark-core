@@ -145,7 +145,7 @@
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Fee => 'Fee',
                         default => $type->staffLabel(),
                     };
-                    // Full class strings — Tailwind purges @layer component selectors not seen in content.
+                    // Full class strings - Tailwind purges @layer component selectors not seen in content.
                     [$icon, $btnClass] = match ($type) {
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => ['labor', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--labor'],
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Part => ['part', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--part'],
@@ -225,7 +225,7 @@
 
 @unless ($isTerminal)
     @if ($concernUsesRepairActions && $concernWorkGroups->isEmpty())
-        {{-- No Repair Action yet — deepest context is the concern. --}}
+        {{-- No Repair Action yet - deepest context is the concern. --}}
         <div class="ops-repair-action__add-row ops-repair-action__add-row--footer ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
             <button
                 type="button"
@@ -247,7 +247,7 @@
             </button>
         </div>
     @elseif (! $concernUsesRepairActions)
-        {{-- Diagnostic / legacy concerns have no Repair Action — full compose lives here. --}}
+        {{-- Diagnostic / legacy concerns have no Repair Action - full compose lives here. --}}
         @php
             $scopeComposeTypes = [
                 App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor,

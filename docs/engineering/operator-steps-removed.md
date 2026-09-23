@@ -1,8 +1,8 @@
-# Product Roadmap — Operator Steps Removed
+# Product Roadmap - Operator Steps Removed
 
 **This is the roadmap.** Not Jira. Not GitHub Projects. Not milestone theater.
 
-A sequence of **disappearing thoughts** — not Voice, Mobile, Orientation as feature pillars.
+A sequence of **disappearing thoughts** - not Voice, Mobile, Orientation as feature pillars.
 
 **Unit of progress:** permanent reductions in operator cognition that produce an operational capability the shop trusts.
 
@@ -39,7 +39,7 @@ Operator never has that thought again
 
 Good software reduces clicks. **Great software reduces training.**
 
-**ARK learns by operating the shop** — not from support tickets alone. That is the evolution loop competitors rarely copy.
+**ARK learns by operating the shop** - not from support tickets alone. That is the evolution loop competitors rarely copy.
 
 ## Certification status
 
@@ -57,21 +57,21 @@ Turn green on the **floor**, not in a checklist doc. Success six months out: *"H
 
 ## Thoughts to remove (by certification)
 
-**Front Counter** — until the station simply works:
+**Front Counter** - until the station simply works:
 
 - How do I provision this?
 - Which extension?
 - Why isn't this phone working?
 - Who is signed in?
 
-**Portable Station** — until Edward simply works:
+**Portable Station** - until Edward simply works:
 
 - Let me check messages.
 - Which RO was this?
 - Did someone already answer?
 - What deserves attention?
 
-**Orientation** — until the operation simply works:
+**Orientation** - until the operation simply works:
 
 - What happened?
 - Who's waiting?
@@ -93,7 +93,7 @@ Turn green on the **floor**, not in a checklist doc. Success six months out: *"H
 
 Add a row when a step is **gone for operators**, not when code ships. Master-admin escape hatches do not count.
 
-## Next week — stories, not features
+## Next week - stories, not features
 
 Success is experiential. Not "we implemented Asterisk." Not "Flutter has push."
 

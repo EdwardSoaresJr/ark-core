@@ -20,7 +20,7 @@ class CommunicationWorkboardFragmentController
                 'calls' => $this->renderLane(
                     id: 'ops-comms-lane-calls',
                     label: 'Calls',
-                    description: 'Live and waiting — ring, missed, and voicemail.',
+                    description: 'Live and waiting - ring, missed, and voicemail.',
                     tone: 'ready',
                     rows: $data['calls_waiting'],
                     cardPartial: 'operations.communications.partials.workboard-card-call',
@@ -30,7 +30,7 @@ class CommunicationWorkboardFragmentController
                 'new' => $this->renderLane(
                     id: 'ops-comms-lane-new',
                     label: 'New',
-                    description: 'Inbound leads — website, SMS, and acquisition.',
+                    description: 'Inbound leads - website, SMS, and acquisition.',
                     tone: 'motion',
                     rows: $data['new_opportunities'],
                     cardPartial: 'operations.communications.partials.workboard-card-lead',
@@ -40,7 +40,7 @@ class CommunicationWorkboardFragmentController
                 'needs_shop' => $this->renderLane(
                     id: 'ops-comms-lane-needs-shop',
                     label: 'Needs shop',
-                    description: 'Threads waiting on the shop — reply or resolve.',
+                    description: 'Threads waiting on the shop - reply or resolve.',
                     tone: 'approval',
                     rows: $data['needs_shop'],
                     cardPartial: 'operations.communications.partials.workboard-card-conversation',
@@ -50,7 +50,7 @@ class CommunicationWorkboardFragmentController
                 'waiting_customer' => $this->renderLane(
                     id: 'ops-comms-lane-waiting-customer',
                     label: 'Waiting customer',
-                    description: 'Ball is with the customer — follow up when needed.',
+                    description: 'Ball is with the customer - follow up when needed.',
                     tone: 'motion',
                     rows: $data['waiting_customer'],
                     cardPartial: 'operations.communications.partials.workboard-card-waiting-customer',

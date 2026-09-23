@@ -13,7 +13,7 @@
             @endif
         </h2>
         <p class="ops-today__section-copy">
-            Explains pipeline, flow, and recommendations — never ranks or mutates operational truth.
+            Explains pipeline, flow, and recommendations - never ranks or mutates operational truth.
             Priority order always comes from deterministic rules above.
         </p>
     </div>

@@ -6,7 +6,7 @@ use App\Ark\Operations\Communications\CommunicationDevice;
 use App\Ark\Platform\VoiceTransportConfiguration;
 
 /**
- * Operator-facing readiness for Milestone 1 — First Contact (G4/G5).
+ * Operator-facing readiness for Milestone 1 - First Contact (G4/G5).
  */
 final class FirstContactReadinessProjection
 {

@@ -1,6 +1,6 @@
 # ARK Platform Manifesto v1
 
-**Status:** Culture — not doctrine, not engineering principles  
+**Status:** Culture - not doctrine, not engineering principles  
 **Date:** 2026-07-19  
 **Alongside:** [architecture-phase-1-complete.md](architecture-phase-1-complete.md) · [engineering-phase-1-adapters.md](engineering-phase-1-adapters.md) · [engineering-principles.md](engineering-principles.md)
 
@@ -99,7 +99,7 @@ Instead:
 
 Architecture stays the foundation. Implementation is a series of small, confidence-building steps.
 
-When infrastructure work feels routine instead of risky — Engineering Phase 1 did its job.
+When infrastructure work feels routine instead of risky - Engineering Phase 1 did its job.
 
 ---
 
@@ -109,13 +109,13 @@ Phase 1’s real deliverable is not the provisioning spine.
 
 It is that the next fifty decisions already have a language.
 
-Measure success by how rarely frozen authorities must change — not by how fast Coolify ships.
+Measure success by how rarely frozen authorities must change - not by how fast Coolify ships.
 
 ---
 
-## After Phase 1 — skepticism is the job
+## After Phase 1 - skepticism is the job
 
-Architecture co-design is done. Review gets harder, not softer — because the model is now valuable enough to protect.
+Architecture co-design is done. Review gets harder, not softer - because the model is now valuable enough to protect.
 
 First question: **What pressure is forcing this?**  
 No pressure → **keep the stub.**

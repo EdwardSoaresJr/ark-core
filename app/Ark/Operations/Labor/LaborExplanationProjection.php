@@ -6,7 +6,7 @@ use App\Ark\Operations\LaborGuides\Rte\RteLaborHoursBasis;
 use App\Ark\Operations\LaborGuides\Rte\RteShopLaborHoursProjection;
 
 /**
- * Doctrine visibility for labor — advisor summary and detail at apply time.
+ * Doctrine visibility for labor - advisor summary and detail at apply time.
  *
  * Engineering detail is computed for tests only; never expose in operational UI.
  */

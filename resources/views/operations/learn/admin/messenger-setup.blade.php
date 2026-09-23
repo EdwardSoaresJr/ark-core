@@ -7,10 +7,10 @@
 
     <h3>Core behavior</h3>
     <ul>
-        <li><strong>Channel</strong> — Messenger conversations use the same Customer Hub and RO communication timeline as SMS.</li>
-        <li><strong>Linking</strong> — unknown PSIDs can be linked to a customer record; matched PSIDs auto-resolve.</li>
-        <li><strong>Outbound</strong> — Core does not ship Meta Messenger transport. Outbound replies return <em>Messenger outbound is not configured.</em></li>
-        <li><strong>Inbound</strong> — Core does not ship Meta webhook ingress. Historical Messenger messages remain readable when already linked.</li>
+        <li><strong>Channel</strong> - Messenger conversations use the same Customer Hub and RO communication timeline as SMS.</li>
+        <li><strong>Linking</strong> - unknown PSIDs can be linked to a customer record; matched PSIDs auto-resolve.</li>
+        <li><strong>Outbound</strong> - Core does not ship Meta Messenger transport. Outbound replies return <em>Messenger outbound is not configured.</em></li>
+        <li><strong>Inbound</strong> - Core does not ship Meta webhook ingress. Historical Messenger messages remain readable when already linked.</li>
     </ul>
 
     <h3 id="24-hour-window">24-hour window and message tags</h3>

@@ -21,7 +21,7 @@ final class ShopFinancialSnapshotTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Live Demo Auto Repair operational money: posted sales, cash collected, labor/parts sales, and waiting-approval dollars. Use for today, this month (shop MTD), or a named calendar month that is on or before the shop clock. The shop clock in the system prompt is the date — never call the current month/year the future. Does not provide net profit. Keep posted sales, cash collected, waiting-approval dollars, and profit distinct.';
+        return 'Live Demo Auto Repair operational money: posted sales, cash collected, labor/parts sales, and waiting-approval dollars. Use for today, this month (shop MTD), or a named calendar month that is on or before the shop clock. The shop clock in the system prompt is the date - never call the current month/year the future. Does not provide net profit. Keep posted sales, cash collected, waiting-approval dollars, and profit distinct.';
     }
 
     public function parameters(): array
@@ -93,8 +93,8 @@ final class ShopFinancialSnapshotTool implements DragonAgentTool
                 'to' => $window['to_local']->toDateString(),
             ],
             'definitions' => [
-                'posted_sales' => 'Posted invoice sales — frozen invoice before tax on repair orders posted in range. Not cash, and not a write-off.',
-                'cash_collected' => 'Operational Report “Cash Collected” — payments + deposits cashiered in range.',
+                'posted_sales' => 'Posted invoice sales - frozen invoice before tax on repair orders posted in range. Not cash, and not a write-off.',
+                'cash_collected' => 'Operational Report “Cash Collected” - payments + deposits cashiered in range.',
                 'waiting_approval_dollars' => 'Human-readable US dollars of Approval Forecast pending on ROs currently waiting approval. Do not confuse with pending_recommended_cents (pennies). Estimate language, not collected cash. Waiting-approval is live board, not limited to this range.',
                 'net_profit' => 'Not available. ARK Financial Authority is RED; Dragon will not invent P&L.',
             ],
@@ -135,7 +135,7 @@ final class ShopFinancialSnapshotTool implements DragonAgentTool
             if ($start->startOfMonth()->gt($now->copy()->startOfMonth())) {
                 return [
                     'ok' => false,
-                    'error' => 'That month is after the shop clock. It is not in the future relative to training data — it has not happened at this shop yet. Use this_month or a month on or before '.$now->format('F Y').'.',
+                    'error' => 'That month is after the shop clock. It is not in the future relative to training data - it has not happened at this shop yet. Use this_month or a month on or before '.$now->format('F Y').'.',
                 ];
             }
 

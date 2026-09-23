@@ -75,7 +75,7 @@ final class MarkEstimateAwaitingCustomerApprovalAction
                 toStatus: null,
                 reason: 'blocked',
                 blockingMessage: $blocking,
-                toast: 'Estimate sent. Status stayed '.$fromLabel.' — '.$blocking,
+                toast: 'Estimate sent. Status stayed '.$fromLabel.' - '.$blocking,
             );
         }
 

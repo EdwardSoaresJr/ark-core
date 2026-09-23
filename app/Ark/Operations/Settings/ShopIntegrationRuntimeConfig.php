@@ -6,7 +6,7 @@ use Throwable;
 
 /**
  * Applies shop-stored reply-to into runtime config.
- * Does not inject Postmark tokens — official production email is ARK Email only.
+ * Does not inject Postmark tokens - official production email is ARK Email only.
  */
 final class ShopIntegrationRuntimeConfig
 {

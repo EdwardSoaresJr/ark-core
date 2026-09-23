@@ -1,13 +1,13 @@
-# Technician — Landon
+# Technician - Landon
 
 **Station:** Bay 3 (fixed) + phone for assigned RO context only  
 **Primary question:** What do I inspect or repair next?
 
-Landon does not live in the shop inbox. He lives in **assigned work**. Communications on his phone appear only inside the RO he is performing — not a global Conversations tab.
+Landon does not live in the shop inbox. He lives in **assigned work**. Communications on his phone appear only inside the RO he is performing - not a global Conversations tab.
 
 ---
 
-## 6:45 AM — My Work
+## 6:45 AM - My Work
 
 **Floor:** Three ROs assigned. One waiting on parts. One ready for inspection.
 
@@ -27,7 +27,7 @@ Landon does not live in the shop inbox. He lives in **assigned work**. Communica
 
 ---
 
-## 7:30 AM — Inspection beside vehicle
+## 7:30 AM - Inspection beside vehicle
 
 **Floor:** Landon walks RO #5105 inspection checklist with phone.
 
@@ -47,7 +47,7 @@ Landon does not live in the shop inbox. He lives in **assigned work**. Communica
 
 ---
 
-## 9:15 AM — Need advisor eyes
+## 9:15 AM - Need advisor eyes
 
 **Floor:** Landon finds additional work. Customer is waiting. He needs Edward.
 
@@ -69,7 +69,7 @@ Landon does not live in the shop inbox. He lives in **assigned work**. Communica
 
 ---
 
-## 10:45 AM — Customer text on assigned RO
+## 10:45 AM - Customer text on assigned RO
 
 **Floor:** Customer texts photo of dash light on RO Landon is assigned.
 
@@ -89,7 +89,7 @@ Landon does not live in the shop inbox. He lives in **assigned work**. Communica
 
 ---
 
-## 1:00 PM — Production status update
+## 1:00 PM - Production status update
 
 **Floor:** Approved scope complete. Landon marks concern production status.
 
@@ -109,7 +109,7 @@ Landon does not live in the shop inbox. He lives in **assigned work**. Communica
 
 ---
 
-## 4:30 PM — Last RO of the day
+## 4:30 PM - Last RO of the day
 
 **Floor:** Final inspection photos uploading from weak shop Wi‑Fi.
 

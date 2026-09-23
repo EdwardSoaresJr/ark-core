@@ -11,7 +11,7 @@
         <div class="border border-slate-300 bg-white">
             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $briefing->narrativeIntro }}</p>
-                <p class="text-xs text-slate-500">Posted sales truth from operational reporting — not a dashboard.</p>
+                <p class="text-xs text-slate-500">Posted sales truth from operational reporting - not a dashboard.</p>
             </div>
             <dl class="divide-y divide-slate-100">
                 @forelse ($briefing->yesterdaySummary as $row)

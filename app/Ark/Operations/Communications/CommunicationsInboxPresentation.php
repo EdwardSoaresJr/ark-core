@@ -198,15 +198,15 @@ final class CommunicationsInboxPresentation
                     : null);
             $title = 'Waiting';
             $prompt = $conversation?->follow_up_due_at
-                ? 'Open — follow-up scheduled'.($when ? ' for '.$when : '').'. Moves to Needs attention when overdue.'
-                : 'Open — waiting on the customer'.($when ? ' since '.$when : '').'. Not forgotten.';
+                ? 'Open - follow-up scheduled'.($when ? ' for '.$when : '').'. Moves to Needs attention when overdue.'
+                : 'Open - waiting on the customer'.($when ? ' since '.$when : '').'. Not forgotten.';
             $excerpt = '';
         } else {
             $title = $last['title'] !== '' ? $last['title'] : 'Needs attention';
             $prompt = match ($last['kind']) {
                 'sms', 'messenger', 'email' => $last['outbound']
                     ? 'Shop action may be due. Schedule a follow-up, mark waiting, or resolve.'
-                    : 'Customer wrote last — reply if needed, mark waiting if the shop is working this, or resolve if finished.',
+                    : 'Customer wrote last - reply if needed, mark waiting if the shop is working this, or resolve if finished.',
                 'missed_call', 'voicemail', 'call', 'recording' => 'Shop action is due. Call back, reply, or resolve.',
                 default => 'Shop action may be due. Reply if needed, mark waiting, or resolve.',
             };

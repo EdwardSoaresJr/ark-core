@@ -1,6 +1,6 @@
 {{--
   Line presentation only. Authoring is modal-hosted via editing_line → workspace-modal/edit-line.
-  Compatibility: editing_line query + editLine() continuity still open that modal — do not restore
+  Compatibility: editing_line query + editLine() continuity still open that modal - do not restore
   inline edit branches here (see docs/operations/ro-builder-workspace-modal-compatibility-debt.md).
 --}}
 @php

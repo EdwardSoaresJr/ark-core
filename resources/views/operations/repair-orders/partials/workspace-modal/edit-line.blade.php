@@ -50,7 +50,7 @@
         'hideInlineChrome' => true,
     ])
 @else
-    {{-- Part / sublet / fee — reuse the existing inline editor body inside the modal --}}
+    {{-- Part / sublet / fee - reuse the existing inline editor body inside the modal --}}
     <div id="line-{{ $line->id }}" class="min-h-[70px]">
         <div
             x-data="arkPartPricing({ type: '{{ $line->type->value }}', concernSummary: @js($concern->summary), pricingMode: '{{ $line->pricing_mode ?: $concernDefaultPartPricingMode }}', defaultPricingMode: '{{ $concernDefaultPartPricingMode }}', defaultPartSell: '{{ $concernDefaultPartPricingMode === 'manual' ? '0' : '' }}', matrixKey: '{{ $line->pricing_matrix_key }}', explicitMatrix: true, cost: '{{ $line->part_cost_cents === null ? '' : $totals->decimal($line->part_cost_cents) }}', sell: '{{ $totals->decimal($line->unit_price_cents) }}', sellEdited: {{ $line->is_overridden || $line->pricing_mode === 'manual' ? 'true' : 'false' }}, defaultLaborRate: '{{ $defaultLaborRate }}' }, partsMatrices, @js($concernPartsMatrixKey), '{{ route('operations.repair-orders.lines.pricing-preview', $repairOrder) }}')"

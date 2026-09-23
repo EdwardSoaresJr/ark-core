@@ -1,6 +1,6 @@
 # ARK Scoped Event Streams v1
 
-**Status:** E0.6 — organizing **infrastructure** (not an authority).  
+**Status:** E0.6 - organizing **infrastructure** (not an authority).  
 **Prerequisites:** [`event-contracts-v1.md`](../mobile/event-contracts-v1.md) · [`ark-authority-interaction-map-v1.md`](ark-authority-interaction-map-v1.md).  
 **Vocabulary:** [`ark-business-language-v1.md`](ark-business-language-v1.md).
 
@@ -18,13 +18,13 @@ An **authority** answers: *Who is allowed to say this is true?*
 
 **Event streams cannot originate truth.** They **organize** truth emitted by authorities as events.
 
-The **Event Stream Engine** is infrastructure — same category as workspace layout engines and timeline renderers. Not a noun in the business dictionary.
+The **Event Stream Engine** is infrastructure - same category as workspace layout engines and timeline renderers. Not a noun in the business dictionary.
 
 ---
 
 ## Core insight
 
-One mechanism — many scoped views:
+One mechanism - many scoped views:
 
 ```text
 Event Stream Engine(scope, anchor, cursor) → ordered event contracts
@@ -32,7 +32,7 @@ Event Stream Engine(scope, anchor, cursor) → ordered event contracts
 
 **Timeline** is UI language for presenting a stream. **Stream** is the infrastructure concept.
 
-Analytics, AI, automation, and feeds consume **engine output** — not parallel truth models.
+Analytics, AI, automation, and feeds consume **engine output** - not parallel truth models.
 
 ---
 
@@ -41,7 +41,7 @@ Analytics, AI, automation, and feeds consume **engine output** — not parallel 
 ```text
 Stream(scope, anchor, cursor?) =
     event contracts
-    WHERE scope membership matches      (E0b — mechanical)
+    WHERE scope membership matches      (E0b - mechanical)
       AND anchor matches
       AND active (expiry · supersession)
     ORDER BY occurred_at
@@ -49,7 +49,7 @@ Stream(scope, anchor, cursor?) =
 
 | Input | Source |
 |-------|--------|
-| Contracts | Authority-emitted events — verbs only |
+| Contracts | Authority-emitted events - verbs only |
 | Membership | [`companion-timeline-scopes-v1.md`](../mobile/companion-timeline-scopes-v1.md) |
 | Active rules | Event contract Q6 · Q7 |
 | Anchor | customer · vehicle · repair_order · operator · shop cursor |
@@ -106,7 +106,7 @@ when Waiting Estimate becomes Estimate Viewed within 4 hours
 
 ## Rendered rows are projections
 
-Chronological rows, feed cards, hub chips — **projection shapes**. The engine output is ordered contracts; UI chooses presentation.
+Chronological rows, feed cards, hub chips - **projection shapes**. The engine output is ordered contracts; UI chooses presentation.
 
 If the row format changes, events and authorities do not.
 
@@ -129,12 +129,12 @@ If the row format changes, events and authorities do not.
 
 | # | Criterion |
 |---|-----------|
-| 1 | Event Stream Engine = infrastructure — **not** authority |
+| 1 | Event Stream Engine = infrastructure - **not** authority |
 | 2 | Authorities originate events; engine organizes |
 | 3 | Timeline = UI projection of engine output |
 | 4 | Observation engine consumes engine output |
 | 5 | Projections never invent events |
-| 6 | No new architecture docs — proceed **E1 Contract Realization** |
+| 6 | No new architecture docs - proceed **E1 Contract Realization** |
 
 ---
 
@@ -145,6 +145,6 @@ Authorities say what is true.
 Events record what happened.
 The Event Stream Engine organizes events by scope.
 Observations describe what it means.
-Projections present — they never invent events.
+Projections present - they never invent events.
 Timeline is how humans read a stream.
 ```

@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | OIDC issuer (Phase 1b spike — staging only until go/no-go)
+    | OIDC issuer (Phase 1b spike - staging only until go/no-go)
     |--------------------------------------------------------------------------
     */
 

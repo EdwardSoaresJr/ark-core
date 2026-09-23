@@ -60,7 +60,7 @@ test('estimate follow-up lifecycle generates call recommendation when estimate v
         ->and($candidate->reason)->toContain('Estimate viewed 3×')
         ->and($candidate->expectedOutcome)->toBe('Increase approval likelihood.');
 
-    // Advisor Today is Shop Dashboard — lifecycle recommendations are not rendered there.
+    // Advisor Today is Shop Dashboard - lifecycle recommendations are not rendered there.
     $this->actingAs($advisor)
         ->get(route('operations.today'))
         ->assertOk()

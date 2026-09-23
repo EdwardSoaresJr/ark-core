@@ -5,7 +5,7 @@
                 <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Reports</p>
                 <h1 class="mt-0.5 text-lg font-black text-slate-950">Pick a report</h1>
                 <p class="mt-1 max-w-2xl text-xs text-slate-500">
-                    Same operational truth as before — one entry point instead of landing inside Executive Pulse.
+                    Same operational truth as before - one entry point instead of landing inside Executive Pulse.
                     <strong class="font-semibold text-slate-600">End of Day</strong> first; drill into tabs when you need depth.
                 </p>
             </div>

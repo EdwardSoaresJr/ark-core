@@ -22,7 +22,7 @@ When favicons change, update the **pack first**, then sync downstream surfaces.
 | **ARK V2** | `app.demo-auto.test`, `portal.demo-auto.test` | ARK ecosystem mark | `Branding::favicon()` via `_favicons.blade.php` |
 | **ARKademy** | `learn.demo-auto.test` | ARK ecosystem mark | Theme `/theme/arkademy/favicon/*` + `app-custom-head` in BookStack settings |
 | **Arkify** | `platform.autorepairkeeper.com` | ARK ecosystem mark | `infra/branding/apply-arkify-branding.sh` + guardrails cron |
-| **ARK-WEB** | `demo-auto.test` | **Shop branding (exception)** | Demo Auto Repair favicon + OG in `arkweb` — do not force ARK mark |
+| **ARK-WEB** | `demo-auto.test` | **Shop branding (exception)** | Demo Auto Repair favicon + OG in `arkweb` - do not force ARK mark |
 
 ### ARK-WEB exception (documented)
 
@@ -58,6 +58,6 @@ See `docs/branding/verification/` for fetched favicon binaries and audit notes.
 
 ## Related docs
 
-- `docs/branding/ecosystem-identity.md` — doctrine
-- `docs/branding/inventory.md` — full asset inventory
-- doctrine `ark-ecosystem-identity.mdc` — agent enforcement
+- `docs/branding/ecosystem-identity.md` - doctrine
+- `docs/branding/inventory.md` - full asset inventory
+- doctrine `ark-ecosystem-identity.mdc` - agent enforcement

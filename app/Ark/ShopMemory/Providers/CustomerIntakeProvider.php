@@ -11,7 +11,7 @@ use App\Ark\ShopMemory\Suggestion\SuggestionProvider;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Problem-language from visit_reason — no VisitReason model.
+ * Problem-language from visit_reason - no VisitReason model.
  */
 final class CustomerIntakeProvider implements SuggestionProvider
 {

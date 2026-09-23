@@ -1,6 +1,6 @@
 # QZ Certificate Investigation
 
-**Status:** Investigated 2026-06-03 — deployment blocker until PEMs are placed on disk.
+**Status:** Investigated 2026-06-03 - deployment blocker until PEMs are placed on disk.
 
 ## Findings (production server `root@24.144.81.19`)
 
@@ -29,7 +29,7 @@ Signing may still work on advisor workstations if QZ Tray was manually trusted (
 
 ## Shared across tenants?
 
-ARK-SMS used one PEM pair per deployment (not per tenant). ARK V2 is single-shop — **one pair per VPS** is correct.
+ARK-SMS used one PEM pair per deployment (not per tenant). ARK V2 is single-shop - **one pair per VPS** is correct.
 
 ## Unsigned fallback
 

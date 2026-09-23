@@ -65,7 +65,7 @@
                     rel="noopener noreferrer"
                     class="inline-flex rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400"
                     data-inspection-tablet
-                    title="Force bay layout — for handing a tablet to the technician"
+                    title="Force bay layout - for handing a tablet to the technician"
                 >Bay layout</a>
             </div>
 

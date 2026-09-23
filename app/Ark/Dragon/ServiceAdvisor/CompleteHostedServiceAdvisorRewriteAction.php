@@ -13,7 +13,7 @@ use Throwable;
 
 /**
  * Completes a Service Advisor rewrite through ARK-hosted Dragon.
- * Same fact-preservation gate as before. Preview only — never writes the RO.
+ * Same fact-preservation gate as before. Preview only - never writes the RO.
  */
 final class CompleteHostedServiceAdvisorRewriteAction
 {

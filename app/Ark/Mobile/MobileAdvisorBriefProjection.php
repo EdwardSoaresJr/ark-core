@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Advisor Brief — operational awareness before the advisor responds.
+ * Advisor Brief - operational awareness before the advisor responds.
  *
  * Not a chatbot. One posture headline, recent signals, one recommendation, promises, suggested replies.
  */
@@ -446,7 +446,7 @@ final class MobileAdvisorBriefProjection
 
         $templates = [
             'voicemail' => 'We received your voicemail. I\'ll call you shortly.',
-            'missed_call' => 'Sorry we missed your call — how can I help?',
+            'missed_call' => 'Sorry we missed your call - how can I help?',
             'estimate_viewed' => 'Your estimate is still awaiting approval. Happy to answer any questions.',
             'vehicle_ready' => 'Your vehicle is ready for pickup.',
         ];

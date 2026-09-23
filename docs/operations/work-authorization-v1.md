@@ -1,11 +1,11 @@
 # Work Authorization v1
 
 **Status:** Frozen doctrine · **v1 Testing Package slice shipped** · Observe  
-**Classification:** Operations authority (grammar) — packages are the customer contract for authorized work  
+**Classification:** Operations authority (grammar) - packages are the customer contract for authorized work  
 **First consumer:** Testing Package v1 (this document · implemented)  
 **Companions:** [Maintenance Service v1](maintenance-service-v1.md) · [Evidence Authority v1](evidence-authority-v1.md) · [Repair Action assignment](repair-action-assignment-and-labor-recognition-v1.md) · [Financial Authority v2](../ARK-FINANCIAL-AUTHORITY-V2.md) · [Repair Portal v1](repair-portal-v1.md)
 
-**Business rationale (craft, not doctrine):** Go Fuel “Level Testing Amplifier” — stop selling open-ended diagnostic hours; sell structured, bounded testing. ARK implements that as **authorized work packages**, not Level labor SKUs.
+**Business rationale (craft, not doctrine):** Go Fuel “Level Testing Amplifier” - stop selling open-ended diagnostic hours; sell structured, bounded testing. ARK implements that as **authorized work packages**, not Level labor SKUs.
 
 ---
 
@@ -21,11 +21,11 @@ Hours belong to production / compensation. Dollars belong to Pricing Policy + Es
 
 ---
 
-## Invariant #0 — Permission, not execution
+## Invariant #0 - Permission, not execution
 
 **Work Authorization owns permission, not execution.**
 
-Analogous to Financial Position’s *owns nothing; answers everything* — this authority answers a narrow question and refuses to become the systems it composes.
+Analogous to Financial Position’s *owns nothing; answers everything* - this authority answers a narrow question and refuses to become the systems it composes.
 
 | Answers | Does not become |
 | --- | --- |
@@ -54,7 +54,7 @@ Package           Package
     Outcome → Recommendation
 ```
 
-Labor, Pricing, Payroll, Technician compensation, and Financial Position stay **outside** this tree — they compose *around* authorization.
+Labor, Pricing, Payroll, Technician compensation, and Financial Position stay **outside** this tree - they compose *around* authorization.
 
 ---
 
@@ -82,7 +82,7 @@ A Testing Package may **recommend** a repair. Completing testing never silently 
 
 ## Principle #3
 
-**Escalation is the product rhythm — not more hours.**
+**Escalation is the product rhythm - not more hours.**
 
 ```text
 Testing Package
@@ -102,8 +102,8 @@ Never: *“We need another hour…”*
 
 | Internal (authority) | Meaning | Customer / Demo Auto Repair policy (example) |
 | --- | --- | --- |
-| **Work Authorization** | Grammar: customer-authorized package of work | — |
-| **Package Type** | Testing · Maintenance · (future) Repair · Programming · Inspection | — |
+| **Work Authorization** | Grammar: customer-authorized package of work | - |
+| **Package Type** | Testing · Maintenance · (future) Repair · Programming · Inspection | - |
 | **Testing Package** | Authorized testing scope on a Concern / RO | Level 1 / 2 / 3 Testing |
 | **Testing Scope** | What systems / depth this package covers | “Single system” / “Multi-system / intermittent” |
 | **Testing Outcome** | How testing ended | See Outcomes |
@@ -120,7 +120,7 @@ Work Authorization (and Testing Package as first type) owns:
 1. **That authorized work exists** as a package (not a free-floating diagnostic labor hour)
 2. **Package type** (Testing first)
 3. **Link to Concern / Repair Order** (where authorization sits)
-4. **Scope key** (shop-policy identity — e.g. `testing.level_1` — not customer copy)
+4. **Scope key** (shop-policy identity - e.g. `testing.level_1` - not customer copy)
 5. **Status** of the authorization (authorized · in progress · completed · declined further)
 6. **Outcome** when testing completes (see Outcomes)
 7. **Recommendation** text / structured next step after outcome
@@ -138,7 +138,7 @@ Work Authorization (and Testing Package as first type) owns:
 | Evidence bytes or visibility | Evidence Authority |
 | Repair Action ownership / status / updates | Repair Action (work groups) |
 | Financial Position / invoice / deposits | Financial Authority |
-| Diagnosis as caption on photos | Concerns / recommendations — Evidence never diagnoses |
+| Diagnosis as caption on photos | Concerns / recommendations - Evidence never diagnoses |
 | Vehicle specification / OEM procedures | Not invented here |
 | Migrating Maintenance into this table on day one | Maintenance stays; **composes** the same grammar |
 
@@ -155,7 +155,7 @@ Work Authorization ── Testing Package (v1)
    │
    ├── Repair Actions     (work to perform)
    ├── Evidence           (proof)
-   ├── Estimate Package line  (customer price — Financial contract)
+   ├── Estimate Package line  (customer price - Financial contract)
    └── Outcome + Recommendation
            │
            ├── Repair Recommended → separate approval / repair work
@@ -165,11 +165,11 @@ Work Authorization ── Testing Package (v1)
 | Existing capability | Role under Work Authorization |
 | --- | --- |
 | **Repair Actions** | Contained work units for the package |
-| **Evidence** | Measurements, photos, captures — Shared to portal |
+| **Evidence** | Measurements, photos, captures - Shared to portal |
 | **Package line type** | Sold price on Estimate (never flag hours) |
 | **Financial Position** | Approved packages + repairs → Projected Balance |
 | **Portal** | Progress, Shared evidence, recommendation |
-| **Maintenance Service** | Peer package type already shipping — same customer question |
+| **Maintenance Service** | Peer package type already shipping - same customer question |
 
 ---
 
@@ -182,7 +182,7 @@ Work Authorization ── Testing Package (v1)
 - Testing Recommendation (when outcome warrants)
 - Escalation target (next scope key) when outcome = Escalate
 
-### Outcomes (operational truth — not labor, not pricing)
+### Outcomes (operational truth - not labor, not pricing)
 
 | Outcome | Meaning |
 | --- | --- |
@@ -211,7 +211,7 @@ Historical Package A remains evidence of what was already authorized and conclud
 | Audience | Sees |
 | --- | --- |
 | **Customer / advisor sell** | Policy label (Level 1 Testing), price, what the package includes, outcome, recommendation, Shared evidence |
-| **Technician** | Testing Package → Repair Actions → Evidence → measurements → status — **not** “Level 2” as a labor concept |
+| **Technician** | Testing Package → Repair Actions → Evidence → measurements → status - **not** “Level 2” as a labor concept |
 
 ---
 
@@ -225,7 +225,7 @@ Pricing Policy (shop configuration)
 Estimate Package line → Financial Position
 ```
 
-Examples (illustrative only — not Demo Auto Repair defaults in code):
+Examples (illustrative only - not Demo Auto Repair defaults in code):
 
 | Shop | Level 1 | Level 2 | Level 3 |
 | --- | --- | --- | --- |
@@ -238,7 +238,7 @@ Tech pay multipliers from coaching PDFs (guaranteed flag hours per level) are **
 
 ---
 
-## Non-goals (still frozen — do not expand yet)
+## Non-goals (still frozen - do not expand yet)
 
 Do **not**:
 
@@ -271,18 +271,18 @@ Code: `app/Ark/Operations/WorkAuthorization/*` · Pest `WorkAuthorizationTesting
 
 ## Observation gate (after v1)
 
-Run ~20–30 real Testing authorizations. Notebook — not dashboard.
+Run ~20–30 real Testing authorizations. Notebook - not dashboard.
 
 | Signal | Ask |
 | --- | --- |
-| **Advisor language** | Do they say “authorizing a Testing Package” — or still “adding diagnostics”? Language fight ≠ architecture fight. |
+| **Advisor language** | Do they say “authorizing a Testing Package” - or still “adding diagnostics”? Language fight ≠ architecture fight. |
 | **Tech ignore** | Do techs jump straight to Repair Actions and never look at the package? Authorization may stay advisor/customer-side. |
 | **Escalate rate** | Rare → Levels may not matter. 30–40% → earn next-package workflow. |
-| **Pricing creep** | Repeated “can we just put the price here?” → thin WA ↔ Pricing Policy composition — do **not** fold price into permission. |
+| **Pricing creep** | Repeated “can we just put the price here?” → thin WA ↔ Pricing Policy composition - do **not** fold price into permission. |
 
-Question under test: **Is Work Authorization the right abstraction?** — not “did we build enough features?”
+Question under test: **Is Work Authorization the right abstraction?** - not “did we build enough features?”
 
-**Next slice only after notebook evidence** — not roadmap momentum. No Levels · Portal · Evidence attach · Auto-escalation · Progress meters.
+**Next slice only after notebook evidence** - not roadmap momentum. No Levels · Portal · Evidence attach · Auto-escalation · Progress meters.
 
 ---
 

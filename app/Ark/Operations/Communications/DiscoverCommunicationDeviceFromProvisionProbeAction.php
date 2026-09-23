@@ -7,7 +7,7 @@ use App\Ark\Communications\Provisioning\CommunicationDeviceModelResolver;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * When a phone probes provisioning, record it — operators assign stations; never type MACs.
+ * When a phone probes provisioning, record it - operators assign stations; never type MACs.
  */
 final class DiscoverCommunicationDeviceFromProvisionProbeAction
 {

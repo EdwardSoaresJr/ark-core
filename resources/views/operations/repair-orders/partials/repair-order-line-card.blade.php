@@ -301,7 +301,7 @@
     @endif
 
     @if ($showActions && ! $isTerminal && $lineGrid !== 'review')
-        {{-- Visually hidden trigger — whole interactive row opens edit; keep for a11y + continuity. --}}
+        {{-- Visually hidden trigger - whole interactive row opens edit; keep for a11y + continuity. --}}
         <a
             href="{{ $lineEditUrl }}"
             data-line-edit-trigger

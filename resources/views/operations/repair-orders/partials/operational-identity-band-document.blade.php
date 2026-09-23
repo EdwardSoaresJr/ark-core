@@ -9,7 +9,7 @@
         && isset($repairOrder)
         && auth()->user()?->can(ArkCapability::RepairOrdersManage->value);
     $showMileageInlineEditor = $canEditMileage && ($mileageEditable ?? true);
-    // Identity stays editable after close — same posture as mileage. Visit posture stays open-RO only.
+    // Identity stays editable after close - same posture as mileage. Visit posture stays open-RO only.
     $canEditCustomer = $identityVariant === 'staff'
         && isset($repairOrder)
         && auth()->user()?->can(ArkCapability::CustomersManage->value);

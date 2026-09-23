@@ -1,4 +1,4 @@
-# ARK Voice — Endpoint Architecture v1
+# ARK Voice - Endpoint Architecture v1
 
 **Status:** Frozen baseline (2026-06-26)  
 **Supersedes:** ad-hoc provisioning design in migration plan drafts v1–v3  
@@ -14,13 +14,13 @@
 
 > **An endpoint is disposable. A workstation is persistent.**
 
-If a technician drops a VVX350 off a ladder: remove device, scan new MAC, reprovision. Nothing else changes — no extension move, no customer data move, no call history move, no workstation change.
+If a technician drops a VVX350 off a ladder: remove device, scan new MAC, reprovision. Nothing else changes - no extension move, no customer data move, no call history move, no workstation change.
 
 ---
 
 ## Purpose
 
-ARK Voice endpoint architecture defines how **communication devices** (desk phones, softphones, mobile legs, paging speakers, door stations) receive configuration derived from operational authority — without embedding business logic in Asterisk, vendor firmware, or static config files.
+ARK Voice endpoint architecture defines how **communication devices** (desk phones, softphones, mobile legs, paging speakers, door stations) receive configuration derived from operational authority - without embedding business logic in Asterisk, vendor firmware, or static config files.
 
 This is **endpoint provisioning**, not phone provisioning. The provisioning file (Poly `.cfg` today) is one **serialization** of endpoint state, not the whole model.
 
@@ -36,7 +36,7 @@ This is **endpoint provisioning**, not phone provisioning. The provisioning file
 | CallSession | CallProjection | What is happening on this call? |
 | CommunicationDevice + Telephony + Policies | **EndpointConfigurationProjection** | **What should this endpoint look like right now?** |
 
-**EndpointConfigurationProjection is a first-class read model** — not a cache, not an optimization afterthought. It answers one question with deterministic, inspectable output.
+**EndpointConfigurationProjection is a first-class read model** - not a cache, not an optimization afterthought. It answers one question with deterministic, inspectable output.
 
 ---
 
@@ -49,10 +49,10 @@ EndpointConfigurationProjection is derived from authority and configuration poli
 | **CommunicationDevice** | Authority | MAC (hardware identity), model, workstation link, active flag, firmware reported |
 | **Telephony** | Authority | Extension on workstation, SIP secret, endpoint identity |
 | **Workstation** | Authority | Persistent desk identity, current operator (presence) |
-| **Firmware policy** | Configuration | `communication_device_models` — min/recommended/latest |
-| **BLF / button policy** | Configuration | Future — DSS keys, line keys |
-| **Presence policy** | Configuration | Future — availability hints on device |
-| **Locale / display policy** | Configuration | Future — timezone, language, wallpaper |
+| **Firmware policy** | Configuration | `communication_device_models` - min/recommended/latest |
+| **BLF / button policy** | Configuration | Future - DSS keys, line keys |
+| **Presence policy** | Configuration | Future - availability hints on device |
+| **Locale / display policy** | Configuration | Future - timezone, language, wallpaper |
 
 ```
 Telephony Authority
@@ -94,7 +94,7 @@ GET /provision/{mac}.cfg serves serialization
 
 **Forbidden:** allocating extension numbers inside provisioning builders or on provision GET.
 
-**MAC address** is hardware **identity** (lookup key), not authentication. Serve gates: device active, workstation assigned, extension exists, shop scope. Future auth: signed provision token or mTLS — not MAC-as-secret.
+**MAC address** is hardware **identity** (lookup key), not authentication. Serve gates: device active, workstation assigned, extension exists, shop scope. Future auth: signed provision token or mTLS - not MAC-as-secret.
 
 ---
 
@@ -126,12 +126,12 @@ Table: `endpoint_configuration_projections` (or equivalent)
 | Field | Purpose |
 |-------|---------|
 | `communication_device_id` | FK |
-| `inputs_fingerprint` | Hash of authority inputs — detect stale |
+| `inputs_fingerprint` | Hash of authority inputs - detect stale |
 | `serialized_config` | Vendor body (`.cfg` text for Poly) |
 | `builder` | e.g. `poly` |
 | `format` | e.g. `poly_cfg` |
 | `generated_at` | |
-| `superseded_at` | nullable — previous versions retained for rollback/history |
+| `superseded_at` | nullable - previous versions retained for rollback/history |
 
 Current projection: latest row per device where `superseded_at` is null. History rows answer projection questions without treating storage as authority.
 
@@ -207,7 +207,7 @@ Asterisk remains a **telephony projection** target (Phase 3), not authority.
 
 ## Phased roadmap
 
-### Phase 1 — Device Identity
+### Phase 1 - Device Identity
 
 - `communication_devices` + MAC, firmware reported, `is_active`
 - `communication_device_models` (firmware policy + builder)
@@ -219,14 +219,14 @@ Asterisk remains a **telephony projection** target (Phase 3), not authority.
 
 **Production milestone:** zero-touch provisioning → device shows **Connected**. Not calls, ARI, or voicemail.
 
-### Phase 2 — Device Management
+### Phase 2 - Device Management
 
 - Claim flow (shop policy)
 - Firmware file service
 - BLF / button templates
 - Admin: inspect projection, diff, stale devices, rollback
 
-### Phase 3 — Telephony Projection
+### Phase 3 - Telephony Projection
 
 ARK is authority; Asterisk is projection (PJSIP today; other backends later).
 
@@ -234,7 +234,7 @@ ARK is authority; Asterisk is projection (PJSIP today; other backends later).
 - `ProjectTelephonyToAsteriskAction`
 - Remove static PJSIP templates
 
-### Phase 4 — Communications Engine
+### Phase 4 - Communications Engine
 
 - ARI / Stasis, routing, presence, park, queue, paging, recording
 - Conversation + CallSession integration
@@ -259,9 +259,9 @@ Laravel runs migrations in **filename order**. History must not look accidental.
 
 | Original | Problem | Replacement |
 |----------|---------|-------------|
-| `2026_06_26_140001_add_workstation_fields_to_communication_devices.php` | Ran before `2026_06_30_100000_create_communication_devices_table.php` — FK to table that did not exist yet | `2026_06_30_105000_add_workstation_fields_to_communication_devices.php` |
+| `2026_06_26_140001_add_workstation_fields_to_communication_devices.php` | Ran before `2026_06_30_100000_create_communication_devices_table.php` - FK to table that did not exist yet | `2026_06_30_105000_add_workstation_fields_to_communication_devices.php` |
 
-**Why `06_26` became `06_30`:** The workstation FK migration was authored with a June 26 timestamp while `communication_devices` was created June 30. Fresh `migrate` failed. The fix is a **rename**, not a logic change — same columns, correct sequence after the create migration.
+**Why `06_26` became `06_30`:** The workstation FK migration was authored with a June 26 timestamp while `communication_devices` was created June 30. Fresh `migrate` failed. The fix is a **rename**, not a logic change - same columns, correct sequence after the create migration.
 
 **Production:** If `2026_06_26_140001` already ran on a host, do not run the renamed file; reconcile manually. See [TECHNICAL_DEBT.md](../engineering/TECHNICAL_DEBT.md).
 
@@ -273,8 +273,8 @@ Laravel runs migrations in **filename order**. History must not look accidental.
 |----|----------|------------------|
 | **PR1** | Schema, `CommunicationDeviceModel`, projection table + Eloquent read model, MAC normalizer, **policy enums** (`EndpointProvisionBuilder`, `EndpointProvisionFormat`), `AssignExtensionToWorkstationAction`, workstation relationships | `ProvisionBuilder`, vendor builders, regenerate/invalidate actions, GET serve route |
 | **PR2** | Projection regenerate/invalidate, `PolyProvisionBuilder`, `GET /provision/{mac}.cfg`, structured provision logging | Shop UI, floor test |
-| **PR3A** | Observability — MAC, model, provision URL, projection fingerprint/timestamp, admin config preview | Workstation/extension assignment UX |
-| **PR3B** | Assignment UX | — |
+| **PR3A** | Observability - MAC, model, provision URL, projection fingerprint/timestamp, admin config preview | Workstation/extension assignment UX |
+| **PR3B** | Assignment UX | - |
 | **First Contact** | Factory-reset VVX350 → Connected (see [first-contact-floor-checklist.md](first-contact-floor-checklist.md)) | Firmware, ARI, dynamic Asterisk |
 
 **Rule:** One milestone, one PR, one review. Files that have no caller in the current PR belong in the PR that first executes them. Policy enums on schema rows are PR1; execution classes are PR2.
@@ -287,7 +287,7 @@ Laravel runs migrations in **filename order**. History must not look accidental.
 - [ ] Endpoint is disposable; workstation is persistent
 - [ ] EndpointConfigurationProjection is first-class read model, not "just cache"
 - [ ] GET `/provision/*` never allocates extensions or mutates telephony authority
-- [ ] MAC is identity with serve gates — not authentication
+- [ ] MAC is identity with serve gates - not authentication
 - [ ] Vendor builder selected via model table, not string matching
 - [ ] Projection invalidated on all authority/policy input changes
 - [ ] Phase 1 exit = Connected device, not working calls

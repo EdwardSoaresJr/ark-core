@@ -148,7 +148,7 @@ test('logging call note from analysis nudge records call analysis follow up resp
 
     $this->actingAs($advisor)
         ->post(route('operations.communications.calls.note', $session), [
-            'body' => 'Jean — I will email the brake quote before we close today.',
+            'body' => 'Jean - I will email the brake quote before we close today.',
             'section' => 'attention',
             'entity_key' => $entityKey,
             'nudge_key' => 'call.analysis_follow_up',
@@ -179,7 +179,7 @@ test('logging call note marks call handled and records nudge response', function
 
     $this->actingAs($advisor)
         ->post(route('operations.communications.calls.note', $session), [
-            'body' => 'Customer asked about brake quote — will text estimate link.',
+            'body' => 'Customer asked about brake quote - will text estimate link.',
             'section' => 'attention',
             'entity_key' => $entityKey,
             'nudge_key' => 'call.log_note',
@@ -280,7 +280,7 @@ test('missed call shows mark handled nudge with higher priority than completed c
         'analysis_json' => [
             'follow_up_needed' => true,
             'follow_up_notes' => 'Return missed call about brakes.',
-            'suggested_reply' => 'Sorry we missed you — still need help with the brakes?',
+            'suggested_reply' => 'Sorry we missed you - still need help with the brakes?',
         ],
         'analyzed_at' => now(),
     ]);
@@ -291,7 +291,7 @@ test('missed call shows mark handled nudge with higher priority than completed c
         ->assertSee('Mark call handled', false)
         ->assertSee('Missed', false)
         ->assertSee('Call insight', false)
-        ->assertSee('Sorry we missed you — still need help with the brakes?', false);
+        ->assertSee('Sorry we missed you - still need help with the brakes?', false);
 });
 
 test('sending sms analysis draft reply records acted response', function (): void {
@@ -331,7 +331,7 @@ test('sending sms analysis draft reply records acted response', function (): voi
         'telephony_inbound_number' => '7195559999',
     ]);
 
-    // Outbound SMS requires a known-capable line — seed instead of hitting lookups.twilio.com.
+    // Outbound SMS requires a known-capable line - seed instead of hitting lookups.twilio.com.
     \App\Ark\Operations\Messaging\PhoneSmsCapability::query()->create([
         'normalized_phone' => \App\Ark\Operations\PhoneNumber::normalize('7195559032'),
         'valid' => true,

@@ -5,7 +5,7 @@ export function arkFloatingCommsMenu(config = {}) {
         align: config.align ?? 'left',
         minWidth: config.minWidth ?? 112,
         flipThreshold: config.flipThreshold ?? 220,
-        /** Ignore dismiss for a beat after open — board columns often fire scroll on layout. */
+        /** Ignore dismiss for a beat after open - board columns often fire scroll on layout. */
         ignoreDismissUntil: 0,
 
         init() {
@@ -59,7 +59,7 @@ export function arkFloatingCommsMenu(config = {}) {
                     return;
                 }
 
-                // Status list is overflow-y:auto — scrolling options must not dismiss.
+                // Status list is overflow-y:auto - scrolling options must not dismiss.
                 if (eventInsideMenu(event)) {
                     return;
                 }

@@ -335,10 +335,10 @@ test('unknown unmatched sms shows reply action and can send from conversation re
 
     $this->actingAs($advisor)
         ->postJson(route('operations.conversations.messages.store', $conversation), [
-            'body' => 'Yes — Saturday 8–12.',
+            'body' => 'Yes - Saturday 8–12.',
         ])
         ->assertOk()
-        ->assertJsonPath('message.body', 'Yes — Saturday 8–12.');
+        ->assertJsonPath('message.body', 'Yes - Saturday 8–12.');
 });
 
 test('unknown unmatched sms start intake prefills phone and concern', function () {

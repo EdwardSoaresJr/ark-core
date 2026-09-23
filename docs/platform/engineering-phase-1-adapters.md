@@ -1,4 +1,4 @@
-# Engineering Phase 1 — Adapters
+# Engineering Phase 1 - Adapters
 
 **Status:** Active  
 **Opened:** 2026-07-19  
@@ -13,9 +13,9 @@
 | --- | --- |
 | Discover authorities | **Earn confidence** |
 | Did we find the right model? | **Can we replace infrastructure without changing the model?** |
-| Co-design abstractions | **Skepticism — burden of proof flipped** |
+| Co-design abstractions | **Skepticism - burden of proof flipped** |
 
-Architecture is frozen enough. Work is constrained **by** architecture — not driven by the next Coolify quirk.
+Architecture is frozen enough. Work is constrained **by** architecture - not driven by the next Coolify quirk.
 
 ### Pressure review (not architecture review)
 
@@ -81,7 +81,7 @@ Production Adoption           ▶ After adapters prove themselves
 
 > Replacing StubCoolifyStep required zero architectural decisions. ✅
 
-**Reality exit:** Live checklist in [sprint-2-coolify-adapter.md](sprint-2-coolify-adapter.md) — milestones 1→2→3 boring before 4/5; then Sprint 3.
+**Reality exit:** Live checklist in [sprint-2-coolify-adapter.md](sprint-2-coolify-adapter.md) - milestones 1→2→3 boring before 4/5; then Sprint 3.
 
 ### Sprint 3 should feel the same
 
@@ -96,7 +96,7 @@ LocalStanclClient (or Http if needed)
 ```
 
 Same process. Different implementation.  
-If Sprint 3 feels fundamentally different, ask whether Stancl crossed a boundary — or the adapter leaked.
+If Sprint 3 feels fundamentally different, ask whether Stancl crossed a boundary - or the adapter leaked.
 
 **Healthier question now:** How do we prove one more adapter without disturbing everything else?
 
@@ -111,7 +111,7 @@ Sprint 4 → DNS stub
 Sprint 5 → Bootstrap stub  
 …
 
-If a sprint needs to change Shop · Deployment · ClusterAssignment · ProvisioningRequest · Orchestrator — **stop and investigate** before continuing.
+If a sprint needs to change Shop · Deployment · ClusterAssignment · ProvisioningRequest · Orchestrator - **stop and investigate** before continuing.
 
 ---
 
@@ -182,6 +182,6 @@ Let ops earn the next abstraction.
 Six months ago, architecture followed implementation.  
 Today, **implementation is constrained by architecture**.
 
-The architecture tells engineering what may change — and what must not.
+The architecture tells engineering what may change - and what must not.
 
 That stability is the prerequisite for inviting real customers onto the platform: small, low-risk adapter replacements instead of redesigning the core.

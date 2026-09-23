@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Leads;
 final class LeadContactNameParser
 {
     /** Stored when the customer only gave a first name (website lead, SMS, etc.). */
-    public const PLACEHOLDER_LAST_NAME = '—';
+    public const PLACEHOLDER_LAST_NAME = '-';
 
     /**
      * @return array{first_name: string, last_name: string}
@@ -31,7 +31,9 @@ final class LeadContactNameParser
 
     public static function isPlaceholderLastName(?string $lastName): bool
     {
-        return trim((string) $lastName) === self::PLACEHOLDER_LAST_NAME;
+        $trimmed = trim((string) $lastName);
+
+        return $trimmed === self::PLACEHOLDER_LAST_NAME || $trimmed === "\u{2014}";
     }
 
     public static function normalizeLastName(?string $lastName): string

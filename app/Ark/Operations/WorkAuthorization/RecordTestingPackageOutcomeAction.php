@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Record Testing Package outcome — ends with an answer, not a repair.
+ * Record Testing Package outcome - ends with an answer, not a repair.
  */
 final class RecordTestingPackageOutcomeAction
 {

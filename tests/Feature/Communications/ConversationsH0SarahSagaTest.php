@@ -1,7 +1,7 @@
 <?php
 
 /**
- * H0.2 — Sarah saga.
+ * H0.2 - Sarah saga.
  *
  * If any of The Six Ones fail after a step, H0 fails. Do not begin H1.
  *
@@ -48,7 +48,7 @@ beforeEach(function (): void {
     ShopSettings::forgetCurrent();
 });
 
-test('H0 Sarah saga — Six Ones after every operational step', function (): void {
+test('H0 Sarah saga - Six Ones after every operational step', function (): void {
     Carbon::setTestNow(Carbon::parse('2026-07-13 09:00:00', 'UTC'));
 
     $advisor = User::factory()->create(['name' => 'Molly'])->assignRole(ArkRole::Advisor->value);
@@ -213,7 +213,7 @@ test('H0 Sarah saga — Six Ones after every operational step', function (): voi
     );
     ConversationsH0::assertSixOnes($customer, $repairOrder->fresh(), $advisor, 'Payment request');
 
-    // 12. Customer paid (story via pickup path — payment is operational; keep Thread active via outbound wait)
+    // 12. Customer paid (story via pickup path - payment is operational; keep Thread active via outbound wait)
     $tick('2026-07-13 21:30:00');
     ConversationsH0::assertSixOnes($customer, $repairOrder->fresh(), $advisor, 'Customer paid', requireActiveTurn: false);
 

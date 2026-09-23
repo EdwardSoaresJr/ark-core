@@ -57,7 +57,7 @@ class AdvisorIntakeStoreController
         return redirect()
             ->route('operations.repair-orders.show', $repairOrder)
             ->withFragment('visit-reason')
-            ->with('status', 'RO #'.$repairOrder->repair_order_id.' opened — estimate is empty until you add work.')
+            ->with('status', 'RO #'.$repairOrder->repair_order_id.' opened - estimate is empty until you add work.')
             ->with('workspace_close_intake_ws', $closeIntakeWorkspaceId);
     }
 }

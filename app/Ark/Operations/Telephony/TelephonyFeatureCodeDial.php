@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Telephony;
 /**
  * Desk-phone feature codes (*43 echo, *97 voicemail, **101 pickup, etc.).
  *
- * These are shop-internal dial patterns — not customer communications.
+ * These are shop-internal dial patterns - not customer communications.
  *
  * @see infra/coolify/asterisk/feature-codes.md
  */

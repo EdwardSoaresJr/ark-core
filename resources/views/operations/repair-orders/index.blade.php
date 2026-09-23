@@ -29,9 +29,9 @@
             <div class="ops-page-toolbar">
                 <p class="ops-page-toolbar-note">
                     @if (($dispositionFilter ?? null) !== null || ($openQueueFilter ?? false))
-                        {{ $queueLabel }} — drill-down from Shop Dashboard. Open an RO to act.
+                        {{ $queueLabel }} - drill-down from Shop Dashboard. Open an RO to act.
                     @elseif ($queueLabel !== null)
-                        {{ $queueLabel }} — full inventory from the workboard overflow link.
+                        {{ $queueLabel }} - full inventory from the workboard overflow link.
                     @else
                         Search active and historical ROs without changing the live workboard queue.
                     @endif

@@ -1,6 +1,6 @@
 /**
  * Honest unsaved-change detection for worksheet / workspace forms.
- * Compare live values to the browser's default* baseline — not a sticky flag.
+ * Compare live values to the browser's default* baseline - not a sticky flag.
  */
 
 const IGNORE_SELECTOR = '[data-ark-workspace-dirty="off"], [type="search"], .ops-workspace-tabs';
@@ -52,7 +52,7 @@ export function fieldHasChanges(field) {
             return field.value !== defaultOption.value;
         }
 
-        // Browser selects the first option when none is marked selected — treat that as baseline.
+        // Browser selects the first option when none is marked selected - treat that as baseline.
         const first = field.options[0];
 
         return first ? field.value !== first.value : field.value !== '';

@@ -326,7 +326,7 @@ final class CommunicationsShopProjection
     }
 
     /**
-     * Floor presence for coverage — not ring-target configuration.
+     * Floor presence for coverage - not ring-target configuration.
      *
      * Available when: signed in at a station, registered assigned desk phone, or live mobile app.
      *
@@ -563,7 +563,7 @@ final class CommunicationsShopProjection
             ->map(function (CommunicationDevice $device): CommunicationsShopPendingDeviceRow {
                 $mac = filled($device->mac_address)
                     ? CommunicationDeviceMacAddress::display((string) $device->mac_address)
-                    : '—';
+                    : '-';
 
                 $foundAgo = $device->updated_at !== null
                     ? 'Found '.$device->updated_at->diffForHumans()
@@ -610,7 +610,7 @@ final class CommunicationsShopProjection
     private function nextSetupStep(array $workstations, array $devices): ?string
     {
         if ($workstations === []) {
-            return 'Add a station — e.g. Front Counter.';
+            return 'Add a station - e.g. Front Counter.';
         }
 
         foreach ($workstations as $workstation) {

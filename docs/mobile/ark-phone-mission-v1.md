@@ -1,6 +1,6 @@
 # ARK Phone Mission v1
 
-**Status:** Engineering doctrine — research before code  
+**Status:** Engineering doctrine - research before code  
 **Companions:** ark-phone-production-telephony-lock.mdc · [ark-voice-endpoint-architecture-v1.md](../communications/ark-voice-endpoint-architecture-v1.md) · `ark-mobile` repo
 
 ---
@@ -58,7 +58,7 @@ For every capability:
 
 Do not invent solutions where established implementations exist.
 
-**Do not rely on generic web search alone.** Deliberately study well-maintained open-source telephony clients that have already solved registration, reconnect, CallKit, PushKit, transfers, and background survival — then adapt those patterns to ARK.
+**Do not rely on generic web search alone.** Deliberately study well-maintained open-source telephony clients that have already solved registration, reconnect, CallKit, PushKit, transfers, and background survival - then adapt those patterns to ARK.
 
 ---
 
@@ -109,7 +109,7 @@ Investigate current best practices and production implementations for:
 
 | Topic | RFC / spec |
 | --- | --- |
-| Flutter SIP clients | — |
+| Flutter SIP clients | - |
 | SIP over WebSocket | RFC 7118 |
 | Asterisk PJSIP WebRTC | Asterisk docs |
 | SIP core | RFC 3261 |
@@ -133,7 +133,7 @@ Document what is already solved **before** modifying ARK.
 
 ## Mature reference implementations (study first)
 
-These are not endorsements to swap stacks blindly — they are **prior art** maintainers must read before inventing.
+These are not endorsements to swap stacks blindly - they are **prior art** maintainers must read before inventing.
 
 ### Flutter / Dart SIP clients
 
@@ -141,7 +141,7 @@ These are not endorsements to swap stacks blindly — they are **prior art** mai
 | --- | --- | --- |
 | **[sip_ua](https://pub.dev/packages/sip_ua)** / [dart-sip-ua](https://github.com/cloudwebrtc/dart-sip-ua) | Current ARK transport (`ArkVoiceTransport`) | WSS registration, INVITE, hold, REFER hooks, known reconnect bugs |
 | **[flutter_webrtc](https://pub.dev/packages/flutter_webrtc)** | Media layer behind sip_ua | ICE, audio tracks, speaker routing limits |
-| **Linphone SDK** ([linphone-sdk](https://gitlab.linphone.org/BC/public/linphone-sdk)) | Production mobile SIP reference | CallKit, ConnectionService, push, multi-call, BLF — **gold standard OSS mobile phone** |
+| **Linphone SDK** ([linphone-sdk](https://gitlab.linphone.org/BC/public/linphone-sdk)) | Production mobile SIP reference | CallKit, ConnectionService, push, multi-call, BLF - **gold standard OSS mobile phone** |
 | **PJSIP** ([pjsip.org](https://www.pjsip.org/)) | Stack under Asterisk + many clients | Registration, transfer, session timer behavior at the metal |
 
 ### Platform native telephony integration
@@ -151,20 +151,20 @@ These are not endorsements to swap stacks blindly — they are **prior art** mai
 | **Apple CallKit** | Native incoming UI, lock screen, Bluetooth routing |
 | **Apple PushKit (VoIP push)** | Background wakeup without polling WSS |
 | **Android ConnectionService / Telecom** | System call UI, car mode, BT headset integration |
-| **Twilio Voice SDK** (`twilio_voice` in ark-mobile) | Alternate transport — CallKit patterns on iOS; compare before reimplementing |
+| **Twilio Voice SDK** (`twilio_voice` in ark-mobile) | Alternate transport - CallKit patterns on iOS; compare before reimplementing |
 | **react-native-callkeep** | Bridge patterns for CallKit + ConnectionService (conceptual reference even if not adopted) |
 
-### Server-side (read-only — do not experiment on production)
+### Server-side (read-only - do not experiment on production)
 
 | System | Study for |
 | --- | --- |
 | **Asterisk PJSIP** | WSS transport, WebRTC codecs, endpoint templates VVX already uses |
-| **Asterisk ARI / AMI** | Call state events, attended transfer server behavior — **observe**, do not become client dependency |
+| **Asterisk ARI / AMI** | Call state events, attended transfer server behavior - **observe**, do not become client dependency |
 | **FreePBX / Asterisk transfer docs** | Attended vs blind dialplan semantics matching VVX |
 
 ### Prior art principle
 
-> The fastest path usually isn't "write better code" — it's "understand why mature implementations handle registration, reconnects, CallKit, PushKit, and transfers the way they do, then adapt those patterns to ARK."
+> The fastest path usually isn't "write better code" - it's "understand why mature implementations handle registration, reconnects, CallKit, PushKit, and transfers the way they do, then adapt those patterns to ARK."
 
 ---
 
@@ -179,8 +179,8 @@ Repo: `ark-mobile` · transport: `ArkVoiceTransport` → `sip_ua` over WSS to sh
 | Incoming / outbound | **Partial** | Single-call model; UI banners on home shell |
 | Two-way audio | **Partial** | WebRTC path via sip_ua |
 | Hold / resume | **Implemented** | `call.hold()` / `call.unhold()` |
-| Blind transfer (REFER) | **Implemented** | `call.refer()` — needs floor certification vs VVX |
-| Attended transfer | **Missing** | Requires consult call + Replaces or Asterisk-native pattern — study Linphone + RFC 3891 |
+| Blind transfer (REFER) | **Implemented** | `call.refer()` - needs floor certification vs VVX |
+| Attended transfer | **Missing** | Requires consult call + Replaces or Asterisk-native pattern - study Linphone + RFC 3891 |
 | DTMF | **Missing** | Not exposed on transport |
 | Call waiting / multi-call | **Missing** | Single `_activeCall` reference |
 | Presence / BLF | **Missing** | `onNewNotify` stub |
@@ -188,11 +188,11 @@ Repo: `ark-mobile` · transport: `ArkVoiceTransport` → `sip_ua` over WSS to sh
 | Background operation | **Gap** | No ConnectionService / CallKit integration |
 | CallKit (iOS) | **Missing** | Required for production iOS phone replacement |
 | Android ConnectionService | **Missing** | Required for native call UI + BT |
-| PushKit / APNs VoIP | **Missing** | FCM exists for ops push — separate from VoIP push |
+| PushKit / APNs VoIP | **Missing** | FCM exists for ops push - separate from VoIP push |
 | Speaker routing | **Stub** | Log-only in `toggleSpeaker` |
-| Twilio fallback transport | **Present** | `TwilioVoiceTransport` — study its CallKit path before reinventing |
+| Twilio fallback transport | **Present** | `TwilioVoiceTransport` - study its CallKit path before reinventing |
 
-**Next engineering moves should close gaps by adopting/wrapping proven patterns — not by writing new SIP semantics.**
+**Next engineering moves should close gaps by adopting/wrapping proven patterns - not by writing new SIP semantics.**
 
 ---
 
@@ -200,10 +200,10 @@ Repo: `ark-mobile` · transport: `ArkVoiceTransport` → `sip_ua` over WSS to sh
 
 | Situation | Action |
 | --- | --- |
-| Capability exists in Linphone / Twilio SDK / sip_ua upstream | Read upstream; wrap or extend — do not rewrite |
+| Capability exists in Linphone / Twilio SDK / sip_ua upstream | Read upstream; wrap or extend - do not rewrite |
 | Capability exists only in native iOS/Android APIs | Thin Flutter platform channel or adopt SDK that already bridges |
-| Capability requires server change | **Stop** — mobile adapts to VVX baseline unless VVX also needs it |
-| No mature OSS pattern found | Document the gap; notebook observation — do not ship invented behavior |
+| Capability requires server change | **Stop** - mobile adapts to VVX baseline unless VVX also needs it |
+| No mature OSS pattern found | Document the gap; notebook observation - do not ship invented behavior |
 
 ---
 

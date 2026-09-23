@@ -87,7 +87,7 @@ class TechnicianTimeSession extends Model
     }
 
     /**
-     * The technician's unresolved punch (open or overnight needs_resolution) — never a closed or deleted session.
+     * The technician's unresolved punch (open or overnight needs_resolution) - never a closed or deleted session.
      */
     public static function openForTechnician(int $userId): ?self
     {
@@ -103,7 +103,7 @@ class TechnicianTimeSession extends Model
     }
 
     /**
-     * Active punches only — deleted sessions remain for audit but never feed hours.
+     * Active punches only - deleted sessions remain for audit but never feed hours.
      */
     public function scopeActive($query)
     {

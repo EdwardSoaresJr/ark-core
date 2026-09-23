@@ -125,7 +125,7 @@ test('advisor can edit suggested concern title before accept', function () {
         'opened_estimate_version' => $repairOrder->estimate_version,
         'proposals' => [
             [
-                'summary' => 'Front brakes — noise on hard stops',
+                'summary' => 'Front brakes - noise on hard stops',
                 'scope_entry_kind' => ScopeEntryKind::CustomerConcern->value,
             ],
         ],
@@ -134,5 +134,5 @@ test('advisor can edit suggested concern title before accept', function () {
     $repairOrder->refresh();
 
     expect($repairOrder->concerns)->toHaveCount(1)
-        ->and($repairOrder->concerns->first()->summary)->toBe('Front brakes — noise on hard stops');
+        ->and($repairOrder->concerns->first()->summary)->toBe('Front brakes - noise on hard stops');
 });

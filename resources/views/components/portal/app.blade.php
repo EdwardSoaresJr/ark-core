@@ -1,4 +1,4 @@
-{{-- Internal alias — customer application uses x-customer.shell only. --}}
+{{-- Internal alias - customer application uses x-customer.shell only. --}}
 @props([
     'layout' => 'stack',
 ])

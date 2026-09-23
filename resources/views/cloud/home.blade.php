@@ -7,7 +7,7 @@
 @endphp
 
 <x-cloud.shell title="Shop management for independent repair shops" :wide="true">
-    {{-- 1. Hero — outcome first --}}
+    {{-- 1. Hero - outcome first --}}
     <section class="cloud-hero relative overflow-hidden">
         <div class="pointer-events-none absolute inset-0">
             <img
@@ -27,7 +27,7 @@
                 Run your shop with confidence.
             </h1>
             <p class="mt-8 max-w-2xl text-lg sm:text-xl leading-relaxed" style="color: rgba(255,255,255,0.82)">
-                Estimates, inspections, customer communication, AI, and your website—all working together
+                Estimates, inspections, customer communication, AI, and your website - all working together
                 so you can spend less time managing software and more time running your shop.
             </p>
             <div class="mt-12 flex flex-wrap items-center gap-4">
@@ -48,7 +48,7 @@
         </div>
     </section>
 
-    {{-- 2. Product dominates — screenshot before belief --}}
+    {{-- 2. Product dominates - screenshot before belief --}}
     <section id="product" class="relative bg-[var(--cloud-ink)] pt-4 pb-16 sm:pb-24">
         <div class="mx-auto max-w-[92rem] px-2 sm:px-4 lg:px-6 -mt-10 sm:-mt-14 cloud-stage" style="animation-delay: 80ms">
             <figure class="relative overflow-hidden rounded-lg sm:rounded-2xl border border-white/10 shadow-[0_50px_120px_-28px_rgba(0,0,0,0.85)]">
@@ -72,12 +72,12 @@
                 </div>
             </figure>
             <p class="mt-6 text-center text-sm sm:text-base" style="color: rgba(255,255,255,0.5)">
-                Real ARK workspace — staged shop data, not a design mockup.
+                Real ARK workspace - staged shop data, not a design mockup.
             </p>
         </div>
     </section>
 
-    {{-- 3. Why shops switch — floor language + proof --}}
+    {{-- 3. Why shops switch - floor language + proof --}}
     <section class="mx-auto max-w-6xl px-5 sm:px-8 py-24 sm:py-32">
         <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Why shops switch</p>
         <h2 class="cloud-display mt-4 text-3xl sm:text-5xl font-semibold text-[var(--cloud-ink)] max-w-3xl leading-tight">
@@ -91,7 +91,7 @@
             @foreach ([
                 ['I’m behind before lunch.', 'Repair orders, approvals, and follow-ups stack up while the phone keeps ringing.'],
                 ['Customers chase updates.', 'They shouldn’t have to. Status, estimates, and pickup should be obvious.'],
-                ['Tools fight each other.', 'One place for the car, the customer, and what’s next — not five tabs.'],
+                ['Tools fight each other.', 'One place for the car, the customer, and what’s next - not five tabs.'],
                 ['The floor needs the truth.', 'Built beside real bays, for advisors and techs who already have enough to do.'],
             ] as [$line, $detail])
                 <li class="rounded-2xl border border-[var(--cloud-line)] bg-white/85 px-7 py-7">
@@ -102,13 +102,13 @@
         </ul>
     </section>
 
-    {{-- Evidence — large product proof, less explanation --}}
+    {{-- Evidence - large product proof, less explanation --}}
     <section class="border-y border-[var(--cloud-line)] bg-white/55">
         <div class="mx-auto max-w-6xl px-5 sm:px-8 py-24 sm:py-32 space-y-28 sm:space-y-36">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Job board</p>
                 <h2 class="cloud-display mt-4 text-3xl sm:text-4xl font-semibold leading-tight max-w-2xl">
-                    Built for the floor — not a boardroom demo.
+                    Built for the floor - not a boardroom demo.
                 </h2>
                 <figure class="mt-10 overflow-hidden rounded-2xl border border-[var(--cloud-line)] bg-[var(--cloud-ink)] shadow-[0_40px_100px_-40px_rgba(11,18,32,0.65)]">
                     <img
@@ -148,7 +148,7 @@
                 <figure class="order-2 lg:order-1 overflow-hidden rounded-2xl border border-[var(--cloud-line)] bg-white shadow-[0_32px_80px_-40px_rgba(11,18,32,0.5)]">
                     <img
                         src="{{ asset('assets/cloud/product/conversation.png') }}"
-                        alt="Live repair-order communications rail — reply, send estimate, and commitments on the job"
+                        alt="Live repair-order communications rail - reply, send estimate, and commitments on the job"
                         class="w-full h-auto"
                         width="1400"
                         height="900"
@@ -161,7 +161,7 @@
                         Approvals and “is it ready?” without the phone tag.
                     </h2>
                     <p class="mt-5 text-xl text-[var(--cloud-muted)] leading-relaxed">
-                        Keep the conversation with the work — so you’re not rewriting the same answer all afternoon.
+                        Keep the conversation with the work - so you’re not rewriting the same answer all afternoon.
                     </p>
                 </div>
             </div>
@@ -169,7 +169,7 @@
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Inspections</p>
                 <h2 class="cloud-display mt-4 text-3xl sm:text-4xl font-semibold leading-tight max-w-2xl">
-                    Show what you found at the car — clearly.
+                    Show what you found at the car - clearly.
                 </h2>
                 <div class="mt-10 grid gap-5 sm:grid-cols-3">
                     <figure class="overflow-hidden rounded-2xl border border-[var(--cloud-line)] sm:col-span-1">
@@ -207,7 +207,7 @@
         </div>
     </section>
 
-    {{-- 4. Getting started — story timeline --}}
+    {{-- 4. Getting started - story timeline --}}
     <section class="mx-auto max-w-3xl px-5 sm:px-8 py-24 sm:py-32">
         <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)] text-center">Getting started</p>
         <h2 class="cloud-display mt-4 text-3xl sm:text-5xl font-semibold text-center leading-tight">
@@ -260,7 +260,7 @@
                             'name' => 'Shop',
                             'price' => '$299',
                             'period' => '/ month',
-                            'blurb' => 'One location — repairs, customer updates, website, and the tools your floor needs.',
+                            'blurb' => 'One location - repairs, customer updates, website, and the tools your floor needs.',
                             'featured' => false,
                         ],
                         [
@@ -302,7 +302,7 @@
                     Don’t want to mess with a server?
                 </h2>
                 <p class="mt-6 text-xl text-[var(--cloud-muted)] leading-relaxed">
-                    We’ll host ARK for your shop. Self-serve signup isn’t open yet — tell us you’re interested
+                    We’ll host ARK for your shop. Self-serve signup isn’t open yet - tell us you’re interested
                     and we’ll reach out when hosted is ready.
                 </p>
                 <a href="{{ $ctaUrl }}" data-cloud-event="cloud_funnel_homepage_cta" class="cloud-btn-primary mt-10 text-lg !px-10 !py-4 inline-flex">
@@ -323,7 +323,7 @@
             </h2>
             <p class="mt-6 text-xl text-[var(--cloud-muted)] max-w-xl mx-auto leading-relaxed">
                 @if ($signupsOpen)
-                    Start running your shop in minutes — not after a week of training.
+                    Start running your shop in minutes - not after a week of training.
                 @else
                     See the product, then ask about hosted ARK if you’d rather we run the infrastructure.
                 @endif

@@ -11,7 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Operator continuity — projection only.
+ * Operator continuity - projection only.
  *
  * Continuity is not authority. There is no continuity database and no continuity
  * truth store. This class composes existing authorities and observations into one
@@ -36,7 +36,7 @@ final class OperatorContinuityProjection
     ) {}
 
     /**
-     * One compact continuity snapshot — home, widgets, badges, and watch consume the same payload.
+     * One compact continuity snapshot - home, widgets, badges, and watch consume the same payload.
      *
      * @return array<string, mixed>
      */
@@ -73,7 +73,7 @@ final class OperatorContinuityProjection
     }
 
     /**
-     * @deprecated Prefer {@see forUser()} — retained for lightweight badge-only polls.
+     * @deprecated Prefer {@see forUser()} - retained for lightweight badge-only polls.
      *
      * @return array{
      *     count: int,

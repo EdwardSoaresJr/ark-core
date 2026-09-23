@@ -1,4 +1,4 @@
-# Vultr / public VPS overlay — HTTPS via Caddy + small-host memory tuning.
+# Vultr / public VPS overlay - HTTPS via Caddy + small-host memory tuning.
 #
 # Usage:
 #   export ARK_DOMAIN=ark.yourshop.com

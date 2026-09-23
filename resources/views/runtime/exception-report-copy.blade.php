@@ -156,7 +156,7 @@
         } catch {
             textarea.focus();
             textarea.select();
-            setStatus('Select-all fallback ready — press ⌘/Ctrl+C.');
+            setStatus('Select-all fallback ready - press ⌘/Ctrl+C.');
         }
     });
 })();

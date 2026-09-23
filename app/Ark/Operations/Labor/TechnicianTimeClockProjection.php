@@ -31,7 +31,7 @@ final class TechnicianTimeClockProjection
     }
 
     /**
-     * Anyone whose own work is trackable on the time clock — technician,
+     * Anyone whose own work is trackable on the time clock - technician,
      * advisor, or admin. Not customer, not inactive.
      */
     public static function canBeClocked(?User $user): bool
@@ -62,7 +62,7 @@ final class TechnicianTimeClockProjection
     }
 
     /**
-     * Staff eligible to appear on the punch-for-staff list — any active
+     * Staff eligible to appear on the punch-for-staff list - any active
      * technician, advisor, or admin. Admin assigns auto day to any of these.
      *
      * @return Collection<int, User>

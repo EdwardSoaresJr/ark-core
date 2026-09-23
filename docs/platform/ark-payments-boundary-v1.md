@@ -7,13 +7,13 @@
 
 | Layer | Owns |
 | --- | --- |
-| **ARK Core** | Payment **truth** — invoice, amount due, ledger, payment method, allocations, refunds/adjustments, receipts/documents, RO settlement |
-| **ARK Platform Payments** (future) | Managed **provider connectivity** — OAuth, tokens, webhooks, terminals, payment links that charge cards |
+| **ARK Core** | Payment **truth** - invoice, amount due, ledger, payment method, allocations, refunds/adjustments, receipts/documents, RO settlement |
+| **ARK Platform Payments** (future) | Managed **provider connectivity** - OAuth, tokens, webhooks, terminals, payment links that charge cards |
 | **Shop staff** | Recording external payments (cash, card taken elsewhere, check, other) on the repair order |
 
 Core does **not** ship turnkey processor credentials, OAuth, charging clients, or processor webhooks.
 
-A shop may charge a customer with Square, Stripe, a standalone terminal, cash, or check **outside** ARK, then **record** that settlement in Core. That is a supported Core workflow — not a degraded workaround.
+A shop may charge a customer with Square, Stripe, a standalone terminal, cash, or check **outside** ARK, then **record** that settlement in Core. That is a supported Core workflow - not a degraded workaround.
 
 ## Provider-neutral Core
 
@@ -27,7 +27,7 @@ Portal pay/deposit tokens identify an invoice or deposit request and show amount
 
 Until then, customers are directed to pay at the shop; staff record the payment in Core.
 
-Starter Estimate Ready / Final Invoice secure links are a **restricted** Cloud interaction path. They must remain migratable into broader ARK Connect without becoming a parallel security model — and must **not** auto-grant full paid Connect.
+Starter Estimate Ready / Final Invoice secure links are a **restricted** Cloud interaction path. They must remain migratable into broader ARK Connect without becoming a parallel security model - and must **not** auto-grant full paid Connect.
 
 ---
 
@@ -48,11 +48,11 @@ Do not add `location_id` fan-out across Core operational tables as Core multi-lo
 | Concern | Rule |
 | --- | --- |
 | **Self-hosted Core** | First-class. Fully capable without Cloud. |
-| **ARK Hosted** | Same ARK Core binary/runtime. Hosting is infrastructure + managed ops — not a privileged Core edition. |
+| **ARK Hosted** | Same ARK Core binary/runtime. Hosting is infrastructure + managed ops - not a privileged Core edition. |
 | **Hosting status** | Must **not** unlock Core features (`if hosted: enable_core_capability()` is forbidden). |
 | **Cloud entitlements** | Determine managed Cloud capabilities. Separate from who operates the Box. |
 
-### Commercial packaging (documentation only — not billing code)
+### Commercial packaging (documentation only - not billing code)
 
 | Offering | Role |
 | --- | --- |
@@ -65,7 +65,7 @@ No Stripe Billing / subscription engine is implemented in Core by this doctrine.
 
 ---
 
-## Two-way Hosted portability (future — not implemented)
+## Two-way Hosted portability (future - not implemented)
 
 ```text
 SELF-HOSTED ARK CORE  ⇄  ARK COMPLETE HOSTED
@@ -83,7 +83,7 @@ Do **not** implement Hosted provisioning, migration UI, fencing, or transfer end
 
 ---
 
-## ARK Data (future — not implemented)
+## ARK Data (future - not implemented)
 
 Core → Cloud **knowledge/projection**.
 
@@ -95,13 +95,13 @@ Authorized, versioned projections for historical sync, company-wide search, cros
 
 ---
 
-## ARK Connect (future — not implemented)
+## ARK Connect (future - not implemented)
 
 Outside world ↔ **authoritative Core** interaction (portal actions, approvals, appointments, messaging, documents, future Pay Invoice, third-party apps).
 
 Customer browser should not need direct privileged access to the Core Box.
 
-Consequential writes route Connect → owning Core. Data may inform reads. Connect is not generic RCE / SQL / HTTP proxy — semantic authorized operations only.
+Consequential writes route Connect → owning Core. Data may inform reads. Connect is not generic RCE / SQL / HTTP proxy - semantic authorized operations only.
 
 Future payment path (not built):
 

@@ -1,6 +1,6 @@
 # Active PR
 
-**Track:** Core RC2 — Local Floor Acceptance  
+**Track:** Core RC2 - Local Floor Acceptance  
 **Status:** Floor use / validation  
 **Surface:** Repair Order advisor workflow + Job Board
 

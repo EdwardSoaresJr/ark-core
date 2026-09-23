@@ -13,7 +13,7 @@ use App\Ark\Operations\WorkTemplates\WorkTemplate;
 use Illuminate\Database\Seeder;
 
 /**
- * LOCAL ONLY — Tacoma Front Brake historical recall fixtures.
+ * LOCAL ONLY - Tacoma Front Brake historical recall fixtures.
  * Not registered in DatabaseSeeder.
  *
  * php artisan db:seed --class=DemoHistoricalWorkRecallSeeder

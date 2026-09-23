@@ -1,5 +1,5 @@
 /**
- * ARK v2 operational workspace tabs — entity multitasking (desktop).
+ * ARK v2 operational workspace tabs - entity multitasking (desktop).
  * Behavior ported from ARK-SMS workspace-manager.js; clean ES module implementation.
  */
 
@@ -414,7 +414,7 @@ function normalizeRepairOrderRoute(entityId, route) {
         const match = url.pathname.match(/^\/app\/repair-orders\/(\d+)(?:\/edit|\/estimate-review)?$/);
 
         if (match && match[1] === String(entityId)) {
-            // Working-set tabs always land on canonical RO show — authoring lives in workspace modals.
+            // Working-set tabs always land on canonical RO show - authoring lives in workspace modals.
             return fallback;
         }
     } catch {
@@ -794,7 +794,7 @@ function getRightDockReserve(tabCount) {
 function partitionTabsForDisplay(tabs = state.tabs) {
     const rightDock = tabs.filter((tab) => isRightDockKey(tab.key));
     const leftDock = tabs.filter((tab) => isLeftDockKey(tab.key));
-    // Preserve state.tabs order — do not resort by focus/recency (tabs stay put when activated).
+    // Preserve state.tabs order - do not resort by focus/recency (tabs stay put when activated).
     const middle = tabs.filter((tab) => !isLeftDockKey(tab.key) && !isRightDockKey(tab.key));
 
     leftDock.sort((a, b) => leftDockSlotOrder(a.key) - leftDockSlotOrder(b.key));
@@ -1096,7 +1096,7 @@ function tabTooltip(tab) {
         parts.push(subtitle);
     }
 
-    return parts.join(' — ');
+    return parts.join(' - ');
 }
 
 function iconForType(type) {

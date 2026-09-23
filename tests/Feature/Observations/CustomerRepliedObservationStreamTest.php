@@ -96,7 +96,7 @@ test('shop reply resolves customer_replied observation for conversation', functi
     app(\App\Ark\Operations\Messaging\SendOutboundMessageAction::class)->execute(
         customer: $customer,
         actor: $advisor,
-        body: 'Yes — drop off before noon.',
+        body: 'Yes - drop off before noon.',
         conversation: $conversation,
     );
 

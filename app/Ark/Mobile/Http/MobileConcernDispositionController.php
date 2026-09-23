@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * In-place estimate approvals from the phone. Reuses the authoritative
- * UpdateConcernDispositionAction — the same path the desktop worksheet uses —
+ * UpdateConcernDispositionAction - the same path the desktop worksheet uses -
  * so approve/decline/defer behaves identically (event, version bump, totals
  * recalc, lifecycle retreat) regardless of surface.
  */

@@ -16,7 +16,7 @@ final readonly class OperationalFlowProjection
     ) {}
 
     /**
-     * Active stages for Today — constraint first, then by pressure score.
+     * Active stages for Today - constraint first, then by pressure score.
      *
      * @return list<FlowStageProjection>
      */

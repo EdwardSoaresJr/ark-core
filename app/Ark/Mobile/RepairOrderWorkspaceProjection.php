@@ -19,7 +19,7 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 
 /**
- * Backend-driven RO workspace — sections and command bar per role and capability.
+ * Backend-driven RO workspace - sections and command bar per role and capability.
  *
  * Authority → projection → workspace configuration. Flutter renders; it does not decide tabs.
  */
@@ -380,7 +380,7 @@ final class RepairOrderWorkspaceProjection
     }
 
     /**
-     * Advisor/owner technician assignment — pick who performs the work from the
+     * Advisor/owner technician assignment - pick who performs the work from the
      * RO command bar. Same assignable list and validation as desktop intake and
      * the Work list; technicians never see this control.
      *
@@ -410,7 +410,7 @@ final class RepairOrderWorkspaceProjection
     }
 
     /**
-     * Advisor/owner RO lifecycle control — move status forward/back and close
+     * Advisor/owner RO lifecycle control - move status forward/back and close
      * the repair order from the phone. Built from the same lifecycle authority
      * (allowed transitions, blocking reasons, close variants) the desktop
      * toolbar uses, so the phone never offers a move the desktop would reject.
@@ -461,7 +461,7 @@ final class RepairOrderWorkspaceProjection
         if ($select->showLostCloseOption) {
             $options[] = [
                 'value' => 'closed:lost',
-                'label' => 'Closed — Lost',
+                'label' => 'Closed - Lost',
                 'blocked_reason' => null,
                 'disabled' => false,
                 'kind' => 'close_lost',

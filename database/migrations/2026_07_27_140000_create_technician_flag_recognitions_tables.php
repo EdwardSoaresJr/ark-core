@@ -42,7 +42,7 @@ return new class extends Migration
             $table->unsignedBigInteger('operation_id')->nullable();
             $table->timestamps();
 
-            // A labor line may be recognized at most once — reopen + complete cannot duplicate.
+            // A labor line may be recognized at most once - reopen + complete cannot duplicate.
             $table->unique('repair_order_line_id', 'tfrl_line_unique');
             $table->foreign('repair_order_line_id', 'tfrl_line_fk')
                 ->references('id')

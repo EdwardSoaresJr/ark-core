@@ -9,7 +9,7 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use App\Models\User;
 
 /**
- * Lead becomes converted when reality changes — not when an advisor remembers a button.
+ * Lead becomes converted when reality changes - not when an advisor remembers a button.
  */
 class LeadConverter
 {

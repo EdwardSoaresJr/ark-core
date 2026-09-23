@@ -44,7 +44,7 @@
                                 'text-emerald-800' => ($row['tone'] ?? null) === 'good',
                                 'text-amber-800' => ($row['tone'] ?? null) === 'warn',
                             ])>{{ $row['amount'] }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums text-slate-500">{{ $row['percent'] ?? '—' }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums text-slate-500">{{ $row['percent'] ?? '-' }}</td>
                             <td class="px-3 py-2 text-xs leading-4 text-slate-500">{{ $row['note'] ?? '' }}</td>
                         </tr>
                     @endforeach
@@ -58,7 +58,7 @@
             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Net profit benchmark</p>
                 <p class="text-xs text-slate-400">
-                    {{ $summary['benchmark']['net_target_percent'] }}% net on service revenue — after prorated fixed costs and estimated tax reserves.
+                    {{ $summary['benchmark']['net_target_percent'] }}% net on service revenue - after prorated fixed costs and estimated tax reserves.
                 </p>
             </div>
             <div class="grid grid-cols-2 gap-px bg-slate-200 sm:grid-cols-4">
@@ -77,7 +77,7 @@
                         'text-emerald-800' => ($summary['benchmark']['tone'] ?? null) === 'good',
                         'text-amber-800' => ($summary['benchmark']['tone'] ?? null) === 'warn',
                         'text-slate-950' => ! in_array($summary['benchmark']['tone'] ?? null, ['good', 'warn'], true),
-                    ])>{{ $summary['benchmark']['gap_label'] ?? '—' }}</p>
+                    ])>{{ $summary['benchmark']['gap_label'] ?? '-' }}</p>
                 </div>
                 <div class="bg-white px-3 py-2">
                     <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Posture</p>
@@ -95,7 +95,7 @@
     <div class="overflow-hidden border border-slate-300 bg-white">
         <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Tax &amp; remittance posture</p>
-            <p class="text-xs text-slate-400">Sales tax is from posted RO lines. Payroll and income lines are planning reserves — not filing amounts.</p>
+            <p class="text-xs text-slate-400">Sales tax is from posted RO lines. Payroll and income lines are planning reserves - not filing amounts.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-100 text-sm">

@@ -1,10 +1,10 @@
 # Operational Certifications
 
-**Status:** Frozen v3 — complete enough to govern decisions. Do not add levels, documents, or certification names without shop evidence that the catalog is too coarse.
+**Status:** Frozen v3 - complete enough to govern decisions. Do not add levels, documents, or certification names without shop evidence that the catalog is too coarse.
 
 **Companion:** [day-in-the-life/](./day-in-the-life/) · [orientation-platform.md](./orientation-platform.md) · [certifications/](./certifications/) (historical records)
 
-**Done means:** *We can perform real shop work using this* — not *we implemented feature X.*
+**Done means:** *We can perform real shop work using this* - not *we implemented feature X.*
 
 **Trust bar:** *Would I trust this while Molly is helping a customer?*
 
@@ -17,9 +17,9 @@
 | Authorities own truth | What happened and what exists |
 | Stations own orientation | Where work happens briefs the operator |
 | Capabilities project workflow | Comms, payments, etc. never own ROs or customers |
-| Every capability must be certifiable | Real shop work — not API 200 or widget rendered |
+| Every capability must be certifiable | Real shop work - not API 200 or widget rendered |
 | **Levels are a dependency chain** | A level cannot stay valid if the level below is red |
-| **Keep the catalog coarse** | ~9 observable shop capabilities — not 70 Jira tickets |
+| **Keep the catalog coarse** | ~9 observable shop capabilities - not 70 Jira tickets |
 
 ---
 
@@ -48,8 +48,8 @@ If Engineering breaks (e.g. VVX registration fails tomorrow):
 
 ```text
 Engineering   ❌
-Operational   suspended  (was ⚠ or ✅ — no longer trustworthy)
-Production    suspended  (was ⬜ or ✅ — no longer trustworthy)
+Operational   suspended  (was ⚠ or ✅ - no longer trustworthy)
+Production    suspended  (was ⬜ or ✅ - no longer trustworthy)
 ```
 
 Operational experience may still *appear* to work; the foundation is no longer certified. Re-certify Engineering before claiming Operational or Production again.
@@ -57,8 +57,8 @@ Operational experience may still *appear* to work; the foundation is no longer c
 | Level | Meaning |
 |-------|---------|
 | **Engineering** | Capability checklist green; PHPUnit guards regression |
-| **Operational** | Shop completed real work once — only valid if Engineering green |
-| **Production** | Sustained live shop trust — only valid if Operational green |
+| **Operational** | Shop completed real work once - only valid if Engineering green |
+| **Production** | Sustained live shop trust - only valid if Operational green |
 
 ---
 
@@ -77,7 +77,7 @@ Record both in [certifications/](./certifications/).
 
 ## Why this matters
 
-Every certification ends with one sentence — **business capability, not engineering achievement:**
+Every certification ends with one sentence - **business capability, not engineering achievement:**
 
 > **After this certification, the shop can…**
 
@@ -93,7 +93,7 @@ Every certification ends with one sentence — **business capability, not engine
 
 ## Coarse certification catalog
 
-Observable in the shop. **Do not splinter** (no per-endpoint certs). Phases (e.g. Portable Station Phase 1) are checklist slices inside one cert — not new certification names.
+Observable in the shop. **Do not splinter** (no per-endpoint certs). Phases (e.g. Portable Station Phase 1) are checklist slices inside one cert - not new certification names.
 
 | Certification | Track | Primary observation |
 |---------------|-------|---------------------|
@@ -110,7 +110,7 @@ Observable in the shop. **Do not splinter** (no per-endpoint certs). Phases (e.g
 Living dashboard (example):
 
 ```text
-Operations Platform — release view
+Operations Platform - release view
 
 Engineering     ✅ Voice Transport  ✅ Orientation
 Operational     ✅ Front Counter    ⚠ Portable Station Phase 1
@@ -150,7 +150,7 @@ Full scenarios in [day-in-the-life/](./day-in-the-life/).
 **Why this matters:** After this certification, staff act without reconstructing RO state first.
 
 **Capability:** frozen contract on all briefing surfaces · density presenters · no duplicated derivation  
-**Operational:** same RO — consistent briefing at Interrupt vs Full on floor observation
+**Operational:** same RO - consistent briefing at Interrupt vs Full on floor observation
 
 ### Voice Transport
 
@@ -166,7 +166,7 @@ Full scenarios in [day-in-the-life/](./day-in-the-life/).
 
 > **Which certification does this move forward?**
 
-If **none** — warning sign; work may not align with current priorities.
+If **none** - warning sign; work may not align with current priorities.
 
 At code review, prefer this over *does the code look good?*
 
@@ -182,7 +182,7 @@ Also name: layer (Capability/Operational) · checklist row · target level · de
 
 ## Release notes
 
-Certifications shipped — not version theatrics. Use the release dashboard shape above.
+Certifications shipped - not version theatrics. Use the release dashboard shape above.
 
 ---
 

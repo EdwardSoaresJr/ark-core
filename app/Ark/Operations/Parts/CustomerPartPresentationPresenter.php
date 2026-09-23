@@ -176,7 +176,7 @@ final class CustomerPartPresentationPresenter
     }
 
     /**
-     * Supplier SKU is not a dedicated line column today — only expose part_number
+     * Supplier SKU is not a dedicated line column today - only expose part_number
      * when the shop explicitly asks for supplier SKU (never invent a second identity).
      *
      * @param  array<string, mixed>  $line

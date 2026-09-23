@@ -481,7 +481,7 @@ export function arkConversationQuickReply(config = {}) {
                     continue;
                 }
 
-                // RO Comms uses event-bubble + canonical timeline — never inject hub-row HTML.
+                // RO Comms uses event-bubble + canonical timeline - never inject hub-row HTML.
                 if (list.dataset.timelineRefresh === 'comms-tab') {
                     if (! refreshedCanonical && typeof window.arkReloadRepairOrderWorkspaceTab === 'function') {
                         window.arkReloadRepairOrderWorkspaceTab('comms');

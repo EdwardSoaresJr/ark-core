@@ -1,4 +1,4 @@
-# Figma handoff — gate screens (Companion v1)
+# Figma handoff - gate screens (Companion v1)
 
 **Purpose:** Pixel-level layout notes for the four screens that gate Sprint 1 floor certification. Pair with specs + reference PNGs.
 
@@ -41,7 +41,7 @@
 ```
 
 **Steal from Quo:** Accept/Decline rhythm · modal clarity  
-**ARK wins:** Vehicle + RO + estimate cards above buttons — not inbox emoji alone
+**ARK wins:** Vehicle + RO + estimate cards above buttons - not inbox emoji alone
 
 ---
 
@@ -61,7 +61,7 @@
 │  │ Can I pick up at 5?   │           │
 │  └───────────────────────┘           │
 │           ┌ outbound ────┐          │
-│           │ Yes — see you! │          │
+│           │ Yes - see you! │          │
 │           └──────────────┘          │
 ├─────────────────────────────────────┤
 │ [Estimate] [Pay] [Inspection]       │ quick row
@@ -116,7 +116,7 @@
 
 ```
 ┌─────────────────────────────────────┐
-│ ←  Brake pads — front               │
+│ ←  Brake pads - front               │
 │     RO #1599 · 2019 Civic           │
 │     Item 4 of 12 · Needs review     │
 ├─────────────────────────────────────┤
@@ -130,7 +130,7 @@
 └─────────────────────────────────────┘
 ```
 
-**Push rule:** Tap notification → **this screen** — never Home
+**Push rule:** Tap notification → **this screen** - never Home
 
 ---
 

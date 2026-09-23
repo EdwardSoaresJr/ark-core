@@ -8,9 +8,9 @@ use Carbon\CarbonImmutable;
 
 final class MissedCallRescueCopy
 {
-    public const DEFAULT_OPEN = 'Hey! This is {{business.name}}. Sorry we missed your call — reply with your year/make/model and what it\'s doing, or text us to get scheduled.';
+    public const DEFAULT_OPEN = 'Hey! This is {{business.name}}. Sorry we missed your call - reply with your year/make/model and what it\'s doing, or text us to get scheduled.';
 
-    public const DEFAULT_CLOSED = 'Hey! This is {{business.name}}. Sorry we missed your call — we\'re currently closed. Reply with your year/make/model and what it\'s doing and we\'ll get back to you first thing.';
+    public const DEFAULT_CLOSED = 'Hey! This is {{business.name}}. Sorry we missed your call - we\'re currently closed. Reply with your year/make/model and what it\'s doing and we\'ll get back to you first thing.';
 
     public static function bodyFor(
         CallSession $session,

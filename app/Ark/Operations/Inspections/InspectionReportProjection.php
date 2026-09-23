@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Disposable customer/report projection of one Inspection.
- * Simple and Detailed are view modes of the same authority — never separate stores.
+ * Simple and Detailed are view modes of the same authority - never separate stores.
  */
 final class InspectionReportProjection
 {
@@ -481,7 +481,7 @@ final class InspectionReportProjection
             }
         }
 
-        // Axle L/R pad average — observational only when comparison would fire
+        // Axle L/R pad average - observational only when comparison would fire
         $prompts = InspectionBrakeComparison::promptsForItem($item, $inspection);
         foreach ($prompts as $prompt) {
             if (($prompt['kind'] ?? '') === 'axle_lr') {

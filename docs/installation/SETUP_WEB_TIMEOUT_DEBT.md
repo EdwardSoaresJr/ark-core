@@ -1,7 +1,7 @@
-# Installer shipping debt — web /setup migrate timeout
+# Installer shipping debt - web /setup migrate timeout
 
 **Status:** Resolved  
-**Was:** Small VPS (`demo.autorepairkeeper.com`, ~1 GB) — HTTP Install could die while migrations ran; CLI still completed.
+**Was:** Small VPS (`demo.autorepairkeeper.com`, ~1 GB) - HTTP Install could die while migrations ran; CLI still completed.
 
 ## Fix
 

@@ -1,6 +1,6 @@
 # ARK Truth Stack v1
 
-**Status:** Platform doctrine — applies to Growth, Voice, Operations, Mobile, Portal, and future surfaces  
+**Status:** Platform doctrine - applies to Growth, Voice, Operations, Mobile, Portal, and future surfaces  
 **Not:** A Growth doctrine, an analytics pattern, or “everything is event-driven”  
 **Purpose:** Define how ARK stores truth, summarizes it, explains it, and justifies it to operators.
 
@@ -15,12 +15,12 @@ Narratives explain truth.
 Evidence justifies truth.
 ```
 
-This is ARK's design language — not a slogan. Every significant surface should map to one of these layers.
+This is ARK's design language - not a slogan. Every significant surface should map to one of these layers.
 
 | Layer | Question | Mutable? | Example |
 | --- | --- | --- | --- |
 | **Events (authority)** | What happened? | Append-only | `CommunicationEvent`, `CallSession`, `OperationalEvent`, `GrowthTouchpoint` |
-| **Projections** | What should this audience see? | Disposable — rebuild anytime | `OperationalJourneyProjection`, `WorkboardCardProjection`, Attention queue rows |
+| **Projections** | What should this audience see? | Disposable - rebuild anytime | `OperationalJourneyProjection`, `WorkboardCardProjection`, Attention queue rows |
 | **Narratives** | What does it mean? | Composed from projections | Operational Journey story, Operations Briefing, orientation copy |
 | **Evidence** | Show me why | Links to immutable sources | `JourneyEvidenceItem`, identity confidence facts, observation source events |
 
@@ -28,13 +28,13 @@ This is ARK's design language — not a slogan. Every significant surface should
 
 If a projection is deleted, it must be rebuildable completely from authority and events. No projection table may become the only place an operational fact lives.
 
-**Projection Rule #1 — Audience language:** Operational truth should not require users to understand operational structure. Advisors answer questions; technicians perform work; owners observe operations; engineers model authorities. Each projection speaks its audience. UI language and domain names need not match — do not rename authorities to chase operator wording. When users hesitate, first suspect a projection leaking implementation, not a wrong model. Full rule: doctrine `ark-projection-rule.mdc.`
+**Projection Rule #1 - Audience language:** Operational truth should not require users to understand operational structure. Advisors answer questions; technicians perform work; owners observe operations; engineers model authorities. Each projection speaks its audience. UI language and domain names need not match - do not rename authorities to chase operator wording. When users hesitate, first suspect a projection leaking implementation, not a wrong model. Full rule: doctrine `ark-projection-rule.mdc.`
 
 ---
 
 ## Projection catalog
 
-Every row below is a **projection** — disposable, audience-specific, non-authoritative.
+Every row below is a **projection** - disposable, audience-specific, non-authoritative.
 
 | Projection | Authority (truth sources) |
 | --- | --- |
@@ -45,7 +45,7 @@ Every row below is a **projection** — disposable, audience-specific, non-autho
 | Journey Explorer | Same + session touchpoint paths |
 | Communications queue / recovery | `CallSession`, `ConversationMessage`, read state |
 | Technician dashboard | Assigned work + production events |
-| Daily / Operations Briefing | All of the above — **narrative**, not a dashboard |
+| Daily / Operations Briefing | All of the above - **narrative**, not a dashboard |
 | Lifecycle select | RO status authority + transition rules |
 | Customer Hub relationship context | Conversation + calls + RO history |
 
@@ -56,7 +56,7 @@ When adding a new surface, ask: **Which authority does this read?** If the answe
 ## Platform invariants
 
 1. **Authorities are stable.** Events and authority rows are append-only unless the domain explicitly allows mutation.
-2. **Projections are disposable.** Cache them, delete them, recompute them — truth must survive.
+2. **Projections are disposable.** Cache them, delete them, recompute them - truth must survive.
 3. **No projection may become authority.** Do not write operational facts into projection-only stores to “make the UI faster.”
 4. **Narratives compose projections.** Briefings and journey stories do not invent new truth.
 5. **Evidence links downward.** Every narrative claim must trace to authority or be withheld.
@@ -79,7 +79,7 @@ Here's why.
 Here's the evidence.
 ```
 
-Example — *Viewed estimate 3×*:
+Example - *Viewed estimate 3×*:
 
 | Layer | Operator sees |
 | --- | --- |
@@ -119,7 +119,7 @@ Three things deserve your attention.
 
 Every sentence expands. Every claim links to evidence. The Briefing **consumes** projections; it does not duplicate authority.
 
-Future AI insights follow the same grammar — analyst beside you, not analytics tool:
+Future AI insights follow the same grammar - analyst beside you, not analytics tool:
 
 > Wheel Bearing page generated 12 leads but only 4 appointments.  
 > **Why?** Visitors increasingly leave after the repair cost section.  
@@ -137,8 +137,8 @@ Authority (ship events)
   → Projection (summarize once per render)
   → Narrative (explain for audience)
   → Evidence (justify on demand)
-  → Earned Authority (publish only when traceable — ark-earned-authority.mdc)
-  → Observation / AI (only when earned — see ark-earned-intelligence.mdc)
+  → Earned Authority (publish only when traceable - ark-earned-authority.mdc)
+  → Observation / AI (only when earned - see ark-earned-intelligence.mdc)
 ```
 
 Never skip to narrative, publication, or AI before authority and observation are trusted.
@@ -155,11 +155,11 @@ Never skip to narrative, publication, or AI before authority and observation are
 | [ark-workspace-interaction-language-v1.md](./ark-workspace-interaction-language-v1.md) | Workspace evolution |
 | ark-observations.mdc | Interpretive truth vocabulary |
 | ark-pressure-first.mdc | Observe before enforce |
-| [ark-event-native-platform-v1.md](./ark-event-native-platform-v1.md) | Event-native OS — streams, observations, platform sentence |
+| [ark-event-native-platform-v1.md](./ark-event-native-platform-v1.md) | Event-native OS - streams, observations, platform sentence |
 | [event-contracts-v1.md](../mobile/event-contracts-v1.md) | Business event language (eight questions) |
 | [ark-scoped-event-streams-v1.md](./ark-scoped-event-streams-v1.md) | Event Stream Engine (infrastructure) |
-| [ark-business-language-v1.md](./ark-business-language-v1.md) | Dictionary — authority / event / observation / projection |
-| [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Exit gate — when knowledge may leave the shop |
-| [ark-repair-authority-v1.md](./ark-repair-authority-v1.md) | Repair is the authority; problem/service pages are projections — rename last |
-| [ark-market-authority-v1.md](./ark-market-authority-v1.md) | Market trust — opportunity-first business health (frozen 2026-07-07) |
+| [ark-business-language-v1.md](./ark-business-language-v1.md) | Dictionary - authority / event / observation / projection |
+| [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Exit gate - when knowledge may leave the shop |
+| [ark-repair-authority-v1.md](./ark-repair-authority-v1.md) | Repair is the authority; problem/service pages are projections - rename last |
+| [ark-market-authority-v1.md](./ark-market-authority-v1.md) | Market trust - opportunity-first business health (frozen 2026-07-07) |
 | `docs/growth/DOCTRINE.md` | Growth instance of this stack |

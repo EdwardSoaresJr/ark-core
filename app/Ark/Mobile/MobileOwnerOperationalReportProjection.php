@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
 final class MobileOwnerOperationalReportProjection
 {
     /**
-     * Read-only operational report pulse for mobile — same metrics authority as
+     * Read-only operational report pulse for mobile - same metrics authority as
      * desktop `/app/reports/operational`. Posted sales truth; no parallel metrics store.
      *
      * @return array<string, mixed>

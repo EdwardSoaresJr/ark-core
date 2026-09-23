@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * Shop-configurable windows for appointment *request* preferences (morning / afternoon).
- * Not Appointment authority — confirmed bookings still require an exact starts_at.
+ * Not Appointment authority - confirmed bookings still require an exact starts_at.
  */
 final class ScheduleRequestWindows
 {
@@ -44,7 +44,7 @@ final class ScheduleRequestWindows
                 'close' => self::DEFAULT_AFTERNOON_CLOSE,
             ],
             'flexible_enabled' => true,
-            // Optional shop policy — off by default. Afternoon request window close (16:00) is separate.
+            // Optional shop policy - off by default. Afternoon request window close (16:00) is separate.
             'latest_appointment_arrival' => null,
         ];
     }
@@ -180,7 +180,7 @@ final class ScheduleRequestWindows
             $filtered[$value] = $label;
         }
 
-        // Preference is guidance — if filtering emptied the list, fall back to full day options
+        // Preference is guidance - if filtering emptied the list, fall back to full day options
         // still respecting latest arrival when set.
         if ($filtered === [] && $bounds !== null) {
             foreach ($all as $value => $label) {

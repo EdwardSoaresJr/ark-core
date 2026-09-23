@@ -38,7 +38,7 @@
                             @if ($tab['count'] > 0)
                                 Attention
                             @else
-                                —
+                                -
                             @endif
                         @elseif ($tab['slug'] === 'all')
                             {{ $tab['count'] > 0 ? 'Needs attention' : 'Open queue' }}

@@ -23,7 +23,7 @@ enum LeadSource: string
         };
     }
 
-    /** Inbox / interrupt origin chip — where the opportunity entered. */
+    /** Inbox / interrupt origin chip - where the opportunity entered. */
     public function opportunityLabel(): string
     {
         return match ($this) {

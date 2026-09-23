@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 3 — Register replaceable runner at ~/ARK/github-runner/ark-build-01
+# Phase 3 - Register replaceable runner at ~/ARK/github-runner/ark-build-01
 #
 #   export RUNNER_REGISTRATION_TOKEN='…'
 #   ./infra/build-runner/mac/register-runner.sh
@@ -53,7 +53,7 @@ fi
     --replace
 
 echo ""
-echo "Runner disposable — do not back up this directory."
+echo "Runner disposable - do not back up this directory."
 echo "If Mac is replaced: install Docker → register-runner.sh → done."
 echo ""
 echo "Next: ./ensure-buildx.sh && ./start-build-session.sh"

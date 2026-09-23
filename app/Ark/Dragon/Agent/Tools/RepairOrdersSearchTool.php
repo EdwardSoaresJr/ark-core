@@ -18,7 +18,7 @@ final class RepairOrdersSearchTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Search open repair orders with allowlisted filters (status, assigned_technician including is_null for unassigned, vehicle_label contains, age, next_action). Use this to name vehicles — not only counts — for unassigned work, in-production work, or a named car. Locate vehicles/people/ROs before concluding they are not on the board. If the first search is empty, try one alternate filter (make vs model, technician name, status group) before saying not found. Read-only. No SQL.';
+        return 'Search open repair orders with allowlisted filters (status, assigned_technician including is_null for unassigned, vehicle_label contains, age, next_action). Use this to name vehicles - not only counts - for unassigned work, in-production work, or a named car. Locate vehicles/people/ROs before concluding they are not on the board. If the first search is empty, try one alternate filter (make vs model, technician name, status group) before saying not found. Read-only. No SQL.';
     }
 
     public function parameters(): array

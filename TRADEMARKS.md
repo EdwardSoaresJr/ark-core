@@ -1,13 +1,13 @@
 # ARK trademarks and branding
 
-**Project policy — not legal advice.**
+**Project policy - not legal advice.**
 
 Copyright protects ARK’s **code**. This file covers the **name and brand**.
 
 ## What you may do
 
 Under the AGPL-3.0-only license (see `LICENSE`), you may use, copy, modify,
-fork, and redistribute ARK’s covered software — including commercially —
+fork, and redistribute ARK’s covered software - including commercially -
 subject to that license’s conditions (including AGPL §13 for network use of
 modified versions).
 

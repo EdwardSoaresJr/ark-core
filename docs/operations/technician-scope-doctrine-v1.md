@@ -1,6 +1,6 @@
 # Technician Scope Doctrine v1
 
-**Status:** Active — north star for technician experience; discovery contract is next milestone  
+**Status:** Active - north star for technician experience; discovery contract is next milestone  
 **Companion:** [Repair Order Discovery Contract](repair-order-discovery-contract.md) (draft) · [Technician Discovery Audit](technician-discovery-audit.md) · [Technician Surface Principle](technician-surface-principle.md) · [Inspection Workflow Principle (1.5)](../inspection/inspection-workflow-principle-1.5.md)
 
 ---
@@ -90,7 +90,7 @@ If a surface cannot justify itself through one of those three purposes, it **doe
 
 **Default answer when proposing technician visibility:**
 
-> No — unless it directly supports assigned work.
+> No - unless it directly supports assigned work.
 
 **The burden of proof is on any surface seeking technician visibility.**
 
@@ -133,7 +133,7 @@ Technicians do **not**:
 - Own communication recovery
 - Own customer relationship workflows
 
-Communication visibility exists **only when it directly supports assigned work** — not as a primary destination or interrupt surface.
+Communication visibility exists **only when it directly supports assigned work** - not as a primary destination or interrupt surface.
 
 ---
 
@@ -202,14 +202,14 @@ Doctrine → Authority → Observation → Workflow → Projection
 | Phase | Technician scope |
 |-------|-------------------|
 | **Doctrine** | This document |
-| **Authority** | `production.access`, assigned RO lifecycle, inspection write — not shop CRM |
-| **Observation** | **Current** — behavior before narrowing workboard / RO index |
+| **Authority** | `production.access`, assigned RO lifecycle, inspection write - not shop CRM |
+| **Observation** | **Current** - behavior before narrowing workboard / RO index |
 | **Workflow** | My Work, assigned RO entry, inspection-first recording |
-| **Projection** | Customer-facing views read inspection truth — later |
+| **Projection** | Customer-facing views read inspection truth - later |
 
 Do not skip observation to “finish” the technician UI.
 
-**Next milestone:** [Repair Order Discovery Contract](repair-order-discovery-contract.md) — how ROs are discovered, not just who may open them.
+**Next milestone:** [Repair Order Discovery Contract](repair-order-discovery-contract.md) - how ROs are discovered, not just who may open them.
 
 ---
 
@@ -219,7 +219,7 @@ Do not skip observation to “finish” the technician UI.
 - Read-only Work or Communications “so they can see what’s going on”
 - Global customer or vehicle search for production staff
 - Shop-wide decision pressure on technician surfaces
-- Expanding nav because advisors use a surface — that is advisor workflow
+- Expanding nav because advisors use a surface - that is advisor workflow
 - Hiding buttons while leaving routes accessible (permission theater)
 
 ---
@@ -232,4 +232,4 @@ The technician experience succeeds when a production user can complete a day wit
 Clock in → My assigned work → RO → inspect / perform / document → next vehicle
 ```
 
-No follow-up queue. No approval pressure. No relationship recovery. No shop-wide coordination — unless observation proves a specific assigned-work exception.
+No follow-up queue. No approval pressure. No relationship recovery. No shop-wide coordination - unless observation proves a specific assigned-work exception.

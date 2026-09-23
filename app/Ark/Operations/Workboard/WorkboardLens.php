@@ -89,7 +89,7 @@ final class WorkboardLens
             ],
             [
                 'label' => 'Building Estimate',
-                'description' => 'Qualified scopes — add lines and prepare authorization',
+                'description' => 'Qualified scopes - add lines and prepare authorization',
                 'tone' => 'motion',
                 'statuses' => [
                     RepairOrderStatus::Estimate,

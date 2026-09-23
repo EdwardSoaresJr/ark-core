@@ -54,7 +54,7 @@ final class InspectionRoadTestGate
         }
 
         if ($performedState === InspectionObservedState::Na && $status !== InspectionChecklistStatus::Na) {
-            abort(422, 'Road test was not performed — findings must be N/A.');
+            abort(422, 'Road test was not performed - findings must be N/A.');
         }
     }
 

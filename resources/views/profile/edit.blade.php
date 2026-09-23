@@ -36,7 +36,7 @@
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">
                     <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">User Settings</p>
-                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">Staff identity, appearance, password, station PIN, PartsTech seat, and catalog defaults — each tab saves independently.</p>
+                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">Staff identity, appearance, password, station PIN, PartsTech seat, and catalog defaults - each tab saves independently.</p>
                 </div>
 
                 @if (session('status') === 'profile-updated' || session('status') === 'appearance-updated' || session('status') === 'password-updated' || session('status') === 'partstech-updated' || session('status') === 'workstation-pin-updated' || session('status') === 'catalogs-updated')
@@ -86,7 +86,7 @@
                     <div>
                         <dt class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Station PIN</dt>
                         <dd class="mt-0.5 text-xs text-slate-700">
-                            {{ $user->hasOperatorPin() ? 'Configured' : 'Not set — create at station or ask admin' }}
+                            {{ $user->hasOperatorPin() ? 'Configured' : 'Not set - create at station or ask admin' }}
                         </dd>
                     </div>
                     <div>

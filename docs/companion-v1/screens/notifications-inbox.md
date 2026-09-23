@@ -1,14 +1,14 @@
-# Screen spec — Notifications Inbox
+# Screen spec - Notifications Inbox
 
 **ID:** `companion.screen.notifications-inbox`  
 **Role(s):** All  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Every interrupt in one list** — tap goes to **workspace**, not Home · recover what push missed.
+**Every interrupt in one list** - tap goes to **workspace**, not Home · recover what push missed.
 
 ---
 
@@ -26,15 +26,15 @@
 ### Entry
 
 - Bell on Home header · badge count
-- Not a primary tab — secondary to continuity list
+- Not a primary tab - secondary to continuity list
 
 ### List
 
 **Row:**
 
-- Icon by type — message · call · inspection · approval · payment
-- Headline — `Emma replied`
-- Subline — vehicle · RO · snippet
+- Icon by type - message · call · inspection · approval · payment
+- Headline - `Emma replied`
+- Subline - vehicle · RO · snippet
 - Time · unread dot
 
 ### Grouping
@@ -51,9 +51,9 @@
 
 | Gesture | Behavior |
 |---------|----------|
-| Tap | Deep link — thread · inspection item · RO · call |
+| Tap | Deep link - thread · inspection item · RO · call |
 | Swipe | Mark read |
-| Clear all | Mark all read — does not delete authority |
+| Clear all | Mark all read - does not delete authority |
 
 **Anti-pattern:** tap → Home → hunt (reject)
 
@@ -69,7 +69,7 @@ Bell → list → tap inspection push equivalent → [`inspection-item.md`](insp
 
 **Needs:** notification feed with `deep_link` + entity ids · read state
 
-**May align with:** continuity projection — same moments · different sort (all vs since unlock)
+**May align with:** continuity projection - same moments · different sort (all vs since unlock)
 
 ---
 

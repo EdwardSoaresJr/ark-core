@@ -188,7 +188,7 @@ test('line store validation failure leaves no orphan line', function (): void {
         ->post(route('operations.repair-orders.lines.store', $repairOrder), [
             'repair_order_concern_id' => $concernId,
             'type' => RepairOrderLineType::Labor->value,
-            // description missing — must fail validation without creating a line
+            // description missing - must fail validation without creating a line
             'quantity' => '1.00',
         ])
         ->assertRedirect()

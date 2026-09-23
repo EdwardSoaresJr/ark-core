@@ -9,7 +9,7 @@
             <span class="text-xs text-slate-500">{{ $row['age_label'] ?? '' }}</span>
             <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-800">{{ $row['state_label'] ?? '' }}</span>
         </div>
-        <p class="mt-1 font-semibold text-slate-950">{{ $row['contact_name'] ?? 'Unknown' }} · {{ $row['display_phone'] ?? '—' }}</p>
+        <p class="mt-1 font-semibold text-slate-950">{{ $row['contact_name'] ?? 'Unknown' }} · {{ $row['display_phone'] ?? '-' }}</p>
         <p class="mt-0.5 font-medium text-slate-800">{{ $row['concern'] ?? '' }}</p>
         @if (filled($row['snippet'] ?? null) && ($row['snippet'] ?? '') !== ($row['concern'] ?? ''))
             <p class="mt-1 text-slate-600 line-clamp-2">{{ $row['snippet'] }}</p>

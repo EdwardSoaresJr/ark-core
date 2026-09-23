@@ -39,7 +39,7 @@ class ResolvePhoneSmsCapabilityAction
     }
 
     /**
-     * Inbound SMS proves the number can receive/send SMS — no Lookup needed.
+     * Inbound SMS proves the number can receive/send SMS - no Lookup needed.
      */
     public function markCapableFromInboundSms(string $phone): ?PhoneSmsCapability
     {
@@ -80,7 +80,7 @@ class ResolvePhoneSmsCapabilityAction
 
         $reason = 'Delivery failed'
             .($errorCode !== null && $errorCode !== '' ? " ({$errorCode})" : '')
-            .' — number cannot receive SMS.';
+            .' - number cannot receive SMS.';
 
         return PhoneSmsCapability::query()->updateOrCreate(
             ['normalized_phone' => $normalized],

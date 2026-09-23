@@ -9,7 +9,7 @@ use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionStatus;
 
 /**
- * Live conversation state scaffold — ARK Voice will populate controls later.
+ * Live conversation state scaffold - ARK Voice will populate controls later.
  */
 final class ConversationLiveStateProjection
 {

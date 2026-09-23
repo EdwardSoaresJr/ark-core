@@ -7,7 +7,7 @@ use App\Ark\Operations\Workboard\WorkboardLens;
 use App\Models\User;
 
 /**
- * Read-only intake queue count for navigation pressure — draft scopes in build.
+ * Read-only intake queue count for navigation pressure - draft scopes in build.
  */
 class AdvisorIntakePressure
 {

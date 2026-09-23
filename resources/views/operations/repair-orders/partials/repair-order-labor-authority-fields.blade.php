@@ -76,7 +76,7 @@
         x-show="! laborCategoryAllowsModifiers()"
         x-cloak
         class="text-[11px] leading-4 text-slate-500"
-    >Program category — book hours and category rate apply. Adjust labor is hidden here so program billing stays clean.</p>
+    >Program category - book hours and category rate apply. Adjust labor is hidden here so program billing stays clean.</p>
 
     <input type="hidden" name="labor_rate_overridden" :value="sellEdited && laborCategoryAllowsModifiers() ? '1' : '0'">
     <input type="hidden" name="labor_hours_overridden" :value="laborHoursOverridden ? '1' : '0'">
@@ -138,7 +138,7 @@
 
     <div x-show="sellEdited && laborCategoryAllowsModifiers()" x-cloak class="space-y-1">
         <p class="text-[11px] font-semibold leading-4 text-amber-800">
-            Custom rate — choose a reason before saving (e.g. Menu / package price for a $199 PPI).
+            Custom rate - choose a reason before saving (e.g. Menu / package price for a $199 PPI).
         </p>
         <label class="ops-field">
             <span class="ops-field-label">Rate override reason</span>

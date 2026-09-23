@@ -1,6 +1,6 @@
-# Cloud Funnel M3 — Workspace Launch Brief
+# Cloud Funnel M3 - Workspace Launch Brief
 
-**Status:** Brief written — **code closed** until this brief is accepted  
+**Status:** Brief written - **code closed** until this brief is accepted  
 **Milestone:** M3 only  
 **Experience contract:** [cloud-funnel-v1.md](cloud-funnel-v1.md)  
 **Critical path:** [cloud-saas-critical-path-v1.md](cloud-saas-critical-path-v1.md)  
@@ -35,16 +35,16 @@ User
   │
   owns
   │
-Shop (Prospect)          ← M2 — done
+Shop (Prospect)          ← M2 - done
   │
   enters via
   │
-Workspace Launch         ← M3 — this milestone
+Workspace Launch         ← M3 - this milestone
 ```
 
 **One authority:** Workspace Launch.
 
-The authenticated owner of a platform `Shop` can leave the Cloud dashboard and enter a workspace that belongs to **that Shop** — not Demo Auto Repair production by accident.
+The authenticated owner of a platform `Shop` can leave the Cloud dashboard and enter a workspace that belongs to **that Shop** - not Demo Auto Repair production by accident.
 
 ### What “real” means in M3
 
@@ -114,7 +114,7 @@ Do **not** implement in M3:
 | Multi-tenant middleware explosion “for later” | only what launch requires |
 | Funnel / dashboard redesign | never for M3 |
 
-If you need one of those to “finish” M3, stop — the milestone is scoped wrong or the fake underneath isn’t allowed enough.
+If you need one of those to “finish” M3, stop - the milestone is scoped wrong or the fake underneath isn’t allowed enough.
 
 ---
 
@@ -165,14 +165,14 @@ No UI redesign.
 
 Authority green is not enough. M3 closes only when both pass.
 
-### A — Authority
+### A - Authority
 
 A reviewer answers **YES**:
 
 - Does a real `Shop` have a durable Workspace Launch path?
-- Does Open Workspace use that path — not a hardcoded Demo Auto Repair `/app` shortcut?
+- Does Open Workspace use that path - not a hardcoded Demo Auto Repair `/app` shortcut?
 
-### B — Experience + production
+### B - Experience + production
 
 Walk as a **brand-new** Cloud user on `autorepairkeeper.com`:
 
@@ -205,6 +205,6 @@ When code starts: one authority, one PR scope, stop.
 | --- | --- |
 | **M4** | ProvisioningRequest + execution behind the existing timeline |
 | **M5** | Stripe after workspace success |
-| **M6** | Existing shop claim — still not “migrate Demo Auto Repair” as an experiment |
+| **M6** | Existing shop claim - still not “migrate Demo Auto Repair” as an experiment |
 
-Migration of Demo Auto Repair remains a **proof**, not a milestone — see strategy doc.
+Migration of Demo Auto Repair remains a **proof**, not a milestone - see strategy doc.

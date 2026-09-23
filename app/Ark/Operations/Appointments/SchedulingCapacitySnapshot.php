@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Appointments;
 
 /**
  * Disposable capacity answer for one open period (typically one shop day).
- * Rebuild from appointments + hours + shop policy — never store as authority.
+ * Rebuild from appointments + hours + shop policy - never store as authority.
  */
 final class SchedulingCapacitySnapshot
 {

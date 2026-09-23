@@ -72,7 +72,7 @@ final class DeterministicAiManagerProvider implements AiManagerProvider
         $impactSentence = $impact !== '' ? " Impact: {$impact}." : '';
         $actionSentence = $action !== '' ? " Suggested next step: {$action}." : '';
 
-        $explanation = "{$customer} — {$title}. {$reasonText}{$impactSentence}{$actionSentence}";
+        $explanation = "{$customer} - {$title}. {$reasonText}{$impactSentence}{$actionSentence}";
 
         return new ArkManagerRecommendationExplanation(
             explanation: trim(preg_replace('/\s+/', ' ', $explanation) ?? $explanation),
@@ -164,7 +164,7 @@ final class DeterministicAiManagerProvider implements AiManagerProvider
         $body = match ($purpose) {
             'approval_follow_up' => "Hi {$firstName}, this is {$shopName}. I wanted to follow up on your estimate and see if you had any questions or if you're ready to move forward. Reply here or call us anytime.",
             'pickup_follow_up' => "Hi {$firstName}, this is {$shopName}. Your vehicle is ready for pickup. Let us know when you'd like to come by or if you need anything before you arrive.",
-            default => "Hi {$firstName}, this is {$shopName}. Following up on your repair order — let me know if you have questions or need anything from us today.",
+            default => "Hi {$firstName}, this is {$shopName}. Following up on your repair order - let me know if you have questions or need anything from us today.",
         };
 
         return new ArkManagerCommunicationDraft(

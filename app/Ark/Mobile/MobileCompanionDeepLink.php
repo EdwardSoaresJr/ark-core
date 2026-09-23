@@ -3,7 +3,7 @@
 namespace App\Ark\Mobile;
 
 /**
- * Companion v1 deep-link routes — push, continuity, and notification payloads.
+ * Companion v1 deep-link routes - push, continuity, and notification payloads.
  *
  * Flutter router owns navigation; these strings are stable contracts.
  */

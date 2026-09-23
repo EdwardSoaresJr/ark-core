@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Attention Queue projection — composes actionable rows from authoritative stores.
+ * Attention Queue projection - composes actionable rows from authoritative stores.
  *
  * Not an AttentionItem authority. CallSession, ConversationMessage, and future
  * HandoffNote / estimate-view / voicemail sources remain separate; this resolver
@@ -61,7 +61,7 @@ class CommunicationsQueueResolver
     }
 
     /**
-     * Actionable queue without the recent-activity feed — used for layout pressure,
+     * Actionable queue without the recent-activity feed - used for layout pressure,
      * comms gate, and interrupt polling so every page load does not scan 70+ rows.
      *
      * @return array{

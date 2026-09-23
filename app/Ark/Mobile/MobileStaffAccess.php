@@ -21,7 +21,7 @@ final class MobileStaffAccess
             return false;
         }
 
-        // Floor staff roles — technicians get assigned-work shell only; advisors/admins get full companion nav.
+        // Floor staff roles - technicians get assigned-work shell only; advisors/admins get full companion nav.
         if ($user->hasAnyRole([
             ArkRole::Admin->value,
             ArkRole::Advisor->value,

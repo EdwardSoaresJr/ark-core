@@ -1,6 +1,6 @@
 # ARK Product Identity v1
 
-**Status:** Frozen product doctrine — **last doctrine addition.** No new doctrine documents until observation earns revision.  
+**Status:** Frozen product doctrine - **last doctrine addition.** No new doctrine documents until observation earns revision.  
 **Not:** A roadmap, feature list, or architecture diagram  
 **Purpose:** North star so nobody accidentally steers ARK away from what it is.
 
@@ -10,7 +10,7 @@
 
 **Every interaction begins with a person and ends with work.**
 
-The customer calls. A conversation begins. The advisor understands the person. Only then does the repair order become relevant. That is how a good service advisor thinks — and what the architecture now reflects.
+The customer calls. A conversation begins. The advisor understands the person. Only then does the repair order become relevant. That is how a good service advisor thinks - and what the architecture now reflects.
 
 ---
 
@@ -30,7 +30,7 @@ That feels complete. Shared authorities power all three. Shared screens do not.
 | Editing an RO · production · parts · reporting · owner rhythm | **ARKv2** |
 | Authority · configuration · transport · platform wiring | **Platform** (not operator-facing product center) |
 
-Moving between workspaces should feel like one product — not switching applications.
+Moving between workspaces should feel like one product - not switching applications.
 
 ---
 
@@ -42,13 +42,13 @@ The reset applied that to the products themselves:
 
 | Layer | Role | Owns / projects |
 | --- | --- | --- |
-| **ARK Platform** | **Authority** | Shops · identity · products · communications · operations — what is true |
-| **ARKv2** | **Projection** | Operations — queue · repair orders · parts · scheduling · business |
-| **ARK Companion** | **Projection** | Communications — inbox · calls · texts · voicemail · Advisor Brief · Operational Context |
+| **ARK Platform** | **Authority** | Shops · identity · products · communications · operations - what is true |
+| **ARKv2** | **Projection** | Operations - queue · repair orders · parts · scheduling · business |
+| **ARK Companion** | **Projection** | Communications - inbox · calls · texts · voicemail · Advisor Brief · Operational Context |
 
 ARKv2 and Companion are not siblings competing for features. They are **two views of the same authorities.**
 
-Technology (Laravel, Flutter, Twilio, Docker) is implementation. The product is what you design. Protect that separation — future decisions ask *does this make the advisor's day better?* not *what is the best technology?*
+Technology (Laravel, Flutter, Twilio, Docker) is implementation. The product is what you design. Protect that separation - future decisions ask *does this make the advisor's day better?* not *what is the best technology?*
 
 ---
 
@@ -89,7 +89,7 @@ Repair Order
 
 The repair order is no longer the first thing you see when the phone rings. **The person is.**
 
-That is how advisors actually think. The biggest win of the telephony reset was not Twilio — it was asking *what are we actually building?*
+That is how advisors actually think. The biggest win of the telephony reset was not Twilio - it was asking *what are we actually building?*
 
 The answer was not a phone system. It was: **a communications workspace that understands repair shops.**
 
@@ -112,8 +112,8 @@ Production feel wraps the hierarchy. It does not compete with it.
 Apply **The Two Workspace Rule** first. Then:
 
 1. **Which question does this answer?** Operations (*what work?*) or communications (*who needs me?*)
-2. **Does it duplicate the other workspace?** If yes — reject or narrow.
-3. **Does it reinforce the customer-first path?** Customer → conversation → work — not RO-first interrupt.
+2. **Does it duplicate the other workspace?** If yes - reject or narrow.
+3. **Does it reinforce the customer-first path?** Customer → conversation → work - not RO-first interrupt.
 
 ---
 
@@ -123,15 +123,15 @@ When a new engineer joins, these words have **one meaning**. If they stay stable
 
 | Term | Meaning |
 | --- | --- |
-| **Customer** | Relationship identity — who we are talking to and working for |
-| **Conversation** | Relationship authority — what we have said to this customer (not SMS inbox, not channel threads) |
-| **Advisor Brief** | What the advisor should know before responding — posture, signals, one recommendation (AI is implementation) |
-| **Operational Context** | Progressive disclosure of vehicle/work state on a thread — collapsible, subordinate to conversation |
-| **Repair Order** | Workflow authority for a visit — work to be done, not the first thing when the phone rings |
-| **Observation** | Interpretive truth — what happened and why it matters (not UI, not a task) |
-| **Pressure** | Operational pain made visible before enforcement — observe, surface, measure first |
-| **Authority** | What is true — append-only operational truth (customers, ROs, messages, calls) |
-| **Projection** | Packaged answer for an audience — disposable, rebuildable from authority (never becomes truth) |
+| **Customer** | Relationship identity - who we are talking to and working for |
+| **Conversation** | Relationship authority - what we have said to this customer (not SMS inbox, not channel threads) |
+| **Advisor Brief** | What the advisor should know before responding - posture, signals, one recommendation (AI is implementation) |
+| **Operational Context** | Progressive disclosure of vehicle/work state on a thread - collapsible, subordinate to conversation |
+| **Repair Order** | Workflow authority for a visit - work to be done, not the first thing when the phone rings |
+| **Observation** | Interpretive truth - what happened and why it matters (not UI, not a task) |
+| **Pressure** | Operational pain made visible before enforcement - observe, surface, measure first |
+| **Authority** | What is true - append-only operational truth (customers, ROs, messages, calls) |
+| **Projection** | Packaged answer for an audience - disposable, rebuildable from authority (never becomes truth) |
 
 Do not invent parallel vocabulary for the same concept. Earn new words through the notebook loop.
 
@@ -147,7 +147,7 @@ Pressure → questions → observations → vocabulary → product
 
 Use Companion. Write observations. Ship the clusters that earn themselves.
 
-If six months from now the notebook has changed the product more than brainstorming would have, the doctrine has become how ARK evolves — not just how it is documented.
+If six months from now the notebook has changed the product more than brainstorming would have, the doctrine has become how ARK evolves - not just how it is documented.
 
 **Do not build major Companion features until the notebook earns them.**
 
@@ -159,11 +159,11 @@ Companion mission (frozen): [`../companion-v1/MISSION.md`](../companion-v1/MISSI
 
 ## Future notebook (not yet)
 
-After Companion has been in pocket long enough — maybe three or four months — start a second log:
+After Companion has been in pocket long enough - maybe three or four months - start a second log:
 
 **Things We No Longer Do**
 
-The inverse of a bug tracker. Not what is broken — what work ARK has eliminated.
+The inverse of a bug tracker. Not what is broken - what work ARK has eliminated.
 
 ```text
 We no longer…
@@ -174,12 +174,12 @@ We no longer…
 …switch apps to answer a customer.
 ```
 
-That notebook validates whether the product is actually changing how the shop operates. Create it when observation proves elimination — not before.
+That notebook validates whether the product is actually changing how the shop operates. Create it when observation proves elimination - not before.
 
 ---
 
 ## Companions
 
-- [ark-constitution-v1.md](ark-constitution-v1.md) — constitutional principle: coherence over capability
-- [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) — communications authority
-- ark-surfaces.mdc — three applications, one runtime
+- [ark-constitution-v1.md](ark-constitution-v1.md) - constitutional principle: coherence over capability
+- [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) - communications authority
+- ark-surfaces.mdc - three applications, one runtime

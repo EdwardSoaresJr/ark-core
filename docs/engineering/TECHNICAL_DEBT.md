@@ -11,15 +11,15 @@
 
 **Named pattern:** Capability shipped → surface persisted → better workspace absorbed the job → old surface not pruned.
 
-**Problem:** A feature introduced a new page or nav tab. A later workspace absorbed the operational job. The original surface stayed discoverable — duplicate navigation, fragmented workflow, advisors asking "which page do I use?"
+**Problem:** A feature introduced a new page or nav tab. A later workspace absorbed the operational job. The original surface stayed discoverable - duplicate navigation, fragmented workflow, advisors asking "which page do I use?"
 
-**Constitution:** [workspace-constitution-v1.md](../ecosystem/workspace-constitution-v1.md) — Law 5 (new surfaces must replace something), Law 6 (deletion is a feature).
+**Constitution:** [workspace-constitution-v1.md](../ecosystem/workspace-constitution-v1.md) - Law 5 (new surfaces must replace something), Law 6 (deletion is a feature).
 
 **Audit inventory:** [workspace-surface-audit-v1.md](../operations/workspace-surface-audit-v1.md)
 
-**Active retirements (Phase 1):** Comms Inbox/History/Workboard routes → Attention; ops rail admin links → Settings; legacy conversation reply page → Attention thread. **Next:** Observation Sprint — [floor-observations-july-2026.md](../operations/floor-observations-july-2026.md).
+**Active retirements (Phase 1):** Comms Inbox/History/Workboard routes → Attention; ops rail admin links → Settings; legacy conversation reply page → Attention thread. **Next:** Observation Sprint - [floor-observations-july-2026.md](../operations/floor-observations-july-2026.md).
 
-**Rule:** Before shipping a new workspace route, name what surface becomes simpler. If nothing — do not ship the page.
+**Rule:** Before shipping a new workspace route, name what surface becomes simpler. If nothing - do not ship the page.
 
 ---
 
@@ -31,7 +31,7 @@
 
 **Problem:** Legacy provisioning path. Resolves extension identity via `assigned_user_id` → user-owned `TelephonyExtension`, or auto-allocates the next free extension in the 101–199 range. Violates workstation-owned business identity.
 
-**Replacement:** `App/Ark/Communications/Provisioning/` — `PolyProvisionBuilder` + `EndpointConfigurationProjection` + `GET /provision/{mac}.cfg`.
+**Replacement:** `App/Ark/Communications/Provisioning/` - `PolyProvisionBuilder` + `EndpointConfigurationProjection` + `GET /provision/{mac}.cfg`.
 
 **Remove when:** First Contact milestone proven; admin generate/download paths fully delegate to projection stack.
 
@@ -67,7 +67,7 @@
 
 **Problem:** Asterisk holds credentials and endpoint rows outside ARK authority.
 
-**Replacement:** Phase 3 — `ProjectTelephonyToAsteriskAction`, DB-backed secrets on `telephony_extensions.secret`.
+**Replacement:** Phase 3 - `ProjectTelephonyToAsteriskAction`, DB-backed secrets on `telephony_extensions.secret`.
 
 **Remove when:** Dynamic PJSIP projection ships and floor-validated.
 
@@ -75,7 +75,7 @@
 
 ### Shop communications user-centric device grouping
 
-**Location:** `CommunicationsShopProjection` — `devicesByUser` keyed on `assigned_user_id`
+**Location:** `CommunicationsShopProjection` - `devicesByUser` keyed on `assigned_user_id`
 
 **Problem:** Coverage and device rows still assume user-bound phones.
 
@@ -92,7 +92,7 @@
 **Was:** `2026_06_26_140001_add_workstation_fields_to_communication_devices.php`  
 **Now:** `2026_06_30_105000_add_workstation_fields_to_communication_devices.php`
 
-**Why:** Original timestamp ran **before** `2026_06_30_100000_create_communication_devices_table.php`, causing fresh installs to fail on FK to a non-existent table. Laravel migration order is filename order — history must not look accidental.
+**Why:** Original timestamp ran **before** `2026_06_30_100000_create_communication_devices_table.php`, causing fresh installs to fail on FK to a non-existent table. Laravel migration order is filename order - history must not look accidental.
 
 **Production note:** If `2026_06_26_140001` already ran on a host, do not re-run the renamed migration; reconcile manually or mark migrated.
 
@@ -106,7 +106,7 @@
 
 **Location:** `infra/coolify/DEPLOYMENT.md`, deploy runbook SSH examples
 
-**Problem:** `docker exec $(docker ps … | grep b38ot …)` is convenient but fragile — wrong container if topology or naming changes.
+**Problem:** `docker exec $(docker ps … | grep b38ot …)` is convenient but fragile - wrong container if topology or naming changes.
 
 **Replacement:** Explicit Coolify app container name (or label) in shop runtime profile and deploy docs.
 
@@ -120,4 +120,4 @@
 2. Point to **replacement** architecture.
 3. State **remove when** with a measurable exit (milestone, observation, or ADR).
 
-Do not use this file for roadmap ideas — only debt that exists in code today.
+Do not use this file for roadmap ideas - only debt that exists in code today.

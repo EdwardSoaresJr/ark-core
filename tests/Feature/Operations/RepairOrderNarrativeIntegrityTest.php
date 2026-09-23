@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Narrative integrity — not functional intake tests.
+ * Narrative integrity - not functional intake tests.
  *
  * Question every scenario must answer:
  *   If I reopen this RO in two years, can I still understand what happened?

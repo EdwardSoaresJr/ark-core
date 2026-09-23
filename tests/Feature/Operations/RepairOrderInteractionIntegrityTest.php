@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Interaction integrity — not whether code works, whether meaning survives
+ * Interaction integrity - not whether code works, whether meaning survives
  * the interaction without interruption.
  *
  * ARK invariant (deeper than "what information should never be lost?"):
@@ -17,9 +17,9 @@
  *   Invoice → completed work     History → entire narrative
  *
  * Three validation states (resolution is future):
- *   Recognition — did ARK understand the words?
- *   Translation — did ARK preserve the meaning?
- *   Resolution  — did the work confirm the meaning?
+ *   Recognition - did ARK understand the words?
+ *   Translation - did ARK preserve the meaning?
+ *   Resolution  - did the work confirm the meaning?
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
  * │  PRODUCTION GATE (before merge)                                     │
@@ -31,20 +31,20 @@
  * │  Did ARK preserve meaning?         → translationValidation trace    │
  * │                                                                     │
  * │  Two failures today (resolution later):                             │
- * │    Recognition — did ARK understand the words? (novel is OK)        │
- * │    Translation — did ARK preserve the meaning? (diverged is danger) │
+ * │    Recognition - did ARK understand the words? (novel is OK)        │
+ * │    Translation - did ARK preserve the meaning? (diverged is danger) │
  * │                                                                     │
  * │  Notebook (daily floor pass):                                       │
  * │    Recognition / Translation / Resolution (when earned)             │
- * │    Customer / Advisor / Technician — whose meaning was lost?        │
+ * │    Customer / Advisor / Technician - whose meaning was lost?        │
  * │                                                                     │
  * │  Floor pass scenarios (record, don't change yet):                   │
- * │    1. Type "front brakes" — trace in devtools:                      │
+ * │    1. Type "front brakes" - trace in devtools:                      │
  * │       copy(JSON.stringify(window.__arkScopeIntakeLastTrace,null,2)) │
- * │    2. Type "brake" — note: keep typing? arrow? enter? ignore? esc?  │
- * │    3. Novel phrase — ARK should not confidently guess wrong         │
+ * │    2. Type "brake" - note: keep typing? arrow? enter? ignore? esc?  │
+ * │    3. Novel phrase - ARK should not confidently guess wrong         │
  * │                                                                     │
- * │  Postpone: "Typical workflow" panel — hasn't earned its place yet.  │
+ * │  Postpone: "Typical workflow" panel - hasn't earned its place yet.  │
  * └─────────────────────────────────────────────────────────────────────┘
  */
 

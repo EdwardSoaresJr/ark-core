@@ -262,7 +262,7 @@ final class OperationalIntelligence
         return [
             'diagnostic_ros' => $total,
             'repair_follow_through' => $converted,
-            'rate_label' => $total > 0 ? (string) round(($converted / $total) * 100).'%' : '—',
+            'rate_label' => $total > 0 ? (string) round(($converted / $total) * 100).'%' : '-',
             'hint' => 'ROs opened in range with a diagnostic scope that also gained approved repair work',
         ];
     }
@@ -449,7 +449,7 @@ final class OperationalIntelligence
 
     private function formatTimestamp(?Carbon $timestamp): string
     {
-        return $timestamp?->timezone(OperationalReportDateScope::displayTimezone())->format('M j, g:i A') ?? '—';
+        return $timestamp?->timezone(OperationalReportDateScope::displayTimezone())->format('M j, g:i A') ?? '-';
     }
 
     private function formatAge(Carbon $timestamp): string

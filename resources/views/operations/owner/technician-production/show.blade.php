@@ -1,6 +1,6 @@
 @php
     $a = $assist;
-    $money = fn (?int $cents): string => $cents === null ? '—' : '$'.number_format($cents / 100, 2);
+    $money = fn (?int $cents): string => $cents === null ? '-' : '$'.number_format($cents / 100, 2);
 @endphp
 
 <x-operations.app :title="'Production · '.$technician->name">
@@ -51,7 +51,7 @@
             <div class="border border-slate-300 bg-white">
                 <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                     <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Production picture</p>
-                    <p class="text-xs text-slate-500">Why is recognized flag low — pending still sitting, or not much production?</p>
+                    <p class="text-xs text-slate-500">Why is recognized flag low - pending still sitting, or not much production?</p>
                 </div>
                 <div class="grid gap-px bg-slate-200 sm:grid-cols-3">
                     <div class="bg-white px-3 py-3">
@@ -71,12 +71,12 @@
                 <div class="grid gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-2">
                     <div class="bg-white px-3 py-2.5">
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Recognized / clock</p>
-                        <p class="text-lg font-black tabular-nums">{{ $a['recognized_efficiency_percent'] === null ? '—' : number_format((float) $a['recognized_efficiency_percent'], 1).'%' }}</p>
+                        <p class="text-lg font-black tabular-nums">{{ $a['recognized_efficiency_percent'] === null ? '-' : number_format((float) $a['recognized_efficiency_percent'], 1).'%' }}</p>
                     </div>
                     <div class="bg-white px-3 py-2.5">
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $a['production_in_view_label'] }}</p>
-                        <p class="text-lg font-black tabular-nums">{{ $a['production_in_view_percent'] === null ? '—' : number_format((float) $a['production_in_view_percent'], 1).'%' }}</p>
-                        <p class="text-[11px] text-slate-500">Includes pending — not earned production</p>
+                        <p class="text-lg font-black tabular-nums">{{ $a['production_in_view_percent'] === null ? '-' : number_format((float) $a['production_in_view_percent'], 1).'%' }}</p>
+                        <p class="text-[11px] text-slate-500">Includes pending - not earned production</p>
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@
             <div class="border border-slate-300 bg-white">
                 <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                     <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Base compensation assist</p>
-                    <p class="text-xs text-slate-500">Management estimate only — not Gross Pay, Paycheck, or Payroll Due.</p>
+                    <p class="text-xs text-slate-500">Management estimate only - not Gross Pay, Paycheck, or Payroll Due.</p>
                 </div>
                 <dl class="divide-y divide-slate-100 text-sm">
                     <div class="flex justify-between gap-3 px-3 py-2">
@@ -171,7 +171,7 @@
                         @foreach ($a['daily_time'] as $day)
                             <li class="flex flex-wrap justify-between gap-2 px-2 py-1.5 text-xs">
                                 <span>{{ $day['weekday'] }} {{ $day['date'] }}</span>
-                                <span class="tabular-nums">{{ $day['compensable_hours'] === null ? '—' : number_format((float) $day['compensable_hours'], 2).' hr' }}
+                                <span class="tabular-nums">{{ $day['compensable_hours'] === null ? '-' : number_format((float) $day['compensable_hours'], 2).' hr' }}
                                     @if ($day['floor_rate_dollars'] !== null)
                                         · floor ${{ number_format((float) $day['floor_rate_dollars'], 2) }}
                                     @endif
@@ -188,7 +188,7 @@
                             <div class="mt-1 border border-slate-100 px-2 py-1.5 text-xs">
                                 <p class="font-semibold text-slate-900">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</p>
                                 <p class="text-slate-600">{{ $line['concern'] }} · {{ $line['labor_description'] }}</p>
-                                <p class="tabular-nums text-slate-500">{{ $line['recognized_date'] }} · rate {{ $line['flag_rate_dollars'] === null ? '—' : '$'.number_format((float) $line['flag_rate_dollars'], 2) }} · {{ $money($line['earnings_cents']) }}</p>
+                                <p class="tabular-nums text-slate-500">{{ $line['recognized_date'] }} · rate {{ $line['flag_rate_dollars'] === null ? '-' : '$'.number_format((float) $line['flag_rate_dollars'], 2) }} · {{ $money($line['earnings_cents']) }}</p>
                             </div>
                         @empty
                             <p class="mt-1 text-xs text-slate-500">No recognized flag in this period.</p>
@@ -201,7 +201,7 @@
                             <div class="mt-1 border border-slate-100 px-2 py-1.5 text-xs">
                                 <p class="font-semibold text-slate-900">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</p>
                                 <p class="text-slate-600">{{ $line['concern'] }} · {{ $line['labor_description'] }}</p>
-                                <p class="text-slate-500">{{ $line['production_status_label'] ?? '—' }} · {{ $line['attribution_source'] }}</p>
+                                <p class="text-slate-500">{{ $line['production_status_label'] ?? '-' }} · {{ $line['attribution_source'] }}</p>
                             </div>
                         @empty
                             <p class="mt-1 text-xs text-slate-500">No pending flag attributed to this technician.</p>

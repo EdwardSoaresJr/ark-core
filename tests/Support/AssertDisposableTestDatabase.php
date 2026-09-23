@@ -58,7 +58,7 @@ final class AssertDisposableTestDatabase
         $database = is_string($database) ? trim($database) : '';
         if ($database === '') {
             throw new RuntimeException(
-                self::message('Database name is empty — refusing destructive tests.')
+                self::message('Database name is empty - refusing destructive tests.')
             );
         }
 
@@ -134,7 +134,7 @@ final class AssertDisposableTestDatabase
      *
      * `php artisan test` inherits shell exports (e.g. DB_DATABASE from a migration
      * rehearsal). PHPUnit force=true updates $_ENV, but Laravel's env() may still
-     * read $_SERVER from the parent process — which is how a rehearsal DB became
+     * read $_SERVER from the parent process - which is how a rehearsal DB became
      * eligible for LazilyRefreshDatabase.
      */
     public static function reconcilePhpUnitEnvironmentIntoProcess(): void

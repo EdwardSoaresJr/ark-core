@@ -21,7 +21,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
- * RO workspace intelligence — health, next action, recommendations, alerts, operational timeline.
+ * RO workspace intelligence - health, next action, recommendations, alerts, operational timeline.
  *
  * Answers: what should this technician or advisor do next?
  */
@@ -299,7 +299,7 @@ final class RepairOrderWorkspaceIntelligenceProjection
 
         // take(-30) keeps the last 30 entries but PRESERVES their original keys,
         // so without a trailing ->values() the array serializes as a JSON object
-        // ({"5":..,"6":..}) once an RO has >30 timeline entries — which made the
+        // ({"5":..,"6":..}) once an RO has >30 timeline entries - which made the
         // mobile workspace fail to parse (List cast on a Map) and the whole RO
         // refused to open. Reindex after taking and mapping.
         return collect($entries)
@@ -411,7 +411,7 @@ final class RepairOrderWorkspaceIntelligenceProjection
                     'rule' => 'EstimatePhaseAdvisorReview',
                     'factors' => [
                         ['label' => 'Repair order in draft or estimate', 'matched' => true],
-                        ['label' => 'Advisor workspace — not production inspection', 'matched' => true],
+                        ['label' => 'Advisor workspace - not production inspection', 'matched' => true],
                     ],
                 ],
             );
@@ -440,7 +440,7 @@ final class RepairOrderWorkspaceIntelligenceProjection
                 return $this->nextPayload(
                     label: 'Check '.$nextItem->label,
                     reason: $customerWaiting
-                        ? 'Customer waiting — keep inspection moving'
+                        ? 'Customer waiting - keep inspection moving'
                         : 'Next unchecked inspection item',
                     actionKey: 'inspect_item',
                     section: 'inspection',

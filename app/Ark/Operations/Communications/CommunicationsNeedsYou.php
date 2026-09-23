@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Communications;
 
 /**
- * Communications daytime home — Needs attention filter on the unified inbox.
+ * Communications daytime home - Needs attention filter on the unified inbox.
  *
  * One instinctive destination when Sarah texts: Communications → Needs attention.
  */

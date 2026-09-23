@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * R1.1 — Repair Action operational communication: status + replaceable Latest Update.
+ * R1.1 - Repair Action operational communication: status + replaceable Latest Update.
  */
 final class UpdateRepairActionCommunicationAction
 {

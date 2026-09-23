@@ -87,8 +87,8 @@ return new class extends Migration
                 'title' => 'Community Window A/C Giveaway',
                 'hero_title' => 'Helping Our Community Stay Cool',
                 'hero_subtitle' => "We're giving away a brand-new window A/C unit to one member of our community.\n\nNo purchase necessary.",
-                'description' => 'Enter for a chance to receive a brand-new window air conditioner from Demo Auto Repair. Pickup only — no delivery or installation.',
-                // Under public/assets/ — never public/community/ (nginx treats that as a static dir and 403s the Laravel route).
+                'description' => 'Enter for a chance to receive a brand-new window air conditioner from Demo Auto Repair. Pickup only - no delivery or installation.',
+                // Under public/assets/ - never public/community/ (nginx treats that as a static dir and 403s the Laravel route).
                 'image_path' => 'assets/community/giveaways/window-ac.webp',
                 'prize_label' => 'window A/C unit',
                 'seo_title' => 'Community Window A/C Giveaway | Demo Auto Repair',
@@ -96,7 +96,7 @@ return new class extends Migration
                 'og_image_path' => 'assets/community/giveaways/window-ac.webp',
                 'entry_button_label' => 'Enter Giveaway',
                 'success_headline' => "You're entered!",
-                'success_body' => "Thank you for participating.\n\nThe recipient will be selected at random after entries close.\n\nGood luck—and stay cool!",
+                'success_body' => "Thank you for participating.\n\nThe recipient will be selected at random after entries close.\n\nGood luck - and stay cool!",
                 'share_prompt' => "Want to help someone else beat the heat?\n\nShare this giveaway with your friends and family.",
                 'closes_label' => 'Friday, August 7 · 6:00 PM',
                 'draw_label' => 'Saturday',

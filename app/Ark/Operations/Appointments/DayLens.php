@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Appointments;
 
 /**
- * Perspective on one Appointment day board — filters visibility; never reinterprets truth.
+ * Perspective on one Appointment day board - filters visibility; never reinterprets truth.
  *
  * @see docs/runtime/scheduling-runtime-authority.md
  */

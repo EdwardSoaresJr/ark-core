@@ -1,8 +1,8 @@
-# Screen spec — Home (Continuity)
+# Screen spec - Home (Continuity)
 
 **ID:** `companion.screen.home`  
 **Role(s):** Advisor (default launch)  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
@@ -17,7 +17,7 @@
 | | Reference CRM | ARK Companion |
 |---|-----|---------------|
 | **Verdict** | Generic dashboard widgets | **Target: Yes** |
-| **Why** | CRM metrics | **Operational moments** — replies · inspections · approvals · calls · arrivals |
+| **Why** | CRM metrics | **Operational moments** - replies · inspections · approvals · calls · arrivals |
 
 ---
 
@@ -25,20 +25,20 @@
 
 ### Shell
 
-- **Title:** Shop name or "Good morning, Edward" — subtle, not hero
+- **Title:** Shop name or "Good morning, Edward" - subtle, not hero
 - **Status line:** `🟢 Phone online` · tap → phone settings
-- **No tab clutter on first paint** — tab bar visible bottom
+- **No tab clutter on first paint** - tab bar visible bottom
 
-### Body — continuity list (primary 100% of above-fold)
+### Body - continuity list (primary 100% of above-fold)
 
-Ordered **oldest actionable first** or **newest first** (Edward picks in review — default newest):
+Ordered **oldest actionable first** or **newest first** (Edward picks in review - default newest):
 
 Each **continuity row:**
 
-- Headline — `Emma replied`
-- Subline — vehicle · RO · snippet
-- Time — `8 min` · posture chip if waiting
-- Chevron — tappable entire row
+- Headline - `Emma replied`
+- Subline - vehicle · RO · snippet
+- Time - `8 min` · posture chip if waiting
+- Chevron - tappable entire row
 
 **Example rows (Edward's Monday):**
 
@@ -50,12 +50,12 @@ Each **continuity row:**
 
 ### Below fold (optional P1)
 
-- Quick search field — "Find customer…"
+- Quick search field - "Find customer…"
 - Not a widget grid
 
 ### Empty
 
-- "You're caught up." — calm · pocket
+- "You're caught up." - calm · pocket
 
 ---
 
@@ -63,8 +63,8 @@ Each **continuity row:**
 
 | Gesture | Behavior |
 |---------|----------|
-| Tap row | Deep link → thread · inspection · RO · call log — **never Home again** |
-| Swipe left | Dismiss / mark seen (continuity cursor — not delete truth) |
+| Tap row | Deep link → thread · inspection · RO · call log - **never Home again** |
+| Swipe left | Dismiss / mark seen (continuity cursor - not delete truth) |
 | Pull to refresh | Reload continuity projection |
 | Long press | Pin to top (optional) |
 
@@ -94,7 +94,7 @@ Each **continuity row:**
 
 ## Data & API
 
-**Needs:** continuity projection — same family as `/api/mobile/continuity` · extend for shop moments (inspection uploaded · estimate approved · arrival)
+**Needs:** continuity projection - same family as `/api/mobile/continuity` · extend for shop moments (inspection uploaded · estimate approved · arrival)
 
 **May need:** expand continuity payload with deep link routes per moment type
 

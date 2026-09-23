@@ -227,7 +227,7 @@ final class InspectionTemplatePointMeta
     }
 
     /**
-     * Technician walk section key from Builder metadata — null when absent (legacy).
+     * Technician walk section key from Builder metadata - null when absent (legacy).
      *
      * Prefer explicit walk_section; otherwise derive from Corner v1 corner/group.
      */
@@ -255,7 +255,7 @@ final class InspectionTemplatePointMeta
     }
 
     /**
-     * Default Demo Auto Repair Corner Builder meta — shop-configurable, not platform law.
+     * Default Demo Auto Repair Corner Builder meta - shop-configurable, not platform law.
      *
      * @return BuilderMeta
      */
@@ -316,7 +316,7 @@ final class InspectionTemplatePointMeta
     }
 
     /**
-     * Rear-axle gate — Corner walk placement without a vehicle corner.
+     * Rear-axle gate - Corner walk placement without a vehicle corner.
      *
      * @return BuilderMeta
      */

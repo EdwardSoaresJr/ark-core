@@ -1,6 +1,6 @@
-# ARK Voice handheld — FUTURE R&D (not the technician product)
+# ARK Voice handheld - FUTURE R&D (not the technician product)
 
-**Product lock (2026-08-23):** The technician product is **[ARK Tech](../tech/ark-tech-direction.md)** — rugged/tablet **Android DVI** (photo + voice + confirm). ESP / ReSpeaker / CoreS3 is a possible **later accessory** (stationary PTT, advisor endpoint, cheap extra ears). **Do not PCB. Do not treat this walkie as Landon’s daily DVI device.**
+**Product lock (2026-08-23):** The technician product is **[ARK Tech](../tech/ark-tech-direction.md)** - rugged/tablet **Android DVI** (photo + voice + confirm). ESP / ReSpeaker / CoreS3 is a possible **later accessory** (stationary PTT, advisor endpoint, cheap extra ears). **Do not PCB. Do not treat this walkie as Landon’s daily DVI device.**
 
 **Stop conditions:** no custom PCB, no `VoiceDevice` / `vce_` tokens, no Dragon on this path, no TTS, no dock firmware, no OTA.
 
@@ -34,10 +34,10 @@ Handheld posture: **grab → raise → PTT → speak → release → lower**. Do
 | 1 | Large **momentary PTT** (12–16 mm) | Glove thumb | 3 | Digi-Key |
 | 1 | WS2812 or 3 mm RGB | Listening indicator while PTT | 1 | Adafruit |
 | 1 | Perfboard + 2.54 mm **6-pin female** for mic | **Swap mics without resoldering the S3** | 4 | Amazon / Digi-Key |
-| 1 | USB-C cable | Flash + bench power | 5 | — |
+| 1 | USB-C cable | Flash + bench power | 5 | - |
 | **Mic A** | **Adafruit 3421 SPH0645LM4H** | Known ESP I2S; pipeline proof | 7 | Adafruit |
-| **Mic B** | **Adafruit 6049 ICS-43434** (or remaining stock) | Different capsule / SNR | 7 | Adafruit — if EOL, skip to C+D |
-| **Mic C** | **INMP441 / INMP441** breakout (GY-INMP441) | Cheap common module; do not freeze production on this silicon | 4 | Amazon / Ali — label as *candidate*, not BOM lock |
+| **Mic B** | **Adafruit 6049 ICS-43434** (or remaining stock) | Different capsule / SNR | 7 | Adafruit - if EOL, skip to C+D |
+| **Mic C** | **INMP441 / INMP441** breakout (GY-INMP441) | Cheap common module; do not freeze production on this silicon | 4 | Amazon / Ali - label as *candidate*, not BOM lock |
 | Optional D | Analog **MAX9814** electret | Isolates “I2S MEMS” vs “acoustics in this hole” | 8 | Adafruit 1713 |
 | Later (not gate 1) | Adafruit 3006 MAX98357A + 28 mm 4 Ω speaker | TTS | 10 | Adafruit |
 | Later | LiPo 2000 mAh + **power-path** charger (PowerBoost 1000C or BQ24075) | Shift life | 25 | Adafruit / SparkFun |
@@ -98,7 +98,7 @@ Environments: quiet counter · running vehicle · radio · compressor · **impac
 
 Gold phrase **5 takes × environment × mic**. Pass = exact laterality + values + unit. Swapped 2/3 is **0**, not 90%.
 
-Also score: fronts/rears, PSI, volts, `P0302`, component names. Conversational prompts (“what’s the Subaru waiting on?”) are a **different column** — they must not unlock inspection writes later.
+Also score: fronts/rears, PSI, volts, `P0302`, component names. Conversational prompts (“what’s the Subaru waiting on?”) are a **different column** - they must not unlock inspection writes later.
 
 ---
 

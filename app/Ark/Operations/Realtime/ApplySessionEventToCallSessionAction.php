@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * Derives CallSession current truth from a normalized SessionEvent.
- * Providers never call this — only RecordSessionEventAction does.
+ * Providers never call this - only RecordSessionEventAction does.
  */
 final class ApplySessionEventToCallSessionAction
 {

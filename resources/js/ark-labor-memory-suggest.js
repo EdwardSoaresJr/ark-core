@@ -1,5 +1,5 @@
 /**
- * Shop Memory — labor description reuse.
+ * Shop Memory - labor description reuse.
  * Type → suggest → ↓ Enter. No AI. No loading chrome.
  */
 export function arkLaborMemorySuggest(suggestUrlOrConfig, initialDescription = '') {

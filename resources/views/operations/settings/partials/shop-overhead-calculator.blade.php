@@ -33,24 +33,24 @@
             @click="overheadGuideOpen = ! overheadGuideOpen"
             class="flex w-full items-center justify-between gap-2 text-left"
         >
-            <span class="font-semibold text-slate-800">Setup walkthrough — start here</span>
+            <span class="font-semibold text-slate-800">Setup walkthrough - start here</span>
             <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400" x-text="overheadGuideOpen ? 'Hide' : 'Show'"></span>
         </button>
         <div x-show="overheadGuideOpen" x-cloak class="mt-2 space-y-3 border-t border-slate-200 pt-2">
             <div class="rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950">
-                <p class="font-semibold">Payroll is split on purpose — there is no single “payroll” box for everything.</p>
+                <p class="font-semibold">Payroll is split on purpose - there is no single “payroll” box for everything.</p>
                 <ul class="mt-1 list-disc space-y-1 pl-4">
-                    <li><strong class="font-semibold">Technician wages</strong> — Settings → Staff → each tech → Loaded cost calculator (base pay + burden % + shop overhead / hr).</li>
-                    <li><strong class="font-semibold">Advisor, front desk, owner (non-billing)</strong> — Fixed Costs tab → <strong class="font-semibold">Office and advisor payroll</strong> (monthly total).</li>
-                    <li><strong class="font-semibold">Break-even on Margin Health</strong> — Owner Targets → Monthly fixed costs (often ≈ this worksheet’s monthly total + all tech payroll from your P&amp;L).</li>
+                    <li><strong class="font-semibold">Technician wages</strong> - Settings → Staff → each tech → Loaded cost calculator (base pay + burden % + shop overhead / hr).</li>
+                    <li><strong class="font-semibold">Advisor, front desk, owner (non-billing)</strong> - Fixed Costs tab → <strong class="font-semibold">Office and advisor payroll</strong> (monthly total).</li>
+                    <li><strong class="font-semibold">Break-even on Margin Health</strong> - Owner Targets → Monthly fixed costs (often ≈ this worksheet’s monthly total + all tech payroll from your P&amp;L).</li>
                 </ul>
             </div>
             <ol class="list-decimal space-y-1.5 pl-4">
-                <li><strong class="font-semibold text-slate-800">Fixed Costs</strong> — rent, utilities, insurance, software, equipment, office/advisor payroll, other. <em>Exclude technician straight wages.</em></li>
-                <li><strong class="font-semibold text-slate-800">Payment Processing</strong> — estimated card volume, processor %, optional merchant financing.</li>
-                <li><strong class="font-semibold text-slate-800">Billing Capacity</strong> — active technicians, workdays, hours, utilization → monthly billable hours.</li>
+                <li><strong class="font-semibold text-slate-800">Fixed Costs</strong> - rent, utilities, insurance, software, equipment, office/advisor payroll, other. <em>Exclude technician straight wages.</em></li>
+                <li><strong class="font-semibold text-slate-800">Payment Processing</strong> - estimated card volume, processor %, optional merchant financing.</li>
+                <li><strong class="font-semibold text-slate-800">Billing Capacity</strong> - active technicians, workdays, hours, utilization → monthly billable hours.</li>
                 <li>Review <strong class="font-semibold text-slate-800">Shop overhead / billed hr</strong> at the top → <strong class="font-semibold text-slate-800">Save shop overhead</strong>.</li>
-                <li><strong class="font-semibold text-slate-800">Settings → Staff</strong> — for each technician: base pay, burden %, click <strong class="font-semibold">Use calculated loaded cost</strong>, save.</li>
+                <li><strong class="font-semibold text-slate-800">Settings → Staff</strong> - for each technician: base pay, burden %, click <strong class="font-semibold">Use calculated loaded cost</strong>, save.</li>
             </ol>
             <p class="text-slate-500">Example: $8,700/mo overhead ÷ 299 billable hr ≈ <strong class="font-semibold text-slate-700">$29.08/hr</strong> shop allocation. A tech at $30/hr base + 28% burden + $29.08 overhead ≈ <strong class="font-semibold text-slate-700">$67/hr</strong> loaded cost on billed hours.</p>
         </div>
@@ -59,7 +59,7 @@
     <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-3 py-3">
         <div>
             <p class="font-bold uppercase tracking-[0.08em] text-slate-500">Monthly overhead pool</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Fixed shop costs for the whole business — not per technician. Click <strong class="font-semibold text-slate-700">Save shop overhead</strong> to persist; staff loaded cost calculators pick up the saved rate.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Fixed shop costs for the whole business - not per technician. Click <strong class="font-semibold text-slate-700">Save shop overhead</strong> to persist; staff loaded cost calculators pick up the saved rate.</p>
         </div>
         <p class="shrink-0 text-right">
             <span class="block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Shop overhead / billed hr</span>
@@ -76,7 +76,7 @@
     <div class="px-3 py-3">
         <div x-show="overheadTab === 'fixed-costs'">
             <p class="font-semibold text-slate-700">Fixed shop costs</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Enter each cost with how often you pay it — ARK converts to a monthly total for break-even. Payroll can be weekly; rent is usually monthly. Technician straight wages still belong under <button type="button" class="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950" @click="$parent.setActive('staff')">Settings → Staff</button> when you split loaded cost.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Enter each cost with how often you pay it - ARK converts to a monthly total for break-even. Payroll can be weekly; rent is usually monthly. Technician straight wages still belong under <button type="button" class="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950" @click="$parent.setActive('staff')">Settings → Staff</button> when you split loaded cost.</p>
 
             <div class="ops-shop-overhead-fixed-costs mt-2 overflow-hidden rounded-sm border border-slate-200">
                 <div class="ops-shop-overhead-fixed-costs__head" aria-hidden="true">
@@ -161,7 +161,7 @@
             <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <label class="block sm:col-span-2">
                     <span class="font-semibold text-slate-600">Estimated monthly card volume</span>
-                    <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">Typical month of customer card payments — RO closeouts, deposits, and invoices paid by card.</span>
+                    <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">Typical month of customer card payments - RO closeouts, deposits, and invoices paid by card.</span>
                     <div class="relative mt-1.5">
                         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-slate-400">$</span>
                         <input x-model="monthlyCardVolume" type="number" min="0" step="0.01" placeholder="85000.00" class="w-full rounded-sm border border-slate-300 py-1.5 pl-5 pr-2 text-sm text-slate-950">
@@ -214,7 +214,7 @@
 
         <div x-show="overheadTab === 'capacity'" x-cloak>
             <p class="font-semibold text-slate-700">Shop billing capacity</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Expected billed hours the whole shop produces in a typical month. Technician count is prefilled from active staff — adjust if your real capacity differs.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Expected billed hours the whole shop produces in a typical month. Technician count is prefilled from active staff - adjust if your real capacity differs.</p>
             <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <label class="block">
                     <span class="font-semibold text-slate-600">Active technicians</span>
@@ -262,10 +262,10 @@
     <div class="border-t border-slate-200 px-3 py-3">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0 space-y-1">
-                <p x-show="dirty && ! saving && ! saved" x-cloak class="text-[11px] font-semibold text-amber-700">Unsaved changes — save before leaving this page.</p>
+                <p x-show="dirty && ! saving && ! saved" x-cloak class="text-[11px] font-semibold text-amber-700">Unsaved changes - save before leaving this page.</p>
                 <p x-show="saved" x-cloak class="text-[11px] font-semibold text-emerald-700">Shop overhead saved. Staff loaded cost calculators will pick this up.</p>
                 <p x-show="saveError" x-cloak class="text-[11px] font-semibold text-rose-700" x-text="saveError"></p>
-                <p class="text-[11px] leading-4 text-slate-500">Next: under <button type="button" class="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950" @click="$parent.setActive('staff')">Settings → Staff</button>, edit each <strong class="font-semibold text-slate-700">technician</strong> — enter base pay and burden, confirm overhead / hr prefilled, click <strong class="font-semibold text-slate-700">Use calculated loaded cost</strong>, then <strong class="font-semibold text-slate-700">Save changes</strong>. Advisors do not use loaded labor cost — their payroll belongs in Office and advisor payroll above.</p>
+                <p class="text-[11px] leading-4 text-slate-500">Next: under <button type="button" class="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950" @click="$parent.setActive('staff')">Settings → Staff</button>, edit each <strong class="font-semibold text-slate-700">technician</strong> - enter base pay and burden, confirm overhead / hr prefilled, click <strong class="font-semibold text-slate-700">Use calculated loaded cost</strong>, then <strong class="font-semibold text-slate-700">Save changes</strong>. Advisors do not use loaded labor cost - their payroll belongs in Office and advisor payroll above.</p>
             </div>
             <button
                 type="submit"

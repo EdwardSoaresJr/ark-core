@@ -8,7 +8,7 @@ class VinDisplay
 
     public const VDS_LENGTH = 6;
 
-    /** VIS — vehicle identifier (model year, plant, serial). */
+    /** VIS - vehicle identifier (model year, plant, serial). */
     public const SUFFIX_LENGTH = 8;
 
     public const WMI_LABEL = 'WMI';

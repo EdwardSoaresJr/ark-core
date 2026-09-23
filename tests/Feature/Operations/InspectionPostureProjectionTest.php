@@ -113,7 +113,7 @@ test('inspection posture needs review when walk is complete with attention findi
     $item = $inspection->fresh()->items()->where('label', 'Wipers / washer')->firstOrFail();
     $item->forceFill([
         'observed_state' => InspectionObservedState::Monitor->value,
-        'notes' => 'Streaking — replace soon.',
+        'notes' => 'Streaking - replace soon.',
     ])->save();
 
     $posture = app(InspectionPostureProjection::class)->forRepairOrder($repairOrder->fresh());

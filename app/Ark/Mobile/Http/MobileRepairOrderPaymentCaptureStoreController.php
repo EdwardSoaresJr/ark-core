@@ -68,7 +68,7 @@ final class MobileRepairOrderPaymentCaptureStoreController
             'message' => match ($attempt->status->value) {
                 'succeeded' => 'Payment captured and recorded.',
                 'pending', 'accepted' => 'Payment is processing.',
-                'reconciliation_required' => 'Payment needs reconciliation — do not charge the same amount again until resolved.',
+                'reconciliation_required' => 'Payment needs reconciliation - do not charge the same amount again until resolved.',
                 'failed' => 'Payment capture failed. No ledger payment was recorded.',
                 'cancelled' => 'Payment capture cancelled. No ledger payment was recorded.',
                 default => 'Payment capture updated.',

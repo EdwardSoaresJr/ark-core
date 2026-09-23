@@ -14,7 +14,7 @@ class ConversationPostureObservationCommand extends Command
         {--open-only : Only open conversations}
         {--markdown : Output as markdown table}';
 
-    protected $description = 'Notebook query — conversation owner, waiting_on, age in state, reopen count.';
+    protected $description = 'Notebook query - conversation owner, waiting_on, age in state, reopen count.';
 
     public function handle(): int
     {
@@ -39,10 +39,10 @@ class ConversationPostureObservationCommand extends Command
                 'id' => (string) $conversation->id,
                 'contact' => $conversation->contact_address,
                 'status' => $conversation->status->value,
-                'owner' => $conversation->owner?->name ?? '—',
-                'waiting_on' => $conversation->waiting_on?->value ?? '—',
-                'age_in_state' => $postureAt?->diffForHumans() ?? '—',
-                'age_days' => $postureAt !== null ? (string) (int) $postureAt->diffInDays(now()) : '—',
+                'owner' => $conversation->owner?->name ?? '-',
+                'waiting_on' => $conversation->waiting_on?->value ?? '-',
+                'age_in_state' => $postureAt?->diffForHumans() ?? '-',
+                'age_days' => $postureAt !== null ? (string) (int) $postureAt->diffInDays(now()) : '-',
                 'reopens' => (string) $conversation->reopen_count,
             ];
         });

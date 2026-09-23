@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Realtime;
 
 /**
- * Ordered canonical events — reusable golden-stream artifact for provider parity tests.
+ * Ordered canonical events - reusable golden-stream artifact for provider parity tests.
  */
 final readonly class CanonicalSessionStream
 {

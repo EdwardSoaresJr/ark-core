@@ -357,7 +357,7 @@ it('falls back to ocr when a pdf has no extractable text', function () {
     $imagick->destroy();
 
     $text = app(DealerQuoteTextExtractor::class)->fromPdfPath($pdf);
-    $normalized = str_replace(['—', '–', '−'], '-', $text);
+    $normalized = str_replace(["\u{2014}", '–', '−'], '-', $text);
 
     expect($normalized)->toContain('Q19696')
         ->and($normalized)->toMatch('/06J-+103-603-BD/i');

@@ -7,7 +7,7 @@ use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use Carbon\CarbonImmutable;
 
 /**
- * Next shop-open morning at 08:00 local — skips closed weekdays (e.g. Sat night → Monday).
+ * Next shop-open morning at 08:00 local - skips closed weekdays (e.g. Sat night → Monday).
  */
 final class TomorrowMorningSchedule
 {

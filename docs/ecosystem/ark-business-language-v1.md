@@ -1,10 +1,10 @@
 # ARK Business Language v1
 
-**Status:** Vocabulary registry — the dictionary. **Not** a new architecture layer.  
+**Status:** Vocabulary registry - the dictionary. **Not** a new architecture layer.  
 **Purpose:** When someone proposes a name, ask: **authority · event · observation · or projection?**  
 **Companions:** [`event-contracts-v1.md`](../mobile/event-contracts-v1.md) · [`companion-authority-model-v1.md`](../mobile/companion-authority-model-v1.md) · [`ark-authority-interaction-map-v1.md`](ark-authority-interaction-map-v1.md).
 
-**Do not add vocabulary here without updating event contracts or observation vocabulary.** This file **indexes** — it does not invent.
+**Do not add vocabulary here without updating event contracts or observation vocabulary.** This file **indexes** - it does not invent.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ---
 
-## Authorities (nouns — who may say this is true)
+## Authorities (nouns - who may say this is true)
 
 | Term | Authoritative question |
 |------|------------------------|
@@ -48,7 +48,7 @@
 
 ---
 
-## Event verbs (facts — past tense business language)
+## Event verbs (facts - past tense business language)
 
 Each authority owns its verbs. **Never use authority names as event names.**
 
@@ -90,7 +90,7 @@ Presence Changed · On Call · Available
 
 ---
 
-## Observations (interpretive — what it means)
+## Observations (interpretive - what it means)
 
 Observations **consume streams** of events. They are not events.
 
@@ -103,11 +103,11 @@ Observations **consume streams** of events. They are not events.
 | **Vehicle Idle** | RO waiting · no production progress |
 | **Estimate Viewed Multiple Times** | Multiple Estimate Viewed events (existing vocabulary) |
 
-**Wrong:** Observation named "Customer Paid" — payment is **Payment Received** (event).
+**Wrong:** Observation named "Customer Paid" - payment is **Payment Received** (event).
 
 ---
 
-## Projections (operator questions — compose, never author)
+## Projections (operator questions - compose, never author)
 
 | Term | Question answered | Consumes |
 |------|-------------------|----------|
@@ -120,7 +120,7 @@ Observations **consume streams** of events. They are not events.
 | **Customers Browse** | Who is this customer? | Customer authority + latest stream head |
 | **Command Palette** | What work am I starting? | Intent resolver |
 | **Workboard** | What ROs need shop attention? | RO authority + observations |
-| **Dashboard** | (desktop) Organize streams for review | Multiple streams — **not** new events |
+| **Dashboard** | (desktop) Organize streams for review | Multiple streams - **not** new events |
 
 **Wrong projection:** UI generates "Customer Paid" row without **Payment Received** event.
 
@@ -130,7 +130,7 @@ Observations **consume streams** of events. They are not events.
 
 ## Infrastructure (not vocabulary entries)
 
-These organize truth — they do **not** originate truth.
+These organize truth - they do **not** originate truth.
 
 | Term | Role |
 |------|------|
@@ -165,13 +165,13 @@ Surfaces
 Before adding any row:
 
 1. Classify: authority · event · observation · projection · infrastructure  
-2. If event — add to [`event-contracts-v1.md`](../mobile/event-contracts-v1.md) with eight questions  
-3. If observation — must cite source events; never invent facts  
-4. If projection — must cite streams/authorities; **projections never invent events**  
+2. If event - add to [`event-contracts-v1.md`](../mobile/event-contracts-v1.md) with eight questions  
+3. If observation - must cite source events; never invent facts  
+4. If projection - must cite streams/authorities; **projections never invent events**  
 5. Update scope membership mechanically in [`companion-timeline-scopes-v1.md`](../mobile/companion-timeline-scopes-v1.md)  
 6. Update this registry index  
 
-**Stop adding architecture documents** unless implementation proves the model cannot express reality. **E1 Contract Realization** is next — spreadsheet boring, not design debate.
+**Stop adding architecture documents** unless implementation proves the model cannot express reality. **E1 Contract Realization** is next - spreadsheet boring, not design debate.
 
 ---
 
@@ -179,8 +179,8 @@ Before adding any row:
 
 | Proposal | Verdict | Why |
 |----------|---------|-----|
-| **VehicleNotification** | Reject unless classified | Likely projection label or observation — not a new authority |
-| **Customer Paid** (projection-only) | Reject | Invented event — use **Payment Received** |
-| **`CustomerPaymentCompleted`** (code) | Reject | Implementation invented vocabulary — use **Payment Received** |
-| **OperationalEventType** (147 values) | Reject | Mega-enum — kills per-authority vocabulary |
-| **Event Stream** (authority) | Reject | Infrastructure — cannot originate truth |
+| **VehicleNotification** | Reject unless classified | Likely projection label or observation - not a new authority |
+| **Customer Paid** (projection-only) | Reject | Invented event - use **Payment Received** |
+| **`CustomerPaymentCompleted`** (code) | Reject | Implementation invented vocabulary - use **Payment Received** |
+| **OperationalEventType** (147 values) | Reject | Mega-enum - kills per-authority vocabulary |
+| **Event Stream** (authority) | Reject | Infrastructure - cannot originate truth |

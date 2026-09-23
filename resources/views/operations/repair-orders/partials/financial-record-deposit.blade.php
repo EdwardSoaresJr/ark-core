@@ -12,7 +12,7 @@
             amountInput?.focus();
             return;
         }
-        if (! confirm(`Confirm ${amount} ${methodLabel} collected from the customer?\n\nThis writes to the payment ledger — only continue if money actually changed hands.`)) {
+        if (! confirm(`Confirm ${amount} ${methodLabel} collected from the customer?\n\nThis writes to the payment ledger - only continue if money actually changed hands.`)) {
             return;
         }
         $el.querySelector('[name=deposit_confirmed]').value = '1';
@@ -26,7 +26,7 @@
     <input type="hidden" name="deposit_confirmed" value="0">
 
     <div>
-        <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-amber-900">Customer paid — record deposit</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-amber-900">Customer paid - record deposit</p>
         <p class="mt-1 text-[11px] leading-4 text-amber-950/80">Ledger entry only. Use when cash, check, or manual card actually changed hands.</p>
         @if (filled($financial['remainingSuggestedDeposit'] ?? null))
             <p class="mt-1 text-[11px] font-semibold text-amber-950">Up to {{ $financial['remainingSuggestedDeposit'] }} remaining on suggested deposit.</p>

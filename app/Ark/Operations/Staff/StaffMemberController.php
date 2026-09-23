@@ -363,7 +363,7 @@ class StaffMemberController
     }
 
     /**
-     * Compensation agreement — preserved when pay basis is Hourly (fields omitted from form).
+     * Compensation agreement - preserved when pay basis is Hourly (fields omitted from form).
      *
      * @param  array<string, mixed>  $data
      * @param  list<string>  $roles
@@ -374,7 +374,7 @@ class StaffMemberController
             return $existing?->flag_rate_cents;
         }
 
-        // Hourly UI omits flag_rate — never destroy a Flag agreement by toggling basis.
+        // Hourly UI omits flag_rate - never destroy a Flag agreement by toggling basis.
         if ($payBasis !== TechnicianLaborPayBasis::Flag->value) {
             return $existing?->flag_rate_cents;
         }
@@ -391,7 +391,7 @@ class StaffMemberController
     }
 
     /**
-     * Compensation agreement — seed suggestion on create only; never silent overwrite on config change.
+     * Compensation agreement - seed suggestion on create only; never silent overwrite on config change.
      *
      * @param  array<string, mixed>  $data
      * @param  list<string>  $roles

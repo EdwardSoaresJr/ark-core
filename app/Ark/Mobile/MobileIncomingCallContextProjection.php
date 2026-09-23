@@ -11,7 +11,7 @@ use App\Ark\Operations\Telephony\InboundCallerDisplayPhone;
 use App\Ark\Operations\Telephony\Projections\CallSessionCallerContextProjection;
 
 /**
- * Incoming call screen payload — customer · vehicle · RO · estimate · last message.
+ * Incoming call screen payload - customer · vehicle · RO · estimate · last message.
  */
 final class MobileIncomingCallContextProjection
 {

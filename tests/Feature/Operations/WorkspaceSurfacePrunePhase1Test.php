@@ -106,7 +106,7 @@ test('communications section nav lists inbox calls and history in that order', f
         ->assertSee('History', false)
         ->assertSee('Calls &amp; VM', false);
 
-    // Internal channels have no workspace tab — notes live in each thread.
+    // Internal channels have no workspace tab - notes live in each thread.
     $nav = str($response->getContent())->between('Communications sections', '</nav>');
     expect($nav->contains('Internal'))->toBeFalse()
         ->and($nav->value())->toMatch('/Inbox.*Calls &amp; VM.*History/s');

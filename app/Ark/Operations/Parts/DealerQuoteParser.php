@@ -55,7 +55,7 @@ final class DealerQuoteParser
     private function normalize(string $rawText): string
     {
         $text = str_replace(["\r\n", "\r"], "\n", $rawText);
-        $text = str_replace(['—', '–', '−', '‐', '‑'], '-', $text);
+        $text = str_replace(["\u{2014}", '–', '−', '‐', '‑'], '-', $text);
         $text = preg_replace('/-{2,}/', '-', $text) ?? $text;
         $text = preg_replace("/[ \t]+/u", ' ', $text) ?? $text;
         $text = preg_replace("/\n{3,}/u", "\n\n", $text) ?? $text;
@@ -281,7 +281,7 @@ final class DealerQuoteParser
             if ($fromMoney >= 0.95 && abs($fromMoney - round($fromMoney)) < 0.08) {
                 $rounded = (float) max(1, (int) round($fromMoney));
 
-                // Single money amount (net == ext) means unit cost only — trust leading qty.
+                // Single money amount (net == ext) means unit cost only - trust leading qty.
                 if ($leading !== null && abs($extended - $net) < 0.02) {
                     return $leading;
                 }

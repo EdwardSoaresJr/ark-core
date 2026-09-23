@@ -44,7 +44,7 @@
                         </button>
                     </form>
                 @empty
-                    <p class="text-xs text-slate-600">Name a station first — then choose where this phone belongs.</p>
+                    <p class="text-xs text-slate-600">Name a station first - then choose where this phone belongs.</p>
                 @endforelse
 
                 <form
@@ -77,5 +77,5 @@
     <p class="rounded-sm border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600">
         Waiting for a phone to appear… ARK will list it here as soon as it checks in.
     </p>
-    <p class="text-[11px] text-slate-500">Plug in the phone — ARK keeps checking in until someone chooses where it belongs.</p>
+    <p class="text-[11px] text-slate-500">Plug in the phone - ARK keeps checking in until someone chooses where it belongs.</p>
 @endif

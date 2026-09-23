@@ -49,7 +49,7 @@ class CustomerDecisionScheduleStoreController
 
         return redirect()
             ->route('operations.index')
-            ->with('status', 'Decision scheduled — returns to Work the day before.');
+            ->with('status', 'Decision scheduled - returns to Work the day before.');
     }
 
     private function clearActiveSchedules(?int $repairOrderId = null, ?int $customerId = null): void

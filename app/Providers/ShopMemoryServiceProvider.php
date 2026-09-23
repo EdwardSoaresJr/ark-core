@@ -23,7 +23,7 @@ use App\Ark\ShopMemory\Suggestion\SuggestionTextNormalizer;
 use Illuminate\Support\ServiceProvider;
 
 /**
- * Shop Memory — Suggestion Engine + gated provider registration.
+ * Shop Memory - Suggestion Engine + gated provider registration.
  */
 final class ShopMemoryServiceProvider extends ServiceProvider
 {
@@ -68,7 +68,7 @@ final class ShopMemoryServiceProvider extends ServiceProvider
     }
 
     /**
-     * Suggestion providers only — AI Rewrite is a sibling action, not engine-registered.
+     * Suggestion providers only - AI Rewrite is a sibling action, not engine-registered.
      *
      * @return array<string, class-string<SuggestionProvider>>
      */

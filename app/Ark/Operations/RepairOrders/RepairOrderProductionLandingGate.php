@@ -6,7 +6,7 @@ use App\Ark\Operations\Workboard\WorkboardLens;
 use App\Models\User;
 
 /**
- * Pure technician production RO landing — not Estimate Review.
+ * Pure technician production RO landing - not Estimate Review.
  * Admin/advisor (including multi-role) keep advisor Estimate Review.
  */
 final class RepairOrderProductionLandingGate

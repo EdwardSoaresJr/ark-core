@@ -84,7 +84,7 @@ final class LaborPoliciesMatrixProjection
                 $cells[$class->key][$posture->value] = $policy === null
                     ? [
                         'hourly_rate_cents' => null,
-                        'rate_display' => '—',
+                        'rate_display' => '-',
                         'labor_policy_id' => null,
                         'rate_type' => null,
                         'effective_from' => null,

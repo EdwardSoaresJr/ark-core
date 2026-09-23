@@ -28,7 +28,7 @@
     <div class="border-b border-slate-100 bg-gradient-to-r from-[#0099cc]/8 to-white px-4 py-4 sm:px-5">
         <h2 class="text-base font-semibold text-slate-950">Choose what to approve</h2>
         <p class="mt-1 text-sm leading-6 text-slate-600">
-            Approve what you want done now. Defer means not now — we keep it for a later visit. Decline means you do not want that repair.
+            Approve what you want done now. Defer means not now - we keep it for a later visit. Decline means you do not want that repair.
         </p>
     </div>
 
@@ -114,10 +114,10 @@
                             <span x-text="approvedCount() === 1 ? ' service approved' : ' services approved'"></span>
                         </p>
                         <p class="mt-0.5 text-xs text-slate-600" x-show="approvedCount() === 0 && declinedCount() > 0 && deferredCount() === 0" x-cloak>
-                            All services declined — your response is recorded.
+                            All services declined - your response is recorded.
                         </p>
                         <p class="mt-0.5 text-xs text-slate-600" x-show="approvedCount() === 0 && deferredCount() > 0 && declinedCount() === 0" x-cloak>
-                            All services deferred — you can still submit to record your choices.
+                            All services deferred - you can still submit to record your choices.
                         </p>
                         <p class="mt-0.5 text-xs text-slate-600" x-show="approvedCount() === 0 && deferredCount() === 0 && declinedCount() === 0" x-cloak>
                             Choose Approve, Defer, or Decline for each repair.

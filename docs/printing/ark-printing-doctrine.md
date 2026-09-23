@@ -16,13 +16,13 @@ Advisors and techs use labels dozens of times per day. If V2 cannot print key ta
 
 This is **not** greenfield. ARK-SMS already prints perfectly on QZ Tray + Brother QL-800.
 
-ARK V2's job: **achieve parity** — not invent a better printing system.
+ARK V2's job: **achieve parity** - not invent a better printing system.
 
 Same discipline as Financial Authority and Labor Authority: audit proven behavior, port authority boundaries, verify parity, then refine.
 
 **No QZ code in V2 until** `docs/printing/ark-sms-printing-audit.md` status is `AUDITED` (completed 2026-06-06 from production server).
 
-Printing is **not** a convenience feature, UI feature, or document feature — it is **operational infrastructure** in the same class as invoices, payments, and estimate PDFs.
+Printing is **not** a convenience feature, UI feature, or document feature - it is **operational infrastructure** in the same class as invoices, payments, and estimate PDFs.
 
 ---
 
@@ -71,7 +71,7 @@ Print payloads are built **server-side** from authoritative operational data.
 
 - **Production target today:** Brother QL-800 via QZ Tray.
 - **Architecture:** support future printers through **settings** (printer name, label size, media).
-- **Business logic:** no Brother-specific assumptions in domain code — only in template/render layer if v1 does the same.
+- **Business logic:** no Brother-specific assumptions in domain code - only in template/render layer if v1 does the same.
 
 Do not hardcode printer names in code paths.
 

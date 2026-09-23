@@ -1,10 +1,10 @@
-# Screen spec — README
+# Screen spec - README
 
 **This folder is the product.** Everything else supports it.
 
 ---
 
-## Status — P0 advisor pocket
+## Status - P0 advisor pocket
 
 | Spec | Screen | Status |
 |------|--------|--------|
@@ -24,7 +24,7 @@
 | [`settings-profile.md`](settings-profile.md) | Settings · phone status | 📝 |
 | [`system-surfaces.md`](system-surfaces.md) | Error · empty · sheets | 📝 |
 
-## Status — P0 tech + inspection (Ben flow)
+## Status - P0 tech + inspection (Ben flow)
 
 | Spec | Screen | Status |
 |------|--------|--------|

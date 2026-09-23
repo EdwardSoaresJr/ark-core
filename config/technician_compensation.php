@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Technician compensation guidance — not payroll authority.
+ * Technician compensation guidance - not payroll authority.
  *
  * floor_wage_suggestion seeds new Flag technicians and surfaces review
  * when a stored floor differs. It never silently rewrites stored agreements.
@@ -16,7 +16,7 @@ return [
     ],
 
     /**
-     * Phase 1A adoption — immutable recognition did not exist before this shop date.
+     * Phase 1A adoption - immutable recognition did not exist before this shop date.
      * Periods entirely before this are "unknown," not zero production.
      */
     'recognition_authority_starts_at' => env('TECH_FLAG_RECOGNITION_STARTS_AT', '2026-07-27'),

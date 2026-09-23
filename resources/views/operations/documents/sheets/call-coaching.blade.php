@@ -301,7 +301,7 @@
             <div class="coaching-notes-blank"></div>
         </section>
 
-        <p class="coaching-footer">Staff coaching handout — not for customer distribution</p>
+        <p class="coaching-footer">Staff coaching handout - not for customer distribution</p>
     </div>
 </body>
 </html>

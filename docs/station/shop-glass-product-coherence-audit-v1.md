@@ -1,4 +1,4 @@
-# Shop Glass + Hosted Dragon — user-journey audit (Phase 0)
+# Shop Glass + Hosted Dragon - user-journey audit (Phase 0)
 
 **Walked as:** Edward / Molly, 2026-08-23  
 **Product lock:** ARK = workplace. Hosted Dragon = employee brain. Shop Glass = shared command center. arkai = fallback until off-day.  

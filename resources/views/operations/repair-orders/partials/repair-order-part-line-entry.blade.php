@@ -1,4 +1,4 @@
-{{-- Part line entry — expects parent form with arkPartPricing x-data --}}
+{{-- Part line entry - expects parent form with arkPartPricing x-data --}}
 <input type="hidden" name="pricing_mode" :value="pricingMode">
 <input type="hidden" name="pricing_matrix_key" :value="pricingMode === 'matrix' ? matrixKey : ''">
 <input type="hidden" name="pricing_matrix_explicit" :value="explicitMatrix ? '1' : '0'">
@@ -23,7 +23,7 @@
             <input
                 name="customer_description"
                 value="{{ $customerDescription ?? '' }}"
-                placeholder="Optional — clean label for estimate / PDF"
+                placeholder="Optional - clean label for estimate / PDF"
                 class="ops-field-input"
             >
             <span class="mt-1 block text-[11px] text-slate-500">Shown on customer documents. Leave blank to use the shop presentation mode.</span>

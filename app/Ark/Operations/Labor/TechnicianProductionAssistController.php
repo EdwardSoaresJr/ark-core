@@ -20,7 +20,7 @@ final class TechnicianProductionAssistController
             'to' => $to->toDateString(),
             'rows' => TechnicianProductionAssistProjection::shopSummaries($from, $to),
             'recognitionStartsAt' => TechnicianProductionAssistProjection::recognitionAuthorityStartsAt()->toDateString(),
-            'northStar' => 'Why is this technician\'s recognized flag low — pending production still sitting, or not much production?',
+            'northStar' => 'Why is this technician\'s recognized flag low - pending production still sitting, or not much production?',
         ]);
     }
 

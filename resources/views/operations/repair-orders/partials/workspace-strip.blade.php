@@ -8,7 +8,7 @@
     ])->filter()->implode(' · ');
 @endphp
 
-{{-- Sticky identity only — next actions live in the contextual footer --}}
+{{-- Sticky identity only - next actions live in the contextual footer --}}
 <div class="ops-workspace-strip" data-workspace-strip aria-hidden="true">
     <div class="ops-workspace-strip__identity text-sm text-slate-950" title="{{ $identityTitle }}">
         <span class="ops-workspace-strip__segment ops-workspace-strip__segment--ro font-extrabold text-slate-950">{{ $strip->roLabel }}</span>

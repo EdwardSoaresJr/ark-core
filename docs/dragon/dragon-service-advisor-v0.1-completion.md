@@ -1,4 +1,4 @@
-# Dragon Service Advisor v0.1 — Completion Report
+# Dragon Service Advisor v0.1 - Completion Report
 
 **Date:** 2026-08-21  
 **Model:** qwen3:14b (unchanged)
@@ -7,8 +7,8 @@
 
 | Repo | Note |
 | --- | --- |
-| ARK (`arksmsv2`) | `11499f77` — *Add reversible Dragon Service Advisor note editing* |
-| Dragon (`arkai:/home/edward/dragon`) | `913f728` — *Add Dragon Service Advisor rewrite skill* (prior `4393816`; dirty Agent Core WIP **not** absorbed) |
+| ARK (`arksmsv2`) | `11499f77` - *Add reversible Dragon Service Advisor note editing* |
+| Dragon (`arkai:/home/edward/dragon`) | `913f728` - *Add Dragon Service Advisor rewrite skill* (prior `4393816`; dirty Agent Core WIP **not** absorbed) |
 | Bridge (`~/dragon-bridge` on arkai) | Multi-capability client deployed + `dragon-assist-bridge` restarted |
 
 ## UI placement
@@ -66,4 +66,4 @@ Bridge fake mode is deterministic for CI. Live 14B quality is “good enough for
 
 ## One next step
 
-~~**Review Estimate Notes** — whole-estimate critique (deferred from v0.1).~~ **Shipped** — see `docs/dragon/review-estimate-notes-v0.1.md`.
+~~**Review Estimate Notes** - whole-estimate critique (deferred from v0.1).~~ **Shipped** - see `docs/dragon/review-estimate-notes-v0.1.md`.

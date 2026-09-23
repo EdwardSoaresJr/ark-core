@@ -3,7 +3,7 @@
     <h1 class="text-xl font-semibold text-slate-950">Connecting ARK Platform</h1>
     <p class="mt-2 text-sm text-slate-600">
         Finish signing in on ARK Platform and approve this Box. This page will update when the connection is ready.
-        ARK does not sign you into Cloud automatically — Cloud asks for your account as usual.
+        ARK does not sign you into Cloud automatically - Cloud asks for your account as usual.
     </p>
 
     @if ($pairingCode)

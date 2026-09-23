@@ -47,7 +47,7 @@
                 @checked(old('channels.messenger.enabled', $shopConnection->isEnabled()))
             >
             Show Messenger in inbound queue filters
-            <span class="text-[11px] font-normal text-slate-500">— display only; transport is not active</span>
+            <span class="text-[11px] font-normal text-slate-500">- display only; transport is not active</span>
         </label>
 
         <label class="block text-xs font-semibold text-slate-600">

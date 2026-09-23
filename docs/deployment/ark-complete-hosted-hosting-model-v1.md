@@ -1,6 +1,6 @@
-# ARK Complete Hosted — Hosting Model & Capacity Doctrine v1
+# ARK Complete Hosted - Hosting Model & Capacity Doctrine v1
 
-**Status:** Accepted — dedicated-compute default (realigned 2026-09-07)  
+**Status:** Accepted - dedicated-compute default (realigned 2026-09-07)  
 **Supersedes:** Shared-host packing as the default Complete Hosted topology (2026-09-07 shared-compute pass remains valid as retained primitives)  
 **Companions:** [fleet-provisioning-authority-v1.md](fleet-provisioning-authority-v1.md) · [shop-runtime-fleet-template-v1.md](shop-runtime-fleet-template-v1.md) · [ark-complete-hosted-storage-doctrine-v1.md](ark-complete-hosted-storage-doctrine-v1.md) · Platform `hosting:shared-compute` (fleet primitives)  
 **Evidence:** LNP Public ARK cutover · Managed Host Capacity Realignment (`vhf-3c-8gb`) · Dedicated-compute realignment closeout
@@ -45,7 +45,7 @@ Quantity of hosts is an **automation / fleet-management** problem. Cross-shop co
 
 ## 2. Priority order
 
-1. Customer experience — ARK always feeling fast  
+1. Customer experience - ARK always feeling fast  
 2. Reliability  
 3. Isolation  
 4. Operational simplicity  
@@ -70,7 +70,7 @@ If a dedicated VPS costs roughly \$5 / \$10 / \$20 / \$40 per month depending on
 | Identity | Installation + Platform Shop relationship |
 | MySQL | Dedicated MySQL on that shop’s VPS (not shared across customers) |
 | Redis | Dedicated Redis on that shop’s VPS (not shared namespaces across customers) |
-| Storage | Dedicated durable storage root — Hosted: S3-compatible object storage (see storage doctrine); not years of media on VPS disk |
+| Storage | Dedicated durable storage root - Hosted: S3-compatible object storage (see storage doctrine); not years of media on VPS disk |
 | Workers | Horizon / scheduler / Reverb for that Box only |
 | Website | Lightweight per-shop runtime on the same VPS |
 | Routing | Shop domains → that Box |
@@ -114,7 +114,7 @@ Capacity does **not** answer:
 | **Healthy headroom** | Shop’s host is fine | **Leave alone** |
 | **Intervention / pressure** | Existing shop workload approaching unhealthy | **Recommend or perform vertical resize** |
 
-`placement_allowed` / colocated placement on a dedicated host defaults to **false**. Spare capacity is headroom for **this** shop — not an invitation to schedule Shop B.
+`placement_allowed` / colocated placement on a dedicated host defaults to **false**. Spare capacity is headroom for **this** shop - not an invitation to schedule Shop B.
 
 Do **not** treat host density as a product success metric. Do **not** require multi-Box density evidence before Hosted proceeds.
 
@@ -199,7 +199,7 @@ Default product path: **new shop → new dedicated host**. Fail closed when heal
 
 ## 10. LNP dogfood
 
-LugsNPlugs Production is Box #1 on its managed host — **no architectural privilege**, and **no casual rebuild**.
+LugsNPlugs Production is Box #1 on its managed host - **no architectural privilege**, and **no casual rebuild**.
 
 - Do not resize LNP solely to match doctrine aesthetics.  
 - Do not start Box #2 on LNP.  
@@ -223,4 +223,4 @@ LugsNPlugs Production is Box #1 on its managed host — **no architectural privi
 
 ## Revision
 
-Revise when clusters of Hosted shops prove sizing/thresholds wrong — not because one shop felt busy on a Tuesday. Shared multi-shop hosts only if measured economics clearly outweigh blast radius, noisy neighbors, isolation, debugging, recovery, and support cost.
+Revise when clusters of Hosted shops prove sizing/thresholds wrong - not because one shop felt busy on a Tuesday. Shared multi-shop hosts only if measured economics clearly outweigh blast radius, noisy neighbors, isolation, debugging, recovery, and support cost.

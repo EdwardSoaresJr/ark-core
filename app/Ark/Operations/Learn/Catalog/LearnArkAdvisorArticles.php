@@ -27,7 +27,7 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'workspace-tabs',
                 'title' => 'Workspace tabs',
-                'summary' => 'Yellow bars, orange dots, locks — what tab signals mean.',
+                'summary' => 'Yellow bars, orange dots, locks - what tab signals mean.',
                 'view' => 'operations.learn.advisor.workspace-tabs',
             ],
             [
@@ -45,7 +45,7 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'customer-hub',
                 'title' => 'Customer Service Hub',
-                'summary' => 'Work, vehicles, Comms timeline, and history — one relationship surface.',
+                'summary' => 'Work, vehicles, Comms timeline, and history - one relationship surface.',
                 'view' => 'operations.learn.advisor.customer-hub',
             ],
             [
@@ -81,13 +81,13 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'scopes-and-intent',
                 'title' => 'Scopes and recommendation intent',
-                'summary' => 'Write the problem — not the repair — in the scope headline.',
+                'summary' => 'Write the problem - not the repair - in the scope headline.',
                 'view' => 'operations.learn.advisor.scopes-and-intent',
             ],
             [
                 'slug' => 'repair-actions',
                 'title' => 'Repair actions',
-                'summary' => 'Scope vs repair action vs labor — what to write in each field.',
+                'summary' => 'Scope vs repair action vs labor - what to write in each field.',
                 'view' => 'operations.learn.advisor.repair-actions',
             ],
             [
@@ -129,7 +129,7 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'lifecycle-transitions',
                 'title' => 'Moving the RO through the shop',
-                'summary' => 'Draft through close — who moves what and when.',
+                'summary' => 'Draft through close - who moves what and when.',
                 'view' => 'operations.learn.advisor.lifecycle-transitions',
             ],
             [
@@ -141,7 +141,7 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'portal-payment-links',
                 'title' => 'Portal payment links',
-                'summary' => 'Invoice balance pay links — not estimate deposits or remote sell links.',
+                'summary' => 'Invoice balance pay links - not estimate deposits or remote sell links.',
                 'view' => 'operations.learn.advisor.portal-payment-links',
             ],
             [
@@ -183,7 +183,7 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'financial-literacy-basics',
                 'title' => 'Financial literacy basics',
-                'summary' => 'ARO, ELR, parts margin — what advisors should understand.',
+                'summary' => 'ARO, ELR, parts margin - what advisors should understand.',
                 'view' => 'operations.learn.advisor.financial-literacy-basics',
             ],
         ];

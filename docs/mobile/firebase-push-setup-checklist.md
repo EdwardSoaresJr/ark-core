@@ -1,9 +1,9 @@
-# Firebase push setup — LugsNPlugs (transport only)
+# Firebase push setup - LugsNPlugs (transport only)
 
 **Doctrine:** [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push-setup-doctrine-v1.md)  
 **Cost:** Spark (free) plan only. Register apps + Cloud Messaging. Do not enable Blaze or add Firestore/Auth/Analytics.
 
-**Production status (2026-06-27):** Server push **operational** (`lugsnplugs-ark-mobile`, credentials in shop settings). **APNs `.p8` not yet uploaded** — iOS push pending. Android floor test next.
+**Production status (2026-06-27):** Server push **operational** (`lugsnplugs-ark-mobile`, credentials in shop settings). **APNs `.p8` not yet uploaded** - iOS push pending. Android floor test next.
 
 ## App identifiers (copy into Firebase Console)
 
@@ -16,7 +16,7 @@ Suggested Firebase project ID: `lugsnplugs-ark-mobile` (any unique ID works).
 
 ---
 
-## Part 1 — Firebase Console (~10 min)
+## Part 1 - Firebase Console (~10 min)
 
 1. Open [Firebase Console](https://console.firebase.google.com) → **Add project** → name e.g. `LugsNPlugs ARK Mobile` → **disable Google Analytics** (optional; keeps surface minimal).
 2. **Project settings** → note **Project ID** (e.g. `lugsnplugs-ark-mobile`).
@@ -27,15 +27,15 @@ Suggested Firebase project ID: `lugsnplugs-ark-mobile` (any unique ID works).
    - Bundle ID: `com.lugsnplugs.arkMobile`
    - Download `GoogleService-Info.plist`
 5. **Project settings → Cloud Messaging → Apple app configuration**
-   - Upload APNs **Authentication Key** (.p8) from [Apple Developer](https://developer.apple.com/account/resources/authkeys/list) — Key ID + Team ID required for iOS push.
+   - Upload APNs **Authentication Key** (.p8) from [Apple Developer](https://developer.apple.com/account/resources/authkeys/list) - Key ID + Team ID required for iOS push.
 6. **Project settings → Service accounts → Generate new private key**
-   - Saves `*-firebase-adminsdk-*.json` — this is the **server send** credential (FCM HTTP v1). Keep private.
+   - Saves `*-firebase-adminsdk-*.json` - this is the **server send** credential (FCM HTTP v1). Keep private.
 
 Do **not** add Firestore, Authentication, or Functions.
 
 ---
 
-## Part 2 — Run setup script (local Mac)
+## Part 2 - Run setup script (local Mac)
 
 From `arksmsv2` (expects `ark-mobile` as sibling directory under the same parent as `arksmsv2`):
 
@@ -53,14 +53,14 @@ If `ark-mobile` lives elsewhere, add `--ark-mobile-dir /path/to/ark-mobile`.
 This will:
 
 - Copy client config into `../ark-mobile/android/app/` and `../ark-mobile/ios/Runner/`
-- Upload service account to production (`/data/ark-shared/storage/app/private/firebase-mobile-service-account.json` — mounted in app container)
+- Upload service account to production (`/data/ark-shared/storage/app/private/firebase-mobile-service-account.json` - mounted in app container)
 - Enable push in production `shop_settings` (encrypted JSON + project ID)
 
 Skip `--enable-production` to configure files only.
 
 ---
 
-## Part 3 — Build & verify
+## Part 3 - Build & verify
 
 ```bash
 cd ../ark-mobile

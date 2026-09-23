@@ -41,7 +41,7 @@ final class InspectionWalkVisibility
                 return $role === 'rear_drum';
             }
 
-            // Axle not chosen yet — hide both rear brake paths until Disc/Drum selected.
+            // Axle not chosen yet - hide both rear brake paths until Disc/Drum selected.
             return false;
         })->values();
     }

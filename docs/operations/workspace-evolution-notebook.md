@@ -1,11 +1,11 @@
 # Workspace Evolution Notebook
 
-**Status:** Era 3 operational tool — observe, don't invent  
+**Status:** Era 3 operational tool - observe, don't invent  
 **Constitution:** [ark-constitution-v1.md](../ecosystem/ark-constitution-v1.md)
 
 The next milestone is not a commit. It is a **sentence**.
 
-This notebook is **ARK's memory about itself** — not code, not analytics. Institutional memory. Six months from now, *"Why does Save & Next work this way?"* is answered by *"Landon said, 'I kept losing my place after every photo.'"* — richer than git history.
+This notebook is **ARK's memory about itself** - not code, not analytics. Institutional memory. Six months from now, *"Why does Save & Next work this way?"* is answered by *"Landon said, 'I kept losing my place after every photo.'"* - richer than git history.
 
 Protect the sentence **"I don't know yet."** The constitution should make that easier to say. It is not indecision. It is respecting the difference between an observation, a pattern, and a product decision.
 
@@ -13,7 +13,7 @@ Protect the sentence **"I don't know yet."** The constitution should make that e
 
 ## Four kinds of evidence
 
-Not four mandatory sections — **four ways to read what you record**:
+Not four mandatory sections - **four ways to read what you record**:
 
 | Kind | Tells you |
 | --- | --- |
@@ -24,7 +24,7 @@ Not four mandatory sections — **four ways to read what you record**:
 
 ### Unexpected behaviors
 
-Moments someone uses ARK in a way you never designed for — but that may reveal a **better workflow**.
+Moments someone uses ARK in a way you never designed for - but that may reveal a **better workflow**.
 
 Examples:
 
@@ -52,7 +52,7 @@ Repeat.
 
 ---
 
-## After Landon's week — three questions
+## After Landon's week - three questions
 
 Do not ask *"How do you like it?"*
 
@@ -74,7 +74,7 @@ End-of-day hesitation question (still valid):
 
 ---
 
-## Page 1 — Repeated Sentences
+## Page 1 - Repeated Sentences
 
 | Date | Who | Repeated sentence | Fix (if any) | Result |
 | --- | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ Example:
 
 ---
 
-## Page 2 — Silent Successes
+## Page 2 - Silent Successes
 
 Not praise. **Things nobody mentioned anymore.**
 
@@ -104,7 +104,7 @@ Silence is evidence. If a complaint disappears and never returns, tightening wor
 
 ---
 
-## Page 3 — Interesting, Not Earned
+## Page 3 - Interesting, Not Earned
 
 **Never becomes a ticket.** Ambition without commitment.
 
@@ -119,7 +119,7 @@ Not bad. Not earned.
 
 ---
 
-## Monthly — Delete more than you add
+## Monthly - Delete more than you add
 
 Development habit (not doctrine). Once a month ask:
 

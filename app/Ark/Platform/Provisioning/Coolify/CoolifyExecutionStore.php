@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * Adapter-owned execution artifacts (deployment UUIDs, poll refs) for idempotency.
- * Workflow state stays on ProvisioningRequest / orchestrator — not here.
+ * Workflow state stays on ProvisioningRequest / orchestrator - not here.
  */
 final class CoolifyExecutionStore
 {

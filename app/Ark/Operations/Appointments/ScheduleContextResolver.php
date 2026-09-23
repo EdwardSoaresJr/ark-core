@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 /**
  * Every schedule entry point produces the same ScheduleContext.
  *
- * Conversation is an entry point only — never schedule authority.
+ * Conversation is an entry point only - never schedule authority.
  * Authority anchors (repair_order / vehicle / customer) win over conversation.
  */
 final class ScheduleContextResolver

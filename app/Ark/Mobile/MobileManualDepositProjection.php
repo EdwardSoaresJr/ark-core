@@ -11,7 +11,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
 /**
- * Manual deposit capture on mobile — cash, check, external card before invoice.
+ * Manual deposit capture on mobile - cash, check, external card before invoice.
  */
 final class MobileManualDepositProjection
 {

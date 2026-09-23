@@ -105,7 +105,7 @@ test('canonical repair order dock is footer-first without posture dashboard', fu
         ->assertDontSee('>Viewing<', false)
         ->assertDontSee('id="builder-add-work"', false);
 
-    // Persistent Context posture remains on the right rail — not the footer dock.
+    // Persistent Context posture remains on the right rail - not the footer dock.
     expect($response->getContent())->toContain('data-posture-layout="rail"');
 });
 

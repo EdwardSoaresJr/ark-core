@@ -18,11 +18,11 @@
         </div>
         <div>
             <dt class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Station</dt>
-            <dd class="font-semibold text-slate-950">{{ $workspace['workstation_name'] ?? '—' }}</dd>
+            <dd class="font-semibold text-slate-950">{{ $workspace['workstation_name'] ?? '-' }}</dd>
         </div>
         <div>
             <dt class="text-[10px] font-bold uppercase tracking-wide text-slate-400">MAC</dt>
-            <dd class="font-mono font-semibold text-slate-950">{{ $workspace['mac_address_display'] ?? '—' }}</dd>
+            <dd class="font-mono font-semibold text-slate-950">{{ $workspace['mac_address_display'] ?? '-' }}</dd>
         </div>
         @if ($workspace['provision_url'])
             <div class="sm:col-span-2">

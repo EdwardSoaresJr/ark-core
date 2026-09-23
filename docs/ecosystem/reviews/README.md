@@ -1,7 +1,7 @@
 # Competitor / product reviews
 
-**Governed by:** [Interaction Craft vs Product Doctrine v1](../ark-interaction-craft-vs-product-doctrine-v1.md) — frozen  
-**Patterns accumulate in:** [Interaction Pattern Library v1](../ark-interaction-pattern-library-v1.md) — living  
+**Governed by:** [Interaction Craft vs Product Doctrine v1](../ark-interaction-craft-vs-product-doctrine-v1.md) - frozen  
+**Patterns accumulate in:** [Interaction Pattern Library v1](../ark-interaction-pattern-library-v1.md) - living  
 **Template pressure:** [_template-pressure-notebook.md](_template-pressure-notebook.md)
 
 ## Evidence gate

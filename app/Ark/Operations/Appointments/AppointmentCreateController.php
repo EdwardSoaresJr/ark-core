@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Legacy create URL — kept for existing links.
+ * Legacy create URL - kept for existing links.
  * Prefer operations.schedule (/app/schedule) for all new CTAs.
  */
 class AppointmentCreateController

@@ -2,7 +2,7 @@
 
 **Status:** Frozen · Engine Oil vertical slice  
 **Peer patterns:** Inspection Authority · Flag Recognition  
-**Slice:** `kind = engine_oil` only — other kinds earn their way through shop use
+**Slice:** `kind = engine_oil` only - other kinds earn their way through shop use
 
 ---
 
@@ -14,13 +14,13 @@
 
 Shop preparation may assist technicians. Historical Maintenance Service Events preserve technician-confirmed truth. Vehicle Specification is absent until ARK has earned authoritative manufacturer data. **Preparation must never masquerade as manufacturer specification.**
 
-Governs VIN decoding, capacities, filters, transmission fluid, coolant, power steering — invent nothing from shop preference.
+Governs VIN decoding, capacities, filters, transmission fluid, coolant, power steering - invent nothing from shop preference.
 
 ### Maintenance Principle #2
 
 **Historical service events are evidence, not estimates.**
 
-Once a `MaintenanceServiceEvent` exists, every downstream consumer — service history, reminders, stickers, portal, future preparation — reads from that evidence. They do **not** infer, recalculate, or substitute preparation data.
+Once a `MaintenanceServiceEvent` exists, every downstream consumer - service history, reminders, stickers, portal, future preparation - reads from that evidence. They do **not** infer, recalculate, or substitute preparation data.
 
 ---
 
@@ -62,10 +62,10 @@ Never a bare type name `ServiceEvent`.
 
 ## Four truths (never overwrite)
 
-1. **Vehicle Specification** — NOT IMPLEMENTED; Unknown is honest  
-2. **Prepared Service** — editable preparation on the session  
-3. **Installed → MaintenanceServiceEvent** — historical evidence  
-4. **Sold Service** — PACKAGE line on the RO  
+1. **Vehicle Specification** - NOT IMPLEMENTED; Unknown is honest  
+2. **Prepared Service** - editable preparation on the session  
+3. **Installed → MaintenanceServiceEvent** - historical evidence  
+4. **Sold Service** - PACKAGE line on the RO  
 
 Shop defaults may prepare. They must not impersonate vehicle specifications.
 
@@ -73,7 +73,7 @@ Shop defaults may prepare. They must not impersonate vehicle specifications.
 | --- | --- |
 | Shop-preferred oil brand/family | Yes |
 | Washer policy | Yes |
-| Package price / “up to N qt” allowance | Yes — **sold** only |
+| Package price / “up to N qt” allowance | Yes - **sold** only |
 | Universal filter SKU / capacity / viscosity-as-fact | **No** |
 
 Auto-detect (A+): latest **current** (non-superseded) `MaintenanceServiceEvent` for vehicle + kind → Prepared; else shop prep defaults only.
@@ -86,7 +86,7 @@ No in-place mutation of an event.
 
 | Field | Role |
 | --- | --- |
-| `service_sequence` | Per vehicle + kind ordinal (Oil Service #1, #2…) — stable across corrections |
+| `service_sequence` | Per vehicle + kind ordinal (Oil Service #1, #2…) - stable across corrections |
 | `revision` | 0 on first event; increments on superseding correction |
 | `superseded_by_event_id` | Points to replacement; null = current |
 
@@ -98,7 +98,7 @@ Consumers read the **current** event per sequence. Originals remain forever.
 
 ## PACKAGE line semantics
 
-`RepairOrderLineType::Package` is first-class sold semantics — not ordinary Labor.
+`RepairOrderLineType::Package` is first-class sold semantics - not ordinary Labor.
 
 Must not contaminate:
 
@@ -115,7 +115,7 @@ PACKAGE quantity is never flag hours. Package dollars never invent hourly labor.
 | Consumer | Source |
 | --- | --- |
 | Estimate **Includes** | Prepared |
-| Sticker **Print** (tech ticket) | Prefer current event; else Prepared / RO mileage — **not gated** on Confirm Installed |
+| Sticker **Print** (tech ticket) | Prefer current event; else Prepared / RO mileage - **not gated** on Confirm Installed |
 | History / reminders / Auto Detect | Current `MaintenanceServiceEvent` only |
 | Invoice / Portal | Event specifics; else honest incomplete |
 
@@ -131,11 +131,11 @@ Confirm snapshots **service mileage** on the event. Next-due = that mileage + sh
 
 ### Extra quarts (beyond package)
 
-Package sell price may include “up to N qt.” Additional quarts are **Part lines at cost** under the same repair action — never PACKAGE mutation, never Installed history. A PACKAGE (or Labor) line is a parts-attach anchor so the composer / Extra quarts control can add them.
+Package sell price may include “up to N qt.” Additional quarts are **Part lines at cost** under the same repair action - never PACKAGE mutation, never Installed history. A PACKAGE (or Labor) line is a parts-attach anchor so the composer / Extra quarts control can add them.
 
 ---
 
-## Supplier / PartsTech boundary (frozen — not built in this slice)
+## Supplier / PartsTech boundary (frozen - not built in this slice)
 
 **Supplier data is advisory, not authoritative. Supplier fitment assists preparation and procurement. Technician confirmation creates historical truth.**
 
@@ -155,9 +155,9 @@ Confirm Installed → MaintenanceServiceEvent (technician reality)
 Next visit Auto Detect → latest MaintenanceServiceEvent only
 ```
 
-Wrong quote, out-of-stock substitute, shelf grab of a different filter — tech corrects on Confirm. Warranty / “what did you install?” answers from the **event**, not estimate, invoice, PartsTech quote, or PO.
+Wrong quote, out-of-stock substitute, shelf grab of a different filter - tech corrects on Confirm. Warranty / “what did you install?” answers from the **event**, not estimate, invoice, PartsTech quote, or PO.
 
-**Provenance badges** (shop default · supplier suggested · technician confirmed) — earned later after floor proof. Do not build until Prepared is naturally treated as a starting point and Installed as final truth.
+**Provenance badges** (shop default · supplier suggested · technician confirmed) - earned later after floor proof. Do not build until Prepared is naturally treated as a starting point and Installed as final truth.
 
 ---
 

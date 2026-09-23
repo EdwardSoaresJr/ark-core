@@ -1,6 +1,6 @@
 # Inspection Workflow Principle (1.5)
 
-**Status:** Superseded — see [Inspection Workspace](inspection-workspace.md)  
+**Status:** Superseded - see [Inspection Workspace](inspection-workspace.md)  
 **Companion:** [Inspection Authority](inspection-authority.md)
 
 Inspection Authority and Inspection Workflow are separate concerns.
@@ -22,7 +22,7 @@ Workflow changes must **not** redefine authority.
 
 Not equal. **Easier.**
 
-If recording a fact in Inspection requires more effort than writing prose, technicians will naturally choose prose — and the authority layer will not be adopted.
+If recording a fact in Inspection requires more effort than writing prose, technicians will naturally choose prose - and the authority layer will not be adopted.
 
 Humans take the path of least resistance.
 
@@ -86,7 +86,7 @@ This shop often works:
 Vehicle arrives → Customer concern → Diagnosis → Observation → Estimate
 ```
 
-That naturally leads to **+ Finding** as the primary action — not a checklist opened on first visit.
+That naturally leads to **+ Finding** as the primary action - not a checklist opened on first visit.
 
 ---
 
@@ -106,7 +106,7 @@ Inspection Truth remains authoritative whether facts originate from:
 
 ## Observation week (before building 1.5)
 
-Run the floor as-is. Use `php artisan ark:inspection-adoption` — not a dashboard — to see whether techs engage seeded rows, use Add Item only, or skip Inspection for prose.
+Run the floor as-is. Use `php artisan ark:inspection-adoption` - not a dashboard - to see whether techs engage seeded rows, use Add Item only, or skip Inspection for prose.
 
 Ask one question:
 

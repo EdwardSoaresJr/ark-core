@@ -8,7 +8,7 @@
     $lineGrid = $lineGrid ?? 'worksheet';
     $isTerminal = $isTerminal ?? true;
     $lineGridClass = 'md:grid-cols-[minmax(0,1fr)_52px_78px_64px_64px_64px_88px]';
-    $lineMoneyDash = '—';
+    $lineMoneyDash = '-';
     $partStateOptions = $partStateOptions ?? [];
     $estimateVersion = $estimateVersion ?? null;
     $lineEditUrl = $lineEditUrl ?? route('operations.repair-orders.show', ['repairOrder' => $repairOrder, 'editing_line' => $line->id]);

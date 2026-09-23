@@ -8,7 +8,7 @@ use App\Models\User;
 /**
  * Maintains operator continuity across mobile devices.
  *
- * Push notifications are one transport — see {@see PushTransport}. ARK decides
+ * Push notifications are one transport - see {@see PushTransport}. ARK decides
  * who receives which continuity packet; this service resolves device tokens and
  * delegates delivery. It does not own observations, routing, or shop policy.
  */

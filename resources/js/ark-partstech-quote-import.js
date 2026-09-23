@@ -49,7 +49,7 @@ export function arkPartsTechQuoteImport(config) {
         },
 
         applyPreferredConcernId(preferredConcernId = undefined) {
-            // Toolbar sends null when no sticky preference — treat like "no preference"
+            // Toolbar sends null when no sticky preference - treat like "no preference"
             // so preview / single-concern defaults can auto-scope.
             if (preferredConcernId === undefined || preferredConcernId === null || preferredConcernId === '') {
                 this.defaultConcernId = '';
@@ -94,7 +94,7 @@ export function arkPartsTechQuoteImport(config) {
             const name = String(matrix?.name ?? matrix?.key ?? '').trim();
 
             if (name === '') {
-                return '—';
+                return '-';
             }
 
             return name.length > 18 ? name.slice(0, 16) + '…' : name;
@@ -154,7 +154,7 @@ export function arkPartsTechQuoteImport(config) {
             const key = String(matrixKey ?? '');
 
             if (key === '') {
-                return '—';
+                return '-';
             }
 
             const matrix = this.partsMatrices.find((entry) => entry.key === key);

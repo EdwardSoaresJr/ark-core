@@ -168,7 +168,7 @@ final class CallSessionIntelligenceQuery
                 ? route('operations.repair-orders.show', $callSession->repairOrder)
                 : null,
             'started_at_label' => $callSession->started_at?->timezone($timezone)->format('M j, Y g:i A'),
-            'duration_label' => $duration !== null ? gmdate($duration >= 3600 ? 'H:i:s' : 'i:s', $duration) : '—',
+            'duration_label' => $duration !== null ? gmdate($duration >= 3600 ? 'H:i:s' : 'i:s', $duration) : '-',
             'analysis_status' => $callSession->analysis_status?->value,
             'analysis_status_label' => $callSession->analysis_status?->label() ?? 'Not queued',
             'summary' => $callSession->analysisSummary(),

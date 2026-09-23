@@ -252,7 +252,7 @@
                                                 x-model="point.note"
                                                 x-on:input="scheduleNote(point)"
                                                 x-on:change="saveNote(point)"
-                                                placeholder="Observation only — not a recommendation or diagnosis"
+                                                placeholder="Observation only - not a recommendation or diagnosis"
                                             ></textarea>
                                         </label>
 

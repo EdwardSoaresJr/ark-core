@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Platform Website P1 — draft authority. Publications exist for P2; never marked current here.
+ * Platform Website P1 - draft authority. Publications exist for P2; never marked current here.
  */
 return new class extends Migration
 {

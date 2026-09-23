@@ -30,7 +30,7 @@
     @if ($showSectionHeader)
         <div class="ops-review-panel-header">
             <p class="ops-eyebrow">Relationship Context</p>
-            <p class="ops-meta mt-0.5">Customer, open ROs, and recent conversation — do not auto-pick an RO.</p>
+            <p class="ops-meta mt-0.5">Customer, open ROs, and recent conversation - do not auto-pick an RO.</p>
         </div>
     @endif
 

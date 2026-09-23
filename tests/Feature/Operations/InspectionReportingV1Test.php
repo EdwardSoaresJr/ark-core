@@ -427,7 +427,7 @@ function reportingRepairOrder(bool $withPhotos = false, bool $recordStructured =
             'checklist_category_name' => 'Road test',
             'label' => 'Road test',
             'observed_state' => InspectionObservedState::Na->value,
-            'notes' => 'Not performed — vehicle unsafe to drive.',
+            'notes' => 'Not performed - vehicle unsafe to drive.',
             'position' => 3,
         ]);
 

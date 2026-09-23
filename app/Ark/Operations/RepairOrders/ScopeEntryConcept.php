@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Operational meaning authority — stable meaning that survives every wording.
+ * Operational meaning authority - stable meaning that survives every wording.
  *
  * "Front Brake Service" is not just a label. It is the meaning that persists
  * across customer, advisor, technician, invoice, search, voice, and time.

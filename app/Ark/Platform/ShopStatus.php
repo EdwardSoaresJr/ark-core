@@ -3,7 +3,7 @@
 namespace App\Ark\Platform;
 
 /**
- * Shop lifecycle — see docs/platform/shop-status-authority-v1.md
+ * Shop lifecycle - see docs/platform/shop-status-authority-v1.md
  */
 enum ShopStatus: string
 {

@@ -17,7 +17,7 @@
         <x-operations.queue-page-header
             id="ops-comms-workboard"
             title="Communications"
-            description="Calls, leads, and threads by whose turn it is — one triage surface."
+            description="Calls, leads, and threads by whose turn it is - one triage surface."
             :count="$actionableCount"
             :show-back="false"
         >
@@ -50,7 +50,7 @@
                     @include('operations.communications.partials.workboard-lane', [
                         'id' => 'ops-comms-lane-calls',
                         'label' => 'Calls',
-                        'description' => 'Live and waiting — ring, missed, and voicemail.',
+                        'description' => 'Live and waiting - ring, missed, and voicemail.',
                         'count' => $counts['calls_waiting'] ?? 0,
                         'tone' => 'ready',
                         'rows' => $calls_waiting,
@@ -61,7 +61,7 @@
                     @include('operations.communications.partials.workboard-lane', [
                         'id' => 'ops-comms-lane-new',
                         'label' => 'New',
-                        'description' => 'Inbound leads — website, SMS, and acquisition.',
+                        'description' => 'Inbound leads - website, SMS, and acquisition.',
                         'count' => $counts['new_opportunities'] ?? 0,
                         'tone' => 'motion',
                         'rows' => $new_opportunities,
@@ -72,7 +72,7 @@
                     @include('operations.communications.partials.workboard-lane', [
                         'id' => 'ops-comms-lane-needs-shop',
                         'label' => 'Needs shop',
-                        'description' => 'Threads waiting on the shop — reply or resolve.',
+                        'description' => 'Threads waiting on the shop - reply or resolve.',
                         'count' => $counts['needs_shop'] ?? 0,
                         'tone' => 'approval',
                         'rows' => $needs_shop,
@@ -83,7 +83,7 @@
                     @include('operations.communications.partials.workboard-lane', [
                         'id' => 'ops-comms-lane-waiting-customer',
                         'label' => 'Waiting customer',
-                        'description' => 'Ball is with the customer — follow up when needed.',
+                        'description' => 'Ball is with the customer - follow up when needed.',
                         'count' => $counts['waiting_customer'] ?? 0,
                         'tone' => 'motion',
                         'rows' => $waiting_customer,

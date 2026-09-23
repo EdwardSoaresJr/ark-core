@@ -207,7 +207,7 @@ test('suggestion engine merges providers and dedupes by text', function (): void
         ->and($result->items[0]->meta['usage_count'])->toBe(9);
 });
 
-test('suggestion engine isolates corpora — work provider never answers problem projection', function (): void {
+test('suggestion engine isolates corpora - work provider never answers problem projection', function (): void {
     $registry = new SuggestionProviderRegistry;
     $registry->register(new FakeWorkLanguageProvider);
     $registry->register(new FakeProblemLanguageProvider);

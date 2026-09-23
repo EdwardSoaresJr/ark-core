@@ -330,7 +330,7 @@ test('cloud unavailable leaves record payment path intact and writes no ledger f
 
 test('deposit context records deposit ledger entry once', function () {
     $repairOrder = financialCloseoutRepairOrder(status: \App\Ark\Operations\RepairOrders\RepairOrderStatus::InProgress);
-    // No invoice — deposit path
+    // No invoice - deposit path
     $advisor = paymentCaptureAdvisor();
 
     Http::fake(function (\Illuminate\Http\Client\Request $request) {

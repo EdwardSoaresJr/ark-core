@@ -76,7 +76,7 @@ class EnsureAdvisorCommsCleared
             'operations.communications.workboard',
             'operations.communications.attention-queue',
             'operations.communications.queue',
-            // Working the pressure IS these surfaces — gating them locks the
+            // Working the pressure IS these surfaces - gating them locks the
             // advisor out of the workspace they must use to clear the gate.
             'operations.communications.workspace.fragment',
             'operations.communications.recent-activity.fragment',

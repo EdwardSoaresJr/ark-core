@@ -11,7 +11,7 @@ use App\Ark\Operations\Telephony\InboundCallerDisplayPhone;
 use Illuminate\Http\Request;
 
 /**
- * Mobile Calls & VM library — automotive rows + companion deep links.
+ * Mobile Calls & VM library - automotive rows + companion deep links.
  */
 final class MobileCallsLibraryProjection
 {

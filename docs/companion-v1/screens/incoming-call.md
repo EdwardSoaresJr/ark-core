@@ -1,15 +1,15 @@
-# Screen spec — Incoming Call
+# Screen spec - Incoming Call
 
 **ID:** `companion.screen.incoming-call`  
 **Role(s):** Advisor  
 **Quo ref (external):** `references/external/quo/incoming-phone-menu-insight.png` · `caller-id-marketing.webp`  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Answer customer calls with **full shop context before picking up** — never hunt after hangup.
+Answer customer calls with **full shop context before picking up** - never hunt after hangup.
 
 ---
 
@@ -27,24 +27,24 @@ Answer customer calls with **full shop context before picking up** — never hun
 
 ### Full-screen incoming (over lock screen when permitted)
 
-**Top third — identity (largest)**
+**Top third - identity (largest)**
 
-- Customer name — Display, bold
-- Phone number — Label, if not already known customer
-- Vehicle line — Title: `2019 Honda Civic · ABC123`
-- RO badge — `#1599 · Waiting approval` status chip
+- Customer name - Display, bold
+- Phone number - Label, if not already known customer
+- Vehicle line - Title: `2019 Honda Civic · ABC123`
+- RO badge - `#1599 · Waiting approval` status chip
 
-**Middle — context cards (scroll if needed, default visible without scroll on Razr)**
+**Middle - context cards (scroll if needed, default visible without scroll on Razr)**
 
-1. **Estimate** — `Sent · viewed 2× · $1,847` or `No open estimate`
-2. **Last message** — one line inbound preview + time · channel icon SMS
-3. **Advisor notes** — max 2 lines internal · "Prefers text after 5pm"
+1. **Estimate** - `Sent · viewed 2× · $1,847` or `No open estimate`
+2. **Last message** - one line inbound preview + time · channel icon SMS
+3. **Advisor notes** - max 2 lines internal · "Prefers text after 5pm"
 
-**Bottom fixed — call actions**
+**Bottom fixed - call actions**
 
-- **Decline** — secondary, left
-- **Answer** — primary, full width or prominent green · largest tap target
-- **Message** — tertiary · send "Can't talk — text me" quick template (optional P1)
+- **Decline** - secondary, left
+- **Answer** - primary, full width or prominent green · largest tap target
+- **Message** - tertiary · send "Can't talk - text me" quick template (optional P1)
 
 No tab bar. No hamburger. No hunt.
 
@@ -52,7 +52,7 @@ No tab bar. No hamburger. No hunt.
 
 ## Typography & density
 
-Tight but readable at arm's length. Identity dominates. Metadata muted. One screen — no tabs inside incoming.
+Tight but readable at arm's length. Identity dominates. Metadata muted. One screen - no tabs inside incoming.
 
 ---
 
@@ -96,7 +96,7 @@ Tight but readable at arm's length. Identity dominates. Metadata muted. One scre
 
 **Decline →** Post-call sheet or pocket
 
-**Hang up from active →** [`post-call.md`](post-call.md) — note · text · schedule · open RO **without backing out to Home**
+**Hang up from active →** [`post-call.md`](post-call.md) - note · text · schedule · open RO **without backing out to Home**
 
 ---
 
@@ -111,7 +111,7 @@ Tight but readable at arm's length. Identity dominates. Metadata muted. One scre
 - Internal notes snippet (RO or customer)
 
 **Existing:** caller lookup / customer hub projections (verify parity for mobile)  
-**May need:** `GET /api/mobile/incoming-call/context?phone=` — **backend not frozen**
+**May need:** `GET /api/mobile/incoming-call/context?phone=` - **backend not frozen**
 
 ---
 

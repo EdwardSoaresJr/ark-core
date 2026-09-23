@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Shop Memory labor suggestions — work-language corpus only.
+ * Shop Memory labor suggestions - work-language corpus only.
  * Does not write RepairOrderLine. Advisor acceptance is authorship.
  */
 final class RepairOrderLaborMemorySuggestController

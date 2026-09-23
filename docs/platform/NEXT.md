@@ -2,20 +2,20 @@
 
 **Company product:** `autorepairkeeper.com` is ARK Platform.
 
-**v1 finish line:** Shop owner discovers ARK → signs up → workspace → first repair order → keeps paying — without talking to Edward.
+**v1 finish line:** Shop owner discovers ARK → signs up → workspace → first repair order → keeps paying - without talking to Edward.
 
 ## Build Monday morning
 
 **Only:** [cloud-saas-critical-path-v1.md](cloud-saas-critical-path-v1.md)
 
-| Done | **M1 — Real Accounts** · **M2 — Real Shops** |
+| Done | **M1 - Real Accounts** · **M2 - Real Shops** |
 | --- | --- |
-| Brief | **[M3 — Workspace Launch](cloud-m3-workspace-launch-brief-v1.md)** — written; **code closed** until accepted |
+| Brief | **[M3 - Workspace Launch](cloud-m3-workspace-launch-brief-v1.md)** - written; **code closed** until accepted |
 | Next | M4 Provisioning → M5 Stripe → M6 Adoption |
 
 M2 closed (authority + production acceptance). M3 one question: *Can a real Shop enter a real Workspace?*
 
-Strategy (frozen): [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform with new shops; migrate Demo Auto Repair last.
+Strategy (frozen): [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) - prove platform with new shops; migrate Demo Auto Repair last.
 
 ## Host split
 
@@ -28,7 +28,7 @@ Strategy (frozen): [multi-tenant-development-strategy-v1.md](multi-tenant-develo
 
 ## Stop
 
-Homepage polish · billing dashboards · domain/cluster/Coolify UI · admin reports — until visitor→paying owner works.
+Homepage polish · billing dashboards · domain/cluster/Coolify UI · admin reports - until visitor→paying owner works.
 
 Do not start M3 code until the brief’s authority boundary and production acceptance gate are accepted.
 

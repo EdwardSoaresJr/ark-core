@@ -37,7 +37,7 @@
             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">ARK Mobile</p>
             <h3 class="mt-1 text-sm font-black text-slate-950">Staff app voice and push</h3>
             <p class="mt-1 text-xs leading-5 text-slate-500">
-                Registered devices appear when staff log into the ARK Staff app. Voice extensions and ring targets are provisioned automatically — not edited here.
+                Registered devices appear when staff log into the ARK Staff app. Voice extensions and ring targets are provisioned automatically - not edited here.
             </p>
         </div>
 
@@ -67,7 +67,7 @@
                     @if ($mobilePush->isOperational())
                         Operational
                     @elseif ($mobilePush->enabled)
-                        Enabled — server credentials missing
+                        Enabled - server credentials missing
                     @else
                         Disabled for this shop
                     @endif
@@ -99,7 +99,7 @@
                                 <p class="truncate text-[11px] text-slate-500">{{ $row->deviceName }}</p>
                             </div>
                             <span class="truncate text-slate-700">{{ $row->platform }}</span>
-                            <span class="font-mono text-[11px] text-slate-800">{{ $row->extension ?? '—' }}</span>
+                            <span class="font-mono text-[11px] text-slate-800">{{ $row->extension ?? '-' }}</span>
                             <span @class([
                                 'text-[11px] font-semibold',
                                 'text-emerald-700' => $row->voiceLive,
@@ -117,7 +117,7 @@
                             <span class="text-[11px] font-semibold {{ $row->pushTokenRegistered ? 'text-emerald-700' : 'text-slate-400' }}">
                                 {{ $row->pushTokenRegistered ? 'Yes' : 'No' }}
                             </span>
-                            <span class="truncate font-mono text-[10px] text-slate-600">{{ $row->appVersion ?? '—' }}</span>
+                            <span class="truncate font-mono text-[10px] text-slate-600">{{ $row->appVersion ?? '-' }}</span>
                             <span class="truncate text-[11px] text-slate-500">{{ $row->lastSeenLabel ?? 'Never' }}</span>
                         </div>
                     @endforeach
@@ -136,7 +136,7 @@
             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Twilio Client</p>
             <h3 class="mt-1 text-sm font-black text-slate-950">In-app calling credentials</h3>
             <p class="mt-1 text-xs leading-5 text-slate-500">
-                Required for ARK Phone / Companion in-app voice after Twilio-native transport. Secrets are encrypted — leave blank to keep the current value.
+                Required for ARK Phone / Companion in-app voice after Twilio-native transport. Secrets are encrypted - leave blank to keep the current value.
             </p>
         </div>
 
@@ -158,7 +158,7 @@
                     type="password"
                     name="twilio_api_key_secret"
                     class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="{{ $hasStoredApiKeySecret ? 'Saved — leave blank to keep' : 'Shown once when created' }}"
+                    placeholder="{{ $hasStoredApiKeySecret ? 'Saved - leave blank to keep' : 'Shown once when created' }}"
                     autocomplete="new-password"
                 >
             </label>
@@ -246,7 +246,7 @@
                     type="button"
                     @click="copyUrl(@js($webhook['url']), @js($webhook['label']))"
                     class="flex w-full items-center gap-2 px-2 py-1.5 text-left transition hover:bg-slate-50"
-                    title="{{ $webhook['hint'] }} — click to copy"
+                    title="{{ $webhook['hint'] }} - click to copy"
                 >
                     <span class="w-28 shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ $webhook['label'] }}</span>
                     <span class="min-w-0 flex-1 truncate font-mono text-[11px] text-slate-700">{{ $webhook['url'] }}</span>
@@ -267,7 +267,7 @@
     <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-3 text-xs leading-5 text-slate-600">
         <p class="font-semibold text-slate-950">In-app calling credentials</p>
         <p class="mt-1">
-            Twilio Client / TwiML App / VoIP push SIDs for Hosted Voice are managed in ARK Cloud — not edited here.
+            Twilio Client / TwiML App / VoIP push SIDs for Hosted Voice are managed in ARK Cloud - not edited here.
             <a href="https://cloud.arksms.com" class="font-semibold underline" target="_blank" rel="noopener">Open ARK Cloud</a>
         </p>
     </div>
@@ -278,7 +278,7 @@
             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Push</p>
             <h3 class="mt-1 text-sm font-black text-slate-950">Shop dispatch toggle</h3>
             <p class="mt-1 text-xs leading-5 text-slate-500">
-                Firebase credentials are platform infrastructure — mounted on the server, not configured per shop.
+                Firebase credentials are platform infrastructure - mounted on the server, not configured per shop.
             </p>
         </div>
 
@@ -289,7 +289,7 @@
             </div>
             <div class="rounded-sm border border-slate-200 bg-white px-3 py-2">
                 <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Firebase project</p>
-                <p class="mt-1 truncate font-mono text-sm font-black text-slate-950">{{ $resolvedProjectId ?? '—' }}</p>
+                <p class="mt-1 truncate font-mono text-sm font-black text-slate-950">{{ $resolvedProjectId ?? '-' }}</p>
             </div>
             <div class="rounded-sm border border-slate-200 bg-white px-3 py-2">
                 <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Device register API</p>

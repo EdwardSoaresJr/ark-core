@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Appointments;
 
 /**
- * Disposable schedule entry projection — never appointment authority.
+ * Disposable schedule entry projection - never appointment authority.
  *
  * Conversation / Hub / RO / Vehicle / Lead all resolve into this same shape.
  */

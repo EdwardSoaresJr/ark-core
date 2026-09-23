@@ -13,7 +13,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
 
 /**
- * Mobile Conversations — one chronological customer relationship timeline per conversation.
+ * Mobile Conversations - one chronological customer relationship timeline per conversation.
  */
 final class MobileConversationsProjection
 {

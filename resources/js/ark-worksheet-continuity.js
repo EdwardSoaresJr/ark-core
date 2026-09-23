@@ -445,7 +445,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                 }
             });
 
-            // DOM baselines reset — sticky dirty from before refresh must re-check forms.
+            // DOM baselines reset - sticky dirty from before refresh must re-check forms.
             if (typeof window.ARK?.workspace?.syncDirty === 'function') {
                 window.ARK.workspace.syncDirty();
             } else {
@@ -599,7 +599,7 @@ export const arkWorksheetContinuity = (config = {}) => {
             const link = event.currentTarget;
 
             // editing_line refreshes the worksheet; host opens modal authoring for that line.
-            // Compatibility debt — keep until edit URLs stop being bookmarked.
+            // Compatibility debt - keep until edit URLs stop being bookmarked.
             link.dataset.refreshScope = 'worksheet';
 
             const targetUrl = new URL(link.href, window.location.origin);
@@ -712,7 +712,7 @@ export const arkWorksheetContinuity = (config = {}) => {
             await new Promise((resolve) => setTimeout(resolve, 180));
 
             if (! keepOpen) {
-                // Unlock before panel morph — never leave ✓ Saved with Close disabled forever.
+                // Unlock before panel morph - never leave ✓ Saved with Close disabled forever.
                 window.dispatchEvent(new CustomEvent('ark-workspace-modal-close'));
             }
 
@@ -804,7 +804,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                     window.dispatchEvent(new CustomEvent('ark-workspace-modal-save-failed', {
                         detail: { message: modalError || '' },
                     }));
-                    // Never native-submit modal forms on AJAX failure — form.submit()
+                    // Never native-submit modal forms on AJAX failure - form.submit()
                     // bypasses HTML5 required checks and re-posts the same empty/wrong form.
 
                     return false;
@@ -837,7 +837,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                 }
 
                 // Redirected POSTs already followed to the canonical Builder HTML (flash/errors
-                // included). Apply that body — do not re-GET, which drops flash and can serve
+                // included). Apply that body - do not re-GET, which drops flash and can serve
                 // a cached pre-mutation page (stale totals). Canonical projections replace UI.
                 const html = await response.text();
                 const doc = new DOMParser().parseFromString(html, 'text/html');

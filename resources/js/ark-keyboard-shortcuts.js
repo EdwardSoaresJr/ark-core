@@ -1,6 +1,6 @@
 /**
  * Lightweight keyboard shortcut registry for ARK operations surfaces.
- * Foundation for / search, N new intake, V toggle view/edit — not a command palette.
+ * Foundation for / search, N new intake, V toggle view/edit - not a command palette.
  */
 
 const shortcuts = [];

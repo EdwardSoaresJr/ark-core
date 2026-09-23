@@ -41,7 +41,7 @@ class TelephonyEndpointMatcher
     }
 
     /**
-     * Mobile callbacks must reach the advisor's cell — not a desk SIP endpoint.
+     * Mobile callbacks must reach the advisor's cell - not a desk SIP endpoint.
      */
     public function mobileCallbackDestinationFor(User $user): ?string
     {

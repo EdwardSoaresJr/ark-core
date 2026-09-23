@@ -7,14 +7,14 @@ Architecture documents are **reviewed**. Implementation documents are **updated*
 | Document | Change policy |
 |----------|---------------|
 | `ARCHITECTURE.md` | Architecture review required |
-| `adr/` | Immutable once accepted — supersede, never edit |
+| `adr/` | Immutable once accepted - supersede, never edit |
 | `STANDARDS.md` | Architecture review required |
 | `CURRENT_MILESTONE.md` | Keep current and short |
 | `ACTIVE_PR.md` | Keep current and short |
 
 Treat `docs/engineering/adr/` and permanent architecture docs like a core domain model: almost never change without intentional architecture review. A CODEOWNERS rule (or team convention) should protect these paths.
 
-Domain canonical architecture (e.g. `docs/communications/ark-voice-endpoint-architecture-v1.md`) follows the same review discipline — it does not live under `docs/engineering/`.
+Domain canonical architecture (e.g. `docs/communications/ark-voice-endpoint-architecture-v1.md`) follows the same review discipline - it does not live under `docs/engineering/`.
 
 ## Architectural Rules
 
@@ -56,13 +56,13 @@ Domain canonical architecture (e.g. `docs/communications/ark-voice-endpoint-arch
 
 ## ARK Forge (Agent 2)
 
-ARK Forge is an **engineering workbench** — observability, workspace, task running (earned later). The dashboard is one projection.
+ARK Forge is an **engineering workbench** - observability, workspace, task running (earned later). The dashboard is one projection.
 
 | Layer | Role |
 |-------|------|
 | Git + `docs/engineering/` | Engineering truth |
-| **Forge Core** | Workstation capability truth — capability graph, never product domain |
-| **Workbench (Flutter)** | Views only — projection + capability invoke |
+| **Forge Core** | Workstation capability truth - capability graph, never product domain |
+| **Workbench (Flutter)** | Views only - projection + capability invoke |
 
 Agent 2 bounded context: **ARK Forge only.** Do not pull ARK Voice into Forge reviews. Agent 1 ships product code and ignores Forge.
 
@@ -76,11 +76,11 @@ Friction notebook: [forge-observation-notebook.md](research/forge-observation-no
 
 ## Customer shell contract
 
-**Status:** Stable — do not revisit without compelling reason. Product doctrine: [ark-website-doctrine-v1.md](../platform/ark-website-doctrine-v1.md).
+**Status:** Stable - do not revisit without compelling reason. Product doctrine: [ark-website-doctrine-v1.md](../platform/ark-website-doctrine-v1.md).
 
 **Rule:** No customer-facing page may bypass `x-customer.shell` without an **explicit documented exception** in the PR.
 
-Delegates are allowed — they must render through the shell:
+Delegates are allowed - they must render through the shell:
 
 - `x-public.lead-intake` → `x-customer.shell`
 - `x-portal.app` → `x-customer.shell`
@@ -94,7 +94,7 @@ Delegates are allowed — they must render through the shell:
 
 **Must inherit the shell:** marketing pages, lead intake, estimates, payments, vehicle history, approvals, and any other normal customer workflow.
 
-**Vocabulary:** Customer UI uses Sign In, My Account, My Vehicles, My Repairs, My Estimates. `portal.*` routes and `Portal*` classes are implementation detail — not customer copy.
+**Vocabulary:** Customer UI uses Sign In, My Account, My Vehicles, My Repairs, My Estimates. `portal.*` routes and `Portal*` classes are implementation detail - not customer copy.
 
 **When customer-shell work is allowed** (otherwise → Growth lane; see [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md)):
 
@@ -108,7 +108,7 @@ No other customer-shell or doctrine refinement without compelling production rea
 
 ## Active sprint (2026-07)
 
-**Communications Workspace v1** — lead → reply → revenue slice. Not Communications v2.
+**Communications Workspace v1** - lead → reply → revenue slice. Not Communications v2.
 
 Contract: [communications-workspace-sprint-v1.md](../communications/communications-workspace-sprint-v1.md)
 

@@ -517,7 +517,7 @@ SurfaceRouting::appRoutes(function (): void {
                 ->middleware('permission:'.ArkCapability::SettingsManage->value)
                 ->name('operations.observations.index');
 
-            // Hidden platform admin — not in nav. Master admin only.
+            // Hidden platform admin - not in nav. Master admin only.
             Route::get('/app/platform/clusters', ClusterIndexController::class)
                 ->name('platform.clusters.index');
 
@@ -602,7 +602,7 @@ SurfaceRouting::appRoutes(function (): void {
                 Route::post('/app/appointments/board-view', AppointmentScheduleBoardViewController::class)
                     ->name('operations.appointments.board-view');
 
-                // Canonical product entry — prefer over /app/appointments/create for new CTAs.
+                // Canonical product entry - prefer over /app/appointments/create for new CTAs.
                 Route::get('/app/schedule', ScheduleEntryController::class)
                     ->name('operations.schedule');
 
@@ -1125,7 +1125,7 @@ SurfaceRouting::appRoutes(function (): void {
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
             ->name('operations.repair-orders.show');
 
-        // Temporary GET bridges — bookmarks only. Removal gate: 2026-09-01 + zero access-log hits.
+        // Temporary GET bridges - bookmarks only. Removal gate: 2026-09-01 + zero access-log hits.
         // Do not restore competing Repair Order page variants on these paths.
         Route::get('/app/repair-orders/{repairOrder}/edit', RepairOrderLegacySurfaceRedirectController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersView->value);

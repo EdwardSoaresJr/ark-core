@@ -131,7 +131,7 @@ class OperationalReportRangeMetrics
     }
 
     /**
-     * Owner day-review KPIs — executive pulse plus margin, pipeline, and break-even supplements.
+     * Owner day-review KPIs - executive pulse plus margin, pipeline, and break-even supplements.
      *
      * @return list<array{label: string, value: string, hint: string, tone: 'good'|'warn'|null}>
      */
@@ -827,7 +827,7 @@ class OperationalReportRangeMetrics
     }
 
     /**
-     * Margin health rows — closed sales truth vs shop targets.
+     * Margin health rows - closed sales truth vs shop targets.
      *
      * @return list<array{metric: string, actual: string, target: string, posture: string, tone: 'good'|'warn'|null, action: string}>
      */
@@ -890,7 +890,7 @@ class OperationalReportRangeMetrics
                     ? $this->comparePercentPosture($partsMarginPercent, $targets['parts_margin_target_percent'])
                     : $this->matchedCostHint($invoice['lines_match'], $components['parts_sales_missing_cost_cents'], 'parts sales have no cost', ''),
                 $partsComplete ? ShopExcellenceTargets::toneForMinimumPercent($partsMarginPercent, $targets['parts_margin_target_percent']) : null,
-                'Follow the parts matrix — advisors do not discount margin away',
+                'Follow the parts matrix - advisors do not discount margin away',
             ),
             $this->marginHealthRow(
                 'Labor gross profit margin',
@@ -918,7 +918,7 @@ class OperationalReportRangeMetrics
     }
 
     /**
-     * Management P&L from closed RO truth — not bookkeeper P&L.
+     * Management P&L from closed RO truth - not bookkeeper P&L.
      *
      * @return array{
      *     range_days: int,
@@ -1092,21 +1092,21 @@ class OperationalReportRangeMetrics
                     ? 'Owner Targets monthly payroll tax'
                     : $targets['payroll_tax_reserve_percent'].'% of closed labor cost',
                 'tone' => null,
-                'note' => 'Employer burden estimate — skip if loaded labor cost already includes full burden',
+                'note' => 'Employer burden estimate - skip if loaded labor cost already includes full burden',
             ],
             [
                 'label' => 'Income tax reserve (est.)',
                 'amount' => $this->money($incomeTaxReserveCents),
                 'source' => $targets['income_tax_reserve_percent'].'% of positive operating income',
                 'tone' => null,
-                'note' => 'Rough S-corp / owner distribution planning — not a filing amount',
+                'note' => 'Rough S-corp / owner distribution planning - not a filing amount',
             ],
             [
                 'label' => 'Total tax posture (est.)',
                 'amount' => $this->money($taxCollectedCents + $payrollTaxReserveCents + $incomeTaxReserveCents),
                 'source' => 'Sales + payroll + income reserves',
                 'tone' => null,
-                'note' => 'Cash to set aside beyond normal AP — confirm with bookkeeper',
+                'note' => 'Cash to set aside beyond normal AP - confirm with bookkeeper',
             ],
         ];
 
@@ -1134,7 +1134,7 @@ class OperationalReportRangeMetrics
             'pl_lines' => $plLines,
             'tax_lines' => $taxLines,
             'benchmark' => $benchmark,
-            'disclaimer' => 'Management estimate from posted sales. Reconcile operating income and tax lines with your bookkeeper P&L — ARK does not replace accounting.',
+            'disclaimer' => 'Management estimate from posted sales. Reconcile operating income and tax lines with your bookkeeper P&L - ARK does not replace accounting.',
         ];
     }
 
@@ -1293,7 +1293,7 @@ class OperationalReportRangeMetrics
             'range_days' => $rangeDays,
             'action' => $surplusCents >= 0
                 ? 'Reconcile with the bookkeeper P&L'
-                : 'Raise margin levers or trim fixed costs — see Margin Health rows above',
+                : 'Raise margin levers or trim fixed costs - see Margin Health rows above',
         ];
     }
 
@@ -1349,11 +1349,11 @@ class OperationalReportRangeMetrics
         }
 
         if ($floorCents !== null && $elrCents < $floorCents) {
-            return 'Below ELR floor — check free work and menu pricing';
+            return 'Below ELR floor - check free work and menu pricing';
         }
 
         if ($postedCents !== null && $elrCents < (int) round($postedCents * 0.9)) {
-            return 'ELR leak — posted rate not reaching the bank';
+            return 'ELR leak - posted rate not reaching the bank';
         }
 
         return 'ELR holding near posted rate';
@@ -1372,8 +1372,8 @@ class OperationalReportRangeMetrics
         }
 
         return $laborPercent < $laborTargetPercent
-            ? 'Labor light — matrix or inspection opportunity'
-            : 'Parts light — check parts write-up and matrix';
+            ? 'Labor light - matrix or inspection opportunity'
+            : 'Parts light - check parts write-up and matrix';
     }
 
     private function money(int $cents): string

@@ -185,7 +185,7 @@ test('flag and floor compensation agreement survives hourly pay basis toggle', f
             'roles' => [ArkRole::Technician->value],
             'labor_pay_basis' => TechnicianLaborPayBasis::Hourly->value,
             'labor_cost' => '50.00',
-            // flag_rate / floor_rate omitted — Hourly UI hides them
+            // flag_rate / floor_rate omitted - Hourly UI hides them
         ])
         ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'staff']));
 
@@ -228,7 +228,7 @@ test('new flag technician seeds floor from suggestion without binding to future 
             'roles' => [ArkRole::Technician->value],
             'labor_pay_basis' => TechnicianLaborPayBasis::Flag->value,
             'flag_rate' => '30.00',
-            // floor_rate omitted — seed from suggestion
+            // floor_rate omitted - seed from suggestion
             'labor_cost' => '43.40',
         ])
         ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'staff']));

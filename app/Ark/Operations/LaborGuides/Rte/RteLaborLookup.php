@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Read-only RTE labor guide lookups — mirrors export/example_join_view.sql.
+ * Read-only RTE labor guide lookups - mirrors export/example_join_view.sql.
  */
 final class RteLaborLookup
 {
@@ -552,7 +552,7 @@ final class RteLaborLookup
         return [
             'passed' => true,
             'message' => sprintf(
-                '%s %s — %s · avg %.2f hr (lo %.2f / hi %.2f)',
+                '%s %s - %s · avg %.2f hr (lo %.2f / hi %.2f)',
                 $sample['car_desc'],
                 $modelYear,
                 $sample['job_desc'] ?? $sample['lab_id'],

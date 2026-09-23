@@ -10,7 +10,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
 /**
- * RO payment history on mobile — read-only ledger rows with void affordances
+ * RO payment history on mobile - read-only ledger rows with void affordances
  * when closeout authority allows (same types as desktop financial rail).
  */
 final class MobileLedgerProjection

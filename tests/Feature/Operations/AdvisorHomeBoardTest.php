@@ -81,7 +81,7 @@ test('advisor home shows compact brief and full active repair order board', func
         ->assertDontSee('+ Create Repair Order', false)
         ->assertSee('John Smith', false)
         ->assertSee('2018 Ram 2500', false)
-        ->assertSee('Estimate — Ready', false)
+        ->assertSee('Estimate - Ready', false)
         ->assertSee('ops-job-card__mark--ready', false)
         ->assertSee('ops-job-card__mark-icon', false)
         ->assertSee('ops-job-card__activity', false)
@@ -152,7 +152,7 @@ test('advisor home waiting approval column holds customer-decision repair orders
     expect($matches[1] ?? '')
         ->toContain('ops-card-ro-'.$hot->repair_order_id)
         ->toContain('Waiting Approval')
-        ->toContain('Estimate — Viewed')
+        ->toContain('Estimate - Viewed')
         ->toContain('4d')
         ->toContain('pending')
         ->toContain('data-workboard-decision="1"')
@@ -210,7 +210,7 @@ test('waiting approval cards surface configured status not estimate overlay', fu
 
     expect($html)
         ->toContain('ops-job-card__chip-label">Waiting Approval')
-        ->toContain('Estimate — Ready')
+        ->toContain('Estimate - Ready')
         ->not->toContain('ops-job-card__chip-label">Not Sent')
         ->not->toContain('ops-job-card__chip--warn');
 });
@@ -321,7 +321,7 @@ test('home card surfaces the next appointment on the job board', function () {
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Edwin Scheduled', false)
-        ->assertSee('Scheduled — Today 2:00 PM', false)
+        ->assertSee('Scheduled - Today 2:00 PM', false)
         ->assertDontSee('Appointment · Today 2:00 PM', false);
 
     Carbon::setTestNow();
@@ -353,7 +353,7 @@ test('home card surfaces a vehicle appointment even when the RO is not linked', 
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Edwin Bedburdick', false)
-        ->assertSee('Scheduled — Tomorrow 9:00 AM', false)
+        ->assertSee('Scheduled - Tomorrow 9:00 AM', false)
         ->assertDontSee('Appointment · Tomorrow 9:00 AM', false);
 
     Carbon::setTestNow();

@@ -1645,7 +1645,7 @@
         color: theme('colors.white');
     }
 
-    /* Repair Order Workspace Modal — one size, fixed chrome grammar */
+    /* Repair Order Workspace Modal - one size, fixed chrome grammar */
     .ops-workspace-modal {
         position: fixed;
         inset: 0;
@@ -2056,7 +2056,7 @@
         background: theme('colors.slate.800');
     }
 
-    /* Note primary — same amber as compose Note strip */
+    /* Note primary - same amber as compose Note strip */
     .ops-workspace-modal__primary--note {
         border-color: #c9a227;
         background: #c9a227;
@@ -2070,7 +2070,7 @@
         background: #713f12;
     }
 
-    /* Footer owns actions — body never submits inside Workspace Modal. */
+    /* Footer owns actions - body never submits inside Workspace Modal. */
     .ops-workspace-modal .ops-line-entry-actions {
         display: none;
     }
@@ -2637,7 +2637,7 @@
         padding-left: 0.25rem;
     }
 
-    /* Equal boxed hit targets — expand on pause, not while sliding across the strip */
+    /* Equal boxed hit targets - expand on pause, not while sliding across the strip */
     .ops-repair-action__compose-btn {
         position: relative;
         z-index: 1;
@@ -2671,7 +2671,7 @@
         filter: brightness(0.92);
     }
 
-    /* ARKv1 semantic action fills — exact concern-strip palette */
+    /* ARKv1 semantic action fills - exact concern-strip palette */
     .ops-repair-action__compose-btn--labor {
         background: #3d9a66;
         border-color: #3d9a66;
@@ -3532,7 +3532,7 @@
         color: theme('colors.white');
     }
 
-    /* Matches ark_workspace_tabs.desktop_min_width — intake lives on the right workspace rail on desktop */
+    /* Matches ark_workspace_tabs.desktop_min_width - intake lives on the right workspace rail on desktop */
     @media (min-width: 1024px) {
         .ops-topbar-primary--narrow-only {
             display: none;
@@ -4048,7 +4048,7 @@
         color: rgb(15 23 42);
     }
 
-    /* Operations chrome — dark mode (toggle sets .dark on html) */
+    /* Operations chrome - dark mode (toggle sets .dark on html) */
     html.dark .ops-shell,
     .dark .ops-shell,
     html.dark .ops-main-shell,
@@ -4279,7 +4279,7 @@
         color: color-mix(in srgb, var(--ops-accent-400) 90%, white);
     }
 
-    /* Estimate workspace — dark mode (content panels match shell chrome) */
+    /* Estimate workspace - dark mode (content panels match shell chrome) */
     html.dark .ops-estimate-workspace,
     .dark .ops-estimate-workspace {
         color: rgb(226 232 240);
@@ -7060,7 +7060,7 @@
         align-items: center;
     }
 
-    /* Quiet action links — not nested chip boxes inside the concern frame. */
+    /* Quiet action links - not nested chip boxes inside the concern frame. */
     .ops-line-type-btn {
         display: inline-flex;
         min-height: 1.75rem;
@@ -7223,7 +7223,7 @@
         }
     }
 
-    /* Compose inside the concern — not a nested colored card. */
+    /* Compose inside the concern - not a nested colored card. */
     .ops-line-entry-panel {
         padding: 0.5rem 0;
         border: none;
@@ -9423,7 +9423,7 @@
         box-shadow: none;
     }
 
-    /* Intent group is the outer frame on review — drop stacked review-panel chrome. */
+    /* Intent group is the outer frame on review - drop stacked review-panel chrome. */
     .ops-estimate-workspace .ops-intent-group.ops-review-panel {
         border: 1px solid theme('colors.slate.200');
         background: theme('colors.white');
@@ -9464,7 +9464,7 @@
         transition: width 140ms ease;
     }
 
-    /* Recommendation intent palette — sync with RecommendationIntent::accentColor() + tintBackground() */
+    /* Recommendation intent palette - sync with RecommendationIntent::accentColor() + tintBackground() */
     .ops-worksheet-concern--intent-immediate_attention,
     .ops-review-concern--intent-immediate_attention {
         --ops-scope-accent-500: #9f1239;
@@ -9606,7 +9606,7 @@
         font-weight: 600;
     }
 
-    /* Repair is a section label inside the concern — never a nested panel. */
+    /* Repair is a section label inside the concern - never a nested panel. */
     .ops-repair-action {
         border-top: 1px solid theme('colors.slate.100');
         background: theme('colors.white');
@@ -10592,7 +10592,7 @@
     }
 
     .ops-review-rail-totals-sticky {
-        /* legacy alias — prefer ops-review-rail-totals-pinned */
+        /* legacy alias - prefer ops-review-rail-totals-pinned */
         position: relative;
         z-index: 3;
         background: theme('colors.white');
@@ -15804,7 +15804,7 @@
         overflow-x: auto;
     }
 
-    /* Detail popover expands past the card — don't clip while open/inspecting. */
+    /* Detail popover expands past the card - don't clip while open/inspecting. */
     .ops-cal-day__lanes:has(.ops-cal-card:hover),
     .ops-cal-day__lanes:has(.ops-cal-card:focus-within),
     .ops-cal-day__lanes:has(.ops-cal-appt-event--open) {
@@ -18081,7 +18081,7 @@
         box-shadow: inset 0 2px 0 var(--ops-accent-500);
     }
 
-    /* Calls & VM has no workspace grid under the tabs — free-standing scrollable list. */
+    /* Calls & VM has no workspace grid under the tabs - free-standing scrollable list. */
     .ops-call-library {
         flex: none;
         min-height: auto;
@@ -19598,7 +19598,7 @@
     }
 }
 
-/* Intake layout overrides — outside @layer so spacing/width rules always win */
+/* Intake layout overrides - outside @layer so spacing/width rules always win */
 .ops-cal-month__head,
 .ops-cal-month__week,
 .ops-cal-week {
@@ -21267,7 +21267,7 @@
     border-top: 1px solid theme('colors.slate.200');
 }
 
-/* Shop settings — labor category hour rounding (segmented radios, not native selects) */
+/* Shop settings - labor category hour rounding (segmented radios, not native selects) */
 .ops-labor-rounding {
     display: inline-flex;
     flex-wrap: nowrap;
@@ -21368,7 +21368,7 @@ html.dark .ops-main .ops-labor-rounding__option:has(input:checked):hover,
     color: theme('colors.slate.950');
 }
 
-/* Shop settings — full-width workspace for dense admin tables */
+/* Shop settings - full-width workspace for dense admin tables */
 .ops-main:has(.ops-shop-settings),
 .ops-main:has(.ops-profile-settings) {
     max-width: min(100%, var(--ops-workspace-max, 1920px));
@@ -21545,7 +21545,7 @@ html.dark .ops-main .ops-labor-rounding__option:has(input:checked):hover,
     }
 }
 
-/* Shop settings — parts matrix delete confirm */
+/* Shop settings - parts matrix delete confirm */
 .ops-parts-matrix-delete-btn {
     display: inline-flex;
     min-height: 2.25rem;
@@ -21583,7 +21583,7 @@ html.dark .ops-main .ops-parts-matrix-delete-btn.is-ready,
     color: theme('colors.white');
 }
 
-/* Ultra-wide workspace frame — outside @layer so width caps survive Tailwind compile order */
+/* Ultra-wide workspace frame - outside @layer so width caps survive Tailwind compile order */
 .ops-shell {
     background: #e8edf3;
 }
@@ -25641,13 +25641,13 @@ html.dark .ops-printing-cmd,
         }
     }
 
-    /* Public marketing surface — LugsNPlugs Theme System v1
+    /* Public marketing surface - LugsNPlugs Theme System v1
        Surfaces: Identity · Shop · Diagnostic · Proof · Action
        Density: compact confidence. Gold optional. Typography before containers. */
     .public-surface {
         --customer-public-sticky-top: 4.75rem;
         --public-blue: #0099cc;
-        --public-blue-dark: #007aa3; /* sole hover/dark blue — do not introduce #0088b8 / ark-cerulean drift */
+        --public-blue-dark: #007aa3; /* sole hover/dark blue - do not introduce #0088b8 / ark-cerulean drift */
         --public-red: #c41e3a;
         --public-red-dark: #a01830;
         --public-navy: #0f172a;
@@ -25678,7 +25678,7 @@ html.dark .ops-printing-cmd,
         color: var(--public-blue-dark);
     }
 
-    /* Theme v1 — shared inner-page link (never #0088b8) */
+    /* Theme v1 - shared inner-page link (never #0088b8) */
     .public-link {
         color: var(--public-blue);
         font-weight: 600;
@@ -25698,7 +25698,7 @@ html.dark .ops-printing-cmd,
         color: var(--public-blue);
     }
 
-    /* Forms native to the site — not floating SaaS cards */
+    /* Forms native to the site - not floating SaaS cards */
     .public-surface .public-panel {
         border-radius: var(--public-radius);
         border-color: var(--public-border);
@@ -25723,7 +25723,7 @@ html.dark .ops-printing-cmd,
         color: var(--public-text-muted);
     }
 
-    /* Common Problems — reference / diagnostic grammar (not Home composition) */
+    /* Common Problems - reference / diagnostic grammar (not Home composition) */
     .public-cp-article,
     .public-cp-index {
         max-width: var(--public-read-max);
@@ -26132,7 +26132,7 @@ html.dark .ops-printing-cmd,
         }
     }
 
-    /* Call is utility — outline, not a competing filled primary. */
+    /* Call is utility - outline, not a competing filled primary. */
     .public-surface .customer-header__contact-link--primary {
         border: 1px solid rgb(0 153 204 / 0.35);
         border-radius: 0.375rem;
@@ -26326,7 +26326,7 @@ html.dark .ops-printing-cmd,
         color: #fff;
     }
 
-    /* Photo hero — trust band is in-flow so it never covers the Book CTA. */
+    /* Photo hero - trust band is in-flow so it never covers the Book CTA. */
     .public-photo-hero {
         position: relative;
         display: flex;
@@ -26469,7 +26469,7 @@ html.dark .ops-printing-cmd,
         padding-bottom: 0.4375rem;
     }
 
-    /* Quiet factual proof — not a badge strip */
+    /* Quiet factual proof - not a badge strip */
     .public-photo-hero__facts {
         display: flex;
         flex-wrap: wrap;
@@ -26549,7 +26549,7 @@ html.dark .ops-printing-cmd,
         color: #fecaca;
     }
 
-    /* How it works — process first; photo evidence below, not a marketing split */
+    /* How it works - process first; photo evidence below, not a marketing split */
     .public-book-band {
         background: var(--public-surface-shop);
         padding: var(--public-space-band) 0 var(--public-space-section);
@@ -26660,12 +26660,12 @@ html.dark .ops-printing-cmd,
         }
     }
 
-    /* Legacy process band kept for safety if referenced elsewhere — visually unused on Home */
+    /* Legacy process band kept for safety if referenced elsewhere - visually unused on Home */
     .public-process-band {
         display: none;
     }
 
-    /* Proof — compact quote band */
+    /* Proof - compact quote band */
     .public-testimonial-band {
         background: var(--public-surface-proof);
         color: #fff;
@@ -26731,7 +26731,7 @@ html.dark .ops-printing-cmd,
         color: #fff;
     }
 
-    /* Diagnostic differentiator — statement beside real shop evidence (not wallpaper) */
+    /* Diagnostic differentiator - statement beside real shop evidence (not wallpaper) */
     .public-brand-moment {
         background: var(--public-navy);
         color: #fff;
@@ -26827,7 +26827,7 @@ html.dark .ops-printing-cmd,
         background: var(--public-red, #c41e3a);
     }
 
-    /* Editorial problem discovery — text links, not chips */
+    /* Editorial problem discovery - text links, not chips */
     .public-home-problems__title {
         margin: 0;
         font-size: clamp(1.375rem, 2.4vw, 1.875rem);
@@ -26921,7 +26921,7 @@ html.dark .ops-printing-cmd,
         color: var(--public-blue);
     }
 
-    /* Proof + financing — one chapter; two columns on desktop */
+    /* Proof + financing - one chapter; two columns on desktop */
     .public-home-proof-chapter {
         padding: var(--public-space-section) 0;
         background: var(--public-surface-shop-alt);
@@ -27023,7 +27023,7 @@ html.dark .ops-printing-cmd,
         color: var(--public-text-muted);
     }
 
-    /* Legacy Home closing CTA — unused when hero/header Book already covers conversion */
+    /* Legacy Home closing CTA - unused when hero/header Book already covers conversion */
     .public-home-next {
         display: none;
     }
@@ -27275,7 +27275,7 @@ html.dark .ops-printing-cmd,
         display: none;
     }
 
-    /* Homepage symptoms — Shop surface */
+    /* Homepage symptoms - Shop surface */
     .public-home-symptoms {
         padding: var(--public-space-section) 0;
         background: var(--public-surface-shop);
@@ -27293,7 +27293,7 @@ html.dark .ops-printing-cmd,
         font-size: clamp(1.375rem, 2.5vw, 1.75rem);
     }
 
-    /* Book page — public marketing surface (not portal/app form) */
+    /* Book page - public marketing surface (not portal/app form) */
     .public-book-surface {
         padding-bottom: 3rem;
         background: #fff;
@@ -27572,7 +27572,7 @@ html.dark .ops-printing-cmd,
         margin: 0.25rem 0 0;
     }
 
-    /* Book Appointment — modal overlay on the public website (not a blank page) */
+    /* Book Appointment - modal overlay on the public website (not a blank page) */
     body.public-book-overlay-open {
         overflow: hidden;
     }
@@ -27629,7 +27629,7 @@ html.dark .ops-printing-cmd,
     }
 
     .public-book-experience__panel {
-        width: min(100%, 36rem); /* ~576px — AutoOps-style dialog */
+        width: min(100%, 36rem); /* ~576px - AutoOps-style dialog */
         max-height: min(94vh, 100%);
         margin: 0;
         padding: 1.25rem 1.25rem 1.75rem;
@@ -28154,7 +28154,7 @@ html.dark .ops-printing-cmd,
         padding: 0;
     }
 
-    /* Credential badges — cerulean wash; squared so they don’t match nav capsules. */
+    /* Credential badges - cerulean wash; squared so they don’t match nav capsules. */
     .public-trust-strip li {
         flex: 1 1 calc(50% - 0.25rem);
         border-radius: 0.375rem;
@@ -28332,7 +28332,7 @@ html.dark .ops-printing-cmd,
             margin-top: 0;
         }
 
-        /* Estimate rail is too narrow for side-by-side CTAs — keep stacked. */
+        /* Estimate rail is too narrow for side-by-side CTAs - keep stacked. */
         .customer-page-split__rail .public-financing-note--featured {
             flex-direction: column;
             align-items: stretch;
@@ -28434,7 +28434,7 @@ html.dark .ops-printing-cmd,
         margin-bottom: 0;
     }
 
-    /* RepairPal subnav — editorial text, not a chip tray */
+    /* RepairPal subnav - editorial text, not a chip tray */
     .public-repairpal-nav {
         margin-top: 1.25rem;
         padding: 0;
@@ -28493,7 +28493,7 @@ html.dark .ops-printing-cmd,
         color: var(--public-navy);
     }
 
-    /* Financing programs — type + dividers, vendor buttons stay vendor */
+    /* Financing programs - type + dividers, vendor buttons stay vendor */
     .public-financing-programs {
         margin: 0;
         padding: 0;
@@ -28548,7 +28548,7 @@ html.dark .ops-printing-cmd,
         height: 2.25rem;
     }
 
-    /* Contact — editorial reach list */
+    /* Contact - editorial reach list */
     .public-reach-list {
         margin: 0.75rem 0 0;
         padding: 0;
@@ -28980,7 +28980,7 @@ html.dark .ops-printing-cmd,
         box-shadow: 0 1px 2px rgb(0 153 204 / 0.08), 0 16px 40px -24px rgb(0 153 204 / 0.35);
     }
 
-    /* Public page shell — shared rhythm across customer-facing pages */
+    /* Public page shell - shared rhythm across customer-facing pages */
     .public-page-layout--editorial {
         display: flex;
         flex-direction: column;
@@ -30502,7 +30502,7 @@ html.dark .ops-printing-cmd,
         display: none;
     }
 
-    /* Explicit columns — arbitrary Tailwind grid templates are not always in the built CSS. */
+    /* Explicit columns - arbitrary Tailwind grid templates are not always in the built CSS. */
     .public-contact-page__columns {
         display: grid;
         gap: 2rem;
@@ -30896,7 +30896,7 @@ html.dark .ops-printing-cmd,
         margin-top: 0.75rem;
     }
 
-    /* Customer public surface — dark theme (system default + html.dark manual override) */
+    /* Customer public surface - dark theme (system default + html.dark manual override) */
     html.dark .public-surface {
         color: theme('colors.slate.100');
         background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
@@ -31617,7 +31617,7 @@ html.dark .ops-printing-cmd,
         color: theme('colors.slate.300');
     }
 
-    /* RO inspection entry — dense strip, not a floating card */
+    /* RO inspection entry - dense strip, not a floating card */
     .ops-inspection-entry {
         margin-bottom: 0.5rem;
         border: 1px solid theme('colors.slate.200');
@@ -31733,7 +31733,7 @@ html.dark .ops-printing-cmd,
         color: theme('colors.white');
     }
 
-    /* Inspection v1.5 — finding-first workspace */
+    /* Inspection v1.5 - finding-first workspace */
     .ops-inspection-flash {
         margin-bottom: 0.75rem;
         border: 1px solid theme('colors.emerald.200');
@@ -31785,7 +31785,7 @@ html.dark .ops-printing-cmd,
         color: theme('colors.slate.900');
     }
 
-    /* Findings tab — embedded in RO workspace (not standalone page) */
+    /* Findings tab - embedded in RO workspace (not standalone page) */
     .ops-inspection--tab {
         padding: 0.75rem 0.875rem 1rem;
     }
@@ -32778,7 +32778,7 @@ html.dark .ops-printing-cmd,
         color: theme('colors.slate.600');
     }
 
-    /* —— Phase 1 section walk —— */
+    /* -- Phase 1 section walk -- */
     .ops-inspection-sections__back a {
         font-size: 0.875rem;
         font-weight: 700;
@@ -33319,7 +33319,7 @@ html.dark .ops-printing-cmd,
         max-width: 56rem;
     }
 
-    /* Tablet bay shell — dense capture card, not stretched phone form */
+    /* Tablet bay shell - dense capture card, not stretched phone form */
     .ops-inspection-tablet-shell {
         background:
             radial-gradient(1200px 600px at 50% -10%, rgba(0, 153, 204, 0.14), transparent 55%),
@@ -33649,7 +33649,7 @@ html.dark .ops-printing-cmd,
         text-align: center;
     }
 
-    /* Today — Tekmetric craft: cockpit strip + dense scan lanes */
+    /* Today - Tekmetric craft: cockpit strip + dense scan lanes */
     .ops-today {
         display: flex;
         min-height: 100%;
@@ -34768,7 +34768,7 @@ html.dark .ops-printing-cmd,
 
 }
 
-/* RO orientation dock — compact next-step chrome (footer-first) */
+/* RO orientation dock - compact next-step chrome (footer-first) */
 body:has([data-ro-orientation-header]) {
     --ops-ro-dock-reserve: 5.25rem;
 }
@@ -34799,7 +34799,7 @@ body:has([data-ro-orientation-header]) .ops-estimate-workspace {
     }
 }
 
-/* Community Giveaway — public event page (reusable campaign content) */
+/* Community Giveaway - public event page (reusable campaign content) */
 .public-community-giveaway {
     width: min(42rem, 100%);
     margin: 0 auto;

@@ -1,8 +1,8 @@
 # ARK Constitution v1
 
-**Status:** Constitutional — constrains future decisions  
+**Status:** Constitutional - constrains future decisions  
 **Not:** A roadmap, architecture diagram, or style guide  
-**Purpose:** When ideas arrive, the first answer is often *"Not yet"* — not because the idea is bad, but because it has not earned its place.
+**Purpose:** When ideas arrive, the first answer is often *"Not yet"* - not because the idea is bad, but because it has not earned its place.
 
 ---
 
@@ -12,9 +12,9 @@
 
 Orientation reduces reconstruction. Stations reduce searching. Operator intent removes configuration. Infrastructure discovery removes installation. Certifications prove trust. The [Operator Notebook](../product/operator-notebook.md) closes the loop: shop → thought → cert → code → shop.
 
-ARK is an **operating system for an automotive shop**. Phones, Asterisk, Twilio, Flutter, and workstations are implementation — not the product.
+ARK is an **operating system for an automotive shop**. Phones, Asterisk, Twilio, Flutter, and workstations are implementation - not the product.
 
-**Product identity (frozen):** [ark-product-identity-v1.md](ark-product-identity-v1.md) — ARKv2 = operations workspace · Companion = communications workspace · same authorities, neither becomes the other.
+**Product identity (frozen):** [ark-product-identity-v1.md](ark-product-identity-v1.md) - ARKv2 = operations workspace · Companion = communications workspace · same authorities, neither becomes the other.
 
 ---
 
@@ -26,7 +26,7 @@ Whenever there is tension between adding another capability and keeping the prod
 
 Recent decisions that follow this principle:
 
-- No separate Finding table — evidence lives on the inspection item
+- No separate Finding table - evidence lives on the inspection item
 - Conversations instead of SMS authority
 - RO Workspace instead of more screens
 - Settings instead of hardcoded behavior
@@ -50,7 +50,7 @@ ARK should become more capable by becoming **more coherent**, not by accumulatin
 | **Workspace** | Interaction | Which operator question does this answer? |
 | **Evolution** | Product improvement | Which repeated sentence earned this? |
 
-There is no fifth grammar. **Coherence over capability** sits above them as constitutional principle — not another layer.
+There is no fifth grammar. **Coherence over capability** sits above them as constitutional principle - not another layer.
 
 Full interaction language: [ark-workspace-interaction-language-v1.md](./ark-workspace-interaction-language-v1.md)
 
@@ -67,7 +67,7 @@ Evidence justifies truth.
 
 Full doctrine: [ark-truth-stack-v1.md](./ark-truth-stack-v1.md)
 
-**Projection summarizes truth. It never becomes truth.** Every projection is disposable and rebuildable from authority. Narratives (Briefing, Journey story) compose projections — they do not invent truth. If evidence cannot be shown, a claim is not operational truth.
+**Projection summarizes truth. It never becomes truth.** Every projection is disposable and rebuildable from authority. Narratives (Briefing, Journey story) compose projections - they do not invent truth. If evidence cannot be shown, a claim is not operational truth.
 
 See also: doctrine `ark-projection-rule.mdc` · doctrine `ark-explainability-doctrine.mdc`
 
@@ -85,7 +85,7 @@ What kind of argument carries weight when reshaping the product:
 5. Opinion
 ```
 
-Opinion is last — not worthless, but it must be grounded by the layers above before it changes truth, interaction, or intelligence.
+Opinion is last - not worthless, but it must be grounded by the layers above before it changes truth, interaction, or intelligence.
 
 Instrumentation **confirms** notebook observations. It does not replace them.
 
@@ -123,7 +123,7 @@ Authority → Projection → Workspace
 
 ## Earned Intelligence
 
-**Anti-pattern:** Premature Intelligence — answering a question nobody is asking yet.
+**Anti-pattern:** Premature Intelligence - answering a question nobody is asking yet.
 
 **Answer to "We should add AI here":**
 
@@ -139,13 +139,13 @@ See doctrine `ark-earned-intelligence.mdc.`
 
 ## Earned Authority
 
-**Anti-pattern:** Publishing knowledge the shop has not earned — SEO filler, competitor mimicry, fabricated repair counts, AI copy without operational trace.
+**Anti-pattern:** Publishing knowledge the shop has not earned - SEO filler, competitor mimicry, fabricated repair counts, AI copy without operational trace.
 
 **Answer to "We should publish / say / email this":**
 
 > **"What operational truth stands behind it?"**
 
-If the claim cannot trace to a verified repair, repeated customer question, documented procedure, measured data, or explicit shop policy — it does not leave the system.
+If the claim cannot trace to a verified repair, repeated customer question, documented procedure, measured data, or explicit shop policy - it does not leave the system.
 
 Earned Authority is the **gatekeeper** between internal truth and every outbound surface (website, Companion, AI, ARKademy, reports, social, email).
 
@@ -193,7 +193,7 @@ When someone says *"We should build…"* the next response is not yes or no:
 
 > **"What evidence would earn that?"**
 
-That is the habit behind the constitution — more important than the document itself.
+That is the habit behind the constitution - more important than the document itself.
 
 ---
 
@@ -210,7 +210,7 @@ A constitution can become either:
 
 **Everything is allowed to be observed. Almost nothing is allowed to be shipped.**
 
-If Landon says *"I wish the camera stayed open"* — that does **not** mean build camera persistence. It means **write it down**.
+If Landon says *"I wish the camera stayed open"* - that does **not** mean build camera persistence. It means **write it down**.
 
 The notebook is the **safest place in ARK**. Ideas accumulate there freely because they have not earned implementation yet. That keeps the constitution from suppressing curiosity.
 
@@ -218,7 +218,7 @@ The notebook is the **safest place in ARK**. Ideas accumulate there freely becau
 
 The hierarchy of evidence governs **workflow and product tightening**. It does not reopen settled **architecture**.
 
-**Vision may outrank evidence at the architectural level** — once. Examples that were architectural, not sentence-driven:
+**Vision may outrank evidence at the architectural level** - once. Examples that were architectural, not sentence-driven:
 
 - Authority over JSON blobs
 - Projection instead of duplicated UI logic
@@ -233,17 +233,17 @@ After architecture exists, **workflow is earned through observation**. Innovatio
 
 | Era | Question | Examples |
 | --- | --- | --- |
-| **1 — Model reality** | Can we model reality? | Authority, truth, relationships, storage |
-| **2 — Understand reality** | Can we help people understand reality? | Observations, boards, projections, conversations, workspaces |
-| **3 — Improve from reality** | Can reality improve the product? | Notebook, repeated sentences, evolution, constitution |
+| **1 - Model reality** | Can we model reality? | Authority, truth, relationships, storage |
+| **2 - Understand reality** | Can we help people understand reality? | Observations, boards, projections, conversations, workspaces |
+| **3 - Improve from reality** | Can reality improve the product? | Notebook, repeated sentences, evolution, constitution |
 
 ARK is in Era 3. The inventing phase ends here.
 
 Six months from now, the biggest wins may sound boring:
 
-- *"I don't even think about the app anymore."* — Landon
-- *"I just open ARK."* — Molly
-- *"We didn't build that because nobody ever asked for it twice."* — You
+- *"I don't even think about the app anymore."* - Landon
+- *"I just open ARK."* - Molly
+- *"We didn't build that because nobody ever asked for it twice."* - You
 
 That is what mature software sounds like.
 
@@ -267,7 +267,7 @@ See [workspace-evolution-notebook.md](../operations/workspace-evolution-notebook
 
 Read this before merging a major feature.
 
-Customers will not read the doctrine. They will feel the **consistency** every time they use ARK. That consistency — earned coherence — is among ARK's strongest competitive advantages as the platform grows.
+Customers will not read the doctrine. They will feel the **consistency** every time they use ARK. That consistency - earned coherence - is among ARK's strongest competitive advantages as the platform grows.
 
 ---
 
@@ -279,6 +279,6 @@ Customers will not read the doctrine. They will feel the **consistency** every t
 | ark-pressure-first.mdc | Visibility before enforcement |
 | ark-authority-adoption.mdc | Observe adoption before automate |
 | ark-earned-intelligence.mdc | Intelligence after repeated sentences |
-| [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Exit gate — when knowledge may leave the shop |
+| [ark-earned-authority-v1.md](./ark-earned-authority-v1.md) | Exit gate - when knowledge may leave the shop |
 | ark-pr-doctrine-review.mdc | Four-question PR lint |
-| [workspace-evolution-notebook.md](../operations/workspace-evolution-notebook.md) | Era 3 notebook — observe, record, ship reluctantly |
+| [workspace-evolution-notebook.md](../operations/workspace-evolution-notebook.md) | Era 3 notebook - observe, record, ship reluctantly |

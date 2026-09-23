@@ -20,9 +20,9 @@ Do **not** edit frozen Conversations doctrine for wording polish. Enforce alignm
 
 **An advisor should be able to answer a customer's phone call without opening the Repair Order.**
 
-If they answer and immediately know who they are, phone and email, vehicle, repair stage, what's waiting, and what they can do next — this is a true advisor workspace.
+If they answer and immediately know who they are, phone and email, vehicle, repair stage, what's waiting, and what they can do next - this is a true advisor workspace.
 
-If they only see messages — it is a unified inbox. Reject that outcome.
+If they only see messages - it is a unified inbox. Reject that outcome.
 
 That sentence is the design bar for every PR that touches this workspace.
 
@@ -34,9 +34,9 @@ The bounded context may still be named **Communications** in code and domain doc
 
 The **workspace** is not about communications anymore. It is about **customer continuity**.
 
-Transports (SMS, phone, email, Messenger, portal, …) are **one input** into relationship state — not the product center.
+Transports (SMS, phone, email, Messenger, portal, …) are **one input** into relationship state - not the product center.
 
-**Messenger is not a peer product.** After platform/shop Meta separation, Messenger must land in the same Communications continuity workspace and Needs Attention evaluation as SMS — chronological relationship story, transport icon only. Do not ship a Messenger inbox, Messenger tab world, or advisor path that asks “where did that land?”
+**Messenger is not a peer product.** After platform/shop Meta separation, Messenger must land in the same Communications continuity workspace and Needs Attention evaluation as SMS - chronological relationship story, transport icon only. Do not ship a Messenger inbox, Messenger tab world, or advisor path that asks “where did that land?”
 
 | Prefer (engineering / UI intent) | Avoid |
 | --- | --- |
@@ -77,7 +77,7 @@ Next Actions
 ────────────────────────────
 
 Conversation
-  (chronological timeline — below operational context)
+  (chronological timeline - below operational context)
 ```
 
 **Operational context and next actions sit above the conversation.**
@@ -113,9 +113,9 @@ List rows (left list) must still show enough to act without opening: name or Unk
 
 Order of meaning:
 
-1. **Workspace** — *why* (relationship + work state + next actions)
-2. **Timeline** — *when* (chronology)
-3. **Icon** — *how* (transport evidence)
+1. **Workspace** - *why* (relationship + work state + next actions)
+2. **Timeline** - *when* (chronology)
+3. **Icon** - *how* (transport evidence)
 
 That order matters. Do not let transport grouping, channel chrome, or message density displace operational context.
 
@@ -160,7 +160,7 @@ Notice what must **not** exist as authority or primary UX:
 - SMS Inbox
 - Email Inbox
 - Facebook Inbox
-- Call Log (as the relationship product — Calls & VM remains an **evidence** library)
+- Call Log (as the relationship product - Calls & VM remains an **evidence** library)
 
 ---
 
@@ -217,7 +217,7 @@ Honda CR-V
 - Campaign
 - Owner (as CRM ownership fields)
 
-Advisor assignment / active advisor for the relationship may appear when operational — that is floor coverage, not CRM “Owner.”
+Advisor assignment / active advisor for the relationship may appear when operational - that is floor coverage, not CRM “Owner.”
 
 ---
 
@@ -244,7 +244,7 @@ Example beats (not separate panels):
 
 SMS → Phone Call → Voicemail → Email → Portal Message → Facebook Messenger → Estimate Viewed → Estimate Approved · Photo Uploaded
 
-Chronology organizes the story. Transport is an icon / evidence expand — not a group header that splits the story.
+Chronology organizes the story. Transport is an icon / evidence expand - not a group header that splits the story.
 
 ---
 
@@ -280,9 +280,9 @@ Reject any PR that introduces:
 
 | Document / rule | Relationship |
 | --- | --- |
-| [ark-conversations-v1.md](../communications/ark-conversations-v1.md) | Frozen product doctrine (The Six Ones) — do not reword for this guardrail |
+| [ark-conversations-v1.md](../communications/ark-conversations-v1.md) | Frozen product doctrine (The Six Ones) - do not reword for this guardrail |
 | [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) | Frozen authorities + transport doctrine (bounded context name may remain Communications) |
-| ark-attention-queue.mdc | Attention is recovery triage — not a channel inbox |
+| ark-attention-queue.mdc | Attention is recovery triage - not a channel inbox |
 | ark-comms-call-surfaces-lock.mdc | Calls & VM evidence library stays discoverable |
-| ark-projection-rule.mdc | RO / customer surfaces project conversation — never become authority |
+| ark-projection-rule.mdc | RO / customer surfaces project conversation - never become authority |
 | ark-advisor-communications-identity.mdc | Advisor owns the conversation; station is optional metadata |

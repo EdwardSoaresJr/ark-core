@@ -12,7 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Authoritative estimate line delete — shared by operations web and mobile.
+ * Authoritative estimate line delete - shared by operations web and mobile.
  */
 final class DestroyRepairOrderLine
 {

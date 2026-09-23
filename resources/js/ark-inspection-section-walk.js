@@ -1,6 +1,6 @@
 /**
  * Rapid section-based Standard Vehicle Inspection capture.
- * Mutates via existing points.update JSON endpoint — no parallel authority.
+ * Mutates via existing points.update JSON endpoint - no parallel authority.
  */
 export function arkInspectionSectionWalk(config = {}) {
     const stages = (config.stages ?? []).map((stage) => ({
@@ -171,7 +171,7 @@ export function arkInspectionSectionWalk(config = {}) {
             const previous = point.status;
             point.status = status;
             point.status_label = displayLabelForPoint(point, status);
-            // Expand Yellow/Red; collapse Green — never wipe notes/photos/observations.
+            // Expand Yellow/Red; collapse Green - never wipe notes/photos/observations.
             this.syncDisclosure(point);
 
             const payload = { status };
@@ -200,7 +200,7 @@ export function arkInspectionSectionWalk(config = {}) {
             if (!ok) {
                 return;
             }
-            // Visibility of rear brake paths changes — reload host.
+            // Visibility of rear brake paths changes - reload host.
             window.location.reload();
         },
 
@@ -277,7 +277,7 @@ export function arkInspectionSectionWalk(config = {}) {
             }
             point.addressed = !!follow.addressed;
             point.missing_measurement_slots = follow.missing_measurement_slots ?? [];
-            // Missing measurements stay on the compact card — do not open documentation panel.
+            // Missing measurements stay on the compact card - do not open documentation panel.
             this.syncDisclosure(point);
         },
 
@@ -417,6 +417,6 @@ function displayLabelForPoint(point, status) {
         case 'na':
             return 'N/A';
         default:
-            return '—';
+            return '-';
     }
 }

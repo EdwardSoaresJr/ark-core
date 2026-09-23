@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Backup a Compose ARK Box: MySQL dump + install secrets + storage.
-# Redis, images, and logs are not shop truth — omit them.
+# Redis, images, and logs are not shop truth - omit them.
 #
 # Run on the Box host from the Compose project directory, or set ARK_COMPOSE_DIR.
 set -euo pipefail

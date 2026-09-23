@@ -98,7 +98,7 @@ final class InstallationState
     }
 
     /**
-     * Terminal failure checkpoints — install stopped; stranger can retry from Review.
+     * Terminal failure checkpoints - install stopped; stranger can retry from Review.
      */
     public static function hasFailedCheckpoint(): bool
     {
@@ -159,7 +159,7 @@ final class InstallationState
     }
 
     /**
-     * Safe recovery for interrupted IN_PROGRESS only — never clears INSTALLED.
+     * Safe recovery for interrupted IN_PROGRESS only - never clears INSTALLED.
      */
     public static function recoverInterruptedProgress(): bool
     {
@@ -173,7 +173,7 @@ final class InstallationState
     }
 
     /**
-     * Testing helper — never call from application code.
+     * Testing helper - never call from application code.
      */
     public static function resetForTests(): void
     {

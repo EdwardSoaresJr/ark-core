@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Left-rail Communications badge — deduped attention count (one customer, one badge).
+ * Left-rail Communications badge - deduped attention count (one customer, one badge).
  */
 final class CommunicationsNavPressure
 {

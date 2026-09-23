@@ -21,7 +21,7 @@ final class OwnerOperationalPulse
     }
 
     /**
-     * Daily digest — closed sales + operational pressure for the shop day.
+     * Daily digest - closed sales + operational pressure for the shop day.
      *
      * @return array{
      *     range_label: string,
@@ -128,7 +128,7 @@ final class OwnerOperationalPulse
     }
 
     /**
-     * Queue pressure for tomorrow — open approvals, parts, unpaid pickup, etc.
+     * Queue pressure for tomorrow - open approvals, parts, unpaid pickup, etc.
      *
      * @return list<array{label: string, count: int, hint: string, tone: string}>
      */

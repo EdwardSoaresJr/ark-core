@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 /**
- * Advisor-facing communications archive — all calls/conversations, any age when searched.
+ * Advisor-facing communications archive - all calls/conversations, any age when searched.
  */
 final class CommunicationsHistoryQuery
 {
@@ -33,7 +33,7 @@ final class CommunicationsHistoryQuery
     {
         return [
             'q' => trim((string) $request->query('q', '')),
-            // Default window stays tight — search (q) reaches all time.
+            // Default window stays tight - search (q) reaches all time.
             'from' => (string) $request->query('from', now()->subDays(30)->toDateString()),
             'to' => (string) $request->query('to', now()->toDateString()),
             'media' => (string) $request->query('media', ''),

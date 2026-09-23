@@ -46,7 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function (): void {
             require __DIR__.'/../routes/install.php';
-            // Cloud + OIDC before public — legacy catch-all must not swallow /cloud or issuer paths.
+            // Cloud + OIDC before public - legacy catch-all must not swallow /cloud or issuer paths.
             require __DIR__.'/../routes/cloud.php';
             require __DIR__.'/../routes/cloud-ingress.php';
             require __DIR__.'/../routes/portal.php';
@@ -61,7 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
-        // Before StartSession — company host must not inherit Domain=.demo-auto.test.
+        // Before StartSession - company host must not inherit Domain=.demo-auto.test.
         $middleware->prepend(ConfigureSessionCookieDomain::class);
         $middleware->prepend(RedirectCrossSurfaceRequests::class);
         // First-run: file session/cache before DB exists; redirect app traffic to /setup.

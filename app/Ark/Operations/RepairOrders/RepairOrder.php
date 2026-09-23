@@ -39,7 +39,7 @@ class RepairOrder extends Model
 {
     protected static function booted(): void
     {
-        // Shop-facing number is the route key. Never persist (or leave) null —
+        // Shop-facing number is the route key. Never persist (or leave) null -
         // a null repair_order_id breaks route() on index and every show link.
         static::saving(function (RepairOrder $repairOrder): void {
             if ($repairOrder->public_id === null || $repairOrder->public_id === '') {
@@ -126,7 +126,7 @@ class RepairOrder extends Model
     }
 
     /**
-     * Transitional compatibility only — do not use for technician work ownership.
+     * Transitional compatibility only - do not use for technician work ownership.
      * Prefer Repair Action owners (`RepairOrderWorkGroup.owner_user_id`).
      * Kept for seed/defaulting until column retirement.
      */

@@ -95,7 +95,7 @@ final class RecomputeTechnicianCompensableDayAction
      * Auto-clock technicians without a manual lunch punch that shop day lose
      * the shop's default lunch minutes once. If a real Out for Lunch / Back
      * from Lunch punch already exists that day, the gap is already excluded
-     * from the summed punch seconds above — never double-deduct.
+     * from the summed punch seconds above - never double-deduct.
      */
     private function deductAutoLunchIfUnpunched(
         User $technician,

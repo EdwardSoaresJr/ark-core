@@ -91,6 +91,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Repair migration — down is handled by 2026_06_25_100000.
+        // Repair migration - down is handled by 2026_06_25_100000.
     }
 };

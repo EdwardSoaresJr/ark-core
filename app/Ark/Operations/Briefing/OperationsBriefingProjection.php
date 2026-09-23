@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Disposable morning briefing — composes existing projections and explainable rules.
+ * Disposable morning briefing - composes existing projections and explainable rules.
  */
 final class OperationsBriefingProjection
 {

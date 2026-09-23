@@ -1,22 +1,22 @@
-# Screen spec — Settings & Profile
+# Screen spec - Settings & Profile
 
 **ID:** `companion.screen.settings-profile`  
 **Role(s):** All  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Operator identity · notification preferences · **phone online status** · sign out — hidden until More, never clutters home.
+Operator identity · notification preferences · **phone online status** · sign out - hidden until More, never clutters home.
 
 ---
 
 ## Profile screen
 
 - Name · email · role badge
-- Presence — Available · Away (P1)
-- Station — read-only or change (P1)
+- Presence - Available · Away (P1)
+- Station - read-only or change (P1)
 - Edit profile → desktop-only P0 · rare mobile edits defer
 
 ---
@@ -26,18 +26,18 @@ Operator identity · notification preferences · **phone online status** · sign
 ### Notifications
 
 - Customer messages · calls · inspection uploads · estimate approvals
-- Per-category toggles — shop defaults respected
+- Per-category toggles - shop defaults respected
 
 ### Phone / SIP (`phone-sip-status` section)
 
-- Registration status — **Online** / **Offline** / **Connecting**
-- Shop line name — not extension number jargon
-- Troubleshoot — re-register · check network · link to support doc
+- Registration status - **Online** / **Offline** / **Connecting**
+- Shop line name - not extension number jargon
+- Troubleshoot - re-register · check network · link to support doc
 - **Operator language:** "Front Counter phone" not "SIP endpoint"
 
 ### Appearance
 
-- Dark mode — follow system default P0
+- Dark mode - follow system default P0
 
 ### About
 

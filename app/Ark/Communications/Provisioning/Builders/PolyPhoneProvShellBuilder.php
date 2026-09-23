@@ -3,7 +3,7 @@
 namespace App\Ark\Communications\Provisioning\Builders;
 
 /**
- * Empty Poly shell cfg — matches Asterisk 000000000000-phone.cfg.
+ * Empty Poly shell cfg - matches Asterisk 000000000000-phone.cfg.
  */
 final class PolyPhoneProvShellBuilder
 {

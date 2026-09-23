@@ -410,7 +410,7 @@ final class OperationalFlowProjectionBuilder
     private function ageLabel(int $ageMinutes): string
     {
         if ($ageMinutes <= 0) {
-            return '—';
+            return '-';
         }
 
         if ($ageMinutes >= 24 * 60) {
@@ -431,7 +431,7 @@ final class OperationalFlowProjectionBuilder
     private function moneyLabel(int $cents): string
     {
         if ($cents <= 0) {
-            return '—';
+            return '-';
         }
 
         return '$'.number_format($cents / 100, 0);

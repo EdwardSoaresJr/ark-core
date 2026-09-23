@@ -87,7 +87,7 @@ class ShopIntegrationSettingsController
         return $redirect;
     }
 
-    /** @deprecated Use ShopPlatformSettingsController — redirects preserved for old links. */
+    /** @deprecated Use ShopPlatformSettingsController - redirects preserved for old links. */
     public function enableArkMail(Request $request): RedirectResponse
     {
         return app(ShopPlatformSettingsController::class)->connect(

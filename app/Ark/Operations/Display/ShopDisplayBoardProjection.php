@@ -12,7 +12,7 @@ use App\Ark\Operations\Workboard\WorkboardTriageProjection;
 use App\Ark\Operations\Workboard\WorkboardTriageRepairOrderQuery;
 
 /**
- * Ambient shop display projection — consumes advisor home attention board truth.
+ * Ambient shop display projection - consumes advisor home attention board truth.
  */
 final readonly class ShopDisplayBoardProjection
 {

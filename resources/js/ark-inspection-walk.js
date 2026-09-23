@@ -61,7 +61,7 @@ export function arkInspectionWalk(config = {}) {
                 status: 'good',
                 rear_axle_brake_type: type,
             });
-            // Axle choice changes visible walk points — reload host.
+            // Axle choice changes visible walk points - reload host.
             window.location.reload();
         },
 

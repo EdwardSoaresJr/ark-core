@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\LaborGuides\Rte;
 
 /**
- * Related RTE job codes to offer with a primary job — real operations, not fees.
+ * Related RTE job codes to offer with a primary job - real operations, not fees.
  *
  * Keys are parent job prefixes (first 4 chars of lab_id). Values are rte_job_lku codes.
  */

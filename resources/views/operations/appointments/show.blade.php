@@ -60,12 +60,12 @@
                         @endif
                     </p>
                     @unless ($appointment->vehicle)
-                        <p class="mt-0.5 text-[10px] text-slate-500">Add when they arrive — use Reschedule or edit.</p>
+                        <p class="mt-0.5 text-[10px] text-slate-500">Add when they arrive - use Reschedule or edit.</p>
                     @endunless
                 </div>
                 <div class="bg-white px-3 py-2">
                     <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Advisor</p>
-                    <p class="mt-0.5 text-sm font-semibold text-slate-950">{{ $appointment->advisor?->name ?? '—' }}</p>
+                    <p class="mt-0.5 text-sm font-semibold text-slate-950">{{ $appointment->advisor?->name ?? '-' }}</p>
                 </div>
             </div>
 
@@ -102,11 +102,11 @@
         @if ($appointment->status !== App\Ark\Operations\Appointments\AppointmentStatus::Canceled)
             <details class="ops-board-shell" @if ($openCommsPrompt ?? false) open @endif data-appointment-sms>
                 <summary class="cursor-pointer px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                    Customer text — confirmation &amp; reminders
+                    Customer text - confirmation &amp; reminders
                 </summary>
                 <div class="space-y-4 border-t border-slate-200 p-3">
                     <p class="text-xs text-slate-600">
-                        Texts go through Conversation (same as Hub). Nothing sends until you choose — confirmation is one click; reminders only fire if you opt in below.
+                        Texts go through Conversation (same as Hub). Nothing sends until you choose - confirmation is one click; reminders only fire if you opt in below.
                     </p>
 
                     @if (! ($smsCanSend ?? false))
@@ -149,7 +149,7 @@
                             <label class="block">
                                 <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Hours before</span>
                                 <select name="reminder_hours_before" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
-                                    <option value="">— none —</option>
+                                    <option value="">- none -</option>
                                     @foreach ($reminderHoursOptions as $hours)
                                         <option value="{{ $hours }}" @selected((string) old('reminder_hours_before', $appointment->reminder_hours_before) === (string) $hours)>
                                             {{ $hours }} hour{{ $hours === 1 ? '' : 's' }} before
@@ -198,7 +198,7 @@
                     @endif
                     <div class="space-y-2 border border-slate-200 bg-slate-50/60 p-3">
                         <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Booking contact</p>
-                        <p class="text-[11px] text-slate-500">Appointment-owned — correcting a typo here does not change the Customer record.</p>
+                        <p class="text-[11px] text-slate-500">Appointment-owned - correcting a typo here does not change the Customer record.</p>
                         <div class="grid gap-3 sm:grid-cols-2">
                             <label class="block sm:col-span-2">
                                 <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Name</span>

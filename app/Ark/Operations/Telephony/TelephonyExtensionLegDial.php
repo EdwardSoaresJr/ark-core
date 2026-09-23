@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * Asterisk emits a separate AMI channel per extension leg. Those legs often
- * report the desk extension as caller ID — not the customer on the trunk.
+ * report the desk extension as caller ID - not the customer on the trunk.
  */
 final class TelephonyExtensionLegDial
 {

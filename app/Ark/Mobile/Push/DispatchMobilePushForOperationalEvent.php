@@ -10,7 +10,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
- * Lifecycle pushes from operational events — parts, vehicle ready, waiting parts.
+ * Lifecycle pushes from operational events - parts, vehicle ready, waiting parts.
  */
 final class DispatchMobilePushForOperationalEvent implements ShouldQueue
 {

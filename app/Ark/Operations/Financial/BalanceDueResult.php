@@ -25,7 +25,7 @@ final readonly class BalanceDueResult
     }
 
     /**
-     * Settlement freezes the invoice contract. Deposits alone do not —
+     * Settlement freezes the invoice contract. Deposits alone do not -
      * they reserve work before the final bill is settled.
      */
     public function hasSettlementActivity(): bool

@@ -1,4 +1,4 @@
-# Repair Order Presentation Reset — commit carve-out
+# Repair Order Presentation Reset - commit carve-out
 
 **Status:** Binding until Edward approves commit scope  
 **Date:** 2026-08-06  
@@ -12,7 +12,7 @@
 - Builder product-language retirement
 - Related tests/docs for the above
 
-## Financial F1 — carve out (do not stage)
+## Financial F1 - carve out (do not stage)
 
 | Path | Why |
 | --- | --- |
@@ -30,16 +30,16 @@
 | `tests/Feature/Operations/Financial/FinancialCoreAuthorityTest.php` | F1 assertions |
 | `tests/Feature/Operations/Financial/FinancialWorkflowUiTest.php` | F1 UI assertions |
 
-## Adjacent — classify before stage
+## Adjacent - classify before stage
 
 | Path | Likely bucket |
 | --- | --- |
-| `app/Ark/Operations/Documents/EstimateDocument.php` | Invoice immutability / PDF — **not** Presentation Reset; keep with F1 or separate micro-fix |
-| `app/Ark/Operations/Documents/EstimateDocumentService.php` | Same — issued invoice PDF metadata |
+| `app/Ark/Operations/Documents/EstimateDocument.php` | Invoice immutability / PDF - **not** Presentation Reset; keep with F1 or separate micro-fix |
+| `app/Ark/Operations/Documents/EstimateDocumentService.php` | Same - issued invoice PDF metadata |
 
 If unsure at commit time: leave unstaged with F1.
 
-## Present footer — Tablet
+## Present footer - Tablet
 
 Flutter **customer** presentation / signature deep link: **not found** in `arksmsv2` or `ark-mobile` (staff Companion only).
 
@@ -55,9 +55,9 @@ Earn gate to show Tablet again: ship customer-facing Flutter deep link, then add
 
 | Test | Verdict | Evidence |
 | --- | --- | --- |
-| ApprovalForecast portal “Approved Work Breakdown” | **Pre-existing copy/test drift** — not rename | Portal `_estimate-summary-panel` renders `Approved work breakdown` (sentence case); PDF footer uses Title Case. `assertSee(..., false)` is case-sensitive. |
+| ApprovalForecast portal “Approved Work Breakdown” | **Pre-existing copy/test drift** - not rename | Portal `_estimate-summary-panel` renders `Approved work breakdown` (sentence case); PDF footer uses Title Case. `assertSee(..., false)` is case-sensitive. |
 | Customer hub deferred copy | **Pre-existing copy/test drift** | Hub shows `Immediate attention item should be revisited calmly.`; test still expects retired `Safety/drivability…` string. |
-| RO deferred Vehicle History on show GET | **Rename-adjacent** — fixed | Canonical show had `workspaceMode="builder"` (Estimate-only tabs). Restored `workspaceMode="review"`. History remains lazy; test now hits `workspace-tabs/history`. |
+| RO deferred Vehicle History on show GET | **Rename-adjacent** - fixed | Canonical show had `workspaceMode="builder"` (Estimate-only tabs). Restored `workspaceMode="review"`. History remains lazy; test now hits `workspace-tabs/history`. |
 | “Schedule maintenance due at next service” | **Pre-existing copy/test drift** | `RecommendationIntent::deferredFollowUpAction()` returns `Schedule maintenance at next service` (no “due”); test expectation stale. |
 
-Do **not** “fix” the three pre-existing copy drifts inside the Presentation Reset commit unless Edward asks — they are unrelated product-copy debt.
+Do **not** “fix” the three pre-existing copy drifts inside the Presentation Reset commit unless Edward asks - they are unrelated product-copy debt.

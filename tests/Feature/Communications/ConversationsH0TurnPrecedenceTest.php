@@ -1,7 +1,7 @@
 <?php
 
 /**
- * H0.2.1 — Communication event precedence regressions.
+ * H0.2.1 - Communication event precedence regressions.
  *
  * Newest unresolved inbound customer communication owns Waiting on Shop.
  * Transport must never matter. Shop action resolves.
@@ -182,7 +182,7 @@ test('precedence: advisor SMS after inbound call does not close the work', funct
     expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Shop);
 
     Carbon::setTestNow(Carbon::parse('2026-07-13 12:05:00', 'UTC'));
-    $recorder->recordOutboundSms($customer, $advisor, 'Got your call — here is the estimate.', 'SM-resolves-call');
+    $recorder->recordOutboundSms($customer, $advisor, 'Got your call - here is the estimate.', 'SM-resolves-call');
 
     expect(phoneConversation($customer)->waiting_on)->toBe(ConversationWaitingOn::Shop);
     Carbon::setTestNow();

@@ -1,12 +1,12 @@
 # ARK Mobile Projection v1
 
-**Status:** Production Workspace v1 milestone — see [ark-mobile-production-workspace-v1.md](./ark-mobile-production-workspace-v1.md)  
-**Product doctrine:** [ark-mobile-workflow-doctrine.md](./ark-mobile-workflow-doctrine.md) — workflow engine, not CRUD screens  
+**Status:** Production Workspace v1 milestone - see [ark-mobile-production-workspace-v1.md](./ark-mobile-production-workspace-v1.md)  
+**Product doctrine:** [ark-mobile-workflow-doctrine.md](./ark-mobile-workflow-doctrine.md) - workflow engine, not CRUD screens  
 **Sequence:** Authority (ARK V2) → **Mobile projection** → Production Workspace UX
 
 **Interaction language:** [ark-workspace-interaction-language-v1.md](../ecosystem/ark-workspace-interaction-language-v1.md)
 
-ARK Mobile is **not** a separate product authority. It is the **production workspace** for technicians — a phone/tablet projection of existing ARK V2 truth.
+ARK Mobile is **not** a separate product authority. It is the **production workspace** for technicians - a phone/tablet projection of existing ARK V2 truth.
 
 **Production Workspace:** [ark-mobile-production-workspace-v1.md](./ark-mobile-production-workspace-v1.md)  
 **Communications transport lock:** [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md)  
@@ -36,7 +36,7 @@ Authority (ARK V2) → Projection (Mobile API) → Flutter UI
 - **Laravel Sanctum** bearer tokens
 - `POST /api/mobile/auth/login` → token
 - `Authorization: Bearer {token}` on all other routes
-- Tokens stored in Flutter via `flutter_secure_storage` — never SharedPreferences
+- Tokens stored in Flutter via `flutter_secure_storage` - never SharedPreferences
 - Same `users` table as web; customer role blocked
 
 ## Phase 1 API
@@ -65,13 +65,13 @@ Route names: `api.mobile.*`
 
 ### Communications (projection only)
 
-Mobile comms endpoints wrap **`Conversation`**, **`ConversationMessage`**, and **`UnifiedOperationalTimeline`**. Outbound reply uses `SendOutboundMessageAction` on the server — never Twilio from Flutter.
+Mobile comms endpoints wrap **`Conversation`**, **`ConversationMessage`**, and **`UnifiedOperationalTimeline`**. Outbound reply uses `SendOutboundMessageAction` on the server - never Twilio from Flutter.
 
 See [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md).
 
 ### `/api/mobile/me` shell
 
-Flutter shapes navigation from authority — not hardcoded roles:
+Flutter shapes navigation from authority - not hardcoded roles:
 
 ```json
 {
@@ -95,11 +95,11 @@ Login returns the same shell fields plus `token` and `token_type`.
 
 ### Device registration
 
-`POST /api/mobile/device` — device observability and optional push token hint:
+`POST /api/mobile/device` - device observability and optional push token hint:
 
 - `device_name`, `platform` (`ios`|`android`|`ipados`|`other`), `app_version`
 - Upserts by user + device_name; updates `last_seen_at`
-- Optional `fcm_token` — transport hint stored on `mobile_devices` when push is enabled later (ARK-owned device truth)
+- Optional `fcm_token` - transport hint stored on `mobile_devices` when push is enabled later (ARK-owned device truth)
 
 Push transport is **deferred**. See [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md). When observation justifies it, configure **Settings → Communications → Mobile** (Firebase project + service account JSON, or optional `FIREBASE_CREDENTIALS` file path).
 
@@ -110,12 +110,12 @@ Technicians discover **assigned work only**:
 - My Work filters `assigned_technician_id = me`
 - RO detail gated by assignment
 - Findings use `InspectionCaptureLinks::canRecord`
-- Communications: conversations linked to assigned ROs only — not shop inbox
+- Communications: conversations linked to assigned ROs only - not shop inbox
 - Customer reply requires `operations.access` (advisor/admin)
 
 ## Flutter client (separate repo)
 
-Legacy `arksms_shop` is reference only — not port wholesale.
+Legacy `arksms_shop` is reference only - not port wholesale.
 
 New Flutter app should use:
 

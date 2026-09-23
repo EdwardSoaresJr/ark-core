@@ -12,7 +12,7 @@ use App\Ark\Operations\Messaging\MessageActionContract;
 use App\Ark\Operations\Messaging\MessageActionReply;
 
 /**
- * Turn-based reason labels — explainable from authority, never generative.
+ * Turn-based reason labels - explainable from authority, never generative.
  */
 final class ConversationTurnReason
 {

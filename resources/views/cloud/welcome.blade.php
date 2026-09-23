@@ -27,7 +27,7 @@
                 </p>
             </div>
 
-            {{-- Day-one mission — answers “What do I do now?” before Billing/Domains --}}
+            {{-- Day-one mission - answers “What do I do now?” before Billing/Domains --}}
             <div class="mt-12 rounded-2xl border border-[var(--cloud-line)] bg-white/90 p-6 sm:p-7 text-left shadow-[0_24px_60px_-48px_rgba(0,0,0,0.35)]">
                 <div class="flex items-baseline justify-between gap-3">
                     <p class="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--cloud-muted)]">Next</p>

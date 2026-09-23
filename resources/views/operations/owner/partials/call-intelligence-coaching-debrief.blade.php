@@ -1,7 +1,7 @@
 <div class="rounded-sm border border-slate-300 bg-slate-50/80">
     <div class="border-b border-slate-200 px-3 py-2">
         <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Coaching debrief</h2>
-        <p class="mt-0.5 text-xs text-slate-600">Log what you discussed with the team member. Saved to their coaching profile — owner-only, not visible to advisors.</p>
+        <p class="mt-0.5 text-xs text-slate-600">Log what you discussed with the team member. Saved to their coaching profile - owner-only, not visible to advisors.</p>
         <p class="mt-1 text-xs text-slate-500">
             <a
                 href="{{ \App\Ark\Runtime\Ecosystem\EcosystemArkademyBridge::advisorIncomingCallsUrl() }}"

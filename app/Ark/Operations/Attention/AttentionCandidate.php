@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Attention;
 use App\Ark\Operations\Observations\OperationalObservation;
 
 /**
- * Explainable attention projection — reasons first, score second.
+ * Explainable attention projection - reasons first, score second.
  */
 final readonly class AttentionCandidate
 {

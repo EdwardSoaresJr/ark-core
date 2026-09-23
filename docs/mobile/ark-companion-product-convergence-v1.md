@@ -1,6 +1,6 @@
-# The Companion — Product Convergence v1
+# The Companion - Product Convergence v1
 
-**Status:** Operating model approved (Edward, 2026-07-04) — **superseded for implementation order by [`companion-authority-model-v1.md`](companion-authority-model-v1.md).**  
+**Status:** Operating model approved (Edward, 2026-07-04) - **superseded for implementation order by [`companion-authority-model-v1.md`](companion-authority-model-v1.md).**  
 **Internal name during this sprint:** **The Companion** (not ARK Mobile).  
 **Gate:** [`companion-authority-model-v1.md`](companion-authority-model-v1.md) ✅ → [`companion-event-architecture-sprint-v1.md`](companion-event-architecture-sprint-v1.md) → `companion-shell-v1.md` → Flutter.
 
@@ -14,16 +14,16 @@ Desktop users **browse**. Phone users **react**.
 
 | Surface | Job |
 |---------|-----|
-| **Desktop** | Manage the business — organize, review, configure |
-| **The Companion** | Run the business — respond in the next 30 seconds |
+| **Desktop** | Manage the business - organize, review, configure |
+| **The Companion** | Run the business - respond in the next 30 seconds |
 
 **Primary question (every surface):** *What should I do before I put this phone back in my pocket?*
 
-**Heart of the product:** **Customer Timeline** — not a screen name, an authority. Workspace is how we render it; timeline is what ARK owns.
+**Heart of the product:** **Customer Timeline** - not a screen name, an authority. Workspace is how we render it; timeline is what ARK owns.
 
-**Next sprint (separate):** [Event Architecture Sprint](#9-follow-on-event-architecture-sprint) — events as the platform abstraction shared by mobile, desktop, notifications, voice, and future PTT.
+**Next sprint (separate):** [Event Architecture Sprint](#9-follow-on-event-architecture-sprint) - events as the platform abstraction shared by mobile, desktop, notifications, voice, and future PTT.
 
-**Out of scope:** Voice Phase D backend cleanup — voice subsystem remains **Observing**.
+**Out of scope:** Voice Phase D backend cleanup - voice subsystem remains **Observing**.
 
 **Companions:** [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md) · doctrine `ark-staff-product-constitution.mdc`
 
@@ -33,14 +33,14 @@ Desktop users **browse**. Phone users **react**.
 
 | Decision | Verdict |
 |----------|---------|
-| Delete Apps tab + `AppsScreen` | ✅ Approved — delete tomorrow |
+| Delete Apps tab + `AppsScreen` | ✅ Approved - delete tomorrow |
 | Converge duplicate customer workspaces (one timeline, many entry points) | ✅ Approved |
 | Build everything around **Customer Timeline** | ✅ Approved |
 | Separate **advisor** and **technician** experiences (different products) | ✅ Approved |
 | Search → **Command palette** (Spotlight), not navigation | ✅ Approved |
-| Keep **Customers** as authority + entry point | ✅ Approved — **do not delete** |
-| Communications as "the OS" | ❌ Rejected — **Events are the OS** |
-| Shrink registration banner | ❌ Rejected — **delete banner**; healthy infra invisible |
+| Keep **Customers** as authority + entry point | ✅ Approved - **do not delete** |
+| Communications as "the OS" | ❌ Rejected - **Events are the OS** |
+| Shrink registration banner | ❌ Rejected - **delete banner**; healthy infra invisible |
 
 ---
 
@@ -60,7 +60,7 @@ Appointment          ─┤         (implementation)      (authority)
 Customers tab        ─┘
 ```
 
-**Events are the operating system.** Phone, SMS, portal, inspection, payment, appointment, transfer — each **produces** events. Home **consumes** shop-level events ("what changed since I last looked?"). Customer Timeline **organizes** customer-scoped events. Communications **transports** some of those events — it is not the OS.
+**Events are the operating system.** Phone, SMS, portal, inspection, payment, appointment, transfer - each **produces** events. Home **consumes** shop-level events ("what changed since I last looked?"). Customer Timeline **organizes** customer-scoped events. Communications **transports** some of those events - it is not the OS.
 
 **Stop building pages. Start building workspaces around timelines.**
 
@@ -72,15 +72,15 @@ Customers tab        ─┘
 
 | Layer | Today | Problem |
 |-------|-------|---------|
-| **Apps** | 16-tile launcher | Desktop CRM — **delete** |
+| **Apps** | 16-tile launcher | Desktop CRM - **delete** |
 | **Home** | Pulse widgets + quick actions + attention | Dashboard, not **change feed** |
-| **Comms tab** | reference CRM-style inbox | Treated as OS — should be **recovery view on events** |
-| **Customers tab** | Customer list | Correct **authority** — wrongly flagged as duplicate |
-| **Customer workspace** | Server-projected blocks | Right shape — timeline must become **primary**, not one block |
-| **Search** | Entity lookup | Objects-first — should be **command palette** |
-| **Technician** | Same 5 tabs as advisor | Same **product** — should be **different product** |
-| **Voice banner** | `VoicePostureBanner` ListTile | Diagnostic chrome on healthy path — **delete** |
-| **Identity** | Profile page + decorative station | Not operational — needs **Identity authority** |
+| **Comms tab** | reference CRM-style inbox | Treated as OS - should be **recovery view on events** |
+| **Customers tab** | Customer list | Correct **authority** - wrongly flagged as duplicate |
+| **Customer workspace** | Server-projected blocks | Right shape - timeline must become **primary**, not one block |
+| **Search** | Entity lookup | Objects-first - should be **command palette** |
+| **Technician** | Same 5 tabs as advisor | Same **product** - should be **different product** |
+| **Voice banner** | `VoicePostureBanner` ListTile | Diagnostic chrome on healthy path - **delete** |
+| **Identity** | Profile page + decorative station | Not operational - needs **Identity authority** |
 
 ### 1.2 Correct operating model
 
@@ -101,13 +101,13 @@ Communications is **one subsystem** among producers. Repairs, appointments, port
 
 ARK already has unified timeline read-model:
 
-- `OperationalEventEntry` — composes authority into one renderable event (`app/Ark/Operations/Timeline/`)
+- `OperationalEventEntry` - composes authority into one renderable event (`app/Ark/Operations/Timeline/`)
 - `CommunicationEvent` → timeline mappers
 - Customer workspace API already exposes a `timeline` block
 
 Convergence **surfaces** this model on mobile. Event Architecture Sprint **extends** it platform-wide.
 
-### 1.4 System bugs (unchanged — fix after IA)
+### 1.4 System bugs (unchanged - fix after IA)
 
 | ID | Bug | Convergence fix |
 |----|-----|-----------------|
@@ -117,7 +117,7 @@ Convergence **surfaces** this model on mobile. Event Architecture Sprint **exten
 | SYS-5 | Command bar not context-aware | Timeline-scoped Finish Work |
 | SYS-6 | Duplicated previews | **Timeline replaces duplicates** |
 
-### 1.5 Advisor vs technician — different products
+### 1.5 Advisor vs technician - different products
 
 Not navigation profiles. **Different Companion products** sharing one backend.
 
@@ -125,8 +125,8 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 |--|----------------------|---------------------------|
 | Question | Who needs me? What changed? | What's today's vehicle? |
 | Nav | Home · Comms · **Customers** · Schedule | **Today** · Inspection · Photos · Talk |
-| Never | — | Customers tab, shop inbox, payments nav, approvals queue |
-| Failure test | — | Landon opens Customers → **product failure** |
+| Never | - | Customers tab, shop inbox, payments nav, approvals queue |
+| Failure test | - | Landon opens Customers → **product failure** |
 | Timeline | Customer-scoped | Vehicle/RO-scoped |
 | Done | Pocket after customer action | Pocket after inspection/photos/talk |
 
@@ -139,24 +139,24 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 | Screen | Convergence role |
 |--------|------------------|
 | `home_shell.dart` | Shell: status-bar voice dot · interrupt overlay · Identity strip |
-| `orientation_home_screen.dart` | **Change feed** — not widgets |
-| `comms_hub_screen.dart` | **Recovery** — unhandled transport events, not "the app" |
-| `customers_screen.dart` | **Customer authority entry** — browse/find identity → workspace |
+| `orientation_home_screen.dart` | **Change feed** - not widgets |
+| `comms_hub_screen.dart` | **Recovery** - unhandled transport events, not "the app" |
+| `customers_screen.dart` | **Customer authority entry** - browse/find identity → workspace |
 | `customer_workspace_screen.dart` | **Timeline-first** implementation surface |
 | `repair_order_workspace_screen.dart` | Execution |
 | `vehicle_workspace_screen.dart` | Technician primary object |
-| `global_search_screen.dart` | **Command palette** — not a tab |
-| `communication_thread_screen.dart` | Embed in timeline — not standalone route |
-| Production flows | check-in, VIN, findings, walk-around — capabilities |
+| `global_search_screen.dart` | **Command palette** - not a tab |
+| `communication_thread_screen.dart` | Embed in timeline - not standalone route |
+| Production flows | check-in, VIN, findings, walk-around - capabilities |
 
 ### Delete
 
 | Screen | Reason |
 |--------|--------|
-| `apps_screen.dart` | ✅ Approved — desktop thinking |
+| `apps_screen.dart` | ✅ Approved - desktop thinking |
 | `conversations_screen.dart` | Orphan duplicate of comms hub |
 | `customer_context_screen.dart` | Superseded by workspace + timeline |
-| `attention_screen.dart` | Events feed Home — not third destination |
+| `attention_screen.dart` | Events feed Home - not third destination |
 | `shop_screen.dart` | Shop events on Home feed |
 | `more_screen.dart` | Fold into Settings / Identity |
 
@@ -173,7 +173,7 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 
 ## 3. Duplicate workflow inventory
 
-### 3.1 Not duplicates — shared destination
+### 3.1 Not duplicates - shared destination
 
 | Entry point | Question asked | Same workspace? |
 |-------------|----------------|-----------------|
@@ -184,7 +184,7 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 | **Incoming call** | Who is calling? (interrupt) | ✅ Customer Workspace |
 | **VIN / appointment** | Which customer/vehicle? | ✅ Customer Workspace |
 
-**Bug to fix:** duplicate **workspace implementations** or thread-as-route — not duplicate **entry points**.
+**Bug to fix:** duplicate **workspace implementations** or thread-as-route - not duplicate **entry points**.
 
 ### 3.2 True duplicates (delete)
 
@@ -198,7 +198,7 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 
 ### 3.3 Navigation traps (unchanged)
 
-- Search/command opens in tab navigator — wrong stack
+- Search/command opens in tab navigator - wrong stack
 - Nested Scaffolds on RO drill-in
 - Technician seeing advisor nav
 
@@ -233,15 +233,15 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 | Authority | Owns | Does not own |
 |-----------|------|--------------|
 | **Events (Home)** | Shop-level change feed since `last_seen_at` | Customer browse, execution |
-| **Customers** | Customer **identity** entry — find, recognize, open timeline | Transport routing, inbox mechanics |
+| **Customers** | Customer **identity** entry - find, recognize, open timeline | Transport routing, inbox mechanics |
 | **Communications** | Interrupt handling, recovery queue, transports (phone/SMS/email/portal/VM) | Event vocabulary, customer CRUD |
 | **Customer Timeline** | Unified customer event stream (calls, texts, portal, inspection, payment, RO, VM, photos) | Shop-wide feed |
-| **Repair Order** | Execution — concerns, findings, inspection, production | Shop inbox |
-| **Calendar** | Appointments — day/agenda | Full scheduling CRM |
+| **Repair Order** | Execution - concerns, findings, inspection, production | Shop inbox |
+| **Calendar** | Appointments - day/agenda | Full scheduling CRM |
 | **Operator Identity** | Edward · Ext 105 · Desk/Mobile · presence · availability · current work · move call · transfer (future) | Customer identity |
 | **Settings** | Shop/device config | Operational posture |
 
-**Operator Identity ≠ login.** Login is infrastructure. Identity is **where Edward is in the shop right now** — enormously important for shared extensions, move call, transfer, PTT, multi-device, docked phones, desktop client.
+**Operator Identity ≠ login.** Login is infrastructure. Identity is **where Edward is in the shop right now** - enormously important for shared extensions, move call, transfer, PTT, multi-device, docked phones, desktop client.
 
 ### 4.2 Advisor bottom nav (approved direction)
 
@@ -253,11 +253,11 @@ Not navigation profiles. **Different Companion products** sharing one backend.
 | 4 | `schedule` | Schedule | Who's arriving? |
 
 **Removed:** Apps.  
-**Not a tab:** Command palette (global — pull down or persistent affordance).
+**Not a tab:** Command palette (global - pull down or persistent affordance).
 
 ### 4.3 Technician product (approved direction)
 
-Not a nav profile — a **separate shell** (or mutually exclusive tab set):
+Not a nav profile - a **separate shell** (or mutually exclusive tab set):
 
 ```text
 Today's vehicle  →  Inspection  →  Photos  →  Talk  →  Done
@@ -265,15 +265,15 @@ Today's vehicle  →  Inspection  →  Photos  →  Talk  →  Done
 
 No Customers. No shop Comms hub. No Schedule tab. Talk = internal/advisor channel on assigned RO only.
 
-### 4.4 Internal comms (reserve — NOT IMPLEMENTED)
+### 4.4 Internal comms (reserve - NOT IMPLEMENTED)
 
-PTT · dispatch · announcements · move call · transfer — couple to **Operator Identity** + internal event stream. Never merge into Customer Timeline transport rows.
+PTT · dispatch · announcements · move call · transfer - couple to **Operator Identity** + internal event stream. Never merge into Customer Timeline transport rows.
 
 ---
 
 ## 5. Workspace convergence proposal
 
-### 5.1 Customer Timeline — the heart
+### 5.1 Customer Timeline - the heart
 
 Everything flows into **one timeline**:
 
@@ -283,12 +283,12 @@ Calls · Texts · Portal · Inspection · Payment · Appointment · RO · Voicem
 
 | Block today | Convergence |
 |-------------|-------------|
-| `timeline` | **Primary surface** — not a section below conversation |
-| `conversation` | Latest transport thread **inside** timeline — not parallel page |
-| `calls` | Merge into timeline — delete separate calls preview block |
+| `timeline` | **Primary surface** - not a section below conversation |
+| `conversation` | Latest transport thread **inside** timeline - not parallel page |
+| `calls` | Merge into timeline - delete separate calls preview block |
 | payments, photos, portal | Timeline events + command actions |
 
-### 5.2 Home — change feed, not pressure
+### 5.2 Home - change feed, not pressure
 
 **Question:** *What changed since I last looked?*
 
@@ -306,9 +306,9 @@ Not: *What pressure exists?* (different mental model)
 
 One scannable list. No shop pulse dashboard. No six quick-action tiles. No module summary.
 
-Finish Work may appear **on the event row** — not a separate widget layer.
+Finish Work may appear **on the event row** - not a separate widget layer.
 
-### 5.3 Communications — transport + recovery
+### 5.3 Communications - transport + recovery
 
 **Not the OS.** One event producer and one recovery surface.
 
@@ -316,12 +316,12 @@ Finish Work may appear **on the event row** — not a separate widget layer.
 |------|-----|
 | Interrupt | Incoming call overlay → Customer Workspace |
 | Active call | Compact bar |
-| Recovery | Comms tab — oldest unhandled transport events first |
-| Healthy phone | **Nothing** — see Identity / status bar |
+| Recovery | Comms tab - oldest unhandled transport events first |
+| Healthy phone | **Nothing** - see Identity / status bar |
 
 ### 5.4 Operator Identity + voice chrome
 
-**Delete `VoicePostureBanner` entirely.** Not shrink — delete.
+**Delete `VoicePostureBanner` entirely.** Not shrink - delete.
 
 Healthy infrastructure **does not exist in UI**:
 
@@ -331,7 +331,7 @@ Healthy infrastructure **does not exist in UI**:
 
 Identity authority owns: extension, device, presence, availability, current work, transfer posture (future).
 
-### 5.5 Command palette — not Search nav
+### 5.5 Command palette - not Search nav
 
 Global affordance (Spotlight pattern). Typing **Emma**:
 
@@ -346,12 +346,12 @@ Schedule
 
 Actions before objects. Opens in **root navigator**. Never a bottom tab.
 
-Customers tab remains for **browse-by-identity** — different job than command.
+Customers tab remains for **browse-by-identity** - different job than command.
 
-### 5.6 RO workspace — execution
+### 5.6 RO workspace - execution
 
 Advisor: lifecycle, estimate events on timeline, payments.  
-Technician: inspection, photos, talk — no customer shop workflows.
+Technician: inspection, photos, talk - no customer shop workflows.
 
 ---
 
@@ -362,10 +362,10 @@ Technician: inspection, photos, talk — no customer shop workflows.
 | Target | Status |
 |--------|--------|
 | **Apps tab + `AppsScreen`** | ✅ Delete |
-| **`VoicePostureBanner`** | ✅ Delete — status bar dot only |
+| **`VoicePostureBanner`** | ✅ Delete - status bar dot only |
 | **`ConversationsScreen`** | Delete |
 | **`CustomerContextScreen`** | Delete |
-| **Standalone Attention / Shop destinations** | Delete — merge into Home feed |
+| **Standalone Attention / Shop destinations** | Delete - merge into Home feed |
 | **All Apps capability tiles** | Delete with Apps |
 
 ### 6.2 Do NOT delete
@@ -374,9 +374,9 @@ Technician: inspection, photos, talk — no customer shop workflows.
 |--------|--------|
 | **Customers tab** | Customer identity authority + entry point |
 | **Customer Workspace screen** | Timeline implementation |
-| **Comms recovery tab** | Transport recovery — distinct entry from Customers |
+| **Comms recovery tab** | Transport recovery - distinct entry from Customers |
 | **RO / vehicle workspaces** | Execution |
-| **Voice runtime** | Observing — no transport changes |
+| **Voice runtime** | Observing - no transport changes |
 
 ### 6.3 Demote
 
@@ -449,45 +449,45 @@ Landon never opens Customers.
 
 ## 8. Migration plan
 
-### Phase 0 — ✅ Approved (this document)
+### Phase 0 - ✅ Approved (this document)
 
 Corrections incorporated above. No Flutter until Phase 1 contract frozen.
 
-### Phase 1 — Backend projection (arksmsv2)
+### Phase 1 - Backend projection (arksmsv2)
 
 | Work | Notes |
 |------|-------|
-| **Home change feed API** | Shop events since `last_seen_at` — not attention widgets |
+| **Home change feed API** | Shop events since `last_seen_at` - not attention widgets |
 | **Customer timeline API** | Promote timeline; merge calls/conversation into `OperationalEventEntry` stream |
-| **Shell: advisor vs technician** | Separate `companion_product: advisor \| technician` — not nav tweak |
-| **Operator Identity projection** | Extension, device, presence, current work — `/api/mobile/identity` or shell block |
+| **Shell: advisor vs technician** | Separate `companion_product: advisor \| technician` - not nav tweak |
+| **Operator Identity projection** | Extension, device, presence, current work - `/api/mobile/identity` or shell block |
 | **Command palette API** | Intent results: actions + objects from one query |
 | **Remove Apps from nav payload** | Delete key; no feature flag needed |
 | **Keep Customers nav** | Explicit enabled for advisor/manager only |
 | Document contract | `docs/mobile/companion-shell-v1.md` |
 
-### Phase 2 — Companion shell (ark-mobile)
+### Phase 2 - Companion shell (ark-mobile)
 
 | Work | Priority |
 |------|----------|
 | Delete Apps screen + tab | P0 |
-| Delete `VoicePostureBanner` — status bar dot | P0 |
+| Delete `VoicePostureBanner` - status bar dot | P0 |
 | Home → change feed only | P0 |
 | Timeline-first Customer Workspace | P0 |
 | Command palette (global, not tab) | P0 |
 | Technician shell (separate product) | P0 |
-| Keep Customers tab — clarify vs Comms in UI copy | P1 |
+| Keep Customers tab - clarify vs Comms in UI copy | P1 |
 | Root navigator for command + deep links | P1 |
 
-### Phase 3 — Delete debt
+### Phase 3 - Delete debt
 
 Orphan screens, thread-as-route, Apps deep links, attention/shop standalone.
 
-### Phase 4 — Operator Identity surface
+### Phase 4 - Operator Identity surface
 
 Presence affects routing (when backend ready). Move call · transfer hooks. Multi-device.
 
-### Phase 5 — Observation
+### Phase 5 - Observation
 
 Notebook: "Where do I go?" · technician Customers tab opens (should be zero) · command vs browse usage.
 
@@ -514,7 +514,7 @@ Once you stop thinking in pages and modules, the next thing to stop thinking in 
 | Phone system | Call events |
 | Future PTT | Internal events |
 
-**Goal:** One event vocabulary — mobile, desktop, notifications, voice, PTT — instead of each inventing its own model.
+**Goal:** One event vocabulary - mobile, desktop, notifications, voice, PTT - instead of each inventing its own model.
 
 **Existing foundation (arksmsv2):**
 
@@ -525,33 +525,33 @@ Once you stop thinking in pages and modules, the next thing to stop thinking in 
 
 **Event Architecture Sprint deliverables (draft scope):**
 
-1. Event taxonomy — shop feed vs customer timeline vs RO timeline vs identity events
-2. Producer catalog — every authority that emits, mapped to existing recorders
+1. Event taxonomy - shop feed vs customer timeline vs RO timeline vs identity events
+2. Producer catalog - every authority that emits, mapped to existing recorders
 3. `last_seen_at` / cursor model for "what changed since I last looked"
 4. Mobile API: Home feed = projected shop events; workspace = projected customer events
-5. Push payload maps to event ID + entry point — not module routes
-6. Desktop alignment doc — same events, different organization posture
+5. Push payload maps to event ID + entry point - not module routes
+6. Desktop alignment doc - same events, different organization posture
 
 **Do not start Event Architecture until Companion Phase 2 shell is stable.**
 
 ---
 
-## Appendix A — Glossary
+## Appendix A - Glossary
 
 | Term | Meaning |
 |------|---------|
 | **The Companion** | Phone runs the business |
-| **Event** | Something that happened — the OS abstraction |
+| **Event** | Something that happened - the OS abstraction |
 | **Home feed** | Shop-level: what changed since I last looked |
-| **Customer Timeline** | Customer-scoped event authority — the heart |
+| **Customer Timeline** | Customer-scoped event authority - the heart |
 | **Customer Workspace** | Implementation surface for timeline + actions |
-| **Customers (tab)** | Identity entry — browse/find customer |
-| **Comms (tab)** | Transport recovery — not the OS |
-| **Command palette** | Spotlight — start work, not search nav |
-| **Operator Identity** | Where the operator is — extension, presence, device, current work |
+| **Customers (tab)** | Identity entry - browse/find customer |
+| **Comms (tab)** | Transport recovery - not the OS |
+| **Command palette** | Spotlight - start work, not search nav |
+| **Operator Identity** | Where the operator is - extension, presence, device, current work |
 | **Advisor / Technician Companion** | Different products, same backend |
 
-## Appendix B — Evidence paths
+## Appendix B - Evidence paths
 
 | Area | Path |
 |------|------|
@@ -563,4 +563,4 @@ Once you stop thinking in pages and modules, the next thing to stop thinking in 
 
 ---
 
-**Next step:** **E1 Contract Realization** — architecture closed until implementation proves a gap.
+**Next step:** **E1 Contract Realization** - architecture closed until implementation proves a gap.

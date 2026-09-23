@@ -32,9 +32,9 @@ The event stream is the truth.
 
 This doctrine separates roles that are often collapsed elsewhere:
 
-- **Self-verification by a single role** — one actor plans, executes, measures, and approves its own work
-- **Collapsing planning, execution, observation, and review into one role** — no independent measurement between claim and judgment
-- **Treating conversation as sufficient evidence** — dialogue substitutes for observed diff, test output, and diagnostics
+- **Self-verification by a single role** - one actor plans, executes, measures, and approves its own work
+- **Collapsing planning, execution, observation, and review into one role** - no independent measurement between claim and judgment
+- **Treating conversation as sufficient evidence** - dialogue substitutes for observed diff, test output, and diagnostics
 
 Queues, orchestration, scheduling, and retries are not part of this doctrine. They may be earned later by observed friction. They are not assumed now.
 

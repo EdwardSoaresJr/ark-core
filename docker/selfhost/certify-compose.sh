@@ -11,10 +11,10 @@ echo "==> Disposable Compose stack (mysql + app)"
 "${COMPOSE[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
 "${COMPOSE[@]}" up -d --build
 
-echo "==> Wait for /setup (prefer in-container curl — host port mapping can flake on Docker Desktop)"
+echo "==> Wait for /setup (prefer in-container curl - host port mapping can flake on Docker Desktop)"
 ok=0
 for i in $(seq 1 90); do
-  # Fresh tree must be not_installed — welcome page or start CTA
+  # Fresh tree must be not_installed - welcome page or start CTA
   body=$("${COMPOSE[@]}" exec -T app php -r '
 require "/app/vendor/autoload.php";
 $app = require "/app/bootstrap/app.php";
@@ -120,7 +120,7 @@ echo "==> Recreate app container (storage volume + MySQL persistence)"
 sleep 5
 
 code=$(curl -s -o /tmp/ark-post.html -w "%{http_code}" -L http://127.0.0.1:8088/setup || true)
-# After install, /setup should refuse (302/403/410) — not show a fresh wizard as not_installed
+# After install, /setup should refuse (302/403/410) - not show a fresh wizard as not_installed
 status=$("${COMPOSE[@]}" exec -T app php artisan ark:install-status --no-ansi 2>/dev/null | tr -d '\r' || true)
 echo "post_recreate setup_http=$code"
 echo "$status"

@@ -7,7 +7,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Workboard\WorkboardTriageCard;
 
 /**
- * Needs Action is an attention queue — not a lifecycle status bucket.
+ * Needs Action is an attention queue - not a lifecycle status bucket.
  */
 final class AdvisorHomeActionableAttention
 {

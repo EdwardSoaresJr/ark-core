@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Messaging\Messenger;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Shop Messenger channel settings — no bundled Meta transport in Core.
+ * Shop Messenger channel settings - no bundled Meta transport in Core.
  */
 final class MessengerShopConnection
 {

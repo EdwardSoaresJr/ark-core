@@ -33,11 +33,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 
 WORKDIR /app
 
-# Layer 1: PHP deps — reuse until composer.lock changes
+# Layer 1: PHP deps - reuse until composer.lock changes
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-autoloader --no-scripts --no-interaction
 
-# Layer 2: npm toolchain — reuse until package-lock.json changes
+# Layer 2: npm toolchain - reuse until package-lock.json changes
 COPY package.json package-lock.json .npmrc vite.config.js tailwind.config.js postcss.config.js ./
 ENV PUPPETEER_CACHE_DIR=/app/puppeteer-cache
 ENV PDF_NODE_BINARY=/usr/bin/node
@@ -48,7 +48,7 @@ RUN npm ci --include=dev \
     && npx puppeteer browsers install chrome-headless-shell \
     && chmod -R a+rX /app/puppeteer-cache
 
-# Layer 3: Vite + Tailwind — must track resources/ and invalidate every deploy.
+# Layer 3: Vite + Tailwind - must track resources/ and invalidate every deploy.
 # GHA layer cache can reuse npm run build when COPY resources hits cache incorrectly;
 # GIT_SHA forces a fresh asset build whenever application code ships.
 COPY resources ./resources
@@ -59,7 +59,7 @@ RUN echo "vite build ${GIT_SHA}" && npm run build \
     && test -f /app/public/js/ark/qz-tray.js \
     && test -f /app/public/vendor/qz/qz-tray.js
 
-# Layer 4: Application code — changes often; refresh autoload only (no npm/composer re-download)
+# Layer 4: Application code - changes often; refresh autoload only (no npm/composer re-download)
 # NOTE: One COPY with multiple dirs flattens contents into /app/ (breaks bootstrap/app.php).
 COPY app ./app
 COPY bootstrap ./bootstrap

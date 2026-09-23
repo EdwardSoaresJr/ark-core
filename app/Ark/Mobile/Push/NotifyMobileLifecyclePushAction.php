@@ -9,7 +9,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Telephony\CallSession;
 
 /**
- * Lifecycle-aware mobile pushes — advisor copy, not generic alerts.
+ * Lifecycle-aware mobile pushes - advisor copy, not generic alerts.
  */
 final class NotifyMobileLifecyclePushAction
 {

@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Inspections;
 
 /**
- * Customer reporting evidence boundary — allowlist, not blacklist.
+ * Customer reporting evidence boundary - allowlist, not blacklist.
  * Unknown / future purposes stay hidden until explicitly classified.
  */
 final class InspectionCustomerEvidenceAllowlist

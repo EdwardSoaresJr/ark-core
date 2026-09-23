@@ -1,7 +1,7 @@
 # Interaction Craft vs Product Doctrine v1
 
 **Status:** Frozen v1  
-**Standing rule:** Every competitor review — Shopmonkey, Tekmetric, AutoLeap, Mitchell, Fullbay, Shop-Ware, and all that follow — must use this template.  
+**Standing rule:** Every competitor review - Shopmonkey, Tekmetric, AutoLeap, Mitchell, Fullbay, Shop-Ware, and all that follow - must use this template.  
 **Companions:** Projection Rule · Pressure First · Attention Queue · product doctrine · Workspace Rules · [Constitution](ark-constitution-v1.md)
 
 ---
@@ -43,7 +43,7 @@ Product doctrine is not (workflow ownership, authority boundaries, mental models
 
 ## Standing review format
 
-Every competitor review follows this structure — extract durable insights, not feature checklists:
+Every competitor review follows this structure - extract durable insights, not feature checklists:
 
 1. **Operating model**
 2. **Interaction craft worth stealing**
@@ -56,7 +56,7 @@ Every competitor review follows this structure — extract durable insights, not
 Culture: learn without letting competitors dictate ARK's architecture. Name what they solved well. Name why we will not copy everything. Not defensive. Not “we're better.”
 
 The value is not that every review produces new doctrine.  
-The value is that every review is evaluated through the same lens — continuous learning without architectural drift.
+The value is that every review is evaluated through the same lens - continuous learning without architectural drift.
 
 ---
 
@@ -110,7 +110,7 @@ Those are different goals.
 
 **A board that accepts everything eventually helps with nothing.**
 
-Pressure-first is why the Workboard exists — not visualization. Decision making.
+Pressure-first is why the Workboard exists - not visualization. Decision making.
 
 **Every new card field must eliminate a click or a decision. Otherwise it does not belong.**
 
@@ -145,19 +145,19 @@ These are **postures**, not entities:
 
 Shorthand for future decisions: *Should this live in the right rail?* → *Is it Persistent Context?*
 
-Wrenchy pins money in a sticky right rail. That is one choice of persistent context. ARK's right rail should own **posture** — whatever must stay visible while the advisor works — not finance alone.
+Wrenchy pins money in a sticky right rail. That is one choice of persistent context. ARK's right rail should own **posture** - whatever must stay visible while the advisor works - not finance alone.
 
 ---
 
 ### 2. Interaction craft worth stealing
 
-- Card glance rhythm (who / vehicle / why / next / money / age) — density and hierarchy, not appearance
+- Card glance rhythm (who / vehicle / why / next / money / age) - density and hierarchy, not appearance
 - Column header counts (count yes; infinite pile no)
 - RO chrome: concern + # + disposition/payment badges; customer phone never name-only
 - Persistent context rail (posture, not KPI theater)
-- **Card hover** — richer projection on hover (customer, vehicle, concern, advisor, total, approval) without opening the RO; not another authority
-- Card-edge pay/schedule — only after notebook proves advisors leave the board for those two jobs
-- Compact event strip later from Journey/events — never Overview KPI wall
+- **Card hover** - richer projection on hover (customer, vehicle, concern, advisor, total, approval) without opening the RO; not another authority
+- Card-edge pay/schedule - only after notebook proves advisors leave the board for those two jobs
+- Compact event strip later from Journey/events - never Overview KPI wall
 
 ### 3. Architecture worth rejecting
 
@@ -166,7 +166,7 @@ Wrenchy pins money in a sticky right rail. That is one choice of persistent cont
 - Paid invoices living in Estimates (document type ≠ lifecycle)
 - Overview profit/margin theater (Infinity%/NaN% is the tell)
 - Estimate ↔ Invoice toggle as workflow authority
-- **Peer RO tabs that are not peers** — Carfax / Timeclocks / Appointments are projections:
+- **Peer RO tabs that are not peers** - Carfax / Timeclocks / Appointments are projections:
 
 | Concern | Belongs to |
 | --- | --- |
@@ -194,7 +194,7 @@ The RO must not become a junk drawer either.
 
 ### 5. Steal list
 
-Earned later from floor pain — not from the screenshot alone:
+Earned later from floor pain - not from the screenshot alone:
 
 1. Enforce Workboard Card glance checklist on redesigns
 2. Column header counts where missing
@@ -237,7 +237,7 @@ Earned later from floor pain — not from the screenshot alone:
 - KPI theater
 - Settings-first customization
 
-That discipline keeps ARK from becoming “Wrenchy with different colors” — and keeps every future competitor review extracting craft without inheriting doctrine.
+That discipline keeps ARK from becoming “Wrenchy with different colors” - and keeps every future competitor review extracting craft without inheriting doctrine.
 
 ---
 
@@ -255,8 +255,8 @@ Before a competitor review is complete:
 
 ## Freeze
 
-**Interaction Craft vs Product Doctrine v1** — frozen.
+**Interaction Craft vs Product Doctrine v1** - frozen.
 
-Revision only when clusters of review outcomes prove the template itself failed — not because a new competitor has a prettier screen.
+Revision only when clusters of review outcomes prove the template itself failed - not because a new competitor has a prettier screen.
 
 **Process stability:** Do not edit this document during a competitor review. If a Shopmonkey, Tekmetric, AutoLeap, Mitchell, or other review seems to “need” a template change, capture that pressure in a separate notebook note. Only after multiple reviews expose the same limitation consider a v2.

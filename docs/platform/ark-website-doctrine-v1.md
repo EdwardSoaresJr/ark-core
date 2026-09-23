@@ -1,7 +1,7 @@
-# ARK Website Doctrine — One Customer Application
+# ARK Website Doctrine - One Customer Application
 
 **Status:** Canonical  
-**Scope:** LugsNPlugs customer experience — anonymous and authenticated states
+**Scope:** LugsNPlugs customer experience - anonymous and authenticated states
 
 ## The sentence
 
@@ -18,7 +18,7 @@ Sign in **unlocks capability**. It does not change websites.
 
 ---
 
-## Three applications — no more
+## Three applications - no more
 
 ARK has exactly **three** applications. Do not invent a fourth.
 
@@ -26,11 +26,11 @@ ARK has exactly **three** applications. Do not invent a fourth.
 | --- | --- | --- | --- |
 | **1** | **Customer Application** | Customers | Anonymous + authenticated states above |
 | **2** | **Operations Application** | Staff | Everything under `/app/*` |
-| **3** | **Admin Platform** | Owners / admins | **Website**, Growth, Voice, Settings, infrastructure — not customer-facing |
+| **3** | **Admin Platform** | Owners / admins | **Website**, Growth, Voice, Settings, infrastructure - not customer-facing |
 
 Owners think *manage my website* → **Website** product. *Why did it perform / what to fix* → **Growth**. See [ark-website-admin-v1.md](ark-website-admin-v1.md).
 
-Route prefixes (`/`, `/portal/*`, `/app/*`) and guards are implementation detail — not product boundaries.
+Route prefixes (`/`, `/portal/*`, `/app/*`) and guards are implementation detail - not product boundaries.
 
 ---
 
@@ -44,7 +44,7 @@ Customers should not think *I'm going to the Portal.* They should think *I'm sig
 
 | Avoid (customer UI) | Use instead |
 | --- | --- |
-| Customer Portal | *(omit — just the shop name)* |
+| Customer Portal | *(omit - just the shop name)* |
 | Portal Login | **Sign In** |
 | Access the portal | **Sign in** · **My Account** |
 | Portal home | **My Vehicles** · **My Account** |
@@ -70,13 +70,13 @@ Anonymous  ──→  x-customer.shell  ──→  content
 Authenticated ──→  x-customer.shell  ──→  content
 ```
 
-Authentication changes **content inside the shell** — not the shell itself.
+Authentication changes **content inside the shell** - not the shell itself.
 
 That yields identical navigation, responsive behavior, spacing, footer, and typography. Only available features change.
 
 Do not maintain parallel layouts (`lead-intake` as a separate HTML document, unused `layouts/portal.blade.php`, duplicate header/footer in public views).
 
-`x-portal.app` is an internal alias for `x-customer.shell` — not a second shell.
+`x-portal.app` is an internal alias for `x-customer.shell` - not a second shell.
 
 ---
 
@@ -88,13 +88,13 @@ When a customer signs in, they should **never feel like they've left**.
 | --- | --- |
 | Website → Redirect → Different application | Website → **Unlock** |
 
-Same header. Same footer. Same type rhythm. More links and personal content appear — that's it.
+Same header. Same footer. Same type rhythm. More links and personal content appear - that's it.
 
 This is subtle and huge for trust.
 
 ---
 
-## One UI — simplifying rule
+## One UI - simplifying rule
 
 This doctrine **reduces** complexity. It eliminates a category of questions:
 
@@ -124,8 +124,8 @@ Visual drift between anonymous and authenticated is technical debt.
 Customer-facing UI work is incomplete until:
 
 1. Both anonymous and authenticated states reviewed for consistency.
-2. Shared components reused — no parallel forks.
-3. Customer copy uses Sign In / My Account vocabulary — not "portal."
+2. Shared components reused - no parallel forks.
+3. Customer copy uses Sign In / My Account vocabulary - not "portal."
 4. Changes render through `x-customer.shell`.
 
 ---
@@ -136,8 +136,8 @@ Customer-facing UI work is incomplete until:
 | --- | --- | --- |
 | **Customer shell** | `resources/views/components/customer/shell.blade.php` | **Only** customer layout entry point |
 | Authenticated alias | `resources/views/components/portal/app.blade.php` | Thin wrapper → `x-customer.shell` |
-| Site chrome | `resources/views/partials/customer/site-header.blade.php` | Header + nav — both states |
-| Site chrome | `resources/views/partials/customer/site-footer.blade.php` | Footer — both states |
+| Site chrome | `resources/views/partials/customer/site-header.blade.php` | Header + nav - both states |
+| Site chrome | `resources/views/partials/customer/site-footer.blade.php` | Footer - both states |
 | Anonymous wrapper | `resources/views/components/public/lead-intake.blade.php` | SEO + instrumentation → delegates to shell |
 | Customer styling | `.public-surface`, `.customer-header` in `resources/css/app.css` | One token set |
 | Navigation | `App\Ark\Customer\CustomerSurfaceNavigation` | Sign In (guest) · My Vehicles (signed in) |
@@ -162,22 +162,22 @@ Customer-facing UI work is incomplete until:
 
 | Document | Relationship |
 | --- | --- |
-| [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc) | Three applications — customer, operations, admin |
-| [ark-earned-authority-v1.md](../ecosystem/ark-earned-authority-v1.md) | Public marketing v1 closed — publication when shop earns new knowledge |
+| [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc) | Three applications - customer, operations, admin |
+| [ark-earned-authority-v1.md](../ecosystem/ark-earned-authority-v1.md) | Public marketing v1 closed - publication when shop earns new knowledge |
 | [ecosystem-identity.md](../branding/ecosystem-identity.md) | Tab mark across ARK products |
-| [shop-identity-v1.md](shop-identity-v1.md) | One shop deployment — customer routes on same host |
+| [shop-identity-v1.md](shop-identity-v1.md) | One shop deployment - customer routes on same host |
 | [website-management-architecture-v1.md](website-management-architecture-v1.md) | Platform manages, Core stores, Foundry serves |
 
 ---
 
-## Public marketing v1 — closed
+## Public marketing v1 - closed
 
 **Closed:** 2026-07-06
 
-v1 is closed — not because the customer site is perfect, but because the foundation is coherent: problem authorities, advisor intake, trust signals, footer, publication paths, and the shop-experience hook (hidden until earned).
+v1 is closed - not because the customer site is perfect, but because the foundation is coherent: problem authorities, advisor intake, trust signals, footer, publication paths, and the shop-experience hook (hidden until earned).
 
 **Homepage layout is frozen** until analytics or floor observation earns a specific change.
 
-The customer application evolves when **the shop earned something new to say** — not when someone has a new layout idea.
+The customer application evolves when **the shop earned something new to say** - not when someone has a new layout idea.
 
 Full doctrine: [ark-earned-authority-v1.md](../ecosystem/ark-earned-authority-v1.md)

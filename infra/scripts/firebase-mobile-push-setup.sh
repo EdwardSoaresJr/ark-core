@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wire Firebase FCM as transport only — client config files + optional production enablement.
+# Wire Firebase FCM as transport only - client config files + optional production enablement.
 # Requires: Firebase Console exports (see docs/mobile/firebase-push-setup-checklist.md)
 set -euo pipefail
 
@@ -30,7 +30,7 @@ Optional:
   --enable-production          SCP secret + enable shop_settings mobile_push on production
   --help
 
-Transport only — no Firestore/Auth/Analytics. FCM Spark plan is free.
+Transport only - no Firestore/Auth/Analytics. FCM Spark plan is free.
 EOF
 }
 
@@ -105,7 +105,7 @@ if [[ "$ENABLE_PRODUCTION" == true ]]; then
     scp "$SERVICE_ACCOUNT" "${PRODUCTION_HOST}:${PRODUCTION_SECRET_HOST}"
     ssh "$PRODUCTION_HOST" "chmod 600 ${PRODUCTION_SECRET_HOST}"
 
-    echo "==> Locking production env + shop dispatch (platform file — not shop JSON)..."
+    echo "==> Locking production env + shop dispatch (platform file - not shop JSON)..."
     ssh "$PRODUCTION_HOST" bash <<REMOTE
 set -euo pipefail
 ENV="/data/coolify/applications/b38otdn2epypspy0jadbgfl0/.env"
@@ -132,7 +132,7 @@ App\\\\Ark\\\\Operations\\\\Settings\\\\ShopSettings::current()->persistTrusted(
 
     echo "==> Verifying push transport..."
     ssh "$PRODUCTION_HOST" "docker exec \$(docker ps --format '{{.Names}}' | grep b38ot | head -1) php artisan ark:mobile-push:verify --migrate-legacy --no-interaction" \
-        || echo "Warning: verify failed — run infra/coolify/ensure-lugsnplugs-firebase-push.sh"
+        || echo "Warning: verify failed - run infra/coolify/ensure-lugsnplugs-firebase-push.sh"
 
     echo "==> Production push wired via platform file. Shop toggle: Settings → Communications → Mobile."
 else

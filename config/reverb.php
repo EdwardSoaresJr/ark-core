@@ -85,7 +85,7 @@ return [
                     'useTLS' => ReverbDeployment::scheme() === 'https',
                 ],
                 // Reverb verifyOrigin() compares parse_url(Origin, PHP_URL_HOST) via Str::is.
-                // Full APP_URL values (https://…) never match — use hostnames (or *).
+                // Full APP_URL values (https://…) never match - use hostnames (or *).
                 'allowed_origins' => filled(env('REVERB_ALLOWED_ORIGINS'))
                     ? array_values(array_filter(array_map('trim', explode(',', (string) env('REVERB_ALLOWED_ORIGINS')))))
                     : (ReverbDeployment::appHost() !== null

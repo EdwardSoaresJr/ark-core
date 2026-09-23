@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Deployment-owned SIP transport — not part of the shop product model.
+ * Deployment-owned SIP transport - not part of the shop product model.
  *
  * Provisioning reads these values; operators never configure them in UI.
- * Desk phones register to Twilio Elastic SIP — not a shop PBX.
+ * Desk phones register to Twilio Elastic SIP - not a shop PBX.
  *
  * @see docs/platform/shop-identity-v1.md
  */

@@ -39,7 +39,7 @@ final class ManagedCommunicationsGate
     }
 
     /**
-     * Compat mirror into Core ConversationMessage — retired after Gate 3.
+     * Compat mirror into Core ConversationMessage - retired after Gate 3.
      * Hosted + Platform authority: always false. Self-host (!platformAuthority): N/A.
      */
     public static function coreMirrorEnabled(): bool

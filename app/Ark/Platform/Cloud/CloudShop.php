@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * M2 — Real Shop ownership for Cloud Funnel.
+ * M2 - Real Shop ownership for Cloud Funnel.
  *
  * Creates / updates platform Shop for one owner. No Tenant, ProvisioningRequest, Stripe, or DNS.
  */
@@ -88,7 +88,7 @@ final class CloudShop
     }
 
     /**
-     * Session / draft shape used by existing funnel views — projected from Shop.
+     * Session / draft shape used by existing funnel views - projected from Shop.
      *
      * @return array{shop_name: string, slug: string, owner_name: string, email: string, shop_id: int}
      */

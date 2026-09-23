@@ -78,7 +78,7 @@ final class OperationalReportPaymentReconciliation
                 ->whereBetween('repair_orders.posted_at', [$this->from, $this->to])
                 ->whereIn('repair_order_ledger_entries.repair_order_id', $salesPostedIds),
         );
-        // Future-posted ROs stay in advance_pay only — never also in cleared_from_ar.
+        // Future-posted ROs stay in advance_pay only - never also in cleared_from_ar.
         $clearedFromAr = $this->ledgerBucket(
             $this->ledgerInRangeQuery()
                 ->whereNotNull('repair_orders.posted_at')
@@ -104,7 +104,7 @@ final class OperationalReportPaymentReconciliation
             $this->row('advance_pay', 'Advance pay', $advancePay, 'Payments on ROs not posted in this range', 'subtract', subtractDisplay: true),
             $this->row('previous_advanced_pay', 'Previous advanced pay', $previousAdvancedPay, 'Pre-range payments on ROs posted in this range', 'add'),
             $this->row('cleared_from_ar', 'Cleared from A/R', $clearedFromAr, 'Payments in range on ROs posted before this range', 'subtract', subtractDisplay: true),
-            $this->row('legacy_carryover', 'Legacy carryover excluded', $legacyCarryoverExcluded, 'Posted in range but opened before the reporting floor — not in posted invoice sales', 'subtract', subtractDisplay: true),
+            $this->row('legacy_carryover', 'Legacy carryover excluded', $legacyCarryoverExcluded, 'Posted in range but opened before the reporting floor - not in posted invoice sales', 'subtract', subtractDisplay: true),
         ];
 
         if ($postedToArCents !== 0) {
@@ -251,7 +251,7 @@ final class OperationalReportPaymentReconciliation
                     'amount' => $this->money((int) ($totalsByRepairOrder[$repairOrder->id] ?? 0)),
                     'posted_at' => $repairOrder->posted_at !== null
                         ? $this->shopDateTimeLabel($repairOrder->posted_at)
-                        : '—',
+                        : '-',
                 ];
             })
             ->values()
@@ -298,7 +298,7 @@ final class OperationalReportPaymentReconciliation
     }
 
     /**
-     * All drawer activity — no trustworthy floor. Must match {@see OperationalReportTotals::cashCollectedCents()}.
+     * All drawer activity - no trustworthy floor. Must match {@see OperationalReportTotals::cashCollectedCents()}.
      *
      * @return Builder<RepairOrderLedgerEntry>
      */

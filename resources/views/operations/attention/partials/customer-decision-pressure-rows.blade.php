@@ -175,7 +175,7 @@
                                         @else
                                             <p class="text-[10px] leading-4 text-slate-500">Snoozes only RO #{{ $schedule['repair_order_shop_number'] }}.</p>
                                         @endif
-                                        <p class="text-[10px] leading-4 text-slate-500">Leaves Work until the day before — then returns as a reminder.</p>
+                                        <p class="text-[10px] leading-4 text-slate-500">Leaves Work until the day before - then returns as a reminder.</p>
                                         <div class="ops-work-item-quick-add-actions">
                                             <button type="button" class="ops-work-item-quick-add-cancel" data-work-item-quick-add-cancel>Cancel</button>
                                             <button type="submit" class="ops-work-item-quick-add-save">Save schedule</button>

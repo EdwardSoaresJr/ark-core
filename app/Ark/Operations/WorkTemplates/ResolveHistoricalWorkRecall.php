@@ -158,7 +158,7 @@ final class ResolveHistoricalWorkRecall
             $reasons[] = 'Drivetrain unknown on current or historical vehicle.';
         }
         if ($yearDelta === 1) {
-            $reasons[] = 'Nearby model year (±1) — generation equivalence not proven.';
+            $reasons[] = 'Nearby model year (±1) - generation equivalence not proven.';
         }
 
         $exactCapable = $yearDelta === 0

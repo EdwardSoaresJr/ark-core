@@ -139,7 +139,7 @@ final class WorkstationPresence
     }
 
     /**
-     * Station lock screen retired — ARK session stays usable at bound stations.
+     * Station lock screen retired - ARK session stays usable at bound stations.
      */
     public function operationalPrivacyActive(): bool
     {

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Safety net only — not marketing CMS. Named route intentionally omitted (no public.book).
+ * Safety net only - not marketing CMS. Named route intentionally omitted (no public.book).
  */
 final class BookingSurfaceRedirectController
 {

@@ -11,7 +11,7 @@ final class ReportVoiceInboundPolicyCommand extends Command
 {
     protected $signature = 'ark:platform:report-voice-inbound-policy';
 
-    protected $description = 'Deprecated — Voice configuration is owned by ARK Platform';
+    protected $description = 'Deprecated - Voice configuration is owned by ARK Platform';
 
     public function handle(): int
     {

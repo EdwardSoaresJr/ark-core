@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Authoritative estimate line update — shared by operations web and mobile.
+ * Authoritative estimate line update - shared by operations web and mobile.
  */
 final class UpdateRepairOrderLine
 {

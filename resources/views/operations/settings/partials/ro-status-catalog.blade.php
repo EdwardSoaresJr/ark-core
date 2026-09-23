@@ -72,7 +72,7 @@
         <section class="border border-slate-200 bg-white">
             <div class="border-b border-slate-200 px-3 py-2">
                 <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Add lifecycle move</p>
-                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Define who can move from one status to another — including backward moves like Approved → Waiting Approval.</p>
+                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Define who can move from one status to another - including backward moves like Approved → Waiting Approval.</p>
             </div>
             <div class="grid gap-3 px-3 py-3 md:grid-cols-2 xl:grid-cols-5">
                 <label class="block text-[11px] font-medium text-slate-500">
@@ -338,7 +338,7 @@
                                 <div class="flex flex-wrap gap-4 border-t border-slate-200 px-3 py-3">
                                     @foreach ($status['variants'] as $variant)
                                         <label class="block min-w-[10rem] text-[11px] font-medium text-slate-500">
-                                            Close — {{ $variant['key'] }}
+                                            Close - {{ $variant['key'] }}
                                             <input
                                                 type="text"
                                                 name="variants[{{ $variant['id'] }}][name]"

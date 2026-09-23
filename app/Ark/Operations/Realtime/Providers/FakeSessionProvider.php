@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Permanent first-class provider — simulates normalized session lifecycle without transport.
+ * Permanent first-class provider - simulates normalized session lifecycle without transport.
  */
 final class FakeSessionProvider implements SessionProvider
 {

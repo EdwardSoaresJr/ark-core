@@ -181,7 +181,7 @@ final class OperationalIdentityPresenter
         if ($addressLines !== null) {
             $lines[] = [
                 'label' => 'Address',
-                'value' => $addressLines['street'] ?? $addressLines['locality'] ?? '—',
+                'value' => $addressLines['street'] ?? $addressLines['locality'] ?? '-',
                 'secondary_value' => filled($addressLines['street'] ?? null) ? $addressLines['locality'] : null,
                 'href' => null,
             ];
@@ -437,7 +437,7 @@ final class OperationalIdentityPresenter
     private static function formatMileageDisplay(mixed $mileage): string
     {
         if ($mileage === null || $mileage === '') {
-            return '—';
+            return '-';
         }
 
         return self::formatMileage($mileage);

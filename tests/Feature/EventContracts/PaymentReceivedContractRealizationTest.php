@@ -39,7 +39,7 @@ test('payment received contract has exactly one financial emitter', function ():
         ->and(File::exists($emitterPath))->toBeTrue();
 });
 
-test('payment received vertical slice — financial authority through projections', function (): void {
+test('payment received vertical slice - financial authority through projections', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();
     issueFinalInvoiceFor($repairOrder);
@@ -94,7 +94,7 @@ test('payment received vertical slice — financial authority through projection
         ->and($roTimelineEntry['tone'])->toBe('financial');
 });
 
-test('deposits do not emit payment received — different business fact', function (): void {
+test('deposits do not emit payment received - different business fact', function (): void {
     $repairOrder = financialCloseoutRepairOrder();
 
     app(RecordLedgerEntryAction::class)->recordDeposit(
@@ -124,7 +124,7 @@ test('payment received clears waiting-on-payment authority posture', function ()
             ->count())->toBe(1);
 });
 
-test('timeline payment entries trace to authority — projections do not invent events', function (): void {
+test('timeline payment entries trace to authority - projections do not invent events', function (): void {
     $repairOrder = financialCloseoutRepairOrder();
     issueFinalInvoiceFor($repairOrder);
 

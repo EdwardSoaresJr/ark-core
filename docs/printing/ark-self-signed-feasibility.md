@@ -12,7 +12,7 @@
 
 | Question | Answer |
 |----------|--------|
-| Can stock QZ Tray silent-print with ARK-issued certs? | **Yes**, when ARK Root CA is trusted on the workstation via `override.crt`, `authcert.override`, or Site Manager whitelist — plus server-side signing via existing `QzTraySigning`. |
+| Can stock QZ Tray silent-print with ARK-issued certs? | **Yes**, when ARK Root CA is trusted on the workstation via `override.crt`, `authcert.override`, or Site Manager whitelist - plus server-side signing via existing `QzTraySigning`. |
 | Can existing ARK sign-message infrastructure be reused? | **Yes.** `QzTraySigning`, `POST /app/api/qz/sign-message`, and `print-helpers.blade.php` already implement the official QZ pattern (`setCertificatePromise` + `setSignaturePromise` + SHA512). |
 | Commercial QZ certificate required? | **No** for proof-of-concept. Commercial certs are pre-trusted by QZ’s embedded root; ARK-owned certs replace that trust with ARK Root CA on each workstation. |
 | Blockers found? | Workstation trust distribution (not PHP signing). ARK must install `override.crt` (or equivalent) on every print workstation. |
@@ -37,9 +37,9 @@ For ARK-owned chains, stock QZ (2.1+) supports replacing or augmenting trust **w
 
 Official references:
 
-- [QZ Signing](https://qz.io/docs/signing) — `setCertificatePromise`, `setSignaturePromise`, SHA512, PKCS#8 2048-bit key
-- [QZ Command Line](https://qz.io/docs/command-line) — `--allow`, `trustedRootCert`
-- [QZ Generate Certificate](https://qz.io/docs/generate-certificate) — commercial portal flow (what we are **not** adopting)
+- [QZ Signing](https://qz.io/docs/signing) - `setCertificatePromise`, `setSignaturePromise`, SHA512, PKCS#8 2048-bit key
+- [QZ Command Line](https://qz.io/docs/command-line) - `--allow`, `trustedRootCert`
+- [QZ Generate Certificate](https://qz.io/docs/generate-certificate) - commercial portal flow (what we are **not** adopting)
 
 **Critical insight:** The browser presents the **leaf signing certificate** (`digital-certificate.txt`). QZ validates that it chains to a **trusted root** (commercial QZ root **or** ARK Root CA via `override.crt`). The server holds the **private key** and signs each privileged QZ API call.
 
@@ -59,7 +59,7 @@ An intermediate CA is **optional** for ARK. A two-level hierarchy is sufficient 
 | Role | File (dev) | Used where |
 |------|------------|------------|
 | ARK Root CA | `ark-root-ca.crt.pem` / `override.crt` | QZ Tray workstation trust only |
-| ARK Root CA private key | `ark-root-ca.key.pem` | **Offline only** — never on web server |
+| ARK Root CA private key | `ark-root-ca.key.pem` | **Offline only** - never on web server |
 | Signing leaf cert | `digital-certificate.txt` | Browser `setCertificatePromise` (injected by Laravel) |
 | Signing private key | `private-key.pem` | Server `QZ_PRIVATE_KEY_PATH` only |
 
@@ -113,13 +113,13 @@ Browser (ARK page)
   → Silent print (no prompt)
 ```
 
-**No code changes are required** to swap commercial QZ certs for ARK-generated certs — only env paths and workstation trust.
+**No code changes are required** to swap commercial QZ certs for ARK-generated certs - only env paths and workstation trust.
 
 ### Not in scope / unchanged
 
-- Shop settings (`shop_settings`) — printer names, label dimensions only; certs stay in env
-- QZ Tray binary — stock install from qz.io
-- Print PDF pipeline — Brother QL raster path unchanged
+- Shop settings (`shop_settings`) - printer names, label dimensions only; certs stay in env
+- QZ Tray binary - stock install from qz.io
+- Print PDF pipeline - Brother QL raster path unchanged
 
 ---
 
@@ -203,7 +203,7 @@ Expect `ready: true` and self-test `true`.
 2. Install `override.crt` on the workstation (see above)
 3. Point local `.env` at dev certs
 4. Log into ARK locally, visit **`/dev/qz-poc`** (local environment only)
-5. Click **Connect** — log should show certificate accepted and signed `getVersion` call
+5. Click **Connect** - log should show certificate accepted and signed `getVersion` call
 6. Optional: open a repair order with `:printing="true"` and print a key tag
 
 Success criteria: QZ connects without “untrusted website” blocking signed calls; sign-message returns 200; print proceeds without Allow dialog.
@@ -233,23 +233,23 @@ As a user with `settings.manage`:
 
 | Approach | Maintenance | Outcome |
 |----------|-------------|---------|
-| ARK cert + stock QZ | Low — OpenSSL + env + workstation trust | **Recommended** |
-| Fork QZ Tray | High — Java desktop releases, security patches | Unnecessary |
-| Commercial QZ cert only | Medium — recurring cost, QZ portal dependency | Valid but not ARK-owned |
-| Client-side JS signing | Security risk — private key in browser | Rejected by QZ and ARK |
+| ARK cert + stock QZ | Low - OpenSSL + env + workstation trust | **Recommended** |
+| Fork QZ Tray | High - Java desktop releases, security patches | Unnecessary |
+| Commercial QZ cert only | Medium - recurring cost, QZ portal dependency | Valid but not ARK-owned |
+| Client-side JS signing | Security risk - private key in browser | Rejected by QZ and ARK |
 
 ---
 
 ## Production migration path (if POC succeeds)
 
-1. **Pilot** — One advisor workstation with `override.crt` + dev certs pointed at staging/local
-2. **Generate production pair** — Separate script invocation with production OU/CN; store PEMs on VPS outside `public/` (see `docs/printing/qz-certificate-investigation.md` paths)
-3. **Env** — `QZ_CERTIFICATE_PATH` / `QZ_PRIVATE_KEY_PATH` on shared `.env`
-4. **Workstation rollout** — Install same ARK Root CA on each print PC (MSI/script/keychain profile)
-5. **Verify** — `GET /app/api/qz/sign-health` on production; print key tag on each machine
-6. **Rotation** — Reissue leaf cert from offline root; root rotation requires re-trust on workstations
+1. **Pilot** - One advisor workstation with `override.crt` + dev certs pointed at staging/local
+2. **Generate production pair** - Separate script invocation with production OU/CN; store PEMs on VPS outside `public/` (see `docs/printing/qz-certificate-investigation.md` paths)
+3. **Env** - `QZ_CERTIFICATE_PATH` / `QZ_PRIVATE_KEY_PATH` on shared `.env`
+4. **Workstation rollout** - Install same ARK Root CA on each print PC (MSI/script/keychain profile)
+5. **Verify** - `GET /app/api/qz/sign-health` on production; print key tag on each machine
+6. **Rotation** - Reissue leaf cert from offline root; root rotation requires re-trust on workstations
 
-Do **not** copy `infra/qz-dev/certs/` to production verbatim — generate a production-specific pair.
+Do **not** copy `infra/qz-dev/certs/` to production verbatim - generate a production-specific pair.
 
 ---
 
@@ -265,7 +265,7 @@ Do **not** copy `infra/qz-dev/certs/` to production verbatim — generate a prod
 
 ## Related docs
 
-- `docs/printing/qz-certificate-investigation.md` — production PEM deployment paths
-- `docs/printing/ark-sms-printing-audit.md` — V1 → V2 signing migration
-- `infra/qz-dev/generate-ark-printing-certs.sh` — dev cert generator
-- `infra/qz-dev/verify-ark-printing-certs.sh` — attribute verifier
+- `docs/printing/qz-certificate-investigation.md` - production PEM deployment paths
+- `docs/printing/ark-sms-printing-audit.md` - V1 → V2 signing migration
+- `infra/qz-dev/generate-ark-printing-certs.sh` - dev cert generator
+- `infra/qz-dev/verify-ark-printing-certs.sh` - attribute verifier

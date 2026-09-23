@@ -51,7 +51,7 @@ final class RepairOrderPaymentCaptureController
         $message = match ($attempt->status) {
             PaymentCaptureAttemptStatus::Succeeded => 'Payment captured and recorded.',
             PaymentCaptureAttemptStatus::Pending, PaymentCaptureAttemptStatus::Accepted => 'Payment is processing. Refresh or check status if it stays open.',
-            PaymentCaptureAttemptStatus::ReconciliationRequired => 'Payment needs reconciliation — do not charge the same amount again until resolved.',
+            PaymentCaptureAttemptStatus::ReconciliationRequired => 'Payment needs reconciliation - do not charge the same amount again until resolved.',
             PaymentCaptureAttemptStatus::Failed => 'Payment capture failed. No ledger payment was recorded.',
             PaymentCaptureAttemptStatus::Cancelled => 'Payment capture cancelled. No ledger payment was recorded.',
         };

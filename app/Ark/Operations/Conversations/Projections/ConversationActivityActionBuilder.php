@@ -15,7 +15,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Action affordances for one timeline activity — shared across mobile and web surfaces.
+ * Action affordances for one timeline activity - shared across mobile and web surfaces.
  *
  * @phpstan-type ConversationActivityAction array{
  *     key: string,

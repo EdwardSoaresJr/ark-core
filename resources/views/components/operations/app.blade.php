@@ -435,7 +435,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                     @elseif (session('learn_snoozed'))
                         <div class="ops-learn-snooze-banner ops-learn-snooze-banner--workspace" role="status">
                             <span>
-                                Training snoozed for {{ session('learn_snoozed.hours') }} hours — back at <strong>{{ session('learn_snoozed.until_label') }}</strong>.
+                                Training snoozed for {{ session('learn_snoozed.hours') }} hours - back at <strong>{{ session('learn_snoozed.until_label') }}</strong>.
                             </span>
                             <a href="{{ \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl() }}">Resume guides</a>
                         </div>

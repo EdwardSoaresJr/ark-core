@@ -66,7 +66,7 @@
                 </ul>
             </div>
         @else
-            <p class="ops-intake-qual-ready-note">Qualification complete — ready to convert.</p>
+            <p class="ops-intake-qual-ready-note">Qualification complete - ready to convert.</p>
         @endif
 
         <div class="ops-intake-qual-footer">

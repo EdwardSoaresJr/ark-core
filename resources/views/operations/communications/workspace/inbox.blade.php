@@ -8,8 +8,8 @@
         default => 'Needs attention',
     };
     $listDescription = match ($listFilter) {
-        'waiting' => 'Waiting on the customer — still owned work',
-        'resolved' => 'Closed — reopen when they come back',
+        'waiting' => 'Waiting on the customer - still owned work',
+        'resolved' => 'Closed - reopen when they come back',
         'all' => 'Every relationship thread',
         default => 'Who needs the shop right now',
     };

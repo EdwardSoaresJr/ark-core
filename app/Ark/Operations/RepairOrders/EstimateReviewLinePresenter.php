@@ -5,7 +5,7 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\Parts\CustomerPartDescriptionPresenter;
 
 /**
- * Customer-facing line labels for estimate review — mirrors PDF/portal presentation.
+ * Customer-facing line labels for estimate review - mirrors PDF/portal presentation.
  */
 final class EstimateReviewLinePresenter
 {

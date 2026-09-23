@@ -32,7 +32,7 @@
                     'name' => 'Multi-Location',
                     'price' => 'Talk to us',
                     'period' => '',
-                    'blurb' => 'For shops running more than one location — same product, room to grow.',
+                    'blurb' => 'For shops running more than one location - same product, room to grow.',
                     'cta' => 'See how it works',
                     'href' => \App\Ark\Platform\Cloud\CloudUrls::route('demo'),
                     'featured' => false,

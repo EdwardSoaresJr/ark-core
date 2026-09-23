@@ -146,7 +146,7 @@ test('advisor can select PPI which replaces Standard before evidence', function 
     app(ApplyInspectionTemplateAction::class)->execute($repairOrder->fresh(), $inspection, actor: $advisor);
 
     expect($inspection->fresh()->inspection_template_id)->toBe($ppi->id)
-        ->and($inspection->items()->where('label', 'Scan — stored codes')->exists())->toBeTrue()
+        ->and($inspection->items()->where('label', 'Scan - stored codes')->exists())->toBeTrue()
         ->and(Inspection::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(1);
 
     $coverage = InspectionCoverageProjection::for($repairOrder->fresh(), $advisor);
@@ -217,7 +217,7 @@ test('confirmed wrong-template correction keeps history and seeds the new checkl
         ->and($inspection->template_corrected_at)->not->toBeNull()
         ->and($item->superseded_at)->not->toBeNull()
         ->and($inspection->items()->whereNotNull('superseded_at')->count())->toBe($beforeItemCount)
-        ->and($inspection->items()->whereNull('superseded_at')->where('label', 'Scan — stored codes')->exists())->toBeTrue()
+        ->and($inspection->items()->whereNull('superseded_at')->where('label', 'Scan - stored codes')->exists())->toBeTrue()
         ->and(Inspection::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(1);
 
     $coverage = InspectionCoverageProjection::for($repairOrder->fresh(), $advisor);

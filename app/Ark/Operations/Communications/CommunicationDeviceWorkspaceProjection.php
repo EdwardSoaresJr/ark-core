@@ -14,7 +14,7 @@ use App\Ark\Operations\Workstations\WorkstationOperatorResolver;
 use Illuminate\Support\Carbon;
 
 /**
- * Device workspace truth — one projection per device render.
+ * Device workspace truth - one projection per device render.
  */
 final class CommunicationDeviceWorkspaceProjection
 {

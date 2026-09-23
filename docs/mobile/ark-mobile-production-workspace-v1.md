@@ -1,11 +1,11 @@
 # ARK Mobile Production Workspace v1
 
 **Status:** Active milestone  
-**Parent doctrine:** [Workflow doctrine](./ark-mobile-workflow-doctrine.md) — workflow engine, not CRUD screens  
+**Parent doctrine:** [Workflow doctrine](./ark-mobile-workflow-doctrine.md) - workflow engine, not CRUD screens  
 **North star:** Can a technician complete an entire repair without needing a desktop?  
 **Sequence:** Authority (ARK V2) → Mobile projection → Production Workspace UX
 
-**Interaction language:** [ark-workspace-interaction-language-v1.md](../ecosystem/ark-workspace-interaction-language-v1.md) — workspace grammar, explainable operations, six questions every object answers
+**Interaction language:** [ark-workspace-interaction-language-v1.md](../ecosystem/ark-workspace-interaction-language-v1.md) - workspace grammar, explainable operations, six questions every object answers
 
 ---
 
@@ -23,7 +23,7 @@ ARK Mobile is no longer a technician app.
 | **ARK Display (Shop TVs / Kiosks)** | See the shop |
 | **ARK Voice** | Connect the shop |
 
-Each is a **projection of the same authority**, optimized for a different audience — not separate apps with overlapping responsibilities.
+Each is a **projection of the same authority**, optimized for a different audience - not separate apps with overlapping responsibilities.
 
 ---
 
@@ -61,7 +61,7 @@ The phone stays in the technician's hand.
 
 ---
 
-## Repair Order — the technician workspace
+## Repair Order - the technician workspace
 
 The Repair Order is the technician's workspace, not a summary card.
 
@@ -81,7 +81,7 @@ Avoid deep navigation stacks. Prefer concern-scoped drill-down over RO-level tab
 
 ---
 
-## Concerns — first-class
+## Concerns - first-class
 
 Technicians think in **concerns**, not repair orders.
 
@@ -98,7 +98,7 @@ Concern detail is the primary production surface. RO detail is the container.
 
 ---
 
-## Findings — finding-first workflow
+## Findings - finding-first workflow
 
 **Recent findings are the default view.** Inspection categories are metadata, not navigation.
 
@@ -116,7 +116,7 @@ Measurement (when applicable)
 Save
 ```
 
-Large **+ Finding** affordance. Findings create existing **`InspectionItem`** authority — no parallel finding store.
+Large **+ Finding** affordance. Findings create existing **`InspectionItem`** authority - no parallel finding store.
 
 ### Camera first
 
@@ -136,7 +136,7 @@ Support voice-to-text as another path to authority:
 
 ARK transcribes. Technician edits if needed. Save.
 
-Voice becomes input to findings — not a separate voice product.
+Voice becomes input to findings - not a separate voice product.
 
 ---
 
@@ -170,7 +170,7 @@ Technicians must be able to, through **existing ARK authority** (no mobile-only 
 - Complete labor operation
 - Record repair verification
 
-All writes go through server projections — same lifecycle and production truth as desktop.
+All writes go through server projections - same lifecycle and production truth as desktop.
 
 ---
 
@@ -243,16 +243,16 @@ Same observation discipline as [ark-mobile-notification-doctrine.md](./ark-mobil
 | Assigned RO comms + internal notes | ✅ | RO-embedded comms rail |
 | Voice-to-text findings | ✅ | Maintain |
 | Tablet layout | ✅ | Photo thumbnails in strip |
-| Labor complete / repair verification | — | Expose via API + UI |
+| Labor complete / repair verification | - | Expose via API + UI |
 | Push notifications | Deferred | Poll until floor proof |
 
-Implement gaps through **new or extended `/api/mobile/*` projections** — never duplicate authority in Flutter.
+Implement gaps through **new or extended `/api/mobile/*` projections** - never duplicate authority in Flutter.
 
 ---
 
 ## Companion docs
 
-- [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md) — API and authority lock
-- [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md) — comms transport lock
-- [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) — notification authority vs transport
-- [technician-scope-doctrine-v1.md](../operations/technician-scope-doctrine-v1.md) — assigned work only
+- [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md) - API and authority lock
+- [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md) - comms transport lock
+- [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) - notification authority vs transport
+- [technician-scope-doctrine-v1.md](../operations/technician-scope-doctrine-v1.md) - assigned work only

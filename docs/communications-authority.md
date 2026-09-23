@@ -1,19 +1,19 @@
 # ARK Communications Authority Doctrine
 
-**Status:** Approved — Conversation authority, `CommunicationEvent`, SMS/Twilio ingress deployed. **Transport:** Twilio-native PV + Elastic SIP (2026-07-05). Operate in shop.
+**Status:** Approved - Conversation authority, `CommunicationEvent`, SMS/Twilio ingress deployed. **Transport:** Twilio-native PV + Elastic SIP (2026-07-05). Operate in shop.
 
 **Foundational doctrine (frozen vocabulary + product split):** [communications-foundational-doctrine-v1.md](communications/communications-foundational-doctrine-v1.md)
 
-**North-star question (one answer path):** *What is the history of this customer relationship, across every channel — and what should we do next?*
+**North-star question (one answer path):** *What is the history of this customer relationship, across every channel - and what should we do next?*
 
 **Green light requirements (must exist before any webhook, provider SDK, or AI agent):**
 
-1. **Two authorities, one system** — `Conversation` (human communication timeline) and `CommunicationEvent` (operational facts) are distinct; they reference each other, never merge into one store  
-2. **Channels are ingress only** — Call, SMS, Voicemail, Email, Website Lead are message sources, not subsystems  
-3. **Customer relationship ownership** — Conversation belongs to the relationship; `ConversationLink` points at Customer, Vehicle, RO; RO timelines are projections, not separate conversation stores  
-4. **One settings authority** — no scattered Phone / AI / Routing / Communication settings  
-5. **Participants, not products** — Customer, Advisor, AI Agent, System speak on one timeline; AI is never a parallel authority  
-6. **Provider layer is replaceable** — Twilio is an adapter, not architecture  
+1. **Two authorities, one system** - `Conversation` (human communication timeline) and `CommunicationEvent` (operational facts) are distinct; they reference each other, never merge into one store  
+2. **Channels are ingress only** - Call, SMS, Voicemail, Email, Website Lead are message sources, not subsystems  
+3. **Customer relationship ownership** - Conversation belongs to the relationship; `ConversationLink` points at Customer, Vehicle, RO; RO timelines are projections, not separate conversation stores  
+4. **One settings authority** - no scattered Phone / AI / Routing / Communication settings  
+5. **Participants, not products** - Customer, Advisor, AI Agent, System speak on one timeline; AI is never a parallel authority  
+6. **Provider layer is replaceable** - Twilio is an adapter, not architecture  
 
 **Purpose:** Communications truth before implementers write webhooks, inbox UI, Twilio integration, or AI receptionist features. This addresses a **true ARK gap** (conversation authority), not a telephony gap.
 
@@ -41,7 +41,7 @@ That fragmentation is the disease. ARKv2 must not recreate it in a shinier packa
 
 > **Conversation is authority; provider tables are ephemeral.**
 
-Once Conversation is authority, Call / SMS / Voicemail / Email / Website Lead become **channels** — the same shift already made with Billing Class, Recommendation Intent, and Repair Actions.
+Once Conversation is authority, Call / SMS / Voicemail / Email / Website Lead become **channels** - the same shift already made with Billing Class, Recommendation Intent, and Repair Actions.
 
 Telephony stops being a phone system. It becomes an **operational context system.**
 
@@ -74,18 +74,18 @@ They are **not the same thing.**
 
 ### ConversationMessage (human communication timeline)
 
-Human-readable acts of communication — append-only.
+Human-readable acts of communication - append-only.
 
 | Example | Participant | Notes |
 |---------|-------------|-------|
 | Customer SMS: *"Can I pick up my truck?"* | Customer | Pure message |
 | Customer SMS: *"Looks good"* | Customer | Pure message |
 | Advisor manual note | Advisor | Pure message |
-| Outbound estimate email (body/summary) | System | Message — something was sent |
+| Outbound estimate email (body/summary) | System | Message - something was sent |
 | Inbound SMS reply | Customer | Pure message |
-| Website lead form content | Customer / System | Message — lead text |
-| Voicemail audio + transcript (future) | Customer | Message — something was received |
-| AI voice reply to caller (future) | AI Agent | Message — something was said |
+| Website lead form content | Customer / System | Message - lead text |
+| Voicemail audio + transcript (future) | Customer | Message - something was received |
+| AI voice reply to caller (future) | AI Agent | Message - something was said |
 
 **ConversationMessage is not:** estimate approved, estimate viewed, missed call, pickup notified, approval recorded. Those are workflow facts.
 
@@ -96,16 +96,16 @@ Workflow-facing facts that communication activity causes or reveals. Append-only
 | Example | May have linked message? | Notes |
 |---------|--------------------------|-------|
 | Estimate sent | Often yes | Event for triggers; message holds email summary |
-| Estimate viewed | **No** | Portal/email open — fact only |
+| Estimate viewed | **No** | Portal/email open - fact only |
 | Estimate approved | **No** | `ApprovalEvent` owns authorization truth; comm event links for posture |
 | Invoice sent | Often yes | Same pattern as estimate sent |
 | Voicemail received | Often yes | Event for attention; message holds transcript/audio ref |
-| Missed call | **No** | Fact only — no human content |
+| Missed call | **No** | Fact only - no human content |
 | Pickup notified | Often yes | Event for triggers |
 | Customer unreachable | **No** | Advisor workflow fact |
 | Approval follow-up needed | **No** | Trigger input |
 
-**Rule:** A `CommunicationEvent` may exist **without** a `ConversationMessage`. A `ConversationMessage` may exist **without** a `CommunicationEvent` (e.g. casual customer chat with no workflow state change). When both exist, the event **references** the message — it does not replace or duplicate it.
+**Rule:** A `CommunicationEvent` may exist **without** a `ConversationMessage`. A `ConversationMessage` may exist **without** a `CommunicationEvent` (e.g. casual customer chat with no workflow state change). When both exist, the event **references** the message - it does not replace or duplicate it.
 
 ### Reference flow (correct)
 
@@ -128,13 +128,13 @@ Estimate emailed
     → CommunicationEvent estimate_sent (workflow fact)
 ```
 
-### Presentation reads both — stores stay separate
+### Presentation reads both - stores stay separate
 
 | Surface | Primary read | Secondary read |
 |---------|--------------|----------------|
-| Inbox / conversation thread | `ConversationMessage` | — |
+| Inbox / conversation thread | `ConversationMessage` | - |
 | RO communication rail | Recent `ConversationMessage` | Recent `CommunicationEvent` summary |
-| `OperationalTimeline` | `CommunicationEvent` + existing operational events | Selected `ConversationMessage` excerpts — **read, never duplicate** |
+| `OperationalTimeline` | `CommunicationEvent` + existing operational events | Selected `ConversationMessage` excerpts - **read, never duplicate** |
 | `OperationalTriggers` | `CommunicationEvent` | Not raw messages |
 
 **Forbidden:** Storing estimate viewed, approval recorded, or missed call as `ConversationMessage` types. **Forbidden:** Maintaining a parallel `OperationalCommunication` log that duplicates `CommunicationEvent` after migration.
@@ -145,13 +145,13 @@ Estimate emailed
 
 | Capability | Location | Role today | Evolution |
 |------------|----------|------------|-----------|
-| Operational communication journal | `OperationalCommunication` | Append-only RO events (estimate sent, follow-up, advisor note) | Workflow projection of `CommunicationEvent` — migrate, do not duplicate |
+| Operational communication journal | `OperationalCommunication` | Append-only RO events (estimate sent, follow-up, advisor note) | Workflow projection of `CommunicationEvent` - migrate, do not duplicate |
 | Email delivery | `EstimateDocumentEmailDelivery`, `InvoiceDocumentEmailDelivery` | Only wired outbound channel; auto-logs comms | First `ConversationMessage` producer |
 | Encounter intake | `Encounter`, `EncounterSource` | Visit recognition; `callback_phone`, source = phone/sms/email | Entry point when conversation creates intake |
 | Approval channel metadata | `ApprovalEvent.source` | phone / sms / portal / email / in_person | Links to `ConversationMessage` when approval came via comms |
-| Operational timeline | `OperationalTimeline` | Merges events, approvals, communications | **Reads** from `CommunicationEvent` + `ConversationMessage` — never duplicates either store |
+| Operational timeline | `OperationalTimeline` | Merges events, approvals, communications | **Reads** from `CommunicationEvent` + `ConversationMessage` - never duplicates either store |
 | Workflow triggers | `OperationalTriggers` | Posture from last communication | Reads from Conversation + `CommunicationEvent` |
-| Phone formatting | `PhoneNumber` | Normalize, display, `tel:` links | Identity helper — not communications authority |
+| Phone formatting | `PhoneNumber` | Normalize, display, `tel:` links | Identity helper - not communications authority |
 | Shop identity on documents | `ShopSettings.phone`, `ShopSettings.email` | PDF/email header fields | Distinct from `ChannelEndpoint` (operational routing) |
 
 **Risk:** Adding Twilio tables, inbox models, and AI config before Conversation authority recreates ARK-SMS's parallel stores (`conversations` + `telephony_calls` + `telephony_messages` + `communication_logs` + scattered settings).
@@ -160,9 +160,9 @@ Estimate emailed
 
 ## Locked Doctrine
 
-### 1. Conversation is the center of gravity — but does not own operational entities
+### 1. Conversation is the center of gravity - but does not own operational entities
 
-Every human communication act — regardless of channel — belongs to one **Conversation** thread.
+Every human communication act - regardless of channel - belongs to one **Conversation** thread.
 
 Operational entities remain **their own authority layers**. Communication provides context; it does not take ownership.
 
@@ -177,16 +177,16 @@ Customer Authority          Vehicle Authority          RO Authority
 
 | Entity | Owned by | Conversation relationship |
 |--------|----------|---------------------------|
-| `Customer` | Customer authority | `ConversationLink` — never `conversation.customer_id` as sole truth |
-| `Vehicle` | Vehicle authority | `ConversationLink` — conversation does not own vehicle state |
-| `RepairOrder` | RO authority | `ConversationLink` — conversation does not own RO status, lines, or totals |
-| `EstimateDocument` | Document authority | `ConversationLink` — conversation does not own snapshot JSON |
+| `Customer` | Customer authority | `ConversationLink` - never `conversation.customer_id` as sole truth |
+| `Vehicle` | Vehicle authority | `ConversationLink` - conversation does not own vehicle state |
+| `RepairOrder` | RO authority | `ConversationLink` - conversation does not own RO status, lines, or totals |
+| `EstimateDocument` | Document authority | `ConversationLink` - conversation does not own snapshot JSON |
 | `ApprovalEvent` | Approval authority | Referenced by `CommunicationEvent`; not owned by conversation |
 | `Encounter` | Intake authority | May be created from conversation; encounter owns intake state |
 
 **Forbidden:** `Conversation` owning or mutating Customer, Vehicle, or RO records. **Forbidden:** Telephony tables becoming the source of truth for who the customer is or what the RO contains.
 
-Linking is explicit (`ConversationLink`), not inferred from provider metadata alone. Provider webhooks resolve context through the linker — they do not subsume operational authority.
+Linking is explicit (`ConversationLink`), not inferred from provider metadata alone. Provider webhooks resolve context through the linker - they do not subsume operational authority.
 
 Staff do not ask: *"Open the phone system."*  
 Staff ask: *"What is the history with this customer?"* and *"What did we say on this RO?"* (projection, not ownership).
@@ -203,7 +203,7 @@ See § Conversation Ownership.
 | Email | A message source with subject/body/attachments | The mailer transport |
 | Website Lead | A message source that opens intake | A marketing CRM |
 
-Twilio becomes **another message source** — not a giant subsystem.
+Twilio becomes **another message source** - not a giant subsystem.
 
 ### 3. Participants, not products
 
@@ -226,7 +226,7 @@ One timeline. Multiple actors. No separate "AI settings app" with its own histor
 > **AI is not an authority system.**  
 > **AI does not own customer state, workflow state, or operational state.**
 
-AI may speak (`ConversationMessage`), suggest actions, or escalate to Attention. AI never writes approvals, estimate lines, RO status, or customer records. AI config lives under Communications settings as participant behavior — not as a parallel product with its own state store.
+AI may speak (`ConversationMessage`), suggest actions, or escalate to Attention. AI never writes approvals, estimate lines, RO status, or customer records. AI config lives under Communications settings as participant behavior - not as a parallel product with its own state store.
 
 Example flow on one conversation:
 
@@ -260,7 +260,7 @@ Website Lead        → ConversationMessage
 
 Only after that proof does Twilio become another ingress adapter.
 
-### 5. Embedded in ARKv2 — not a separate application
+### 5. Embedded in ARKv2 - not a separate application
 
 Communications authority lives inside the same operational runtime as Customer, Vehicle, RO, Estimate, and Attention.
 
@@ -278,7 +278,7 @@ Context is the product. Context must not cross system boundaries.
 
 > **Conversation belongs to the customer relationship, not the repair order.**
 
-Communications often happen **before** an RO exists, **after** an RO closes, or **across multiple open ROs**. Conversation is the **Customer Relationship Authority** layer — larger than telephony, larger than a single job.
+Communications often happen **before** an RO exists, **after** an RO closes, or **across multiple open ROs**. Conversation is the **Customer Relationship Authority** layer - larger than telephony, larger than a single job.
 
 ### Why
 
@@ -296,9 +296,9 @@ The RO may not exist yet. This communication still belongs to the **customer rel
 
 Fleet customer has multiple open ROs:
 
-- RO #1001 — F-150  
-- RO #1002 — Transit  
-- RO #1003 — Silverado  
+- RO #1001 - F-150  
+- RO #1002 - Transit  
+- RO #1003 - Silverado  
 
 Customer calls: *"Where are we at on the fleet vehicles?"*
 
@@ -344,7 +344,7 @@ incoming communication
     → attach communication directly to RO
 ```
 
-For ambiguous contexts — especially fleet or multiple open ROs:
+For ambiguous contexts - especially fleet or multiple open ROs:
 
 - Link to **customer conversation first**  
 - Suggest relevant open ROs  
@@ -376,9 +376,9 @@ One authority. Multiple read projections. No duplicate stores.
 
 Current Phase 1 is **consistent** with this doctrine:
 
-- `Conversation` resolves by **contact identity** (phone, email, website lead surface) — relationship-scoped, not RO-scoped  
+- `Conversation` resolves by **contact identity** (phone, email, website lead surface) - relationship-scoped, not RO-scoped  
 - `ConversationRecorder` appends messages to that conversation, then **links** customer / vehicle / RO via `ConversationLink`  
-- `ConversationTimeline::forRepairOrder()` is a **filtered projection** via RO links — not RO ownership  
+- `ConversationTimeline::forRepairOrder()` is a **filtered projection** via RO links - not RO ownership  
 
 **Not yet built (operate first, then earn):**
 
@@ -405,9 +405,9 @@ No schema changes required for ownership clarification. Presentation and linker 
 The authoritative thread for a **customer relationship**, identified by contact surface until customer identity is resolved.
 
 - Scoped to one shop (single-tenant; no landlord/tenant split)  
-- Identified by contact surface (phone number, email address, messenger id, or synthetic id for anonymous leads) — **not** by `repair_order_id`  
-- Has status: open, resolved, archived (operational — not CRM pipeline)  
-- Does not own financial truth, estimate lines, or approval state — **links** to them via `ConversationLink`  
+- Identified by contact surface (phone number, email address, messenger id, or synthetic id for anonymous leads) - **not** by `repair_order_id`  
+- Has status: open, resolved, archived (operational - not CRM pipeline)  
+- Does not own financial truth, estimate lines, or approval state - **links** to them via `ConversationLink`  
 - Does not belong to a Repair Order; RO views are projections  
 
 ### ConversationMessage
@@ -433,8 +433,8 @@ Each message has:
 - `channel` (how it arrived)  
 - `body` / `summary` (human-readable)  
 - `occurred_at`  
-- optional `provider_reference` (Twilio SID — ephemeral pointer, not authority)  
-- optional `metadata` (JSON — recording URL, delivery status; not business truth)  
+- optional `provider_reference` (Twilio SID - ephemeral pointer, not authority)  
+- optional `metadata` (JSON - recording URL, delivery status; not business truth)  
 
 ### ConversationParticipant
 
@@ -444,10 +444,10 @@ Who spoke or acted.
 |------|------------|
 | `customer` | `customers.id` when known; anonymous until matched |
 | `advisor` | `users.id` |
-| `ai_agent` | System actor — configurable display name, not a separate product entity |
+| `ai_agent` | System actor - configurable display name, not a separate product entity |
 | `system` | Automated shop actions (estimate sent, reminder fired) |
 
-Participants are actors on the timeline — not separate communication products.
+Participants are actors on the timeline - not separate communication products.
 
 ### ConversationLink
 
@@ -470,27 +470,27 @@ Provider webhooks resolve context through the linker. They never become the auth
 
 Operational fact generated by communication activity. Append-only. Distinct from `ConversationMessage`.
 
-Purpose: drive `OperationalTriggers`, posture, reporting, and `OperationalTimeline` workflow entries — the evolution of today's `OperationalCommunication`.
+Purpose: drive `OperationalTriggers`, posture, reporting, and `OperationalTimeline` workflow entries - the evolution of today's `OperationalCommunication`.
 
 | Field concept | Role |
 |---------------|------|
 | `event_type` | estimate_sent, estimate_viewed, missed_call, pickup_notified, etc. |
 | `repair_order_id` | When RO-scoped |
-| `conversation_message_id` | Optional — when a message is the source |
+| `conversation_message_id` | Optional - when a message is the source |
 | `occurred_at` | When the fact occurred for workflow |
 
 **Rules:**
 
 - `CommunicationEvent` may exist **without** a `ConversationMessage` (estimate viewed, missed call, approval recorded).  
 - `ConversationMessage` may exist **without** a `CommunicationEvent` (casual customer chat).  
-- When both exist, the event **references** the message — it does not copy or subsume it.  
+- When both exist, the event **references** the message - it does not copy or subsume it.  
 - Authorization truth remains in `ApprovalEvent`. Communication events reflect posture; they do not replace approval authority.
 
 Existing `OperationalCommunication` migrates into `CommunicationEvent` (not into `ConversationMessage`). Do not maintain two workflow logs after migration.
 
 ### ChannelEndpoint
 
-Shop-owned operational endpoints — distinct from shop identity on PDFs.
+Shop-owned operational endpoints - distinct from shop identity on PDFs.
 
 | Endpoint | Examples |
 |----------|----------|
@@ -500,7 +500,7 @@ Shop-owned operational endpoints — distinct from shop identity on PDFs.
 | Email from / reply-to | Operational email identity |
 | Website lead endpoint | API token / form id |
 
-Provider credentials and routing rules attach to endpoints — not to `locations` columns, `static_options`, or scattered env keys.
+Provider credentials and routing rules attach to endpoints - not to `locations` columns, `static_options`, or scattered env keys.
 
 ---
 
@@ -529,7 +529,7 @@ Truth is never overwritten. Corrections are new messages (e.g. advisor clarifica
 | `ConversationIngress` | Normalizes provider events → `ConversationMessage` |
 | `ConversationLinker` | Matches phone/email → Customer; attaches RO, Vehicle, Encounter |
 | `ConversationEgress` | Sends outbound from advisor/system → provider adapter |
-| `CommunicationEventEmitter` | Emits workflow events — from messages when applicable, or directly when no message exists (estimate viewed, missed call) |
+| `CommunicationEventEmitter` | Emits workflow events - from messages when applicable, or directly when no message exists (estimate viewed, missed call) |
 
 Provider webhooks hit the **boundary only**. They never write RO lines, approvals, or estimate totals.
 
@@ -540,7 +540,7 @@ Provider webhooks hit the **boundary only**. They never write RO lines, approval
 | RO estimate review communication rail | Conversation + recent messages |
 | Customer profile communication history | Conversation linked to customer |
 | Service lane attention | Unmatched conversations, urgent messages |
-| Operational timeline | **Reads** `CommunicationEvent` + selected `ConversationMessage` excerpts — composes view; does not store duplicates |
+| Operational timeline | **Reads** `CommunicationEvent` + selected `ConversationMessage` excerpts - composes view; does not store duplicates |
 | Inbox (future) | Conversations filtered by status / attention |
 
 Presentation never owns send logic, matching logic, or settings authority.
@@ -549,7 +549,7 @@ Presentation never owns send logic, matching logic, or settings authority.
 
 ## Provider Layer vs Communication Authority
 
-### Communication Authority (ARKv2 — permanent)
+### Communication Authority (ARKv2 - permanent)
 
 - Conversation model and linking  
 - Customer / vehicle / RO matching  
@@ -558,10 +558,10 @@ Presentation never owns send logic, matching logic, or settings authority.
 - Workflow events and attention  
 - Consent, business hours, send gates  
 
-### Provider Layer (replaceable — ephemeral storage allowed)
+### Provider Layer (replaceable - ephemeral storage allowed)
 
 - Twilio (first adapter)  
-- SignalWire, Telnyx, RingCentral (future — same interface)  
+- SignalWire, Telnyx, RingCentral (future - same interface)  
 - Webhook signature validation  
 - TwiML / provider-specific response generation  
 - Provider SID storage (reference on message metadata only)  
@@ -569,7 +569,7 @@ Presentation never owns send logic, matching logic, or settings authority.
 
 ### Normalized provider events (adapter output)
 
-ARKv2 receives these — not Twilio shapes:
+ARKv2 receives these - not Twilio shapes:
 
 ```
 IncomingCall
@@ -605,14 +605,14 @@ Swap provider without touching Conversation schema or RO workspace.
 
 ### What TO extract (behavior only)
 
-From legacy `ARK-SMS-CloudWays-Staging` — port **patterns**, not files:
+From legacy `ARK-SMS-CloudWays-Staging` - port **patterns**, not files:
 
 1. Customer/RO matching (`ConversationAutoLinker` behavior)  
 2. Outbound send safety (`MessageDispatcher` typed + idempotent audit pattern)  
 3. Effective settings resolver (`PhoneSettingsResolver` → single `CommunicationSettingsResolver`)  
 4. Business hours → ring → voicemail decision flow  
 5. Webhook idempotency (event dedup by provider message id)  
-6. Website lead capture (thin — Encounter + Conversation)  
+6. Website lead capture (thin - Encounter + Conversation)  
 
 ---
 
@@ -625,7 +625,7 @@ All of these questions answer from **one place**:
 
 > How should we communicate?
 
-### Structure (conceptual — not UI spec)
+### Structure (conceptual - not UI spec)
 
 ```
 Communications
@@ -643,7 +643,7 @@ Communications
 │   └── consent / dnd rules
 ├── Email
 │   └── extends existing Postmark shop identity
-├── AI Agent (participant config — not a product)
+├── AI Agent (participant config - not a product)
 │   ├── voice_answer_enabled
 │   ├── sms_suggest_enabled
 │   └── escalation_rules
@@ -678,22 +678,22 @@ Communications **reads** runtime config. Settings do not scatter into env + four
 
 | System | Relationship |
 |--------|--------------|
-| `OperationalTriggers` | Reads `CommunicationEvent` — not raw provider payloads |
-| `OperationalTimeline` | **Reads** `CommunicationEvent` and `ConversationMessage` from authority stores; merges with `ApprovalEvent` and `OperationalEvent` for display — **never writes parallel communication history** |
+| `OperationalTriggers` | Reads `CommunicationEvent` - not raw provider payloads |
+| `OperationalTimeline` | **Reads** `CommunicationEvent` and `ConversationMessage` from authority stores; merges with `ApprovalEvent` and `OperationalEvent` for display - **never writes parallel communication history** |
 | `Encounter` | Created/updated when conversation opens intake (website lead, unmatched call) |
 | `ApprovalEvent` | Immutable authorization truth; may reference `ConversationMessage` as source |
 | Estimate / Invoice email | Channel handlers that write `ConversationMessage` + emit `CommunicationEvent` |
 | Attention (future) | Unmatched conversations, SLA breaches, escalation from AI participant |
 
-Communications does not own estimate totals, approval state, or invoice balance. It **links** and **informs**. Customer, Vehicle, and RO authorities are protected — see § Locked Doctrine 1 and `ConversationLink`.
+Communications does not own estimate totals, approval state, or invoice balance. It **links** and **informs**. Customer, Vehicle, and RO authorities are protected - see § Locked Doctrine 1 and `ConversationLink`.
 
 ---
 
 ## Implementation Phases (Doctrine-Gated)
 
-**Phase 0 — This document.** Review and accept before any model migration.
+**Phase 0 - This document.** Review and accept before any model migration.
 
-**Phase 1 — Conversation authority only (four entities, nothing else)**
+**Phase 1 - Conversation authority only (four entities, nothing else)**
 
 Scaffold **only:**
 
@@ -713,27 +713,27 @@ Minimal presentation: RO-linked conversation projection on RO review (not custom
 
 **Phase 1 explicitly excludes:** `CommunicationEvent` model, Twilio, SMS, AI, phone numbers, webhooks, Communications settings UI beyond existing shop settings.
 
-**Phase 1b — Communication Event authority** (after conversation proof)
+**Phase 1b - Communication Event authority** (after conversation proof)
 
-Scaffold `CommunicationEvent`. Migrate `OperationalCommunication` → `CommunicationEvent`. Update `OperationalTriggers` and `OperationalTimeline` to **read** from authority stores — not duplicate them. Wire estimate sent / invoice sent as events referencing their messages.
+Scaffold `CommunicationEvent`. Migrate `OperationalCommunication` → `CommunicationEvent`. Update `OperationalTriggers` and `OperationalTimeline` to **read** from authority stores - not duplicate them. Wire estimate sent / invoice sent as events referencing their messages.
 
 **No Twilio. No SMS. No AI. No phone numbers.**
 
-**Phase 2 — Outbound + inbound SMS** (after Phase 1 proof)
+**Phase 2 - Outbound + inbound SMS** (after Phase 1 proof)
 
 Provider adapter, webhooks, `ConversationIngress`, typed outbound with audit.
 
-**Phase 3 — Voice** (after SMS proof)
+**Phase 3 - Voice** (after SMS proof)
 
 Call sessions as messages, recording/voicemail as messages, business hours routing.
 
-**Phase 4 — AI participant** (deferred; not ARK-SMS v2)
+**Phase 4 - AI participant** (deferred; not ARK-SMS v2)
 
-Voice answer and SMS suggest with advisor override; escalation to Attention. **AI auto-reply is permanently out of scope for ARK-SMS** — any future AI work would be greenfield, not an extension of this stack.
+Voice answer and SMS suggest with advisor override; escalation to Attention. **AI auto-reply is permanently out of scope for ARK-SMS** - any future AI work would be greenfield, not an extension of this stack.
 
-**Phase 5 — Additional channels**
+**Phase 5 - Additional channels**
 
-Messenger v1 is in ARK-SMS v2. **Legacy Messenger history backfill from old ARK-SMS is permanently out of scope** — conversations start fresh in v2.
+Messenger v1 is in ARK-SMS v2. **Legacy Messenger history backfill from old ARK-SMS is permanently out of scope** - conversations start fresh in v2.
 
 ---
 
@@ -764,9 +764,9 @@ Projection Layer (next)
 
 **No new authority. No new storage. No new settings.**
 
-The resolver is infrastructure, not a destination. When relationship context appears on Customer Hub and RO Review — not only Lookup Caller — the resolver has compounded.
+The resolver is infrastructure, not a destination. When relationship context appears on Customer Hub and RO Review - not only Lookup Caller - the resolver has compounded.
 
-### T0 — Call Context Lookup (deployed)
+### T0 - Call Context Lookup (deployed)
 
 Manual **Lookup Caller** composes:
 
@@ -774,7 +774,7 @@ Manual **Lookup Caller** composes:
 Phone → Customer → Active Vehicles → Open ROs → Conversation → Workflow Posture
 ```
 
-**Behavior test (this week):** Watch language and context hops — not click counts.
+**Behavior test (this week):** Watch language and context hops - not click counts.
 
 | Signal | Healthy |
 |--------|---------|
@@ -792,19 +792,19 @@ Phone → Customer → Active Vehicles → Open ROs → Conversation → Workflo
 | Lost my place friction | Context hop loses concern, scroll, composer, tab |
 | **Wrong context friction** | Advisor opens wrong RO; fleet call is customer-level but they dive into individual ROs; conversation is about RO #1003 but they're on #1001 |
 
-Wrong context friction signals whether the **Open RO strip** needs more prominence in T1 — advisor must see candidates without ARK guessing.
+Wrong context friction signals whether the **Open RO strip** needs more prominence in T1 - advisor must see candidates without ARK guessing.
 
 One friction type will shout loudest and drive the next build.
 
-### T1 — Call Context Everywhere (after T0 behavior test passes)
+### T1 - Call Context Everywhere (after T0 behavior test passes)
 
 **Not** a Customer Relationship Timeline **page**. That names a screen. The capability is **Call Context Everywhere**.
 
-**Next small build:** `ConversationContextPanel` — shared partial reading existing resolver/timeline projections.
+**Next small build:** `ConversationContextPanel` - shared partial reading existing resolver/timeline projections.
 
 Use it in:
 
-- Caller Lookup (refactor — stop duplicating markup)
+- Caller Lookup (refactor - stop duplicating markup)
 - Customer Hub
 - RO Review (enrich: RO-linked messages + customer-relationship context where useful)
 
@@ -812,7 +812,7 @@ Same authority. Same resolver. Multiple projections. **Context where advisors al
 
 **Forbidden at T1:** Standalone Customer Relationship Timeline page as a new destination.
 
-### Workspace Deep Memory — multiplier, not competitor
+### Workspace Deep Memory - multiplier, not competitor
 
 Call Context Everywhere and Workspace Deep Memory are **not** alternatives. T0 forces rapid context switching:
 
@@ -832,7 +832,7 @@ If Deep Memory is weak, T0 exposes it immediately (*"I lost my place"*). If Deep
 
 Phone-driven switching will stress every weakness. Build when friction notebook says so.
 
-### Ingress (later — not T1)
+### Ingress (later - not T1)
 
 When Twilio arrives:
 
@@ -848,26 +848,26 @@ Not: Twilio → Custom Telephony System.
 
 You know Communications Authority is working when:
 
-1. **One Communications settings area** — staff never hunt across Phone / AI / Routing screens  
-2. **Human comms and workflow facts stay separate** — inbox shows messages; triggers/timeline read events; estimate viewed is never a `ConversationMessage`  
-3. **Customer, Vehicle, RO remain independent authorities** — `ConversationLink` only; no communication-owned operational state  
-4. **RO workspace shows conversation context** beside estimate — not a separate phone app  
-5. **Provider swap** touches adapter only — Conversation schema unchanged  
-6. **`OperationalTimeline` reads authority** — composes from `CommunicationEvent` + `ConversationMessage`; does not duplicate either store  
-7. **Estimate email writes `ConversationMessage`** — authority proven without Twilio  
-8. **AI is participant only** — speaks on timeline; does not own customer, workflow, or operational state  
+1. **One Communications settings area** - staff never hunt across Phone / AI / Routing screens  
+2. **Human comms and workflow facts stay separate** - inbox shows messages; triggers/timeline read events; estimate viewed is never a `ConversationMessage`  
+3. **Customer, Vehicle, RO remain independent authorities** - `ConversationLink` only; no communication-owned operational state  
+4. **RO workspace shows conversation context** beside estimate - not a separate phone app  
+5. **Provider swap** touches adapter only - Conversation schema unchanged  
+6. **`OperationalTimeline` reads authority** - composes from `CommunicationEvent` + `ConversationMessage`; does not duplicate either store  
+7. **Estimate email writes `ConversationMessage`** - authority proven without Twilio  
+8. **AI is participant only** - speaks on timeline; does not own customer, workflow, or operational state  
 
 ---
 
 ## Audit Reference
 
-Legacy telephony implementation lives in `ARK-SMS-CloudWays-Staging` (not `arksms-server-deploy`, `arksms-control`, or `arksms_shop`). ARKv2 import explicitly skips legacy communication history. See conversation history in that repo for provider patterns to extract — not to port wholesale.
+Legacy telephony implementation lives in `ARK-SMS-CloudWays-Staging` (not `arksms-server-deploy`, `arksms-control`, or `arksms_shop`). ARKv2 import explicitly skips legacy communication history. See conversation history in that repo for provider patterns to extract - not to port wholesale.
 
 ARKv2 current state: `OperationalCommunication` journal + Postmark email only. No Twilio. No webhooks for comms. No conversation threading.
 
 ---
 
-## The Conversation Test (Phase 1 acceptance — RO projection)
+## The Conversation Test (Phase 1 acceptance - RO projection)
 
 Open an RO six months from now and ask:
 
@@ -877,23 +877,23 @@ If the answer is understandable from the **Conversation · What We've Said** rai
 
 If you need Inbox, Phone Logs, SMS Logs, Email History, Lead Notes, and AI Logs to reconstruct the story, ARK-SMS fragmentation has returned.
 
-Phase 1 succeeds when estimate email, manual notes, phone summaries, and website leads all appear on that timeline — without channel subsystems.
+Phase 1 succeeds when estimate email, manual notes, phone summaries, and website leads all appear on that timeline - without channel subsystems.
 
-## The Relationship Test (projection — not a page)
+## The Relationship Test (projection - not a page)
 
 Open the **Customer** hub and ask:
 
 > *What is the history of this customer relationship?*
 
-The same conversation authority must answer this — across ROs, before and after individual jobs, without duplicating messages.
+The same conversation authority must answer this - across ROs, before and after individual jobs, without duplicating messages.
 
-This is **not** a request for a new Customer Relationship Timeline screen. It is the **customer-hub projection** of Call Context Everywhere — same store, broader read.
+This is **not** a request for a new Customer Relationship Timeline screen. It is the **customer-hub projection** of Call Context Everywhere - same store, broader read.
 
 | Test | Scope | Status |
 |------|-------|--------|
-| Conversation Test | RO-linked projection | Phase 1 — deployed |
+| Conversation Test | RO-linked projection | Phase 1 - deployed |
 | T0 behavior test | Lookup Caller + language + fleet | Operate now |
-| Relationship Test | Customer-hub projection (T1 panel) | Earn after T0 signal — not a standalone page |
+| Relationship Test | Customer-hub projection (T1 panel) | Earn after T0 signal - not a standalone page |
 
 **Doctrine drift to guard:** Call notes, SMS notes, email notes, and lead notes appearing anywhere outside Conversation. Every human communication artifact should land in relationship conversation authority.
 
@@ -907,12 +907,12 @@ This is **not** a request for a new Customer Relationship Timeline screen. It is
 |------|--------|
 | Conversation is authority | ✅ Locked |
 | Providers are adapters | ✅ Locked |
-| AI is participant, not product | ✅ Locked — see AI doctrine sentence |
+| AI is participant, not product | ✅ Locked - see AI doctrine sentence |
 | One Communications settings authority | ✅ Locked |
 | No Twilio in Phase 1 | ✅ Locked |
-| `ConversationMessage` vs `CommunicationEvent` distinct | ✅ Locked — see § Two Authorities |
+| `ConversationMessage` vs `CommunicationEvent` distinct | ✅ Locked - see § Two Authorities |
 | `ConversationLink` references, never owns Customer/Vehicle/RO | ✅ Locked |
-| Conversation belongs to customer relationship, not RO | ✅ Locked — see § Conversation Ownership |
+| Conversation belongs to customer relationship, not RO | ✅ Locked - see § Conversation Ownership |
 | RO timeline is projection; customer timeline is broader projection | ✅ Locked |
 | AI cannot become parallel authority | ✅ Locked |
 | `OperationalTimeline` reads authority, does not duplicate | ✅ Locked |
@@ -925,34 +925,34 @@ This is **not** a request for a new Customer Relationship Timeline screen. It is
 
 When T0 passes (language, fleet, reach):
 
-> **T1 — Call Context Everywhere** (narrow brief — ready to execute)
+> **T1 - Call Context Everywhere** (narrow brief - ready to execute)
 
-**Goal:** Make `CustomerCallContextResolver` ambient. Advisors want **the answer** wherever they're working — not a destination called Lookup Caller.
+**Goal:** Make `CustomerCallContextResolver` ambient. Advisors want **the answer** wherever they're working - not a destination called Lookup Caller.
 
 **Do not:** Create new authority, routes, stores, settings, or standalone timeline screens.
 
 **Build:**
 
-1. **`ConversationContextPanel`** — shared partial/component  
+1. **`ConversationContextPanel`** - shared partial/component  
    - Reads: `ConversationTimeline`, `CustomerCallContextResolver`  
-   - Displays: recent relationship conversation, open repair orders (strip — do not auto-pick), active vehicles, workflow summary per RO  
+   - Displays: recent relationship conversation, open repair orders (strip - do not auto-pick), active vehicles, workflow summary per RO  
 
-2. **Customer Hub projection** — embed `ConversationContextPanel`  
+2. **Customer Hub projection** - embed `ConversationContextPanel`  
 
-3. **RO Review enrichment** — preserve RO-linked conversation rail; add relationship context section when relevant (customer-level messages, open RO strip for fleet)  
+3. **RO Review enrichment** - preserve RO-linked conversation rail; add relationship context section when relevant (customer-level messages, open RO strip for fleet)  
 
-4. **Caller Lookup refactor** — reuse `ConversationContextPanel`; remove duplicated markup  
+4. **Caller Lookup refactor** - reuse `ConversationContextPanel`; remove duplicated markup  
 
 **Success:**
 
 - Same relationship context visible from Caller Lookup, Customer Hub, and RO Review  
 - No duplicated markup, no duplicated queries, no new authority  
-- Shop asks *"why can't I see this from the customer screen?"* — answered by projection, not a new page  
+- Shop asks *"why can't I see this from the customer screen?"* - answered by projection, not a new page  
 
-**Then:** Let T0 friction notebook choose next build — **Workspace Deep Memory** or **more context projection** — not both at once unless shop demands both.
+**Then:** Let T0 friction notebook choose next build - **Workspace Deep Memory** or **more context projection** - not both at once unless shop demands both.
 
 When friction notebook shows *lost my place* dominates:
 
-> **Workspace Deep Memory** — cross-context return to expanded concern, repair action, composer, scroll, active tab.
+> **Workspace Deep Memory** - cross-context return to expanded concern, repair action, composer, scroll, active tab.
 
 Phase 1b (`CommunicationEvent`), Twilio, SMS, and AI remain parked until conversation + projection layers are proven in daily use.

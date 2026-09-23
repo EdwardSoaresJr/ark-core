@@ -6,7 +6,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Models\User;
 
 /**
- * Observable inspection coverage only — not completion, not lifecycle.
+ * Observable inspection coverage only - not completion, not lifecycle.
  * Does not write inspections.completed_at.
  * Posture keys/labels come from InspectionPostureProjection (single derivation).
  */
@@ -87,7 +87,7 @@ final class InspectionCoverageProjection
         }
 
         if ($posture->remaining > 0) {
-            return 'Continue Inspection — '.$posture->remaining.' points remaining';
+            return 'Continue Inspection - '.$posture->remaining.' points remaining';
         }
 
         return 'Continue Inspection';

@@ -23,7 +23,7 @@ class LivingDemoResetCommand extends Command
         $this->call('db:seed', ['--class' => ArkAuthorizationSeeder::class, '--no-interaction' => true]);
         $this->call('db:seed', ['--class' => LivingDemoSeeder::class, '--no-interaction' => true]);
 
-        $this->components->info('Living Demo reset — Schedule should show a busy Tuesday.');
+        $this->components->info('Living Demo reset - Schedule should show a busy Tuesday.');
 
         return self::SUCCESS;
     }

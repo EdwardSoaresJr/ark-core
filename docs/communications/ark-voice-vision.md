@@ -1,6 +1,6 @@
 # ARK Voice Vision
 
-**Status:** Vision — observe before build  
+**Status:** Vision - observe before build  
 **Audience:** ARK V2, ARK Mobile, shop floor hardware, communications  
 **Sequence:** Authority → Observation → Transport → Projections
 
@@ -20,7 +20,7 @@ The shop needs a **communications operating system**:
 - Shop paging (*80*, overhead speakers, bay announcements)
 - One operational event → desk pop, mobile notification, display board, optional page
 
-That is not "SMS messaging." It is shop voice infrastructure owned by ARK — with replaceable transport underneath.
+That is not "SMS messaging." It is shop voice infrastructure owned by ARK - with replaceable transport underneath.
 
 ---
 
@@ -62,7 +62,7 @@ Only transport adapters change.
 | ARK becomes FreePBX admin | Endpoint provisioning may use FreePBX; ARK does not rebuild extension/trunk UI |
 | ARK builds a contact center | No IVR trees, hunt-group product, or SaaS comms vendor |
 | Separate ARK Voice deployable | Legacy standalone `ark-voice` was decommissioned 2026-06-17; voice lives **inside ARK SMS runtime** |
-| Flutter as SIP client | Mobile consumes `/api/mobile/*` projections — never Asterisk AMI or SIP directly |
+| Flutter as SIP client | Mobile consumes `/api/mobile/*` projections - never Asterisk AMI or SIP directly |
 | Replacing Conversation authority | Voice feeds `CallSession` + `Conversation`; it does not create parallel inbox stores |
 
 **Asterisk/FreePBX is allowed as shop-local transport.** Building a phone company inside ARK is not.
@@ -75,14 +75,14 @@ These are operational truth. Transport emits events; ARK persists meaning.
 
 | Authority | Owns today / evolves to |
 |-----------|-------------------------|
-| **Conversation** | Relationship timeline — SMS, email, messages |
+| **Conversation** | Relationship timeline - SMS, email, messages |
 | **ConversationMessage** | Human-readable comm acts |
 | **CallSession** | Call lifecycle, ownership, handled, recording metadata |
 | **CommunicationEvent** | Operational facts (missed call, voicemail received, estimate approved signal) |
-| **TelephonyEndpoint** → **CommunicationEndpoint** | Desk phone, mobile app, cell, SIP leg, page target — *where* shop staff receive comms |
+| **TelephonyEndpoint** → **CommunicationEndpoint** | Desk phone, mobile app, cell, SIP leg, page target - *where* shop staff receive comms |
 | **Extension** (future) | Internal dial plan identity mapped to endpoint + user |
-| **Queue** (future) | Ring targets, stagger, overflow — operational ring policy, not PBX hunt UI |
-| **PageGroup** (future) | Shop paging targets — bays, all-call, front counter, role groups |
+| **Queue** (future) | Ring targets, stagger, overflow - operational ring policy, not PBX hunt UI |
+| **PageGroup** (future) | Shop paging targets - bays, all-call, front counter, role groups |
 
 Naming may evolve (`TelephonyEndpoint` → `CommunicationEndpoint`). The boundary does not: **endpoint is authority; provider extension number is transport detail.**
 
@@ -93,15 +93,15 @@ Naming may evolve (`TelephonyEndpoint` → `CommunicationEndpoint`). The boundar
 | Projection | Question it answers |
 |------------|---------------------|
 | **Front counter phone / pop** | Who is calling and what RO context before I answer? |
-| **Flutter mobile app** | RO, findings, photos, messages on my assigned work — during or after a call |
+| **Flutter mobile app** | RO, findings, photos, messages on my assigned work - during or after a call |
 | **Communications workspace** | Calls waiting, recovery, relationship context |
 | **Shop display board** | Approved work, bay status, shop-wide announcements |
-| **Customer portal** | What the customer sees — never internal paging or staff extensions |
-| **Workboard / Attention** | Pressure from comms + workflow — not a phone log |
+| **Customer portal** | What the customer sees - never internal paging or staff extensions |
+| **Workboard / Attention** | Pressure from comms + workflow - not a phone log |
 
 One event. Multiple projections. No duplicate authority.
 
-**Example — RO approved:**
+**Example - RO approved:**
 
 1. Customer approves estimate → `ApprovalEvent` + `CommunicationEvent`
 2. Shop display updates approved posture
@@ -122,7 +122,7 @@ ARK emits once. Projections and transport adapters consume.
 | **Hybrid** (likely) | Twilio PSTN in → Asterisk shop fabric → desk/mobile/SIP |
 | **ARK Voice native** (later) | Custom transport only if Asterisk + adapters prove insufficient |
 
-Provider selection is **shop infrastructure**, configured in **Settings → Communications** — not hardcoded per tenant and not `TELEPHONY_PROVIDER` in `.env`. See ark-telephony-settings-doctrine.mdc.
+Provider selection is **shop infrastructure**, configured in **Settings → Communications** - not hardcoded per tenant and not `TELEPHONY_PROVIDER` in `.env`. See ark-telephony-settings-doctrine.mdc.
 
 Existing seam: `TelephonyProvider` contract + `TwilioTelephonyProvider`. Future: `AsteriskTelephonyProvider`, unified ingress normalizer → `CallSession`.
 
@@ -132,7 +132,7 @@ Mobile contract unchanged: [ark-mobile-communications-authority-contract.md](../
 
 ## Floor scenarios (why Asterisk wins over Twilio-only)
 
-### Incoming call — context before answer
+### Incoming call - context before answer
 
 ```text
 Incoming Call
@@ -145,7 +145,7 @@ RO #1586 · Approved
 Vehicle ID Needed
 ```
 
-Pop appears on front counter **and** mobile **before** answer. Resolver reads Customer, Vehicle, open ROs, Conversation — same `CustomerCallContextResolver` path as today, richer projection.
+Pop appears on front counter **and** mobile **before** answer. Resolver reads Customer, Vehicle, open ROs, Conversation - same `CustomerCallContextResolver` path as today, richer projection.
 
 ### Technician mobile during production
 
@@ -156,7 +156,7 @@ Landon's Flutter app shows for the active / assigned RO:
 - Findings + photos
 - Customer messages
 
-No browser. No desktop. Still **not** a SIP stack in Flutter — call control actions go through ARK API (`POST /api/mobile/calls/{id}/transfer` conceptual), transport executes.
+No browser. No desktop. Still **not** a SIP stack in Flutter - call control actions go through ARK API (`POST /api/mobile/calls/{id}/transfer` conceptual), transport executes.
 
 ### Call transfers (internal)
 
@@ -218,7 +218,7 @@ Observe floor pain
 | **V4** | Shop display + observation-driven TTS/page hooks | One proven event (e.g. RO approved) |
 | **V5** | Hybrid PSTN (Twilio in, Asterisk fabric) if needed | Operational measurement |
 
-SMS/MMS priority remains per ark-telephony-roadmap.mdc. Voice expansion follows **observed** shop pain — not roadmap momentum.
+SMS/MMS priority remains per ark-telephony-roadmap.mdc. Voice expansion follows **observed** shop pain - not roadmap momentum.
 
 ---
 
@@ -230,7 +230,7 @@ SMS/MMS priority remains per ark-telephony-roadmap.mdc. Voice expansion follows 
 | `TelephonyEndpoint` (cell, SIP) | Seed of `CommunicationEndpoint` |
 | `TelephonyProvider` | Expand to full voice transport interface |
 | Incoming pop + Calls Waiting | Front counter + recovery projections |
-| `SendOutboundMessageAction` | SMS transport — parallel pattern for voice actions |
+| `SendOutboundMessageAction` | SMS transport - parallel pattern for voice actions |
 | Decommissioned `ark-voice` app | Do not resurrect as separate product; voice layer merges into ARK SMS |
 
 ---

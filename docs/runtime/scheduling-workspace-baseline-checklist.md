@@ -1,4 +1,4 @@
-# Scheduling Workspace — baseline capture checklist
+# Scheduling Workspace - baseline capture checklist
 
 **Purpose:** 2–3 minute internal baseline video (not marketing). Compare against this after future scheduling changes.
 

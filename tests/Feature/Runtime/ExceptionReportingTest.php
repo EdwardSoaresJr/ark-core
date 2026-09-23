@@ -332,7 +332,7 @@ test('error page presenter sends technicians back to their front door', function
 
 test('ad hoc php -r command line failures are not emailed', function () {
     // Throwable::getTrace() is final, so an ad-hoc CLI trace cannot be faked on
-    // a real exception — assert the detection rule the notifier suppresses on.
+    // a real exception - assert the detection rule the notifier suppresses on.
     expect(ExceptionReporter::traceIndicatesAdHocCli([
         ['file' => 'Command line code', 'line' => 10, 'function' => 'app'],
     ]))->toBeTrue()

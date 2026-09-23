@@ -262,7 +262,7 @@ test('builder closeout shows send review actions instead of asked checkbox', fun
         ->assertDontSee('Not editable here')
         ->assertDontSee("We'd love your honest feedback")
         ->assertDontSee('Was a Google review requested?')
-        ->assertDontSee('Yes — review requested')
+        ->assertDontSee('Yes - review requested')
         ->assertDontSee('name="review_request_sent"', false);
 });
 

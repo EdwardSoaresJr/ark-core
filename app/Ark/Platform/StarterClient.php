@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 /**
  * Cloud-owned Starter transactional operations (estimate / final invoice).
- * Facts only — never HTML or arbitrary subjects.
+ * Facts only - never HTML or arbitrary subjects.
  */
 final class StarterClient
 {

@@ -15,7 +15,7 @@ final class KnowledgeSearchTool implements DragonAgentTool
 
     public function description(): string
     {
-        return 'Search ARK-hosted Dragon Knowledge. Sources stay separate: website, arkademy, sop, excellence. Use for website copy, ARKademy lessons, or published shop pages. Empty hits mean say you do not have that document — never invent pages.';
+        return 'Search ARK-hosted Dragon Knowledge. Sources stay separate: website, arkademy, sop, excellence. Use for website copy, ARKademy lessons, or published shop pages. Empty hits mean say you do not have that document - never invent pages.';
     }
 
     public function parameters(): array

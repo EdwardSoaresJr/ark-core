@@ -6,7 +6,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 /**
- * Technician production RO landing — vehicle, why here, concerns, inspection posture.
+ * Technician production RO landing - vehicle, why here, concerns, inspection posture.
  * Walk stays on /inspection (not embedded).
  */
 final class RepairOrderProductionLandingController

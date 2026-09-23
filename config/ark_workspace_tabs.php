@@ -7,7 +7,7 @@ return [
     | Workspace tabs (operational multitasking)
     |--------------------------------------------------------------------------
     |
-    | Entity-based workspaces for operations — not browser tabs or iframes.
+    | Entity-based workspaces for operations - not browser tabs or iframes.
     | Behavior ported from ARK-SMS; see docs in legacy ark-sms-app repo.
     |
     */

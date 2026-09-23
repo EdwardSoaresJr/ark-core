@@ -152,4 +152,4 @@ test('ro show query composition report snapshot', function () {
     ]);
 
     expect($report->totalQueries)->toBeGreaterThan(0);
-})->skip('Investigation snapshot — run manually during Pass 3 profiling');
+})->skip('Investigation snapshot - run manually during Pass 3 profiling');

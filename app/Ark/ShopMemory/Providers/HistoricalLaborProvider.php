@@ -12,7 +12,7 @@ use App\Ark\ShopMemory\Suggestion\SuggestionProvider;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Shop Memory — historical labor language.
+ * Shop Memory - historical labor language.
  *
  * Observes work-language corpus only. Never coordinates with other providers.
  */

@@ -4,7 +4,7 @@
 
 ## Context
 
-Projections are convenient. Over time, teams promote read models, caches, and generated config into sources of truth — especially under delivery pressure. ARK's authority/projection boundary exists across Voice, Operations, Communications, and future products.
+Projections are convenient. Over time, teams promote read models, caches, and generated config into sources of truth - especially under delivery pressure. ARK's authority/projection boundary exists across Voice, Operations, Communications, and future products.
 
 ## Decision
 
@@ -13,6 +13,6 @@ Projections are convenient. Over time, teams promote read models, caches, and ge
 ## Consequences
 
 - Deleting or regenerating a projection must never destroy operational truth.
-- If business logic requires persistence, it belongs in an authority — not a projection table.
+- If business logic requires persistence, it belongs in an authority - not a projection table.
 - "Cache" and "read model" are projection vocabulary; neither grants authority status.
-- Promotion of a projection to authority requires a new ADR and architecture review — not an incremental refactor.
+- Promotion of a projection to authority requires a new ADR and architecture review - not an incremental refactor.

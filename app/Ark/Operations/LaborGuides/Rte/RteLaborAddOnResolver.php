@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 final class RteLaborAddOnResolver
 {
     /**
-     * RTE bundled add-on codes that are fees or prep — not billable labor lines here.
+     * RTE bundled add-on codes that are fees or prep - not billable labor lines here.
      *
      * @var list<string>
      */

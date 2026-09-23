@@ -16,7 +16,7 @@ use Throwable;
  * Interprets expected replies on open Message Action contracts.
  *
  * Consent keywords still win first on inbound SMS.
- * ConversationMessage rows stay append-only — reply truth is written at create time.
+ * ConversationMessage rows stay append-only - reply truth is written at create time.
  */
 final class ProcessMessageActionReplyAction
 {
@@ -65,12 +65,12 @@ final class ProcessMessageActionReplyAction
             MessageActionReply::Confirm => $this->handleConfirm($contract),
             MessageActionReply::Reschedule => [
                 'handled' => true,
-                'confirmation' => 'Got it — we will text you about rescheduling.',
+                'confirmation' => 'Got it - we will text you about rescheduling.',
             ],
             MessageActionReply::Directions => $this->handleDirections($payload->contactKey, $inbound),
             MessageActionReply::Callback => [
                 'handled' => true,
-                'confirmation' => 'Got it — we will call you soon.',
+                'confirmation' => 'Got it - we will call you soon.',
             ],
         };
     }
@@ -121,7 +121,7 @@ final class ProcessMessageActionReplyAction
 
             return [
                 'handled' => true,
-                'confirmation' => 'Sorry — we could not look up directions right now. Please call the shop.',
+                'confirmation' => 'Sorry - we could not look up directions right now. Please call the shop.',
             ];
         }
 

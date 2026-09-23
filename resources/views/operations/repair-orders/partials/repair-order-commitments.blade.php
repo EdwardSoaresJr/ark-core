@@ -15,7 +15,7 @@
 
 <section class="border-t border-slate-200 px-3 py-2.5">
     <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Commitments</p>
-    <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Record what we promised the customer — owner and due date stay visible on Today.</p>
+    <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Record what we promised the customer - owner and due date stay visible on Today.</p>
 
     @if ($openCommitments->isNotEmpty())
         <ul class="mt-2 divide-y divide-slate-100 border border-slate-200 bg-white">

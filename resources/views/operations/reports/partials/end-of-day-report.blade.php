@@ -7,7 +7,7 @@
         <div>
             <p class="ops-eod-report__eyebrow">End of Day Report</p>
             <h1 class="ops-eod-report__title">{{ $eod->rangeLabel }}</h1>
-            <p class="ops-eod-report__note">Posted sales truth · ROs with <code class="text-[10px]">posted_at</code> in range. Cash collected may differ — see reconciliation below.</p>
+            <p class="ops-eod-report__note">Posted sales truth · ROs with <code class="text-[10px]">posted_at</code> in range. Cash collected may differ - see reconciliation below.</p>
         </div>
         <form method="GET" action="{{ $dateFormAction ?? route('operations.owner.day-review') }}" class="ops-eod-report__date">
             <label class="ops-eod-report__date-label" for="bookend-date">Shop day</label>

@@ -42,7 +42,7 @@ final readonly class AdvisorHomeCockpitProjection
     ) {}
 
     /**
-     * Job Board column chrome only — morning brief / attention zones are not rendered on /app.
+     * Job Board column chrome only - morning brief / attention zones are not rendered on /app.
      *
      * @param  list<WorkboardTriageLaneProjection>  $homeBoardColumns
      * @param  Collection<int, EstimateTotals>  $repairOrderTotals
@@ -271,7 +271,7 @@ final readonly class AdvisorHomeCockpitProjection
                 $totalCents = $totals instanceof EstimateTotals ? $totals->totalCents() : 0;
                 $totalLabel = $totalCents > 0 && $totals instanceof EstimateTotals
                     ? $totals->format($totalCents)
-                    : '—';
+                    : '-';
                 $urgencyScore = $card->homeUrgencyScore($totalCents);
                 $isRecommended = $recommendedRepairOrderId !== null
                     && $recommendedRepairOrderId === $repairOrder->repair_order_id;

@@ -50,7 +50,7 @@ export function arkOperationalClock(config = {}) {
                 } else if (dbAnchorMs !== null) {
                     this.dbUtc = formatClock(new Date(dbAnchorMs + elapsed), 'UTC');
                 } else {
-                    this.dbUtc = '—';
+                    this.dbUtc = '-';
                 }
             } else {
                 this.dbUtc = 'n/a';

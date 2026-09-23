@@ -9,7 +9,7 @@
             @if (\App\Ark\Operations\Settings\ShopSettings::current()->appointmentsEnabled())
                 <p class="ops-workboard-empty__copy">Check in a walk-in, or open Schedule for tomorrow’s appointments.</p>
             @else
-                <p class="ops-workboard-empty__copy">Check in a walk-in — that’s how cars land on this board.</p>
+                <p class="ops-workboard-empty__copy">Check in a walk-in - that’s how cars land on this board.</p>
             @endif
             <a href="{{ route('operations.intake.create') }}" class="ops-workboard-empty__link">+ Check In</a>
         </div>

@@ -1,14 +1,14 @@
-# Screen spec — Concern Detail
+# Screen spec - Concern Detail
 
 **ID:** `companion.screen.concern-detail`  
 **Role(s):** Advisor · Technician  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**One customer concern on the RO** — findings · estimate lines · inspection link · production status — bridge between inspection and money.
+**One customer concern on the RO** - findings · estimate lines · inspection link · production status - bridge between inspection and money.
 
 ---
 
@@ -16,15 +16,15 @@
 
 ### Header
 
-- Concern title — `Customer states brake noise`
+- Concern title - `Customer states brake noise`
 - RO · vehicle chips
 
 ### Sections
 
-1. **Findings** — inspection items linked to this concern · tap → inspection item
-2. **Estimate lines** — type · description · sell · total · scan rhythm from RO workspace doctrine
-3. **Production** — tech notes · labor status · parts pressure chip (read projection)
-4. **Media** — thumbnail grid → photo viewer
+1. **Findings** - inspection items linked to this concern · tap → inspection item
+2. **Estimate lines** - type · description · sell · total · scan rhythm from RO workspace doctrine
+3. **Production** - tech notes · labor status · parts pressure chip (read projection)
+4. **Media** - thumbnail grid → photo viewer
 
 ### Actions
 

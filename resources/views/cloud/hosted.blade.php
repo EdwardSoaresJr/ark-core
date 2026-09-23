@@ -6,7 +6,7 @@
         </h1>
         <p class="mt-6 text-xl text-[var(--cloud-muted)] max-w-xl mx-auto leading-relaxed">
             Self-serve signup and public pricing aren’t open yet. If you don’t want to set up your own server,
-            tell us — we can host ARK for your shop when you’re ready.
+            tell us - we can host ARK for your shop when you’re ready.
         </p>
         <div class="mt-12 flex flex-wrap justify-center gap-4">
             <a href="{{ $interestMailto }}" class="cloud-btn-primary text-lg !px-9 !py-4">

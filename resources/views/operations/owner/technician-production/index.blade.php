@@ -47,28 +47,28 @@
                             <td class="px-3 py-2.5 text-right tabular-nums">{{ number_format((float) $row['clock_hours'], 1) }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums">
                                 @if ($row['history_unavailable'])
-                                    —
+                                    -
                                 @else
                                     {{ number_format((float) $row['recognized_flag_hours'], 1) }}
                                 @endif
                             </td>
                             <td class="px-3 py-2.5 text-right tabular-nums">
                                 @if ($row['history_unavailable'])
-                                    —
+                                    -
                                 @else
                                     {{ number_format((float) $row['pending_flag_hours'], 1) }}
                                 @endif
                             </td>
                             <td class="px-3 py-2.5 text-right tabular-nums">
                                 @if ($row['recognized_efficiency_percent'] === null)
-                                    —
+                                    -
                                 @else
                                     {{ number_format((float) $row['recognized_efficiency_percent'], 1) }}%
                                 @endif
                             </td>
                             <td class="px-3 py-2.5 text-right tabular-nums font-semibold">
                                 @if ($row['history_unavailable'] || $row['floor_exposure_cents'] === null)
-                                    —
+                                    -
                                 @else
                                     ${{ number_format($row['floor_exposure_cents'] / 100, 2) }}
                                 @endif

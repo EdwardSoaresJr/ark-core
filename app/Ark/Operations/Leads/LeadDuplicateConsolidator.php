@@ -82,7 +82,7 @@ final class LeadDuplicateConsolidator
                 if (! $dryRun) {
                     $lead->state = LeadState::Lost;
                     $lead->lost_at = now();
-                    $lead->lost_reason = "Duplicate intake — consolidated into lead #{$canonical->id}";
+                    $lead->lost_reason = "Duplicate intake - consolidated into lead #{$canonical->id}";
                     $lead->save();
                 }
 

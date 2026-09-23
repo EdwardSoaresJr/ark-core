@@ -1,4 +1,4 @@
-{{-- RO identity authoring — customer/vehicle/mileage remain available after close; visit posture is open-RO only. --}}
+{{-- RO identity authoring - customer/vehicle/mileage remain available after close; visit posture is open-RO only. --}}
 @php
     use App\Ark\Operations\Settings\ShopSettings;
 
@@ -46,7 +46,7 @@
             <label class="block text-[11px] font-medium text-slate-500">
                 Preferred contact
                 <select name="contact_preference" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" aria-label="Preferred contact">
-                    <option value="">—</option>
+                    <option value="">-</option>
                     <option value="text" @selected(old('contact_preference', $identityCustomer->contact_preference?->value) === 'text')>Text</option>
                     <option value="call" @selected(old('contact_preference', $identityCustomer->contact_preference?->value) === 'call')>Call</option>
                     <option value="email" @selected(old('contact_preference', $identityCustomer->contact_preference?->value) === 'email')>Email</option>

@@ -2,7 +2,7 @@
     <section class="ops-index space-y-2">
         <div class="ops-board-shell">
             <div class="ops-page-toolbar">
-                <p class="ops-page-toolbar-note">Browse vehicles or search by plate, VIN, YMM, nickname, or customer — then open the hub.</p>
+                <p class="ops-page-toolbar-note">Browse vehicles or search by plate, VIN, YMM, nickname, or customer - then open the hub.</p>
                 <div class="ops-page-toolbar-actions">
                     <a href="{{ route('operations.customers.search') }}" class="ops-page-link">Customers</a>
                     <a href="{{ route('operations.repair-orders.index') }}" class="ops-page-link">Repair Orders</a>

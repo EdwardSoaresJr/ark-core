@@ -1,4 +1,4 @@
-# Conversations H0.4 — Floor notebook
+# Conversations H0.4 - Floor notebook
 
 **Status:** Ready for Molly · Engineering H0.1–H0.3 green  
 **Protocol:** [ark-conversations-h0-floor-validation-v1.md](ark-conversations-h0-floor-validation-v1.md)

@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 /**
- * Advisor call library — phones only, with voicemail and recording playback.
+ * Advisor call library - phones only, with voicemail and recording playback.
  */
 final class CallLibraryQuery
 {

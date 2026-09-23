@@ -12,7 +12,7 @@ namespace App\Ark\Communications\Provisioning;
  */
 final class PolyPhoneNatProvisioning
 {
-    /** Shop WAN IP — Twilio must not receive a private LAN contact (error 32011). */
+    /** Shop WAN IP - Twilio must not receive a private LAN contact (error 32011). */
     public const DEFAULT_PUBLIC_IP = '71.196.200.50';
 
     public static function phoneChildren(?string $publicIp = null): string

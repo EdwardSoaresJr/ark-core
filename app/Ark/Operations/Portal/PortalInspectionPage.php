@@ -114,7 +114,7 @@ final class PortalInspectionPage
                     'photo' => $photo,
                 ]);
             },
-            // Auth interactive page is not a share URL — QR/share minted only for print/PDF.
+            // Auth interactive page is not a share URL - QR/share minted only for print/PDF.
             liveReportUrl: null,
         );
 

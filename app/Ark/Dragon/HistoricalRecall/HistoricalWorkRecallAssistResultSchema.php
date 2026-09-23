@@ -30,7 +30,7 @@ final class HistoricalWorkRecallAssistResultSchema
             'sources.*.work_group_id' => ['nullable', 'integer'],
             'sources.*.repair_order_id' => ['nullable', 'integer'],
             'sources.*.reason' => ['nullable', 'string', 'max:300'],
-            // Forbidden authority fields — must not appear.
+            // Forbidden authority fields - must not appear.
             'tier' => ['prohibited'],
             'match_tier' => ['prohibited'],
             'median_hours' => ['prohibited'],

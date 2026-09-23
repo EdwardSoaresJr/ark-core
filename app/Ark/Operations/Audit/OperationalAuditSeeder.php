@@ -114,7 +114,7 @@ final class OperationalAuditSeeder
             key: 'happy_path',
             title: 'Happy Path',
             repairOrder: $repairOrder->fresh(),
-            purpose: 'Brake job approved and ready for pickup. Invoice not issued — exercise Generate Final Invoice and first payment.',
+            purpose: 'Brake job approved and ready for pickup. Invoice not issued - exercise Generate Final Invoice and first payment.',
             expectations: 'Generate Final Invoice → record payment → close.',
         );
     }
@@ -279,7 +279,7 @@ final class OperationalAuditSeeder
             year: 2020,
             make: 'Jeep',
             model: 'Wrangler',
-            concernSummary: 'Still on the lift — customer waiting in lobby.',
+            concernSummary: 'Still on the lift - customer waiting in lobby.',
             status: RepairOrderStatus::InProgress,
             concerns: [[
                 'summary' => 'Suspension clunk',
@@ -383,7 +383,7 @@ final class OperationalAuditSeeder
             year: 2018,
             make: 'Mazda',
             model: 'CX-5',
-            concernSummary: 'Completed brake and tire service — reference closeout.',
+            concernSummary: 'Completed brake and tire service - reference closeout.',
             status: RepairOrderStatus::ReadyPickup,
             concerns: [[
                 'summary' => 'Brake and tire service',
@@ -420,7 +420,7 @@ final class OperationalAuditSeeder
         $priorClosed = $this->createRepairOrderFor(
             customer: $customer,
             vehicle: $camry,
-            concernSummary: 'Prior visit — paid oil service, deferred rear shocks.',
+            concernSummary: 'Prior visit - paid oil service, deferred rear shocks.',
             status: RepairOrderStatus::ReadyPickup,
             concerns: [[
                 'summary' => 'Oil service',
@@ -445,7 +445,7 @@ final class OperationalAuditSeeder
         $active = $this->createRepairOrderFor(
             customer: $customer,
             vehicle: $crv,
-            concernSummary: 'Customer returned — vibration at highway speed.',
+            concernSummary: 'Customer returned - vibration at highway speed.',
             status: RepairOrderStatus::Estimate,
             concerns: [[
                 'summary' => 'Wheel balance and rotation',

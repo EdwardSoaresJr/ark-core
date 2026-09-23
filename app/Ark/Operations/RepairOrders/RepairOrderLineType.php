@@ -12,7 +12,7 @@ enum RepairOrderLineType: string
     case Fee = 'fee';
     case Note = 'note';
     case Sublet = 'sublet';
-    /** Customer package price — not ordinary hourly labor (flag hours / ELR / labor GP). */
+    /** Customer package price - not ordinary hourly labor (flag hours / ELR / labor GP). */
     case Package = 'package';
 
     public function label(): string
@@ -66,7 +66,7 @@ enum RepairOrderLineType: string
     }
 
     /**
-     * Financial labor rollup — taxable labor dollars and estimate labor GP.
+     * Financial labor rollup - taxable labor dollars and estimate labor GP.
      * Includes Sublet (vendor service sold as labor-like revenue).
      */
     public function countsTowardLaborRollup(): bool
@@ -75,7 +75,7 @@ enum RepairOrderLineType: string
     }
 
     /**
-     * Technician production / flag hours — bay work only.
+     * Technician production / flag hours - bay work only.
      * Sublets, packages, fees, and parts never count as tech hours.
      */
     public function countsTowardFlagHours(): bool

@@ -1,5 +1,5 @@
 /**
- * Open-RO working-set eviction — oldest inactive first.
+ * Open-RO working-set eviction - oldest inactive first.
  * Pure helpers; no DOM / storage side effects.
  */
 

@@ -22,7 +22,7 @@ final class ReviewRequestCopy
     }
 
     /**
-     * Equal Contact Us path for every customer — never a sentiment branch.
+     * Equal Contact Us path for every customer - never a sentiment branch.
      *
      * @see docs/communications/review-request-no-gating-v1.md
      */

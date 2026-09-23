@@ -6,7 +6,7 @@
 @endphp
 
 <details class="ops-learn-media-manager" @if ($errors->has('slot') || $errors->has('file') || $errors->has('youtube_url')) open @endif>
-    <summary class="ops-learn-media-manager__summary">Guide media — upload images, video, or YouTube</summary>
+    <summary class="ops-learn-media-manager__summary">Guide media - upload images, video, or YouTube</summary>
 
     @if (session('learn_media_saved'))
         <p class="ops-learn-media-manager__flash" role="status">{{ session('learn_media_saved') }}</p>

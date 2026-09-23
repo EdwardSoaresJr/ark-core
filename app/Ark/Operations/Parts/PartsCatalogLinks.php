@@ -84,7 +84,7 @@ final class PartsCatalogLinks
     }
 
     /**
-     * Custom catalogs only — reserved keys are shop/platform slots.
+     * Custom catalogs only - reserved keys are shop/platform slots.
      *
      * @return list<array{key: string, label: string, url: string|null, mode: string, color: string}>
      */

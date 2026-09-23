@@ -20,7 +20,7 @@
                 <div class="ops-cal-capacity__metric">
                     <span class="ops-cal-capacity__metric-label">Base</span>
                     <span class="ops-cal-capacity__metric-value ops-cal-capacity__metric-value--muted">
-                        {{ $shop['available'] && $shop['base_label'] ? $shop['base_label'] : '—' }}
+                        {{ $shop['available'] && $shop['base_label'] ? $shop['base_label'] : '-' }}
                     </span>
                 </div>
                 <div class="ops-cal-capacity__metric">
@@ -29,7 +29,7 @@
                         @if ($shop['available'] && $shop['target_label'])
                             {{ $shop['target_label'] }} · {{ $shop['target_percent'] }}%
                         @else
-                            —
+                            -
                         @endif
                     </span>
                 </div>

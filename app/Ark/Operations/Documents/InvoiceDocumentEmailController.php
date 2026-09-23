@@ -41,7 +41,7 @@ class InvoiceDocumentEmailController
         } catch (EstimatePdfUnavailableException) {
             return redirect()
                 ->to($this->redirectBack($request, $repairOrder))
-                ->with('status', 'Invoice email failed. The PDF could not be generated — check Chromium runtime support.');
+                ->with('status', 'Invoice email failed. The PDF could not be generated - check Chromium runtime support.');
         } catch (\RuntimeException $exception) {
             throw ValidationException::withMessages([
                 'email' => $exception->getMessage(),

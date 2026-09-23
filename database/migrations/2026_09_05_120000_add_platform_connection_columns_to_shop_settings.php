@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Dual-write Platform connection columns alongside legacy cloud_* names.
- * Does not drop cloud_* — paired installations keep working.
+ * Does not drop cloud_* - paired installations keep working.
  */
 return new class extends Migration
 {

@@ -14,8 +14,8 @@
     $canManage = (bool) ($canManageRecommendations ?? false);
     $isTerminal = (bool) ($isTerminal ?? false);
     $displayTz = \App\Ark\Operations\Settings\ShopDisplayTimezone::resolve();
-    $money = fn (?int $cents): string => $cents ? '$'.number_format($cents / 100, 2) : '—';
-    $when = fn ($value) => $value?->timezone($displayTz)->format('M j, Y') ?? '—';
+    $money = fn (?int $cents): string => $cents ? '$'.number_format($cents / 100, 2) : '-';
+    $when = fn ($value) => $value?->timezone($displayTz)->format('M j, Y') ?? '-';
 @endphp
 
 <div id="recommendations-rail" class="ops-review-rail-tab-panel ops-recommendations-workspace">
@@ -139,7 +139,7 @@
                             @endif
                             · Last: {{ $row['last_decision'] ?? ($row['was_presented'] ? 'Presented' : 'Not presented') }}
                             @if ($row['last_decision_reason'])
-                                — {{ $row['last_decision_reason'] }}
+                                - {{ $row['last_decision_reason'] }}
                             @endif
                             · {{ $money($row['estimated_cents']) }}
                         </p>
@@ -256,7 +256,7 @@
                             @endif
                             · {{ $event['occurred_at']?->timezone($displayTz)->format('M j, g:i A') }}
                             @if ($event['note'])
-                                — {{ $event['note'] }}
+                                - {{ $event['note'] }}
                             @endif
                         </li>
                     @empty

@@ -52,7 +52,7 @@ class AdvisorIntakeWebsiteLeadStoreController
         return redirect()
             ->route('operations.intake.create', $params)
             ->with('status', $source === EncounterSource::Website
-                ? 'Website lead logged — finish intake to open a repair order.'
+                ? 'Website lead logged - finish intake to open a repair order.'
                 : 'Continue in intake to open a repair order.');
     }
 }

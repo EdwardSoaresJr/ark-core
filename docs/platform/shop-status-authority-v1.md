@@ -1,6 +1,6 @@
 # Shop Status Authority v1
 
-**Status:** Locked — lifecycle before Features / provisioning / billing automation  
+**Status:** Locked - lifecycle before Features / provisioning / billing automation  
 **Date:** 2026-07-19  
 **Companions:** [shop-authority-v1.md](shop-authority-v1.md) · [domain-contract-v1.md](domain-contract-v1.md) · [shop-registry-implementation-design-v1.md](../deployment/shop-registry-implementation-design-v1.md)
 
@@ -70,7 +70,7 @@ Archived
 | Prospect | PendingProvision | Shop create / slug reserved / profile chosen |
 | PendingProvision | Provisioning | Provisioning engine starts |
 | Provisioning | Active | Provision succeeded |
-| Provisioning | PendingProvision | Provision failed — **retryable**; not a half-created Shop |
+| Provisioning | PendingProvision | Provision failed - **retryable**; not a half-created Shop |
 | Active | Suspended | Business hold |
 | Active | Maintenance | Temporary infra / migration work |
 | Active | PendingDeletion | Deletion scheduled |
@@ -79,7 +79,7 @@ Archived
 | Maintenance | Active | Work complete |
 | PendingDeletion | Active | Restored within grace |
 | PendingDeletion | Archived | Grace expired / teardown complete |
-| Archived | \* | **Forbidden** — terminal |
+| Archived | \* | **Forbidden** - terminal |
 
 **Forbidden:** billing, Stripe, Coolify, or Stancl inventing statuses outside this set. External systems may **request** transitions; Arkify / Shop authority **applies** them.
 
@@ -110,7 +110,7 @@ Provisioning
   → Retry
 ```
 
-Never leave a “half-created tenant” as a business status. Stancl/DB/DNS leftovers are Infrastructure cleanup under PendingProvision or operator tools — not a new Shop status.
+Never leave a “half-created tenant” as a business status. Stancl/DB/DNS leftovers are Infrastructure cleanup under PendingProvision or operator tools - not a new Shop status.
 
 ---
 
@@ -126,7 +126,7 @@ Create Shop
 
 While work runs: **Provisioning**.
 
-Welcome email, DNS cutover, first-login enablement, and billing “live” signals fire on transitions into **Active** (and reverse on Suspended / PendingDeletion) — not on wizard completion.
+Welcome email, DNS cutover, first-login enablement, and billing “live” signals fire on transitions into **Active** (and reverse on Suspended / PendingDeletion) - not on wizard completion.
 
 ---
 
@@ -148,8 +148,8 @@ Billing may **request** Suspended or influence eligibility toward PendingProvisi
 | Provisioning engine | PendingProvision ↔ Provisioning → Active (or back to PendingProvision on failure) |
 | Platform operators | Suspended, Maintenance, PendingDeletion, Archived; emergency overrides with audit |
 | Billing reconcile | **Request** Suspended / reinstate → Active only when deployment allows and policy says so |
-| Onboarding wizard | Create Prospect / drive to PendingProvision only — **never** Active |
-| Deployment health monitors | Update Deployment health only — **never** Shop.status |
+| Onboarding wizard | Create Prospect / drive to PendingProvision only - **never** Active |
+| Deployment health monitors | Update Deployment health only - **never** Shop.status |
 
 ---
 
@@ -177,13 +177,13 @@ Billing may **request** Suspended or influence eligibility toward PendingProvisi
 | 5d | [Provisioning Request Authority v1](provisioning-request-authority-v1.md) | ✅ Scaffolding |
 | 6 | Provisioning v1 (Shop → Deployment → Assignment → STOP) | ✅ **Frozen** |
 | 6a | [Adapter Rule v1](adapter-rule-v1.md) | ✅ **Locked** |
-| — | [Architecture Phase 1 complete](architecture-phase-1-complete.md) | ✅ Closed |
+| - | [Architecture Phase 1 complete](architecture-phase-1-complete.md) | ✅ Closed |
 | 6b | Provisioning Orchestrator (stub steps) | ✅ Sprint 1 |
 | 6c | [Orchestrator Rule v1](orchestrator-rule-v1.md) | ✅ Locked |
-| — | [Engineering principles](engineering-principles.md) | Practice (not doctrine) |
-| — | **Doctrine freeze** — no new authority without pressure | Active |
-| — | [Engineering Phase 1 — Adapters](engineering-phase-1-adapters.md) | **Active** |
-| 6d | [Sprint 2 Coolify adapter](sprint-2-coolify-adapter.md) — prove contract | Active (milestone-gated) |
+| - | [Engineering principles](engineering-principles.md) | Practice (not doctrine) |
+| - | **Doctrine freeze** - no new authority without pressure | Active |
+| - | [Engineering Phase 1 - Adapters](engineering-phase-1-adapters.md) | **Active** |
+| 6d | [Sprint 2 Coolify adapter](sprint-2-coolify-adapter.md) - prove contract | Active (milestone-gated) |
 | 7 | Billing | Later |
 | 8 | Self-service onboarding | Later |
 
@@ -202,9 +202,9 @@ Lifecycle is **existence**. Features are **entitlements**. Freeze Features only 
 | `provisioning` | Provisioning |
 | `active` | Active |
 | `suspended` | Suspended |
-| — | **Maintenance** (new) |
-| — | **PendingProvision**, **PendingDeletion** (new) |
+| - | **Maintenance** (new) |
+| - | **PendingProvision**, **PendingDeletion** (new) |
 | `archived` | Archived |
-| `decommissioned` | Infra teardown after Archived — projection / operator action, not a separate Shop status in v1 |
+| `decommissioned` | Infra teardown after Archived - projection / operator action, not a separate Shop status in v1 |
 
 Registry remains useful for control-plane storage sketches; **status names and transition rules above win**.

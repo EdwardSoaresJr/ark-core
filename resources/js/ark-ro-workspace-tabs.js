@@ -56,7 +56,7 @@ export function arkRoWorkspaceTabs(config = {}) {
                     this.tab = stored;
                 }
             } catch {
-                // Private browsing or blocked storage — keep server default.
+                // Private browsing or blocked storage - keep server default.
             }
 
             this.queueTabLoad(this.tab);

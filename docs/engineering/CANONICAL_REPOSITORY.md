@@ -20,7 +20,7 @@ The check uses the Git root and `origin` remote URL. Directory names are not ide
 | --- | --- |
 | Shop Core (repair orders, estimates, inspections, scheduling, documents, Core website records) | This repo (`EdwardSoaresJr/ark`) |
 | Control plane, managed services, website editor UI | `EdwardSoaresJr/ark-platform` |
-| Emergency restore / private fallback only | `arksmsv2` — no new Core features |
+| Emergency restore / private fallback only | `arksmsv2` - no new Core features |
 
 Do not create a private Core fork. If the commercial cloud is later shut down, Platform can relocate into Docker beside Core.
 

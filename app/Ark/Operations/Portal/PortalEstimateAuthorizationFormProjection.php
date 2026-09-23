@@ -34,7 +34,7 @@ final readonly class PortalEstimateAuthorizationFormProjection
                     'id' => $concern->id,
                     'summary' => $concern->summary,
                     'subtotalCents' => (int) ($snapshotConcern['subtotal_cents'] ?? 0),
-                    'subtotal' => $snapshotConcern['subtotal'] ?? '—',
+                    'subtotal' => $snapshotConcern['subtotal'] ?? '-',
                 ];
             })
             ->values()

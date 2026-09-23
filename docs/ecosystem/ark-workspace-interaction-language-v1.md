@@ -1,9 +1,9 @@
 # ARK Workspace Interaction Language v1
 
-**Parent:** [ark-constitution-v1.md](./ark-constitution-v1.md) — constitutional principle: **coherence over capability**  
-**Status:** Interaction grammar — apply, do not extend without earned sentences  
+**Parent:** [ark-constitution-v1.md](./ark-constitution-v1.md) - constitutional principle: **coherence over capability**  
+**Status:** Interaction grammar - apply, do not extend without earned sentences  
 **Date:** June 2026  
-**Do not:** Code this into a meta-framework yet. Sufficient doctrine exists — apply it.
+**Do not:** Code this into a meta-framework yet. Sufficient doctrine exists - apply it.
 
 ---
 
@@ -15,7 +15,7 @@
 
 ARK has moved from the first toward the second. This document is philosophy, not a module map.
 
-Most software keeps inventing principles because existing ones do not help answer the next question. ARK's grammars are **self-correcting** — each is protected by a question that resolves the next decision without a new doctrine document.
+Most software keeps inventing principles because existing ones do not help answer the next question. ARK's grammars are **self-correcting** - each is protected by a question that resolves the next decision without a new doctrine document.
 
 **ARK now has a way to discover itself.** That is rarer than any feature.
 
@@ -34,7 +34,7 @@ ARK is not "modules." It is four grammars:
 
 Authority owns operational truth. Projection packages answers for a surface and role. Workspace is how an operator **works** with that truth without losing place. Evolution is how ARK **changes** without rewriting truth from a single opinion.
 
-Observation, Configuration, and Transport remain delivery layers — but the mental model for product decisions is **Truth → Audience → Interaction → Improvement**.
+Observation, Configuration, and Transport remain delivery layers - but the mental model for product decisions is **Truth → Audience → Interaction → Improvement**.
 
 ---
 
@@ -110,7 +110,7 @@ Those grammars center the **database**. ARK is centering the **operator's questi
 
 ARK is developing an **interaction language**, not a collection of mobile screens.
 
-Every major operational object — Repair Order, Conversation, Inspection item, and eventually Customer, Vehicle, Vendor, Warranty — can be entered as a **workspace** that answers the same questions in the same order.
+Every major operational object - Repair Order, Conversation, Inspection item, and eventually Customer, Vehicle, Vendor, Warranty - can be entered as a **workspace** that answers the same questions in the same order.
 
 This is **explainable operations**: whether a suggestion comes from a simple rule, an observation, a recommendation engine, or eventually AI, the inspection surface does not change. It always answers:
 
@@ -144,11 +144,11 @@ Commands         (What can I do?)
 
 A new engineer can memorize this in five minutes.
 
-**Memory** is the concept. **Timeline** is one implementation — the API may still say `timeline` while the philosophy says memory.
+**Memory** is the concept. **Timeline** is one implementation - the API may still say `timeline` while the philosophy says memory.
 
-Inspection, Repair Order, and Conversation already fit this pattern. Customer, Vehicle, Vendor, and Warranty should follow the same grammar — not the same UI.
+Inspection, Repair Order, and Conversation already fit this pattern. Customer, Vehicle, Vendor, and Warranty should follow the same grammar - not the same UI.
 
-**Let multiple workspaces prove the grammar first.** Three strong examples exist today: Repair Order, Conversation, and Inspection. If Customer, Vehicle, and Vendor naturally converge on the same pattern over time, the grammar was **discovered** — not imposed.
+**Let multiple workspaces prove the grammar first.** Three strong examples exist today: Repair Order, Conversation, and Inspection. If Customer, Vehicle, and Vendor naturally converge on the same pattern over time, the grammar was **discovered** - not imposed.
 
 ---
 
@@ -164,9 +164,9 @@ Inspection, Repair Order, and Conversation already fit this pattern. Customer, V
 | 6 | **What can I do?** | Commands | Photo, Finding, Complete Item | Reply, estimate link |
 | 7 | **How confident is this workspace?** | Confidence | Dev/debug only today | Intentional gaps vs broken |
 
-Question 4 — **Decision** — separates an assistant from an opaque system. A technician should always be able to answer *"Why?"* with one tap (eventually in-product; today via Workspace Inspector in debug builds).
+Question 4 - **Decision** - separates an assistant from an opaque system. A technician should always be able to answer *"Why?"* with one tap (eventually in-product; today via Workspace Inspector in debug builds).
 
-Question 7 — **Confidence** — is for builders, not operators. It distinguishes *intentionally incomplete* from *broken*.
+Question 7 - **Confidence** - is for builders, not operators. It distinguishes *intentionally incomplete* from *broken*.
 
 ---
 
@@ -187,7 +187,7 @@ ARK is asking **"Which question is the operator still asking?"**
 
 The roadmap stops being feature-driven and becomes **question-driven**.
 
-Before adding a capability, ask: **Which operator question does this answer?** If it does not answer a recurring question — or answers one another layer already covers — it probably does not belong.
+Before adding a capability, ask: **Which operator question does this answer?** If it does not answer a recurring question - or answers one another layer already covers - it probably does not belong.
 
 For **Evolution**, ask: **Which repeated sentence earned this change?** Not *"I think…"* Not *"We should…"* But *"We heard this five times."*
 
@@ -218,7 +218,7 @@ Waiting Approval
 
 That is **Orientation**.
 
-Orientation is identity and placement. It is not progress, posture, or recommendation pressure — those belong to Health.
+Orientation is identity and placement. It is not progress, posture, or recommendation pressure - those belong to Health.
 
 ---
 
@@ -259,9 +259,9 @@ That is cognitively much lighter. One suggestion. One tap. Move.
 
 The command bar must remain:
 
-- **High-frequency** — what the operator reaches for without thinking
-- **Context-aware** — relevant to this object and this moment
-- **Role-aware** — technician muscle memory ≠ advisor muscle memory
+- **High-frequency** - what the operator reaches for without thinking
+- **Context-aware** - relevant to this object and this moment
+- **Role-aware** - technician muscle memory ≠ advisor muscle memory
 
 Everything else belongs under **More**.
 
@@ -273,7 +273,7 @@ Muscle memory matters more than completeness. Do not let Commands become a toolb
 
 **Memory is what the operator wants. Timeline is how we often render it.**
 
-Every workspace answers a memory question — not always as a chronological list:
+Every workspace answers a memory question - not always as a chronological list:
 
 | Workspace | Memory question |
 | --- | --- |
@@ -283,7 +283,7 @@ Every workspace answers a memory question — not always as a chronological list
 | **Inspection item** | What happened last time we checked this? |
 | **Vendor** | What happened to this order? |
 
-Render as timeline, activity feed, prior visits, or order history — the concept is **memory**. Do not confuse the implementation with the operator's question.
+Render as timeline, activity feed, prior visits, or order history - the concept is **memory**. Do not confuse the implementation with the operator's question.
 
 API payloads may use `timeline` as the transport key. Product language should say **memory**.
 
@@ -338,7 +338,7 @@ Notice what the payload does **not** say: `repair_order`, `conversation`, `inspe
 
 Workspaces differ by **what belongs in the repair**, not by permission theater.
 
-| Role | Workspace excludes (by design) | Not because forbidden — because irrelevant |
+| Role | Workspace excludes (by design) | Not because forbidden - because irrelevant |
 | --- | --- | --- |
 | **Technician** | Payments, reports, accounting, customer balance | Production grammar |
 | **Advisor** | Inspection flow, production commands, next inspection item | Communication and decision grammar |
@@ -361,7 +361,7 @@ Permissions still exist. Workspace configuration is the cleaner philosophy.
 | **Matched factors** | ✓ Why this suggestion won |
 | **Ignored factors** | What was considered but deprioritized |
 | **Blocked by** | What prevents progress |
-| **Confidence** | High / Medium / Low — qualitative, not numeric |
+| **Confidence** | High / Medium / Low - qualitative, not numeric |
 | **Alternatives considered** | Optional; human-readable only |
 
 **Example:**
@@ -389,7 +389,7 @@ Explain **reasoning**, not **implementation**. Nobody on the floor thinks in dec
 
 **Today (development):** `Workspace Ready: 86%` + list of intentional Phase 3 gaps.
 
-**Target:** Granular capability catalog — easier to reason about than one percentage.
+**Target:** Granular capability catalog - easier to reason about than one percentage.
 
 | Symbol | Meaning |
 | --- | --- |
@@ -421,11 +421,11 @@ Surfaces projection grammar: orientation, health, next, decision, memory (timeli
 Implementation: `ark-mobile` → `lib/widgets/workspace_inspector.dart`  
 Backend: `RepairOrderWorkspaceIntelligenceProjection`, `RepairOrderWorkspaceProjection`
 
-Named **Inspector** deliberately — it inspects **product grammar**, not code.
+Named **Inspector** deliberately - it inspects **product grammar**, not code.
 
 ---
 
-## System Inspector (later — do not build yet)
+## System Inspector (later - do not build yet)
 
 Eventually: long-press **anything** in a debug build.
 
@@ -458,9 +458,9 @@ Daily question: *What took three taps that should have taken one?*
 
 | Repeated sentence | Fix type |
 | --- | --- |
-| "I keep hitting Save & Next with greasy gloves." | Bigger Save — not redesign inspection |
-| "I always open Conversation after Overview." | Reorder sections — not a new feature |
-| "I take three photos before adding a measurement." | Camera stays open — not a new screen |
+| "I keep hitting Save & Next with greasy gloves." | Bigger Save - not redesign inspection |
+| "I always open Conversation after Overview." | Reorder sections - not a new feature |
+| "I take three photos before adding a measurement." | Camera stays open - not a new screen |
 
 ### What not to build next
 
@@ -475,13 +475,13 @@ Daily question: *What took three taps that should have taken one?*
 
 ## Observation notebook
 
-**Observe first. Instrument confirms — it does not replace.**
+**Observe first. Instrument confirms - it does not replace.**
 
 Eventually someone will say: *"Let's instrument all of this."* Instrumentation is valuable. It should **confirm** notebook observations, not discover them.
 
 | Sequence | Right | Wrong |
 | --- | --- | --- |
-| 1 | Notebook: *"I always ignore NEXT after brakes."* | Dashboard shows low NEXT tap rate — now what? |
+| 1 | Notebook: *"I always ignore NEXT after brakes."* | Dashboard shows low NEXT tap rate - now what? |
 | 2 | Instrumentation: Is that true across five technicians? | Instrument first, explain later |
 
 The notebook preserves **context**. Metrics preserve **scale**. Never reverse the order.
@@ -509,7 +509,7 @@ Not "Did you like it?" Not "Was it fast?" **Uncertainty** is the metric undernea
 | --- | --- | --- |
 | "I wasn't sure after brakes." | Auto-open Cooling | "Didn't have to think." |
 
-Six months later this table explains **why** the workspace feels natural — not just that it does.
+Six months later this table explains **why** the workspace feels natural - not just that it does.
 
 ### Technician signals
 
@@ -575,7 +575,7 @@ It is **Continuous Work**.
 > The software should never interrupt the repair.  
 > The repair should interrupt the software.
 
-That is a different priority than most enterprise apps — and it explains every workspace decision that might otherwise look like mobile polish.
+That is a different priority than most enterprise apps - and it explains every workspace decision that might otherwise look like mobile polish.
 
 ---
 
@@ -614,7 +614,7 @@ That is a different priority than most enterprise apps — and it explains every
 
 > **The purpose of ARK is not to digitize shop operations. It is to reduce hesitation while preserving momentum, using operational truth that remains explainable at every step.**
 
-That is not a mobile philosophy or a workspace philosophy. It is **product philosophy** — it applies to inspections, communications, telephony, scheduling, customer portals, and products not yet imagined.
+That is not a mobile philosophy or a workspace philosophy. It is **product philosophy** - it applies to inspections, communications, telephony, scheduling, customer portals, and products not yet imagined.
 
 ### Workspace principles
 
@@ -629,7 +629,7 @@ They are companions, not duplicates:
 | **Reduce hesitation** | I know what to do |
 | **Preserve momentum** | I don't lose my place while doing it |
 
-A good workspace answers the questions an operator naturally asks — in the order they ask them. Every additional screen, search, or decision introduces hesitation. Every unnecessary navigation break kills momentum.
+A good workspace answers the questions an operator naturally asks - in the order they ask them. Every additional screen, search, or decision introduces hesitation. Every unnecessary navigation break kills momentum.
 
 ARK workspaces should continually evolve toward:
 
@@ -652,11 +652,11 @@ Six months from now, contributors will not remember why there are persistent hea
 
 > **Reduce hesitation. Preserve momentum. Make the next action obvious. Make the reasoning inspectable.**
 
-**Continuous Work** is the north star. If a technician never pauses to figure out the software — and never loses their place while using it — ARK has become part of the repair instead of an interruption to it.
+**Continuous Work** is the north star. If a technician never pauses to figure out the software - and never loses their place while using it - ARK has become part of the repair instead of an interruption to it.
 
-If the answer to the end-of-day hesitation question is consistently **"No"** — the grammar is working.
+If the answer to the end-of-day hesitation question is consistently **"No"** - the grammar is working.
 
-The next milestone is not another feature. It is **Landon on the floor** — repeated sentences in the notebook, tightening only what earned it, and letting the evolution loop do its work.
+The next milestone is not another feature. It is **Landon on the floor** - repeated sentences in the notebook, tightening only what earned it, and letting the evolution loop do its work.
 
 ---
 
@@ -664,7 +664,7 @@ The next milestone is not another feature. It is **Landon on the floor** — rep
 
 From here, the biggest risk is not under-design. It is **violating the philosophy**.
 
-Every **significant PR** must answer four questions — architectural linting:
+Every **significant PR** must answer four questions - architectural linting:
 
 | Grammar | Question |
 | --- | --- |
@@ -722,13 +722,13 @@ Same questions. Different surface.
 
 ## Earned Intelligence
 
-**Anti-pattern:** Premature Intelligence — answering a question nobody is asking yet.
+**Anti-pattern:** Premature Intelligence - answering a question nobody is asking yet.
 
 **Principle:** Intelligence is introduced only after authority is trusted and the repeated operator question has been observed.
 
 Examples of premature intelligence: AI summaries before sentences; push before polling fails; desktop parity before phone workspace stabilizes.
 
-When someone says *"We should add AI here"* — the answer is:
+When someone says *"We should add AI here"* - the answer is:
 
 > **"What repeated sentence earned it?"**
 
@@ -742,4 +742,4 @@ Stop asking **"What's next?"**
 
 Ask **"What has earned the right to exist?"**
 
-ARK has learned how to say no. Preserving coherence while the product grows is the hardest part of building software — and the capability ARK is now positioned to protect.
+ARK has learned how to say no. Preserving coherence while the product grows is the hardest part of building software - and the capability ARK is now positioned to protect.

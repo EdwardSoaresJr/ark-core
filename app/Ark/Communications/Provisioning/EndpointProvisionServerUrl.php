@@ -4,7 +4,7 @@ namespace App\Ark\Communications\Provisioning;
 
 /**
  * Public base URL Poly phones use as custom provisioning server (G5).
- * Phones append {MAC}.cfg — not the per-device URL shown for G4 bench tests.
+ * Phones append {MAC}.cfg - not the per-device URL shown for G4 bench tests.
  */
 final class EndpointProvisionServerUrl
 {

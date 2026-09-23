@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Phase 1B composition — management visibility + base compensation assist.
+ * Phase 1B composition - management visibility + base compensation assist.
  * Not payroll authority.
  */
 final class TechnicianProductionAssistProjection
@@ -135,7 +135,7 @@ final class TechnicianProductionAssistProjection
         if ($historyUnavailable) {
             return self::packResult($technician, $from, $to, [
                 'history_unavailable' => true,
-                'history_unavailable_reason' => 'Production history unavailable for this period — flag recognition began '.$adoption->toDateString().'.',
+                'history_unavailable_reason' => 'Production history unavailable for this period - flag recognition began '.$adoption->toDateString().'.',
                 'clock_hours' => $clockHours,
                 'recognized_flag_hours' => null,
                 'pending_flag_hours' => null,
@@ -239,7 +239,7 @@ final class TechnicianProductionAssistProjection
             'history_unavailable' => false,
             'history_partial' => $partialAdoption,
             'history_partial_note' => $partialAdoption
-                ? 'Recognized flag only includes production on or after '.$adoption->toDateString().' (when recognition authority began). Earlier days are unknown — not zero.'
+                ? 'Recognized flag only includes production on or after '.$adoption->toDateString().' (when recognition authority began). Earlier days are unknown - not zero.'
                 : null,
             'clock_hours' => $clockHours,
             'recognized_flag_hours' => $recognizedHours,
@@ -327,7 +327,7 @@ final class TechnicianProductionAssistProjection
     }
 
     /**
-     * Approved unrecognized labor with no RO technician — visible, not attributed.
+     * Approved unrecognized labor with no RO technician - visible, not attributed.
      *
      * @return list<array<string, mixed>>
      */
@@ -431,7 +431,7 @@ final class TechnicianProductionAssistProjection
             'recognition_policy' => FlagRecognitionPolicy::KEY,
             'recognition_policy_version' => FlagRecognitionPolicy::VERSION,
             'recognition_policy_label' => FlagRecognitionPolicy::label(),
-            'explanation' => 'Recognized flag is immutable production recorded when an approved concern reaches Completed. Pending flag is approved labor still not recognized — sublets never count as flag hours. Actor who marks Completed is not the earning technician — RO assigned technician is snapshotted at recognition.',
+            'explanation' => 'Recognized flag is immutable production recorded when an approved concern reaches Completed. Pending flag is approved labor still not recognized - sublets never count as flag hours. Actor who marks Completed is not the earning technician - RO assigned technician is snapshotted at recognition.',
             'recognition_authority_starts_at' => self::recognitionAuthorityStartsAt()->toDateString(),
         ];
     }

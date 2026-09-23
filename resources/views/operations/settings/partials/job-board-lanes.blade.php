@@ -13,7 +13,7 @@
         <div class="border-b border-slate-200 px-3 py-2">
             <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Job Board lanes</p>
             <p class="mt-0.5 text-[11px] leading-4 text-slate-500">
-                These are the shop queues on the Job Board. Rename, reorder, and recolor them. Lane color is visual identity — it is not ARK attention.
+                These are the shop queues on the Job Board. Rename, reorder, and recolor them. Lane color is visual identity - it is not ARK attention.
             </p>
         </div>
 

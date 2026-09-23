@@ -56,7 +56,7 @@ class UnreadInboundMessageQueue
             ->where('occurred_at', '>=', $windowStart)
             ->whereHas('conversation', fn ($query) => $query
                 ->where('contact_surface', $contactSurface)
-                // Resolved is a shop-level statement that the thread is done —
+                // Resolved is a shop-level statement that the thread is done -
                 // it must clear the unread row for every advisor, not one viewer.
                 ->where('status', ConversationStatus::Open->value))
             ->where(function ($query) use ($viewer): void {

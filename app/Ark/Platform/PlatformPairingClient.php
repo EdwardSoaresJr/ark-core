@@ -99,7 +99,7 @@ final class PlatformPairingClient
     }
 
     /**
-     * Soft-fail status check — never throws for ordinary shop operation.
+     * Soft-fail status check - never throws for ordinary shop operation.
      *
      * @return array{ok: bool, connected: bool, status: ?string, error: ?string}
      */

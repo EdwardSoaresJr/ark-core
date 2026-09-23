@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Curated operational observation stream — not event sourcing, not every authority write.
+ * Curated operational observation stream - not event sourcing, not every authority write.
  *
  * This stream exists so that every operator surface explains
  * the same operational change in the same way.

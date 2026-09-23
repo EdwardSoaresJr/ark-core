@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Authoritative estimate line create — shared by operations web and mobile.
+ * Authoritative estimate line create - shared by operations web and mobile.
  */
 final class StoreRepairOrderLine
 {

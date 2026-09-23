@@ -1,7 +1,7 @@
-# Docker Desktop — recommended settings for ARK builds
+# Docker Desktop - recommended settings for ARK builds
 
 **Machine class:** Apple Silicon Mac build workstation (16+ GiB RAM recommended)  
-**Role:** Build worker only — never run production containers here.
+**Role:** Build worker only - never run production containers here.
 
 Open **Docker Desktop → Settings → Resources**:
 
@@ -19,13 +19,13 @@ Open **Docker Desktop → Settings → Resources**:
 | `~/ARK/build-cache/` | BuildKit local cache (workflow + manual builds) |
 | `~/ARK/github-runner/ark-build-01/` | GitHub Actions runner install (**disposable**) |
 | `~/ARK/ark-builder.env` | Paths and labels (copy from `ark-builder.env.example`) |
-| Docker Desktop VM | Internal image/layer storage — prune via Docker Desktop or `docker system df` |
+| Docker Desktop VM | Internal image/layer storage - prune via Docker Desktop or `docker system df` |
 
 **Convention:** Everything ARK-build-related under `~/ARK/`. No hidden magic in `~/actions-runner`.
 
-To relocate Docker Desktop's disk image (optional): Docker Desktop → Settings → Resources → Advanced → Disk image location — point at a folder under `~/ARK/` if you want one tree for cleanup.
+To relocate Docker Desktop's disk image (optional): Docker Desktop → Settings → Resources → Advanced → Disk image location - point at a folder under `~/ARK/` if you want one tree for cleanup.
 
-## Builder only — not runtime
+## Builder only - not runtime
 
 | Build Mac | Production VPS |
 |-------------|----------------|
@@ -42,4 +42,4 @@ du -sh ~/ARK/build-cache
 docker builder prune -f   # when cache > ~20 GiB
 ```
 
-Do not back up the runner binary — back up repo, workflows, and `~/ARK/ark-builder.env`.
+Do not back up the runner binary - back up repo, workflows, and `~/ARK/ark-builder.env`.

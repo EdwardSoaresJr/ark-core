@@ -12,7 +12,7 @@ class ReconcileOpenLeadsCommand extends Command
     protected $signature = 'ark:leads:reconcile-open
                             {--dry-run : Report matches without converting}';
 
-    protected $description = 'One-time backfill — link open leads to existing repair orders by phone, vehicle, and concern.';
+    protected $description = 'One-time backfill - link open leads to existing repair orders by phone, vehicle, and concern.';
 
     public function handle(LeadConverter $converter): int
     {
@@ -52,7 +52,7 @@ class ReconcileOpenLeadsCommand extends Command
                 return self::SUCCESS;
             }
 
-            $this->components->info('Dry run — would convert '.count($matches).' lead(s):');
+            $this->components->info('Dry run - would convert '.count($matches).' lead(s):');
             $this->table(
                 ['Lead ID', 'RO #', 'Contact', 'Concern'],
                 collect($matches)->map(fn (array $row): array => [

@@ -23,7 +23,7 @@ function loadSquareSdk(url) {
 }
 
 /**
- * Take Payment rail — Terminal or Square Web Payments tokenized keyed entry.
+ * Take Payment rail - Terminal or Square Web Payments tokenized keyed entry.
  * Core never sees PAN/CVV; only source_token from Square.js.
  */
 export function arkPaymentCapture(config = {}) {

@@ -7,7 +7,7 @@ use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Customers\Customer;
 
 /**
- * Suggested reply text for advisor nudges — advisor confirms before send.
+ * Suggested reply text for advisor nudges - advisor confirms before send.
  */
 final class AdvisorNudgeDraftBuilder
 {
@@ -24,9 +24,9 @@ final class AdvisorNudgeDraftBuilder
         $name = $this->firstName($customer, $conversation);
 
         $draft = match ($key) {
-            'conversation.waiting_response' => "Hi {$name}, following up on your message — let me know if you still need anything from us.",
-            'conversation.multiple_messages' => "Hi {$name}, sorry for the delay — I'm here now. What can I help with?",
-            'conversation.estimate_views', 'conversation.estimate_viewed' => "Hi {$name}, I noticed you opened the estimate — happy to answer any questions or help with approval whenever you're ready.",
+            'conversation.waiting_response' => "Hi {$name}, following up on your message - let me know if you still need anything from us.",
+            'conversation.multiple_messages' => "Hi {$name}, sorry for the delay - I'm here now. What can I help with?",
+            'conversation.estimate_views', 'conversation.estimate_viewed' => "Hi {$name}, I noticed you opened the estimate - happy to answer any questions or help with approval whenever you're ready.",
             'conversation.sms_analysis_follow_up' => $this->smsAnalysisDraft($nudge, $name),
             'call.analysis_follow_up' => $this->callAnalysisDraft($nudge, $name),
             default => null,
@@ -82,7 +82,7 @@ final class AdvisorNudgeDraftBuilder
         $suggested = trim((string) ($nudge['suggested_reply'] ?? ''));
 
         if ($suggested !== '') {
-            return "{$name} — {$suggested}";
+            return "{$name} - {$suggested}";
         }
 
         $notes = trim((string) ($nudge['message'] ?? ''));
@@ -91,7 +91,7 @@ final class AdvisorNudgeDraftBuilder
             return null;
         }
 
-        return "{$name} — {$notes}";
+        return "{$name} - {$notes}";
     }
 
     private function firstName(?Customer $customer, ?Conversation $conversation): string

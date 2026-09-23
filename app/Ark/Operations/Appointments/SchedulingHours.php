@@ -25,7 +25,7 @@ final class SchedulingHours
     ];
 
     /**
-     * Legacy seed shape — not the product default. Prefer Business Hours inherit.
+     * Legacy seed shape - not the product default. Prefer Business Hours inherit.
      *
      * @return array<string, array{enabled: bool, open: string, close: string}>
      */

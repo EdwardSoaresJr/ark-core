@@ -1,4 +1,4 @@
-{{-- Labor Policies — Settings → Financial Rules --}}
+{{-- Labor Policies - Settings → Financial Rules --}}
 @php
     /** @var array $laborPoliciesMatrix */
     /** @var array $laborPolicyPreview */
@@ -36,7 +36,7 @@
             Rows are operation classes. Columns are billing postures. Each cell is an independent policy rate.
             Click a cell to edit one policy. The shop currently keeps
             <span class="font-semibold text-slate-700">RepairPal, Warranty, Comeback, and Internal</span>
-            equal across classes by configuration — the matrix does not force that.
+            equal across classes by configuration - the matrix does not force that.
         </p>
     </div>
 
@@ -107,7 +107,7 @@
                                         @js($cell['effective_from'] ?? null)
                                     )"
                                 >
-                                    {{ $cell['rate_display'] ?? '—' }}
+                                    {{ $cell['rate_display'] ?? '-' }}
                                 </button>
                             </td>
                         @endforeach

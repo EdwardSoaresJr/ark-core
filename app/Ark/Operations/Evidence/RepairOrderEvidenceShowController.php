@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Staff media stream — authorization only; never records customer viewed. */
+/** Staff media stream - authorization only; never records customer viewed. */
 final class RepairOrderEvidenceShowController
 {
     public function __invoke(

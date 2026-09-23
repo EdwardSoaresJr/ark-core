@@ -48,6 +48,6 @@ class RepairOrderLedgerWriteOffController
 
         return redirect()
             ->back()
-            ->with('status', $disposition->label().' — remaining balance waived. Invoice total still shows what this would have cost.');
+            ->with('status', $disposition->label().' - remaining balance waived. Invoice total still shows what this would have cost.');
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Repair order work memory — concern orientation, expanded details, editing line, scroll.
+ * Repair order work memory - concern orientation, expanded details, editing line, scroll.
  * Cooperates with workspace tabs; persists per shop RO number in sessionStorage.
  */
 

@@ -5,35 +5,35 @@
 **Status:** Stub | In progress | Complete  
 **Pattern library:** [ark-interaction-pattern-library-v1.md](../ark-interaction-pattern-library-v1.md)
 
-Use the standing format only — do not invent sections.
+Use the standing format only - do not invent sections.
 
 ---
 
 ## 1. Operating model
 
-—
+-
 
 ## 2. Interaction craft worth stealing
 
-—
+-
 
 ## 3. Architecture worth rejecting
 
-—
+-
 
 ## 4. Doctrine impact
 
 | Discovery | Doctrine home |
 | --- | --- |
-| — | — |
+| - | - |
 
 ## 5. Steal list
 
-—
+-
 
 ## 6. Do not steal
 
-—
+-
 
 ## 7. One-sentence takeaway
 

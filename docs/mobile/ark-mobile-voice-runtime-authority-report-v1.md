@@ -17,7 +17,7 @@ sip_ua
         ↓
 Asterisk
         ↓
-Twilio Elastic SIP Trunk   (carrier — arksmsv2 backend only)
+Twilio Elastic SIP Trunk   (carrier - arksmsv2 backend only)
 ```
 
 ## Acceptance counters
@@ -43,4 +43,4 @@ Renamed: 0 symbols
 Behavior changes: 0
 ```
 
-**Result:** Pass — single path `ArkVoiceDialer → ArkVoiceTransport → sip_ua → Asterisk`.
+**Result:** Pass - single path `ArkVoiceDialer → ArkVoiceTransport → sip_ua → Asterisk`.

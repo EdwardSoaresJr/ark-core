@@ -4,18 +4,18 @@
 #   open http://localhost:8088 → /setup
 #
 # Services:
-#   install-bootstrap — generates per-install secrets before MySQL starts
-#   mysql             — application database (durable volume)
-#   redis             — cache, sessions, queues (Horizon)
-#   app               — nginx, php-fpm, Horizon, Reverb, scheduler
+#   install-bootstrap - generates per-install secrets before MySQL starts
+#   mysql             - application database (durable volume)
+#   redis             - cache, sessions, queues (Horizon)
+#   app               - nginx, php-fpm, Horizon, Reverb, scheduler
 #
 # Durable shop state (backup/restore these together):
-#   ark_mysql   — MySQL operational database
-#   ark_secrets — per-install APP_KEY, DB passwords, Reverb credentials
-#   ark_storage — uploaded media, install identity, persisted files
+#   ark_mysql   - MySQL operational database
+#   ark_secrets - per-install APP_KEY, DB passwords, Reverb credentials
+#   ark_storage - uploaded media, install identity, persisted files
 #
 # Ephemeral runtime (do not treat as irreplaceable shop truth):
-#   ark_redis   — cache / optional session+queue transport; safe to rebuild empty
+#   ark_redis   - cache / optional session+queue transport; safe to rebuild empty
 #   containers, compiled views, logs
 #
 # See docs/installation/portable-state.md
@@ -41,7 +41,7 @@ services:
       MYSQL_DATABASE: ark
       MYSQL_USER: ark
     ports:
-      # Host-side tools only — app uses mysql:3306 on the Compose network
+      # Host-side tools only - app uses mysql:3306 on the Compose network
       - "3307:3306"
     volumes:
       - ark_mysql:/var/lib/mysql

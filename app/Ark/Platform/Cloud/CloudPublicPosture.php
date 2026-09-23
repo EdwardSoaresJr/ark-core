@@ -6,7 +6,7 @@ namespace App\Ark\Platform\Cloud;
  * Company-site posture: what the public Cloud funnel may offer right now.
  *
  * Self-host remains available. Hosted signup and public pricing stay closed until
- * the hosted offering is ready — interest routes to a configurable contact email.
+ * the hosted offering is ready - interest routes to a configurable contact email.
  */
 final class CloudPublicPosture
 {

@@ -1,6 +1,6 @@
-# Deliverable 5 — Design System Components
+# Deliverable 5 - Design System Components
 
-**Rule:** Inventory before Flutter. Every screen in [`01-screen-inventory.md`](01-screen-inventory.md) must compose from this list — no one-off widgets.
+**Rule:** Inventory before Flutter. Every screen in [`01-screen-inventory.md`](01-screen-inventory.md) must compose from this list - no one-off widgets.
 
 **Status:** 📝 spec'd · map in [`screen-component-map.md`](screen-component-map.md)
 
@@ -10,7 +10,7 @@
 
 | Component | Used on | Spec notes |
 |-----------|---------|------------|
-| **Identity strip** | All workspaces | Customer · vehicle · RO · status — persistent |
+| **Identity strip** | All workspaces | Customer · vehicle · RO · status - persistent |
 | **Status chip** | RO · concern · inspection · payment | Color = operational posture |
 | **Avatar / initials** | Threads · staff | |
 | **RO badge** | Comms rows · search | `#1599` + lifecycle hint |
@@ -92,7 +92,7 @@
 
 | Component | Used on | Spec notes |
 |-----------|---------|------------|
-| **Push payload → route** | OS | Not UI — document in flows |
+| **Push payload → route** | OS | Not UI - document in flows |
 | **In-app notification row** | Notifications inbox | Same routing as push |
 | **Badge (tab / app icon)** | | Unread · continuity count |
 
@@ -109,7 +109,7 @@
 | Label | Metadata · timestamps |
 | Spacing 4/8/12/16/24 | No per-screen inventing |
 
-Reference: ~15–20% tighter than generic CRM — `ark product doctrine` — but **spec here in Companion terms**, not doctrine prose.
+Reference: ~15–20% tighter than generic CRM - `ark product doctrine` - but **spec here in Companion terms**, not doctrine prose.
 
 ---
 

@@ -415,7 +415,7 @@ test('owner call intelligence lists analyzed sms threads', function () {
 
     $recorder = app(ConversationRecorder::class);
     $recorder->recordInboundSms('7195558888', 'Can I get a quote on brakes?', 'SM_intel_1', $customer);
-    $recorder->recordOutboundSms($customer, $advisor, 'Yes — send a photo if you can.', 'SM_intel_2');
+    $recorder->recordOutboundSms($customer, $advisor, 'Yes - send a photo if you can.', 'SM_intel_2');
 
     $slice = ConversationSmsIntelligenceSlice::query()->first();
 
@@ -443,5 +443,5 @@ test('owner call intelligence lists analyzed sms threads', function () {
         ->get(route('operations.owner.call-intelligence.sms.show', $slice))
         ->assertOk()
         ->assertSee('Can I get a quote on brakes?')
-        ->assertSee('Yes — send a photo if you can.');
+        ->assertSee('Yes - send a photo if you can.');
 });

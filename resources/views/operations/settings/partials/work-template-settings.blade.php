@@ -33,7 +33,7 @@
                 <input type="text" name="description" maxlength="1000" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
             </label>
             <label class="block text-xs font-medium text-slate-500 md:col-span-2">
-                Internal note <span class="font-normal text-slate-400">(optional — becomes a private note line)</span>
+                Internal note <span class="font-normal text-slate-400">(optional - becomes a private note line)</span>
                 <textarea name="internal_note" rows="2" maxlength="2000" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"></textarea>
             </label>
             <label class="block text-xs font-medium text-slate-500 md:col-span-2">
@@ -134,7 +134,7 @@
                     @foreach ($template->lines as $line)
                         <li>
                             <span class="font-semibold text-slate-800">{{ $line->type->label() }}</span>
-                            — {{ $line->description }}
+                            - {{ $line->description }}
                             @if ($line->type->isLabor())
                                 · {{ rtrim(rtrim(number_format((float) $line->quantity, 2, '.', ''), '0'), '.') }} hr
                                 @if ($line->unit_price_cents)

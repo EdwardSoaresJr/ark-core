@@ -1,4 +1,4 @@
-# API & projection backlog — Companion v1
+# API & projection backlog - Companion v1
 
 **Rule:** Specs drive API. Backend is **not frozen** for `/api/mobile`.  
 **Authority:** Projections read truth · never duplicate financial math client-side.

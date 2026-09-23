@@ -104,7 +104,7 @@ class LearnArkProgressController
             ->back()
             ->with(
                 'learn_gate_control',
-                Branding::learnName().' is available to authorized staff. Shop-wide workboard training gates are retired — future requirements will be employee-specific.',
+                Branding::learnName().' is available to authorized staff. Shop-wide workboard training gates are retired - future requirements will be employee-specific.',
             );
     }
 

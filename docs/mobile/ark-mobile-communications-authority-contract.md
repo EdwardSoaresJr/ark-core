@@ -149,7 +149,7 @@ NotificationsRepository
 
 ## Server-side provider abstraction (direction)
 
-ARK should route outbound/inbound transport through an internal provider boundary — not expose it to mobile.
+ARK should route outbound/inbound transport through an internal provider boundary - not expose it to mobile.
 
 Example shape (conceptual; implementations live in `app/Ark/Operations/` today):
 
@@ -174,7 +174,7 @@ Mobile does not.
 
 **Current V2 path:** outbound SMS → `SendOutboundMessageAction` → `ConversationMessage`; telephony → `CallSession`. Mobile controllers call these actions only.
 
-**ARK Voice direction:** desk phones, transfer, paging via Asterisk as transport — `docs/communications/ark-voice-vision.md`. Flutter boundary unchanged.
+**ARK Voice direction:** desk phones, transfer, paging via Asterisk as transport - `docs/communications/ark-voice-vision.md`. Flutter boundary unchanged.
 
 ---
 
@@ -182,12 +182,12 @@ Mobile does not.
 
 These may be added later without changing the mobile architecture:
 
-- SMS / MMS (customer reply via mobile — **uses existing message POST**)
+- SMS / MMS (customer reply via mobile - **uses existing message POST**)
 - Voicemail
 - Call recordings
 - Call notes
 - Click-to-call
-- Push transport (optional `fcm_token` via `/api/mobile/device` — ARK-owned delivery; FCM/APNs transport only). **Deferred** until floor observation — see `docs/mobile/ark-mobile-notification-doctrine.md`
+- Push transport (optional `fcm_token` via `/api/mobile/device` - ARK-owned delivery; FCM/APNs transport only). **Deferred** until floor observation - see `docs/mobile/ark-mobile-notification-doctrine.md`
 - ARK Voice
 - Provider failover
 - Multi-provider routing
@@ -218,8 +218,8 @@ If Flutter must change, provider details have leaked across the authority bounda
 | API surface | `/api/mobile/conversations*`, `/api/mobile/telephony/*`, `/api/mobile/notifications` |
 | Voice path | Session/connect via `/api/mobile/telephony/voice-*`; `dial_method` from `/me` |
 | Reply path | `POST …/messages` → server writes `ConversationMessage` |
-| Thread body | `UnifiedOperationalTimeline` / conversation projection — not raw provider payloads |
-| New feature | New mobile endpoint wraps existing authority — not a parallel inbox |
+| Thread body | `UnifiedOperationalTimeline` / conversation projection - not raw provider payloads |
+| New feature | New mobile endpoint wraps existing authority - not a parallel inbox |
 
 ---
 

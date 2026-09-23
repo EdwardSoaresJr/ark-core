@@ -11,7 +11,7 @@ use App\Ark\Operations\Customers\Customer;
 use Illuminate\Console\Command;
 
 /**
- * Gate 1 — print Core continuity counts before reconcile / Twilio flip.
+ * Gate 1 - print Core continuity counts before reconcile / Twilio flip.
  */
 final class CommunicationsContinuityCountsCommand extends Command
 {
@@ -60,7 +60,7 @@ final class CommunicationsContinuityCountsCommand extends Command
                 ['messages', (string) $messages],
                 ['attachments', (string) $attachments],
                 ['customer-linked conversations', (string) $linked],
-                ['latest message occurred_at', $latest ? (string) $latest : '—'],
+                ['latest message occurred_at', $latest ? (string) $latest : '-'],
             ],
         );
 

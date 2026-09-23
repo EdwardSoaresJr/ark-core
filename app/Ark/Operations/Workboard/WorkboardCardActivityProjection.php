@@ -53,12 +53,12 @@ final class WorkboardCardActivityProjection
     public static function idle(): array
     {
         return [
-            self::mark('estimate', 'EST', WorkboardCardActivityState::None, 'Estimate — None'),
-            self::mark('sms', 'SMS', WorkboardCardActivityState::None, 'SMS — None'),
-            self::mark('email', 'EMAIL', WorkboardCardActivityState::None, 'Email — None'),
-            self::mark('phone', 'PHONE', WorkboardCardActivityState::None, 'Phone — None'),
-            self::mark('dvi', 'DVI', WorkboardCardActivityState::None, 'DVI — None'),
-            self::mark('scheduled', 'APPT', WorkboardCardActivityState::None, 'Scheduled — None'),
+            self::mark('estimate', 'EST', WorkboardCardActivityState::None, 'Estimate - None'),
+            self::mark('sms', 'SMS', WorkboardCardActivityState::None, 'SMS - None'),
+            self::mark('email', 'EMAIL', WorkboardCardActivityState::None, 'Email - None'),
+            self::mark('phone', 'PHONE', WorkboardCardActivityState::None, 'Phone - None'),
+            self::mark('dvi', 'DVI', WorkboardCardActivityState::None, 'DVI - None'),
+            self::mark('scheduled', 'APPT', WorkboardCardActivityState::None, 'Scheduled - None'),
         ];
     }
 
@@ -89,11 +89,11 @@ final class WorkboardCardActivityProjection
     private function scheduledMark(?Appointment $appointment): WorkboardCardActivityMark
     {
         if (! $appointment instanceof Appointment) {
-            return self::mark('scheduled', 'APPT', WorkboardCardActivityState::None, 'Scheduled — None');
+            return self::mark('scheduled', 'APPT', WorkboardCardActivityState::None, 'Scheduled - None');
         }
 
         if ($appointment->status === AppointmentStatus::Arrived) {
-            return self::mark('scheduled', 'APPT', WorkboardCardActivityState::Engaged, 'Scheduled — Checked in');
+            return self::mark('scheduled', 'APPT', WorkboardCardActivityState::Engaged, 'Scheduled - Checked in');
         }
 
         $startsAt = ShopDisplayTimezone::present($appointment->starts_at);
@@ -104,17 +104,17 @@ final class WorkboardCardActivityProjection
                 'scheduled',
                 'APPT',
                 WorkboardCardActivityState::Attention,
-                'Scheduled — Missed '.$this->ago($appointment->starts_at),
+                'Scheduled - Missed '.$this->ago($appointment->starts_at),
             );
         }
 
         $when = $this->scheduledWhenLabel($startsAt, $now);
 
         if ($startsAt->isSameDay($now) || $appointment->status === AppointmentStatus::Confirmed) {
-            return self::mark('scheduled', 'APPT', WorkboardCardActivityState::Sent, 'Scheduled — '.$when);
+            return self::mark('scheduled', 'APPT', WorkboardCardActivityState::Sent, 'Scheduled - '.$when);
         }
 
-        return self::mark('scheduled', 'APPT', WorkboardCardActivityState::Ready, 'Scheduled — '.$when);
+        return self::mark('scheduled', 'APPT', WorkboardCardActivityState::Ready, 'Scheduled - '.$when);
     }
 
     private function scheduledWhenLabel(Carbon $startsAt, Carbon $now): string
@@ -139,18 +139,18 @@ final class WorkboardCardActivityProjection
         $sent = $this->latestOfType($events, OperationalCommunicationType::EstimateSent);
 
         if ($viewed instanceof CommunicationEvent) {
-            return self::mark('estimate', 'EST', WorkboardCardActivityState::Engaged, 'Estimate — Viewed '.$this->ago($viewed->occurred_at));
+            return self::mark('estimate', 'EST', WorkboardCardActivityState::Engaged, 'Estimate - Viewed '.$this->ago($viewed->occurred_at));
         }
 
         if ($sent instanceof CommunicationEvent) {
-            return self::mark('estimate', 'EST', WorkboardCardActivityState::Sent, 'Estimate — Sent '.$this->ago($sent->occurred_at));
+            return self::mark('estimate', 'EST', WorkboardCardActivityState::Sent, 'Estimate - Sent '.$this->ago($sent->occurred_at));
         }
 
         if ($this->hasPricedEstimate($repairOrder)) {
-            return self::mark('estimate', 'EST', WorkboardCardActivityState::Ready, 'Estimate — Ready');
+            return self::mark('estimate', 'EST', WorkboardCardActivityState::Ready, 'Estimate - Ready');
         }
 
-        return self::mark('estimate', 'EST', WorkboardCardActivityState::None, 'Estimate — None');
+        return self::mark('estimate', 'EST', WorkboardCardActivityState::None, 'Estimate - None');
     }
 
     /**
@@ -172,22 +172,22 @@ final class WorkboardCardActivityProjection
             ->first();
 
         if ($replied instanceof CommunicationEvent) {
-            return self::mark('sms', 'SMS', WorkboardCardActivityState::Engaged, 'SMS — Customer replied '.$this->ago($replied->occurred_at));
+            return self::mark('sms', 'SMS', WorkboardCardActivityState::Engaged, 'SMS - Customer replied '.$this->ago($replied->occurred_at));
         }
 
         if ($failed instanceof CommunicationEvent && ! $this->eventIsLater($delivered, $failed)) {
-            return self::mark('sms', 'SMS', WorkboardCardActivityState::Attention, 'SMS — Delivery failed '.$this->ago($failed->occurred_at));
+            return self::mark('sms', 'SMS', WorkboardCardActivityState::Attention, 'SMS - Delivery failed '.$this->ago($failed->occurred_at));
         }
 
         if ($delivered instanceof CommunicationEvent) {
-            return self::mark('sms', 'SMS', WorkboardCardActivityState::Sent, 'SMS — Delivered '.$this->ago($delivered->occurred_at));
+            return self::mark('sms', 'SMS', WorkboardCardActivityState::Sent, 'SMS - Delivered '.$this->ago($delivered->occurred_at));
         }
 
         if ($outbound instanceof CommunicationEvent) {
-            return self::mark('sms', 'SMS', WorkboardCardActivityState::Ready, 'SMS — Sent '.$this->ago($outbound->occurred_at));
+            return self::mark('sms', 'SMS', WorkboardCardActivityState::Ready, 'SMS - Sent '.$this->ago($outbound->occurred_at));
         }
 
-        return self::mark('sms', 'SMS', WorkboardCardActivityState::None, 'SMS — None');
+        return self::mark('sms', 'SMS', WorkboardCardActivityState::None, 'SMS - None');
     }
 
     /**
@@ -204,14 +204,14 @@ final class WorkboardCardActivityProjection
             ->first();
 
         if ($opened instanceof CommunicationEvent) {
-            return self::mark('email', 'EMAIL', WorkboardCardActivityState::Engaged, 'Email — Opened '.$this->ago($opened->occurred_at));
+            return self::mark('email', 'EMAIL', WorkboardCardActivityState::Engaged, 'Email - Opened '.$this->ago($opened->occurred_at));
         }
 
         if ($sent instanceof CommunicationEvent) {
-            return self::mark('email', 'EMAIL', WorkboardCardActivityState::Sent, 'Email — Sent '.$this->ago($sent->occurred_at));
+            return self::mark('email', 'EMAIL', WorkboardCardActivityState::Sent, 'Email - Sent '.$this->ago($sent->occurred_at));
         }
 
-        return self::mark('email', 'EMAIL', WorkboardCardActivityState::None, 'Email — None');
+        return self::mark('email', 'EMAIL', WorkboardCardActivityState::None, 'Email - None');
     }
 
     /**
@@ -220,7 +220,7 @@ final class WorkboardCardActivityProjection
     private function phoneMark(array $calls): WorkboardCardActivityMark
     {
         if ($calls === []) {
-            return self::mark('phone', 'PHONE', WorkboardCardActivityState::None, 'Phone — None');
+            return self::mark('phone', 'PHONE', WorkboardCardActivityState::None, 'Phone - None');
         }
 
         $attention = collect($calls)->first(
@@ -237,7 +237,7 @@ final class WorkboardCardActivityProjection
                 'phone',
                 'PHONE',
                 WorkboardCardActivityState::Attention,
-                'Phone — '.$label.' '.$this->ago($attention->started_at),
+                'Phone - '.$label.' '.$this->ago($attention->started_at),
             );
         }
 
@@ -247,10 +247,10 @@ final class WorkboardCardActivityProjection
         $prefix = $count > 1 ? $count.' calls · last ' : '';
 
         if ($latest->direction === CallSessionDirection::Inbound) {
-            return self::mark('phone', 'PHONE', WorkboardCardActivityState::Sent, 'Phone — '.$prefix.'Inbound call '.$when);
+            return self::mark('phone', 'PHONE', WorkboardCardActivityState::Sent, 'Phone - '.$prefix.'Inbound call '.$when);
         }
 
-        return self::mark('phone', 'PHONE', WorkboardCardActivityState::Sent, 'Phone — '.$prefix.'Outbound call '.$when);
+        return self::mark('phone', 'PHONE', WorkboardCardActivityState::Sent, 'Phone - '.$prefix.'Outbound call '.$when);
     }
 
     /**
@@ -261,7 +261,7 @@ final class WorkboardCardActivityProjection
         $sent = $this->latestOfType($events, OperationalCommunicationType::InspectionSent);
 
         if ($sent instanceof CommunicationEvent) {
-            return self::mark('dvi', 'DVI', WorkboardCardActivityState::Sent, 'DVI — Sent '.$this->ago($sent->occurred_at));
+            return self::mark('dvi', 'DVI', WorkboardCardActivityState::Sent, 'DVI - Sent '.$this->ago($sent->occurred_at));
         }
 
         if ($inspection instanceof Inspection) {
@@ -271,11 +271,11 @@ final class WorkboardCardActivityProjection
                 'dvi',
                 'DVI',
                 WorkboardCardActivityState::Ready,
-                'DVI — On file'.($when instanceof Carbon ? ' '.$this->ago($when) : ''),
+                'DVI - On file'.($when instanceof Carbon ? ' '.$this->ago($when) : ''),
             );
         }
 
-        return self::mark('dvi', 'DVI', WorkboardCardActivityState::None, 'DVI — None');
+        return self::mark('dvi', 'DVI', WorkboardCardActivityState::None, 'DVI - None');
     }
 
     /**
@@ -323,7 +323,7 @@ final class WorkboardCardActivityProjection
     /**
      * Next active appointment per board RO.
      * Prefer the appointment linked to this RO. Floor bookings often sit on the vehicle
-     * with repair_order_id null (or an old closed RO) — still project onto the open card.
+     * with repair_order_id null (or an old closed RO) - still project onto the open card.
      *
      * @param  Collection<int, RepairOrder>  $repairOrders
      * @return array<int, Appointment>

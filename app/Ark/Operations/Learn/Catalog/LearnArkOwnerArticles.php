@@ -45,13 +45,13 @@ final class LearnArkOwnerArticles
             [
                 'slug' => 'payments-reconciliation',
                 'title' => 'Payments reconciliation',
-                'summary' => 'Bridge Cash Collected to Sales Posted — buckets, drill-down, daily habit.',
+                'summary' => 'Bridge Cash Collected to Sales Posted - buckets, drill-down, daily habit.',
                 'view' => 'operations.learn.owner.payments-reconciliation',
             ],
             [
                 'slug' => 'weekly-owner-review',
                 'title' => 'Weekly owner review',
-                'summary' => 'Friday checklist — KPIs, margin health, next week focus.',
+                'summary' => 'Friday checklist - KPIs, margin health, next week focus.',
                 'view' => 'operations.learn.owner.weekly-owner-review',
             ],
             [

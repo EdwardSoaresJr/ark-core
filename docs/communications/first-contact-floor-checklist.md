@@ -1,10 +1,10 @@
-# Milestone 1: First Contact — Floor Checklist
+# Milestone 1: First Contact - Floor Checklist
 
 **Definition of done:** A factory-reset VVX350 obtains its complete configuration from ARK, registers with Asterisk, and appears as **Connected** without manual phone configuration beyond pointing it at the provisioning server.
 
 **Not in scope for this milestone:** firmware management, claim flow, ARI, dynamic PJSIP, BLF, paging, call routing.
 
-**Posture:** This is a **certification**, not a debug session. After G3 passes, software is no longer under test — the **system** is. If something fails, name the gate (e.g. "Gate G5 failed"), not "provisioning failed."
+**Posture:** This is a **certification**, not a debug session. After G3 passes, software is no longer under test - the **system** is. If something fails, name the gate (e.g. "Gate G5 failed"), not "provisioning failed."
 
 **Single-variable rule:** One phone, one workstation, one extension, one provisioning server, one known firmware. Change one thing at a time if retrying.
 
@@ -27,19 +27,19 @@ Record **timestamps** at every gate transition. The timeline is the baseline for
 Example:
 
 ```
-09:14:02  G5 — Phone boots
-09:14:07  G4 — GET /provision/48256730757F.cfg → 200, projection REUSED
-09:14:11  G5 — Phone applies config
-09:14:17  G6 — SIP REGISTER
-09:14:17  G6 — AMI Registered
-09:14:18  G7 — Connected
+09:14:02  G5 - Phone boots
+09:14:07  G4 - GET /provision/48256730757F.cfg → 200, projection REUSED
+09:14:11  G5 - Phone applies config
+09:14:17  G6 - SIP REGISTER
+09:14:17  G6 - AMI Registered
+09:14:18  G7 - Connected
 ```
 
 Full timeline → [first-contact-report.md](first-contact-report.md).
 
 ---
 
-## Pre-flight (ARK) — G1 through G4
+## Pre-flight (ARK) - G1 through G4
 
 - [ ] Migrations applied (`communication_device_models`, `endpoint_configuration_projections`, device MAC fields, extension workstation fields)
 - [ ] `CommunicationDeviceModelSeeder` run (VVX350 policy present)
@@ -65,7 +65,7 @@ MAC `AA:BB:CC:DD:EE:FF` → URL `/provision/AABBCCDDEEFF.cfg`
 
 ---
 
-## Phone preparation — G5 through G7
+## Phone preparation - G5 through G7
 
 - [ ] Factory reset VVX350
 - [ ] Disable Poly ZTP / cloud provisioning (if enabled)
@@ -109,9 +109,9 @@ Record each step. Structured logs (`endpoint.provision.request`) should align wi
 
 Only then:
 
-- PR3B — assignment UX polish
+- PR3B - assignment UX polish
 - **Provisioning Diagnostics** page (engineer-only: MAC → gates, projection, last request, last registration, rendered XML)
-- Integration tests — every real bug becomes automated regression (404 → 403 → 200 → register → AMI → Connected)
-- Phase 2 — claim flow, firmware, BLF
-- Phase 3 — dynamic Asterisk projection
+- Integration tests - every real bug becomes automated regression (404 → 403 → 200 → register → AMI → Connected)
+- Phase 2 - claim flow, firmware, BLF
+- Phase 3 - dynamic Asterisk projection
 - Retire entries in [TECHNICAL_DEBT.md](../engineering/TECHNICAL_DEBT.md)

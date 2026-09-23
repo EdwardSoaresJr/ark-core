@@ -167,7 +167,7 @@ return [
     |
     | Immutable copy of SESSION_DOMAIN for host-aware middleware. Company product
     | hosts (COMPANY_DOMAIN) get host-only cookies; Demo Auto Repair ops keep this value.
-    | Do not mutate this at runtime — ConfigureSessionCookieDomain reads it.
+    | Do not mutate this at runtime - ConfigureSessionCookieDomain reads it.
     |
     */
 

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Customer media stream — Shared + token scope only.
+ * Customer media stream - Shared + token scope only.
  * Does NOT record first_customer_viewed_at (preload-safe).
  */
 final class PortalEvidenceShowController

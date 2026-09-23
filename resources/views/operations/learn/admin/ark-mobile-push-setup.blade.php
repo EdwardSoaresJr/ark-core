@@ -1,29 +1,29 @@
 <div class="ops-learn-prose">
-    <h3>Status — production operational (2026-06-27)</h3>
-    <p>ARK owns notification authority. Firebase is <strong>FCM transport only</strong> — free tier, no Firestore/Auth/Analytics. Demo Auto Repair production push is <strong>enabled</strong> (<code>demo-auto-ark-mobile</code>). iOS still needs APNs <code>.p8</code> in Firebase Console before iPhone push works. Advisors still have Attention polling when push fails.</p>
+    <h3>Status - production operational (2026-06-27)</h3>
+    <p>ARK owns notification authority. Firebase is <strong>FCM transport only</strong> - free tier, no Firestore/Auth/Analytics. Demo Auto Repair production push is <strong>enabled</strong> (<code>demo-auto-ark-mobile</code>). iOS still needs APNs <code>.p8</code> in Firebase Console before iPhone push works. Advisors still have Attention polling when push fails.</p>
 
     <h3>When push is justified (later)</h3>
-    <p>ARK owns notification authority. Firebase is <strong>transport only</strong> — not Auth, Firestore, or workflow. ARK sends via FCM HTTP v1; Flutter registers a token via <code>POST /api/mobile/device</code> only.</p>
+    <p>ARK owns notification authority. Firebase is <strong>transport only</strong> - not Auth, Firestore, or workflow. ARK sends via FCM HTTP v1; Flutter registers a token via <code>POST /api/mobile/device</code> only.</p>
 
     <h3>Settings (preferred)</h3>
     <p><strong>Settings → Communications → Mobile</strong></p>
     <ul>
-        <li><strong>Enable mobile push</strong> — master switch (leave off until credentials exist).</li>
-        <li><strong>Firebase project ID</strong> — from Firebase console project settings.</li>
-        <li><strong>Firebase service account JSON</strong> — paste full JSON from Project settings → Service accounts → Generate new private key (Firebase Cloud Messaging Admin).</li>
+        <li><strong>Enable mobile push</strong> - master switch (leave off until credentials exist).</li>
+        <li><strong>Firebase project ID</strong> - from Firebase console project settings.</li>
+        <li><strong>Firebase service account JSON</strong> - paste full JSON from Project settings → Service accounts → Generate new private key (Firebase Cloud Messaging Admin).</li>
     </ul>
-    <p>Credentials are stored encrypted in shop settings — not in git.</p>
+    <p>Credentials are stored encrypted in shop settings - not in git.</p>
 
     <h3>Optional server file (.env)</h3>
     <p>When JSON is not pasted in Settings, ARK can read a file path from <code>FIREBASE_CREDENTIALS</code> on the server:</p>
     <ul>
         <li><strong>Local:</strong> <code>storage/app/private/firebase-mobile-service-account.json</code> (gitignored)</li>
-        <li><strong>Production file fallback:</strong> <code>/data/ark-shared/storage/app/private/firebase-mobile-service-account.json</code> (mode <code>600</code>) — primary path is encrypted JSON in Settings</li>
+        <li><strong>Production file fallback:</strong> <code>/data/ark-shared/storage/app/private/firebase-mobile-service-account.json</code> (mode <code>600</code>) - primary path is encrypted JSON in Settings</li>
     </ul>
     <p>Prefer Settings for shop-operable configuration. Use the file path only when ops mounts secrets outside the database.</p>
 
     <h3>Setup script (preferred)</h3>
-    <p><code>infra/scripts/firebase-mobile-push-setup.sh</code> — see <code>docs/mobile/firebase-mobile-push-setup-doctrine-v1.md</code>.</p>
+    <p><code>infra/scripts/firebase-mobile-push-setup.sh</code> - see <code>docs/mobile/firebase-mobile-push-setup-doctrine-v1.md</code>.</p>
 
     <h3>Firebase console checklist</h3>
     <ol>
@@ -36,7 +36,7 @@
     <h3>Verify</h3>
     <p>Advisor signs into ARK Mobile → device registration returns <code>push_enabled: true</code> when push is fully configured.</p>
     <p>Send inbound test SMS to shop line → operations advisors with registered devices should receive push (queued job + FCM HTTP v1).</p>
-    <p>Check Laravel logs for FCM warnings if delivery fails — stale tokens are cleared automatically.</p>
+    <p>Check Laravel logs for FCM warnings if delivery fails - stale tokens are cleared automatically.</p>
 
     <h3>Related</h3>
     <p>Install app on devices first: <a href="{{ route('operations.learn.show', ['role' => 'admin', 'article' => 'ark-mobile-android-deploy']) }}">ARK Mobile Android deploy</a>.</p>

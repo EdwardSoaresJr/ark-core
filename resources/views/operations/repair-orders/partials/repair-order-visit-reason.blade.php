@@ -1,4 +1,4 @@
-{{-- Reason for Visit — presentation only; author via workspace modal --}}
+{{-- Reason for Visit - presentation only; author via workspace modal --}}
 @php
     $visitReasonEditable = ! $isTerminal;
     $visitReasonText = trim((string) ($repairOrder->visit_reason ?? ''));
@@ -57,7 +57,7 @@
             x-data="{ proposals: @js($visitReasonProposalState) }"
         >
             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Suggested concerns</p>
-            <p class="mt-0.5 text-[11px] text-slate-500">From the reason for visit. Accept to create concerns — the visit reason stays unchanged.</p>
+            <p class="mt-0.5 text-[11px] text-slate-500">From the reason for visit. Accept to create concerns - the visit reason stays unchanged.</p>
             <ul class="mt-2 space-y-1.5">
                 @foreach ($visitReasonProposals as $index => $proposal)
                     <li class="flex flex-wrap items-center gap-2 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5">

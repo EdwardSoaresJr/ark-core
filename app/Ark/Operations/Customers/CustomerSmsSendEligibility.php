@@ -50,7 +50,7 @@ final class CustomerSmsSendEligibility
         return null;
     }
 
-    /** Consent / phone checks only — used when Platform owns transport. */
+    /** Consent / phone checks only - used when Platform owns transport. */
     public function consentBlockReason(): ?string
     {
         if (! filled($this->customer->phone)) {

@@ -464,7 +464,7 @@ final class RepairOrderStatusCatalog
             $variant = $this->variant($slug, $closeVariantKey);
 
             if ($variant !== null) {
-                return $this->labelForSlug($slug).' — '.$variant->name;
+                return $this->labelForSlug($slug).' - '.$variant->name;
             }
         }
 

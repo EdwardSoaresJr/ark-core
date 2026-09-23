@@ -1,7 +1,7 @@
 import { filterRoMentions, insertRoMentionToken, mentionFragmentAtCaret } from './ark-repair-order-mention';
 
 /**
- * Add Concern compose — vocabulary (interim) or Shop Memory problem-language.
+ * Add Concern compose - vocabulary (interim) or Shop Memory problem-language.
  * Suggestions populate the editor; Create Concern is authorship.
  */
 export function arkScopeEntryIntake(configOrUrl, defaultEntryKind = '') {
@@ -171,7 +171,7 @@ export function arkScopeEntryIntake(configOrUrl, defaultEntryKind = '') {
                     recognition: 'novel',
                     translation: 'not_applicable',
                     resolution: 'pending',
-                    note: 'Words survive verbatim — recognition without learned meaning is acceptable.',
+                    note: 'Words survive verbatim - recognition without learned meaning is acceptable.',
                 };
             }
 
@@ -180,7 +180,7 @@ export function arkScopeEntryIntake(configOrUrl, defaultEntryKind = '') {
                     recognition: 'recognized',
                     translation: 'diverged',
                     resolution: 'pending',
-                    note: 'Translation failure candidate — meaning may not have been preserved between dialects.',
+                    note: 'Translation failure candidate - meaning may not have been preserved between dialects.',
                 };
             }
 
@@ -395,7 +395,7 @@ export function arkScopeEntryIntake(configOrUrl, defaultEntryKind = '') {
         },
 
         /**
-         * Populate the editor only — Create Concern is authorship.
+         * Populate the editor only - Create Concern is authorship.
          */
         promoteIntoEditor(entryKind, suggestion, conceptId = null, suggestionId = null, provider = null) {
             this.entryKind = entryKind || config.defaultEntryKind;
@@ -710,7 +710,7 @@ function persistScopeIntakeTrace(trace) {
     try {
         sessionStorage.setItem('ark.scopeIntake.lastTrace', JSON.stringify(payload));
     } catch {
-        // sessionStorage unavailable — floor pass can still read window global
+        // sessionStorage unavailable - floor pass can still read window global
     }
 
     window.__arkScopeIntakeLastTrace = payload;

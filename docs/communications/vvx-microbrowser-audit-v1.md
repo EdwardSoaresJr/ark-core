@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-27  
 **Supersedes:** v1 (web-page optimization framing)  
-**Device:** Poly VVX350 — Right Phone, ext 101, station Right
+**Device:** Poly VVX350 - Right Phone, ext 101, station Right
 
 ---
 
@@ -16,16 +16,16 @@ Wrong question: *How do we make the microbrowser faster?*
 
 Right question: *What is the absolute minimum context a person standing at this station needs right now?*
 
-The operation follows the operator. The VVX is the **Front Counter station** — whoever unlocks the workstation owns the screen. Molly signs in → same HTML, different projection → DOM patch. No reload.
+The operation follows the operator. The VVX is the **Front Counter station** - whoever unlocks the workstation owns the screen. Molly signs in → same HTML, different projection → DOM patch. No reload.
 
 ## VVX 350 hardware ceiling (floor-verified)
 
-Poly: **VVX 3xx/4xx use the microbrowser as screensaver only when idle** — not during calls. When a call rings, firmware shows the native Incoming Call screen. ARK cannot replace that with a custom full-screen takeover on VVX350. Ring urgency = audio + line key + desktop pop. Microbrowser value = **idle continuity between calls**.
+Poly: **VVX 3xx/4xx use the microbrowser as screensaver only when idle** - not during calls. When a call rings, firmware shows the native Incoming Call screen. ARK cannot replace that with a custom full-screen takeover on VVX350. Ring urgency = audio + line key + desktop pop. Microbrowser value = **idle continuity between calls**.
 
 Implications:
 - `ringing` / `on_call` postures are for JS-capable refresh between states; they will not paint during active ring on 3xx.
-- First paint must be **server-rendered HTML** — VVX microbrowser often does not run JS reliably.
-- `mb.idleDisplay.refresh="5"` + `screenSaver.waitTime="0"` — phone re-GETs the URL; `refresh="0"` caused ~15s blank on floor.
+- First paint must be **server-rendered HTML** - VVX microbrowser often does not run JS reliably.
+- `mb.idleDisplay.refresh="5"` + `screenSaver.waitTime="0"` - phone re-GETs the URL; `refresh="0"` caused ~15s blank on floor.
 
 ---
 
@@ -37,9 +37,9 @@ When the phone rings, nobody cares about three waiting approvals.
 
 | Interrupt | Screen behavior |
 |-------------|-----------------|
-| Incoming call | Full takeover — caller, vehicle, RO, one headline |
-| On call | Minimal — customer, RO, note, duration |
-| (future) Customer arrived, emergency | Same rule — everything else disappears |
+| Incoming call | Full takeover - caller, vehicle, RO, one headline |
+| On call | Minimal - customer, RO, note, duration |
+| (future) Customer arrived, emergency | Same rule - everything else disappears |
 
 Idle is **not** a dashboard. No lists, moments, cards, scrolling, logo chrome.
 
@@ -51,9 +51,9 @@ One static HTML instrument cluster. Five postures:
 
 | Posture | Meaning |
 |---------|---------|
-| `idle` | Signed in, no live call — minimal continuity |
-| `ringing` | Incoming — **full interrupt** |
-| `on_call` | Active call — minimal |
+| `idle` | Signed in, no live call - minimal continuity |
+| `ringing` | Incoming - **full interrupt** |
+| `on_call` | Active call - minimal |
 | `locked` | Station ready, no operator |
 | `offline` | Device not registered / no workstation |
 

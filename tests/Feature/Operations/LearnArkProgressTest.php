@@ -383,7 +383,7 @@ test('required article page shows training progress footer', function () {
 
     $this->get(route('operations.learn.show', ['role' => 'advisor', 'article' => 'getting-started']))
         ->assertOk()
-        ->assertSee('Required guide — read each section')
+        ->assertSee('Required guide - read each section')
         ->assertSee('Mark guide complete');
 });
 

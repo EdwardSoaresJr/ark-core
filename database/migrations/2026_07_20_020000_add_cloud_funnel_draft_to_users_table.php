@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * M1 Cloud Accounts — funnel draft on the user so login can resume without a Shop.
+ * M1 Cloud Accounts - funnel draft on the user so login can resume without a Shop.
  * Not a Shop authority. Disposable when M2 creates real Shop records.
  */
 return new class extends Migration

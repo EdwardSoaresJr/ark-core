@@ -12,7 +12,7 @@ use App\Mail\PortalAccessCodeMail;
 use Illuminate\Support\Facades\Mail;
 
 /*
-| Query budget guardrails — regression ceilings with documented targets.
+| Query budget guardrails - regression ceilings with documented targets.
 |
 | Surface              | Target | Regression ceiling (today)
 | -------------------- | ------ | --------------------------
@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\Mail;
 | Comms inbox          | 60     | 120 (identity-first list; batch call context)
 | RO show              | 35     | 110
 | Estimate review      | 35     | 110
-| Portal vehicle       | —      | 75
-| Customer hub         | —      | 95
+| Portal vehicle       | -      | 75
+| Customer hub         | -      | 95
 |
 | RO read-path invariant: GET must not UPDATE repair_order_lines.
 */
@@ -88,7 +88,7 @@ test('repair order inspect workspace tab stays within query budget', function ()
     // First visit includes one-time checklist scaffolding (batched inserts).
     assertOkWithinQueryBudget($url, 105);
 
-    // Steady-state revisit must be pure read — and much cheaper.
+    // Steady-state revisit must be pure read - and much cheaper.
     $measured = measureQueries(fn () => $this->get($url)->assertOk());
 
     expect(getMutationQueries($measured['queries']))->toBeEmpty(

@@ -1,14 +1,14 @@
-# Screen spec — Estimate Send & Approval
+# Screen spec - Estimate Send & Approval
 
 **ID:** `companion.screen.estimate-send-approval`  
 **Role(s):** Advisor  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Send estimate link** or **record approval** on the RO — from thread · RO · post-call without desktop.
+**Send estimate link** or **record approval** on the RO - from thread · RO · post-call without desktop.
 
 ---
 
@@ -18,19 +18,19 @@
 
 ---
 
-## Mode A — Send estimate
+## Mode A - Send estimate
 
 - RO · customer · vehicle
-- Estimate total — authoritative
+- Estimate total - authoritative
 - Delivery: **SMS** (default) · copy link
-- Preview line — what customer receives
+- Preview line - what customer receives
 - **Send** → `ConversationMessage` with portal link · system row in thread
 
 Same authority as desktop `SendEstimateLinkAction`
 
 ---
 
-## Mode B — Capture approval
+## Mode B - Capture approval
 
 - Concern or full RO scope selector
 - Approved · Deferred · Declined per concern or batch

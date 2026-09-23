@@ -1,13 +1,13 @@
-# Advisor — Edward
+# Advisor - Edward
 
 **Station:** Front Counter (fixed) + Portable Station (phone)  
 **Primary question:** Who needs a response or decision?
 
-Edward is a service advisor at Demo Auto Repair. He splits time between the Front Counter VVX and the lot. ARK must treat his phone as a **Portable Station peer** — not a shrunken inbox app.
+Edward is a service advisor at Demo Auto Repair. He splits time between the Front Counter VVX and the lot. ARK must treat his phone as a **Portable Station peer** - not a shrunken inbox app.
 
 ---
 
-## 7:55 AM — Unlock Portable Station
+## 7:55 AM - Unlock Portable Station
 
 **Floor:** Shop opens at 8. One vehicle left overnight. Two appointments on the board.
 
@@ -15,7 +15,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 | Verb | Content |
 |------|---------|
-| What is happening? | Shop opening — 1 overnight RO, 2 appointments arriving |
+| What is happening? | Shop opening - 1 overnight RO, 2 appointments arriving |
 | Why? | Since Last Shift boundary |
 | What should I do? | Review 3 Attention items |
 | Can I trust that? | Items sourced from decision pressure + comms queue |
@@ -27,7 +27,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 ---
 
-## 8:10 AM — Customer texts
+## 8:10 AM - Customer texts
 
 **Floor:** Sarah Johnson texts: *"Are my brakes ready yet?"* She has RO #5102 waiting on approval.
 
@@ -43,10 +43,10 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 **Flow:**
 
-1. Push arrives: Sarah Johnson — *Are my brakes ready yet?*
+1. Push arrives: Sarah Johnson - *Are my brakes ready yet?*
 2. Edward taps → already oriented (not raw inbox)
 3. Edward replies from Portable Station
-4. `ConversationMessage` written — desktop thread shows same truth
+4. `ConversationMessage` written - desktop thread shows same truth
 5. `current_situation` updates on RO orientation
 
 **Surfaces:** Push (B) · Conversation thread (B) · RO orientation (C) · Desktop Customer Hub (C)
@@ -57,7 +57,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 ---
 
-## 8:30 AM — Phone rings
+## 8:30 AM - Phone rings
 
 **Floor:** Incoming call from unknown number matching open RO customer.
 
@@ -71,15 +71,15 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 | Can I trust that? | Customer texted 20 minutes ago |
 | What can I do? | Answer · Callback · Open conversation |
 
-**Surfaces:** Front Counter VVX (A) · Call pop desktop (C) · Portable awareness (B) — not softphone yet
+**Surfaces:** Front Counter VVX (A) · Call pop desktop (C) · Portable awareness (B) - not softphone yet
 
 **Status:** ⚠️ Desktop call pop ✅ · Mobile call awareness 🔲 · Flutter SIP out of scope until Front Counter certified
 
 ---
 
-## 9:15 AM — Landon needs help
+## 9:15 AM - Landon needs help
 
-**Floor:** Landon at Bay 3 yells: *"Need second set of eyes on brakes — customer waiting."*
+**Floor:** Landon at Bay 3 yells: *"Need second set of eyes on brakes - customer waiting."*
 
 **ARK must brief:**
 
@@ -99,7 +99,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 ---
 
-## 10:00 AM — Warranty approves
+## 10:00 AM - Warranty approves
 
 **Floor:** Warranty company approves deferred work on overnight RO #4821.
 
@@ -119,7 +119,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 ---
 
-## 12:00 PM — Walk to Front Counter
+## 12:00 PM - Walk to Front Counter
 
 **Floor:** Edward was operating Portable Station near Bay 2. He walks to Front Counter and unlocks the desk.
 
@@ -128,7 +128,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 | Entity | State |
 |--------|-------|
 | Front Counter | Operator: Edward |
-| Portable Station | Still Edward's device — station context may differ |
+| Portable Station | Still Edward's device - station context may differ |
 | Comms routing | May follow operator (later) |
 
 **Surfaces:** Workstation operator (A) · Station orientation desktop (C) · Portable presence UI (B)
@@ -137,7 +137,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 ---
 
-## 2:30 PM — Send estimate from lot
+## 2:30 PM - Send estimate from lot
 
 **Floor:** Customer approves verbal add-on. Edward sends estimate link from phone beside vehicle.
 
@@ -155,7 +155,7 @@ Edward is a service advisor at Demo Auto Repair. He splits time between the Fron
 
 ---
 
-## 5:45 PM — End of day
+## 5:45 PM - End of day
 
 **Floor:** Two ROs waiting on customer decision. One call unhandled from 4 PM.
 

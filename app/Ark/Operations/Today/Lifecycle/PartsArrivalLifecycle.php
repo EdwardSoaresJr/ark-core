@@ -207,7 +207,7 @@ final class PartsArrivalLifecycle implements TodayRecommendationLifecycle
         $pressureSince = $oldestUnresolved?->updated_at ?? $repairOrder->updated_at ?? now();
 
         $reason = match ($partsPressure) {
-            PartsPressure::PartialParts => 'Partial delivery — finish receiving',
+            PartsPressure::PartialParts => 'Partial delivery - finish receiving',
             PartsPressure::Backordered => 'Vendor shipment may be ready to receive',
             default => $awaitingReceive->count().' part line'.($awaitingReceive->count() === 1 ? '' : 's').' awaiting receive',
         };

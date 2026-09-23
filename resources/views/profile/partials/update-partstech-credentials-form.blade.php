@@ -3,7 +3,7 @@
         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Integrations</p>
         <h2 class="text-base font-black text-slate-950">PartsTech login</h2>
         <p class="mt-0.5 text-xs text-slate-500">
-            Optional personal PartsTech seat. ARK prepares carts and pulls quotes with this login — sign into PartsTech in your browser as the same user. Leave blank to use the shop PartsTech account.
+            Optional personal PartsTech seat. ARK prepares carts and pulls quotes with this login - sign into PartsTech in your browser as the same user. Leave blank to use the shop PartsTech account.
         </p>
     </div>
 

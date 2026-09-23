@@ -615,7 +615,7 @@ test('staff portal preview disables live card deposit', function () {
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.repair-orders.portal-preview', $repairOrder))
         ->assertOk()
-        ->assertSee('Step 3 — Pay deposit')
+        ->assertSee('Step 3 - Pay deposit')
         ->assertSee('Card deposit is disabled in staff preview')
         ->assertDontSee('arkPortalEstimateDeposit', false);
 });
@@ -648,7 +648,7 @@ test('portal estimate deposit complete url keeps zeros inside the access token',
 
     $html = $this->get(route('portal.estimates.show', ['token' => $plainToken]))
         ->assertOk()
-        ->assertSee('Step 3 — Pay deposit', false)
+        ->assertSee('Step 3 - Pay deposit', false)
         ->getContent();
 
     // @js() escapes path slashes as \/
@@ -680,13 +680,13 @@ test('portal estimate deposit panel persists after session flash expires', funct
     $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
         ->assertOk()
         ->assertSee('Next step: pay your deposit')
-        ->assertSee('Step 3 — Pay deposit')
+        ->assertSee('Step 3 - Pay deposit')
         ->assertSee('Paying the deposit does not approve any extra repairs');
 
     $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
         ->assertOk()
         ->assertSee('Next step: pay your deposit')
-        ->assertSee('Step 3 — Pay deposit');
+        ->assertSee('Step 3 - Pay deposit');
 });
 
 test('portal estimate shows authorize instructions when deposit is enabled', function () {

@@ -11,7 +11,7 @@ use App\Models\User;
 
 /**
  * Disposable packaging of the durable Repair Portal doorway for customer documents.
- * Documents consume this — they never mint competing access.
+ * Documents consume this - they never mint competing access.
  */
 final class RepairPortalAdvertisementProjection
 {
@@ -98,11 +98,11 @@ final class RepairPortalAdvertisementProjection
         }
 
         if (count($parts) === 1) {
-            return $headline.' — '.$parts[0].'.';
+            return $headline.' - '.$parts[0].'.';
         }
 
         $last = array_pop($parts);
 
-        return $headline.' — '.implode(', ', $parts).' & '.$last.'.';
+        return $headline.' - '.implode(', ', $parts).' & '.$last.'.';
     }
 }

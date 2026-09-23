@@ -24,7 +24,7 @@ Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Re
 | --- | --- | --- |
 | Bootstrap | `APP_KEY`, `APP_URL`, `DB_*` | Environment / `.env` (allowlisted writer only) |
 | Application | shop name, timezone, phone | `ShopSettings` (database) |
-| Integrations | Mail, telephony, labor guides | Optional — Settings after install |
+| Integrations | Mail, telephony, labor guides | Optional - Settings after install |
 
 ## Two deployment modes
 
@@ -42,7 +42,7 @@ Redis is part of the Docker Compose runtime (cache, sessions, Horizon queues, Re
 
 ```bash
 php artisan ark:install-status
-php artisan ark:install-recover --force   # clears interrupted IN_PROGRESS only — never unlocks INSTALLED
+php artisan ark:install-recover --force   # clears interrupted IN_PROGRESS only - never unlocks INSTALLED
 ```
 
 ## Cloud VPS beginner guide
@@ -55,12 +55,12 @@ Step-by-step for a small Ubuntu cloud server, Docker, HTTPS (Caddy), and `/setup
 
 ## Docker Compose (recommended)
 
-Self-host stack — same runtime shape production uses:
+Self-host stack - same runtime shape production uses:
 
 | Service | Role |
 | --- | --- |
 | `mysql` | Application database (volume `ark_mysql`) |
-| `redis` | Cache and optional session/queue transport (volume `ark_redis` — **ephemeral**, not shop truth) |
+| `redis` | Cache and optional session/queue transport (volume `ark_redis` - **ephemeral**, not shop truth) |
 | `app` | Production Dockerfile: nginx, PHP-FPM, **Horizon**, **Reverb**, **scheduler** (volume `ark_storage`) |
 
 Durable state boundary (backup/restore): **`ark_mysql` + `ark_secrets` + `ark_storage`**. See **[portable-state.md](./portable-state.md)**.

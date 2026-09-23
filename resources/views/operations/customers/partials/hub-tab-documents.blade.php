@@ -10,7 +10,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
             <div>
                 <p class="ops-eyebrow">Documents</p>
-                <p class="ops-meta mt-0.5">Warranty contracts, registration, outside invoices, alignment sheets — paperwork for this customer.</p>
+                <p class="ops-meta mt-0.5">Warranty contracts, registration, outside invoices, alignment sheets - paperwork for this customer.</p>
             </div>
             @can(App\Ark\Runtime\Authorization\ArkCapability::CustomersManage->value)
                 <button

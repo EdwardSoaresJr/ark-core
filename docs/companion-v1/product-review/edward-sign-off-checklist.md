@@ -1,4 +1,4 @@
-# Edward sign-off checklist — ARK Companion v1
+# Edward sign-off checklist - ARK Companion v1
 
 **When:** After reading specs · before Flutter  
 
@@ -17,11 +17,11 @@
 
 ---
 
-## P0 — Advisor pocket (ship first)
+## P0 - Advisor pocket (ship first)
 
 | # | Spec | Ref | Ready? | Notes |
 |---|------|-----|--------|-------|
-| 1 | [`launch-login.md`](../screens/launch-login.md) | — | ⬜ | |
+| 1 | [`launch-login.md`](../screens/launch-login.md) | - | ⬜ | |
 | 2 | [`home-continuity.md`](../screens/home-continuity.md) | 2689, 2690 | ⬜ | Continuity vs dashboard |
 | 3 | [`notifications-inbox.md`](../screens/notifications-inbox.md) | doc-8 | ⬜ | Deep link every row |
 | 4 | [`conversation-list.md`](../screens/conversation-list.md) | 2748, Quo threads | ⬜ | Vehicle on row |
@@ -33,19 +33,19 @@
 | 11 | [`calls-library.md`](../screens/calls-library.md) | Quo missed | ⬜ | VM + handled |
 | 12 | [`global-search.md`](../screens/global-search.md) | 2752, 2762 | ⬜ | Emma → act |
 | 13 | [`customer-workspace.md`](../screens/customer-workspace.md) | doc-5 | ⬜ | |
-| 14 | [`vehicle-workspace.md`](../screens/vehicle-workspace.md) | — | ⬜ | |
+| 14 | [`vehicle-workspace.md`](../screens/vehicle-workspace.md) | - | ⬜ | |
 | 15 | [`repair-order-workspace.md`](../screens/repair-order-workspace.md) | reject Opportunity | ⬜ | RO command center |
-| 16 | [`concern-detail.md`](../screens/concern-detail.md) | — | ⬜ | |
+| 16 | [`concern-detail.md`](../screens/concern-detail.md) | - | ⬜ | |
 | 17 | [`payment-sheet.md`](../screens/payment-sheet.md) | 2755 rhythm | ⬜ | Balance authority |
-| 18 | [`estimate-send-approval.md`](../screens/estimate-send-approval.md) | — | ⬜ | |
+| 18 | [`estimate-send-approval.md`](../screens/estimate-send-approval.md) | - | ⬜ | |
 | 19 | [`schedule-day.md`](../screens/schedule-day.md) | 2747 | ⬜ | |
 | 20 | [`appointment-detail.md`](../screens/appointment-detail.md) | 2747 | ⬜ | Check-in |
 | 21 | [`settings-profile.md`](../screens/settings-profile.md) | 2692 | ⬜ | Phone online copy |
-| 22 | [`system-surfaces.md`](../screens/system-surfaces.md) | — | ⬜ | Errors calm |
+| 22 | [`system-surfaces.md`](../screens/system-surfaces.md) | - | ⬜ | Errors calm |
 
 ---
 
-## P0 — Tech + inspection (Ben flow)
+## P0 - Tech + inspection (Ben flow)
 
 | # | Spec | Ready? | Notes |
 |---|------|--------|-------|
@@ -56,7 +56,7 @@
 
 ---
 
-## P1 — Drafted · sign when scheduling build
+## P1 - Drafted · sign when scheduling build
 
 | Spec | Defer until |
 |------|-------------|
@@ -86,15 +86,15 @@ Full list: [`../02-flows.md`](../02-flows.md)
 
 ## Global gates
 
-- [ ] **I would carry this for ten hours** — advisor P0 set  
+- [ ] **I would carry this for ten hours** - advisor P0 set  
 - [ ] No screen dumps to Home before job done  
 - [ ] Every customer row shows vehicle when known  
 - [ ] Phone status uses shop language (not SIP)  
 - [ ] Product review table updated with ✅ rows  
-- [ ] **Ready for Flutter** — date: ___________
+- [ ] **Ready for Flutter** - date: ___________
 
 ---
 
 ## If "not yet"
 
-Do not build. Edit the spec until **Yes**. Note what still beats us on speed or context — that becomes the redesign ticket.
+Do not build. Edit the spec until **Yes**. Note what still beats us on speed or context - that becomes the redesign ticket.

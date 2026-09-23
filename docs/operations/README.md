@@ -15,7 +15,7 @@
 
 **Stop filming certifications. Film operations.**
 
-Future engineers — including people who never met Edward — should watch these **before** reading doctrine. They should immediately understand why phone, continuity, stations, and observations exist — and why search is not the product.
+Future engineers - including people who never met Edward - should watch these **before** reading doctrine. They should immediately understand why phone, continuity, stations, and observations exist - and why search is not the product.
 
 ---
 
@@ -23,7 +23,7 @@ Future engineers — including people who never met Edward — should watch thes
 
 Videos are **not requirements**. They are **executable examples** of how one shop runs. Another tenant records its own versions when ARK multi-shops.
 
-Store files under `operations/videos/` (gitignored — too large for git). This README is the index.
+Store files under `operations/videos/` (gitignored - too large for git). This README is the index.
 
 | # | File | Operation (how Edward actually works) | Status |
 | --- | --- | --- | --- |
@@ -44,8 +44,8 @@ Add operations as the floor earns them. Do not invent operations that Demo Auto 
 
 ## How to record
 
-- **Real shop**, real (or realistic) work — not scripted demos
-- **~5–15 minutes** — long enough to see friction, short enough to re-watch
+- **Real shop**, real (or realistic) work - not scripted demos
+- **~5–15 minutes** - long enough to see friction, short enough to re-watch
 - **One operator perspective** where possible (Edward, Landon, Molly)
 - **Internal only** until explicitly approved for external use
 - Note date, participants, and RO/customer IDs in the index row when filmed
@@ -112,5 +112,5 @@ Skip the fifty-page doctrine tour until a specific decision requires it.
 
 ## Companions
 
-- [workflow-completion-certification.md](../engineering/workflow-completion-certification.md) — workflow checklists map to operations 01–06  
-- [certifications/README.md](../product/certifications/README.md) — formal sign-off when needed; videos are primary
+- [workflow-completion-certification.md](../engineering/workflow-completion-certification.md) - workflow checklists map to operations 01–06  
+- [certifications/README.md](../product/certifications/README.md) - formal sign-off when needed; videos are primary

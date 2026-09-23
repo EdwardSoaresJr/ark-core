@@ -1,8 +1,8 @@
-# ARK Tech — direction lock (DVI handheld)
+# ARK Tech - direction lock (DVI handheld)
 
 **Status:** v0.1 stood up (staff `/api/tech` + `apps/ark_tech`). Shop Glass remains the sellable-track command center; ARK Tech is a **separate technician product**, not a Glass/Mobile mode.
 
-**Certification hardware (first):** existing Demo Auto Repair **Android tablets** — rugged SKU deferred until floor log is filled.
+**Certification hardware (first):** existing Demo Auto Repair **Android tablets** - rugged SKU deferred until floor log is filled.
 
 **Auth:** human staff Sanctum via `POST /api/tech/auth/login` (technician or admin). Not `stn_` / `drg_` / `vce_`.
 
@@ -36,7 +36,7 @@ That makes hardware boring in a good way: a rugged Android already has camera, s
 ARK              system of record
 Shop Glass       advisor command center (1920×1080)
 ARK Tech         technician handheld (portrait, glove, bay)
-Hosted Dragon    AI employee inside ARK — augments, does not own
+Hosted Dragon    AI employee inside ARK - augments, does not own
 OpenAI           current reasoning/STT provider
 ```
 
@@ -50,13 +50,13 @@ ARK Tech must still inspect if Dragon/OpenAI is down.
 
 | Option | Verdict |
 |--------|---------|
-| **A — fold into `apps/advisor_station`** | **Reject.** That app is Shop Glass: landscape 1080p, station pairing, advisor glance. Mixing DVI camera + PTT into it produces one giant conditional shell. |
-| **B — distinct `apps/ark_tech`** | **Accept.** Technician UX, portrait, camera, PTT, pending uploads. |
+| **A - fold into `apps/advisor_station`** | **Reject.** That app is Shop Glass: landscape 1080p, station pairing, advisor glance. Mixing DVI camera + PTT into it produces one giant conditional shell. |
+| **B - distinct `apps/ark_tech`** | **Accept.** Technician UX, portrait, camera, PTT, pending uploads. |
 
 **Shared later (extract when duplication hurts, not day one):**
 
-- `packages/ark_api` — Sanctum staff client (same origin as today’s `/api/mobile/*`)
-- `packages/ark_auth` — staff session, not `stn_` / `drg_` / `vce_`
+- `packages/ark_api` - Sanctum staff client (same origin as today’s `/api/mobile/*`)
+- `packages/ark_auth` - staff session, not `stn_` / `drg_` / `vce_`
 - design tokens if they stay coherent
 - media upload helper (idempotent photo queue)
 
@@ -78,10 +78,10 @@ Technician product language (`/api/tech/...`) is a **projection name**. Implemen
 | Open RO | `GET /api/mobile/repair-orders/{id}` |
 | DVI list / item | `GET .../inspection-checklist`, `.../items/{item}` |
 | Save condition + measurements + photo | `PATCH .../inspection-checklist/items/{item}` |
-| Voice utterance (proposal only) | **New:** `POST /api/mobile/voice/proposal` — STT + Dragon structured JSON, **no write** |
-| Confirm proposal | **New:** `POST /api/mobile/voice/proposal/{id}/confirm` — then same update path as PATCH |
-| Dragon rewrite | **New:** `POST /api/mobile/dragon/rewrite` — returns text; Apply is a note PATCH |
-| What am I missing? | **Later** — advisory, not v0.1 |
+| Voice utterance (proposal only) | **New:** `POST /api/mobile/voice/proposal` - STT + Dragon structured JSON, **no write** |
+| Confirm proposal | **New:** `POST /api/mobile/voice/proposal/{id}/confirm` - then same update path as PATCH |
+| Dragon rewrite | **New:** `POST /api/mobile/dragon/rewrite` - returns text; Apply is a note PATCH |
+| What am I missing? | **Later** - advisory, not v0.1 |
 
 Do not expose payments, estimates, customer CRM, or arbitrary RO mutation on this client.
 
@@ -93,7 +93,7 @@ Do not expose payments, estimates, customer CRM, or arbitrary RO mutation on thi
 
 Authority: `Inspection` → `InspectionItem` (condition) → `InspectionItemMeasurement` + `InspectionItemPhoto`.
 
-**Condition** (`InspectionObservedState`) — do not invent a second enum:
+**Condition** (`InspectionObservedState`) - do not invent a second enum:
 
 | Tech prompt | ARK value | Note |
 |-------------|-----------|------|
@@ -132,7 +132,7 @@ ARK Tech camera (full-res)
   → RO + inspection + tech + time
 ```
 
-No second “pick RO” after shutter. Retake/delete only while pending. Failed upload stays labeled pending — never silent success.
+No second “pick RO” after shutter. Retake/delete only while pending. Failed upload stays labeled pending - never silent success.
 
 ---
 
@@ -167,7 +167,7 @@ Outage: hide Ask Dragon / Rewrite; DVI continues. No fabricated safety language.
 
 ---
 
-## Hardware evaluation (paper — **do not buy**)
+## Hardware evaluation (paper - **do not buy**)
 
 **First cert platform:** current shop Android tablets. Same Flutter layout must stay usable on ~5–6″ later (responsive, not tablet-only chrome).
 
@@ -196,7 +196,7 @@ Outage: hide Ask Dragon / Rewrite; DVI continues. No fabricated safety language.
 
 ---
 
-## Brake vertical slice (to prove — not built here)
+## Brake vertical slice (to prove - not built here)
 
 1. Staff login  
 2. My Work → assigned RO  
@@ -233,7 +233,7 @@ Outage: hide Ask Dragon / Rewrite; DVI continues. No fabricated safety language.
 
 ## ESP / voice terminal
 
-See `docs/voice/handheld-v0.1.md` — **FUTURE R&D**. Do not PCB. Do not make it Landon’s DVI device.
+See `docs/voice/handheld-v0.1.md` - **FUTURE R&D**. Do not PCB. Do not make it Landon’s DVI device.
 
 ---
 
@@ -248,6 +248,6 @@ See `docs/voice/handheld-v0.1.md` — **FUTURE R&D**. Do not PCB. Do not make it
 | Does Dragon outage leave core DVI functional? | **YES** (by design). Manual PATCH already exists on mobile inspection. |
 | Is rugged Android more promising than custom ESP as the **primary technician platform**? | **YES** |
 | Is custom hardware justified yet? | **NO** |
-| Buy XCover / Zebra now? | **NO** — tablet workflow first |
+| Buy XCover / Zebra now? | **NO** - tablet workflow first |
 
 **Do not start this as the next coding milestone until Shop Glass work is explicitly paused or this slice is scheduled. This document is the lock, not the implementation.**

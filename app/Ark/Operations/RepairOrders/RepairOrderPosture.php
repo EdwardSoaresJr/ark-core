@@ -62,7 +62,7 @@ final class RepairOrderPosture
             $approvedConcerns->isNotEmpty() && $repairOrder->hasUnresolvedApprovedParts() => 'Order approved parts',
             $approvedConcerns->isNotEmpty() => 'Release approved work to production',
             $deferredConcerns->isNotEmpty() => 'Retain deferred work for follow-up',
-            $declinedConcerns->isNotEmpty() => 'Declined work recorded — no follow-up on those scopes',
+            $declinedConcerns->isNotEmpty() => 'Declined work recorded - no follow-up on those scopes',
             $repairOrder->status->is(RepairOrderStatus::WaitingApproval) => 'Waiting customer authorization',
             $recommendedConcerns->isNotEmpty() => 'Present estimate for authorization',
             default => 'Build estimate before authorization',

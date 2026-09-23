@@ -1,10 +1,10 @@
-# ARK Communications v3 — Research Sprint
+# ARK Communications v3 - Research Sprint
 
 **Status:** Research only · **No code**  
 **Date:** 2026-07-15  
-**Trigger:** Operator uncertainty — “Does this land in Needs Attention or Conversations?”
+**Trigger:** Operator uncertainty - “Does this land in Needs Attention or Conversations?”
 
-**Companions:** [ark-conversations-v1.md](ark-conversations-v1.md) (frozen — do not edit for wording) · Attention Queue doctrine · Communications foundational doctrine
+**Companions:** [ark-conversations-v1.md](ark-conversations-v1.md) (frozen - do not edit for wording) · Attention Queue doctrine · Communications foundational doctrine
 
 ---
 
@@ -12,7 +12,7 @@
 
 > **If Sarah texts the shop right now, where should Edward instinctively look, and why is there only one correct answer?**
 
-**Answer:** Edward opens **Communications** — the single relationship inbox — and looks at the top section: **Needs You** (Waiting on Shop).
+**Answer:** Edward opens **Communications** - the single relationship inbox - and looks at the top section: **Needs You** (Waiting on Shop).
 
 There is only one correct answer because every serious product studied below makes the operator’s first look a **who-needs-me list of people**, not a menu of destinations. SMS, call, voicemail, portal, and estimate events are **reasons inside that person-row**, not alternate homes for the same work.
 
@@ -75,7 +75,7 @@ That decision is product architecture leaking into operator cognition.
 | **3. Voicemail** | Attaches to the call/conversation. Filterable (Voicemail / Missed) but **still the same chat thread**. Not a parallel “VM product.” |
 | **4. Stop being attention** | **Done** removes from main view. Unread → read on open (still Open). Unresponded is separate from Unread (viewed ≠ replied). |
 | **5. After reply** | Often still **Open** until operator marks **Done**. Reply alone does not always = archive. |
-| **6. Primary list** | **Chats / Inbox** for that number — Open conversations. |
+| **6. Primary list** | **Chats / Inbox** for that number - Open conversations. |
 | **7. Active vs history** | Open vs **Done** (filter). Same thread forever. |
 | **8. Duplicate work** | Shared status syncs team-wide; Done for one is Done for all on that inbox. |
 | **9. Ownership** | Shared number inbox; teammate filters; comments. Ownership is light vs Front/Missive. |
@@ -88,9 +88,9 @@ That decision is product architecture leaking into operator cognition.
 | **1–3** | **Conversations** tab = unified contact timeline (SMS, email, call, social, activities). Call/VM are timeline entries, not separate first homes. |
 | **4** | **Unread** until reply **or** explicit Mark Read (opening does **not** auto-clear). Archive sinks. |
 | **5** | Reply marks read; conversation can remain in All/Recents until archived. |
-| **6** | **Conversations** — Unread / Recents / All / Starred filters. |
+| **6** | **Conversations** - Unread / Recents / All / Starred filters. |
 | **7** | Recents/All vs Archive. |
-| **8–9** | Assignees + filters; star as personal pin. Automation (workflows) can mark read/archive — risk of noise if misconfigured. |
+| **8–9** | Assignees + filters; star as personal pin. Automation (workflows) can mark read/archive - risk of noise if misconfigured. |
 | **10** | Never ask “SMS inbox vs Call inbox” as the first job. |
 
 ### Front
@@ -145,7 +145,7 @@ That decision is product architecture leaking into operator cognition.
 
 ---
 
-## ARK today — gap analysis
+## ARK today - gap analysis
 
 ### What ARK already got right (authority)
 
@@ -176,7 +176,7 @@ That chrome asks the forbidden question:
 | Person + Reason row | Correct in Conversations doctrine; diluted by dual homes |
 | Done / Archive sinks | Status filters exist in doctrine; Attention queue feels like a **second product** |
 | Calls in thread | Calls & VM is necessary evidence, but becomes a **competing first door** |
-| Interrupt ≠ recovery | Topbar interrupt vs Attention recovery is correct **if** Conversations is the daytime home — today both “look like inbox” |
+| Interrupt ≠ recovery | Topbar interrupt vs Attention recovery is correct **if** Conversations is the daytime home - today both “look like inbox” |
 
 ### Root cause
 
@@ -206,9 +206,9 @@ COMMUNICATIONS                          ← one product name
 
 **Workspace (unchanged obligation):** Identity → Story (+ Evidence) → Shop Context → Actions.
 
-**Calls & VM:** Remains reachable as **evidence / library** (recordings, voicemail playback) — never as the place Edward must choose when Sarah texts.
+**Calls & VM:** Remains reachable as **evidence / library** (recordings, voicemail playback) - never as the place Edward must choose when Sarah texts.
 
-**Interrupts (topbar / Companion push):** Still interrupt. They deep-link into the **same** Communications thread — never into a third inbox.
+**Interrupts (topbar / Companion push):** Still interrupt. They deep-link into the **same** Communications thread - never into a third inbox.
 
 ### Lifecycle table (ARK v3)
 
@@ -238,7 +238,7 @@ Prefer **computed Turn** (doctrine) over “mark read”:
 
 1. Needs Attention **or** Conversations?
 2. Calls **or** Conversations for a missed call?
-3. Portal event — which inbox?
+3. Portal event - which inbox?
 4. Which channel “owns” Sarah?
 5. Is this a message product or a telephony product?
 

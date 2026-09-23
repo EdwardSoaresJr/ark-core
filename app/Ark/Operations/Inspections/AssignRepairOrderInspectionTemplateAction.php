@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Advisor selects required template for the visit (Standard default / PPI replaces).
- * One Inspection per RO. Captured evidence is never destroyed — wrong-template
+ * One Inspection per RO. Captured evidence is never destroyed - wrong-template
  * correction supersedes prior points as history and seeds the new checklist.
  */
 final class AssignRepairOrderInspectionTemplateAction
@@ -49,7 +49,7 @@ final class AssignRepairOrderInspectionTemplateAction
 
                     throw new DomainException(
                         'This visit already has inspection work on '.$from
-                        .'. Confirm changing the template — recorded points stay as history.',
+                        .'. Confirm changing the template - recorded points stay as history.',
                     );
                 }
 
@@ -88,7 +88,7 @@ final class AssignRepairOrderInspectionTemplateAction
                 return $repairOrder->fresh(['requiredInspectionTemplate']);
             }
 
-            // Empty active checklist only — never delete superseded history.
+            // Empty active checklist only - never delete superseded history.
             $inspection->items()
                 ->whereNull('superseded_at')
                 ->each(function (InspectionItem $item): void {

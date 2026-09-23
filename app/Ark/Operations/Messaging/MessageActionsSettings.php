@@ -10,7 +10,7 @@ use RuntimeException;
 
 /**
  * Shop-configured extras for Message Actions (tow / wifi / after-hours pickup).
- * Configuration — not authority.
+ * Configuration - not authority.
  *
  * @phpstan-type MessageActionsConfig array{
  *     tow_company?: ?string,

@@ -27,9 +27,9 @@
                 @if ($vehicleCount === 0)
                     Add a vehicle to continue intake.
                 @elseif ($vehicleCount === 1)
-                    Confirm this is the vehicle in the shop today — or add another.
+                    Confirm this is the vehicle in the shop today - or add another.
                 @else
-                    {{ $vehicleCount }} vehicles on file — pick the one in the shop today.
+                    {{ $vehicleCount }} vehicles on file - pick the one in the shop today.
                 @endif
             </p>
         </div>

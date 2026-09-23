@@ -41,7 +41,7 @@ class PortalInvoicePayCompleteController
         return response()->json([
             'attempt' => $presented,
             'message' => sprintf(
-                'Thank you — we received your %s payment.',
+                'Thank you - we received your %s payment.',
                 $presented['amount'],
             ),
         ]);

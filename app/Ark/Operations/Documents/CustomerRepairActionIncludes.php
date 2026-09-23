@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Documents;
 
 /**
  * Customer-facing "Includes" bullets from shop repair-action titles.
- * Presentation only — does not change repair_order_work_groups authority.
+ * Presentation only - does not change repair_order_work_groups authority.
  */
 final class CustomerRepairActionIncludes
 {
@@ -96,7 +96,7 @@ final class CustomerRepairActionIncludes
 
     /**
      * Soft group header for a single repair action on line lists.
-     * Title case — customer-readable “what we're doing,” not washed-out uppercase chrome.
+     * Title case - customer-readable “what we're doing,” not washed-out uppercase chrome.
      */
     public static function groupHeading(string $title): string
     {

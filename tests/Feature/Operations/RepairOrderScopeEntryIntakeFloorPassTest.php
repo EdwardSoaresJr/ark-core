@@ -3,7 +3,7 @@
 /**
  * Floor-pass checklist for scope intake before production.
  *
- * Human pass: Molly/Ben at counter for 15 minutes — if nobody pauses on
+ * Human pass: Molly/Ben at counter for 15 minutes - if nobody pauses on
  * "how do I enter this?", ship it.
  *
  * Automated pass: seeds shop-learned vocabulary, then asserts ranking,
@@ -152,7 +152,7 @@ test('observed_summary is stored as concept alias separate from canonical summar
 
 /**
  * Seed shop-learned vocabulary with realistic frequency skew.
- * Front brake service and oil change dominate — like most shops.
+ * Front brake service and oil change dominate - like most shops.
  */
 function seedFloorPassShopVocabulary(): void
 {

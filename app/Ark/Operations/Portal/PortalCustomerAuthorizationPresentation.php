@@ -8,7 +8,7 @@ use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use Brick\Money\Money;
 
 /**
- * Customer-facing authorization records for the portal — not a communication log.
+ * Customer-facing authorization records for the portal - not a communication log.
  *
  * Shows who authorized, when, and by what channel. Internal message history stays in ops.
  */

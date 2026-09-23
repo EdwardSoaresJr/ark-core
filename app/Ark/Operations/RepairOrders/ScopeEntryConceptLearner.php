@@ -6,9 +6,9 @@ namespace App\Ark\Operations\RepairOrders;
  * Records observed language → operational meaning relationships.
  *
  * Translation validation (meaning preservation, not fluency):
- *   Recognition — did ARK understand the words?
- *   Translation — did ARK preserve the meaning between dialects?
- *   Resolution  — did the work confirm the meaning? (future)
+ *   Recognition - did ARK understand the words?
+ *   Translation - did ARK preserve the meaning between dialects?
+ *   Resolution  - did the work confirm the meaning? (future)
  */
 final class ScopeEntryConceptLearner
 {

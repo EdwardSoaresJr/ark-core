@@ -18,7 +18,7 @@ final class MobileUserPresenter
     ) {}
 
     /**
-     * App shell payload — Flutter shapes navigation from this, not hardcoded roles.
+     * App shell payload - Flutter shapes navigation from this, not hardcoded roles.
      *
      * @return array{
      *     user: array<string, mixed>,
@@ -96,7 +96,7 @@ final class MobileUserPresenter
     }
 
     /**
-     * RO workspace profile — matches shell operational posture, not raw role order.
+     * RO workspace profile - matches shell operational posture, not raw role order.
      *
      * Multi-role operators (admin + advisor + technician) must not land in technician
      * inspection flow when their shell is manager/advisor.
@@ -136,7 +136,7 @@ final class MobileUserPresenter
             'repair_orders' => $user->can(ArkCapability::RepairOrdersView->value),
             'findings' => $user->can(ArkCapability::RepairOrdersLifecycle->value)
                 || $user->can(ArkCapability::RepairOrdersManage->value),
-            // Shop inbox tab — advisors/managers only; technicians use RO workspace comms.
+            // Shop inbox tab - advisors/managers only; technicians use RO workspace comms.
             'conversations' => $shopCommunications,
             'communications' => $shopCommunications,
             'customer_reply' => $this->access->canReplyToCustomer($user),
@@ -149,7 +149,7 @@ final class MobileUserPresenter
     }
 
     /**
-     * Role-aware bottom navigation — Flutter renders tabs from this list only.
+     * Role-aware bottom navigation - Flutter renders tabs from this list only.
      *
      * @return list<array{key: string, label: string, enabled: bool}>
      */

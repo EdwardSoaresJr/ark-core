@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use RuntimeException;
 
 /**
- * Back-compat route for Send Address — delegates to MessageActionKey::Address.
+ * Back-compat route for Send Address - delegates to MessageActionKey::Address.
  */
 class SendShopAddressController
 {

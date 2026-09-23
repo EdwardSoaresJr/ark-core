@@ -1,7 +1,7 @@
 # Repair Order Discovery Contract
 
-**Status:** Draft — doctrinal milestone; **not a build mandate** until observation closes open questions  
-**Version:** 0.1 — 2026-06-15  
+**Status:** Draft - doctrinal milestone; **not a build mandate** until observation closes open questions  
+**Version:** 0.1 - 2026-06-15  
 **Sequence:** Doctrine → **Contract** → Observation → Authority → Routes/UI
 
 **Predecessors:**
@@ -18,7 +18,7 @@
 
 ## 1. What this is
 
-Phase “technician permissions” split **`production.access`** from **`operations.access`**. That fixed **advisor inheritance** — Work, Communications, Customers, Vehicles.
+Phase “technician permissions” split **`production.access`** from **`operations.access`**. That fixed **advisor inheritance** - Work, Communications, Customers, Vehicles.
 
 It did **not** fix **repair order discovery**.
 
@@ -34,7 +34,7 @@ Doctrine requires:
 Technicians cannot discover work that is not theirs.
 ```
 
-This contract defines **how a repair order may be discovered** — separately from **what a technician may do on an RO they legitimately hold**.
+This contract defines **how a repair order may be discovered** - separately from **what a technician may do on an RO they legitimately hold**.
 
 **Rule:** Do not change routes, nav labels, or menu items until this contract is **accepted** and observation questions are **answered**.
 
@@ -63,7 +63,7 @@ Technicians **must** open assigned ROs. They **must not** browse the repair orde
 
 Default answer:
 
-> **No — unless it directly supports diagnose, perform, or document assigned work.**
+> **No - unless it directly supports diagnose, perform, or document assigned work.**
 
 ---
 
@@ -86,7 +86,7 @@ These must be answered on the floor **before** capability or route changes. Hypo
 
 **If assigned only:** Workboard unassigned lanes and global index are doctrinal violations for technicians.
 
-**If claim pool:** Unassigned discovery must be **explicit, bounded, and justified** — not an accidental side effect of `repair_orders.view`.
+**If claim pool:** Unassigned discovery must be **explicit, bounded, and justified** - not an accidental side effect of `repair_orders.view`.
 
 ---
 
@@ -107,9 +107,9 @@ These must be answered on the floor **before** capability or route changes. Hypo
 - Dollar totals on deferred work
 - “Other open work for customer” on different vehicles
 
-**Classification:** **Requires observation** — not an immediate violation. Do not over-correct without floor evidence.
+**Classification:** **Requires observation** - not an immediate violation. Do not over-correct without floor evidence.
 
-**Contract direction (hypothesis):** Same-vehicle history **on an assigned RO** may remain a **read-only projection** scoped to vehicle context — not a shop-wide index substitute.
+**Contract direction (hypothesis):** Same-vehicle history **on an assigned RO** may remain a **read-only projection** scoped to vehicle context - not a shop-wide index substitute.
 
 ---
 
@@ -117,9 +117,9 @@ These must be answered on the floor **before** capability or route changes. Hypo
 
 **Question:** May technicians discover **closed/completed** ROs unrelated to current assignment?
 
-**Default under doctrine:** **No** — unless vehicle-history observation (§4.2) proves otherwise.
+**Default under doctrine:** **No** - unless vehicle-history observation (§4.2) proves otherwise.
 
-Global index explicitly advertises “active and historical ROs” — shop-wide discovery, not production role.
+Global index explicitly advertises “active and historical ROs” - shop-wide discovery, not production role.
 
 ---
 
@@ -137,9 +137,9 @@ Current violations: global index, Waiting Parts / QC workboard lanes, unscoped d
 
 **Question:** Must deep links keep working (advisor message, bookmark, printed sheet)?
 
-**Hypothesis:** **Yes** — for ROs **assigned to the technician**, even if not discovered via My Work.
+**Hypothesis:** **Yes** - for ROs **assigned to the technician**, even if not discovered via My Work.
 
-**Contract implication:** Access gate ≠ discovery gate. Direct URL may be **access without catalog browse** — still requires assignment validation.
+**Contract implication:** Access gate ≠ discovery gate. Direct URL may be **access without catalog browse** - still requires assignment validation.
 
 ---
 
@@ -149,20 +149,20 @@ From [Technician Discovery Audit](technician-discovery-audit.md). Implementation
 
 | Mechanism | Class today |
 |-----------|-------------|
-| Global RO index (`/repair-orders`) | Shop-wide discovery — **violation** |
-| Global RO search (customer, phone, VIN) | Shop-wide discovery — **violation** |
-| Repair Orders nav + topbar search | Entry to above — **violation** |
-| Caller lookup | Shop-wide discovery — **violation** |
-| Direct URL to arbitrary RO id | Shop-wide access — **violation** |
-| Workboard — unassigned ready pool | **Requires observation** (§4.1) |
-| Workboard — other tech Waiting Parts / QC | Shop-wide discovery — **violation** |
-| RO History rail — prior visits / deferred ROs | **Requires observation** (§4.2) |
-| RO History rail — other customer open ROs | Likely **violation**; confirm |
-| Broadcast `operations.repair-orders.{id}` | Shop-wide subscription — **violation** |
+| Global RO index (`/repair-orders`) | Shop-wide discovery - **violation** |
+| Global RO search (customer, phone, VIN) | Shop-wide discovery - **violation** |
+| Repair Orders nav + topbar search | Entry to above - **violation** |
+| Caller lookup | Shop-wide discovery - **violation** |
+| Direct URL to arbitrary RO id | Shop-wide access - **violation** |
+| Workboard - unassigned ready pool | **Requires observation** (§4.1) |
+| Workboard - other tech Waiting Parts / QC | Shop-wide discovery - **violation** |
+| RO History rail - prior visits / deferred ROs | **Requires observation** (§4.2) |
+| RO History rail - other customer open ROs | Likely **violation**; confirm |
+| Broadcast `operations.repair-orders.{id}` | Shop-wide subscription - **violation** |
 
 ---
 
-## 6. Capability direction (contract intent — not implemented)
+## 6. Capability direction (contract intent - not implemented)
 
 **Problem capability:**
 
@@ -178,7 +178,7 @@ repair_orders.view  →  implies shop-wide see + discover
 | Assigned RO access | Open/work assigned ROs | Yes | Yes |
 | Assigned RO lifecycle | Lifecycle/inspection on assigned ROs | Yes | Yes |
 
-Exact capability split is **implementation** — this contract fixes **semantics** first.
+Exact capability split is **implementation** - this contract fixes **semantics** first.
 
 **Anti-pattern:** Hide Repair Orders nav while leaving `repair_orders.view` shop-wide on `/repair-orders` and direct URLs.
 
@@ -201,7 +201,7 @@ ARKademy
 Work · Communications · Repair Orders (global) · Customers · Vehicles
 ```
 
-**Operations (workboard)** may become **My Work** or remain advisor/owner-oriented shop coordination — **observe first**.
+**Operations (workboard)** may become **My Work** or remain advisor/owner-oriented shop coordination - **observe first**.
 
 ---
 
@@ -212,7 +212,7 @@ When implemented, the system must satisfy:
 1. A technician can **diagnose, perform, and document** work on ROs **assigned to them**.
 2. A technician **cannot browse** the repair order system as a shop-wide catalog.
 3. Every technician discovery path passes: *Does this directly support assigned work?*
-4. Vehicle history (if allowed) is **bounded projection** from an assigned RO — not a second global index.
+4. Vehicle history (if allowed) is **bounded projection** from an assigned RO - not a second global index.
 5. `repair_orders.view` (or its successor) **does not imply** shop-wide discovery for production-role users.
 
 ---
@@ -234,7 +234,7 @@ Technician Scope Doctrine v1
         ↓
 Technician Discovery Audit (accepted)
         ↓
-Repair Order Discovery Contract (this document — accept after observation)
+Repair Order Discovery Contract (this document - accept after observation)
         ↓
 Observation (Landon: index? pool? history?)
         ↓

@@ -150,7 +150,7 @@ test('orchestrator emits step failed and provisioning failed events', function (
     Event::assertDispatched(ProvisioningFailed::class, fn ($e) => $e->reason === 'explode');
 });
 
-test('only orchestrator marks completed — stubs never set status', function () {
+test('only orchestrator marks completed - stubs never set status', function () {
     $request = makePendingProvisioningRequest();
 
     app(ProvisioningOrchestrator::class)->run($request);

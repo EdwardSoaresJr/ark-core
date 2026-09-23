@@ -1,6 +1,6 @@
 # ARK-SMS → ARK V2 Label Printing Migration
 
-> **Doctrine:** `docs/printing/ark-printing-doctrine.md` — printing is operational infrastructure (like invoices and estimate PDFs), not a convenience feature.
+> **Doctrine:** `docs/printing/ark-printing-doctrine.md` - printing is operational infrastructure (like invoices and estimate PDFs), not a convenience feature.
 
 ## Context
 
@@ -31,7 +31,7 @@ Restore operational printing in ARK V2:
 
 **Stack:** Browser → QZ Tray → Brother QL-800
 
-**Source of truth for implementation:** ARK-SMS v1 codebase and its database settings — not this document alone.
+**Source of truth for implementation:** ARK-SMS v1 codebase and its database settings - not this document alone.
 
 ---
 
@@ -41,7 +41,7 @@ Restore operational printing in ARK V2:
 
 Document findings in:
 
-`docs/printing/ark-sms-printing-audit.md` — **status `AUDITED` (2026-06-06)** from ReleasePanel server `root@24.144.81.19`, path `/var/www/sites/ark-sms/production/current`.
+`docs/printing/ark-sms-printing-audit.md` - **status `AUDITED` (2026-06-06)** from ReleasePanel server `root@24.144.81.19`, path `/var/www/sites/ark-sms/production/current`.
 
 V1 canonical detail remains on server: `docs/ARK-SMS-PRINTING-QZ-KEY-TAGS.md`.
 
@@ -87,7 +87,7 @@ Support the same workflow as ARK-SMS:
 
 ### Reuse existing logic
 
-If ARK-SMS already calculates next oil service mileage, sticker formatting, or label dimensions — **port it**. Do not rewrite working business logic.
+If ARK-SMS already calculates next oil service mileage, sticker formatting, or label dimensions - **port it**. Do not rewrite working business logic.
 
 ---
 
@@ -95,7 +95,7 @@ If ARK-SMS already calculates next oil service mileage, sticker formatting, or l
 
 Migrate existing settings authority.
 
-If ARK-SMS stores printer name, label size, print preferences — map into ARK V2 `shop_settings` (or the documented V2 settings surface). **Do not hardcode printer names.**
+If ARK-SMS stores printer name, label size, print preferences - map into ARK V2 `shop_settings` (or the documented V2 settings surface). **Do not hardcode printer names.**
 
 ---
 
@@ -155,7 +155,7 @@ Match v1 output first. No label redesign during migration.
 | Print key tag | RO review / workspace header actions |
 | Print oil reminder | Vehicle card / post-service / RO context |
 
-One-click operational access — same speed as ARK-SMS.
+One-click operational access - same speed as ARK-SMS.
 
 ---
 

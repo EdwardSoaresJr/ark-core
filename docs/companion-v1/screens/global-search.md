@@ -1,15 +1,15 @@
-# Screen spec — Global Search
+# Screen spec - Global Search
 
 **ID:** `companion.screen.global-search`  
 **Role(s):** Advisor · Owner  
-**Quo ref:** contact search rhythm in `screensdesign-2.webp` — reference only  
-**Status:** 📝 draft — Edward review
+**Quo ref:** contact search rhythm in `screensdesign-2.webp` - reference only  
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Emma → act in one tap** — find customer · vehicle · RO · phone · then call · text · open RO · pay · schedule without hunting tabs.
+**Emma → act in one tap** - find customer · vehicle · RO · phone · then call · text · open RO · pay · schedule without hunting tabs.
 
 ---
 
@@ -18,33 +18,33 @@
 | | Reference CRM | Quo | ARK Companion |
 |---|-----|-----|---------------|
 | **Verdict** | "Search across all Apps" · launcher | Contact/number search | **Target: Yes** |
-| **Why** | CRM app grid | No RO · pay · schedule from search | **Command palette for the shop** — results are **actions**, not just records |
+| **Why** | CRM app grid | No RO · pay · schedule from search | **Command palette for the shop** - results are **actions**, not just records |
 
 ---
 
 ## Layout (production spec)
 
-### Mode A — Search entry (empty / focused)
+### Mode A - Search entry (empty / focused)
 
 **Shell**
 
-- **Search field** — autofocus · clear (×) · cancel/back
+- **Search field** - autofocus · clear (×) · cancel/back
 - **Placeholder:** `Customer · vehicle · RO · phone`
 
 **Body (empty state)**
 
-- **Recent searches** — last 5–8 · tap refills query
+- **Recent searches** - last 5–8 · tap refills query
 - **Quick filters (chips):** Customers · Vehicles · Repair orders · Phone numbers
-- **Shortcuts row (optional):** New walk-in · Scan VIN — P1
+- **Shortcuts row (optional):** New walk-in · Scan VIN - P1
 
-### Mode B — Results (typing ≥2 chars)
+### Mode B - Results (typing ≥2 chars)
 
-**Result groups** — section headers sticky on scroll:
+**Result groups** - section headers sticky on scroll:
 
-1. **Customers** — name match · phone suffix
-2. **Vehicles** — YMM · plate · VIN last 6
-3. **Repair orders** — `#1599` · customer · status chip
-4. **Phone numbers** — if direct dial match
+1. **Customers** - name match · phone suffix
+2. **Vehicles** - YMM · plate · VIN last 6
+3. **Repair orders** - `#1599` · customer · status chip
+4. **Phone numbers** - if direct dial match
 
 **Customer result row (~64pt):**
 
@@ -52,7 +52,7 @@
 - Subline · `2019 Civic · RO #1599 open`
 - Trailing · chevron
 
-**Tap row** → expands **inline action rail** OR navigates to **Result detail sheet** (prefer sheet — stay in search):
+**Tap row** → expands **inline action rail** OR navigates to **Result detail sheet** (prefer sheet - stay in search):
 
 | Action | Destination |
 |--------|-------------|
@@ -63,9 +63,9 @@
 | **Schedule** | Appointment sheet |
 | **History** | [`customer-workspace.md`](customer-workspace.md) |
 
-**≤2 taps from search field to any action** — Edward gate.
+**≤2 taps from search field to any action** - Edward gate.
 
-### Mode C — Numeric entry (dialer path)
+### Mode C - Numeric entry (dialer path)
 
 When query is all digits / formatted phone:
 
@@ -89,7 +89,7 @@ When query is all digits / formatted phone:
 | RO line | RO #1599 · Waiting approval |
 | Section | CUSTOMERS |
 
-Tight list — 3–4 results visible without scroll for common names.
+Tight list - 3–4 results visible without scroll for common names.
 
 ---
 
@@ -106,7 +106,7 @@ Tight list — 3–4 results visible without scroll for common names.
 | Cancel | Dismiss modal / previous tab |
 | Pull to refresh | Re-run query |
 
-**Persistent affordance:** magnifying glass on Communications · Home quick field · hardware keyboard `/` shortcut — P1
+**Persistent affordance:** magnifying glass on Communications · Home quick field · hardware keyboard `/` shortcut - P1
 
 ---
 
@@ -118,7 +118,7 @@ Tight list — 3–4 results visible without scroll for common names.
 | No results | "No matches" · offer create customer / walk-in |
 | Loading | Skeleton rows in each section |
 | Offline | Search local recents + cached customers only · banner |
-| Single exact match | Auto-highlight top row · actions visible without second tap — optional |
+| Single exact match | Auto-highlight top row · actions visible without second tap - optional |
 
 ---
 
@@ -143,12 +143,12 @@ Link: [`../02-flows.md`](../02-flows.md#search--act-emma)
 
 **Needs:**
 
-- Unified search endpoint — customers · vehicles · ROs · phones
+- Unified search endpoint - customers · vehicles · ROs · phones
 - Recent searches (local + optional server sync)
 - Result DTO includes open RO id · vehicle summary · balance flag for Pay action visibility
 
 **May need:** `GET /api/mobile/search?q=` with grouped sections  
-**Existing:** customer search on desktop — extend ranking for mobile (phone · plate · RO #)
+**Existing:** customer search on desktop - extend ranking for mobile (phone · plate · RO #)
 
 ---
 

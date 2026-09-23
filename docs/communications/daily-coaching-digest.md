@@ -1,6 +1,6 @@
 # Daily Coaching Digest
 
-Operational coaching email for shop leadership — **not** a winner/loser scoreboard.
+Operational coaching email for shop leadership - **not** a winner/loser scoreboard.
 
 ## Framing (non-negotiable)
 
@@ -16,7 +16,7 @@ Advisors get defensive when AI picks "losers." ARK surfaces **coaching opportuni
 
 ### Phase 1 (implemented)
 
-- `communication_reviews` authority — one row per analyzed call
+- `communication_reviews` authority - one row per analyzed call
 - Sync from call AI analysis on `CallSession` (`RecordCommunicationReviewFromCallAction`)
 - Evening job: `communications:daily-coaching-digest`
 - Email sections: Strongest Call, Highest Coaching Opportunity, transcript links
@@ -31,7 +31,7 @@ Dimension scoring scaffold in `dimension_scores` JSON:
 
 ### Phase 3
 
-Outcome-aware scoring — conversation quality **and** operational result (appointment, estimate, approval, revenue).
+Outcome-aware scoring - conversation quality **and** operational result (appointment, estimate, approval, revenue).
 
 ## Data model
 
@@ -56,8 +56,8 @@ Call analysis JSON on `call_sessions` remains transport; `communication_reviews`
 
 - `coaching_digest_enabled` (default `false`)
 - `coaching_digest_time` (default `19:00` shop TZ)
-- `coaching_digest_recipient_emails` — when set, **only** these addresses (Edward-only pilot). When empty, active admins + extra emails.
-- `coaching_digest_extra_emails` — additional recipients when using admin default list
+- `coaching_digest_recipient_emails` - when set, **only** these addresses (Edward-only pilot). When empty, active admins + extra emails.
+- `coaching_digest_extra_emails` - additional recipients when using admin default list
 
 ## Commands
 
@@ -68,10 +68,10 @@ php artisan communications:daily-coaching-digest --date=2026-06-14 --email=you@e
 
 ## ARKademy bridge (future)
 
-Eventually combine score with operational outcome (Phase 3) — not purely composite_score forever.
+Eventually combine score with operational outcome (Phase 3) - not purely composite_score forever.
 
 ## Roadmap notes
 
-- **Most Improved** (weekly) — third digest category for reinforcement; not Phase 1.
-- **ARKademy bridge** — coaching opportunity topic → recommended SOP article.
+- **Most Improved** (weekly) - third digest category for reinforcement; not Phase 1.
+- **ARKademy bridge** - coaching opportunity topic → recommended SOP article.
 

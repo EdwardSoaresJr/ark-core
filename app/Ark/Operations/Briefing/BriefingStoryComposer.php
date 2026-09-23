@@ -7,7 +7,7 @@ use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Models\User;
 
 /**
- * Narrative layer for the operations briefing — greeting and yesterday summary only.
+ * Narrative layer for the operations briefing - greeting and yesterday summary only.
  */
 final class BriefingStoryComposer
 {

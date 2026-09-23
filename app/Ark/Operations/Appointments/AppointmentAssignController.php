@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Updates technician / bay assignment only — same appointment fields as reschedule.
+ * Updates technician / bay assignment only - same appointment fields as reschedule.
  * Does not move the appointment in time.
  */
 class AppointmentAssignController

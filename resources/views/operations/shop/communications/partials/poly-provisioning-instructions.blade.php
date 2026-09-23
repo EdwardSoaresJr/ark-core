@@ -6,7 +6,7 @@
     <header class="space-y-1">
         <p class="text-[10px] font-bold uppercase tracking-wide text-sky-800">Connect this device</p>
         <p class="text-xs leading-5 text-slate-700">
-            After factory reset, enter this provisioning server on the phone. Credentials download automatically — nothing else to type on the device.
+            After factory reset, enter this provisioning server on the phone. Credentials download automatically - nothing else to type on the device.
         </p>
     </header>
 

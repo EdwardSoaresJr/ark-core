@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * POST — create durable Historical Work Recall Assist after deterministic GET recall.
+ * POST - create durable Historical Work Recall Assist after deterministic GET recall.
  * Deterministic GET remains zero-write.
  */
 final class HistoricalWorkRecallAssistController

@@ -181,6 +181,6 @@ final class PartsTechCatalogLauncher
             return null;
         }
 
-        return 'No VIN or year/make/model on this RO — pick the vehicle manually in PartsTech. ARK still tags the cart with this RO number.';
+        return 'No VIN or year/make/model on this RO - pick the vehicle manually in PartsTech. ARK still tags the cart with this RO number.';
     }
 }

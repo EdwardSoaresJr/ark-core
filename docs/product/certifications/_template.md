@@ -1,4 +1,4 @@
-# Certification record — {Name}
+# Certification record - {Name}
 
 **Certification:**  
 **Track:** A · B · C  
@@ -9,7 +9,7 @@
 
 After this certification, the shop can:
 
-*(One sentence — business capability, not engineering achievement.)*
+*(One sentence - business capability, not engineering achievement.)*
 
 ---
 
@@ -43,7 +43,7 @@ Operational and Production are **suspended** if Engineering is not green. Produc
 
 ## Suspension log
 
-*(When Engineering or Operational drops, record date and cause — upper levels auto-suspend.)*
+*(When Engineering or Operational drops, record date and cause - upper levels auto-suspend.)*
 
 | Date | Level broken | Cause | Upper levels suspended |
 |------|--------------|-------|------------------------|
@@ -55,4 +55,4 @@ Operational and Production are **suspended** if Engineering is not green. Produc
 
 ## Corrections
 
-- *(append only — do not rewrite history)*
+- *(append only - do not rewrite history)*

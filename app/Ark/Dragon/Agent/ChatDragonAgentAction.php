@@ -37,7 +37,7 @@ final class ChatDragonAgentAction
     }
 
     /**
-     * Read-only hosted chat for the shared Shop Glass. Station token only — not a staff PAT.
+     * Read-only hosted chat for the shared Shop Glass. Station token only - not a staff PAT.
      *
      * @return array<string, mixed>
      */

@@ -517,7 +517,7 @@ class ShopCommunicationsSettingsController
             ? ShopSettings::current()->communications_channels
             : [];
 
-        // Preserve legacy verify_token in JSON for platform fallback until env is set — do not accept new shop writes.
+        // Preserve legacy verify_token in JSON for platform fallback until env is set - do not accept new shop writes.
         $legacyVerify = is_array($channels['messenger'] ?? null)
             ? ($channels['messenger']['verify_token'] ?? null)
             : null;

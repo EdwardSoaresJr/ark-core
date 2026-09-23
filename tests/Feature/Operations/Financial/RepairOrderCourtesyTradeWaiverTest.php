@@ -138,7 +138,7 @@ test('invoice pdf snapshot includes courtesy waiver customer label', function ()
     $invoice = app(BalanceDueCalculator::class)->issuedInvoice($repairOrder->fresh());
     $snapshot = app(InvoicePdfFinancialSnapshot::class)->append($invoice, $invoice->snapshot_json ?? []);
 
-    expect($snapshot['financial']['collection_waiver_label'])->toBe('Courtesy — balance waived')
+    expect($snapshot['financial']['collection_waiver_label'])->toBe('Courtesy - balance waived')
         ->and($snapshot['financial']['write_offs_cents'])->toBe(15000);
 
     $snapshot['document_footer'] = app(DocumentFooterPresenter::class)->present($snapshot);
@@ -148,7 +148,7 @@ test('invoice pdf snapshot includes courtesy waiver customer label', function ()
         'snapshot' => $snapshot,
     ])->render();
 
-    expect($html)->toContain('Courtesy — balance waived')
+    expect($html)->toContain('Courtesy - balance waived')
         ->toContain('Write-offs');
 });
 

@@ -25,7 +25,7 @@ enum ScopeProductionStatus: string
             self::Pending => 'Approved scope not started in the bay yet.',
             self::InProgress => 'Technician is actively working this scope.',
             self::WaitingParts => 'Scope is blocked on parts or an outside dependency.',
-            self::Completed => 'This scope is finished — independent of other scopes on the RO.',
+            self::Completed => 'This scope is finished - independent of other scopes on the RO.',
         };
     }
 

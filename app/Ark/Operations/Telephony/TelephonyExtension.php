@@ -56,7 +56,7 @@ class TelephonyExtension extends Model
     }
 
     /**
-     * Primary enabled extension for a workstation — shared read path for Voice UI and provisioning.
+     * Primary enabled extension for a workstation - shared read path for Voice UI and provisioning.
      */
     public static function primaryForWorkstation(int $workstationId): ?self
     {

@@ -167,7 +167,7 @@ test('operator can change workstation pin from profile settings', function (): v
     expect(app(OperatorPinVerifier::class)->verify($admin->fresh(), '4321'))->toBeTrue();
 });
 
-test('workstation lock screen retired — operational shell stays visible', function (): void {
+test('workstation lock screen retired - operational shell stays visible', function (): void {
     $this->withoutVite();
 
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);

@@ -158,7 +158,7 @@ final class MobileWorkProjection
             fn ($item): bool => $item->observed_state === InspectionObservedState::NotChecked,
         );
         if ($next === null) {
-            return 'Inspection complete — review production';
+            return 'Inspection complete - review production';
         }
 
         $label = trim((string) ($next->label ?? ''));

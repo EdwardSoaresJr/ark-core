@@ -408,7 +408,7 @@ final class RepairOrderStatusCatalogDefaults
             }
         }
 
-        // Do not recreate the full matrix — that flooded operational menus.
+        // Do not recreate the full matrix - that flooded operational menus.
         // One-shot prune: deactivateNonCanonicalTransitions() via migration.
 
         $catalog->forgetCache();

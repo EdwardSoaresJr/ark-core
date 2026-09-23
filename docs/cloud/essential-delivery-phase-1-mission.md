@@ -1,4 +1,4 @@
-# Essential Delivery — Phase 1 Mission (Core)
+# Essential Delivery - Phase 1 Mission (Core)
 
 **Status:** PHASE 1 COMPLETE ✅  
 **Companion (Cloud):** `ark-cloud/docs/essential-delivery-phase-1-mission.md`  
@@ -13,12 +13,12 @@
 
 ## Phase 1 scope
 
-Prove staff password recovery for the installation recovery owner — **not** every staff account.
+Prove staff password recovery for the installation recovery owner - **not** every staff account.
 
 ### Two acceptance paths (both required)
 
-1. **Paired Demo Box** — signs Cloud requests with pairing credential.
-2. **Stock unpaired install** — setup writes recovery owner + essential secret; signs with bootstrap secret.
+1. **Paired Demo Box** - signs Cloud requests with pairing credential.
+2. **Stock unpaired install** - setup writes recovery owner + essential secret; signs with bootstrap secret.
 
 Same recovery mechanics, same Cloud template, same local password mutation.
 
@@ -51,11 +51,11 @@ Pairing is optional. Recovery is not.
 
 ## Acceptance
 
-### Path A — Paired Demo Box
+### Path A - Paired Demo Box
 
 Recovery owner falls back to master admin email if install file missing (legacy demo).
 
-### Path B — Stock unpaired install
+### Path B - Stock unpaired install
 
 `CompleteInstallationAction` writes recovery identity and calls essential register.
 
@@ -68,8 +68,8 @@ Recovery owner falls back to master admin email if install file missing (legacy 
 
 ## Phase 1 closeout (2026-09-03)
 
-**Functional:** Path B proved the architecture — fresh unpaired install registers Essential Delivery during setup (`44db4f9`), recovers locally, never touches ARK Mail or shop pairing. Path A proved the paired credential path on the Demo Box.
+**Functional:** Path B proved the architecture - fresh unpaired install registers Essential Delivery during setup (`44db4f9`), recovers locally, never touches ARK Mail or shop pairing. Path A proved the paired credential path on the Demo Box.
 
 **Transport:** Demo Box forgot-password → Cloud Essential Delivery → Postmark sent `recovery@mail.arksms.com` → code entered on Core → reset → login. Zero ARK Mail entitlement.
 
-**Next:** [essential-delivery-phase-2-mission.md](./essential-delivery-phase-2-mission.md) — offline challenge/response recovery without Cloud↔Box network access.
+**Next:** [essential-delivery-phase-2-mission.md](./essential-delivery-phase-2-mission.md) - offline challenge/response recovery without Cloud↔Box network access.

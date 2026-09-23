@@ -1,4 +1,4 @@
-# ARK Staff — The Operation Follows the Operator
+# ARK Staff - The Operation Follows the Operator
 
 **Status:** Active product doctrine  
 **North star:** [operation-follows-operator-v1.md](../product/operation-follows-operator-v1.md)  
@@ -20,7 +20,7 @@ Phone-First Shop is evidence, not the product.
 
 **Month:** Can Edward, Molly, Landon run the floor without device-thinking?
 
-**Artifact:** [operations/README.md](../operations/README.md) — film operations, not certifications.
+**Artifact:** [operations/README.md](../operations/README.md) - film operations, not certifications.
 
 ---
 
@@ -40,7 +40,7 @@ The problem is:
 
 ARK Staff is **NOT** a miniature desktop. It is **NOT** CRUD on a small screen.
 
-**ARK Staff is a workflow engine** — the primary execution surface for floor operations.
+**ARK Staff is a workflow engine** - the primary execution surface for floor operations.
 
 Every interaction must answer:
 
@@ -48,7 +48,7 @@ Every interaction must answer:
 
 Not: *What data do we have?*
 
-If it does not help the operator finish work at the vehicle, at the counter, or on the walk — rethink it.
+If it does not help the operator finish work at the vehicle, at the counter, or on the walk - rethink it.
 
 ---
 
@@ -100,7 +100,7 @@ Pickup
 Closed
 ```
 
-If any step forces unnecessary desktop usage, **observe why** — that observation becomes the roadmap.
+If any step forces unnecessary desktop usage, **observe why** - that observation becomes the roadmap.
 
 ---
 
@@ -275,16 +275,16 @@ That does **NOT** mean duplicating every desktop feature. It means **completing 
 
 ## Current priority
 
-Stop expanding horizontally. **Certify one workflow at a time** — see [workflow-completion-certification.md](../engineering/workflow-completion-certification.md).
+Stop expanding horizontally. **Certify one workflow at a time** - see [workflow-completion-certification.md](../engineering/workflow-completion-certification.md).
 
 | Priority | Workflow certification |
 | --- | --- |
-| **1** | [Customer Arrival](../product/certifications/customer-arrival-workflow.md) — find/create → VIN → verify → concern → photos → RO → assign |
-| **2** | [Technician Start](../product/certifications/technician-start-workflow.md) — assigned work → inspection → photos → recommendations → note |
-| **3** | [Advisor Communication](../product/certifications/advisor-communication-workflow.md) — observation → workspace → call/text/estimate/note |
-| **4** | [Vehicle Pickup](../product/certifications/vehicle-pickup-workflow.md) — invoice → payment → receipt → close |
-| **5** | [Shop Walk](../product/certifications/shop-walk-workflow.md) — bay-to-bay continuity, no search |
-| **★** | [Phone-First Shop](../product/certifications/phone-first-shop.md) — full operational day on phone |
+| **1** | [Customer Arrival](../product/certifications/customer-arrival-workflow.md) - find/create → VIN → verify → concern → photos → RO → assign |
+| **2** | [Technician Start](../product/certifications/technician-start-workflow.md) - assigned work → inspection → photos → recommendations → note |
+| **3** | [Advisor Communication](../product/certifications/advisor-communication-workflow.md) - observation → workspace → call/text/estimate/note |
+| **4** | [Vehicle Pickup](../product/certifications/vehicle-pickup-workflow.md) - invoice → payment → receipt → close |
+| **5** | [Shop Walk](../product/certifications/shop-walk-workflow.md) - bay-to-bay continuity, no search |
+| **★** | [Phone-First Shop](../product/certifications/phone-first-shop.md) - full operational day on phone |
 
 ## Surface grammar
 
@@ -333,7 +333,7 @@ Success is **NOT**: "We built another screen."
 
 Success **IS**: A technician or advisor completes an entire customer visit without wondering where to go next.
 
-If the user hesitates, leaves the workflow, or reaches for the desktop — observe why. Those observations become the roadmap.
+If the user hesitates, leaves the workflow, or reaches for the desktop - observe why. Those observations become the roadmap.
 
 Do not optimize for feature count. Optimize for **uninterrupted shop workflow**.
 
@@ -343,7 +343,7 @@ Do not optimize for feature count. Optimize for **uninterrupted shop workflow**.
 
 | Doc | Role |
 | --- | --- |
-| [Production Workspace v1](./ark-mobile-production-workspace-v1.md) | Technician production surface — concerns, camera-first, tablet |
+| [Production Workspace v1](./ark-mobile-production-workspace-v1.md) | Technician production surface - concerns, camera-first, tablet |
 | [Notification doctrine](./ark-mobile-notification-doctrine.md) | Poll-first; push deferred |
 | [Projection v1](./ark-mobile-projection-v1.md) | API transport layer |
 | doctrine `ark-mobile-workflow-doctrine.mdc` | doctrine enforcement |

@@ -1,10 +1,10 @@
 # Runtime Host Profile v1
 
-**Status:** Accepted — frozen operational baseline for all Arkify production runtime hosts  
-**Version:** 1.0 — 2026-06-15  
+**Status:** Accepted - frozen operational baseline for all Arkify production runtime hosts  
+**Version:** 1.0 - 2026-06-15  
 **Sequence:** [Doctrine](../coolify/production-runtime-host-doctrine-v1.md) → **Profile** (this file) → [Shop implementation](../coolify/demo-auto-runtime-profile.md)
 
-Every new ARK deployment starts from this profile. Shop-specific documents record **host identity, observed metrics, and justified deviations** — not a rediscovery of these baselines.
+Every new ARK deployment starts from this profile. Shop-specific documents record **host identity, observed metrics, and justified deviations** - not a rediscovery of these baselines.
 
 ---
 
@@ -31,7 +31,7 @@ Runtime hosts accumulate image tags and build cache even after cutover from lega
 |--------|----------|
 | Build cache on runtime host | **< 2 GB** (should trend toward **0** after pull-only) |
 | Reclaimable images (`docker system df`) | **< 25%** of total image disk |
-| Prune review | **Monthly** — or when reclaimable > 25% |
+| Prune review | **Monthly** - or when reclaimable > 25% |
 | Prune during deploy | **Never** |
 
 **Monthly review commands:**
@@ -50,7 +50,7 @@ Build cache on a pull-only host is **operational debt**, not a feature. Investig
 
 **Swap is a safety margin, not operating mode.**
 
-Steady-state production should run primarily in RAM. Persistent swap use under normal traffic indicates undersizing or mis-tuning — not a reason to accept swap as baseline.
+Steady-state production should run primarily in RAM. Persistent swap use under normal traffic indicates undersizing or mis-tuning - not a reason to accept swap as baseline.
 
 **Investigate when:**
 
@@ -58,7 +58,7 @@ Steady-state production should run primarily in RAM. Persistent swap use under n
 |--------|-------------------------------|
 | Sustained swap growth (24h+ steady state) | Runtime undersize, FPM/Horizon headroom, MySQL reservation |
 | OOM events (`dmesg`, container restarts) | cgroup limits vs actual RSS; deploy overlap |
-| Deploy-induced memory pressure | **Build on host** — fix deployment architecture before shrinking MySQL or FPM |
+| Deploy-induced memory pressure | **Build on host** - fix deployment architecture before shrinking MySQL or FPM |
 
 Do not treat swap consumed during **on-host builds** as application memory demand. That is build authority leaking into runtime.
 
@@ -90,7 +90,7 @@ Implement via `infra/coolify/php-fpm-www.conf` COPY in Dockerfile when shop prof
 
 > Do not shrink MySQL to compensate for deployment architecture.
 
-MySQL cgroup limits reflect **observed runtime RSS**, shared tenants on the instance, backup windows, and growth — not RAM freed for `npm ci` or BuildKit.
+MySQL cgroup limits reflect **observed runtime RSS**, shared tenants on the instance, backup windows, and growth - not RAM freed for `npm ci` or BuildKit.
 
 If MySQL OOMs during deploy:
 
@@ -106,7 +106,7 @@ Shop-specific `mem_limit`, `memswap_limit`, and CPU values live in the **shop im
 
 **Keep Redis small.**
 
-Memory authority belongs to **MySQL** and the **application runtime** (FPM, Horizon, Reverb). Redis holds queue metadata, cache, and Horizon state — not bulk data.
+Memory authority belongs to **MySQL** and the **application runtime** (FPM, Horizon, Reverb). Redis holds queue metadata, cache, and Horizon state - not bulk data.
 
 | Baseline | |
 |----------|---|
@@ -142,7 +142,7 @@ Host-level `vm.swappiness` is documented here; **not applied automatically** on 
 | Adoption | Requires **observation period** (≥ 1 week steady state) after pull-only cutover |
 | Persist | `/etc/sysctl.d/99-ark.conf` when approved per shop |
 
-**Do not lower swappiness while on-host builds continue** — build spikes still need swap headroom on small hosts.
+**Do not lower swappiness while on-host builds continue** - build spikes still need swap headroom on small hosts.
 
 MySQL container `mem_swappiness: 10` in Coolify compose is complementary; host sysctl still matters on some kernels.
 
@@ -162,7 +162,7 @@ Exceptions must be recorded in the shop implementation profile with owner, reaso
 
 **Build authority:** `.github/workflows/docker-publish.yml` → `ghcr.io/<org>/arksmsv2:{main,sha}`
 
-**Runtime authority:** Coolify env, bind mounts, entrypoint post-deploy — secrets never baked into image.
+**Runtime authority:** Coolify env, bind mounts, entrypoint post-deploy - secrets never baked into image.
 
 ---
 
@@ -182,13 +182,13 @@ infra/coolify/<shop>-runtime-profile.md
 
 **Deviation examples:** Demo Auto Repair still runs legacy on-host build until P2; FPM baseline not yet copied into Dockerfile; swappiness still 60.
 
-When hardware changes, update the **shop implementation** — not this profile unless the fleet baseline itself changes.
+When hardware changes, update the **shop implementation** - not this profile unless the fleet baseline itself changes.
 
 ---
 
 ## Related docs
 
 - [Production Runtime Host Doctrine v1](../coolify/production-runtime-host-doctrine-v1.md)
-- [Demo Auto Repair Runtime Profile](../coolify/demo-auto-runtime-profile.md) — first shop implementation
-- [Pull-Only Deployments](../coolify/pull-only-deployments.md) — P0–P2 cutover
-- [DEPLOYMENT.md](../coolify/DEPLOYMENT.md) — Demo Auto Repair Coolify layout
+- [Demo Auto Repair Runtime Profile](../coolify/demo-auto-runtime-profile.md) - first shop implementation
+- [Pull-Only Deployments](../coolify/pull-only-deployments.md) - P0–P2 cutover
+- [DEPLOYMENT.md](../coolify/DEPLOYMENT.md) - Demo Auto Repair Coolify layout

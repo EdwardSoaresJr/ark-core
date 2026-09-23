@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Maintenance;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Shop preparation defaults for Engine Oil — never vehicle specification.
+ * Shop preparation defaults for Engine Oil - never vehicle specification.
  */
 final class EngineOilShopDefaults
 {

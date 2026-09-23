@@ -30,7 +30,7 @@ final class StationTokenIssueCommand extends Command
         $this->line('prefix='.$token->token_prefix);
         $this->line('shop_identity='.$token->shop_identity);
         $this->newLine();
-        $this->warn('Store this on the glass now — it will not be shown again:');
+        $this->warn('Store this on the glass now - it will not be shown again:');
         $this->line($plain);
 
         return self::SUCCESS;

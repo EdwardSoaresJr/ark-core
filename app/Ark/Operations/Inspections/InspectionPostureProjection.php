@@ -8,7 +8,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
  * Disposable read model: Inspection Posture on a Repair Order.
  *
  * Owns no persistence. Rebuild from inspection checklist authority at any time.
- * Surfaces must consume this — do not re-derive Not Started / % / Complete inline.
+ * Surfaces must consume this - do not re-derive Not Started / % / Complete inline.
  */
 final class InspectionPostureProjection
 {

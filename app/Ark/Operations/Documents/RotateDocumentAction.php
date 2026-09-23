@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 /**
- * Rotate pages 90°. Writes a new storage object and retargets the row —
+ * Rotate pages 90°. Writes a new storage object and retargets the row -
  * never overwrites the previous storage_path in place.
  */
 final class RotateDocumentAction

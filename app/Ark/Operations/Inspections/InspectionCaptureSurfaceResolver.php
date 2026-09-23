@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 /**
  * Disposable projection: which capture surface should open for this request.
- * Surfaces are projections of one inspection authority — not product concepts.
+ * Surfaces are projections of one inspection authority - not product concepts.
  *
  * Today: desktop walk · tablet bay shell.
  * Later: Companion · rugged kiosk · native mobile without renaming callers.
@@ -89,7 +89,7 @@ final class InspectionCaptureSurfaceResolver
             return true;
         }
 
-        // Phones at the vehicle are capture devices — not desk review.
+        // Phones at the vehicle are capture devices - not desk review.
         if (str_contains($ua, 'iphone') || str_contains($ua, 'ipod')) {
             return true;
         }

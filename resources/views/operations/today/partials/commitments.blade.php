@@ -5,7 +5,7 @@
 <section class="ops-today__section ops-today-commitments" aria-labelledby="ops-today-commitments">
     <div class="ops-today__section-header">
         <h2 id="ops-today-commitments" class="ops-today__section-title">Commitments</h2>
-        <p class="ops-today__section-copy">What we promised, who owns it, and when it is due — not tasks, not hope.</p>
+        <p class="ops-today__section-copy">What we promised, who owns it, and when it is due - not tasks, not hope.</p>
     </div>
 
     <div class="ops-today-commitments__summary">

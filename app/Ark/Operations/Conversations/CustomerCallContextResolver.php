@@ -42,7 +42,7 @@ class CustomerCallContextResolver
     }
 
     /**
-     * Attention / Needs You list rows — customer + open RO labels only.
+     * Attention / Needs You list rows - customer + open RO labels only.
      * Skips orientation + relationship timeline (those belong on selection).
      */
     public function resolveForAttentionList(?string $phoneNumber): ?CustomerCallContext
@@ -57,7 +57,7 @@ class CustomerCallContextResolver
     }
 
     /**
-     * Batch list identity for Communications rows — one customer + open-RO query set.
+     * Batch list identity for Communications rows - one customer + open-RO query set.
      *
      * @param  list<string|null>  $phoneNumbers
      * @return array<string, CustomerCallContext> keyed by normalized phone

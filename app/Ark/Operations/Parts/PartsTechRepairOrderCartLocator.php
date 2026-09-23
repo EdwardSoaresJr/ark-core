@@ -36,7 +36,7 @@ final class PartsTechRepairOrderCartLocator
     }
 
     /**
-     * Another RO's cart is active with parts — shared shop login is mid-session elsewhere.
+     * Another RO's cart is active with parts - shared shop login is mid-session elsewhere.
      *
      * @return array{id: string, repairOrderNumber: string, itemCount: int}|null
      */
@@ -71,7 +71,7 @@ final class PartsTechRepairOrderCartLocator
             .'Finish and pull that quote, or clear the cart in PartsTech, before opening or pulling '.$expected.'. '
             .($this->client->usesPersonalLogin()
                 ? 'Your PartsTech login can only have one active cart at a time.'
-                : 'ARK uses one shared PartsTech shop login — only one repair order should be in PartsTech at a time.');
+                : 'ARK uses one shared PartsTech shop login - only one repair order should be in PartsTech at a time.');
     }
 
     public function activateCart(string $cartId): void

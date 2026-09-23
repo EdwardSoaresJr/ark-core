@@ -2,7 +2,7 @@
 
 **Goal:** [Complete First Contact Certification](../goals/first-contact-certification.md)  
 **Worker:** human  
-**Status:** In progress — G4 production URL returns 200; G5–G7 not bench-certified yet
+**Status:** In progress - G4 production URL returns 200; G5–G7 not bench-certified yet
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### goal.referenced
 
-2026-06-26 — Opened against First Contact Certification. Bench session targeting G3 (unknown MAC) and G4 (known MAC provision URL).
+2026-06-26 - Opened against First Contact Certification. Bench session targeting G3 (unknown MAC) and G4 (known MAC provision URL).
 
 ---
 
@@ -35,7 +35,7 @@
 
 ### planner.hypothesis.proposed
 
-**Hypothesis:** Production failure is misconfiguration (migrations, `ASTERISK_PROVISIONING_HOST`, SIP credentials) — not bad MAC or phone.  
+**Hypothesis:** Production failure is misconfiguration (migrations, `ASTERISK_PROVISIONING_HOST`, SIP credentials) - not bad MAC or phone.  
 **Falsifiable by:** Plain-text 503 with specific reason after preflight deploy; env vars present in running container.
 
 ---
@@ -44,12 +44,12 @@
 
 **Proposed artifacts (commits on `main` / `production`):**
 
-- `47dbc087` — 503 plain-text preflight instead of opaque 500
-- `2310c6e8` — lock `ASTERISK_PROVISIONING_HOST` from `VOICE_SIP_REGISTRAR` in env sync
-- `749a3c8f` — resolve voice SIP registrar from env, shared secrets, Asterisk transport env
+- `47dbc087` - 503 plain-text preflight instead of opaque 500
+- `2310c6e8` - lock `ASTERISK_PROVISIONING_HOST` from `VOICE_SIP_REGISTRAR` in env sync
+- `749a3c8f` - resolve voice SIP registrar from env, shared secrets, Asterisk transport env
 - SSH: `sync-arksms-voice-transport.sh` on control plane; backfill `ark-production.env`
 
-**Declaration only** — observer events below.
+**Declaration only** - observer events below.
 
 ---
 
@@ -60,7 +60,7 @@
 
 - `48256730757F.cfg` → **503** plain text: `ASTERISK_PROVISIONING_HOST is not configured` (preflight working; env still missing)
 - After Coolify env sync + redeploy: container `printenv VOICE_SIP_REGISTRAR` = `voice.demo-auto.test`
-- `48256730757F.cfg` → **200** — Poly body with `voice.demo-auto.test`, extension 101, microbrowser URL
+- `48256730757F.cfg` → **200** - Poly body with `voice.demo-auto.test`, extension 101, microbrowser URL
 
 **What changed my mind:** Observer layer (HTTP status + body) separated config gap from code gap. 503 text pointed at env; 200 confirmed G4 URL path without trusting worker summary alone.
 
@@ -75,10 +75,10 @@
 
 ### observer.evidence.captured
 
-**Source:** Doctrine commit (meta — engineering process)  
-**Measured:** `f6578c05` — ARK Engineering Doctrine v1 frozen on `main` only (not production). Separates shop runtime from how platform is built.
+**Source:** Doctrine commit (meta - engineering process)  
+**Measured:** `f6578c05` - ARK Engineering Doctrine v1 frozen on `main` only (not production). Separates shop runtime from how platform is built.
 
-**What changed my mind:** N/A for Voice gate — recorded because this task surfaced the engineering-loop pattern worth dogfooding.
+**What changed my mind:** N/A for Voice gate - recorded because this task surfaced the engineering-loop pattern worth dogfooding.
 
 ---
 

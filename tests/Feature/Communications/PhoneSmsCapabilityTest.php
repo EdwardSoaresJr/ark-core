@@ -90,7 +90,7 @@ test('eligibility blocks send when stored capability is not sms capable', functi
         'line_type' => 'landline',
         'carrier_name' => 'CenturyLink',
         'sms_capable' => false,
-        'reason' => 'Landline (CenturyLink) — cannot receive SMS.',
+        'reason' => 'Landline (CenturyLink) - cannot receive SMS.',
         'checked_at' => now(),
     ]);
 
@@ -117,7 +117,7 @@ test('outbound send refuses landline when capability is stored', function () {
         'line_type' => 'landline',
         'carrier_name' => 'CenturyLink',
         'sms_capable' => false,
-        'reason' => 'Landline (CenturyLink) — cannot receive SMS.',
+        'reason' => 'Landline (CenturyLink) - cannot receive SMS.',
         'checked_at' => now(),
     ]);
 

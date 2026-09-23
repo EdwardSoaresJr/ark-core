@@ -12,7 +12,7 @@ use RuntimeException;
 
 /**
  * Catalog open stamps R{RO} on the PartsTech cart (and any supplier orders) before the browser loads.
- * A leftover cart from another RO is retagged to this RO — punchout keeps one live cart.
+ * A leftover cart from another RO is retagged to this RO - punchout keeps one live cart.
  * Pull-quote (syncOnly) still finds and stamps an existing quote.
  */
 final class PartsTechCartPreparer
@@ -507,7 +507,7 @@ final class PartsTechCartPreparer
 
     private function syncPurchaseOrderNumbers(string $purchaseOrderNumber): void
     {
-        // Set without clearing first — clearing an empty cart hides the PO field in PartsTech until lines exist.
+        // Set without clearing first - clearing an empty cart hides the PO field in PartsTech until lines exist.
         $this->syncActiveCartPurchaseOrderNumber($purchaseOrderNumber);
         $this->syncActiveCartOrderPurchaseOrderNumbers($purchaseOrderNumber);
     }
@@ -612,7 +612,7 @@ final class PartsTechCartPreparer
     private function linkVehicleBestEffort(string $cartId, RepairOrder $repairOrder): void
     {
         if (! $this->launcher->hasVehicleIdentity($repairOrder)) {
-            $this->lastWarnings[] = 'No VIN or year/make/model on this RO — pick the vehicle manually in PartsTech.';
+            $this->lastWarnings[] = 'No VIN or year/make/model on this RO - pick the vehicle manually in PartsTech.';
 
             return;
         }
@@ -623,14 +623,14 @@ final class PartsTechCartPreparer
 
             if ($resolved['approximate']) {
                 $label = $this->launcher->ymmSearchPhrase($repairOrder) ?? 'YMM';
-                $this->lastWarnings[] = 'PartsTech linked '.$label.' — confirm trim/engine in PartsTech if fitment looks off.';
+                $this->lastWarnings[] = 'PartsTech linked '.$label.' - confirm trim/engine in PartsTech if fitment looks off.';
             }
         } catch (RuntimeException $exception) {
             $identity = $this->launcher->vinForRepairOrder($repairOrder)
                 ?? $this->launcher->ymmSearchPhrase($repairOrder)
                 ?? 'vehicle';
 
-            $this->lastWarnings[] = 'PartsTech did not link '.$identity.' — select the vehicle manually in PartsTech.';
+            $this->lastWarnings[] = 'PartsTech did not link '.$identity.' - select the vehicle manually in PartsTech.';
 
             Log::warning('parts-tech.cart-vehicle-link-failed', [
                 'repair_order_id' => $repairOrder->repair_order_id,

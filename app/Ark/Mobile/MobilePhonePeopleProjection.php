@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Shop people ARK Phone may blind-transfer to — SIP REFER uses refer_uri.
+ * Shop people ARK Phone may blind-transfer to - SIP REFER uses refer_uri.
  */
 final class MobilePhonePeopleProjection
 {

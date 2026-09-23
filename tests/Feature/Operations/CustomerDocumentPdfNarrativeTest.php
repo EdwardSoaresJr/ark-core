@@ -126,7 +126,7 @@ test('customer pdf closing block is compact and does not trap the whole footer o
             'repair_portal' => [
                 'headline' => 'Vehicle Portal',
                 'cta' => 'View your vehicle online',
-                'callout' => 'Vehicle Portal — Track this repair, Approve work & View invoices.',
+                'callout' => 'Vehicle Portal - Track this repair, Approve work & View invoices.',
                 'qr_data_uri' => 'data:image/svg+xml;base64,Zg==',
                 'bullets' => ['Track this repair', 'Approve work', 'View invoices'],
             ],
@@ -147,7 +147,7 @@ test('customer pdf closing block is compact and does not trap the whole footer o
         ->toContain('Vehicle Portal')
         ->toContain('Track this repair')
         ->toContain('width="64"')
-        ->not->toContain('Vehicle Portal — Track this repair')
+        ->not->toContain('Vehicle Portal - Track this repair')
         ->not->toContain('Approval Status')
         ->not->toContain('Important Information')
         ->not->toContain('Scan to view')

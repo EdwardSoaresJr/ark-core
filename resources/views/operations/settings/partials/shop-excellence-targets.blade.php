@@ -11,7 +11,7 @@
             <strong class="font-semibold text-slate-800">Posted invoice sales</strong> uses the frozen invoice on repair orders posted in the range, before tax.
             <strong class="font-semibold text-slate-800">Cash Collected</strong> uses ledger payment/deposit dates (Payment Details / Total Cashiered).
             Deposits and partial payments never inflate posted sales until the RO is posted.
-            Close — Paid posts automatically; paid ROs can also be posted from the repair order when ready.
+            Close - Paid posts automatically; paid ROs can also be posted from the repair order when ready.
         </p>
     </div>
 

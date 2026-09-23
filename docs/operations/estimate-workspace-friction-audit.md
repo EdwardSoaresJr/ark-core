@@ -1,4 +1,4 @@
-# Estimate Workspace — Advisor Friction Audit
+# Estimate Workspace - Advisor Friction Audit
 
 **Milestone:** Estimate Workspace: Friction Discovery  
 **Status:** Observation · **zero implementation**  
@@ -18,11 +18,11 @@ Every hesitation is one of: missing information · unnecessary navigation · unc
 2. Speak pauses out loud; write **one sentence** per pause.
 3. Prefer **clusters** over one-offs before naming any capability.
 4. Do **not** solve during the audit. Capture only.
-5. After one focused walk (or a short floor week), stop — then name the next capability from dominant categories only.
+5. After one focused walk (or a short floor week), stop - then name the next capability from dominant categories only.
 
 ---
 
-## Categories (prediction — revise from evidence only)
+## Categories (prediction - revise from evidence only)
 
 | Category | Meaning |
 | --- | --- |
@@ -85,20 +85,20 @@ Every hesitation is one of: missing information · unnecessary navigation · unc
 | | | | | | |
 | | | | | | |
 
-### Emerging clusters (observation only — no fix)
+### Emerging clusters (observation only - no fix)
 
 | Cluster | Category | Occurrences | Pattern | Outcome |
 | --- | --- | --- | --- | --- |
-| Intake Truth → Operational Truth transition | Choice | #1, #2 | Advisor decides when customer language stops being intake and becomes estimate authority | **Handoff-localized** — Check In → Estimate entry only; does **not** continue into Add Concern |
+| Intake Truth → Operational Truth transition | Choice | #1, #2 | Advisor decides when customer language stops being intake and becomes estimate authority | **Handoff-localized** - Check In → Estimate entry only; does **not** continue into Add Concern |
 | Approval Forecast missing | Information | #3 | While building recommendations after approved work, advisor cannot answer “if I approve all of this today, what’s my total?” without mental math or leaving the workspace | **Earned → shipped** · `ApprovalForecastProjection` on Edit/Review rails + customer PDF/portal (invoice story vs advisor compact) |
-| Priority as container | Context | #4 | Intent/priority wrappers create empty headers across page breaks; concerns already carry priority identity | **Earned → shipping** · flatten PDF + advisor surfaces — concern is the visual unit; priority is metadata + sort order |
+| Priority as container | Context | #4 | Intent/priority wrappers create empty headers across page breaks; concerns already carry priority identity | **Earned → shipping** · flatten PDF + advisor surfaces - concern is the visual unit; priority is metadata + sort order |
 
 ### Cleared steps (no pause)
 
 | Step | Surface | Note | Who | Date |
 | --- | --- | --- | --- | --- |
-| 1 | Check In queue | No hesitation — queue answers “which customer next?”; select and enter without thinking or switching context | Edward | 2026-07-23 |
-| 4 | Add Concern (popup) | No pause — mental model already operational; compose is clear authorship boundary; Intake→Operational cluster does not persist here | Edward | 2026-07-23 |
+| 1 | Check In queue | No hesitation - queue answers “which customer next?”; select and enter without thinking or switching context | Edward | 2026-07-23 |
+| 4 | Add Concern (popup) | No pause - mental model already operational; compose is clear authorship boundary; Intake→Operational cluster does not persist here | Edward | 2026-07-23 |
 
 ---
 
@@ -112,17 +112,17 @@ Never propose a fix in the same breath as the pause.
 
 ### Steps (ask in order)
 
-1. **Check In queue** (`/app/intake`) — Did momentum stop? → **No** (cleared)
-2. **Check In form** (`/app/intake/new`) — Did momentum stop? → **Yes** · Choice (#1)
-3. **Edit · visit reason** — Did momentum stop? → **Yes** · Choice (#2) · same cluster as #1
-4. **Add Concern (popup)** — Did momentum stop? → **No** (cleared) · cluster handoff-localized
-5. **Repair actions / work groups** — Did momentum stop? → **Yes** · Information (#3) · Approval Forecast earned/shipped
-6. **Labor / parts lines** — Did momentum stop? ← **current**
-7. **Intent + disposition** — Did momentum stop?
-8. **Estimate Review** — Did momentum stop?
-9. **Send estimate** — Did momentum stop?
-10. **Authorization** — Did momentum stop?
-11. **Deposit / payment** (if on path) — Did momentum stop?
+1. **Check In queue** (`/app/intake`) - Did momentum stop? → **No** (cleared)
+2. **Check In form** (`/app/intake/new`) - Did momentum stop? → **Yes** · Choice (#1)
+3. **Edit · visit reason** - Did momentum stop? → **Yes** · Choice (#2) · same cluster as #1
+4. **Add Concern (popup)** - Did momentum stop? → **No** (cleared) · cluster handoff-localized
+5. **Repair actions / work groups** - Did momentum stop? → **Yes** · Information (#3) · Approval Forecast earned/shipped
+6. **Labor / parts lines** - Did momentum stop? ← **current**
+7. **Intent + disposition** - Did momentum stop?
+8. **Estimate Review** - Did momentum stop?
+9. **Send estimate** - Did momentum stop?
+10. **Authorization** - Did momentum stop?
+11. **Deposit / payment** (if on path) - Did momentum stop?
 
 ### Session log
 

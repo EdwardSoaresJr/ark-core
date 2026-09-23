@@ -1,5 +1,5 @@
 /**
- * ARK-SMS — Brother QL key-tag helpers for QZ Tray.
+ * ARK-SMS - Brother QL key-tag helpers for QZ Tray.
  *
  * Loaded before print-helpers inline script. Core print flow stays in
  * resources/views/components/print-helpers.blade.php; this file owns detection

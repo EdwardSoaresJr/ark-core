@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Read-only Communications workspace shell — lists, thread preview, context panel.
+ * Read-only Communications workspace shell - lists, thread preview, context panel.
  *
  * Not message authority. Composes Conversation, Lead, CallSession, InternalChannel.
  */
@@ -79,7 +79,7 @@ final class CommunicationsWorkspaceProjection
         $listItems = [];
 
         foreach (array_values($rows) as $index => $row) {
-            // List pressure uses placeholder scores — full AttentionCandidate builds
+            // List pressure uses placeholder scores - full AttentionCandidate builds
             // timeline + observations (N+1). Enrich only the selected conversation.
             $listItems[] = $this->attentionListItem($row, $index);
         }
@@ -226,7 +226,7 @@ final class CommunicationsWorkspaceProjection
 
     /**
      * The left list holds relationships, not per-event rows. A call from a
-     * phone with an open conversation is that conversation's pressure — the
+     * phone with an open conversation is that conversation's pressure - the
      * row keeps the call's reason but selects the conversation.
      *
      * @param  list<array<string, mixed>>  $listItems
@@ -257,7 +257,7 @@ final class CommunicationsWorkspaceProjection
                 return $item;
             }
 
-            // Live calls stay call rows — the interrupt state is the point.
+            // Live calls stay call rows - the interrupt state is the point.
             if (in_array($item['call_status'] ?? '', [CallSessionStatus::Ringing->value, CallSessionStatus::Answered->value], true)) {
                 return $item;
             }
@@ -1012,7 +1012,7 @@ final class CommunicationsWorkspaceProjection
             'status_label' => 'Internal',
             'assignment_label' => count($events).' messages',
             'events' => $events,
-            'empty_label' => 'No internal messages yet — messaging arrives in a later phase.',
+            'empty_label' => 'No internal messages yet - messaging arrives in a later phase.',
         ];
     }
 
@@ -1374,7 +1374,7 @@ final class CommunicationsWorkspaceProjection
             return null;
         }
 
-        // A live call is an interrupt, not history — keep the call selection
+        // A live call is an interrupt, not history - keep the call selection
         // so the advisor sees ringing/active state instead of the quiet
         // conversation shell.
         if (in_array($session->status, [CallSessionStatus::Ringing, CallSessionStatus::Answered], true)) {
@@ -1455,7 +1455,7 @@ final class CommunicationsWorkspaceProjection
     }
 
     /**
-     * Lightweight nav badges — COUNT only, never full list presenters.
+     * Lightweight nav badges - COUNT only, never full list presenters.
      *
      * @return array{shop: int, customer: int, all: int}
      */
@@ -1482,7 +1482,7 @@ final class CommunicationsWorkspaceProjection
     }
 
     /**
-     * Cheap queue row — conversation + latest message + batched identity later.
+     * Cheap queue row - conversation + latest message + batched identity later.
      * Does not call WorkboardPresenter / CustomerCallContextResolver::resolve().
      *
      * @return array<string, mixed>
@@ -1569,7 +1569,7 @@ final class CommunicationsWorkspaceProjection
     }
 
     /**
-     * Lightweight poll stamp — aggregates only, never list presenters or timelines.
+     * Lightweight poll stamp - aggregates only, never list presenters or timelines.
      */
     public function pollSignature(
         string $filter,

@@ -70,7 +70,7 @@ final class LearnArkCatalog
     /**
      * @return list<ArkRole>
      *
-     * @deprecated Use visibleSectionsFor() — retained for backward compatibility in views during transition
+     * @deprecated Use visibleSectionsFor() - retained for backward compatibility in views during transition
      */
     public static function visibleRolesFor(User $user): array
     {

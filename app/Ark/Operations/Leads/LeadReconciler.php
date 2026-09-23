@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 /**
  * Reconcile unknown inbound contact into Lead Truth.
  *
- * Known customers already have relationship context — no Lead required.
+ * Known customers already have relationship context - no Lead required.
  * Unknown contacts are Lead candidates regardless of channel.
  */
 class LeadReconciler

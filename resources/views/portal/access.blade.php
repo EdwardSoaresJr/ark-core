@@ -51,7 +51,7 @@
                 @if ($bookContinuation)
                     <p class="text-sm font-semibold text-slate-900">Prefer text?</p>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                        Enter the mobile number {{ $shopName }} has for you above — we’ll text a 6-digit code.
+                        Enter the mobile number {{ $shopName }} has for you above - we’ll text a 6-digit code.
                     </p>
                 @else
                     <p class="text-sm font-semibold text-slate-900">Don’t have a code yet?</p>

@@ -8,7 +8,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
 /**
- * Manual refund capture on mobile — same ledger path as desktop Record Refund.
+ * Manual refund capture on mobile - same ledger path as desktop Record Refund.
  */
 final class MobileManualRefundProjection
 {

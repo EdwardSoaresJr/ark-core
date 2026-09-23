@@ -86,7 +86,7 @@ final class SurfaceRouting
         return filled($host) ? (string) $host : null;
     }
 
-    /** Company product host — ARK Cloud (marketing + trial + cloud dashboard). */
+    /** Company product host - ARK Cloud (marketing + trial + cloud dashboard). */
     public static function companyHost(): ?string
     {
         $host = config('surfaces.company');
@@ -102,7 +102,7 @@ final class SurfaceRouting
     }
 
     /**
-     * Future: app.autorepairkeeper.com — Auth + Cloud dashboard.
+     * Future: app.autorepairkeeper.com - Auth + Cloud dashboard.
      * Phase 1 may leave this empty (dashboard still on company host).
      */
     public static function cloudAppHost(): ?string

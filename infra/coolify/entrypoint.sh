@@ -99,7 +99,7 @@ fi
 php /app/artisan storage:link --force >/dev/null 2>&1 || true
 
 # Surface domain routing bakes hosts into route/config cache. Clear synchronously
-# before nginx serves traffic — post-deploy runs in the background and is too late.
+# before nginx serves traffic - post-deploy runs in the background and is too late.
 php /app/artisan config:clear --no-interaction >/dev/null 2>&1 || true
 php /app/artisan route:clear --no-interaction >/dev/null 2>&1 || true
 # Shared storage/framework volume keeps compiled Blade across image pulls.
@@ -108,7 +108,7 @@ find /app/storage/framework/views -mindepth 1 -delete 2>/dev/null || true
 php /app/artisan view:clear --no-interaction >/dev/null 2>&1 || true
 
 # Lifecycle boundary: installer owns birth; post-deploy owns upgrades.
-# InstallationState is file-backed under storage/app/install — no DB required.
+# InstallationState is file-backed under storage/app/install - no DB required.
 # Exit 0 = installed, 1 = not installed, other = check failed (skip mutations).
 # Presence of APP_KEY does NOT mean ARK is installed.
 set +e

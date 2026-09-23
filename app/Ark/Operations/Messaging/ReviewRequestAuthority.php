@@ -19,7 +19,7 @@ final class ReviewRequestAuthority
      * v1 idempotency is RO-scoped (ConversationMessage kind + legacy RO columns).
      *
      * Future production hardening (not this slice): prefer customer + recent window
-     * (e.g. one request per ~30 days) with an explicit advisor override — so closing
+     * (e.g. one request per ~30 days) with an explicit advisor override - so closing
      * several ROs the same day does not spam Google review requests.
      */
 

@@ -1,9 +1,9 @@
-# The Companion — Authority Model v1
+# The Companion - Authority Model v1
 
-**Status:** **Approved** (Edward, 2026-07-04) — frozen. Next: [Event Architecture Sprint](companion-event-architecture-sprint-v1.md). **No `companion-shell-v1.md` or Flutter until feed/scoping contract ships.**  
+**Status:** **Approved** (Edward, 2026-07-04) - frozen. Next: [Event Architecture Sprint](companion-event-architecture-sprint-v1.md). **No `companion-shell-v1.md` or Flutter until feed/scoping contract ships.**  
 **Product:** The Companion (phone runs the business; desktop organizes information).  
-**Precedent:** [voice-runtime-authority.md](../runtime/voice-runtime-authority.md) — identity before implementation.  
-**Companion:** [`ark-companion-product-convergence-v1.md`](ark-companion-product-convergence-v1.md) (operating model — subordinate to this doc).
+**Precedent:** [voice-runtime-authority.md](../runtime/voice-runtime-authority.md) - identity before implementation.  
+**Companion:** [`ark-companion-product-convergence-v1.md`](ark-companion-product-convergence-v1.md) (operating model - subordinate to this doc).
 
 ---
 
@@ -22,9 +22,9 @@ Truth                ← what exists and what happened (authorities + append-onl
     ↓
 Authority            ← who owns entity state and event vocabulary (this document)
     ↓
-Event                ← business facts — see event-contracts-v1.md
+Event                ← business facts - see event-contracts-v1.md
     ↓
-Event Stream Engine  ← infrastructure — scope membership; NOT an authority
+Event Stream Engine  ← infrastructure - scope membership; NOT an authority
     ↓
 Observation          ← what it means
     ↓
@@ -53,7 +53,7 @@ For each domain we answer:
 | **Event consumers** | What reads those facts (including other authorities) |
 | **Timeline relationship** | Which timeline scope(s) include this domain's events |
 | **Workspace relationship** | How mobile/desktop workspaces compose this authority |
-| **Projections** | Disposable surfaces — never become truth |
+| **Projections** | Disposable surfaces - never become truth |
 
 **Verdict key:**
 
@@ -61,11 +61,11 @@ For each domain we answer:
 |---------|---------|
 | **Entity authority** | Owns durable entity state (`Customer`, `Vehicle`, `RepairOrder`) |
 | **Event authority** | Owns append-only facts (`CallSession`, `OperationalEvent`) |
-| **Organizing authority** | Owns **relationship scope rules** (e.g. Operator Identity line) — not event streams |
-| **Infrastructure** | Organizes without originating truth — Event Stream Engine, workspace layout |
+| **Organizing authority** | Owns **relationship scope rules** (e.g. Operator Identity line) - not event streams |
+| **Infrastructure** | Organizes without originating truth - Event Stream Engine, workspace layout |
 | **Projection** | Rebuildable read model for a surface |
-| **Configuration** | Shop behavior — points at authority, must not become truth |
-| **Consumed capability** | External product (ARKademy) — link, not rebuild |
+| **Configuration** | Shop behavior - points at authority, must not become truth |
+| **Consumed capability** | External product (ARKademy) - link, not rebuild |
 
 ---
 
@@ -79,12 +79,12 @@ It does **not** mean one monolithic `Events` table owns everything.
 
 | Layer | Owns | Role |
 |-------|------|------|
-| **Event authorities** (many) | Append-only records | **Truth** — what happened |
-| **Event Stream Engine** | Infrastructure | Filters events into scoped views — **cannot originate truth** |
-| **Observations** (interpretive) | Derived meaning | *Why it matters* — not raw events |
+| **Event authorities** (many) | Append-only records | **Truth** - what happened |
+| **Event Stream Engine** | Infrastructure | Filters events into scoped views - **cannot originate truth** |
+| **Observations** (interpretive) | Derived meaning | *Why it matters* - not raw events |
 | **Projections** | Feed rows, workspace blocks | **Present** scoped events to an operator |
 
-**Answer:** Events are owned by **their source authorities**. The **Event Stream Engine** organizes them — it does not own them. **Home** is a **Shop Feed projection** — not an authority.
+**Answer:** Events are owned by **their source authorities**. The **Event Stream Engine** organizes them - it does not own them. **Home** is a **Shop Feed projection** - not an authority.
 
 ```text
 CallSession (truth)  ──produces──►  call event entry
@@ -100,23 +100,23 @@ MobileChangeFeedProjection (consume)  ◄─┘  "Josh transferred a call"
 
 | Domain | Verdict | One-line role |
 |--------|---------|---------------|
-| **Shop** | Entity + configuration boundary | Tenant — settings, hours, capabilities |
-| **Operator** | Entity authority | Staff person (`User`) — roles, permissions |
+| **Shop** | Entity + configuration boundary | Tenant - settings, hours, capabilities |
+| **Operator** | Entity authority | Staff person (`User`) - roles, permissions |
 | **Operator Identity** | Organizing authority | Extension, station, device, current work |
-| **Presence** | Entity authority | Availability — Available, Busy, On call, Driving, Lunch (separate from Identity) |
+| **Presence** | Entity authority | Availability - Available, Busy, On call, Driving, Lunch (separate from Identity) |
 | **Customer** | Entity authority | Person / relationship identity |
-| **Vehicle** | Entity authority | **Owns itself** — YMM, VIN, plate; links to customer |
+| **Vehicle** | Entity authority | **Owns itself** - YMM, VIN, plate; links to customer |
 | **Repair Order** | Entity authority | Workflow execution unit on a vehicle |
-| **Inspection** | Entity authority | **Owns itself** — findings, measurements, photos on an RO |
-| **Financial** | Entity authority | Invoice, ledger, balance, payments — **not owned by Customer** |
+| **Inspection** | Entity authority | **Owns itself** - findings, measurements, photos on an RO |
+| **Financial** | Entity authority | Invoice, ledger, balance, payments - **not owned by Customer** |
 | **Estimate** | Entity authority (document) | Versioned estimate lines + approvals context on RO |
-| **Communication (relationship)** | Entity authority | `Conversation` — relationship thread identity |
-| **Telephony (call)** | Event + entity authority | `CallSession` — call lifecycle truth |
-| **Message** | Event authority | `ConversationMessage` — what was said |
-| **Communication fact** | Event authority | `CommunicationEvent` — portal viewed, delivery failed, … |
-| **Operational fact** | Event authority | `OperationalEvent` — RO lifecycle, production, intake |
-| **Appointment** | Entity authority | Scheduled arrival — links customer + vehicle |
-| **Timeline / Event Stream Engine** | **Infrastructure** — organizes authority-emitted events; cannot originate truth |
+| **Communication (relationship)** | Entity authority | `Conversation` - relationship thread identity |
+| **Telephony (call)** | Event + entity authority | `CallSession` - call lifecycle truth |
+| **Message** | Event authority | `ConversationMessage` - what was said |
+| **Communication fact** | Event authority | `CommunicationEvent` - portal viewed, delivery failed, … |
+| **Operational fact** | Event authority | `OperationalEvent` - RO lifecycle, production, intake |
+| **Appointment** | Entity authority | Scheduled arrival - links customer + vehicle |
+| **Timeline / Event Stream Engine** | **Infrastructure** - organizes authority-emitted events; cannot originate truth |
 | **Observation** | Interpretive projection | Surprise / placement vocabulary |
 | **Customer Timeline** | Projection | Customer-scoped event stream |
 | **RO Timeline** | Projection | Production-scoped event stream |
@@ -124,10 +124,10 @@ MobileChangeFeedProjection (consume)  ◄─┘  "Josh transferred a call"
 | **Workspace** | Projection | Layout engine composing blocks for an anchor |
 | **Recovery Queue** | Projection | Unhandled transport events (Comms tab) |
 | **Customers Browse** | Projection | Identity index → opens Customer Timeline |
-| **Command Palette** | Projection | Intent resolver — actions before objects |
-| **Knowledge** | Consumed capability | ARKademy — external BookStack |
+| **Command Palette** | Projection | Intent resolver - actions before objects |
+| **Knowledge** | Consumed capability | ARKademy - external BookStack |
 | **Configuration** | Configuration | Shop settings, telephony prefs, theme |
-| **Shell** | Implementation | Tab sets, chrome — **never authoritative** |
+| **Shell** | Implementation | Tab sets, chrome - **never authoritative** |
 
 ---
 
@@ -139,27 +139,27 @@ These were open in discovery. Answers are **product architecture**, not UI.
 
 **No.** **Vehicle is its own entity authority.**
 
-- **Truth:** `vehicles` — VIN, plate, YMM, identity pressure, notes.
-- **Relationship:** `customer_id` links default owner — a vehicle can be reassigned; vehicle identity persists across ROs.
-- **Companion implication:** Technician orients on **vehicle**; advisor orients on **customer** — same timeline scopes may differ.
+- **Truth:** `vehicles` - VIN, plate, YMM, identity pressure, notes.
+- **Relationship:** `customer_id` links default owner - a vehicle can be reassigned; vehicle identity persists across ROs.
+- **Companion implication:** Technician orients on **vehicle**; advisor orients on **customer** - same timeline scopes may differ.
 
 ### Does Repair Order own Inspection?
 
 **No.** **Inspection is its own entity authority**, scoped to an RO.
 
 - **Truth:** `inspections`, `inspection_items`, findings, measurements, photos.
-- **Relationship:** `repair_order_id` — inspection **belongs to** RO execution without being a sub-document of RO status.
+- **Relationship:** `repair_order_id` - inspection **belongs to** RO execution without being a sub-document of RO status.
 - **Events:** Finding recorded, measurement verified → `OperationalEvent` + timeline entries.
 - **Companion implication:** Technician product centers Inspection authority; RO workspace **projects** inspection state.
 
 ### Does Payment belong to Customer, RO, or Financial?
 
-**Financial authority** — anchored on **Repair Order**, attributed to **Customer** for relationship context.
+**Financial authority** - anchored on **Repair Order**, attributed to **Customer** for relationship context.
 
 - **Truth:** `repair_order_ledger_entries`, `payment_gateway_attempts`, invoice snapshots, `BalanceDueCalculator`.
-- **Not** a Customer balance authority — customer may have multiple open ROs.
+- **Not** a Customer balance authority - customer may have multiple open ROs.
 - **Timeline:** Payment events appear on **Customer Timeline** (relationship) and **RO Timeline** (execution).
-- **Companion implication:** "Take payment" is a **command** on an RO / customer workspace — not a Payments app.
+- **Companion implication:** "Take payment" is a **command** on an RO / customer workspace - not a Payments app.
 
 ### Does Communication own the OS?
 
@@ -169,7 +169,7 @@ These were open in discovery. Answers are **product architecture**, not UI.
 - **Call authority:** `CallSession`
 - **Message authority:** `ConversationMessage`
 - **Fact authority:** `CommunicationEvent`
-- **Recovery projection:** Comms tab — unhandled transport events awaiting operator
+- **Recovery projection:** Comms tab - unhandled transport events awaiting operator
 
 ### Does Home exist?
 
@@ -181,7 +181,7 @@ These were open in discovery. Answers are **product architecture**, not UI.
 | Home screen | Flutter presents the feed |
 | "Pressure dashboard" | Chronological events since `last_seen_at` |
 
-Same class as Needs Attention, Today, Recent, Unread — **projections**, not authorities.
+Same class as Needs Attention, Today, Recent, Unread - **projections**, not authorities.
 
 ---
 
@@ -194,8 +194,8 @@ Same class as Needs Attention, Today, Recent, Unread — **projections**, not au
 | **Verdict** | Entity boundary + configuration host |
 | **Source of truth** | Shop tenant, `shop_settings`, capabilities |
 | **Event producers** | Shop-level config changes (rare); not operational event hub |
-| **Event consumers** | All domains — read settings, never write truth on GET |
-| **Timeline** | None — shop is container |
+| **Event consumers** | All domains - read settings, never write truth on GET |
+| **Timeline** | None - shop is container |
 | **Workspace** | None directly |
 | **Projections** | Capabilities shell, shop pulse counts, owner reports |
 
@@ -206,14 +206,14 @@ Same class as Needs Attention, Today, Recent, Unread — **projections**, not au
 | | |
 |--|--|
 | **Verdict** | Entity authority |
-| **Source of truth** | `users` — name, email, roles, permissions, accent |
+| **Source of truth** | `users` - name, email, roles, permissions, accent |
 | **Event producers** | Auth session, assignment changes, actor attribution on events |
 | **Event consumers** | Every projection needing "who acted" |
 | **Timeline** | Actor field on all event entries |
-| **Workspace** | Profile fragment — not a destination |
+| **Workspace** | Profile fragment - not a destination |
 | **Projections** | `MobileUserPresenter`, role labels, staff access gates |
 
-**Distinct from Operator Identity** — same split as Voice doc (person vs extension line).
+**Distinct from Operator Identity** - same split as Voice doc (person vs extension line).
 
 ---
 
@@ -225,8 +225,8 @@ Same class as Needs Attention, Today, Recent, Unread — **projections**, not au
 | **Source of truth** | Extensions, endpoints, devices, workstations, voice session |
 | **Event producers** | Registration, device attach, call ownership, transfer (future) |
 | **Event consumers** | Provisioning, move call, multi-device |
-| **Timeline** | Operator Feed — identity events |
-| **Does not own** | Availability / routing posture — see **Presence** |
+| **Timeline** | Operator Feed - identity events |
+| **Does not own** | Availability / routing posture - see **Presence** |
 
 ```text
 Operator (User)
@@ -237,10 +237,10 @@ Presence (available · busy · on call · driving · lunch)   ← separate autho
     ↓
 Endpoints (VVX · Companion phone · future desktop)
     ↓
-PBX / Carrier (transport — see voice-runtime-authority.md)
+PBX / Carrier (transport - see voice-runtime-authority.md)
 ```
 
-**Companion rule:** Healthy identity infrastructure **does not occupy UI**. Status-bar dot only. Identity sheet on tap. **Presence** is toggled separately — it affects routing, not provisioning.
+**Companion rule:** Healthy identity infrastructure **does not occupy UI**. Status-bar dot only. Identity sheet on tap. **Presence** is toggled separately - it affects routing, not provisioning.
 
 ---
 
@@ -248,13 +248,13 @@ PBX / Carrier (transport — see voice-runtime-authority.md)
 
 | | |
 |--|--|
-| **Verdict** | **Entity authority** — separate from Operator Identity |
+| **Verdict** | **Entity authority** - separate from Operator Identity |
 | **Source of truth** | Operator availability state (Available, Busy, On call, Driving, Lunch, Offline) |
 | **Event producers** | Presence changed, auto-busy from call, manual status |
 | **Event consumers** | Routing, dispatch, PTT, transfers, scheduling (future policy) |
 | **Timeline** | Operator Feed |
 | **Projections** | Quick status toggle, shop-visible availability |
-| **Not** | Extension number, device MAC, SIP — those are Identity |
+| **Not** | Extension number, device MAC, SIP - those are Identity |
 
 Edward · extension 105 · mobile device = **Identity**. Driving = **Presence**.
 
@@ -265,10 +265,10 @@ Edward · extension 105 · mobile device = **Identity**. Driving = **Presence**.
 | | |
 |--|--|
 | **Verdict** | Entity authority |
-| **Source of truth** | `customers` — identity, phones, email, consent, address, classification |
+| **Source of truth** | `customers` - identity, phones, email, consent, address, classification |
 | **Event producers** | Customer created/updated; consent changes; portal auth |
 | **Event consumers** | Phone, portal, payments, inspections, appointments, RO, search, command palette |
-| **Timeline** | **Customer Relationship Timeline** scope — primary Companion anchor for advisors |
+| **Timeline** | **Customer Relationship Timeline** scope - primary Companion anchor for advisors |
 | **Workspace** | Customer Workspace **projects** timeline + actions |
 | **Projections** | Customers browse index, Customer Hub, workspace layout engine, command palette matches |
 
@@ -278,7 +278,7 @@ Projects: Customer Timeline · Customer Workspace · Customers browse · Search/
 Consumes: Phone · Portal · Payments · Inspections · Appointments · RO events (as timeline entries)
 ```
 
-**Customers tab is a projection** of Customer authority (identity browse) — **not** duplicate of Comms. Comms recovery is a different projection on Communication events.
+**Customers tab is a projection** of Customer authority (identity browse) - **not** duplicate of Comms. Comms recovery is a different projection on Communication events.
 
 ---
 
@@ -287,11 +287,11 @@ Consumes: Phone · Portal · Payments · Inspections · Appointments · RO event
 | | |
 |--|--|
 | **Verdict** | Entity authority (**self-owned**) |
-| **Source of truth** | `vehicles` — VIN, plate, YMM, identity pressure, history notes |
+| **Source of truth** | `vehicles` - VIN, plate, YMM, identity pressure, history notes |
 | **Event producers** | Vehicle linked, identity verified, VIN decode |
 | **Event consumers** | RO, inspection, appointments, walk-around, command palette |
-| **Timeline** | Vehicle-scoped timeline (RO history, inspections) — subset of customer relationship timeline |
-| **Workspace** | Vehicle Workspace — technician-primary |
+| **Timeline** | Vehicle-scoped timeline (RO history, inspections) - subset of customer relationship timeline |
+| **Workspace** | Vehicle Workspace - technician-primary |
 | **Projections** | VIN scan → check-in, global search vehicle rows |
 
 ---
@@ -305,7 +305,7 @@ Consumes: Phone · Portal · Payments · Inspections · Appointments · RO event
 | **Event producers** | Status transitions, concern changes, assignment, posted/closed |
 | **Event consumers** | Inspection, financial, communication, workboard, technician My Work |
 | **Timeline** | **RO Production Timeline** scope |
-| **Workspace** | RO Workspace — execution surface |
+| **Workspace** | RO Workspace - execution surface |
 | **Projections** | Workboard cards, lifecycle select, mobile RO workspace |
 
 ---
@@ -319,7 +319,7 @@ Consumes: Phone · Portal · Payments · Inspections · Appointments · RO event
 | **Event producers** | Finding recorded, item verified, inspection completed |
 | **Event consumers** | RO workspace, advisor review, Customer Timeline (summary events only) |
 | **Timeline** | RO timeline + optional customer-facing summary events |
-| **Workspace** | Finding capture/detail — bodies inside RO/Vehicle workspace |
+| **Workspace** | Finding capture/detail - bodies inside RO/Vehicle workspace |
 | **Projections** | Inspection cards, adoption reports, mobile finding queue |
 
 ---
@@ -333,7 +333,7 @@ Consumes: Phone · Portal · Payments · Inspections · Appointments · RO event
 | **Event producers** | Payment captured, invoice issued, balance change |
 | **Event consumers** | RO closeout, portal pay, Customer Timeline, owner reports |
 | **Timeline** | Payment / invoice events on Customer + RO timelines |
-| **Workspace** | Payment actions on RO / Customer workspace — no Payments app |
+| **Workspace** | Payment actions on RO / Customer workspace - no Payments app |
 | **Projections** | Balance due on workboard, send payment link, Square terminal flow |
 
 ---
@@ -347,7 +347,7 @@ Consumes: Phone · Portal · Payments · Inspections · Appointments · RO event
 | **Event producers** | Estimate sent, viewed, approved, deferred |
 | **Event consumers** | Portal, Customer Timeline, decision pressure |
 | **Timeline** | Portal + approval events |
-| **Workspace** | Estimate summary blocks — not standalone nav |
+| **Workspace** | Estimate summary blocks - not standalone nav |
 | **Projections** | Send estimate link, portal token, decision pressure rows |
 
 ---
@@ -358,9 +358,9 @@ Split into **authorities**, not one blob:
 
 | Sub-authority | Verdict | Truth |
 |---------------|---------|-------|
-| **Conversation** | Entity | `conversations` — relationship thread identity |
-| **ConversationMessage** | Event | `conversation_messages` — SMS/MMS/email content |
-| **CallSession** | Entity + event lifecycle | `call_sessions` — telephony truth |
+| **Conversation** | Entity | `conversations` - relationship thread identity |
+| **ConversationMessage** | Event | `conversation_messages` - SMS/MMS/email content |
+| **CallSession** | Entity + event lifecycle | `call_sessions` - telephony truth |
 | **CommunicationEvent** | Event | Portal viewed, delivery failed, estimate viewed, … |
 
 | | |
@@ -368,10 +368,10 @@ Split into **authorities**, not one blob:
 | **Event producers** | Inbound/outbound message, call started/ended/missed, portal activity |
 | **Event consumers** | Customer Timeline, Recovery Queue, Attention candidates, push |
 | **Timeline** | Customer Relationship Timeline (transport entries) |
-| **Workspace** | Thread embed inside Customer Timeline — not standalone route |
+| **Workspace** | Thread embed inside Customer Timeline - not standalone route |
 | **Projections** | Comms hub / recovery tab, Calls Waiting (desktop), inbound overlay |
 
-**Internal comms (future):** separate event stream — couples to **Operator Identity**, never merged into customer `Conversation`.
+**Internal comms (future):** separate event stream - couples to **Operator Identity**, never merged into customer `Conversation`.
 
 ---
 
@@ -380,7 +380,7 @@ Split into **authorities**, not one blob:
 | | |
 |--|--|
 | **Verdict** | Entity authority |
-| **Source of truth** | `appointments` — scheduled time, customer, vehicle, status |
+| **Source of truth** | `appointments` - scheduled time, customer, vehicle, status |
 | **Event producers** | Booked, confirmed, arrived, no-show |
 | **Event consumers** | Calendar projections, Customer Timeline, intake |
 | **Timeline** | Customer + shop day feed |
@@ -389,14 +389,14 @@ Split into **authorities**, not one blob:
 
 ---
 
-### Event Stream Engine (infrastructure — not an authority)
+### Event Stream Engine (infrastructure - not an authority)
 
 | | |
 |--|--|
-| **Verdict** | **Infrastructure** — same class as workspace layout engines |
-| **Source of truth** | **None** — rebuild from authorities + event contracts + scope membership |
+| **Verdict** | **Infrastructure** - same class as workspace layout engines |
+| **Source of truth** | **None** - rebuild from authorities + event contracts + scope membership |
 | **Role** | Filter and order events into Customer · RO · Vehicle · Operator · Shop views |
-| **UI names** | Customer Timeline · Shop Feed · Operator Feed — **projections** of engine output |
+| **UI names** | Customer Timeline · Shop Feed · Operator Feed - **projections** of engine output |
 | **Cannot** | Originate events · invent "Customer Paid" · replace Financial authority |
 
 See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.md) · membership [`companion-timeline-scopes-v1.md`](companion-timeline-scopes-v1.md).
@@ -407,10 +407,10 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 
 | | |
 |--|--|
-| **Verdict** | Interpretive layer — consumes **Event Stream Engine** output |
-| **Source of truth** | Resolver rules over streams + events — not a parallel store |
+| **Verdict** | Interpretive layer - consumes **Event Stream Engine** output |
+| **Source of truth** | Resolver rules over streams + events - not a parallel store |
 | **Engine** | Observation engine reads streams; emits observations |
-| **Event producers** | None — observations interpret |
+| **Event producers** | None - observations interpret |
 | **Projections** | Feed ranking, Finish Work, attention candidates |
 
 ---
@@ -420,11 +420,11 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 | | |
 |--|--|
 | **Verdict** | Projection |
-| **Source of truth** | None — composes authorities |
+| **Source of truth** | None - composes authorities |
 | **Owns** | Layout, block order, command bar, Finish Work presentation |
 | **Types** | Customer Workspace · RO Workspace · Vehicle Workspace |
 | **Implementation** | `MobileCustomerWorkspaceProjection`, layout engine, `ArkObjectScaffold` |
-| **Rule** | Workspace **composes** — never stores operational facts not elsewhere |
+| **Rule** | Workspace **composes** - never stores operational facts not elsewhere |
 
 ---
 
@@ -437,8 +437,8 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 | **Source of truth** | Current: `users.last_seen_at` (or dedicated continuity cursor) + event authorities |
 | **Not** | Module summary, shop pulse dashboard, widget grid |
 | **Examples** | Customer replied · Inspection finished · Josh transferred a call · Estimate approved · Customer arrived · New voicemail · Tech blocked |
-| **Implementation target** | `MobileOrientationProjection` evolution — feed rows, not cards |
-| **Flutter** | `OrientationHomeScreen` presents projection — screen name is not authority |
+| **Implementation target** | `MobileOrientationProjection` evolution - feed rows, not cards |
+| **Flutter** | `OrientationHomeScreen` presents projection - screen name is not authority |
 
 ---
 
@@ -450,7 +450,7 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 | **Question answered** | *Which transport events still need handling?* |
 | **Source of truth** | `CallSession` (unhandled), unread/read state, conversation attention |
 | **Distinct from** | Customers browse, Change Feed |
-| **Implementation** | Comms hub — recovery sort, oldest first |
+| **Implementation** | Comms hub - recovery sort, oldest first |
 
 ---
 
@@ -461,8 +461,8 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 | **Verdict** | Projection |
 | **Question answered** | *Who is this customer?* (identity entry) |
 | **Source of truth** | `Customer` authority |
-| **Distinct from** | Recovery queue — different intent, same Customer Timeline destination |
-| **Keep** | ✅ Approved — entry point, not duplicate authority |
+| **Distinct from** | Recovery queue - different intent, same Customer Timeline destination |
+| **Keep** | ✅ Approved - entry point, not duplicate authority |
 
 ---
 
@@ -472,7 +472,7 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 |--|--|
 | **Verdict** | Projection |
 | **Question answered** | *What work am I starting?* |
-| **Not** | Navigation tab — Spotlight overlay |
+| **Not** | Navigation tab - Spotlight overlay |
 | **Source of truth** | Resolver over Customer, Vehicle, RO, Appointment + intent catalog |
 | **Examples** | Emma → Call · Text · New RO · Take payment · Find vehicle · Schedule |
 
@@ -483,8 +483,8 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 | | |
 |--|--|
 | **Verdict** | Consumed capability |
-| **Source of truth** | ARKademy (BookStack) — external |
-| **Companion** | Link out via ecosystem switcher — not rebuilt |
+| **Source of truth** | ARKademy (BookStack) - external |
+| **Companion** | Link out via ecosystem switcher - not rebuilt |
 | **Projections** | Learning block in shell |
 
 ---
@@ -495,7 +495,7 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 |--|--|
 | **Verdict** | Configuration (see `ark-authority-vs-configuration.mdc`) |
 | **Source of truth** | `shop_settings`, telephony settings, owner targets |
-| **Must not** | Become operational truth — history test fails if settings rewrite past |
+| **Must not** | Become operational truth - history test fails if settings rewrite past |
 | **Projections** | Settings surfaces, theme, business hours |
 
 ---
@@ -504,17 +504,17 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 
 | | |
 |--|--|
-| **Verdict** | Implementation — **last**, not first |
+| **Verdict** | Implementation - **last**, not first |
 | **Source of truth** | None |
 | **Owns** | Tab keys, chrome, role product switch (`advisor` vs `technician`) |
 | **Depends on** | This authority model + projection contracts |
-| **Document** | `companion-shell-v1.md` — written **after** this doc is approved |
+| **Document** | `companion-shell-v1.md` - written **after** this doc is approved |
 
 ---
 
 ## Projection map (same authorities, different lenses)
 
-One event, many projections — **no arguments about which tab "wins"**:
+One event, many projections - **no arguments about which tab "wins"**:
 
 ```text
                     ┌─────────────────────┐
@@ -543,9 +543,9 @@ One event, many projections — **no arguments about which tab "wins"**:
 
 ---
 
-## Advisor vs Technician — authority visibility
+## Advisor vs Technician - authority visibility
 
-Not nav profiles — **different projection sets on different authorities**:
+Not nav profiles - **different projection sets on different authorities**:
 
 | Authority / Projection | Advisor Companion | Technician Companion |
 |------------------------|:-----------------:|:--------------------:|
@@ -582,20 +582,20 @@ Not nav profiles — **different projection sets on different authorities**:
 | Customer timeline projection | `CustomerHubCommsTimeline`, mobile workspace projection |
 | RO timeline projection | `OperationalTimeline` |
 | Workspace projection | `MobileCustomerWorkspaceProjection`, layout engine |
-| Shell (today) | `MobileUserPresenter` — **needs authority-aware redesign** |
+| Shell (today) | `MobileUserPresenter` - **needs authority-aware redesign** |
 | Truth stack doctrine | `docs/ecosystem/ark-truth-stack-v1.md` |
 
 ---
 
 ## Open questions (Event Architecture Sprint)
 
-Defer implementation — record for next convergence:
+Defer implementation - record for next convergence:
 
-1. **Shop Change Feed cursor** — `last_seen_at` vs dedicated `operator_continuity_cursors` table
-2. **Vehicle timeline** — separate scope vs filtered customer timeline for technicians
-3. **Internal event stream** — schema reservation for PTT, transfer, dispatch
-4. **Observation → feed ranking** — which events surface on Change Feed vs timeline only
-5. **Desktop parity** — same scopes, different organization posture (browse vs react)
+1. **Shop Change Feed cursor** - `last_seen_at` vs dedicated `operator_continuity_cursors` table
+2. **Vehicle timeline** - separate scope vs filtered customer timeline for technicians
+3. **Internal event stream** - schema reservation for PTT, transfer, dispatch
+4. **Observation → feed ranking** - which events surface on Change Feed vs timeline only
+5. **Desktop parity** - same scopes, different organization posture (browse vs react)
 
 ---
 
@@ -607,14 +607,14 @@ Defer implementation — record for next convergence:
 | Scopes: Customer · RO · Vehicle · Operator · Shop Change Feed | ✅ |
 | Financial = separate authority; projected onto customer timelines | ✅ |
 | Home = Shop Change Feed projection | ✅ |
-| Customers = browse entry projection — not competing workspace | ✅ |
-| Next sprint = Event Architecture — event contracts first | ✅ Signed — [`event-contracts-v1.md`](event-contracts-v1.md) |
+| Customers = browse entry projection - not competing workspace | ✅ |
+| Next sprint = Event Architecture - event contracts first | ✅ Signed - [`event-contracts-v1.md`](event-contracts-v1.md) |
 
 **Sequence:** Event Architecture → `companion-shell-v1.md` → Flutter.
 
 ---
 
-## Appendix — Doctrine card
+## Appendix - Doctrine card
 
 ```text
 Screens never own truth.

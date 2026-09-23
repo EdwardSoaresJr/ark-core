@@ -27,7 +27,7 @@ final class RepairOrderDefaultDepositCalculator
 
         $repairOrder->loadMissing(['lines.concern']);
 
-        // Deposit is conversation prep across approved + recommended work — not the
+        // Deposit is conversation prep across approved + recommended work - not the
         // Estimate Total billable set (which drops Recommended once anything is Approved).
         $candidateLines = $this->depositCandidateLines($repairOrder->lines);
         $diagnosticKeys = $settings->defaultDepositDiagnosticLaborCategoryKeys();
@@ -117,7 +117,7 @@ final class RepairOrderDefaultDepositCalculator
 
     /**
      * Lines eligible for deposit quoting: Approved + Recommended (open sell path).
-     * Excludes Draft / Deferred / Declined — those are not deposit conversation.
+     * Excludes Draft / Deferred / Declined - those are not deposit conversation.
      *
      * @param  Collection<int, RepairOrderLine>  $lines
      * @return Collection<int, RepairOrderLine>

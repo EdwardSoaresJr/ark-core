@@ -28,7 +28,7 @@ final class RepairOrderLineItemPresentation
     }
 
     /**
-     * Exception-only context for view mode — not already on chips or facts.
+     * Exception-only context for view mode - not already on chips or facts.
      *
      * @return list<string>
      */
@@ -109,7 +109,7 @@ final class RepairOrderLineItemPresentation
     }
 
     /**
-     * Matrix pricing and markup — edit mode facts line.
+     * Matrix pricing and markup - edit mode facts line.
      *
      * @return list<string>
      */

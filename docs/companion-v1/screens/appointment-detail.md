@@ -1,14 +1,14 @@
-# Screen spec — Appointment Detail
+# Screen spec - Appointment Detail
 
 **ID:** `companion.screen.appointment-detail`  
 **Role(s):** Advisor  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-One appointment — customer · vehicle · time · notes · **check in to RO**.
+One appointment - customer · vehicle · time · notes · **check in to RO**.
 
 ---
 

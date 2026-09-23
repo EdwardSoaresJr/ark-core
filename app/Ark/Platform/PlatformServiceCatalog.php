@@ -10,7 +10,7 @@ use App\Ark\Platform\ShopBaseUrl;
  * Settings → ARK Platform service list.
  *
  * Box connection state is local (PlatformConnection). Managed-service rows come
- * from ARK Platform when connected — Core renders; Cloud is authority.
+ * from ARK Platform when connected - Core renders; Cloud is authority.
  */
 final class PlatformServiceCatalog
 {

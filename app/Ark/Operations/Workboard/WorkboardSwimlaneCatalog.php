@@ -10,7 +10,7 @@ final class WorkboardSwimlaneCatalog
 {
     public const VISIBLE_CARD_LIMIT = 3;
 
-    /** Advisor Job Board columns — keep the board scannable; inventory holds the rest. */
+    /** Advisor Job Board columns - keep the board scannable; inventory holds the rest. */
     public const HOME_BOARD_VISIBLE_CARD_LIMIT = 12;
 
     public const PICKUP_RECENT_DAYS = 3;
@@ -262,7 +262,7 @@ final class WorkboardSwimlaneCatalog
     }
 
     /**
-     * Advisor home (/app) — configured Job Board lanes. Defaults are the five shop queues.
+     * Advisor home (/app) - configured Job Board lanes. Defaults are the five shop queues.
      *
      * @return list<array{key: string, label: string, tone: string, color: string}>
      */

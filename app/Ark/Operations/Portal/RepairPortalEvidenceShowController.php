@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Shared evidence stream via durable Repair Portal code.
- * Authorization only — does not record customer viewed.
+ * Authorization only - does not record customer viewed.
  */
 final class RepairPortalEvidenceShowController
 {

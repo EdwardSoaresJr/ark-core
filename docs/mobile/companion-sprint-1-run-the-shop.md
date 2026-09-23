@@ -1,10 +1,10 @@
-# Companion Sprint 1 — Run the Shop
+# Companion Sprint 1 - Run the Shop
 
-**Status:** **Execution milestone** — starts **after** Companion v1 product discovery gate.  
+**Status:** **Execution milestone** - starts **after** Companion v1 product discovery gate.  
 **Discovery (active now):** [`../companion-v1/README.md`](../companion-v1/README.md)
 
 **Owner:** Edward (Demo Auto Repair)  
-**Device:** Razr — primary execution surface for the advisor day
+**Device:** Razr - primary execution surface for the advisor day
 
 ---
 
@@ -34,8 +34,8 @@ Can he comfortably:
 | See what changed while away? | Morning continuity |
 | Find any customer in 5 seconds? | Customer search |
 | See what Ben or Landon needs? | Photo from tech · notifications |
-| Approve work? | *(RO workspace — after notification routing)* |
-| Take payment if needed? | *(search → pay — after customer search)* |
+| Approve work? | *(RO workspace - after notification routing)* |
+| Take payment if needed? | *(search → pay - after customer search)* |
 | Stay in context the entire time? | Ten-hour workday |
 
 If **no** → that's what we build.
@@ -48,27 +48,27 @@ If not → not P0.
 
 ---
 
-## Sprint board (measure here — not documents)
+## Sprint board (measure here - not documents)
 
 | Experience | Status | Notes |
 |------------|--------|-------|
 | **Incoming call** | ❌ | Context before answer · stay on screen after hangup |
-| **Notification → correct screen** | ❌ | Tap lands in workspace — not Home |
+| **Notification → correct screen** | ❌ | Tap lands in workspace - not Home |
 | **Customer search** | ⚠️ | Exists · not yet "search starts work" |
 | **Reply to text** | ⚠️ | API exists · shell/UX friction |
 | **Photo from tech** | ❌ | Notification → RO/inspection · reply in context |
 | **Morning continuity** | ❌ | Unlock → what changed · pocket · done |
-| **Ten-hour workday** | ❌ | Composite — Edward loves using his own app |
+| **Ten-hour workday** | ❌ | Composite - Edward loves using his own app |
 
 Update this table when an experience passes the Monday test on the floor.
 
 ---
 
-## Experience 1 — Customer calls
+## Experience 1 - Customer calls
 
 **Goal:** Never hunt.
 
-**While ringing — before answer:**
+**While ringing - before answer:**
 
 - Customer name
 - Vehicle
@@ -77,7 +77,7 @@ Update this table when an experience passes the Monday test on the floor.
 - Last message
 - Advisor notes
 
-**After hangup — without backing out:**
+**After hangup - without backing out:**
 
 - Add note
 - Send text
@@ -88,7 +88,7 @@ Update this table when an experience passes the Monday test on the floor.
 
 ---
 
-## Experience 2 — Notification
+## Experience 2 - Notification
 
 **Example:** *Ben uploaded inspection.*
 
@@ -100,7 +100,7 @@ Not Home. Not Conversations. Not Customers. **The inspection.**
 
 ---
 
-## Experience 3 — Search
+## Experience 3 - Search
 
 **Type:** `Emma`
 
@@ -113,11 +113,11 @@ Not Home. Not Conversations. Not Customers. **The inspection.**
 - Take payment
 - History
 
-**Search starts work** — not a directory browse.
+**Search starts work** - not a directory browse.
 
 ---
 
-## Experience 4 — Morning
+## Experience 4 - Morning
 
 **Unlock phone.** Not dashboards. Not KPIs.
 
@@ -131,7 +131,7 @@ Just:
 
 **Done. Pocket.**
 
-**P0:** Continuity feed — what changed since last unlock.
+**P0:** Continuity feed - what changed since last unlock.
 
 ---
 
@@ -165,7 +165,7 @@ Just:
 
 ## What we do not do this sprint
 
-- Replace or extend the event architecture sprint (frozen — see below)
+- Replace or extend the event architecture sprint (frozen - see below)
 - New doctrine or platform documents
 - E1 spreadsheet work unless a P0 ship is blocked
 - Features Edward would not use on the Razr in a ten-hour day
@@ -176,9 +176,9 @@ Just:
 
 Event contracts, authority model, and scoped streams **already did their job**. They explain implementation when needed. They are **not** the product and **not** the sprint board.
 
-**Frozen:** [`companion-event-architecture-sprint-v1.md`](companion-event-architecture-sprint-v1.md) — do not extend unless implementation proves the model cannot express a P0 experience.
+**Frozen:** [`companion-event-architecture-sprint-v1.md`](companion-event-architecture-sprint-v1.md) - do not extend unless implementation proves the model cannot express a P0 experience.
 
-**Use when building:** existing `/api/mobile/*` authority · conversation rail · continuity APIs · voice ingress — not new vocabulary.
+**Use when building:** existing `/api/mobile/*` authority · conversation rail · continuity APIs · voice ingress - not new vocabulary.
 
 ---
 
@@ -186,7 +186,7 @@ Event contracts, authority model, and scoped streams **already did their job**. 
 
 One experience · one vertical slice · one PR · floor test · update sprint board.
 
-Same discipline as telephony certification — but the bar is **Edward loves using his own app**, not a completed register row.
+Same discipline as telephony certification - but the bar is **Edward loves using his own app**, not a completed register row.
 
 ---
 

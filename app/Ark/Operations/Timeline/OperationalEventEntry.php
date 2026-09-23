@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 /**
  * Unified read-model event for operational timelines.
  *
- * Not authority — composes existing stores into one renderable shape.
+ * Not authority - composes existing stores into one renderable shape.
  */
 final readonly class OperationalEventEntry
 {

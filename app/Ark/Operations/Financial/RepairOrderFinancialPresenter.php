@@ -26,9 +26,9 @@ final class RepairOrderFinancialPresenter
 
     /**
      * Two money axes (plus posted sales):
-     * - Owe today — FinancialPositionProjection (operational / customer-facing position).
-     * - Settlement — BalanceDueResult (issued-invoice paid state + pay/waive/close/post gates).
-     * - Posted sales — repair_orders.posted_at (not a balance).
+     * - Owe today - FinancialPositionProjection (operational / customer-facing position).
+     * - Settlement - BalanceDueResult (issued-invoice paid state + pay/waive/close/post gates).
+     * - Posted sales - repair_orders.posted_at (not a balance).
      *
      * Legacy balanceDue* keys alias settlement when an invoice is issued so payment forms
      * cannot silently collect against owe-today while gates use settlement.
@@ -66,7 +66,7 @@ final class RepairOrderFinancialPresenter
             $balance,
         );
         $canRecordDeposit = $this->canRecordDeposit($repairOrder, $balance);
-        // Satisfied is strictly "remaining computed and is zero" — reuse remaining; do not re-enter the guard.
+        // Satisfied is strictly "remaining computed and is zero" - reuse remaining; do not re-enter the guard.
         $suggestedDepositSatisfied = $remainingSuggestedDepositCents !== null
             && $remainingSuggestedDepositCents === 0;
 
@@ -125,12 +125,12 @@ final class RepairOrderFinancialPresenter
                 : null,
             'collectionWaiverLabel' => $this->collectionDisposition($repairOrder)->waiverCustomerLabel(),
             'excludesFromPostedSales' => $this->collectionDisposition($repairOrder)->excludesFromPostedSales(),
-            // Owe today — FinancialPositionProjection
+            // Owe today - FinancialPositionProjection
             'oweTodayCents' => $oweTodayCents,
             'oweToday' => $this->formatCents($oweTodayCents),
             'oweTodayDecimal' => $this->decimalCents($oweTodayCents),
             'oweTodayDiffersFromSettlement' => $oweTodayDiffersFromSettlement,
-            // Settlement — BalanceDueResult (issued invoice contract)
+            // Settlement - BalanceDueResult (issued invoice contract)
             'settlementBalanceDueCents' => $settlementBalanceDueCents,
             'settlementBalanceDue' => $balance->hasIssuedInvoice
                 ? $this->formatCents($settlementBalanceDueCents)
@@ -319,7 +319,7 @@ final class RepairOrderFinancialPresenter
             return null;
         }
 
-        return 'Shop policy quote from estimate '.implode(' + ', $parts).' — not money collected until you record payment below.';
+        return 'Shop policy quote from estimate '.implode(' + ', $parts).' - not money collected until you record payment below.';
     }
 
     private function workflowHint(RepairOrder $repairOrder, BalanceDueResult $balance, string $workflowPosture): string

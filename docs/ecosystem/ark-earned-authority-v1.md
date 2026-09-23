@@ -1,6 +1,6 @@
 # Earned Authority v1
 
-**Status:** Foundational — governs everything that leaves the shop on behalf of ARK  
+**Status:** Foundational - governs everything that leaves the shop on behalf of ARK  
 **Not:** A marketing doctrine, SEO playbook, or content calendar  
 **Applies to:** Public website · ARK Companion · advisor AI · voice AI · ARKademy · analytics · customer summaries · reports · social · email · any surface where ARK speaks for the shop
 
@@ -18,7 +18,7 @@ Every statement made by ARK or the shop should be traceable to operational truth
 
 > **Every public sentence should have a repair order standing behind it.**
 
-Not literally one RO per sentence — but conceptually. If someone challenged a claim, the shop should be able to say *"Here's why we know that"* — not *"Every SEO guide says to write that."*
+Not literally one RO per sentence - but conceptually. If someone challenged a claim, the shop should be able to say *"Here's why we know that"* - not *"Every SEO guide says to write that."*
 
 ---
 
@@ -52,9 +52,9 @@ A statement is authoritative when it is derived from one or more of:
 | Source | Meaning |
 | --- | --- |
 | **Verified repair outcomes** | Closed work, diagnostic results, parts replaced, measured resolution |
-| **Repeated customer questions** | The same sentence asked on the floor, in intake, or in comms — not once |
-| **Documented diagnostic procedures** | How this shop actually tests — not generic industry copy |
-| **Measured operational data** | Counts, rates, ages, dollars — with a defined authority path |
+| **Repeated customer questions** | The same sentence asked on the floor, in intake, or in comms - not once |
+| **Documented diagnostic procedures** | How this shop actually tests - not generic industry copy |
+| **Measured operational data** | Counts, rates, ages, dollars - with a defined authority path |
 | **Explicit shop policy** | Owner-entered policy the shop stands behind (warranty terms, hours, billing class rules) |
 
 **No other source creates authority.**
@@ -71,14 +71,14 @@ Projection must never invent, exaggerate, or infer beyond its authority.
 
 | Rule | Meaning |
 | --- | --- |
-| **Project once** | Package answers per render or per audience — do not re-derive inline |
+| **Project once** | Package answers per render or per audience - do not re-derive inline |
 | **Never invent** | If the shop has not observed it, do not publish it |
 | **Never exaggerate** | Rounded marketing numbers without verified counts are fabrication |
-| **Publish uncertainty** | When the shop does not know yet, say so — that is trustworthy |
+| **Publish uncertainty** | When the shop does not know yet, say so - that is trustworthy |
 
 Companion: ark-projection-rule.mdc · ark-explainability-doctrine.mdc
 
-**Explainability Rule:** If evidence cannot be shown, the claim is not operational truth — hold it in engineering detail or the notebook, not on the floor or the public site.
+**Explainability Rule:** If evidence cannot be shown, the claim is not operational truth - hold it in engineering detail or the notebook, not on the floor or the public site.
 
 ---
 
@@ -104,7 +104,7 @@ New customers
 Shop
 ```
 
-Growth is the publication arm of operational truth — not a marketing layer bolted onto operations.
+Growth is the publication arm of operational truth - not a marketing layer bolted onto operations.
 
 ---
 
@@ -154,7 +154,7 @@ Reject any content that:
 
 > **If we deleted this sentence tomorrow, would any operational record miss it?**
 
-If no — it was probably publication, not authority.
+If no - it was probably publication, not authority.
 
 ---
 
@@ -173,11 +173,11 @@ The goal is to **reduce the distance between what the shop learns and what the p
 
 ---
 
-## Public marketing v1 — closed
+## Public marketing v1 - closed
 
 **Closed:** 2026-07-06 · Commit `8a37017a` and doctrine alignment
 
-Public marketing v1 is **closed** — not because the site is perfect, but because the foundation is coherent:
+Public marketing v1 is **closed** - not because the site is perfect, but because the foundation is coherent:
 
 - One customer application, problem authorities, advisor intake, operational footer
 - CTA discipline, trust signals, publication paths (warranty, privacy, terms)
@@ -197,10 +197,10 @@ When planning engineering time after v1:
 
 | Share | Focus |
 | --- | --- |
-| **~40%** | New authority pages — earned from actual customer questions, not AI-generated filler |
-| **~30%** | ARK observation capture — completed repairs enrich the knowledge base |
-| **~20%** | Diagnostic tools — utilities people use before calling, not gimmicks |
-| **~10%** | UI polish — only when observation says it matters |
+| **~40%** | New authority pages - earned from actual customer questions, not AI-generated filler |
+| **~30%** | ARK observation capture - completed repairs enrich the knowledge base |
+| **~20%** | Diagnostic tools - utilities people use before calling, not gimmicks |
+| **~10%** | UI polish - only when observation says it matters |
 
 ---
 
@@ -209,17 +209,17 @@ When planning engineering time after v1:
 | Doctrine | Relationship |
 | --- | --- |
 | [ark-truth-stack-v1.md](./ark-truth-stack-v1.md) | Events → projections → narratives → evidence |
-| [ark-repair-authority-v1.md](./ark-repair-authority-v1.md) | Repair is the authority; problem/service/advisor pages are projections — rename last |
+| [ark-repair-authority-v1.md](./ark-repair-authority-v1.md) | Repair is the authority; problem/service/advisor pages are projections - rename last |
 | [ark-constitution-v1.md](./ark-constitution-v1.md) | Coherence over capability; hierarchy of evidence |
-| ark-pressure-first.mdc | Observe before enforce — same sequence, public side |
+| ark-pressure-first.mdc | Observe before enforce - same sequence, public side |
 | ark-observations.mdc | Vocabulary earns placement before publication |
-| ark-earned-intelligence.mdc | Intelligence after repeated sentences — inbound to Earned Authority |
+| ark-earned-intelligence.mdc | Intelligence after repeated sentences - inbound to Earned Authority |
 | ark-explainability-doctrine.mdc | What / Why / Show me for every outbound claim |
 | ark-projection-rule.mdc | Compute once; never become truth |
-| [ark-the-shop-learns-v1.md](./ark-the-shop-learns-v1.md) | Accumulation lifecycle — how shop knowledge is earned, revised, and retired before publication |
-| [ark-market-authority-v1.md](./ark-market-authority-v1.md) | Market trust — opportunity-first; distinct from Earned Authority (publication) |
-| [docs/growth/DOCTRINE.md](../growth/DOCTRINE.md) | Growth measures completed work — observer, not gatekeeper |
-| [ark-website-doctrine-v1.md](../platform/ark-website-doctrine-v1.md) | One customer application — publication surface |
+| [ark-the-shop-learns-v1.md](./ark-the-shop-learns-v1.md) | Accumulation lifecycle - how shop knowledge is earned, revised, and retired before publication |
+| [ark-market-authority-v1.md](./ark-market-authority-v1.md) | Market trust - opportunity-first; distinct from Earned Authority (publication) |
+| [docs/growth/DOCTRINE.md](../growth/DOCTRINE.md) | Growth measures completed work - observer, not gatekeeper |
+| [ark-website-doctrine-v1.md](../platform/ark-website-doctrine-v1.md) | One customer application - publication surface |
 
 ---
 
@@ -227,6 +227,6 @@ When planning engineering time after v1:
 
 > **You're not trying to build the prettiest auto repair website in Demo City. You're trying to build the most trustworthy automotive knowledge source in Demo City.**
 
-That is harder to copy — because it depends on years of real repairs, real diagnostics, and real observations, not better web design.
+That is harder to copy - because it depends on years of real repairs, real diagnostics, and real observations, not better web design.
 
 Read this before publishing, before prompting AI for customer copy, and before approving any surface that speaks on behalf of the shop.

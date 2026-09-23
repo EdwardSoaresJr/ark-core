@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Appointments;
 
 /**
- * Canonical product entry for scheduling — /app/schedule.
+ * Canonical product entry for scheduling - /app/schedule.
  * Prefer this over /app/appointments/create for all new CTAs.
  */
 final class ScheduleUrl

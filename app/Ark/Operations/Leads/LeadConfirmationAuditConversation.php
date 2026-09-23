@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 /**
  * Website lead email confirmations log on a sibling email conversation.
- * Primary shop work stays on the phone thread — audit threads must not inherit Needs shop pressure.
+ * Primary shop work stays on the phone thread - audit threads must not inherit Needs shop pressure.
  */
 final class LeadConfirmationAuditConversation
 {
@@ -21,7 +21,7 @@ final class LeadConfirmationAuditConversation
 
     public function isAuditOnly(Conversation $conversation): bool
     {
-        // Relation may already be the "latest message" limit(1) hydrate from Attention —
+        // Relation may already be the "latest message" limit(1) hydrate from Attention -
         // always reload the full set when auditing confirmation threads.
         $conversation->unsetRelation('messages');
         $conversation->load(['messages.participant']);

@@ -28,7 +28,7 @@
                     <h1 class="text-xl font-black text-slate-950">Stations &amp; Phones</h1>
                     <p class="mt-1 text-xs leading-5 text-slate-600">
                         @if ($shop['voice_posture'] === 'setup')
-                            Name the places where work happens — then plug in phones.
+                            Name the places where work happens - then plug in phones.
                         @elseif ($shop['voice_posture'] === 'certify')
                             Station setup is ready. Connect the device on the bench.
                         @else

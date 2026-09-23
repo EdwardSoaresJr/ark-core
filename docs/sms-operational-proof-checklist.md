@@ -1,4 +1,4 @@
-# SMS Operational Proof — Shop Gate (Step 5)
+# SMS Operational Proof - Shop Gate (Step 5)
 
 **Purpose:** Prove SMS ingress is daily-use before adding Messenger. Code Steps 1–4 are deployed; this gate is **operational**, not a build step.
 
@@ -12,14 +12,14 @@
 |---|-----------|---------------|
 | 1 | Inbound SMS lands on **Customer Hub** and **RO Review** conversation rail without manual copy-paste | Send test text from a known customer phone; confirm message appears on hub + open RO within 30s |
 | 2 | Advisors reply from **customer/RO context**, not only the raw queue | Reply from Customer Hub composer or queue “Reply” link; confirm outbound appears on same thread |
-| 3 | **Comms Queue** is morning triage — opened at shift start, items cleared or intentionally deferred | Advisor lead signs queue reviewed daily |
-| 4 | Dominant friction is **not** “where did that text go?” | Friction log (below) — no more than 1 “lost message” per week |
+| 3 | **Comms Queue** is morning triage - opened at shift start, items cleared or intentionally deferred | Advisor lead signs queue reviewed daily |
+| 4 | Dominant friction is **not** “where did that text go?” | Friction log (below) - no more than 1 “lost message” per week |
 
 ---
 
 ## Daily advisor rhythm (5 minutes)
 
-1. Open **[Work](/app)** — triage **Customer Decisions**, **Since Last Shift**, then **Needs Attention**.
+1. Open **[Work](/app)** - triage **Customer Decisions**, **Since Last Shift**, then **Needs Attention**.
 2. For matched customers: open **Customer Hub** or **RO Review** from queue row; reply in context.
 3. For unknown numbers: **Lookup Caller** → intake or link customer before replying.
 4. Mark read when handled (queue or conversation rail).
@@ -28,7 +28,7 @@
 
 ## Weekly friction log (T0 notebook)
 
-Record one line per incident. Dominant pattern after 2 weeks decides Deep Memory / UX work — not Messenger.
+Record one line per incident. Dominant pattern after 2 weeks decides Deep Memory / UX work - not Messenger.
 
 | Date | Customer / phone | Friction type | What happened | Surface used |
 |------|------------------|---------------|---------------|--------------|
@@ -36,10 +36,10 @@ Record one line per incident. Dominant pattern after 2 weeks decides Deep Memory
 
 **Friction types**
 
-- **lookup** — hard to identify who is texting
-- **conversation** — thread exists but hard to read or scan
-- **lost place** — message not where advisors expect
-- **wrong context** — open RO / vehicle / posture wrong on the rail
+- **lookup** - hard to identify who is texting
+- **conversation** - thread exists but hard to read or scan
+- **lost place** - message not where advisors expect
+- **wrong context** - open RO / vehicle / posture wrong on the rail
 
 **Gate fails if:** “lost place” or “wrong context” is the top category for 2+ weeks.
 
@@ -50,9 +50,9 @@ Record one line per incident. Dominant pattern after 2 weeks decides Deep Memory
 Run once per environment when credentials or webhook URL changes.
 
 1. Confirm Twilio messaging webhook URL points at production `webhooks/communications/twilio/messaging/incoming`.
-2. From a **known customer** mobile, text the shop line: `SMS proof test — [date]`.
+2. From a **known customer** mobile, text the shop line: `SMS proof test - [date]`.
 3. Within 30s: message on Customer Hub comms tab and open RO conversation rail.
-4. Advisor replies from hub: `Reply proof — [date]`.
+4. Advisor replies from hub: `Reply proof - [date]`.
 5. Customer receives SMS; thread shows outbound on hub.
 6. Queue: unread clears after mark-read or reply.
 
@@ -86,6 +86,6 @@ Include: `MessageSid`, customer phone, timestamp, RO #, screenshot of queue + hu
 
 ## Related
 
-- `docs/communications-roadmap-to-messenger.md` — full path to Messenger
-- `docs/communications-authority.md` — conversation vs workflow event doctrine
+- `docs/communications-roadmap-to-messenger.md` - full path to Messenger
+- `docs/communications-authority.md` - conversation vs workflow event doctrine
 - Learn: **Comms Queue** and **Customer Hub** advisor articles under `/app/learn`

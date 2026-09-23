@@ -1,6 +1,6 @@
 # Adapter Rule v1
 
-**Status:** Locked — last major domain freeze before infrastructure adapters  
+**Status:** Locked - last major domain freeze before infrastructure adapters  
 **Date:** 2026-07-19  
 **Phase:** [Architecture Phase 1 complete](architecture-phase-1-complete.md) · Sprint 1 orchestrator shipping  
 **Companions:** [orchestrator-rule-v1.md](orchestrator-rule-v1.md) · [provisioning-request-authority-v1.md](provisioning-request-authority-v1.md) · [deployment-flow-v1.md](deployment-flow-v1.md) · [cluster-assignment-authority-v1.md](cluster-assignment-authority-v1.md)
@@ -28,7 +28,7 @@ Email Adapter
 ```
 
 Above the line: **ARK Platform platform truth** (authorities).  
-Below the line: **adapters** — interchangeable engineering.
+Below the line: **adapters** - interchangeable engineering.
 
 Nothing in the authority stack requires Laravel, Docker, Coolify, Cloudflare, Vultr, or Stancl. Those are implementations.
 
@@ -61,7 +61,7 @@ That prevents one adapter from declaring success while another failed silently.
 
 Adapters may report step success/failure to the orchestrator (or via structured step records later). They must **not** set `status = Completed` themselves.
 
-Allowed adapter-adjacent transitions (if ever delegated): none for Completed. Orchestrator-only for Completed. Failed/Cancelled may be set by orchestrator when a step fails or an operator cancels — still not by a lone adapter claiming overall success.
+Allowed adapter-adjacent transitions (if ever delegated): none for Completed. Orchestrator-only for Completed. Failed/Cancelled may be set by orchestrator when a step fails or an operator cancels - still not by a lone adapter claiming overall success.
 
 ---
 
@@ -94,9 +94,9 @@ Not an adapter. Platform workflow owner:
 1. Load `ProvisioningRequest` (Pending → Running).  
 2. Ensure prerequisites above the line exist (Shop, Deployment, ClusterAssignment).  
 3. Invoke required adapters in order.  
-4. Record per-step outcomes (future step table OK — not required to freeze schema here).  
+4. Record per-step outcomes (future step table OK - not required to freeze schema here).  
 5. On all required success → `Completed`.  
-6. On failure → `Failed` + `failure_reason`; retry = new attempt path or re-run same request with skip-completed — product choice later, rule stays: retry the request/workflow, not a lone adapter.
+6. On failure → `Failed` + `failure_reason`; retry = new attempt path or re-run same request with skip-completed - product choice later, rule stays: retry the request/workflow, not a lone adapter.
 
 ---
 

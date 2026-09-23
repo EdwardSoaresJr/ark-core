@@ -1,8 +1,8 @@
 # Interaction Pattern Library v1
 
-**Status:** Living — inventory of reusable interaction patterns  
+**Status:** Living - inventory of reusable interaction patterns  
 **Not:** Governing doctrine (do not freeze this file like Interaction Craft Doctrine)  
-**Parent:** [Interaction Craft vs Product Doctrine v1](ark-interaction-craft-vs-product-doctrine-v1.md) (`20670702`) — frozen; governs *how* reviews are done  
+**Parent:** [Interaction Craft vs Product Doctrine v1](ark-interaction-craft-vs-product-doctrine-v1.md) (`20670702`) - frozen; governs *how* reviews are done  
 **Companions:** [Workspace Interaction Language](ark-workspace-interaction-language-v1.md) · Review notes under `docs/ecosystem/reviews/` · [Template-pressure notebook](reviews/_template-pressure-notebook.md)
 
 ---
@@ -117,7 +117,7 @@ After each completed review, increment **Evidence count** and append the product
 
 ## Evidence scoreboard
 
-Running totals — update when a review closes.
+Running totals - update when a review closes.
 
 | Pattern | Evidence count | Sources |
 | --- | --- | --- |
@@ -126,11 +126,11 @@ Running totals — update when a review closes.
 | Persistent Context | 1 | Wrenchy |
 | Card Hover Projection | 1 | Wrenchy |
 | Column Decision Counts | 1 | Wrenchy |
-| Keyboard-first Operations | 0 | — |
-| Inline Approval Summary | 0 | — |
-| Timeline Narrative | 0 | — |
+| Keyboard-first Operations | 0 | - |
+| Inline Approval Summary | 0 | - |
+| Timeline Narrative | 0 | - |
 
-Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLeap / etc. — not anticipatory wishlist items until a review evidences them.
+Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLeap / etc. - not anticipatory wishlist items until a review evidences them.
 
 ---
 
@@ -145,10 +145,10 @@ Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLe
 | **Evidence count** | 1 |
 | **Doctrine gate** | Workboard Card acceptance; board = decisions; junk-drawer rule |
 | **Surfaces** | Workboard (primary) |
-| **Status** | `shipped` — advisor home board (full Who→Age); triage queue Who→Next→Age |
+| **Status** | `shipped` - advisor home board (full Who→Age); triage queue Who→Next→Age |
 | **Convergence** | Workboard → later Attention row density if earned |
-| **Ship history** | 2026-07-19 — shipped on advisor job board; **reverted same day** — regressed marketed Tekmetric card anatomy (`job-board.png`). Pattern retained in library; do not re-apply to Job Board without floor evidence that beats the screenshot contract. |
-| **Review links** | [Doctrine worked example — Wrenchy](ark-interaction-craft-vs-product-doctrine-v1.md#worked-example-wrenchy) (in frozen doctrine) |
+| **Ship history** | 2026-07-19 - shipped on advisor job board; **reverted same day** - regressed marketed Tekmetric card anatomy (`job-board.png`). Pattern retained in library; do not re-apply to Job Board without floor evidence that beats the screenshot contract. |
+| **Review links** | [Doctrine worked example - Wrenchy](ark-interaction-craft-vs-product-doctrine-v1.md#worked-example-wrenchy) (in frozen doctrine) |
 
 ### Workboard Scan Density
 
@@ -159,9 +159,9 @@ Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLe
 | **Evidence count** | 1 |
 | **Doctrine gate** | product doctrine; borrow density, reject workflow-as-home |
 | **Surfaces** | Workboard |
-| **Status** | `shipped` — denser card padding/gap |
+| **Status** | `shipped` - denser card padding/gap |
 | **Convergence** | Workboard → Attention / Intake lists if earned |
-| **Ship history** | 2026-07-19 — shipped with Card Glance Rhythm; density CSS reverted with Job Board restore |
+| **Ship history** | 2026-07-19 - shipped with Card Glance Rhythm; density CSS reverted with Job Board restore |
 | **Review links** | Wrenchy worked example |
 
 ### Card Hover Projection
@@ -171,11 +171,11 @@ Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLe
 | **Outcome** | Richer projection on hover without opening the RO; not another authority |
 | **Sources** | Wrenchy |
 | **Evidence count** | 1 |
-| **Doctrine gate** | Projection Rule — package once; never become truth |
+| **Doctrine gate** | Projection Rule - package once; never become truth |
 | **Surfaces** | Workboard |
-| **Status** | `candidate` — ship after glance/density if floor still needs it |
+| **Status** | `candidate` - ship after glance/density if floor still needs it |
 | **Convergence** | Workboard only until proven elsewhere |
-| **Ship history** | — |
+| **Ship history** | - |
 | **Review links** | Wrenchy worked example |
 
 ### Persistent Context
@@ -185,11 +185,11 @@ Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLe
 | **Outcome** | Information required continuously while performing work stays visible without scroll/nav |
 | **Sources** | Wrenchy (sticky money rail as one instance) |
 | **Evidence count** | 1 |
-| **Doctrine gate** | Persistent Context postures: Financial · Approval · Communication · Workflow — not KPI theater |
+| **Doctrine gate** | Persistent Context postures: Financial · Approval · Communication · Workflow - not KPI theater |
 | **Surfaces** | RO right rail (primary) |
-| **Status** | `shipped` — RO rail posture band |
+| **Status** | `shipped` - RO rail posture band |
 | **Convergence** | RO right rail → Customer drawer (later) → Technician workspace (later) |
-| **Ship history** | 2026-07-19 — Sticky four-posture band (Workflow · Approval · Communication · Financial); existing posture only |
+| **Ship history** | 2026-07-19 - Sticky four-posture band (Workflow · Approval · Communication · Financial); existing posture only |
 | **Review links** | Wrenchy worked example |
 
 ### Column Decision Counts
@@ -199,16 +199,16 @@ Zero-count rows are placeholders for craft that may appear in Tekmetric / AutoLe
 | **Outcome** | Column headers show counts that aid triage; never justify infinite piles |
 | **Sources** | Wrenchy |
 | **Evidence count** | 1 |
-| **Doctrine gate** | Junk drawer rule — count yes; infinite Estimates no |
+| **Doctrine gate** | Junk drawer rule - count yes; infinite Estimates no |
 | **Surfaces** | Workboard |
 | **Status** | `candidate` |
 | **Convergence** | Workboard |
-| **Ship history** | — |
+| **Ship history** | - |
 | **Review links** | Wrenchy worked example |
 
 ---
 
-## Source focus (review queue — not pattern ownership)
+## Source focus (review queue - not pattern ownership)
 
 Primary learning objective per product. Reviews fill notes; patterns get Sources appended.
 
@@ -224,7 +224,7 @@ Primary learning objective per product. Reviews fill notes; patterns get Sources
 
 ### Cross-industry sources (in scope)
 
-Not automotive peers — interaction evidence for ARK surfaces:
+Not automotive peers - interaction evidence for ARK surfaces:
 
 | Surface need | Study |
 | --- | --- |
@@ -243,27 +243,27 @@ Same Borrow / Reject discipline. Same evidence gate.
 
 ## Surfaces index
 
-Patterns may list multiple surfaces. Index for navigation only — surfaces do not own patterns.
+Patterns may list multiple surfaces. Index for navigation only - surfaces do not own patterns.
 
 | Surface | Patterns (current) |
 | --- | --- |
 | Workboard | Card Glance Rhythm · Workboard Scan Density · Card Hover Projection · Column Decision Counts |
 | Repair Order | Persistent Context |
-| Communications | — (await AutoLeap / messaging reviews) |
-| Customer Portal | — (await tracking-product reviews) |
-| Scheduling | — |
-| Mobile | — |
-| Reporting | — |
-| Command palette | — |
+| Communications | - (await AutoLeap / messaging reviews) |
+| Customer Portal | - (await tracking-product reviews) |
+| Scheduling | - |
+| Mobile | - |
+| Reporting | - |
+| Command palette | - |
 
 ---
 
 ## Validation hypotheses (library + reviews)
 
-1. **Coverage** — every review fits the frozen template without new sections  
-2. **Consistency** — different reviewers reach comparable Borrow / Reject conclusions  
-3. **Reuse** — Persistent Context, Workboard Card, Borrow/Reject recur across products  
-4. **Convergence** — shipped patterns improve more than one ARK surface over time  
+1. **Coverage** - every review fits the frozen template without new sections  
+2. **Consistency** - different reviewers reach comparable Borrow / Reject conclusions  
+3. **Reuse** - Persistent Context, Workboard Card, Borrow/Reject recur across products  
+4. **Convergence** - shipped patterns improve more than one ARK surface over time  
 
 ---
 
@@ -275,7 +275,7 @@ First (and each) pattern-ship PR should be expressible as:
 
 If any change cannot honestly fit that sentence, it belongs in a later PR.
 
-**Job Board visual contract:** `public/assets/cloud/product/job-board.png` (and live Cloud homepage) — RO left · status right · customer · vehicle · money · promise · age. Do not replace that anatomy without explicit acceptance.
+**Job Board visual contract:** `public/assets/cloud/product/job-board.png` (and live Cloud homepage) - RO left · status right · customer · vehicle · money · promise · age. Do not replace that anatomy without explicit acceptance.
 
 **Persistent Context** (RO rail postures) remains shipped. Card Glance Rhythm is **not** on the Job Board after 2026-07-19 restore.
 
@@ -286,6 +286,6 @@ If any change cannot honestly fit that sentence, it belongs in a later PR.
 - Library grows from **evidence**, not anticipation.  
 - No screenshots / walkthrough → review stays stubbed; no invented craft.  
 - Prefer operational surfaces over marketing pages (see [reviews/README.md](reviews/README.md)).  
-- Do not edit Interaction Craft Doctrine v1 from review pressure — use the notebook.  
+- Do not edit Interaction Craft Doctrine v1 from review pressure - use the notebook.  
 - Ship cadence is independent: validated ≠ automatically scheduled.  
 - After each review: update **Evidence count** + **Sources** on matching patterns.

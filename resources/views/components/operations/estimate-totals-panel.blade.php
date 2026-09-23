@@ -109,7 +109,7 @@
             <div class="ops-total-row py-1.5">
                 <dt class="text-slate-500">
                     Suggested deposit
-                    <span class="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Shop policy quote — not collected</span>
+                    <span class="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Shop policy quote - not collected</span>
                 </dt>
                 <dd class="flex items-center justify-end gap-2 font-semibold tabular-nums text-slate-950">
                     <button

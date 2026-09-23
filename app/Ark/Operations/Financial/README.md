@@ -34,7 +34,7 @@ Estimate subtotals and estimate totals sum only billable concerns. Deferred and 
 
 ## Immutable Snapshot Rule
 
-**Issue Final Invoice** persists an immutable financial snapshot. That snapshot is historical evidence — not a living contract — and must not be recalculated from current shop settings, pricing matrix, fee rules, or tax rules. Do not “refresh” it to chase living estimate changes.
+**Issue Final Invoice** persists an immutable financial snapshot. That snapshot is historical evidence - not a living contract - and must not be recalculated from current shop settings, pricing matrix, fee rules, or tax rules. Do not “refresh” it to chase living estimate changes.
 
 ## Financial Core (Authority Layer)
 
@@ -43,12 +43,12 @@ Estimate subtotals and estimate totals sum only billable concerns. Deferred and 
 | `EstimateTotalsCalculator` | Living estimate only |
 | `InvoiceSnapshotBuilder` + `GenerateInvoiceSnapshotAction` | Closeout readiness → immutable Final Invoice |
 | `BalanceDueCalculator` | Post-invoice payment/closeout gates (transitional; owe-today display uses Financial Position) |
-| `FinancialPositionProjection` | **Customer owes today** — disposable; Estimate + Ledger (+ Coverage later); Invoice if issued |
-| `FinancialPositionCalculator` | Sole orchestrator behind Position — GET-pure |
+| `FinancialPositionProjection` | **Customer owes today** - disposable; Estimate + Ledger (+ Coverage later); Invoice if issued |
+| `FinancialPositionCalculator` | Sole orchestrator behind Position - GET-pure |
 | `RecordLedgerEntryAction` | Deposits, payments, refunds, adjustments, store credit |
 | `RepairOrderCloseoutAuthority` | Closeout readiness → Issue Final Invoice → balance 0 → close |
 
-### Transitional — do not extend (v2)
+### Transitional - do not extend (v2)
 
 `RefreshLivingInvoiceSnapshotAction`, `RefreshCustomerInvoiceAction`, and early mid-job invoices are **compatibility**, not target architecture. See Financial Authority v2 Implementation freeze.
 

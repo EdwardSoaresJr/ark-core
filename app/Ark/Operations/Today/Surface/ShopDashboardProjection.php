@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Today\Surface;
 
 /**
- * Open-queue shop dashboard — disposition money + status lanes.
+ * Open-queue shop dashboard - disposition money + status lanes.
  * Disposable projection; rebuild from RepairOrder + estimate line authority.
  */
 final readonly class ShopDashboardProjection

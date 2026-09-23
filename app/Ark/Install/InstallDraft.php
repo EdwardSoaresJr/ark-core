@@ -4,7 +4,7 @@ namespace App\Ark\Install;
 
 /**
  * Non-secret wizard draft persisted to disk between steps.
- * Passwords and API secrets never belong here — session only.
+ * Passwords and API secrets never belong here - session only.
  */
 final class InstallDraft
 {

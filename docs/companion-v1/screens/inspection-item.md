@@ -1,14 +1,14 @@
-# Screen spec — Inspection Item
+# Screen spec - Inspection Item
 
 **ID:** `companion.screen.inspection-item`  
 **Role(s):** Technician (capture) · Advisor (review)  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**One inspection line item** — see finding · photos · video · severity · add advisor response — the destination for **"Ben uploaded inspection"** push.
+**One inspection line item** - see finding · photos · video · severity · add advisor response - the destination for **"Ben uploaded inspection"** push.
 
 ---
 
@@ -17,7 +17,7 @@
 | | Reference CRM | ARK Companion |
 |---|-----|---------------|
 | **Verdict** | No inspection authority | **Target: Yes** |
-| **Why** | N/A | Native **finding + evidence + RO concern** — advisor reviews without desktop |
+| **Why** | N/A | Native **finding + evidence + RO concern** - advisor reviews without desktop |
 
 ---
 
@@ -26,33 +26,33 @@
 ### Header
 
 - **Back** → inspection overview or RO workspace (preserve stack)
-- Title — item name · `Brake pads — front`
+- Title - item name · `Brake pads - front`
 - RO chip · `#1599` · vehicle subtitle
-- Progress — `Item 4 of 12` (tech) · **Needs review** badge (advisor push)
+- Progress - `Item 4 of 12` (tech) · **Needs review** badge (advisor push)
 
-### Body — finding block
+### Body - finding block
 
-- **Status** — Pass · Monitor · Fail · Not inspected
-- **Finding text** — tech narrative · editable (tech only)
-- **Measurements** — if any · read-only for advisor
-- **Recommendation** — linked ops preview · deferred/approved chips
+- **Status** - Pass · Monitor · Fail · Not inspected
+- **Finding text** - tech narrative · editable (tech only)
+- **Measurements** - if any · read-only for advisor
+- **Recommendation** - linked ops preview · deferred/approved chips
 
 ### Media strip
 
 - Horizontal thumbnails · tap → [`photo-viewer.md`](photo-viewer.md)
-- **Add photo / video** — tech only · camera entry
+- **Add photo / video** - tech only · camera entry
 - Upload progress inline
 
 ### Advisor review zone (visible when push = review)
 
-- **Internal note field** — "Ask Ben to get closer shot…"
-- **Send to customer** — P1 · inspection link
-- **Add to estimate** — jump to concern · not full estimate builder P0
+- **Internal note field** - "Ask Ben to get closer shot…"
+- **Send to customer** - P1 · inspection link
+- **Add to estimate** - jump to concern · not full estimate builder P0
 
 ### Tech capture zone (tech role)
 
 - **Camera** · **Video** · **Mark complete**
-- Large capture buttons — glove-friendly
+- Large capture buttons - glove-friendly
 
 ### Footer actions (role-aware)
 
@@ -112,6 +112,6 @@ Link: [`../02-flows.md`](../02-flows.md#notification--inspection-ben-uploaded)
 
 ## Edward sign-off
 
-- [ ] Push lands on exact item — never Home hunt
+- [ ] Push lands on exact item - never Home hunt
 - [ ] Advisor can respond in one screen
 - [ ] Ready for Flutter

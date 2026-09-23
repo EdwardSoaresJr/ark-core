@@ -39,7 +39,7 @@ class WorkstationBrowserBinding extends Model
 
     public function touchSeen(bool $force = false): void
     {
-        // Binding presence is recovered by the staff heartbeat POST — do not WRITE
+        // Binding presence is recovered by the staff heartbeat POST - do not WRITE
         // on every GET when last_seen was updated recently (Read/Write rule).
         if (! $force && $this->last_seen_at !== null && $this->last_seen_at->greaterThan(now()->subMinutes(5))) {
             return;

@@ -1,6 +1,6 @@
-# ARK Platform — Engineering Principles
+# ARK Platform - Engineering Principles
 
-**Status:** Active practice — not doctrine, not authorities  
+**Status:** Active practice - not doctrine, not authorities  
 **Date:** 2026-07-19  
 **Context:** [engineering-phase-1-adapters.md](engineering-phase-1-adapters.md) · [architecture-phase-1-complete.md](architecture-phase-1-complete.md) · [sprint-2-coolify-adapter.md](sprint-2-coolify-adapter.md)
 
@@ -19,7 +19,7 @@ Domain Contract · Shop · Status · Deployment · Cluster · Cluster Assignment
 **No new authority without repeated operational pressure.**
 
 If Sprints 2–4 fit the current model, the model was correct.  
-If an adapter stretches the model, *then* discover the next authority — not before.
+If an adapter stretches the model, *then* discover the next authority - not before.
 
 Do not invent `PlatformOperation`, multi-region routing, or cluster balancers from imagination.
 
@@ -46,13 +46,13 @@ Do not invent `PlatformOperation`, multi-region routing, or cluster balancers fr
    Shops, placements, and requests are truth. Forms, wizards, and jobs do not invent parallel state.
 
 7. **Observations are computed.**  
-   Utilization, shop counts, health aggregates — derive them. Do not store sync-debt counters as authority.
+   Utilization, shop counts, health aggregates - derive them. Do not store sync-debt counters as authority.
 
 8. **Projections never become authorities.**  
    Cluster assignment history is authority. Edge routing tables and Coolify UUIDs are projections/refs.
 
 9. **Smell: orchestrator changes during an adapter sprint.**  
-   Sprint 2 = Coolify step only. If the spine must move, stop and ask whether pressure earned a new concept — or the adapter is wrong.
+   Sprint 2 = Coolify step only. If the spine must move, stop and ask whether pressure earned a new concept - or the adapter is wrong.
 
 10. **Same language across products.**  
     ARK Operations, Companion, Stinson, ARK Platform: authorities own truth · workflows are requests · orchestrators coordinate · adapters touch infrastructure.
@@ -99,7 +99,7 @@ That shape stays understandable years later.
 
 ## Contributor checklist (before a PR)
 
-- [ ] Did I add a new authority? If yes — what repeated pressure earned it?  
+- [ ] Did I add a new authority? If yes - what repeated pressure earned it?  
 - [ ] Did I put infra or conditionals in the orchestrator?  
 - [ ] Can this step be retried by re-running the request?  
 - [ ] Do failures emit events with a step key?  

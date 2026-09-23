@@ -42,7 +42,7 @@ final class RegisterMobileDeviceAction
         );
 
         // Ensure a MobileApp endpoint row exists for later voice readiness, but do not
-        // mark StaffCallPresence or voice_ready_at — generic device registration is not
+        // mark StaffCallPresence or voice_ready_at - generic device registration is not
         // evidence that Twilio Client can ring this identity.
         $this->voiceEndpointRegistrar->ensureForDevice($device);
 

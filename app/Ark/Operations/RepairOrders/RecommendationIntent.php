@@ -31,17 +31,17 @@ enum RecommendationIntent: string
     public function helpText(): string
     {
         return match ($this) {
-            self::ImmediateAttention => 'Customer should act before return or further driving — e.g. brake pads at 1mm, coolant leak, loose steering.',
-            self::PlanSoon => 'Schedule in the near term — e.g. battery at 28%, tires approaching replacement, spark plugs due.',
-            self::Maintenance => 'Planned upkeep — e.g. fluid service, timing belt interval, manufacturer maintenance item.',
-            self::Diagnostic => 'More testing needed before repair is recommended — e.g. check engine light with unknown root cause.',
-            self::RepairVerification => 'Confirm completed work — e.g. recheck after repair, drive cycle, post-repair monitor.',
-            self::InformationOnly => 'Document context only — e.g. Banks intake installed, customer-supplied lift kit, cosmetic observation.',
+            self::ImmediateAttention => 'Customer should act before return or further driving - e.g. brake pads at 1mm, coolant leak, loose steering.',
+            self::PlanSoon => 'Schedule in the near term - e.g. battery at 28%, tires approaching replacement, spark plugs due.',
+            self::Maintenance => 'Planned upkeep - e.g. fluid service, timing belt interval, manufacturer maintenance item.',
+            self::Diagnostic => 'More testing needed before repair is recommended - e.g. check engine light with unknown root cause.',
+            self::RepairVerification => 'Confirm completed work - e.g. recheck after repair, drive cycle, post-repair monitor.',
+            self::InformationOnly => 'Document context only - e.g. Banks intake installed, customer-supplied lift kit, cosmetic observation.',
         };
     }
 
     /**
-     * Recommendation status describes customer action — not part classification.
+     * Recommendation status describes customer action - not part classification.
      *
      * @return list<array{label: string, detail: string}>
      */
@@ -50,7 +50,7 @@ enum RecommendationIntent: string
         return [
             [
                 'label' => 'Not for part source',
-                'detail' => 'Customer-supplied vs shop-supplied parts belong on the part line — not recommendation status.',
+                'detail' => 'Customer-supplied vs shop-supplied parts belong on the part line - not recommendation status.',
             ],
             [
                 'label' => 'Not for OEM / aftermarket / performance',
@@ -85,7 +85,7 @@ enum RecommendationIntent: string
         return $this->staffLabel();
     }
 
-    /** Category accent — wayfinding, not urgency scoring. Authoritative across PDF + worksheet. */
+    /** Category accent - wayfinding, not urgency scoring. Authoritative across PDF + worksheet. */
     public function accentColor(): string
     {
         return match ($this) {
@@ -142,7 +142,7 @@ enum RecommendationIntent: string
 
     /**
      * Presentation order for estimate PDF / review intent groups and related surfaces.
-     * Diagnostic leads — diagnose before recommended work.
+     * Diagnostic leads - diagnose before recommended work.
      *
      * @return array<string, int>
      */
@@ -255,7 +255,7 @@ enum RecommendationIntent: string
 
     /**
      * Flat concern list ordered by priority, then advisor position.
-     * Priority is metadata on each concern — not a group wrapper.
+     * Priority is metadata on each concern - not a group wrapper.
      *
      * @param  iterable<RepairOrderConcern>  $concerns
      * @return list<array{type: 'concern', concern: RepairOrderConcern}>
@@ -313,7 +313,7 @@ enum RecommendationIntent: string
     }
 
     /**
-     * Customer PDF / portal — Diagnostic first, then same types stay together.
+     * Customer PDF / portal - Diagnostic first, then same types stay together.
      *
      * @param  list<array<string, mixed>>|iterable<mixed>  $concerns
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>

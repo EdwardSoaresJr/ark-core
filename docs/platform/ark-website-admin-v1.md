@@ -1,7 +1,7 @@
-# ARK Website Admin — Owner Mental Model
+# ARK Website Admin - Owner Mental Model
 
 **Status:** Canonical product direction  
-**Scope:** Admin Platform — how owners manage and read the customer-facing website  
+**Scope:** Admin Platform - how owners manage and read the customer-facing website  
 **Companion:** [ark-website-doctrine-v1.md](ark-website-doctrine-v1.md) (customer application) · [website-management-architecture-v1.md](website-management-architecture-v1.md) (Platform editor, Core records, Foundry delivery) · [docs/growth/DOCTRINE.md](../growth/DOCTRINE.md) (attribution)
 
 Paid website management is the Platform editor. Core holds the website records and executes signed commands. Foundry serves the published site from the shop database. The Core screens below are not that editor, and they are not the self-managed publishing path.
@@ -33,7 +33,7 @@ Website is **not** Growth. Website is **not** buried in Shop Settings. Website i
 | Owner question | Product | Tab | Authority |
 | --- | --- | --- | --- |
 | *What do customers see?* | **Website → Manage** | Presentation + publishing | `PublicSurfaceSettings`, content registry (edit paths), common problems, media |
-| *How is my website doing?* | **Website → Performance** | Summary dashboard | **Projections only** — deep-link to Growth for detail |
+| *How is my website doing?* | **Website → Performance** | Summary dashboard | **Projections only** - deep-link to Growth for detail |
 
 ### Website asks
 
@@ -57,13 +57,13 @@ Everything about what customers see on lugsnplugs.com (and authenticated custome
 | --- | --- | --- |
 | Homepage | Settings → Shop → Public Website | Website → Manage → Homepage |
 | Hero / headline | Public surface settings | Same |
-| Trust strip | Derived from shop + public surface copy | Editable labels or read-only derived — TBD on floor |
+| Trust strip | Derived from shop + public surface copy | Editable labels or read-only derived - TBD on floor |
 | Photos | Public surface uploads | Website → Manage → Photos (or Media) |
 | Reviews / Google proof | Public surface settings | Website → Manage → Reviews |
 | Common Problems | `config/common_problems.php` + Growth content | Website → Manage → Common Problems |
 | Service / landing pages | Growth content registry | Website → Content / Pages |
 | Navigation / footer | Customer shell partials + settings | Website → Manage → Navigation / Footer |
-| Contact (phone, hours) | Shop settings + comms hours | Website → Manage → Contact (hours sync from comms — link, do not duplicate) |
+| Contact (phone, hours) | Shop settings + comms hours | Website → Manage → Contact (hours sync from comms - link, do not duplicate) |
 | SEO defaults | Growth `SeoEngine` / content registry | Website → Manage → SEO defaults |
 
 **Implementation rule:** Manage **routes to or embeds** existing settings forms initially. Move UI; do not fork authority stores on day one.
@@ -93,11 +93,11 @@ Footer on Performance: **Open Growth →** (primary escape hatch to optimization
 
 ```
 Website
-├── Manage        — presentation (homepage, photos, trust, contact)
-├── Performance   — summarized pulse (links to Growth)
-├── Content       — pages registry (may deep-link Growth content UI initially)
-├── Media         — shop photos, future assets
-└── Pages         — common problems + service pages index
+├── Manage        - presentation (homepage, photos, trust, contact)
+├── Performance   - summarized pulse (links to Growth)
+├── Content       - pages registry (may deep-link Growth content UI initially)
+├── Media         - shop photos, future assets
+└── Pages         - common problems + service pages index
 ```
 
 Phase 1 may ship **Manage + Performance** only; Content/Media/Pages can alias Growth content surfaces until consolidated.
@@ -110,7 +110,7 @@ Phase 1 may ship **Manage + Performance** only; Content/Media/Pages can alias Gr
 | --- | --- |
 | **Website** | Presentation, publishing, owner-facing "what customers see" |
 | **Growth** | Sessions, touchpoints, attribution, SEO intelligence, opportunity queue, optimization |
-| **Settings** | Shop operations (financial, workflow, comms, staff) — not the owner's website mental home |
+| **Settings** | Shop operations (financial, workflow, comms, staff) - not the owner's website mental home |
 
 **Website owns presentation and publishing.**  
 **Growth owns attribution, measurement, and optimization.**
@@ -154,19 +154,19 @@ Routes may live under `/app/website/*` as a **presentation layer** over existing
 
 ## Phased delivery
 
-### Phase 1 — Mental model fix (MVP)
+### Phase 1 - Mental model fix (MVP)
 
 - Add **Website** to admin rail (alongside Growth, Voice, Settings)
 - **Manage:** re-home Public Website settings (redirect or embed existing form)
 - **Performance:** read-only cards from existing summaries + deep links to Growth
 - Shop Settings → Public Website tab redirects to Website → Manage with notice
 
-### Phase 2 — Content home
+### Phase 2 - Content home
 
 - Common Problems index in Website → Pages
 - Content/Media aliases into Growth content registry with Website chrome
 
-### Phase 3 — Measurement polish
+### Phase 3 - Measurement polish
 
 - Search Console / GBP trend cards when ingest is live
 - Weekly owner pulse email optional (future)
@@ -188,7 +188,7 @@ Website PRs must state:
 
 | Document | Relationship |
 | --- | --- |
-| [ark-website-doctrine-v1.md](ark-website-doctrine-v1.md) | Customer application — one shell, two auth states |
+| [ark-website-doctrine-v1.md](ark-website-doctrine-v1.md) | Customer application - one shell, two auth states |
 | [ark-authority-vs-configuration.mdc](../../.cursor/rules/ark-authority-vs-configuration.mdc) | Settings vs authority |
 | [ark-projection-rule.mdc](../../.cursor/rules/ark-projection-rule.mdc) | Performance = projections |
 | [docs/growth/DOCTRINE.md](../growth/DOCTRINE.md) | Growth owns optimization |

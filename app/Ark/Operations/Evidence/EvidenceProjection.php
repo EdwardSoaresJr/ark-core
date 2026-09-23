@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Disposable packaging of Evidence for staff / customer surfaces.
- * One renderer family — never per-domain photo renderers.
+ * One renderer family - never per-domain photo renderers.
  */
 final class EvidenceProjection
 {

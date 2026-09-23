@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ARK build runner — one command for the work day.
+# ARK build runner - one command for the work day.
 #
 #   ark-build up              Start Docker, Buildx, runner, enable builds
 #   ark-build down            Stop runner, disable builds
@@ -36,7 +36,7 @@ case "$cmd" in
         "$SCRIPT_DIR/ensure-buildx.sh"
 
         if ! grep -q '"ghcr.io"' "$HOME/.docker/config.json" 2>/dev/null; then
-            echo "WARN: GHCR not logged in — run configure-ghcr-login.sh" >&2
+            echo "WARN: GHCR not logged in - run configure-ghcr-login.sh" >&2
         fi
 
         mkdir -p "$ARK_HOME"

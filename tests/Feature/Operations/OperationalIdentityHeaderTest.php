@@ -116,7 +116,7 @@ test('service lane identity presenter exposes recognition ownership and financia
         ->and($serviceLane['ownership']['advisor'])->toBe('Lane Advisor')
         ->and($serviceLane['financial']['estimate'])->toBe('$150.00')
         ->and($serviceLane['financial']['approved'])->toBe('$0.00')
-        ->and($serviceLane['financial']['due'])->toBe('—');
+        ->and($serviceLane['financial']['due'])->toBe('-');
 });
 
 test('repair order review header shows service lane identity band without presentation card', function () {

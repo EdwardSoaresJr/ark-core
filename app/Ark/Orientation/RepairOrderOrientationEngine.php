@@ -507,7 +507,7 @@ final class RepairOrderOrientationEngine
         $ageHours = $this->ageInHours($occurredAt) ?? 0;
 
         if ($ageHours >= 48) {
-            return 'Call today — the customer has had time to decide.';
+            return 'Call today - the customer has had time to decide.';
         }
 
         if ($ageHours >= 12) {

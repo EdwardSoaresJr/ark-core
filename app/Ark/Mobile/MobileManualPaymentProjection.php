@@ -9,7 +9,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
 /**
- * Manual payment capture on mobile — cash, check, external card.
+ * Manual payment capture on mobile - cash, check, external card.
  * Same ledger path as desktop Record Payment; amount is server-validated.
  */
 final class MobileManualPaymentProjection

@@ -56,7 +56,7 @@ class Operation extends Model
 
     /**
      * Transitional loader: map the Labor Categories shop default onto an Operation.
-     * Does not mean Operation Authority owns the default — Labor Categories does.
+     * Does not mean Operation Authority owns the default - Labor Categories does.
      *
      * TODO(migration): Remove once every labor line carries operation_id.
      */

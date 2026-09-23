@@ -3,7 +3,7 @@
 namespace App\Ark\Communications\Provisioning;
 
 /**
- * Poly device.prov.* — pins phones to ARK /provision/ instead of legacy DHCP/Asterisk hosts.
+ * Poly device.prov.* - pins phones to ARK /provision/ instead of legacy DHCP/Asterisk hosts.
  */
 final class PolyPhoneProvServerProvisioning
 {

@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Inspections;
 /**
  * Binding product definitions.
  *
- * Standard Vehicle Inspection — Corner Inspection v1.0 frozen in
+ * Standard Vehicle Inspection - Corner Inspection v1.0 frozen in
  * docs/inspection/corner-inspection-v1-freeze.md (Phase 2A).
  * Do not expand Standard into Steering / Under Vehicle / etc. from this class
  * beyond preserving existing non-corner categories until those phases freeze.
@@ -65,7 +65,7 @@ final class FrozenInspectionTemplateDefinitions
             )],
             ['name' => 'Brake system', 'items' => [
                 self::point(
-                    'Brake fluid — level / condition',
+                    'Brake fluid - level / condition',
                     key: 'std_brake_fluid',
                     allowsNa: false,
                     meta: InspectionTemplatePointMeta::shopCornerMeasureMeta('shared', 'brake_fluid'),
@@ -77,7 +77,7 @@ final class FrozenInspectionTemplateDefinitions
                     meta: InspectionTemplatePointMeta::shopCornerMeasureMeta('shared', 'parking_brake'),
                 ),
             ]],
-            // Preserved until later phase freezes — not redesigned in Phase 2A.
+            // Preserved until later phase freezes - not redesigned in Phase 2A.
             ['name' => 'Arrival / outside', 'items' => [
                 self::point('Warning lights / dash indicators', key: 'std_warning_lights'),
                 self::point('Exterior lights (head / brake / turn / plate)', key: 'std_exterior_lights'),
@@ -96,9 +96,9 @@ final class FrozenInspectionTemplateDefinitions
                 self::point('Fluid leaks (underbody)', key: 'std_underbody_leaks'),
                 self::point('Steering linkage / tie rods', key: 'std_steering_linkage'),
                 self::point('Ball joints / obvious joint play', key: 'std_ball_joints'),
-                self::point('Front struts/shocks — leaks or damage', key: 'std_front_struts'),
-                self::point('Rear shocks/struts — leaks or damage', key: 'std_rear_shocks'),
-                self::point('Rear bushings / components — obvious looseness or damage', key: 'std_rear_bushings'),
+                self::point('Front struts/shocks - leaks or damage', key: 'std_front_struts'),
+                self::point('Rear shocks/struts - leaks or damage', key: 'std_rear_shocks'),
+                self::point('Rear bushings / components - obvious looseness or damage', key: 'std_rear_bushings'),
                 self::point('CV boots / driveline visual', key: 'std_cv_boots'),
                 self::point('Exhaust condition', key: 'std_exhaust'),
             ]],
@@ -129,7 +129,7 @@ final class FrozenInspectionTemplateDefinitions
 
         return [
             ['name' => 'Exterior', 'items' => [
-                self::point('Body panels — dents / prior repair clues', key: 'ppi_body'),
+                self::point('Body panels - dents / prior repair clues', key: 'ppi_body'),
                 self::point('Paint / clearcoat condition', key: 'ppi_paint'),
                 self::point('Rust / corrosion (visible exterior)', key: 'ppi_rust'),
                 self::point('Glass / mirrors', key: 'ppi_glass'),
@@ -142,7 +142,7 @@ final class FrozenInspectionTemplateDefinitions
                 self::point('Horn', key: 'ppi_horn'),
             ]],
             ['name' => 'Cabin / HVAC / accessories', 'items' => [
-                self::point('Seats — condition / operation', key: 'ppi_seats'),
+                self::point('Seats - condition / operation', key: 'ppi_seats'),
                 self::point('Seat belts', key: 'ppi_belts'),
                 self::point('Airbag / SRS warning state', key: 'ppi_srs'),
                 self::point('Dash warning lamps (key-on)', key: 'ppi_dash_warn'),
@@ -155,9 +155,9 @@ final class FrozenInspectionTemplateDefinitions
                 self::point('Odor / moisture / water intrusion clues', key: 'ppi_odor'),
             ]],
             ['name' => 'Scan / readiness', 'items' => [
-                self::point('Scan — stored codes', key: 'ppi_scan_stored', scanEvidence: true),
-                self::point('Scan — pending codes', key: 'ppi_scan_pending', scanEvidence: true),
-                self::point('Scan — permanent codes (where supported)', key: 'ppi_scan_permanent', scanEvidence: true),
+                self::point('Scan - stored codes', key: 'ppi_scan_stored', scanEvidence: true),
+                self::point('Scan - pending codes', key: 'ppi_scan_pending', scanEvidence: true),
+                self::point('Scan - permanent codes (where supported)', key: 'ppi_scan_permanent', scanEvidence: true),
                 self::point('Emissions readiness / monitors', key: 'ppi_readiness', scanEvidence: true),
             ]],
             ['name' => 'Tires / wheels', 'items' => [
@@ -173,13 +173,13 @@ final class FrozenInspectionTemplateDefinitions
             ['name' => 'Under hood', 'items' => [
                 self::point('Engine oil level / condition', key: 'ppi_oil'),
                 self::point('Coolant level / condition', key: 'ppi_coolant'),
-                self::point('Brake fluid — level / condition', key: 'ppi_brake_fluid'),
+                self::point('Brake fluid - level / condition', key: 'ppi_brake_fluid'),
                 self::point('Power steering fluid (if equipped)', key: 'ppi_ps_fluid'),
                 self::point('Washer fluid', key: 'ppi_washer_fluid'),
                 self::point('Transmission fluid (dipstick) / sealed note', key: 'ppi_trans_fluid'),
                 self::point('Battery terminals / physical condition', key: 'ppi_battery_physical'),
-                self::point('Battery test — voltage / CCA or tool result', key: 'ppi_battery_test', slots: $batteryTest),
-                self::point('Charging system test — charging voltage / result', key: 'ppi_charging_test', slots: $chargingTest),
+                self::point('Battery test - voltage / CCA or tool result', key: 'ppi_battery_test', slots: $batteryTest),
+                self::point('Charging system test - charging voltage / result', key: 'ppi_charging_test', slots: $chargingTest),
                 self::point('Belts', key: 'ppi_belts'),
                 self::point('Hoses', key: 'ppi_hoses'),
                 self::point('Air filter', key: 'ppi_air_filter'),
@@ -196,7 +196,7 @@ final class FrozenInspectionTemplateDefinitions
                 self::point('Rear shocks/struts', key: 'ppi_rear_shocks'),
                 self::point('Rear control arms / bushings / trailing components', key: 'ppi_rear_arms'),
                 self::point('Sway bar links / bushings (visual)', key: 'ppi_sway'),
-                self::point('Wheel bearings — play / noise', key: 'ppi_bearings'),
+                self::point('Wheel bearings - play / noise', key: 'ppi_bearings'),
                 self::point('CV axles / boots', key: 'ppi_cv'),
                 self::point('Driveshaft / U-joints (if RWD/AWD as equipped)', key: 'ppi_driveshaft'),
                 self::point('Exhaust / heat shields', key: 'ppi_exhaust'),
@@ -246,7 +246,7 @@ final class FrozenInspectionTemplateDefinitions
         array $discPads,
         ?array $drumSlots = null,
     ): array {
-        // Tires and brakes exist on every vehicle — never offer N/A.
+        // Tires and brakes exist on every vehicle - never offer N/A.
         $items = [
             self::point(
                 "{$labelPrefix} Tire",

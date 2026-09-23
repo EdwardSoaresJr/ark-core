@@ -1,6 +1,6 @@
 @php
     /** @var array{checks: list<array{label: string, passed: bool}>, ready: bool, action_label: string, action_url: ?string} $firstContact */
-    $passMark = static fn (bool $passed): string => $passed ? '✓' : '—';
+    $passMark = static fn (bool $passed): string => $passed ? '✓' : '-';
     $passClass = static fn (bool $passed): string => $passed ? 'text-emerald-700' : 'text-rose-700';
 @endphp
 

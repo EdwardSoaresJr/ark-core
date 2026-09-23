@@ -18,7 +18,7 @@ use App\Ark\Operations\Timeline\UnifiedOperationalTimeline;
 use App\Models\User;
 
 /**
- * H0 measurable probes for The Six Ones — not a product surface.
+ * H0 measurable probes for The Six Ones - not a product surface.
  *
  * @see docs/communications/ark-conversations-v1.md
  */
@@ -215,7 +215,7 @@ final class ConversationsH0
 
         if ($repairOrder !== null) {
             $roAction = trim($repairOrder->fresh()->communicationNextAction());
-            if ($roAction !== '' && $roAction !== '—') {
+            if ($roAction !== '' && $roAction !== '-') {
                 return $roAction;
             }
         }

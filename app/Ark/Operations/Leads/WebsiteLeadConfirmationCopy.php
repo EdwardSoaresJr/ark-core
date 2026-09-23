@@ -45,10 +45,10 @@ final class WebsiteLeadConfirmationCopy
         $shopName = ShopMailBranding::shopName();
 
         if ($lead instanceof Lead && PublicAppointmentRequest::isBookSurfaceFromLead($lead)) {
-            return sprintf('%s — appointment request received', $shopName);
+            return sprintf('%s - appointment request received', $shopName);
         }
 
-        return sprintf('%s — request received', $shopName);
+        return sprintf('%s - request received', $shopName);
     }
 
     /**

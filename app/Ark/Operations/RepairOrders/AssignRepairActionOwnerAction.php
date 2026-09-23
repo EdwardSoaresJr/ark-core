@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * R1 — RepairActionOwner (Technician only). Ownership transfers; never copies.
+ * R1 - RepairActionOwner (Technician only). Ownership transfers; never copies.
  */
 final class AssignRepairActionOwnerAction
 {

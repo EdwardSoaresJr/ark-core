@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Compose Anywhere — search → open Thread for customer (ConversationResolver).
+ * Compose Anywhere - search → open Thread for customer (ConversationResolver).
  */
 class CommunicationsComposeStartController
 {

@@ -5,7 +5,7 @@ namespace App\Ark\Platform\Cloud;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Cloud Funnel instrumentation — observe hesitation before provisioning is real.
+ * Cloud Funnel instrumentation - observe hesitation before provisioning is real.
  *
  * Events: homepage_cta · trial_started · shop_completed · workspace_completed ·
  * account_completed · funnel_completed · open_workspace

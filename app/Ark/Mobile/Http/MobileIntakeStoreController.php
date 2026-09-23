@@ -30,7 +30,7 @@ final class MobileIntakeStoreController
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'visit_reason' => ['nullable', 'string', 'max:5000'],
-            // Compat: older mobile clients may still send concern rows — map text into visit_reason only.
+            // Compat: older mobile clients may still send concern rows - map text into visit_reason only.
             'concerns' => ['nullable', 'array'],
             'concerns.*.customer_states' => ['nullable', 'string', 'max:5000'],
             'advisor_notes' => ['nullable', 'string', 'max:5000'],

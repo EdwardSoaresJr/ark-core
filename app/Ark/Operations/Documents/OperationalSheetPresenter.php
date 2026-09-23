@@ -292,7 +292,7 @@ final class OperationalSheetPresenter
                         'description' => $title,
                         'quantity' => $hours,
                         'operation_title' => $title,
-                        'label' => sprintf('%s — %s hrs', $title, $hours),
+                        'label' => sprintf('%s - %s hrs', $title, $hours),
                         'hours_only_label' => sprintf('%s hrs', $hours),
                         'suppress_duplicate' => true,
                     ];
@@ -302,7 +302,7 @@ final class OperationalSheetPresenter
                     'description' => $line->description,
                     'quantity' => $hours,
                     'operation_title' => $title,
-                    'label' => sprintf('%s — %s hrs', $line->description, $hours),
+                    'label' => sprintf('%s - %s hrs', $line->description, $hours),
                     'hours_only_label' => sprintf('%s hrs', $hours),
                     'suppress_duplicate' => false,
                 ];
@@ -331,8 +331,8 @@ final class OperationalSheetPresenter
                 $partNumber = filled($line->part_number) ? (string) $line->part_number : null;
                 $description = (string) $line->description;
                 $label = $partNumber !== null
-                    ? sprintf('%s · %s — Qty %s', $partNumber, $description, $quantity)
-                    : sprintf('%s — Qty %s', $description, $quantity);
+                    ? sprintf('%s · %s - Qty %s', $partNumber, $description, $quantity)
+                    : sprintf('%s - Qty %s', $description, $quantity);
 
                 return [
                     'part_number' => $partNumber,

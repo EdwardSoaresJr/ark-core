@@ -1,6 +1,6 @@
-# Interaction patterns — ARK Companion v1
+# Interaction patterns - ARK Companion v1
 
-**Rule:** These patterns repeat **everywhere** they apply. Habit-forming apps feel consistent — not one-off gestures per screen.
+**Rule:** These patterns repeat **everywhere** they apply. Habit-forming apps feel consistent - not one-off gestures per screen.
 
 Each screen spec must declare which patterns it uses ([`_SPEC_TEMPLATE.md`](../screens/_SPEC_TEMPLATE.md)).
 
@@ -18,9 +18,9 @@ Each screen spec must declare which patterns it uses ([`_SPEC_TEMPLATE.md`](../s
 | **Infinite scroll** | Paginate timeline · messages | Customer timeline · thread history |
 | **Action sheet** | Destructive / overflow | Delete draft · transfer call (P1) |
 | **FAB** | One primary create action | New message · new intake (context-gated) |
-| **Search affordance** | Persistent or pull-down | Global command palette — always reachable |
-| **Back** | Single stack — shell owns it | Never nested AppBars |
-| **Haptic** | Send · payment recorded · call connect | Subtle — confirm money and comms |
+| **Search affordance** | Persistent or pull-down | Global command palette - always reachable |
+| **Back** | Single stack - shell owns it | Never nested AppBars |
+| **Haptic** | Send · payment recorded · call connect | Subtle - confirm money and comms |
 
 ---
 
@@ -40,9 +40,9 @@ Each screen spec must declare which patterns it uses ([`_SPEC_TEMPLATE.md`](../s
 | Pattern | Use |
 |---------|-----|
 | **Inline reply** | Composer fixed bottom · keyboard pushes content |
-| **Quick reply chips** | Operational templates — not AI |
-| **Unread badge** | Tab + row — same count authority |
-| **Mark read** | On thread open — server authoritative |
+| **Quick reply chips** | Operational templates - not AI |
+| **Unread badge** | Tab + row - same count authority |
+| **Mark read** | On thread open - server authoritative |
 
 ---
 
@@ -50,9 +50,9 @@ Each screen spec must declare which patterns it uses ([`_SPEC_TEMPLATE.md`](../s
 
 | Pattern | Use |
 |---------|-----|
-| **Incoming full-screen** | Context before answer — not minimal OS default only |
+| **Incoming full-screen** | Context before answer - not minimal OS default only |
 | **In-call minimal chrome** | Customer strip stays visible |
-| **Post-call sheet** | Note · text · RO · schedule — no hunt |
+| **Post-call sheet** | Note · text · RO · schedule - no hunt |
 
 ---
 

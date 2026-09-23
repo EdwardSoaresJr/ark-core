@@ -4,7 +4,7 @@
 
 @section('content')
     <h1>Shop</h1>
-    <p class="lead">Identity is stored in ARK’s shop settings authority — not a second configuration system.</p>
+    <p class="lead">Identity is stored in ARK’s shop settings authority - not a second configuration system.</p>
 
     <form method="post" action="{{ route('install.shop.store') }}">
         @csrf

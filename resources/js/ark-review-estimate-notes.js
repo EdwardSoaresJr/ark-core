@@ -1,5 +1,5 @@
 /**
- * Dragon Review Estimate Notes — whole-estimate or single-concern critique + proposals.
+ * Dragon Review Estimate Notes - whole-estimate or single-concern critique + proposals.
  * Nothing writes RO authority until the advisor Applies one proposal at a time.
  */
 export function arkReviewEstimateNotes(config = {}) {

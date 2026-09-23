@@ -2,10 +2,10 @@
     $legacyMileageIn = $repairOrder->mileage_in === null ? $repairOrder->resolvedMileageIn() : null;
     $displayIn = $repairOrder->mileage_in !== null
         ? number_format((int) $repairOrder->mileage_in)
-        : ($legacyMileageIn ? number_format((int) $legacyMileageIn) : '—');
+        : ($legacyMileageIn ? number_format((int) $legacyMileageIn) : '-');
     $displayOut = $repairOrder->mileage_out !== null
         ? number_format((int) $repairOrder->mileage_out)
-        : '—';
+        : '-';
 @endphp
 
 <div

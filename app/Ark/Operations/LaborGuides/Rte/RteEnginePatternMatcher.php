@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\LaborGuides\Rte;
 
 /**
- * RTE engine pattern matching — includes known family groupings not expressible as simple wildcards.
+ * RTE engine pattern matching - includes known family groupings not expressible as simple wildcards.
  */
 final class RteEnginePatternMatcher
 {

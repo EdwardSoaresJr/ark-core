@@ -129,7 +129,7 @@ test('repair order relationship timeline is strict linked oldest to newest', fun
         'started_at' => Carbon::parse('2026-07-10 10:15:00'),
     ]);
 
-    // Unlinked customer call — must not appear on RO A.
+    // Unlinked customer call - must not appear on RO A.
     CallSession::query()->create([
         'provider' => 'twilio',
         'provider_call_sid' => 'CAroreltimeline03',

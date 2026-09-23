@@ -305,7 +305,7 @@ final class CustomerPartDescriptionPresenter
             return $description;
         }
 
-        $pattern = '/^'.preg_quote($brand, '/').'\b[\s\-–—:]*/iu';
+        $pattern = '/^'.preg_quote($brand, '/').'\b[\s\-–\x{2014}:]*/iu';
 
         return $this->normalizeSpacing((string) preg_replace($pattern, '', $description));
     }
@@ -327,7 +327,7 @@ final class CustomerPartDescriptionPresenter
         $positional = $this->extractLeadingPositional($prefix);
         $meaningfulSuffix = $this->extractMeaningfulQualifierSuffix($suffix, $category);
 
-        // Bare category unless fitment qualifiers are present — avoids catalog merchandising leakage.
+        // Bare category unless fitment qualifiers are present - avoids catalog merchandising leakage.
         if ($positional === '' && $meaningfulSuffix === '') {
             return $category;
         }
@@ -373,8 +373,8 @@ final class CustomerPartDescriptionPresenter
             $stripped = preg_replace($pattern, ' ', $stripped) ?? $stripped;
         }
 
-        $stripped = preg_replace('/^(?:compatible with|for use with|suitable for)[^-–—]+[-–—]\s*/iu', '', $stripped) ?? $stripped;
-        $stripped = preg_replace('/\s*[-–—]\s*/u', ' ', $stripped) ?? $stripped;
+        $stripped = preg_replace('/^(?:compatible with|for use with|suitable for)[^-–\x{2014}]+[-–\x{2014}]\s*/iu', '', $stripped) ?? $stripped;
+        $stripped = preg_replace('/\s*[-–\x{2014}]\s*/u', ' ', $stripped) ?? $stripped;
 
         return $this->normalizeSpacing($stripped);
     }
@@ -720,7 +720,7 @@ final class CustomerPartDescriptionPresenter
             $stripped = preg_replace($pattern, ' ', $stripped) ?? $stripped;
         }
 
-        $stripped = preg_replace('/^(?:compatible with|for use with|suitable for)[^-–—]+[-–—]\s*/u', '', $stripped) ?? $stripped;
+        $stripped = preg_replace('/^(?:compatible with|for use with|suitable for)[^-–\x{2014}]+[-–\x{2014}]\s*/u', '', $stripped) ?? $stripped;
 
         return $this->normalizeSpacing($stripped);
     }

@@ -29,7 +29,7 @@ function isSqliteSchemaIntrospectionQuery(string $sql): bool
 {
     $sql = ltrim($sql);
 
-    // SQLite-only Schema grammar traffic — not production MySQL cost.
+    // SQLite-only Schema grammar traffic - not production MySQL cost.
     return (bool) preg_match(
         '/\bpragma\b|\bsqlite_master\b|\bsqlite_temp_master\b|dflt_value as ["\']default["\']/i',
         $sql,

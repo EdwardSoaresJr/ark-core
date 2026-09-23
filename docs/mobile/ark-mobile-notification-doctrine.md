@@ -18,7 +18,7 @@ The mobile application must never depend on Firebase services for business logic
 Provider transport only:
 
 - Apple Push Notification Service (APNs)
-- Firebase Cloud Messaging (FCM) — transport layer only
+- Firebase Cloud Messaging (FCM) - transport layer only
 - Future notification transports
 
 Example:
@@ -66,7 +66,7 @@ Push providers deliver notifications only.
 
 ## Notification authority vs transport
 
-**Notifications are authority events.** ARK creates them from operational truth — not from Firebase, APNs, or poll mechanics.
+**Notifications are authority events.** ARK creates them from operational truth - not from Firebase, APNs, or poll mechanics.
 
 **Push delivery is transport.** Business code speaks in ARK terms; only the transport implementation names the provider.
 
@@ -79,12 +79,12 @@ MobilePushService (resolves device tokens, shop/user already decided)
         │
 PushTransport::send(...)
         │
-FirebasePushTransport (today — APNs direct, OneSignal, etc. tomorrow)
+FirebasePushTransport (today - APNs direct, OneSignal, etc. tomorrow)
         │
 Staff mobile app
 ```
 
-One **ARK Staff** Firebase project for the single App Store / Play Store binary — not per shop. Every device authenticates to ARK; ARK decides `device → shop → user → role → send`. Firebase knows only: deliver this packet to this device token.
+One **ARK Staff** Firebase project for the single App Store / Play Store binary - not per shop. Every device authenticates to ARK; ARK decides `device → shop → user → role → send`. Firebase knows only: deliver this packet to this device token.
 
 | Layer | Responsibility |
 | --- | --- |
@@ -130,7 +130,7 @@ ARK owns:
 
 Push providers do not own device truth.
 
-Optional `fcm_token` on register is a **transport hint** stored on `mobile_devices` — not device authority and not required for login, comms, or workflow.
+Optional `fcm_token` on register is a **transport hint** stored on `mobile_devices` - not device authority and not required for login, comms, or workflow.
 
 ---
 
@@ -165,4 +165,4 @@ Setup wiring: [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push
 - [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push-setup-doctrine-v1.md)
 - [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md)
 - [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md)
-- ark-pressure-first.mdc — observe before automate
+- ark-pressure-first.mdc - observe before automate

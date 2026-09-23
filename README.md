@@ -16,7 +16,7 @@ It is a clean public snapshot and does not include private shop data, production
 
 ## What you get
 
-* **ARK Web** — the Laravel-based core shop management system (operations, portal, installer)
+* **ARK Web** - the Laravel-based core shop management system (operations, portal, installer)
 * Database migrations, automated tests, and configuration examples
 * Synthetic/demo shop seed data
 * **Dragon runtime** with support for your own model provider credentials
@@ -63,11 +63,11 @@ Some parts of the environment used to operate and develop ARK cannot or should n
 
 ARK can be run with Docker Compose or directly on a compatible PHP environment.
 
-* PHP 8.3+ — match the version requirements in `composer.json`
+* PHP 8.3+ - match the version requirements in `composer.json`
 * Composer when running directly on the host
 * Node.js and npm for Vite assets
 * MySQL 8 for the application database
-* Redis — required for the Docker Compose runtime (cache, sessions, queues, Horizon)
+* Redis - required for the Docker Compose runtime (cache, sessions, queues, Horizon)
 
 Automated tests use isolated SQLite (`:memory:` per process) through Pest/PHPUnit. Tests do not use your application MySQL database.
 
@@ -148,7 +148,7 @@ Stock Core does not include private shop knowledge sources or proprietary knowle
 
 A few architectural rules are important when working on ARK:
 
-* **Database per tenant** — ARK does not use a shared-database `shop_id` tenancy model.
+* **Database per tenant** - ARK does not use a shared-database `shop_id` tenancy model.
 * **Workstations and stations** represent physical locations within a shop, not separate tenants.
 * **Authoritative services own business truth.** Projections and views present that information rather than independently recreating it.
 * **Financial calculations stay server-side.** Important totals should come from authoritative calculators instead of being duplicated in client-side JavaScript.
@@ -169,7 +169,7 @@ See:
 * `NOTICE`
 
 Core records external payments on the ledger. Managed processor connectivity is
-not part of this repository — see `docs/platform/ark-payments-boundary-v1.md`.
+not part of this repository - see `docs/platform/ark-payments-boundary-v1.md`.
 
 For project naming and branding guidelines, see `TRADEMARKS.md`.
 

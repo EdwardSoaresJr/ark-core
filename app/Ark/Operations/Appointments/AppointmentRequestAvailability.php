@@ -135,7 +135,7 @@ final class AppointmentRequestAvailability
     }
 
     /**
-     * All known period values (including disabled) — for validating stored Lead metadata.
+     * All known period values (including disabled) - for validating stored Lead metadata.
      *
      * @return list<array{value: string, label: string}>
      */

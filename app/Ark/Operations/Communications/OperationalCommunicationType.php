@@ -41,7 +41,7 @@ enum OperationalCommunicationType: string
         };
     }
 
-    /** Carrier delivery receipts — tracked on the event row, not advisor comms scan surfaces. */
+    /** Carrier delivery receipts - tracked on the event row, not advisor comms scan surfaces. */
     public function surfacesOnAdvisorCommsTimeline(): bool
     {
         return ! in_array($this, [self::SmsDelivered, self::SmsDeliveryFailed], true);

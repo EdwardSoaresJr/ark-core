@@ -38,9 +38,9 @@ enum RepairOrderCollectionDisposition: string
     public function waiverCustomerLabel(): ?string
     {
         return match ($this) {
-            self::Courtesy => 'Courtesy — balance waived',
-            self::Trade => 'Trade — balance waived',
-            self::Goodwill => 'Goodwill — balance waived',
+            self::Courtesy => 'Courtesy - balance waived',
+            self::Trade => 'Trade - balance waived',
+            self::Goodwill => 'Goodwill - balance waived',
             self::BadDebt, self::Retail => null,
         };
     }

@@ -50,7 +50,7 @@ final class PollSquareTerminalCheckoutAction
 
             if (! $payment->isCompleted()) {
                 // Checkout can flip to COMPLETED before the payment object is COMPLETED.
-                // Keep polling instead of throwing — the next poll usually finishes cleanly.
+                // Keep polling instead of throwing - the next poll usually finishes cleanly.
                 return $attempt;
             }
 

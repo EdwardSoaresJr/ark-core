@@ -32,7 +32,7 @@ class VehicleVinDecodeController
             }
 
             if ($hasVin && $hasPlate) {
-                $validator->errors()->add('decode', 'Decode using either VIN or plate — not both at once.');
+                $validator->errors()->add('decode', 'Decode using either VIN or plate - not both at once.');
             }
         });
 

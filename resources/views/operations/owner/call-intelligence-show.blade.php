@@ -84,7 +84,7 @@
                 @elseif ($row['analysis_error'])
                     <div class="rounded-sm border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">{{ $row['analysis_error'] }}</div>
                 @elseif ($row['analysis_status'] === 'pending' || $row['analysis_status'] === 'processing')
-                    <p class="text-sm text-slate-500">{{ $row['analysis_status_label'] }} — check back shortly.</p>
+                    <p class="text-sm text-slate-500">{{ $row['analysis_status_label'] }} - check back shortly.</p>
                 @endif
 
                 @if (! empty($row['topics']))

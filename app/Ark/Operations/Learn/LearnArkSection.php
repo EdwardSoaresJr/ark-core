@@ -10,7 +10,7 @@ final class LearnArkSection
 {
     public const OWNER = 'owner';
 
-    /** @var list<ArkRole> Highest staff role first — used for "role and down" learn access. */
+    /** @var list<ArkRole> Highest staff role first - used for "role and down" learn access. */
     private const STAFF_ROLE_HIERARCHY = [
         ArkRole::Admin,
         ArkRole::Advisor,

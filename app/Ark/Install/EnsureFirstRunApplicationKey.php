@@ -123,7 +123,7 @@ final class EnsureFirstRunApplicationKey
         }
 
         $contents = (string) file_get_contents($path);
-        // Use horizontal whitespace only after "=" — "\s*" would consume the newline
+        // Use horizontal whitespace only after "=" - "\s*" would consume the newline
         // and capture the following .env assignment (e.g. APP_DEBUG / CUSTOM_KEEP).
         if (preg_match('/^\s*APP_KEY\s*=\h*([^\r\n]*)/m', $contents, $matches) !== 1) {
             return '';

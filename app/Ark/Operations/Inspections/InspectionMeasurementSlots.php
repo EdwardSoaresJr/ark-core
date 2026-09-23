@@ -73,7 +73,7 @@ final class InspectionMeasurementSlots
     }
 
     /**
-     * Corner tire — tread SM + pressure SM at the same wheel.
+     * Corner tire - tread SM + pressure SM at the same wheel.
      *
      * @return list<Slot>
      */
@@ -88,7 +88,7 @@ final class InspectionMeasurementSlots
     public static function discBrakePadsAndRotor(): array
     {
         // Rotor CR lives on the point's observed_state (condition buttons).
-        // Pad thicknesses are SM — Good alone does not address the point.
+        // Pad thicknesses are SM - Good alone does not address the point.
         // Corner Inspection v1 uses Inner/Outer; keys stay compatible with comparison.
         return [
             ['key' => 'inner', 'name' => 'Inner pad', 'unit' => 'mm', 'required' => true, 'type' => 'number'],

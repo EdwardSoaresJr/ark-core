@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 /**
  * Materializes and closes the auto-assigned workday for staff whose day is
  * covered by Business Hours instead of a real punch. Explicit punches
- * (including lunch) always win — this action never overrides an unresolved
+ * (including lunch) always win - this action never overrides an unresolved
  * lunch break and never reopens a day that already ended.
  */
 final class EnsureAutoClockSessionsAction
@@ -77,7 +77,7 @@ final class EnsureAutoClockSessionsAction
 
     /**
      * A closed Out for Lunch punch with no newer session means the person is
-     * currently on their break — never auto-materialize or auto-close over it.
+     * currently on their break - never auto-materialize or auto-close over it.
      */
     private function isAwaitingLunchReturn(User $user): bool
     {

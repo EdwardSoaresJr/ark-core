@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Messaging\Messenger;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Messenger channel projection for Core — transport is not bundled.
+ * Messenger channel projection for Core - transport is not bundled.
  */
 final class MetaMessengerConfiguration
 {

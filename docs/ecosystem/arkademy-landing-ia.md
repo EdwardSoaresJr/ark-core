@@ -1,6 +1,6 @@
 # ARKademy Landing IA
 
-**Status:** Recommended structure — placeholders documented; content migration is a separate phase.
+**Status:** Recommended structure - placeholders documented; content migration is a separate phase.
 
 ## Goal
 
@@ -14,9 +14,9 @@ Not: “I am in a generic wiki.”
 
 BookStack default home can show **Shelves**, **Books**, or a **custom HTML** page. ARKademy uses:
 
-- **APP_THEME=arkademy** — ARK header mark, cerulean accents, ecosystem switcher
-- **Shelf landing** — `Shop In A Box` shelf as primary entry (`BOOKSTACK_SHELF_SLUG=shop-in-a-box`)
-- **OIDC** — staff enter via ARK identity; no parallel BookStack passwords
+- **APP_THEME=arkademy** - ARK header mark, cerulean accents, ecosystem switcher
+- **Shelf landing** - `Shop In A Box` shelf as primary entry (`BOOKSTACK_SHELF_SLUG=shop-in-a-box`)
+- **OIDC** - staff enter via ARK identity; no parallel BookStack passwords
 
 **Verdict:** BookStack home customization is **sufficient for Phase 1** when the primary shelf is curated and named for shop operations. A dedicated custom HTML landing page is **optional later** if advisors still miss role-based entry.
 
@@ -24,7 +24,7 @@ BookStack default home can show **Shelves**, **Books**, or a **custom HTML** pag
 
 ### Shop In A Box (base curriculum)
 
-Distributable ARK content — maps from existing Blade catalogs:
+Distributable ARK content - maps from existing Blade catalogs:
 
 | Book | Role catalog | Audience |
 |------|--------------|----------|
@@ -42,7 +42,7 @@ Add when ready (not blocking landing):
 
 ### Demo Auto Repair SOPs (shop shelf)
 
-Shop-private content — not distributed to other shops:
+Shop-private content - not distributed to other shops:
 
 | Book | Purpose |
 |------|---------|
@@ -51,7 +51,7 @@ Shop-private content — not distributed to other shops:
 | Technician | Bay and production SOPs |
 | Operations | Shop floor conventions |
 
-## Placeholder pages (future SOPs — not final content)
+## Placeholder pages (future SOPs - not final content)
 
 Use BookStack pages with clear **PLACEHOLDER** titles until real SOPs are written:
 
@@ -76,9 +76,9 @@ Use BookStack pages with clear **PLACEHOLDER** titles until real SOPs are writte
 | 4 | Add placeholder pages with visible “Draft” tags | Shop admin |
 | 5 | Register URLs in `arkademy_content_registry` when stable | ARK import / manual |
 
-This pass **does not** run bulk placeholder creation — avoids fake authority in the registry.
+This pass **does not** run bulk placeholder creation - avoids fake authority in the registry.
 
-## Custom landing page — when needed
+## Custom landing page - when needed
 
 Consider a custom BookStack home or theme view if:
 
@@ -96,7 +96,7 @@ Staff should reach ARKademy via:
 - Ecosystem switcher **ARKademy**
 - Deep links from call intelligence / coaching digest
 
-All use `ArkademyUrls` / `EcosystemArkademyBridge` — deterministic legacy keys, not search.
+All use `ArkademyUrls` / `EcosystemArkademyBridge` - deterministic legacy keys, not search.
 
 ## Success check
 

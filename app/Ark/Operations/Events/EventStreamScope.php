@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Events;
 
 /**
- * Scoped event stream membership — mechanical projection of E0b.
+ * Scoped event stream membership - mechanical projection of E0b.
  */
 enum EventStreamScope: string
 {

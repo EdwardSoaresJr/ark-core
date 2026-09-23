@@ -12,7 +12,7 @@ SurfaceRouting::publicRoutes(function (): void {
         });
 
         // Safety bridge only when BOOKING_SURFACE_BASE_URL is set.
-        // No route name — public.book must stay absent (Website boundary).
+        // No route name - public.book must stay absent (Website boundary).
         if (BookingSurface::isConfigured()) {
             Route::get('/book', BookingSurfaceRedirectController::class);
         }

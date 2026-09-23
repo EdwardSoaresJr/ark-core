@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * ARK Complete Funnel — the product journey on autorepairkeeper.com.
+ * ARK Complete Funnel - the product journey on autorepairkeeper.com.
  *
  * M1: Account is real (User).
  * M2: Shop is real (platform Shop owned by User). Provisioning remains funnel UI.

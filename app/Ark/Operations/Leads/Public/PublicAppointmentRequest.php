@@ -7,7 +7,7 @@ use App\Ark\Operations\Appointments\AppointmentRequestAvailabilityProjection;
 
 /**
  * Appointment-request projection helpers for the public /book surface.
- * Still creates a website Lead — does not write Appointment Truth.
+ * Still creates a website Lead - does not write Appointment Truth.
  */
 final class PublicAppointmentRequest
 {
@@ -23,7 +23,7 @@ final class PublicAppointmentRequest
         'Within a few days',
         'Later this week',
         'Next week',
-        'Flexible — call or text me to schedule',
+        'Flexible - call or text me to schedule',
     ];
 
     public static function isBookSurface(?array $metadata): bool

@@ -50,7 +50,7 @@
                 @if (! empty($template_name ?? null))
                     {{ $template_name }} ·
                 @endif
-                Point {{ $nav['index'] ?? '—' }} of {{ $nav['total'] ?? '—' }}
+                Point {{ $nav['index'] ?? '-' }} of {{ $nav['total'] ?? '-' }}
                 · {{ $checked }}/{{ $total }} checked
             </p>
             <h2 class="ops-inspection-walk__title">{{ $living_record['label'] }}</h2>
@@ -84,7 +84,7 @@
     @if ($isAxleGate && $canEdit)
         <section class="ops-inspection-walk__section" aria-labelledby="inspection-axle-heading">
             <h3 id="inspection-axle-heading" class="ops-inspection-walk__section-label">Rear axle brake type</h3>
-            <p class="ops-inspection-walk__hint-copy mb-2">One choice for the rear axle — Disc or Drum.</p>
+            <p class="ops-inspection-walk__hint-copy mb-2">One choice for the rear axle - Disc or Drum.</p>
             <div class="ops-inspection-walk__conditions" role="group" aria-label="Rear axle type">
                 <button type="button" class="ops-inspection-walk__condition" :class="{ 'is-active': rearAxleBrakeType === 'disc' }" x-on:click="setRearAxle('disc')">Disc</button>
                 <button type="button" class="ops-inspection-walk__condition" :class="{ 'is-active': rearAxleBrakeType === 'drum' }" x-on:click="setRearAxle('drum')">Drum</button>
@@ -115,7 +115,7 @@
                 </div>
                 <p class="ops-inspection-walk__autosave" x-show="saving" x-cloak>Saving…</p>
                 <p class="ops-inspection-walk__autosave ops-inspection-walk__autosave--saved" x-show="saved" x-cloak>Saved</p>
-                <p class="ops-inspection-walk__autosave ops-inspection-walk__autosave--error" x-show="saveError" x-cloak>Save failed — tap condition again to retry</p>
+                <p class="ops-inspection-walk__autosave ops-inspection-walk__autosave--error" x-show="saveError" x-cloak>Save failed - tap condition again to retry</p>
             @else
                 <p class="ops-inspection-walk__readonly">{{ $living_record['status_display'] ?? 'Not checked' }}</p>
             @endif
@@ -141,7 +141,7 @@
                                     x-model="slot.value"
                                     x-on:change="saveSlots()"
                                 >
-                                    <option value="">—</option>
+                                    <option value="">-</option>
                                     <option value="good">Good</option>
                                     <option value="monitor">Monitor</option>
                                     <option value="needs_attention">Needs Attention</option>
@@ -173,7 +173,7 @@
                     @foreach ($slots as $slot)
                         <li class="ops-inspection-walk__prior-row">
                             <span>{{ $slot['name'] }}</span>
-                            <span>{{ filled($slot['value']) ? $slot['value'].($slot['unit'] ? ' '.$slot['unit'] : '') : '—' }}</span>
+                            <span>{{ filled($slot['value']) ? $slot['value'].($slot['unit'] ? ' '.$slot['unit'] : '') : '-' }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -209,7 +209,7 @@
             @elseif ($living_record['measurement']['formatted'] ?? null)
                 <p class="ops-inspection-walk__readonly">{{ $living_record['measurement']['formatted'] }}</p>
             @else
-                <p class="ops-inspection-walk__empty">—</p>
+                <p class="ops-inspection-walk__empty">-</p>
             @endif
         </section>
     @endif
@@ -228,7 +228,7 @@
     @if ($living_record['requires_scan_evidence'] ?? false)
         <section class="ops-inspection-walk__section">
             <p class="ops-inspection-walk__hint-copy">
-                Scan evidence preferred — attach a photo/screenshot of the tool. Manual code typing is not required when an attachment is present.
+                Scan evidence preferred - attach a photo/screenshot of the tool. Manual code typing is not required when an attachment is present.
             </p>
         </section>
     @endif
@@ -304,7 +304,7 @@
                     @elseif (filled($living_record['note'] ?? null))
                         <p class="ops-inspection-walk__readonly">{{ $living_record['note'] }}</p>
                     @else
-                        <p class="ops-inspection-walk__empty">—</p>
+                        <p class="ops-inspection-walk__empty">-</p>
                     @endif
                 </section>
             </div>
@@ -362,7 +362,7 @@
                     >
                 </form>
             @elseif (count($living_record['photos'] ?? []) === 0)
-                <p class="ops-inspection-walk__empty">—</p>
+                <p class="ops-inspection-walk__empty">-</p>
             @endif
         </section>
 
@@ -379,7 +379,7 @@
             @elseif (filled($living_record['note'] ?? null))
                 <p class="ops-inspection-walk__readonly">{{ $living_record['note'] }}</p>
             @else
-                <p class="ops-inspection-walk__empty">—</p>
+                <p class="ops-inspection-walk__empty">-</p>
             @endif
         </section>
     @endif
@@ -416,7 +416,7 @@
             @else
                 <span class="ops-inspection-walk__nav-btn is-disabled" aria-disabled="true">← Prev</span>
             @endif
-            <span class="ops-inspection-walk__nav-mid">{{ $nav['index'] ?? '—' }}/{{ $nav['total'] ?? '—' }}</span>
+            <span class="ops-inspection-walk__nav-mid">{{ $nav['index'] ?? '-' }}/{{ $nav['total'] ?? '-' }}</span>
             @if ($nav['next_url'] ?? null)
                 <a href="{{ $nav['next_url'] }}" class="ops-inspection-walk__nav-btn ops-inspection-walk__nav-btn--next">Next →</a>
             @else

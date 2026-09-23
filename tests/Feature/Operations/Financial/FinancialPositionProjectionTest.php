@@ -103,15 +103,15 @@ test('after final invoice living estimate may drift but position stays on immuta
         ->issuedInvoice($repairOrder->fresh());
     $invoiceTotalAfter = InvoiceSnapshotBuilder::invoiceTotalCents($invoiceDoc->snapshot_json ?? []);
 
-    // Living estimate may change — that is not a second financial contract.
+    // Living estimate may change - that is not a second financial contract.
     expect($livingEstimateTotal)->toBe($issuedTotal + 7000)
         ->and($livingEstimateTotal)->not->toBe($issuedTotal);
 
-    // Final Invoice is immutable evidence — never silently refreshed.
+    // Final Invoice is immutable evidence - never silently refreshed.
     expect($invoiceTotalAfter)->toBe($issuedTotal)
         ->and($invoiceDoc->snapshot_json)->toBe($issuedSnapshotJson);
 
-    // Position remains the owe-today authority from Invoice + Ledger — not living estimate.
+    // Position remains the owe-today authority from Invoice + Ledger - not living estimate.
     expect($after->contractSource)->toBe(FinancialContractSource::Invoice)
         ->and($after->approvedWorkCents)->toBe($issuedTotal)
         ->and($after->customerOwesTodayCents)->toBe($issuedTotal)

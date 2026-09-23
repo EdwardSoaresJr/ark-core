@@ -1,7 +1,7 @@
 # Inspection Workspace
 
-**Status:** Canonical — evolves with floor observation  
-**Authority:** [Inspection Authority](inspection-authority.md) — do not redefine here  
+**Status:** Canonical - evolves with floor observation  
+**Authority:** [Inspection Authority](inspection-authority.md) - do not redefine here  
 **Supersedes:** Interaction portions of [Inspection Authority v1.5](inspection-authority-v1.5.md) and [Workflow Principle 1.5](inspection-workflow-principle-1.5.md)
 
 Part of the inspection stack: **Authority** (immutable) → **Projection** (audience) → **Workspace** (this document).
@@ -46,9 +46,9 @@ Auto-save, **Next →**, walk order, persistent orientation, and inline evidence
 
 ### Walk sequence
 
-1. Open assigned RO → **Inspection** (production surface — not Estimate Review tab).
+1. Open assigned RO → **Inspection** (production surface - not Estimate Review tab).
 2. Walk the vehicle in **walk order** (shop-configured; today: template `position` until walk-order settings ship).
-3. Tap **condition** on each point — autosaves immediately.
+3. Tap **condition** on each point - autosaves immediately.
 4. Glance **previous visit** before entering today’s evidence.
 5. Add measurement / photo / video / note when the point requires or merits it.
 6. **Next →** to the following point.
@@ -62,9 +62,9 @@ Primary order = **walk order** across the vehicle.
 
 | Setting | Describes |
 |---------|-----------|
-| **Template** | **What** — labels, measurement definitions, photo policy per point |
-| **Walk order** | **How** — sequence shops actually move around the car |
-| **Condition labels** | **Language** — OK/Monitor/Replace vs Pass/Monitor/Fail |
+| **Template** | **What** - labels, measurement definitions, photo policy per point |
+| **Walk order** | **How** - sequence shops actually move around the car |
+| **Condition labels** | **Language** - OK/Monitor/Replace vs Pass/Monitor/Fail |
 
 Different shops inspect differently:
 
@@ -77,9 +77,9 @@ Walk order belongs in **Settings**. Template describes *what*. Walk order descri
 
 ### Condition labels (projection)
 
-Authority stays `observed_state` enums. Buttons are configurable per shop — not hardcoded Good/Monitor/Failed, not mandatory Green/Yellow/Red.
+Authority stays `observed_state` enums. Buttons are configurable per shop - not hardcoded Good/Monitor/Failed, not mandatory Green/Yellow/Red.
 
-### Photo policy (per point — not per condition)
+### Photo policy (per point - not per condition)
 
 | Policy | Example |
 |--------|---------|
@@ -95,26 +95,26 @@ Photo rules live on **template point configuration**, not “always photo on red
 
 When a technician opens one point:
 
-1. **Condition** — tap targets (autosave)
-2. **Previous visit** — last condition/measurement for this point (projection)
+1. **Condition** - tap targets (autosave)
+2. **Previous visit** - last condition/measurement for this point (projection)
 3. **Measurements**
 4. **Photos & video**
 5. **Notes**
-6. **Recommendation hint** — advisor-facing projection; inspection does not create work
+6. **Recommendation hint** - advisor-facing projection; inspection does not create work
 
-Previous visit before photos: *“Last time 5 mm — today 1 mm”* changes the inspection before they capture anything.
+Previous visit before photos: *“Last time 5 mm - today 1 mm”* changes the inspection before they capture anything.
 
 ---
 
 ## Concern linkage (differentiating rhythm)
 
-**Vehicle health** — point with no concern link:
+**Vehicle health** - point with no concern link:
 
 ```
 Front Brakes → Replace → evidence on point
 ```
 
-**Complaint-driven** — same point, linked scope:
+**Complaint-driven** - same point, linked scope:
 
 ```
 Customer: Grinding
@@ -132,23 +132,23 @@ Show concern-linked points under **scope headers** on production and review surf
 
 When the checklist cannot express reality:
 
-1. **Checklist first** — use or extend template.
-2. **Reality wins** — add a point to the template when the gap repeats.
-3. **Freeform last** — ad-hoc point or prose only when vocabulary has not caught up yet.
+1. **Checklist first** - use or extend template.
+2. **Reality wins** - add a point to the template when the gap repeats.
+3. **Freeform last** - ad-hoc point or prose only when vocabulary has not caught up yet.
 
 Track freeform usage as **vocabulary gap signal**, not workflow preference.
 
 ---
 
-## Adoption (floor — not dashboard)
+## Adoption (floor - not dashboard)
 
 **Phase:** Architecture is validated. **Adoption is the test now.**
 
 The question is no longer *did we build the right thing?* It is *did the shop naturally choose to use it?* A technician can like a feature and bypass it, or complain and still use it because it helps. **Behavior is the authority.**
 
-Do not build adoption dashboards for at least a month. `php artisan ark:inspection-adoption` prints traces that may **confirm** what you already noticed on the floor — not decide what matters.
+Do not build adoption dashboards for at least a month. `php artisan ark:inspection-adoption` prints traces that may **confirm** what you already noticed on the floor - not decide what matters.
 
-After Landon's week, run the same *home* question across subsystems: Intake, Inspection, Conversation, Board — did this workspace become the natural place to work without navigation forcing it?
+After Landon's week, run the same *home* question across subsystems: Intake, Inspection, Conversation, Board - did this workspace become the natural place to work without navigation forcing it?
 
 ---
 
@@ -167,7 +167,7 @@ Everything translates toward **decision-making**, not storage.
 
 ## Web vs mobile
 
-One inspection experience — **shared projections in Operations** — projected onto different surfaces. Improving inspection improves Inspection, not "mobile inspection" or "desktop inspection."
+One inspection experience - **shared projections in Operations** - projected onto different surfaces. Improving inspection improves Inspection, not "mobile inspection" or "desktop inspection."
 
 | Surface | Posture |
 |---------|---------|
@@ -201,12 +201,12 @@ Do not fork authority or duplicate living-record logic per surface.
 
 P0 shipped: web walk workspace, auto-template, shared Operations projections, vocabulary-gap demotion.
 
-Earn next through observation — not roadmap momentum:
+Earn next through observation - not roadmap momentum:
 
 1. Walk order settings (shop sequence vs template position).
 2. Photo policy per point (required / recommended / forbidden).
 3. Concern-linked points under scope headers.
-4. Derivation automation (recommendation → estimate candidates) — only if adoption holds.
+4. Derivation automation (recommendation → estimate candidates) - only if adoption holds.
 
 ---
 
@@ -214,11 +214,11 @@ Earn next through observation — not roadmap momentum:
 
 Nothing else until these stay healthy for a week.
 
-### 1 — Begin
+### 1 - Begin
 
 Did the tech **open Inspection first**, or bypass to something else (RO overview, conversation, verified findings, prose elsewhere)?
 
-### 2 — Return
+### 2 - Return
 
 Did they naturally come back?
 
@@ -234,7 +234,7 @@ Inspection → RO overview → Inspection
 
 If yes, Inspection is becoming **home**.
 
-### 3 — Vocabulary gaps
+### 3 - Vocabulary gaps
 
 Every freeform escape hatch use is **product input**, not technician error.
 
@@ -245,7 +245,7 @@ Didn't fit: Electrical checklist
 
 → tomorrow's template.
 
-### 4 — Rhythm breaks
+### 4 - Rhythm breaks
 
 Not bugs. Moments where the **physical inspection stopped because of software**:
 
@@ -256,5 +256,5 @@ Not bugs. Moments where the **physical inspection stopped because of software**:
 
 These are **momentum** problems. They matter more than UI polish.
 
-Operator rhythm is **literal** here — walk order, phone, flashlight, lift, hood. If ARK asks the technician to stop moving around the vehicle, it failed.
+Operator rhythm is **literal** here - walk order, phone, flashlight, lift, hood. If ARK asks the technician to stop moving around the vehicle, it failed.
 

@@ -1,13 +1,13 @@
 # ARK Event Contracts v1
 
-**Status:** **Signed** (Edward, 2026-07-04) — foundational ARK document.  
-**Prerequisite:** [`companion-authority-model-v1.md`](companion-authority-model-v1.md) — approved.
+**Status:** **Signed** (Edward, 2026-07-04) - foundational ARK document.  
+**Prerequisite:** [`companion-authority-model-v1.md`](companion-authority-model-v1.md) - approved.
 
-This document defines **ARK's business language**. It intentionally contains **no database schema, API contracts, mobile widgets, server models, transport protocols, or storage decisions**. Those are implementations of this language — not the language itself.
+This document defines **ARK's business language**. It intentionally contains **no database schema, API contracts, mobile widgets, server models, transport protocols, or storage decisions**. Those are implementations of this language - not the language itself.
 
-Six months from now this document may matter more than any single app surface. Once the event language is right, the Companion, desktop, AI, notifications, reporting, automation, voice, and analytics are all **projections of the same business facts** — not parallel vocabularies.
+Six months from now this document may matter more than any single app surface. Once the event language is right, the Companion, desktop, AI, notifications, reporting, automation, voice, and analytics are all **projections of the same business facts** - not parallel vocabularies.
 
-**Next (E1):** [`contract-realization-register-v1.md`](contract-realization-register-v1.md) — vertical slice per companion-critical verb. Architecture closed.
+**Next (E1):** [`contract-realization-register-v1.md`](contract-realization-register-v1.md) - vertical slice per companion-critical verb. Architecture closed.
 
 ---
 
@@ -17,7 +17,7 @@ Six months from now this document may matter more than any single app surface. O
 
 > **Events describe what happened. Observations describe what it means. Projections never invent events.**
 
-Example: **Estimate viewed** — event. *Customer appears engaged* — observation. Fundamentally different. Observations never invent truth; AI must not skip the event layer.
+Example: **Estimate viewed** - event. *Customer appears engaged* - observation. Fundamentally different. Observations never invent truth; AI must not skip the event layer.
 
 > **Desktop organizes information. Mobile responds to events.**
 
@@ -30,7 +30,7 @@ Authorities
     ↓
 Events                   ← this document (verbs)
     ↓
-Event Stream Engine      ← infrastructure — organizes by scope; see ark-scoped-event-streams-v1.md
+Event Stream Engine      ← infrastructure - organizes by scope; see ark-scoped-event-streams-v1.md
     ↓
 Observations             ← what it means
     ↓
@@ -39,7 +39,7 @@ Projections              ← compose; never invent events
 Surfaces
 ```
 
-**Timeline** is UI for engine output — not an authority. See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.md).
+**Timeline** is UI for engine output - not an authority. See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.md).
 
 ### Ordering (do not invert)
 
@@ -55,26 +55,26 @@ See [`ark-authority-interaction-map-v1.md`](../ecosystem/ark-authority-interacti
 
 **Event Contracts must be understandable without knowing any implementation language or framework.**
 
-Contracts use business vocabulary only. Implementation mapping lives in a **separate, non-normative** appendix at the end of this document — never in the contract definitions themselves.
+Contracts use business vocabulary only. Implementation mapping lives in a **separate, non-normative** appendix at the end of this document - never in the contract definitions themselves.
 
 Never create a platform-wide event type enum with 147 values. **Each authority owns its vocabulary.**
 
 **Contracts are verbs. Authorities are nouns.**
 
-| Verbs (events) | Nouns (authorities — never event names) |
+| Verbs (events) | Nouns (authorities - never event names) |
 |----------------|----------------------------------------|
 | Inspection Completed · Finding Added | Inspection |
 | Payment Received · Payment Requested | Financial |
 | Message Received · Call Missed | Message · Call |
 | Estimate Sent · Estimate Viewed | Estimate / portal facts |
 
-**Bad event name:** Payment · Conversation · Inspection — those are domains, not facts.
+**Bad event name:** Payment · Conversation · Inspection - those are domains, not facts.
 
 ---
 
 ## What an event contract is
 
-An **event contract** is the product definition of a business fact — the sentence an advisor would say on the floor:
+An **event contract** is the product definition of a business fact - the sentence an advisor would say on the floor:
 
 *"Customer replied."* · *"Inspection completed."* · *"Payment received."*
 
@@ -86,11 +86,11 @@ An **event contract** is the product definition of a business fact — the sente
 
 ## The eight questions (every event, exactly eight)
 
-Every event contract must answer these — not twenty, not a schema dump.
+Every event contract must answer these - not twenty, not a schema dump.
 
 ### 1. Where is this truth authoritative?
 
-**Domain** — where the fact lives if all projections are deleted.
+**Domain** - where the fact lives if all projections are deleted.
 
 Subtle but important: a payment is **authoritative in the Financial domain**. The Financial authority owns it; the wording scales when authorities distribute later.
 
@@ -107,16 +107,16 @@ Subtle but important: a payment is **authoritative in the Financial domain**. Th
 | Communication fact | Portal views, estimate sends, delivery facts |
 | Appointment | Scheduled arrival |
 | Operator Identity | Extension, device, station assignment |
-| **Presence** | Availability state — **separate from identity** |
+| **Presence** | Availability state - **separate from identity** |
 | Audit | Compliance-only facts |
 
-One contract → one **primary** authoritative domain. Links to customer, vehicle, RO are anchors — not ownership.
+One contract → one **primary** authoritative domain. Links to customer, vehicle, RO are anchors - not ownership.
 
 ---
 
 ### 2. What happened?
 
-**Business language** — not implementation identifiers.
+**Business language** - not implementation identifiers.
 
 | Wrong | Right |
 |-------|-------|
@@ -129,7 +129,7 @@ One contract → one **primary** authoritative domain. Links to customer, vehicl
 
 ### 3. Who should observe this?
 
-**Observers** — who or what surfaces should see this event. Not emotional interest; not "subscribers."
+**Observers** - who or what surfaces should see this event. Not emotional interest; not "subscribers."
 
 | Observer | Role |
 |----------|------|
@@ -144,11 +144,11 @@ One contract → one **primary** authoritative domain. Links to customer, vehicl
 | **Operator Feed** | Identity / internal stream |
 | **Audit Only** | Never operator UI |
 
-**Example — Message received**
+**Example - Message received**
 
 - Observed by: **Advisor** · **Customer Timeline** · **Shop Feed**
 
-**Example — Inspection completed**
+**Example - Inspection completed**
 
 - Observed by: **Advisor** · **Technician** · **Customer Timeline** · **Shop Feed**
 
@@ -156,7 +156,7 @@ One contract → one **primary** authoritative domain. Links to customer, vehicl
 
 ### 4. Where should it appear?
 
-**Stream scopes** — not routes, not tabs. Membership defines which **scoped event stream** includes this contract.
+**Stream scopes** - not routes, not tabs. Membership defines which **scoped event stream** includes this contract.
 
 | Scope | Stream |
 |-------|--------|
@@ -177,7 +177,7 @@ Shop Feed         = contracts WHERE Shop Feed ∈ scopes AND active
 Recovery Queue    = contracts WHERE action ∈ {Action Required, Blocking} AND transport domain AND active
 ```
 
-**Shop Feed is a projection** — not an authority.
+**Shop Feed is a projection** - not an authority.
 
 ---
 
@@ -187,12 +187,12 @@ Recovery Queue    = contracts WHERE action ∈ {Action Required, Blocking} AND t
 |---------|---------|---------|
 | **None** | History only | Call completed |
 | **Informational** | Awareness; no operational wait | Vehicle checked in |
-| **Waiting** | Waiting on someone or something — **most common shop state** | Estimate sent · waiting on customer |
+| **Waiting** | Waiting on someone or something - **most common shop state** | Estimate sent · waiting on customer |
 | **Action Required** | Operator should act now | Customer replied · voicemail received |
 | **Blocking** | Work cannot proceed | Technician blocked · part backordered |
 | **Completed** | Deliberate close; often supersedes a prior event | Payment received · estimate approved |
 
-**Waiting vs Informational:** Estimate sent is not merely informational — the shop is **waiting** on the customer. Waiting belongs on Shop Feed and decision surfaces until superseded.
+**Waiting vs Informational:** Estimate sent is not merely informational - the shop is **waiting** on the customer. Waiting belongs on Shop Feed and decision surfaces until superseded.
 
 **Recovery Queue** (transport recovery only):
 
@@ -200,7 +200,7 @@ Recovery Queue    = contracts WHERE action ∈ {Action Required, Blocking} AND t
 action ∈ {Action Required, Blocking} AND NOT superseded
 ```
 
-Waiting customer decisions surface on **Shop Feed** and **observation-driven** emphasis — not the transport recovery queue.
+Waiting customer decisions surface on **Shop Feed** and **observation-driven** emphasis - not the transport recovery queue.
 
 ---
 
@@ -213,26 +213,26 @@ When does this event leave **active** feeds?
 | **When handled** | Customer replied → expires when advisor replies |
 | **When superseded** | See supersession graph (Q8) |
 | **When terminal** | Waiting approval → expires when approved or lost |
-| **Never** | Payment received · inspection completed — permanent history |
+| **Never** | Payment received · inspection completed - permanent history |
 
-Expiry prevents feed garbage. Truth is never deleted — only active surfacing ends.
+Expiry prevents feed garbage. Truth is never deleted - only active surfacing ends.
 
 ---
 
 ### 7. Supersession graph
 
-Lifecycle is a **directed graph** — queryable, not a bullet list.
+Lifecycle is a **directed graph** - queryable, not a bullet list.
 
 Each contract may declare:
 
 - **supersedes →** prior contract(s) this event closes on active feeds  
 - **superseded by →** successor contract(s)
 
-**Example — estimate decision chain**
+**Example - estimate decision chain**
 
 ```text
 Estimate Sent
-    supersedes → (none — opens waiting)
+    supersedes → (none - opens waiting)
     superseded by → Waiting Approval
 
 Waiting Approval
@@ -248,7 +248,7 @@ Estimate Approved
     superseded by → (terminal)
 ```
 
-**Example — call chain**
+**Example - call chain**
 
 ```text
 Call Started
@@ -269,7 +269,7 @@ When B supersedes A, A **drops from active feeds** but remains in timeline histo
 
 ### 8. What caused this?
 
-**Causation** — what business or physical fact produced this event.
+**Causation** - what business or physical fact produced this event.
 
 | Event | Cause (examples) |
 |-------|------------------|
@@ -280,11 +280,11 @@ When B supersedes A, A **drops from active feeds** but remains in timeline histo
 | **Part backordered** | Vendor delay · Part unavailable |
 | **Presence changed** | Operator selected Lunch · Auto on-call from answered call |
 
-Causation powers analytics, observations, root-cause review, and future AI — **without** AI inventing events. Causes reference other contracts or named external facts — not stack traces.
+Causation powers analytics, observations, root-cause review, and future AI - **without** AI inventing events. Causes reference other contracts or named external facts - not stack traces.
 
 ---
 
-## Presence — separate from Identity
+## Presence - separate from Identity
 
 **Operator Identity** and **Presence** are different authoritative domains.
 
@@ -294,7 +294,7 @@ Causation powers analytics, observations, root-cause review, and future AI — *
 | **Question** | *Who is this operator and where is their line?* | *Are they reachable right now?* |
 | **Affects (future)** | Provisioning · extension mapping | Routing · dispatch · PTT · transfers · scheduling |
 
-**Presence Changed** is a Presence-domain contract — not an Identity contract.
+**Presence Changed** is a Presence-domain contract - not an Identity contract.
 
 Identity: *Edward, extension 105, mobile device.*  
 Presence: *Driving.*
@@ -365,7 +365,7 @@ Each authority owns its language. Tables use business fields only.
 | **Refund Issued** | Financial | Advisor · Audit | Customer · RO · Audit | Informational | Never |
 | **Balance Due** | Financial | Advisor · Customer Timeline | Customer · RO | **Waiting** | When paid |
 
-**Rule:** Truth is authoritative in **Financial** domain. Customer Timeline **observes** — Customer does not own payment truth.
+**Rule:** Truth is authoritative in **Financial** domain. Customer Timeline **observes** - Customer does not own payment truth.
 
 **Cause examples:** Payment received ← customer portal pay · terminal capture · card keyed.
 
@@ -382,7 +382,7 @@ Each authority owns its language. Tables use business fields only.
 
 See **supersession graph** (Q7) for full estimate chain.
 
-**Observation (not event):** Estimate viewed 4× in 2 hours → *Customer appears engaged* — observation on repeated **Estimate viewed** events.
+**Observation (not event):** Estimate viewed 4× in 2 hours → *Customer appears engaged* - observation on repeated **Estimate viewed** events.
 
 ---
 
@@ -423,7 +423,7 @@ See **supersession graph** (Q7) for full estimate chain.
 | **On Call** | Presence | Operator · Shop Feed | Operator · Shop | Informational | Call answered |
 | **Available** | Presence | Operator · Shop Feed | Operator · Shop | Informational | Call completed · Manual clear |
 
-Presence affects routing, dispatch, PTT, transfers, scheduling — **future policy consumes Presence domain truth**, not Identity.
+Presence affects routing, dispatch, PTT, transfers, scheduling - **future policy consumes Presence domain truth**, not Identity.
 
 ---
 
@@ -440,7 +440,7 @@ contracts WHERE Shop Feed ∈ scopes
 ORDER BY occurred_at DESC
 ```
 
-Includes **Waiting** and **Action Required** — not widgets.
+Includes **Waiting** and **Action Required** - not widgets.
 
 ### Recovery Queue (projection)
 
@@ -461,23 +461,23 @@ contracts WHERE Customer Timeline ∈ scopes AND customer = anchor ORDER BY time
 
 ### Customers browse (projection)
 
-Customer identity + latest Customer Timeline contract + open RO hint. Entry point — not a competing timeline.
+Customer identity + latest Customer Timeline contract + open RO hint. Entry point - not a competing timeline.
 
 ---
 
 ## Observations consume streams
 
 ```text
-Event        — Estimate viewed (fact)
-Stream       — Customer Stream (scoped sequence)
-Observation  — Customer appears engaged (meaning — observation engine on stream)
-Projection   — Finish Work: Call Jason (action)
+Event        - Estimate viewed (fact)
+Stream       - Customer Stream (scoped sequence)
+Observation  - Customer appears engaged (meaning - observation engine on stream)
+Projection   - Finish Work: Call Jason (action)
 ```
 
 **Wrong:** Observation reads raw tables or AI summarizes the customer record.  
 **Right:** Observation engine **interprets scoped event streams.**
 
-Pressure First · Repeated Questions · Observations · Communications · **Events** · **Streams** — one stack.
+Pressure First · Repeated Questions · Observations · Communications · **Events** · **Streams** - one stack.
 
 ---
 
@@ -497,7 +497,7 @@ Pressure First · Repeated Questions · Observations · Communications · **Even
 |---|-----------|
 | 1 | Every v1 contract answers exactly **eight** questions |
 | 2 | Q1: authoritative **domain** wording |
-| 3 | Q3: **observers** — not "who cares" |
+| 3 | Q3: **observers** - not "who cares" |
 | 4 | **Waiting** posture for estimate sent, payment requested, waiting approval |
 | 5 | Q8: **causation** on every contract |
 | 6 | Supersession as **graph** (supersedes / superseded by) |
@@ -512,10 +512,10 @@ Pressure First · Repeated Questions · Observations · Communications · **Even
 
 | Doc | Role |
 |-----|------|
-| **This doc** | Business language — **signed** |
-| [`companion-timeline-scopes-v1.md`](companion-timeline-scopes-v1.md) | Scope membership — **E0b ✅** |
+| **This doc** | Business language - **signed** |
+| [`companion-timeline-scopes-v1.md`](companion-timeline-scopes-v1.md) | Scope membership - **E0b ✅** |
 | [`ark-business-language-v1.md`](../ecosystem/ark-business-language-v1.md) | Dictionary |
-| `companion-event-api-v1.md` | Implementation API — **E2** |
+| `companion-event-api-v1.md` | Implementation API - **E2** |
 | `companion-shell-v1.md` | After E2 |
 
 ---
@@ -535,17 +535,17 @@ Mobile responds to events.
 
 ---
 
-## Appendix A — Implementation map (non-normative)
+## Appendix A - Implementation map (non-normative)
 
-**Not part of the business language.** For engineers migrating existing code — contracts above are authoritative if this appendix drifts.
+**Not part of the business language.** For engineers migrating existing code - contracts above are authoritative if this appendix drifts.
 
 | Existing artifact | Maps toward |
 |-------------------|-------------|
 | Unified timeline composer | Projects contracts into scoped streams |
-| Operational event entry DTO | Projection transport shape — add contract id + eight answers in E1 |
+| Operational event entry DTO | Projection transport shape - add contract id + eight answers in E1 |
 | Per-source mappers (call, message, comm fact) | Emit named contracts |
-| Legacy kind enum (18 transport hints) | Not product vocabulary — shrink over time |
+| Legacy kind enum (18 transport hints) | Not product vocabulary - shrink over time |
 | Legacy name enum (40+ cases) | Migrate to per-authority contract IDs |
-| Observation resolver | Sits above events — never replaces them |
+| Observation resolver | Sits above events - never replaces them |
 
-Implementation work begins in **E1 Contract Realization** — one vertical slice per contract (implementation → projection → observation). Mappers are implementation detail; contracts are the product. This appendix is not required reading for product or floor vocabulary.
+Implementation work begins in **E1 Contract Realization** - one vertical slice per contract (implementation → projection → observation). Mappers are implementation detail; contracts are the product. This appendix is not required reading for product or floor vocabulary.

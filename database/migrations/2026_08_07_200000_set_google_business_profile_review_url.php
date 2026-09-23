@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Point shop google_reviews_url at the Google Business Profile review form.
- * Settings remains the authority — this only migrates known legacy destinations.
+ * Settings remains the authority - this only migrates known legacy destinations.
  */
 return new class extends Migration
 {
@@ -59,6 +59,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Intentionally empty — review destination is shop configuration, not reversible schema.
+        // Intentionally empty - review destination is shop configuration, not reversible schema.
     }
 };

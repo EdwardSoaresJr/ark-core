@@ -8,7 +8,7 @@ use App\Ark\Platform\Provisioning\Coolify\CoolifyMessageSanitizer;
 use Illuminate\Console\Command;
 
 /**
- * Transport verification only — never deploys or creates resources.
+ * Transport verification only - never deploys or creates resources.
  */
 class CoolifyCheckCommand extends Command
 {

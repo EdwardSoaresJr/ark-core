@@ -6,7 +6,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Str;
 
 /**
- * Customer-facing appointment SMS copy — ConversationMessage body only.
+ * Customer-facing appointment SMS copy - ConversationMessage body only.
  * Reply menus are Message Action contracts (see MessageActionContract).
  */
 final class AppointmentSmsCopy

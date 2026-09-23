@@ -1,6 +1,6 @@
 # Voice Runtime Authority
 
-**Status:** Stock Core — provider-neutral domain only · **Updated:** 2026-08-31  
+**Status:** Stock Core - provider-neutral domain only · **Updated:** 2026-08-31  
 **See:** [ADR-0007](../engineering/adr/ADR-0007-stock-core-voice-transport-boundary.md)
 
 ---
@@ -13,7 +13,7 @@ Call session domain + ring-group intent + advisor ownership
 OutboundVoiceCallControl / TelephonyProvider contracts
         ↓
 Not configured in stock Core (honest unavailable)
-        — or —
+        - or -
 Custom / managed transport implementation
 ```
 

@@ -1,6 +1,6 @@
-# ARK Companion: Communications — Mission (Frozen)
+# ARK Companion: Communications - Mission (Frozen)
 
-**Status:** Frozen product doctrine — architecture stable  
+**Status:** Frozen product doctrine - architecture stable  
 **Internal name:** **ARK Companion: Communications** (advisor)  
 **Not:** ARK Mobile · not ARKv2 on a smaller screen · not a general staff app
 
@@ -26,7 +26,7 @@ Organizing question:
 
 Not: *Which screen should they open?*
 
-### Example — inbound call
+### Example - inbound call
 
 **Wrong** (data dump):
 
@@ -61,10 +61,10 @@ ARK does not win by being a better CRM or a better phone app. It wins by answeri
 
 | Surface | Role | Advisor lives here for… |
 | --- | --- | --- |
-| **Companion** | Relationships | Calls, texts, inbox, interrupt, recovery — throughout the day |
+| **Companion** | Relationships | Calls, texts, inbox, interrupt, recovery - throughout the day |
 | **ARKv2** | Operations workspace | Planning, editing, production, parts, reporting, owner rhythm |
 
-Same communication authorities. Different primary question. Moving between them should feel like one product — not switching applications.
+Same communication authorities. Different primary question. Moving between them should feel like one product - not switching applications.
 
 If you're **answering a customer** → Companion.  
 If you're **editing a repair order for two minutes** → desktop.
@@ -85,13 +85,13 @@ It optimizes for:
 - Vehicle context
 - Quick operational actions
 
-If a workflow requires **sustained operational work** — editing repair orders, managing parts, reporting, accounting, scheduling — Companion **deep-links to ARKv2** rather than reproducing the desktop experience.
+If a workflow requires **sustained operational work** - editing repair orders, managing parts, reporting, accounting, scheduling - Companion **deep-links to ARKv2** rather than reproducing the desktop experience.
 
 ---
 
 ## UX benchmark
 
-**OpenPhone / Quo** — not visually identical; **interaction quality should feel comparable.**
+**OpenPhone / Quo** - not visually identical; **interaction quality should feel comparable.**
 
 | Dimension | Bar |
 | --- | --- |
@@ -103,7 +103,7 @@ If a workflow requires **sustained operational work** — editing repair orders,
 | Voicemail / recording playback | First-class, not buried |
 | Push-first workflow | Notification → act without hunting |
 
-**Primary UX benchmark:** OpenPhone / Quo — see [`references/external/quo.md`](references/external/quo.md).
+**Primary UX benchmark:** OpenPhone / Quo - see [`references/external/quo.md`](references/external/quo.md).
 
 ---
 
@@ -121,7 +121,7 @@ Every conversation should surface operational context **without leaving the thre
 | Parts pressure | Projection |
 | Advisor ownership | Authority |
 | Observations | Interpretive truth |
-| Advisor Brief | Projection — awareness before action |
+| Advisor Brief | Projection - awareness before action |
 
 **No competitor provides this level of operational context.**
 
@@ -139,7 +139,7 @@ Identity → Conversation → Advisor Brief → Operational Context
 
 Companion informs. ARKv2 operates. Conversation stays primary.
 
-Operational context is progressive disclosure — show only what reduces uncertainty for the advisor at this moment.
+Operational context is progressive disclosure - show only what reduces uncertainty for the advisor at this moment.
 
 ---
 
@@ -150,20 +150,20 @@ Engineering executes implementation details. Product input stops at milestones:
 | # | Milestone | Success signal |
 | --- | --- | --- |
 | **1** | **Inbox** | Advisor opens app → knows who needs attention |
-| **2** | **Conversation thread** | Reply, attachments, timeline — habit-forming |
+| **2** | **Conversation thread** | Reply, attachments, timeline - habit-forming |
 | **3** | **Calling** | Inbound, outbound, active call, post-call |
 | **4** | **Voicemail / recordings** | Playback, mark handled, link to customer |
-| **5** | **Advisor awareness** | Brief before responding — one recommendation, promises, suggested replies |
-| **6** | **Operational context** | Vehicle · RO · estimate · inspection · parts · appointment · warranty — only when relevant |
-| **7** | **Production feel** | Companion disappears — motion, speed, aware notifications, search, haptics, battery, offline |
+| **5** | **Advisor awareness** | Brief before responding - one recommendation, promises, suggested replies |
+| **6** | **Operational context** | Vehicle · RO · estimate · inspection · parts · appointment · warranty - only when relevant |
+| **7** | **Production feel** | Companion disappears - motion, speed, aware notifications, search, haptics, battery, offline |
 
 **Quality bar (every milestone from 4 onward):** If an interaction feels slower, more confusing, or less polished than OpenPhone, stop and improve it before adding features.
 
-**Floor certification:** Each milestone ships when the floor says it is good enough to continue — not when it is perfect. Issues become tickets; the next milestone does not wait on polish debt unless it blocks the workflow.
+**Floor certification:** Each milestone ships when the floor says it is good enough to continue - not when it is perfect. Issues become tickets; the next milestone does not wait on polish debt unless it blocks the workflow.
 
 **Not in scope for milestone guidance:** 40-page specs, pixel-level instructions, screen-by-screen build orders.
 
-Reference material lives in [`screens/`](screens/) and [`references/`](references/) — **inform design; do not dictate sequence.**
+Reference material lives in [`screens/`](screens/) and [`references/`](references/) - **inform design; do not dictate sequence.**
 
 ---
 

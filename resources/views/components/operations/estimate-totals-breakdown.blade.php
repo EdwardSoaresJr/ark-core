@@ -73,13 +73,13 @@
 @endphp
 
 @if ($isStaff)
-    <div class="ops-total-row ops-total-row--final py-2"><dt>{{ $breakdown['total_label'] ?? 'Total' }}</dt><dd class="font-bold tabular-nums text-slate-950">{{ $breakdown['total'] ?? '—' }}</dd></div>
+    <div class="ops-total-row ops-total-row--final py-2"><dt>{{ $breakdown['total_label'] ?? 'Total' }}</dt><dd class="font-bold tabular-nums text-slate-950">{{ $breakdown['total'] ?? '-' }}</dd></div>
 @elseif ($isPdf)
     <div @class([
         'totals-row',
         'final' => $finalEmphasis && ! ($breakdown['is_invoice'] ?? false),
         'totals-row--quiet-final' => ! $finalEmphasis && ! ($breakdown['is_invoice'] ?? false),
-    ])><span>{{ $breakdown['total_label'] ?? 'Total' }}</span><span>{{ $breakdown['total'] ?? '—' }}</span></div>
+    ])><span>{{ $breakdown['total_label'] ?? 'Total' }}</span><span>{{ $breakdown['total'] ?? '-' }}</span></div>
 @else
     <div @class([
         'portal-estimate-summary__total-row flex items-center justify-between gap-3',
@@ -93,6 +93,6 @@
         <dd @class([
             'text-2xl font-black tabular-nums tracking-tight text-slate-950' => $finalEmphasis,
             'text-base font-semibold tabular-nums text-slate-950' => ! $finalEmphasis,
-        ])>{{ $breakdown['total'] ?? '—' }}</dd>
+        ])>{{ $breakdown['total'] ?? '-' }}</dd>
     </div>
 @endif

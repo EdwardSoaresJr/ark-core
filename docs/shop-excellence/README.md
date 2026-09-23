@@ -1,6 +1,6 @@
 # Shop Excellence Doctrine
 
-Operational knowledge for shop financial discipline and owner rhythm — used by ARK shops and product direction.
+Operational knowledge for shop financial discipline and owner rhythm - used by ARK shops and product direction.
 
 ## Purpose
 
@@ -12,9 +12,9 @@ This library captures:
 
 ## Rules
 
-1. **Principles, not transcripts** — capture what to do, benchmark ranges, and ARK implications. Do not republish paid course material.
-2. **Shop targets in Settings** — industry benchmarks may live here; *your* bands live in **Settings → Owner Targets** (`shop_settings.shop_excellence_targets`).
-3. **Closed loop** — when ARK gains a metric, update [`ark-mapping/kpi-gap-matrix.md`](ark-mapping/kpi-gap-matrix.md).
+1. **Principles, not transcripts** - capture what to do, benchmark ranges, and ARK implications. Do not republish paid course material.
+2. **Shop targets in Settings** - industry benchmarks may live here; *your* bands live in **Settings → Owner Targets** (`shop_settings.shop_excellence_targets`).
+3. **Closed loop** - when ARK gains a metric, update [`ark-mapping/kpi-gap-matrix.md`](ark-mapping/kpi-gap-matrix.md).
 
 ## Structure
 

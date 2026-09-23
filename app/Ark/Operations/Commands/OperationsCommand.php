@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Commands;
 
 /**
- * Interaction craft only — navigate/create/search/ops entry points.
+ * Interaction craft only - navigate/create/search/ops entry points.
  * No new authority or business logic.
  */
 final readonly class OperationsCommand

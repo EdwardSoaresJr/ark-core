@@ -6,7 +6,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Support\Carbon;
 
 /**
- * Shop-configured schedule increments — calendar slots and appointment time selects.
+ * Shop-configured schedule increments - calendar slots and appointment time selects.
  */
 final class AppointmentSlotMinutes
 {

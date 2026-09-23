@@ -5,7 +5,7 @@ namespace App\Ark\ShopMemory;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Shop Memory capability toggles — Settings, not FeatureFlag package.
+ * Shop Memory capability toggles - Settings, not FeatureFlag package.
  */
 final class ShopMemoryFeatures
 {

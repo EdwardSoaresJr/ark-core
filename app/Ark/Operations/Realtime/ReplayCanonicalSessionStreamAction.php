@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Replays a canonical stream through RecordSessionEventAction — used for parity tests.
+ * Replays a canonical stream through RecordSessionEventAction - used for parity tests.
  */
 final class ReplayCanonicalSessionStreamAction
 {

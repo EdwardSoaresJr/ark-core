@@ -1,15 +1,15 @@
-# Screen spec — Conversation Thread
+# Screen spec - Conversation Thread
 
 **ID:** `companion.screen.conversation-thread`  
 **Role(s):** Advisor  
 **Quo ref:** `references/external/quo/quo-threads.png` · `screensdesign-5.webp` (thread rhythm)  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Read and reply in **one thread** with customer · vehicle · RO visible — send estimate · pay · schedule without leaving the conversation.
+Read and reply in **one thread** with customer · vehicle · RO visible - send estimate · pay · schedule without leaving the conversation.
 
 ---
 
@@ -25,42 +25,42 @@ Read and reply in **one thread** with customer · vehicle · RO visible — send
 
 ## Layout (production spec)
 
-### Shell — identity strip (persistent, collapses on scroll)
+### Shell - identity strip (persistent, collapses on scroll)
 
 - **Back** → conversation list (preserves scroll position)
 - **Center stack:**
-  - Customer name — Display
-  - Vehicle line — `2019 Honda Civic · ABC123`
-  - RO chip — `#1599 · Waiting approval`
+  - Customer name - Display
+  - Vehicle line - `2019 Honda Civic · ABC123`
+  - RO chip - `#1599 · Waiting approval`
 - **Header actions (right):** Call · **More (⋯)** → Manage sheet
 
 Strip **never** shows bare phone number when customer is known.
 
-### Body — message timeline
+### Body - message timeline
 
 
-- Date separators — `Today` · `Yesterday` · `Jun 12`
-- **Message bubbles** — inbound left · outbound right
-- **Channel label** on mixed threads — SMS · Email · Call (icon + one word, muted)
-- **Call rows** — duration · inbound/outbound · tap → call detail / playback (P1)
-- **Voice memo / MMS** — inline thumbnail · tap full-screen
-- **System rows** — estimate sent · viewed · approved (muted center line — not fake chat)
+- Date separators - `Today` · `Yesterday` · `Jun 12`
+- **Message bubbles** - inbound left · outbound right
+- **Channel label** on mixed threads - SMS · Email · Call (icon + one word, muted)
+- **Call rows** - duration · inbound/outbound · tap → call detail / playback (P1)
+- **Voice memo / MMS** - inline thumbnail · tap full-screen
+- **System rows** - estimate sent · viewed · approved (muted center line - not fake chat)
 
 **Scroll:** newest at bottom · composer pinned · keyboard pushes composer up
 
-### Context rail (optional P0 — collapsed chip row above composer)
+### Context rail (optional P0 - collapsed chip row above composer)
 
-Horizontal chips — tap expands sheet, does not navigate away:
+Horizontal chips - tap expands sheet, does not navigate away:
 
 - **Open RO** · **Estimate** · **Pay** · **Schedule** · **Inspection**
 
 If rail omitted in v1, Manage sheet carries all actions.
 
 
-- **Attachment** — photo · file (MMS)
-- **Text field** — placeholder `Message Emma…`
-- **Send** — enabled when non-empty · haptic on send
-- **Quick actions row** (above composer, collapsible): Send estimate · Payment link · Inspection link — same as desktop Quick Reply rail
+- **Attachment** - photo · file (MMS)
+- **Text field** - placeholder `Message Emma…`
+- **Send** - enabled when non-empty · haptic on send
+- **Quick actions row** (above composer, collapsible): Send estimate · Payment link · Inspection link - same as desktop Quick Reply rail
 
 No tab bar on thread (full-bleed workspace).
 
@@ -74,7 +74,7 @@ No tab bar on thread (full-bleed workspace).
 | Review request | **Send estimate** |
 | Add to campaign | **Take payment** |
 | Generic tags | **Schedule / Book appointment** |
-| — | **Mark handled** · **Internal note** |
+| - | **Mark handled** · **Internal note** |
 
 Sheet: half-height · draggable · dismiss swipe down.
 
@@ -111,7 +111,7 @@ Bubble max width ~75% · line height comfortable for thumb scroll.
 |---------|----------|
 | Tap bubble | Copy text · long-press copy |
 | Long press message | Copy · resend template (outbound only) |
-| Swipe left on row | Reply shortcut (focus composer + quote) — optional P1 |
+| Swipe left on row | Reply shortcut (focus composer + quote) - optional P1 |
 | Tap Call (header) | Outgoing call → [`active-call.md`](active-call.md) |
 | Tap attachment | Full-screen viewer · share sheet |
 | Pull down from top | Refresh thread |
@@ -128,10 +128,10 @@ Bubble max width ~75% · line height comfortable for thumb scroll.
 | Default | Timeline + composer |
 | Loading | Skeleton bubbles · identity strip from list cache |
 | Empty thread | "Start the conversation" · composer focused |
-| Customer turn | Subtle banner `Waiting on you` — optional |
+| Customer turn | Subtle banner `Waiting on you` - optional |
 | Send failed | Red exclamation on bubble · tap retry |
 | Offline | Composer disabled · banner · read cache |
-| Internal note mode | Composer tint · staff-only badge — from Manage |
+| Internal note mode | Composer tint · staff-only badge - from Manage |
 
 ---
 
@@ -164,7 +164,7 @@ Link: [`../02-flows.md`](../02-flows.md#notification--customer-replied)
 - Turn indicator (customer vs shop)
 - Quick reply templates / link actions
 
-**Existing:** conversation + Quick Reply patterns on desktop — mirror for mobile  
+**Existing:** conversation + Quick Reply patterns on desktop - mirror for mobile  
 **May need:** `GET /api/mobile/conversations/{id}` · `POST .../messages` · link actions bundle
 
 ---

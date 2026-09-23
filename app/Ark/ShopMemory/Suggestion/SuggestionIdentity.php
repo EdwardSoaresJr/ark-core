@@ -3,7 +3,7 @@
 namespace App\Ark\ShopMemory\Suggestion;
 
 /**
- * Stable suggestion identity. Not a database id — reuse/tracking key.
+ * Stable suggestion identity. Not a database id - reuse/tracking key.
  */
 final class SuggestionIdentity
 {

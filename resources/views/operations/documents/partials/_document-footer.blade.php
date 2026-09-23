@@ -162,7 +162,7 @@
                 @php
                     $portalHeadline = trim((string) ($repairPortal['headline'] ?? 'Vehicle Portal'));
                     $portalDetail = trim((string) ($repairPortal['callout'] ?? ''));
-                    $portalPrefix = $portalHeadline.' — ';
+                    $portalPrefix = $portalHeadline.' - ';
                     if ($portalDetail !== '' && str_starts_with($portalDetail, $portalPrefix)) {
                         $portalDetail = substr($portalDetail, strlen($portalPrefix));
                     }

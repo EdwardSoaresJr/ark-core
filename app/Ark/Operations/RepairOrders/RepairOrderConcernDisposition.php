@@ -35,7 +35,7 @@ enum RepairOrderConcernDisposition: string
     public static function advisorHelpOverview(): string
     {
         return collect(self::advisorHelpOverviewItems())
-            ->map(fn (array $item): string => $item['label'].' — '.$item['detail'])
+            ->map(fn (array $item): string => $item['label'].' - '.$item['detail'])
             ->implode("\n");
     }
 
@@ -96,7 +96,7 @@ enum RepairOrderConcernDisposition: string
     {
         return match ($this) {
             self::Approved => '✓',
-            self::Deferred => '—',
+            self::Deferred => '-',
             self::Declined => '✗',
             default => '',
         };

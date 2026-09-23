@@ -6,7 +6,7 @@ use App\Ark\Operations\Inspections\InspectionCoverageProjection;
 use App\Models\User;
 
 /**
- * Technician production RO control surface — orientation before the walk.
+ * Technician production RO control surface - orientation before the walk.
  * Does not embed the inspection checklist.
  */
 final class RepairOrderProductionLandingProjection

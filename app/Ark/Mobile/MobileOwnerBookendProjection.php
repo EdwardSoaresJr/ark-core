@@ -17,7 +17,7 @@ final class MobileOwnerBookendProjection
     ) {}
 
     /**
-     * Owner day review for mobile — posted sales truth and live queue pressure.
+     * Owner day review for mobile - posted sales truth and live queue pressure.
      * No web URLs; mobile renders the projection only.
      */
     public function forDate(?Carbon $shopDate = null): array

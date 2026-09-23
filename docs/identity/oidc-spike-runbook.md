@@ -1,6 +1,6 @@
-# ARK OIDC Spike Runbook (Phase 1b.0 — staging only)
+# ARK OIDC Spike Runbook (Phase 1b.0 - staging only)
 
-**Status:** Staging spike — **no production tokens** until go/no-go.  
+**Status:** Staging spike - **no production tokens** until go/no-go.  
 **Contract:** `docs/identity/identity-authority-contract.md` (v1.1 accepted)  
 **Design:** `docs/identity/oidc-design-pass.md` (v1.1 accepted)
 
@@ -24,7 +24,7 @@ Automated proof: `php artisan test --filter=OidcSpike`
 
 ## Staging enable (ARK V2)
 
-On **staging only** — do not set on production until go/no-go:
+On **staging only** - do not set on production until go/no-go:
 
 ```env
 OIDC_ENABLED=true
@@ -38,7 +38,7 @@ php artisan ark:oidc:keys:create
 php artisan ark:oidc:spike:seed
 ```
 
-Store the emitted `client_secret` in BookStack env only — not in git.
+Store the emitted `client_secret` in BookStack env only - not in git.
 
 ---
 
@@ -127,7 +127,7 @@ Validation evidence: `docs/identity/oidc-validation-evidence.md`
 
 ```bash
 php artisan test --filter=OidcSpike   # 9 tests
-# Five manual validations — see oidc-validation-evidence.md
+# Five manual validations - see oidc-validation-evidence.md
 ```
 
 ---

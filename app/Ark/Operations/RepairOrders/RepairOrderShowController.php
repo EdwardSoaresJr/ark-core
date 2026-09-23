@@ -28,7 +28,7 @@ use Illuminate\Http\Request;
 /**
  * Canonical Repair Order presentation surface.
  *
- * GET /app/repair-orders/{repairOrder} — report first; authoring via Workspace Modal.
+ * GET /app/repair-orders/{repairOrder} - report first; authoring via Workspace Modal.
  */
 class RepairOrderShowController
 {

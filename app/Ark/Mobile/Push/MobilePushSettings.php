@@ -116,6 +116,6 @@ readonly class MobilePushSettings
 
     public function transportSummary(): string
     {
-        return 'One Firebase project for the ARK Staff app — shared across all shops on this runtime.';
+        return 'One Firebase project for the ARK Staff app - shared across all shops on this runtime.';
     }
 }

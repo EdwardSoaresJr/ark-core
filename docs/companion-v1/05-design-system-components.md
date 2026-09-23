@@ -1,4 +1,4 @@
-# Deliverable 5 — Components (index)
+# Deliverable 5 - Components (index)
 
 **Moved to:** [`design-system/components.md`](design-system/components.md)
 

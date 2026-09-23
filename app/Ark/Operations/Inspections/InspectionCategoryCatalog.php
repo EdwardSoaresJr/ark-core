@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Inspections;
 
 /**
- * Seeds default inspection items — organization only, not authoritative templates.
+ * Seeds default inspection items - organization only, not authoritative templates.
  */
 final class InspectionCategoryCatalog
 {

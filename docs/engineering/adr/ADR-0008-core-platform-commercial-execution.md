@@ -44,7 +44,7 @@ Handshake (card payment is the pattern; same for SMS, mail, catalog):
 
 **Cloud is not a third product.** `cloud.arksms.com` is Platform’s current API/webhook host. `app.arksms.com` is Platform’s customer-facing application. `api.arksms.com` may later replace the Cloud API host.
 
-## Three workstreams — keep distinct
+## Three workstreams - keep distinct
 
 | Stream | Job | Not |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ Handshake (card payment is the pattern; same for SMS, mail, catalog):
 | **Isolated Settings** | UI changes and Voice ownership gating | Removing Core provider paths |
 | **Hostnames** | Customer and API address migration | Architectural completeness |
 
-## Migration — one provider at a time
+## Migration - one provider at a time
 
 A known gap is not permission to delete production code.
 
@@ -62,7 +62,7 @@ A known gap is not permission to delete production code.
 
 Do not bundle Square, Voice, mail, and PartsTech. Do not remove a Core path because Settings already hid it.
 
-## Acceptance — complete only when both pass
+## Acceptance - complete only when both pass
 
 Not when domains look right.
 

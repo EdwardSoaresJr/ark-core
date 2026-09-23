@@ -1,6 +1,6 @@
 # Shop Memory Observations
 
-**Capability:** Shop Memory Phase 2 — historical labor language  
+**Capability:** Shop Memory Phase 2 - historical labor language  
 **Gate:** Observe one week before Phase 3. **Do not change ranking, providers, or AI.**
 
 **Doctrine:** Shop Memory remembers. Suggestions surface. Advisors decide. Authorities persist.  
@@ -42,7 +42,7 @@ After each estimate session (or end of day), add rows. Do not fix anything durin
 
 ---
 
-## Patterns (fill after several days — still no code)
+## Patterns (fill after several days - still no code)
 
 - Always-edited jobs:
 - Never-chosen suggestions:

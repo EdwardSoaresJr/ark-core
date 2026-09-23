@@ -151,7 +151,7 @@ final class EnrichReviewEstimateNotesProposals
                 'reason' => $row['reason'] ?? null,
                 'original_hash' => $hash,
                 'applyable' => false,
-                'rejected_reason' => 'Source field is empty — author the note first, then rewrite.',
+                'rejected_reason' => 'Source field is empty - author the note first, then rewrite.',
             ];
         }
 
@@ -189,7 +189,7 @@ final class EnrichReviewEstimateNotesProposals
                 'reason' => $row['reason'] ?? null,
                 'original_hash' => $hash,
                 'applyable' => false,
-                'rejected_reason' => 'Source field is empty — author the note first, then rewrite.',
+                'rejected_reason' => 'Source field is empty - author the note first, then rewrite.',
             ];
         }
 
@@ -238,7 +238,7 @@ final class EnrichReviewEstimateNotesProposals
                 'reason' => $row['reason'] ?? null,
                 'original_hash' => $hash,
                 'applyable' => false,
-                'rejected_reason' => 'Source field is empty — author the note first, then rewrite.',
+                'rejected_reason' => 'Source field is empty - author the note first, then rewrite.',
             ];
         }
 

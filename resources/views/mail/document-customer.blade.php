@@ -1,4 +1,4 @@
-{{-- Paperwork email — attachment is the document authority file. Keep copy generic (customer, warranty, third party). --}}
+{{-- Paperwork email - attachment is the document authority file. Keep copy generic (customer, warranty, third party). --}}
 <x-mail::message>
 # {{ $document->type?->label() ?? 'Document' }} from {{ $shopName }}
 

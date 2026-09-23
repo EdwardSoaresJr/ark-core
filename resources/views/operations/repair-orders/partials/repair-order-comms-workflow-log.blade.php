@@ -5,7 +5,7 @@
                 <div class="flex items-center justify-between gap-2">
                     <div>
                         <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Workflow note</p>
-                        <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Staff-only posture — does not appear on the timeline below.</p>
+                        <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Staff-only posture - does not appear on the timeline below.</p>
                     </div>
                     <span class="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 group-open:hidden">Expand</span>
                     <span class="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 hidden group-open:inline">Collapse</span>

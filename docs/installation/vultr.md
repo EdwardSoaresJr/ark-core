@@ -161,7 +161,7 @@ First build can take several minutes. Coffee is allowed.
 
 No manual MySQL install. No Composer. No Laravel `.env` homework for a normal shop.
 
-**Public ports:** only **80** and **443** (Caddy). MySQL, Redis, and the app container stay on the private Compose network — they are not published on the VPS.
+**Public ports:** only **80** and **443** (Caddy). MySQL, Redis, and the app container stay on the private Compose network - they are not published on the VPS.
 
 **APP_KEY and database passwords:** generated automatically on first boot and stored on durable volumes. You do **not** run `php artisan key:generate`, and you do **not** invent MySQL passwords for a normal Compose install.
 

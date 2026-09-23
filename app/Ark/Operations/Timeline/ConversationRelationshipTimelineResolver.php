@@ -72,7 +72,7 @@ final class ConversationRelationshipTimelineResolver
     }
 
     /**
-     * Evidence explicitly linked to this repair order only — no customer time-window inference.
+     * Evidence explicitly linked to this repair order only - no customer time-window inference.
      *
      * @return array{
      *     messages: Collection<int, \App\Ark\Operations\Conversations\ConversationMessage>,

@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Persists canonical SessionEvent DTOs — the only write path from normalized transport.
+ * Persists canonical SessionEvent DTOs - the only write path from normalized transport.
  */
 final class IngestCanonicalSessionEventAction
 {

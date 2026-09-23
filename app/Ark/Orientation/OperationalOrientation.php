@@ -3,7 +3,7 @@
 namespace App\Ark\Orientation;
 
 /**
- * Operational orientation for a repair order — derived, never editable.
+ * Operational orientation for a repair order - derived, never editable.
  *
  * @phpstan-type OrientationPayload array{
  *     situation: string,

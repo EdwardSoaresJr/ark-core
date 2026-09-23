@@ -1,6 +1,6 @@
 # Deployment Authority v1
 
-**Status:** Locked — ARK Edge, Ingress Endpoint, parallel evolution  
+**Status:** Locked - ARK Edge, Ingress Endpoint, parallel evolution  
 **Date:** 2026-07-19  
 **Companions:** [cluster-authority-v1.md](cluster-authority-v1.md) · [deployment-flow-v1.md](deployment-flow-v1.md) · [shop-authority-v1.md](shop-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md) · [domain-contract-v1.md](domain-contract-v1.md) · [production-runtime-host-doctrine-v1.md](../../infra/coolify/production-runtime-host-doctrine-v1.md) · [fleet-provisioning-authority-v1.md](../deployment/fleet-provisioning-authority-v1.md)
 
@@ -61,7 +61,7 @@ Docker Deployment (:80)
 | --- | --- |
 | **Profile** | Shop intent class |
 | **Routing Target** | Logical destination name |
-| **Ingress Endpoint** | What the edge actually dials — not Docker, Vultr, or Coolify IDs |
+| **Ingress Endpoint** | What the edge actually dials - not Docker, Vultr, or Coolify IDs |
 
 The edge needs only Operations Domain → Ingress Endpoint. Swap Vultr → Hetzner by changing Ingress Endpoint; Shop identity and Operations Domain stay put.
 
@@ -77,18 +77,18 @@ No DNS change. No URL change. No app config change for the Shop.
 
 ---
 
-## ARK Edge (core) — Cloudflare optional
+## ARK Edge (core) - Cloudflare optional
 
 **Core architecture needs an edge router, not Cloudflare.**
 
 | Layer | Role |
 | --- | --- |
-| **ARK Edge** | Traefik (recommended) — hostname → Ingress Endpoint |
+| **ARK Edge** | Traefik (recommended) - hostname → Ingress Endpoint |
 | **Cloudflare** | Optional later: DDoS, CDN, WAF, DNS hosting, bots |
 
 Do not depend on Cloudflare-specific routing (Workers, Tunnel-as-registry, Load Balancing pools as Shop truth). DNS may point `*.arksms.com` at the edge IP whether Cloudflare proxies or not.
 
-### Model A — One Edge (recommended)
+### Model A - One Edge (recommended)
 
 ```text
 Internet
@@ -112,7 +112,7 @@ ARK Edge VPS (Traefik)
 | One routing place | ARK Platform registry → Traefik sync |
 | App servers private | Less exposed surface |
 
-### Model B — DNS per shop (avoid)
+### Model B - DNS per shop (avoid)
 
 `joe.arksms.com` → distinct public IP per VPS. Works, but TTL, certs-per-server, more exposure. **Not the v1 path.**
 
@@ -122,12 +122,12 @@ ARK Edge VPS (Traefik)
 Client ↔ Traefik ↔ App VPS
 ```
 
-Yes — **traffic runs through the edge**. That is intentional for v1. You are not “passing the baton” to a direct client↔app connection yet.
+Yes - **traffic runs through the edge**. That is intentional for v1. You are not “passing the baton” to a direct client↔app connection yet.
 
 | Model | Behavior | When |
 | --- | --- | --- |
-| **A — Reverse proxy** | Request and response via Traefik | **Start here** — dozens to hundreds of shops; bottleneck will be app/DB first |
-| **B — Smart edge** | Edge decides; client talks more directly to destination | Later — more DNS/cert/migration complexity |
+| **A - Reverse proxy** | Request and response via Traefik | **Start here** - dozens to hundreds of shops; bottleneck will be app/DB first |
+| **B - Smart edge** | Edge decides; client talks more directly to destination | Later - more DNS/cert/migration complexity |
 
 When one edge saturates, scale **edges**, not Shop URLs:
 
@@ -164,7 +164,7 @@ Keep Stancl on shared **and** enterprise/dedicated.
 | Deployment | Stancl |
 | --- | --- |
 | Shared Cluster | Many Shops |
-| Enterprise VPS | **One** Shop — still Stancl |
+| Enterprise VPS | **One** Shop - still Stancl |
 
 Resolution is hostname → Shop. One tenant is trivial and cheap vs the rest of a Laravel request.
 
@@ -224,8 +224,8 @@ Edge / Routing Target decide geography.
 
 | Phase | Action |
 | --- | --- |
-| **1 Today** | Demo Auto Repair single-tenant on current VPS — feature work OK; no Stancl conversion |
-| **2** | Shared Cluster A + ARK Edge — prove provision with e.g. `testgarage.arksms.com` |
+| **1 Today** | Demo Auto Repair single-tenant on current VPS - feature work OK; no Stancl conversion |
+| **2** | Shared Cluster A + ARK Edge - prove provision with e.g. `testgarage.arksms.com` |
 | **3** | `autorepairkeeper.com` trials → Shared Cluster A; Demo Auto Repair untouched |
 | **4** | After real shops prove the model → migrate Demo Auto Repair as a routine workflow |
 

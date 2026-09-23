@@ -15,7 +15,7 @@ on real production data. Synthetic/happy-path data does not reproduce it.
 - RO workspace happy path is **green**: `tests/Feature/Mobile/MobileApiTest.php`
   RO/workspace/concern tests pass (13 tests / 148 assertions).
 - The structural projection (`RepairOrderWorkspaceProjection`) is sound.
-- Therefore the failure is **almost certainly data-specific** — a malformed,
+- Therefore the failure is **almost certainly data-specific** - a malformed,
   partial, or legacy field on this particular RO / customer / vehicle row.
 
 ## Leading hypotheses

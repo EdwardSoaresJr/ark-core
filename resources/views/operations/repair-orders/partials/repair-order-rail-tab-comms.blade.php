@@ -7,7 +7,7 @@
 <div id="communication-rail" class="ops-review-rail-tab-panel divide-y divide-slate-100 text-sm">
     <div class="ops-review-panel-header">
         <p class="ops-eyebrow">Communications</p>
-        <p class="ops-meta mt-0.5">Text the customer from here — <span class="font-semibold text-slate-700">Send Estimate</span> for the portal link, pay links when invoiced. Calls and messages stay on this conversation.</p>
+        <p class="ops-meta mt-0.5">Text the customer from here - <span class="font-semibold text-slate-700">Send Estimate</span> for the portal link, pay links when invoiced. Calls and messages stay on this conversation.</p>
     </div>
 
     @if ($repairOrder->customer)

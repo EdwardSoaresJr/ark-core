@@ -313,8 +313,8 @@ test('advisor home renders customer first attention cockpit', function () {
         ->assertSee('John Smith', false)
         ->assertSee('2018 Ram 2500', false)
         ->assertSee('$0', false)
-        ->assertSee('Estimate — None', false)
-        ->assertSee('Scheduled — None', false)
+        ->assertSee('Estimate - None', false)
+        ->assertSee('Scheduled - None', false)
         ->assertDontSee('ops-job-card__exception-mark', false)
         ->assertSee('Search job board', false)
         ->assertSee('ops-advisor-home__sticky-head', false);

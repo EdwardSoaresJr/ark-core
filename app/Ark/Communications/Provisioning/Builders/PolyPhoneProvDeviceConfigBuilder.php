@@ -11,7 +11,7 @@ use App\Ark\Platform\VoiceTransportConfiguration;
 use RuntimeException;
 
 /**
- * Poly config/{MAC} body — port of Asterisk phoneprov polycom.xml + polycom_line.xml.
+ * Poly config/{MAC} body - port of Asterisk phoneprov polycom.xml + polycom_line.xml.
  */
 final class PolyPhoneProvDeviceConfigBuilder
 {

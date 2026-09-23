@@ -3,7 +3,7 @@
 namespace App\Ark\Platform;
 
 /**
- * Public URLs for shop capabilities — always derived from SHOP_BASE_URL.
+ * Public URLs for shop capabilities - always derived from SHOP_BASE_URL.
  *
  * @see docs/platform/shop-identity-v1.md
  */

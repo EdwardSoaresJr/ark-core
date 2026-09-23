@@ -22,7 +22,7 @@
 
 This document is the **target architecture**. Existing early-invoice and living-invoice sync behavior is **transitional compatibility**, not the destination.
 
-It sits with Inspection, Maintenance, Evidence, and Customer Recognition: **authority instead of synchronized documents**. It is not a feature — it changes how the system thinks.
+It sits with Inspection, Maintenance, Evidence, and Customer Recognition: **authority instead of synchronized documents**. It is not a feature - it changes how the system thinks.
 
 **Architectural stop (binding):** Financial Authority is frozen. No invoice work, refresh work, synchronization work, or early-invoice enhancements are permitted until F1 (Financial Position) is implemented. Existing living-invoice behavior exists only as transitional compatibility.
 
@@ -58,7 +58,7 @@ These questions exist only if an invoice is allowed to be living. Under v2 they 
 
 **The Estimate answers “What has been approved?” The Ledger answers “What money has moved?” The Invoice answers “What was finally billed?”**
 
-Everything else — portal balances, advisor totals, customer responsibility, warranty portions — is a **projection** composed from those authorities.
+Everything else - portal balances, advisor totals, customer responsibility, warranty portions - is a **projection** composed from those authorities.
 
 ---
 
@@ -82,21 +82,21 @@ Invoice   →  historical snapshot
 
 ## Principles
 
-### #1 — The Estimate is the living financial contract
+### #1 - The Estimate is the living financial contract
 
 Until a repair is complete and closeout readiness is met, there is **one** financial truth: the approved Estimate.
 
 There is never a “living invoice.”
 
-Approval — portal, phone, or in-person recorded — is the only gate that changes the contract. Advisor “refresh” is not a gate.
+Approval - portal, phone, or in-person recorded - is the only gate that changes the contract. Advisor “refresh” is not a gate.
 
-### #2 — The Invoice is evidence
+### #2 - The Invoice is evidence
 
 Like InspectionEvidence and MaintenanceServiceEvent, the Invoice is **historical evidence** that a financial contract was finalized.
 
 It is not the contract itself.
 
-### #3 — Money belongs to the Ledger
+### #3 - Money belongs to the Ledger
 
 Money never belongs to an Estimate.  
 Money never belongs to an Invoice.  
@@ -110,7 +110,7 @@ Money belongs to the Ledger:
 
 Deposits are **not** invoice payments. They are ledger transactions that reserve work toward whatever the contract ultimately becomes. When the Final Invoice is issued, deposits apply automatically.
 
-### #4 — The Invoice is the consequence of closeout, not a prerequisite for closeout
+### #4 - The Invoice is the consequence of closeout, not a prerequisite for closeout
 
 ```
 Repair Complete
@@ -164,7 +164,7 @@ That sentence is a guardrail for every future financial feature.
 | **Ledger deposit** | Invoice deposit / payment against unfinished invoice |
 | **Financial Position** | Ad-hoc estimate vs invoice vs deposit math in UI |
 
-There is one final invoice — not an early invoice and a later invoice.
+There is one final invoice - not an early invoice and a later invoice.
 
 ---
 
@@ -212,7 +212,7 @@ Advisors do not ask four questions. They ask one:
 
 ```
 Approved Work
-− Coverage (warranty / fleet / insurance / goodwill — when that authority exists)
+− Coverage (warranty / fleet / insurance / goodwill - when that authority exists)
 − Deposits
 − Credits
 − Payments
@@ -234,7 +234,7 @@ North-star question remains: *What does this customer owe us right now?*
 
 **Every financial screen must answer exactly one question.**
 
-Same discipline as Inspection, Evidence, Maintenance, and Customer Recognition — surfaces do not become overlapping financial dashboards.
+Same discipline as Inspection, Evidence, Maintenance, and Customer Recognition - surfaces do not become overlapping financial dashboards.
 
 | Surface | Primary question |
 | --- | --- |
@@ -266,7 +266,7 @@ Customers must not wonder why two financial documents exist while work is still 
 | --- | --- |
 | **Estimate PDF** | Living document versions; older PDFs may be superseded |
 | **Final Invoice PDF** | Issued once with the Final Invoice; **immutable**; never regenerated as “refresh” |
-| Emailed / printed copies | Historical communication evidence — may be superseded by a later estimate version or by the Final Invoice, but do not create a second living invoice |
+| Emailed / printed copies | Historical communication evidence - may be superseded by a later estimate version or by the Final Invoice, but do not create a second living invoice |
 
 History is preserved. Money stays correct because the Estimate (then the Final Invoice) is synchronized by **approval and closeout**, not advisor memory.
 
@@ -274,7 +274,7 @@ History is preserved. Money stays correct because the Estimate (then the Final I
 
 ## Advisor UI posture
 
-**Before Final Invoice** — the invoice literally does not exist yet:
+**Before Final Invoice** - the invoice literally does not exist yet:
 
 ```
 Estimate
@@ -290,7 +290,7 @@ Projected Balance          ← Financial Position
 
 Missing on purpose: Invoice tab · Refresh Invoice · Sync Status.
 
-That matches how advisors think through a repair — contract and money first; Final Invoice only when the job is done.
+That matches how advisors think through a repair - contract and money first; Final Invoice only when the job is done.
 
 **After Final Invoice**
 
@@ -304,13 +304,13 @@ Financial
 
 ---
 
-## Coverage (future — do not invent early)
+## Coverage (future - do not invent early)
 
 Warranty / fleet / insurance / internal / goodwill belong to a future **Coverage** authority.
 
 Invoice and Financial Position **consume** Coverage. They do not become multi-payor systems themselves.
 
-Until Coverage exists, human process may note customer portion on deposits — that is not line-level billing truth.
+Until Coverage exists, human process may note customer portion on deposits - that is not line-level billing truth.
 
 ---
 
@@ -328,8 +328,8 @@ Until Coverage exists, human process may note customer portion on deposits — t
 | Existing behavior | Classification |
 | --- | --- |
 | Early issued invoices on open ROs | Transitional compatibility |
-| `RefreshLivingInvoiceSnapshotAction` | Transitional — do not extend |
-| `RefreshCustomerInvoiceAction` / Refresh Invoice UI | Transitional — do not extend |
+| `RefreshLivingInvoiceSnapshotAction` | Transitional - do not extend |
+| `RefreshCustomerInvoiceAction` / Refresh Invoice UI | Transitional - do not extend |
 | Deposit-tolerant living sync (2026-08-03) | Transitional patch; not target architecture |
 
 **Allowed now:** money-loss bugfixes that do not expand living-invoice doctrine; doctrine; **Financial Position** design and implementation.
@@ -360,7 +360,7 @@ Financial Authority stays **RED** until F1 is complete.
 | Milestone | Status | Deliverable |
 | --- | --- | --- |
 | **F0** Doctrine freeze | 🔒 **Done** | This document |
-| **F1** Financial Position | ⏸️ **Next — sole resume point** | Projection + every owe-today surface consumes it |
+| **F1** Financial Position | ⏸️ **Next - sole resume point** | Projection + every owe-today surface consumes it |
 | **F2** Advisor financial UI | ⏸️ After F1 | Estimate · Coverage · Deposits · Projected Balance · Issue Final Invoice (Closeout Ready only); no Invoice tab |
 | **F3** Issue Final Invoice event | ⏸️ After F1–F2 | Closeout readiness → immutable Final Invoice once |
 | **F4** Migrate open early invoices | ⏸️ After F3 | Compatibility without rewriting closed history |

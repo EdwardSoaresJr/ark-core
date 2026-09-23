@@ -46,7 +46,7 @@ check_http "Arkify favicon asset" "https://platform.autorepairkeeper.com/ark/fav
 check_http "Arkify apple-touch" "https://platform.autorepairkeeper.com/ark/ark-180x180.png"
 
 echo ""
-echo "=== Public Surface — lugsnplugs.com (shop branding — intentional) ==="
+echo "=== Public Surface - lugsnplugs.com (shop branding - intentional) ==="
 check "Public shop favicon" "https://lugsnplugs.com" 'lugsnplugs-favicon\.png'
 
 echo ""

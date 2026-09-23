@@ -94,7 +94,7 @@ class OperationalReportTotals
     }
 
     /**
-     * Authoritative posted sales — alias for {@see postedSalesCents()}.
+     * Authoritative posted sales - alias for {@see postedSalesCents()}.
      *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      */
@@ -500,7 +500,7 @@ class OperationalReportTotals
     }
 
     /**
-     * Imported legacy invoice totals (frozen snapshot only — not living estimate rebuilds).
+     * Imported legacy invoice totals (frozen snapshot only - not living estimate rebuilds).
      *
      * @param  Collection<int, int>|array<int, int|string>  $repairOrderIds
      * @return Collection<int, int>

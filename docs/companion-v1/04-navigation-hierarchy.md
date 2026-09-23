@@ -1,6 +1,6 @@
-# Deliverable 4 — Navigation Hierarchy
+# Deliverable 4 - Navigation Hierarchy
 
-**Advisor v1** — top level first, then everything underneath. Every leaf links to a spec in [`screens/`](screens/).
+**Advisor v1** - top level first, then everything underneath. Every leaf links to a spec in [`screens/`](screens/).
 
 ```text
 Companion (Advisor)
@@ -32,7 +32,7 @@ Companion (Advisor)
 │   ├── Profile / Settings                    → settings-profile.md
 │   └── About
 │
-└── Workspaces (stack — not tabs)
+└── Workspaces (stack - not tabs)
     ├── Customer                              → customer-workspace.md
     ├── Vehicle                               → vehicle-workspace.md
     ├── Repair order                          → repair-order-workspace.md
@@ -65,7 +65,7 @@ Companion (Technician)
 
 ---
 
-## Owner mode (P1 — not advisor tabs)
+## Owner mode (P1 - not advisor tabs)
 
 ```text
 Owner entry (More or separate login intent)
@@ -81,7 +81,7 @@ Owner entry (More or separate login intent)
 
 - Persistent identity strip (customer · vehicle · RO)
 - Single back stack
-- Context action bar (changes per workspace — not duplicated)
+- Context action bar (changes per workspace - not duplicated)
 
 **Sub-views are bodies**, not nested apps with their own nav bars.
 
@@ -106,7 +106,7 @@ Reference legacy failure: `docs/mobile/ark-mobile-ux-audit-v1.md` SYS-1.
 |-------|-----|---------|
 | 1 tap from tab | ✅ | Comms → thread |
 | 2 taps | ✅ | Home → continuity → thread |
-| 3 taps | ⚠️ | Max for P0 — flag in flows |
+| 3 taps | ⚠️ | Max for P0 - flag in flows |
 | 4+ | ❌ | Redesign |
 
 ---
@@ -116,7 +116,7 @@ Reference legacy failure: `docs/mobile/ark-mobile-ux-audit-v1.md` SYS-1.
 | From | Back goes to |
 |------|--------------|
 | Thread | List (scroll restored) |
-| RO workspace | Caller (search · thread · home row) — **not** tab root unless caller was tab |
+| RO workspace | Caller (search · thread · home row) - **not** tab root unless caller was tab |
 | Inspection item | Overview or RO |
 | Payment success | RO workspace or dismiss to caller |
 | Search action | Previous workspace or search |

@@ -1,4 +1,4 @@
-{{-- Labor, fee, note, sublet line entry — expects parent form with arkPartPricing x-data --}}
+{{-- Labor, fee, note, sublet line entry - expects parent form with arkPartPricing x-data --}}
 @php
     $suppressLaborDescription = (bool) ($suppressLaborDescription ?? false);
     $repairTitle = (string) ($repairTitle ?? '');

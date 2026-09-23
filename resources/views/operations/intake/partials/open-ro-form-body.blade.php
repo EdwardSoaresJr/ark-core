@@ -18,7 +18,7 @@
             <div class="ops-intake-open-panel-head">
                 <div class="min-w-0">
                     <h2 class="ops-intake-open-panel-title">Reason for visit</h2>
-                    <p class="ops-intake-open-panel-lead">What the customer said — not the estimate. Optional now; you can edit it on the RO.</p>
+                    <p class="ops-intake-open-panel-lead">What the customer said - not the estimate. Optional now; you can edit it on the RO.</p>
                 </div>
             </div>
 

@@ -25,7 +25,7 @@
     @endunless
 >
     <div class="border-b border-amber-200 bg-amber-50 px-4 py-4 sm:px-5">
-        <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-800">{{ $payingRemaining ? 'Pay remaining balance' : 'Step 3 — Pay deposit' }}</p>
+        <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-800">{{ $payingRemaining ? 'Pay remaining balance' : 'Step 3 - Pay deposit' }}</p>
         <h2 class="mt-1 text-lg font-bold text-slate-950">Pay {{ $depositAmountLabel }} {{ $payingRemaining ? 'remaining' : 'deposit' }}</h2>
         <p class="mt-1 text-sm leading-6 text-slate-700">
             @if ($payingRemaining)
@@ -40,7 +40,7 @@
     <div class="space-y-4 px-4 py-4 sm:px-5">
     @if ($staffPreview)
         <p class="rounded-md border border-amber-200 bg-amber-50/80 px-3 py-3 text-sm leading-6 text-amber-950">
-            Card deposit is disabled in staff preview — open the shared customer estimate link to collect the deposit.
+            Card deposit is disabled in staff preview - open the shared customer estimate link to collect the deposit.
         </p>
     @else
     <div x-ref="cardMount" class="min-h-12 rounded-md border border-slate-200 bg-slate-50 p-3"></div>

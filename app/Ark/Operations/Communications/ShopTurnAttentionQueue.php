@@ -10,7 +10,7 @@ use App\Ark\Runtime\Database\SchemaPresence;
 use App\Models\User;
 
 /**
- * Conversations where the shop owes the next move — turn-based Needs Attention.
+ * Conversations where the shop owes the next move - turn-based Needs Attention.
  *
  * No age window: unreplied customer SMS/MMS stays until the shop replies or
  * resolves. Live unread + call interrupt still use CommunicationsQueueWindow.

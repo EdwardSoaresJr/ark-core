@@ -393,7 +393,7 @@ final class CustomerDocumentScopeNarrative
     }
 
     /**
-     * Visible labor and parts on the work card — shop supplies and tax belong in document totals.
+     * Visible labor and parts on the work card - shop supplies and tax belong in document totals.
      *
      * @param  list<array<string, mixed>>  $charges
      */

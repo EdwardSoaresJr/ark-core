@@ -10,7 +10,7 @@ use App\Ark\Operations\Timeline\UnifiedOperationalTimeline;
 use Illuminate\Support\Collection;
 
 /**
- * Customer Hub comms tab — unified timeline consumer.
+ * Customer Hub comms tab - unified timeline consumer.
  */
 class CustomerHubCommsTimeline
 {
@@ -30,7 +30,7 @@ class CustomerHubCommsTimeline
     }
 
     /**
-     * Full customer conversation timeline — messages, calls, workflow, portal, payments.
+     * Full customer conversation timeline - messages, calls, workflow, portal, payments.
      *
      * @return Collection<int, OperationalEventEntry>
      */

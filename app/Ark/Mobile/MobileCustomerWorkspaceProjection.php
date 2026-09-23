@@ -16,7 +16,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Portable Station — customer workspace loads authority for blocks; orientation follows observations.
+ * Portable Station - customer workspace loads authority for blocks; orientation follows observations.
  */
 final class MobileCustomerWorkspaceProjection
 {

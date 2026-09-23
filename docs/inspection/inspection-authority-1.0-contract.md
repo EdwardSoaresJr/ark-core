@@ -1,6 +1,6 @@
 # Inspection Authority 1.0 Contract
 
-**Status:** Superseded for canonical authority — see [Inspection Authority](inspection-authority.md)  
+**Status:** Superseded for canonical authority - see [Inspection Authority](inspection-authority.md)  
 **Principle:** Store observed facts. Project urgency, customer views, and messaging later.
 
 Same sequence as Identity and Communications:
@@ -17,8 +17,8 @@ Authority → Projection → Delivery
 |-------|---------|
 | Inspection | One per repair order |
 | InspectionItem | Category, label, observed state, notes, optional concern link |
-| InspectionItemMeasurement | Name, value, unit — **rows, not JSON** |
-| InspectionItemPhoto | Storage path, purpose, content type — **rows, not JSON** |
+| InspectionItemMeasurement | Name, value, unit - **rows, not JSON** |
+| InspectionItemPhoto | Storage path, purpose, content type - **rows, not JSON** |
 | Categories | Seeded labels for organization only |
 | Linkage | `repair_order_id`, optional `repair_order_concern_id` on items |
 
@@ -30,7 +30,7 @@ Authority → Projection → Delivery
 - `measure`
 - `na`
 
-### Photo purpose (authority — not customer portal)
+### Photo purpose (authority - not customer portal)
 
 - `internal`
 - `customer`
@@ -57,7 +57,7 @@ Severity colors (green / yellow / red) are **forbidden** as persisted truth.
 
 ## Success criterion
 
-A technician can record what they observed on a repair order — items, measurements, photos, and notes — with no other workflow required.
+A technician can record what they observed on a repair order - items, measurements, photos, and notes - with no other workflow required.
 
 ---
 
@@ -65,7 +65,7 @@ A technician can record what they observed on a repair order — items, measurem
 
 | Phase | Delivers |
 |-------|----------|
-| 1.5 | Finding-first technician workflow — see [Inspection Authority v1.5](inspection-authority-v1.5.md) |
+| 1.5 | Finding-first technician workflow - see [Inspection Authority v1.5](inspection-authority-v1.5.md) |
 | 2.0 | Customer inspection portal (projection) |
 | 2.5 | Send Inspection Link on comms rail (delivery) |
 

@@ -1,6 +1,6 @@
 # ARK Runtime Authority
 
-**Purpose:** One page per subsystem where **reality is written down** — not ceremony, not encyclopedia.
+**Purpose:** One page per subsystem where **reality is written down** - not ceremony, not encyclopedia.
 
 If a page stops helping decisions, delete or rewrite it.
 
@@ -52,11 +52,11 @@ See ark-subsystem-lifecycle.mdc.
 
 Every subsystem runtime page includes:
 
-1. **Authority** — who owns truth  
-2. **Runtime** — production path (30-second test)  
-3. **Baseline** — link to operations snapshot  
-4. **Known defects** — missing capabilities, not instability  
-5. **Observation gate** — what must pass before evolution  
+1. **Authority** - who owns truth  
+2. **Runtime** - production path (30-second test)  
+3. **Baseline** - link to operations snapshot  
+4. **Known defects** - missing capabilities, not instability  
+5. **Observation gate** - what must pass before evolution  
 
 ---
 
@@ -68,16 +68,16 @@ Every subsystem runtime page includes:
 | [voice-baseline-v1.md](./voice-baseline-v1.md) | Observing | Operations snapshot + log |
 | [scheduling-runtime-authority.md](./scheduling-runtime-authority.md) | Converging | Appointments · Schedule · Operational Capacity · Floor Proof pending |
 | [shop-memory-runtime-authority.md](./shop-memory-runtime-authority.md) | Observing (v1 COMPLETE) | Shop Memory · Labor + Add Concern popup ON · providers gated · observation before enable |
-| [operator-adoption-pass-v1.md](./operator-adoption-pass-v1.md) | Converging | Track E — another shop without tribal knowledge; H blocked until exit criterion |
+| [operator-adoption-pass-v1.md](./operator-adoption-pass-v1.md) | Converging | Track E - another shop without tribal knowledge; H blocked until exit criterion |
 | [payments-runtime-authority.md](./payments-runtime-authority.md) | Observing | Ledger · external/manual · portal balance links |
-| `communications-runtime-authority.md` | — | Conversation · SMS · timeline |
-| `identity-runtime-authority.md` | — | Customer · vehicle · extension |
-| `inspection-runtime-authority.md` | — | Findings · evidence |
-| `pricing-runtime-authority.md` | — | Matrix · `EstimateTotalsCalculator` |
+| `communications-runtime-authority.md` | - | Conversation · SMS · timeline |
+| `identity-runtime-authority.md` | - | Customer · vehicle · extension |
+| `inspection-runtime-authority.md` | - | Findings · evidence |
+| `pricing-runtime-authority.md` | - | Matrix · `EstimateTotalsCalculator` |
 
-Add a page when a subsystem **completes convergence** — not when someone wants a doc.
+Add a page when a subsystem **completes convergence** - not when someone wants a doc.
 
-Sprint evidence stays in sprint/archive docs — not duplicated here.
+Sprint evidence stays in sprint/archive docs - not duplicated here.
 
 ---
 

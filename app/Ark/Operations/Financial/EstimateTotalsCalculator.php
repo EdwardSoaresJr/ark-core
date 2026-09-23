@@ -99,7 +99,7 @@ class EstimateTotalsCalculator
     }
 
     /**
-     * Read-only "waiting on a decision" totals — recommended work the customer
+     * Read-only "waiting on a decision" totals - recommended work the customer
      * has not yet approved or declined. Deferred opportunity (ARO); GET-safe.
      * Distinct from the estimate total, which drops recommended work once any
      * work is approved (see RepairOrderConcernDisposition::countsTowardEstimateTotal).
@@ -118,7 +118,7 @@ class EstimateTotalsCalculator
     }
 
     /**
-     * Read-only declined-work totals — customer declined lines. GET-safe.
+     * Read-only declined-work totals - customer declined lines. GET-safe.
      */
     public function declinedTotalsForRead(RepairOrder $repairOrder): EstimateTotals
     {
@@ -162,7 +162,7 @@ class EstimateTotalsCalculator
      */
     private function totalsForLines(Collection $allLines, Collection $billableLines, ShopSettings $settings): EstimateTotals
     {
-        // Concern headers show deferred/recommended money for scan, but never draft —
+        // Concern headers show deferred/recommended money for scan, but never draft -
         // draft is unfinished authoring and must not look like it belongs on the bill.
         $concernMoneyLines = $allLines->filter(
             fn (RepairOrderLine $line): bool => $line->concern?->disposition !== RepairOrderConcernDisposition::Draft,
@@ -463,7 +463,7 @@ class EstimateTotalsCalculator
                 return $netSubtotalCents;
             }
 
-            // Packages follow labor tax posture — service package, not parts.
+            // Packages follow labor tax posture - service package, not parts.
             if ($line->type->isPackage() && $settings->taxable_labor) {
                 return $netSubtotalCents;
             }

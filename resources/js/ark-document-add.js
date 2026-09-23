@@ -1,5 +1,5 @@
 /**
- * Add Document modal body — scan page assembly + mode chooser + attach search.
+ * Add Document modal body - scan page assembly + mode chooser + attach search.
  */
 export function arkDocumentAdd(config = {}) {
     return {

@@ -62,7 +62,7 @@
                             {{ $milestone['occurred_at']->timezone($displayTimezone)->format('M j, g:i A') }}
                         </time>
                     @else
-                        <span class="text-xs font-semibold tabular-nums text-slate-300" title="{{ $milestone['note'] ?? $milestone['source'] }}">—</span>
+                        <span class="text-xs font-semibold tabular-nums text-slate-300" title="{{ $milestone['note'] ?? $milestone['source'] }}">-</span>
                     @endif
                 </dd>
             </div>

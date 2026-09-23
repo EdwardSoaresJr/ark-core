@@ -8,7 +8,7 @@ use App\Ark\Platform\ClusterType;
 use Illuminate\Database\Seeder;
 
 /**
- * Development seed only — not called from DatabaseSeeder.
+ * Development seed only - not called from DatabaseSeeder.
  *
  * php artisan db:seed --class=ClusterSeeder
  */

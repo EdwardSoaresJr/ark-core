@@ -1,4 +1,4 @@
-# Floor Observations — July 2026
+# Floor Observations - July 2026
 
 **Observation Sprint:** two weeks after Workspace Constitution Phase 1  
 **Purpose:** Factual record only. No solutions. No doctrine. Prioritize after 30–50 entries.
@@ -9,15 +9,15 @@
 2. Did work stop?
 3. What observation supports changing it?
 
-If #3 is "none" — don't change it.
+If #3 is "none" - don't change it.
 
 When someone says "We should add…" → **Show me the observation.** Three or four independent entries on the same friction earn Phase 1.5. One annoyance does not.
 
 ---
 
-## Observation Sprint — daily check
+## Observation Sprint - daily check
 
-Silence is data. Four hours without "Where is…?" or "How do I…?" is a success. Instinctive clicks (Work without thinking) count. Record the **No** answers — they mean the mental model is becoming automatic.
+Silence is data. Four hours without "Where is…?" or "How do I…?" is a success. Instinctive clicks (Work without thinking) count. Record the **No** answers - they mean the mental model is becoming automatic.
 
 ```
 Date:

@@ -21,7 +21,7 @@
         @if ($staffPreview ?? false)
             <div class="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                 <p class="font-semibold">Staff preview</p>
-                <p class="mt-1 text-amber-900">This is what the customer sees. Card entry is disabled here — use Send Pay Link from Comms to collect payment.</p>
+                <p class="mt-1 text-amber-900">This is what the customer sees. Card entry is disabled here - use Send Pay Link from Comms to collect payment.</p>
             </div>
         @endif
 
@@ -34,11 +34,11 @@
             <p class="text-lg font-black text-slate-950">{{ $amountLabel ?? 'Balance due' }}: {{ $balanceDue }}</p>
             @if ($payMode === 'remaining_deposit')
                 <p>
-                    This is the leftover balance on work you already approved — not extra repairs.
+                    This is the leftover balance on work you already approved - not extra repairs.
                 </p>
             @elseif ($isDeposit)
                 <p>
-                    This is a deposit toward approved work — not the full repair total unless those amounts match.
+                    This is a deposit toward approved work - not the full repair total unless those amounts match.
                     Paying does not approve any extra repairs.
                 </p>
             @else

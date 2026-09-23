@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
  *
  * iMessage previews are especially sneaky: the request comes from the phone's IP with a
  * Safari-looking UA that also embeds facebookexternalhit / Facebot / Twitterbot so OG
- * tags are served. Matching those tokens (below) is the reliable signal — not Applebot.
+ * tags are served. Matching those tokens (below) is the reliable signal - not Applebot.
  */
 final class PortalCustomerViewGate
 {
@@ -108,7 +108,7 @@ final class PortalCustomerViewGate
 
     /**
      * Fetch Metadata: automated previews often omit Sec-Fetch-User while sending Mode.
-     * Require ?1 only when Mode is present — never require the header for older phones.
+     * Require ?1 only when Mode is present - never require the header for older phones.
      *
      * Do not require Sec-Fetch-User whenever Mode is set: browsers omit User on
      * redirect follow-ups (http→https), which would miss real customer opens.

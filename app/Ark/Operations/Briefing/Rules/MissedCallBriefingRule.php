@@ -48,7 +48,7 @@ final class MissedCallBriefingRule implements BriefingRule
                     ],
                     facts: [
                         ['label' => 'Call', 'value' => '#'.$call->id],
-                        ['label' => 'From', 'value' => $call->from_number ?? '—'],
+                        ['label' => 'From', 'value' => $call->from_number ?? '-'],
                     ],
                 ),
                 evidenceItems: [

@@ -1,8 +1,8 @@
-# External reference — Quo (formerly OpenPhone)
+# External reference - Quo (formerly OpenPhone)
 
-**Product:** [Quo](https://www.quo.com/) — business phone + SMS. Rebrand from OpenPhone; docs still say "formerly OpenPhone" in places.
+**Product:** [Quo](https://www.quo.com/) - business phone + SMS. Rebrand from OpenPhone; docs still say "formerly OpenPhone" in places.
 
-**Doctrine:** Reference · not clone — steal **call UX craft**, not a second inbox product.
+**Doctrine:** Reference · not clone - steal **call UX craft**, not a second inbox product.
 
 **Assets:** [`quo/`](quo/) · catalog [`CATALOG.md`](CATALOG.md)
 
@@ -19,7 +19,7 @@
 
 ## P0 reference screens (downloaded)
 
-### Incoming call — `incoming-phone-menu-insight.png`
+### Incoming call - `incoming-phone-menu-insight.png`
 
 From [Quo phone menu blog](https://www.quo.com/blog/phone-menu/) (Nov 2024 feature).
 
@@ -28,11 +28,11 @@ From [Quo phone menu blog](https://www.quo.com/blog/phone-menu/) (Nov 2024 featu
 - **Context before answer:** inbox name + emoji · caller name · **why they're calling** (menu option `3`)
 - Footnote: shared inbox behavior ("Declining still allows others to pick up")
 
-**ARK adds:** vehicle line · RO chip · estimate one-liner · last SMS — not menu option alone.
+**ARK adds:** vehicle line · RO chip · estimate one-liner · last SMS - not menu option alone.
 
 **Spec:** [`../../screens/incoming-call.md`](../../screens/incoming-call.md)
 
-### Caller ID — `caller-id-marketing.webp`
+### Caller ID - `caller-id-marketing.webp`
 
 From [call screening product page](https://www.quo.com/product/call-management/call-screening).
 
@@ -40,15 +40,15 @@ From [call screening product page](https://www.quo.com/product/call-management/c
 
 **ARK:** Shop name + station optional · customer + vehicle primary.
 
-### Inbox — `quo-threads.png` · `screensdesign-*.webp`
+### Inbox - `quo-threads.png` · `screensdesign-*.webp`
 
 **Steal:** Thread density · avatar · preview · calm spacing
 
 **ARK:** Automotive row (vehicle · RO · badges) on [`conversation-list.md`](../../screens/conversation-list.md)
 
-### In-call — ScreensDesign showcase notes
+### In-call - ScreensDesign showcase notes
 
-Showcase calls out **clean in-call UI @ 03:39** — see `screensdesign-4.webp` (large frame). Transfer tagged "Business" — reference tier gating, not ARK P0.
+Showcase calls out **clean in-call UI @ 03:39** - see `screensdesign-4.webp` (large frame). Transfer tagged "Business" - reference tier gating, not ARK P0.
 
 ---
 

@@ -1,4 +1,4 @@
-# ARK Voice Phase 1 — Parallel Ingress Spec
+# ARK Voice Phase 1 - Parallel Ingress Spec
 
 **Status:** Active build contract  
 **Doctrine:** doctrine `ark-authority-vs-configuration.mdc` · doctrine `ark-telephony-settings-doctrine.mdc`  
@@ -36,9 +36,9 @@ Phase 1 must answer **yes** for everything it ships:
 
 ### Authority (code)
 
-- `CallSession` — single call authority for Twilio and Asterisk
-- `CustomerCallContextResolver` — customer / vehicle / RO matching
-- `TelephonyExtension` — per-shop extension registry (rows, not constants)
+- `CallSession` - single call authority for Twilio and Asterisk
+- `CustomerCallContextResolver` - customer / vehicle / RO matching
+- `TelephonyExtension` - per-shop extension registry (rows, not constants)
 - `TelephonyProvider` contract + Twilio + Asterisk adapters
 
 ### Settings (per shop)
@@ -56,7 +56,7 @@ Phase 1 must answer **yes** for everything it ships:
 
 ### Projections
 
-- `CallSessionCallerContextProjection` — staff API for pop fields
+- `CallSessionCallerContextProjection` - staff API for pop fields
 - `GET /app/api/telephony/call-sessions/{callSession}/caller-context`
 
 ### Tests
@@ -75,12 +75,12 @@ Phase 1 must answer **yes** for everything it ships:
 | PSTN cutover | Parallel observation first |
 | Flutter SIP / AMI | Mobile stays `/api/mobile/*` |
 | `AsteriskCall` parallel table | Violates authority doctrine |
-| Ring groups (named) | Settings surface Phase 2 — endpoints exist today |
+| Ring groups (named) | Settings surface Phase 2 - endpoints exist today |
 | Page groups | Settings surface Phase 2+ |
-| Routing tables (hours / overflow / voicemail routes) | Phase 2+ — hours exist; route *targets* do not |
-| Caller pop field toggles | Phase 2 — projection prefs in settings |
+| Routing tables (hours / overflow / voicemail routes) | Phase 2+ - hours exist; route *targets* do not |
+| Caller pop field toggles | Phase 2 - projection prefs in settings |
 | FreePBX admin UI | Transport provisioning stays outside ARK |
-| Sync jobs / health automation | Authority adoption — observe first |
+| Sync jobs / health automation | Authority adoption - observe first |
 
 ---
 
@@ -88,10 +88,10 @@ Phase 1 must answer **yes** for everything it ships:
 
 When floor pain justifies build, add **configuration surfaces** before automation:
 
-1. **Ring groups** — named groups → `TelephonyEndpoint` membership
-2. **Page groups** — named paging targets
-3. **Route map** — business / after-hours / voicemail / overflow → group or endpoint
-4. **Caller pop preferences** — which projection fields each shop shows
+1. **Ring groups** - named groups → `TelephonyEndpoint` membership
+2. **Page groups** - named paging targets
+3. **Route map** - business / after-hours / voicemail / overflow → group or endpoint
+4. **Caller pop preferences** - which projection fields each shop shows
 
 Each row passes the SaaS test: Shop A and Shop B differ without deploy.
 

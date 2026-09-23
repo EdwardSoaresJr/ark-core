@@ -1,7 +1,7 @@
 @if ($duplicateMatches->isNotEmpty())
     <div class="ops-intake-duplicate-hint" role="status" aria-live="polite">
         <p class="ops-intake-duplicate-hint-head">Similar customers on file</p>
-        <p class="ops-intake-duplicate-hint-copy">Possible matches while you're adding someone new. Use one below if it's the same person — otherwise continue and add them.</p>
+        <p class="ops-intake-duplicate-hint-copy">Possible matches while you're adding someone new. Use one below if it's the same person - otherwise continue and add them.</p>
         <div class="ops-intake-duplicate-list">
             @foreach ($duplicateMatches as $match)
                 @php

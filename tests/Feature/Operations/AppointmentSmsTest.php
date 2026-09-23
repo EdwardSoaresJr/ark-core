@@ -39,7 +39,7 @@ function appointmentSmsCustomer(): Customer
         'sms_consent_status' => CustomerSmsConsentStatus::Subscribed,
     ]);
 
-    // Capability gate shipped after appointment SMS — seed known-mobile so Lookup is not required.
+    // Capability gate shipped after appointment SMS - seed known-mobile so Lookup is not required.
     PhoneSmsCapability::query()->create([
         'normalized_phone' => PhoneNumber::normalize((string) $customer->phone),
         'valid' => true,
@@ -97,7 +97,7 @@ test('scheduling an appointment flashes the customer text prompt', function () {
         ->get(route('operations.appointments.show', $appointment).'?comms=1')
         ->assertOk()
         ->assertSee('Send confirmation SMS', false)
-        ->assertSee('Customer text — confirmation', false)
+        ->assertSee('Customer text - confirmation', false)
         ->assertSee('data-appointment-sms', false);
 });
 

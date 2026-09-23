@@ -1188,7 +1188,7 @@ export function arkCommsInterrupt() {
                 return 'No open repair orders';
             }
 
-            return `${count} open ${count === 1 ? 'RO' : 'ROs'} — pick on Customer Hub or below`;
+            return `${count} open ${count === 1 ? 'RO' : 'ROs'} - pick on Customer Hub or below`;
         },
 
         lastConversationSnippet() {

@@ -6,7 +6,7 @@ use App\Ark\Operations\Communications\CommunicationDevice;
 use App\Ark\Operations\Telephony\TelephonyExtension;
 
 /**
- * Authority inputs packaged for endpoint serialization — provisioning reads only.
+ * Authority inputs packaged for endpoint serialization - provisioning reads only.
  */
 final readonly class EndpointProvisionContext
 {

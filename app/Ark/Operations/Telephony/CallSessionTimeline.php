@@ -23,7 +23,7 @@ class CallSessionTimeline
     }
 
     /**
-     * Calls explicitly linked to this repair order — no customer time-window inference.
+     * Calls explicitly linked to this repair order - no customer time-window inference.
      *
      * @return EloquentCollection<int, CallSession>
      */

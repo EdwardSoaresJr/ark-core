@@ -302,7 +302,7 @@ test('close is allowed when invoice issued and balance due is zero', function ()
     issueFinalInvoiceFor($repairOrder);
     payRepairOrderInFull($repairOrder);
 
-    // Close must answer how it closed — paid vs lost — not a generic closed state.
+    // Close must answer how it closed - paid vs lost - not a generic closed state.
     $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder->fresh()), [
         'status' => 'closed:paid',
         'review_request_sent' => '1',

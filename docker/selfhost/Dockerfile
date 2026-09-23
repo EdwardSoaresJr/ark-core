@@ -1,6 +1,6 @@
 FROM php:8.4-apache-bookworm
 
-# Advanced / minimal Apache image — NOT the default Compose path.
+# Advanced / minimal Apache image - NOT the default Compose path.
 # Default `docker compose up` builds the root Dockerfile (nginx, php-fpm,
 # Horizon, Reverb, scheduler) so self-host matches production runtime semantics.
 # Use this file only when you intentionally want a reduced stack.

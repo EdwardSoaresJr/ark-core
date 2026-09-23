@@ -1,4 +1,4 @@
-# Repair Order — Builder retirement + legacy surface bridges
+# Repair Order - Builder retirement + legacy surface bridges
 
 **Status:** Canonical rename in progress (uncommitted with Presentation Reset)  
 **Date:** 2026-08-06  
@@ -41,17 +41,17 @@ Deprecated shell: ~~`RepairOrderEstimateReviewController`~~ **deleted** (unused;
 
 ## Footer
 
-`RepairOrderFooterProjection` — Workflow · Present · Utilities  
+`RepairOrderFooterProjection` - Workflow · Present · Utilities  
 Blade: `repair-order-footer.blade.php`
 
 | Present action | Status |
 | --- | --- |
 | Customer Display | Wired → `portal-preview` (second monitor / browser) |
-| Tablet | **Hidden** — no Flutter customer presentation/signature deep link exists; do not substitute inspection `surface=tablet` |
+| Tablet | **Hidden** - no Flutter customer presentation/signature deep link exists; do not substitute inspection `surface=tablet` |
 
 Commit carve-out (exclude Financial F1): `docs/operations/ro-presentation-reset-commit-carve-out.md`
 
 ## Commit gate
 
 Edward floor observation + explicit approve. No push/deploy until then.  
-Stage Presentation Reset only — leave F1 files unstaged per carve-out doc.
+Stage Presentation Reset only - leave F1 files unstaged per carve-out doc.

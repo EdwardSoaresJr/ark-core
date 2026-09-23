@@ -61,7 +61,7 @@ test('observation resolver detects customer waiting after shop outbound message'
 
     expect($waiting)->not->toBeNull()
         ->and($waiting->metadata['hours_waiting'])->toBe(5)
-        ->and($waiting->description)->toBe('Shop replied 5 hours ago — no customer response since.');
+        ->and($waiting->description)->toBe('Shop replied 5 hours ago - no customer response since.');
 });
 
 test('customer waiting response copy uses whole hours when Carbon returns a float diff', function (): void {
@@ -78,7 +78,7 @@ test('customer waiting response copy uses whole hours when Carbon returns a floa
         metadata: ['conversation_id' => 12, 'direction' => 'outbound'],
     );
 
-    // 2.15 hours later — Carbon 3 would stringify as 2.15 without an int cast.
+    // 2.15 hours later - Carbon 3 would stringify as 2.15 without an int cast.
     Carbon::setTestNow(Carbon::parse('2026-06-10 10:14:00'));
 
     $observations = $resolver->resolve([$outbound], ['conversation_id' => 12]);
@@ -91,7 +91,7 @@ test('customer waiting response copy uses whole hours when Carbon returns a floa
 
     expect($waiting)->not->toBeNull()
         ->and($waiting->metadata['hours_waiting'])->toBe(2)
-        ->and($waiting->description)->toBe('Shop replied 2 hours ago — no customer response since.');
+        ->and($waiting->description)->toBe('Shop replied 2 hours ago - no customer response since.');
 });
 
 test('observation resolver detects multiple customer messages without shop reply', function (): void {

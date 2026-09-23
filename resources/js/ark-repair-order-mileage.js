@@ -20,7 +20,7 @@ const formatMileageInput = (value) => {
 
 const formatMileageDisplay = (value) => {
     if (value === null || value === undefined || value === '') {
-        return '—';
+        return '-';
     }
 
     return Number(value).toLocaleString('en-US');

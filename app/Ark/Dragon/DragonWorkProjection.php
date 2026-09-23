@@ -8,7 +8,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Support\Collection;
 
 /**
- * Minimized shop-floor projection for Dragon — read-only, no customer PII.
+ * Minimized shop-floor projection for Dragon - read-only, no customer PII.
  *
  * Summary counts are computed across ALL open repair orders.
  * Item cards may be capped (config shop.dragon_work_items_limit) with truncation flagged.
@@ -76,7 +76,7 @@ final class DragonWorkProjection
     }
 
     /**
-     * Full open-RO card list. Used by summary and constrained query — never truncated.
+     * Full open-RO card list. Used by summary and constrained query - never truncated.
      *
      * @return list<array<string, mixed>>
      */
@@ -277,7 +277,7 @@ final class DragonWorkProjection
             return 'Vehicle';
         }
 
-        // Dragon answers want Year/Make/Model — trim packages read as noise on the floor.
+        // Dragon answers want Year/Make/Model - trim packages read as noise on the floor.
         $label = trim(implode(' ', array_filter([
             $vehicle->year,
             $vehicle->make,

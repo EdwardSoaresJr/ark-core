@@ -311,7 +311,7 @@ final class ShopCsvImporter
                 'action' => 'skip',
                 'customer' => '(empty)',
                 'vehicle' => null,
-                'warning' => "Row {$rowNumber}: skipped — no name, phone, or email.",
+                'warning' => "Row {$rowNumber}: skipped - no name, phone, or email.",
                 'attributes' => [],
                 'vehicle_data' => null,
                 'existing_id' => null,

@@ -1,4 +1,4 @@
-# Review Request — No Gating v1
+# Review Request - No Gating v1
 
 **Status:** Frozen · Binding  
 **Companions:** [review-schema-solicitation-compliance-v1.md](../growth/review-schema-solicitation-compliance-v1.md) · [ark-earned-authority-v1.md](../ecosystem/ark-earned-authority-v1.md)
@@ -40,7 +40,7 @@ Having an issue with your repair?
 
 No sentiment branch. The customer chooses.
 
-## CSAT (future — not Review Request)
+## CSAT (future - not Review Request)
 
 Private shop feedback (how did we do?) may exist as its own Conversation Intent later.
 
@@ -53,4 +53,4 @@ Rules when earned:
 
 ## Why
 
-Fits Google’s expectations for business review solicitation, protects the Google Business Profile, and matches Demo Auto Repair: **Accurate Diagnostics. Honest Repairs.** — ask for an honest review, not a managed score.
+Fits Google’s expectations for business review solicitation, protects the Google Business Profile, and matches Demo Auto Repair: **Accurate Diagnostics. Honest Repairs.** - ask for an honest review, not a managed score.

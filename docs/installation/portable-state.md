@@ -10,7 +10,7 @@ This is the public contract for self-host and future managed-host migrations.
 | --- | --- | --- |
 | **Database** | `ark_mysql` | Customers, vehicles, repair orders, estimates, inspections, settings, sessions when `SESSION_DRIVER=database`, queue rows when `QUEUE_CONNECTION=database`, and all other MySQL operational truth |
 | **Persistent files** | `ark_storage` | `storage/app/public` media, `storage/app/install/` (installation UUID, install checkpoint, optional `.env` copy), and other shop files written under `storage/` |
-| **Installation secrets** | `ark_secrets` | Per-install `APP_KEY`, database passwords, Reverb credentials — generated once on first boot and never rotated silently |
+| **Installation secrets** | `ark_secrets` | Per-install `APP_KEY`, database passwords, Reverb credentials - generated once on first boot and never rotated silently |
 
 On Compose/Vultr hosts, `infra/coolify/entrypoint.sh` loads `ark_secrets/install.env` and rewrites `storage/app/install/dotenv` (and `/app/.env`) before php-fpm starts. That keeps Laravel readable after an `app` container recreate without manual secret reconstruction.
 
@@ -28,11 +28,11 @@ These are runtime convenience. They rebuild after restore:
 
 | Layer | Docker Compose volume | Why ephemeral |
 | --- | --- | --- |
-| **Redis** | `ark_redis` | Cache, optional session/queue transport — not authoritative shop truth |
-| **Containers / images** | — | Replace with `docker compose up -d --build` |
+| **Redis** | `ark_redis` | Cache, optional session/queue transport - not authoritative shop truth |
+| **Containers / images** | - | Replace with `docker compose up -d --build` |
 | **Compiled views** | inside `ark_storage` framework subtree | Regenerated on demand |
 | **Logs** | stderr / log files | Operational telemetry, not shop state |
-| **`bootstrap/cache`** | — | Framework cache; regenerates |
+| **`bootstrap/cache`** | - | Framework cache; regenerates |
 
 `docker compose down` keeps durable volumes. `docker compose down -v` **destroys** durable state and starts a new installation with new secrets.
 
@@ -48,7 +48,7 @@ These are runtime convenience. They rebuild after restore:
 Restore onto a fresh host:
 
 1. Clone this repository and start Compose with the **same** durable volumes attached.
-2. Do **not** run `install-bootstrap` against an empty secrets file when MySQL data already exists — bootstrap detects existing MySQL without secrets and fails closed.
+2. Do **not** run `install-bootstrap` against an empty secrets file when MySQL data already exists - bootstrap detects existing MySQL without secrets and fails closed.
 3. Open the shop URL and verify customers, repair orders, and media.
 
 Automated backup/restore tooling and ARK Platform “Move to managed hosting” are future product paths. The boundary above is what those tools must preserve.

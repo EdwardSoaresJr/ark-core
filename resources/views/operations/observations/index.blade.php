@@ -6,7 +6,7 @@
                     <p class="ops-eyebrow">Observation layer</p>
                     <h1 class="text-lg font-black text-slate-950">Operational observations</h1>
                     <p class="mt-1 max-w-3xl text-sm text-slate-600">
-                        Admin debug view — observations derived from timeline events. Not pressure. Not tasks. No authority writes.
+                        Admin debug view - observations derived from timeline events. Not pressure. Not tasks. No authority writes.
                     </p>
                 </div>
                 <div class="ops-page-toolbar-actions">
@@ -76,7 +76,7 @@
                                             @endforeach
                                         </ul>
                                     @else
-                                        —
+                                        -
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 font-mono text-[10px] text-slate-500">

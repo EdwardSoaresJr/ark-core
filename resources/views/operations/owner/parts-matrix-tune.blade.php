@@ -47,7 +47,7 @@
             @if ($analysis['insufficient_data'])
                 <div class="px-3 py-3 text-xs text-slate-600">
                     <p>{{ $analysis['sample_count'] }} closed part lines sampled (need {{ $analysis['minimum_sample_lines'] }} minimum).</p>
-                    <p class="mt-1 text-slate-500">Trustworthy data starts {{ $analysis['trustworthy_floor'] }}. Tool structure is ready — analysis fills in as ROs close.</p>
+                    <p class="mt-1 text-slate-500">Trustworthy data starts {{ $analysis['trustworthy_floor'] }}. Tool structure is ready - analysis fills in as ROs close.</p>
                 </div>
             @endif
 
@@ -131,11 +131,11 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 align-middle tabular-nums font-semibold text-slate-950">
-                                    {{ $tier['actual_margin_percent'] !== null ? $tier['actual_margin_percent'].'%' : '—' }}
+                                    {{ $tier['actual_margin_percent'] !== null ? $tier['actual_margin_percent'].'%' : '-' }}
                                 </td>
                                 <td class="px-3 py-2 align-middle tabular-nums text-slate-600">
                                     {{ $tier['current_markup'] }}%
-                                    <span class="text-slate-400">({{ $tier['current_margin_percent'] ?? '—' }}% margin)</span>
+                                    <span class="text-slate-400">({{ $tier['current_margin_percent'] ?? '-' }}% margin)</span>
                                 </td>
                                 <td class="px-3 py-2 align-middle">
                                     <input
@@ -148,7 +148,7 @@
                                     <span class="text-slate-400">%</span>
                                 </td>
                                 <td class="px-3 py-2 align-middle tabular-nums font-semibold text-slate-950">
-                                    {{ $tier['simulated_margin_percent'] !== null ? $tier['simulated_margin_percent'].'%' : '—' }}
+                                    {{ $tier['simulated_margin_percent'] !== null ? $tier['simulated_margin_percent'].'%' : '-' }}
                                 </td>
                                 <td class="px-3 py-2 align-middle text-xs text-slate-500">{{ $tier['recommendation'] }}</td>
                             </tr>

@@ -1,13 +1,13 @@
 # ARK Operator Continuity Doctrine
 
 **Status:** v1  
-**Classification:** **Projection / composition only — not authority**
+**Classification:** **Projection / composition only - not authority**
 
 ## Product sentence
 
 ARK is not building a notification system. ARK is building a **continuity system**.
 
-The product is making sure Edward never loses the thread of what is happening in the shop — wherever he is, on whatever surface.
+The product is making sure Edward never loses the thread of what is happening in the shop - wherever he is, on whatever surface.
 
 Push is one delivery mechanism. Not the product.
 
@@ -49,7 +49,7 @@ There is **no continuity database**.
 
 There is **no continuity truth**.
 
-`OperationalObservationStream` holds interpretive stream entries — observation authority, not continuity authority. Continuity **composes** observations (and eventually other projections) at read time.
+`OperationalObservationStream` holds interpretive stream entries - observation authority, not continuity authority. Continuity **composes** observations (and eventually other projections) at read time.
 
 Continuity simply asks:
 
@@ -68,13 +68,13 @@ That prevents Continuity from becoming another bounded context that accumulates 
 | Channel thinking | Operator thinking |
 | Build notification features | Build continuity surfaces |
 
-**Badge metric:** unresolved observations relevant to this operator — not unread SMS count.
+**Badge metric:** unresolved observations relevant to this operator - not unread SMS count.
 
 ---
 
 ## One snapshot, many surfaces
 
-`GET /api/mobile/continuity` returns one compact projection. Home, widgets, Live Activities, badges, and watch complications consume the same payload — different presentation, not different pipelines.
+`GET /api/mobile/continuity` returns one compact projection. Home, widgets, Live Activities, badges, and watch complications consume the same payload - different presentation, not different pipelines.
 
 **Current shape (v1):**
 
@@ -136,7 +136,7 @@ Ready
 
 Phone rings → continuity updates. Customer arrives → continuity updates. Warranty approved → continuity updates.
 
-The VVX is a continuity surface — not a SIP device with a webpage glued on.
+The VVX is a continuity surface - not a SIP device with a webpage glued on.
 
 ---
 
@@ -146,7 +146,7 @@ The VVX is a continuity surface — not a SIP device with a webpage glued on.
 | --- | --- |
 | Authorities + events | Truth |
 | `OperationalObservationStream` | Curated observation stream (interpretive) |
-| `OperatorContinuityProjection` | **Composes** snapshot — no writes |
+| `OperatorContinuityProjection` | **Composes** snapshot - no writes |
 | `MobilePushService` | One mobile push transport |
 | `PushTransport` | Deliver packet to device token |
 
@@ -168,7 +168,7 @@ Do **not** build more notification features. Build continuity surfaces.
 
 ## Companions
 
-- [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) — transport boundary
-- ark-observations.mdc — observation vocabulary
-- ark-projection-rule.mdc — compute once, render many
-- ark-orientation-pattern.mdc — briefing before action
+- [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) - transport boundary
+- ark-observations.mdc - observation vocabulary
+- ark-projection-rule.mdc - compute once, render many
+- ark-orientation-pattern.mdc - briefing before action

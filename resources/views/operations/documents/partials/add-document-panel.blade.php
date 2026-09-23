@@ -1,5 +1,5 @@
 {{--
-  Add Document — Scan or Upload. Hosted in Workspace Modal (RO or Customer Hub).
+  Add Document - Scan or Upload. Hosted in Workspace Modal (RO or Customer Hub).
   Props: $customer, $storeUrl, $scanUrl, $repairOrder?, $attachableDocuments?, $attachUrl?, $customerRepairOrders?
 --}}
 @php
@@ -47,7 +47,7 @@
                 @click="choose('attach')"
             >
                 <span class="block text-sm font-semibold text-slate-950">Attach Existing Document</span>
-                <span class="mt-1 block text-xs text-slate-600">Search warranty, registration, alignment, invoice — same file, no duplicate.</span>
+                <span class="mt-1 block text-xs text-slate-600">Search warranty, registration, alignment, invoice - same file, no duplicate.</span>
             </button>
         @endif
     </div>

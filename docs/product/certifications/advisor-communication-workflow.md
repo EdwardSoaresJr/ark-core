@@ -1,14 +1,14 @@
-# Certification record — Advisor Communication Workflow
+# Certification record - Advisor Communication Workflow
 
 **Certification:** Advisor Communication Workflow  
-**Track:** B — ARK Staff · Workflow 3  
+**Track:** B - ARK Staff · Workflow 3  
 **Role:** Advisor (Edward)  
 **Owner:** Alex Rivera  
 **Scenario source:** Customer replies · phone only
 
 ## Why this matters
 
-When a customer texts or calls, Edward completes the communication loop — context, response, estimate, note — from his pocket without opening desktop or losing RO/customer thread.
+When a customer texts or calls, Edward completes the communication loop - context, response, estimate, note - from his pocket without opening desktop or losing RO/customer thread.
 
 ---
 
@@ -22,7 +22,7 @@ When a customer texts or calls, Edward completes the communication loop — cont
 
 ---
 
-## Operational acceptance — phone only
+## Operational acceptance - phone only
 
 ```
 Observation (customer_replied, etc.)

@@ -9,7 +9,7 @@ use App\Ark\Operations\Vehicles\VehicleSearchQuery;
 use App\Models\User;
 
 /**
- * Universal shop search for mobile — customers, vehicles, RO number hints.
+ * Universal shop search for mobile - customers, vehicles, RO number hints.
  */
 final class MobileGlobalSearchProjection
 {

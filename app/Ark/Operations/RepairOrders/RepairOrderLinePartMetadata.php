@@ -116,15 +116,15 @@ final class RepairOrderLinePartMetadata
         return [
             [
                 'label' => 'Part source',
-                'detail' => 'Who supplied the part — shop inventory/order vs customer brought in.',
+                'detail' => 'Who supplied the part - shop inventory/order vs customer brought in.',
             ],
             [
                 'label' => 'Part type',
-                'detail' => 'OEM, aftermarket replacement, or performance/custom — not recommendation status.',
+                'detail' => 'OEM, aftermarket replacement, or performance/custom - not recommendation status.',
             ],
             [
                 'label' => 'Warranty impact',
-                'detail' => 'How this part affects warranty posture on the line — separate from scope billing.',
+                'detail' => 'How this part affects warranty posture on the line - separate from scope billing.',
             ],
         ];
     }

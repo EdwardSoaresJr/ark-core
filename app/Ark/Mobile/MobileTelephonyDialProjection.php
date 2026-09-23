@@ -10,7 +10,7 @@ use App\Ark\Operations\Telephony\OutboundVoiceCallControl;
 use App\Models\User;
 
 /**
- * Mobile dial posture — Flutter follows dial_method and voice session payloads from ARK.
+ * Mobile dial posture - Flutter follows dial_method and voice session payloads from ARK.
  */
 final class MobileTelephonyDialProjection
 {

@@ -70,7 +70,7 @@
                 >
                 <span>Standard</span>
             </label>
-            <label class="ops-inspection-entry__radio" title="Sold / requested this visit — replaces Standard">
+            <label class="ops-inspection-entry__radio" title="Sold / requested this visit - replaces Standard">
                 <input
                     type="radio"
                     name="inspection_template_choice"

@@ -7,7 +7,7 @@ use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use Carbon\CarbonImmutable;
 
 /**
- * Projection for Send Estimate scheduling UX — not contact evidence.
+ * Projection for Send Estimate scheduling UX - not contact evidence.
  *
  * @phpstan-type PendingSchedule array{
  *     id: int,

@@ -1,6 +1,6 @@
 # ARKademy training gates
 
-**Status:** Doctrine v1 — global shop gate **retired** (2026-09-06)
+**Status:** Doctrine v1 - global shop gate **retired** (2026-09-06)
 
 ## Availability
 
@@ -43,7 +43,7 @@ Do not tightly couple ARKademy content itself to one hard-coded workflow gate.
 
 Keep Learn completion evidence (`learn_completions`, checkpoints) as the read-side proof that a module was completed.
 
-Future assignment tables (names illustrative only — do not invent schema now) would live near Core authorization/process:
+Future assignment tables (names illustrative only - do not invent schema now) would live near Core authorization/process:
 
 ```text
 employee_id + learning_module_key + gated_capability_key + required_at + satisfied_at

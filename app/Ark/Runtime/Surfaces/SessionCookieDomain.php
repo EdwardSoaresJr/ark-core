@@ -6,7 +6,7 @@ namespace App\Ark\Runtime\Surfaces;
  * Resolve session cookie Domain for the active request host.
  *
  * Ops surfaces (*.demo-auto.test) keep SESSION_DOMAIN sharing.
- * Company product host (autorepairkeeper.com) must use host-only cookies —
+ * Company product host (autorepairkeeper.com) must use host-only cookies -
  * browsers reject Domain=.demo-auto.test on a different registrable domain.
  */
 final class SessionCookieDomain

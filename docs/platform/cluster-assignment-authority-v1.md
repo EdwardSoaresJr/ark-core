@@ -1,6 +1,6 @@
 # Cluster Assignment Authority v1
 
-**Status:** Active — scaffolding before Provisioning v1  
+**Status:** Active - scaffolding before Provisioning v1  
 **Date:** 2026-07-19  
 **Companions:** [cluster-authority-v1.md](cluster-authority-v1.md) · [deployment-flow-v1.md](deployment-flow-v1.md) · [shop-authority-v1.md](shop-authority-v1.md)
 
@@ -88,7 +88,7 @@ Later growth without changing the provisioning workflow:
 | **Shared** | Infrastructure: shared cluster |
 | **Dedicated** | Infrastructure: dedicated cluster |
 
-**Enterprise is a Subscription / pricing plan — not a DeploymentProfile.**  
+**Enterprise is a Subscription / pricing plan - not a DeploymentProfile.**  
 Do not couple billing vocabulary to infrastructure enums.
 
 ---

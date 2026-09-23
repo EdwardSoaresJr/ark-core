@@ -8,7 +8,7 @@
                 <p class="text-sm font-black text-slate-950">Enable Appointments</p>
                 <p class="mt-1 text-xs leading-5 text-slate-500">
                     Turn scheduling on when staff are trained and appointments have a clear path into Check In or repair orders.
-                    Disabled by default — Work stays the advisor front door until you are ready.
+                    Disabled by default - Work stays the advisor front door until you are ready.
                 </p>
             </div>
             <label class="flex shrink-0 items-center gap-2 text-sm font-semibold text-slate-800">
@@ -28,7 +28,7 @@
     <div class="rounded-md border border-slate-200 bg-white p-4">
         <p class="text-sm font-black text-slate-950">Appointment time steps</p>
         <p class="mt-1 text-xs leading-5 text-slate-500">
-            Schedule grid and book/edit time pickers use this increment — no scrolling minute-by-minute.
+            Schedule grid and book/edit time pickers use this increment - no scrolling minute-by-minute.
         </p>
         <label class="mt-3 block max-w-xs">
             <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Increment</span>
@@ -46,7 +46,7 @@
         <div>
             <p class="text-sm font-black text-slate-950">Scheduling capacity</p>
             <p class="mt-1 text-xs leading-5 text-slate-500">
-                Appointments reserve soft shop capacity. Bay and technician assignments are optional planning — not required to book.
+                Appointments reserve soft shop capacity. Bay and technician assignments are optional planning - not required to book.
             </p>
         </div>
 

@@ -6,7 +6,7 @@ namespace App\Ark\Operations\RepairOrders;
  * Audience dialect for concept language projections.
  *
  * Same operational concept, different vocabulary per participant.
- * ARK translates between dialects — it does not replace them.
+ * ARK translates between dialects - it does not replace them.
  */
 enum ScopeLanguageAudience: string
 {

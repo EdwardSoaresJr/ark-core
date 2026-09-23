@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
  * Client-reported mobile voice registration posture.
  *
  * Observation for all phases; persists Twilio Client voice readiness only for
- * explicit voice_ready / cleared phases — never for generic device registration.
+ * explicit voice_ready / cleared phases - never for generic device registration.
  */
 final class MobileTelephonyVoiceRegistrationEventController
 {

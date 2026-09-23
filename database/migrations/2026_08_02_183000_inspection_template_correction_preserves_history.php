@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Wrong-template correction: keep prior points as superseded history on the same Inspection.
- * One Inspection per RO remains — no destroy path for captured evidence.
+ * One Inspection per RO remains - no destroy path for captured evidence.
  */
 return new class extends Migration
 {

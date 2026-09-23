@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Labor;
 
 /**
  * Dated shop guidance for Flag technician hourly floors.
- * Configuration informs agreements — it does not rewrite them.
+ * Configuration informs agreements - it does not rewrite them.
  */
 final class TechnicianFloorWageSuggestion
 {

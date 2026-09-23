@@ -100,7 +100,7 @@ class BackfillRepairOrderStatusCatalogCommand extends Command
 
                     if ($variantKey === null) {
                         $variantSkipped++;
-                        $this->line("Skipped close variant RO #{$repairOrder->repair_order_id} — no confident variant.");
+                        $this->line("Skipped close variant RO #{$repairOrder->repair_order_id} - no confident variant.");
 
                         continue;
                     }

@@ -14,7 +14,7 @@ use App\Ark\Operations\Timeline\UnifiedOperationalTimeline;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Admin debug projection — surfaces observations derived from live operational truth.
+ * Admin debug projection - surfaces observations derived from live operational truth.
  */
 final class OperationalObservationDebugProjection
 {

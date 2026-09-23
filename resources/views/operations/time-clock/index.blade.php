@@ -14,7 +14,7 @@
             @if ($p)
                 <p class="mt-1 text-sm font-semibold text-slate-700">{{ $p['status_label'] }}</p>
             @else
-                <p class="mt-1 text-sm text-slate-600">Punch staff in and out when work starts and ends. Hours feed compensable time — not a paycheck.</p>
+                <p class="mt-1 text-sm text-slate-600">Punch staff in and out when work starts and ends. Hours feed compensable time - not a paycheck.</p>
             @endif
         </div>
 

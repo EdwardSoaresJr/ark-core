@@ -6,7 +6,7 @@ use App\Ark\ShopMemory\ShopMemoryFeatures;
 use RuntimeException;
 
 /**
- * Explicit Rewrite only — never on blur, never silent authorship.
+ * Explicit Rewrite only - never on blur, never silent authorship.
  * Disabled until ShopMemoryFeatures::aiRewriteEnabled().
  */
 final class AiRewriteAction

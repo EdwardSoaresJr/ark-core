@@ -123,7 +123,7 @@ test('call analysis suggested reply becomes call note draft text', function (): 
         'suggested_reply' => 'I will email the brake quote before we close today.',
     ], null, $customer);
 
-    expect($draft)->toBe('Jean — I will email the brake quote before we close today.');
+    expect($draft)->toBe('Jean - I will email the brake quote before we close today.');
 });
 
 test('call analysis draft falls back to follow up message when suggested reply missing', function (): void {
@@ -139,7 +139,7 @@ test('call analysis draft falls back to follow up message when suggested reply m
         'message' => 'Customer wants brake quote emailed before end of day.',
     ], null, $customer);
 
-    expect($draft)->toBe('Jean — Customer wants brake quote emailed before end of day.');
+    expect($draft)->toBe('Jean - Customer wants brake quote emailed before end of day.');
 });
 
 test('sms analysis suggested reply becomes composer draft text', function (): void {
@@ -297,7 +297,7 @@ test('analysis insight panel shows when mark handled blocks call analysis nudge'
     ]);
 
     // The call deep link resolves to the customer conversation (continuity
-    // model) — the call insight surfaces there with the SMS composer target.
+    // model) - the call insight surfaces there with the SMS composer target.
     $this->actingAs($advisor)
         ->get(CommunicationsNeedsYou::url(['call' => $session->id]))
         ->assertOk()
@@ -353,7 +353,7 @@ test('dismissed mark handled nudge reveals call analysis nudge with draft', func
         ->assertOk()
         ->assertSee('Follow-up suggested', false)
         ->assertSee('Call analysis', false)
-        ->assertSee('Jean — I will email the brake quote before we close today.', false)
+        ->assertSee('Jean - I will email the brake quote before we close today.', false)
         ->assertSee('Log call note', false)
         ->assertDontSee('Mark call handled', false);
 });
@@ -371,7 +371,7 @@ test('owner call intelligence surfaces suggested reply from sms analysis', funct
 
     $recorder = app(ConversationRecorder::class);
     $recorder->recordInboundSms('7195558812', 'Can I get a quote on brakes?', 'SM_intel_suggested', $customer);
-    $recorder->recordOutboundSms($customer, $advisor, 'Yes — send a photo if you can.', 'SM_intel_suggested2');
+    $recorder->recordOutboundSms($customer, $advisor, 'Yes - send a photo if you can.', 'SM_intel_suggested2');
 
     $conversation = Conversation::query()->where('contact_address', '7195558812')->firstOrFail();
     $slice = ConversationSmsIntelligenceSlice::query()->where('conversation_id', $conversation->id)->firstOrFail();
@@ -381,7 +381,7 @@ test('owner call intelligence surfaces suggested reply from sms analysis', funct
             'summary' => 'Advisor answered brake quote quickly.',
             'follow_up_needed' => true,
             'follow_up_notes' => 'Send quote after photo arrives.',
-            'suggested_reply' => 'Thanks — once we see the photo we can finalize the quote.',
+            'suggested_reply' => 'Thanks - once we see the photo we can finalize the quote.',
         ],
         'analyzed_at' => now(),
     ])->saveQuietly();
@@ -390,5 +390,5 @@ test('owner call intelligence surfaces suggested reply from sms analysis', funct
         ->get(route('operations.owner.call-intelligence.sms.show', $slice))
         ->assertOk()
         ->assertSee('Suggested reply', false)
-        ->assertSee('Thanks — once we see the photo we can finalize the quote.', false);
+        ->assertSee('Thanks - once we see the photo we can finalize the quote.', false);
 });

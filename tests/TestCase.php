@@ -21,7 +21,7 @@ abstract class TestCase extends BaseTestCase
         );
         \App\Ark\Operations\Inspections\DefaultInspectionTemplateCatalog::forgetSeededCache();
 
-        // Existing suites assume a running shop — not the first-run wizard.
+        // Existing suites assume a running shop - not the first-run wizard.
         InstallationState::markInstalled();
 
         try {

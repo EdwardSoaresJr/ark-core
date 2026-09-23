@@ -13,7 +13,7 @@ final class MobilePushMessage
         public readonly ?int $callSessionId = null,
         /**
          * Continuity tone from the observation vocabulary: urgent · waiting ·
-         * positive · info. Tone decides delivery priority and sound — urgent and
+         * positive · info. Tone decides delivery priority and sound - urgent and
          * waiting chime on mobile; positive/info arrive quietly.
          */
         public readonly string $tone = 'info',

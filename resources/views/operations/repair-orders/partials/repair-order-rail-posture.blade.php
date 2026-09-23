@@ -1,4 +1,4 @@
-{{-- Persistent Context: Financial · Approval · Communication · Workflow — existing posture only --}}
+{{-- Persistent Context: Financial · Approval · Communication · Workflow - existing posture only --}}
 @php
     $postureLayout = ($postureLayout ?? 'rail') === 'dock' ? 'dock' : 'rail';
     $isDock = $postureLayout === 'dock';

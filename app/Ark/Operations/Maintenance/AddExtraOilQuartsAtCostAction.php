@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 /**
- * Extra quarts beyond the sold package — Part line at cost (not PACKAGE mutation).
+ * Extra quarts beyond the sold package - Part line at cost (not PACKAGE mutation).
  */
 final class AddExtraOilQuartsAtCostAction
 {
@@ -88,7 +88,7 @@ final class AddExtraOilQuartsAtCostAction
                 'matrix_applied' => false,
                 'vendor_name' => null,
                 'part_number' => null,
-                'sourcing_notes' => 'Extra quarts beyond Engine Oil Service package — sold at cost.',
+                'sourcing_notes' => 'Extra quarts beyond Engine Oil Service package - sold at cost.',
                 'has_core' => false,
                 'save_old_part' => false,
                 'is_private' => false,

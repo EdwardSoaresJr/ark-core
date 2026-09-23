@@ -17,7 +17,7 @@ A fallback is not ownership. A locked row is not permission to change code.
 
 ---
 
-## 1. Product identities — locked
+## 1. Product identities - locked
 
 **Core** is the single-shop operating system. It is the authority for shop records: customer, vehicle, repair order, estimate, inspection, invoice, repair-order ledger, and shop workflow. When Communications is connected, Core owns shop conversation workflow: advisor assignment, attention, waiting, follow-ups, and resolution. A shop must be able to run Core without purchasing Communications or any other managed Platform service. Without that product, Core does not receive Platform communications history.
 
@@ -31,7 +31,7 @@ One Hosted shop is one Core installation on its own machine. Core is not multi-t
 
 ---
 
-## 2. Integration contract — locked
+## 2. Integration contract - locked
 
 One authoritative owner per responsibility.
 
@@ -53,7 +53,7 @@ An ownership decision does not authorize an implementation change.
 
 ## 3. Ownership matrix
 
-### Shop records — locked
+### Shop records - locked
 
 | Responsibility | Owner | Current implementation | Discrepancy |
 | --- | --- | --- | --- |
@@ -78,7 +78,7 @@ An ownership decision does not authorize an implementation change.
 
 No payment code, credentials, settings, or fallback behavior changes are authorized.
 
-### Communications — locked
+### Communications - locked
 
 Communications is a paid Platform product. It must run with no Core installation. Standalone Core runs without it and does not receive that history. When the two are connected, Platform uses Core’s workflow. It does not invent a second one.
 
@@ -90,7 +90,7 @@ Communications is a paid Platform product. It must run with no Core installation
 | Words the shop chooses (hours, tow, pickup, canned replies) | Core | Communications settings | None | Locked |
 | How Communications, deployed alone, runs its own workflow, then yields that workflow when a Core shop connects | Not an ownership fight | Not designed | Future design. Must not create a competing workflow authority once Core is connected | Open design |
 
-### Voice, mail, parts — locked targets
+### Voice, mail, parts - locked targets
 
 The owner is decided. The code does not yet match. That is not a build order.
 
@@ -113,7 +113,7 @@ The owner is decided. The code does not yet match. That is not a build order.
 | Company site and trial signup | Platform | `routes/cloud.php` still serves `autorepairkeeper.com` from the shop host | Misplaced and live. Ownership is Platform. Deletion waits until that site has a home | Locked |
 | A second website editor inside Core | Prohibited | `app/Ark/Platform/Website/*`, `routes/platform-website.php`. Uncommitted. Not in `f3e82498` | Must not ship. Must not become the website boundary | Locked prohibition |
 
-### Control plane — locked
+### Control plane - locked
 
 | Responsibility | Owner | Current implementation | Discrepancy |
 | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ The owner is decided. The code does not yet match. That is not a build order.
 
 ---
 
-## 4. What Core can do alone — locked
+## 4. What Core can do alone - locked
 
 Core stays single-shop and usable without Platform.
 
@@ -150,7 +150,7 @@ Existing standalone fallbacks remain until a per-provider cut after the Platform
 
 ---
 
-## 6. Communications modes — design, not a build
+## 6. Communications modes - design, not a build
 
 Ownership is closed. This section only says how the two products switch modes. No code change follows from it.
 
@@ -184,7 +184,7 @@ Existing Core `ConversationMessage` and `CallSession` rows stay until a separate
 
 ---
 
-## 7. Separation complete — locked criterion
+## 7. Separation complete - locked criterion
 
 Hostnames do not enforce this contract. `app.arksms.com`, `cloud.arksms.com`, and a later `api.arksms.com` are naming. Settings UI is not this contract.
 
@@ -194,7 +194,7 @@ Hostnames do not enforce this contract. `app.arksms.com`, `cloud.arksms.com`, an
 
 Separation is complete only when **both** pass:
 
-1. **Code audit** — credentials, adapters, webhooks, and entitlement for monetized services live only in Platform. Core has no execute path to those providers after Platform is off.
-2. **Standalone Core tests** — without Platform, Core opens a repair order and records an external payment, and does not contact a commercial provider to do that.
+1. **Code audit** - credentials, adapters, webhooks, and entitlement for monetized services live only in Platform. Core has no execute path to those providers after Platform is off.
+2. **Standalone Core tests** - without Platform, Core opens a repair order and records an external payment, and does not contact a commercial provider to do that.
 
 Known mismatches stay listed in ADR-0008. This section does not start a cleanup sprint.

@@ -1,4 +1,4 @@
-# Milestone 7 — Production Feel
+# Milestone 7 - Production Feel
 
 **Not polish.** Not rounded corners and animations for their own sake.
 
@@ -12,7 +12,7 @@ Companion should **disappear**.
 
 The advisor should feel like they're simply talking to customers. Every interaction should feel inevitable.
 
-**Rule:** Every screen must earn another hour of use — not merely look nice.
+**Rule:** Every screen must earn another hour of use - not merely look nice.
 
 ---
 
@@ -26,7 +26,7 @@ Put the app in your pocket for **two weeks**.
 
 Those are the improvements users notice.
 
-Then call **Companion v1 finished** — not because it is feature complete, but because the **mission is complete**.
+Then call **Companion v1 finished** - not because it is feature complete, but because the **mission is complete**.
 
 ---
 
@@ -129,4 +129,4 @@ Anything after Production Feel is **expansion**, not foundation.
 Identity → Conversation → Advisor Brief → Operational Context
 ```
 
-Production feel wraps the hierarchy — it must never compete with it.
+Production feel wraps the hierarchy - it must never compete with it.

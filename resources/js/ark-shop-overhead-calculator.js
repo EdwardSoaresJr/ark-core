@@ -277,7 +277,7 @@ export function shopOverheadCalculator(config = {}) {
         formattedOverheadPerHour() {
             const value = this.overheadPerBilledHour();
 
-            return value === null ? '—' : `$${value.toFixed(2)}/hr`;
+            return value === null ? '-' : `$${value.toFixed(2)}/hr`;
         },
 
         money(value) {

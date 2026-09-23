@@ -22,13 +22,13 @@ Not: copy Tekmetric / Shopmonkey / AutoLeap. Not a 50-feature Cursor mission. No
 | Let Recommendations feed the slice | Rebuild Recommendations |
 | Observe LNP after each slice | Declare Core finished because one slice felt good |
 
-**Active slice:** 1 — Workboard / queue  
+**Active slice:** 1 - Workboard / queue  
 **First bite:** Shipped 2026-09-10. Stop and look at the floor before Slice 2.  
-**Next after that earns trust:** 2 — Estimate Builder
+**Next after that earns trust:** 2 - Estimate Builder
 
 ---
 
-## Slice 0 — shipped
+## Slice 0 - shipped
 
 **Recommendations + RO workspace**
 
@@ -42,7 +42,7 @@ Still not this board: historical recommendation backfill; RTE extraction.
 
 Each row is one slice. **First bite** is the only buildable unit. Everything else in the row waits.
 
-### 1. Workboard / queue — active
+### 1. Workboard / queue - active
 
 **Operator question:** At a glance, where is every vehicle, what is happening with it now, and which vehicles need attention?
 
@@ -62,7 +62,7 @@ Each row is one slice. **First bite** is the only buildable unit. Everything els
 
 **Already in ARK:** Estimate lines, `EstimateTotalsCalculator`, labor/parts policies, snapshots, recommendation insertion, dealer-quote capture. Pricing engine is frozen.
 
-**First bite:** Faster line construction on the builder we have — canned/common work, recommendation onto a line without leaving the estimate, matrix/customer-type behavior as shop configuration pointing at authority. Do not reopen snapshot immutability or invent a second totals path.
+**First bite:** Faster line construction on the builder we have - canned/common work, recommendation onto a line without leaving the estimate, matrix/customer-type behavior as shop configuration pointing at authority. Do not reopen snapshot immutability or invent a second totals path.
 
 **Not this slice:** Catalog provider swap, RTE labor-guide extraction, a new estimate SPA.
 
@@ -106,7 +106,7 @@ Each row is one slice. **First bite** is the only buildable unit. Everything els
 
 ### 6. Customer authorization / closeout
 
-**Operator question:** Sent, viewed, approved, declined, or callback — and the RO already knows.
+**Operator question:** Sent, viewed, approved, declined, or callback - and the RO already knows.
 
 **Already in ARK:** Approvals, portal links, conversation send-estimate/inspection/payment, Customer Decision Pressure, estimate-viewed observations.
 
@@ -118,7 +118,7 @@ Each row is one slice. **First bite** is the only buildable unit. Everything els
 
 ### 7. Operational reporting
 
-**Operator question:** What is true about the shop today — not a chart wall.
+**Operator question:** What is true about the shop today - not a chart wall.
 
 **Already in ARK:** Executive Pulse, Day Review, queue pressure, ELR/ARO/margin, Flow design contract. Shop-excellence mapping lives in `docs/shop-excellence/`.
 
@@ -128,7 +128,7 @@ Each row is one slice. **First bite** is the only buildable unit. Everything els
 
 ---
 
-## Side lanes — not this board
+## Side lanes - not this board
 
 These may run beside a slice. They must not replace a slice.
 

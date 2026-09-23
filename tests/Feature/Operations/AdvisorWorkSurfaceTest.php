@@ -132,7 +132,7 @@ test('advisor can create standalone follow up and task without repair order', fu
 
     $this->actingAs($advisor)
         ->post(route('operations.work.follow-ups.store'), [
-            'notes' => 'Call customer Thursday — waiting on husband approval',
+            'notes' => 'Call customer Thursday - waiting on husband approval',
             'due_at' => Carbon::parse('2026-06-12 10:00:00')->format('Y-m-d\TH:i'),
         ])
         ->assertRedirect(route('operations.index'));
@@ -147,7 +147,7 @@ test('advisor can create standalone follow up and task without repair order', fu
     $this->actingAs($advisor)
         ->get(route('operations.work.queue', 'follow-ups'))
         ->assertOk()
-        ->assertSee('Call customer Thursday — waiting on husband approval')
+        ->assertSee('Call customer Thursday - waiting on husband approval')
         ->assertSee('Due Fri Jun 12', false);
 
     $this->actingAs($advisor)

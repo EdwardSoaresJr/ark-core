@@ -55,7 +55,7 @@ class RepairOrderLifecycleTransition
 
         if ($toStatusSlug === RepairOrderStatus::Closed->value) {
             if ($closeVariantKey === null && $this->statusCatalog->requiresCloseVariant($toStatusSlug)) {
-                return 'Choose how this repair order closed — Paid or Lost — before continuing.';
+                return 'Choose how this repair order closed - Paid or Lost - before continuing.';
             }
 
             if ($selectCache !== null && ! $this->statusCatalog->closeVariantBypassesRules($closeVariantKey)) {
@@ -69,7 +69,7 @@ class RepairOrderLifecycleTransition
             ? $selectCache->requiresTechnicianAssignment()
             : $this->soloShop->requiresTechnicianAssignment();
 
-        // RO assigned_technician_id is transitional — Repair Action owners are the
+        // RO assigned_technician_id is transitional - Repair Action owners are the
         // production ownership authority. Either satisfies the In Progress gate.
         if (
             $toStatusSlug === RepairOrderStatus::InProgress->value

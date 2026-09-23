@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Phone Verification Authority — proves phone possession only.
+ * Phone Verification Authority - proves phone possession only.
  *
  * Does not create customers, log users in, or schedule. Callers decide what
  * happens after a verified session exists. Must never know why verification was requested.

@@ -30,7 +30,7 @@ final class DragonAssistLifecycle
                 return $locked;
             }
 
-            // Already claimed by this node — idempotent; never burn another attempt.
+            // Already claimed by this node - idempotent; never burn another attempt.
             if (in_array($locked->status, [DragonAssistStatus::Dispatched, DragonAssistStatus::Accepted], true)
                 && (int) $locked->dragon_node_id === (int) $node->id) {
                 return $locked;

@@ -113,7 +113,7 @@ final class AppointmentBookingIdentity
     /**
      * Update-time snapshots are appointment-owned.
      * Explicit contact fields in the request replace the booking snapshot.
-     * Absent fields keep the existing snapshot — never silent Customer sync.
+     * Absent fields keep the existing snapshot - never silent Customer sync.
      *
      * @param  array<string, mixed>  $data
      * @return array{contact_name: ?string, contact_phone: ?string, contact_email: ?string}

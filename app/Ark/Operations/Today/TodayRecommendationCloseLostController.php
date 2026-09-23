@@ -82,7 +82,7 @@ final class TodayRecommendationCloseLostController
             ->route('operations.index')
             ->with(
                 'status',
-                'RO #'.$repairOrder->repair_order_id.' closed lost — '.$lostReason->label().'.',
+                'RO #'.$repairOrder->repair_order_id.' closed lost - '.$lostReason->label().'.',
             );
     }
 }

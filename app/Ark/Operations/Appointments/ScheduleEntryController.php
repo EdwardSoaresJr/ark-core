@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Canonical schedule entry — /app/schedule.
+ * Canonical schedule entry - /app/schedule.
  * Product language: schedule this customer. Implementation stays Appointment create.
  */
 class ScheduleEntryController

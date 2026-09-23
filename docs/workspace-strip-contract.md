@@ -1,9 +1,9 @@
 # ARK V2 Workspace Strip Contract
 
-**Status:** Spec only — do not implement until this document is accepted.  
-**Version:** 1.0 — 2026-06-14  
+**Status:** Spec only - do not implement until this document is accepted.  
+**Version:** 1.0 - 2026-06-14  
 **Surfaces:** Repair Order estimate workspace (`operations.repair-orders.show`, `operations.repair-orders.show`).  
-**Predecessor insight:** ARK-SMS sticky bar audit — orientation + primary action reachability, not bottom-dock clutter.
+**Predecessor insight:** ARK-SMS sticky bar audit - orientation + primary action reachability, not bottom-dock clutter.
 
 ---
 
@@ -43,14 +43,14 @@ ops-main
 └── ops-estimate-workspace [data-worksheet-root]
     ├── worksheet banners / flash
     ├── ops-review-shell
-    │   ├── #ro-identity-band (full identity band — scrolls away)
+    │   ├── #ro-identity-band (full identity band - scrolls away)
     │   └── #review-toolbar (PDFs, lifecycle, assignee, mode control today)
-    ├── [SENTINEL — see §4]
-    ├── ops-workspace-strip (hidden until sentinel triggers — sticky top)
+    ├── [SENTINEL - see §4]
+    ├── ops-workspace-strip (hidden until sentinel triggers - sticky top)
     └── estimate layout (concerns scroll with document)
 ```
 
-**Scroll authority:** Document scroll (`window`) — same as `ark-ro-workspace-memory.js`. The strip does not create an inner scroll container.
+**Scroll authority:** Document scroll (`window`) - same as `ark-ro-workspace-memory.js`. The strip does not create an inner scroll container.
 
 **Sticky stack:** Strip sticks below workspace tabs + topbar offset (`--ops-sticky-stack-offset`). Solid background. `z-index` above concern content, below modals/comms interrupt. Document z-index in interface constitution before shipping.
 
@@ -60,7 +60,7 @@ ops-main
 
 **Goal:** No double chrome. Full identity visible → strip hidden. Identity scrolled away → strip visible.
 
-**Mechanism:** `IntersectionObserver` only — **no** `scrollTop` listeners.
+**Mechanism:** `IntersectionObserver` only - **no** `scrollTop` listeners.
 
 | Element | Role |
 |---------|------|
@@ -71,10 +71,10 @@ ops-main
 
 1. When the identity band is **fully intersecting** the viewport (or sentinel above fold threshold), strip is **hidden** (`hidden` / `aria-hidden="true"` / no pointer events).
 2. When the identity band **leaves** the viewport upward (user scrolled down into concerns), strip **appears** and becomes `position: sticky` at the contracted top offset.
-3. Threshold: `rootMargin` tuned so strip appears as soon as customer/vehicle columns leave view — not after entire `ops-review-shell` exits.
+3. Threshold: `rootMargin` tuned so strip appears as soon as customer/vehicle columns leave view - not after entire `ops-review-shell` exits.
 4. Observer must **not** fire writes on GET; visibility is presentation-only.
 5. Strip appearance must **not** reset scroll position or fight `ark-ro-workspace-memory` restore.
-6. On mode switch (View ↔ Edit navigation), strip state re-derives from observer on load — no session persistence of strip visibility.
+6. On mode switch (View ↔ Edit navigation), strip state re-derives from observer on load - no session persistence of strip visibility.
 
 **Forbidden:** Strip always visible. Strip fixed at bottom. Strip inside concern cards.
 
@@ -105,13 +105,13 @@ Single line, left side, ellipsis on overflow. Order fixed:
 
 **Omit from strip:** VIN, phone, email, mileage, plate, visit posture, waiting-parts narrative, incomplete-customer warnings, technician name, totals, concern summary. Those remain on the full identity band or rails.
 
-**Missing data:** Use existing operational dash/placeholder conventions — do not invent new empty states.
+**Missing data:** Use existing operational dash/placeholder conventions - do not invent new empty states.
 
 ---
 
 ## 7. Mode control
 
-Reuse existing mode control behavior — do not fork logic.
+Reuse existing mode control behavior - do not fork logic.
 
 | Item | Contract |
 |------|----------|
@@ -119,16 +119,16 @@ Reuse existing mode control behavior — do not fork logic.
 | Placement | Strip right cluster, before primary action |
 | Toggle | Click + `V` shortcut (`ark-ro-mode-control` / `ark-keyboard-shortcuts`) |
 | Unsaved edit | Same confirmation modal (Save & Switch / Discard & Switch / Cancel) |
-| Visual | Rose (Edit) / emerald (View) on control only — **no** full-strip tint |
+| Visual | Rose (Edit) / emerald (View) on control only - **no** full-strip tint |
 | Tooltip | `Toggle Mode (V)` |
 
-**Remove from toolbar when strip ships:** Duplicate mode control in `#review-toolbar` workflow section — strip owns mode while implemented on RO workspace. Toolbar keeps lifecycle/assignee/PDFs.
+**Remove from toolbar when strip ships:** Duplicate mode control in `#review-toolbar` workflow section - strip owns mode while implemented on RO workspace. Toolbar keeps lifecycle/assignee/PDFs.
 
 ---
 
 ## 8. Primary action (one only)
 
-**Rightmost control.** One button or one link. Label from server projection — never hardcoded in Blade per status string.
+**Rightmost control.** One button or one link. Label from server projection - never hardcoded in Blade per status string.
 
 ### Authority
 
@@ -137,10 +137,10 @@ New read-only projection: `RepairOrderWorkspaceStripProjection` (name fixed at i
 Inputs (existing truth only):
 
 - `RepairOrder` status + lifecycle posture
-- `RepairOrderLifecycleSelectProjection` (blocking reasons — if blocked, primary may be disabled with reason)
+- `RepairOrderLifecycleSelectProjection` (blocking reasons - if blocked, primary may be disabled with reason)
 - Mode (`review` vs `edit`)
-- Financial snapshot (invoice issued, balance due) — for **label/disabled** only, not amounts on strip
-- Vehicle/customer identity pressure (e.g. VIN required before send) — disable + title, not strip clutter
+- Financial snapshot (invoice issued, balance due) - for **label/disabled** only, not amounts on strip
+- Vehicle/customer identity pressure (e.g. VIN required before send) - disable + title, not strip clutter
 - Permissions
 
 **No** parallel `command_actions` JSON matrix. **No** client-side primary pick from a meta map. **No** AI-first CTA.
@@ -155,7 +155,7 @@ Implement only these keys in v1; expand by contract revision, not ad hoc Blade.
 | `open_comms` | Text Customer | review or edit | No send-estimate posture but customer comms appropriate; deep-link `#customer-communication` or compose |
 | `add_concern` | Add Concern | edit | Builder, not terminal, manage permission, not locked |
 | `view_estimate_pdf` | Estimate PDF | review or edit | Fallback when no higher-priority action; opens PDF route |
-| `none` | — | any | Terminal, or no allowed action — hide primary slot |
+| `none` | - | any | Terminal, or no allowed action - hide primary slot |
 
 **Precedence (first match wins):**
 
@@ -164,7 +164,7 @@ Implement only these keys in v1; expand by contract revision, not ad hoc Blade.
 3. `add_concern` when edit + builder open.
 4. `open_comms` when conversation initiation appropriate and higher actions unavailable.
 5. `view_estimate_pdf` as read-only fallback.
-6. `none` — empty primary slot; strip still shows identity + mode.
+6. `none` - empty primary slot; strip still shows identity + mode.
 
 **Not primary in v1:** Take payment, collect deposit, send payment link, assign tech, change status, print key tag, oil sticker, tech sheet, intake sheet, FOB, POS display, finalize invoice, reset approval, preview estimate (unless merged into send flow).
 
@@ -175,7 +175,7 @@ Secondary PDFs stay in `#review-toolbar`.
 | Type | Behavior |
 |------|----------|
 | Link | Navigate or `target="_blank"` for PDF |
-| Button | Existing pathways (e.g. Send Estimate → `#communication-rail` or conversation action — same as toolbar trailing today) |
+| Button | Existing pathways (e.g. Send Estimate → `#communication-rail` or conversation action - same as toolbar trailing today) |
 
 Success/error toasts use existing notify patterns. No new toast system.
 
@@ -200,7 +200,7 @@ Optional **read-only** status chip on strip only if user testing shows disorient
 | Technician (`repair_orders.view`, no manage) | Yes | Static **View** label | `view_estimate_pdf` or `none` |
 | Terminal RO | Yes | View or static mode | `view_estimate_pdf` or `none` |
 
-Reuse `ArkCapability` and existing `@can` gates — no new RBAC.
+Reuse `ArkCapability` and existing `@can` gates - no new RBAC.
 
 ---
 
@@ -219,7 +219,7 @@ Reuse `ArkCapability` and existing `@can` gates — no new RBAC.
 
 Below 992px:
 
-- Strip **hidden** entirely, OR single-line identity without primary (choose at implement — default **hidden** to avoid fighting mobile layout).
+- Strip **hidden** entirely, OR single-line identity without primary (choose at implement - default **hidden** to avoid fighting mobile layout).
 - Do not ship mobile FAB or bottom dock in v1.
 
 Staff mobile app (`arksms_shop`) is out of scope.
@@ -252,10 +252,10 @@ Hard prohibition list for v1:
 
 1. One Blade partial + one CSS block + one JS module (`IntersectionObserver` + class toggle).
 2. One projection class returning: identity triple, mode, primary action descriptor `{ key, label, href|action, disabled, title }`.
-3. Reuse `arkRoModeControl` — register strip instance or single mode control per page (no duplicate `V` targets).
+3. Reuse `arkRoModeControl` - register strip instance or single mode control per page (no duplicate `V` targets).
 4. Controller passes projection to show + estimate-review blades only.
 5. Remove duplicate mode control from workflow toolbar when strip ships.
-6. Query composition: projection computed once per GET in controller — **zero** strip-driven queries in Blade loops.
+6. Query composition: projection computed once per GET in controller - **zero** strip-driven queries in Blade loops.
 7. Tests: feature tests for projection keys by status/mode/permission; DOM assert strip hidden when sentinel mocked in view tests optional.
 
 **Files likely touched (implement phase only):**
@@ -266,7 +266,7 @@ Hard prohibition list for v1:
 - `resources/views/operations/repair-orders/partials/workspace-strip.blade.php` (new)
 - `resources/js/ark-workspace-strip.js` (new)
 - `resources/css/app.css` (strip tokens)
-- `docs/ark-v2-interface-constitution.md` (anatomy line — after ship)
+- `docs/ark-v2-interface-constitution.md` (anatomy line - after ship)
 
 ---
 

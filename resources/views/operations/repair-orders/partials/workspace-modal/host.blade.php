@@ -82,7 +82,7 @@
         :initial-context="$isTerminal ? [] : $initialContext"
     >
         @unless ($isTerminal)
-        {{-- Add Work chooser — radio list, not a menu of buttons --}}
+        {{-- Add Work chooser - radio list, not a menu of buttons --}}
         <div class="ops-workspace-modal__panel" x-show="task === 'add-work'" x-cloak>
             <fieldset class="ops-workspace-modal__chooser">
                 <legend class="sr-only">What would you like to add?</legend>
@@ -135,7 +135,7 @@
                     >
                     <span class="ops-workspace-modal__chooser-copy">
                         <span class="ops-workspace-modal__chooser-title">Common Job</span>
-                        <span class="ops-workspace-modal__chooser-hint">Add a common job from a shop template — labor, parts, and fees in one step.</span>
+                        <span class="ops-workspace-modal__chooser-hint">Add a common job from a shop template - labor, parts, and fees in one step.</span>
                     </span>
                 </label>
             </fieldset>
@@ -249,7 +249,7 @@
                 </div>
             @endforeach
 
-            {{-- Scope-level line create (no Repair Action) — diagnostic concerns, standalone notes --}}
+            {{-- Scope-level line create (no Repair Action) - diagnostic concerns, standalone notes --}}
             @php
                 $scopeOldBelongs = filled(old('repair_order_concern_id'))
                     && (string) old('repair_order_concern_id') === (string) $concern->id
@@ -352,7 +352,7 @@
                             class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
                         >
                     </label>
-                    <p class="mt-1 text-[11px] text-slate-400">Name the repair — labor hours hang under it.</p>
+                    <p class="mt-1 text-[11px] text-slate-400">Name the repair - labor hours hang under it.</p>
                 </form>
             </div>
         @endforeach
@@ -528,7 +528,7 @@
                                     <template x-for="line in (selected?.lines || []).filter(l => l.type === 'labor')" :key="'labor-'+line.description">
                                         <span>
                                             <span x-text="line.description"></span>
-                                            <span x-show="line.hours" x-text="' — ' + line.hours + ' hr'"></span>
+                                            <span x-show="line.hours" x-text="' - ' + line.hours + ' hr'"></span>
                                         </span>
                                     </template>
                                 </span>
@@ -686,7 +686,7 @@
             @endunless
         </div>
 
-        {{-- Customer / RO Documents — paperwork, not Evidence --}}
+        {{-- Customer / RO Documents - paperwork, not Evidence --}}
         <div class="ops-workspace-modal__panel" x-show="task === 'document'" x-cloak>
             @php
                 $roDocuments = $customerDocuments ?? collect();

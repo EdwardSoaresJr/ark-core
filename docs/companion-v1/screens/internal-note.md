@@ -1,14 +1,14 @@
-# Screen spec — Internal Note
+# Screen spec - Internal Note
 
 **ID:** `companion.screen.internal-note`  
 **Role(s):** Advisor · Technician  
-**Status:** 📝 draft — P1
+**Status:** 📝 draft - P1
 
 ---
 
 ## Job
 
-Staff-only note on thread or RO — never visible to customer · same authority as desktop internal notes.
+Staff-only note on thread or RO - never visible to customer · same authority as desktop internal notes.
 
 ---
 

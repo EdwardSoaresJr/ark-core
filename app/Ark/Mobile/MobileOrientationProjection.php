@@ -5,7 +5,7 @@ namespace App\Ark\Mobile;
 use App\Models\User;
 
 /**
- * Portable Station home — observation stream first, then attention/work fallbacks.
+ * Portable Station home - observation stream first, then attention/work fallbacks.
  */
 final class MobileOrientationProjection
 {

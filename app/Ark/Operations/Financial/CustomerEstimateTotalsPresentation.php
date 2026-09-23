@@ -6,7 +6,7 @@ use App\Ark\Operations\RepairOrders\EstimateTotals;
 use App\Ark\Operations\Settings\ShopSettings;
 
 /**
- * Customer-facing estimate totals breakdown — gross labor and parts, discount, then fees and tax
+ * Customer-facing estimate totals breakdown - gross labor and parts, discount, then fees and tax
  * so Labor + Parts − Discount + Fees + Tax equals Total.
  */
 final class CustomerEstimateTotalsPresentation

@@ -14,7 +14,7 @@ use RuntimeException;
 /**
  * Telephony authority: assign business identity (extension) to a persistent workstation.
  *
- * Provisioning never allocates extensions — only this action (or equivalent POST paths) may.
+ * Provisioning never allocates extensions - only this action (or equivalent POST paths) may.
  */
 final class AssignExtensionToWorkstationAction
 {

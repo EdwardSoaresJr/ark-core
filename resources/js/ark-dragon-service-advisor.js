@@ -1,5 +1,5 @@
 /**
- * Dragon Service Advisor — on-demand rewrite with before/after preview.
+ * Dragon Service Advisor - on-demand rewrite with before/after preview.
  * Never auto-applies. Polls assist status until completed/failed.
  */
 export function arkDragonServiceAdvisor(config = {}) {

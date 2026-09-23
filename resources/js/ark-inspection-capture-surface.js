@@ -13,7 +13,7 @@ export function preferredInspectionCaptureSurface() {
             return 'tablet';
         }
     } catch {
-        // Private / restricted environments — keep server href.
+        // Private / restricted environments - keep server href.
     }
 
     return 'desktop_walk';

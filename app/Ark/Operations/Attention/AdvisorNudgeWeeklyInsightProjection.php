@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Attention;
 use Illuminate\Support\Carbon;
 
 /**
- * Weekly advisor nudge response counts — tune suggestions before automation.
+ * Weekly advisor nudge response counts - tune suggestions before automation.
  */
 final class AdvisorNudgeWeeklyInsightProjection
 {

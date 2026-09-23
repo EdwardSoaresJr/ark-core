@@ -11,7 +11,7 @@
         <span class="ops-comms-work-card__state">{{ $row['state_label'] ?? '' }}</span>
     </div>
 
-    <p class="ops-comms-work-card__identity">{{ $row['contact_name'] ?? 'Unknown' }} · {{ $row['display_phone'] ?? '—' }}</p>
+    <p class="ops-comms-work-card__identity">{{ $row['contact_name'] ?? 'Unknown' }} · {{ $row['display_phone'] ?? '-' }}</p>
     <p class="ops-comms-work-card__concern">{{ $row['concern'] ?? '' }}</p>
 
     <div class="ops-comms-work-card__actions">

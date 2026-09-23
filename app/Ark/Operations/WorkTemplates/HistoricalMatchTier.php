@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\WorkTemplates;
 
 /**
- * Confidence tiers for Historical Work Recall — observational guidance only.
+ * Confidence tiers for Historical Work Recall - observational guidance only.
  * Never OEM / factory / book time.
  */
 enum HistoricalMatchTier: string

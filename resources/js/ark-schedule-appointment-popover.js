@@ -1,5 +1,5 @@
 /**
- * Shared scheduler appointment popover — Month is the interaction reference.
+ * Shared scheduler appointment popover - Month is the interaction reference.
  * Single-open, fixed placement, flip above near viewport edges.
  */
 export default function arkScheduleAppointmentPopover() {

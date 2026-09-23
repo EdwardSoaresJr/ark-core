@@ -21,7 +21,7 @@
                     <form method="POST" action="{{ route('operations.learn.progress.snooze') }}" class="ops-learn-snooze-form">
                         @csrf
                         <button type="submit" class="ops-learn-snooze-form__btn">
-                            Snooze {{ $snoozeHours }}h — back to workboard
+                            Snooze {{ $snoozeHours }}h - back to workboard
                         </button>
                     </form>
                 @elseif (($trainingSummary['required'] ?? 0) > ($trainingSummary['completed'] ?? 0))
@@ -46,7 +46,7 @@
             <div>
                 <p class="ops-learn__eyebrow">Staff training</p>
                 <h1 class="ops-learn__title">{{ \App\Support\Branding\Branding::learnName() }}</h1>
-                <p class="ops-learn__lede">Role-based training for how this shop uses ARK. Available to authorized staff — progress is tracked; workboard access is not blocked by a shop-wide gate.</p>
+                <p class="ops-learn__lede">Role-based training for how this shop uses ARK. Available to authorized staff - progress is tracked; workboard access is not blocked by a shop-wide gate.</p>
                 @if (($trainingSummary['required'] ?? 0) > 0)
                     <div class="ops-learn-training">
                         <div class="ops-learn-training__meta">
@@ -57,7 +57,7 @@
                             <span class="ops-learn-training__fill" style="width: {{ $trainingSummary['percent'] }}%"></span>
                         </div>
                         @if (($trainingSummary['stale'] ?? 0) > 0)
-                            <p class="ops-learn-training__stale">{{ $trainingSummary['stale'] }} guide(s) updated — re-read required.</p>
+                            <p class="ops-learn-training__stale">{{ $trainingSummary['stale'] }} guide(s) updated - re-read required.</p>
                         @endif
                     </div>
                 @endif
@@ -199,7 +199,7 @@
                                         <p class="ops-learn-progress__stale">This guide was updated. Re-read each section to complete again.</p>
                                     @endif
                                     <div class="ops-learn-progress__head">
-                                        <p class="ops-learn-progress__title">Required guide — read each section</p>
+                                        <p class="ops-learn-progress__title">Required guide - read each section</p>
                                         <p class="ops-learn-progress__hint">Active time only. Idle tabs stop the clock. Sections unlock in order.</p>
                                     </div>
 
@@ -240,7 +240,7 @@
                                             <form method="POST" action="{{ route('operations.learn.progress.snooze') }}">
                                                 @csrf
                                                 <button type="submit" class="ops-learn-snooze-form__btn ops-learn-snooze-form__btn--inline">
-                                                    Snooze {{ $snoozeHours }}h — workboard
+                                                    Snooze {{ $snoozeHours }}h - workboard
                                                 </button>
                                             </form>
                                         @endif

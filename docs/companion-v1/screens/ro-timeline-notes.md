@@ -1,14 +1,14 @@
-# Screen spec — RO Timeline & Notes
+# Screen spec - RO Timeline & Notes
 
 **ID:** `companion.screen.ro-timeline-notes`  
 **Role(s):** Advisor · Technician  
-**Status:** 📝 draft — P1
+**Status:** 📝 draft - P1
 
 ---
 
 ## Job
 
-Scoped activity on one RO · internal production notes — read history · add note without full workspace scroll.
+Scoped activity on one RO · internal production notes - read history · add note without full workspace scroll.
 
 ---
 
@@ -22,7 +22,7 @@ Scoped activity on one RO · internal production notes — read history · add n
 ## Notes screen
 
 - Chronological internal notes · author · timestamp
-- Composer at bottom — same as internal note spec
+- Composer at bottom - same as internal note spec
 - Tech: assigned RO only
 
 ---

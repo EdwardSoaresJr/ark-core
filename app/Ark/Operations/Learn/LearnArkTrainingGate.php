@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Learn;
 use App\Models\User;
 
 /**
- * Shop-wide ARKademy / Learn training gate — RETIRED.
+ * Shop-wide ARKademy / Learn training gate - RETIRED.
  *
  * Doctrine:
  * - Learning content is available by default to authorized users.

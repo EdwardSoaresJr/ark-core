@@ -93,7 +93,7 @@ test('repair action compose opens line types through authoring entry points', fu
     $html = $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        // Labor already anchors this Repair Action — still offer Labor for additional
+        // Labor already anchors this Repair Action - still offer Labor for additional
         // hours lines, plus supporting part/note/sublet/evidence types.
         ->assertSee('Add Labor', false)
         ->assertSee('Add Part', false)
@@ -308,7 +308,7 @@ test('builder presents remaining editors as presentation cards into workspace mo
         ->assertDontSee('Save Narrative', false)
         ->getContent();
 
-    // One primary Add Work — contextual footer (not a body CTA competing in the same viewport).
+    // One primary Add Work - contextual footer (not a body CTA competing in the same viewport).
     expect(substr_count($html, 'id="workspace-visit-reason"'))->toBe(1)
         ->and(substr_count($html, 'data-workspace-modal-trigger="add-work"'))->toBe(1)
         ->and($html)->toContain('data-ro-footer')

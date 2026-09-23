@@ -9,9 +9,9 @@ enum ConcernBillingPosture: string
 {
     case Default = 'default';
     case CustomerPay = 'customer_pay';
-    /** @deprecated Legacy value — migrated to {@see self::WarrantyOther}. */
+    /** @deprecated Legacy value - migrated to {@see self::WarrantyOther}. */
     case Warranty = 'warranty';
-    /** @deprecated Legacy value — migrated to {@see self::RepairPal}. */
+    /** @deprecated Legacy value - migrated to {@see self::RepairPal}. */
     case WarrantyRepairPal = 'warranty_repairpal';
     case WarrantyOther = 'warranty_other';
     case Fleet = 'fleet';
@@ -49,7 +49,7 @@ enum ConcernBillingPosture: string
             self::Fleet => 'Fleet fee rate and parts matrix from shop settings.',
             self::Internal => 'Internal shop vehicle; no customer shop fees.',
             self::Wholesale => 'Wholesale parts profile and fee rules from shop settings.',
-            self::Comeback => 'Comeback rework at $0 labor; enter part cost for tracking and set sell manually — often $0.',
+            self::Comeback => 'Comeback rework at $0 labor; enter part cost for tracking and set sell manually - often $0.',
         };
     }
 
@@ -69,7 +69,7 @@ enum ConcernBillingPosture: string
     }
 
     /**
-     * Comeback and warranty scopes need independent cost vs sell control — often $0 customer sell with shop cost tracked.
+     * Comeback and warranty scopes need independent cost vs sell control - often $0 customer sell with shop cost tracked.
      */
     public function prefersManualPartPricing(): bool
     {
@@ -90,7 +90,7 @@ enum ConcernBillingPosture: string
     public static function advisorHelpOverview(): string
     {
         return collect(self::advisorHelpOverviewItems())
-            ->map(fn (array $item): string => $item['label'].' — '.$item['detail'])
+            ->map(fn (array $item): string => $item['label'].' - '.$item['detail'])
             ->implode("\n");
     }
 

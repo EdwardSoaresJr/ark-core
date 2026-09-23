@@ -5,7 +5,7 @@ namespace App\Ark\Mobile;
 use App\Models\User;
 
 /**
- * Companion v1 shell — parallel to legacy mobile navigation until new app ships.
+ * Companion v1 shell - parallel to legacy mobile navigation until new app ships.
  */
 final class MobileCompanionShellProjection
 {

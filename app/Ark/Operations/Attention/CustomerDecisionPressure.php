@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Read-only Attention projection — dollars waiting on customer decisions.
+ * Read-only Attention projection - dollars waiting on customer decisions.
  *
  * Authority remains on RepairOrder, lines, approvals, payments, and communications.
  *

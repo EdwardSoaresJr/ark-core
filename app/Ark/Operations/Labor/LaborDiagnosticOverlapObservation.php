@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Labor;
 
 /**
- * Doctrine observation — possible duplicate diagnostic/testing labor on an RO.
+ * Doctrine observation - possible duplicate diagnostic/testing labor on an RO.
  *
  * Advisory only. Does not mutate authority, hours, or customer presentation.
  */

@@ -95,8 +95,8 @@ final class HistoricalWorkRecallProjection
     {
         return match ($this->tier) {
             HistoricalMatchTier::Exact => 'Based on your shop history',
-            HistoricalMatchTier::Likely => 'Suggested from shop history — review before adding',
-            HistoricalMatchTier::Possible => 'Historical reference only — labor not automatically applied',
+            HistoricalMatchTier::Likely => 'Suggested from shop history - review before adding',
+            HistoricalMatchTier::Possible => 'Historical reference only - labor not automatically applied',
             HistoricalMatchTier::None => 'Saved Work default',
         };
     }

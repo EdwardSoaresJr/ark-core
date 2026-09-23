@@ -7,7 +7,7 @@ use App\Ark\Operations\Observations\OperationalObservationSeverity;
 use App\Ark\Operations\Observations\OperationalObservationType;
 
 /**
- * Explainable attention — every point in the score maps to a visible reason.
+ * Explainable attention - every point in the score maps to a visible reason.
  */
 final class AttentionPressureResolver
 {
@@ -85,7 +85,7 @@ final class AttentionPressureResolver
                 observationType: $observation->type,
             ),
             OperationalObservationType::EstimateSent => new AttentionReason(
-                label: 'Estimate sent — awaiting customer',
+                label: 'Estimate sent - awaiting customer',
                 weight: 10,
                 observationType: $observation->type,
             ),

@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Operational Context — progressive disclosure of work state inside a conversation thread.
+ * Operational Context - progressive disclosure of work state inside a conversation thread.
  *
  * Companion informs. ARKv2 operates. Show only what reduces uncertainty right now.
  */

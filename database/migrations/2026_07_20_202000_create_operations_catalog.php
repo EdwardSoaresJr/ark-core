@@ -34,7 +34,7 @@ return new class extends Migration
 
         // Temporary operational records so Pricing can resolve Operation Class.
         // NOT a service catalog. Expand only when another capability earns it.
-        // Codes mirror today's labor categories during migration — that is intentional and temporary.
+        // Codes mirror today's labor categories during migration - that is intentional and temporary.
         $rows = [
             ['code' => 'mechanical', 'name' => 'General Mechanical', 'class' => 'general_repair', 'sort' => 10],
             ['code' => 'diagnostic', 'name' => 'Diagnostics', 'class' => 'diagnostics', 'sort' => 20],
@@ -43,7 +43,7 @@ return new class extends Migration
             ['code' => 'courtesy', 'name' => 'Courtesy', 'class' => 'general_repair', 'sort' => 50],
             ['code' => 'comeback', 'name' => 'Comeback', 'class' => 'general_repair', 'sort' => 60],
             ['code' => 'repairpal', 'name' => 'RepairPal', 'class' => 'general_repair', 'sort' => 70],
-            ['code' => 'warranty-other', 'name' => 'Warranty — Other', 'class' => 'general_repair', 'sort' => 80],
+            ['code' => 'warranty-other', 'name' => 'Warranty - Other', 'class' => 'general_repair', 'sort' => 80],
             ['code' => 'maintenance', 'name' => 'Maintenance', 'class' => 'maintenance', 'sort' => 5],
             ['code' => 'advanced_mechanical', 'name' => 'Advanced Mechanical', 'class' => 'advanced_mechanical', 'sort' => 45],
         ];

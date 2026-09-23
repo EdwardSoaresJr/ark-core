@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * M2 — User owns Shop. Extends platform Shop authority; no Tenant / provisioning.
+ * M2 - User owns Shop. Extends platform Shop authority; no Tenant / provisioning.
  */
 return new class extends Migration
 {

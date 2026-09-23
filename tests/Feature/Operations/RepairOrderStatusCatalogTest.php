@@ -309,7 +309,7 @@ test('building estimate lifecycle select offers close lost without estimate line
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Closed — Lost', false);
+        ->assertSee('Closed - Lost', false);
 });
 
 test('technicians can close lost when status catalog grants closed transition', function () {

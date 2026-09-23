@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Platform Cluster / Shop / Deployment scaffolding.
- * No production behavior — authorities for future provisioning.
+ * No production behavior - authorities for future provisioning.
  */
 return new class extends Migration
 {

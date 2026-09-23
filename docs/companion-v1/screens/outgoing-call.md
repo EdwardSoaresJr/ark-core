@@ -1,15 +1,15 @@
-# Screen spec — Outgoing Call (Dialer)
+# Screen spec - Outgoing Call (Dialer)
 
 **ID:** `companion.screen.outgoing-call`  
 **Role(s):** Advisor  
-**Quo ref:** minimal dial pattern — prefer search-first over bare keypad  
-**Status:** 📝 draft — Edward review
+**Quo ref:** minimal dial pattern - prefer search-first over bare keypad  
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Call a customer **with context confirmed** — prefer search/name over raw number · show vehicle before connect.
+Call a customer **with context confirmed** - prefer search/name over raw number · show vehicle before connect.
 
 ---
 
@@ -28,7 +28,7 @@ Call a customer **with context confirmed** — prefer search/name over raw numbe
 
 1. **Preferred:** [`global-search.md`](global-search.md) → Call
 2. **Thread / customer / RO** header Call button
-3. **Dialer tab** (secondary) — Recents · Keypad
+3. **Dialer tab** (secondary) - Recents · Keypad
 
 
 **Tabs:** Recents · Keypad · (Contacts merges into Search)
@@ -43,7 +43,7 @@ Call a customer **with context confirmed** — prefer search/name over raw numbe
 
 - Standard 0–9 · \* · #
 - Number field · backspace
-- **Call** green — if unknown number, confirm "Call (512)…?" · offer create customer after
+- **Call** green - if unknown number, confirm "Call (512)…?" · offer create customer after
 
 ### Confirm sheet (before connect)
 
@@ -52,7 +52,7 @@ Call a customer **with context confirmed** — prefer search/name over raw numbe
 
 ### Ringing → connected
 
-Transition to [`active-call.md`](active-call.md) — same stack
+Transition to [`active-call.md`](active-call.md) - same stack
 
 ---
 

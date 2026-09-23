@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 /**
  * Client workspace identity for parallel intake tabs ({@see config ark_workspace_tabs}).
- * The ws query param is ignored by intake business logic — it only scopes multitasking.
+ * The ws query param is ignored by intake business logic - it only scopes multitasking.
  */
 final class IntakeWorkspaceSession
 {

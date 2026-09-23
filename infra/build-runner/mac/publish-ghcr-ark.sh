@@ -73,4 +73,4 @@ echo "  ${IMAGE}:${SHA}"
 echo "  ${IMAGE}:${SHORT_SHA}"
 docker buildx imagetools inspect "${IMAGE}:${SHA}" | head -20
 echo ""
-echo "Pin certs by digest from imagetools output above — not by floating tags."
+echo "Pin certs by digest from imagetools output above - not by floating tags."

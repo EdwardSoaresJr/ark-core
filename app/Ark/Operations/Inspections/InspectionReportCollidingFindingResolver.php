@@ -99,7 +99,7 @@ final class InspectionReportCollidingFindingResolver
         bool $embedImageDataUris,
         callable $imageDataUri,
     ): array {
-        // $authoritative condition/state is already in $payload — never overwritten here.
+        // $authoritative condition/state is already in $payload - never overwritten here.
 
         foreach ($freeforms as $freeform) {
             $freeform->loadMissing(['measurements', 'photos']);

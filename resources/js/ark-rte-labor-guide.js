@@ -334,7 +334,7 @@ export function arkRteLaborGuide(config = {}) {
 
         formatHours(value) {
             if (value === null || value === undefined || value === '') {
-                return '—';
+                return '-';
             }
 
             return Number(value).toFixed(2);

@@ -1,13 +1,13 @@
-# Certification record — Portable Station Phase 1
+# Certification record - Portable Station Phase 1
 
 **Certification:** Portable Station Phase 1  
-**Track:** B — Portable Station  
+**Track:** B - Portable Station  
 **Owner:** Alex Rivera  
 **Scenario source:** [advisor.md](../day-in-the-life/advisor.md) · 7:55 AM + 8:10 AM
 
 ## Why this matters
 
-Edward can leave the Front Counter without leaving the operation — phone opens into orientation, not a raw inbox.
+Edward can leave the Front Counter without leaving the operation - phone opens into orientation, not a raw inbox.
 
 ---
 
@@ -34,8 +34,8 @@ Edward can leave the Front Counter without leaving the operation — phone opens
 
 | Check | Status | Date | Evidence | Proof |
 |-------|--------|------|----------|-------|
-| 7:55 AM — open app → orientation home, not Conversations | ⬜ | | | |
-| 8:10 AM — tap text → oriented thread → reply → desktop parity | ⬜ | | | |
+| 7:55 AM - open app → orientation home, not Conversations | ⬜ | | | |
+| 8:10 AM - tap text → oriented thread → reply → desktop parity | ⬜ | | | |
 | Push notification opens conversation context | ⬜ | | | Server operational; device rebuild + APNs (iOS) + floor test pending |
 
 ## Notes

@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Inspections;
 
 /**
  * Disposable read-model payload for Inspection Posture on an RO.
- * Rebuildable from inspection authority — owns no persistence.
+ * Rebuildable from inspection authority - owns no persistence.
  */
 final class InspectionPosture
 {

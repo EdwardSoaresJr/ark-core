@@ -162,7 +162,7 @@
                     <input
                         type="search"
                         x-model="rteLabor.query"
-                        placeholder="Search jobs — brakes, water pump, A/C…"
+                        placeholder="Search jobs - brakes, water pump, A/C…"
                         class="min-w-0 flex-1 rounded-sm border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-950 placeholder:text-slate-400 sm:px-3 sm:py-2 sm:text-sm"
                     >
                     <button

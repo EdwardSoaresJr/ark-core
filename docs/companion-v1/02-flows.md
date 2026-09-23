@@ -1,4 +1,4 @@
-# Deliverable 2 — Every Tap (Flows)
+# Deliverable 2 - Every Tap (Flows)
 
 **Rule:** No code. Only sequences. If a flow needs more than 3 taps for a P0 job, flag it.
 
@@ -20,11 +20,11 @@ Outcome (pocket / done / stay in context)
 ### Incoming call → pocket
 
 ```text
-Phone rings (Incoming Call screen — context visible)
+Phone rings (Incoming Call screen - context visible)
   ↓ Answer
-Active Call (minimal — customer + vehicle strip)
+Active Call (minimal - customer + vehicle strip)
   ↓ Hang up
-Post-Call sheet (same screen stack — no Home)
+Post-Call sheet (same screen stack - no Home)
   ↓ Add note OR Send text OR Open RO OR Schedule
 Target workspace
   ↓ Back
@@ -38,7 +38,7 @@ Pocket
 ```text
 Push: "Ben uploaded inspection"
   ↓ Tap
-Inspection Item (exact item — not Home)
+Inspection Item (exact item - not Home)
   ↓ Review photo / Reply internal note
   ↓ Back
 RO workspace OR pocket
@@ -49,7 +49,7 @@ RO workspace OR pocket
 ```text
 Push: "Emma replied"
   ↓ Tap
-Conversation thread (Emma — full context rail)
+Conversation thread (Emma - full context rail)
   ↓ Reply
   ↓ Send
 Pocket
@@ -60,7 +60,7 @@ Pocket
 ```text
 Unlock phone
   ↓ Open Companion
-Home (continuity list — not dashboard)
+Home (continuity list - not dashboard)
   ↓ Tap "3 customers replied"
 Conversation list (filtered: needs reply) OR first thread
   ↓ Handle OR back

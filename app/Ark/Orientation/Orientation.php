@@ -5,10 +5,10 @@ namespace App\Ark\Orientation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 
 /**
- * Platform orientation service — every interruption surface asks here first.
+ * Platform orientation service - every interruption surface asks here first.
  *
  * Doctrine: every human interruption in ARK begins with orientation.
- * North star metric: Time to Orientation (TTO) — seconds until an employee
+ * North star metric: Time to Orientation (TTO) - seconds until an employee
  * can make a good decision, not page load time.
  */
 final class Orientation

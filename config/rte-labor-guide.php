@@ -7,9 +7,9 @@ return [
     | Repair Time Engine availability
     |--------------------------------------------------------------------------
     |
-    | null  — auto-detect (rte_lab table exists and has rows)
-    | true  — force enabled (still requires imported data at runtime)
-    | false — hide Repair Time Engine surfaces without querying rte_lab
+    | null  - auto-detect (rte_lab table exists and has rows)
+    | true  - force enabled (still requires imported data at runtime)
+    | false - hide Repair Time Engine surfaces without querying rte_lab
     |
     */
     'enabled' => env('RTE_LABOR_GUIDE_ENABLED'),
@@ -19,7 +19,7 @@ return [
     | Default labor hours basis
     |--------------------------------------------------------------------------
     |
-    | Shop Avg is the working estimate default — weighted toward book high with
+    | Shop Avg is the working estimate default - weighted toward book high with
     | vehicle-age padding on Avg/Hi. Advisors can still apply Lo or Hi.
     |
     */

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Strips pricing metadata that briefly lived on Operation.
- * Operation owns Operation Class only — posture/legacy rate belong in LaborAuthority.
+ * Operation owns Operation Class only - posture/legacy rate belong in LaborAuthority.
  *
  * Idempotent: create migration may already omit these columns (fresh installs / SQLite tests).
  */

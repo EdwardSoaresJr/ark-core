@@ -130,7 +130,7 @@ final class UnifiedOperationalTimeline
     }
 
     /**
-     * Complete customer conversation timeline — every interaction in one stream.
+     * Complete customer conversation timeline - every interaction in one stream.
      *
      * @return Collection<int, OperationalEventEntry>
      */
@@ -146,7 +146,7 @@ final class UnifiedOperationalTimeline
     }
 
     /**
-     * RO-scoped customer conversation — same composer as relationship timelines.
+     * RO-scoped customer conversation - same composer as relationship timelines.
      *
      * Returns canonical surface order for event-bubble: oldest → newest.
      *

@@ -503,7 +503,7 @@ function arkQzLocationStorageKey(prefix) {
     return prefix + ':default';
 }
 
-/** Per-location verified record key (uses location id when available, not display name — renames don’t orphan verification). */
+/** Per-location verified record key (uses location id when available, not display name - renames don’t orphan verification). */
 function arkGetVerificationKey() {
     return arkQzLocationStorageKey('ark_qz_verified');
 }
@@ -556,13 +556,13 @@ function arkCopyPrintDiagnostics(override) {
 
 async function arkShowPrintTestDiagnostics(printerName) {
     var lines = [];
-    lines.push('Printed to: ' + (printerName || '—'));
+    lines.push('Printed to: ' + (printerName || '-'));
     if (window.ARK_PRINT_LOCATION_LABEL) {
         lines.push('Location: ' + window.ARK_PRINT_LOCATION_LABEL);
     }
     var qzOk = typeof qz !== 'undefined' && qz.websocket.isActive();
     lines.push('QZ: ' + (qzOk ? 'Connected' : 'Not connected'));
-    var queue = '—';
+    var queue = '-';
     var printersNorm = [];
     if (qzOk) {
         try {
@@ -683,7 +683,7 @@ function arkBadgeLocationSuffix() {
     return '';
 }
 
-/** Fallback if ARK_KEY_TAG_QZ_PAGE is missing — uses window.ARK_KEY_TAG_QZ_DEFAULTS from config/printing.php. */
+/** Fallback if ARK_KEY_TAG_QZ_PAGE is missing - uses window.ARK_KEY_TAG_QZ_DEFAULTS from config/printing.php. */
 function arkKeyTagQzPageOrFallback() {
     var p = window.ARK_KEY_TAG_QZ_PAGE || {};
     var d = window.ARK_KEY_TAG_QZ_DEFAULTS || {};
@@ -877,7 +877,7 @@ function arkGetQzPrintConfig(printerName, keyTagPayloadIsImage, documentType) {
         size: { width: page.width_mm, height: page.height_mm }
     };
     if (isQl) {
-        /* PDF to QZ: rasterize false — OS/driver interpret page geometry. PNG: rasterize true + nearest-neighbor. */
+        /* PDF to QZ: rasterize false - OS/driver interpret page geometry. PNG: rasterize true + nearest-neighbor. */
         cfg.rasterize = payloadIsImage;
         /* PNG: opt-in stretch if driver needs it. PDF: let the queue render the page (no QZ scale). */
         cfg.scaleContent = payloadIsImage && qlScale;
@@ -889,7 +889,7 @@ function arkGetQzPrintConfig(printerName, keyTagPayloadIsImage, documentType) {
         if (orientMode === 'portrait' || orientMode === 'landscape') {
             cfg.orientation = orientMode;
         } else {
-            /* Auto: PDF page matches die-cut label (e.g. 62×38.1 mm) — portrait on Brother QL-800. */
+            /* Auto: PDF page matches die-cut label (e.g. 62×38.1 mm) - portrait on Brother QL-800. */
             if (Number(page.width_mm) >= Number(page.height_mm)) {
                 cfg.orientation = 'portrait';
             } else {
@@ -1013,7 +1013,7 @@ window.arkGetVerificationStatus = arkGetVerificationStatus;
 
 /**
  * Optional yellow banner (only when #ark-qz-print-setup-banner-host exists).
- * No fallback onto RO action bars — repair order pages omit the host on purpose.
+ * No fallback onto RO action bars - repair order pages omit the host on purpose.
  */
 function arkRenderPrinterBanner() {
     if (window.ARK_USER_IS_ADMIN === false) {
@@ -1282,7 +1282,7 @@ function arkSetBadgeQZOfflineHint() {
     }
     el.classList.remove('badge-success', 'badge-warning');
     el.classList.add('badge-secondary');
-    el.textContent = 'QZ Tray idle — start app' + arkBadgeLocationSuffix();
+    el.textContent = 'QZ Tray idle - start app' + arkBadgeLocationSuffix();
     el.style.display = '';
     el.removeAttribute('hidden');
 }
@@ -1305,7 +1305,7 @@ function arkBlobToBase64(blob) {
     });
 }
 
-/** See public/js/ark/ark-qz-key-tag.js — ArkQzKeyTag.printerLooksLikeQl */
+/** See public/js/ark/ark-qz-key-tag.js - ArkQzKeyTag.printerLooksLikeQl */
 function arkPrinterNameSuggestsBrotherQl(printerName) {
     if (window.ArkQzKeyTag && typeof window.ArkQzKeyTag.printerLooksLikeQl === 'function') {
         return window.ArkQzKeyTag.printerLooksLikeQl(printerName);
@@ -1320,7 +1320,7 @@ function arkPrinterNameSuggestsBrotherQl(printerName) {
     return s.indexOf('BROTHER') !== -1 && s.indexOf('QL') !== -1;
 }
 
-/** See public/js/ark/ark-qz-key-tag.js — ArkQzKeyTag.clientLooksLikeMacOs */
+/** See public/js/ark/ark-qz-key-tag.js - ArkQzKeyTag.clientLooksLikeMacOs */
 /** Effective QL raster DPI: server seed on page load, then optional API merge; else Mac/203 heuristic. */
 function arkKeyTagRasterDpiForRender() {
     var d = Number(window.ARK_KEY_TAG_RASTER_DPI);
@@ -1459,7 +1459,7 @@ async function arkRenderPdfBlobToPngBase64(blob, scale) {
 /**
  * Key-tag raster for Brother QL: PNG is exactly finalW × finalH (mm×DPI or reference lock).
  * High-res PDF.js render, then scale to label WIDTH and center-crop (or center letterbox) vertically so the
- * bitmap is never taller than one QZ label — avoids Brother splitting the job across two feeds.
+ * bitmap is never taller than one QZ label - avoids Brother splitting the job across two feeds.
  */
 async function arkRenderKeyTagPdfToPngForQz(blob, documentType) {
     var dpi = arkKeyTagRasterDpiForRender();
@@ -3327,7 +3327,7 @@ async function arkPrintKeyTagsBatch(urls, btn, batchOptions) {
                 }
             } else {
                 var doneMsg =
-                    'All print jobs completed — ' +
+                    'All print jobs completed - ' +
                     ok +
                     ' key tag' +
                     (ok === 1 ? '' : 's') +
@@ -3460,7 +3460,7 @@ async function arkPrintPartsLabelsBatch(urls, btn, batchOptions) {
                 }
             } else if (ok > 0) {
                 var doneMsg =
-                    'All print jobs completed — ' +
+                    'All print jobs completed - ' +
                     ok +
                     ' parts label' +
                     (ok === 1 ? '' : 's') +
@@ -3509,7 +3509,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <style>
-    /** QZ not connected after initial check — optional styling for admins (see arkInitQZPrinterHealthHint / ensureQZConnection). */
+    /** QZ not connected after initial check - optional styling for admins (see arkInitQZPrinterHealthHint / ensureQZConnection). */
     body.ark-print-offline {
         box-shadow: inset 0 3px 0 0 rgba(255, 193, 7, 0.9);
     }

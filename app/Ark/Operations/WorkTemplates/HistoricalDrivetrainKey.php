@@ -89,7 +89,7 @@ final class HistoricalDrivetrainKey
             return self::RWD;
         }
 
-        // Preserve ambiguity — do not invent FWD/RWD from 2WD / 4x2.
+        // Preserve ambiguity - do not invent FWD/RWD from 2WD / 4x2.
         if (
             $upper === '2WD'
             || $upper === '4X2'

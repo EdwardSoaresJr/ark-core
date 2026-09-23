@@ -146,7 +146,7 @@ final class OilChangeStickerPrintContext
             $maxVehicleChars = 8;
         }
 
-        $veh = Str::limit(trim($vehicleRaw) !== '' ? trim($vehicleRaw) : '—', $maxVehicleChars, '');
+        $veh = Str::limit(trim($vehicleRaw) !== '' ? trim($vehicleRaw) : '-', $maxVehicleChars, '');
 
         return $veh.$suffix;
     }

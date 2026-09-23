@@ -1,6 +1,6 @@
 # Cluster Authority v1
 
-**Status:** Active — scaffolding only (no production behavior change)  
+**Status:** Active - scaffolding only (no production behavior change)  
 **Date:** 2026-07-19  
 **Companions:** [deployment-authority-v1.md](deployment-authority-v1.md) · [shop-authority-v1.md](shop-authority-v1.md) · [deployment-flow-v1.md](deployment-flow-v1.md)
 
@@ -36,7 +36,7 @@ Shop → Docker
 | Identity | `id`, `name`, `slug` |
 | Type | Shared \| Dedicated |
 | Status | Provisioning \| Healthy \| Maintenance \| Degraded \| Offline |
-| Accepting new shops | `accepting_new_shops` — assignable gate for provisioning |
+| Accepting new shops | `accepting_new_shops` - assignable gate for provisioning |
 | Deployment target | Coolify/server label (e.g. `coolify-server-01`) |
 | Ingress endpoint | What ARK Edge dials (e.g. `https://shared-a.internal`) |
 | Application version | `current_version` running on the cluster |
@@ -68,7 +68,7 @@ Compute when needed:
 | Observation | Source |
 | --- | --- |
 | Current Shops | `cluster->deployments()->count()` |
-| Capacity / utilization | Future policy / metrics — not Cluster authority columns |
+| Capacity / utilization | Future policy / metrics - not Cluster authority columns |
 
 Storing counters creates sync debt forever.
 

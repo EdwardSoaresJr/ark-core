@@ -31,7 +31,7 @@ Do not Coolify Deploy. Do not retarget `144.202.74.190`. Do not roll back the da
 
 ## Database restore
 
-SQL files in `/data/ark-shared/backups/` are manual. Restoring one overwrites shop data. That is a separate, explicitly approved operation — never automatic, never bundled with an image recreate.
+SQL files in `/data/ark-shared/backups/` are manual. Restoring one overwrites shop data. That is a separate, explicitly approved operation - never automatic, never bundled with an image recreate.
 
 ## File volumes
 

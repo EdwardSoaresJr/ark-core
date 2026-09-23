@@ -7,7 +7,7 @@ use App\Ark\Mobile\OperatorContinuityProjection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/** One continuity snapshot — badge, moments, and next action for any mobile surface. */
+/** One continuity snapshot - badge, moments, and next action for any mobile surface. */
 final class MobileContinuityController
 {
     public function __invoke(

@@ -25,7 +25,7 @@ class ArkOperationalAuditCommand extends Command
         $scenarios = $seeder->seed((bool) $this->option('financial-only'));
 
         $this->newLine();
-        $this->components->info('Operational audit data ready. Spend 30 minutes in RO review — not PHPUnit.');
+        $this->components->info('Operational audit data ready. Spend 30 minutes in RO review - not PHPUnit.');
         $this->newLine();
 
         $rows = $scenarios->map(function (OperationalAuditScenario $scenario) use ($balanceDue): array {

@@ -123,17 +123,17 @@ final class SchedulingCapacityCalculator
                 ? [$technicianCapacity, 'technicians', null]
                 : ($hasBay
                     ? [$bayCapacity, 'bays', null]
-                    : [null, 'none', 'Capacity unavailable — add technicians or bays under Settings → Appointments.']),
+                    : [null, 'none', 'Capacity unavailable - add technicians or bays under Settings → Appointments.']),
             AppointmentCapacityBasis::Bays => $hasBay
                 ? [$bayCapacity, 'bays', null]
                 : ($hasTech
                     ? [$technicianCapacity, 'technicians', null]
-                    : [null, 'none', 'Capacity unavailable — add bays or technicians under Settings → Appointments.']),
+                    : [null, 'none', 'Capacity unavailable - add bays or technicians under Settings → Appointments.']),
             AppointmentCapacityBasis::LimitingResource => match (true) {
                 $hasTech && $hasBay => [min($technicianCapacity, $bayCapacity), 'limiting_resource', null],
                 $hasTech => [$technicianCapacity, 'technicians', null],
                 $hasBay => [$bayCapacity, 'bays', null],
-                default => [null, 'none', 'Capacity unavailable — add technicians or bays under Settings → Appointments.'],
+                default => [null, 'none', 'Capacity unavailable - add technicians or bays under Settings → Appointments.'],
             },
         };
     }

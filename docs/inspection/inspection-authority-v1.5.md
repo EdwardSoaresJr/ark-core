@@ -1,6 +1,6 @@
 # Inspection Authority v1.5
 
-**Status:** Superseded for interaction — see [Inspection Workspace](inspection-workspace.md). Authority: [Inspection Authority](inspection-authority.md).  
+**Status:** Superseded for interaction - see [Inspection Workspace](inspection-workspace.md). Authority: [Inspection Authority](inspection-authority.md).  
 **Sequence:** Authority → Workspace → Derivation (2.x) → Customer delivery (2.0+)  
 **Companions:** [Inspection Authority](inspection-authority.md) · [Inspection Workspace](inspection-workspace.md) · [1.0 Contract](inspection-authority-1.0-contract.md) (historical)
 
@@ -10,7 +10,7 @@
 
 **InspectionItem remains the inspection authority.**
 
-**Finding** is technician-facing vocabulary only — same pattern as:
+**Finding** is technician-facing vocabulary only - same pattern as:
 
 | Authority | Vocabulary |
 |-----------|------------|
@@ -105,7 +105,7 @@ Replace checklist-first workflow with:
 
 as the primary inspection action when a technician opens inspection.
 
-Categories (Brakes, Tires, Battery, …) remain available for **organization and projection** — not as the primary workflow entry point.
+Categories (Brakes, Tires, Battery, …) remain available for **organization and projection** - not as the primary workflow entry point.
 
 Do not lead with:
 
@@ -119,7 +119,7 @@ Do not lead with:
 When a technician opens inspection, lead with:
 
 1. **+ Finding** (primary action)
-2. **Recent Findings** (this RO — reverse chronological)
+2. **Recent Findings** (this RO - reverse chronological)
 
 Categories (Brakes, Tires, Battery, …) exist for **organization**, not as the landing workflow. Findings are workflow; categories are projection.
 
@@ -139,7 +139,7 @@ Phone → Camera → Measurement → Save
 
 Target: **under 10 seconds** for a minimal finding (title + photo, or title + measurement + photo).
 
-Intent, note, and concern link can be optional or deferred — never block the fast path.
+Intent, note, and concern link can be optional or deferred - never block the fast path.
 
 ---
 
@@ -154,7 +154,7 @@ Mobile-first flow:
    - Diagnostic
    - Verification
 3. Enter **title** (e.g. Front brake pads)
-4. Add **measurement** (optional — e.g. 3 mm)
+4. Add **measurement** (optional - e.g. 3 mm)
 5. Take **photo(s)** (strongly encouraged; evidence-first)
 6. Add **note** (optional)
 7. Save
@@ -165,7 +165,7 @@ Behind the scenes: create `InspectionItem` + measurement rows + photo rows exact
 
 ---
 
-## Three inspection modes (projections — not authority)
+## Three inspection modes (projections - not authority)
 
 Templates and UI modes project from the same `InspectionItem` authority:
 
@@ -181,7 +181,7 @@ MPI templates seed items only. They must not become authority.
 
 ---
 
-## Derivation chain (2.x — not 1.5 build)
+## Derivation chain (2.x - not 1.5 build)
 
 After adoption is proven, the same Finding authority feeds the operational pipeline:
 
@@ -207,7 +207,7 @@ This mirrors ARK's existing stack:
 Events → Observations → Projections
 ```
 
-Inspection findings are another **authority source** into the same grammar — not a parallel DVI product.
+Inspection findings are another **authority source** into the same grammar - not a parallel DVI product.
 
 ### Three audience projections (future)
 
@@ -233,7 +233,7 @@ Do **not** build:
 - Separate DVI module bolted beside the RO
 - Customer portal / Send Inspection Link (Phase 2.0+)
 - Auto recommendation or estimate engines tied to inspection rows
-- **Auto Observation / Auto Recommendation / Auto Estimate** — even when technically feasible; prove adoption first (see below)
+- **Auto Observation / Auto Recommendation / Auto Estimate** - even when technically feasible; prove adoption first (see below)
 
 Inspection remains **RO-native authority**. Checklist templates remain **projections**.
 
@@ -251,7 +251,7 @@ Only after those survive contact with the shop should observation/recommendation
 
 ---
 
-## Adoption notebook (floor — not dashboard)
+## Adoption notebook (floor - not dashboard)
 
 Track weekly alongside `php artisan ark:inspection-adoption`:
 
@@ -276,7 +276,7 @@ If that chain does not happen, inspection is still documentation.
 
 A technician **naturally chooses + Finding over `verified_findings`** when recording an observed fact.
 
-Measure with `php artisan ark:inspection-adoption` — notebook, not dashboard theater.
+Measure with `php artisan ark:inspection-adoption` - notebook, not dashboard theater.
 
 Ask on the floor:
 
@@ -285,7 +285,7 @@ Ask on the floor:
 | Answer | Meaning |
 |--------|---------|
 | **+ Finding** | 1.5 workflow is working |
-| **`verified_findings`** | 1.5 still loses to prose — fix friction before derivation or portal |
+| **`verified_findings`** | 1.5 still loses to prose - fix friction before derivation or portal |
 
 ---
 
@@ -299,14 +299,14 @@ Doctrine → Authority → Observation → Workflow → Projection → Derivatio
 
 ---
 
-## Shop build priority (Demo Auto Repair — sequencing)
+## Shop build priority (Demo Auto Repair - sequencing)
 
 Inspection v1.5 is spec-ready but **not the front-door blocker**. Prioritize when scheduling implementation work:
 
-1. **Today / Active Repair Orders board** — advisors struggling to find ROs is daily operational friction affecting every repair order.
-2. **Portal / public website unification** — customer surface continuity.
-3. **Inspection v1.5 UI pass** — finding-first workflow after the above, or in parallel only if RO discovery is unblocked.
+1. **Today / Active Repair Orders board** - advisors struggling to find ROs is daily operational friction affecting every repair order.
+2. **Portal / public website unification** - customer surface continuity.
+3. **Inspection v1.5 UI pass** - finding-first workflow after the above, or in parallel only if RO discovery is unblocked.
 
 Inspection doctrine is stable. Do not let inspection UI work displace urgent workboard/RO discovery fixes.
 
-Advisor discoverability: see `docs/operations/advisor-cockpit-discoverability-v1.md` — **Phase A (advisor cockpit) outranks inspection UI** at Demo Auto Repair.
+Advisor discoverability: see `docs/operations/advisor-cockpit-discoverability-v1.md` - **Phase A (advisor cockpit) outranks inspection UI** at Demo Auto Repair.

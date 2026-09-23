@@ -10,7 +10,7 @@
         </p>
 
         <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {{-- Mission first — not Billing / Domains on day one --}}
+            {{-- Mission first - not Billing / Domains on day one --}}
             <div class="sm:col-span-2 lg:col-span-2 rounded-2xl border border-[var(--cloud-cerulean)] bg-white p-6 sm:p-7 shadow-[0_24px_60px_-40px_rgba(0,153,204,0.55)]">
                 <div class="flex items-baseline justify-between gap-3">
                     <p class="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--cloud-muted)]">Your first jobs</p>
@@ -19,7 +19,7 @@
                     </p>
                 </div>
                 <p class="mt-2 text-[var(--cloud-ink-soft)]">
-                    Open the workspace and run the floor — start here.
+                    Open the workspace and run the floor - start here.
                 </p>
                 <ul class="mt-5 space-y-3">
                     @foreach ($missionSteps as $step)

@@ -4,7 +4,7 @@
 **Product name:** Conversations  
 **Engineering milestone (internal only):** Inbox Rewrite  
 
-> **Doctrine frozen.** The next improvement must come from watching advisors use Conversations—not from editing this document.
+> **Doctrine frozen.** The next improvement must come from watching advisors use Conversations - not from editing this document.
 >
 > **Conversations is the operational memory of the repair shop.** Everything else is implementation.
 
@@ -18,7 +18,7 @@
 
 **Do not optimize for beautiful Threads. Optimize for advisors getting back to work in under five seconds.**
 
-If an advisor opens Conversations and, within a few seconds, knows who needs them, why, what happened, and what to do next — H has succeeded, even if visual refinements remain.
+If an advisor opens Conversations and, within a few seconds, knows who needs them, why, what happened, and what to do next - H has succeeded, even if visual refinements remain.
 
 ---
 
@@ -37,7 +37,7 @@ Shop          → What is happening across the operation?
 
 **A Thread is the operational memory of a customer relationship, projected from multiple communication authorities.**
 
-Conversations is an operational triage surface — not a messaging product.
+Conversations is an operational triage surface - not a messaging product.
 
 Decision tests:
 
@@ -46,7 +46,7 @@ Decision tests:
 3. Reduce navigation?
 4. Make the operational next action obvious?
 
-**Non-regression:** The advisor sees who needs them — never which channel rang. An inbox row is a waiting relationship, never a transport label (SMS, Call, Portal, Email).
+**Non-regression:** The advisor sees who needs them - never which channel rang. An inbox row is a waiting relationship, never a transport label (SMS, Call, Portal, Email).
 
 **Protect forever:** Calls & VM remains an **evidence** surface. Workflow (Conversations) and evidence are different surfaces. Do not delete Calls & VM because it appears duplicated.
 
@@ -73,7 +73,7 @@ Engineering acceptance checklist. H0 is incomplete until every box holds.
 | --- | --- |
 | **One Relationship** | Survives spouses, fleet contacts, phone/email changes, SMS → email → portal |
 | **One Thread** | All interactions compose into one Thread projection |
-| **One Turn** | Whose move — computed from authority, never advisor-editable |
+| **One Turn** | Whose move - computed from authority, never advisor-editable |
 | **One Identity** | Relationship header before the story (vehicle, RO, estimate, activity, assignee) |
 | **One Story** | Every customer-facing interaction in one chronological operational narrative regardless of transport |
 | **One Next Action** | Workspace makes the operational next action obvious |
@@ -101,7 +101,7 @@ A Resolved Thread can become Waiting on Shop again when the customer replies (St
 
 Primary list navigation is by **Turn** (with counts) among Active relationships. Resolved and Archived are Status filters.
 
-Turns are **computed** from authority (last customer event, last shop event, unresolved commitments, pending approvals, unhandled call coverage, etc.). Advisors never flip Turns manually — that would turn truth into tags.
+Turns are **computed** from authority (last customer event, last shop event, unresolved commitments, pending approvals, unhandled call coverage, etc.). Advisors never flip Turns manually - that would turn truth into tags.
 
 ---
 
@@ -115,7 +115,7 @@ Customer replied to estimate · 2 min ago
 2018 F-150 · Brake Estimate
 ```
 
-**Reasons must be explainable** — derived from authority events. Examples: Customer replied · Missed inbound call · Estimate viewed · Estimate approved · Inspection completed · Payment received.
+**Reasons must be explainable** - derived from authority events. Examples: Customer replied · Missed inbound call · Estimate viewed · Estimate approved · Inspection completed · Payment received.
 
 **Forbidden:** Inferred or generative phrasing such as “Customer may need follow-up.” Reason must support What / Why / Show me.
 
@@ -159,7 +159,7 @@ Identity
   → Story (+ Evidence expand)
   → Shop Context
   → Actions
-  → (Summary when earned — not required)
+  → (Summary when earned - not required)
 ```
 
 Advisor rhythm: Who? → What happened? → What am I looking at? → What do I do?
@@ -215,7 +215,7 @@ H3   Compose Anywhere + Search Everywhere
 
 | Slice | Delivers |
 | --- | --- |
-| **H0** | Prove The Six Ones — no chrome |
+| **H0** | Prove The Six Ones - no chrome |
 | **H1** | Turn nav with counts · Reason-led rows · never transport as row identity |
 | **H2** | Identity → Story (+ Evidence) → Shop Context → Actions |
 | **H3** | Compose: search → type → send · One search everywhere: customer · plate · VIN · phone · RO · invoice · estimate · appointment |
@@ -224,9 +224,9 @@ H3   Compose Anywhere + Search Everywhere
 
 ## Floor success
 
-1. Opens Conversations — Turn counts, not channel piles.
-2. Row shows relationship + Reason + age — knows why without opening.
-3. Opens Thread — Identity, chronological Story, Shop Context, clear Next Action — within five seconds.
+1. Opens Conversations - Turn counts, not channel piles.
+2. Row shows relationship + Reason + age - knows why without opening.
+3. Opens Thread - Identity, chronological Story, Shop Context, clear Next Action - within five seconds.
 4. Finds Sarah / plate / RO without hunting (H3).
 5. Calls & VM still available as evidence.
 

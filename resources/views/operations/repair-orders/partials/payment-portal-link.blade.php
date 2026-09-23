@@ -65,7 +65,7 @@
         >
             <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Payment portal link</p>
             <p class="mt-0.5 text-xs leading-4 text-slate-500">
-                Issued invoice balance only. Send from Comms on the RO or Customer Hub — preview here before texting.
+                Issued invoice balance only. Send from Comms on the RO or Customer Hub - preview here before texting.
             </p>
             <div class="mt-2 flex flex-wrap items-center gap-2">
                 @if ($canShare)

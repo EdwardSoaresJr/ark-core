@@ -1,7 +1,7 @@
-# ARK — Event-Native Platform v1
+# ARK - Event-Native Platform v1
 
 **Status:** Architecture **closed** until implementation proves the model cannot express reality.  
-**Vocabulary:** [`ark-business-language-v1.md`](ark-business-language-v1.md) — naming disputes start here.
+**Vocabulary:** [`ark-business-language-v1.md`](ark-business-language-v1.md) - naming disputes start here.
 
 ---
 
@@ -9,9 +9,9 @@
 
 > **ARK is an event-native operating system that models how an automotive repair shop actually works.**
 
-Not merely helping run a shop — **modeling its reality**.
+Not merely helping run a shop - **modeling its reality**.
 
-Desktop, Companion, voice, AI, analytics, automation, portal — different ways of **interacting with that shared model**.
+Desktop, Companion, voice, AI, analytics, automation, portal - different ways of **interacting with that shared model**.
 
 Nothing in this sentence says Laravel, Flutter, MySQL, Asterisk, or Twilio. That is intentional.
 
@@ -19,28 +19,28 @@ Nothing in this sentence says Laravel, Flutter, MySQL, Asterisk, or Twilio. That
 
 ## ARK doctrine stack (how the documents stack)
 
-Looking back, these are not separate debates — they **stack**:
+Looking back, these are not separate debates - they **stack**:
 
 ```text
-Pressure First                    — observe before enforce · automate
+Pressure First                    - observe before enforce · automate
         ↓
-Truth Stack                       — events are truth; projections summarize
+Truth Stack                       - events are truth; projections summarize
         ↓
-Authority Model                   — who may say this is true
+Authority Model                   - who may say this is true
         ↓
-Business Language                 — dictionary; authority · event · observation · projection
+Business Language                 - dictionary; authority · event · observation · projection
         ↓
-Event Contracts                   — business facts; eight questions per verb
+Event Contracts                   - business facts; eight questions per verb
         ↓
-Authority Interaction Map         — how authorities relate without owning each other
+Authority Interaction Map         - how authorities relate without owning each other
         ↓
-Event Stream Engine               — infrastructure; organizes events by scope
+Event Stream Engine               - infrastructure; organizes events by scope
         ↓
-Observations                      — what it means
+Observations                      - what it means
         ↓
-Projections                       — operator questions; never invent events
+Projections                       - operator questions; never invent events
         ↓
-Surfaces                          — Companion · desktop · APIs · portal · voice
+Surfaces                          - Companion · desktop · APIs · portal · voice
 ```
 
 **Runtime stack (same model, one sentence per layer):**
@@ -74,7 +74,7 @@ Bad: `CustomerPaymentCompleted` in code when the language says **Payment Receive
 
 Architecture is **closed**, not forever.
 
-**Reopen doctrine only when:** implementation teaches you something the model **cannot express** — not when implementation is inconvenient.
+**Reopen doctrine only when:** implementation teaches you something the model **cannot express** - not when implementation is inconvenient.
 
 Until then: stop writing architecture documents. Make **E1 delightfully boring**.
 
@@ -108,7 +108,7 @@ E3    Shell
 E4    Surfaces
 ```
 
-**E1 proves:** every business event contract has **exactly one** authoritative implementation path — not "every mapper maps correctly."
+**E1 proves:** every business event contract has **exactly one** authoritative implementation path - not "every mapper maps correctly."
 
 **Success signal:** E1 feels like filling in a spreadsheet, not inventing ideas.
 
@@ -119,4 +119,4 @@ E4    Surfaces
 **Wrong:** Summarize the customer.  
 **Right:** Interpret this scoped stream.
 
-Observations consume engine output. Projections render events — they do not author them.
+Observations consume engine output. Projections render events - they do not author them.

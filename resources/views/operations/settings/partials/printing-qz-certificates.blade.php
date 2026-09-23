@@ -9,7 +9,7 @@
     <div class="border-b border-slate-200 pb-2">
         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Certificate &amp; silent printing</p>
         <h3 class="text-sm font-black text-slate-950">ARK-owned QZ Tray setup</h3>
-        <p class="mt-0.5 text-xs leading-5 text-slate-500">Stock QZ Tray from <a href="https://qz.io/download/" class="underline decoration-slate-300 hover:text-slate-900" target="_blank" rel="noopener">qz.io</a> — no fork. Server signs print requests; each workstation trusts ARK Root CA via <code class="text-[11px]">override.crt</code>.</p>
+        <p class="mt-0.5 text-xs leading-5 text-slate-500">Stock QZ Tray from <a href="https://qz.io/download/" class="underline decoration-slate-300 hover:text-slate-900" target="_blank" rel="noopener">qz.io</a> - no fork. Server signs print requests; each workstation trusts ARK Root CA via <code class="text-[11px]">override.crt</code>.</p>
     </div>
 
     <div class="grid gap-px border border-slate-300 bg-slate-300 sm:grid-cols-2 lg:grid-cols-4">
@@ -64,14 +64,14 @@
 
         <div class="space-y-3 px-3 pb-3">
             <div>
-                <p class="text-xs font-semibold text-slate-800">1. Local machine — generate dev certificates (repo root)</p>
+                <p class="text-xs font-semibold text-slate-800">1. Local machine - generate dev certificates (repo root)</p>
                 <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Do not commit output. Root key stays offline.</p>
                 <pre class="ops-printing-cmd">bash infra/qz-dev/generate-ark-printing-certs.sh
 bash infra/qz-dev/verify-ark-printing-certs.sh</pre>
             </div>
 
             <div>
-                <p class="text-xs font-semibold text-slate-800">2. Server — point <code class="text-[11px]">.env</code> at the signing PEMs</p>
+                <p class="text-xs font-semibold text-slate-800">2. Server - point <code class="text-[11px]">.env</code> at the signing PEMs</p>
                 <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Development paths below. Production: store under VPS <code class="text-[11px]">shared/qz/</code> outside <code class="text-[11px]">public/</code>, chmod 600 key / 644 cert.</p>
                 <pre class="ops-printing-cmd">QZ_CERTIFICATE_PATH=infra/qz-dev/certs/digital-certificate.txt
 QZ_PRIVATE_KEY_PATH=infra/qz-dev/certs/private-key.pem
@@ -83,13 +83,13 @@ QZ_SIGNATURE_ALGORITHM=sha512</pre>
             </div>
 
             <div>
-                <p class="text-xs font-semibold text-slate-800">3. Server — verify signing (SSH on VPS or local Herd)</p>
+                <p class="text-xs font-semibold text-slate-800">3. Server - verify signing (SSH on VPS or local Herd)</p>
                 <pre class="ops-printing-cmd">php artisan tinker --execute="dump(App\Ark\Operations\Printing\QzTraySigning::healthSnapshot());"
 php artisan tinker --execute="dump(App\Ark\Operations\Printing\QzTraySigning::selfTestSigningRoundTrip());"</pre>
             </div>
 
             <div>
-                <p class="text-xs font-semibold text-slate-800">4. Each print workstation — trust ARK Root in stock QZ Tray</p>
+                <p class="text-xs font-semibold text-slate-800">4. Each print workstation - trust ARK Root in stock QZ Tray</p>
                 <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Copy <code class="text-[11px]">infra/qz-dev/certs/override.crt</code> (or production ARK root), restart QZ Tray.</p>
                 <pre class="ops-printing-cmd"># Windows
 copy override.crt "C:\Program Files\QZ Tray\override.crt"
@@ -103,7 +103,7 @@ cp override.crt /opt/qz-tray/override.crt</pre>
 
             <div>
                 <p class="text-xs font-semibold text-slate-800">5. Verify end-to-end</p>
-                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Open <a href="{{ $qz['sign_health_url'] ?? '#' }}" class="underline decoration-slate-300 hover:text-slate-800" target="_blank" rel="noopener">sign-health</a> → <code class="text-[11px]">status: ok</code>. Print a key tag from an RO — no Allow prompt.
+                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Open <a href="{{ $qz['sign_health_url'] ?? '#' }}" class="underline decoration-slate-300 hover:text-slate-800" target="_blank" rel="noopener">sign-health</a> → <code class="text-[11px]">status: ok</code>. Print a key tag from an RO - no Allow prompt.
                     @if (filled($qz['poc_url'] ?? null))
                         Local POC: <a href="{{ $qz['poc_url'] }}" class="underline decoration-slate-300 hover:text-slate-800" target="_blank" rel="noopener">{{ $qz['poc_url'] }}</a>
                     @endif

@@ -11,7 +11,7 @@ use App\Ark\Operations\Telephony\CallSession;
 use Illuminate\Support\Str;
 
 /**
- * Aware push copy — customer name as title, operational context as body.
+ * Aware push copy - customer name as title, operational context as body.
  *
  * Not "New Message." The notification itself should reduce uncertainty.
  */
@@ -74,7 +74,7 @@ final class MobileAwarePushCopy
             ? $session->repairOrder
             : $context?->openRepairOrders->first()?->repairOrder;
 
-        $parts = ['Incoming call — open ARK to answer.'];
+        $parts = ['Incoming call - open ARK to answer.'];
 
         if ($repairOrder instanceof RepairOrder) {
             $status = $repairOrder->statusDisplayLabel();

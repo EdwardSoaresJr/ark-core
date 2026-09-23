@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Messaging;
 
 /**
- * Operator-facing Message Action intents — not canned-SMS template keys.
+ * Operator-facing Message Action intents - not canned-SMS template keys.
  */
 enum MessageActionKey: string
 {

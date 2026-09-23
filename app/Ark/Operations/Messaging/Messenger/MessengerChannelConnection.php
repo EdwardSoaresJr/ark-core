@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Messaging\Messenger;
 
 /**
- * Messenger channel connection projection — transport not bundled in Core.
+ * Messenger channel connection projection - transport not bundled in Core.
  */
 final class MessengerChannelConnection
 {

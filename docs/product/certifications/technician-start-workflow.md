@@ -1,14 +1,14 @@
-# Certification record — Technician Start Workflow
+# Certification record - Technician Start Workflow
 
 **Certification:** Technician Start Workflow  
-**Track:** B — ARK Staff · Workflow 2  
+**Track:** B - ARK Staff · Workflow 2  
 **Role:** Technician (Landon)  
 **Owner:** Alex Rivera  
 **Scenario source:** Tech walks to vehicle · phone only · no desktop
 
 ## Why this matters
 
-Landon can start production at the car — assigned work, vehicle context, concern, inspection, photos, recommendations, internal note — without returning to a bay PC or asking the advisor what to do.
+Landon can start production at the car - assigned work, vehicle context, concern, inspection, photos, recommendations, internal note - without returning to a bay PC or asking the advisor what to do.
 
 ---
 
@@ -22,7 +22,7 @@ Landon can start production at the car — assigned work, vehicle context, conce
 
 ---
 
-## Operational acceptance — phone only
+## Operational acceptance - phone only
 
 ```
 Assigned work
@@ -45,7 +45,7 @@ Done
 | Step | Acceptance | Status | Proof |
 | --- | --- | --- | --- |
 | Assigned RO visible on Work | From Customer Arrival assignment | ⬜ | |
-| Vehicle + concern context | No search — opens from assignment | ⬜ | |
+| Vehicle + concern context | No search - opens from assignment | ⬜ | |
 | Inspection checklist | Record at vehicle | ⬜ | |
 | Photos | Camera-first capture | ⬜ | |
 | Recommendations / findings | Document needed work | ⬜ | |

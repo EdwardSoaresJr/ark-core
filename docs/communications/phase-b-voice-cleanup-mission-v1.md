@@ -1,4 +1,4 @@
-# ARK Voice Cleanup Sprint — Phase B Mission
+# ARK Voice Cleanup Sprint - Phase B Mission
 
 **Status:** APPROVED · **Priority:** P0  
 **Objective:** Erase every trace of Twilio Programmable Voice from ARK and ark-mobile while preserving 100% production PBX behavior.
@@ -32,13 +32,13 @@ If any code contradicts this model, assume obsolete until proven otherwise.
 | # | Rule |
 | --- | --- |
 | 1 | No new abstractions without two production implementations |
-| 2 | Keep **`ArkVoiceTransport`** — never rename to `AsteriskVoiceTransport` |
-| 3 | Delete — do not deprecate, wrap, or leave for later |
-| 4 | **No behavior changes** — cleanup only (see ark-cleanup-sprint-discipline.mdc) |
+| 2 | Keep **`ArkVoiceTransport`** - never rename to `AsteriskVoiceTransport` |
+| 3 | Delete - do not deprecate, wrap, or leave for later |
+| 4 | **No behavior changes** - cleanup only (see ark-cleanup-sprint-discipline.mdc) |
 
 ---
 
-## Phase B1 — Inventory (no code changes)
+## Phase B1 - Inventory (no code changes)
 
 Deliverable: [ark-mobile-voice-cleanup-inventory-v1.md](../mobile/ark-mobile-voice-cleanup-inventory-v1.md)
 
@@ -48,7 +48,7 @@ Unknown → investigate → classify. **Zero Unknown at B1 sign-off.**
 
 ---
 
-## Phase B2 — Mechanical erasure
+## Phase B2 - Mechanical erasure
 
 Delete Dead · Rename Rename · nothing else.
 
@@ -70,7 +70,7 @@ Asterisk behavior · dialplan · PJSIP · SIP routing · registration · RTP · 
 
 ---
 
-## Backend (Phase D — **not started**; observe first)
+## Backend (Phase D - **not started**; observe first)
 
 Run the shop after Phase B before deleting backend PV. See [voice-runtime-authority.md](../runtime/voice-runtime-authority.md#observation-period-before-phase-d).
 
@@ -105,6 +105,6 @@ New engineer clones both repos; within 30 seconds:
 
 No ProviderManager · Strategy · RuntimeSelector · Twilio Programmable Voice.
 
-**Goal:** delete confusion, not lines of code — one obvious voice architecture.
+**Goal:** delete confusion, not lines of code - one obvious voice architecture.
 
 > **Success measure:** The measure of success is not how much Twilio code was deleted. The measure of success is whether a new engineer can identify the entire production voice runtime in under 30 seconds without encountering obsolete architectural concepts.

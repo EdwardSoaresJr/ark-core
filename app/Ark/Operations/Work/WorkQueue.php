@@ -24,7 +24,7 @@ enum WorkQueue: string
     public function description(): string
     {
         return match ($this) {
-            self::Tasks => 'Internal shop work — vendors, warranty, tools, coordination.',
+            self::Tasks => 'Internal shop work - vendors, warranty, tools, coordination.',
             self::FollowUps => 'Customer callbacks and revenue waiting on the next touch.',
             self::Scheduled => 'Customer decisions snoozed until a future day.',
             self::Comms => 'Customer communication pressure requiring action.',

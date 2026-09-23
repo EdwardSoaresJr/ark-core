@@ -10,7 +10,7 @@ use App\Ark\Operations\Telephony\TelephonyExtension;
 use App\Models\User;
 
 /**
- * Station orientation — situation at a place, not device inventory.
+ * Station orientation - situation at a place, not device inventory.
  *
  * Surfaces: VVX microbrowser, Shop Walk, portable station when bound to a station.
  */
@@ -91,7 +91,7 @@ final class StationOrientationProjection
     }
 
     /**
-     * Live call at this station — operator ownership or ringing extension on this desk phone.
+     * Live call at this station - operator ownership or ringing extension on this desk phone.
      *
      * @return array{posture: string, detail: string, call_session_id: int}|null
      */
@@ -211,7 +211,7 @@ final class StationOrientationProjection
         }
 
         if ($operator === null) {
-            return "{$workstation->name} is ready — sign in to answer customers";
+            return "{$workstation->name} is ready - sign in to answer customers";
         }
 
         return "{$workstation->name} is ready for customers";

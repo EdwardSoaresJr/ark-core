@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 final class ShopBehaviorPulse
 {
     /**
-     * Live queue pressure — counts and operational hints, not revenue.
+     * Live queue pressure - counts and operational hints, not revenue.
      *
      * @return list<array{label: string, count: int, hint: string, tone: string}>
      */

@@ -21,7 +21,7 @@ final class FinancialPositionCalculator
         $invoice = $this->issuedInvoice($repairOrder);
         $entries = $this->activeEntries($repairOrder);
 
-        $coverageCents = 0; // F7 — keep interface; return zero.
+        $coverageCents = 0; // F7 - keep interface; return zero.
 
         if ($invoice !== null) {
             $approvedWorkCents = InvoiceSnapshotBuilder::invoiceTotalCents($invoice->snapshot_json ?? []);

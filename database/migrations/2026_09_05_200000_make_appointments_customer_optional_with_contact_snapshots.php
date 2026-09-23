@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Appointment becomes an independent booking record:
- * - customer_id optional (nullOnDelete — history survives customer deletion)
+ * - customer_id optional (nullOnDelete - history survives customer deletion)
  * - booking-time contact snapshots
  * - optional lead provenance
  */

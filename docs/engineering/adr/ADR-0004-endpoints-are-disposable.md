@@ -12,7 +12,7 @@ An **endpoint (communication device) is disposable.** A **workstation is persist
 
 ## Consequences
 
-- Device lifecycle is link/unlink/reprovision — not "move extension."
+- Device lifecycle is link/unlink/reprovision - not "move extension."
 - `EndpointConfigurationProjection` is keyed to device hardware identity; regeneration is cheap.
 - UI and APIs must not treat device replacement as telephony reassignment.
 - See [ADR-0001](ADR-0001-workstations-own-business-identity.md) for identity ownership.

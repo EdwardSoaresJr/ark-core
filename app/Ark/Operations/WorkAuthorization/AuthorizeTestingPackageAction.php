@@ -60,7 +60,7 @@ final class AuthorizeTestingPackageAction
                 'position' => max(1, $workGroupPosition),
             ]);
 
-            // Package sell line exists so Estimate can later hold a price — $0 until Pricing Policy.
+            // Package sell line exists so Estimate can later hold a price - $0 until Pricing Policy.
             $line = $repairOrder->lines()->create([
                 'repair_order_concern_id' => $concern->id,
                 'repair_order_work_group_id' => $workGroup->id,

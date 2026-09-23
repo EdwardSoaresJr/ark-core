@@ -6,7 +6,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Support\Collection;
 
 /**
- * Technician working object for one inspection point — condition and evidence live here.
+ * Technician working object for one inspection point - condition and evidence live here.
  */
 final class InspectionItemLivingRecordProjection
 {

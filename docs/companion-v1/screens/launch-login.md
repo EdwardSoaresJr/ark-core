@@ -1,14 +1,14 @@
-# Screen spec — Launch & Login
+# Screen spec - Launch & Login
 
 **ID:** `companion.screen.launch-login`  
 **Role(s):** All staff  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Open Companion → authenticated → right role home** in under 10 seconds on a cold start — no admin jargon.
+**Open Companion → authenticated → right role home** in under 10 seconds on a cold start - no admin jargon.
 
 ---
 
@@ -38,26 +38,26 @@
 
 ### 2. Login
 
-- Email · password — same credentials as `/app/login`
-- **Sign in** — primary full-width
+- Email · password - same credentials as `/app/login`
+- **Sign in** - primary full-width
 - Forgot password → in-app browser to staff reset URL
-- Error — inline · no toast-only failures
+- Error - inline · no toast-only failures
 
 
-### 3. Shop select (P1 — spec now, ship later)
+### 3. Shop select (P1 - spec now, ship later)
 
 - Only when user belongs to multiple shops
 - List shop names · last used pinned
-- P0: **skip** — auto single tenant
+- P0: **skip** - auto single tenant
 
 ### 4. PIN / station unlock (P1)
 
-- Shared bay tablet pattern — not Edward's phone P0
+- Shared bay tablet pattern - not Edward's phone P0
 - Document: 4–6 digit · operator name shown after unlock
 
 ### 5. Permissions prompt (first run + upgrade)
 
-Sequential sheets — not one scary wall:
+Sequential sheets - not one scary wall:
 
 | Permission | Copy (operator language) |
 |------------|---------------------------|
@@ -67,7 +67,7 @@ Sequential sheets — not one scary wall:
 
 **Not now:** contacts upload · location · camera (request in inspection flow)
 
-Each: **Allow** · **Not now** · skip does not block login — degrades features with calm banner
+Each: **Allow** · **Not now** · skip does not block login - degrades features with calm banner
 
 ---
 
@@ -79,7 +79,7 @@ Each: **Allow** · **Not now** · skip does not block login — degrades feature
 | Technician | [`my-work.md`](my-work.md) |
 | Owner (owner mode P1) | Owner pulse |
 
-Capabilities payload from server — **no hardcoded role tabs in Flutter**
+Capabilities payload from server - **no hardcoded role tabs in Flutter**
 
 ---
 

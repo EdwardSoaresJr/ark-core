@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\RepairOrders\Status;
 
 /**
- * Catalog color tokens for RO statuses — shop-configurable in Workflow Defaults.
+ * Catalog color tokens for RO statuses - shop-configurable in Workflow Defaults.
  * Maps to operational chip / card tones used on boards and indexes.
  */
 final class RepairOrderStatusColor

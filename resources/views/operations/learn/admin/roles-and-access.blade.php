@@ -14,7 +14,7 @@
             </tr>
             <tr>
                 <td>Technician</td>
-                <td>Workboard and repair order <strong>view</strong> — read sold work, no estimate editing.</td>
+                <td>Workboard and repair order <strong>view</strong> - read sold work, no estimate editing.</td>
             </tr>
             <tr>
                 <td>Admin</td>
@@ -31,7 +31,7 @@
     </ul>
 
     <h3>Assigning roles</h3>
-    <p>Manage staff in <strong>Settings → Staff</strong>. Each user should have one primary staff role matching their job. Mixed roles are supported — they will see multiple {{ \App\Support\Branding\Branding::learnName() }} sections.</p>
+    <p>Manage staff in <strong>Settings → Staff</strong>. Each user should have one primary staff role matching their job. Mixed roles are supported - they will see multiple {{ \App\Support\Branding\Branding::learnName() }} sections.</p>
 
     <h3>Master admin</h3>
     <p>Platform-level accounts may exist outside normal shop roles. Keep those limited to owners and IT.</p>

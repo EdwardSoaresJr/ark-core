@@ -61,7 +61,7 @@
                         </form>
                     @elseif ($financial['invoiceRefreshBlockedBySettlement'] ?? false)
                         <p class="mt-2 font-semibold text-amber-900/80">
-                            Write-off, refund, or store credit is on file — invoice cannot auto-update. Use credit memo, adjustment, or refund workflows.
+                            Write-off, refund, or store credit is on file - invoice cannot auto-update. Use credit memo, adjustment, or refund workflows.
                         </p>
                     @endif
                 @endcan
@@ -326,14 +326,14 @@
                         @if ($financial['excludesFromPostedSales'] ?? false)
                             Closing posts the job for history. The invoice stays in posted invoice sales. The write-off is reported separately.
                         @else
-                            Posts this job into sales reporting. Closing as Paid posts automatically — use this when the job is sold but not closed yet.
+                            Posts this job into sales reporting. Closing as Paid posts automatically - use this when the job is sold but not closed yet.
                         @endif
                     </p>
                 @elseif ($financial['isPosted'])
                     <p class="text-xs font-semibold leading-4 {{ ($financial['excludesFromPostedSales'] ?? false) ? 'text-slate-700' : 'text-emerald-800' }}">
                         Posted {{ $financial['postedAtLabel'] }}
                         @if ($financial['excludesFromPostedSales'] ?? false)
-                            · {{ $financial['collectionDispositionLabel'] }} — invoice stays in posted invoice sales. Write-off is separate.
+                            · {{ $financial['collectionDispositionLabel'] }} - invoice stays in posted invoice sales. Write-off is separate.
                         @else
                             · included in posted invoice sales.
                         @endif

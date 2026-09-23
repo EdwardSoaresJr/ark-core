@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Immutable flag recognition when a concern first earns previously unrecognized labor.
  *
- * Identity is the labor line — not “this concern was ever completed.”
+ * Identity is the labor line - not “this concern was ever completed.”
  * Completed → reopen → Completed cannot duplicate already-recognized lines;
  * newly added labor on a later Completed can recognize without rewriting the past.
  */

@@ -31,8 +31,8 @@ class PortalObservationReportCommand extends Command
             collect($data['funnel'])->map(fn (array $row): array => [
                 $row['step'],
                 (string) $row['count'],
-                $row['unique_sessions'] !== null ? (string) $row['unique_sessions'] : '—',
-                $row['rate_of_prior'] ?? '—',
+                $row['unique_sessions'] !== null ? (string) $row['unique_sessions'] : '-',
+                $row['rate_of_prior'] ?? '-',
             ])->all(),
         );
         $this->newLine();

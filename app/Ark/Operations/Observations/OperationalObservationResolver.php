@@ -8,7 +8,7 @@ use App\Ark\Operations\Timeline\OperationalEventTone;
 use Illuminate\Support\Carbon;
 
 /**
- * Observation layer — authority events in, operational observations out.
+ * Observation layer - authority events in, operational observations out.
  *
  * Not pressure. Not tasks. Not authority. Not event sourcing.
  * Most authority changes produce zero observations.
@@ -134,7 +134,7 @@ final class OperationalObservationResolver
         $last = $customerFacing->last();
 
         if ($last !== null && $last->tone === OperationalEventTone::Shop) {
-            // Carbon 3 returns float diffs — cast before any operator-facing copy.
+            // Carbon 3 returns float diffs - cast before any operator-facing copy.
             $hoursWaiting = max(0, (int) $last->occurredAt->diffInHours(now()));
             $severity = match (true) {
                 $hoursWaiting >= 24 => OperationalObservationSeverity::High,
@@ -151,8 +151,8 @@ final class OperationalObservationResolver
                 entities: $context,
                 headline: 'Customer waiting response',
                 description: $hoursWaiting >= 1
-                    ? "Shop replied {$hourLabel} ago — no customer response since."
-                    : 'Shop replied recently — waiting on customer response.',
+                    ? "Shop replied {$hourLabel} ago - no customer response since."
+                    : 'Shop replied recently - waiting on customer response.',
                 sourceEvents: [OperationalObservationSourceEvent::fromEntry($last)],
                 metadata: array_merge($this->sourceMetadata($last), [
                     'hours_waiting' => $hoursWaiting,

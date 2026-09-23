@@ -6,7 +6,7 @@ namespace App\Ark\Operations\RepairOrders;
  * Presents operational meaning for an existing scope on the worksheet.
  *
  * Intake captures meaning once; this projection keeps it visible for every
- * scope — new and legacy — without re-running the intake control.
+ * scope - new and legacy - without re-running the intake control.
  *
  * Staff-only context belongs on Note / Supporting Note lines (is_private),
  * not on a parallel concern.notes Advisor Note field.

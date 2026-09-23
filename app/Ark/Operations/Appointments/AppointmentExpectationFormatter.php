@@ -26,7 +26,7 @@ final class AppointmentExpectationFormatter
     public static function confirmedShowHeader(Appointment $appointment): string
     {
         return ShopDisplayTimezone::format($appointment->starts_at, 'l, M j · g:i A')
-            ?? '—';
+            ?? '-';
     }
 
     /**

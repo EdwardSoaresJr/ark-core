@@ -80,7 +80,7 @@ final class PartsMatrixTuneAssistant
             'minimum_sample_lines' => self::MIN_SAMPLE_LINES,
             'trustworthy_floor' => (string) config('ark-reports.trustworthy_data_starts_at'),
             'doctrine' => [
-                'matrix_discipline' => 'Follow the parts matrix — margin comes from system pricing, not advisor discounting.',
+                'matrix_discipline' => 'Follow the parts matrix - margin comes from system pricing, not advisor discounting.',
                 'review_cadence' => 'Review closed truth quarterly; simulate before changing live matrix policy.',
                 'mix_note' => 'Parts/labor mix is structural (inspections, parts lists, ARO). Matrix tuning affects parts margin only.',
             ],
@@ -428,7 +428,7 @@ final class PartsMatrixTuneAssistant
         }
 
         if (($stats['override_lines'] ?? 0) > 0) {
-            return 'Overrides present — matrix discipline review';
+            return 'Overrides present - matrix discipline review';
         }
 
         return 'On sampled posture';
@@ -463,7 +463,7 @@ final class PartsMatrixTuneAssistant
             return [
                 'headline' => 'Sampled parts margin meets target',
                 'detail' => "Closed sample at {$actualMargin}% on {$sampleCount} part lines. Matrix discipline posture: ".($matrix['margin_percent'] ?? 'n/a').'%.',
-                'action' => 'Quarterly review only — mark Owner Targets when verified.',
+                'action' => 'Quarterly review only - mark Owner Targets when verified.',
             ];
         }
 

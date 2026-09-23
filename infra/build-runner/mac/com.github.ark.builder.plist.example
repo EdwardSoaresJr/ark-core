@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  OPTIONAL — not installed by default.
+  OPTIONAL - not installed by default.
 
   Ephemeral posture (recommended): use start-build-session.sh / stop-build-session.sh instead.
 

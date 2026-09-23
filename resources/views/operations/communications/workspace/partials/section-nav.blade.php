@@ -15,13 +15,13 @@
         [
             'key' => 'needs',
             'label' => 'Needs attention',
-            'title' => 'Shop action is due now — reply, overdue follow-up, or unresolved call',
+            'title' => 'Shop action is due now - reply, overdue follow-up, or unresolved call',
             'count' => $filterCounts['needs'] ?? null,
         ],
         [
             'key' => 'waiting',
             'label' => 'Waiting',
-            'title' => 'Open — awaiting a customer reply or a follow-up that is not due yet',
+            'title' => 'Open - awaiting a customer reply or a follow-up that is not due yet',
             'count' => $filterCounts['waiting'] ?? null,
         ],
         [

@@ -21,7 +21,7 @@ use App\Ark\Operations\Workboard\WorkboardTriageLaneProjection;
 use Illuminate\Support\Collection;
 
 /**
- * Tekmetric-style operational surface for advisor home cards — chips, promise, recognition.
+ * Tekmetric-style operational surface for advisor home cards - chips, promise, recognition.
  */
 final class AdvisorHomeCardSurfaceProjection
 {
@@ -358,7 +358,7 @@ final class AdvisorHomeCardSurfaceProjection
     }
 
     /**
-     * Latest estimate sent/viewed touch per RO — "Viewed an hour ago" card footers.
+     * Latest estimate sent/viewed touch per RO - "Viewed an hour ago" card footers.
      *
      * @param  list<int|string>  $repairOrderIds
      * @return array<int, array{label: string, kind: string}>

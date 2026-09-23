@@ -76,7 +76,7 @@
                             <li>{{ $bullet }}</li>
                         @endforeach
                     </ul>
-                    <p class="mt-1 text-slate-500">Not confirmed — print uses prepared values until Confirm Installed</p>
+                    <p class="mt-1 text-slate-500">Not confirmed - print uses prepared values until Confirm Installed</p>
                 </div>
             @endif
 
@@ -118,7 +118,7 @@
                         Add at cost
                     </button>
                     <p class="col-span-3 text-[11px] text-slate-500">
-                        Beyond package — Part line at cost. Does not change the package price or Installed history.
+                        Beyond package - Part line at cost. Does not change the package price or Installed history.
                     </p>
                 </form>
             @endif

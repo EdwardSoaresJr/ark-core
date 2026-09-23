@@ -31,7 +31,7 @@ final class DragonFloorBakeoffCommand extends Command
         $tasks = $this->selectedTasks();
 
         if ($this->option('dry-run')) {
-            $this->info('Dragon floor bake-off '.DragonFloorBakeoffCatalog::VERSION.' — '.count($tasks).' tasks');
+            $this->info('Dragon floor bake-off '.DragonFloorBakeoffCatalog::VERSION.' - '.count($tasks).' tasks');
             $this->line(DragonFloorBakeoffCatalog::ACCEPTANCE);
             $this->newLine();
             foreach ($tasks as $task) {

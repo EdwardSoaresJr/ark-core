@@ -1,7 +1,7 @@
-# Certification record — Front Counter
+# Certification record - Front Counter
 
 **Certification:** Front Counter  
-**Track:** A — Operations Platform  
+**Track:** A - Operations Platform  
 **Owner:** Alex Rivera  
 **Scenario source:** [operational-certifications.md](../operational-certifications.md) · [first-contact-floor-checklist.md](../../communications/first-contact-floor-checklist.md)
 
@@ -56,7 +56,7 @@ After this certification, the shop can answer customer calls and texts entirely 
 ## Notes
 
 - Voice cutover: business number on Twilio Elastic SIP Trunk `Demo Auto Repair ARK Voice`; legacy Programmable Voice webhook cleared on the number.
-- Rollback remains Twilio Console only — repoint Voice URL to legacy webhook; no ARK deploy required.
+- Rollback remains Twilio Console only - repoint Voice URL to legacy webhook; no ARK deploy required.
 - Production Certified waits for one week of sustained PSTN on the trunk path without rollback.
 
 ## Corrections

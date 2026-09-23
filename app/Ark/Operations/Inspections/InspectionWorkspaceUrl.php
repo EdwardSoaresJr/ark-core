@@ -9,7 +9,7 @@ final class InspectionWorkspaceUrl
     public const SURFACE_TABLET = 'tablet';
 
     /**
-     * Production inspection host — not Estimate Review.
+     * Production inspection host - not Estimate Review.
      *
      * @param  array<string, scalar|null>  $query
      */
@@ -79,7 +79,7 @@ final class InspectionWorkspaceUrl
     }
 
     /**
-     * Advisor review still lives on Estimate Review — Inspect tab only.
+     * Advisor review still lives on Estimate Review - Inspect tab only.
      *
      * @param  array<string, scalar|null>  $query
      */

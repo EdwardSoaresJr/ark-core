@@ -1,7 +1,7 @@
 # ARK OIDC Design Pass
 
-**Status:** **Accepted** — frozen 2026-06-14. Phase 1b.0 staging spike authorized. No production tokens until spike go/no-go.  
-**Version:** 1.1 — 2026-06-14  
+**Status:** **Accepted** - frozen 2026-06-14. Phase 1b.0 staging spike authorized. No production tokens until spike go/no-go.  
+**Version:** 1.1 - 2026-06-14  
 **Inputs:** `docs/identity/identity-authority-contract.md` (accepted v1.1)  
 **Sequence:** Contract → **Design pass** → Spike (1b.0) → Implementation
 
@@ -15,23 +15,23 @@ The Identity Authority Contract defines **who owns what**. This document selects
 
 > Can ARK become the identity authority for the entire ecosystem **without introducing a second authority**?
 
-**Answer: Yes** — if these hold:
+**Answer: Yes** - if these hold:
 
 | Requirement | How ARK satisfies it |
 |-------------|----------------------|
-| Single user directory for staff | `users` table — no Authentik/Keycloak directory |
-| Single customer directory (future) | `customers` table — separate guard, same issuer pattern |
+| Single user directory for staff | `users` table - no Authentik/Keycloak directory |
+| Single customer directory (future) | `customers` table - separate guard, same issuer pattern |
 | Products project on login | OIDC authorize + token; no sync jobs |
 | Issuer replaceable transport | Passport or first-party code is **implementation**; claims and `sub` stability are **contract** |
 | No external IdP as source of truth | Rejected: Authentik, Keycloak, BookStack-as-directory |
 
-ARK becomes **Identity Authority** the same way it is **Operations Authority** and **Knowledge Registry Authority** — one truth layer, many projections.
+ARK becomes **Identity Authority** the same way it is **Operations Authority** and **Knowledge Registry Authority** - one truth layer, many projections.
 
 Once tokens are issued, the ecosystem inherits claim shapes, client model, JWKS lifecycle, and authorize gates. One design pass now avoids `Problem → OIDC package → Regret`.
 
 ---
 
-## 2. Five design invariants (what matters — not Passport)
+## 2. Five design invariants (what matters - not Passport)
 
 Passport, a first-party issuer, or any OAuth library is **replaceable transport**. These five invariants are **not**.
 
@@ -42,7 +42,7 @@ Passport, a first-party issuer, or any OAuth library is **replaceable transport*
 | `sub` value | `(string) users.id` for Phase 1b |
 | Immutability | **Never** changes for the life of the identity |
 | Forbidden | Email, username, phone, display name |
-| Future | Optional `users.uuid` set at create if PK remapping ever needed — still never email |
+| Future | Optional `users.uuid` set at create if PK remapping ever needed - still never email |
 | Consumer rule | BookStack `external_auth_id` = `sub` forever; email updates do not re-link |
 
 **Test:** Change user email in ARK → same `sub` → same BookStack user row.
@@ -67,7 +67,7 @@ Clients receive a **closed claim surface**. They never learn how ARK stores user
 
 **Forbidden in tokens:** internal ARK ids as extra claims, permission names, shop_settings keys, database hints, Partstech fields, hashed passwords, session ids.
 
-BookStack maps `groups` → BookStack roles. It does not need — and must not receive — ARK schema knowledge.
+BookStack maps `groups` → BookStack roles. It does not need - and must not receive - ARK schema knowledge.
 
 ### 2.3 Product claim authority
 
@@ -86,23 +86,23 @@ Issue ID token with products claim
 Client auto-provisions on first login
 ```
 
-**Future Shop In A Box:** grant `ark_v2` + `arkademy` to a new shop employee without role gymnastics — product slugs are the provisioning vocabulary.
+**Future Shop In A Box:** grant `ark_v2` + `arkademy` to a new shop employee without role gymnastics - product slugs are the provisioning vocabulary.
 
 **Examples (role ≠ product access):**
 
 | Person | Roles (`groups`) | Products |
 |--------|------------------|----------|
-| Customer | — (customer guard, not staff) | `portal` |
+| Customer | - (customer guard, not staff) | `portal` |
 | Technician | `technician` | `ark_v2`, `arkademy` |
 | Technician (restricted) | `technician` | `ark_v2` only |
-| Marketing contractor | — | `ark_web_admin` |
+| Marketing contractor | - | `ark_web_admin` |
 | Owner | `admin` | all staff products |
 
 Authorize gate uses **products**, not **groups**, to admit a client.
 
 ### 2.4 JWKS lifecycle (required before production issuance)
 
-Key management must be defined **before** the first production token — not retrofitted.
+Key management must be defined **before** the first production token - not retrofitted.
 
 | Phase | Behavior | Command / trigger |
 |-------|----------|-------------------|
@@ -124,7 +124,7 @@ Passport path: wrap Passport keys with this lifecycle. First-party path: `OidcKe
 |---|-------|----------|
 | **Directory** | `users` | `customers` |
 | **OIDC clients** | `arkademy`, future `ark_web_admin` | future `portal` |
-| **`sub` namespace** | staff user id | customer id (separate — never collide) |
+| **`sub` namespace** | staff user id | customer id (separate - never collide) |
 | **`groups` claim** | Spatie staff roles | absent or customer-specific |
 | **`products` claim** | `ark_v2`, `arkademy`, … | `portal` |
 | **Phase 1b** | In scope | **Explicitly out of scope** |
@@ -145,11 +145,11 @@ Non-negotiables from the accepted contract:
 | ARK owns user; products project via OIDC | Issuer lives in ARKv2; no external IdP as directory |
 | Projection on login, not sync | No SCIM, no nightly user sync to BookStack |
 | Role ≠ product access | Authorize checks `products`; `groups` is not the gate |
-| `sub` immutable | `users.id` only — see §2.1 |
+| `sub` immutable | `users.id` only - see §2.1 |
 | Closed claim surface | See §2.2 |
 | `shop_id` reserved | Constant for Demo Auto Repair in 1b |
 | One issuer, many clients | Client registry from day one |
-| Staff ≠ customer directories | Separate clients and `sub` namespaces — see §2.5 |
+| Staff ≠ customer directories | Separate clients and `sub` namespaces - see §2.5 |
 | Breeze stays on ARK V2 | Issuer reuses same `users` + password |
 | BookStack first consumer | Auth code + PKCE, `groups`, external id |
 
@@ -161,9 +161,9 @@ Non-negotiables from the accepted contract:
 
 | Option | Recommendation |
 |--------|----------------|
-| **`https://app.demo-auto.test`** | **Phase 1b** — existing staff session, operational host |
+| **`https://app.demo-auto.test`** | **Phase 1b** - existing staff session, operational host |
 | `https://auth.demo-auto.test` | Defer |
-| Per-shop issuers | Reject — violates single authority |
+| Per-shop issuers | Reject - violates single authority |
 
 Routes: `/oauth/*`, discovery at `/.well-known/openid-configuration`.  
 BookStack: `OIDC_ISSUER=https://app.demo-auto.test`.
@@ -182,16 +182,16 @@ Must support: custom claims (`groups`, `products`, `shop_id`), authorize hook fo
 
 ### 5.2 First-party minimal issuer
 
-Fallback: `app/Ark/Runtime/Identity/Oidc/` — discovery, authorize, token, userinfo, JWKS, key repository.
+Fallback: `app/Ark/Runtime/Identity/Oidc/` - discovery, authorize, token, userinfo, JWKS, key repository.
 
 ### 5.3 Authentik / Keycloak
 
-**Rejected** — second authority to operate; inverts ARK ownership.
+**Rejected** - second authority to operate; inverts ARK ownership.
 
 ### 5.4 Recommendation
 
 **Spike Passport + bridge first.** If bridge fails invariant checklist → first-party issuer.  
-**Spike success criterion:** BookStack login with stable `sub`, product gate, JWKS rotation test — not “package installed.”
+**Spike success criterion:** BookStack login with stable `sub`, product gate, JWKS rotation test - not “package installed.”
 
 ---
 
@@ -209,7 +209,7 @@ Fallback: `app/Ark/Runtime/Identity/Oidc/` — discovery, authorize, token, user
 9. Client projects user on first login
 ```
 
-**Product gate is step 5 — before any token exists.**
+**Product gate is step 5 - before any token exists.**
 
 ---
 
@@ -220,7 +220,7 @@ Fallback: `app/Ark/Runtime/Identity/Oidc/` — discovery, authorize, token, user
 | Claim | Required | Source |
 |-------|----------|--------|
 | `iss` | yes | `https://app.demo-auto.test` |
-| `sub` | yes | `(string) users.id` — immutable |
+| `sub` | yes | `(string) users.id` - immutable |
 | `aud` | yes | client_id |
 | `exp`, `iat`, `auth_time` | yes | standard |
 | `email`, `email_verified`, `name` | yes | profile |
@@ -370,16 +370,16 @@ Optional later: `users.uuid` for immutable `sub` decoupled from PK.
 ## 14. Implementation phases
 
 ```
-1b.0 — Staging spike (go/no-go)
+1b.0 - Staging spike (go/no-go)
   - Bridge or first-party prototype
   - BookStack one login
   - JWKS rotation test
   - Product gate test
   - NO production tokens
 
-1b.1 — Issuer core + key lifecycle commands
-1b.2 — BookStack production cutover
-1b.3 — Silent SSO + optional logout endpoint
+1b.1 - Issuer core + key lifecycle commands
+1b.2 - BookStack production cutover
+1b.3 - Silent SSO + optional logout endpoint
 ```
 
 ---
@@ -426,13 +426,13 @@ If any invariant fails → fix design or switch transport. **Do not ship product
 
 | Invariant | Decision |
 |-----------|----------|
-| Authority | ARK only — no Authentik |
-| `sub` | `users.id` forever — never email |
+| Authority | ARK only - no Authentik |
+| `sub` | `users.id` forever - never email |
 | Client claims | Closed set: sub, email, name, groups, products, shop_id |
-| Access gate | Product access at authorize — before token |
+| Access gate | Product access at authorize - before token |
 | Keys | Create → rotate → revoke before production |
-| Staff vs customer | Separate directories and clients — portal later |
+| Staff vs customer | Separate directories and clients - portal later |
 | Transport | Passport + bridge spike; replaceable |
 | Next step | Accept this pass → 1b.0 spike → still no prod tokens until go |
 
-**Gate sentence:** If the spike proves ARK can issue tokens meeting §2 without a second authority, Phase 1b.1 is justified. If not, fix the design — not the package.
+**Gate sentence:** If the spike proves ARK can issue tokens meeting §2 without a second authority, Phase 1b.1 is justified. If not, fix the design - not the package.

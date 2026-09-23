@@ -1,8 +1,8 @@
-# Screen spec — Check-in / Arrival
+# Screen spec - Check-in / Arrival
 
 **ID:** `companion.screen.check-in-arrival`  
 **Role(s):** Advisor  
-**Status:** 📝 draft — P1
+**Status:** 📝 draft - P1
 
 ---
 

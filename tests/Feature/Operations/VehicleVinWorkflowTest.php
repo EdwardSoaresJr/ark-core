@@ -122,7 +122,7 @@ test('diagnostic repair order can be created without vin', function () {
     $this->actingAs($advisor)
         ->post(route('operations.customers.repair-orders.drafts.store', $customer), [
             'vehicle_id' => $vehicle->id,
-            'concern_summary' => 'Check engine light — no VIN yet.',
+            'concern_summary' => 'Check engine light - no VIN yet.',
         ])
         ->assertRedirect();
 

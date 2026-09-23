@@ -106,7 +106,7 @@ final class InstallerEnvironmentWriter
             $content .= "\n";
         }
 
-        // Keep temp/backup under install storage — /app is often not writable for new siblings.
+        // Keep temp/backup under install storage - /app is often not writable for new siblings.
         $backupDir = storage_path('app/'.(app()->environment('testing') ? 'install/testing' : 'install'));
         if (! is_dir($backupDir)) {
             @mkdir($backupDir, 0775, true);
@@ -133,7 +133,7 @@ final class InstallerEnvironmentWriter
 
         foreach ($keysWritten as $key) {
             if (! in_array($key, self::SECRET_KEYS, true)) {
-                // Non-secret confirmation only — never log secret values.
+                // Non-secret confirmation only - never log secret values.
                 logger()->info('installer.env.updated', ['key' => $key]);
             } else {
                 logger()->info('installer.env.updated', ['key' => $key, 'secret' => true]);

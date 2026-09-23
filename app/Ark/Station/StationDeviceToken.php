@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Device credential for the Front Counter glass — not a staff User / Sanctum PAT.
+ * Device credential for the Front Counter glass - not a staff User / Sanctum PAT.
  *
  * Scope is /api/station/* GET only. Plaintext shown once at issue; only the hash is stored.
  */

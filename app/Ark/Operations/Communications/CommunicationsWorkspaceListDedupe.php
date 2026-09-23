@@ -7,7 +7,7 @@ use App\Ark\Operations\PhoneNumber;
 /**
  * Collapse Communications workspace list rows that represent the same customer or phone.
  *
- * Conversation wins over lead over call — relationship authority, not per-event rows.
+ * Conversation wins over lead over call - relationship authority, not per-event rows.
  */
 final class CommunicationsWorkspaceListDedupe
 {

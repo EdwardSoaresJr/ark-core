@@ -183,7 +183,7 @@ final class LegacyInvoicePaymentBackfill
                             $repairOrder->fresh(),
                             $writeOffCents,
                             $actor,
-                            'Legacy v1 import remainder — invoice rounding discrepancy, not customer payment.',
+                            'Legacy v1 import remainder - invoice rounding discrepancy, not customer payment.',
                             $writeOffReference,
                             $this->parseTimestamp($legacyInvoice->finalized_at ?? null),
                         );
@@ -309,7 +309,7 @@ final class LegacyInvoicePaymentBackfill
                             $repairOrder->fresh(),
                             $writeOffCents,
                             $actor,
-                            'Legacy v1 import remainder — deposit total vs approved invoice, not customer payment.',
+                            'Legacy v1 import remainder - deposit total vs approved invoice, not customer payment.',
                             $writeOffReference,
                             $latestPaidAt,
                         );

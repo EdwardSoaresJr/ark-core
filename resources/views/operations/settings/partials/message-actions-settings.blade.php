@@ -80,7 +80,7 @@
                     </label>
                     <label class="block sm:col-span-2">
                         <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Tow notes</span>
-                        <textarea name="message_actions[tow_notes]" rows="2" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950" placeholder="Tell them it's for LugsNPlugs — Unit D.">{{ old('message_actions.tow_notes', $messageActions['tow_notes'] ?? '') }}</textarea>
+                        <textarea name="message_actions[tow_notes]" rows="2" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950" placeholder="Tell them it's for LugsNPlugs - Unit D.">{{ old('message_actions.tow_notes', $messageActions['tow_notes'] ?? '') }}</textarea>
                     </label>
                 @elseif ($block['key'] === MessageActionKey::Wifi->value)
                     <label class="block">

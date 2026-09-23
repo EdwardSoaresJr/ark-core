@@ -16,7 +16,7 @@
         @if ($platformVoiceManaged)
             <h3 class="mt-1 text-sm font-black text-slate-950">Hosted Voice (ARK Cloud)</h3>
             <p class="mt-1 max-w-3xl text-xs leading-5 text-slate-600">
-                Inbound Voice for this installation is executed on ARK Platform. Core receives CallSession and media metadata over Connect/Fabric —
+                Inbound Voice for this installation is executed on ARK Platform. Core receives CallSession and media metadata over Connect/Fabric -
                 Core Twilio Voice webhook URLs below are legacy and must not be the Twilio Voice URL for the Hosted shop number.
             </p>
             <div class="mt-4 space-y-2 text-xs leading-5 text-slate-600">

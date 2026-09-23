@@ -18,7 +18,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Disposable recognition projection for customer-facing surfaces.
- * Observes authority only — never mutates customer, vehicle, RO, maintenance, or appointments.
+ * Observes authority only - never mutates customer, vehicle, RO, maintenance, or appointments.
  *
  * @phpstan-type RecognitionVehicle array{
  *     id: int,
@@ -255,7 +255,7 @@ final class CustomerRecognitionProjection
     }
 
     /**
-     * Deferred concerns only — current follow-up authority.
+     * Deferred concerns only - current follow-up authority.
      * Never declined, never invent from recommendations without Deferred disposition.
      *
      * @return list<RadarItem>
@@ -304,7 +304,7 @@ final class CustomerRecognitionProjection
             return '';
         }
 
-        // Labels only — strip dollar amounts advisors may have typed into summaries.
+        // Labels only - strip dollar amounts advisors may have typed into summaries.
         $summary = preg_replace('/\$\s*\d[\d,]*(?:\.\d{2})?/', '', $summary) ?? $summary;
         $summary = trim(preg_replace('/\s+/', ' ', $summary) ?? $summary);
 

@@ -278,7 +278,7 @@
                             @endphp
                             <select name="shop_timezone" required class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
                                 @if ($timezoneValue !== '' && ! in_array($timezoneValue, $timezoneOptions, true))
-                                    <option value="{{ $timezoneValue }}" selected>{{ $timezoneValue }} — choose a listed timezone</option>
+                                    <option value="{{ $timezoneValue }}" selected>{{ $timezoneValue }} - choose a listed timezone</option>
                                 @endif
                                 @foreach ($timezoneOptions as $tz)
                                     <option value="{{ $tz }}" @selected($timezoneValue === $tz)>{{ $tz }}</option>
@@ -370,7 +370,7 @@
                         <div class="mt-4 overflow-hidden rounded-md border border-slate-200 bg-white">
                             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Labor categories</p>
-                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Category defaults drive labor authority on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked). Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment — never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
+                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Category defaults drive labor authority on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked). Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment - never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
                             </div>
                             @error('labor_categories')
                                 <div class="border-b border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{{ $message }}</div>
@@ -469,7 +469,7 @@
                             @method('PATCH')
                         <div class="border border-slate-200 bg-slate-50 px-3 py-2">
                             <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tax outcome</p>
-                            <p class="mt-0.5 text-xs leading-5 text-slate-600">Used when calculating taxable estimate/invoice totals. Set rate, label, and which sell amounts tax applies to — including allocated shop fees when enabled.</p>
+                            <p class="mt-0.5 text-xs leading-5 text-slate-600">Used when calculating taxable estimate/invoice totals. Set rate, label, and which sell amounts tax applies to - including allocated shop fees when enabled.</p>
                         </div>
 
                         <div class="mt-3 grid gap-4 md:grid-cols-2">
@@ -526,7 +526,7 @@
 
                     <div x-show="financialTab === 'shop-fees'" x-cloak class="mt-4 max-w-3xl space-y-4">
                         <p class="text-xs leading-5 text-slate-500">
-                            Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own billing posture — billing classes do not turn fees on or off for the whole repair order.
+                            Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own billing posture - billing classes do not turn fees on or off for the whole repair order.
                         </p>
                         <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" class="grid gap-4 md:grid-cols-3">
                             @csrf
@@ -649,7 +649,7 @@
                             <div class="border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
                                 Markup is the editable pricing policy. Margin is calculated visibility for parts GP health. Matrices affect new part sell pricing; line overrides remain operational exceptions, not hidden settings behavior.
                                 <a href="{{ route('operations.owner.parts-matrix-tune') }}" class="ml-1 font-bold text-slate-700 underline">Matrix tune assistant</a>
-                                — simulate tier changes from closed part-line history before saving live policy.
+                                - simulate tier changes from closed part-line history before saving live policy.
                             </div>
                             @error('parts_matrices')
                                 <div class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{{ $message }}</div>
@@ -786,7 +786,7 @@
                             Billing classes identify the customer for billing and set the default when a new scope is added. Fees, parts matrix, and <strong class="font-semibold text-slate-700">customer document presentation</strong> follow the billing class unless a scope's <strong class="font-semibold text-slate-700">Billing posture</strong> overrides it.
                         </p>
                         <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
-                            Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer — not billing class.
+                            Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer - not billing class.
                         </p>
 
                         @foreach ($settings->customerTypeRows() as $index => $type)
@@ -819,7 +819,7 @@
                                             <option
                                                 value="{{ $profile->value }}"
                                                 @selected(old('customer_types.'.$index.'.document_presentation_profile', $type['document_presentation_profile'] ?? 'retail') === $profile->value)
-                                            >{{ $profile->label() }} — {{ $profile->helpText() }}</option>
+                                            >{{ $profile->label() }} - {{ $profile->helpText() }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -1037,7 +1037,7 @@
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Shop Overhead</p>
                         <h2 class="text-base font-black text-slate-950">Shop overhead worksheet</h2>
-                        <p class="mt-0.5 text-xs leading-5 text-slate-500">Build the shop’s monthly fixed-cost pool and spread it across expected <strong class="font-semibold text-slate-700">billed labor hours</strong>. That produces <strong class="font-semibold text-slate-700">shop overhead / billed hr</strong>, which feeds each technician’s loaded cost under Staff. Technician wages are entered per tech — not here.</p>
+                        <p class="mt-0.5 text-xs leading-5 text-slate-500">Build the shop’s monthly fixed-cost pool and spread it across expected <strong class="font-semibold text-slate-700">billed labor hours</strong>. That produces <strong class="font-semibold text-slate-700">shop overhead / billed hr</strong>, which feeds each technician’s loaded cost under Staff. Technician wages are entered per tech - not here.</p>
                         <p class="mt-1 text-xs leading-5 text-slate-500">
                             Full walkthrough:
                             <x-operations.learn.guide-link role="admin" article="shop-overhead-setup" :label="\App\Support\Branding\Branding::learnName().' → Shop overhead and loaded labor cost'" class="font-semibold text-slate-700 decoration-slate-300 hover:text-slate-950" />
@@ -1235,7 +1235,7 @@
                     <div x-show="workflowTab === 'statuses'" x-cloak>
                         <div class="mt-4 border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-black text-slate-950">Job Board</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Set up the shop queues and the statuses that live in each one. Attention stays derived — it is not a lane or a status color.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Set up the shop queues and the statuses that live in each one. Attention stays derived - it is not a lane or a status color.</p>
                         </div>
                         @include('operations.settings.partials.job-board-lanes')
                         <div class="mt-8 border-b border-slate-100 pb-2">
@@ -1248,7 +1248,7 @@
                     <div x-show="workflowTab === 'inspections'" x-cloak>
                         <div class="mt-4 border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-black text-slate-950">Inspection checklists</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Mobile technician checklists — item labels, photo requirements, and measurements. Templates seed checklist rows on each RO; findings still live on InspectionItem authority.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Mobile technician checklists - item labels, photo requirements, and measurements. Templates seed checklist rows on each RO; findings still live on InspectionItem authority.</p>
                         </div>
                         @include('operations.settings.partials.inspection-template-settings', ['inspectionTemplates' => $inspectionTemplates])
                     </div>
@@ -1256,7 +1256,7 @@
                     <div x-show="workflowTab === 'saved-work'" x-cloak>
                         <div class="mt-4 border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-black text-slate-950">Common Jobs</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Repeat jobs that author a Repair Action plus labor, parts, and fees. After Add Work, the template owns nothing — edit the RO normally.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Repeat jobs that author a Repair Action plus labor, parts, and fees. After Add Work, the template owns nothing - edit the RO normally.</p>
                         </div>
                         @include('operations.settings.partials.work-template-settings', ['workTemplates' => $workTemplates])
                     </div>
@@ -1265,7 +1265,7 @@
                 <section x-show="active === 'operations'" x-cloak>
                     <div class="border-b border-slate-200 px-3 py-3">
                         <h3 class="text-sm font-black text-slate-950">Operations</h3>
-                        <p class="mt-0.5 text-xs text-slate-500">Advisor work surface — scheduling, station presence, and shop workflow options.</p>
+                        <p class="mt-0.5 text-xs text-slate-500">Advisor work surface - scheduling, station presence, and shop workflow options.</p>
                     </div>
 
                     <div class="p-3">

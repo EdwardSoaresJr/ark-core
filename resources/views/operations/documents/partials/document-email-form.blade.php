@@ -1,5 +1,5 @@
 {{--
-  Email paperwork form — viewer, Hub list expand, or RO modal.
+  Email paperwork form - viewer, Hub list expand, or RO modal.
   Props: $customer, $documentId (or $doc with id), $emailUrl optional, $compact optional
 --}}
 @php

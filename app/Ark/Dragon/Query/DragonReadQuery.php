@@ -140,7 +140,7 @@ final class DragonReadQuery
     }
 
     /**
-     * Safe log metadata — no values that may contain PII (concern text, names beyond field ops).
+     * Safe log metadata - no values that may contain PII (concern text, names beyond field ops).
      *
      * @return array<string, mixed>
      */

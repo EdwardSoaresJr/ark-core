@@ -42,7 +42,7 @@ final class PartsTechQuoteLineAttributes
             return $description;
         }
 
-        return $positionLabel.' — '.$description;
+        return $positionLabel.' - '.$description;
     }
 
     private static function descriptionContainsPosition(string $description, string $positionLabel): bool

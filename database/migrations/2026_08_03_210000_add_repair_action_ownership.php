@@ -25,7 +25,7 @@ return new class extends Migration
 
         Schema::create('repair_action_ownership_events', function (Blueprint $table): void {
             $table->id();
-            // Short FK names — default MySQL identifier exceeds 64 chars.
+            // Short FK names - default MySQL identifier exceeds 64 chars.
             $table->unsignedBigInteger('repair_order_work_group_id');
             $table->string('event_kind', 32);
             $table->string('from_owner_type', 32)->nullable();

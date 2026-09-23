@@ -1,15 +1,15 @@
-# Screen spec — Conversation List (Communications)
+# Screen spec - Conversation List (Communications)
 
 **ID:** `companion.screen.conversation-list`  
 **Role(s):** Advisor  
 **Quo ref:** `references/external/quo/quo-threads.png` · `screensdesign-5.webp`  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Who needs a reply?** Scan · tap · reply — with vehicle and RO visible on every row.
+**Who needs a reply?** Scan · tap · reply - with vehicle and RO visible on every row.
 
 ---
 
@@ -33,7 +33,7 @@
 
 Each row (~72–80pt height):
 
-- **Avatar** — customer initials or photo
+- **Avatar** - customer initials or photo
 - **Line 1:** Customer name · time right
 - **Line 2:** Message preview · unread dot
 - **Line 3:** `2019 Civic · RO #1599` · status chip `Waiting approval`
@@ -55,10 +55,10 @@ Each row (~72–80pt height):
 | Tap row | Open conversation thread |
 | Swipe left | Mark read / archive from needs-reply (turn logic) |
 | Swipe right | Call customer |
-| Long press | Quick actions sheet — open RO · assign · mute |
+| Long press | Quick actions sheet - open RO · assign · mute |
 | Pull to refresh | Reload threads |
 | Infinite scroll | Paginate |
-| FAB tap | Compose — pick customer or search |
+| FAB tap | Compose - pick customer or search |
 
 ---
 
@@ -81,7 +81,7 @@ Each row (~72–80pt height):
 
 ## Data & API
 
-**Existing:** `/api/mobile/comms/hub` — verify row shape includes vehicle · RO · estimate posture  
+**Existing:** `/api/mobile/comms/hub` - verify row shape includes vehicle · RO · estimate posture  
 **Extend if missing:** thread list DTO fields for automotive badges
 
 ---

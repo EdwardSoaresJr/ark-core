@@ -1,0 +1,14 @@
+---
+description: Never use the Unicode em dash. Use an ASCII hyphen.
+alwaysApply: true
+---
+
+# No em dash
+
+Never use the Unicode em dash (U+2014). Use the ASCII hyphen (-).
+
+This applies to code, comments, documentation, commit messages, pull requests, UI and customer copy, tests, release notes, and generated prose.
+
+Treat a newly introduced em dash as a style violation and replace it before committing.
+
+Inbound supplier or customer text may still contain an em dash. Match that character with a Unicode escape (`\u2014` or `\x{2014}`), not a literal em dash in source.

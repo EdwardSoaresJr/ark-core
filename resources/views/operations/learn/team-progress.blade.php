@@ -53,7 +53,7 @@
                             </td>
                             <td>
                                 @if ($outstanding->isEmpty())
-                                    <span class="ops-learn-team__none">—</span>
+                                    <span class="ops-learn-team__none">-</span>
                                 @else
                                     <ul class="ops-learn-team__outstanding">
                                         @foreach ($outstanding as $article)

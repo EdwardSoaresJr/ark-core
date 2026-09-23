@@ -21,7 +21,7 @@ That sentence protects the boundary for the next decade.
 
 ## Owns
 
-Durable paperwork / files associated with operational entities — the bytes and the quiet history of what happened to them.
+Durable paperwork / files associated with operational entities - the bytes and the quiet history of what happened to them.
 
 Today ownership is:
 
@@ -31,7 +31,7 @@ Document
  └── may belong to Repair Order (optional)
 ```
 
-Tomorrow may also project onto Vehicle, Warranty Claim, Vendor — **without duplicating bytes**.
+Tomorrow may also project onto Vehicle, Warranty Claim, Vendor - **without duplicating bytes**.
 
 ## Does not own
 
@@ -41,7 +41,7 @@ Tomorrow may also project onto Vehicle, Warranty Claim, Vendor — **without dup
 | Scope / labor structure | **Repair Actions** |
 | Customer authorization of work | **Work Authorization** |
 | Money | **Financial** |
-| Interpretation (OCR, extraction, AI) | Future consumers — never Documents |
+| Interpretation (OCR, extraction, AI) | Future consumers - never Documents |
 
 Estimate/invoice *generation engines* may later emit a Document with `source=generated`. Generation logic stays elsewhere; Documents preserves the resulting paperwork.
 
@@ -51,7 +51,7 @@ Estimate/invoice *generation engines* may later emit a Document with `source=gen
 | --- | --- |
 | `upload` | Advisor uploaded a file |
 | `scan` | Multi-page camera capture assembled to one PDF |
-| `generated` | ARK-produced PDF (estimate, inspection, invoice, signed authorization, warranty claim, customer statement — future) |
+| `generated` | ARK-produced PDF (estimate, inspection, invoice, signed authorization, warranty claim, customer statement - future) |
 
 `generated` is permanent vocabulary. Do not reopen `import`.
 
@@ -81,13 +81,13 @@ Each authority answers one question. Documents answers: *what durable paperwork 
 
 ## Invariants
 
-1. One physical storage object per Document row for a given rendition — never copy bytes to satisfy Customer vs RO (or future Vehicle) visibility.
+1. One physical storage object per Document row for a given rendition - never copy bytes to satisfy Customer vs RO (or future Vehicle) visibility.
 2. Relationships are pointers; visibility is projected from relationships.
 3. Private storage only; authenticated staff streams.
-4. Soft retire — do not casually hard-delete.
+4. Soft retire - do not casually hard-delete.
 5. Wrong file → retire and upload another.
 6. **Rotation creates a new storage object** (new rendition). Never mutate uploaded bytes in place. Protects auditability.
-7. Evidence remains Evidence — a Document may later be *referenced* by Evidence if earned; Documents does not become proof authority.
+7. Evidence remains Evidence - a Document may later be *referenced* by Evidence if earned; Documents does not become proof authority.
 
 ## Projections (disposable)
 
@@ -97,7 +97,7 @@ Each authority answers one question. Documents answers: *what durable paperwork 
 | **Document Timeline** | What happened to this document? |
 | Attach search | Which existing document matches warranty / registration / alignment…? |
 
-Document Timeline is authority events packaged for an audience — same philosophy as Vehicle Timeline, Financial Timeline, Inspection Timeline. v1 **writes** `document_events`; operator timeline UI ships when earned.
+Document Timeline is authority events packaged for an audience - same philosophy as Vehicle Timeline, Financial Timeline, Inspection Timeline. v1 **writes** `document_events`; operator timeline UI ships when earned.
 
 ## Timeline events (quiet)
 

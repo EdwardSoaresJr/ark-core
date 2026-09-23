@@ -1,4 +1,4 @@
-# Communications Workspace Sprint v1 — Who Needs a Reply?
+# Communications Workspace Sprint v1 - Who Needs a Reply?
 
 **Status:** Locked milestone  
 **Effective:** 2026-07-01
@@ -35,7 +35,7 @@ Click → composer → send. Done.
 
 Two criteria. Everything else is secondary.
 
-### 1. Advisor effort — under 30 seconds
+### 1. Advisor effort - under 30 seconds
 
 Not system latency. **Advisor time.**
 
@@ -53,7 +53,7 @@ No searching. No three screens. No deciding which channel first.
 
 **Floor test:** timed advisor effort from click row → send ≤ **30 seconds**.
 
-### 2. Business KPI — one number only
+### 2. Business KPI - one number only
 
 **Median first-response time:** website lead submitted → advisor sends first outbound.
 
@@ -67,7 +67,7 @@ Measure **only this** for the sprint. Not messages sent, emails, calls, or respo
 Instrument:
 
 - Lead submitted timestamp (`leads.created_at` or equivalent event)
-- First advisor outbound on same `conversation_id` (`ConversationMessage` or logged call/email — not system auto-replies)
+- First advisor outbound on same `conversation_id` (`ConversationMessage` or logged call/email - not system auto-replies)
 
 Notebook + query until trusted. No dashboard theater.
 
@@ -91,7 +91,7 @@ Direct operational payoff on day one. Revenue follows when the loop is fast.
 
 ---
 
-## The slice (full path — incremental after reply works)
+## The slice (full path - incremental after reply works)
 
 Prove reply first. Then extend the same thread:
 
@@ -99,19 +99,19 @@ Prove reply first. Then extend the same thread:
 Same thread → Estimate sent → Customer approves → RO updates → Today recommendation retires
 ```
 
-If first reply is fast and measurable, the rest is incremental — not a separate platform expansion.
+If first reply is fast and measurable, the rest is incremental - not a separate platform expansion.
 
 ---
 
 ## Turn-based rhythm (not "resolved")
 
-Real conversations have **whose turn it is** — not unread badges or inbox zero.
+Real conversations have **whose turn it is** - not unread badges or inbox zero.
 
 ```
 Advisor sends first response
         ↓
 Response started → Waiting for customer
-        (leave Needs Attention — not advisor's turn)
+        (leave Needs Attention - not advisor's turn)
         ↓
 Customer replies
         ↓
@@ -121,7 +121,7 @@ Needs Attention returns
 | State | Advisor surface |
 | --- | --- |
 | **Advisor's turn** | Needs Attention |
-| **Customer's turn** | Not in Needs Attention — do not bother the advisor |
+| **Customer's turn** | Not in Needs Attention - do not bother the advisor |
 
 Do not optimize for "Resolved" or "Inbox empty." Optimize for **turn clarity**.
 
@@ -134,7 +134,7 @@ Every first advisor response should transition: **Needs first response** → **W
 ### Needs Attention row
 
 - Customer name (or contact label)
-- Source hint (Website Lead, SMS, Missed call — secondary)
+- Source hint (Website Lead, SMS, Missed call - secondary)
 - Age
 - Turn reason (`Needs first response`, `Customer replied`, etc.)
 
@@ -157,8 +157,8 @@ Quick Replies
   Estimate received · Scheduling · Running behind · Financing · Custom
 ```
 
-- **Quick Replies** — operational snippets advisors pick and edit. Not AI. Not auto-send.
-- **Later:** AI may draft — **not this sprint.** Advisors must become fast first.
+- **Quick Replies** - operational snippets advisors pick and edit. Not AI. Not auto-send.
+- **Later:** AI may draft - **not this sprint.** Advisors must become fast first.
 
 ---
 
@@ -169,7 +169,7 @@ Quick Replies
 | **Needs Attention** | Reactive | Who needs a reply? |
 | **Today** | Strategic | What should we improve or close this week? |
 
-When Ben sits down: **Needs Attention → Jason → Reply.** RO, Hub, Today open from the thread — not instead of it.
+When Ben sits down: **Needs Attention → Jason → Reply.** RO, Hub, Today open from the thread - not instead of it.
 
 **Growth measures demand. Communications converts it.**
 
@@ -179,10 +179,10 @@ When Ben sits down: **Needs Attention → Jason → Reply.** RO, Hub, Today open
 
 | Layer | Rule |
 | --- | --- |
-| **Conversation** | Won — one timeline |
+| **Conversation** | Won - one timeline |
 | **ConversationMessage** | All human comms; `transport` = sms · email · phone · … |
-| **Lead** | Projects into conversation + Needs Attention — not a parallel inbox |
-| **Turn** | Projection on conversation (advisor turn vs customer turn) — not a new authority store |
+| **Lead** | Projects into conversation + Needs Attention - not a parallel inbox |
+| **Turn** | Projection on conversation (advisor turn vs customer turn) - not a new authority store |
 
 **Forbidden:** `EmailMessage`, `EmailThread`, `SmsInbox`, `AttentionItem`, AI auto-replies.
 
@@ -197,10 +197,10 @@ Fastest path wins. Twilio OK. Asterisk not a sprint gate. Advisor does not see t
 ## In scope
 
 1. Website lead → **Needs Attention** row (conversation deduped; one row)
-2. Immediate advisor notification (existing realtime/poll — no new product)
+2. Immediate advisor notification (existing realtime/poll - no new product)
 3. One-click → thread + **one composer** (SMS · Email · Call)
 4. **Quick Replies** (static operational templates)
-5. **Turn projection** — first send → waiting for customer; inbound → back to Needs Attention
+5. **Turn projection** - first send → waiting for customer; inbound → back to Needs Attention
 6. Median first-response instrumentation
 7. *(Stretch)* Same thread → estimate → approve → RO → Today retires
 

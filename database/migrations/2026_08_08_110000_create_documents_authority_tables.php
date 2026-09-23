@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Documents authority — durable paperwork.
+ * Documents authority - durable paperwork.
  * Freeze: A document exists once. Relationships determine where it appears.
  * The physical document is never duplicated merely to satisfy a relationship.
  */

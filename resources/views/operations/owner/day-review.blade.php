@@ -3,7 +3,7 @@
         @if ($targetReviewStale)
             <div class="border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
                 @if ($lastTargetReview)
-                    Last target review: {{ $lastTargetReview }} — overdue for quarterly refresh.
+                    Last target review: {{ $lastTargetReview }} - overdue for quarterly refresh.
                 @else
                     Shop excellence targets have not been reviewed yet.
                 @endif
@@ -32,7 +32,7 @@
                         ])>{{ $priority['count'] }}</span>
                     </li>
                 @empty
-                    <li class="px-3 py-4 text-sm text-slate-500">No queue pressure flagged — shop flow is clear.</li>
+                    <li class="px-3 py-4 text-sm text-slate-500">No queue pressure flagged - shop flow is clear.</li>
                 @endforelse
             </ul>
         </div>
@@ -53,7 +53,7 @@
                     </div>
                     <div class="bg-white px-3 py-2">
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Action rate</p>
-                        <p class="mt-1 text-lg font-black tabular-nums text-slate-950">{{ $nudgeInsight['action_rate'] !== null ? $nudgeInsight['action_rate'].'%' : '—' }}</p>
+                        <p class="mt-1 text-lg font-black tabular-nums text-slate-950">{{ $nudgeInsight['action_rate'] !== null ? $nudgeInsight['action_rate'].'%' : '-' }}</p>
                     </div>
                 </div>
             </details>

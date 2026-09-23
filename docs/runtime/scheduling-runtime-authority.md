@@ -1,8 +1,8 @@
 # Scheduling Runtime Authority
 
-**State:** Soft-capacity scheduling — **FROZEN** (2026-07-22) · DayLens projection contract — **FROZEN** (2026-07-22) · Floor Proof / Observation next  
-**Board:** ARK Sellable Track — Scheduling Workspace  
-**Reopen:** Verified defects or earned pressure (Dispatch / RO bay / assignment UX) only — not roadmap momentum. DayLens itself is a stable projection contract — see Day board + DayLens.
+**State:** Soft-capacity scheduling - **FROZEN** (2026-07-22) · DayLens projection contract - **FROZEN** (2026-07-22) · Floor Proof / Observation next  
+**Board:** ARK Sellable Track - Scheduling Workspace  
+**Reopen:** Verified defects or earned pressure (Dispatch / RO bay / assignment UX) only - not roadmap momentum. DayLens itself is a stable projection contract - see Day board + DayLens.
 
 ## Mental model (frozen)
 
@@ -13,7 +13,7 @@ Consumes soft capacity
 
 Optional assignment data (tech / bay columns)
  ↓
-DayLens — filtered perspective on the same day
+DayLens - filtered perspective on the same day
 ```
 
 Not: Appointment → Bay as booking authority.  
@@ -25,13 +25,13 @@ Floor language: *“Yeah, we’ve got room Thursday.”* Morning ops may place w
 
 Customer **request** preference (`preferred_period` on Lead metadata): morning / afternoon / flexible (`any`).
 
-Shop **request windows** (`appointment_request_availability.request_windows`): configurable clocks — defaults 09:00–12:00 / 12:00–16:00.
+Shop **request windows** (`appointment_request_availability.request_windows`): configurable clocks - defaults 09:00–12:00 / 12:00–16:00.
 
 Optional **latest appointment arrival** cutoff: nullable / off by default. Distinct from afternoon request close. When enabled by the shop, preference time lists may filter to that clock; otherwise confirmed starts follow scheduling hours.
 
 Staff confirms an **exact** Appointment: `starts_at` / `ends_at` only. Dayparts do not become Appointment authority. Visit-mode `arrival_type` on schedule cards remains RepairOrderVisitMode (waiting / drop-off).
 
-Canonical copy: `AppointmentExpectationFormatter` — request labels vs confirmed clock separately.
+Canonical copy: `AppointmentExpectationFormatter` - request labels vs confirmed clock separately.
 
 ## Protected sentences
 
@@ -41,7 +41,7 @@ Canonical copy: `AppointmentExpectationFormatter` — request labels vs confirme
 
 **Appointments reserve capacity. Repair Orders consume work.**
 
-**Scheduling is policy-driven** — same family as Pricing Policy, Labor Policy, Communication Policy. Behavior lives in Settings + `SchedulingCapacityCalculator`, not hard-coded in the guard.
+**Scheduling is policy-driven** - same family as Pricing Policy, Labor Policy, Communication Policy. Behavior lives in Settings + `SchedulingCapacityCalculator`, not hard-coded in the guard.
 
 | Authority | Answers |
 |-----------|---------|
@@ -49,7 +49,7 @@ Canonical copy: `AppointmentExpectationFormatter` — request labels vs confirme
 | **Capacity snapshot** | How full is this open period vs base and target? |
 | **Repair Order** | What work is being performed? (production) |
 
-Day lenses are projections. Agenda must never hide a valid appointment; other lenses may reduce visibility to a subset — they must never reinterpret what an appointment means.
+Day lenses are projections. Agenda must never hide a valid appointment; other lenses may reduce visibility to a subset - they must never reinterpret what an appointment means.
 
 ## Workload ownership (do not let these merge)
 
@@ -59,7 +59,7 @@ Day lenses are projections. Agenda must never hide a valid appointment; other le
 | Proposed repair work | Estimate lines | What we offered the customer |
 | Approved production work | Repair Order / approvals | What we are authorized to perform |
 
-Different lifecycles. Do not treat them as interchangeable truths. Sync or projection between them only when pressure earns it — never silent overwrite.
+Different lifecycles. Do not treat them as interchangeable truths. Sync or projection between them only when pressure earns it - never silent overwrite.
 
 ## Capacity as authority (projections consume; they do not own)
 
@@ -77,14 +77,14 @@ Controllers, views, and guards must not duplicate the math.
 | `Appointment` | Start/end, status, customer/vehicle, expected workload, optional technician, optional workstation |
 | `Workstation` | Places; `accepts_scheduled_work` contributes to bay capacity / optional planning |
 | `shop_settings.scheduling_hours` | Optional staff booking window overrides. **Null = inherit Business Hours** (`telephony_call_flow.weekly_hours`). Custom JSON only when the shop blacklists days or narrows hours for appointments. |
-| `shop_settings.appointment_request_availability` | Weekly defaults + horizon + min notice for public `/book` requests (Lead intake — not Appointment Truth) |
+| `shop_settings.appointment_request_availability` | Weekly defaults + horizon + min notice for public `/book` requests (Lead intake - not Appointment Truth) |
 | `appointment_request_exceptions` | Date-specific enable/disable overrides for public requests |
 | `shop_settings.appointment_capacity_basis` | `technicians` · `bays` · `limiting_resource` |
 | `shop_settings.appointment_scheduling_target_percent` | Target = base × percent / 100 (25–300, default 100) |
 | `shop_settings.appointment_capacity_enforcement` | `warn` or `block` when beyond target |
 | `users.scheduling_hours` | Optional technician windows (null inherits shop) |
 
-**Business Hours (telephony) are the default scheduling windows.** Custom `scheduling_hours` are optional deviations (blacklist a day, narrower open/close). Request availability answers “when may customers request?” — not “when is the shop open?” Soft capacity is not consulted for `/book` day lists (v1).
+**Business Hours (telephony) are the default scheduling windows.** Custom `scheduling_hours` are optional deviations (blacklist a day, narrower open/close). Request availability answers “when may customers request?” - not “when is the shop open?” Soft capacity is not consulted for `/book` day lists (v1).
 
 ## Soft capacity
 
@@ -100,11 +100,11 @@ Workload prefers `estimated_labor_hours`. Duration is a fallback only when labor
 **Block:** reject create/reschedule when beyond target.  
 Editing excludes the appointment’s current workload before recalculation. Canceled do not consume capacity.
 
-Capacity unavailable → appointments may still schedule; rail shows unavailable — never a false 0% block of the shop.
+Capacity unavailable → appointments may still schedule; rail shows unavailable - never a false 0% block of the shop.
 
 Do **not** require bay or technician to create or update an appointment.
 
-Resource-specific overlaps are planning warnings when an optional assignment exists — not save blockers while frozen.
+Resource-specific overlaps are planning warnings when an optional assignment exists - not save blockers while frozen.
 
 ## Soft-remove bays (frozen)
 
@@ -130,7 +130,7 @@ Surfaces choose perspective.   → default DayLens only
 
 | Rule | Meaning |
 |------|---------|
-| One authority | `Appointment` — optional `technician_user_id` / `workstation_id` are data, not a second store |
+| One authority | `Appointment` - optional `technician_user_id` / `workstation_id` are data, not a second store |
 | One day board | Same calendar component; no Agenda / Bays / Tech product pages |
 | Reusable lenses | `DayLens::agenda()` · `unassigned()` · `technician($id)` · `workstation($id)` |
 | Projection-owned chips | Projection returns `chips[]` + filtered cards; Blade does not count, sort, or invent chips |
@@ -170,14 +170,14 @@ Soft capacity stays **shop-wide** (Agenda truth) regardless of selected lens. Ca
 
 ### Assignment data vs assignment UI
 
-Chips need assignment **data**, not a dedicated assignment product. Data may arrive via edit dialog, import, or a later Floor Planner. Restoring prominent bay/tech assignment UX is a **separate** reopen — not part of the DayLens contract.
+Chips need assignment **data**, not a dedicated assignment product. Data may arrive via edit dialog, import, or a later Floor Planner. Restoring prominent bay/tech assignment UX is a **separate** reopen - not part of the DayLens contract.
 
 Multi-lane bay/tech boards (`lanes=technician|workstation` as product modes) stay retired. A lens filters cards on the day board; it does not resurrect lane boards as the center of Schedule.
 
 ```text
 Customer calls
  ↓
-Schedule (Agenda lens) — can we fit them?
+Schedule (Agenda lens) - can we fit them?
  ↓
 Appointment created (time + expected workload)
  ↓
@@ -202,8 +202,8 @@ The projection owns chip generation and filtering; surfaces choose only the defa
 
 ## Settings
 
-**Settings → Appointments → Scheduling capacity** — basis, target %, warn/block.  
-**Settings → Appointments → Bays** — operational locations / capacity inputs; not mandatory booking resources.
+**Settings → Appointments → Scheduling capacity** - basis, target %, warn/block.  
+**Settings → Appointments → Bays** - operational locations / capacity inputs; not mandatory booking resources.
 
 ## Explicit non-goals (pressure-first)
 
@@ -211,4 +211,4 @@ Dedicated Bay table · **Dispatch** · **RO workstation assignment** · vehicle 
 
 ## Observation gate (soft capacity sellable)
 
-Engineering frozen ≠ Sellable. Soft capacity is sellable when Floor Proof shows it replaces Google Calendar for another shop. Do not open Dispatch or RO bay until operators repeatedly ask for them. DayLens ships under its own implementation gate above — not this sellable gate.
+Engineering frozen ≠ Sellable. Soft capacity is sellable when Floor Proof shows it replaces Google Calendar for another shop. Do not open Dispatch or RO bay until operators repeatedly ask for them. DayLens ships under its own implementation gate above - not this sellable gate.

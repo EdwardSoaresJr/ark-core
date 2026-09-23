@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * Calendar / list card shape for Scheduling Workspace.
- * Fields reserved even when compact UI hides some — avoid layout corners later.
+ * Fields reserved even when compact UI hides some - avoid layout corners later.
  */
 final class AppointmentScheduleRowPresenter
 {

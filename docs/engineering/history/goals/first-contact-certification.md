@@ -10,7 +10,7 @@ Bench observation template: [floor-test-provisioning-observation.md](../research
 
 | Task | Status |
 |------|--------|
-| [2026-06-26 — Provision endpoint gates (G3/G4)](../tasks/2026-06-26-provision-endpoint-g3-g4.md) | In progress — G4 unblocked on production; G5–G7 pending bench |
+| [2026-06-26 - Provision endpoint gates (G3/G4)](../tasks/2026-06-26-provision-endpoint-g3-g4.md) | In progress - G4 unblocked on production; G5–G7 pending bench |
 
 ## Outcome (when closed)
 

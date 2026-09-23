@@ -142,7 +142,7 @@ use InvalidArgumentException;
 ])]
 class ShopSettings extends Model
 {
-    /** Used only for first install / migration backfill — not a runtime display fallback. */
+    /** Used only for first install / migration backfill - not a runtime display fallback. */
     public const INSTALL_DEFAULT_TIMEZONE = 'America/Denver';
 
     public const DEFAULT_PARTS_MATRIX = [
@@ -249,7 +249,7 @@ class ShopSettings extends Model
         ],
         [
             'key' => self::WARRANTY_OTHER_LABOR_CATEGORY_KEY,
-            'name' => 'Warranty — Other',
+            'name' => 'Warranty - Other',
             'rate_cents' => 16500,
             'minimum_hours' => '1.00',
             'rounding_rule' => 'quarter',
@@ -897,7 +897,7 @@ TEXT;
         $matrixName = (string) ($matrix['name'] ?? 'Shop matrix');
         $shopFee = $posture->shopFeePolicy($this);
 
-        // decimal:3 cast stringifies as e.g. "5.000" — present "5" / "5.25".
+        // decimal:3 cast stringifies as e.g. "5.000" - present "5" / "5.25".
         $feeRate = filled($shopFee['rate'])
             ? rtrim(rtrim(number_format((float) $shopFee['rate'], 3, '.', ''), '0'), '.')
             : null;

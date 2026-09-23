@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Observations;
 
 /**
- * Curated operational observation vocabulary — interpretive truth, NOT authority.
+ * Curated operational observation vocabulary - interpretive truth, NOT authority.
  *
  * Pipeline: authority changes → authority events (factual) → observations (this enum)
  * → operational observation stream → orientation → surface.
@@ -47,7 +47,7 @@ enum OperationalObservationType: string
     case LeadMissingCustomer = 'lead_missing_customer';
     case LeadAging = 'lead_aging';
 
-    // Shop / portable station (stream vocabulary — emitters ship incrementally)
+    // Shop / portable station (stream vocabulary - emitters ship incrementally)
     case CustomerArrived = 'customer_arrived';
     case PaymentReceived = 'payment_received';
     case RepairOrderWaiting = 'repair_order_waiting';
@@ -162,14 +162,14 @@ enum OperationalObservationType: string
     }
 
     /**
-     * Explainable presentation tone for the moment feed — NOT a score.
+     * Explainable presentation tone for the moment feed - NOT a score.
      *
      * - urgent   (red):   a decision or failure that needs attention now
      * - waiting  (amber): someone/something is waiting on the shop
      * - positive (green): a good thing just happened
      * - info     (grey):  informational, no action implied
      *
-     * One sentence answers "why this color?" — never a numeric weight.
+     * One sentence answers "why this color?" - never a numeric weight.
      */
     public function tone(): string
     {
@@ -210,7 +210,7 @@ enum OperationalObservationType: string
     }
 
     /**
-     * Surface request aliases (mobile workspace, deep links) — not authority events.
+     * Surface request aliases (mobile workspace, deep links) - not authority events.
      */
     public static function tryFromSurfaceRequest(?string $value): ?self
     {

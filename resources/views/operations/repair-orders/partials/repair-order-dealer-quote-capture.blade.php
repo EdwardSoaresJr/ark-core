@@ -116,7 +116,7 @@
                                     <li class="flex gap-2 border-b border-slate-200/80 pb-1.5 last:border-0 last:pb-0">
                                         <span class="w-6 shrink-0 tabular-nums text-slate-500" x-text="preview.quantity"></span>
                                         <span class="min-w-0 flex-1">
-                                            <span class="font-mono text-[11px] text-slate-800" x-text="preview.part_number || '—'"></span>
+                                            <span class="font-mono text-[11px] text-slate-800" x-text="preview.part_number || '-'"></span>
                                             <span class="mt-0.5 block text-slate-600" x-text="preview.description || 'Part line'"></span>
                                         </span>
                                         <span class="shrink-0 tabular-nums text-slate-700" x-text="preview.part_cost ? ('$' + preview.part_cost) : ''"></span>
@@ -145,19 +145,19 @@
                 <div class="grid gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Supplier</p>
-                        <p class="font-semibold" x-text="capture.supplier_name || '—'"></p>
+                        <p class="font-semibold" x-text="capture.supplier_name || '-'"></p>
                     </div>
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Quote #</p>
-                        <p class="font-semibold" x-text="capture.quote_number || '—'"></p>
+                        <p class="font-semibold" x-text="capture.quote_number || '-'"></p>
                     </div>
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Vehicle</p>
-                        <p class="font-semibold" x-text="capture.vehicle_description || '—'"></p>
+                        <p class="font-semibold" x-text="capture.vehicle_description || '-'"></p>
                     </div>
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">VIN</p>
-                        <p class="font-semibold break-all" x-text="capture.vin || '—'"></p>
+                        <p class="font-semibold break-all" x-text="capture.vin || '-'"></p>
                     </div>
                 </div>
 
@@ -218,7 +218,7 @@
                         </summary>
                         <pre
                             class="mt-2 max-h-36 overflow-auto whitespace-pre-wrap rounded-sm border border-slate-200 bg-white px-3 py-2 font-mono text-[11px] leading-snug text-slate-700"
-                            x-text="capture.raw_text || quoteText || '—'"
+                            x-text="capture.raw_text || quoteText || '-'"
                         ></pre>
                     </details>
 
@@ -299,7 +299,7 @@
                                             <input type="checkbox" x-model="row.selected" class="rounded-sm border-slate-300 text-slate-900">
                                         </td>
                                         <td class="px-2 py-1.5 text-right tabular-nums" x-text="row.quantity"></td>
-                                        <td class="px-2 py-1.5 font-mono text-[11px]" x-text="row.part_number || '—'"></td>
+                                        <td class="px-2 py-1.5 font-mono text-[11px]" x-text="row.part_number || '-'"></td>
                                         <td class="px-2 py-1.5">
                                             <input
                                                 type="text"
@@ -316,7 +316,7 @@
                                                 class="w-20 rounded-sm border border-slate-300 px-1.5 py-1 text-right text-xs"
                                             >
                                         </td>
-                                        <td class="px-2 py-1.5 text-right tabular-nums text-slate-700" x-text="row.sell || '—'"></td>
+                                        <td class="px-2 py-1.5 text-right tabular-nums text-slate-700" x-text="row.sell || '-'"></td>
                                         <td class="w-[5.5rem] px-2 py-1.5">
                                             <select
                                                 x-model="row.pricing_matrix_key"

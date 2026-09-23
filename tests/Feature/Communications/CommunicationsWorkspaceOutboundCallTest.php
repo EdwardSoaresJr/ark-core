@@ -151,7 +151,7 @@ test('handled call stays in inbox with full thread including outbound messages',
         'conversation_participant_id' => $participant->id,
         'channel' => OperationalCommunicationChannel::Sms,
         'direction' => OperationalCommunicationDirection::Outbound,
-        'body' => 'Following up on our call — estimate link is on the way.',
+        'body' => 'Following up on our call - estimate link is on the way.',
         'occurred_at' => now()->subMinutes(10),
     ]);
 
@@ -160,5 +160,5 @@ test('handled call stays in inbox with full thread including outbound messages',
         ->assertOk()
         ->assertSee('Handled', false)
         ->assertSee('Outgoing call', false)
-        ->assertSee('Following up on our call — estimate link is on the way.', false);
+        ->assertSee('Following up on our call - estimate link is on the way.', false);
 });

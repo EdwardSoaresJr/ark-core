@@ -132,7 +132,7 @@ class RepairOrderWorkGroup extends Model
             ];
 
             // Additional labor under the same repair is normal (Remove / Install).
-            // Package-only anchors (engine oil) omit Labor — hours live on the package.
+            // Package-only anchors (engine oil) omit Labor - hours live on the package.
             if ($this->hasLaborAnchor()) {
                 array_unshift($types, RepairOrderLineType::Labor);
             }

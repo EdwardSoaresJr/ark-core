@@ -6,7 +6,7 @@ use App\Ark\ShopMemory\ShopMemoryFeatures;
 use App\Ark\ShopMemory\ShopMemoryProviderCatalog;
 
 /**
- * Catalog vs enablement vs engine registration — disabled ≠ broken.
+ * Catalog vs enablement vs engine registration - disabled ≠ broken.
  */
 final class ShopMemoryDiagnostics
 {
@@ -48,7 +48,7 @@ final class ShopMemoryDiagnostics
                 $enabledCount++;
             }
 
-            // AI Rewrite is a sibling action — never engine-registered.
+            // AI Rewrite is a sibling action - never engine-registered.
             $status = match (true) {
                 ! $isEngineProvider && $enabled => 'healthy',
                 ! $isEngineProvider && ! $enabled => 'disabled',

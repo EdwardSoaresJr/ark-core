@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
 /**
  * Advisor-facing nudge projection for Communications → Needs attention.
  *
- * Suggestions only — never mutates authority. Responses logged in advisor_nudge_responses.
+ * Suggestions only - never mutates authority. Responses logged in advisor_nudge_responses.
  */
 final class CommunicationsAttentionNudgeProjection
 {
@@ -60,7 +60,7 @@ final class CommunicationsAttentionNudgeProjection
             return null;
         }
 
-        // Suppression is tracked per nudge entity key — call nudges surfaced on
+        // Suppression is tracked per nudge entity key - call nudges surfaced on
         // a merged conversation selection keep their own call:{id} identity.
         $suppressedByEntity = [];
 
@@ -299,7 +299,7 @@ final class CommunicationsAttentionNudgeProjection
             ];
         }
 
-        // Calls merge into the conversation selection in the workspace list —
+        // Calls merge into the conversation selection in the workspace list -
         // an unhandled call's nudges must not vanish behind that mapping.
         $session = $this->latestUnhandledInboundCall($conversation);
 
@@ -364,7 +364,7 @@ final class CommunicationsAttentionNudgeProjection
                     'headline' => 'Estimate viewed again',
                     'message' => 'Customer opened the estimate '
                         .($observation->metadata['view_count'] ?? 'multiple')
-                        .' times — consider a check-in text.',
+                        .' times - consider a check-in text.',
                     'rationale' => 'Observation',
                     'priority' => 82,
                     'sources' => ['observation.estimate_viewed_multiple_times'],
@@ -373,7 +373,7 @@ final class CommunicationsAttentionNudgeProjection
                 OperationalObservationType::EstimateViewed => [
                     'key' => 'conversation.estimate_viewed',
                     'headline' => 'Estimate viewed',
-                    'message' => 'Customer opened the estimate portal — follow up if approval hasn\'t come in.',
+                    'message' => 'Customer opened the estimate portal - follow up if approval hasn\'t come in.',
                     'rationale' => 'Observation',
                     'priority' => 68,
                     'sources' => ['observation.estimate_viewed'],
@@ -403,7 +403,7 @@ final class CommunicationsAttentionNudgeProjection
                     'key' => 'conversation.multiple_messages',
                     'headline' => 'Multiple customer texts',
                     'message' => ($observation->metadata['message_count'] ?? 2)
-                        .' customer messages — make sure nothing is unanswered.',
+                        .' customer messages - make sure nothing is unanswered.',
                     'rationale' => 'Observation',
                     'priority' => 84,
                     'sources' => ['observation.customer_sent_multiple_messages'],

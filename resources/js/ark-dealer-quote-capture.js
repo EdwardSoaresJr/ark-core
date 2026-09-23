@@ -99,7 +99,7 @@ export function arkDealerQuoteCapture(config) {
             const name = String(matrix?.name ?? matrix?.key ?? '').trim();
 
             if (name === '') {
-                return '—';
+                return '-';
             }
 
             return name
@@ -164,7 +164,7 @@ export function arkDealerQuoteCapture(config) {
             const key = String(matrixKey ?? '');
 
             if (key === '') {
-                return '—';
+                return '-';
             }
 
             const matrix = this.partsMatrices.find((entry) => entry.key === key);
@@ -531,7 +531,7 @@ function previewPartLinesFromPaste(quoteText) {
     const withoutPart = /^(\d+(?:\.\d+)?)\s+([A-Za-z].+?)\s+(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+\.\d{2})\s*$/;
 
     for (const rawLine of text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')) {
-        const line = rawLine.trim().replace(/[—–−]/g, '-').replace(/[ \t]+/g, ' ');
+        const line = rawLine.trim().replace(/[\u2014–−]/g, '-').replace(/[ \t]+/g, ' ');
 
         if (line === '') {
             continue;

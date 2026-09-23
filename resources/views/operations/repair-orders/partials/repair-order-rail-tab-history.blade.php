@@ -19,7 +19,7 @@
 <div id="history-rail" class="ops-review-rail-tab-panel divide-y divide-slate-100 text-sm">
     <div class="ops-review-panel-header">
         <p class="ops-eyebrow">Vehicle History</p>
-        <p class="ops-meta mt-0.5">Prior visits and deferred work for this vehicle — advisory context only. Calls and texts live on Comms.</p>
+        <p class="ops-meta mt-0.5">Prior visits and deferred work for this vehicle - advisory context only. Calls and texts live on Comms.</p>
     </div>
 
     <section class="px-3 py-2.5">
@@ -86,7 +86,7 @@
     @if ($otherOpenRepairOrders->isNotEmpty())
         <section class="px-3 py-2.5">
             <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Other open work for customer</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Different vehicle — open only when the customer asks about another car.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Different vehicle - open only when the customer asks about another car.</p>
             @foreach ($otherOpenRepairOrders as $otherOpenRepairOrder)
                 <div class="mt-2 flex flex-wrap items-center justify-between gap-2 border border-slate-200 bg-slate-50/80 px-3 py-2">
                     <p class="min-w-0 text-xs font-semibold text-slate-700">

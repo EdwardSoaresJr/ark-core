@@ -12,7 +12,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Models\User;
 
 /**
- * Money on the mobile RO — read-only projection of authoritative estimate
+ * Money on the mobile RO - read-only projection of authoritative estimate
  * totals and Financial Position. Mobile renders dollars; it never derives them.
  *
  * Owe-today: FinancialPositionProjection only.
@@ -42,7 +42,7 @@ final class MobileEstimateProjection
         return [
             'estimate_total_cents' => $estimateCents,
             'estimate_total_label' => $totals->format($estimateCents),
-            // "What is approved vs waiting?" — approved invoiceable work and the
+            // "What is approved vs waiting?" - approved invoiceable work and the
             // recommended work still awaiting a decision (ARO). Independent
             // buckets: the estimate total drops recommended work once anything
             // is approved, so waiting is not (estimate − approved).
@@ -65,7 +65,7 @@ final class MobileEstimateProjection
     }
 
     /**
-     * Full estimate detail for the Estimate section — priced line items grouped
+     * Full estimate detail for the Estimate section - priced line items grouped
      * by concern, plus the parts/labor/fees/tax breakdown.
      *
      * @return array<string, mixed>

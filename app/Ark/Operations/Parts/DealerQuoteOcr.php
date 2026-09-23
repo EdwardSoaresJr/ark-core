@@ -26,7 +26,7 @@ final class DealerQuoteOcr
 
         if ($pdftoppm === null || $tesseract === null) {
             throw new RuntimeException(
-                'This PDF is a scan (no selectable text). OCR is not installed on this server yet — paste the quote text, or wait for the OCR deploy.'
+                'This PDF is a scan (no selectable text). OCR is not installed on this server yet - paste the quote text, or wait for the OCR deploy.'
             );
         }
 
@@ -86,7 +86,7 @@ final class DealerQuoteOcr
 
         if ($tesseract === null) {
             throw new RuntimeException(
-                'Quote photo OCR is not installed on this server yet — paste the quote text, or wait for the OCR deploy.'
+                'Quote photo OCR is not installed on this server yet - paste the quote text, or wait for the OCR deploy.'
             );
         }
 
@@ -101,7 +101,7 @@ final class DealerQuoteOcr
 
     private function normalizeOcrText(string $text): string
     {
-        $text = str_replace(['—', '–', '−', '‐', '‑'], '-', trim($text));
+        $text = str_replace(["\u{2014}", '–', '−', '‐', '‑'], '-', trim($text));
 
         return preg_replace('/-{2,}/', '-', $text) ?? $text;
     }

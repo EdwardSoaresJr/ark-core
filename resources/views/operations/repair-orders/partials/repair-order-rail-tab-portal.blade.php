@@ -30,7 +30,7 @@
 
     <section class="px-3 py-2.5">
         <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Portal activity</p>
-        <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Vehicle records, documents, and portal navigation — not estimate sends or estimate link opens.</p>
+        <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Vehicle records, documents, and portal navigation - not estimate sends or estimate link opens.</p>
         <div class="mt-2 divide-y divide-slate-100 border border-slate-200 bg-white">
             @forelse ($portalActivity as $event)
                 <div class="px-3 py-2">

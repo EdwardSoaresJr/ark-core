@@ -73,7 +73,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Operational timestamps are stored in UTC. Display timezone is resolved at
-    | runtime from shop_settings.shop_timezone only — never from env fallbacks.
+    | runtime from shop_settings.shop_timezone only - never from env fallbacks.
     |
     */
 

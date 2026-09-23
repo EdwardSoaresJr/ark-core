@@ -13,7 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Customer workspace orientation — consumes operational observations, not raw authority meaning.
+ * Customer workspace orientation - consumes operational observations, not raw authority meaning.
  *
  * Authority payload (customer, RO, timeline rows) is loaded for display blocks only.
  * Layout/emphasis follows the selected observation type.

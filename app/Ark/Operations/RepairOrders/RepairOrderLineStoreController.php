@@ -163,7 +163,7 @@ class RepairOrderLineStoreController
 
         $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
 
-        // Issued Final Invoice is the billed total — keep it aligned when approved work changes.
+        // Issued Final Invoice is the billed total - keep it aligned when approved work changes.
         $refreshInvoice->executeIfNeeded(
             $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
             $request->user(),

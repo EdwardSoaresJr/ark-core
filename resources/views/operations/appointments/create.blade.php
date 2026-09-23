@@ -24,7 +24,7 @@
         @if ($customer === null && ! ($showUnlinkedForm ?? false))
             <div class="ops-board-shell space-y-3 p-3">
                 <div>
-                    <p class="text-sm font-bold text-slate-950">Find an existing customer — or schedule a new caller</p>
+                    <p class="text-sm font-bold text-slate-950">Find an existing customer - or schedule a new caller</p>
                     <p class="mt-0.5 text-xs text-slate-600">Search by name, phone, email, plate, or VIN. Or book with name and phone only.</p>
                 </div>
                 <form method="GET" action="{{ route('operations.schedule') }}" class="flex flex-wrap gap-2">
@@ -176,7 +176,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <span class="mt-0.5 block text-[10px] text-slate-500">Optional — leave unset until they arrive if the vehicle isn’t known yet.</span>
+                        <span class="mt-0.5 block text-[10px] text-slate-500">Optional - leave unset until they arrive if the vehicle isn’t known yet.</span>
                     </label>
                 @endif
 
@@ -194,7 +194,7 @@
                     <label class="block sm:max-w-xs">
                         <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Advisor</span>
                         <select name="advisor_user_id" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
-                            <option value="">—</option>
+                            <option value="">-</option>
                             @foreach ($advisors as $advisor)
                                 <option value="{{ $advisor->id }}" @selected(old('advisor_user_id', $defaultAdvisorId) == $advisor->id)>{{ $advisor->name }}</option>
                             @endforeach

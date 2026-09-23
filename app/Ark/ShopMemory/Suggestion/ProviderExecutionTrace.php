@@ -3,7 +3,7 @@
 namespace App\Ark\ShopMemory\Suggestion;
 
 /**
- * Dev/diagnostics only — never shown in advisor UI.
+ * Dev/diagnostics only - never shown in advisor UI.
  */
 final class ProviderExecutionTrace
 {

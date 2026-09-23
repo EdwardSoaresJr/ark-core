@@ -8,7 +8,7 @@
     <div class="border-b border-slate-200 pb-2">
         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Staff Access</p>
         <h2 class="text-base font-black text-slate-950">Team logins and roles</h2>
-        <p class="mt-0.5 text-xs text-slate-500">Add name, email, and roles — ARK emails a secure setup link so they choose their own password. Select every hat someone wears: admin, advisor, and/or technician.</p>
+        <p class="mt-0.5 text-xs text-slate-500">Add name, email, and roles - ARK emails a secure setup link so they choose their own password. Select every hat someone wears: admin, advisor, and/or technician.</p>
     </div>
 
     @if ($errors->any() && (old('_member') || old('roles') || old('password') || old('labor_pay_basis') || old('labor_cost') || old('flag_rate') || old('floor_rate')))
@@ -61,7 +61,7 @@
             <div class="ops-staff-field" x-show="roles.includes(@js(ArkRole::Technician->value))" x-cloak>
                 <label for="staff-labor-cost" class="ops-index-field-label">Estimated labor cost / hr</label>
                 <input id="staff-labor-cost" name="labor_cost" type="number" min="0" step="0.01" value="{{ old('labor_cost') }}" class="ops-index-field" placeholder="35.00">
-                <p class="mt-1 text-xs text-slate-500">Cost per billed hour for labor GP on closed ROs — not a paycheck. Set shop overhead first under Settings → Shop Overhead.</p>
+                <p class="mt-1 text-xs text-slate-500">Cost per billed hour for labor GP on closed ROs - not a paycheck. Set shop overhead first under Settings → Shop Overhead.</p>
                 @include('operations.settings.partials.loaded-labor-cost-calculator', [
                     'targetInputId' => 'staff-labor-cost',
                     'workdayHours' => old('workday_hours') ?: 8,
@@ -129,13 +129,13 @@
                                         @if ($member->flag_rate_cents !== null)
                                             Flag ${{ number_format($member->flag_rate_cents / 100, 2) }}
                                         @else
-                                            Flag —
+                                            Flag -
                                         @endif
                                         ·
                                         @if ($member->floor_rate_cents !== null)
                                             Floor ${{ number_format($member->floor_rate_cents / 100, 2) }}
                                         @else
-                                            Floor —
+                                            Floor -
                                         @endif
                                         @if ($member->floorWageNeedsReview())
                                             <span class="text-amber-700">· Floor may need review</span>
@@ -262,7 +262,7 @@
                                     placeholder="{{ $member->hasOperatorPin() ? '•••• (leave blank to keep)' : '4 digits' }}"
                                     autocomplete="off"
                                 >
-                                <p class="mt-1 text-xs text-slate-500">Used to unlock shared workstations — not the ARK login password.</p>
+                                <p class="mt-1 text-xs text-slate-500">Used to unlock shared workstations - not the ARK login password.</p>
                             </div>
                             <div class="ops-staff-field" x-show="roles.includes(@js(ArkRole::Technician->value))" x-cloak>
                                 <label for="staff-labor-cost-{{ $member->id }}" class="ops-index-field-label">Estimated labor cost / hr</label>
@@ -276,7 +276,7 @@
                                     class="ops-index-field"
                                     placeholder="35.00"
                                 >
-                                <p class="mt-1 text-xs text-slate-500">Margin cost per billed hour — not a paycheck. Set shop overhead first under Settings → Shop Overhead.</p>
+                                <p class="mt-1 text-xs text-slate-500">Margin cost per billed hour - not a paycheck. Set shop overhead first under Settings → Shop Overhead.</p>
                                 @include('operations.settings.partials.loaded-labor-cost-calculator', [
                                     'targetInputId' => 'staff-labor-cost-'.$member->id,
                                     'workdayHours' => $member->effectiveWorkdayHours(),

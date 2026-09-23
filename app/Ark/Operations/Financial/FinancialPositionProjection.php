@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Financial;
 use Brick\Money\Money;
 
 /**
- * Disposable projection — owns nothing, answers everything.
+ * Disposable projection - owns nothing, answers everything.
  *
  * Only public API for "what does the customer owe?"
  * Construct once. Throw away. Never persist.

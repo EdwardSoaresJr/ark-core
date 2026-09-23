@@ -89,7 +89,7 @@ class OutboundTransactionalMail
             return $this->arkMail->send($envelope);
         }
 
-        // local_log / array — development and automated tests only
+        // local_log / array - development and automated tests only
         try {
             Mail::to(strtolower(trim($recipientEmail)))->send($mailable);
         } catch (\Throwable $e) {

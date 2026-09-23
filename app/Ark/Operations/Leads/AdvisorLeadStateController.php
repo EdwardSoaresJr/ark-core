@@ -49,6 +49,6 @@ class AdvisorLeadStateController
             app(WebsiteLeadInterruptBroadcaster::class)->clearForLead($lead->id);
         }
 
-        return back()->with('status', 'Lead updated — '.$state->label().'.');
+        return back()->with('status', 'Lead updated - '.$state->label().'.');
     }
 }

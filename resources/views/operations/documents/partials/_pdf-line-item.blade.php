@@ -38,8 +38,8 @@
         <div class="line-col">{{ $line['quantity'] }}</div>
         <div class="line-col">{{ $line['unit_price'] }}</div>
         <div class="line-col">{{ $line['subtotal'] }}</div>
-        <div class="line-col line-col--muted">{{ ($line['shop_fee_cents'] ?? 0) > 0 ? $line['shop_fee'] : '—' }}</div>
-        <div class="line-col line-col--muted">{{ ($line['tax_cents'] ?? 0) > 0 ? $line['tax'] : '—' }}</div>
+        <div class="line-col line-col--muted">{{ ($line['shop_fee_cents'] ?? 0) > 0 ? $line['shop_fee'] : '-' }}</div>
+        <div class="line-col line-col--muted">{{ ($line['tax_cents'] ?? 0) > 0 ? $line['tax'] : '-' }}</div>
         <div class="line-col line-col--total">{{ $line['total'] }}</div>
     @endif
 </div>

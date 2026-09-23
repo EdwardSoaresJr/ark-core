@@ -9,7 +9,7 @@ use Illuminate\Http\RedirectResponse;
 final class CommunicationsWorkspaceRedirect
 {
     /**
-     * Back to the list with nothing re-selected — a cleared row must visibly leave.
+     * Back to the list with nothing re-selected - a cleared row must visibly leave.
      */
     public static function toList(?string $status = null, string $filter = 'needs'): RedirectResponse
     {
@@ -36,7 +36,7 @@ final class CommunicationsWorkspaceRedirect
             };
         }
 
-        // Filter first — matches CommunicationsNeedsYou::url() parameter order
+        // Filter first - matches CommunicationsNeedsYou::url() parameter order
         // so redirect targets compare equal across the workspace.
         $params = [
             'filter' => in_array($filter, ['all', 'needs', 'waiting', 'resolved'], true)

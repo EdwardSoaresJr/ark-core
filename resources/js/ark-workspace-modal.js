@@ -1,5 +1,5 @@
 /**
- * Repair Order authoring chrome — advisors see task titles only (Add Work, Edit Labor).
+ * Repair Order authoring chrome - advisors see task titles only (Add Work, Edit Labor).
  * Presentation stays on the Builder; this modal authors through existing worksheet continuity.
  */
 import { arkSelectRepairOrderWorkspaceTab } from './ark-ro-workspace-tabs';
@@ -81,7 +81,7 @@ export function arkWorkspaceModal(config = {}) {
         note: '',
         oil: 'Authorize this maintenance package.',
         testing: 'Authorize this testing package.',
-        'saved-work': 'Creates a new concern. Recommendation status comes from the saved job — change it if needed.',
+        'saved-work': 'Creates a new concern. Recommendation status comes from the saved job - change it if needed.',
         evidence: 'Attach a photo, video, or PDF to this repair order.',
         document: 'Scan, upload, or attach existing paperwork for this visit.',
         'hub-document': 'Scan or upload paperwork for this customer.',
@@ -330,7 +330,7 @@ export function arkWorkspaceModal(config = {}) {
 
             const form = this.$refs.dialog?.querySelector('[data-workspace-modal-delete-line]');
 
-            // Do not require panelIsVisible — x-show has not always applied when task
+            // Do not require panelIsVisible - x-show has not always applied when task
             // flips to edit-line, and DOM visibility is not an Alpine reactive dependency.
             return form instanceof HTMLFormElement ? form : null;
         },
@@ -459,7 +459,7 @@ export function arkWorkspaceModal(config = {}) {
             this.saved = false;
             this.validationMessage = '';
             this.clearDeleteConfirm();
-            // Add Work: concern is the common path — preselect so Enter on Continue advances.
+            // Add Work: concern is the common path - preselect so Enter on Continue advances.
             this.addWorkChoice = task === 'add-work' ? 'concern' : null;
             this.task = task;
             this.context = { ...context };
@@ -471,7 +471,7 @@ export function arkWorkspaceModal(config = {}) {
                 this.syncDeleteAvailability();
                 this.focusFirstUsefulInput();
 
-                // Refs/panels settle after x-show — re-sync type once more so line forms
+                // Refs/panels settle after x-show - re-sync type once more so line forms
                 // are not submitted with an empty type after a late panel paint.
                 this.$nextTick(() => {
                     this.syncLineCreateForm();
@@ -509,7 +509,7 @@ export function arkWorkspaceModal(config = {}) {
                     : '';
             }
 
-            // Fresh key per open — avoid replaying a prior line.store idempotency hit.
+            // Fresh key per open - avoid replaying a prior line.store idempotency hit.
             const idempotencyInput = form.querySelector('input[name="worksheet_idempotency_key"]');
 
             if (idempotencyInput) {
@@ -568,7 +568,7 @@ export function arkWorkspaceModal(config = {}) {
                 return false;
             }
 
-            // Require the panel itself to be displayed. Do not OR with offsetParent —
+            // Require the panel itself to be displayed. Do not OR with offsetParent -
             // fixed ancestors make offsetParent null, and children of display:none
             // parents can still report display:block, which falsely marks every
             // concern's Repair Action form as visible (Save then posts the wrong empty form).
@@ -952,7 +952,7 @@ export function arkWorkspaceModal(config = {}) {
                 const reason = String(pricing.laborRateOverrideReason ?? '').trim();
 
                 if (reason === '') {
-                    this.validationMessage = 'Custom labor rate needs a reason — choose Menu / package price for a flat PPI, or another reason.';
+                    this.validationMessage = 'Custom labor rate needs a reason - choose Menu / package price for a flat PPI, or another reason.';
                     this.$nextTick(() => {
                         form.querySelector('[name="labor_rate_override_reason"]')?.focus();
                     });
@@ -1106,7 +1106,7 @@ export function arkWorkspaceModal(config = {}) {
                     return;
                 }
 
-                // Worksheet morph replaces #workspace-modal-host — handoff reopens Dragon after refresh.
+                // Worksheet morph replaces #workspace-modal-host - handoff reopens Dragon after refresh.
                 const result = await worksheet.submitWorksheetForm(form, {
                     keepModalOpen: true,
                     pendingDragonRewrite,

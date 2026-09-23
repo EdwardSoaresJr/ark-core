@@ -119,7 +119,7 @@ test('website lead with full name prefills intake customer step', function (): v
     $lead = Lead::query()->create([
         'source' => LeadSource::Website,
         'state' => LeadState::Received,
-        'concern' => 'Rear brakes, shoes, turn drums — how much will this cost?',
+        'concern' => 'Rear brakes, shoes, turn drums - how much will this cost?',
         'contact_phone' => '7195550180',
         'contact_name' => 'Jeremiah Seress',
         'vehicle_year' => 2022,

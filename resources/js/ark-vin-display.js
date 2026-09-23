@@ -162,7 +162,7 @@ export const arkVinDisplay = (vin) => ({
                 this.copied = false;
             }, 1500);
         } catch {
-            // Clipboard unavailable — hover still exposes the full VIN.
+            // Clipboard unavailable - hover still exposes the full VIN.
         }
     },
 });

@@ -1,4 +1,4 @@
-# Frozen — Legacy ARK Mobile (pointer)
+# Frozen - Legacy ARK Mobile (pointer)
 
 **Superseded by:** [`frozen-flutter-ui.md`](frozen-flutter-ui.md)
 

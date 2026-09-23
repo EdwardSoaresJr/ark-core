@@ -6,7 +6,7 @@
 **Pattern library:** [ark-interaction-pattern-library-v1.md](../ark-interaction-pattern-library-v1.md)  
 **Don't steal (seed):** Fleet assumptions
 
-Use the standing format only — do not invent sections.
+Use the standing format only - do not invent sections.
 
 ---
 
@@ -26,7 +26,7 @@ Awaiting evidence.
 
 | Discovery | Doctrine home |
 | --- | --- |
-| — | — |
+| - | - |
 
 ## 5. Steal list
 
@@ -34,11 +34,11 @@ Awaiting evidence.
 
 ## 6. Do not steal
 
-- Fleet assumptions (seed — confirm or refine after evidence)
+- Fleet assumptions (seed - confirm or refine after evidence)
 
 ## 7. One-sentence takeaway
 
-**Borrow X. Reject Y.** — awaiting evidence.
+**Borrow X. Reject Y.** - awaiting evidence.
 
 ---
 

@@ -44,7 +44,7 @@
         <x-operations.queue-page-header
             id="ops-call-library"
             title="Calls & Voicemail"
-            description="Inbound and outbound phone calls — listen to voicemails and recordings here."
+            description="Inbound and outbound phone calls - listen to voicemails and recordings here."
             :count="$paginator->total() > 0 ? $paginator->total() : null"
             :show-back="false"
         >

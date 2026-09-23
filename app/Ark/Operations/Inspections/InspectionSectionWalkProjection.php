@@ -93,7 +93,7 @@ final class InspectionSectionWalkProjection
                 'label' => $stageDef['label'],
                 'optional' => $stageDef['optional'],
                 'hint' => $stageDef['optional']
-                    ? 'Only when the concern, diagnosis, or verification needs it — not required for every visit.'
+                    ? 'Only when the concern, diagnosis, or verification needs it - not required for every visit.'
                     : null,
                 'sections' => $sections,
                 'state' => $this->aggregateState($sections),
@@ -238,7 +238,7 @@ final class InspectionSectionWalkProjection
             'group' => $meta['group'] ?? null,
             'corner' => $meta['corner'] ?? null,
             'status' => $status?->value,
-            'status_label' => InspectionTemplatePointMeta::statusDisplayLabel($templateItem, $status) ?? '—',
+            'status_label' => InspectionTemplatePointMeta::statusDisplayLabel($templateItem, $status) ?? '-',
             'addressed' => $addressed,
             'missing_measurement_slots' => $missingSlots,
             'measurement_slots' => $slotValues,

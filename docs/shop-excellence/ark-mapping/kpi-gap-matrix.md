@@ -19,6 +19,6 @@
 | Tech productivity | Production tab | Done |
 | Queue pressure | Day Review priorities, Shop Behavior Pulse | Done |
 | Gross margin by category | Financial Mix | Done |
-| Labor cost (partial) | Labor cost in mix | Partial — not full payroll |
+| Labor cost (partial) | Labor cost in mix | Partial - not full payroll |
 
 Update this table when a metric lands or stays blocked.

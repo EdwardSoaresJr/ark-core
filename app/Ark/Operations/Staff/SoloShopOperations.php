@@ -19,7 +19,7 @@ final class SoloShopOperations
     }
 
     /**
-     * The single active staff member, when the shop has exactly one — a solo or
+     * The single active staff member, when the shop has exactly one - a solo or
      * mobile-solo operator. Derived from authority (who exists), never a stored
      * "default operator" setting that drifts or is forgotten. Returns null the
      * moment a second staff user exists, because then "the individual" is
@@ -95,7 +95,7 @@ final class SoloShopOperations
         }
 
         // A single-user shop's only staff member is, by definition, the
-        // technician — whatever role they hold (e.g. an advisor-only solo).
+        // technician - whatever role they hold (e.g. an advisor-only solo).
         $sole = $this->soleStaffUser();
 
         return $sole !== null && $sole->getKey() === $user->getKey();

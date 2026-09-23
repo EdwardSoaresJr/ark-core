@@ -33,7 +33,7 @@
         <div class="tech-wo-flag-badge">
             <p class="tech-wo-flag-label">Approved Flag Hours</p>
             <p class="tech-wo-flag-value">{{ $sheet['approved_flag_hours'] }} HOURS</p>
-            <p class="tech-wo-flag-hint">Hours assigned to approved work on this sheet — shop production record</p>
+            <p class="tech-wo-flag-hint">Hours assigned to approved work on this sheet - shop production record</p>
         </div>
 
         <p class="tech-wo-printed">Printed {{ $sheet['printed_at'] }}</p>

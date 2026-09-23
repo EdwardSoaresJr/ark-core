@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Rapid Work Templates — disposable authors of Repair Actions + lines.
+ * Rapid Work Templates - disposable authors of Repair Actions + lines.
  * Shop-wide (single-tenant) like inspection_templates. Not a Service Catalog.
  */
 return new class extends Migration

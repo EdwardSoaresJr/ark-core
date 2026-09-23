@@ -12,11 +12,11 @@
         <tbody>
             <tr>
                 <td>Check In / Diagnosis</td>
-                <td>Still being written or diagnosed — usually not ready for the bay.</td>
+                <td>Still being written or diagnosed - usually not ready for the bay.</td>
             </tr>
             <tr>
                 <td>Waiting Approval</td>
-                <td>With the customer — do not start billable work until approved.</td>
+                <td>With the customer - do not start billable work until approved.</td>
             </tr>
             <tr>
                 <td>Waiting Parts</td>
@@ -32,7 +32,7 @@
             </tr>
             <tr>
                 <td>Ready Pickup</td>
-                <td>Work complete — customer pickup and payment flow.</td>
+                <td>Work complete - customer pickup and payment flow.</td>
             </tr>
         </tbody>
     </table>

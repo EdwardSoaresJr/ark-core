@@ -6,7 +6,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use RuntimeException;
 
 /**
- * Customer-facing shop address SMS body — Message Action copy only.
+ * Customer-facing shop address SMS body - Message Action copy only.
  */
 final class ShopAddressSmsCopy
 {

@@ -9,7 +9,7 @@ Classification for public Core extraction.
 | Item | Why |
 | --- | --- |
 | `ShopSettings` identity (name, address, phone, email, `scheduling_hours`, `shop_timezone`, logo, `website`) | Operational shop truth; documents/portal |
-| `google_reviews_url` + messaging settings | Post-repair review **destination** — not SEO |
+| `google_reviews_url` + messaging settings | Post-repair review **destination** - not SEO |
 | Customer portal (`routes/portal.php`, portal views, customer shell) | Authenticated customer application |
 | `Lead` / `LeadRecorder` / `LeadSource::Website` | Operational lead authority |
 | Advisor intake website-lead store | Staff captures website-sourced leads |
@@ -17,7 +17,7 @@ Classification for public Core extraction.
 | `LeadIngressContext` / `LeadIngressHygiene` | Spam observation on lead authority |
 | `PUBLIC_DOMAIN` / `surfaces.public` | Host routing seam only |
 | Appointment availability settings | When shop can take requests |
-| Platform SaaS funnel views (`resources/views/cloud/**`) | ARK Platform product — not shop Website CMS |
+| Platform SaaS funnel views (`resources/views/cloud/**`) | ARK Platform product - not shop Website CMS |
 | `BOOKING_SURFACE_BASE_URL` + `/book` redirect-away (unnamed) | Cutover safety: keep marketing `/book` off Core; see [lnp-book-cutover-survival.md](./lnp-book-cutover-survival.md) |
 
 ## REMOVE (done or enforced)
@@ -39,20 +39,20 @@ Classification for public Core extraction.
 
 | Item | Action |
 | --- | --- |
-| Portal chrome still using `public-hero` / `public-panel` class names | Keep styles for portal UX; vocabulary is presentation chrome for customer app, not CMS product. Optional rename later — not required for boundary PASS |
+| Portal chrome still using `public-hero` / `public-panel` class names | Keep styles for portal UX; vocabulary is presentation chrome for customer app, not CMS product. Optional rename later - not required for boundary PASS |
 | `CustomerSurfaceUrls::publicHome()` | Alias to portal access (no marketing homepage) |
-| Appointment settings copy referencing `/book` | Reworded — availability stays Core; booking UI is Website |
+| Appointment settings copy referencing `/book` | Reworded - availability stays Core; booking UI is Website |
 | Stale docs mentioning Growth rails / thin public marketing surface | Point to this boundary; do not resurrect Growth |
 
 ## AMBIGUOUS → decision
 
 | Item | Decision |
 | --- | --- |
-| `ShopSettings.website` URL field | **KEEP** — shop’s public URL on documents; not CMS config |
-| Orphan `growth_session_id` columns | **REMOVE** — dropped with Growth schema; parent product gone |
-| Residual `.public-cp-*` CSS in `app.css` | **REMOVE later / non-blocking** — pages gone; dead CSS does not restore Website ownership. Not required to block PASS |
-| Events kiosk `marketing_opt_in` (if any remain) | **KEEP if Events ships**; else drop with Events product — out of Website CMS scope |
-| External Website → Core lead HTTP ingest | **Future** — authority stays `LeadRecorder`; no marketing form in Core |
+| `ShopSettings.website` URL field | **KEEP** - shop’s public URL on documents; not CMS config |
+| Orphan `growth_session_id` columns | **REMOVE** - dropped with Growth schema; parent product gone |
+| Residual `.public-cp-*` CSS in `app.css` | **REMOVE later / non-blocking** - pages gone; dead CSS does not restore Website ownership. Not required to block PASS |
+| Events kiosk `marketing_opt_in` (if any remain) | **KEEP if Events ships**; else drop with Events product - out of Website CMS scope |
+| External Website → Core lead HTTP ingest | **Future** - authority stays `LeadRecorder`; no marketing form in Core |
 
 ## Schema impact
 

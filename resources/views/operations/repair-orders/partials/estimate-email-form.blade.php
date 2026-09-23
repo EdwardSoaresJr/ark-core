@@ -89,9 +89,9 @@
                 @if ($contactPreference === LeadContactPreference::Email)
                     <p class="mt-1 text-xs font-semibold text-sky-800">Customer prefers email for follow-up.</p>
                 @elseif ($contactPreference === LeadContactPreference::Call)
-                    <p class="mt-1 text-xs font-semibold text-amber-900">Customer prefers a call — email only when needed.</p>
+                    <p class="mt-1 text-xs font-semibold text-amber-900">Customer prefers a call - email only when needed.</p>
                 @elseif ($contactPreference === LeadContactPreference::Text)
-                    <p class="mt-1 text-xs font-semibold text-slate-600">Customer prefers text — email only when needed.</p>
+                    <p class="mt-1 text-xs font-semibold text-slate-600">Customer prefers text - email only when needed.</p>
                 @endif
             </div>
 

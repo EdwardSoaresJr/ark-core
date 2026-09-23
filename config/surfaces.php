@@ -15,7 +15,7 @@ return [
     // Production: PUBLIC_DOMAIN=demo-auto.test. Local: falls back to SHOP_LOCAL_PARENT_DOMAIN (demo-auto.test).
     'public' => env('PUBLIC_DOMAIN', env('SHOP_LOCAL_PARENT_DOMAIN')),
 
-    // ARK Platform product — company domain (never a Shop).
+    // ARK Platform product - company domain (never a Shop).
     'company' => env('COMPANY_DOMAIN'),
 
     'company_www' => env('COMPANY_WWW_DOMAIN'),

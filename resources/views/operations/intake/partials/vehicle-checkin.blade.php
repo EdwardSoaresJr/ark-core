@@ -7,7 +7,7 @@
 >
     <div class="ops-intake-find-search">
         <label for="intake-vehicle-checkin" class="ops-index-field-label">Quick check-in</label>
-        <p class="ops-intake-checkin-lead">VIN or plate on file — open RO directly.</p>
+        <p class="ops-intake-checkin-lead">VIN or plate on file - open RO directly.</p>
         <div class="ops-intake-checkin-row">
             <input
                 id="intake-vehicle-checkin"

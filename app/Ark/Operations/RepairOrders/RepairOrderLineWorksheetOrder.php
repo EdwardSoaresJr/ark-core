@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
  * Stable worksheet order inside a concern / work group.
  *
  * Labor → Package → Part → Sublet → Fee → Note (then id).
- * Display order only — not financial authority.
+ * Display order only - not financial authority.
  */
 final class RepairOrderLineWorksheetOrder
 {

@@ -18,7 +18,7 @@
 >
     <div class="border-b border-slate-100 px-3 py-2">
         <p class="ops-eyebrow">Communications</p>
-        <p class="ops-meta mt-0.5">One timeline for calls, text, and email — filter by type when you need to focus.</p>
+        <p class="ops-meta mt-0.5">One timeline for calls, text, and email - filter by type when you need to focus.</p>
         <nav class="mt-2 flex flex-wrap gap-1.5" aria-label="Communication type filters">
             <button type="button" @click="setFilter('all')" :class="filterClass('all')">All · {{ $hubCommsCounts['all'] }}</button>
             <button type="button" @click="setFilter('call')" :class="filterClass('call')">Calls · {{ $hubCommsCounts['call'] }}</button>

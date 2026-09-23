@@ -208,7 +208,7 @@
                         <button
                             type="button"
                             class="ops-call-queue__action ops-call-queue__action--ghost"
-                            title="We've handled this call — customer context is covered on the shop floor"
+                            title="We've handled this call - customer context is covered on the shop floor"
                             data-call-queue-mark-worked="{{ $callSessionId }}"
                         >Handled</button>
                     @endif

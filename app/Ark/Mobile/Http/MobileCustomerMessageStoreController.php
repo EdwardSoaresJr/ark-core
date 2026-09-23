@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use RuntimeException;
 
 /**
- * Advisor-initiated SMS when no conversation thread exists yet — write path only.
+ * Advisor-initiated SMS when no conversation thread exists yet - write path only.
  * Reuses SendOutboundMessageAction; ConversationRecorder creates thread authority.
  */
 final class MobileCustomerMessageStoreController

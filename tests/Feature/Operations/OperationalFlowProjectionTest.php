@@ -182,7 +182,7 @@ function flowRepairOrderWithoutLines(RepairOrderStatus $status): RepairOrder
         'customer_id' => $customer->id,
         'vehicle_id' => $vehicle->id,
         'status' => $status,
-        'concern_summary' => 'Scheduled intake — not yet diagnosed.',
+        'concern_summary' => 'Scheduled intake - not yet diagnosed.',
         'opened_at' => now(),
     ]);
 }

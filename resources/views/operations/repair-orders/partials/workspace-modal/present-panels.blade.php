@@ -322,7 +322,7 @@
                                             </template>
                                         </div>
                                         <template x-if="! p.applyable">
-                                            <p class="text-xs text-amber-800" x-text="p.rejected_reason || 'Not applyable — critique only.'"></p>
+                                            <p class="text-xs text-amber-800" x-text="p.rejected_reason || 'Not applyable - critique only.'"></p>
                                         </template>
                                         <div class="flex flex-wrap gap-2" x-show="p.applyable">
                                             <button
@@ -393,7 +393,7 @@
                         x-ref="field"
                         value="{{ old('summary', $concern->summary) }}"
                         required
-                        placeholder="The problem — e.g. Overheating, brake noise. Type @RO for a previous visit."
+                        placeholder="The problem - e.g. Overheating, brake noise. Type @RO for a previous visit."
                         class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
                         @input="onInput()"
                         @keydown="onKeydown($event)"

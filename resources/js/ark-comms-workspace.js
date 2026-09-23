@@ -274,7 +274,7 @@ function markOpenConversationRead() {
         credentials: 'same-origin',
         body: '{}',
     }).catch(() => {
-        // Read state catches up on the next open — stay quiet.
+        // Read state catches up on the next open - stay quiet.
     });
 }
 
@@ -441,7 +441,7 @@ export function initCommsWorkspace() {
 
             applyPayload(payload);
         } catch {
-            // Polling backup when realtime misses — stay quiet.
+            // Polling backup when realtime misses - stay quiet.
         } finally {
             if (generation === selectionGeneration) {
                 inflight = false;

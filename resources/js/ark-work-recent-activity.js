@@ -88,7 +88,7 @@ export function initWorkRecentActivity() {
             lastSignature = signature;
             applyPayload(payload);
         } catch {
-            // Polling backup when realtime misses — stay quiet.
+            // Polling backup when realtime misses - stay quiet.
         } finally {
             inflight = false;
         }

@@ -3,7 +3,7 @@
         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Station presence</p>
         <h2 class="text-base font-black text-slate-950">Workstation PIN</h2>
         <p class="mt-0.5 text-xs text-slate-500">
-            Optional 4-digit PIN for legacy station handoff flows — not your ARK login password. Daily ARK use no longer requires a lock screen.
+            Optional 4-digit PIN for legacy station handoff flows - not your ARK login password. Daily ARK use no longer requires a lock screen.
         </p>
     </div>
 

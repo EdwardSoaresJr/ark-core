@@ -10,7 +10,7 @@ use App\Models\User;
 use RuntimeException;
 
 /**
- * Advisor Message Action send — intent → ConversationMessage via SMS.
+ * Advisor Message Action send - intent → ConversationMessage via SMS.
  */
 final class SendAdvisorMessageAction
 {

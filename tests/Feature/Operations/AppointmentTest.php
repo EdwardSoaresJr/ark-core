@@ -514,7 +514,7 @@ test('advisor can open schedule create from a repair order', function () {
         ]))
         ->assertOk()
         ->assertSee('Comeback noise', false)
-        ->assertSee('labor hours — used for daily shop capacity', false)
+        ->assertSee('labor hours - used for daily shop capacity', false)
         ->assertDontSee('name="technician_user_id"', false)
         ->assertSee('name="starts_time"', false)
         ->assertSee('name="duration_minutes"', false)

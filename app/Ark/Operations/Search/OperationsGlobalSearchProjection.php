@@ -11,7 +11,7 @@ use App\Ark\Operations\Vehicles\VehicleSearchQuery;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * One search everywhere — customer · plate · VIN · phone · RO · estimate · appointment.
+ * One search everywhere - customer · plate · VIN · phone · RO · estimate · appointment.
  * Projection only; opens existing operational destinations.
  */
 final class OperationsGlobalSearchProjection

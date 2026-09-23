@@ -52,7 +52,7 @@ test('history defaults to the last 30 days without a search', function (): void 
         'started_at' => now()->subDays(45),
     ]);
 
-    // Row select URLs prove list membership — phone digits also appear in
+    // Row select URLs prove list membership - phone digits also appear in
     // topbar queue payloads, so they cannot distinguish the history list.
     $this->actingAs($advisor)
         ->get(route('operations.communications.history'))

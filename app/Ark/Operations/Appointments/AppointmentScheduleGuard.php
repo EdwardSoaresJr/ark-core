@@ -74,7 +74,7 @@ final class AppointmentScheduleGuard
             $warnings[] = "This day would be over base capacity by {$over} hours (within the {$proposed->targetPercent}% scheduling target).";
         }
 
-        // MySQL datetime casts store wall-clock of the Carbon instance — persist UTC.
+        // MySQL datetime casts store wall-clock of the Carbon instance - persist UTC.
         $data['starts_at'] = $startsAt->copy()->utc();
         $data['ends_at'] = $endsAt->copy()->utc();
         $data['technician_user_id'] = $technicianUserId;
@@ -90,7 +90,7 @@ final class AppointmentScheduleGuard
     }
 
     /**
-     * Assignment-only updates keep existing start/end times — do not re-check hours.
+     * Assignment-only updates keep existing start/end times - do not re-check hours.
      *
      * @return array{technician_user_id: int|null, workstation_id: int|null, _schedule_warnings: list<string>}
      */

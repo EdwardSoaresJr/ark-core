@@ -54,7 +54,7 @@ Dragon is **in the work**, not a destination.
 
 - No permanent Dragon tab whose job is “type an RO number, chat”
 - Card tap → overlay: posture, money if ARK exposes it, last contact, one Dragon sentence, actions
-- Actions: glance on this board, then rewrite / review / ask — assists only, not editors. Never launch a browser on the shared screen.
+- Actions: glance on this board, then rewrite / review / ask - assists only, not editors. Never launch a browser on the shared screen.
 - Persistent **Ask Dragon** in the header is enough surface
 
 Dragon may stay **Not configured**. The glass still has a job: shop right now + needs action. Work happens in ARK on each person's computer.
@@ -63,7 +63,7 @@ Dragon may stay **Not configured**. The glass still has a job: shop right now + 
 
 Ambient awareness, not a second phone app.
 
-Example: *Molly is on a call — RO 1706 · 4:32 · estimate · Dragon: brake / waiting approval.*
+Example: *Molly is on a call - RO 1706 · 4:32 · estimate · Dragon: brake / waiting approval.*
 
 Missed / voicemail counts may appear. Playback, claiming, and dialing stay in ARK (Calls & VM).
 
@@ -73,7 +73,7 @@ Prefer **Today / Shop / Calls**. Persistent Ask Dragon. Contextual overlays.
 
 - **Admin** tucked (pair / unpair / version)
 - **Knowledge** has no permanent tab until the floor asks for it
-- **ROs / Approvals / Dragon** as peer tabs = SaaS clone — do not grow that IA
+- **ROs / Approvals / Dragon** as peer tabs = SaaS clone - do not grow that IA
 
 ## Shared board (not a browser)
 
@@ -83,7 +83,7 @@ Tap → glance on the glass (RO, vehicle, why it matters). Work happens in ARK *
 
 ## What may appear later (only when ARK already owns it)
 
-Financials, activity/events, estimate posture, live calls, technician capacity, parts state — as **projections** on this canvas. Dragon correlates; it does not invent.
+Financials, activity/events, estimate posture, live calls, technician capacity, parts state - as **projections** on this canvas. Dragon correlates; it does not invent.
 
 Financial sentences on the glass wait on **Financial Authority F1**. Do not fake $ sold / collected before then.
 
@@ -110,7 +110,7 @@ Canonical appliance: **1920 × 1080 logical pixels**, 16:9, 100% scaling, touchs
 ```
 Plumbing certified (done)
     ↓
-coming_in from ARK certified (2026-08-23) — scheduling freeze
+coming_in from ARK certified (2026-08-23) - scheduling freeze
     ↓
 Command center: attention · coming in · approvals · follow-up · shop pressure
     + glance on this board (no browser steal)

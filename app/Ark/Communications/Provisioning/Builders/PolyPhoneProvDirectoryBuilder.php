@@ -3,7 +3,7 @@
 namespace App\Ark\Communications\Provisioning\Builders;
 
 /**
- * Poly directory.xml shell — matches Asterisk 000000000000-directory.xml without user rows.
+ * Poly directory.xml shell - matches Asterisk 000000000000-directory.xml without user rows.
  */
 final class PolyPhoneProvDirectoryBuilder
 {

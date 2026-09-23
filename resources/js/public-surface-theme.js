@@ -37,7 +37,7 @@ function persistTheme(theme) {
     try {
         localStorage.setItem(STORAGE_KEY, theme);
     } catch {
-        // Ignore storage failures — still apply for this page view.
+        // Ignore storage failures - still apply for this page view.
     }
 
     if (helpers?.writeCookie) {

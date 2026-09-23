@@ -11,6 +11,6 @@
             href="{{ InspectionCaptureLinks::captureUrl($repairOrder, $concern->id) }}"
             class="font-semibold text-sky-700 underline underline-offset-2 hover:text-sky-900"
         >Open Inspection</a>
-        — photo and measurement beat prose alone.
+        - photo and measurement beat prose alone.
     </p>
 @endif

@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Dedicated machine credential for Dragon — not a staff User / Sanctum PAT.
+ * Dedicated machine credential for Dragon - not a staff User / Sanctum PAT.
  *
  * Plaintext token is shown once at issue time; only the hash is stored.
  */

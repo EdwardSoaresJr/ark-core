@@ -1,4 +1,4 @@
-# ADR-0006: Programmable Voice SIP Domain — Not Elastic SIP Trunking
+# ADR-0006: Programmable Voice SIP Domain - Not Elastic SIP Trunking
 
 **Status:** Accepted
 
@@ -12,8 +12,8 @@ Older cutover notes and ADR-0005 (Twilio native) said “Twilio Programmable Voi
 
 | Product | Role in ARK history |
 | --- | --- |
-| **Elastic SIP Trunking** | Carrier trunk into shop Asterisk / PBX — **retired** with `ark-asterisk` |
-| **Programmable Voice SIP domains** | Desk phone (VVX) registration so ARK can `<Sip>` ring endpoints — **current** |
+| **Elastic SIP Trunking** | Carrier trunk into shop Asterisk / PBX - **retired** with `ark-asterisk` |
+| **Programmable Voice SIP domains** | Desk phone (VVX) registration so ARK can `<Sip>` ring endpoints - **current** |
 
 Operator Learn already states the rule: use SIP domains; do not use Elastic SIP Trunking.
 

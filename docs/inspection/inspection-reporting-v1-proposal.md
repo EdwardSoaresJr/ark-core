@@ -1,4 +1,4 @@
-# Inspection Reporting v1 — Proposal (audit)
+# Inspection Reporting v1 - Proposal (audit)
 
 **Status:** Approved · Implemented · **STOP for visual review**  
 **Date:** 2026-07-26 · Implemented 2026-07-27  
@@ -11,7 +11,7 @@ Inspection → InspectionReportProjection(Simple|Detailed) → Portal / Print �
 ```
 
 No report tables. No second interpretation layer.  
-**Evidence rule (HARD):** customer-facing purpose allowlist — unknown/new purposes default hidden.
+**Evidence rule (HARD):** customer-facing purpose allowlist - unknown/new purposes default hidden.
 
 **Authority invariant (frozen for this capability):**
 
@@ -33,7 +33,7 @@ No report tables. No second interpretation layer.
 | Print / PDF for inspection | **Missing** | Estimate has PDF parity; inspection does not |
 
 **Today’s customer sentence:** “Here are the findings we recorded.”  
-**Desired sentence:** “Here is your vehicle inspection report — Simple first, evidence when you want it.”
+**Desired sentence:** “Here is your vehicle inspection report - Simple first, evidence when you want it.”
 
 ---
 
@@ -41,7 +41,7 @@ No report tables. No second interpretation layer.
 
 | Pattern | Engine | Reuse? |
 | --- | --- | --- |
-| Operational sheets (intake / tech) | `HtmlPdfBuilder` → Spatie Browsershot | **Yes — primary path** |
+| Operational sheets (intake / tech) | `HtmlPdfBuilder` → Spatie Browsershot | **Yes - primary path** |
 | Estimate / invoice PDF | `HeadlessChromiumPdfRenderer` + frozen `documents/pdf/document.blade.php` | Shop presentation layers yes; **do not** merge into estimate Blade |
 | Thermal labels | Separate | No |
 | DomPDF / `window.print()` as PDF authority | Forbidden by PDF doctrine | No |
@@ -61,7 +61,7 @@ Inspection (authority)
 ```
 
 **Name:** `InspectionReportProjection`  
-**Modes:** `simple` | `detailed` — **view modes of one payload**, never two stored reports.  
+**Modes:** `simple` | `detailed` - **view modes of one payload**, never two stored reports.  
 **Consumers:** Portal token page, authenticated portal entry (v1), print HTML, PDF bytes.  
 **Deprecate/thin:** `PortalInspectionSnapshot` becomes a thin adapter calling the report projection (or is replaced by it). Finding cards may still feed point packaging where useful.
 
@@ -69,33 +69,33 @@ Inspection (authority)
 
 ---
 
-## 4. Simple report — information hierarchy (exact)
+## 4. Simple report - information hierarchy (exact)
 
 **Default customer view.**
 
-1. **Shop identity** — logo, name, phone (letterhead-light on Portal; full on print/PDF)  
-2. **Title** — Vehicle Inspection  
-3. **Vehicle + visit** — Y/M/M · mileage in (if present) · date inspected · RO # · template name (Standard / PPI) · technician name (if recorded)  
-4. **Summary strip** — counts only:  
+1. **Shop identity** - logo, name, phone (letterhead-light on Portal; full on print/PDF)  
+2. **Title** - Vehicle Inspection  
+3. **Vehicle + visit** - Y/M/M · mileage in (if present) · date inspected · RO # · template name (Standard / PPI) · technician name (if recorded)  
+4. **Summary strip** - counts only:  
    - N Need Attention (Needs Attention + Failed)  
    - N Monitor  
    - N Checked OK (Pass)  
-   - N/A / Not performed called out honestly when relevant (road test N/A, etc.) — not buried  
-5. **Needs Attention / Failed** — each point:  
+   - N/A / Not performed called out honestly when relevant (road test N/A, etc.) - not buried  
+5. **Needs Attention / Failed** - each point:  
    - Condition label (restrained type, not emoji)  
    - Structured measurements that matter (brake I/O, tire O/C/I, PSI when relevant)  
-   - Comparison **observation** language only when derived (e.g. “Uneven wear was observed on the left front brake.”) — **never** “replace caliper”  
+   - Comparison **observation** language only when derived (e.g. “Uneven wear was observed on the left front brake.”) - **never** “replace caliper”  
    - Tech note (intent prefix stripped)  
    - Associated photo(s)  
-6. **Monitor** — same shape, quieter  
-7. **Checked & OK** — collapsed: category or comma list of labels + count (no green card forest)  
-8. **Footer** — shop contact; optional “Ask us about anything on this report”
+6. **Monitor** - same shape, quieter  
+7. **Checked & OK** - collapsed: category or comma list of labels + count (no green card forest)  
+8. **Footer** - shop contact; optional “Ask us about anything on this report”
 
 **Simple excludes:** full template walk of every Pass point, internal brake “take another look” coaching copy, internal ARK vocabulary, estimate/Concern links as repair conclusions.
 
 ---
 
-## 5. Detailed report — information hierarchy (exact)
+## 5. Detailed report - information hierarchy (exact)
 
 **Evidence / records / PPI buyer / warranty / another shop.**
 
@@ -109,9 +109,9 @@ Inspection (authority)
    - Notes  
    - Photos/video for that point  
    - Scan evidence callout on PPI scan points (attachment present)  
-4. **Comparison observations** (customer-safe sentence only) adjacent to the measured points — not a separate “diagnosis” section  
+4. **Comparison observations** (customer-safe sentence only) adjacent to the measured points - not a separate “diagnosis” section  
 5. **Road-test** section intact (performed + observations)  
-6. Optional small “Not checked” honesty if walk incomplete — do not pretend coverage
+6. Optional small “Not checked” honesty if walk incomplete - do not pretend coverage
 
 Detailed is still a **projection**, not a DB dump: typography, measurement pairs, photos with findings.
 
@@ -122,13 +122,13 @@ Detailed is still a **projection**, not a DB dump: typography, measurement pairs
 | Requirement | Proposal |
 | --- | --- |
 | Preserve `InspectionAccessToken` SMS delivery | Keep routes; feed report projection |
-| Visible from vehicle/visit without fresh SMS | **v1:** add inspection entry on authenticated portal vehicle/visit when an Inspection has addressable evidence (and customer owns vehicle). Deep-link may mint/reuse token or use portal-auth gated report route — **prefer portal-auth for signed-in; keep token for SMS** |
+| Visible from vehicle/visit without fresh SMS | **v1:** add inspection entry on authenticated portal vehicle/visit when an Inspection has addressable evidence (and customer owns vehicle). Deep-link may mint/reuse token or use portal-auth gated report route - **prefer portal-auth for signed-in; keep token for SMS** |
 | Default Simple | Query/UI: `?view=simple` default; `?view=detailed` |
 | Simple \| Detailed toggle | Client switch or links; same projection |
 | Print · Save PDF | CTAs → print Blade URL / PDF download (token- or auth-scoped) |
 | Staff preview | Keep amber banner; do not log customer view |
 
-**Photo hygiene (must ship with report):** Portal/print/PDF include photos with purpose `customer` (and optionally `before`/`after` if used customer-facing). **Exclude `internal`** unless explicitly approved later. Today’s snapshot leaks all purposes — fix as part of this capability.
+**Photo hygiene (must ship with report):** Portal/print/PDF include photos with purpose `customer` (and optionally `before`/`after` if used customer-facing). **Exclude `internal`** unless explicitly approved later. Today’s snapshot leaks all purposes - fix as part of this capability.
 
 ---
 
@@ -145,7 +145,7 @@ InspectionReportProjection
 - Page-break-aware sections (`page-break-inside: avoid` on finding blocks)  
 - Photos sized for print; embed as data URIs or absolute URLs Chromium can load  
 - Footer: shop · RO · report date · page numbers (print CSS)  
-- QR/link to live Portal — **optional v1**, not required  
+- QR/link to live Portal - **optional v1**, not required  
 - Black-and-white readable: condition via type weight/labels, not color-only  
 
 **Do not** print Portal chrome. **Do not** invent a second measurement mapper for PDF.
@@ -174,7 +174,7 @@ InspectionReportProjection
 | Tire PSI | Four-corner grid LF/RF/LR/RR |
 | PPI battery / charging | Voltage / result as labeled figures |
 
-**Copy when Δ exceeds shop threshold (customer):** observational only — e.g. “Uneven pad wear was observed on this wheel.”  
+**Copy when Δ exceeds shop threshold (customer):** observational only - e.g. “Uneven pad wear was observed on this wheel.”  
 **Forbidden:** inventing cause, parts to replace, or Concern titles from Δ.  
 **Tech “take another look” helper:** walk-only; **not** on customer report.
 
@@ -185,9 +185,9 @@ InspectionReportProjection
 | Fact | Behavior |
 | --- | --- |
 | One Inspection per RO | Report is always for that RO’s inspection session |
-| Template edits after capture | Report reads **item rows + measurements on the Inspection**, not live template seed — historical evidence preserved |
-| Reset walk | Clears session evidence; report empties / “not ready” — no parallel history table |
-| Prior visits | Optional Detailed glance via existing prior-visit projection — not required for Simple v1 |
+| Template edits after capture | Report reads **item rows + measurements on the Inspection**, not live template seed - historical evidence preserved |
+| Reset walk | Clears session evidence; report empties / “not ready” - no parallel history table |
+| Prior visits | Optional Detailed glance via existing prior-visit projection - not required for Simple v1 |
 | Incomplete walks | Honest counts; do not claim “23 Checked OK” if coverage incomplete without labeling incompleteness |
 
 ---
@@ -209,12 +209,12 @@ InspectionReportProjection
 
 | Gap | New authority? |
 | --- | --- |
-| Simple/Detailed packaging | **No** — projection |
-| Print/PDF Blade + HtmlPdfBuilder | **No** — presentation |
-| Portal vehicle discovery | **No** — routing + auth gate |
-| Photo purpose filter | **No** — already on `InspectionItemPhoto.purpose` |
-| Customer-safe comparison sentence | **No** — derived from measurements + threshold; do not persist as diagnosis |
-| Completed lifecycle / Finish Inspection | **Out of scope** — do not invent via report |
+| Simple/Detailed packaging | **No** - projection |
+| Print/PDF Blade + HtmlPdfBuilder | **No** - presentation |
+| Portal vehicle discovery | **No** - routing + auth gate |
+| Photo purpose filter | **No** - already on `InspectionItemPhoto.purpose` |
+| Customer-safe comparison sentence | **No** - derived from measurements + threshold; do not persist as diagnosis |
+| Completed lifecycle / Finish Inspection | **Out of scope** - do not invent via report |
 | Auto Concern from Δ | **Forbidden** |
 | Stored report PDF archive | **Not required v1**; earn later if email/history demands |
 

@@ -5,7 +5,7 @@
     :show-active-vehicles="false"
     :show-conversation="false"
     open-repair-orders-label="Active Work"
-    :open-repair-orders-meta="'Open repair orders across all vehicles — status, workflow posture, and next action.'"
+    :open-repair-orders-meta="'Open repair orders across all vehicles - status, workflow posture, and next action.'"
 />
 
 @include('operations.work.partials.advisor-work-context-panel', [

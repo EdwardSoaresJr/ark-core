@@ -8,7 +8,7 @@
             <div>
                 <p class="ops-learn__eyebrow">Staff training</p>
                 <h1 class="ops-learn__title">Print {{ \App\Support\Branding\Branding::learnName() }}</h1>
-                <p class="ops-learn__lede">Select the guides you want on paper. Whole sections or individual topics — your choice.</p>
+                <p class="ops-learn__lede">Select the guides you want on paper. Whole sections or individual topics - your choice.</p>
             </div>
             <div class="ops-learn-print-select__actions">
                 <a href="{{ route('operations.learn.index') }}" class="ops-learn-print-select__btn">Back to guides</a>

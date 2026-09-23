@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ARK Self-Signed Printing — development certificate generator (DO NOT deploy to production).
+# ARK Self-Signed Printing - development certificate generator (DO NOT deploy to production).
 #
 # Produces an ARK-owned chain for stock QZ Tray evaluation:
 #   ARK Root CA → ARK Printing Signing Certificate

@@ -1,6 +1,6 @@
 # ARK Message Actions v1
 
-**Status:** Shipping — first platform slice  
+**Status:** Shipping - first platform slice  
 **Not:** A canned-SMS product
 
 > Advisors send **intent**. ARK delivers **copy**, over the customer's current channel, and may handle expected replies. Conversation remains authority for what was said.
@@ -13,11 +13,11 @@
 
 | Term | Meaning |
 | --- | --- |
-| **Message Action** | Operator intent — Send Address, Send Reminder, Send Tow Info |
+| **Message Action** | Operator intent - Send Address, Send Reminder, Send Tow Info |
 | **Delivery** | Channel projection (SMS today; portal / app later) |
 | **ConversationMessage** | Always what was said (append-only) |
 | **Expected replies** (optional) | Interpretable inbound (`1` / `3` / `CALL`) → structured outcome |
-| **Attention** | Projection only when a human must act — never `AttentionItem` authority |
+| **Attention** | Projection only when a human must act - never `AttentionItem` authority |
 
 Do **not** center the product on a template library. Templates are implementation inside an action.
 
@@ -45,7 +45,7 @@ Do **not** center the product on a template library. Templates are implementatio
 | `3` / Directions | Auto-send shop address · no Attention |
 | `4` / Call / Callback | Attention: Customer requested callback |
 
-Contract lives on outbound `ConversationMessage.metadata` (`message_action`, `expected_replies`, `appointment_id`, `contract_expires_at`). Consumption is inferred from a later inbound with `message_action_reply` — messages stay append-only.
+Contract lives on outbound `ConversationMessage.metadata` (`message_action`, `expected_replies`, `appointment_id`, `contract_expires_at`). Consumption is inferred from a later inbound with `message_action_reply` - messages stay append-only.
 
 ---
 

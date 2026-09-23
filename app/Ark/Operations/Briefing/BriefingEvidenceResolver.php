@@ -10,7 +10,7 @@ use App\Ark\Operations\Telephony\CallSession;
 use Illuminate\Support\Carbon;
 
 /**
- * Resolves evidence references into display rows — never duplicates authority.
+ * Resolves evidence references into display rows - never duplicates authority.
  */
 final class BriefingEvidenceResolver
 {

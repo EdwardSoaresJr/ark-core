@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Notebook query for sprint KPI — median minutes from website lead submit to first advisor outbound.
+ * Notebook query for sprint KPI - median minutes from website lead submit to first advisor outbound.
  */
 final class CommunicationsFirstResponseMedian
 {

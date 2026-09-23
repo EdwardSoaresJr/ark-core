@@ -191,7 +191,7 @@ test('projection never selects another repair orders appointment by customer veh
         'status' => AppointmentStatus::Scheduled,
     ]);
 
-    // Same customer/vehicle/time, linked only to RO A — RO B must not inherit.
+    // Same customer/vehicle/time, linked only to RO A - RO B must not inherit.
     $postureB = app(ArrivalPostureProjection::class)->forRepairOrder($roB);
 
     expect($postureB->present)->toBeFalse()

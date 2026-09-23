@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
-/** Firebase HTTP v1 credentials — implementation detail of {@see FirebasePushTransport}. */
+/** Firebase HTTP v1 credentials - implementation detail of {@see FirebasePushTransport}. */
 final class FcmAccessTokenProvider
 {
     private const CACHE_KEY = 'mobile:push-transport:firebase:access_token';

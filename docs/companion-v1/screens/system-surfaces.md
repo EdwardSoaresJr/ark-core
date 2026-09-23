@@ -1,25 +1,25 @@
-# Screen spec — System Surfaces (Error · Offline · Empty)
+# Screen spec - System Surfaces (Error · Offline · Empty)
 
 **ID:** `companion.screen.system-surfaces`  
 **Role(s):** All  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Calm recovery when things fail — **retry** · **go back** · no stack traces · no SaaS apology essays.
+Calm recovery when things fail - **retry** · **go back** · no stack traces · no SaaS apology essays.
 
 ---
 
 ## Error (inline + full)
 
-**Inline:** failed send · payment · upload — action on the row
+**Inline:** failed send · payment · upload - action on the row
 
 **Full-screen rare:**
 
-- Title — `Can't reach the shop`
-- Body — one sentence
+- Title - `Can't reach the shop`
+- Body - one sentence
 - **Retry** primary · **Go back** secondary
 
 ---
@@ -41,14 +41,14 @@ Calm recovery when things fail — **retry** · **go back** · no stack traces �
 | Schedule empty | "No appointments today." |
 | Calls empty | "No recent calls." |
 
-No illustration theater — icon optional · one line · one action if relevant
+No illustration theater - icon optional · one line · one action if relevant
 
 ---
 
 ## Action / filter sheets
 
-- **Action sheet** — iOS standard · destructive last
-- **Filter sheet** — comms · calls · schedule chips · Apply · Reset
+- **Action sheet** - iOS standard · destructive last
+- **Filter sheet** - comms · calls · schedule chips · Apply · Reset
 
 ---
 

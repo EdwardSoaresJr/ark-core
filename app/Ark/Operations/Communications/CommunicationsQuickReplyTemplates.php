@@ -30,7 +30,7 @@ final class CommunicationsQuickReplyTemplates
             [
                 'key' => 'estimate_received',
                 'label' => 'Estimate received',
-                'body' => 'Thanks for reaching out — we received your request and will follow up shortly with next steps.',
+                'body' => 'Thanks for reaching out - we received your request and will follow up shortly with next steps.',
                 'color' => CommunicationsAccentColor::NEUTRAL,
             ],
             [
@@ -42,7 +42,7 @@ final class CommunicationsQuickReplyTemplates
             [
                 'key' => 'running_behind',
                 'label' => 'Running behind',
-                'body' => 'Thanks for your patience — we are running a little behind today but will get back to you as soon as possible.',
+                'body' => 'Thanks for your patience - we are running a little behind today but will get back to you as soon as possible.',
                 'color' => CommunicationsAccentColor::NEUTRAL,
             ],
             [

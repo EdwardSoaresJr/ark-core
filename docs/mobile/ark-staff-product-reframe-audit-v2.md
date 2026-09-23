@@ -1,7 +1,7 @@
-# ARK Staff — Product Reframe Audit v2
+# ARK Staff - Product Reframe Audit v2
 
-**Status:** Observation only — no Flutter implementation in this pass.  
-**Canonical audit:** **`ark-staff-moments-audit-v3.md`** — moments, first 30s, thumb travel, emotional audit, NextActions. This v2 doc keeps the **screen inventory + SYS-1–6 appendix** only.
+**Status:** Observation only - no Flutter implementation in this pass.  
+**Canonical audit:** **`ark-staff-moments-audit-v3.md`** - moments, first 30s, thumb travel, emotional audit, NextActions. This v2 doc keeps the **screen inventory + SYS-1–6 appendix** only.
 
 **Posture:** Architecture is good enough. Next milestone = **product**, not framework.
 
@@ -12,7 +12,7 @@
 | Module tabs / CRUD screens | **Dashboards that answer: happened · needs me · next · connected** |
 | Empty = honest | **Incomplete = framed** (identity, related objects, expected actions) |
 
-**Success metric:** Edward opens ARK Staff and **instinctively prefers it over generic CRM mobile** — not because it has more features, but because it feels **purpose-built for running an automotive shop**.
+**Success metric:** Edward opens ARK Staff and **instinctively prefers it over generic CRM mobile** - not because it has more features, but because it feels **purpose-built for running an automotive shop**.
 
 ---
 
@@ -33,17 +33,17 @@
 
 **One sentence:** reference CRM removes *decisions per task*. ARK still asks the operator to understand *navigation architecture*.
 
-**Automotive guardrail:** Keep vehicle + customer + RO hierarchy. Adopt reference CRM's **speed patterns** (sheets, swipe, persistent actions, inline reply) — not CRM channel thinking.
+**Automotive guardrail:** Keep vehicle + customer + RO hierarchy. Adopt reference CRM's **speed patterns** (sheets, swipe, persistent actions, inline reply) - not CRM channel thinking.
 
 ---
 
 ## 2. Six system bugs (still the root cause)
 
-From v1 — unchanged, still wearing ~30 costumes:
+From v1 - unchanged, still wearing ~30 costumes:
 
 | ID | Bug | Operator symptom |
 |---|---|---|
-| **SYS-1** | No navigation shell — every screen owns `Scaffold`/`AppBar` | Double headers, triple back, "screens inside screens" |
+| **SYS-1** | No navigation shell - every screen owns `Scaffold`/`AppBar` | Double headers, triple back, "screens inside screens" |
 | **SYS-2** | Identity not persistent in shell | "Whose car am I touching?" after drill-in |
 | **SYS-3** | Two spacing scales (giant + cramped) | Intake tiles huge; Concern heading clips findings |
 | **SYS-4** | Four card languages | Work `ArkCard` vs Schedule `Card` vs Intake outlined tiles vs Home moments |
@@ -60,31 +60,31 @@ For each: **Production? · Sparse? · Dead end? · Comms visible? · Notes**
 
 | Screen | File | Production feel | Sparse | Dead end | Comms/SIP |
 |---|---|:---:|:---:|:---:|---|
-| Splash | `app.dart` | OK | — | — | — |
-| Login | `login_screen.dart` | OK | — | — | — |
+| Splash | `app.dart` | OK | - | - | - |
+| Login | `login_screen.dart` | OK | - | - | - |
 | **Home / Orientation** | `orientation_home_screen.dart` | **Strong** | Low | No | Inline Reply on moments; call obs → customer |
-| **Comms hub** | `comms_hub_screen.dart` | Good | Medium when empty | No | **Hub** — attention + threads + voice banners |
+| **Comms hub** | `comms_hub_screen.dart` | Good | Medium when empty | No | **Hub** - attention + threads + voice banners |
 | **Work** | `my_work_screen.dart` | OK | **Yes** (tall cards) | No | None on row |
 | **Intake hub** | `intake_hub_screen.dart` | OK | **Yes** (6 empty tiles) | No | None |
 | **Shop / Attention** | `attention_screen.dart` | Good | When empty | Partial (rows depend on deep link) | Call/text via attention rows |
 | **Schedule** | `schedule_screen.dart` | Good | Empty state OK | No | **Missing** on appointment rows |
-| **More** | `more_screen.dart` | OK | Low | No | — |
-| **Apps** | `apps_screen.dart` | **Weak** | Grid OK | **Yes — 9 Soon tiles** | Duplicates Comms launcher |
+| **More** | `more_screen.dart` | OK | Low | No | - |
+| **Apps** | `apps_screen.dart` | **Weak** | Grid OK | **Yes - 9 Soon tiles** | Duplicates Comms launcher |
 | **Customers** (list) | `customers_screen.dart` | OK | Search empty | No | Indirect |
-| **Global search** | `global_search_screen.dart` | OK | — | Partial types | — |
-| **Customer workspace** | `customer_workspace_screen.dart` | **Good when loaded** | — | Was P0 404 — **route now exists** | Call + composer + quick actions |
+| **Global search** | `global_search_screen.dart` | OK | - | Partial types | - |
+| **Customer workspace** | `customer_workspace_screen.dart` | **Good when loaded** | - | Was P0 404 - **route now exists** | Call + composer + quick actions |
 | **Vehicle workspace** | `vehicle_workspace_screen.dart` | Partial | Placeholder cards | Soft dead ends | **Missing** action strip |
 | **RO workspace** | `repair_order_workspace_screen.dart` | **Best surface** | Overview good | Voice → "Phase 3"; web fallbacks | Thread embed + command bar |
 | **Concern detail** | `concern_detail_screen.dart` | **Worst UX** | Inverted hierarchy | SYS-1 stack | None |
-| **Comm thread** | `communication_thread_screen.dart` | Good | — | Unknown actions → web | Call banner, voicemail play |
+| **Comm thread** | `communication_thread_screen.dart` | Good | - | Unknown actions → web | Call banner, voicemail play |
 | **Check-in** | `check_in_screen.dart` | Strong flow | Form dense | No | Could add text customer |
-| **VIN scan** | `vin_scan_screen.dart` | OK | — | No | — |
-| **Walk-around** | `vehicle_walk_around_screen.dart` | OK | — | No | — |
-| **Finding capture** | `finding_capture_screen.dart` | OK | — | No | — |
-| **Finding detail** | `finding_detail_screen.dart` | OK | Read-only | No | — |
+| **VIN scan** | `vin_scan_screen.dart` | OK | - | No | - |
+| **Walk-around** | `vehicle_walk_around_screen.dart` | OK | - | No | - |
+| **Finding capture** | `finding_capture_screen.dart` | OK | - | No | - |
+| **Finding detail** | `finding_detail_screen.dart` | OK | Read-only | No | - |
 | **Conversations** | `conversations_screen.dart` | OK | Hidden (Apps only) | Orphan route | Duplicate of Comms tab |
-| **Owner bookend** | `owner_bookend_screen.dart` | OK | Active queue empty | Wrapped AppBar | — |
-| **Owner ops report** | `owner_operational_report_screen.dart` | OK | Advisor list sparse | More → wrapper | — |
+| **Owner bookend** | `owner_bookend_screen.dart` | OK | Active queue empty | Wrapped AppBar | - |
+| **Owner ops report** | `owner_operational_report_screen.dart` | OK | Advisor list sparse | More → wrapper | - |
 
 ---
 
@@ -104,11 +104,11 @@ For each: **Production? · Sparse? · Dead end? · Comms visible? · Notes**
 
 | Location | Issue |
 |---|---|
-| Apps tab | Implemented in Flutter but **not in API nav** — unreachable launcher |
-| Conversations screen | Parallel to Comms hub — **two paths to same authority** |
-| Intake 6-tile grid | Walk-in / drop-off / tow-in → **same check-in** — tiles pretend differentiation |
-| Work empty | One line centered — no connected objects |
-| Vehicle workspace | `_PlaceholderCard` for history/deferred — reads as unfinished |
+| Apps tab | Implemented in Flutter but **not in API nav** - unreachable launcher |
+| Conversations screen | Parallel to Comms hub - **two paths to same authority** |
+| Intake 6-tile grid | Walk-in / drop-off / tow-in → **same check-in** - tiles pretend differentiation |
+| Work empty | One line centered - no connected objects |
+| Vehicle workspace | `_PlaceholderCard` for history/deferred - reads as unfinished |
 | More → Bookend / Ops report | Extra AppBar wrapper on body-only screens |
 
 ### Navigation traps
@@ -131,7 +131,7 @@ For each: **Production? · Sparse? · Dead end? · Comms visible? · Notes**
 | Comms (empty) | OK copy but no adjacent context | Show schedule arrivals + missed call count |
 | Customer (error) | Full screen whitespace + raw error | Branded error + retry + last customer |
 | Concern | Giant H1 + clipped findings | One concern line + findings list above fold |
-| Apps Soon tiles | Visual grid promises capability | Grey out **or** show framed 70% preview — never snackbar-only |
+| Apps Soon tiles | Visual grid promises capability | Grey out **or** show framed 70% preview - never snackbar-only |
 
 ---
 
@@ -152,16 +152,16 @@ For each: **Production? · Sparse? · Dead end? · Comms visible? · Notes**
 
 ---
 
-## 7. Communications — first-class (not bolted on)
+## 7. Communications - first-class (not bolted on)
 
 ### Today
 
 - **Strong:** Comms tab, thread, inbound SIP overlay, customer workspace composer, home inline Reply
-- **Weak:** Schedule rows, Work rows, Vehicle workspace, Intake hub, Finding detail — **no ambient comms**
+- **Weak:** Schedule rows, Work rows, Vehicle workspace, Intake hub, Finding detail - **no ambient comms**
 
 ### Target: `ContactActionStrip` (reserved on every customer-facing surface)
 
-Not modules — one horizontal strip, same order, same icons:
+Not modules - one horizontal strip, same order, same icons:
 
 | Action | v1 ship | v2 ship |
 |---|---|---|
@@ -172,7 +172,7 @@ Not modules — one horizontal strip, same order, same icons:
 | Navigate | Maps to shop/customer | Address from customer |
 | Payment | Send payment link | Read balance + link |
 
-**Rule:** Disabled state + label beats missing control. "Payment — balance $240" beats no button.
+**Rule:** Disabled state + label beats missing control. "Payment - balance $240" beats no button.
 
 ### Desktop parity gap (mobile still missing)
 
@@ -182,20 +182,20 @@ Not modules — one horizontal strip, same order, same icons:
 
 ---
 
-## 8. Horizontal 70% — capability matrix
+## 8. Horizontal 70% - capability matrix
 
-Every row must **exist, feel intentional, connect** — not perfect.
+Every row must **exist, feel intentional, connect** - not perfect.
 
 | Capability | ~70% definition | Current ~% | Gap |
 |---|---|---:|---|
-| Home / Today | Moments + inline actions | 75 | — |
+| Home / Today | Moments + inline actions | 75 | - |
 | Work / RO production | Workspace + inspection + findings | 70 | Drill-in UX |
 | Comms | Hub + thread + inbound voice | 65 | No queue; orphan Conversations |
 | Intake / check-in | Full walk-in flow | 70 | Sparse hub |
 | Customer / vehicle | Workspace + identity | 60 | Vehicle placeholders |
 | Schedule | Day view + status | 55 | No comms on row |
 | Search | All entity types | 50 | Partial types |
-| Attention / shop | Manager triage | 65 | — |
+| Attention / shop | Manager triage | 65 | - |
 | Payments | View balance + send link | 30 | Apps Soon |
 | Estimates | View + send link | 40 | Web fallback |
 | Photos / docs | View on RO | 45 | Apps Soon |
@@ -205,31 +205,31 @@ Every row must **exist, feel intentional, connect** — not perfect.
 
 ## 9. Proposed redesign order (product pass, not architecture)
 
-**Phase 0 — Screenshot board (mandatory)**  
+**Phase 0 - Screenshot board (mandatory)**  
 Capture all 27 screens @ 390×844 + tablet width. Lay out on one board. Mark SYS-1/2/4 violations in red. **No code until board review.**
 
-**Phase 1 — Shell (unblocks everything)**  
-1. `WorkspaceShell` — one AppBar, one back, persistent `IdentityStrip`  
-2. Sub-views as **bodies or bottom sheets** — never nested `Scaffold`  
+**Phase 1 - Shell (unblocks everything)**  
+1. `WorkspaceShell` - one AppBar, one back, persistent `IdentityStrip`  
+2. Sub-views as **bodies or bottom sheets** - never nested `Scaffold`  
 3. Global search results open in shell navigator, not tab navigator  
 
-**Phase 2 — Design system enforcement**  
-4. `ArkCard` + `ArkSection` + `ArkListRow` — migrate tab roots (Work, Intake, Schedule)  
-5. `AsyncStateView` everywhere — kill raw errors  
+**Phase 2 - Design system enforcement**  
+4. `ArkCard` + `ArkSection` + `ArkListRow` - migrate tab roots (Work, Intake, Schedule)  
+5. `AsyncStateView` everywhere - kill raw errors  
 6. Context-aware command bar (SYS-5)  
 
-**Phase 3 — Remove hallways (horizontal 70%)**  
+**Phase 3 - Remove hallways (horizontal 70%)**  
 7. Replace Apps **Soon** tiles with framed surfaces or remove  
 8. `ContactActionStrip` on Customer · Vehicle · RO · Schedule row  
 9. Merge Conversations → Comms (one path)  
 10. Intake hub density + show live queue  
 
-**Phase 4 — reference CRM speed patterns (automotive)**  
+**Phase 4 - reference CRM speed patterns (automotive)**  
 11. Bottom sheets: Concern, Finding, Log call  
 12. Swipe Work row: Assign · Message · Open RO  
 13. Optimistic assign + undo snackbar  
 
-**Phase 5 — Owner / manager**  
+**Phase 5 - Owner / manager**  
 14. Bookend + ops report use same shell  
 15. Attention → always lands in meaningful workspace  
 
@@ -241,7 +241,7 @@ Edward: beside vehicle, flashlight, gloves, interrupted every 20s.
 
 | Requirement | Status |
 |---|---|
-| Primary action thumb-reachable | Partial (command bar bottom — good) |
+| Primary action thumb-reachable | Partial (command bar bottom - good) |
 | 48×48 targets | Theme defined; chips/buttons often smaller |
 | Sunlight contrast | Muted tier improved in theme; not verified all screens |
 | One-handed back | Broken when triple-back |
@@ -257,11 +257,11 @@ Edward: beside vehicle, flashlight, gloves, interrupted every 20s.
 | Persistent record header | `IdentityStrip`: Customer · Vehicle · RO status |
 | Bottom sheet actions | Concern / finding / call log over workspace |
 | Swipe triage | Work + Attention rows |
-| Inline reply | Already on Home — extend to Comms list |
+| Inline reply | Already on Home - extend to Comms list |
 | Unified inbox badge | Comms tab badge from attention count |
 | Quick actions row | `ContactActionStrip` |
 | Search omnibox | Finish entity types; open in shell |
-| Pipeline stages | RO lifecycle chips (already) — not CRM stages |
+| Pipeline stages | RO lifecycle chips (already) - not CRM stages |
 
 ---
 
@@ -269,9 +269,9 @@ Edward: beside vehicle, flashlight, gloves, interrupted every 20s.
 
 1. **Device:** iPhone 14 Pro logical size + one Android mid-size.  
 2. **Account:** Production or staging with real Demo Auto Repair data (not empty tenant).  
-3. **Role:** Capture as **Advisor** (Edward) — full tab set.  
+3. **Role:** Capture as **Advisor** (Edward) - full tab set.  
 4. **States per screen:** Populated · Empty · Error (where safe).  
-5. **Layout:** Figma/FigJam or printed grid — rows = capability, columns = screen state.  
+5. **Layout:** Figma/FigJam or printed grid - rows = capability, columns = screen state.  
 6. **Annotate:** Red = dead end; Yellow = sparse; Blue = inconsistency; Green = reference surfaces (RO overview, Home).  
 
 **Reference surfaces to clone:** RO workspace Overview · Home moments · Customer workspace (loaded).
@@ -280,8 +280,8 @@ Edward: beside vehicle, flashlight, gloves, interrupted every 20s.
 
 ## 13. Relation to v1 audit
 
-- `docs/mobile/ark-mobile-ux-audit-v1.md` — live walkthrough + SYS-1–6 + P0 list  
-- **P0-A customer route** — fixed (`GET /api/mobile/customers/{customer}` in `routes/api.php`)  
-- **This v2 doc** — milestone reframe, horizontal 70%, hallway removal, comms-first, reference CRM UX study, screenshot gate  
+- `docs/mobile/ark-mobile-ux-audit-v1.md` - live walkthrough + SYS-1–6 + P0 list  
+- **P0-A customer route** - fixed (`GET /api/mobile/customers/{customer}` in `routes/api.php`)  
+- **This v2 doc** - milestone reframe, horizontal 70%, hallway removal, comms-first, reference CRM UX study, screenshot gate  
 
 **Next step:** Screenshot board review with Edward → then Phase 1 shell implementation in `ark-mobile` only.

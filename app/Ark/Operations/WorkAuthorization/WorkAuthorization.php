@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Permission for packaged work — not execution.
+ * Permission for packaged work - not execution.
  * Owns: package type, status, scope key, outcome, recommendation.
  * Does not own: Repair Actions, Evidence, Pricing, Labor, Financial Position.
  */

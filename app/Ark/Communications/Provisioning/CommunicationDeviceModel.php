@@ -5,7 +5,7 @@ namespace App\Ark\Communications\Provisioning;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Platform catalog — firmware policy and builder dispatch for endpoint models.
+ * Platform catalog - firmware policy and builder dispatch for endpoint models.
  */
 class CommunicationDeviceModel extends Model
 {

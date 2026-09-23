@@ -1,6 +1,6 @@
-# ARK Complete Hosted — Durable Media Storage Doctrine v1
+# ARK Complete Hosted - Durable Media Storage Doctrine v1
 
-**Status:** Accepted design — 2026-09-07  
+**Status:** Accepted design - 2026-09-07  
 **Companions:** [ark-complete-hosted-hosting-model-v1.md](ark-complete-hosted-hosting-model-v1.md) · Laravel `config/filesystems.php`  
 **Scope:** Architecture + Hosted policy. Does **not** move LNP media, change production provider, or resize/migrate compute.
 
@@ -58,7 +58,7 @@ R2 / S3-compatible durable media
 - LNP currently runs on oversized `vhf-3c-8gb` (`144.202.74.190`) after an in-place resize.
 - Desired starter class: `vhf-2c-2gb` (2 vCPU / 2 GiB / 80 GB). Vultr cannot shrink in place.
 - **Do not assume** ARK can provision an additional temporary VPS for right-sizing.
-- Shadow (`149.28.240.77`) and Platform may be *candidates* for a future temporary authority bridge — **not inspected or authorized here**.
+- Shadow (`149.28.240.77`) and Platform may be *candidates* for a future temporary authority bridge - **not inspected or authorized here**.
 - Eventual right-sizing must preserve a single-authority chain:
 
 ```text
@@ -85,11 +85,11 @@ ARK application
 
 | Surface | Provider |
 | --- | --- |
-| **ARK Complete Hosted (default)** | Cloudflare R2 (S3-compatible) — leading candidate |
+| **ARK Complete Hosted (default)** | Cloudflare R2 (S3-compatible) - leading candidate |
 | **Enterprise / self-hosted** | Customer S3 / MinIO / B2 / other compatible endpoint, or local disk |
 | **Dev / single-box** | Local disk remains fully supported |
 
-Core must **not** hard-wire Cloudflare APIs. Provider-specific Hosted wiring belongs in Platform / env / secrets — not application conditionals on `if (r2)`.
+Core must **not** hard-wire Cloudflare APIs. Provider-specific Hosted wiring belongs in Platform / env / secrets - not application conditionals on `if (r2)`.
 
 `FILESYSTEM_DISK` / `ARK_MEDIA_DISK` select the durable-media disk. R2 is configured as the Laravel `s3` driver with `AWS_ENDPOINT` (and path-style as required).
 
@@ -117,14 +117,14 @@ Core must **not** hard-wire Cloudflare APIs. Provider-specific Hosted wiring bel
 | Logs | Operational; rotate |
 | Horizon / queue working state | Runtime |
 | Imagick / Browsershot / OCR scratch | Absolute FS tooling |
-| OIDC keys, QZ, Firebase SA, SIP secrets | Host secrets — not public media |
+| OIDC keys, QZ, Firebase SA, SIP secrets | Host secrets - not public media |
 | Install identity under `storage/app/install` | Platform/install concern |
 | Device provision `.cfg` | Generated operational config |
 | Upload / transform temp under `sys_get_temp_dir()` | Must clean up |
 
 ### Public marketing / brand assets
 
-Shop logos and website featured media may use a **public-readable** object prefix or a separate public disk — still S3-compatible when Hosted — with CDN optional later. Authorization model differs from private operational media; do not collapse them into one ACL.
+Shop logos and website featured media may use a **public-readable** object prefix or a separate public disk - still S3-compatible when Hosted - with CDN optional later. Authorization model differs from private operational media; do not collapse them into one ACL.
 
 ---
 
@@ -137,8 +137,8 @@ Compute is dedicated per shop; object storage may be a shared managed service.
 | Layer | Choice |
 | --- | --- |
 | Account | ARK-managed R2 account (or per-env) |
-| Bucket | **One bucket per environment** (e.g. `ark-hosted-prod`) *or* one bucket per shop if ops prefer hard walls — start with **prefix isolation + scoped credentials** |
-| Object key | `{installation_uuid}/{collection}/{…}` — UUID, not shop slug |
+| Bucket | **One bucket per environment** (e.g. `ark-hosted-prod`) *or* one bucket per shop if ops prefer hard walls - start with **prefix isolation + scoped credentials** |
+| Object key | `{installation_uuid}/{collection}/{…}` - UUID, not shop slug |
 | Credentials | Prefer **per-installation** access keys limited to that prefix (R2 API tokens / S3 policies) when Platform can issue them; until then, Platform-held credentials with server-side-only access |
 | Enumeration | Application never lists sibling installation prefixes for authorization |
 | Deletion | Shop cancel → controlled lifecycle job; not casual recursive wipe from UI |
@@ -156,14 +156,14 @@ Enterprise: customer supplies endpoint + credentials; same key shape inside thei
 **Target representation (conceptual):**
 
 ```text
-disk          — Laravel disk name (e.g. media, public_media)
-object_key    — path within that disk (today’s storage_path value)
+disk          - Laravel disk name (e.g. media, public_media)
+object_key    - path within that disk (today’s storage_path value)
 mime / size / original_name / metadata
 ```
 
 Do **not** persist provider-specific public HTTPS URLs as authority.
 
-**Schema:** no migration required to *accept* the doctrine. A `disk` column (or equivalent) becomes valuable for **piecemeal local→object migration** and dual-read. Add when cutover implementation starts — not as speculative churn.
+**Schema:** no migration required to *accept* the doctrine. A `disk` column (or equivalent) becomes valuable for **piecemeal local→object migration** and dual-read. Add when cutover implementation starts - not as speculative churn.
 
 Until then: configure `ARK_MEDIA_DISK=local` (default) or `s3` when a shop is cut over wholesale after verified copy.
 
@@ -173,9 +173,9 @@ Until then: configure `ARK_MEDIA_DISK=local` (default) or `s3` when a shop is cu
 
 | Media class | Delivery |
 | --- | --- |
-| Private operational (evidence, DVI, documents, MMS) | **Auth-gated app routes** today; evolve to **short-lived signed object URLs** (Flysystem `temporaryUrl` / R2 signed GET) after auth check — avoid streaming every large file through PHP when possible |
+| Private operational (evidence, DVI, documents, MMS) | **Auth-gated app routes** today; evolve to **short-lived signed object URLs** (Flysystem `temporaryUrl` / R2 signed GET) after auth check - avoid streaming every large file through PHP when possible |
 | Public brand / website | Public object URL or CDN; no secrets in client |
-| MMS outbound to Twilio | Keep app signed routes *or* short-lived object signed URLs — provider fetch must not receive long-lived secrets |
+| MMS outbound to Twilio | Keep app signed routes *or* short-lived object signed URLs - provider fetch must not receive long-lived secrets |
 
 Default bias: durable shop media is **not** world-public. Authorization stays under ARK.
 
@@ -185,9 +185,9 @@ Default bias: durable shop media is **not** world-public. Authorization stays un
 
 Do **not** invent open/closed storage tiers for latency.
 
-If hot views need help: thumbnails / derivatives, browser cache, CDN, optional local **cache** of hot keys — never a second authority.
+If hot views need help: thumbnails / derivatives, browser cache, CDN, optional local **cache** of hot keys - never a second authority.
 
-Inspection “thumbnails” today are often the full object via the show route — derivative generation is a **future optimization**, not a doctrine blocker.
+Inspection “thumbnails” today are often the full object via the show route - derivative generation is a **future optimization**, not a doctrine blocker.
 
 ---
 
@@ -235,7 +235,7 @@ Do not store backups under the same prefix tree as live evidence without a hard 
 | --- | --- |
 | Soft-retire evidence/document | Keep object until retention policy says otherwise (**current code already keeps bytes**) |
 | Hard delete inspection photo | Delete object (current) |
-| Message/attachment delete | Define later — today bytes may orphan |
+| Message/attachment delete | Define later - today bytes may orphan |
 | Shop cancel | Controlled offline job; grace period |
 | Accidental delete | Prefer soft-delete + retention window over immediate object purge |
 
@@ -245,7 +245,7 @@ Do not auto-purge durable objects solely because a row disappears unless domain 
 
 ## 13. VPS disk doctrine
 
-Size Hosted VPS tiers for compute/DB/runtime headroom — **not** for years of photos.
+Size Hosted VPS tiers for compute/DB/runtime headroom - **not** for years of photos.
 
 80 GB on `vhf-2c-2gb` is for OS, Docker, MySQL, Redis, logs, temp, deploy artifacts, safety margin.
 
@@ -282,11 +282,11 @@ Preserve relative keys where possible so `storage_path` rows keep working.
 
 ---
 
-## 16. Cost (Hosted, illustrative — not hard-coded)
+## 16. Cost (Hosted, illustrative - not hard-coded)
 
 R2-class economics: storage + Class A/B operations; egress often favorable vs classic S3 for media-heavy apps. Exact cents change; the structural win is **predictable media cost decoupled from VPS RAM/CPU class**.
 
-Track per shop: stored GB, PUT/GET counts, growth rate — Platform telemetry later.
+Track per shop: stored GB, PUT/GET counts, growth rate - Platform telemetry later.
 
 ---
 
@@ -306,4 +306,4 @@ Track per shop: stored GB, PUT/GET counts, growth rate — Platform telemetry la
 
 ## Revision
 
-Revise when Hosted shops prove key layout, signed URL TTL, or isolation model wrong — not because one upload felt slow on a Tuesday.
+Revise when Hosted shops prove key layout, signed URL TTL, or isolation model wrong - not because one upload felt slow on a Tuesday.

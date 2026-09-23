@@ -4,7 +4,7 @@
             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                 <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Owner</p>
                 <h1 class="mt-0.5 text-base font-black text-slate-950">Call & SMS intelligence</h1>
-                <p class="mt-1 text-xs text-slate-500">Recorded calls and SMS threads with AI summary, empathy scoring, missed-upsell flags, and advisor coaching. Owner-only — not advisor workflow.</p>
+                <p class="mt-1 text-xs text-slate-500">Recorded calls and SMS threads with AI summary, empathy scoring, missed-upsell flags, and advisor coaching. Owner-only - not advisor workflow.</p>
             </div>
 
             @if (session('status'))
@@ -125,7 +125,7 @@
                             @elseif ($row['analysis_error'])
                                 <p class="text-xs font-semibold text-rose-800">{{ $row['analysis_error'] }}</p>
                             @else
-                                <p class="text-xs text-slate-500">{{ $row['analysis_status_label'] }}@if ($row['analysis_status'] === 'pending' || $row['analysis_status'] === 'processing') — check back shortly @endif</p>
+                                <p class="text-xs text-slate-500">{{ $row['analysis_status_label'] }}@if ($row['analysis_status'] === 'pending' || $row['analysis_status'] === 'processing') - check back shortly @endif</p>
                             @endif
 
                             @if (! empty($row['topics']))

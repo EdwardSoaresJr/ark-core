@@ -2,7 +2,7 @@
 
 # ADR-0005: Twilio Native Voice Transport
 
-**Status:** Accepted — Elastic SIP product naming corrected by [ADR-0006](ADR-0006-programmable-voice-sip-domain-not-elastic-sip-trunking.md) (do not restore Elastic SIP Trunking)
+**Status:** Accepted - Elastic SIP product naming corrected by [ADR-0006](ADR-0006-programmable-voice-sip-domain-not-elastic-sip-trunking.md) (do not restore Elastic SIP Trunking)
 
 **Supersedes:** [ADR-0003](ADR-0003-asterisk-is-a-projection.md) (Asterisk execution layer retired)
 
@@ -20,7 +20,7 @@ ARK communications authority (`CallSession`, `Conversation`, `CommunicationEvent
 | --- | --- |
 | PSTN ingress | Twilio → `/webhooks/communications/twilio/voice/*` |
 | Ring policy | ARK `TelephonyRingGroup` / `TelephonyIncomingCallFlow` (TwiML) |
-| Desk phones (VVX) | Twilio Elastic SIP registration — not shop PBX |
+| Desk phones (VVX) | Twilio Elastic SIP registration - not shop PBX |
 | Mobile in-app voice | Twilio Client SDK via `TwilioMobileVoiceTransport` |
 | Call truth | `CallSession` (unchanged) |
 | Relationship truth | `Conversation` / `ConversationMessage` (unchanged) |
@@ -31,8 +31,8 @@ Asterisk PHP, AMI bridge, PJSIP/dialplan sync, and shop-PBX PSTN ingress are **r
 
 - `TelephonyProgrammableVoiceGuard::isActive()` is always true; Twilio webhooks are production path.
 - `telephony_provider` coerces to `twilio`; no `asterisk` enum case.
-- VVX certification = Twilio Elastic SIP registration + TwiML ring — not Asterisk dialplan.
-- `VoiceTransportConfiguration` reads `VOICE_SIP_REGISTRAR` only — no Asterisk env paths or bridge reload URLs.
+- VVX certification = Twilio Elastic SIP registration + TwiML ring - not Asterisk dialplan.
+- `VoiceTransportConfiguration` reads `VOICE_SIP_REGISTRAR` only - no Asterisk env paths or bridge reload URLs.
 - ADR-0003 remains historical; do not edit it. This ADR is the active transport decision.
 
 ## References

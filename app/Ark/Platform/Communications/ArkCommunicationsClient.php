@@ -98,7 +98,7 @@ final class ArkCommunicationsClient
         $installationUuid = InstallationIdentity::uuid();
 
         $raw = $body !== null ? json_encode($body, JSON_THROW_ON_ERROR) : '';
-        // GET signing in Platform tests uses "[]" — match Authenticate middleware getContent().
+        // GET signing in Platform tests uses "[]" - match Authenticate middleware getContent().
         if (strtoupper($method) === 'GET') {
             $raw = '[]';
         }

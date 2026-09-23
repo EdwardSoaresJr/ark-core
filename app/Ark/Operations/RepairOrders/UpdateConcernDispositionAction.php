@@ -12,7 +12,7 @@ use App\Models\User;
 /**
  * Authoritative concern-disposition write. The estimate decision (approve /
  * decline / defer / recommend) is identical whether it comes from the desktop
- * worksheet or the phone — so both surfaces call this one path: update
+ * worksheet or the phone - so both surfaces call this one path: update
  * disposition, reset production status, record the operational event, bump the
  * estimate version, recalculate totals, and retreat the lifecycle when nothing
  * is approved anymore.
@@ -71,7 +71,7 @@ final class UpdateConcernDispositionAction
         );
 
         // Approving/removing scope after Final Invoice is the human gate to revise
-        // billed total — keep balance due aligned without a second Refresh click.
+        // billed total - keep balance due aligned without a second Refresh click.
         $this->refreshInvoice->executeIfNeeded(
             $repairOrder->fresh(['concerns', 'lines.concern', 'customer']),
             $actor,

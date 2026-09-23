@@ -1,7 +1,7 @@
 <x-mail::message>
 # Daily Coaching Digest
 
-**{{ $digest['range_label'] }}** — {{ $digest['review_count'] }} reviewed {{ Str::plural('call', $digest['review_count']) }} with coaching notes.
+**{{ $digest['range_label'] }}** - {{ $digest['review_count'] }} reviewed {{ Str::plural('call', $digest['review_count']) }} with coaching notes.
 
 @if ($digest['strongest_call'])
 ## Strongest Call

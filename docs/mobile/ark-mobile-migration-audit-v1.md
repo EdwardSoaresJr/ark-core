@@ -7,7 +7,7 @@
 
 The rebuild did **not** evolve the original app. It built a **new Flutter client** (`ark-mobile`) against a **new API projection** (`/api/mobile/*` on ARK V2). That was intentional per `ark-mobile-projection-v1.md`:
 
-> Legacy `arksms_shop` is reference only — not port wholesale.
+> Legacy `arksms_shop` is reference only - not port wholesale.
 
 **Risk:** Years of floor-tested workflows in `arksms_shop` are not automatically carried forward. The new app is architecturally cleaner but functionally narrower.
 
@@ -78,7 +78,7 @@ The rebuild did **not** evolve the original app. It built a **new Flutter client
 | RO hub | `repair_order_screen.dart` | Scan, inspection entry, diagnostics |
 | OBD scan attach to RO | `repair_order_api_service.dart` | Server-side concern linking |
 | OBD suggestion → labor | `repair_order_screen.dart` | Convert diagnostic to line |
-| Digital inspection | `digital_inspection_screen.dart` | **Placeholder** — nav only |
+| Digital inspection | `digital_inspection_screen.dart` | **Placeholder** - nav only |
 | RO concern picker | `ro_concern_picker_sheet.dart` | |
 
 ### Advisor / revenue ops
@@ -150,10 +150,10 @@ Push (FCM), offline queue, VIN, intake, OBD, advisor hub, status changes, time c
 
 | Feature | Old (`arksms_shop`) | New (`ark-mobile`) | Status | Recommendation |
 |---------|---------------------|--------------------|--------|----------------|
-| **VIN barcode scan** | Yes (`mobile_scanner`) | No | **Missing** | **Required before old app retirement** — highest ROI phone feature |
-| **VIN decode (NHTSA)** | Yes | No | **Missing** | **Required before production rollout** — port as V2 mobile tool projection |
-| **License plate capture** | Yes (manual field) | No | **Missing** | **Required before rollout** — no scan yet in old app either; add lookup on V2 |
-| **Customer / vehicle check-in** | Yes (intake tab) | No | **Missing** | **Required Phase 2** — must map to ARK V2 Intake authority, not v1 intake API |
+| **VIN barcode scan** | Yes (`mobile_scanner`) | No | **Missing** | **Required before old app retirement** - highest ROI phone feature |
+| **VIN decode (NHTSA)** | Yes | No | **Missing** | **Required before production rollout** - port as V2 mobile tool projection |
+| **License plate capture** | Yes (manual field) | No | **Missing** | **Required before rollout** - no scan yet in old app either; add lookup on V2 |
+| **Customer / vehicle check-in** | Yes (intake tab) | No | **Missing** | **Required Phase 2** - must map to ARK V2 Intake authority, not v1 intake API |
 | **Vehicle lookup** | Via decode + RO prefill | No | **Missing** | **Required Phase 2** |
 | **Concern-scoped photo intake** | Yes | Partial (findings only) | **Partial** | Extend finding capture; harvest concern attach UX |
 | **Offline photo queue** | Yes | No | **Missing** | **Required before rollout** for greasy-floor reliability |
@@ -161,21 +161,21 @@ Push (FCM), offline queue, VIN, intake, OBD, advisor hub, status changes, time c
 | **My Work / assigned ROs** | Yes (Jobs API) | Yes | **Parity** | New app better hierarchy (v1.1) |
 | **RO detail** | Yes (job detail + RO screen) | Yes | **Parity+** | New concern/finding drill-down stronger |
 | **Findings + photos** | Via intake + inspection placeholder | Yes | **Partial** | New app is finding-first (correct doctrine) |
-| **Digital inspection checklist** | Placeholder only | No | **Neither** | **Retire checklist UI** — finding-first is correct for V2 |
+| **Digital inspection checklist** | Placeholder only | No | **Neither** | **Retire checklist UI** - finding-first is correct for V2 |
 | **Inspection → finding vocabulary** | Mixed | Yes | **New wins** | Keep ARK V2 approach |
 | **Status updates on RO** | Yes (job detail) | No | **Missing** | **Required Phase 2** for techs (production status / concern scope) |
-| **Job notes** | Yes | No | **Missing** | **Required Phase 2** — internal notes on RO/conversation |
-| **Comms / SMS** | Planned in old app | List only | **Partial** | **Required Phase 2** — thread + reply (API exists) |
-| **Push notifications** | Yes (FCM) | Poll + Attention | **By design for now** | **Deferred** — poll until observation proves need; see notification doctrine |
-| **Advisor command center** | Yes | No | **Missing** | **Phase 3** — project from V2 Attention, not v1 hub |
+| **Job notes** | Yes | No | **Missing** | **Required Phase 2** - internal notes on RO/conversation |
+| **Comms / SMS** | Planned in old app | List only | **Partial** | **Required Phase 2** - thread + reply (API exists) |
+| **Push notifications** | Yes (FCM) | Poll + Attention | **By design for now** | **Deferred** - poll until observation proves need; see notification doctrine |
+| **Advisor command center** | Yes | No | **Missing** | **Phase 3** - project from V2 Attention, not v1 hub |
 | **Approvals / estimate review** | Yes (approval sheet) | No | **Missing** | **Phase 3** advisor |
 | **Money leaks / playbook** | Yes | No | **Missing** | **Retire / replace** with V2 Attention + Owner digest |
-| **Activity feed** | Yes | Alerts poll only | **Partial** | **Phase 3** — map to Attention queue projection |
-| **Time clock** | Yes | No | **Missing** | **Nice to have** — only if shop still uses mobile clock |
+| **Activity feed** | Yes | Alerts poll only | **Partial** | **Phase 3** - map to Attention queue projection |
+| **Time clock** | Yes | No | **Missing** | **Nice to have** - only if shop still uses mobile clock |
 | **Multi-tenant domain login** | Yes | No (single shop) | **By design** | **Retire** for Demo Auto Repair single-tenant V2 |
-| **Customer timeline** | Yes | No | **Missing** | **Phase 3** — Customer Hub projection |
+| **Customer timeline** | Yes | No | **Missing** | **Phase 3** - Customer Hub projection |
 | **Vehicle repair history** | Yes | No | **Missing** | **Phase 2** tech scope (assigned RO only) |
-| **Diagnostic → labor convert** | Yes | No | **Missing** | **Phase 3** — needs V2 OBD/diagnostic authority |
+| **Diagnostic → labor convert** | Yes | No | **Missing** | **Phase 3** - needs V2 OBD/diagnostic authority |
 | **Role-based nav** | Rich | Capabilities from API | **Partial** | Expand as V2 roles mature |
 | **Auth** | Domain + token | Sanctum | **Replaced** | Keep V2 |
 
@@ -191,10 +191,10 @@ Push (FCM), offline queue, VIN, intake, OBD, advisor hub, status changes, time c
 | Open RO context | Job detail | RO detail ✅ |
 | Record findings | Intake photos | Finding capture ✅ |
 | Concern drill-down | Partial | Concern detail ✅ |
-| VIN at vehicle | Intake scan | **Port** — camera → V2 vehicle identity |
-| Status / production | Job detail | **Build** — concern production status |
-| Comms on assigned RO | — | **Build** — thread detail + reply |
-| OBD | Full BLE | **Later** — after V2 attach API |
+| VIN at vehicle | Intake scan | **Port** - camera → V2 vehicle identity |
+| Status / production | Job detail | **Build** - concern production status |
+| Comms on assigned RO | - | **Build** - thread detail + reply |
+| OBD | Full BLE | **Later** - after V2 attach API |
 
 ### Advisor (Phase 3+)
 
@@ -206,7 +206,7 @@ Push (FCM), offline queue, VIN, intake, OBD, advisor hub, status changes, time c
 | Quick RO creation | Via intake submit | V2 intake create RO |
 | Comms + reply | Partial | Full thread (API ready) |
 | Estimate approval | Approval sheet | Portal/RO approval projection |
-| Attention / needs action | Command center | V2 **Attention** mobile slice — not v1 hub |
+| Attention / needs action | Command center | V2 **Attention** mobile slice - not v1 hub |
 
 ### Owner / manager (Phase 4)
 
@@ -239,13 +239,13 @@ Never port v1 API shapes wholesale. For each old feature, ask: **which V2 author
 | Advisor command center | Attention + Today projections |
 | OBD attach | Needs explicit V2 authority decision |
 
-### Phase 2 — Harvest (next sprint freeze until agreed)
+### Phase 2 - Harvest (next sprint freeze until agreed)
 
 **Goal:** Advisors can check in a vehicle on the lot; techs can complete field capture without desktop.
 
 1. **Mobile tools API (V2)**
-   - `POST /api/mobile/tools/vin-decode` — wrap existing NHTSA/vehicle enrich
-   - `GET /api/mobile/vehicles/lookup?vin=&plate=` — read-only search projection
+   - `POST /api/mobile/tools/vin-decode` - wrap existing NHTSA/vehicle enrich
+   - `GET /api/mobile/vehicles/lookup?vin=&plate=` - read-only search projection
 
 2. **Flutter: VIN scan + decode module**
    - Port `vin_scan_screen.dart` + decode UX (not intake monolith)
@@ -264,14 +264,14 @@ Never port v1 API shapes wholesale. For each old feature, ask: **which V2 author
 6. **Backend: Production status mobile write**
    - Scoped POST for concern `production_status` (tech assigned RO only)
 
-### Phase 3 — Advisor parity
+### Phase 3 - Advisor parity
 
 - Attention mobile slice (not v1 command center)
 - Approval / estimate review read-only mobile
 - Customer timeline on RO (Conversation + events projection)
-- Push transport (APNs/FCM) after observation — not a rollout blocker; poll Attention/notifications until then
+- Push transport (APNs/FCM) after observation - not a rollout blocker; poll Attention/notifications until then
 
-### Phase 4 — Owner + retire old app
+### Phase 4 - Owner + retire old app
 
 - Today / bookend mobile pulse
 - Retire `arksms_shop` when Phase 2 + 3 acceptance tests pass on floor
@@ -282,7 +282,7 @@ Never port v1 API shapes wholesale. For each old feature, ask: **which V2 author
 - v1 multi-tenant domain login UI
 - v1 money leaks / playbook (replace with V2 Attention)
 - Digital inspection **checklist** UI (finding-first replaces it)
-- v1 advisor command center layout (revenue theater — rebuild from V2 Attention)
+- v1 advisor command center layout (revenue theater - rebuild from V2 Attention)
 
 ---
 
@@ -311,13 +311,13 @@ Until these pass on **ark-mobile + ARK V2**, keep **`arksms_shop`** installed fo
 
 ## 7. Answer to “did the rebuild start a new app?”
 
-**Yes.** And that was documented doctrine — not an accident.
+**Yes.** And that was documented doctrine - not an accident.
 
 What the rebuild did well: V2-aligned projections, finding-first inspection UX, technician scope, Sanctum, test coverage.
 
 What the rebuild skipped: **harvest inventory** from `arksms_shop` before sprinting on RO/findings polish.
 
-**Next move:** Agree Phase 2 harvest (VIN + check-in + comms thread + offline queue). Do not add net-new surfaces until VIN scan exists — it is the highest ROI bridge between old and new.
+**Next move:** Agree Phase 2 harvest (VIN + check-in + comms thread + offline queue). Do not add net-new surfaces until VIN scan exists - it is the highest ROI bridge between old and new.
 
 ---
 

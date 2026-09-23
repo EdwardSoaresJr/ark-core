@@ -94,7 +94,7 @@
                             href="{{ $scheduleHref }}"
                             class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
                         >Schedule</a>
-                        <span class="text-[11px] text-slate-500">Book the visit — customer can be linked at arrival.</span>
+                        <span class="text-[11px] text-slate-500">Book the visit - customer can be linked at arrival.</span>
                     @endif
                 </div>
             @endif

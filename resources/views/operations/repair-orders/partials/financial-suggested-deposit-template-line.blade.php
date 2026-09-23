@@ -11,7 +11,7 @@
     <td class="ops-deposit-breakdown-modal__description">{{ $line['description'] }}</td>
     <td class="ops-deposit-breakdown-modal__category">{{ $line['category_label'] }}</td>
     <td class="ops-deposit-breakdown-modal__amount">{{ $line['sell'] }}</td>
-    <td class="ops-deposit-breakdown-modal__amount">{{ $line['tax'] ?? '—' }}</td>
-    <td class="ops-deposit-breakdown-modal__amount">{{ $line['shop_fee'] ?? '—' }}</td>
+    <td class="ops-deposit-breakdown-modal__amount">{{ $line['tax'] ?? '-' }}</td>
+    <td class="ops-deposit-breakdown-modal__amount">{{ $line['shop_fee'] ?? '-' }}</td>
     <td class="ops-deposit-breakdown-modal__amount ops-deposit-breakdown-modal__amount--total">{{ $line['amount'] }}</td>
 </tr>

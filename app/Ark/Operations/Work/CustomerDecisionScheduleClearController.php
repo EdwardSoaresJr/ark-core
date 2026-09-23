@@ -14,6 +14,6 @@ class CustomerDecisionScheduleClearController
 
         return redirect()
             ->route('operations.index')
-            ->with('status', 'Schedule cleared — decision back on Work.');
+            ->with('status', 'Schedule cleared - decision back on Work.');
     }
 }

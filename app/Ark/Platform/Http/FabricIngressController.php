@@ -226,7 +226,7 @@ final class FabricIngressController
 
         $updated = $this->callSessions->updateStatus($callPayload);
         if ($updated === null) {
-            // Late status with no prior started event — still record for Calls history.
+            // Late status with no prior started event - still record for Calls history.
             [$session] = $this->callSessions->record($callPayload);
             $this->callBroadcaster->broadcastUpdate($session, null);
 
@@ -251,7 +251,7 @@ final class FabricIngressController
         if ($providerCallSid === '' || $fromPhone === '') {
             // Legacy interrupt-shaped payloads
             if (array_key_exists('call_session_id', $payload) && filled($payload['display_phone'] ?? null)) {
-                return null; // handled by legacy path — keep null to force callers to use callInterrupt
+                return null; // handled by legacy path - keep null to force callers to use callInterrupt
             }
 
             return null;

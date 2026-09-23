@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * ProvisioningRequest workflow authority — no infrastructure adapters.
+ * ProvisioningRequest workflow authority - no infrastructure adapters.
  */
 return new class extends Migration
 {

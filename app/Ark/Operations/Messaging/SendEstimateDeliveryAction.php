@@ -82,7 +82,7 @@ final class SendEstimateDeliveryAction
             try {
                 $emailResult = $this->email->send($repairOrder, $actor, $email, $staffNote);
             } catch (EstimatePdfUnavailableException) {
-                throw new RuntimeException('Estimate email failed. The PDF could not be generated — check Chromium runtime support.');
+                throw new RuntimeException('Estimate email failed. The PDF could not be generated - check Chromium runtime support.');
             }
 
             $messages[] = $emailResult['message'];

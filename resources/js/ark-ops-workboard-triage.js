@@ -66,7 +66,7 @@ export function initOpsWorkboardTriage() {
             lastSignature = signature;
             applyPayload(payload);
         } catch {
-            // Polling backup — stay quiet.
+            // Polling backup - stay quiet.
         } finally {
             inflight = false;
         }

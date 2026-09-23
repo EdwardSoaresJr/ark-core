@@ -1,4 +1,4 @@
-# Parts Capture v1 — Capture Dealer Quote
+# Parts Capture v1 - Capture Dealer Quote
 
 **Status:** Shipped (floor path) · V2/V3 parked  
 **Authority:** `DealerQuote` + `DealerQuoteLine`  

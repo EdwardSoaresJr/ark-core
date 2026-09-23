@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Active operational observation in the shared stream — interpretive, not authority.
+ * Active operational observation in the shared stream - interpretive, not authority.
  */
 class OperationalObservationStreamEntry extends Model
 {

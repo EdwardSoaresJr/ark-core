@@ -1,4 +1,4 @@
-# ARK Fleet — release distribution v1
+# ARK Fleet - release distribution v1
 
 **Status:** Phase 1 observation · Fleet deploy **disabled**  
 **Operator contract:** [RELEASE_DISTRIBUTION.md](../engineering/RELEASE_DISTRIBUTION.md) · [`ops/releases/distribution.yaml`](../../ops/releases/distribution.yaml)
@@ -37,7 +37,7 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 
 - URL: `https://demo.arksms.com`
 - Host: `104.238.144.183` (`hostname=demo`)
-- Mechanism: **Docker Compose** at `/opt/ark` — container `ark-app-1` running
+- Mechanism: **Docker Compose** at `/opt/ark` - container `ark-app-1` running
 - Image: `ghcr.io/edwardsoaresjr/ark-core@sha256:4056297143c78f931d7ca95478686938c20a57775075f2cd7651d4ebb5609fe7`
 - Coolify application: **none**
 - Installation UUID **assigned, not written:** `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`
@@ -47,11 +47,11 @@ Verification only. Recent local URL: `https://app.lugsnplugs.test`. Not a hosted
 ### LNP Production
 
 - URL: `https://lugsnplugs.arksms.com`
-- Live host: `149.28.249.13` (`ark-lugsnplugs-production`) — SSH reachable
+- Live host: `149.28.249.13` (`ark-lugsnplugs-production`) - SSH reachable
 - Container: `b38otdn2epypspy0jadbgfl0-core` running the same digest
 - Compose: `/data/coolify/services/waqkg4rlh7rq9pdfwpnfij8u/docker-compose.yml` pins that digest on `core`
-- Installation UUID: `7d115599-cae5-4a10-a4cf-4ebe11af47ed` (matches Platform adopt — ownership proven)
-- Adopted host `144.202.74.190`: SSH timed out — **unreachable**
+- Installation UUID: `7d115599-cae5-4a10-a4cf-4ebe11af47ed` (matches Platform adopt - ownership proven)
+- Adopted host `144.202.74.190`: SSH timed out - **unreachable**
 - Backup/rollback: [LNP_BACKUP_AND_ROLLBACK.md](../engineering/LNP_BACKUP_AND_ROLLBACK.md)
 
 **LNP automation stays disabled.** Do not Coolify Deploy. Do not target 144. Correct IPv4 only with `hosting:reconcile-observed-host --confirm-ownership=<uuid>` after explicit approval.

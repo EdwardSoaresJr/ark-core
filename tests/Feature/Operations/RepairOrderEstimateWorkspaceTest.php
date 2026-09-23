@@ -61,7 +61,7 @@ test('the shop can add concerns and estimate lines with authoritative totals', f
         'type' => RepairOrderLineType::Labor->value,
         'description' => 'Diagnose cold start rattle',
         'quantity' => '1.50',
-        // LaborAuthority resolves rate from labor policy — posted unit_price without override is ignored.
+        // LaborAuthority resolves rate from labor policy - posted unit_price without override is ignored.
         'unit_price' => '120.00',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#estimate-lines');
 
@@ -1283,7 +1283,7 @@ test('shop fees are allocated on eligible concern lines instead of generated as 
         'type' => RepairOrderLineType::Labor->value,
         'description' => 'Diagnostic',
         'quantity' => '1.00',
-        // Posted unit_price without override is ignored — LaborAuthority resolves policy rate ($165/hr).
+        // Posted unit_price without override is ignored - LaborAuthority resolves policy rate ($165/hr).
         'unit_price' => '100.00',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#estimate-lines');
 

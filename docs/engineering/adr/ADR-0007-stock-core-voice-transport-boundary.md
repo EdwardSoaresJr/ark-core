@@ -1,4 +1,4 @@
-# ADR-0007 — Stock Core voice transport boundary
+# ADR-0007 - Stock Core voice transport boundary
 
 - Status: Accepted
 - Date: 2026-08-31

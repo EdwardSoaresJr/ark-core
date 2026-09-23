@@ -8,7 +8,7 @@ Not ARK. Not ARKv2. Not Companion. Not Cloud.
 
 Everything else is implementation.
 
-Software that **belongs to** repair shops — not software *for* them.
+Software that **belongs to** repair shops - not software *for* them.
 
 ## Every product is ownership
 
@@ -46,25 +46,25 @@ Before every story:
 
 ## Product board (seven cards)
 
-### 1. Discover — “I found ARK.”
+### 1. Discover - “I found ARK.”
 
 Marketing site · Pricing · Why switch? · CTA  
 
 **Success:** I want to try this.
 
-### 2. Trust — “These people understand repair shops.”
+### 2. Trust - “These people understand repair shops.”
 
 Features · Screenshots · Videos · Testimonials · Migration story  
 
 **Success:** This is built for shops like mine.
 
-### 3. Start — “I’m creating my shop.”
+### 3. Start - “I’m creating my shop.”
 
 Signup · Shop name · Subdomain · Owner account  
 
 **Success:** I’m committed.
 
-### 4. Become — “My shop is coming online.”
+### 4. Become - “My shop is coming online.”
 
 ```text
 ✓ Account
@@ -77,7 +77,7 @@ Progress, not complexity. Platform stays invisible.
 
 **Success:** The system is working for me.
 
-### 5. Arrive — “This is my shop.”
+### 5. Arrive - “This is my shop.”
 
 **Design this first.** Not the homepage. Not pricing. This screen.
 
@@ -95,15 +95,15 @@ From this moment forward, this is your shop.
 [ Open Workspace ]
 ```
 
-Not marketing copy — the product delivering on its promise. Ownership happens here.
+Not marketing copy - the product delivering on its promise. Ownership happens here.
 
-### 6. Work — ARKv2
+### 6. Work - ARKv2
 
 Customer · Vehicle · RO. Real business. No demo theater.
 
 ### 7. Grow
 
-Invite · Domain · Billing · SMS · Website · Voice · Reviews — after they’ve decided to stay.
+Invite · Domain · Billing · SMS · Website · Voice · Reviews - after they’ve decided to stay.
 
 ---
 

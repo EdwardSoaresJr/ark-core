@@ -132,7 +132,7 @@ test('operational sheets always show mileage capture fields with verify when val
         ->toContain('mileage-capture-label">Mileage out</span>')
         ->not->toContain('class="mileage-capture-verify"')
         ->not->toContain('class="mileage-capture-value"')
-        ->not->toContain('Mileage: — / —');
+        ->not->toContain('Mileage: - / -');
 
     $missingSheet = $presenter->intake($repairOrder);
     expect(collect($missingSheet['identity']['vehicle']['lines'])->pluck('label'))
@@ -151,7 +151,7 @@ test('operational sheets always show mileage capture fields with verify when val
         ->toContain('mileage-capture-value">165,604</p>')
         ->toContain('class="mileage-capture-verify"')
         ->toContain('Mileage: 165,604')
-        ->not->toContain('Mileage: 165,604 / —');
+        ->not->toContain('Mileage: 165,604 / -');
 
     $inOnlySheet = $presenter->intake($freshRepairOrder);
     expect(collect($inOnlySheet['identity']['visit']['lines'])->firstWhere('label', 'Mileage')['value'])->toBe('165,604')

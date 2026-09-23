@@ -5,7 +5,7 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 
 /**
- * Approval Forecast — conversation prep, not invoice authority.
+ * Approval Forecast - conversation prep, not invoice authority.
  *
  * Projects: Approved · Needs Approval (pending recommendations) · If All Approved.
  * Disposable. Rebuild from EstimateTotalsCalculator read APIs. No new store.
@@ -45,7 +45,7 @@ final class ApprovalForecastProjection
             ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Recommended)
             ->count();
 
-        // Visible when there is recommended work to forecast — the friction case
+        // Visible when there is recommended work to forecast - the friction case
         // (approved diagnostic + recommendations) and pure-pending builds alike.
         $visible = $pendingCents > 0 || $pendingConcernCount > 0;
 

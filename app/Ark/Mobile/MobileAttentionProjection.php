@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Mobile Attention slice — composes existing Attention projections only.
+ * Mobile Attention slice - composes existing Attention projections only.
  */
 final class MobileAttentionProjection
 {
@@ -109,7 +109,7 @@ final class MobileAttentionProjection
     }
 
     /**
-     * Communications-only attention — Calls Waiting + Since Last Shift for the Comms hub.
+     * Communications-only attention - Calls Waiting + Since Last Shift for the Comms hub.
      *
      * @return array{
      *     sections: list<array<string, mixed>>,
@@ -185,7 +185,7 @@ final class MobileAttentionProjection
         $subtitle = trim(collect([$vehicle, $dollars, $age])->filter()->implode(' · '));
         $kind = (string) ($row['kind'] ?? 'customer_decision');
 
-        // Explainable tone — money waiting on a decision is amber "waiting":
+        // Explainable tone - money waiting on a decision is amber "waiting":
         // someone/something is waiting on the shop. Observation drives the glyph.
         [$observation, $tone] = match ($kind) {
             'approved_work_stalled' => ['repair_order_stalled', 'waiting'],
@@ -235,7 +235,7 @@ final class MobileAttentionProjection
         };
 
         // A waiting call interrupts now (urgent/red); an unanswered customer
-        // message is amber "waiting" — the customer is waiting on the shop.
+        // message is amber "waiting" - the customer is waiting on the shop.
         [$observation, $tone] = match ($kind) {
             'call' => ['incoming_call', 'urgent'],
             default => ['customer_waiting_response', 'waiting'],

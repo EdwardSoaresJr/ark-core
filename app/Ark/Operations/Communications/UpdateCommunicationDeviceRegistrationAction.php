@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Communications;
 
 /**
  * Transport truth: registration observed by provider → device posture.
- * Match by device identity (provider_identifier) only — never auto-create.
+ * Match by device identity (provider_identifier) only - never auto-create.
  */
 final class UpdateCommunicationDeviceRegistrationAction
 {

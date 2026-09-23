@@ -1,5 +1,5 @@
 /**
- * ⌘K / Ctrl+K — command palette + entity search.
+ * ⌘K / Ctrl+K - command palette + entity search.
  * Commands filter locally; entity search runs at ≥2 characters.
  */
 export function initOpsGlobalSearch() {

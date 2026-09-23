@@ -19,7 +19,7 @@ use InvalidArgumentException;
 use Throwable;
 
 /**
- * Coordinates steps only — never performs infrastructure work.
+ * Coordinates steps only - never performs infrastructure work.
  *
  * @see docs/platform/orchestrator-rule-v1.md
  * @see docs/platform/adapter-rule-v1.md

@@ -116,7 +116,7 @@
             </fieldset>
 
             <p class="text-xs leading-5 text-slate-500">
-                Finding intent describes the condition — not part source, OEM/aftermarket type, or warranty. Use part line fields when selling parts.
+                Finding intent describes the condition - not part source, OEM/aftermarket type, or warranty. Use part line fields when selling parts.
             </p>
 
             <label class="ops-inspection-field">
@@ -169,7 +169,7 @@
                     capture="environment"
                     class="ops-inspection-photo-field__input"
                 >
-                <span class="ops-inspection-photo-field__hint">Camera strongly encouraged — photo or short video of the condition.</span>
+                <span class="ops-inspection-photo-field__hint">Camera strongly encouraged - photo or short video of the condition.</span>
             </label>
 
             <div>

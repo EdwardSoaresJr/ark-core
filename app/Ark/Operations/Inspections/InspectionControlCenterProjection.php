@@ -8,7 +8,7 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 
 /**
- * RO Inspection tab projection — control/review, not the technician walk.
+ * RO Inspection tab projection - control/review, not the technician walk.
  */
 final class InspectionControlCenterProjection
 {
@@ -96,7 +96,7 @@ final class InspectionControlCenterProjection
                 'recipients' => $recipients,
                 'default_recipient_id' => $this->defaultRecipientId($recipients, $repairOrder),
                 'sms_body' => "Vehicle inspection for {$vehicle} ({$roLabel}): {$walkUrl}",
-                'email_subject' => "Vehicle inspection — {$vehicle} {$roLabel}",
+                'email_subject' => "Vehicle inspection - {$vehicle} {$roLabel}",
                 'email_body' => "Open the inspection walk:\n\n{$walkUrl}\n",
             ],
         ];

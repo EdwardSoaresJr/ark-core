@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
  * Selects which operational observation orients the customer workspace.
  *
  * Target: consume the operational observation stream. Today: infer from timeline reads
- * while emission catches up. Browse (null) is not an observation — neutral workspace entry.
+ * while emission catches up. Browse (null) is not an observation - neutral workspace entry.
  */
 final class MobileCustomerWorkspaceObservationSelector
 {

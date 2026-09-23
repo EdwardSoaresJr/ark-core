@@ -70,7 +70,7 @@ final class ServiceLaneIdentityPresenter
             'approved' => $totals->format($approvedCents),
             'due' => $balance->hasIssuedInvoice
                 ? $totals->format($balance->balanceDueCents)
-                : '—',
+                : '-',
         ];
     }
 

@@ -1,7 +1,7 @@
-# ARK CHECKPOINT — PRE-HOME INVERSION
+# ARK CHECKPOINT - PRE-HOME INVERSION
 
 **Date:** 2026-06-09  
-**Status:** Complete — all four sprints shipped (2026-06-09, commit `2822304`)  
+**Status:** Complete - all four sprints shipped (2026-06-09, commit `2822304`)  
 **Related:** [Communications Authority](../communications-authority.md) (authority boundaries unchanged)
 
 ---
@@ -52,7 +52,7 @@ Work
 
 - **Customer pressure** becomes primary.
 - **Shop pressure** becomes secondary context.
-- **Workboard** becomes a deliberate operational drill-down — not the default mental model.
+- **Workboard** becomes a deliberate operational drill-down - not the default mental model.
 
 ### Two pressure systems (not two products)
 
@@ -184,10 +184,10 @@ Workboard → RO → Work
 
 ## Sprint Order (Post-Checkpoint)
 
-1. **Home / Attention identity** — declare the front door (this experiment)
-2. **RO workspace craft** — review rail collapse, financial disclosure, chrome flattening
-3. **Encounter + Hub continuity** — fold admin surfaces into the flow
-4. **Settings cleanup** — advisors don't live here
+1. **Home / Attention identity** - declare the front door (this experiment)
+2. **RO workspace craft** - review rail collapse, financial disclosure, chrome flattening
+3. **Encounter + Hub continuity** - fold admin surfaces into the flow
+4. **Settings cleanup** - advisors don't live here
 
 ---
 
@@ -213,4 +213,4 @@ That distinction becomes surprisingly important later.
 
 **Stop building communications. Start building Home.**
 
-The comms stack has done its job — it revealed what the primary operating surface should be. Sprint 1 makes the software admit it.
+The comms stack has done its job - it revealed what the primary operating surface should be. Sprint 1 makes the software admit it.

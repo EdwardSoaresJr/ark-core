@@ -1,4 +1,4 @@
-# Financial Authority v2 — Adoption Ladder
+# Financial Authority v2 - Adoption Ladder
 
 **Status:** Approved · F1 implementing  
 **Canonical doctrine:** [`ARK-FINANCIAL-AUTHORITY-V2.md`](ARK-FINANCIAL-AUTHORITY-V2.md)
@@ -15,7 +15,7 @@ This document is the **implementation adoption ladder**. Doctrine invariants liv
 
 ---
 
-## Financial Position — Principle #1
+## Financial Position - Principle #1
 
 **Financial Position owns nothing. It answers everything.**
 
@@ -72,7 +72,7 @@ Readonly DTO. No setters. Construct once. Throw away. GET never mutates (no refr
 
 ### Financial Contract Source
 
-`Estimate` | `Invoice` — never `LivingInvoice` / `Compatibility` as business language.
+`Estimate` | `Invoice` - never `LivingInvoice` / `Compatibility` as business language.
 
 ### Legacy rule
 

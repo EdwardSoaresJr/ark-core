@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Installation-scoped Essential Delivery — not ARK Email, not pairing.
+ * Installation-scoped Essential Delivery - not ARK Email, not pairing.
  */
 final class EssentialDeliveryClient
 {

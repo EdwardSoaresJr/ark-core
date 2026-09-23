@@ -7,7 +7,7 @@
     <p>
         ARK owns floor behavior: who should ring, Calls Waiting, screen pop, and call-session history.
         Stock Core does not ship a carrier SIP/PSTN turnkey. Desk-phone registration, SIP domains, and
-        carrier webhooks belong to a voice transport implementation — not a Settings paste form in Core.
+        carrier webhooks belong to a voice transport implementation - not a Settings paste form in Core.
     </p>
 
     <h3>What stays in ARK</h3>

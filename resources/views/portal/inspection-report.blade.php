@@ -32,7 +32,7 @@
                     </h1>
                     <p class="mt-2 text-sm leading-6 text-slate-600">
                         @if ($isDetailed)
-                            Full inspection record — every checked point, measurement, and customer-facing photo.
+                            Full inspection record - every checked point, measurement, and customer-facing photo.
                         @else
                             What we checked on your vehicle, with measurements and photos where they matter most.
                         @endif
@@ -187,7 +187,7 @@
                                 <li class="text-sm text-slate-800">
                                     <span class="font-semibold">{{ $group['category'] }}</span>
                                     <span class="text-slate-500">({{ (int) $group['count'] }})</span>
-                                    — {{ implode(', ', $group['labels'] ?? []) }}
+                                    - {{ implode(', ', $group['labels'] ?? []) }}
                                 </li>
                             @endforeach
                         </ul>
@@ -204,7 +204,7 @@
                                 <li class="text-sm text-slate-700">
                                     <span class="font-semibold">{{ $point['label'] }}</span>
                                     @if (filled($point['note'] ?? null))
-                                        — {{ $point['note'] }}
+                                        - {{ $point['note'] }}
                                     @endif
                                 </li>
                             @endforeach

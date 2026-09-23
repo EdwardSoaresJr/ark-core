@@ -61,8 +61,8 @@ final class PhoneSmsCapabilityClassifier
             return [
                 'sms_capable' => false,
                 'reason' => $carrier !== ''
-                    ? "{$label} ({$carrier}) — cannot receive SMS."
-                    : "{$label} — cannot receive SMS.",
+                    ? "{$label} ({$carrier}) - cannot receive SMS."
+                    : "{$label} - cannot receive SMS.",
             ];
         }
 

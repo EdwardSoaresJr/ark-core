@@ -357,7 +357,7 @@ final class RepairOrderEstimateInstrumentProjection
     }
 
     /**
-     * Customer-facing estimate breakdown — what builds the total.
+     * Customer-facing estimate breakdown - what builds the total.
      *
      * @return array{title: string, items: list<array{label: string, detail: string}>, footer: string|null}
      */
@@ -397,7 +397,7 @@ final class RepairOrderEstimateInstrumentProjection
     }
 
     /**
-     * Owner/advisor profitability — costs, GP, and shop health levers.
+     * Owner/advisor profitability - costs, GP, and shop health levers.
      *
      * @param  array{sales_cents: int, cost_cents: int, gp_cents: int, margin_percent: int|null}  $partsMetrics
      * @param  array{sales_cents: int, cost_cents: int, gp_cents: int, margin_percent: int|null, hours: float}  $laborMetrics

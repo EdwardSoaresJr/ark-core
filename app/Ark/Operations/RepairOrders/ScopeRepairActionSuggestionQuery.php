@@ -5,7 +5,7 @@ namespace App\Ark\Operations\RepairOrders;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Shop-learned repair action titles for a scope concept — shortcuts, not committed lines.
+ * Shop-learned repair action titles for a scope concept - shortcuts, not committed lines.
  */
 final class ScopeRepairActionSuggestionQuery
 {

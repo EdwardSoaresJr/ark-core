@@ -46,7 +46,7 @@ final class InitiatePaymentCaptureAction
 
         if (! PlatformConnection::current()->isConnected()) {
             throw ValidationException::withMessages([
-                'capture' => 'Payment capture is unavailable — Platform is not connected. Use Record Payment for external card payments.',
+                'capture' => 'Payment capture is unavailable - Platform is not connected. Use Record Payment for external card payments.',
             ]);
         }
 
@@ -105,7 +105,7 @@ final class InitiatePaymentCaptureAction
             $attempt->save();
 
             throw ValidationException::withMessages([
-                'capture' => 'Payment capture is unavailable — Platform did not respond. Use Record Payment if the card was taken outside ARK.',
+                'capture' => 'Payment capture is unavailable - Platform did not respond. Use Record Payment if the card was taken outside ARK.',
             ]);
         }
 

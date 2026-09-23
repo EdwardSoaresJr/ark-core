@@ -52,7 +52,7 @@ final class AssignRepairOrderTechnician
     }
 
     /**
-     * Auto-assign the shop's sole staff member as technician when none is set —
+     * Auto-assign the shop's sole staff member as technician when none is set -
      * the solo / mobile-solo operator is the technician by reality, not by a
      * configurable default. No-op when a technician is already assigned or when
      * more than one staff user exists (then a human must choose).

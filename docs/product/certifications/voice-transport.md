@@ -1,7 +1,7 @@
-# Certification record — Voice Transport
+# Certification record - Voice Transport
 
 **Certification:** Voice Transport  
-**Track:** A — Operations Platform  
+**Track:** A - Operations Platform  
 **Owner:** Alex Rivera  
 **Scenario source:** [production-voice-cutover-v1.md](../../communications/production-voice-cutover-v1.md)
 
@@ -43,8 +43,8 @@ After this certification, customer calls reach the shop through ARK-backed desk 
 
 ## Notes
 
-- Inbound failure root cause (2026-06-27): Twilio sends E.164 `+17194136227`; dialplan `_X.` did not match — fixed with `_+X.`.
-- Outbound failure root cause (2026-06-27): malformed quotes in rendered `pjsip-trunk.conf` contact URI — fixed.
+- Inbound failure root cause (2026-06-27): Twilio sends E.164 `+17194136227`; dialplan `_X.` did not match - fixed with `_+X.`.
+- Outbound failure root cause (2026-06-27): malformed quotes in rendered `pjsip-trunk.conf` contact URI - fixed.
 
 ## Corrections
 

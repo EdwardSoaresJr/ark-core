@@ -106,7 +106,7 @@ A successful heartbeat is inventory check-in. It is **not** deploy success. Curr
 - Demo installation UUID **assigned** (not written on the box): `5dba0d3f-fbbd-4c45-8b2d-2e0ea550d7b6`. Write with `php artisan ark:installation-identity write --uuid=…`. Pair later. Do not invent a Coolify application id.
 - Demo Compose backups exist at `/var/backups/ark-box`. Latest stamp includes `storage.tar.gz` (gzip ok). `restore-box.sh` can restore that archive. SQL restore has been tested. File-volume restore is coded, not certified.
 - LNP Core is `b38otdn2epypspy0jadbgfl0-core` on `149.28.249.13`, pinned to the running digest in the live inventory above. Installation UUID `7d115599-cae5-4a10-a4cf-4ebe11af47ed` matches Platform adopt.
-- Adopted host `144.202.74.190` timed out on SSH. Do not deploy there. Inventory correction is `hosting:reconcile-observed-host` after ownership confirmation — not re-adopt, not Coolify Deploy. Do not run it until explicitly approved.
+- Adopted host `144.202.74.190` timed out on SSH. Do not deploy there. Inventory correction is `hosting:reconcile-observed-host` after ownership confirmation - not re-adopt, not Coolify Deploy. Do not run it until explicitly approved.
 - LNP backup/rollback: [LNP_BACKUP_AND_ROLLBACK.md](LNP_BACKUP_AND_ROLLBACK.md).
 
 ## Default sequence (when automation is later allowed)

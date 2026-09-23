@@ -6,7 +6,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 
 /**
  * Stickers may print with the tech ticket (Prepared / RO mileage).
- * Prefer MaintenanceServiceEvent when present — history still owns Installed truth.
+ * Prefer MaintenanceServiceEvent when present - history still owns Installed truth.
  */
 final class OilChangeStickerGate
 {
@@ -40,13 +40,13 @@ final class OilChangeStickerGate
             ->first();
     }
 
-    /** Tech ticket / bay print — not gated on Confirm Installed. */
+    /** Tech ticket / bay print - not gated on Confirm Installed. */
     public static function canPrint(RepairOrder $repairOrder): bool
     {
         return true;
     }
 
-    /** @deprecated use canPrint() — kept for call sites during transition */
+    /** @deprecated use canPrint() - kept for call sites during transition */
     public static function canPrintFinal(RepairOrder $repairOrder): bool
     {
         return self::canPrint($repairOrder);

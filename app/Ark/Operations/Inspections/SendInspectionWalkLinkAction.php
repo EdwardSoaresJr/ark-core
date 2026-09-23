@@ -17,7 +17,7 @@ use RuntimeException;
 
 /**
  * Staff handoff of the authenticated inspection walk URL.
- * Uses shop Twilio + Laravel mail — not device sms:/mailto: protocols.
+ * Uses shop Twilio + Laravel mail - not device sms:/mailto: protocols.
  * Does not write customer ConversationMessage authority.
  */
 final class SendInspectionWalkLinkAction
@@ -44,7 +44,7 @@ final class SendInspectionWalkLinkAction
         $roLabel = 'RO #'.$repairOrder->repair_order_id;
         $vehicle = trim((string) ($repairOrder->vehicle?->display_name ?? 'Vehicle'));
         $smsBody = "Vehicle inspection for {$vehicle} ({$roLabel}): {$walkUrl}";
-        $emailSubject = "Vehicle inspection — {$vehicle} {$roLabel}";
+        $emailSubject = "Vehicle inspection - {$vehicle} {$roLabel}";
 
         $smsSent = false;
         $emailSent = false;

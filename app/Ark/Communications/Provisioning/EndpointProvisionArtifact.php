@@ -3,7 +3,7 @@
 namespace App\Ark\Communications\Provisioning;
 
 /**
- * Poly phoneprov artifact types — mirrors Asterisk res_phoneprov file naming.
+ * Poly phoneprov artifact types - mirrors Asterisk res_phoneprov file naming.
  *
  * @see infra/coolify/asterisk/phoneprov/phoneprov.conf
  */

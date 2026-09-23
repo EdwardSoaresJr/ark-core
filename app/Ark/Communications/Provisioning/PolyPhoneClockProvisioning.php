@@ -7,7 +7,7 @@ use DateTime;
 use DateTimeZone;
 
 /**
- * Poly VVX clock provisioning — mirrors the working floor VVX datetime profile.
+ * Poly VVX clock provisioning - mirrors the working floor VVX datetime profile.
  *
  * device.sntp carries city ID + current offset; tcpIpApp.sntp carries offset only.
  * daylightSavings.enable stays off; VVX350 does not reliably honor Poly city DST tables.
@@ -17,7 +17,7 @@ final class PolyPhoneClockProvisioning
     public const DEFAULT_NTP_SERVER = 'time.google.com';
 
     /**
-     * device.sntp.* on {@code <device>} — display clock path on VVX350.
+     * device.sntp.* on {@code <device>} - display clock path on VVX350.
      *
      * @return array<string, string>
      */
@@ -43,7 +43,7 @@ final class PolyPhoneClockProvisioning
     }
 
     /**
-     * Nested tcpIpApp.sntp — no city ID (matches working left desk phone).
+     * Nested tcpIpApp.sntp - no city ID (matches working left desk phone).
      */
     public static function phoneChildren(?string $shopTimezone = null): string
     {

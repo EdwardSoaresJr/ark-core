@@ -5,13 +5,13 @@
             Everything your shop needs. Nothing you don’t.
         </h1>
         <p class="mt-5 max-w-xl text-lg text-[var(--cloud-muted)]">
-            Built for independent shops that need to move fast — not learn a new vocabulary.
+            Built for independent shops that need to move fast - not learn a new vocabulary.
         </p>
 
         <ul class="mt-14 grid gap-6 sm:grid-cols-2">
             @foreach ([
                 ['Repair orders & estimates', 'Write the job, price the work, and keep the car moving without switching tools.'],
-                ['Customer updates', 'Approvals, texts, and “is it ready?” answers in one place — without the chaos.'],
+                ['Customer updates', 'Approvals, texts, and “is it ready?” answers in one place - without the chaos.'],
                 ['Inspections at the car', 'Capture findings and turn them into work the counter can sell.'],
                 ['Your shop online', 'A website tied to the work you actually do.'],
                 ['Approvals & payments', 'Send estimates and collect payment without phone tag.'],

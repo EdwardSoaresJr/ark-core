@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 /**
  * Deterministic, explainable recommendation ranking for advisor Today.
  *
- * Priority order is rule-based only — no LLM involvement.
+ * Priority order is rule-based only - no LLM involvement.
  * One repair order = one recommendation; all signals aggregate into that card.
  */
 final class AdvisorTodayRecommendationEngine
@@ -225,12 +225,12 @@ final class AdvisorTodayRecommendationEngine
         return match ($ruleKey) {
             'overdue_pickup' => 'Cash and bay space tied up until pickup',
             'multiple_customer_messages' => 'Customer trust drops when messages go unanswered',
-            'estimate_viewed_multiple_times' => 'High-intent estimate review — approval may be close',
+            'estimate_viewed_multiple_times' => 'High-intent estimate review - approval may be close',
             'estimate_viewed' => 'Customer is reviewing estimate',
             'unassigned_tech' => 'Shop floor work cannot start without a tech',
             'parts_pressure' => ($card->signalLabel ?? 'Parts').' is slowing production',
             'vehicle_id_needed' => 'Vehicle identity blocks accurate workflow',
-            default => TodayImpactKind::CustomerTrust->label().' — respond before momentum fades',
+            default => TodayImpactKind::CustomerTrust->label().' - respond before momentum fades',
         };
     }
 

@@ -37,7 +37,7 @@ export MYSQL_HOST MYSQL_PORT MYSQL_DB MYSQL_USER MYSQL_PASS
 # Ensure empty
 TABLES=$(docker compose exec -T mysql sh -c 'set -a; . /run/ark/secrets/install.env; set +a; mysql -N -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -e "SHOW TABLES;"' 2>/dev/null | wc -l | tr -d ' ')
 if [ "${TABLES}" != "0" ]; then
-  echo "Database not empty after fresh volume — abort"
+  echo "Database not empty after fresh volume - abort"
   exit 1
 fi
 
@@ -51,7 +51,7 @@ if [ ! -f .env ]; then
 fi
 php artisan key:generate --force --no-interaction >/dev/null
 
-# Force not installed (file write — do not call resetForTests outside testing)
+# Force not installed (file write - do not call resetForTests outside testing)
 php -r '
 $file = "storage/app/install/state.json";
 @mkdir("storage/app/install", 0755, true);

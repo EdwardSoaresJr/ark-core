@@ -1,14 +1,14 @@
-# Certification record — Phone-First Shop
+# Certification record - Phone-First Shop
 
 **Certification:** Phone-First Shop  
-**Track:** B — ARK Staff (**derivative** of [operation-follows-operator-v1.md](../operation-follows-operator-v1.md))  
+**Track:** B - ARK Staff (**derivative** of [operation-follows-operator-v1.md](../operation-follows-operator-v1.md))  
 **Owner:** Alex Rivera  
 **Prerequisite:** Workflows 1–5 filmed and operationally green  
 **Workflow doc:** [workflow-completion-certification.md](../../engineering/workflow-completion-certification.md)
 
 ## Why this matters
 
-This cert is **evidence** for the north star — not the north star itself.
+This cert is **evidence** for the north star - not the north star itself.
 
 After this certification, Edward, Molly, and Landon can run operational work for a week without thinking about which device they are on, because **the operation follows them**. Desktop is for depth; the floor never feels like it lost the thread.
 
@@ -20,13 +20,13 @@ After this certification, Edward, Molly, and Landon can run operational work for
 |-------|--------|------|-----------|
 | Engineering Certified | ⬜ | | All five workflow paths exist on device |
 | Operationally Certified | ⬜ | | Full workday floor proof |
-| Production Certified | ⬜ | | Sustained daily use — advisors + techs |
+| Production Certified | ⬜ | | Sustained daily use - advisors + techs |
 
 ---
 
 ## Operational acceptance
 
-> Edward, Molly, and Landon can spend an operational week where **the operation follows them** — never forced to a specific device, never wondering if the floor work saved.
+> Edward, Molly, and Landon can spend an operational week where **the operation follows them** - never forced to a specific device, never wondering if the floor work saved.
 
 | Criterion | Status | Proof |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ When operator opens desktop after phone-first work, authority should already ref
 - Customer replied; advisor responded
 - Payment taken; RO closed
 
-Desktop is **secondary execution** — not the source of operational truth during the floor day.
+Desktop is **secondary execution** - not the source of operational truth during the floor day.
 
 ---
 
@@ -62,4 +62,4 @@ Desktop is **secondary execution** — not the source of operational truth durin
 
 ## Corrections
 
-- **2026-06-28:** Reframed as derivative evidence for "operation follows operator" — not top-level product.
+- **2026-06-28:** Reframed as derivative evidence for "operation follows operator" - not top-level product.

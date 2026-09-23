@@ -34,7 +34,7 @@ final class ConversationTurnPrecedence
 
         $newestUnresolved = null;
 
-        // An explicit human resolution wins a same-second tie — unlike ambient
+        // An explicit human resolution wins a same-second tie - unlike ambient
         // outbound sends, clicking Mark handled is a deliberate shop response.
         $explicitResolvedAt = $conversation->resolved_at instanceof CarbonInterface
             ? $conversation->resolved_at
@@ -46,7 +46,7 @@ final class ConversationTurnPrecedence
 
             if (! $resolved) {
                 foreach ($resolutions as $resolvedAt) {
-                    // Strictly after — same-second outbound (e.g. reminder just sent) must not
+                    // Strictly after - same-second outbound (e.g. reminder just sent) must not
                     // pretend to resolve a customer reply that arrived in the same second.
                     if ($resolvedAt->greaterThan($inboundAt)) {
                         $resolved = true;

@@ -5,14 +5,14 @@
             Built for the floor.
         </h1>
         <p class="mt-5 max-w-xl text-lg text-[var(--cloud-muted)]">
-            Written for owners who already have enough on their plate — not for a software committee.
+            Written for owners who already have enough on their plate - not for a software committee.
         </p>
 
         <div class="mt-14 space-y-6">
             @foreach ([
                 ['Getting started', 'Create your shop → invite your team → write your first repair order → help your first customer. Usually under five minutes.'],
-                ['Built for the floor', 'Who needs attention, who’s waiting, what’s next on the car — the questions advisors already ask out loud.'],
-                ['Your data stays yours', 'Your customers, vehicles, and repair history belong to your shop — not locked inside someone else’s inbox.'],
+                ['Built for the floor', 'Who needs attention, who’s waiting, what’s next on the car - the questions advisors already ask out loud.'],
+                ['Your data stays yours', 'Your customers, vehicles, and repair history belong to your shop - not locked inside someone else’s inbox.'],
             ] as [$title, $blurb])
                 <div class="rounded-2xl border border-[var(--cloud-line)] bg-white/80 p-7">
                     <p class="cloud-display text-xl font-semibold">{{ $title }}</p>

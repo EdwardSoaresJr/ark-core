@@ -90,7 +90,7 @@
                                         ])
                                     </li>
                                 @empty
-                                    <li class="ops-cal-week-alloc__empty">—</li>
+                                    <li class="ops-cal-week-alloc__empty">-</li>
                                 @endforelse
                             </ul>
                         </div>

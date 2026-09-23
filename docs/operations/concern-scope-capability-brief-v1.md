@@ -1,7 +1,7 @@
 # Concern → Scope Capability Brief v1
 
 **Status:** Earned · Brief only · Not doctrine · Not closed  
-**Discovered by:** Writing RO #1644 (front/rear brakes) — customer statement attached to one approval unit; splitting front vs rear lost the narrative or forced combined approval.  
+**Discovered by:** Writing RO #1644 (front/rear brakes) - customer statement attached to one approval unit; splitting front vs rear lost the narrative or forced combined approval.  
 **Not:** Service Catalog · Estimate Editor redesign · reusable repair templates · visit-level narrative
 
 ---
@@ -28,7 +28,7 @@ Three truths. Three moments. One parent chain.
 | **Scope** | What we’re recommending · approval/disposition · summary · totals · repair actions · labor · parts · scope notes | Customer wording · service catalog · Operation Class · pricing policy |
 | **Repair Action** | Named repair steps | Money · disposition · customer statement |
 
-**Billing posture:** assign ownership only when the RO write path forces it — not in this brief.
+**Billing posture:** assign ownership only when the RO write path forces it - not in this brief.
 
 ---
 
@@ -36,8 +36,8 @@ Three truths. Three moments. One parent chain.
 
 1. **A Scope cannot exist without exactly one parent Concern.**
 2. **A Concern may exist with zero or more Scopes.**
-3. Customer statement lives on the Concern — never duplicated onto Scopes, never required on Visit for multi-concern visits.
-4. Disposition and billable totals live on the Scope — not on the Concern.
+3. Customer statement lives on the Concern - never duplicated onto Scopes, never required on Visit for multi-concern visits.
+4. Disposition and billable totals live on the Scope - not on the Concern.
 5. This capability is **not** a Service Catalog. No reusable repair template authority here.
 
 ---
@@ -47,7 +47,7 @@ Three truths. Three moments. One parent chain.
 Customer: *“Need front and rear brakes. Noise on hard stops.”* → **one Concern**  
 Inspection: front pads/rotors + rear pads/rotors → **two Scopes**  
 Customer: approve front, defer rear → **independent Scope dispositions**  
-Six months later: *“Why did I come in?”* → Concern customer statement — not *Front Pads & Rotors*
+Six months later: *“Why did I come in?”* → Concern customer statement - not *Front Pads & Rotors*
 
 ---
 
@@ -65,7 +65,7 @@ Mental model first. Operational truth second. Code names last.
 
 Only after the slice feels natural on real ROs: decide whether `RepairOrderConcern` becomes `Concern` in code. Same rename-last discipline as Repair Authority / Pricing.
 
-**Today’s collapse:** `RepairOrderConcern` wears both hats (customer problem + authorization unit). The child Scope is the missing hat — not a missing Concern.
+**Today’s collapse:** `RepairOrderConcern` wears both hats (customer problem + authorization unit). The child Scope is the missing hat - not a missing Concern.
 
 ---
 

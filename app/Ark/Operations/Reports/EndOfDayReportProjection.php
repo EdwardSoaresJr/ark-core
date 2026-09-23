@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 /**
- * Tekmetric-style End of Day card — one authoritative answer for posted sales truth.
+ * Tekmetric-style End of Day card - one authoritative answer for posted sales truth.
  */
 final readonly class EndOfDayReportProjection
 {

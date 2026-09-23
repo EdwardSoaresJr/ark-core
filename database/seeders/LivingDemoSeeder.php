@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Living Demo — busy Tuesday schedule for sales/demo.
+ * Living Demo - busy Tuesday schedule for sales/demo.
  * Idempotent on living-demo* markers. Safe for local/testing only via reset command.
  */
 class LivingDemoSeeder extends Seeder
@@ -139,12 +139,12 @@ class LivingDemoSeeder extends Seeder
                 'technician_user_id' => $technician->id,
                 'workstation_id' => $slot['bay']->id,
                 'created_by_user_id' => $advisor->id,
-                // Persist UTC wall-clock — Eloquent datetime casts do not convert TZ on write.
+                // Persist UTC wall-clock - Eloquent datetime casts do not convert TZ on write.
                 'starts_at' => $starts->copy()->utc(),
                 'ends_at' => $ends->copy()->utc(),
                 'estimated_labor_hours' => $slot['labor'],
                 'concern' => $slot['concern'],
-                'notes' => 'Living Demo appointment — busy Tuesday.',
+                'notes' => 'Living Demo appointment - busy Tuesday.',
                 'status' => AppointmentStatus::Confirmed,
             ]);
         }

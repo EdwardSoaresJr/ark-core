@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Str;
 
 /**
- * Mobile voice SIP identity — one enabled extension per registered mobile device.
+ * Mobile voice SIP identity - one enabled extension per registered mobile device.
  */
 final class EnsureMobileVoiceExtensionAction
 {

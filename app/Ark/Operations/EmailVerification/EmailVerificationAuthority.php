@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Email Verification Authority — proves email possession only.
+ * Email Verification Authority - proves email possession only.
  *
  * Does not create customers or log users in. Callers decide what happens after
  * a verified session exists. Portal sign-in stays on PortalAccessChallenge.

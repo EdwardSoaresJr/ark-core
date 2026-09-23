@@ -1,13 +1,13 @@
-# Parts Desk — Ben
+# Parts Desk - Ben
 
 **Station:** Parts Desk (fixed) + phone for urgent RO lookups  
 **Primary question:** What is blocking production?
 
-Parts lives between **production pressure** and **vendor reality**. ARK parts scenarios are younger than advisor/tech — many rows below define **target** behavior, not shipped features.
+Parts lives between **production pressure** and **vendor reality**. ARK parts scenarios are younger than advisor/tech - many rows below define **target** behavior, not shipped features.
 
 ---
 
-## 8:00 AM — Morning blockers
+## 8:00 AM - Morning blockers
 
 **Floor:** Two ROs waiting on parts. One backorder from yesterday.
 
@@ -25,11 +25,11 @@ Parts lives between **production pressure** and **vendor reality**. ARK parts sc
 
 **Status:** 🔲 No Parts Desk station surface · No mobile parts role
 
-**Acceptance (future):** Parts Desk orientation home shows blocker rows with RO + vehicle + advisor owner — same contract, Standard density.
+**Acceptance (future):** Parts Desk orientation home shows blocker rows with RO + vehicle + advisor owner - same contract, Standard density.
 
 ---
 
-## 9:30 AM — Parts arrived
+## 9:30 AM - Parts arrived
 
 **Floor:** Carrier delivers water pump for RO #5105. Ben notifies production.
 
@@ -45,13 +45,13 @@ Parts lives between **production pressure** and **vendor reality**. ARK parts sc
 
 **Surfaces:** RO parts (desktop) · Internal messaging (🔲) · Shop broadcast (🔲 P2)
 
-**Status:** 🔲 Scenario defines target for broadcast foundation — not SMS to tech
+**Status:** 🔲 Scenario defines target for broadcast foundation - not SMS to tech
 
 **At 9:30 acceptance:** Ben marks received → Landon's RO orientation `current_situation` updates → optional internal ping → no phone tag game.
 
 ---
 
-## 11:00 AM — Advisor asks status
+## 11:00 AM - Advisor asks status
 
 **Floor:** Edward at Front Counter asks Ben verbally. Ben checks ARK.
 
@@ -71,7 +71,7 @@ Parts lives between **production pressure** and **vendor reality**. ARK parts sc
 
 ---
 
-## 2:00 PM — Wrong part received
+## 2:00 PM - Wrong part received
 
 **Floor:** Vendor shipped incorrect component. Production stopped.
 
@@ -91,7 +91,7 @@ Parts lives between **production pressure** and **vendor reality**. ARK parts sc
 
 ---
 
-## 4:00 PM — End of day stock pull
+## 4:00 PM - End of day stock pull
 
 **Floor:** Ben pulls tomorrow's staged picks.
 
@@ -121,4 +121,4 @@ Parts lives between **production pressure** and **vendor reality**. ARK parts sc
 | 2:00 | Wrong part · production stop | 🔲 |
 | 4:00 | Stage for tomorrow | 🔲 |
 
-**Note:** Parts Desk validates the platform early. If orientation contract works for Ben's blockers the same way it works for Edward's customer text, the architecture is real. Parts mobile is not P0 — scenarios still **gate** features so parts does not become a siloed inventory app.
+**Note:** Parts Desk validates the platform early. If orientation contract works for Ben's blockers the same way it works for Edward's customer text, the architecture is real. Parts mobile is not P0 - scenarios still **gate** features so parts does not become a siloed inventory app.

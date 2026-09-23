@@ -1,6 +1,6 @@
 # Engineering Reviews
 
-Architecture and scope reviews — **engineering judgment**, not ADRs.
+Architecture and scope reviews - **engineering judgment**, not ADRs.
 
 | Artifact | Captures |
 |----------|----------|
@@ -8,7 +8,7 @@ Architecture and scope reviews — **engineering judgment**, not ADRs.
 | [reviews/](.) | Review records (why we approved, what we worried about) |
 | Git history | What shipped |
 
-ADRs are immutable once accepted. Reviews are written when a person actually reviews architecture or scope — not after every change.
+ADRs are immutable once accepted. Reviews are written when a person actually reviews architecture or scope - not after every change.
 
 ## When to Write a Review
 
@@ -47,7 +47,7 @@ Why this passed or failed review.
 
 ## Future concerns
 
-- {items to watch — not blockers}
+- {items to watch - not blockers}
 
 ## Doctrine alignment
 

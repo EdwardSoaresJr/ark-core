@@ -7,7 +7,7 @@ Do **not** move Growth/CMS into Core. Do **not** replace `lugsnplugs.com` with W
 
 | Host | After Public Core ops cutover | Owns `/book`? |
 | --- | --- | --- |
-| `lugsnplugs.com` / `www` | **Stay** on booking-capable runtime (today: arksmsv2 public surface) | **Yes** — `PublicBookController` → `POST /leads` → Lead |
+| `lugsnplugs.com` / `www` | **Stay** on booking-capable runtime (today: arksmsv2 public surface) | **Yes** - `PublicBookController` → `POST /leads` → Lead |
 | `app.lugsnplugs.com` | Public Core image | No |
 | Shadow `lugsnplugs.arksms.com` | Public Core rehearsal | No (404 expected) |
 
@@ -26,7 +26,7 @@ When swapping staff ops to Public Core:
 | Piece | Role |
 | --- | --- |
 | `BOOKING_SURFACE_BASE_URL` | External origin that still serves `/book` |
-| `BOOKING_SURFACE_ENFORCE` | Production default on — boot fails if protected hosts claimed without base URL |
+| `BOOKING_SURFACE_ENFORCE` | Production default on - boot fails if protected hosts claimed without base URL |
 | `BOOKING_SURFACE_PROTECTED_HOSTS` | Default `lugsnplugs.com,www.lugsnplugs.com` |
 | `GET /book` | Redirect-away **only** when base URL is set (no `public.book` route name) |
 | `php artisan ark:booking-surface:check` | Pre-cutover verification |

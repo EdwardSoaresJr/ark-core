@@ -98,7 +98,7 @@ PHP file counts under `app/Ark` (2026-09-18). Operations is 1,666 files. That is
 
 This folder is the main confusion. It is **not** the Platform product. The Platform product is a different app. This folder is leftover control-plane code plus the clients Core uses to talk to the real Platform.
 
-### Keep in Core — the shop calling out
+### Keep in Core - the shop calling out
 
 These are the phone line from the shop to Platform. Deleting them stops LugsNPlugs texts, card capture, or pairing.
 
@@ -112,7 +112,7 @@ These are the phone line from the shop to Platform. Deleting them stops LugsNPlu
 - Commands `ark:platform-pair`, `ark:platform-heartbeat`
 - `shop_settings.platform_*` pairing columns
 
-### Get out of Core — control plane that should not be here
+### Get out of Core - control plane that should not be here
 
 | Thing | What it is | If you delete it tomorrow |
 | --- | --- | --- |

@@ -230,7 +230,7 @@ final class DefaultInspectionTemplateCatalog
     }
 
     /**
-     * Legacy Standard categories named Tires / Brakes — every vehicle has them; no N/A.
+     * Legacy Standard categories named Tires / Brakes - every vehicle has them; no N/A.
      */
     public static function disableNaOnLegacyTireBrakeCategories(?InspectionTemplate $template = null): void
     {

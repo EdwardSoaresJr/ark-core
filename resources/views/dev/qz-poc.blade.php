@@ -18,7 +18,7 @@
     </style>
 </head>
 <body>
-    <h1>ARK × Stock QZ Tray — signing POC</h1>
+    <h1>ARK × Stock QZ Tray - signing POC</h1>
     <p>Local environment only. Proves browser → ARK <code>sign-message</code> → stock QZ Tray with ARK-owned dev certificates. Install <code>infra/qz-dev/certs/override.crt</code> into QZ Tray before connecting.</p>
 
     <dl>
@@ -100,7 +100,7 @@
             try {
                 initSecurity();
                 await qz.websocket.connect();
-                log('qz.websocket.connect() OK — stock QZ accepted ARK certificate chain.');
+                log('qz.websocket.connect() OK - stock QZ accepted ARK certificate chain.');
             } catch (e) {
                 log('CONNECT FAILED: ' + (e?.message || e));
             }

@@ -1,4 +1,4 @@
-# ARK Platform Doctrine — Shop Identity vs Voice Transport
+# ARK Platform Doctrine - Shop Identity vs Voice Transport
 
 **Status:** Canonical  
 **Scope:** Arkify · Communications · Provisioning · Deployment
@@ -27,7 +27,7 @@ https://shop1.arksms.com
 
 Later, `shop1.com` or `app.shop1.com` may CNAME to the same deployment. The public product model never changes.
 
-There is no `voice.shop1.arksms.com`. There is no shared `voice.arksms.com` SIP edge — each shop has its own Asterisk on its own VPS.
+There is no `voice.shop1.arksms.com`. There is no shared `voice.arksms.com` SIP edge - each shop has its own Asterisk on its own VPS.
 
 ## Voice has two identities
 
@@ -49,7 +49,7 @@ These are product capabilities. Operators never type URLs.
 
 ### SIP identity (transport)
 
-SIP is transport. Phones register to a **SIP registrar hostname** defined by deployment configuration — not by the product model.
+SIP is transport. Phones register to a **SIP registrar hostname** defined by deployment configuration - not by the product model.
 
 Examples (all valid, all deployment-specific):
 
@@ -93,8 +93,8 @@ Generated Poly config contains HTTP URLs from `SHOP_BASE_URL` and SIP values fro
 | `SHOP_BASE_URL` | Application | HTTP capability URLs |
 | `VOICE_SIP_REGISTRAR` | Deployment | SIP registrar hostname in provisioning |
 | `VOICE_SIP_PORT` | Deployment | SIP port (default 5060) |
-| `ASTERISK_PROVISIONING_HOST` | Deployment | Poly SIP server in generated configs — locked to `VOICE_SIP_REGISTRAR` per shop |
-| `VOICE_HOSTNAME` | Coolify/Traefik | Asterisk stack Traefik/SIP bind — not product model |
+| `ASTERISK_PROVISIONING_HOST` | Deployment | Poly SIP server in generated configs - locked to `VOICE_SIP_REGISTRAR` per shop |
+| `VOICE_HOSTNAME` | Coolify/Traefik | Asterisk stack Traefik/SIP bind - not product model |
 
 ## Preferred fleet pattern (one shop, one VPS)
 

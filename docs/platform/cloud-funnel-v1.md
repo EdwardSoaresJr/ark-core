@@ -1,14 +1,14 @@
 # Cloud Funnel v1
 
-**Status:** Experience validated — replace implementations, not the journey  
+**Status:** Experience validated - replace implementations, not the journey  
 **Host:** `autorepairkeeper.com`  
 **Controller:** `CloudExperienceController` · session key `ark_cloud_trial`
 
-## Principle (guardrail — not guidance)
+## Principle (guardrail - not guidance)
 
-**Replace implementations, not experiences.** *(Design rule — what to do.)*
+**Replace implementations, not experiences.** *(Design rule - what to do.)*
 
-**The user journey is the contract; underlying authorities mature incrementally.** *(Architectural rationale — why.)*
+**The user journey is the contract; underlying authorities mature incrementally.** *(Architectural rationale - why.)*
 
 **Milestones are defined by the authority they mature, not by the amount of functionality they deliver.**
 
@@ -18,8 +18,8 @@ Stricter than a vertical slice:
 
 | | Role |
 | --- | --- |
-| **Experience** | The slice — continuity the user feels |
-| **Authority** | The unit of implementation — one per milestone |
+| **Experience** | The slice - continuity the user feels |
+| **Authority** | The unit of implementation - one per milestone |
 
 The user experiences continuity while internal truth becomes progressively more real.
 
@@ -32,7 +32,7 @@ The user experiences continuity while internal truth becomes progressively more 
 | **M5** | Billing posture unchanged | Subscription / Stripe |
 | **M6** | Adoption / claim unchanged | Existing shop claim |
 
-If a future milestone starts **changing the funnel** to accommodate infrastructure, question the **milestone scope** — do not redesign the experience.
+If a future milestone starts **changing the funnel** to accommodate infrastructure, question the **milestone scope** - do not redesign the experience.
 
 ## Journey (stable)
 
@@ -79,12 +79,12 @@ Experience ladder (funnel): Phase 1 shipped. Implementation backlog is **M1–M6
 
 ## Companions
 
-- [cloud-saas-critical-path-v1.md](cloud-saas-critical-path-v1.md) — **execute this**
-- [cloud-m3-workspace-launch-brief-v1.md](cloud-m3-workspace-launch-brief-v1.md) — M3 brief
-- [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) — prove platform; migrate Demo Auto Repair last
-- [NEXT.md](NEXT.md) — Monday pointer
-- [PRODUCT-TRACK.md](PRODUCT-TRACK.md) — sellable track
-- Platform orchestrator — **M4**, not before
+- [cloud-saas-critical-path-v1.md](cloud-saas-critical-path-v1.md) - **execute this**
+- [cloud-m3-workspace-launch-brief-v1.md](cloud-m3-workspace-launch-brief-v1.md) - M3 brief
+- [multi-tenant-development-strategy-v1.md](multi-tenant-development-strategy-v1.md) - prove platform; migrate Demo Auto Repair last
+- [NEXT.md](NEXT.md) - Monday pointer
+- [PRODUCT-TRACK.md](PRODUCT-TRACK.md) - sellable track
+- Platform orchestrator - **M4**, not before
 
 ## Arrive mission (day-one)
 
@@ -94,7 +94,7 @@ Honest copy while provisioning is simulated:
 
 - “Let’s get your shop ready.”
 - “Your workspace is waiting.”
-- Free trial badge — no ambiguity
+- Free trial badge - no ambiguity
 
 Not: “Your shop has been created” / “{{ shop }} is ready” until Phase 3–4 make that true.
 

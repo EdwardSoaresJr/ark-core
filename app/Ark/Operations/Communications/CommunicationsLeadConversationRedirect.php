@@ -7,7 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
- * Website leads own a conversation — never strand advisors on a lead-only thread.
+ * Website leads own a conversation - never strand advisors on a lead-only thread.
  */
 final class CommunicationsLeadConversationRedirect
 {

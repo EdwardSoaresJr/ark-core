@@ -73,7 +73,7 @@ final class FirebasePushTransport implements PushTransport
     }
 
     /**
-     * Tone decides delivery loudness — urgent/waiting wake the device and play
+     * Tone decides delivery loudness - urgent/waiting wake the device and play
      * sound; positive/info stay quiet.
      *
      * @return array<string, mixed>

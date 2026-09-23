@@ -99,7 +99,7 @@ final class StoreInspectionFindingAction
     }
 
     /**
-     * Other Findings are for vocabulary gaps only — never a second condition for a checklist point.
+     * Other Findings are for vocabulary gaps only - never a second condition for a checklist point.
      */
     private function assertNoTemplatePointCollision(Inspection $inspection, string $label): void
     {

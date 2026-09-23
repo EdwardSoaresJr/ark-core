@@ -64,7 +64,7 @@ final class ShopMemoryProviderCatalog
             [
                 'key' => self::AI_REWRITE,
                 'name' => 'AI Rewrite',
-                'description' => 'Explicit Rewrite only — never automatic authorship.',
+                'description' => 'Explicit Rewrite only - never automatic authorship.',
                 'version' => '1',
                 'corpora' => [],
             ],

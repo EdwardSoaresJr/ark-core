@@ -22,7 +22,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Surface-agnostic Conversation projection — operational relationship history.
+ * Surface-agnostic Conversation projection - operational relationship history.
  */
 final class ConversationProjection
 {

@@ -27,7 +27,7 @@
                         <p>Enter the 6-digit code we sent to your email or phone.</p>
                     @endif
                     <p class="mt-2 text-sm text-slate-600">
-                        Don’t see it? Check texts or spam, wait a minute, then try again — or use a different email or number.
+                        Don’t see it? Check texts or spam, wait a minute, then try again - or use a different email or number.
                     </p>
                 </div>
             </div>

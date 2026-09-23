@@ -61,7 +61,7 @@ for _ in $(seq 1 30); do
 done
 
 pgrep -f "Runner.Listener" >/dev/null 2>&1 || {
-    echo "WARN: Listener not up yet — check ${LOG_ERR}" >&2
+    echo "WARN: Listener not up yet - check ${LOG_ERR}" >&2
     exit 1
 }
 

@@ -5,7 +5,7 @@ namespace App\Ark\Communications\Provisioning;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Structured observations for endpoint provisioning — support tooling, not debug noise.
+ * Structured observations for endpoint provisioning - support tooling, not debug noise.
  */
 final class EndpointProvisionObservationLogger
 {

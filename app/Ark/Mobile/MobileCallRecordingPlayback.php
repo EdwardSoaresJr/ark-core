@@ -7,7 +7,7 @@ use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionMediaCaptureStatus;
 
 /**
- * Mobile playback URLs for call recordings — Sanctum-authenticated proxy routes.
+ * Mobile playback URLs for call recordings - Sanctum-authenticated proxy routes.
  */
 final class MobileCallRecordingPlayback
 {

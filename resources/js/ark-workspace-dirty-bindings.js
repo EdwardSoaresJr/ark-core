@@ -1,5 +1,5 @@
 /**
- * Wire entity surfaces to ARK.workspace.setDirty — only when forms actually differ
+ * Wire entity surfaces to ARK.workspace.setDirty - only when forms actually differ
  * from their loaded baselines (reverts clear the scare).
  */
 import { rootHasUnsavedFormChanges } from './ark-form-unsaved';

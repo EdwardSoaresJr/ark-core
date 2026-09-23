@@ -125,7 +125,7 @@ test('applied standard has corner points with builder meta and gyr palette', fun
         ->and($inspection->items()->where('label', 'LF Caliper')->exists())->toBeTrue()
         ->and($inspection->items()->where('label', 'LF Brake hose')->exists())->toBeTrue()
         ->and($inspection->items()->where('label', 'Parking brake')->exists())->toBeTrue()
-        ->and($inspection->items()->where('label', 'Brake fluid — level / condition')->exists())->toBeTrue();
+        ->and($inspection->items()->where('label', 'Brake fluid - level / condition')->exists())->toBeTrue();
 
     $tire = $inspection->items()->where('label', 'LF Tire')->firstOrFail();
     $templateItem = InspectionTemplateItem::query()->findOrFail($tire->inspection_template_item_id);
@@ -224,7 +224,7 @@ test('apply snapshots walk_section and walk ignores category labels and live bui
     $rearAxle = $inspection->items()->where('label', 'Rear axle brake type')->firstOrFail();
     expect($rearAxle->walk_section)->toBe('rear_axle');
 
-    $brakeFluid = $inspection->items()->where('label', 'Brake fluid — level / condition')->firstOrFail();
+    $brakeFluid = $inspection->items()->where('label', 'Brake fluid - level / condition')->firstOrFail();
     expect($brakeFluid->walk_section)->toBe('brake_system');
 
     // Category drift must not move Corner points.
@@ -236,7 +236,7 @@ test('apply snapshots walk_section and walk ignores category labels and live bui
             'LR Tire',
             'RR Tire',
             'RF Tire',
-            'Brake fluid — level / condition',
+            'Brake fluid - level / condition',
             'Parking brake',
         ])
         ->pluck('id');
@@ -286,7 +286,7 @@ test('legacy walk still groups by checklist category when walk_section snapshot 
 
     $inspection->items()->create([
         'category' => 'tires',
-        'label' => 'LF tire — condition / damage',
+        'label' => 'LF tire - condition / damage',
         'checklist_category_name' => 'Tires',
         'walk_section' => null,
         'position' => 1,

@@ -1,17 +1,17 @@
-# First Contact — Engineering Report
+# First Contact - Engineering Report
 
-**Milestone:** Milestone 1 — First Contact  
+**Milestone:** Milestone 1 - First Contact  
 **Date:** _fill after certification_  
 **Device:** Poly VVX350  
 **Shop:** Demo Auto Repair  
 
-> Certification record — not a debug log. Name failed **gates** (G1–G7), not subsystems.
+> Certification record - not a debug log. Name failed **gates** (G1–G7), not subsystems.
 
 ---
 
 ## Environment
 
-_Not success or failure — the lab snapshot for future comparison (Yealink, Fanvil, etc.)._
+_Not success or failure - the lab snapshot for future comparison (Yealink, Fanvil, etc.)._
 
 | Field | Value |
 |-------|-------|
@@ -36,7 +36,7 @@ _Not success or failure — the lab snapshot for future comparison (Yealink, Fan
 | G6 | SIP registration? | PJSIP registered | | |
 | G7 | ARK observes reality? | AMI → Connected | | |
 
-**Failed gate (if any):** G___ — _describe observation, not hypothesis_
+**Failed gate (if any):** G___ - _describe observation, not hypothesis_
 
 ---
 
@@ -45,23 +45,23 @@ _Not success or failure — the lab snapshot for future comparison (Yealink, Fan
 _Capture timestamps at every gate. This becomes the performance baseline._
 
 ```
-__:__:__  G1 —
-__:__:__  G2 —
-__:__:__  G3 —
-__:__:__  G4 —
-__:__:__  G5 —
-__:__:__  G6 —
-__:__:__  G7 —
+__:__:__  G1 -
+__:__:__  G2 -
+__:__:__  G3 -
+__:__:__  G4 -
+__:__:__  G5 -
+__:__:__  G6 -
+__:__:__  G7 -
 ```
 
 Example reference:
 
 ```
-09:14:02  G5 — Phone boots
-09:14:07  G4 — GET /provision/48256730757F.cfg → 200, projection REUSED
-09:14:11  G5 — Phone applies config
-09:14:17  G6 — SIP REGISTER / AMI Registered
-09:14:18  G7 — Connected
+09:14:02  G5 - Phone boots
+09:14:07  G4 - GET /provision/48256730757F.cfg → 200, projection REUSED
+09:14:11  G5 - Phone applies config
+09:14:17  G6 - SIP REGISTER / AMI Registered
+09:14:18  G7 - Connected
 ```
 
 ---
@@ -86,7 +86,7 @@ _DHCP, VLAN, DNS, provisioning server URL on phone._
 
 ## Provision request (G4 / G5)
 
-_First real MAC request — HTTP status, `endpoint.provision.request` log line._
+_First real MAC request - HTTP status, `endpoint.provision.request` log line._
 
 ---
 
@@ -110,7 +110,7 @@ _Bridge event, registration webhook._
 
 ## Outcome
 
-- [ ] **G7 — Connected** in ARK Shop → Communications
+- [ ] **G7 - Connected** in ARK Shop → Communications
 - [ ] Or: certification stopped at gate G___
 
 ---
@@ -131,15 +131,15 @@ _What the system proved. What a gate taught us. What becomes a regression test._
 
 **Open question:** Why can't the provisioning handler produce NOT_FOUND for a valid unknown MAC?
 
-**Status:** Superseded by Session 2 observation — not rewritten.
+**Status:** Superseded by Session 2 observation - not rewritten.
 
 ---
 
 ## Session 2
 
-**G1 PASS** — `GET /up` → 200
+**G1 PASS** - `GET /up` → 200
 
-**G3 PASS** — `GET /provision/AABBCCDDEEFF.cfg` → **404**
+**G3 PASS** - `GET /provision/AABBCCDDEEFF.cfg` → **404**
 
 **Observed:** Production now behaves as expected for an unknown valid MAC.
 

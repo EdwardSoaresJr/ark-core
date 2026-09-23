@@ -1,7 +1,7 @@
 # ARK Identity Authority Contract
 
-**Status:** **Accepted** — frozen 2026-06-14. Do not implement OIDC until `docs/identity/oidc-design-pass.md` is accepted.  
-**Version:** 1.1 — 2026-06-14  
+**Status:** **Accepted** - frozen 2026-06-14. Do not implement OIDC until `docs/identity/oidc-design-pass.md` is accepted.  
+**Version:** 1.1 - 2026-06-14  
 **Predecessor:** `docs/arkademy/bookstack-foundation-plan.md` (Phase 1a/1a.5 complete; branding audit complete)  
 **Sequence:** Doctrine → **Contract** → Implementation
 
@@ -9,15 +9,15 @@
 
 ## 1. What this is
 
-Phase 1b is not “BookStack login.” It is **ARK Identity Platform** — one authority for who a person is, what they may do, and which shop they belong to. Every other product **projects** that truth; none may become a peer directory.
+Phase 1b is not “BookStack login.” It is **ARK Identity Platform** - one authority for who a person is, what they may do, and which shop they belong to. Every other product **projects** that truth; none may become a peer directory.
 
 ```
 ARK User (authority)
     ↓ OIDC
 Product User (projection)
-    ├── ARK V2 session (native — same authority)
+    ├── ARK V2 session (native - same authority)
     ├── ARKademy / BookStack user
-    ├── Portal customer (future — separate guard, same pattern)
+    ├── Portal customer (future - separate guard, same pattern)
     └── ARK-WEB admin (future)
 ```
 
@@ -42,7 +42,7 @@ Product User (projection)
 | **Training gate / curriculum progress** | **ARK** | Unchanged. BookStack does not own completion truth. |
 | **Session** | **Per product** | ARK Breeze session on V2; BookStack session after OIDC; no shared cookie jar required. |
 
-**Rule:** If a product needs name, email, role, or product access, it **reads from OIDC claims or ARK API** — never the reverse.
+**Rule:** If a product needs name, email, role, or product access, it **reads from OIDC claims or ARK API** - never the reverse.
 
 ---
 
@@ -64,8 +64,8 @@ A user has **one or more roles** and **one or more product grants**. Role drives
 | Edward (owner) | `admin` | `ark_v2`, `arkademy`, `portal`, `ark_web_admin` |
 | Ben (advisor) | `advisor` | `ark_v2`, `arkademy` |
 | Technician | `technician` | `ark_v2`, `arkademy` (override: `ark_v2` only if ARKademy revoked) |
-| Customer | `customer` | `portal` only — **no** `ark_v2` |
-| Marketing contractor | (none or limited staff role) | `ark_web_admin` only — **no** `ark_v2` |
+| Customer | `customer` | `portal` only - **no** `ark_v2` |
+| Marketing contractor | (none or limited staff role) | `ark_web_admin` only - **no** `ark_v2` |
 
 **Phase 1b defaults (single shop):**
 
@@ -81,7 +81,7 @@ Defaults may be overridden per user in ARK admin without changing role.
 1. User is active and authenticated.
 2. User has product access matching the requesting `client_id` (e.g. `arkademy` requires `arkademy` product).
 
-If product access is missing, issuer returns `access_denied` — no BookStack user is created.
+If product access is missing, issuer returns `access_denied` - no BookStack user is created.
 
 **Storage (target):** `user_product_access` or equivalent in ARK (not BookStack). Phase 1b may implement defaults-from-role first; schema must allow per-user overrides without redesign.
 
@@ -95,7 +95,7 @@ Operational hosts share ARK ecosystem branding; public shop hosts stay shop-bran
 
 | Class | Examples | Branding | OIDC |
 |-------|----------|----------|------|
-| Operational | `app.demo-auto.test`, `learn.demo-auto.test`, `platform.autorepairkeeper.com` | ARK | Yes — staff issuer and clients |
+| Operational | `app.demo-auto.test`, `learn.demo-auto.test`, `platform.autorepairkeeper.com` | ARK | Yes - staff issuer and clients |
 | Public shop | `demo-auto.test`, future `acmeautorepair.com` | Shop | No staff OIDC on marketing site |
 | Future multi-shop ops | `shop1.arksms.com`, `shop2.arksms.com` | ARK | Same issuer; `shop_id` claim scopes tenant |
 
@@ -137,15 +137,15 @@ See `docs/branding/ownership.md`.
 
 | Rule | Detail |
 |------|--------|
-| **Phase 1b value** | `(string) users.id` — ARK primary key |
-| **Future option** | Immutable UUID column (`users.uuid`) if id remapping ever required — set once at create, never updated |
+| **Phase 1b value** | `(string) users.id` - ARK primary key |
+| **Future option** | Immutable UUID column (`users.uuid`) if id remapping ever required - set once at create, never updated |
 | **Forbidden as `sub`** | Email, username, phone, name, Partstech username, or any mutable profile field |
 
 Products store `external_auth_id` = `sub`. Email changes update profile claims only; projection linkage survives.
 
 ### 5.2 Staff claim surface (client-facing)
 
-OIDC clients receive **only** this claim set — nothing about ARK schema, tables, or internal ids beyond `sub`:
+OIDC clients receive **only** this claim set - nothing about ARK schema, tables, or internal ids beyond `sub`:
 
 | Claim | Source | Mutable? |
 |-------|--------|----------|
@@ -170,7 +170,7 @@ Minimum claims for all staff OIDC clients:
 | `groups` | Spatie role names | BookStack role mapping (`admin`, `advisor`, `technician`) |
 | `products` | ARK product access slugs | Issuer-side only; authorize gate per OIDC client |
 | `shop_id` | Shop membership (nullable until multi-shop) | Future tenant isolation |
-| `display_theme` | `users.display_theme` | Light/dark/system — ARK V2 + ARKademy display sync |
+| `display_theme` | `users.display_theme` | Light/dark/system - ARK V2 + ARKademy display sync |
 | `accent_theme` | `users.accent_theme` | ARK V2 + ARKademy accent personalization |
 
 Optional later (not Phase 1b blockers):
@@ -183,15 +183,15 @@ Optional later (not Phase 1b blockers):
 
 ## 5.3 Staff identity vs customer identity
 
-**Two directories, one issuer architecture — not one merged user table.**
+**Two directories, one issuer architecture - not one merged user table.**
 
 | Dimension | Staff identity | Customer identity |
 |-----------|----------------|-------------------|
 | **Authority table** | `users` | `customers` |
 | **Guard** | Staff Breeze / staff OIDC clients | Portal guard (future) |
-| **Roles** | `admin`, `advisor`, `technician` | none — not Spatie staff roles |
+| **Roles** | `admin`, `advisor`, `technician` | none - not Spatie staff roles |
 | **Product access** | `ark_v2`, `arkademy`, `ark_web_admin`, … | `portal` only |
-| **Phase 1b** | Issuer + BookStack | **Out of scope** — no customer OIDC |
+| **Phase 1b** | Issuer + BookStack | **Out of scope** - no customer OIDC |
 | **Future** | Same issuer, **separate OIDC clients** | `portal` client; different authorize gate |
 | **Forbidden** | Customer row in `users` for portal login | Staff row in `customers` for operations |
 
@@ -209,7 +209,7 @@ OIDC_GROUPS_CLAIM=groups
 OIDC_EXTERNAL_ID_CLAIM=sub
 ```
 
-BookStack roles map via External Authentication IDs — not manual user admin.
+BookStack roles map via External Authentication IDs - not manual user admin.
 
 ---
 
@@ -249,7 +249,7 @@ BookStack **never** owns staff identity. On each OIDC login:
 | 1 | **ARK** | Admin creates user (or invite flow): name, email, role, shop membership |
 | 2 | **ARK** | User sets password (or accepts invite link) on `app.demo-auto.test` |
 | 3 | **ARKademy** | User visits `learn.demo-auto.test` → OIDC → BookStack user **auto-created** on first login |
-| 4 | **ARK** | Training gate / curriculum unchanged — ARK tables, not BookStack |
+| 4 | **ARK** | Training gate / curriculum unchanged - ARK tables, not BookStack |
 
 **No pre-provisioning in BookStack required.** First OIDC login is the projection create.
 
@@ -257,8 +257,8 @@ BookStack **never** owns staff identity. On each OIDC login:
 
 | Condition | ARKademy access |
 |-----------|-----------------|
-| User has `arkademy` product access | Yes — OIDC authorize succeeds; user **auto-provisions on first login** |
-| User lacks `arkademy` product access | Issuer denies — no BookStack session |
+| User has `arkademy` product access | Yes - OIDC authorize succeeds; user **auto-provisions on first login** |
+| User lacks `arkademy` product access | Issuer denies - no BookStack session |
 | `customer` role | No staff OIDC clients |
 | Deactivated ARK user | Issuer denies |
 
@@ -280,7 +280,7 @@ Default: staff roles (`admin`, `advisor`, `technician`) receive `ark_v2` + `arka
 
 | Path | Phase 1b |
 |------|----------|
-| Admin-created staff | **Yes** — primary path |
+| Admin-created staff | **Yes** - primary path |
 | Public self-registration on ARK | **No** for staff |
 | BookStack registration | **Disabled** |
 
@@ -294,7 +294,7 @@ Phase 1b issuer MUST be designed for **multiple OIDC clients** without schema ch
 |--------|-------|-------|
 | `arkademy` | 1b | BookStack on `learn.*` |
 | `ark-operations` | implicit | Native V2 session; may later use OIDC for mobile/API |
-| `ark-portal` | later | Customer guard — **separate client**, not staff claims |
+| `ark-portal` | later | Customer guard - **separate client**, not staff claims |
 | `ark-web-admin` | later | CMS staff for shop sites |
 | Future products | later | Register client; same `sub` + `shop_id` |
 
@@ -323,10 +323,10 @@ Membership: user belongs to 1..n shops; token includes active shop context
 
 | Question | Answer |
 |----------|--------|
-| Can `shop1.arksms.com` and `shop2.arksms.com` share one issuer? | **Yes** — same issuer; `shop_id` claim + app routing |
-| Is user data isolated per shop? | **Yes** — operations data already shop-scoped; identity carries membership |
-| Can one human work at two shops? | **Yes** — multiple memberships; active shop selected at login or host-derived |
-| Does BookStack get one instance per shop? | **Phase 1b:** single Demo Auto Repair instance. **Future:** shop-scoped shelves or instance-per-shop — projection still from same ARK user |
+| Can `shop1.arksms.com` and `shop2.arksms.com` share one issuer? | **Yes** - same issuer; `shop_id` claim + app routing |
+| Is user data isolated per shop? | **Yes** - operations data already shop-scoped; identity carries membership |
+| Can one human work at two shops? | **Yes** - multiple memberships; active shop selected at login or host-derived |
+| Does BookStack get one instance per shop? | **Phase 1b:** single Demo Auto Repair instance. **Future:** shop-scoped shelves or instance-per-shop - projection still from same ARK user |
 
 **Phase 1b scope:** Implement issuer with `shop_id` claim **reserved** (constant for Demo Auto Repair). Do not build full multi-shop switching UI until Shop In A Box demands it.
 
@@ -334,7 +334,7 @@ Membership: user belongs to 1..n shops; token includes active shop context
 
 ## 10. ARK V2 native session vs OIDC
 
-ARK V2 staff login **remains Breeze** on `app.*` in Phase 1b. OIDC issuer sits **alongside** existing auth — same `users` table, same password verification inside issuer endpoints.
+ARK V2 staff login **remains Breeze** on `app.*` in Phase 1b. OIDC issuer sits **alongside** existing auth - same `users` table, same password verification inside issuer endpoints.
 
 BookStack does not redirect through V2 session cookie; it uses standard OIDC. Optional UX: if user already has ARK session, issuer authorize step is silent (SSO within ecosystem).
 
@@ -349,7 +349,7 @@ BookStack does not redirect through V2 session cookie; it uses standard OIDC. Op
 - BookStack API service accounts via SSO
 - SCIM provisioning
 - Syncing BookStack content permissions from ARK permissions matrix
-- Replacing embedded Blade ARKademy (`/app/learn`) — separate migration phase
+- Replacing embedded Blade ARKademy (`/app/learn`) - separate migration phase
 - Authentik/Keycloak deployment
 
 ---
@@ -358,25 +358,25 @@ BookStack does not redirect through V2 session cookie; it uses standard OIDC. Op
 
 - [x] This contract accepted (2026-06-14)
 - [x] Role vs product access defined as separate axes (§2.1)
-- [ ] Issuer host confirmed (`app.demo-auto.test` vs dedicated `auth.*`) — see design pass
+- [ ] Issuer host confirmed (`app.demo-auto.test` vs dedicated `auth.*`) - see design pass
 - [ ] BookStack admin password rotated; local accounts documented as break-glass only
 - [x] Role → BookStack role mapping table agreed (`admin` / `advisor` / `technician`)
 - [x] Deactivation behavior agreed (issuer deny sufficient for 1b)
-- [ ] Logout behavior documented (V2 logout vs BookStack session) — see design pass
+- [ ] Logout behavior documented (V2 logout vs BookStack session) - see design pass
 - [x] `shop_id` claim reserved in token schema
 - [x] `products` claim reserved in token schema
-- [ ] OIDC design pass accepted — **before issuer code**
-- [x] OIDC design pass accepted (2026-06-14) — Phase 1b.0 spike authorized
+- [ ] OIDC design pass accepted - **before issuer code**
+- [x] OIDC design pass accepted (2026-06-14) - Phase 1b.0 spike authorized
 
 ---
 
 ## 13. Implementation phases (after acceptance)
 
 ```
-1b.0 — Issuer skeleton (discovery, JWKS, single test client)
-1b.1 — BookStack OIDC client + auto-register + group sync
-1b.2 — Break-glass local admin + runbook
-1b.3 — Silent SSO when ARK session present (optional polish)
+1b.0 - Issuer skeleton (discovery, JWKS, single test client)
+1b.1 - BookStack OIDC client + auto-register + group sync
+1b.2 - Break-glass local admin + runbook
+1b.3 - Silent SSO when ARK session present (optional polish)
 ```
 
 Each sub-phase ships with tests and runbook updates. No content migration or training gate changes in 1b.
@@ -390,7 +390,7 @@ Each sub-phase ships with tests and runbook updates. No content migration or tra
 | `docs/arkademy/bookstack-foundation-plan.md` | Infrastructure + SSO appendix |
 | `docs/branding/ownership.md` | Operational vs public host branding |
 | `docs/branding/ecosystem-identity.md` | Presentation layer consistency |
-| `docs/identity/oidc-design-pass.md` | Implementation approach — **next gate before code** |
+| `docs/identity/oidc-design-pass.md` | Implementation approach - **next gate before code** |
 | doctrine `ark-surfaces.md` | Staff vs portal surface separation |
 
 ---

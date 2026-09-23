@@ -1,9 +1,9 @@
 # Deployment Flow v1
 
-**Status:** Provisioning v1 **frozen** — truth only  
+**Status:** Provisioning v1 **frozen** - truth only  
 **Companions:** [adapter-rule-v1.md](adapter-rule-v1.md) · [provisioning-request-authority-v1.md](provisioning-request-authority-v1.md) · [cluster-assignment-authority-v1.md](cluster-assignment-authority-v1.md) · [cluster-authority-v1.md](cluster-authority-v1.md)
 
-## Provisioning v1 — frozen
+## Provisioning v1 - frozen
 
 ```text
 Create Shop

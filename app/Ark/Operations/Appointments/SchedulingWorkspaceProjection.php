@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 
 /**
- * Day / week Scheduling Workspace — packages calendar once per request.
+ * Day / week Scheduling Workspace - packages calendar once per request.
  * Soft-capacity day board + DayLens chips (projection-owned filters).
  */
 final class SchedulingWorkspaceProjection
@@ -294,7 +294,7 @@ final class SchedulingWorkspaceProjection
      */
     private function laneRows(string $lanes, array $cards, string $view = 'day', bool $showEmptyLanes = false): array
     {
-        // Agenda is one wide lane — reserve side-by-side columns even for a lone card.
+        // Agenda is one wide lane - reserve side-by-side columns even for a lone card.
         $minColumns = ($lanes === 'agenda' && $view === 'day') ? 3 : 1;
 
         if ($lanes === 'agenda') {
@@ -422,7 +422,7 @@ final class SchedulingWorkspaceProjection
             ]];
         }
 
-        // Technicians stay full lanes for now — Floor Planner honesty applies to Bays.
+        // Technicians stay full lanes for now - Floor Planner honesty applies to Bays.
         return [
             'rows' => $rows,
             'show_empty_lanes' => false,
@@ -729,7 +729,7 @@ final class SchedulingWorkspaceProjection
     }
 
     /**
-     * Soft-capacity cue for month cells — does not change the 3-card summary cap.
+     * Soft-capacity cue for month cells - does not change the 3-card summary cap.
      *
      * @param  list<array{days: list<array<string, mixed>>}>  $weeks
      * @return list<array{days: list<array<string, mixed>>}>

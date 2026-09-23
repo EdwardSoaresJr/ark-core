@@ -32,5 +32,5 @@ Product must reinforce these levers in reporting and workflow. Numbers come from
 
 ## 5. Mix and net
 
-- Balanced posted mix often near ~55% labor / ~45% parts — set shop targets in Settings.
+- Balanced posted mix often near ~55% labor / ~45% parts - set shop targets in Settings.
 - Net profit targets belong on real P&L; ARK Owner P&L is a management estimate only.

@@ -10,7 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Applies a verified Cloud capture result to Core financial authority — once.
+ * Applies a verified Cloud capture result to Core financial authority - once.
  */
 final class ApplyPaymentCaptureResultAction
 {

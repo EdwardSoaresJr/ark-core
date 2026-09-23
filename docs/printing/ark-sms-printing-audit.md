@@ -1,12 +1,12 @@
 # ARK-SMS Printing Audit
 
-**Status:** `AUDITED` (production server source + config; tenant DB values not sampled — multi-tenant)
+**Status:** `AUDITED` (production server source + config; tenant DB values not sampled - multi-tenant)
 
 **Audited on:** 2026-06-06  
 **Auditor:** remote session via `root@24.144.81.19`  
 **ARK-SMS deploy path:** `/var/www/sites/ark-sms/production/current`  
 **Release:** `20260531023539`  
-**V1 reference doc (on server):** `docs/ARK-SMS-PRINTING-QZ-KEY-TAGS.md` (240 lines — canonical operational detail)
+**V1 reference doc (on server):** `docs/ARK-SMS-PRINTING-QZ-KEY-TAGS.md` (240 lines - canonical operational detail)
 
 ---
 
@@ -16,12 +16,12 @@
 |---|----------|--------|
 | 1 | **Where are the current templates?** | Blade PDF templates under `resources/views/tenant/admin/repair_orders/pdf/`: `key-tag.blade.php`, `oil-change-sticker.blade.php`, plus block partials in `key_tag_blocks/` and `oil_change_sticker_blocks/`. Layout is **DB-driven** via `key_tag_templates` + `key_tag_template_blocks` and `oil_change_sticker_templates` + `oil_change_sticker_template_blocks` (tenant DB). Services: `KeyTagTemplateService`, `OilChangeStickerTemplateService`. |
 | 2 | **How are dimensions defined?** | `config/printing.php` defaults: **62.0 × 38.1 mm** (`key_tag_qz_page`). Tenant overrides in `static_options`: `qz_key_tag_label_width_mm`, `qz_key_tag_label_height_mm` (and oil sticker equivalents, with inherit-from-key-tag fallback). Per-location suffix keys `:location_id`. Snappy PDF options built in `TenantPrintingSettings::keyTagSnappyPdfOptions()` / `oilStickerSnappyPdfOptions()`. Optional reference lock: `ql_label_reference_mm`, `ql_key_tag_lock_reference_px` at 203/300 DPI. |
-| 3 | **How are printer names stored?** | Tenant DB `static_options` via `App\Support\TenantPrintingSettings` — **not** `.env`. Keys: `qz_printing_key_tag_printer`, `qz_printing_oil_sticker_printer` (falls back to key tag), `qz_printing_ro_printer`. Per-location overrides: same keys with `:location_id` suffix. Config fallback only: `config('printing.key_tag_printer')` default **`Brother QL-800`**. |
+| 3 | **How are printer names stored?** | Tenant DB `static_options` via `App\Support\TenantPrintingSettings` - **not** `.env`. Keys: `qz_printing_key_tag_printer`, `qz_printing_oil_sticker_printer` (falls back to key tag), `qz_printing_ro_printer`. Per-location overrides: same keys with `:location_id` suffix. Config fallback only: `config('printing.key_tag_printer')` default **`Brother QL-800`**. |
 | 4 | **How are oil change mileages calculated?** | `App\Support\Printing\OilChangeStickerPrintContext::fromRepairOrder()`. Current mileage: `vehicle_mileage_out` else `vehicle_mileage_in`. Next mileage: **current + interval** where interval = `config('vehicle_maintenance_intervals.intervals.oil.interval')` default **5000** miles. Calendar due: anchor `mileage_out_at` else RO date + `oil_sticker_next_due_months` (config default **6**, tenant override `static_options` `oil_change_sticker_next_due_months`). Combined line: `Due: {next_mi} or {date}`. Oil type: `OilChangeStickerOilTypeResolver`. |
-| 5 | **How are QZ certificates handled?** | `config/printing.php` → `qz.certificate_path`, `qz.private_key_path` from env `QZ_CERTIFICATE_PATH`, `QZ_PRIVATE_KEY_PATH`. Signing: `App\Support\QzTraySigning`, `QzTraySignController::signMessage`. Routes: `POST /app/api/qz/sign-message`, `POST /app/qz/sign`. Health: `GET /app/api/printing/health`, `GET /app/api/qz/sign-health`. **Production note:** shared `.env` references `/home/master/applications/production/public_html/qz/*.pem` — **files not present** on audited server path; verify live signing on advisor workstations or update paths. |
+| 5 | **How are QZ certificates handled?** | `config/printing.php` → `qz.certificate_path`, `qz.private_key_path` from env `QZ_CERTIFICATE_PATH`, `QZ_PRIVATE_KEY_PATH`. Signing: `App\Support\QzTraySigning`, `QzTraySignController::signMessage`. Routes: `POST /app/api/qz/sign-message`, `POST /app/qz/sign`. Health: `GET /app/api/printing/health`, `GET /app/api/qz/sign-health`. **Production note:** shared `.env` references `/home/master/applications/production/public_html/qz/*.pem` - **files not present** on audited server path; verify live signing on advisor workstations or update paths. |
 | 6 | **What settings already exist?** | See [Shop / printer settings](#3-shop--printer-settings-persistence) below. Settings UI: Repair Order Settings, Location edit → QZ, QZ Wizard (`QzWizardController`), key tag / oil sticker layout editors. |
 
-**Ready for V2 implementation planning:** Yes — port from audited paths; **do not write QZ code until migration plan is scoped to V2 authority model** (single shop, `shop_settings` not `static_options`).
+**Ready for V2 implementation planning:** Yes - port from audited paths; **do not write QZ code until migration plan is scoped to V2 authority model** (single shop, `shop_settings` not `static_options`).
 
 ---
 
@@ -35,7 +35,7 @@ Browser (arkPrintDocument / arkPrintPDF)
 ```
 
 - **Payload:** Server-rendered **PDF** (Snappy/wkhtml), not client-computed label data.
-- **QL path (default):** PDF sent to QZ as `pixel/pdf`, `rasterize: false` — driver owns page size.
+- **QL path (default):** PDF sent to QZ as `pixel/pdf`, `rasterize: false` - driver owns page size.
 - **Optional:** `PRINTING_QL_FORCE_RASTER=true` → PDF.js → PNG → `pixel/image`.
 - **Single JS entry:** `resources/views/components/print-helpers.blade.php` (~3400 lines) + `public/js/ark/ark-qz-key-tag.js`.
 
@@ -71,7 +71,7 @@ Browser (arkPrintDocument / arkPrintPDF)
 |------|-------|
 | Config | `config/printing.php` → `printing.qz.*` |
 | Env vars | `QZ_CERTIFICATE_PATH`, `QZ_PRIVATE_KEY_PATH`, `QZ_PRIVATE_KEY_PASSPHRASE`, `QZ_SIGNATURE_ALGORITHM` (default `sha512`) |
-| Audited `.env` paths | Point to legacy `/home/master/applications/production/public_html/qz/` — **not found on server** |
+| Audited `.env` paths | Point to legacy `/home/master/applications/production/public_html/qz/` - **not found on server** |
 | V1 doc | `docs/ARK-SMS-PRINTING-QZ-KEY-TAGS.md` § QZ signing |
 
 ---
@@ -83,8 +83,8 @@ Browser (arkPrintDocument / arkPrintPDF)
 | Printer name fallback | `Brother QL-800` (`config/printing.php`) |
 | Label width | **62 mm** (DK-2205 continuous) |
 | Label height | **38.1 mm** |
-| DPI | Auto via `RasterDpiResolver` — often **300** on Mac-class UA, else config `key_tag.default_dpi` (**300** in config) |
-| Orientation | `auto` — landscape when width ≥ height |
+| DPI | Auto via `RasterDpiResolver` - often **300** on Mac-class UA, else config `key_tag.default_dpi` (**300** in config) |
+| Orientation | `auto` - landscape when width ≥ height |
 | Media | `mono` or `red_black` (`qz_key_tag_media_type`) |
 | VIN on key tag | `qz_key_tag_vin_display`: `last6` (default), `last8`, or `full` |
 
@@ -113,7 +113,7 @@ ARK-SMS uses **tenant DB** `static_options` (not V2 `shop_settings`).
 
 Per-location: same keys with **`:location_id`** suffix.
 
-**Table:** `location_print_settings` — `location_id`, `qz_raster_dpi` (nullable).
+**Table:** `location_print_settings` - `location_id`, `qz_raster_dpi` (nullable).
 
 **Authority class:** `app/Support/TenantPrintingSettings.php`
 
@@ -147,7 +147,7 @@ Controllers return **inline PDF bytes** with print job headers (`X-Print-Job-Id`
 | `PrintRoutingService` | Document type → printer name |
 | `RasterDpiResolver` | DPI for raster path |
 
-### Print context (authority — port verbatim logic)
+### Print context (authority - port verbatim logic)
 
 | Class | Role |
 |-------|------|
@@ -196,7 +196,7 @@ Controllers return **inline PDF bytes** with print job headers (`X-Print-Job-Id`
 - `KeyTagLayoutController`, `OilChangeStickerLayoutController`
 - Views: `settings/key_tag_layout/`, `settings/oil_change_sticker_layout/`
 
-**Phase 1 V2:** Port default template rendering + hardcoded/seeded layout equivalent to v1 production output — not layout editor.
+**Phase 1 V2:** Port default template rendering + hardcoded/seeded layout equivalent to v1 production output - not layout editor.
 
 ---
 
@@ -229,7 +229,7 @@ Controllers return **inline PDF bytes** with print job headers (`X-Print-Job-Id`
 
 ---
 
-## 10. Failure posture (ARK-SMS — preserve in V2)
+## 10. Failure posture (ARK-SMS - preserve in V2)
 
 - QZ JS load failure → `QZ_TRAY_JS_LOAD_FAILED`
 - QZ not connected → user-facing errors in `print-helpers` (do not silent-fail)
@@ -252,8 +252,8 @@ Controllers return **inline PDF bytes** with print job headers (`X-Print-Job-Id`
 | `KeyTagPrintContext` + `KeyTagPdfRenderer` | `app/Ark/Operations/Printing/KeyTag/` | 1 |
 | `OilChangeStickerPrintContext` + renderer | `app/Ark/Operations/Printing/OilSticker/` | 1 |
 | `vehicle_maintenance_intervals` oil interval | Shop setting or config default 5000 | 1 |
-| DB template editors | Defer — use v1 default layout | 2 |
-| `location_print_settings` | N/A single-shop — `shop_settings` only | 1 |
+| DB template editors | Defer - use v1 default layout | 2 |
+| `location_print_settings` | N/A single-shop - `shop_settings` only | 1 |
 | `docs/ARK-SMS-PRINTING-QZ-KEY-TAGS.md` | Copy/reference in `docs/printing/` | 0 ✓ |
 
 ---
@@ -275,8 +275,8 @@ On advisor workstation with QZ Tray + Brother QL-800:
 
 ## 13. Open questions
 
-1. **QZ cert paths** on production `.env` reference missing files — confirm whether signing works unsigned, or certs live elsewhere.
-2. **Tenant `static_options` values** for Auto Repair Keeper shop (printer name, mm overrides) — sample from tenant DB when connection available.
+1. **QZ cert paths** on production `.env` reference missing files - confirm whether signing works unsigned, or certs live elsewhere.
+2. **Tenant `static_options` values** for Auto Repair Keeper shop (printer name, mm overrides) - sample from tenant DB when connection available.
 3. **V2 template strategy:** Seed v1 default blocks vs inline Blade-only for Phase 1?
 
 ---

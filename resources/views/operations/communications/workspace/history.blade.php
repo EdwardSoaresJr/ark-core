@@ -1,7 +1,7 @@
 @php
     /** @var array<string, mixed> $workspace */
     $listTitle = 'History';
-    $listDescription = 'Past calls and conversations — last 30 days shown, search reaches everything';
+    $listDescription = 'Past calls and conversations - last 30 days shown, search reaches everything';
 @endphp
 
 <x-operations.app title="Communications">

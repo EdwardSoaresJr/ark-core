@@ -7,7 +7,7 @@
 
 ## Reason
 
-PR1 delivers schema, authority, and projection persistence. PR2 delivers execution (regenerate, Poly builder, GET serve). Policy enums (`EndpointProvisionBuilder`, `EndpointProvisionFormat`) belong to PR1 because they are **schema vocabulary** on `communication_device_models` and `endpoint_configuration_projections` — not execution scaffolding.
+PR1 delivers schema, authority, and projection persistence. PR2 delivers execution (regenerate, Poly builder, GET serve). Policy enums (`EndpointProvisionBuilder`, `EndpointProvisionFormat`) belong to PR1 because they are **schema vocabulary** on `communication_device_models` and `endpoint_configuration_projections` - not execution scaffolding.
 
 Execution classes (`ProvisionBuilder`, `PolyProvisionBuilder`, `RegenerateEndpointConfigurationAction`, `InvalidateEndpointConfigurationAction`) belong to PR2 because nothing in PR1 calls them.
 
@@ -31,7 +31,7 @@ Execution classes (`ProvisionBuilder`, `PolyProvisionBuilder`, `RegenerateEndpoi
 
 ## PR3A scope (in progress)
 
-Observability only — MAC, model, provision URL, projection fingerprint/timestamp, admin projection body preview. No assignment UX.
+Observability only - MAC, model, provision URL, projection fingerprint/timestamp, admin projection body preview. No assignment UX.
 
 ## Pre-existing debt
 

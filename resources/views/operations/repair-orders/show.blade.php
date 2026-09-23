@@ -414,7 +414,7 @@
             descriptionPlaceholder() {
                 const examples = {
                     labor: 'e.g. Diagnose check engine light',
-                    part: 'e.g. Oil filter — OEM',
+                    part: 'e.g. Oil filter - OEM',
                     note: 'e.g. Customer will decide at next visit',
                     fee: 'e.g. Shop supplies / hazmat',
                     sublet: 'e.g. Alignment at tire shop',
@@ -427,7 +427,7 @@
                     sublet: 'Sublet description',
                 };
 
-                return `${labels[this.type] || 'Line description'}${this.scopeHint()} — ${examples[this.type] || 'required'}`;
+                return `${labels[this.type] || 'Line description'}${this.scopeHint()} - ${examples[this.type] || 'required'}`;
             },
             descriptionFieldLabel() {
                 const labels = {
@@ -733,9 +733,9 @@
             },
             simpleLineGuidance() {
                 const guidance = {
-                    labor: 'Book hours are what you quote. Billable hours apply category minimums and rounding — edit billable hours directly or use Bill book hours.',
+                    labor: 'Book hours are what you quote. Billable hours apply category minimums and rounding - edit billable hours directly or use Bill book hours.',
                     fee: 'Flat fee or per-quantity shop charge on the estimate.',
-                    sublet: 'Vendor work billed through this scope — enter cost, markup, or sell price. Rolls into labor totals.',
+                    sublet: 'Vendor work billed through this scope - enter cost, markup, or sell price. Rolls into labor totals.',
                 };
 
                 return guidance[this.type] || '';
@@ -774,7 +774,7 @@
                 return 'Your cost $';
             },
             vendorPlaceholder() {
-                return 'Vendor — e.g. Worldpac, NAPA';
+                return 'Vendor - e.g. Worldpac, NAPA';
             },
             partNumberPlaceholder() {
                 return 'Manufacturer part #';
@@ -866,7 +866,7 @@
                         const modal = document.querySelector('#workspace-modal-host')?._x_dataStack?.[0];
 
                         if (modal) {
-                            modal.validationMessage = 'Custom labor rate needs a reason — choose Menu / package price for a flat PPI, or another reason.';
+                            modal.validationMessage = 'Custom labor rate needs a reason - choose Menu / package price for a flat PPI, or another reason.';
                             modal.saving = false;
                         }
 
@@ -1697,7 +1697,7 @@
                     @endif
 
                     @unless ($isTerminal)
-                        {{-- Add Work lives on the contextual footer — one primary CTA per viewport. --}}
+                        {{-- Add Work lives on the contextual footer - one primary CTA per viewport. --}}
                     @endunless
 
                     @include('operations.repair-orders.partials.workspace-modal.host', [
@@ -1747,7 +1747,7 @@
 
                         @php
                             // Priority order (Diagnostic → … → Plan Soon), then advisor position.
-                            // Each concern carries its own priority badge — no group wrappers.
+                            // Each concern carries its own priority badge - no group wrappers.
                             $worksheetConcerns = App\Ark\Operations\RepairOrders\RecommendationIntent::sortedModels($repairOrder->concerns);
                         @endphp
                         @forelse ($worksheetConcerns as $concern)

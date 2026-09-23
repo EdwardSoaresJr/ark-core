@@ -1,6 +1,6 @@
 # Provisioning Request Authority v1
 
-**Status:** Active — scaffolding (no infrastructure adapters)  
+**Status:** Active - scaffolding (no infrastructure adapters)  
 **Date:** 2026-07-19  
 **Companions:** [adapter-rule-v1.md](adapter-rule-v1.md) · [deployment-flow-v1.md](deployment-flow-v1.md) · [cluster-assignment-authority-v1.md](cluster-assignment-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md)
 
@@ -57,7 +57,7 @@ Those are not Shop fields.
 | `failed_at` | Failure |
 | `failure_reason` | Nullable text |
 
-No Docker. No Coolify. No Stancl ids on this row in v1 — adapters may add projection refs later without becoming authority.
+No Docker. No Coolify. No Stancl ids on this row in v1 - adapters may add projection refs later without becoming authority.
 
 ---
 
@@ -79,7 +79,7 @@ Retry = new `ProvisioningRequest` (v1). Do not rewrite Completed history.
 
 ## Boundary with Provisioning v1 / v2
 
-### Provisioning v1 — frozen (truth only)
+### Provisioning v1 - frozen (truth only)
 
 ```text
 Create Shop
@@ -91,11 +91,11 @@ Create Shop
 
 No `ProvisioningRequest`. No jobs. No infrastructure.
 
-### After this authority — still no adapters yet
+### After this authority - still no adapters yet
 
 Scaffolding only: model + migration + relationships.
 
-### Provisioning v2 — infrastructure
+### Provisioning v2 - infrastructure
 
 ```text
 Create Shop

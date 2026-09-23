@@ -6,7 +6,7 @@
 
 **Destination:** `public/assets/ARK_SMS_FINAL_DROP_IN_PACK/` (29 files, byte-identical copy)
 
-**Guidelines docs:** `docs/branding/ARK-SMS-Full-Brand-System/` (text/CSS reference only — not wired into runtime styles per scope)
+**Guidelines docs:** `docs/branding/ARK-SMS-Full-Brand-System/` (text/CSS reference only - not wired into runtime styles per scope)
 
 ## Authority layer created
 
@@ -30,7 +30,7 @@
 
 ## Intentionally unchanged
 
-- Shop-uploaded estimate/PDF logos (`shop_settings.logo_path`) — per-shop authority, not platform branding
+- Shop-uploaded estimate/PDF logos (`shop_settings.logo_path`) - per-shop authority, not platform branding
 - CSS, colors, typography, layout structure
 - Text-only shop identity in customer estimate/invoice emails
 - `resources/design-reference/**` reference images
@@ -47,4 +47,4 @@
 
 ## Tests
 
-`tests/Unit/Support/BrandingAssetRegistryTest.php` — asset existence, URL resolution, layout wiring.
+`tests/Unit/Support/BrandingAssetRegistryTest.php` - asset existence, URL resolution, layout wiring.

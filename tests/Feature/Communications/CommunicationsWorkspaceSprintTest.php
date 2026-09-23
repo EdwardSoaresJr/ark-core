@@ -165,7 +165,7 @@ test('advisor reply records first contact and keeps Needs attention until follow
 
     $this->actingAs($advisor)
         ->postJson(route('operations.conversations.messages.store', $conversation), [
-            'body' => 'Thanks Maria — we received your request and will follow up shortly.',
+            'body' => 'Thanks Maria - we received your request and will follow up shortly.',
         ])
         ->assertOk();
 
@@ -199,7 +199,7 @@ test('customer inbound sms returns conversation to needs attention', function ()
 
     $this->actingAs($advisor)
         ->postJson(route('operations.conversations.messages.store', $conversation), [
-            'body' => 'We can get you on the schedule — what day works?',
+            'body' => 'We can get you on the schedule - what day works?',
         ])
         ->assertOk();
 

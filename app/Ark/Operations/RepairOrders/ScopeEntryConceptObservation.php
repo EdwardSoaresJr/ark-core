@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Audience-specific language projection linked to operational meaning.
  *
- * Preserves how each participant said it — customer, advisor, technician, invoice.
+ * Preserves how each participant said it - customer, advisor, technician, invoice.
  * Wording changes; meaning does not.
  */
 class ScopeEntryConceptObservation extends Model

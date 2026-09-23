@@ -89,7 +89,7 @@ final class CoolifyAdapter implements ProvisioningStep
                         ? $this->observeUntilTerminal($existingRef)
                         : ProvisioningStepResult::success();
                 }
-                // Failed — allow retrigger only via retried ProvisioningRequest (this execute).
+                // Failed - allow retrigger only via retried ProvisioningRequest (this execute).
                 $this->execution->forget($request->id);
             }
 

@@ -24,7 +24,7 @@ export function loadedLaborCostCalculator(config = {}) {
                 }
             });
 
-            // Estimated labor cost lives in Alpine until Apply — auto-apply on Save.
+            // Estimated labor cost lives in Alpine until Apply - auto-apply on Save.
             const form = this.$el.closest('form');
             form?.addEventListener('submit', () => {
                 if (this.canApply()) {
@@ -48,7 +48,7 @@ export function loadedLaborCostCalculator(config = {}) {
         basePayHint() {
             return this.isFlagPay()
                 ? 'What the technician earns for completed flagged production.'
-                : 'Straight wage for each paid clock hour — before taxes and benefits.';
+                : 'Straight wage for each paid clock hour - before taxes and benefits.';
         },
 
         floorNeedsReview() {
@@ -85,7 +85,7 @@ export function loadedLaborCostCalculator(config = {}) {
         formattedResult() {
             const value = this.loadedCost();
 
-            return value === null ? '—' : `$${value.toFixed(2)}/hr`;
+            return value === null ? '-' : `$${value.toFixed(2)}/hr`;
         },
 
         calculationBreakdown() {

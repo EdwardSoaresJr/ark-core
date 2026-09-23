@@ -41,7 +41,7 @@
         </div>
 
         <footer class="ops-learn-guide-modal__footer">
-            <p class="ops-learn-guide-modal__footer-note">Preview from ARK — open {{ Branding::learnName() }} for search, print, and full navigation.</p>
+            <p class="ops-learn-guide-modal__footer-note">Preview from ARK - open {{ Branding::learnName() }} for search, print, and full navigation.</p>
             <div class="ops-learn-guide-modal__footer-actions">
                 <button type="button" class="ops-learn-guide-modal__secondary" @click="close()">Close</button>
                 <a

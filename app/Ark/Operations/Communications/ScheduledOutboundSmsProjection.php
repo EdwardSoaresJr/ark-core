@@ -7,7 +7,7 @@ use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use Carbon\CarbonImmutable;
 
 /**
- * Projection for SMS reply scheduling UX — not contact evidence.
+ * Projection for SMS reply scheduling UX - not contact evidence.
  *
  * @phpstan-type PendingSchedule array{
  *     id: int,

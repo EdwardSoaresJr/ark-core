@@ -8,7 +8,7 @@ use RuntimeException;
 
 /**
  * Decides where a Shop lives. Does not provision infrastructure.
- * Provisioning v1 ends here — does not create ProvisioningRequest or dispatch jobs.
+ * Provisioning v1 ends here - does not create ProvisioningRequest or dispatch jobs.
  *
  * @see docs/platform/cluster-assignment-authority-v1.md
  * @see docs/platform/deployment-flow-v1.md

@@ -9,7 +9,7 @@
         <h2 class="mt-1 text-base font-black text-slate-950">Runtime health</h2>
         <p class="mt-1 max-w-3xl text-xs leading-5 text-slate-600">
             Infrastructure may observe local time. ARK records facts in UTC and projects them into the shop timezone at display time.
-            Use this page after deploys or VPS timezone changes — not for daily operations.
+            Use this page after deploys or VPS timezone changes - not for daily operations.
         </p>
     </div>
 
@@ -69,15 +69,15 @@
                             'font-bold',
                             'text-emerald-700' => $operationalClock->dbMatchesUtc,
                             'text-amber-700' => ! $operationalClock->dbMatchesUtc,
-                        ])>{{ $operationalClock->dbMatchesUtc ? 'Yes' : 'No — investigate' }}</dd>
+                        ])>{{ $operationalClock->dbMatchesUtc ? 'Yes' : 'No - investigate' }}</dd>
                     </div>
                     <div class="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-2">
                         <dt class="font-semibold text-slate-600">@@session.time_zone</dt>
-                        <dd class="font-mono font-bold text-slate-950">{{ $operationalClock->dbSessionTimezone ?? '—' }}</dd>
+                        <dd class="font-mono font-bold text-slate-950">{{ $operationalClock->dbSessionTimezone ?? '-' }}</dd>
                     </div>
                     <div class="flex items-baseline justify-between gap-3">
                         <dt class="font-semibold text-slate-600">@@global.time_zone</dt>
-                        <dd class="font-mono font-bold text-slate-950">{{ $operationalClock->dbGlobalTimezone ?? '—' }}</dd>
+                        <dd class="font-mono font-bold text-slate-950">{{ $operationalClock->dbGlobalTimezone ?? '-' }}</dd>
                     </div>
                 @else
                     <p class="text-xs text-slate-600">MySQL clock probe unavailable on this connection.</p>

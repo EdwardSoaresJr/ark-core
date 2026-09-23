@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Observations;
 use Illuminate\Support\Carbon;
 
 /**
- * Observation read model — interpretive truth derived from authority events, not stored authority.
+ * Observation read model - interpretive truth derived from authority events, not stored authority.
  *
  * Authority events are factual (timeline / OperationalEventKind). Observations reason about them.
  * Orientation consumes observations; surfaces must not re-derive business meaning from authorities.

@@ -1,15 +1,15 @@
-# Screen spec — My Work (Technician)
+# Screen spec - My Work (Technician)
 
 **ID:** `companion.screen.my-work`  
 **Role(s):** Technician  
 **ARK doctrine:** `ark-technician-scope.mdc`  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Assigned ROs only** — what Ben opens first · no shop-wide queue · no comms inbox.
+**Assigned ROs only** - what Ben opens first · no shop-wide queue · no comms inbox.
 
 ---
 
@@ -27,13 +27,13 @@
 ### Header
 
 - **My Work** · operator name
-- Bay / station chip if set — `Bay 3`
+- Bay / station chip if set - `Bay 3`
 
-### List — assigned ROs only
+### List - assigned ROs only
 
 **Row:**
 
-- Vehicle YMM — primary
+- Vehicle YMM - primary
 - RO # · concern count · status chip
 - Advisor name · promised time
 - Badge: inspection in progress · parts waiting
@@ -58,7 +58,7 @@ Launch (tech role) → My Work → tap RO → RO workspace (tech mode) → inspe
 
 ## Data & API
 
-**Needs:** `GET /api/mobile/my-work` — assigned ROs for current user only
+**Needs:** `GET /api/mobile/my-work` - assigned ROs for current user only
 
 ---
 

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 /**
  * Operator path: extension identity is automatic when a workstation exists.
- * Numbers and SIP secrets stay in authority — not on the Voice setup surface.
+ * Numbers and SIP secrets stay in authority - not on the Voice setup surface.
  */
 final class EnsureWorkstationTelephonyExtensionAction
 {

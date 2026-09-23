@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ARK Companion v1 — Design Preview (local)</title>
+    <title>ARK Companion v1 - Design Preview (local)</title>
     <link rel="icon" href="/assets/ARK_SMS_FINAL_DROP_IN_PACK/favicon/favicon.ico">
     <style>
         :root {
@@ -217,7 +217,7 @@
 </head>
 <body>
     <div class="banner">
-        <strong>ARK Companion v1 — Design Preview</strong>
+        <strong>ARK Companion v1 - Design Preview</strong>
         Local only · Not the Flutter app · Specs + references side-by-side · API is JSON until mobile ships
     </div>
 
@@ -266,7 +266,7 @@
                         </div>
                         <div class="label" style="text-align:center;margin:8px 0;">Today</div>
                         <div class="bubble-in">Can I pick up at 5?</div>
-                        <div class="bubble-out">Yes — see you then!</div>
+                        <div class="bubble-out">Yes - see you then!</div>
                         <div class="quick-row">
                             <span class="quick">Send estimate</span>
                             <span class="quick">Payment link</span>
@@ -307,7 +307,7 @@
 
                     {{-- Inspection --}}
                     <div class="screen" data-screen="inspection">
-                        <div class="display" style="font-size:20px;">Brake pads — front</div>
+                        <div class="display" style="font-size:20px;">Brake pads - front</div>
                         <div class="body">RO #1599 · 2019 Civic</div>
                         <span class="chip">Item 4 of 12 · Needs review</span>
                         <div class="card"><strong style="color:var(--red);">FAIL</strong> · Pad thickness below spec · recommend replacement</div>
@@ -332,7 +332,7 @@
                         <div class="chip" style="background:#1e3a2f;color:#86efac;">🟢 Phone online</div>
                         <div style="margin-top:20px;">
                             <div class="continuity-row"><strong>Emma replied</strong><span>2019 Civic · RO #1599 · "Can I pick up at 5?" · 8 min</span></div>
-                            <div class="continuity-row"><strong>Ben uploaded inspection</strong><span>RO #1599 · Brake pads — front · 12 min</span></div>
+                            <div class="continuity-row"><strong>Ben uploaded inspection</strong><span>RO #1599 · Brake pads - front · 12 min</span></div>
                             <div class="continuity-row"><strong>Josh called while closed</strong><span>Missed · (719) 555-0142 · 6:42 AM</span></div>
                         </div>
                         <div class="tab-bar">
@@ -376,9 +376,9 @@
                     <figure class="ref-card"><img src="{{ $ref['src'] }}" alt=""><figcaption>{{ $ref['label'] }}</figcaption></figure>
                 @endforeach
             </div>
-            <div id="refs-inspection" hidden><p class="body">Push lands here — shop-native inspection surface.</p></div>
-            <div id="refs-home" hidden><p class="body">Continuity-first home — not a KPI dashboard.</p></div>
-            <div id="refs-search" hidden><p class="body">Command palette — find customer, vehicle, or RO.</p></div>
+            <div id="refs-inspection" hidden><p class="body">Push lands here - shop-native inspection surface.</p></div>
+            <div id="refs-home" hidden><p class="body">Continuity-first home - not a KPI dashboard.</p></div>
+            <div id="refs-search" hidden><p class="body">Command palette - find customer, vehicle, or RO.</p></div>
         </div>
     </div>
 

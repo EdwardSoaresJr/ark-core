@@ -1,4 +1,4 @@
-# Screen spec — [Screen name]
+# Screen spec - [Screen name]
 
 **ID:** `companion.screen.[kebab-name]`  
 **Role(s):** Advisor · Technician · …  
@@ -24,7 +24,7 @@ What job does this screen do on the floor?
 
 ## Layout (production spec)
 
-Describe as if handing to Figma — top to bottom, fixed regions.
+Describe as if handing to Figma - top to bottom, fixed regions.
 
 ### Shell (persistent)
 
@@ -53,7 +53,7 @@ Describe as if handing to Figma — top to bottom, fixed regions.
 | Secondary | Body | 2019 Honda Civic · RO #1599 |
 | Metadata | Label | 3 min ago |
 
-Operational density — calm under pressure, not SaaS whitespace.
+Operational density - calm under pressure, not SaaS whitespace.
 
 ---
 
@@ -113,7 +113,7 @@ Link: [`../02-flows.md`](../02-flows.md#…)
 
 **Existing API:** `/api/mobile/...` or **New endpoint needed:** …
 
-Backend is **not frozen** — spec drives API additions.
+Backend is **not frozen** - spec drives API additions.
 
 ---
 

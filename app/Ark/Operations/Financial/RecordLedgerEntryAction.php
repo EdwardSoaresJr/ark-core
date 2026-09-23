@@ -154,7 +154,7 @@ final class RecordLedgerEntryAction
         ?Carbon $recordedAt = null,
         array $contractPayload = [],
     ): array {
-        // Cash tender above balance is change at the counter — never store credit.
+        // Cash tender above balance is change at the counter - never store credit.
         if ($method === PaymentMethod::Cash) {
             if ($balanceDueCents <= 0) {
                 throw new RuntimeException('Nothing is due on this invoice.');

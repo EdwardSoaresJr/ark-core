@@ -1,5 +1,5 @@
 /**
- * Workspace Modal Saved Work picker — search, Historical Work Recall, Dragon Assist (async).
+ * Workspace Modal Saved Work picker - search, Historical Work Recall, Dragon Assist (async).
  */
 export function arkSavedWorkPicker(config = {}) {
     return {

@@ -36,8 +36,8 @@
                         $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
                     @endphp
                     <select name="key_tag_mileage_requirement" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        <option value="none" @selected($keyTagMileage === 'none')>None — print without mileage in</option>
-                        <option value="in" @selected($keyTagMileage === 'in')>Mileage in — don't print until it is entered</option>
+                        <option value="none" @selected($keyTagMileage === 'none')>None - print without mileage in</option>
+                        <option value="in" @selected($keyTagMileage === 'in')>Mileage in - don't print until it is entered</option>
                     </select>
                     <span class="mt-1 block font-normal leading-4 text-slate-500">A blocked print says mileage in is missing. It does not print a blank tag.</span>
                 </label>
@@ -59,7 +59,7 @@
                 </label>
                 <div class="text-xs leading-5 text-slate-500">
                     <p class="font-semibold text-slate-700">Default labor category</p>
-                    <p class="mt-1"><span class="font-semibold text-slate-800">{{ $defaultLaborCategory['name'] }}</span> at ${{ number_format($defaultLaborCategory['rate_cents'] / 100, 2) }}/hr — <button type="button" @click="setActive('financial'); setFinancialTab('labor')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">Financial Rules → Labor</button>.</p>
+                    <p class="mt-1"><span class="font-semibold text-slate-800">{{ $defaultLaborCategory['name'] }}</span> at ${{ number_format($defaultLaborCategory['rate_cents'] / 100, 2) }}/hr - <button type="button" @click="setActive('financial'); setFinancialTab('labor')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">Financial Rules → Labor</button>.</p>
                     <p class="mt-2">RO lifecycle status is configured under <button type="button" @click="setWorkflowTab('statuses')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">RO statuses</button>.</p>
                 </div>
             </div>

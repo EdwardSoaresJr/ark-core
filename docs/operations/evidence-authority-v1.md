@@ -23,8 +23,8 @@ Diagnosis belongs to Concerns, Inspection findings, Recommendations, and Mainten
 
 | Layer | Meaning |
 | --- | --- |
-| **Evidence** (this authority) | File proof — photo / video / pdf on a Repair Order |
-| Journey / Briefing “evidence” | Explainability Show-me DTOs — not blobs |
+| **Evidence** (this authority) | File proof - photo / video / pdf on a Repair Order |
+| Journey / Briefing “evidence” | Explainability Show-me DTOs - not blobs |
 
 ## Immutability
 
@@ -72,8 +72,8 @@ Show to Customer is an explicit advisor write. Customer surfaces allowlist **Sha
 
 ### Shared timestamps
 
-- `shared_at` — first transition to Shared  
-- `first_customer_viewed_at` — first qualifying presentation (once)
+- `shared_at` - first transition to Shared  
+- `first_customer_viewed_at` - first qualifying presentation (once)
 
 ## Primary
 

@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * Platform-backed inbox send — no Core ConversationMessage authority writes.
+ * Platform-backed inbox send - no Core ConversationMessage authority writes.
  */
 final class SendPlatformConversationMessageController
 {

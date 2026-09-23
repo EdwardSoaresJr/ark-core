@@ -1,10 +1,10 @@
 # Scope Membership v1
 
-**Status:** E0b **complete** — mechanical only; no new product ideas.  
+**Status:** E0b **complete** - mechanical only; no new product ideas.  
 **Prerequisites:** [`event-contracts-v1.md`](event-contracts-v1.md) · [`ark-authority-interaction-map-v1.md`](../ecosystem/ark-authority-interaction-map-v1.md) · [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.md).  
-**Rule:** If this table disagrees with a signed contract, **the contract wins**. Update this row — do not debate in E0b.
+**Rule:** If this table disagrees with a signed contract, **the contract wins**. Update this row - do not debate in E0b.
 
-Scope columns map to **Event Stream Engine** inputs (infrastructure — not authorities).
+Scope columns map to **Event Stream Engine** inputs (infrastructure - not authorities).
 
 | Column | Stream |
 |--------|--------|
@@ -77,7 +77,7 @@ Derived from event-contracts-v1.md scope columns only.
 
 ---
 
-## Projection filters (unchanged — derived)
+## Projection filters (unchanged - derived)
 
 | Projection | Filter |
 |------------|--------|
@@ -87,7 +87,7 @@ Derived from event-contracts-v1.md scope columns only.
 | **RO Timeline** | RO = ✅ · repair_order anchor |
 | **Vehicle Timeline** | Vehicle = ✅ · vehicle anchor |
 | **Operator Feed** | Operator = ✅ · operator anchor |
-| **Customers Browse** | Customer authority + latest Customer-stream head — not a membership column |
+| **Customers Browse** | Customer authority + latest Customer-stream head - not a membership column |
 
 ---
 
@@ -106,4 +106,4 @@ Derived from event-contracts-v1.md scope columns only.
 
 Disagreement on any row → resolve in **event-contracts-v1.md**, not here. This table applies rules already signed.
 
-**Next:** **E1 Contract Realization** — vertical slice per companion-critical verb. Architecture closed.
+**Next:** **E1 Contract Realization** - vertical slice per companion-critical verb. Architecture closed.

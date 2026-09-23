@@ -12,7 +12,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Support\Carbon;
 
 /**
- * Status-first Repair Portal home. Estimate is a card — not the page.
+ * Status-first Repair Portal home. Estimate is a card - not the page.
  */
 final class RepairPortalHubProjection
 {

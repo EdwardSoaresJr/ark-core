@@ -34,7 +34,7 @@
             $approvedCount > 0 => 'Approved work can move forward',
             $recommendedCount > 0 => 'Authorization needed before production',
             $deferredCount > 0 => 'Deferred work retained for follow-up',
-            $declinedCount > 0 => 'Declined work recorded — no follow-up',
+            $declinedCount > 0 => 'Declined work recorded - no follow-up',
             default => 'No authorization gate recorded',
         };
     @endphp
@@ -330,10 +330,10 @@
                                                 <p class="font-bold tabular-nums text-slate-950">{{ $line['subtotal'] }}</p>
                                             </div>
                                             <div class="hidden text-right md:block">
-                                                <p class="font-semibold tabular-nums text-slate-500">{{ ($line['shop_fee_cents'] ?? 0) > 0 ? $line['shop_fee'] : '—' }}</p>
+                                                <p class="font-semibold tabular-nums text-slate-500">{{ ($line['shop_fee_cents'] ?? 0) > 0 ? $line['shop_fee'] : '-' }}</p>
                                             </div>
                                             <div class="hidden text-right md:block">
-                                                <p class="font-semibold tabular-nums text-slate-500">{{ ($line['tax_cents'] ?? 0) > 0 ? $line['tax'] : '—' }}</p>
+                                                <p class="font-semibold tabular-nums text-slate-500">{{ ($line['tax_cents'] ?? 0) > 0 ? $line['tax'] : '-' }}</p>
                                             </div>
                                             <div class="md:text-right">
                                                 <p class="font-black tabular-nums text-slate-950">{{ $line['total'] }}</p>

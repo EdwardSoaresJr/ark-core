@@ -39,7 +39,7 @@ Then compile `windows/packaging/shop-glass.iss` with [Inno Setup 6](https://jrso
 1. Run the Setup `.exe`
 2. Install (per-user is allowed)
 3. Launch **LugsNPlugs Shop Glass** from Start Menu or desktop shortcut
-4. On ARK (server/admin), issue a device token — plaintext is shown **once**:
+4. On ARK (server/admin), issue a device token - plaintext is shown **once**:
 
 ```bash
 php artisan station:token-issue front-counter-glass

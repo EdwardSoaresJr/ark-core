@@ -58,7 +58,7 @@ function missedCallRescueSession(?Customer $customer = null, string $sid = 'CAre
 }
 
 test('missed call rescue sends system sms into conversation when enabled', function () {
-    // Open-hours template only applies while the shop is open — pin a
+    // Open-hours template only applies while the shop is open - pin a
     // weekday mid-morning so the test does not depend on the wall clock.
     $this->travelTo(now('America/Denver')->next('Tuesday')->setTime(10, 0));
 
@@ -178,7 +178,7 @@ test('admin can save missed call rescue settings on hours tab', function () {
                 'missed_call_rescue_delay_seconds' => 90,
                 'missed_call_rescue_cooldown_minutes' => 45,
                 'missed_call_rescue_text_open' => 'Sorry we missed you at {{business.name}}.',
-                'missed_call_rescue_text_closed' => 'Closed — {{business.name}} will reply soon.',
+                'missed_call_rescue_text_closed' => 'Closed - {{business.name}} will reply soon.',
             ],
         ])
         ->assertRedirect();
@@ -201,7 +201,7 @@ test('missed call rescue skips landline when stored capability says not sms capa
         'line_type' => 'landline',
         'carrier_name' => 'CenturyLink',
         'sms_capable' => false,
-        'reason' => 'Landline (CenturyLink) — cannot receive SMS.',
+        'reason' => 'Landline (CenturyLink) - cannot receive SMS.',
         'checked_at' => now(),
     ]);
 

@@ -1,14 +1,14 @@
-# Screen spec — Post-Call
+# Screen spec - Post-Call
 
 **ID:** `companion.screen.post-call`  
 **Role(s):** Advisor  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Hang up → **one screen** to log, text, schedule, or open RO — **without backing out to Home**.
+Hang up → **one screen** to log, text, schedule, or open RO - **without backing out to Home**.
 
 ---
 
@@ -27,10 +27,10 @@ Hang up → **one screen** to log, text, schedule, or open RO — **without back
 
 **Primary actions (horizontal or 2×2 grid)**
 
-- **Add note** — RO or customer
-- **Send text** — opens composer with thread
-- **Schedule** — appointment / callback
-- **Open RO** — full workspace
+- **Add note** - RO or customer
+- **Send text** - opens composer with thread
+- **Schedule** - appointment / callback
+- **Open RO** - full workspace
 
 **Secondary row**
 

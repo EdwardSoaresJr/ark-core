@@ -303,7 +303,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Cloud Funnel M2 — one owned platform Shop. Not operational shop_settings.
+     * Cloud Funnel M2 - one owned platform Shop. Not operational shop_settings.
      */
     public function ownedShop(): HasOne
     {
@@ -311,7 +311,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The operator's effective accent color as a hex string — custom override
+     * The operator's effective accent color as a hex string - custom override
      * first, otherwise the chosen swatch, otherwise ARK cerulean. One source of
      * truth for every surface (web data-accent, mobile theme, avatars).
      */

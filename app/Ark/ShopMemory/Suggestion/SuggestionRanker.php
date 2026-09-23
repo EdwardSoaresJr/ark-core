@@ -4,7 +4,7 @@ namespace App\Ark\ShopMemory\Suggestion;
 
 /**
  * Sort + limit only. Dedupe and normalize live elsewhere in the pipeline.
- * Ranking algorithm is replaceable — swap this class, keep pipeline shape.
+ * Ranking algorithm is replaceable - swap this class, keep pipeline shape.
  */
 final class SuggestionRanker
 {

@@ -53,7 +53,7 @@ final class LaborGuideLauncher
     }
 
     /**
-     * Clipboard payload for labor guide launch — VIN only, never RO context.
+     * Clipboard payload for labor guide launch - VIN only, never RO context.
      */
     public function clipboardVin(RepairOrder $repairOrder): ?string
     {
@@ -95,7 +95,7 @@ final class LaborGuideLauncher
     }
 
     /**
-     * Advisor-facing scope context for internal tooling — not for clipboard handoff.
+     * Advisor-facing scope context for internal tooling - not for clipboard handoff.
      */
     public function clipboardContext(RepairOrder $repairOrder, ?int $concernId = null): string
     {

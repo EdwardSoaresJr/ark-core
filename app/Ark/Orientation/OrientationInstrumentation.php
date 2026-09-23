@@ -3,7 +3,7 @@
 namespace App\Ark\Orientation;
 
 /**
- * Internal product metric — Time to Orientation (TTO).
+ * Internal product metric - Time to Orientation (TTO).
  *
  * Seconds until a shop employee has enough context to act confidently.
  * Instrumentation hook for future observation; not advisor-facing UI.

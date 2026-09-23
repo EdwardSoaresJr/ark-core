@@ -60,7 +60,7 @@ final class TodayBriefingMapper
     {
         if (str_starts_with($item->key, 'customer_waiting')) {
             return Str::before($item->headline, ' is waiting') !== $item->headline
-                ? Str::before($item->headline, ' is waiting').' — waiting for reply'
+                ? Str::before($item->headline, ' is waiting').' - waiting for reply'
                 : $item->headline;
         }
 
@@ -77,7 +77,7 @@ final class TodayBriefingMapper
         }
 
         if (str_starts_with($item->key, 'missed_call')) {
-            return 'Missed call — call back';
+            return 'Missed call - call back';
         }
 
         return $item->headline;

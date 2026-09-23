@@ -11,7 +11,7 @@
     </p>
     <p>
         Stock ARK Core does not include a paste-credentials carrier setup. When a transport is not configured,
-        outbound SMS and live voice stay unavailable with an honest message — repair orders, customers, and
+        outbound SMS and live voice stay unavailable with an honest message - repair orders, customers, and
         estimates keep working.
     </p>
 

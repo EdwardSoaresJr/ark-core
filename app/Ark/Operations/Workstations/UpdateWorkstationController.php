@@ -15,7 +15,7 @@ class UpdateWorkstationController
             'accepts_scheduled_work' => ['sometimes', 'boolean'],
         ]);
 
-        // Communications station forms no longer send this flag — preserve bay posture.
+        // Communications station forms no longer send this flag - preserve bay posture.
         $acceptsScheduledWork = $request->exists('accepts_scheduled_work')
             ? $request->boolean('accepts_scheduled_work')
             : null;

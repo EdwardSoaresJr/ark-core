@@ -7,7 +7,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderPaymentStatus;
 use Illuminate\Support\Carbon;
 
 /**
- * TEMPORARY COMPATIBILITY LAYER — remove after financial workflow UI owns payment posture.
+ * TEMPORARY COMPATIBILITY LAYER - remove after financial workflow UI owns payment posture.
  *
  * Ledger + BalanceDueCalculator are authoritative. This class mirrors balance into
  * repair_orders.payment_status and paid_at so legacy queue/report surfaces keep working.

@@ -104,7 +104,7 @@ final class MobileVoiceEndpointRegistrar
 
     /**
      * Ring eligibility for a MobileApp endpoint: Client credentials + platform push + recent voice_ready_at.
-     * Fail closed when TwiML App or push credential is missing — SIP/Number children keep ringing.
+     * Fail closed when TwiML App or push credential is missing - SIP/Number children keep ringing.
      * Generic FCM/APNs device registration alone is not sufficient.
      */
     public function isEndpointVoiceReady(TelephonyEndpoint $endpoint, ?int $timeoutMinutes = null): bool

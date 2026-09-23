@@ -9,7 +9,7 @@ use App\Ark\Operations\Reports\OperationalReportTotals;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Operational cash-flow pipeline for Today — explainable dollars from RO authority.
+ * Operational cash-flow pipeline for Today - explainable dollars from RO authority.
  */
 final class TodayPipelineProjection
 {
@@ -128,7 +128,7 @@ final class TodayPipelineProjection
         $totalCents = 0;
 
         foreach ($repairOrders as $repairOrder) {
-            // GET-safe reads only — never totalsForApprovedWork (persists recalculation).
+            // GET-safe reads only - never totalsForApprovedWork (persists recalculation).
             $totalCents += $estimateTotals
                 ? $this->totalsCalculator->totalsFor($repairOrder)->totalCents()
                 : $this->totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();

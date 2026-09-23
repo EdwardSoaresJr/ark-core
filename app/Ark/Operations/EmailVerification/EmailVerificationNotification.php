@@ -7,7 +7,7 @@ use App\Support\Mail\ShopMailBranding;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Delivers OTP email. Transport only — callers own what happens after verify.
+ * Delivers OTP email. Transport only - callers own what happens after verify.
  */
 final class EmailVerificationNotification
 {

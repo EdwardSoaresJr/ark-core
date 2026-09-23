@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\LaborGuides\Rte;
 
 /**
- * Shop labor hours — RTE book times remapped for conservative shop estimates.
+ * Shop labor hours - RTE book times remapped for conservative shop estimates.
  *
  * Base tiers (no vehicle-age padding):
  * - Lo  = RTE book average

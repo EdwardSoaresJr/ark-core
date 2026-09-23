@@ -63,7 +63,7 @@ test('render inspection reporting visual review fixtures', function () {
     }
 
     File::put($dir.'/README.txt', implode("\n", [
-        'Inspection Reporting v1 — visual STOP review',
+        'Inspection Reporting v1 - visual STOP review',
         'Open each HTML file in a browser.',
         'Print/PDF fixtures are chrome-free (05, 06). Use browser Print → PDF for PDF look.',
         'Portal fixtures (01–04) include customer shell chrome.',

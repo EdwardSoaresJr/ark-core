@@ -51,7 +51,7 @@ final class LearnArkCurriculum
     }
 
     /**
-     * Next optional guides to promote to required — prioritized by floor impact.
+     * Next optional guides to promote to required - prioritized by floor impact.
      *
      * @return list<string>
      */
@@ -73,7 +73,7 @@ final class LearnArkCurriculum
     }
 
     /**
-     * Per-article content generation — bump only the keys whose guides changed materially.
+     * Per-article content generation - bump only the keys whose guides changed materially.
      * Unlisted articles stay at version 1 so staff are not forced to re-read the whole catalog.
      *
      * @return array<string, int>

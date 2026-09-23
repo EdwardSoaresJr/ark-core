@@ -84,7 +84,7 @@ enum RepairOrderStatus: string
     }
 
     /**
-     * Open RO statuses where estimate portal views are expected noise — car is already in workflow.
+     * Open RO statuses where estimate portal views are expected noise - car is already in workflow.
      *
      * @return list<string>
      */
@@ -101,7 +101,7 @@ enum RepairOrderStatus: string
     }
 
     /**
-     * Open statuses where a technician is capturing DVI — including estimate / waiting approval.
+     * Open statuses where a technician is capturing DVI - including estimate / waiting approval.
      *
      * @return list<string>
      */

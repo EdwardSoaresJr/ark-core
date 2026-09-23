@@ -29,7 +29,7 @@ class StaffInvitationNotification extends Notification
         );
 
         return (new MailMessage)
-            ->subject($shopName.' — set up your ARK access')
+            ->subject($shopName.' - set up your ARK access')
             ->greeting('Hello '.$notifiable->name)
             ->line('You have been added to '.$shopName.' on ARK-SMS.')
             ->line('Use the secure link below to sign in and choose your own password. The link expires in '.StaffInvitationIssuer::INVITE_VALID_DAYS.' days.')

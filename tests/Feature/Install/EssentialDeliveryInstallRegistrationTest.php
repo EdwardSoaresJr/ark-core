@@ -38,7 +38,7 @@ test('essential registration is available after install but install itself does 
     Http::assertNothingSent();
 
     InstallationState::markInstalled();
-    // Explicit connect path may call registerAtInstall — still gated on installed.
+    // Explicit connect path may call registerAtInstall - still gated on installed.
     $client->registerAtInstall();
 
     Http::assertSent(fn ($request) => $request->url() === 'https://cloud.example.test/api/v1/essential/register'
@@ -52,7 +52,7 @@ test('standalone install completion does not phone home for essential registrati
     Http::fake();
 
     InstallationState::markInstalled();
-    // Simulates CompleteInstallationAction after Set up later — no Essential call.
+    // Simulates CompleteInstallationAction after Set up later - no Essential call.
     Http::assertNothingSent();
     expect(is_file(EssentialDeliverySecret::path()))->toBeFalse();
 });

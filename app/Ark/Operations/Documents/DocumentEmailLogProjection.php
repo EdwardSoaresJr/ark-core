@@ -5,7 +5,7 @@ namespace App\Ark\Operations\Documents;
 use Illuminate\Support\Collection;
 
 /**
- * Disposable send history for a document — who received the file by email.
+ * Disposable send history for a document - who received the file by email.
  * Rebuilds from document_events (Emailed + transitional Presented/channel=email).
  */
 final class DocumentEmailLogProjection
@@ -38,7 +38,7 @@ final class DocumentEmailLogProjection
     }
 
     /**
-     * Batch summaries for list rows — avoids N+1.
+     * Batch summaries for list rows - avoids N+1.
      *
      * @param  list<int>|Collection<int, int>  $documentIds
      * @return array<int, array{count: int, last_label: string|null}>
@@ -124,7 +124,7 @@ final class DocumentEmailLogProjection
                 'occurred_at' => $occurred,
                 'occurred_label' => $occurred
                     ? $occurred->timezone(config('app.timezone'))->format('M j, Y g:i A')
-                    : '—',
+                    : '-',
             ];
         }
 

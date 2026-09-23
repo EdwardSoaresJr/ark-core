@@ -208,7 +208,7 @@
                     rows="2"
                     required
                     maxlength="2000"
-                    placeholder="Internal note — never sent to customer"
+                    placeholder="Internal note - never sent to customer"
                     class="ops-comms-workspace__composer-input"
                 ></textarea>
                 <div class="ops-comms-workspace__composer-actions">

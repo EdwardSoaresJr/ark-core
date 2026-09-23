@@ -1,6 +1,6 @@
 # Domain Contract v1
 
-**Status:** Locked — stancl / Shop provisioning prep  
+**Status:** Locked - stancl / Shop provisioning prep  
 **Date:** 2026-07-19  
 **Companions:** [shop-authority-v1.md](shop-authority-v1.md) · [shop-status-authority-v1.md](shop-status-authority-v1.md) · [shop-identity-v1.md](shop-identity-v1.md) (HTTP vs SIP; deployment autonomy) · [ark-surfaces.mdc](../../.cursor/rules/ark-surfaces.mdc)
 
@@ -24,24 +24,24 @@ Provisioning provisions a Shop. Billing bills a Shop. Communications and operati
 ## Audiences (three hosts, three jobs)
 
 ```text
-I want ARK          →  autorepairkeeper.com          (ARK Cloud — the product)
-I manage ARK        →  app.autorepairkeeper.com      (Auth + Cloud dashboard — Phase 2+)
+I want ARK          →  autorepairkeeper.com          (ARK Cloud - the product)
+I manage ARK        →  app.autorepairkeeper.com      (Auth + Cloud dashboard - Phase 2+)
 I work here         →  {shop}.arksms.com             (shop workspace)
 I'm a customer      →  {custom domain}  (or trial preview)
 ```
 
-**Phase 1 (now):** Company host *is* the product. Marketing site posture ends — Cloud Funnel at apex.
+**Phase 1 (now):** Company host *is* the product. Marketing site posture ends - Cloud Funnel at apex.
 
 ---
 
-## 1. Company — never tenant-aware
+## 1. Company - never tenant-aware
 
 | | |
 | --- | --- |
 | **Domain** | `autorepairkeeper.com` (+ `www` → apex) |
 | **Audience** | Prospective customers + new owners |
-| **Owns** | ARK Cloud product — Home · Features · Pricing · Resources · Login · Trial · Become · Arrive · Cloud dashboard (Phase 1) |
-| **Stancl** | Central domain — not a Shop |
+| **Owns** | ARK Cloud product - Home · Features · Pricing · Resources · Login · Trial · Become · Arrive · Cloud dashboard (Phase 1) |
+| **Stancl** | Central domain - not a Shop |
 
 No Shop routing. No operations. No customer portal.
 
@@ -49,7 +49,7 @@ No Shop routing. No operations. No customer portal.
 
 ---
 
-## 2. Platform — internal operations
+## 2. Platform - internal operations
 
 | | |
 | --- | --- |
@@ -58,11 +58,11 @@ No Shop routing. No operations. No customer portal.
 | **Owns** | Provisioning · Deployment · Hosting · Monitoring · Billing · Support tooling |
 | **Stancl** | Central domain |
 
-No public login. No Shop staff login. If an internal admin UI is needed later, it is a **route on this host** — not a separate `admin.` product hostname.
+No public login. No Shop staff login. If an internal admin UI is needed later, it is a **route on this host** - not a separate `admin.` product hostname.
 
 ---
 
-## 3. Platform Runtime — Operations Domain (Stancl tenant)
+## 3. Platform Runtime - Operations Domain (Stancl tenant)
 
 | | |
 | --- | --- |
@@ -75,18 +75,18 @@ Examples: `lugsnplugs.arksms.com`, `joesauto.arksms.com`.
 
 There is no required `app.` prefix. The Shop slug **is** the operations host.
 
-`SHOP_BASE_URL` / voice HTTP capabilities resolve to this host (SIP registrar remains deployment config — see shop-identity).
+`SHOP_BASE_URL` / voice HTTP capabilities resolve to this host (SIP registrar remains deployment config - see shop-identity).
 
 ---
 
-## 4. Public Shop — Public Domain
+## 4. Public Shop - Public Domain
 
 | | |
 | --- | --- |
 | **Domain** | Custom domain (e.g. `lugsnplugs.com`) |
 | **Audience** | Customers |
 | **Owns** | Website · signed-in customer account · Appointment requests · SEO · Reviews · public lead intake |
-| **Stancl** | **Public Domain** on the same Shop — not another tenant |
+| **Stancl** | **Public Domain** on the same Shop - not another tenant |
 
 Product vocabulary: **Public Domain** (not “alias”). Alias is Stancl’s implementation detail.
 
@@ -103,8 +103,8 @@ Trials must not require DNS before evaluation.
 | | |
 | --- | --- |
 | **Preferred** | `{shop}-preview.arksms.com` |
-| **Fallback** | `preview.arksms.com/{shop}` (path model — secondary) |
-| **Role** | Temporary public surface — clearly distinct from Operations Domain |
+| **Fallback** | `preview.arksms.com/{shop}` (path model - secondary) |
+| **Role** | Temporary public surface - clearly distinct from Operations Domain |
 
 Once the shop connects a Public Domain (`joesauto.com`):
 
@@ -115,7 +115,7 @@ Preview must **not** live under `autorepairkeeper.com` (keeps shop public identi
 
 ---
 
-## 6. Learn — central
+## 6. Learn - central
 
 | | |
 | --- | --- |
@@ -133,7 +133,7 @@ Everything hangs off one Shop:
 Create Shop
   → Slug                  lugsnplugs
   → Operations Domain     lugsnplugs.arksms.com
-  → Public Domain         (optional — custom or trial preview)
+  → Public Domain         (optional - custom or trial preview)
   → Deployment Profile    Shared | Dedicated | …
   → Provision
 ```

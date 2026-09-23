@@ -1,5 +1,5 @@
 /**
- * Service intake work memory — URL step context, scroll, and in-progress recognize draft.
+ * Service intake work memory - URL step context, scroll, and in-progress recognize draft.
  */
 
 const SCROLL_RETRY_MS = [0, 50, 150, 350, 700];

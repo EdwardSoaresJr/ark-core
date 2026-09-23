@@ -8,7 +8,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
 /**
- * Sticky identity strip for the Repair Order — identity only.
+ * Sticky identity strip for the Repair Order - identity only.
  * Next actions live on {@see RepairOrderFooterProjection}.
  */
 final readonly class RepairOrderWorkspaceStripProjection
@@ -34,7 +34,7 @@ final readonly class RepairOrderWorkspaceStripProjection
             default => 'presentation',
         };
 
-        // Identity strip no longer owns a primary CTA — footer does.
+        // Identity strip no longer owns a primary CTA - footer does.
         // Keep primaryAction as none for inspect deep-links that still pass strip.
         $primary = RepairOrderWorkspaceStripPrimaryAction::none();
 

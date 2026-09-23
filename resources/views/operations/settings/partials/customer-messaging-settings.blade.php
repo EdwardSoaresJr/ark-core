@@ -187,7 +187,7 @@
                             name="telephony_call_flow[missed_call_rescue_text_closed]"
                             rows="3"
                             class="mt-1 w-full rounded-sm border-slate-300 text-sm text-slate-800"
-                            placeholder="Hey! This is @{{business.name}}. Sorry we missed your call — we're currently closed…"
+                            placeholder="Hey! This is @{{business.name}}. Sorry we missed your call - we're currently closed…"
                         >{{ old('telephony_call_flow.missed_call_rescue_text_closed', $callFlowConfig['missed_call_rescue_text_closed'] ?? '') }}</textarea>
                     </label>
                 </div>

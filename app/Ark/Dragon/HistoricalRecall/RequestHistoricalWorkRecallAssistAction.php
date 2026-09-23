@@ -12,7 +12,7 @@ use App\Models\User;
 
 /**
  * Builds a privacy-minimized assist payload from deterministic Historical Work Recall.
- * Does not change Exact/Likely/Possible — Dragon only reviews.
+ * Does not change Exact/Likely/Possible - Dragon only reviews.
  */
 final class RequestHistoricalWorkRecallAssistAction
 {

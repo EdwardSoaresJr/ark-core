@@ -5,7 +5,7 @@ namespace App\Ark\Mobile;
 use App\Models\User;
 
 /**
- * Mobile Comms hub — voice posture, comms pressure, and conversation inbox in one poll.
+ * Mobile Comms hub - voice posture, comms pressure, and conversation inbox in one poll.
  */
 final class MobileCommsHubProjection
 {

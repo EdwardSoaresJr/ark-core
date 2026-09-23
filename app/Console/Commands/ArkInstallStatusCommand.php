@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 /**
  * Container lifecycle and operators query first-run authority here.
  *
- * InstallationState is file-backed under storage — no DB schema required.
+ * InstallationState is file-backed under storage - no DB schema required.
  * Exit codes for --check-installed:
  *   0 = installed
  *   1 = not installed (or in_progress / missing marker)

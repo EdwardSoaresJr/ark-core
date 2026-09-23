@@ -13,7 +13,7 @@
     <section class="ops-today__section" aria-labelledby="ops-morning-recommendations">
         <div class="ops-today__section-header">
             <h2 id="ops-morning-recommendations" class="ops-today__section-title">Recommended next</h2>
-            <p class="ops-today__section-copy">Ranked by deterministic rules — not AI. Every row shows why it surfaced.</p>
+            <p class="ops-today__section-copy">Ranked by deterministic rules - not AI. Every row shows why it surfaced.</p>
         </div>
 
         @if ($briefRecommendations === [])

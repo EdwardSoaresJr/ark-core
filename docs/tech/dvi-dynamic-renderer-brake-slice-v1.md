@@ -1,4 +1,4 @@
-# ARK Tech DVI renderer — brake slice
+# ARK Tech DVI renderer - brake slice
 
 **Date:** 2026-08-24  
 **Scope:** Brake vertical slice only. No template editor in Tech.

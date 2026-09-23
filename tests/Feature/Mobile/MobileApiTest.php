@@ -183,7 +183,7 @@ test('advisor workspace surfaces money, estimate section, and send actions', fun
         ->assertOk()
         ->assertJsonPath('workspace.header.estimate_total_label', fn ($v) => is_string($v) && str_starts_with($v, '$'))
         // Unit price is stable regardless of shop tax/fee settings (line totals
-        // are not — total_cents carries allocated tax + shop fee per line).
+        // are not - total_cents carries allocated tax + shop fee per line).
         ->assertJsonPath('repair_order.estimate.groups.0.lines.0.unit_price_label', fn ($v) => is_string($v) && str_contains($v, '150.00'))
         ->assertJsonPath('repair_order.estimate.groups.0.lines.0.total_label', fn ($v) => is_string($v) && str_starts_with($v, '$'));
 
@@ -336,7 +336,7 @@ test('advisor can document vehicle condition at arrival as observation photos', 
         $this->withToken($token)
             ->post('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/findings', [
                 'intent' => InspectionFindingIntent::Observation->value,
-                'label' => 'Walk-around — '.$angle,
+                'label' => 'Walk-around - '.$angle,
                 'repair_order_concern_id' => $concern->id,
                 'photo' => UploadedFile::fake()->image(strtolower($angle).'.jpg'),
             ], ['Accept' => 'application/json'])
@@ -1206,7 +1206,7 @@ test('blocked lifecycle move returns a reason from mobile', function (): void {
     $repairOrder = mobileRepairOrder();
     $repairOrder->forceFill(['status' => RepairOrderStatus::Estimate->value])->save();
 
-    // No estimate lines and/or not an allowed forward move — server must refuse
+    // No estimate lines and/or not an allowed forward move - server must refuse
     // with an explanation rather than silently changing state.
     $this->withToken($advisor->createToken('test')->plainTextToken)
         ->patchJson('/api/mobile/repair-orders/'.$repairOrder->repair_order_id.'/status', [
@@ -1265,7 +1265,7 @@ test('advisor can load conversation thread and reply on mobile', function (): vo
         'conversation_participant_id' => $shopParticipant->id,
         'channel' => OperationalCommunicationChannel::Sms,
         'direction' => OperationalCommunicationDirection::Outbound,
-        'body' => 'Yes — drop off before noon.',
+        'body' => 'Yes - drop off before noon.',
         'occurred_at' => now()->subMinutes(3),
     ]);
 
@@ -1282,7 +1282,7 @@ test('advisor can load conversation thread and reply on mobile', function (): vo
         ->assertJsonPath('thread.poll_after_seconds', 20)
         ->assertJsonCount(2, 'thread.events')
         ->assertJsonPath('thread.events.0.body', 'Are you open Saturday?')
-        ->assertJsonPath('thread.events.1.body', 'Yes — drop off before noon.');
+        ->assertJsonPath('thread.events.1.body', 'Yes - drop off before noon.');
 
     $this->withToken($token)
         ->getJson('/api/mobile/communications')
@@ -1297,7 +1297,7 @@ test('advisor can load conversation thread and reply on mobile', function (): vo
 
     $this->withToken($token)
         ->postJson('/api/mobile/communications/'.$conversation->id.'/messages', [
-            'body' => 'Yes — drop off before noon.',
+            'body' => 'Yes - drop off before noon.',
         ])
         ->assertCreated()
         ->assertJsonStructure(['message_id']);
@@ -1305,7 +1305,7 @@ test('advisor can load conversation thread and reply on mobile', function (): vo
     expect(ConversationMessage::query()
         ->where('conversation_id', $conversation->id)
         ->where('direction', OperationalCommunicationDirection::Outbound)
-        ->where('body', 'Yes — drop off before noon.')
+        ->where('body', 'Yes - drop off before noon.')
         ->exists())->toBeTrue();
 });
 
@@ -2504,7 +2504,7 @@ test('advisor customer workspace exposes money, open work, and quick actions', f
 
     $this->withToken($token)
         ->postJson('/api/mobile/customers/'.$customer->id.'/messages', [
-            'body' => 'Hi — your estimate is ready when you are.',
+            'body' => 'Hi - your estimate is ready when you are.',
             'repair_order_id' => $openA->repair_order_id,
         ])
         ->assertCreated()

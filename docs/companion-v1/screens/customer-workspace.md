@@ -1,14 +1,14 @@
-# Screen spec — Customer Workspace
+# Screen spec - Customer Workspace
 
 **ID:** `companion.screen.customer-workspace`  
 **Role(s):** Advisor  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Relationship home on mobile** — who they are · what vehicles · what work is open · one tap to call · text · pay · schedule.
+**Relationship home on mobile** - who they are · what vehicles · what work is open · one tap to call · text · pay · schedule.
 
 ---
 
@@ -23,35 +23,35 @@
 
 ## Layout
 
-### Header — identity
+### Header - identity
 
-- Customer name — Display
-- Phone · email — tap to call / mailto
-- Billing class / referral — muted labels (if set)
+- Customer name - Display
+- Phone · email - tap to call / mailto
+- Billing class / referral - muted labels (if set)
 
 
 Horizontal equal buttons:
 
 - **Call** · **Text** · **Schedule** · **More** (Pay · New RO · Edit)
 
-### Section — Vehicles
+### Section - Vehicles
 
-Card list — YMM · plate · mileage if known · tap → vehicle workspace
+Card list - YMM · plate · mileage if known · tap → vehicle workspace
 
-### Section — Open repair orders
+### Section - Open repair orders
 
 Each row: `#1599` · vehicle · status chip · total · tap → RO workspace
 
-### Section — Recent activity (timeline)
+### Section - Recent activity (timeline)
 
-Newest first — messages · calls · estimate viewed · approval · payment  
+Newest first - messages · calls · estimate viewed · approval · payment  
 Tap row → thread · call detail · RO
 
 ### Footer
 
-- **New repair order** — secondary full-width
+- **New repair order** - secondary full-width
 
-No tab bar when pushed from search/RO — back returns caller.
+No tab bar when pushed from search/RO - back returns caller.
 
 ---
 
@@ -79,14 +79,14 @@ No tab bar when pushed from search/RO — back returns caller.
 
 **Entry:** Search → History · thread header tap · RO workspace customer chip
 
-**Exit:** Back to caller — never force Home
+**Exit:** Back to caller - never force Home
 
 ---
 
 ## Data & API
 
-**Needs:** customer hub projection — vehicles · open ROs · timeline slice  
-**Existing:** Customer Hub desktop — `/api/mobile/customers/{id}` parity
+**Needs:** customer hub projection - vehicles · open ROs · timeline slice  
+**Existing:** Customer Hub desktop - `/api/mobile/customers/{id}` parity
 
 ---
 

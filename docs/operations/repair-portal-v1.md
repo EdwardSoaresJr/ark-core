@@ -44,11 +44,11 @@ Order:
 
 1. Vehicle  
 2. Current Status  
-3. Estimate (card — “Updated … ago”, not estimate #)  
+3. Estimate (card - “Updated … ago”, not estimate #)  
 4. Photos (Shared Evidence)  
 5. Inspection (later)  
 6. Messages (later)  
-7. Portal Notices (later — hub, not SMS)
+7. Portal Notices (later - hub, not SMS)
 
 ## Growth
 
@@ -65,7 +65,7 @@ Repair Portal
 
 ## Advertisement
 
-`RepairPortalAdvertisementProjection` — only Portal generates QR URLs.  
+`RepairPortalAdvertisementProjection` - only Portal generates QR URLs.  
 Documents consume; they never invent access.
 
 **Frozen consumers (wire over time):** Estimate · Invoice · Authorization · Inspection PDF · Maintenance report · SMS · Email · Oil sticker (maybe).

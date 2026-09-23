@@ -404,7 +404,7 @@ export function arkPortalInvoicePay(config = {}) {
                     return;
                 }
 
-                this.message = payload.message || 'Thank you — we received your payment.';
+                this.message = payload.message || 'Thank you - we received your payment.';
             } catch {
                 this.error = 'Payment could not be completed.';
             } finally {
@@ -548,7 +548,7 @@ export function arkPortalEstimateDeposit(config = {}) {
                     return;
                 }
 
-                this.message = payload.message || 'Thank you — we received your deposit.';
+                this.message = payload.message || 'Thank you - we received your deposit.';
             } catch {
                 this.error = 'Deposit could not be completed.';
             } finally {

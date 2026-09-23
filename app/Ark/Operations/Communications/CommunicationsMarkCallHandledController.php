@@ -35,7 +35,7 @@ final class CommunicationsMarkCallHandledController
             );
         }
 
-        // Back to the list unselected — re-selecting the call would synthesize
+        // Back to the list unselected - re-selecting the call would synthesize
         // the cleared row straight back into Needs attention.
         return CommunicationsWorkspaceRedirect::toList('Call marked handled.');
     }

@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * Previous visits and deferred work for this vehicle — suggestion list + link map.
+ * Previous visits and deferred work for this vehicle - suggestion list + link map.
  * Disposable. Rebuild from RepairOrder / Recommendation rows.
  */
 final class PriorVisitMentionProjection

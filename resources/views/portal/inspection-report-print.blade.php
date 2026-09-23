@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Vehicle Inspection — RO #{{ $report['identity']['repair_order_id'] ?? '' }}</title>
+    <title>Vehicle Inspection - RO #{{ $report['identity']['repair_order_id'] ?? '' }}</title>
     <style>
         @page {
             size: Letter;
@@ -426,7 +426,7 @@
                 @foreach (($ok['by_category'] ?? []) as $group)
                     <li>
                         <strong>{{ $group['category'] }}</strong>
-                        ({{ (int) $group['count'] }}) —
+                        ({{ (int) $group['count'] }}) -
                         {{ implode(', ', $group['labels'] ?? []) }}
                     </li>
                 @endforeach
@@ -439,7 +439,7 @@
                 @foreach ($report['na_findings'] as $point)
                     <li>
                         <strong>{{ $point['label'] }}</strong>
-                        @if (filled($point['note'] ?? null)) — {{ $point['note'] }}@endif
+                        @if (filled($point['note'] ?? null)) - {{ $point['note'] }}@endif
                     </li>
                 @endforeach
             </ul>

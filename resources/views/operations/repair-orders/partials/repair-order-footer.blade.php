@@ -1,4 +1,4 @@
-{{-- Contextual Repair Order footer — disposable projection, not a toolbar --}}
+{{-- Contextual Repair Order footer - disposable projection, not a toolbar --}}
 @php
     /** @var \App\Ark\Operations\RepairOrders\RepairOrderFooterProjection $footer */
     $footer = $repairOrderFooter;
@@ -10,7 +10,7 @@
 
 {{--
   Docked footer lives outside the worksheet Alpine tree (orientation stack).
-  Own x-data so @click / PRINT menu bind — otherwise Add Work is a dead button.
+  Own x-data so @click / PRINT menu bind - otherwise Add Work is a dead button.
 --}}
 <footer
     @class([

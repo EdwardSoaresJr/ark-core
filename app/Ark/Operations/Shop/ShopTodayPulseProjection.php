@@ -9,7 +9,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Models\User;
 
 /**
- * Lightweight shop-day pulse for continuity surfaces — not reporting authority.
+ * Lightweight shop-day pulse for continuity surfaces - not reporting authority.
  */
 final class ShopTodayPulseProjection
 {

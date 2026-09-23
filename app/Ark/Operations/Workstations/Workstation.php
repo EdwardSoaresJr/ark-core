@@ -78,7 +78,7 @@ class Workstation extends Model
     }
 
     /**
-     * Desk phone / station appliance label — extension display name when provisioned.
+     * Desk phone / station appliance label - extension display name when provisioned.
      */
     public function applianceDisplayName(): string
     {

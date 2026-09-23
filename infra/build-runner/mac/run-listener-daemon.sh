@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# launchd entrypoint — keeps GitHub Actions listener alive (exec run.sh).
+# launchd entrypoint - keeps GitHub Actions listener alive (exec run.sh).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,7 +18,7 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 docker info >/dev/null 2>&1 || {
-    echo "Docker not running — listener waiting for Docker Desktop." >&2
+    echo "Docker not running - listener waiting for Docker Desktop." >&2
     exit 1
 }
 

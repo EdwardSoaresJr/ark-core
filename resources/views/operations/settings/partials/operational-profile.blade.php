@@ -7,7 +7,7 @@
     <div class="border-b border-slate-200 pb-3">
         <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Shop profile</h4>
         <p class="mt-0.5 text-xs text-slate-500">
-            Defaults only — not a different product. Applying a profile updates appointments, Check In visit mode, and printing.
+            Defaults only - not a different product. Applying a profile updates appointments, Check In visit mode, and printing.
             Staff-based solo behavior still comes from who is on the roster.
         </p>
     </div>

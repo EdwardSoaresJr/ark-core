@@ -1,15 +1,15 @@
-# Screen spec — Voicemail & Calls Library
+# Screen spec - Voicemail & Calls Library
 
 **ID:** `companion.screen.calls-library`  
 **Role(s):** Advisor  
-**ARK doctrine:** Desktop **Calls & VM** surface is protected — mobile mirrors job, not Attention queue  
-**Status:** 📝 draft — Edward review
+**ARK doctrine:** Desktop **Calls & VM** surface is protected - mobile mirrors job, not Attention queue  
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-**Recovery, not interrupt** — listen to voicemail · see missed calls · mark handled · call back with customer + vehicle context.
+**Recovery, not interrupt** - listen to voicemail · see missed calls · mark handled · call back with customer + vehicle context.
 
 ---
 

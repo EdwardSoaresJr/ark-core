@@ -4,7 +4,7 @@ namespace App\Ark\ShopMemory\Suggestion;
 
 /**
  * Provider registration only. Providers never see each other.
- * Duplicate keys fail loud — do not silently overwrite.
+ * Duplicate keys fail loud - do not silently overwrite.
  */
 final class SuggestionProviderRegistry
 {

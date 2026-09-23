@@ -5,7 +5,7 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use Stringable;
 
-/** Catalog-backed workflow slug — system enum cases and shop custom statuses. */
+/** Catalog-backed workflow slug - system enum cases and shop custom statuses. */
 final class RepairOrderWorkflowStatus implements Stringable
 {
     public readonly string $value;

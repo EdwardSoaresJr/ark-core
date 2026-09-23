@@ -8,7 +8,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Core commands — modules may register more via the singleton registry.
+ * Core commands - modules may register more via the singleton registry.
  */
 final class RegisterCoreOperationsCommands
 {

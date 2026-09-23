@@ -7,7 +7,7 @@ use App\Ark\Operations\Commitments\OperationalCommitment;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 
 /**
- * Open shop commitments due today or overdue — visibility before automation.
+ * Open shop commitments due today or overdue - visibility before automation.
  */
 final class TodayCommitmentsProjection
 {

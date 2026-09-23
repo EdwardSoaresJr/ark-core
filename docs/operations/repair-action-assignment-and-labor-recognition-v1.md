@@ -1,6 +1,6 @@
 # Repair Action Assignment & Labor Recognition Authority v1
 
-**Status:** Frozen · 2026-08-03 · **Doctrine only — not yet implemented**  
+**Status:** Frozen · 2026-08-03 · **Doctrine only - not yet implemented**  
 **Category:** Operations foundation (same class as Inspection · Maintenance · Evidence · Customer Recognition · Financial Authority)  
 **Companions:** [`concern-scope-capability-brief-v1.md`](concern-scope-capability-brief-v1.md) · [`technician-compensation-flag-floor-v1.md`](technician-compensation-flag-floor-v1.md) · Technician Scope · Projection Rule
 
@@ -36,7 +36,7 @@ Two floor failures collided:
 
 | Problem | Wrong model | Reality |
 | --- | --- | --- |
-| **Multi-tech RO** | `repair_orders.assigned_technician_id` owns the job | Edward diagnoses · Landon installs starter · Caleb oils — one RO, three packages |
+| **Multi-tech RO** | `repair_orders.assigned_technician_id` owns the job | Edward diagnoses · Landon installs starter · Caleb oils - one RO, three packages |
 | **Diag Friday / repair Monday** | Recognition / pending attributed from the whole RO | Diag 1.0 already recognized Friday must never reappear Monday when starter 3.2 sells |
 
 RO cannot own technician assignment. Recognition cannot scan “the RO.” Tech sheets cannot be “filter the RO.”
@@ -47,7 +47,7 @@ RO cannot own technician assignment. Recognition cannot scan “the RO.” Tech 
 
 ```text
 Customer says it              → Concern
-Advisor recommends it         → Scope (approval unit — see Concern→Scope brief)
+Advisor recommends it         → Scope (approval unit - see Concern→Scope brief)
 Accountable party owns it     → Repair Action
 Labor line is paid as flag    → Labor Recognition
 ```
@@ -63,7 +63,7 @@ Labor line is paid as flag    → Labor Recognition
 
 ---
 
-## Authority A — Repair Action Assignment
+## Authority A - Repair Action Assignment
 
 ### Primary question
 
@@ -71,7 +71,7 @@ Labor line is paid as flag    → Labor Recognition
 
 Not merely “who is turning the wrench right now.”
 
-### Ownership identity — `RepairActionOwner` (freeze now)
+### Ownership identity - `RepairActionOwner` (freeze now)
 
 Do **not** freeze ownership as a bare `owner_technician_id` you will eventually regret.
 
@@ -84,10 +84,10 @@ RepairActionOwner
 
 | Today (R1) | Later (only when earned) |
 | --- | --- |
-| **Technician** — only owner type | Team (transmission, diagnostics, …) |
+| **Technician** - only owner type | Team (transmission, diagnostics, …) |
 | | Vendor / Sublet |
 | | Unassigned |
-| | Training pair (via **R4 assists** — not dual owners) |
+| | Training pair (via **R4 assists** - not dual owners) |
 
 No polymorphism required in R1. Doctrine requires: **the owner is the accountable party; today the only owner type is Technician.**
 
@@ -96,7 +96,7 @@ R1 may persist a technician id **behind** `RepairActionOwner` of type Technician
 Owner vs performer (freeze the distinction; R1 performer may default to owner):
 
 ```text
-Check Engine Light — Repair Action
+Check Engine Light - Repair Action
 ──────────────────────────────────
 Owner (RepairActionOwner)  Edward
 Performing tech            Landon   ← may install; does not steal ownership
@@ -108,8 +108,8 @@ Performing tech            Landon   ← may install; does not steal ownership
 | --- | --- |
 | **`RepairActionOwner`** | Exactly one accountable party for the package |
 | Work package | Labor + parts + sublets + notes + future evidence / maintenance / inspection follow-up |
-| **Package completeness** | Whether the *package* is done — not labor alone |
-| **Ownership transfer history** | Assign / transfer events — never simultaneous owners |
+| **Package completeness** | Whether the *package* is done - not labor alone |
+| **Ownership transfer history** | Assign / transfer events - never simultaneous owners |
 
 ### Does not own
 
@@ -120,12 +120,12 @@ Payroll dollars · Estimate approval · Financial Position · Invoice · Coverag
 1. **Exactly one `RepairActionOwner` at a time.**
 2. **Ownership transfers. It is never copied.**
 3. **Never dual-own a Repair Action.** Collaborate → **split into two Repair Actions**.
-4. Ownership lives on the Repair Action — never on the RO as authority.
+4. Ownership lives on the Repair Action - never on the RO as authority.
 5. Labor does not own parts; parts ride with the Repair Action.
-6. RO `assigned_technician_id` = **Primary Technician** — visibility / dispatch hint only.
+6. RO `assigned_technician_id` = **Primary Technician** - visibility / dispatch hint only.
 7. **A technician never receives a Repair Order. A technician receives owned Repair Actions.**
 8. **Repair Action Complete ≠ labor complete.** Completeness is package completeness.
-9. **Completion ownership:** **Completed by** = the **current `RepairActionOwner`** (including after transfer) — never “last technician who touched a labor line,” never an R4 helper as completer by side effect.
+9. **Completion ownership:** **Completed by** = the **current `RepairActionOwner`** (including after transfer) - never “last technician who touched a labor line,” never an R4 helper as completer by side effect.
 
 ### Transfer semantics (frozen)
 
@@ -190,7 +190,7 @@ Today's Work
 Not `RO #1842`.
 
 ```text
-Caleb — Engine Oil Service
+Caleb - Engine Oil Service
 ──────────────────────────
 Labor     1.0
 Parts     Mobil 1 · Filter · Washer
@@ -209,13 +209,13 @@ Pending is a projection of **currently owned** Repair Actions.
 
 ---
 
-## Authority B — Labor Recognition
+## Authority B - Labor Recognition
 
 ### Owns
 
 | Concept | Meaning |
 | --- | --- |
-| **Recognized labor line** | This flag hour identity has been paid — forever |
+| **Recognized labor line** | This flag hour identity has been paid - forever |
 | `recognized_at` · recognition id · actor | Audit |
 | Technician attribution snapshot | Who was paid for **this line** (defaults from **`RepairActionOwner`** at recognition when owner type is Technician) |
 
@@ -250,7 +250,7 @@ Phase 1A unique on `repair_order_line_id`. Reopen-safe. New labor can recognize 
 ```text
 Friday   Diagnosis (Owner Edward)  · Diag 1.0 → Recognized
 Monday   Starter (Owner Landon)    · 3.2 → Recognized later
-Payroll  Edward 1.0 · Landon 3.2 — diag never again
+Payroll  Edward 1.0 · Landon 3.2 - diag never again
 ```
 
 ---
@@ -300,26 +300,26 @@ Ownership **transfers** before or after recognition. After recognition, the labo
 | Milestone | Deliverable |
 | --- | --- |
 | **R0** | This doctrine freeze |
-| **R1** | `RepairActionOwner` (type Technician only) + transfer history; UI; pending by current owner begins — **Shipped 2026-08-03** |
-| **R1.1** | Status + **Latest Update** on Repair Actions; deprecate RO Primary Tech from production surfaces — **Shipped 2026-08-04 · observe** |
+| **R1** | `RepairActionOwner` (type Technician only) + transfer history; UI; pending by current owner begins - **Shipped 2026-08-03** |
+| **R1.1** | Status + **Latest Update** on Repair Actions; deprecate RO Primary Tech from production surfaces - **Shipped 2026-08-04 · observe** |
 | **R2** | Package-based tech sheets polish (only if earned) |
 | **R3** | Labor recognition attribution from `RepairActionOwner`; update `FlagRecognitionPolicy` |
-| **R4** | Assists / shared work (helper time) — **not** dual ownership |
+| **R4** | Assists / shared work (helper time) - **not** dual ownership |
 | **R5** | Observe shop friction (Complete, package-completeness facets) |
 
 **Resist skipping to R3.** Ownership + operational communication are the foundation.
 
-### R1 / R1.1 Observation Period — Locked
+### R1 / R1.1 Observation Period - Locked
 
 **Duration:** 2–4 weeks or ~100 Repair Actions (whichever comes first).
 
-R3 is blocked because R1 changed the shop’s unit of work — not because recognition is hard. Floor evidence before building on top.
+R3 is blocked because R1 changed the shop’s unit of work - not because recognition is hard. Floor evidence before building on top.
 
 **Principle:** The current state of a repair must be discoverable from its Repair Actions. If an advisor must interrupt a technician to answer a customer, ARK failed.
 
 **Stop rules during observation:** no Labor Recognition · no payroll · no assists · no Financial (RED) · no chat/timeline · no workflow redesign unless verified defect. Fix only bugs, missing information that blocks normal use, and verified usability defects.
 
-**Earn R2/R3 from:** ownership habit · package trust · My Work fidelity · advisor answers from Latest Update without interruption — plus transfers/day, actions/RO, multi-tech share, sheet reprints, wrong-owner corrections, “Where are my parts?”, “Why is this on my list?”
+**Earn R2/R3 from:** ownership habit · package trust · My Work fidelity · advisor answers from Latest Update without interruption - plus transfers/day, actions/RO, multi-tech share, sheet reprints, wrong-owner corrections, “Where are my parts?”, “Why is this on my list?”
 
 ---
 

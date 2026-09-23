@@ -62,13 +62,13 @@ class DatabaseConnectionTester
         $msg = preg_replace('/password=[^;\s]+/i', 'password=***', $msg) ?? $msg;
 
         if (str_contains($msg, 'Access denied')) {
-            return 'Access denied — check username and password.';
+            return 'Access denied - check username and password.';
         }
         if (str_contains($msg, 'Unknown database')) {
-            return 'Database does not exist — create an empty MySQL database first.';
+            return 'Database does not exist - create an empty MySQL database first.';
         }
         if (str_contains($msg, 'Connection refused') || str_contains($msg, 'timed out')) {
-            return 'Could not reach the database host — check host and port.';
+            return 'Could not reach the database host - check host and port.';
         }
 
         return 'Database connection failed. Verify host, port, database name, and credentials.';

@@ -50,7 +50,7 @@ final class RefreshCustomerInvoiceAction
         $balance = $projection->balance;
 
         // Payments/deposits stay applied after refresh. Write-offs, refunds, and store-credit
-        // applications need a dedicated correction path — not snapshot rewrite.
+        // applications need a dedicated correction path - not snapshot rewrite.
         if ($balance->writeOffsCents > 0
             || $balance->refundsAppliedCents > 0
             || $balance->creditsAppliedCents > 0) {

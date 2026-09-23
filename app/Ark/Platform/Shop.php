@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Platform Shop authority — not operational shop_settings.
+ * Platform Shop authority - not operational shop_settings.
  *
  * M2: owned by one User (hasOne). Provisioning / Tenant remain later milestones.
  *

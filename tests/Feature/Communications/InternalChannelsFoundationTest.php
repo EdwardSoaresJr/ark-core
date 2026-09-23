@@ -62,7 +62,7 @@ test('internal message belongs to user and channel', function (): void {
     $message = InternalMessage::query()->create([
         'internal_channel_id' => $channel->id,
         'user_id' => $user->id,
-        'body' => 'Heads up — condenser order is delayed.',
+        'body' => 'Heads up - condenser order is delayed.',
     ]);
 
     expect($message->channel->is($channel))->toBeTrue()

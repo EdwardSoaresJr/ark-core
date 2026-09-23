@@ -12,9 +12,9 @@
 
 > Where is work accumulating, and which stage is the primary limiter of throughput and cash conversion right now?
 
-This is not a dashboard. It is a **first-class projection** consumed by Today, ARK Manager, future reports, and future coaching — without re-deriving truth at each surface.
+This is not a dashboard. It is a **first-class projection** consumed by Today, ARK Manager, future reports, and future coaching - without re-deriving truth at each surface.
 
-Flow explains revenue swings better than commitments alone. Commitments answer *which promises are at risk*. Flow answers *why a month was $38k vs $15k* — work got trapped somewhere in the cycle.
+Flow explains revenue swings better than commitments alone. Commitments answer *which promises are at risk*. Flow answers *why a month was $38k vs $15k* - work got trapped somewhere in the cycle.
 
 ### The four morning questions (Today acceptance test)
 
@@ -53,7 +53,7 @@ Today already has adjacent pieces. Flow **unifies** them; it does not duplicate 
 | `AdvisorTodayShopRadarBuilder` | Count + oldest age + revenue per workboard queue | **Proto-flow rows.** Flow extends coverage to full lifecycle and adds constraint. |
 | `WorkboardTriageProjection` | Queue membership, pressure signals | **Stage assignment input** for signal-weight |
 | `CustomerDecisionPressure` | Decision dollars, age, estimate-not-sent | **Approval-stage pressure input** |
-| `AdvisorTodayRecommendationEngine` | Ranked next actions | **Consumer** — recommendations should reference constraint stage when present |
+| `AdvisorTodayRecommendationEngine` | Ranked next actions | **Consumer** - recommendations should reference constraint stage when present |
 | `OperationalIntelligence` (reports) | Legacy bucket counts | **Do not extend.** New code consumes `OperationalFlowProjection` instead. |
 
 After Flow ships, **Shop radar on Today may fold into Flow** or remain as a drill-down alias. Do not maintain two competing stage models.
@@ -70,7 +70,7 @@ Flow composes from truth layers already in ARK:
 | `WorkboardSwimlaneCatalog` | Canonical stage keys and status slug mapping |
 | `WorkboardTriageProjection` | Cross-cutting signals (customer waiting, unassigned, parts pressure) |
 | `CustomerDecisionPressure` | Approval-stage dollars, age, estimate-ready-not-sent |
-| `EstimateTotalsCalculator` | Revenue at stage (estimate total vs approved-work total — same rules as Pipeline) |
+| `EstimateTotalsCalculator` | Revenue at stage (estimate total vs approved-work total - same rules as Pipeline) |
 | `BalanceDueCalculator` | Paid vs unpaid at pickup stage |
 | `OperationalEvent` (`RepairOrderLifecycleChanged`) | **Preferred** time-in-stage (status entered at) |
 | `repair_orders.opened_at` / `updated_at` | **v1 fallback** only when lifecycle event missing |
@@ -81,28 +81,28 @@ No new writes on GET. Flow is computed once per Today render and passed explicit
 
 ## Stage model
 
-Stages represent **operational accumulation points** in the shop cycle — not every lifecycle slug gets its own row.
+Stages represent **operational accumulation points** in the shop cycle - not every lifecycle slug gets its own row.
 
 | `stage_key` | Label | Primary assignment |
 |-------------|-------|-------------------|
-| `work_arrives` | Work Arrives | Intake pressure: draft ROs with no estimate lines, or explicit intake queue (v1: `draft` + `estimate` with zero lines — see rules below) |
+| `work_arrives` | Work Arrives | Intake pressure: draft ROs with no estimate lines, or explicit intake queue (v1: `draft` + `estimate` with zero lines - see rules below) |
 | `needs_diagnosis` | Needs Diagnosis | `draft` with lines/concerns, not yet estimate-ready |
 | `building_estimate` | Building Estimate | `estimate` status |
 | `waiting_approval` | Waiting Approval | `waiting_approval` status |
 | `waiting_parts` | Waiting Parts | `waiting_parts` status |
 | `in_repair` | In Repair | `approved`, `ready_for_work`, `in_progress` |
 | `quality_check` | Quality Check | `quality_check` status |
-| `ready_pickup` | Ready Pickup | `completed`, `invoiced`, `ready_pickup` — work complete, cash conversion may still be pending (Pipeline owns unpaid-at-pickup dollars) |
+| `ready_pickup` | Ready Pickup | `completed`, `invoiced`, `ready_pickup` - work complete, cash conversion may still be pending (Pipeline owns unpaid-at-pickup dollars) |
 
-**Paid is excluded from Flow v1.** Paid belongs to Pipeline / Day Review. Flow stops at Ready Pickup — work and cash conversion still in motion.
+**Paid is excluded from Flow v1.** Paid belongs to Pipeline / Day Review. Flow stops at Ready Pickup - work and cash conversion still in motion.
 
 **Closed ROs are excluded** from Flow.
 
 ### Assignment rules (deterministic)
 
-1. Each open RO maps to **exactly one** stage (first match wins — document order in implementation).
+1. Each open RO maps to **exactly one** stage (first match wins - document order in implementation).
 2. Stage keys align with `WorkboardSwimlaneCatalog` lane keys where possible (`needs_diagnosis`, `building_estimate`, `waiting_approval`, `waiting_parts`, `shop_floor` → `in_repair`, `quality_check`, `ready_pickup`).
-3. `work_arrives` is **pre-production intake only** — leads, scheduled intake, draft ROs not yet checked in or diagnosed. It is not a junk drawer for stale leads or every open lead forever. ROs with diagnostic/estimate activity belong in `needs_diagnosis` or later stages.
+3. `work_arrives` is **pre-production intake only** - leads, scheduled intake, draft ROs not yet checked in or diagnosed. It is not a junk drawer for stale leads or every open lead forever. ROs with diagnostic/estimate activity belong in `needs_diagnosis` or later stages.
 4. Triage overlays (customer waiting, unassigned tech) contribute **signal weight** to the RO's current stage; they do not create parallel stage rows.
 
 ---
@@ -117,11 +117,11 @@ Each stage produces a `FlowStageProjection`:
 | `label` | string | Display label |
 | `count` | int | ROs in stage |
 | `oldest_age_minutes` | int | Max time-in-stage among members |
-| `oldest_age_label` | string | Human label (`2d`, `4h`) — computed once |
+| `oldest_age_label` | string | Human label (`2d`, `4h`) - computed once |
 | `median_age_minutes` | int | Median time-in-stage |
 | `median_age_label` | string | Human label |
 | `revenue_cents` | int | Sum of authoritative totals for ROs in stage |
-| `revenue_label` | string | `$11,400` — computed once |
+| `revenue_label` | string | `$11,400` - computed once |
 | `pressure_score` | int | Weighted score for constraint ranking (see below) |
 | `inventory_url` | string | Drill-down (workboard queue or RO index filter) |
 | `signal_summary` | ?string | Optional one-line explainability (`3 over 72h`, `2 estimate not sent`) |
@@ -151,7 +151,7 @@ The **constraint** is the stage with the highest `pressure_score` among stages w
 Flow must be able to say:
 
 > **Constraint → Waiting Approval**  
-> Waiting Approval is currently the largest limiter of cash conversion — 9 ROs, $11,400, oldest 4 days.
+> Waiting Approval is currently the largest limiter of cash conversion - 9 ROs, $11,400, oldest 4 days.
 
 Not merely "Waiting Approval = 9".
 
@@ -167,14 +167,14 @@ pressure_score =
     (signal_weight   × signal_norm)
 ```
 
-**Default weights (v1 — fixed for initial measurement; tunable per shop only after observation proves misfire):**
+**Default weights (v1 - fixed for initial measurement; tunable per shop only after observation proves misfire):**
 
 | Component | Weight | `volume_norm` | `age_norm` | `revenue_norm` | `signal_norm` |
 |-----------|--------|---------------|------------|----------------|---------------|
-| Volume | **0.25** | stage count ÷ max count | — | — | — |
-| Age | **0.30** | — | median age ÷ max median age | — | — |
-| Revenue | **0.30** | — | — | stage revenue ÷ max revenue | — |
-| Signal | **0.15** | — | — | — | triage + decision pressure severity |
+| Volume | **0.25** | stage count ÷ max count | - | - | - |
+| Age | **0.30** | - | median age ÷ max median age | - | - |
+| Revenue | **0.30** | - | - | stage revenue ÷ max revenue | - |
+| Signal | **0.15** | - | - | - | triage + decision pressure severity |
 
 **Signal_norm sources (additive caps at 100):**
 
@@ -194,7 +194,7 @@ FlowConstraintProjection {
     reasons: [
         'Highest revenue trapped ($11,400)',
         'Oldest median age (4.2 days)',
-        '9 ROs — highest volume stage',
+        '9 ROs - highest volume stage',
     ],
 }
 ```
@@ -207,7 +207,7 @@ Namespace: `App\Ark\Operations\Flow\`
 
 ### `FlowStageProjection` (readonly)
 
-One row per stage. All display strings computed in projection — views render fields only.
+One row per stage. All display strings computed in projection - views render fields only.
 
 ### `FlowConstraintProjection` (readonly)
 
@@ -232,7 +232,7 @@ final readonly class OperationalFlowProjection
 ```php
 final class OperationalFlowProjectionBuilder
 {
-    /** @param Collection<int, RepairOrder> $openRepairOrders — same cohort as Today/workboard advisor query */
+    /** @param Collection<int, RepairOrder> $openRepairOrders - same cohort as Today/workboard advisor query */
     public function build(Collection $openRepairOrders): OperationalFlowProjection;
 }
 ```
@@ -247,13 +247,13 @@ Single entry point. No static helpers called from Blade.
 |----------|-------|
 | **Today** | Flow section at top of overview (above or replacing shop radar). Constraint headline visible without scrolling on desktop. |
 | **Recommendations** | Engine receives optional `FlowConstraintProjection`; boost cards whose `ruleKey` aligns with constraint stage. |
-| **ARK Manager** | Narrates constraint + reasons — never inventing bottleneck from LLM when Flow projection is present. |
-| **Operational Report** (later) | Weekly constraint history — feeds Outcomes. |
+| **ARK Manager** | Narrates constraint + reasons - never inventing bottleneck from LLM when Flow projection is present. |
+| **Operational Report** (later) | Weekly constraint history - feeds Outcomes. |
 | **Owner Day Review** (later) | End-of-day constraint snapshot comparison. |
 
 ---
 
-## Outcomes (mandatory companion — separate projection)
+## Outcomes (mandatory companion - separate projection)
 
 **Flow without Outcomes is dashboard theater.**
 
@@ -267,7 +267,7 @@ Single entry point. No static helpers called from Blade.
 | `improvement_percent` | e.g. 36% |
 | `cohort_window` | `7d` / `30d` |
 
-**v1 storage:** append-only shop notebook table or weekly snapshot row — not required for Flow v1 ship, but **schema intent** documented:
+**v1 storage:** append-only shop notebook table or weekly snapshot row - not required for Flow v1 ship, but **schema intent** documented:
 
 ```
 operational_flow_snapshots (
@@ -293,51 +293,51 @@ FLOW                          Constraint → Waiting Approval
 Needs Diagnosis          5     oldest 2d
 Waiting Approval         9     $11,400 · median 4.2d
 Waiting Parts            2     $4,900
-In Repair                6     —
-Quality Check            1     —
+In Repair                6     -
+Quality Check            1     -
 Ready Pickup             4     $3,800
 ```
 
 - One column scan: **stage · count · age/revenue**
-- Constraint row highlighted — not a separate dashboard
+- Constraint row highlighted - not a separate dashboard
 - Every row links to inventory (workboard or filtered RO index)
-- Pipeline remains adjacent — **money** vs **work** side by side
+- Pipeline remains adjacent - **money** vs **work** side by side
 
 ---
 
 ## Implementation sequence (minimal)
 
-### Phase 1 — Projection only (no UI change) ✅ shipped
+### Phase 1 - Projection only (no UI change) ✅ shipped
 
-1. `FlowStageKey` enum — eight stages, **no paid**
+1. `FlowStageKey` enum - eight stages, **no paid**
 2. `FlowStageProjection`, `FlowConstraintProjection`, `OperationalFlowProjection`
 3. `FlowStageResolver` + `OperationalFlowProjectionBuilder` with tests against fixture RO cohorts
 4. Query composition budget test: one advisor Today load, stable truth + projection query counts *(budget test deferred to Phase 2 when wired to Today)*
 
 **Namespace:** `App\Ark\Operations\Flow\`
 
-### Phase 2 — Today surface ✅ shipped
+### Phase 2 - Today surface ✅ shipped
 
 1. Wire into `AdvisorTodayProjection` (same advisor cohort as recommendations)
-2. Blade partial `operations/today/partials/flow.blade.php` — full width above Pipeline
+2. Blade partial `operations/today/partials/flow.blade.php` - full width above Pipeline
 3. Constraint headline + active stage rows + **Why?** explainability block
 4. Feature test: constraint and reasons render on Today
 
 **Deferred:** Shop radar fold, Flow History, Outcomes snapshots, recommendation constraint boost.
 
-### Phase 3 — Recommendation alignment
+### Phase 3 - Recommendation alignment
 
 1. Pass constraint into `AdvisorTodayRecommendationEngine`
-2. Modest rank boost for cards matching constraint stage — still deterministic, still explainable in `whyReasons`
+2. Modest rank boost for cards matching constraint stage - still deterministic, still explainable in `whyReasons`
 
-### Phase 4 — Outcomes snapshot
+### Phase 4 - Outcomes snapshot
 
-1. Daily snapshot job (shop timezone midnight or first Today visit — **measure before automating**)
+1. Daily snapshot job (shop timezone midnight or first Today visit - **measure before automating**)
 2. Outcomes line on Today
 
-### Phase 5 — ARK Manager
+### Phase 5 - ARK Manager
 
-1. Manager panel consumes `OperationalFlowProjection` + Outcomes — narrative only, no new math
+1. Manager panel consumes `OperationalFlowProjection` + Outcomes - narrative only, no new math
 
 ---
 
@@ -358,7 +358,7 @@ Ready Pickup             4     $3,800
 | Question | Default until measured |
 |----------|------------------------|
 | `work_arrives` vs `needs_diagnosis` boundary | Use line count + status slug; refine with floor observation |
-| Include `paid` bucket on Today? | **No — excluded from Flow v1.** Pipeline / Day Review own paid truth. |
+| Include `paid` bucket on Today? | **No - excluded from Flow v1.** Pipeline / Day Review own paid truth. |
 | Snapshot trigger: cron vs first visit | Notebook manual week one; automate after observation |
 | Weight tuning | Ship v1 defaults; shop settings only if LNP proves misfire |
 
@@ -368,8 +368,8 @@ Ready Pickup             4     $3,800
 
 ```
 ✓ Today
-→ Pipeline        (money — finish polish + drill-down)
-→ Flow            (work — this document)
+→ Pipeline        (money - finish polish + drill-down)
+→ Flow            (work - this document)
 → Commitments     (promises at risk)
 → Outcomes        (prove constraint improved)
 → ARK Manager     (narrative on measured constraint)
@@ -380,7 +380,7 @@ Pipeline and Flow together answer the two questions that explain revenue:
 
 - **Pipeline:** Where is the money? (collected / money buckets)
 - **Flow:** Where is work stuck? (operational stages through ready pickup)
-- **Day Review:** Historical paid truth (end-of-day closeout — not Flow)
+- **Day Review:** Historical paid truth (end-of-day closeout - not Flow)
 
 Commitments matter. They do not explain April vs May. Flow might.
 
@@ -389,7 +389,7 @@ Commitments matter. They do not explain April vs May. Flow might.
 ## References
 
 - `.cursor/rules/ark-projection-rule.mdc`
-- `.cursor/rules/ark-pressure-first.mdc` — observe → surface → measure before enforce
+- `.cursor/rules/ark-pressure-first.mdc` - observe → surface → measure before enforce
 - `app/Ark/Operations/Today/TodayPipelineProjection.php`
 - `app/Ark/Operations/Today/AdvisorTodayShopRadarBuilder.php`
 - `app/Ark/Operations/Workboard/WorkboardSwimlaneCatalog.php`

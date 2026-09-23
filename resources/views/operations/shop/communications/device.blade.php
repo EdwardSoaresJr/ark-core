@@ -105,7 +105,7 @@
         @if (auth()->user()?->isMasterAdmin())
             <section class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
                 <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Infrastructure</p>
-                <p class="text-xs leading-5 text-slate-600">Bench tools — not part of daily operations.</p>
+                <p class="text-xs leading-5 text-slate-600">Bench tools - not part of daily operations.</p>
 
                 <dl class="space-y-2 text-sm">
                     <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">

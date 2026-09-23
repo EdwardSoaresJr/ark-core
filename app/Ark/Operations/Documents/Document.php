@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Documents authority — durable paperwork.
+ * Documents authority - durable paperwork.
  *
  * Freeze:
  * - Documents preserve paperwork. They do not interpret it.

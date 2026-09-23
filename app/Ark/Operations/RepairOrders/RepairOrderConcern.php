@@ -147,7 +147,7 @@ class RepairOrderConcern extends Model
 
     /**
      * Bay production tracking (Pending / In Progress / Waiting Parts / Completed).
-     * Draft and Recommended must not block In Progress — diagnosis and Testing
+     * Draft and Recommended must not block In Progress - diagnosis and Testing
      * Package work start before customer authorization. Deferred/Declined stay out.
      */
     public function tracksProduction(): bool

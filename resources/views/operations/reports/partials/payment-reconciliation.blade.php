@@ -119,7 +119,7 @@
         @if ($reconciliation['reconciles'])
             Reconciled cash matches posted invoice totals for this range.
         @else
-            Reconciliation gap: {{ $reconciliation['delta_label'] }} vs posted invoice total — expand lines above to find the RO.
+            Reconciliation gap: {{ $reconciliation['delta_label'] }} vs posted invoice total - expand lines above to find the RO.
         @endif
     </div>
 </div>

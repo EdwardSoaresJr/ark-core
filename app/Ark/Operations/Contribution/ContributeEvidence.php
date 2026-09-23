@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Contribution capability — human says evidence belongs in public.
+ * Contribution capability - human says evidence belongs in public.
  * Today's projection: Featured Media on a common-problem page.
  */
 final class ContributeEvidence
@@ -68,7 +68,7 @@ final class ContributeEvidence
         $item = $photo->item;
         $label = trim((string) ($item?->label ?? 'Inspection'));
         $purpose = $photo->purposeLabel();
-        $alt = trim($label.' — '.$purpose.' inspection evidence at the shop');
+        $alt = trim($label.' - '.$purpose.' inspection evidence at the shop');
 
         if ($altError = CommonProblemFeaturedMedia::altTextError($alt)) {
             $alt = 'Technician documenting '.$label.' during vehicle inspection at the shop';

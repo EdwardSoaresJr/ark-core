@@ -12,7 +12,7 @@ use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use Brick\Money\Money;
 
 /**
- * Resolves portal deposit / remaining-balance pay state from authority — not session flash alone.
+ * Resolves portal deposit / remaining-balance pay state from authority - not session flash alone.
  *
  * Session flash still wins immediately after authorize; on refresh we rebuild
  * from the latest portal approval so customers can pay the deposit and any leftover.
@@ -211,7 +211,7 @@ final class PortalEstimateDepositProjection
         return [
             'kind' => 'complete',
             'title' => 'Payment received',
-            'body' => sprintf('Thank you — we received your %s payment.', $amount),
+            'body' => sprintf('Thank you - we received your %s payment.', $amount),
             'remaining_line' => null,
             'received_amount' => $amount,
         ];
@@ -233,7 +233,7 @@ final class PortalEstimateDepositProjection
         return [
             'kind' => 'partial',
             'title' => 'Partial payment received',
-            'body' => sprintf('Thank you — we received your %s payment.', $amount),
+            'body' => sprintf('Thank you - we received your %s payment.', $amount),
             'remaining_line' => $remainingLine,
             'received_amount' => $amount,
         ];

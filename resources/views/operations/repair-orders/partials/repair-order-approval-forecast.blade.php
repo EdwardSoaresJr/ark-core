@@ -37,7 +37,7 @@
         $approvedLabel = 'Approved';
         $pendingLabel = 'Needs Approval';
         $projectedLabel = $projectedStaffLabel;
-        $footnote = 'Conversation prep — not invoice authority.';
+        $footnote = 'Conversation prep - not invoice authority.';
         $pendingPrefix = '+';
     }
 @endphp

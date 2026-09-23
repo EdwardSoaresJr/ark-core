@@ -5,7 +5,7 @@ namespace App\Ark\Platform\Provisioning;
 use App\Ark\Platform\ProvisioningRequest;
 
 /**
- * Adapter contract — every infrastructure step looks identical.
+ * Adapter contract - every infrastructure step looks identical.
  *
  * @see docs/platform/orchestrator-rule-v1.md
  */

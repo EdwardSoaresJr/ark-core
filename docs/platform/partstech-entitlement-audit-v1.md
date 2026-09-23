@@ -1,4 +1,4 @@
-# Addendum — PartsTech entitlement / integration
+# Addendum - PartsTech entitlement / integration
 
 **Status:** Investigation only. Do not implement from this file.  
 **Date:** 2026-09-15  
@@ -10,9 +10,9 @@ PartsTech is the first real commercial entitlement to prove on Platform. Do not 
 Locked boundary:
 
 ```text
-ARK Platform  — shop entitlement + admin enable/disable
-ARK Cloud     — PartsTech credentials, adapter, authorization
-ARK Core      — estimating/parts workflow; selected-part snapshots
+ARK Platform  - shop entitlement + admin enable/disable
+ARK Cloud     - PartsTech credentials, adapter, authorization
+ARK Core      - estimating/parts workflow; selected-part snapshots
 ```
 
 Core must not decide “this shop gets PartsTech because they are Pro.” Core must not hold the shop’s global PartsTech credentials once the managed path is live. Plans may later include the entitlement; the entitlement itself stays discrete.
@@ -28,9 +28,9 @@ On Hosted LugsNPlugs (docs snapshot 2026-09-08):
 | Layer | State |
 | --- | --- |
 | Platform entitlement `parts` | **none** |
-| Platform transport | **stub** (`ARK_PLATFORM_PARTS_TRANSPORT=stub`) — fake quote lines, no PartsTech network |
-| Core client | **none** — no `ArkPartsClient` |
-| Core foundry code | **present** — catalog launch, GraphQL cart prep, Pull Quote, import |
+| Platform transport | **stub** (`ARK_PLATFORM_PARTS_TRANSPORT=stub`) - fake quote lines, no PartsTech network |
+| Core client | **none** - no `ArkPartsClient` |
+| Core foundry code | **present** - catalog launch, GraphQL cart prep, Pull Quote, import |
 | Public Core overlay | `NotConfiguredPartsCatalogLauncher` if that image is used; LNP stays on foundry |
 
 LNP restoration docs already said: do not cut Core over to the stub. That still holds.
@@ -52,8 +52,8 @@ What already exists:
 | Implementation | `development` |
 | APIs | `GET /api/v1/services/parts/readiness` · `POST …/sessions/prepare` · `GET …/sessions/{cartReference}/quote` |
 | Gate | `EntitlementService::assertEntitled($installation, 'parts')` |
-| Admin Enable/Disable | **omitted** — `POLICY_SERVICES = ['mail', 'sms', 'payments', 'voice']` |
-| Portal shop status | **omitted** — `ShopManagedServiceStatus` lists sms/voice/mail/payments only |
+| Admin Enable/Disable | **omitted** - `POLICY_SERVICES = ['mail', 'sms', 'payments', 'voice']` |
+| Portal shop status | **omitted** - `ShopManagedServiceStatus` lists sms/voice/mail/payments only |
 
 **Recommendation:** keep the existing discrete key `parts`. Do not add a second key `catalog.partstech`. Platform UI label for this shop: **PartsTech Catalog**. Plans, manual grants, beta, and later add-ons all write the same `service_entitlements` row. If a dotted alias is wanted later, map `catalog.partstech` → `parts`; do not fork two entitlements.
 
@@ -73,12 +73,12 @@ RO show (edit, non-terminal)
 
 | Area | Authority / code |
 | --- | --- |
-| HTTP / GraphQL | `PartsTechHttpClient` — cookie `POST /api/login`, then `/graphql` |
+| HTTP / GraphQL | `PartsTechHttpClient` - cookie `POST /api/login`, then `/graphql` |
 | Credentials | Shop columns on `shop_settings` (encrypted password + api_key) with env fallback; optional per-user seat on `users` |
-| Launch | `PartsTechCatalogLauncher` — VIN/YMM query string, PO `R{shopNumber}` |
-| Cart | `PartsTechCartPreparer` + `PartsTechRepairOrderCartLocator` — create/activate/PO/vehicle; 423 session lock |
+| Launch | `PartsTechCatalogLauncher` - VIN/YMM query string, PO `R{shopNumber}` |
+| Cart | `PartsTechCartPreparer` + `PartsTechRepairOrderCartLocator` - create/activate/PO/vehicle; 423 session lock |
 | Quote | `PartsTechActiveCartQuoteReader` → `PartsTechQuoteLine` |
-| Import | `PartsTechQuoteImporter` — concern/work-group, matrix pricing, `EstimateTotalsCalculator`, event `source=partstech` |
+| Import | `PartsTechQuoteImporter` - concern/work-group, matrix pricing, `EstimateTotalsCalculator`, event `source=partstech` |
 | VIN/plate | `PartsTechProvider` in `VehicleIntelligenceManager` (API key; NHTSA fallback) |
 | UI | toolbar, import panel, Settings, profile seats, Learn articles |
 | Tests | `PartsTechCatalogTest` (16), `PartsTechQuoteImportTest` (16), credential + attribute unit tests |

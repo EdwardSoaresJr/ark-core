@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Contracts\View\View;
 
 /**
- * Local-only interactive mock of Companion v1 gate screens — design review, not production UI.
+ * Local-only interactive mock of Companion v1 gate screens - design review, not production UI.
  */
 final class CompanionPreviewController
 {

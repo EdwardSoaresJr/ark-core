@@ -44,7 +44,7 @@
                 class="h-9 w-full rounded-sm border-slate-300 text-sm text-slate-700"
             >
             <p class="text-[11px] font-semibold leading-4 text-slate-500">
-                Paid date — blank for today
+                Paid date - blank for today
             </p>
         </div>
     </div>
@@ -61,7 +61,7 @@
         class="h-9 w-full min-w-0 rounded-sm border-slate-300 text-sm text-slate-700"
     >
     <p class="text-[11px] font-semibold leading-4 text-slate-500">
-        Cash above balance due is treated as change given — not store credit. Prefer the exact amount due.
+        Cash above balance due is treated as change given - not store credit. Prefer the exact amount due.
     </p>
     <button type="submit" class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:border-slate-400">
         Record Payment

@@ -1,7 +1,7 @@
 # ARK Core ↔ Website boundary
 
-**Status:** SEALED — PASS baseline `7c24ce2` (2026-09-05)  
-**Doctrine:** We extract Website from Core because **ARK Website is becoming its own automotive CMS product** — not because website capability is abandoned.
+**Status:** SEALED - PASS baseline `7c24ce2` (2026-09-05)  
+**Doctrine:** We extract Website from Core because **ARK Website is becoming its own automotive CMS product** - not because website capability is abandoned.
 
 **Sealed product boundary:** ARK Website owns the form and customer-facing experience. ARK Core owns the resulting Lead.
 
@@ -16,13 +16,13 @@ Core may hold website **records** (sites, drafts, publications) and a signed rea
 ## What stays in Core (KEEP)
 
 - Shop identity (`ShopSettings`: name, address, phone, email, `scheduling_hours`, `shop_timezone`, logo, `website` URL for documents)
-- Google review destination (`shop_settings.google_reviews_url`) for post-repair review requests — Core messaging, not Website SEO
+- Google review destination (`shop_settings.google_reviews_url`) for post-repair review requests - Core messaging, not Website SEO
 - Customer portal and tokenized estimate / inspection / pay links
 - Leads as operational authority (advisor intake, `LeadSource::Website` for historical/source labeling, `LeadRecorder`)
 - Website-lead interrupt presenters for uncontacted leads already in Core
 - Ingress hygiene / spam observation on lead authority (no public marketing form required)
-- `PUBLIC_DOMAIN` / `surfaces.public` as an optional **host routing** seam for portal co-location — not a marketing CMS
-- Appointment **availability** configuration (when the shop can take requests) — presentation of booking UI is Website
+- `PUBLIC_DOMAIN` / `surfaces.public` as an optional **host routing** seam for portal co-location - not a marketing CMS
+- Appointment **availability** configuration (when the shop can take requests) - presentation of booking UI is Website
 
 ## What left Core (REMOVE / left)
 
@@ -46,4 +46,4 @@ Useful concepts captured for migration: [ark-website-product-concepts-from-core.
 
 Inventory: [ark-core-website-boundary-inventory.md](./ark-core-website-boundary-inventory.md)
 
-ARK Website is conceptually independent of Connect: a shop may publish a site and receive email notifications without Connect; Connect enables direct Core workflow when that product exists. This document records the boundary only — no Website or Connect implementation claim.
+ARK Website is conceptually independent of Connect: a shop may publish a site and receive email notifications without Connect; Connect enables direct Core workflow when that product exists. This document records the boundary only - no Website or Connect implementation claim.

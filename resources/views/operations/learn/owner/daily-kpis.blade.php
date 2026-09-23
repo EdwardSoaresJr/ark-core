@@ -4,23 +4,23 @@
 
     <h3>The six KPIs</h3>
     <ol>
-        <li><strong>Gross margin %</strong> — the most important number. Financial tab and Owner P&amp;L show labor and parts margin on posted work.</li>
-        <li><strong>ARO</strong> — average repair order value (open + closed in range on Executive Pulse).</li>
-        <li><strong>Effective labor rate</strong> — labor $ ÷ billed hours on <em>posted</em> sales. Should track posted rate.</li>
-        <li><strong>Tech productivity</strong> — billed hours vs capacity. Production tab → technician efficiency.</li>
-        <li><strong>Parts margin %</strong> — matrix discipline. Executive Pulse → Parts Margin (posted sales).</li>
-        <li><strong>Break-even</strong> — Margin Health when monthly fixed costs are set in Owner Targets.</li>
+        <li><strong>Gross margin %</strong> - the most important number. Financial tab and Owner P&amp;L show labor and parts margin on posted work.</li>
+        <li><strong>ARO</strong> - average repair order value (open + closed in range on Executive Pulse).</li>
+        <li><strong>Effective labor rate</strong> - labor $ ÷ billed hours on <em>posted</em> sales. Should track posted rate.</li>
+        <li><strong>Tech productivity</strong> - billed hours vs capacity. Production tab → technician efficiency.</li>
+        <li><strong>Parts margin %</strong> - matrix discipline. Executive Pulse → Parts Margin (posted sales).</li>
+        <li><strong>Break-even</strong> - Margin Health when monthly fixed costs are set in Owner Targets.</li>
     </ol>
 
     <h3>Supporting metrics</h3>
     <ul>
-        <li><strong>Car count</strong> — ROs opened in range</li>
-        <li><strong>Sales Posted</strong> — revenue recognized when ROs are posted in range (<code>posted_at</code>)</li>
-        <li><strong>Cash Collected</strong> — payments and deposits cashiered in range — compare to Sales Posted via reconciliation</li>
-        <li><strong>Parts/labor mix</strong> — target ~45% parts / 55% labor on posted sales</li>
-        <li><strong>Approval rate</strong> — how often customers buy approved work</li>
-        <li><strong>Deferred opportunity</strong> — follow-up revenue still in the relationship</li>
-        <li><strong>Unpaid pickups</strong> — cash still on the table</li>
+        <li><strong>Car count</strong> - ROs opened in range</li>
+        <li><strong>Sales Posted</strong> - revenue recognized when ROs are posted in range (<code>posted_at</code>)</li>
+        <li><strong>Cash Collected</strong> - payments and deposits cashiered in range - compare to Sales Posted via reconciliation</li>
+        <li><strong>Parts/labor mix</strong> - target ~45% parts / 55% labor on posted sales</li>
+        <li><strong>Approval rate</strong> - how often customers buy approved work</li>
+        <li><strong>Deferred opportunity</strong> - follow-up revenue still in the relationship</li>
+        <li><strong>Unpaid pickups</strong> - cash still on the table</li>
     </ul>
 
     <h3>Where to look in ARK</h3>

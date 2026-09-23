@@ -421,13 +421,13 @@ export function arkCallQueue(bootstrap = null) {
 
         triggerTitle() {
             if (this.count === 0) {
-                return 'Attention — nothing needs attention';
+                return 'Attention - nothing needs attention';
             }
 
             const parts = [this.summary.trigger_label, this.summary.breakdown_label]
                 .filter((part) => part !== '');
 
-            return `Attention — ${parts.join(' · ')}`;
+            return `Attention - ${parts.join(' · ')}`;
         },
 
         get urgency() {

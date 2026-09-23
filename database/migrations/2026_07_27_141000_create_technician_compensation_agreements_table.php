@@ -31,7 +31,7 @@ return new class extends Migration
                 ->nullOnDelete();
         });
 
-        // Honest adoption boundary — do not invent pre-Phase-1A history.
+        // Honest adoption boundary - do not invent pre-Phase-1A history.
         $adoptedAt = now();
 
         User::query()

@@ -1,8 +1,8 @@
-# Sprint 2 — Coolify Adapter (prove the contract)
+# Sprint 2 - Coolify Adapter (prove the contract)
 
-**Status:** ✅ Frozen (code) — Reality pending live control plane  
+**Status:** ✅ Frozen (code) - Reality pending live control plane  
 **Phase:** [Engineering Phase 1](engineering-phase-1-adapters.md)  
-**Goal:** Prove the adapter contract — **not** “Coolify integration.”  
+**Goal:** Prove the adapter contract - **not** “Coolify integration.”  
 **Companions:** [orchestrator-rule-v1.md](orchestrator-rule-v1.md) · [engineering-principles.md](engineering-principles.md)
 
 **Sticky note:** Every sprint replaces a stub, never reshapes the spine.
@@ -18,27 +18,27 @@ Not when “Coolify works.”
 | --- | --- |
 | **Architecture** | Unchanged ✅ |
 | **Engineering** | Proven ✅ (tests, contract, zero spine changes) |
-| **Reality** | **Pending** — live Coolify must prove the contract |
+| **Reality** | **Pending** - live Coolify must prove the contract |
 
 The sprint is not complete because the code compiles.  
 It is complete when the real control plane proves the contract.
 
 ### Live validation checklist (raise one milestone at a time)
 
-**Milestone 1 — stop after**
+**Milestone 1 - stop after**
 
 - [ ] `php artisan ark:coolify:check`
 - [ ] Authenticate succeeds
 - [ ] Token validated
 - [ ] Correct team returned
 
-**Milestone 2 — stop after**
+**Milestone 2 - stop after**
 
 - [ ] Discover servers
 - [ ] Assigned Cluster `deployment_target` resolves correctly
 - [ ] No assumptions about server IDs
 
-**Milestone 3 — stop after**
+**Milestone 3 - stop after**
 
 - [ ] Discover projects
 - [ ] Discover applications
@@ -47,13 +47,13 @@ It is complete when the real control plane proves the contract.
 - [ ] Compare expected application / server / project UUIDs against Coolify UI  
   If they don’t line up → **adapter changes, not the platform**
 
-**Only then — Milestone 4**
+**Only then - Milestone 4**
 
 - [ ] Trigger deploy on the **existing preconfigured** application
 - [ ] Watch Coolify dashboard while adapter observes  
   If dashboard and adapter disagree → **trust the dashboard first**
 
-**Then — Milestone 5**
+**Then - Milestone 5**
 
 - [ ] Successful deployment
 - [ ] Failed deployment
@@ -69,7 +69,7 @@ Do not start Sprint 3 until milestones 1–3 are boring on a live instance.
 | Item | Value |
 | --- | --- |
 | Shape | `CoolifyAdapter` → `CoolifyClient` → `HttpCoolifyClient` \| `FakeCoolifyClient` |
-| Execution artifacts | `CoolifyExecutionStore` (idempotency refs — not workflow state) |
+| Execution artifacts | `CoolifyExecutionStore` (idempotency refs - not workflow state) |
 | Config | `config/ark-platform.php` → `coolify.*` |
 | Endpoints | `GET /api/v1/teams`, `/servers`, `/projects`, `/applications`, `/deploy`, `/deployments/{uuid}` |
 | Default milestone | `1` (authenticate only) |
@@ -94,7 +94,7 @@ ProvisioningOrchestrator     ← unchanged
         └── EmailStep        ← Stub
 ```
 
-If Shop, Deployment, ClusterAssignment, ProvisioningRequest, or Orchestrator must change — **stop and ask why.**
+If Shop, Deployment, ClusterAssignment, ProvisioningRequest, or Orchestrator must change - **stop and ask why.**
 
 ---
 
@@ -155,7 +155,7 @@ Replace `CoolifyClient` with `ForgeClient` or `KubernetesClient` **without touch
 
 Orchestrator · ProvisioningRequest · Shop · Deployment · ClusterAssignment
 
-If yes — the contract held.
+If yes - the contract held.
 
 ---
 

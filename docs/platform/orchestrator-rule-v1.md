@@ -1,6 +1,6 @@
 # Orchestrator Rule v1
 
-**Status:** Locked — engineering discipline for ARK Platform  
+**Status:** Locked - engineering discipline for ARK Platform  
 **Date:** 2026-07-19  
 **Companions:** [adapter-rule-v1.md](adapter-rule-v1.md) · [architecture-phase-1-complete.md](architecture-phase-1-complete.md)
 
@@ -37,7 +37,7 @@ interface ProvisioningStep
 }
 ```
 
-Coolify, Stancl, DNS, Bootstrap, Email — identical surface. Swap implementations without touching the orchestrator.
+Coolify, Stancl, DNS, Bootstrap, Email - identical surface. Swap implementations without touching the orchestrator.
 
 **Smell:** orchestrator changes during an adapter sprint (e.g. Sprint 2 Coolify). Fix the adapter, not the spine.
 
@@ -56,7 +56,7 @@ Emit (at minimum):
 | `ProvisioningCompleted` | Request → Completed |
 | `ProvisioningFailed` | Request → Failed |
 
-Not for dashboards today — so Shop #27 at 2 AM shows which step failed without SSH.
+Not for dashboards today - so Shop #27 at 2 AM shows which step failed without SSH.
 
 ---
 

@@ -4,7 +4,7 @@ namespace App\Ark\Operations\Financial;
 
 /**
  * Which living financial contract Financial Position is projecting from.
- * Never LivingInvoice / Compatibility — those are implementation debt, not business language.
+ * Never LivingInvoice / Compatibility - those are implementation debt, not business language.
  */
 enum FinancialContractSource: string
 {

@@ -183,7 +183,7 @@ test('hosted go pay charges through Platform keyed capture and posts ledger once
         'source_id' => 'cnon:go-token',
     ])->assertOk()
         ->assertJsonPath('attempt.status', PaymentGatewayAttemptStatus::Completed->value)
-        ->assertJsonPath('message', 'Thank you — we received your $150.00 payment.');
+        ->assertJsonPath('message', 'Thank you - we received your $150.00 payment.');
 
     $this->postJson(route('portal.invoice-pay.attempts.complete', [
         'token' => $token->plainToken,
@@ -487,7 +487,7 @@ test('hosted estimate deposit charges through Platform keyed capture after autho
         'source_id' => 'cnon:go-estimate-deposit',
     ])->assertOk()
         ->assertJsonPath('attempt.status', PaymentGatewayAttemptStatus::Completed->value)
-        ->assertJsonPath('message', 'Thank you — we received your '.$initiate->json('attempt.amount').' deposit.');
+        ->assertJsonPath('message', 'Thank you - we received your '.$initiate->json('attempt.amount').' deposit.');
 
     expect(RepairOrderLedgerEntry::query()
         ->where('repair_order_id', $repairOrder->id)

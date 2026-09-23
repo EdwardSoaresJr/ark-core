@@ -48,7 +48,7 @@ final class CommunicationsAnalysisInsightProjection
             }
         }
 
-        // Calls merge into the conversation selection — an analyzed unhandled
+        // Calls merge into the conversation selection - an analyzed unhandled
         // call keeps its insight visible through that mapping.
         $session = $this->latestAnalyzedInboundCall($conversationId);
 

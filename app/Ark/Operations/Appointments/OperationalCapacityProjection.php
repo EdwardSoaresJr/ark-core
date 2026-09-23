@@ -6,7 +6,7 @@ use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use Illuminate\Support\Carbon;
 
 /**
- * Capacity rail — packages SchedulingCapacityCalculator once per render.
+ * Capacity rail - packages SchedulingCapacityCalculator once per render.
  * Per-resource bars remain optional planning detail; shop soft capacity is primary.
  */
 final class OperationalCapacityProjection

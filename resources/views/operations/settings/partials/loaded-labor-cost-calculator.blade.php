@@ -37,7 +37,7 @@
         <div>
             <p class="font-bold uppercase tracking-[0.08em] text-slate-500">Estimated labor cost</p>
             <p class="mt-0.5 text-[11px] leading-4 text-slate-500">
-                Margin planning only — not a paycheck.
+                Margin planning only - not a paycheck.
                 Output is cost per <strong class="font-semibold text-slate-700">billed</strong> hour for labor GP and efficiency.
                 <span x-show="isHourlyPay()">Hourly: spread clock wage across billable utilization, then add shop overhead.</span>
                 <span x-show="isFlagPay()" x-cloak>Flag: take the higher of flag rate and floor ÷ utilization, then burden and overhead.</span>
@@ -52,7 +52,7 @@
     <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <label class="block sm:col-span-2">
             <span class="font-semibold text-slate-700">Pay type</span>
-            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">How this technician is paid. Estimated labor cost is for margin — not payroll settlement.</span>
+            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">How this technician is paid. Estimated labor cost is for margin - not payroll settlement.</span>
             {{-- Hidden field owns form submit; Alpine radios often fail to post with x-model alone. --}}
             <input type="hidden" name="labor_pay_basis" :value="payBasis">
             <div class="mt-1.5 flex flex-wrap gap-4">
@@ -112,7 +112,7 @@
             <span class="font-semibold text-slate-700">Billable utilization %</span>
             <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">
                 <span x-show="isHourlyPay()">How much paid clock time becomes billable hours. Non-billable time includes cleanup, comebacks, training, and shop tasks. 85% on an {{ number_format((float) $workdayHours, 1) }}-hr day ≈ {{ number_format((float) $workdayHours * 0.85, 1) }} billable hrs.</span>
-                <span x-show="isFlagPay()" x-cloak>Assumed flagged/billed hours ÷ compensable hours. Used only to estimate what the hourly floor costs per produced hour — not a pay rate.</span>
+                <span x-show="isFlagPay()" x-cloak>Assumed flagged/billed hours ÷ compensable hours. Used only to estimate what the hourly floor costs per produced hour - not a pay rate.</span>
             </span>
             <input x-model="billableUtilization" type="number" min="1" max="100" step="1" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
         </label>
@@ -125,12 +125,12 @@
                 <p x-show="calculationBreakdown().showsFloorEquivalent">
                     <span class="text-slate-500">Floor-equivalent production cost</span>
                     <span class="float-right font-semibold text-slate-800" x-text="`${money(calculationBreakdown().floorEquivalent)}/billed hr`"></span>
-                    <span class="block text-slate-400" x-text="`floor ÷ ${calculationBreakdown().utilization}% utilization — planning only`"></span>
+                    <span class="block text-slate-400" x-text="`floor ÷ ${calculationBreakdown().utilization}% utilization - planning only`"></span>
                 </p>
                 <p x-show="isFlagPay()">
                     <span class="text-slate-500">Effective wage cost</span>
                     <span class="float-right font-semibold text-slate-800" x-text="`${money(calculationBreakdown().effectiveWage)}/billed hr`"></span>
-                    <span class="block text-slate-400">max(flag rate, floor-equivalent) — not a stored pay rate</span>
+                    <span class="block text-slate-400">max(flag rate, floor-equivalent) - not a stored pay rate</span>
                 </p>
                 <p>
                     <span class="text-slate-500">After burden</span>
@@ -166,6 +166,6 @@
                 Use estimated labor cost
             </button>
         </div>
-        <p class="mt-2 text-[11px] leading-4 text-slate-500">Or just <strong class="font-semibold text-slate-700">Save changes</strong> — if the calculator has a rate, ARK applies the estimated labor cost automatically.</p>
+        <p class="mt-2 text-[11px] leading-4 text-slate-500">Or just <strong class="font-semibold text-slate-700">Save changes</strong> - if the calculator has a rate, ARK applies the estimated labor cost automatically.</p>
     @endif
 </div>

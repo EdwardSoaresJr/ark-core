@@ -1,15 +1,15 @@
-# Screen spec — Active Call
+# Screen spec - Active Call
 
 **ID:** `companion.screen.active-call`  
 **Role(s):** Advisor  
-**Quo ref:** `references/external/quo/` screensdesign in-call frames — see [`references/external/quo.md`](../references/external/quo.md)  
-**Status:** 📝 draft — Edward review
+**Quo ref:** `references/external/quo/` screensdesign in-call frames - see [`references/external/quo.md`](../references/external/quo.md)  
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Stay on the call with **shop actions one tap away** — never hunt the desktop for RO, text, or payment.
+Stay on the call with **shop actions one tap away** - never hunt the desktop for RO, text, or payment.
 
 ---
 
@@ -18,7 +18,7 @@ Stay on the call with **shop actions one tap away** — never hunt the desktop f
 | | Reference CRM | ARK Companion |
 |---|-----|---------------|
 | **Verdict** | Strong in-call grid (Calendars · Notes · Tasks · Payments · Profile) | **Target: Yes** |
-| **Why** | CRM contact tools | Same grid rhythm — **Open RO · Text · Schedule · Pay · Note** on **vehicle/customer** context |
+| **Why** | CRM contact tools | Same grid rhythm - **Open RO · Text · Schedule · Pay · Note** on **vehicle/customer** context |
 
 ---
 
@@ -26,7 +26,7 @@ Stay on the call with **shop actions one tap away** — never hunt the desktop f
 **Top bar**
 
 - Minimal back (disabled or ends call with confirm)
-- **DND** — defer P1
+- **DND** - defer P1
 
 **Center (compact while connected)**
 
@@ -50,7 +50,7 @@ Optional expand: swipe up on card for estimate one-liner + last message.
 
 | Pattern | Behavior |
 |---------|----------|
-| Tool grid tap | Opens **sheet or inline panel** — call stays connected |
+| Tool grid tap | Opens **sheet or inline panel** - call stays connected |
 | End | → [`post-call.md`](post-call.md) |
 
 ---
@@ -66,7 +66,7 @@ Optional expand: swipe up on card for estimate one-liner + last message.
 ## Data & API
 
 In-call context = same payload as incoming + live timer  
-Sheets may need RO id · balance · appointment slots — `/api/mobile` as needed
+Sheets may need RO id · balance · appointment slots - `/api/mobile` as needed
 
 ---
 

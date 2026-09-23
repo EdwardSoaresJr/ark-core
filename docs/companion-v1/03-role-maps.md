@@ -1,4 +1,4 @@
-# Deliverable 3 — Role Product Maps
+# Deliverable 3 - Role Product Maps
 
 **Rule:** Not permissions. **Different products** for different jobs on the floor.
 
@@ -6,9 +6,9 @@ Same backend. Different default home, tabs, and flows.
 
 ---
 
-## Advisor (Edward) — primary Companion v1
+## Advisor (Edward) - primary Companion v1
 
-**Job:** Run the front of the shop from pocket — calls, texts, customers, money, schedule.
+**Job:** Run the front of the shop from pocket - calls, texts, customers, money, schedule.
 
 **Default home:** Continuity feed (what changed)
 
@@ -18,7 +18,7 @@ Same backend. Different default home, tabs, and flows.
 |-----|------------------|
 | Home | What changed since I last looked? |
 | Communications | Who needs a reply? |
-| Search | Find anyone — start work |
+| Search | Find anyone - start work |
 | Schedule | Who's arriving? |
 | More | RO list · settings · profile |
 
@@ -30,7 +30,7 @@ Same backend. Different default home, tabs, and flows.
 
 ## Technician (Ben, Landon)
 
-**Job:** Perform work on assigned vehicles — inspect, document, complete.
+**Job:** Perform work on assigned vehicles - inspect, document, complete.
 
 **Default home:** My Work (assigned ROs)
 
@@ -45,23 +45,23 @@ Same backend. Different default home, tabs, and flows.
 
 **Does not own:** Customer search globally · comms queue · schedule · payments · estimate send
 
-**Comms consumption:** On assigned RO only — internal notes · advisor messages · photo notifications
+**Comms consumption:** On assigned RO only - internal notes · advisor messages · photo notifications
 
 ---
 
-## Owner (Edward-as-owner — optional surface)
+## Owner (Edward-as-owner - optional surface)
 
-**Job:** Daily pulse — did we win today?
+**Job:** Daily pulse - did we win today?
 
 **Default home:** Owner pulse (numbers + shop feed)
 
-**Not the advisor home.** Separate entry or mode — do not merge dashboards.
+**Not the advisor home.** Separate entry or mode - do not merge dashboards.
 
 ---
 
 ## Manager / service manager
 
-**Job:** Floor visibility — who's stuck · who's waiting · comms recovery
+**Job:** Floor visibility - who's stuck · who's waiting · comms recovery
 
 **Default home:** Shop continuity + team presence (P1)
 
@@ -89,4 +89,4 @@ Same backend. Different default home, tabs, and flows.
 
 - [ ] Edward: advisor map matches ten-hour counter day
 - [ ] Tech lead: technician map matches bay day (no advisor clutter)
-- [ ] Owner map deferred or scoped — not blocking advisor P0
+- [ ] Owner map deferred or scoped - not blocking advisor P0

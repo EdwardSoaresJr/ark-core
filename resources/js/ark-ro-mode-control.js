@@ -135,7 +135,7 @@ export function arkRoModeControl(config = {}) {
                 const ok = await saveDirtyWorksheetForms(worksheetData());
 
                 if (!ok) {
-                    arkOpsToast('Save failed — fix errors before switching.');
+                    arkOpsToast('Save failed - fix errors before switching.');
 
                     return;
                 }

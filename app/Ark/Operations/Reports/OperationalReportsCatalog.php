@@ -6,7 +6,7 @@ use App\Ark\Operations\ShopExcellence\OwnerWorkspaceAccess;
 use App\Models\User;
 
 /**
- * Tekmetric-style report picker — routes to existing ARK report surfaces.
+ * Tekmetric-style report picker - routes to existing ARK report surfaces.
  */
 final readonly class OperationalReportsCatalog
 {
@@ -92,7 +92,7 @@ final readonly class OperationalReportsCatalog
                     [
                         'key' => 'technician-production-assist',
                         'title' => 'Technician production assist',
-                        'hint' => 'Recognized vs pending flag, clock hours, and base compensation assist — not a paycheck.',
+                        'hint' => 'Recognized vs pending flag, clock hours, and base compensation assist - not a paycheck.',
                         'url' => $this->canAccessBookend
                             ? route('operations.owner.technician-production.index')
                             : route('operations.reports.index'),

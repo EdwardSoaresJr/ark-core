@@ -1,6 +1,6 @@
 # ark-mobile Voice Cleanup Inventory v1
 
-**Status:** B1 ✅ · **B2 ✅ (ark-mobile)** — pending commit  
+**Status:** B1 ✅ · **B2 ✅ (ark-mobile)** - pending commit  
 **Report:** [ark-mobile-voice-runtime-authority-report-v1.md](../mobile/ark-mobile-voice-runtime-authority-report-v1.md)  
 **Date:** 2026-07-04  
 **Repo:** `private ark-mobile sibling (not redistributed)` (sibling to `arksmsv2`)  
@@ -41,7 +41,7 @@ sip_ua (+ flutter_webrtc)         pubspec.yaml · package:sip_ua
 Asterisk (WSS REGISTER/INVITE)    Session from POST /api/mobile/telephony/voice-session
         │
         ▼
-Twilio Elastic SIP Trunk          arksmsv2 backend only — not referenced in ark-mobile code
+Twilio Elastic SIP Trunk          arksmsv2 backend only - not referenced in ark-mobile code
 ```
 
 **Production proof (backend issues `transport: ark_voice` only today):**
@@ -74,7 +74,7 @@ twilio_voice (pubspec + native deps)
 TwilioVoiceTransport
         │
         ▼
-(no production callers — backend never sends transport=twilio)
+(no production callers - backend never sends transport=twilio)
 
 ArkVoiceDialer._bindTransport (runtime selector)
         │
@@ -85,7 +85,7 @@ ArkVoiceDialer._bindTransport (runtime selector)
 VoiceTransport (abstract interface)
         │
         ▼
-(three implementers — only ArkVoiceTransport is production)
+(three implementers - only ArkVoiceTransport is production)
 
 transport key checks (client-side multi-runtime)
         │
@@ -143,7 +143,7 @@ Stale Twilio docs / README sections
 | Item | Runtime Authority | Classification | Action | Proof | Why |
 | --- | --- | --- | --- | --- | --- |
 | `ArkVoiceDialer` | Mobile Voice | Infrastructure | Keep | Singleton; called from bootstrap, overlays, `call_placer.dart`; wires session/connect API | Production dialer shell |
-| `ArkVoiceTransport` | Mobile Voice | Infrastructure | Keep | Only transport used when backend sends `ark_voice`; `SipUaHelperListener`; WSS to shop Asterisk | Production client runtime — **do not rename** |
+| `ArkVoiceTransport` | Mobile Voice | Infrastructure | Keep | Only transport used when backend sends `ark_voice`; `SipUaHelperListener`; WSS to shop Asterisk | Production client runtime - **do not rename** |
 | `VoiceTransport` (abstract) | None (dead abstraction) | Dead | Delete | 3 implementers; only `ArkVoiceTransport` on production path; two-implementation rule | Interface exists only to switch runtimes |
 | `TwilioVoiceTransport` | None (dead) | Dead | Delete | Only referenced from `ark_voice_dialer.dart` `_bindTransport` + import; never selected in production (`transportKey` from API is always `ark_voice`) | Obsolete PV transport |
 | `NoopVoiceTransport` | None (dead) | Dead | Delete | Only `_bindTransport` default branch when transport ∉ {ark_voice, asterisk, twilio}; production never hits | Fallback for removed runtimes |
@@ -154,16 +154,16 @@ Stale Twilio docs / README sections
 | `VoiceDialerBootstrap` | Mobile Voice | Infrastructure | Keep | Post-login SIP registration; direct `ArkVoiceTransport.instance` for health | Production bootstrap |
 | `voice_registration_provider.dart` | Product | Infrastructure | Keep | Riverpod snapshot from shell `telephony.voice.*` | UI registration state |
 | `voice_registration_snapshot.dart` | Product | Legacy | Rename | `isArkVoiceTransport` checks `asterisk` alias at line 36; simplify to single runtime in B2 | Client-side alias for retired key |
-| `MobileVoicePosture.transport` | Product | Legacy | Rename | Parsed from shell JSON; used for runtime gating — after B2, field may remain but gating drops transport switch | Server still sends key; client should not branch |
+| `MobileVoicePosture.transport` | Product | Legacy | Rename | Parsed from shell JSON; used for runtime gating - after B2, field may remain but gating drops transport switch | Server still sends key; client should not branch |
 
 ### Transport key gates (client runtime selection)
 
 | Item | Runtime Authority | Classification | Action | Proof | Why |
 | --- | --- | --- | --- | --- | --- |
-| `home_shell.dart` transport poll gate | Product | Legacy | Delete branch | Lines 99, 219: `transport == 'ark_voice' \|\| 'asterisk'` — backend only emits `ark_voice` | Multi-runtime gate obsolete |
+| `home_shell.dart` transport poll gate | Product | Legacy | Delete branch | Lines 99, 219: `transport == 'ark_voice' \|\| 'asterisk'` - backend only emits `ark_voice` | Multi-runtime gate obsolete |
 | `incoming_call_host.dart` transport gate | Mobile Voice | Legacy | Delete branch | Lines 40-42: skips host when transport not ark/asterisk | Twilio host path dead |
 | `voice_dialer_bootstrap._usesArkVoiceTransport` | Mobile Voice | Legacy | Delete / simplify | Lines 80-83: same dual-key check | Replace with `inAppReady` only |
-| Shell default `transport: 'ark_voice'` | Product | Infrastructure | Keep | `mobile_shell.dart:113`, `voice_session.dart:51,94` — harmless default | Matches backend |
+| Shell default `transport: 'ark_voice'` | Product | Infrastructure | Keep | `mobile_shell.dart:113`, `voice_session.dart:51,94` - harmless default | Matches backend |
 
 ### SIP support layer
 
@@ -175,9 +175,9 @@ Stale Twilio docs / README sections
 | `voice_network_monitor.dart` | SIP | Infrastructure | Keep | Used by bootstrap health polling | Network-triggered recovery |
 | `voice_registration_health_monitor.dart` | Mobile Voice | Infrastructure | Keep | Bootstrap registration truth | UI health |
 | `voice_phone_telemetry.dart` | Product | Infrastructure | Keep | Posts to `/telephony/voice-registration-event` | Server lifecycle evidence |
-| `tool/patch_sip_ua_web.sh` | SIP | Infrastructure | Keep | Patches `sip_ua` for web compile — unrelated to Twilio | sip_ua maintenance |
+| `tool/patch_sip_ua_web.sh` | SIP | Infrastructure | Keep | Patches `sip_ua` for web compile - unrelated to Twilio | sip_ua maintenance |
 
-### UI (call control — production)
+### UI (call control - production)
 
 | Item | Runtime Authority | Classification | Action | Proof | Why |
 | --- | --- | --- | --- | --- | --- |
@@ -186,7 +186,7 @@ Stale Twilio docs / README sections
 | `active_inbound_call_banner.dart` | Mobile Voice | Infrastructure | Keep | `answerIncoming()` entry | Inbound banner |
 | `voice_posture_banner.dart` | Product | Infrastructure | Keep | Registration posture display | Operator feedback |
 | `call_placer.dart` | Mobile Voice | Infrastructure | Keep | `ArkVoiceDialer.connectOutbound` via server `dial_method` | Outbound placement |
-| `call_launch.dart` | Product | Infrastructure | Keep | Native fallback dial — not Twilio SDK | Non-in-app fallback |
+| `call_launch.dart` | Product | Infrastructure | Keep | Native fallback dial - not Twilio SDK | Non-in-app fallback |
 
 ### API layer
 
@@ -206,13 +206,13 @@ Stale Twilio docs / README sections
 | `android/settings.gradle.kts` `patchTwilioVoiceProguardForAgp9` | None (dead) | Dead | Delete | Patches hosted `twilio_voice-*` plugin Gradle | Build hack for dead package |
 | `tool/patch_twilio_voice_ios.sh` | None (dead) | Dead | Delete | README references; patches plugin Swift | UIScene patch for dead package |
 | `tool/patch_twilio_voice_android.sh` | None (dead) | Dead | Delete | Same | AGP patch for dead package |
-| `macos/Flutter/GeneratedPluginRegistrant.swift` | None (dead) | Delete (regenerate) | `import twilio_voice` line 21 — auto file; removed after `flutter pub get` without dep | Generated |
+| `macos/Flutter/GeneratedPluginRegistrant.swift` | None (dead) | Delete (regenerate) | `import twilio_voice` line 21 - auto file; removed after `flutter pub get` without dep | Generated |
 
 ### Demo / fixtures
 
 | Item | Runtime Authority | Classification | Action | Proof | Why |
 | --- | --- | --- | --- | --- | --- |
-| `lugs_demo_data.dart` `transport: 'twilio'` | None (dead) | Dead | Delete / set `ark_voice` | Lines 60, 99 — demo shell only; not production path | Obsolete demo fixture |
+| `lugs_demo_data.dart` `transport: 'twilio'` | None (dead) | Dead | Delete / set `ark_voice` | Lines 60, 99 - demo shell only; not production path | Obsolete demo fixture |
 
 ### Documentation
 
@@ -220,14 +220,14 @@ Stale Twilio docs / README sections
 | --- | --- | --- | --- | --- | --- |
 | `docs/engineering/phase0-twilio-lifecycle-study.md` | None (dead) | Dead | Delete | Entire doc studies Twilio SDK lifecycle for retired transport | PV study obsolete |
 | `README.md` Twilio patch section | None (dead) | Dead | Delete | Lines 99-104 patch scripts for `twilio_voice` | Misleading setup |
-| `docs/firebase-transport-only.md` Twilio invite line | Messaging | Legacy | Rename | Line 54 stale: "handles Twilio Voice invites first" — `ArkFirebaseMessagingService.kt` comment says PV retired | Doc drift |
-| `docs/engineering/phase0-phone-telemetry-v1.md` | Product | Future | Keep | CallKit/Telecom Phase 1 note — not Twilio transport | Planned platform work |
+| `docs/firebase-transport-only.md` Twilio invite line | Messaging | Legacy | Rename | Line 54 stale: "handles Twilio Voice invites first" - `ArkFirebaseMessagingService.kt` comment says PV retired | Doc drift |
+| `docs/engineering/phase0-phone-telemetry-v1.md` | Product | Future | Keep | CallKit/Telecom Phase 1 note - not Twilio transport | Planned platform work |
 
 ### Not ARK Phone (exclude from B2 telephony erasure)
 
 | Item | Runtime Authority | Classification | Action | Proof | Why |
 | --- | --- | --- | --- | --- | --- |
-| `VoiceCaptureService` | Product | Infrastructure | Keep | `speech_to_text` for inspection dictation — zero SIP/Twilio imports | Speech capture, not telephony |
+| `VoiceCaptureService` | Product | Infrastructure | Keep | `speech_to_text` for inspection dictation - zero SIP/Twilio imports | Speech capture, not telephony |
 | `VoiceFindingParser` | Product | Infrastructure | Keep | Parses measurement strings from speech transcript | Inspection NLP, not telephony |
 
 ---
@@ -237,7 +237,7 @@ Stale Twilio docs / README sections
 ### `TwilioVoiceTransport`
 
 1. **Who calls this?** Only `ArkVoiceDialer._bindTransport` when `transportKey == 'twilio'`.
-2. **What production behavior depends on it?** None — `MobileVoiceTransportManager` never returns `twilio`; Demo Auto Repair production API issues `ark_voice`.
+2. **What production behavior depends on it?** None - `MobileVoiceTransportManager` never returns `twilio`; Demo Auto Repair production API issues `ark_voice`.
 3. **What replaces it?** `ArkVoiceTransport` (already production).
 
 ### `twilio_voice` package
@@ -249,7 +249,7 @@ Stale Twilio docs / README sections
 ### `VoiceTransport` interface
 
 1. **Who calls this?** `ArkVoiceDialer` types `_transport` as interface; three implementers.
-2. **What production behavior depends on it?** Indirection only — production impl is always `ArkVoiceTransport`.
+2. **What production behavior depends on it?** Indirection only - production impl is always `ArkVoiceTransport`.
 3. **What replaces it?** Direct `ArkVoiceTransport` on dialer (no interface).
 
 ---
@@ -271,11 +271,11 @@ Mechanical only. Each PR ends with `Behavior changes: 0`.
 
 ---
 
-## arksmsv2 backend (Phase B2 — separate track)
+## arksmsv2 backend (Phase B2 - separate track)
 
 Not inventoried row-by-row in this document. Pre-classified in [voice-runtime-inventory-v1.md](../communications/voice-runtime-inventory-v1.md).
 
-**Safe to delete in backend B2 (no Asterisk/PJSIP/dialplan change):** `TwilioMobileVoiceTransport`, PV webhooks/TwiML stack per inventory — **after** ark-mobile B2 proves mobile path is single-runtime.
+**Safe to delete in backend B2 (no Asterisk/PJSIP/dialplan change):** `TwilioMobileVoiceTransport`, PV webhooks/TwiML stack per inventory - **after** ark-mobile B2 proves mobile path is single-runtime.
 
 **Protected:** Asterisk dialplan sync, PJSIP, VVX provisioning, `VoiceTransportConfiguration`, trunk config.
 

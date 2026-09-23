@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Cluster Assignment authority + assignable flag.
- * Placement history — not provisioning.
+ * Placement history - not provisioning.
  */
 return new class extends Migration
 {

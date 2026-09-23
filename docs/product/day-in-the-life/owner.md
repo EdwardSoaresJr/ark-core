@@ -1,4 +1,4 @@
-# Owner / Manager — Molly (admin)
+# Owner / Manager - Molly (admin)
 
 **Station:** Office + Portable Station for floor walks  
 **Primary question:** What needs attention across the shop?
@@ -7,7 +7,7 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 
 ---
 
-## 7:30 AM — Shop pulse
+## 7:30 AM - Shop pulse
 
 **Floor:** Before advisors arrive. Molly checks overnight activity from home.
 
@@ -27,11 +27,11 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 
 ---
 
-## 11:00 AM — ELR leak on floor walk
+## 11:00 AM - ELR leak on floor walk
 
 **Floor:** Molly overhears free diagnostic conversation. She checks effective labor rate context later on desktop.
 
-**ARK must brief (management — desktop primary):**
+**ARK must brief (management - desktop primary):**
 
 | Verb | Content |
 |------|---------|
@@ -41,15 +41,15 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 | Can I trust that? | Posted RO truth |
 | What can I do? | Open report · adjust targets in settings |
 
-**Surfaces:** Operational Report (desktop) — **not a mobile v1 scenario**
+**Surfaces:** Operational Report (desktop) - **not a mobile v1 scenario**
 
 **Status:** 🔲 Mobile does not expose financial/ELR surfaces (correct per scope)
 
-**Feature gate:** If a proposal does not appear in Molly's mobile day, reject mobile scope — do not shrink reports onto phone.
+**Feature gate:** If a proposal does not appear in Molly's mobile day, reject mobile scope - do not shrink reports onto phone.
 
 ---
 
-## 3:00 PM — Customer escalation
+## 3:00 PM - Customer escalation
 
 **Floor:** Customer calls shop asking for manager. Advisor escalates.
 
@@ -69,7 +69,7 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 
 ---
 
-## 5:30 PM — Day Review
+## 5:30 PM - Day Review
 
 **Floor:** Shop closing. Molly reviews queue with advisors.
 
@@ -89,11 +89,11 @@ Molly is an owner-operator. She needs **daily numbers and queue truth**, not a s
 
 ---
 
-## 6:00 PM — Owner digest email
+## 6:00 PM - Owner digest email
 
 **Floor:** Automated digest if enabled in shop targets.
 
-**ARK must brief:** N/A — async email from `shop-excellence:owner-digest`
+**ARK must brief:** N/A - async email from `shop-excellence:owner-digest`
 
 **Surfaces:** Email · Settings → Owner Targets
 

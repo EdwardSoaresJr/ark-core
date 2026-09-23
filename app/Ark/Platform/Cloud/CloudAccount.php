@@ -10,8 +10,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * M1 — Real Cloud Accounts.
- * M2 — On register / login, attach or resume owned Shop via CloudShop.
+ * M1 - Real Cloud Accounts.
+ * M2 - On register / login, attach or resume owned Shop via CloudShop.
  *
  * Does not create Tenant, ProvisioningRequest, or Stripe.
  */

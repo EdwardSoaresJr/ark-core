@@ -6,7 +6,7 @@
         $claimUrl = str_replace('0', '__CALL_SESSION__', route('operations.telephony.calls.claim', ['callSession' => 0]));
         $markReadUrl = str_replace('0', '__CONVERSATION__', route('operations.conversations.read', ['conversation' => 0]));
 
-        // Poller chrome only — share Attention with ops layout (never includeRecentActivity).
+        // Poller chrome only - share Attention with ops layout (never includeRecentActivity).
         // Full-panel mode still needs recent activity for SSR bootstrap.
         $previousLastSeen = request()->attributes->get('operations.previous_last_seen_at');
         $previousLastSeenAt = $previousLastSeen instanceof \Illuminate\Support\Carbon
@@ -30,8 +30,8 @@
             default => '',
         };
         $callQueueTriggerTitle = $callQueueCount === 0
-            ? 'Attention — nothing needs attention'
-            : 'Attention — '.implode(' · ', array_filter([
+            ? 'Attention - nothing needs attention'
+            : 'Attention - '.implode(' · ', array_filter([
                 $callQueueSummary['trigger_label'] ?? '',
                 $callQueueSummary['breakdown_label'] ?? '',
             ]));

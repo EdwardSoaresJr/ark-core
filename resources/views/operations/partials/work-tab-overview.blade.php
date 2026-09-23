@@ -16,6 +16,6 @@
 
     <p class="ops-morning-brief__workboard">
         <a href="{{ route('operations.workboard') }}" class="ops-page-link ops-page-link--primary">Open workboard</a>
-        <span class="ops-morning-brief__workboard-copy">Shop floor lanes — customer waiting, approval, parts, pickup.</span>
+        <span class="ops-morning-brief__workboard-copy">Shop floor lanes - customer waiting, approval, parts, pickup.</span>
     </p>
 </div>

@@ -145,7 +145,7 @@
                 x-cloak
                 class="ops-intake-customer-create-selected"
             >
-                Selected <span x-text="selectedCustomerName"></span> — review details, then continue.
+                Selected <span x-text="selectedCustomerName"></span> - review details, then continue.
             </p>
 
             <div class="ops-intake-field ops-intake-field--action">

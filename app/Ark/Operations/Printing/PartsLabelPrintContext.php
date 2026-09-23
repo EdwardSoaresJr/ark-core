@@ -53,7 +53,7 @@ final class PartsLabelPrintContext
         $partNumberRaw = trim((string) ($line->part_number ?? ''));
         $partNumber = $partNumberRaw !== ''
             ? Str::limit($partNumberRaw, self::PART_NUMBER_LIMIT)
-            : '—';
+            : '-';
 
         $descriptionRaw = trim((string) $line->description);
         $description = $descriptionRaw !== ''

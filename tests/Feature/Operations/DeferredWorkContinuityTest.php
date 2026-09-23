@@ -42,7 +42,7 @@ test('repeat vehicle RO review shows prior future work without sales pipeline po
         'concern_summary' => 'Customer returned for oil service.',
     ]);
 
-    // History is a lazy workspace tab — present on canonical Repair Order nav,
+    // History is a lazy workspace tab - present on canonical Repair Order nav,
     // content loads via workspace-tabs (not the initial GET body).
     $this->get(route('operations.repair-orders.show', $currentRepairOrder))
         ->assertOk()

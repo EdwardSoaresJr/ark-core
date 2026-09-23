@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Events;
 
 /**
- * Signed business event verbs — product language, not transport enums.
+ * Signed business event verbs - product language, not transport enums.
  *
  * @see docs/mobile/event-contracts-v1.md
  */

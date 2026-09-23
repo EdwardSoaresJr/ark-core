@@ -157,7 +157,7 @@
                                             class="ops-partstech-position-chip"
                                             x-text="row.position_label"
                                         ></span>
-                                        <span x-show="! row.position_label" class="text-[11px] text-slate-400">—</span>
+                                        <span x-show="! row.position_label" class="text-[11px] text-slate-400">-</span>
                                     </td>
                                     <td class="px-2 py-1.5 text-right tabular-nums text-slate-800" x-text="row.quantity"></td>
                                     <td class="px-2 py-1.5">
@@ -189,14 +189,14 @@
                                     <td class="px-2 py-1.5 text-right">
                                         <span
                                             class="text-xs font-semibold tabular-nums text-slate-800"
-                                            x-text="row.sell || (row.previewing ? '…' : '—')"
+                                            x-text="row.sell || (row.previewing ? '…' : '-')"
                                         ></span>
                                         <p class="mt-0.5 text-[10px] tabular-nums text-slate-400" x-show="row.margin_percentage">
                                             <span x-text="row.margin_percentage"></span>% margin
                                             <span x-show="row.previewing"> · pricing…</span>
                                         </p>
                                     </td>
-                                    <td class="px-2 py-1.5 text-slate-600" x-text="row.vendor_name || '—'"></td>
+                                    <td class="px-2 py-1.5 text-slate-600" x-text="row.vendor_name || '-'"></td>
                                     <td class="px-2 py-1.5">
                                         <select
                                             x-model="row.concern_id"

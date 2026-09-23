@@ -27,7 +27,7 @@ final class WebsiteLeadInterruptPresenter
             'lead_interrupt_key' => 'lead:'.$lead->id,
             'conversation_id' => $lead->conversation_id,
             'headline' => $headline,
-            'display_phone' => $lead->display_phone ?: '—',
+            'display_phone' => $lead->display_phone ?: '-',
             'snippet' => Str::limit(trim($lead->concern), 140),
             'matched' => $lead->customer_id !== null,
             'customer_id' => $lead->customer_id,

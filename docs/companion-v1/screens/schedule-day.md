@@ -1,14 +1,14 @@
-# Screen spec — Schedule Day
+# Screen spec - Schedule Day
 
 **ID:** `companion.screen.schedule-day`  
 **Role(s):** Advisor  
-**Status:** 📝 draft — Edward review
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-See **today's appointments and arrivals** — tap customer · vehicle · RO · check in without desktop schedule board.
+See **today's appointments and arrivals** - tap customer · vehicle · RO · check in without desktop schedule board.
 
 ---
 
@@ -34,15 +34,15 @@ Grouped by time block or continuous sorted by start:
 
 **Row (~72pt):**
 
-- Time — `9:00 AM`
-- Customer · vehicle — `John Smith · 2020 F-150`
-- Service summary — one line
-- Status chip — `Arriving` · `Checked in` · `RO #1602`
+- Time - `9:00 AM`
+- Customer · vehicle - `John Smith · 2020 F-150`
+- Service summary - one line
+- Status chip - `Arriving` · `Checked in` · `RO #1602`
 - Chevron
 
 ### Empty
 
-- "No appointments today" · tap to book — P1
+- "No appointments today" · tap to book - P1
 
 ### Tab bar
 

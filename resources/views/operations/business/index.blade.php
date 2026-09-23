@@ -2,7 +2,7 @@
     <section class="ops-business space-y-3">
         <header class="border border-slate-300 bg-white px-4 py-4">
             <p class="text-xl font-black text-slate-950">{{ $business->greeting }}</p>
-            <p class="mt-2 text-sm font-semibold text-slate-900">Business — market, growth, and yesterday.</p>
+            <p class="mt-2 text-sm font-semibold text-slate-900">Business - market, growth, and yesterday.</p>
             <p class="mt-1 text-sm text-slate-600">Operational work lives on Today. This cockpit is for shop health.</p>
         </header>
 

@@ -11,7 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Vehicle workspace — the vehicle as a connected object with open work,
+ * Vehicle workspace - the vehicle as a connected object with open work,
  * service history, and owner context. Money is advisor-only projection.
  */
 final class MobileVehicleWorkspaceProjection

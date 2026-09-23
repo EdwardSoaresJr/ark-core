@@ -1,6 +1,6 @@
 # ARK Financial Authority & Closeout Architecture
 
-**Status:** Partially superseded — 2026-08-03  
+**Status:** Partially superseded - 2026-08-03  
 **Target architecture:** [`ARK-FINANCIAL-AUTHORITY-V2.md`](ARK-FINANCIAL-AUTHORITY-V2.md) (**Frozen**)
 
 **v2 wins** on: Estimate = living contract · Ledger = money · Invoice = historical Final Invoice only · Invoice is a consequence of closeout · never two living financial contracts · Financial Position projection · suspend living-invoice / refresh work.
@@ -11,10 +11,10 @@ This document remains reference for ledger types, post-issuance invoice states, 
 
 **Green light requirements (must exist before invoice/payment UI):**
 
-1. **Explicit invoice issuance** — no auto-invoice on status change  
-2. **Invoice operational states** — not balance inference alone  
-3. **`BalanceDueCalculator`** — first-class authority; every screen uses it  
-4. **Payment ledger** — deposits are ledger rows, not a parallel subsystem  
+1. **Explicit invoice issuance** - no auto-invoice on status change  
+2. **Invoice operational states** - not balance inference alone  
+3. **`BalanceDueCalculator`** - first-class authority; every screen uses it  
+4. **Payment ledger** - deposits are ledger rows, not a parallel subsystem  
 
 **Purpose:** Financial truth before implementers write invoices, payments, or closeout UI. This addresses a **true ARK gap** (financial spine), not a visual gap.
 
@@ -28,14 +28,14 @@ This document remains reference for ledger types, post-issuance invoice states, 
 | Billable disposition rules | `RepairOrderConcernDisposition` + `billableLines()` | Deferred/declined never bill; recommended only until first approval; then **approved-only** living total |
 | Estimate PDF snapshots | `EstimateSnapshotBuilder`, `estimate_documents.snapshot_json` | Schema v2 JSON + PDF; living doc per RO today |
 | RO lifecycle | `RepairOrderStatus` | Includes `ready_pickup`, `closed` |
-| Payment posture (minimal) | `RepairOrderPaymentStatus`, `RepairOrderPaymentRecorder` | Binary unpaid/paid — **to be replaced** by ledger + calculator |
+| Payment posture (minimal) | `RepairOrderPaymentStatus`, `RepairOrderPaymentRecorder` | Binary unpaid/paid - **to be replaced** by ledger + calculator |
 | Financial README | `app/Ark/Operations/Financial/README.md` | Immutable snapshot rule declared; payments/invoices excluded today |
 
 **Risk:** Invoice UI on living `repair_order_lines` without frozen invoice truth destroys auditability and reporting.
 
 ---
 
-## Locked Doctrine (Response 1 — Shop-Aligned)
+## Locked Doctrine (Response 1 - Shop-Aligned)
 
 ### 1. Invoice = deliberate Final Invoice (internal: invoice snapshot)
 
@@ -45,7 +45,7 @@ This document remains reference for ledger types, post-issuance invoice states, 
 Living RO (editable estimate workspace)
     ↓ approval + work
 Closeout readiness (work + coverage + Financial Position)
-    ↓ advisor: Issue Final Invoice (explicit — consequence of closeout)
+    ↓ advisor: Issue Final Invoice (explicit - consequence of closeout)
 Final Invoice snapshot (immutable evidence)
     ↓ apply ledger (deposits become applications)
     ↓ payments / write-offs / refunds / credits
@@ -56,7 +56,7 @@ Closed
 
 **Superseded (do not implement):** living invoice until settlement; deposit-tolerant snapshot refresh; advisor Refresh Invoice.
 
-**Why explicit issuance:** Final Invoice is evidence that closeout readiness was met — not a mid-job living document and not a prerequisite invented so payment can begin. See Financial Authority v2 Principle #4.
+**Why explicit issuance:** Final Invoice is evidence that closeout readiness was met - not a mid-job living document and not a prerequisite invented so payment can begin. See Financial Authority v2 Principle #4.
 
 - **Advisor-facing label:** **Final Invoice** (usability)  
 - **Internal/code:** `InvoiceSnapshot`, `InvoiceSnapshotBuilder`, `document_type = invoice`  
@@ -84,7 +84,7 @@ At issuance: copy approved lines once; freeze totals in snapshot; never re-read 
 
 ### 3. Freeze moment
 
-**Immutable at explicit Issue Final Invoice.** No silent edits to lines, price, tax, or fees on that document. Corrections → revised invoice / supplemental invoice / credit memo — never “refresh.” See v2.
+**Immutable at explicit Issue Final Invoice.** No silent edits to lines, price, tax, or fees on that document. Corrections → revised invoice / supplemental invoice / credit memo - never “refresh.” See v2.
 
 ---
 
@@ -147,7 +147,7 @@ Payments         $1,200
 → Store credit   $200 (customer account)
 ```
 
-Reject payment entry that would overpay **only if** store credit is disabled — default **allow** and credit the customer (Response 1). *(Alternative: reject overpay in v1 — **DECIDE**; default store credit.)*
+Reject payment entry that would overpay **only if** store credit is disabled - default **allow** and credit the customer (Response 1). *(Alternative: reject overpay in v1 - **DECIDE**; default store credit.)*
 
 ---
 
@@ -188,7 +188,7 @@ Authority: `repair_orders.collection_disposition` + `collection_disposition_reas
 | Gate | Rule |
 |------|------|
 | Closeout readiness | Work + coverage + Financial Position resolved; estimate still living until Final Invoice |
-| **Issue Final Invoice** | Consequence of readiness — not a prerequisite invented to unlock payment |
+| **Issue Final Invoice** | Consequence of readiness - not a prerequisite invented to unlock payment |
 | Pre-invoice deposits | Ledger only; apply when Final Invoice issues |
 | Payments after Final Invoice | Ledger rows; partial OK |
 | `closed` | **Only if** balance authority → `balance_due_cents === 0` (or approved write-off) |
@@ -214,7 +214,7 @@ Two calculators, one ledger, zero UI math:
 | Payment ledger | Source rows for deposits, payments, refunds, credits, write-offs |
 
 ```php
-// BalanceDueCalculator — sole balance path
+// BalanceDueCalculator - sole balance path
 balance_due_cents =
     invoice_total_cents
   - deposits_applied_cents
@@ -232,7 +232,7 @@ Controllers return authoritative cents; views format only.
 
 ## Invoice Operational States
 
-First-class states — **do not infer everything from balance alone.**
+First-class states - **do not infer everything from balance alone.**
 
 | State | Meaning |
 |-------|---------|
@@ -304,9 +304,9 @@ flowchart TD
 
 ## Snapshot Rules
 
-1. **Estimate snapshot** — living; may refresh for approval PDF.  
-2. **Final invoice snapshot** — immutable at issuance; payment UI + invoice PDF + closed reporting.  
-3. **Close PDF** — uses **invoice snapshot totals**, not living lines.  
+1. **Estimate snapshot** - living; may refresh for approval PDF.  
+2. **Final invoice snapshot** - immutable at issuance; payment UI + invoice PDF + closed reporting.  
+3. **Close PDF** - uses **invoice snapshot totals**, not living lines.  
 4. Legacy `legacy_arksms_invoice_id` documents remain reporting truth (no rebuild from living lines).
 
 ---
@@ -324,7 +324,7 @@ flowchart TD
 
 ## Temporary: `RepairOrderPaymentPostureSync`
 
-**Status:** compatibility bridge only — not doctrine.
+**Status:** compatibility bridge only - not doctrine.
 
 Ledger entries + `BalanceDueCalculator` are authoritative. `RepairOrderPaymentPostureSync` copies balance posture into `repair_orders.payment_status` and `paid_at` so existing queue/report code keeps working until the Financial Workflow UI pass surfaces calculator output everywhere.
 
@@ -350,7 +350,7 @@ Ledger entries + `BalanceDueCalculator` are authoritative. `RepairOrderPaymentPo
 
 ---
 
-## Implementation Order — Financial Core Pass First
+## Implementation Order - Financial Core Pass First
 
 **Not** invoice screens, PDFs, or receipts first.
 
@@ -362,7 +362,7 @@ Ledger entries + `BalanceDueCalculator` are authoritative. `RepairOrderPaymentPo
 6. Lifecycle gates: issued invoice before closeout payments; closed requires balance 0.  
 7. Minimal operations UI (generate invoice + record payment on ready pickup).  
 8. Customer open-balance summary.  
-9. Portal / receipts / GL — later.
+9. Portal / receipts / GL - later.
 
 ---
 
@@ -370,16 +370,16 @@ Ledger entries + `BalanceDueCalculator` are authoritative. `RepairOrderPaymentPo
 
 **Stop.** Do not use this prompt to build living-invoice sync. Read [`ARK-FINANCIAL-AUTHORITY-V2.md`](ARK-FINANCIAL-AUTHORITY-V2.md) first.
 
-Legacy prompt (ledger / BalanceDueCalculator reference only — supersede closeout sequence with v2):
+Legacy prompt (ledger / BalanceDueCalculator reference only - supersede closeout sequence with v2):
 
 ```
-ARK Financial — read docs/ARK-FINANCIAL-AUTHORITY-V2.md (frozen) and docs/ARK-FINANCIAL-AUTHORITY-AND-CLOSEOUT.md (ledger reference).
+ARK Financial - read docs/ARK-FINANCIAL-AUTHORITY-V2.md (frozen) and docs/ARK-FINANCIAL-AUTHORITY-AND-CLOSEOUT.md (ledger reference).
 
 Do not invent rules. Do not extend living-invoice refresh.
 
 Locked (v2):
 - Estimate = living contract; Ledger = money; Invoice = historical Final Invoice only.
-- Issue Final Invoice = consequence of closeout readiness — not a mid-job living document.
+- Issue Final Invoice = consequence of closeout readiness - not a mid-job living document.
 - Never two living financial contracts on one RO.
 - Financial Position = Customer Owes Today.
 - Deposits: ledger until Final Invoice applies them.
@@ -393,8 +393,8 @@ Locked (v2):
 - [ ] Supplemental invoice per RO or credit-memo-only?  
 - [ ] Gift card in v1?  
 - [ ] Overpay: store credit (default) vs reject transaction?  
-- [x] Write-off UI — **shipped:** Waive balance (courtesy / trade / goodwill / bad debt); retail invoice preserved  
-- [ ] Partial payments before final invoice (deposits only)? — default **deposits yes, payments apply at issued**
+- [x] Write-off UI - **shipped:** Waive balance (courtesy / trade / goodwill / bad debt); retail invoice preserved  
+- [ ] Partial payments before final invoice (deposits only)? - default **deposits yes, payments apply at issued**
 
 ---
 
@@ -402,4 +402,4 @@ Locked (v2):
 
 Architecture target: **Estimate → Approval → Final Invoice → Payment → Closeout** = complete operational + financial spine. Everything after is refinement, scale, and polish.
 
-*Aligns with `EstimateTotalsCalculator`, disposition doctrine, and existing `RepairOrderStatus` / close gate — superseding binary `markPaid()`.*
+*Aligns with `EstimateTotalsCalculator`, disposition doctrine, and existing `RepairOrderStatus` / close gate - superseding binary `markPaid()`.*

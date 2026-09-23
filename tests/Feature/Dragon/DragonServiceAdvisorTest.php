@@ -51,7 +51,7 @@ function saRo(): array
     ]);
     $concern = $ro->concerns()->create([
         'summary' => 'Battery concern',
-        'verified_findings' => 'Battery tested 650/480 CCA. Left front pad 2 mm. Possible EVAP leak — needs smoke test. DTC P0456 present.',
+        'verified_findings' => 'Battery tested 650/480 CCA. Left front pad 2 mm. Possible EVAP leak - needs smoke test. DTC P0456 present.',
         'customer_states' => 'Customer says hard start in the morning.',
         'recommendation' => 'Replace battery. Smoke-test EVAP if leak confirmed.',
         'position' => 1,
@@ -117,8 +117,8 @@ test('fact preservation check catches measurement dtc side and invented urgency'
     expect($check->check('Left front pad 2 mm.', 'Right front pad 2 mm.')['ok'])->toBeFalse();
 
     expect($check->check(
-        'Possible EVAP leak — needs smoke test.',
-        'EVAP system has failed. Do not drive — unsafe.',
+        'Possible EVAP leak - needs smoke test.',
+        'EVAP system has failed. Do not drive - unsafe.',
     )['ok'])->toBeFalse();
 });
 
@@ -158,7 +158,7 @@ test('rewrite without a dragon node completes through hosted dragon', function (
 test('completed rewrite with failed fact check is rejected and apply unavailable', function (): void {
     [$ro, $concern] = saRo();
     app(\App\Ark\Dragon\Agent\Providers\FakeDragonProvider::class)->structuredQueue = [[
-        'proposal' => 'Pads are worn. Replace immediately — unsafe to drive.',
+        'proposal' => 'Pads are worn. Replace immediately - unsafe to drive.',
         'facts_preserved' => [],
         'material_changes' => [],
         'warnings' => [],
@@ -186,7 +186,7 @@ test('apply writes field with audit and revert restores exact original', functio
     [$ro, $concern] = saRo();
     $user = saAdvisor();
     $original = $concern->verified_findings;
-    $proposal = 'Battery tested 650/480 CCA. Left front pad measures 2 mm. Possible EVAP leak — needs smoke test. DTC P0456 present.';
+    $proposal = 'Battery tested 650/480 CCA. Left front pad measures 2 mm. Possible EVAP leak - needs smoke test. DTC P0456 present.';
 
     $assist = app(RequestDragonAssistAction::class)->execute(
         DragonAssistTaskType::ServiceAdvisorRewrite,
@@ -241,7 +241,7 @@ test('applied dragon rewrite appears on the customer estimate portal', function 
         'disposition' => \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Recommended,
     ])->save();
     $user = saAdvisor();
-    $proposal = 'Battery tested 650/480 CCA. Left front pad measures 2 mm. Possible EVAP leak — needs smoke test. DTC P0456 present.';
+    $proposal = 'Battery tested 650/480 CCA. Left front pad measures 2 mm. Possible EVAP leak - needs smoke test. DTC P0456 present.';
 
     $assist = app(RequestDragonAssistAction::class)->execute(
         DragonAssistTaskType::ServiceAdvisorRewrite,

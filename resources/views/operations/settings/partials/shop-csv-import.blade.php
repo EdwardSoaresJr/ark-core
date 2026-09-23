@@ -9,7 +9,7 @@
         <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Shop import</h4>
         <p class="mt-0.5 text-xs text-slate-500">
             Bring customers (and vehicles) from a spreadsheet so the shop feels familiar on day one.
-            Writes Customer and Vehicle authority only — no staging tables, no repair history.
+            Writes Customer and Vehicle authority only - no staging tables, no repair history.
         </p>
     </div>
 
@@ -82,7 +82,7 @@
                                             <td class="px-2 py-1 tabular-nums text-slate-500">{{ $row['row'] }}</td>
                                             <td class="px-2 py-1 font-semibold text-slate-800">{{ $row['action'] }}</td>
                                             <td class="px-2 py-1 text-slate-800">{{ $row['customer'] }}</td>
-                                            <td class="px-2 py-1 text-slate-600">{{ $row['vehicle'] ?? '—' }}</td>
+                                            <td class="px-2 py-1 text-slate-600">{{ $row['vehicle'] ?? '-' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

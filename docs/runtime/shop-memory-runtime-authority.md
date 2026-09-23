@@ -1,4 +1,4 @@
-# Shop Memory — Runtime Authority
+# Shop Memory - Runtime Authority
 
 **Status:** Shop Memory v1 COMPLETE · selective enablement  
 **Capability:** Shop Memory  
@@ -60,7 +60,7 @@ Stored in `shop_settings.shop_memory` JSON via [`ShopMemoryFeatures`](../../app/
 | Customer Intake | OFF |
 | AI Rewrite | OFF |
 
-Disabled providers are **not** registered with `SuggestionEngine`. Diagnostics compare catalog vs enablement vs registration — disabled ≠ missing/broken.
+Disabled providers are **not** registered with `SuggestionEngine`. Diagnostics compare catalog vs enablement vs registration - disabled ≠ missing/broken.
 
 ```text
 php artisan tinker
@@ -75,7 +75,7 @@ Suggestions are **not** authority. `RepairOrderConcern` and `RepairOrderLine` re
 
 No provider may silently create or overwrite operational truth. Only explicit advisor acceptance creates authority.
 
-AI Rewrite is a **sibling action** (`AiRewriteAction`) — never on blur, never engine search.
+AI Rewrite is a **sibling action** (`AiRewriteAction`) - never on blur, never engine search.
 
 ---
 
@@ -125,6 +125,6 @@ Do not auto-enable providers. Flip `shop_memory` JSON after the notebook earns e
 
 Notebook: [`docs/operations/shop-memory-observations.md`](../operations/shop-memory-observations.md)
 
-### Future rule (protect now — do not implement yet)
+### Future rule (protect now - do not implement yet)
 
 **Shop Memory learns from advisor behavior, not from persistence alone.**

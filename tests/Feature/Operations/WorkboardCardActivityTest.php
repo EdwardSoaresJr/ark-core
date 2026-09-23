@@ -44,9 +44,9 @@ test('activity strip reserves six none marks when nothing happened', function ()
             WorkboardCardActivityState::None,
             WorkboardCardActivityState::None,
         ])
-        ->and($marks[0]->tooltip)->toBe('Estimate — None')
-        ->and($marks[3]->tooltip)->toBe('Phone — None')
-        ->and($marks[5]->tooltip)->toBe('Scheduled — None');
+        ->and($marks[0]->tooltip)->toBe('Estimate - None')
+        ->and($marks[3]->tooltip)->toBe('Phone - None')
+        ->and($marks[5]->tooltip)->toBe('Scheduled - None');
 });
 
 test('activity strip marks estimate ready from priced lines then viewed over sent', function () {
@@ -63,7 +63,7 @@ test('activity strip marks estimate ready from priced lines then viewed over sen
     $ready = (new WorkboardCardActivityProjection)->map(new Collection([$repairOrder]))[22][0];
 
     expect($ready->state)->toBe(WorkboardCardActivityState::Ready)
-        ->and($ready->tooltip)->toBe('Estimate — Ready');
+        ->and($ready->tooltip)->toBe('Estimate - Ready');
 
     $sent = new CommunicationEvent;
     $sent->forceFill([
@@ -85,7 +85,7 @@ test('activity strip marks estimate ready from priced lines then viewed over sen
 
     expect($engaged->state)->toBe(WorkboardCardActivityState::Engaged)
         ->and($engaged->badge)->toBe('viewed')
-        ->and($engaged->tooltip)->toBe('Estimate — Viewed 2w ago');
+        ->and($engaged->tooltip)->toBe('Estimate - Viewed 2w ago');
 
     Carbon::setTestNow();
 });
@@ -145,7 +145,7 @@ test('activity strip marks dvi on file from the inspection on this repair order'
     $marks = (new WorkboardCardActivityProjection)->map(new Collection([$repairOrder]))[$repairOrder->id];
 
     expect($marks[4]->state)->toBe(WorkboardCardActivityState::Ready)
-        ->and($marks[4]->tooltip)->toStartWith('DVI — On file');
+        ->and($marks[4]->tooltip)->toStartWith('DVI - On file');
 });
 
 test('activity strip lights sms attention when delivery failed', function () {
@@ -167,7 +167,7 @@ test('activity strip lights sms attention when delivery failed', function () {
 
     expect($marks[1]->state)->toBe(WorkboardCardActivityState::Attention)
         ->and($marks[1]->badge)->toBe('alert')
-        ->and($marks[1]->tooltip)->toBe('SMS — Delivery failed 2h ago');
+        ->and($marks[1]->tooltip)->toBe('SMS - Delivery failed 2h ago');
 
     Carbon::setTestNow();
 });
@@ -191,7 +191,7 @@ test('activity strip marks sms engaged when the customer replied on this repair 
 
     expect($marks[1]->state)->toBe(WorkboardCardActivityState::Engaged)
         ->and($marks[1]->badge)->toBe('replied')
-        ->and($marks[1]->tooltip)->toBe('SMS — Customer replied 1d ago');
+        ->and($marks[1]->tooltip)->toBe('SMS - Customer replied 1d ago');
 
     Carbon::setTestNow();
 });
@@ -217,7 +217,7 @@ test('activity strip lights scheduled today and missed appointments', function (
     $today = (new WorkboardCardActivityProjection)->map(new Collection([$repairOrder]))[$repairOrder->id][5];
 
     expect($today->state)->toBe(WorkboardCardActivityState::Sent)
-        ->and($today->tooltip)->toBe('Scheduled — Today 2:00 PM');
+        ->and($today->tooltip)->toBe('Scheduled - Today 2:00 PM');
 
     Appointment::query()->where('repair_order_id', $repairOrder->id)->update([
         'starts_at' => ShopDisplayTimezone::parseLocal('2026-08-24 08:00')->utc(),
@@ -228,7 +228,7 @@ test('activity strip lights scheduled today and missed appointments', function (
 
     expect($missed->state)->toBe(WorkboardCardActivityState::Attention)
         ->and($missed->badge)->toBe('alert')
-        ->and($missed->tooltip)->toStartWith('Scheduled — Missed');
+        ->and($missed->tooltip)->toStartWith('Scheduled - Missed');
 
     Carbon::setTestNow();
 });
@@ -252,5 +252,5 @@ test('activity strip marks checked-in appointments as engaged', function () {
     $marks = (new WorkboardCardActivityProjection)->map(new Collection([$repairOrder]))[$repairOrder->id];
 
     expect($marks[5]->state)->toBe(WorkboardCardActivityState::Engaged)
-        ->and($marks[5]->tooltip)->toBe('Scheduled — Checked in');
+        ->and($marks[5]->tooltip)->toBe('Scheduled - Checked in');
 });

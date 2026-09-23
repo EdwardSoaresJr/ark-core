@@ -42,7 +42,7 @@ class RepairOrderConcernProductionStatusController
 
         $statusMessage = 'Scope production status updated.';
         if ($recognition['status'] === 'deferred') {
-            $statusMessage = 'Scope marked completed. Flag recognition deferred — assign a technician before production can be recognized.';
+            $statusMessage = 'Scope marked completed. Flag recognition deferred - assign a technician before production can be recognized.';
         } elseif ($recognition['status'] === 'recognized' && $recognition['recognition'] !== null) {
             $hours = number_format((float) $recognition['recognition']->flag_hours_total, 2);
             $statusMessage = "Scope production status updated. Recognized {$hours} flag hours.";

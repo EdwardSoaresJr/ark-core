@@ -48,14 +48,14 @@ final readonly class RteLaborApplyResult
 
         if ($this->includedLineCount() === 0) {
             return sprintf(
-                RepairTimeEngine::NAME.' labor applied — %s · %s hr.',
+                RepairTimeEngine::NAME.' labor applied - %s · %s hr.',
                 $primary->description,
                 $primaryHours,
             );
         }
 
         return sprintf(
-            RepairTimeEngine::NAME.' labor applied — %s · %s hr (+%d included · %s hr total).',
+            RepairTimeEngine::NAME.' labor applied - %s · %s hr (+%d included · %s hr total).',
             $primary->description,
             $primaryHours,
             $this->includedLineCount(),

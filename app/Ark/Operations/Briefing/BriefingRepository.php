@@ -11,7 +11,7 @@ use App\Ark\Operations\Briefing\Rules\RevenueMovementBriefingRule;
 use App\Ark\Operations\Briefing\Rules\WaitingPartsBriefingRule;
 
 /**
- * Composes attention items from explainable briefing rules — owns no truth.
+ * Composes attention items from explainable briefing rules - owns no truth.
  */
 final class BriefingRepository
 {

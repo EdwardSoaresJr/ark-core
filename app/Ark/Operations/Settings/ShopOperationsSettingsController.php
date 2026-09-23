@@ -295,7 +295,7 @@ public function updateWorkflow(Request $request): RedirectResponse
 
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'operations'])
-            ->with('status', $profile->label().' defaults applied. Review appointments, intake, and printing — adjust anything that does not fit this shop.');
+            ->with('status', $profile->label().' defaults applied. Review appointments, intake, and printing - adjust anything that does not fit this shop.');
     }
 
 public function updateExcellence(Request $request): RedirectResponse

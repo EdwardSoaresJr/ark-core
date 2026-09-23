@@ -1,15 +1,15 @@
-# Screen spec — Compose / Reply Sheet
+# Screen spec - Compose / Reply Sheet
 
 **ID:** `companion.screen.compose-reply`  
 **Role(s):** Advisor  
-**Quo ref:** `quo-threads.png` — minimal composer rhythm  
-**Status:** 📝 draft — Edward review
+**Quo ref:** `quo-threads.png` - minimal composer rhythm  
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Send SMS (and MMS) **from anywhere** — reply in thread · new message to customer · post-call text — one composer, same API as desktop Quick Reply.
+Send SMS (and MMS) **from anywhere** - reply in thread · new message to customer · post-call text - one composer, same API as desktop Quick Reply.
 
 ---
 
@@ -26,26 +26,26 @@ Send SMS (and MMS) **from anywhere** — reply in thread · new message to custo
 
 ### Presentation
 
-- **Inline** — bottom of [`conversation-thread.md`](conversation-thread.md) (default)
-- **Sheet** — half-screen when opened from post-call · FAB · RO workspace
-- **Full-screen compose** — new message: pick customer first, then same composer
+- **Inline** - bottom of [`conversation-thread.md`](conversation-thread.md) (default)
+- **Sheet** - half-screen when opened from post-call · FAB · RO workspace
+- **Full-screen compose** - new message: pick customer first, then same composer
 
 ### Composer bar
 
 - Attachment (camera · gallery · file)
-- Multiline text field — grows to 4 lines max then scrolls
-- Send button — primary when content or attachment present
-- Character count — hidden unless approaching SMS segment limit
+- Multiline text field - grows to 4 lines max then scrolls
+- Send button - primary when content or attachment present
+- Character count - hidden unless approaching SMS segment limit
 
 ### Quick insert row (above field, horizontal scroll)
 
-- **Templates** — shop-configured snippets ("We're running 15 min late")
-- **Insert link** — Estimate · Payment · Inspection (same as Quick Reply rail)
+- **Templates** - shop-configured snippets ("We're running 15 min late")
+- **Insert link** - Estimate · Payment · Inspection (same as Quick Reply rail)
 - Inserts append to field · server builds portal URL
 
-### New message — customer picker (step 1)
+### New message - customer picker (step 1)
 
-- Search field — reuse search projection
+- Search field - reuse search projection
 - Rows: customer · vehicle · last message time
 - Select → thread opens or creates · composer focused
 
@@ -86,8 +86,8 @@ Send SMS (and MMS) **from anywhere** — reply in thread · new message to custo
 
 ## Data & API
 
-**Existing:** `SendOutboundMessageAction` · link actions — expose via `/api/mobile/conversations/...`  
-**Same authority:** `ConversationMessage` only — no parallel SMS store
+**Existing:** `SendOutboundMessageAction` · link actions - expose via `/api/mobile/conversations/...`  
+**Same authority:** `ConversationMessage` only - no parallel SMS store
 
 ---
 

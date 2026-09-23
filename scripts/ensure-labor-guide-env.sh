@@ -21,7 +21,7 @@ fi
 
 cat >> "${env_file}" <<'EOF'
 
-# Labor guides (browser launch — set URLs to your shop login entry points)
+# Labor guides (browser launch - set URLs to your shop login entry points)
 LABOR_GUIDE_ALLDATA_URL=https://my.alldata.com/repair
 LABOR_GUIDE_ALLDATA_LOGIN_PATH=
 LABOR_GUIDE_PRODEMAND_URL=https://www.prodemand.com

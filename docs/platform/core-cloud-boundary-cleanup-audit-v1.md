@@ -27,14 +27,14 @@ LNP today: Square capture is Platform; outbound Voice and most email are still C
 
 ---
 
-## 1. Navigation — Core “Platform” section
+## 1. Navigation - Core “Platform” section
 
 **File:** `resources/views/components/operations/app.blade.php`  
 **Gate:** `$hasPlatformNav` = production/advisor shell **or** `settings.manage`
 
 | Nav label | Route | Job | Class | If removed today |
 | --- | --- | --- | --- | --- |
-| Section label **Platform** | — | Implies control plane | **DELETE LEGACY** (label only) | Cosmetic. Rename to **Shop** / fold into System. |
+| Section label **Platform** | - | Implies control plane | **DELETE LEGACY** (label only) | Cosmetic. Rename to **Shop** / fold into System. |
 | ARKademy | `ArkademyUrls::staffNavUrl()` → `operations.learn.*` or BookStack | Staff training | **KEEP CORE** | Advisors lose guides / snooze banners. Not a control plane. |
 | Voice | `operations.shop.communications` | Stations, devices, provision config | **KEEP CORE** as floor setup; **misnamed and misfiled** | Cannot name stations or add desk phones. Does **not** duplicate Attention / Calls & VM. |
 
@@ -142,22 +142,22 @@ Full inventory: companion addendum. Summary for this cleanup:
 
 ## 7. Legacy control plane in Core
 
-**Namespace:** `app/Ark/Platform/**` — name collision with the real product in `ark-cloud`.
+**Namespace:** `app/Ark/Platform/**` - name collision with the real product in `ark-cloud`.
 
-### KEEP CORE — Hosted clients (do not delete)
+### KEEP CORE - Hosted clients (do not delete)
 
 `PlatformConnection`, `PlatformPairingClient`, `ArkBoxHeartbeatClient`, `BoxRuntimeObservation`, `FabricIngressController`, `VerifyPlatformFabricSignature`, managed comms/payments clients and gates, `ShopBaseUrl`, `VoiceTransport*`, `CoreApplicationOrigin`.  
 Commands: `ark:platform-pair`, `ark:platform-heartbeat`.  
 Columns: `shop_settings.platform_*` (pairing), not `platform_shops`.
 
-### MOVE/CLOUD — company funnel still LIVE on Core host
+### MOVE/CLOUD - company funnel still LIVE on Core host
 
 `CloudExperienceController`, `CloudAccount`, `CloudShop`, `CloudUrls`, `routes/cloud.php`, `resources/views/cloud/**`.  
 Serves `autorepairkeeper.com` from Core Traefik. Foundry (`lugsnplugs.com`) is the shop site.
 
 **If deleted today:** company marketing/trial 404s. Shop website and `/app` survive.
 
-### DELETE LEGACY / MOVE/PLATFORM — unused shop-provisioning spine
+### DELETE LEGACY / MOVE/PLATFORM - unused shop-provisioning spine
 
 | Piece | Notes | Break if removed today |
 | --- | --- | --- |
@@ -190,8 +190,8 @@ LNP ship path is Mac `deploy-production.sh`. Core Coolify adapter is not that pa
 
 | Finding | Class |
 | --- | --- |
-| Memory table + agent tools | **KEEP CORE** (or later Cloud Dragon entitlement — not this cleanup) |
-| Settings section “Hosted Dragon” | **UI leakage** — remove from Operational Domains |
+| Memory table + agent tools | **KEEP CORE** (or later Cloud Dragon entitlement - not this cleanup) |
+| Settings section “Hosted Dragon” | **UI leakage** - remove from Operational Domains |
 | Query loads latest 200 including `superseded_at` | Exposes forgotten/superseded ledger to shop users |
 | Correct / Forget mutating `provenance` with `|settings:correct` | Engineering lifecycle on a shop Settings page |
 
@@ -217,11 +217,11 @@ Comment already says Hosted Core should not hold Square secrets. The Settings fo
 
 Do not skip ahead. Each step assumes the previous did not break LNP floor proof.
 
-1. **Nav/copy only** — **Done.** Rail **Platform** heading retired. Voice → Stations & Phones. ARKademy stays as shop training.
+1. **Nav/copy only** - **Done.** Rail **Platform** heading retired. Voice → Stations & Phones. ARKademy stays as shop training.
 
-2. **Dragon Memory Settings UI** — **Done.** Removed from Operational Domains. Table, retrieval, and forget/update routes remain.
+2. **Dragon Memory Settings UI** - **Done.** Removed from Operational Domains. Table, retrieval, and forget/update routes remain.
 
-3. **Square Settings Hosted-gate** — **Done.** When `ManagedPaymentsGate::platformCapture()`, hide credential paste, Core webhook URL, and Core device-code pairing. Capture-surface toggles stay. Core Square SDK path remains.
+3. **Square Settings Hosted-gate** - **Done.** When `ManagedPaymentsGate::platformCapture()`, hide credential paste, Core webhook URL, and Core device-code pairing. Capture-surface toggles stay. Core Square SDK path remains.
 
 4. **Do not touch PartsTech credentials** until Cloud `PartsCatalogTransport` is real and entitled. Restoring PartsTech is a Platform v1 feature, not this cleanup. See companion addendum.
 
@@ -229,7 +229,7 @@ Do not skip ahead. Each step assumes the previous did not break LNP floor proof.
 
 6. **Do not remove Postmark Settings** until Core calls Platform mail. Email still Core; UI already blocks if token empty.
 
-7. **Hide leftover control-plane URLs** — ` /app/platform/clusters` can 404 for everyone including master-admin once tests drop. Do not drop `platform_shops` while `routes/cloud.php` still creates shops.
+7. **Hide leftover control-plane URLs** - ` /app/platform/clusters` can 404 for everyone including master-admin once tests drop. Do not drop `platform_shops` while `routes/cloud.php` still creates shops.
 
 8. **Extract company Cloud funnel** off Core host (`autorepairkeeper.com`) when a real Cloud/Platform public site exists. Until then it is LIVE. Not an LNP shop cleanup.
 
@@ -270,7 +270,7 @@ Hosted Square uses `ManagedPaymentsGate::platformCapture()`, not “this Core is
 
 Do not start steps 4–10 until PartsTech pull-quote certification and RO 1737 reprint are done. Next cleanup is per-provider: prove the Cloud path, then hide the obsolete Core surface.
 
-### CommunicationsShopWorkspaceTest — pre-existing, not Phase 1
+### CommunicationsShopWorkspaceTest - pre-existing, not Phase 1
 
 Leave these until a deliberate Communications audit. Do not “fix” them under nav / Square / Dragon work.
 

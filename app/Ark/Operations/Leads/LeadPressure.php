@@ -15,7 +15,7 @@ class LeadPressure
     private const REQUEST_CACHE_KEY = 'lead_pressure';
 
     /**
-     * Rail badge only — one COUNT, not six lead aggregates.
+     * Rail badge only - one COUNT, not six lead aggregates.
      *
      * @return array{open_count: int, leads_url: string}
      */

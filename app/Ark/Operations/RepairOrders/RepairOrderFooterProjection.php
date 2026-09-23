@@ -11,7 +11,7 @@ use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Models\User;
 
 /**
- * Disposable footer projection — contextual next actions for the Repair Order.
+ * Disposable footer projection - contextual next actions for the Repair Order.
  *
  * Presentation is permanent. Authoring is temporary. This footer is not a toolbar.
  *
@@ -87,12 +87,12 @@ final readonly class RepairOrderFooterProjection
     }
 
     /**
-     * Present group — customer-facing projections of the Repair Order only.
+     * Present group - customer-facing projections of the Repair Order only.
      *
      * Customer Display = kiosk-style front-counter monitor for this RO.
      * Tablet = Flutter customer presentation + signature (when that surface exists).
      *
-     * Do not put InspectionCaptureLinks::tabletUrl here — that is the technician
+     * Do not put InspectionCaptureLinks::tabletUrl here - that is the technician
      * bay inspection walk, a different user and purpose.
      *
      * @return list<RepairOrderFooterAction>
@@ -109,7 +109,7 @@ final readonly class RepairOrderFooterProjection
             ->whereNull('deleted_at')
             ->count();
 
-        // Paperwork sits with Present / PRINT — not buried in the estimate body.
+        // Paperwork sits with Present / PRINT - not buried in the estimate body.
         if ($canManage && ! $repairOrder->isTerminal()) {
             $actions[] = RepairOrderFooterAction::modal(
                 key: 'paperwork',

@@ -118,7 +118,7 @@ test('enabling historical concern registers provider and answers suggest', funct
     $memory['providers'][ShopMemoryProviderCatalog::HISTORICAL_CONCERN] = true;
     $settings->forceFill(['shop_memory' => $memory])->save();
 
-    // Reboot registry for this process — features read DB; re-register manually for test.
+    // Reboot registry for this process - features read DB; re-register manually for test.
     $registry = app(SuggestionProviderRegistry::class);
     if (! in_array(HistoricalConcernProvider::KEY, $registry->keys(), true)) {
         $registry->register(app(HistoricalConcernProvider::class));

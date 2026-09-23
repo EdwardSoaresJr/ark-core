@@ -1,14 +1,14 @@
-# Certification record — Vehicle Pickup Workflow
+# Certification record - Vehicle Pickup Workflow
 
 **Certification:** Vehicle Pickup Workflow  
-**Track:** B — ARK Staff · Workflow 4  
+**Track:** B - ARK Staff · Workflow 4  
 **Role:** Advisor  
 **Owner:** Alex Rivera  
 **Scenario source:** Customer picks up · phone only
 
 ## Why this matters
 
-Advisor completes pickup at the counter or curb — invoice, payment, receipt, RO close — without desktop. Customer leaves; history is updated.
+Advisor completes pickup at the counter or curb - invoice, payment, receipt, RO close - without desktop. Customer leaves; history is updated.
 
 ---
 
@@ -22,7 +22,7 @@ Advisor completes pickup at the counter or curb — invoice, payment, receipt, R
 
 ---
 
-## Operational acceptance — phone only
+## Operational acceptance - phone only
 
 ```
 Customer (ready vehicle)

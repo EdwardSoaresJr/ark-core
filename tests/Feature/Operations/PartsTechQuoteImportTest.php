@@ -259,9 +259,9 @@ test('parts tech quote preview surfaces front and rear position for duplicate br
         ->getJson(route('operations.repair-orders.partstech.import.preview', $repairOrder))
         ->assertOk()
         ->assertJsonPath('lines.0.position_label', 'Front')
-        ->assertJsonPath('lines.0.description', 'Front — Wagner BrakeBest Select Ceramic Disc Brake Pad Set')
+        ->assertJsonPath('lines.0.description', 'Front - Wagner BrakeBest Select Ceramic Disc Brake Pad Set')
         ->assertJsonPath('lines.1.position_label', 'Rear')
-        ->assertJsonPath('lines.1.description', 'Rear — Wagner BrakeBest Select Ceramic Disc Brake Pad Set');
+        ->assertJsonPath('lines.1.description', 'Rear - Wagner BrakeBest Select Ceramic Disc Brake Pad Set');
 });
 
 test('parts tech quote import assigns selected parts to chosen concerns', function () {

@@ -1,5 +1,5 @@
 ---
-description: Public ARK is the only Core development repository — verify before editing
+description: Public ARK is the only Core development repository - verify before editing
 alwaysApply: true
 ---
 
@@ -19,6 +19,6 @@ If the Git root or origin is `arksmsv2` or `ark-cloud` / `ark-platform`, **stop*
 | --- | --- |
 | Shared Core | this repo |
 | Platform | `/Users/edwardsoares/Herd/ark-cloud` (`EdwardSoaresJr/ark-platform`) |
-| Preserved fallback | `/Users/edwardsoares/Herd/arksmsv2` — no new Core work |
+| Preserved fallback | `/Users/edwardsoares/Herd/arksmsv2` - no new Core work |
 
 Open this repository as the Cursor workspace. Do not open the parent `Herd` directory.

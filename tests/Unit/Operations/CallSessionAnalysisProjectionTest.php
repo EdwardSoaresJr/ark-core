@@ -32,10 +32,10 @@ test('call session analysis projection preserves suggested reply', function () {
         'summary' => 'Customer asked about Monday drop-off.',
         'follow_up_needed' => true,
         'follow_up_notes' => 'Advisor missed confirming the visit.',
-        'suggested_reply' => 'Monday works great — see you then!',
+        'suggested_reply' => 'Monday works great - see you then!',
     ]);
 
-    expect($projected['suggested_reply'])->toBe('Monday works great — see you then!')
+    expect($projected['suggested_reply'])->toBe('Monday works great - see you then!')
         ->and($projected['follow_up_notes'])->toBe('Advisor missed confirming the visit.');
 });
 

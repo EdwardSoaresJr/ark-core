@@ -18,7 +18,7 @@
 
         @include('partials.branding._favicons')
 
-        {{-- Error pages must never depend on Vite — deploys can briefly activate a release before assets build. --}}
+        {{-- Error pages must never depend on Vite - deploys can briefly activate a release before assets build. --}}
         <style>
             body { margin: 0; min-height: 100vh; background: #f1f5f9; color: #020617; font-family: ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
             main { margin: 0 auto; display: flex; min-height: 100vh; max-width: 42rem; flex-direction: column; justify-content: center; padding: 2.5rem 1rem; }

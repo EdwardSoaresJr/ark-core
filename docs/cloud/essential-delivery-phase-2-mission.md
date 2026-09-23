@@ -1,4 +1,4 @@
-# Essential Delivery — Phase 2 Mission (Core)
+# Essential Delivery - Phase 2 Mission (Core)
 
 **Status:** ESSENTIAL DELIVERY PHASE 2: COMPLETE ✅  
 **Prerequisite:** [Phase 1 COMPLETE](./essential-delivery-phase-1-mission.md)  
@@ -38,20 +38,20 @@ The Box owns the user, challenge, verification, and password mutation. Cloud nev
 
 ## What crosses the air gap
 
-Only the signed authorization artifact — installation-bound, challenge-bound, purpose-bound, expiring. No password.
+Only the signed authorization artifact - installation-bound, challenge-bound, purpose-bound, expiring. No password.
 
 ## Relationship to Phase 1
 
 | Condition | Path |
 | --- | --- |
-| Box can reach Cloud | Phase 1 — Essential Delivery email code |
-| Box cannot reach Cloud | Phase 2 — offline challenge + carried authorization |
+| Box can reach Cloud | Phase 1 - Essential Delivery email code |
+| Box cannot reach Cloud | Phase 2 - offline challenge + carried authorization |
 
 Both paths mutate the password on-box. Both use the installation recovery identity registered at setup (Phase 1 essential registration).
 
 ## Acceptance (Core side)
 
-Same stop condition as Cloud mission doc — offline Box, carried authorization, local verify, reset, login, zero Mail entitlement, no pairing.
+Same stop condition as Cloud mission doc - offline Box, carried authorization, local verify, reset, login, zero Mail entitlement, no pairing.
 
 ## Implementation
 

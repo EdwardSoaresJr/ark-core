@@ -3,7 +3,7 @@
 namespace App\Ark\Operations\Maintenance;
 
 /**
- * Customer estimate Includes from Prepared Service — never invents vehicle specs.
+ * Customer estimate Includes from Prepared Service - never invents vehicle specs.
  */
 final class EngineOilPreparedIncludes
 {

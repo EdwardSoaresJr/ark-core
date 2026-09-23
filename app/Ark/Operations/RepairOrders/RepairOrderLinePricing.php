@@ -123,7 +123,7 @@ class RepairOrderLinePricing
             $concern = $repairOrder->concerns->firstWhere('id', $data['repair_order_concern_id'] ?? null);
             $posture = $concern?->billing_posture;
 
-            // Default posture means "shop default" — leave rate selection to category→policy map.
+            // Default posture means "shop default" - leave rate selection to category→policy map.
             if ($posture instanceof ConcernBillingPosture && $posture !== ConcernBillingPosture::Default) {
                 $data['billing_posture'] = $posture->value;
             }

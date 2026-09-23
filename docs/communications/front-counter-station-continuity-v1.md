@@ -1,6 +1,6 @@
 # Front Counter Station Continuity
 
-**Mission:** Make the Front Counter feel alive — ambient awareness, not a dashboard.
+**Mission:** Make the Front Counter feel alive - ambient awareness, not a dashboard.
 
 The Front Counter is a **station**. The VVX is one renderer today. Build **station continuity**; do not embed VVX-specific business logic in projections.
 
@@ -17,23 +17,23 @@ Observation Stream
 
 **What must never be missed at the Front Counter?**
 
-Filtered observation types live in `StationContinuityObservationScope`. Not every observation belongs here — filter by operational responsibility at the station.
+Filtered observation types live in `StationContinuityObservationScope`. Not every observation belongs here - filter by operational responsibility at the station.
 
 ## Screen ownership
 
 | State | Owner |
 |-------|--------|
-| Idle | ARK — baseline readiness + ambient announcements |
-| Ringing | Poly — native UI |
+| Idle | ARK - baseline readiness + ambient announcements |
+| Ringing | Poly - native UI |
 | On call | Poly |
-| After call | ARK — resumes on idle screensaver |
+| After call | ARK - resumes on idle screensaver |
 
 ## Ambient announcements
 
 Idle is the baseline. When a Front Counter observation occurs:
 
 1. Replace idle with a **temporary station announcement** (one glance, &lt;1 second).
-2. Auto-expire after **90 seconds** — return to idle without dismissal.
+2. Auto-expire after **90 seconds** - return to idle without dismissal.
 3. Appliance **informs**; it does not require interaction.
 
 Examples:

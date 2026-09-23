@@ -1,6 +1,6 @@
 # ARK Authority Interaction Map v1
 
-**Status:** E0.5 — **signed architecture** (relationships, not tables).  
+**Status:** E0.5 - **signed architecture** (relationships, not tables).  
 **Prerequisite:** [`event-contracts-v1.md`](../mobile/event-contracts-v1.md) · [`companion-authority-model-v1.md`](../mobile/companion-authority-model-v1.md).  
 **Next:** [`ark-scoped-event-streams-v1.md`](ark-scoped-event-streams-v1.md).
 
@@ -17,12 +17,12 @@ No implementation. No storage. No UI. Relationship verbs only.
 | Verb | Meaning |
 |------|---------|
 | **owns** | Authoritative truth for this domain |
-| **references** | Points at another authority — foreign key, not copy |
+| **references** | Points at another authority - foreign key, not copy |
 | **produces** | Emits event contracts |
 | **observes** | Receives events from another domain (read-only) |
 | **projects** | Surfaces another authority's facts without owning them |
 | **scopes** | Filters events into a stream anchor |
-| **contains** | Parent-child **entity** containment (RO contains lines — not "RO owns inspection truth") |
+| **contains** | Parent-child **entity** containment (RO contains lines - not "RO owns inspection truth") |
 | **never owns** | Explicit boundary |
 
 ---
@@ -58,7 +58,7 @@ Vehicle
     │
     ├── owns ──────────────► VIN · YMM · plate · vehicle identity · history notes
     │
-    ├── references ────────► Customer              (relationship — vehicle can move)
+    ├── references ────────► Customer              (relationship - vehicle can move)
     │
     ├── contains ──────────► Repair Order history  (via RO.reference → vehicle)
     │
@@ -69,7 +69,7 @@ Vehicle
     └── never owns ────────► Customer · RO lifecycle · Inspection · Financial
 ```
 
-Technician Companion orients on **Vehicle Stream**; advisor orients on **Customer Stream**. Same events may appear in both scopes — different anchors.
+Technician Companion orients on **Vehicle Stream**; advisor orients on **Customer Stream**. Same events may appear in both scopes - different anchors.
 
 ---
 
@@ -82,7 +82,7 @@ Repair Order
     │
     ├── references ────────► Customer · Vehicle
     │
-    ├── references ────────► Inspection         (RO-scoped — Inspection owns findings)
+    ├── references ────────► Inspection         (RO-scoped - Inspection owns findings)
     │
     ├── references ────────► Financial          (ledger anchored on RO)
     │
@@ -95,7 +95,7 @@ Repair Order
     └── never owns ────────► Customer identity · Vehicle identity · Inspection truth · Payment truth
 ```
 
-**Contains vs owns:** RO **contains** concern lines. RO **references** Inspection — findings live in Inspection authority.
+**Contains vs owns:** RO **contains** concern lines. RO **references** Inspection - findings live in Inspection authority.
 
 ---
 
@@ -133,7 +133,7 @@ Financial
     └── never owns ────────► Customer · RO workflow · Estimate lines
 ```
 
-Payment truth is **authoritative in Financial domain** — projected onto Customer Stream for relationship context.
+Payment truth is **authoritative in Financial domain** - projected onto Customer Stream for relationship context.
 
 ---
 
@@ -156,7 +156,7 @@ Call
     └── produces ──────────► Call Started · Call Missed · Voicemail Received · …
 ```
 
-Communication **produces** events — does not organize the shop. Streams organize.
+Communication **produces** events - does not organize the shop. Streams organize.
 
 ---
 
@@ -189,7 +189,7 @@ Presence
     ├── owns ──────────────► availability state (Available · Busy · On Call · Driving · Lunch)
     ├── references ────────► Operator
     ├── produces ──────────► Presence Changed · On Call · Available
-    ├── influences ────────► routing · dispatch · PTT · transfers   (future policy — does not own calls)
+    ├── influences ────────► routing · dispatch · PTT · transfers   (future policy - does not own calls)
     └── never owns ────────► Identity · Customer · RO
 ```
 
@@ -201,12 +201,12 @@ Edward · extension 105 = **Identity**. Driving = **Presence**. Separate truths.
 
 ```text
 Shop
-    ├── owns ──────────────► tenant · configuration (behavior — not operational history)
+    ├── owns ──────────────► tenant · configuration (behavior - not operational history)
     ├── scopes ────────────► Shop Stream          (cross-customer delta for an operator)
     └── never owns ────────► customer facts · events (events remain in domain authorities)
 ```
 
-Shop Stream is a **projection scope** — not a sixth event store.
+Shop Stream is a **projection scope** - not a sixth event store.
 
 ---
 
@@ -214,11 +214,11 @@ Shop Stream is a **projection scope** — not a sixth event store.
 
 | Pattern | Example |
 |---------|---------|
-| **Reference, don't copy** | RO references Vehicle — does not store YMM as truth |
-| **Project, don't own** | Customer Stream shows Payment Received — Financial owns it |
-| **Produce events, not UI** | Inspection produces Inspection Completed — screens consume streams |
-| **Scope, don't fork** | Same event in Customer Stream and RO Stream — one contract, two filters |
-| **Observe streams, not tables** | Observation engine reads Customer Stream — not 12 JOINs |
+| **Reference, don't copy** | RO references Vehicle - does not store YMM as truth |
+| **Project, don't own** | Customer Stream shows Payment Received - Financial owns it |
+| **Produce events, not UI** | Inspection produces Inspection Completed - screens consume streams |
+| **Scope, don't fork** | Same event in Customer Stream and RO Stream - one contract, two filters |
+| **Observe streams, not tables** | Observation engine reads Customer Stream - not 12 JOINs |
 
 ---
 
@@ -231,7 +231,7 @@ Shop Stream is a **projection scope** — not a sixth event store.
 | Comms owns the OS | Events come from many producers |
 | Timeline table as truth | Streams rebuild from events |
 | `OperationalEventType` mega-enum | Authorities lose vocabulary |
-| Event contract named "Payment" | Noun — authority name, not verb |
+| Event contract named "Payment" | Noun - authority name, not verb |
 
 ---
 

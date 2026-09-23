@@ -43,7 +43,7 @@ class PortalEstimateDepositCompleteController
         return response()->json([
             'attempt' => $presented,
             'message' => sprintf(
-                'Thank you — we received your %s deposit.',
+                'Thank you - we received your %s deposit.',
                 $presented['amount'],
             ),
         ]);

@@ -82,7 +82,7 @@ ARKSMS_LEGACY_PASSWORD=
 | `repair_order_status_logs` | history | **Authoritative close date:** last transition into `closed`, `completed`, `invoiced`, etc. |
 | `deleted_at` | timestamp nullable | Skip |
 
-**Financial (header-level, if present):** `subtotal`, `tax`, `total`, `shop_fee` — used only for invoice snapshot / validation, **not** to recalc lines.
+**Financial (header-level, if present):** `subtotal`, `tax`, `total`, `shop_fee` - used only for invoice snapshot / validation, **not** to recalc lines.
 
 **Risks:** unknown legacy status slugs → `closed`. Missing vehicle/customer → skip.
 
@@ -156,7 +156,7 @@ V2 has no separate `invoices` table. Historic invoice truth lives in `estimate_d
 
 - Matrix pricing metadata (unless present on line)
 - Procurement state (defaults `none`)
-- Technician assignment (unless legacy `assigned_technician_id` maps to V2 user by email — **unresolved**, skipped)
+- Technician assignment (unless legacy `assigned_technician_id` maps to V2 user by email - **unresolved**, skipped)
 - Shop fee rollup synthetic lines (rebuilt only on live recalc)
 
 ## Status mapping (verbatim)
@@ -208,10 +208,10 @@ Legacy `repair_order_statuses.slug` values are lowercased and mapped through `co
 
 V2 **Sales Closed** uses the same authority as legacy ARK-SMS for imported repair orders:
 
-1. **Close date** — `closed_at` from legacy status logs / invoice timing (`ark:backfill-imported-repair-order-dates`).
-2. **Completed scope** — `closed` and `ready_pickup` (legacy `completed`, `invoiced`, `paid`, `closed`).
-3. **Opened in range** — imported legacy ROs count toward sales only when **opened_at** is inside the report range (excludes jobs that started in a prior year but closed after import).
-4. **Revenue** — legacy invoice `total` when an invoice exists; otherwise approved/published line totals only (not all estimate lines).
+1. **Close date** - `closed_at` from legacy status logs / invoice timing (`ark:backfill-imported-repair-order-dates`).
+2. **Completed scope** - `closed` and `ready_pickup` (legacy `completed`, `invoiced`, `paid`, `closed`).
+3. **Opened in range** - imported legacy ROs count toward sales only when **opened_at** is inside the report range (excludes jobs that started in a prior year but closed after import).
+4. **Revenue** - legacy invoice `total` when an invoice exists; otherwise approved/published line totals only (not all estimate lines).
 
 Run `php artisan ark:audit-imported-reporting --from=YYYY-MM-DD --to=YYYY-MM-DD` to compare V2 vs legacy. Delta should stay within a few hundred dollars (rounding).
 

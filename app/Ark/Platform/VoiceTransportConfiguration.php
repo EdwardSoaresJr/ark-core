@@ -7,8 +7,8 @@ use RuntimeException;
 /**
  * Deployment-owned SIP transport values for desk phone provisioning.
  *
- * Intentionally separate from {@see ShopBaseUrl} — HTTP identity ≠ SIP identity.
- * Desk phones register to Twilio Elastic SIP — not a shop PBX.
+ * Intentionally separate from {@see ShopBaseUrl} - HTTP identity ≠ SIP identity.
+ * Desk phones register to Twilio Elastic SIP - not a shop PBX.
  *
  * @see docs/platform/shop-identity-v1.md
  */
@@ -74,7 +74,7 @@ final class VoiceTransportConfiguration
             return 'Auto-provisioned on deploy';
         }
 
-        return 'Missing — run ark:voice:ensure-transport-config';
+        return 'Missing - run ark:voice:ensure-transport-config';
     }
 
     public static function ensure(): ?string

@@ -28,7 +28,7 @@ enum InspectionFindingIntent: string
             self::Maintenance => 'Wear or interval item observed during inspection.',
             self::Diagnostic => 'Finding needs further testing before recommending repair.',
             self::Verification => 'Post-repair or quality check result.',
-            self::Observation => 'Document-only context — installed equipment, cosmetic note, customer-supplied hardware.',
+            self::Observation => 'Document-only context - installed equipment, cosmetic note, customer-supplied hardware.',
         };
     }
 

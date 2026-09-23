@@ -4,7 +4,7 @@
 
 @section('content')
     <h1>Installing ARK</h1>
-    <p class="lead">This can take a few minutes on a small server. Keep this page open — you do not need the terminal.</p>
+    <p class="lead">This can take a few minutes on a small server. Keep this page open - you do not need the terminal.</p>
 
     <div id="install-progress-panel" class="{{ $failed ? 'errors' : 'status' }}" role="status" aria-live="polite">
         <strong id="install-progress-label">{{ $label }}</strong>
@@ -64,7 +64,7 @@
                         return;
                     }
                 } catch (e) {
-                    // Keep polling — short outages during migrate are expected.
+                    // Keep polling - short outages during migrate are expected.
                 }
 
                 window.setTimeout(poll, 2000);

@@ -28,7 +28,7 @@ test('advisor can add internal note from communications inbox', function (): voi
 
     $this->actingAs($advisor)
         ->post(route('operations.communications.conversations.internal-note', $conversation), [
-            'body' => 'Customer asked about brake noise — follow up tomorrow.',
+            'body' => 'Customer asked about brake noise - follow up tomorrow.',
             'section' => 'inbox',
         ])
         ->assertRedirect(CommunicationsNeedsYou::url(['conversation' => $conversation->id]))
@@ -39,7 +39,7 @@ test('advisor can add internal note from communications inbox', function (): voi
     expect($message->conversation_id)->toBe($conversation->id)
         ->and($message->channel)->toBe(OperationalCommunicationChannel::Internal)
         ->and($message->direction)->toBe(OperationalCommunicationDirection::Internal)
-        ->and($message->body)->toBe('Customer asked about brake noise — follow up tomorrow.');
+        ->and($message->body)->toBe('Customer asked about brake noise - follow up tomorrow.');
 
     Http::assertNothingSent();
 });
@@ -92,7 +92,7 @@ test('advisor can log call note against phone conversation', function (): void {
 
     $this->actingAs($advisor)
         ->post(route('operations.communications.calls.note', $session), [
-            'body' => 'Voicemail — wants oil change quote.',
+            'body' => 'Voicemail - wants oil change quote.',
         ])
         ->assertRedirect(CommunicationsNeedsYou::url(['call' => $session->id]))
         ->assertSessionHas('status', 'Call note logged.');
@@ -103,7 +103,7 @@ test('advisor can log call note against phone conversation', function (): void {
     expect($message->direction)->toBe(OperationalCommunicationDirection::Internal)
         ->and($message->metadata['call_note'] ?? false)->toBeTrue()
         ->and($message->metadata['call_session_id'] ?? null)->toBe($session->id)
-        ->and($message->body)->toBe('Voicemail — wants oil change quote.');
+        ->and($message->body)->toBe('Voicemail - wants oil change quote.');
 
     Http::assertNothingSent();
 });

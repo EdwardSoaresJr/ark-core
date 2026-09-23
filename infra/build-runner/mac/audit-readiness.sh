@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 1 — Mac build runner readiness audit (read-only).
+# Phase 1 - Mac build runner readiness audit (read-only).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -56,12 +56,12 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
         warn "Run ensure-buildx.sh after Docker install"
     fi
 else
-    fail "Docker not running — install-prerequisites.sh + open Docker Desktop"
+    fail "Docker not running - install-prerequisites.sh + open Docker Desktop"
 fi
 
 echo ""
 echo "--- Cross-platform ---"
-[[ "$(uname -m)" == "arm64" ]] && warn "Apple Silicon — workflows use platforms: linux/amd64 + DOCKER_DEFAULT_PLATFORM"
+[[ "$(uname -m)" == "arm64" ]] && warn "Apple Silicon - workflows use platforms: linux/amd64 + DOCKER_DEFAULT_PLATFORM"
 if docker info >/dev/null 2>&1 && docker pull --platform linux/amd64 alpine:3.20 >/dev/null 2>&1; then
     pass "linux/amd64 pull works"
 fi

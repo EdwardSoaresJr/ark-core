@@ -8,7 +8,7 @@
 ```text
 Advisor Saved Work
   → Deterministic Historical Work Recall (unchanged, GET zero-write)
-  → POST assist request (durable DragonAssistRequest — persists first)
+  → POST assist request (durable DragonAssistRequest - persists first)
   → DragonBridgeDispatcher
        ├─ Reverb private channel private-dragon.node.{id}  (NORMAL delivery, ms)
        └─ HTTP pending list on connect/reconnect           (RECOVERY only)
@@ -63,13 +63,13 @@ Idempotent accepted/completed/failed. Max 3 dispatch attempts. Accepted timeout 
 - Flow: Generate → preview ORIGINAL / PROPOSAL → explicit Apply → optional Revert
 - ARK-side `ServiceAdvisorFactPreservationCheck` rejects proposals that drop measurements/DTCs/sides or invent urgency
 - Audit: `dragon_service_advisor_applications` (original, proposal, edited, applied, revert)
-- Dragon never writes RO authority — Apply is a staff HTTP write with `RepairOrdersManage`
+- Dragon never writes RO authority - Apply is a staff HTTP write with `RepairOrdersManage`
 
 ## Review Estimate Notes (v0.1)
 
 - Task type: `review_estimate_notes`
 - Entry: RO review toolbar → **Review Estimate Notes**
-- Critique only (gaps / inconsistencies / suggested actions) — no Apply, no field writes
+- Critique only (gaps / inconsistencies / suggested actions) - no Apply, no field writes
 - Context: visit reason + all concern narratives (bounded, no PII)
 
 ## UI
@@ -115,7 +115,7 @@ No Dragon writes to RO/labor/financials · no OEM labor · no voice · no generi
 ### systemd (arkai)
 
 ```bash
-# On production app container — issue token once:
+# On production app container - issue token once:
 php artisan dragon:token-issue arkai-assist
 
 # On arkai:

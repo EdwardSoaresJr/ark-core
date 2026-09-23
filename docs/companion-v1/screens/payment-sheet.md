@@ -1,15 +1,15 @@
-# Screen spec — Payment Sheet
+# Screen spec - Payment Sheet
 
 **ID:** `companion.screen.payment-sheet`  
 **Role(s):** Advisor  
-**ARK doctrine:** `ark-square-payments.mdc` — server-authoritative balance  
-**Status:** 📝 draft — Edward review
+**ARK doctrine:** `ark-square-payments.mdc` - server-authoritative balance  
+**Status:** 📝 draft - Edward review
 
 ---
 
 ## Job
 
-Collect payment on an **issued invoice** — cash · card · terminal · payment link — balance from server only, never duplicated in JavaScript.
+Collect payment on an **issued invoice** - cash · card · terminal · payment link - balance from server only, never duplicated in JavaScript.
 
 ---
 
@@ -26,21 +26,21 @@ Collect payment on an **issued invoice** — cash · card · terminal · payment
 
 ### Presentation
 
-- **Bottom sheet** (default) — draggable · half → full height
-- **Full-screen** when Square Terminal pairing needs space — rare
+- **Bottom sheet** (default) - draggable · half → full height
+- **Full-screen** when Square Terminal pairing needs space - rare
 
-### Header — context (always visible)
+### Header - context (always visible)
 
 - Customer · vehicle
 - **RO #1599** · invoice #
-- **Balance due** — Display · authoritative from `EstimateTotalsCalculator` / invoice projection
-- Paid to date · last payment — muted if partial
+- **Balance due** - Display · authoritative from `EstimateTotalsCalculator` / invoice projection
+- Paid to date · last payment - muted if partial
 
 
 - Default amount = **full balance due** (editable)
-- Numeric keypad — large tap targets
+- Numeric keypad - large tap targets
 - **Quick amounts:** Full balance · Custom
-- No arbitrary "sale items" — this is invoice collection, not retail POS
+- No arbitrary "sale items" - this is invoice collection, not retail POS
 
 ### Payment methods row
 
@@ -51,14 +51,14 @@ Collect payment on an **issued invoice** — cash · card · terminal · payment
 | **Terminal** | Pair/select terminal · send to device · wait for capture |
 | **Send link** | Portal pay token → SMS via [`compose-reply-sheet.md`](compose-reply-sheet.md) pattern |
 
-Methods hidden when shop settings disable them — configuration, not hardcoded.
+Methods hidden when shop settings disable them - configuration, not hardcoded.
 
 ### Footer
 
-- **Record payment** — primary when method + amount valid
-- **Cancel** — dismiss sheet · no mutation
+- **Record payment** - primary when method + amount valid
+- **Cancel** - dismiss sheet · no mutation
 
-### Success state (inline — not new screen hunt)
+### Success state (inline - not new screen hunt)
 
 - Checkmark · new balance · receipt actions
 - **Text receipt** · **Email receipt** (P1) · **Done**
@@ -74,7 +74,7 @@ Methods hidden when shop settings disable them — configuration, not hardcoded.
 | Terminal | Poll server for capture status · cancel sends void to terminal API |
 | Send link | Opens composer pre-filled or sends immediately with confirm |
 | Swipe down | Dismiss if no payment in flight |
-| Done | Return to caller — RO workspace · search · thread |
+| Done | Return to caller - RO workspace · search · thread |
 
 ---
 
@@ -110,7 +110,7 @@ Link: [`../02-flows.md`](../02-flows.md#take-payment-from-search)
 
 ## Data & API
 
-**Authority:** Financial domain · `RecordLedgerEntryAction` path — same as desktop
+**Authority:** Financial domain · `RecordLedgerEntryAction` path - same as desktop
 
 **Needs:**
 

@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * RO lifecycle transitions from the phone — move status forward/back and close
+ * RO lifecycle transitions from the phone - move status forward/back and close
  * the repair order. Reuses RepairOrderLifecycleTransition, the same authority
  * the desktop toolbar uses, so blocking rules, final invoice issue, posting,
  * and lifecycle events behave identically across surfaces. The status value may

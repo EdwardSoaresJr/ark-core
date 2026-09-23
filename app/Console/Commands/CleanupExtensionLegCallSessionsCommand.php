@@ -38,12 +38,12 @@ class CleanupExtensionLegCallSessionsCommand extends Command
                 $session->from_number,
                 $session->to_number,
                 $session->status->value,
-                $session->started_at?->toDateTimeString() ?? '—',
+                $session->started_at?->toDateTimeString() ?? '-',
             ])->all(),
         );
 
         if ($dryRun) {
-            $this->components->warn('Dry run — '.$sessions->count().' session(s) would be deleted. Pass --force to delete.');
+            $this->components->warn('Dry run - '.$sessions->count().' session(s) would be deleted. Pass --force to delete.');
 
             return self::SUCCESS;
         }

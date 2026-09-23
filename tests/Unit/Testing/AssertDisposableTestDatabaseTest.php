@@ -3,7 +3,7 @@
 use Tests\Support\AssertDisposableTestDatabase;
 
 /**
- * Pure policy tests — do not boot Laravel / RefreshDatabase.
+ * Pure policy tests - do not boot Laravel / RefreshDatabase.
  * These prove the fail-closed identity rules themselves.
  */
 test('permits disposable sqlite identities', function (string $database) {

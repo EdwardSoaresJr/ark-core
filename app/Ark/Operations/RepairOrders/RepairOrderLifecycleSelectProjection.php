@@ -73,7 +73,7 @@ final readonly class RepairOrderLifecycleSelectProjection
 
             $closeOptions[] = [
                 'value' => 'closed:'.$variant->variant_key,
-                'label' => 'Closed — '.$variant->name,
+                'label' => 'Closed - '.$variant->name,
                 'blockedReason' => $transition->blockingReason(
                     $repairOrder,
                     RepairOrderStatus::Closed->value,
@@ -141,7 +141,7 @@ final readonly class RepairOrderLifecycleSelectProjection
     }
 
     /**
-     * Chip tone for Job Board / Hub / Comms status controls — keyed to lifecycle, not pressure.
+     * Chip tone for Job Board / Hub / Comms status controls - keyed to lifecycle, not pressure.
      */
     public static function statusTone(RepairOrder $repairOrder): string
     {
@@ -203,7 +203,7 @@ final readonly class RepairOrderLifecycleSelectProjection
         if ($this->showLostCloseOption) {
             $moves[] = [
                 'value' => 'closed:lost',
-                'label' => 'Closed — Lost',
+                'label' => 'Closed - Lost',
                 'disabled' => false,
                 'blockedReason' => null,
                 'needsRoConfirmation' => true,

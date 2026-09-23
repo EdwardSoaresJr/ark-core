@@ -5,7 +5,7 @@
 <div class="ops-today__overview-col" aria-labelledby="ops-today-pipeline">
     <div class="ops-today__overview-head">
         <h2 id="ops-today-pipeline" class="ops-today__overview-title">Pipeline</h2>
-        <p class="ops-today__overview-copy">Operational cash flow — not accounting. Every row links to the repair orders behind it.</p>
+        <p class="ops-today__overview-copy">Operational cash flow - not accounting. Every row links to the repair orders behind it.</p>
     </div>
 
     <ul class="ops-today-metric-list">

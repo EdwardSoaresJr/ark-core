@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Staff media stream — private disk only. */
+/** Staff media stream - private disk only. */
 final class DocumentStreamController
 {
     public function __invoke(

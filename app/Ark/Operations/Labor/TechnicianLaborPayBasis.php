@@ -26,7 +26,7 @@ enum TechnicianLaborPayBasis: string
     public function basePayHint(): string
     {
         return match ($this) {
-            self::Hourly => 'Straight wage for each paid clock hour — before taxes and benefits.',
+            self::Hourly => 'Straight wage for each paid clock hour - before taxes and benefits.',
             self::Flag => 'What the technician earns for completed flagged production.',
         };
     }

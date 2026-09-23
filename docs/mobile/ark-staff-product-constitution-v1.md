@@ -1,8 +1,8 @@
-# ARK Staff — Product Constitution v1
+# ARK Staff - Product Constitution v1
 
-**Status:** Frozen — protect, do not re-debate.  
+**Status:** Frozen - protect, do not re-debate.  
 **Scope:** ARK Staff (mobile) and `/api/mobile/*` projections that feed it.  
-**Audit:** [`ark-staff-moments-audit-v3.md`](ark-staff-moments-audit-v3.md) (Shop Posture — observation complete).  
+**Audit:** [`ark-staff-moments-audit-v3.md`](ark-staff-moments-audit-v3.md) (Shop Posture - observation complete).  
 **Not:** Another platform doctrine. Seven PR questions + three invariants + one design loop.
 
 ---
@@ -11,7 +11,7 @@
 
 > **The operator should never have to inspect the operation to understand its state.**
 
-ARK is an **operating system for an automotive shop** — not a CRM with a nicer RO screen. Every surface helps the operator **regain control of the shop**, not navigate software.
+ARK is an **operating system for an automotive shop** - not a CRM with a nicer RO screen. Every surface helps the operator **regain control of the shop**, not navigate software.
 
 **Design question (start every PR here):**
 
@@ -25,13 +25,13 @@ Not: *What screen should this live on?*
 
 | Layer | Owns |
 |-------|------|
-| **Authorities** | Truth — what happened, what exists |
-| **Observations** | Change — what it means (*customer replied* is an observation, not a "moment layer") |
-| **Posture** | The operation — how the shop feels right now |
+| **Authorities** | Truth - what happened, what exists |
+| **Observations** | Change - what it means (*customer replied* is an observation, not a "moment layer") |
+| **Posture** | The operation - how the shop feels right now |
 
 **Everything else is presentation.**
 
-Full loop (authority-driven — not a checklist):
+Full loop (authority-driven - not a checklist):
 
 ```
 Authority changes
@@ -51,13 +51,13 @@ Observation resolves
 Posture improves → ARK decides what matters next
 ```
 
-**Finish Work** — design intent for what was called Next Actions. Not necessarily the UI label.
+**Finish Work** - design intent for what was called Next Actions. Not necessarily the UI label.
 
 > **Finish Work is not a task list. It is the minimum action required to move the operation toward FLOWING.**
 
 *"Next action"* implies a to-do list. **Finish work** asks: *What is preventing this operation from flowing?*
 
-When Finish Work completes, **posture changes** — then ARK surfaces the next thing that matters. Not four parallel items. **One thing.**
+When Finish Work completes, **posture changes** - then ARK surfaces the next thing that matters. Not four parallel items. **One thing.**
 
 | Wrong (task bucket) | Right (flow restore) |
 |---------------------|----------------------|
@@ -70,7 +70,7 @@ When Finish Work completes, **posture changes** — then ARK surfaces the next t
 | Vehicle arrived | Check in |
 | Estimate viewed (4×, no reply 18h) | Call Jason |
 
-**Tied to operational state** — each Finish Work item has a clear close:
+**Tied to operational state** - each Finish Work item has a clear close:
 
 - Waiting on customer approval
 - Vehicle ready for pickup
@@ -81,11 +81,11 @@ When Finish Work completes, **posture changes** — then ARK surfaces the next t
 
 **Not Finish Work:** unread messages · notifications · reminders · generic tasks · navigation disguised as action.
 
-If completing it does not **automatically** improve posture (because authority genuinely advanced, not because someone checked a box), it is not Finish Work — it is information or navigation.
+If completing it does not **automatically** improve posture (because authority genuinely advanced, not because someone checked a box), it is not Finish Work - it is information or navigation.
 
 ### Where AI fits (invisible, not replacement)
 
-AI reduces **decision budget** inside Finish Work — it does not replace the operator.
+AI reduces **decision budget** inside Finish Work - it does not replace the operator.
 
 Not: *Call customer.*
 
@@ -101,7 +101,7 @@ Suggested opening:
 "Hi Jason, I wanted to make sure you had a chance to review the estimate..."
 ```
 
-Context and suggested opening — Edward still decides and acts. AI disappears into the product.
+Context and suggested opening - Edward still decides and acts. AI disappears into the product.
 
 ---
 
@@ -112,7 +112,7 @@ Authority
     ↓
 Observation
     ↓
-Shop Posture          (always visible — every workspace)
+Shop Posture          (always visible - every workspace)
     ↓
 Workspace
     ↓
@@ -131,7 +131,7 @@ Finish Work
 
 Shop posture **persists** inside every workspace. The operation does not disappear on an RO.
 
-**Emotional rule:** The interface should **mirror the emotional posture of the operation** — not flat CRM intensity.
+**Emotional rule:** The interface should **mirror the emotional posture of the operation** - not flat CRM intensity.
 
 ---
 
@@ -139,13 +139,13 @@ Shop posture **persists** inside every workspace. The operation does not disappe
 
 > If Edward opened this in the middle of a busy Tuesday, would he immediately understand the **current state of the operation** and **what the operation needs from him**?
 
-If no — not finished, regardless of functionality shipped.
+If no - not finished, regardless of functionality shipped.
 
 ---
 
-## PR litmus — seven questions (required for ARK Staff PRs)
+## PR litmus - seven questions (required for ARK Staff PRs)
 
-Answer in PR description. Not "did tests pass?" — **did we make the operation easier to understand?**
+Answer in PR description. Not "did tests pass?" - **did we make the operation easier to understand?**
 
 ### 1. Decision budget
 
@@ -169,7 +169,7 @@ A surface that informs but does not move the operation forward should be questio
 
 **If the operator completes this, does the posture improve automatically?**
 
-Because authority advanced — not because someone checked a box. If no, this may be navigation or information, not Finish Work.
+Because authority advanced - not because someone checked a box. If no, this may be navigation or information, not Finish Work.
 
 ### 5. Operation stays visible
 
@@ -181,7 +181,7 @@ No workspace should isolate the operator from the broader state of the shop.
 
 **Would this still make sense if the operator switched devices right now?**
 
-Phone, desktop, VVX, tablet — posture and Finish Work should remain coherent (presentation may differ).
+Phone, desktop, VVX, tablet - posture and Finish Work should remain coherent (presentation may differ).
 
 ### 7. State-first (implicit in all above)
 
@@ -193,17 +193,17 @@ If the PR cannot answer in one sentence, scope is wrong.
 
 ## What we do not re-litigate
 
-- Beat generic CRM mobile apps on features — ARK is shop OS, not a contact database.
-- Moments as a platform layer — use Observations.
-- Unlock-only posture — posture everywhere.
-- Modules — capabilities · workspaces · posture.
-- More philosophy docs — apply this constitution.
+- Beat generic CRM mobile apps on features - ARK is shop OS, not a contact database.
+- Moments as a platform layer - use Observations.
+- Unlock-only posture - posture everywhere.
+- Modules - capabilities · workspaces · posture.
+- More philosophy docs - apply this constitution.
 
 ---
 
 ## Primary metric
 
-**Decision budget** — count stops where the operator chooses *where* before *what*. Fewer decisions, not fewer taps.
+**Decision budget** - count stops where the operator chooses *where* before *what*. Fewer decisions, not fewer taps.
 
 ---
 
@@ -212,9 +212,9 @@ If the PR cannot answer in one sentence, scope is wrong.
 Edward anywhere in the app knows:
 
 1. **Shop posture** (and workspace posture when in an object)
-2. **One Finish Work** — the minimum action to restore flow
+2. **One Finish Work** - the minimum action to restore flow
 3. Without inspecting lists, queues, badges, or tabs
 
-When Finish Work completes, posture improves and items **disappear because the operation advanced** — not because someone checked a box. That is fundamentally different from a CRM or traditional shop system.
+When Finish Work completes, posture improves and items **disappear because the operation advanced** - not because someone checked a box. That is fundamentally different from a CRM or traditional shop system.
 
 The app learns Edward. Edward does not learn ARK.

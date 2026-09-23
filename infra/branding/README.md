@@ -27,7 +27,7 @@ Survives Coolify upgrades via `/data/coolify/custom/ark-branding/` + guardrails 
 
 ## Public Surface (shop host)
 
-**Exception:** `demo-auto.test` is a placeholder shop domain for favicon/OG — served by ARK V2 Public Surface (not ARK-WEB / Botble).
+**Exception:** `demo-auto.test` is a placeholder shop domain for favicon/OG - served by ARK V2 Public Surface (not ARK-WEB / Botble).
 
 ## Verify
 
