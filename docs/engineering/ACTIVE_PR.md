@@ -1,16 +1,29 @@
 # Active PR
 
-**Track:** Remove repair-order missing-item recommendations  
-**Status:** Implementation  
-**Surface:** Estimate totals, estimate send, advisor estimate tools
+**Track:** Core RC2 — Local Floor Acceptance  
+**Status:** Floor use / validation  
+**Surface:** Repair Order advisor workflow + Job Board
 
-## Scope
+## Release set
 
-Remove the estimate-companion catalog that warned a job was missing parts or labor the shop usually includes.
+Oldest to newest. This is the release. Other commits on main are not part of it.
 
-## Out of scope
+1. `253ecc54` Remove repair order missing-item recommendations.
+2. `455845b2` Move work exceptions out of the concern worksheet.
+3. `a01264ca` Set the repair order query ceiling to the measured exception load.
+4. `2f842878` Keep the active PR note on the missing-item track.
+5. `ef3b8a58` Lead the repair order with the job being written.
+6. `162e1432` Stop the job board from repeating timezone, message, and lane lookups.
+7. `220d256b` Keep print and paperwork on the repair order footer.
 
-- VIN-missing send warning
-- Authorization and approval scope
-- Inspection findings
-- Production deploy
+## Next gate
+
+Use this Repair Order and Job Board during normal shop operation. Record actual workflow problems only. Do not reopen completed UI or performance work from code inspection.
+
+## Job Board
+
+179 queries / ~178 ms measured with 24 cards. No further optimization unless real use shows noticeable latency. If it does, profile customer phone matching, conversations, and leads next.
+
+## Release
+
+After floor acceptance, test this set together and prepare one controlled Core release. Do not deploy piecemeal.
