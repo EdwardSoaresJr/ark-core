@@ -21,6 +21,13 @@
     aria-label="Repair Order actions"
     x-data
 >
+    @unless ($isTerminal ?? false)
+        @include('operations.repair-orders.partials.repair-order-footer-compose', [
+            'laborGuides' => $laborGuides ?? [],
+            'partsCatalogs' => $partsCatalogs ?? [],
+        ])
+    @endunless
+
     <div class="ops-ro-footer__row">
         <div class="ops-ro-footer__workflow">
             @if ($workflow->key !== 'none')

@@ -1112,11 +1112,29 @@
 
                 return this.laborGuideItems.filter((item) => item.key !== key);
             },
+            focusLaborGuideConcern() {
+                const sections = [...document.querySelectorAll('section[id^=concern-]')]
+                    .filter((el) => /^concern-\d+$/.test(el.id));
+
+                if (sections.length === 0 || ! this.rteLabor) {
+                    return;
+                }
+
+                const nearest = sections
+                    .map((el) => ({ el, top: el.getBoundingClientRect().top }))
+                    .sort((a, b) => Math.abs(a.top - 140) - Math.abs(b.top - 140))[0];
+                const id = Number(nearest.el.id.replace('concern-', ''));
+
+                if (Number.isFinite(id)) {
+                    this.rteLabor.concernId = id;
+                }
+            },
             runLaborGuideItem(item) {
                 if (! item) {
                     return;
                 }
 
+                this.focusLaborGuideConcern();
                 this.laborGuideMenu = false;
 
                 if (item.kind === 'rte') {
@@ -1676,13 +1694,14 @@
                 ])
             </div>
 
-            @include('operations.repair-orders.partials.repair-order-visit-reason', [
-                'repairOrder' => $repairOrder,
-                'isTerminal' => $isTerminal,
-                'estimateVersion' => $estimateVersion,
-            ])
         </div>
                 </x-slot:header>
+
+                @include('operations.repair-orders.partials.repair-order-visit-reason', [
+                    'repairOrder' => $repairOrder,
+                    'isTerminal' => $isTerminal,
+                    'estimateVersion' => $estimateVersion,
+                ])
 
                 <div id="estimate-lines" class="scroll-mt-6" :class="worksheetBusyPending ? 'ops-worksheet-saving' : ''">
                     @if (($engineOilServices ?? collect())->isNotEmpty())
