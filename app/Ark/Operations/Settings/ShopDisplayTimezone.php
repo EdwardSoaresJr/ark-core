@@ -10,10 +10,13 @@ use Throwable;
 
 final class ShopDisplayTimezone
 {
+    private static ?string $resolved = null;
+
     private static ?bool $schemaReady = null;
 
     public static function forget(): void
     {
+        self::$resolved = null;
         self::$schemaReady = null;
     }
 
@@ -30,6 +33,10 @@ final class ShopDisplayTimezone
 
     public static function resolve(): string
     {
+        if (self::$resolved !== null) {
+            return self::$resolved;
+        }
+
         if (! self::schemaReady()) {
             throw new RuntimeException('Shop timezone is unavailable before shop settings are migrated.');
         }
@@ -44,7 +51,7 @@ final class ShopDisplayTimezone
             throw new RuntimeException("Shop timezone [{$timezone}] is not valid.");
         }
 
-        return $timezone;
+        return self::$resolved = $timezone;
     }
 
     public static function format(?CarbonInterface $instant, string $format = 'M j, Y g:i A'): ?string
