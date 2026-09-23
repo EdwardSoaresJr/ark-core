@@ -119,6 +119,68 @@ function assertGetHasNoMutations(callable $callback): mixed
     return $measured['result'];
 }
 
+/**
+ * Schema existence / column-catalog queries for one table.
+ *
+ * @param  list<array<string, mixed>>  $queries
+ * @return list<array<string, mixed>>
+ */
+function schemaQueriesForTable(array $queries, string $table): array
+{
+    return array_values(array_filter(
+        $queries,
+        function (array $query) use ($table): bool {
+            $sql = strtolower((string) $query['query']);
+            $schemaSql = str_contains($sql, 'information_schema')
+                || str_contains($sql, 'sqlite_master')
+                || str_contains($sql, 'pragma');
+
+            if (! $schemaSql) {
+                return false;
+            }
+
+            if (str_contains($sql, $table)) {
+                return true;
+            }
+
+            foreach ($query['bindings'] ?? [] as $binding) {
+                if (is_string($binding) && str_contains(strtolower($binding), $table)) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+    ));
+}
+
+/**
+ * Per-row reloads: select the parent by a single id. Batched whereIn stays out of this list.
+ *
+ * @param  list<array<string, mixed>>  $queries
+ * @return list<array<string, mixed>>
+ */
+function singleIdReloads(array $queries, string $table): array
+{
+    return array_values(array_filter(
+        $queries,
+        function (array $query) use ($table): bool {
+            $sql = strtolower((string) $query['query']);
+
+            if (! str_contains($sql, $table) || ! str_contains($sql, 'where')) {
+                return false;
+            }
+
+            $bindings = array_values(array_filter(
+                $query['bindings'] ?? [],
+                fn (mixed $binding): bool => is_int($binding) || (is_string($binding) && ctype_digit($binding)),
+            ));
+
+            return count($bindings) === 1;
+        },
+    ));
+}
+
 function assertOkWithinQueryBudget(string $url, int $maxQueries, ?callable $setup = null): TestResponse
 {
     if ($setup !== null) {

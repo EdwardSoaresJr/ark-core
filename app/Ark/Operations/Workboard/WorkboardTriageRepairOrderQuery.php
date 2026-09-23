@@ -63,10 +63,13 @@ final class WorkboardTriageRepairOrderQuery
             ->groupBy('repair_order_id');
 
         foreach ($repairOrders as $repairOrder) {
-            $repairOrder->setRelation(
-                'communicationEvents',
-                ($grouped->get($repairOrder->id) ?? collect())->take($limit)->values(),
-            );
+            $events = ($grouped->get($repairOrder->id) ?? collect())->take($limit)->values();
+
+            foreach ($events as $event) {
+                $event->setRelation('repairOrder', $repairOrder);
+            }
+
+            $repairOrder->setRelation('communicationEvents', $events);
         }
     }
 }

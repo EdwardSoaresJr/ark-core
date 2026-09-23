@@ -484,6 +484,7 @@ TEXT;
     public static function forgetCurrent(): void
     {
         self::$current = null;
+        ShopDisplayTimezone::forget();
     }
 
     /**

@@ -13,7 +13,11 @@ final class CommunicationEventMapper
 {
     public function map(CommunicationEvent $event): OperationalEventEntry
     {
-        $event->loadMissing(['repairOrder.vehicle', 'repairOrder.customer', 'creator']);
+        if (! $this->repairOrderGraphLoaded($event)) {
+            $event->loadMissing(['repairOrder.vehicle', 'repairOrder.customer']);
+        }
+
+        $event->loadMissing('creator');
 
         $repairOrder = $event->repairOrder;
         $kind = $this->eventKind($event->event_type);
@@ -48,6 +52,22 @@ final class CommunicationEventMapper
             ],
             subject: $event,
         );
+    }
+
+    private function repairOrderGraphLoaded(CommunicationEvent $event): bool
+    {
+        if (! $event->relationLoaded('repairOrder')) {
+            return false;
+        }
+
+        $repairOrder = $event->getRelation('repairOrder');
+
+        if ($repairOrder === null) {
+            return true;
+        }
+
+        return $repairOrder->relationLoaded('vehicle')
+            && $repairOrder->relationLoaded('customer');
     }
 
     private function eventKind(OperationalCommunicationType $type): OperationalEventKind

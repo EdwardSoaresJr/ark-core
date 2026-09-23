@@ -26,6 +26,7 @@ use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
 use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Texting\PlatformOutboundSmsTransport;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OutboundSmsTransport::class, PlatformOutboundSmsTransport::class);
         $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);
         $this->app->scoped(RepairOrderStatusCatalog::class);
+        $this->app->scoped(JobBoardLaneCatalog::class);
 
         $this->app->singleton(ProvisionBuilder::class, fn (): ProvisionBuilder => ProvisionBuilder::default());
 

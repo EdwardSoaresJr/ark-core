@@ -10,8 +10,17 @@ use Throwable;
 
 final class ShopDisplayTimezone
 {
+    private static ?bool $schemaReady = null;
+
+    public static function forget(): void
+    {
+        self::$schemaReady = null;
+    }
+
     public static function apply(): void
     {
+        self::forget();
+
         if (! self::schemaReady()) {
             return;
         }
@@ -78,11 +87,21 @@ final class ShopDisplayTimezone
 
     private static function schemaReady(): bool
     {
+        if (self::$schemaReady !== null) {
+            return self::$schemaReady;
+        }
+
         try {
-            return Schema::hasTable('shop_settings')
+            $ready = Schema::hasTable('shop_settings')
                 && Schema::hasColumn('shop_settings', 'shop_timezone');
         } catch (Throwable) {
             return false;
         }
+
+        if ($ready) {
+            self::$schemaReady = true;
+        }
+
+        return $ready;
     }
 }
