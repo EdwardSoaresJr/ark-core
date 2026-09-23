@@ -655,25 +655,108 @@ test('authorization history survives concern deletion', function () {
         ->and(AuthorizationException::query()->whereKey($exceptionId)->exists())->toBeTrue();
 });
 
-test('authorization exceptions are append-only and the worksheet says they are not customer consent', function () {
+test('authorization exceptions are append-only and the repair order says they are not customer approval', function () {
     $advisor = integrityAdvisor();
     [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $labor = addLabor($repairOrder, $concern);
     $this->actingAs($advisor);
+
+    $note = 'Shop truck brake inspection. Not billed to a customer and not an approval.';
 
     $this->post(route('operations.repair-orders.concerns.authorization-exceptions.store', [$repairOrder, $concern]), [
         'reason' => 'internal',
-        'note' => 'Shop truck brake inspection. Not billed to a customer and not an approval.',
+        'note' => $note,
         'line_ids' => [$part->id],
+        'authorization_exception_concern_id' => $concern->id,
     ])->assertRedirect();
 
     $exception = AuthorizationException::query()->first();
+    $recordedAt = $exception->created_at->timezone(config('app.timezone'))->format('M j, Y g:i A');
 
     expect(fn () => $exception->update(['note' => 'rewritten']))->toThrow(LogicException::class);
     expect(fn () => $exception->delete())->toThrow(LogicException::class);
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('It does not approve the work or record customer consent.', false);
+        ->assertSee('This documents an internal basis for proceeding. It does not record customer approval.', false)
+        ->assertSee('data-authorization-exception-line="'.$part->id.'"', false)
+        ->assertDontSee('data-authorization-exception-line="'.$labor->id.'"', false)
+        ->assertSee('ops-exception-record__basis">Internal', false)
+        ->assertSee('Recorded by '.$advisor->name, false)
+        ->assertSee($recordedAt, false)
+        ->assertSee($note, false)
+        ->assertSee('Front brake pads', false)
+        ->assertSee('Covered work', false)
+        ->assertDontSee('Delete exception', false)
+        ->assertDontSee('Edit exception', false);
+});
+
+test('exception recording stays in a concern action instead of the worksheet', function () {
+    $advisor = integrityAdvisor();
+    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $labor = addLabor($repairOrder, $concern);
+    $note = RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Note,
+        'description' => 'Advisor-only context that is not exception work.',
+        'quantity' => '1.00',
+        'unit_price_cents' => 0,
+        'is_private' => true,
+    ]);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('aria-label="More actions"', false)
+        ->assertSee('data-authorization-exception-action="record"', false)
+        ->assertSee('Record work exception', false)
+        ->assertSee('Select a basis', false)
+        ->assertSee('This documents an internal basis for proceeding. It does not record customer approval.', false)
+        ->assertSee('name="line_ids[]" value="'.$part->id.'"', false)
+        ->assertSee('name="line_ids[]" value="'.$labor->id.'"', false)
+        ->assertSee('Diagnose front-end wobble', false)
+        ->assertDontSee('name="line_ids[]" value="'.$note->id.'"', false)
+        ->assertDontSee('ops-scope-settings__exception', false)
+        ->assertDontSee('<summary>Record exception</summary>', false);
+
+    $this->actingAs($admin)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('data-authorization-exception-action="record"', false);
+
+    $this->actingAs($technician)
+        ->followingRedirects()
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertDontSee('data-authorization-exception-action="record"', false)
+        ->assertDontSee('Record work exception', false);
+
+    expect(RecordAuthorizationExceptionAction::actorMayRecord($advisor))->toBeTrue()
+        ->and(RecordAuthorizationExceptionAction::actorMayRecord($admin))->toBeTrue()
+        ->and(RecordAuthorizationExceptionAction::actorMayRecord($technician))->toBeFalse();
+});
+
+test('an incomplete exception explanation reopens the dialog with the error', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $this->actingAs($advisor);
+
+    $this->followingRedirects()
+        ->from(route('operations.repair-orders.show', $repairOrder))
+        ->post(route('operations.repair-orders.concerns.authorization-exceptions.store', [$repairOrder, $concern]), [
+            'reason' => 'warranty',
+            'note' => 'too short',
+            'line_ids' => [$part->id],
+            'authorization_exception_concern_id' => $concern->id,
+        ])
+        ->assertOk()
+        ->assertSee('Describe which work this exception covers and why this basis applies.', false)
+        ->assertSee('data-authorization-exception-reopen="'.$concern->id.'"', false)
+        ->assertSee('too short', false);
+
+    expect(AuthorizationException::query()->count())->toBe(0);
 });
 
 function integrityAdvisor(): User

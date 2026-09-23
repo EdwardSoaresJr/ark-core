@@ -51,7 +51,7 @@ class RepairOrderShowController
             return app(RepairOrderProductionLandingController::class)($request, $repairOrder);
         }
 
-        $repairOrder->load(['customer', 'vehicle', 'encounter.creator', 'assignedTechnician', 'concerns.workGroups.lines', 'concerns.workGroups.ownerUser', 'concerns.lines', 'lines', 'approvalEvents.revocation']);
+        $repairOrder->load(['customer', 'vehicle', 'encounter.creator', 'assignedTechnician', 'concerns.workGroups.lines', 'concerns.workGroups.ownerUser', 'concerns.lines', 'concerns.authorizationExceptions.recordedBy', 'lines', 'approvalEvents.revocation']);
         $settings = ShopSettings::current();
         $technicians = $soloShop->assignableTechnicians();
         $totals = $calculator->totalsFor($repairOrder);

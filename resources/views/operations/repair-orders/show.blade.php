@@ -1872,6 +1872,15 @@
                                     'defaultNotesPrivate' => $defaultNotesPrivate,
                                     'technicians' => $technicians ?? collect(),
                                 ])
+
+                                @include('operations.repair-orders.partials.repair-order-concern-authorization-exception', [
+                                    'exceptionSurface' => 'dialog',
+                                    'repairOrder' => $repairOrder,
+                                    'concern' => $concern,
+                                    'isTerminal' => $isTerminal,
+                                    'estimateVersion' => $estimateVersion,
+                                    'totals' => $totals,
+                                ])
                             </section>
                         @empty
                             @if ($isTerminal)

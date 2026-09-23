@@ -33,6 +33,11 @@
         : RepairOrderLineItemPresentation::editContextLines($line);
     $needsAuthorization = isset($linesNeedingAuthorization)
         && collect($linesNeedingAuthorization)->contains(fn ($unauthorizedLine): bool => (int) $unauthorizedLine->id === (int) $line->id);
+    $lineExceptions = isset($concern) && $concern->relationLoaded('authorizationExceptions')
+        ? $concern->authorizationExceptions->filter(
+            fn ($exception): bool => in_array((int) $line->id, $exception->lineIds(), true),
+        )
+        : collect();
 @endphp
 
 <div @class([
@@ -86,6 +91,19 @@
                     <span class="ops-line-type ops-line-type--{{ $line->type->value }}">{{ $line->type->staffLabel() }}</span>
                     @if ($needsAuthorization)
                         <span class="text-[11px] font-semibold text-amber-950">Needs authorization</span>
+                    @endif
+                    @if ($lineExceptions->isNotEmpty())
+                        <button
+                            type="button"
+                            class="ops-line-exception"
+                            data-line-card-ignore
+                            data-authorization-exception-line="{{ $line->id }}"
+                            aria-haspopup="dialog"
+                            aria-label="{{ $lineExceptions->count() === 1 ? 'View work exception' : 'View work exceptions' }}"
+                            @click.stop="window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', { detail: { concernId: {{ $concern->id }}, mode: 'inspect', lineId: {{ $line->id }}, invokeEl: $event.currentTarget } }))"
+                        >
+                            Exception
+                        </button>
                     @endif
                     <p class="ops-line-card__title truncate">{{ $lineTitle }}</p>
                 </div>

@@ -5,6 +5,7 @@ namespace App\Ark\Operations\RepairOrders;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -84,6 +85,21 @@ class RepairOrderConcern extends Model
         return $this->hasMany(RepairOrderLine::class)
             ->orderByRaw(RepairOrderLineWorksheetOrder::sqlCaseExpression())
             ->orderBy('id');
+    }
+
+    public function authorizationExceptions(): HasMany
+    {
+        return $this->hasMany(AuthorizationException::class)->orderBy('id');
+    }
+
+    /**
+     * @return Collection<int, RepairOrderLine>
+     */
+    public function linesEligibleForAuthorizationException(): Collection
+    {
+        return $this->lines
+            ->filter(fn (RepairOrderLine $line): bool => $line->isPart() || $line->type->isLabor())
+            ->values();
     }
 
     public function ungroupedLines()

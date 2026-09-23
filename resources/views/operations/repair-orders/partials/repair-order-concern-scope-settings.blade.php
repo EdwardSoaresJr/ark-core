@@ -90,12 +90,13 @@
                     </form>
                 @endcan
             @endif
+            @include('operations.repair-orders.partials.repair-order-concern-authorization-exception', [
+                'exceptionSurface' => 'menu',
+                'repairOrder' => $repairOrder,
+                'concern' => $concern,
+                'isTerminal' => $isTerminal,
+                'estimateVersion' => $estimateVersion,
+            ])
         </div>
     </div>
-    @include('operations.repair-orders.partials.repair-order-concern-authorization-exception', [
-        'repairOrder' => $repairOrder,
-        'concern' => $concern,
-        'isTerminal' => $isTerminal,
-        'estimateVersion' => $estimateVersion,
-    ])
 </div>

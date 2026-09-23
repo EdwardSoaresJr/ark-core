@@ -56,7 +56,7 @@ test('repair order show stays within query budget', function () {
 
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
-    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 105);
+    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 106);
 });
 
 test('repair order estimate review stays within query budget', function () {
@@ -64,7 +64,7 @@ test('repair order estimate review stays within query budget', function () {
 
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
-    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 105);
+    assertOkWithinQueryBudget(route('operations.repair-orders.show', $repairOrder), 106);
 });
 
 test('repair order inspection show hosts the production walk within query budget', function () {

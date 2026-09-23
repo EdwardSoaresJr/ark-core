@@ -16,6 +16,14 @@ final class RecordAuthorizationExceptionAction
         private readonly OperationalEventRecorder $events,
     ) {}
 
+    public static function actorMayRecord(?User $actor): bool
+    {
+        return $actor !== null && $actor->hasAnyRole([
+            ArkRole::Admin->value,
+            ArkRole::Advisor->value,
+        ]);
+    }
+
     /**
      * @param  list<int>  $lineIds
      */
@@ -27,7 +35,7 @@ final class RecordAuthorizationExceptionAction
         string $note,
         User $actor,
     ): AuthorizationException {
-        if (! $actor->hasAnyRole([ArkRole::Admin->value, ArkRole::Advisor->value])) {
+        if (! self::actorMayRecord($actor)) {
             throw new AccessDenied('Recording an exception requires an advisor or admin.');
         }
 
@@ -83,8 +91,7 @@ final class RecordAuthorizationExceptionAction
 
         $concern->loadMissing('lines');
 
-        $allowed = $concern->lines
-            ->filter(fn (RepairOrderLine $line): bool => $line->isPart() || $line->type->isLabor())
+        $allowed = $concern->linesEligibleForAuthorizationException()
             ->map(fn (RepairOrderLine $line): int => (int) $line->id)
             ->all();
 
