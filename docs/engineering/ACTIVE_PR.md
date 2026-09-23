@@ -20,12 +20,19 @@ Oldest to newest. This is the release. Other commits on main are not part of it.
 
 ## Next gate
 
-Use this Repair Order and Job Board during normal shop operation. Record actual workflow problems only. Do not reopen completed UI or performance work from code inspection.
+Floor acceptance. Use this Repair Order and Job Board during normal shop operation. No further development, profiling, or cleanup joins this set unless shop use exposes a release-blocking problem.
 
 ## Job Board
 
-179 queries / ~178 ms measured with 24 cards. No further optimization unless real use shows noticeable latency. If it does, profile customer phone matching, conversations, and leads next.
+179 queries / ~178 ms measured with 24 cards. No further profiling unless shop use shows noticeable latency.
 
 ## Release
 
-After floor acceptance, assemble exactly these seven commits from the accepted production lineage, run the combined release gate, and produce one immutable RC2 artifact. Do not release every commit ahead of origin. Do not deploy piecemeal.
+After floor acceptance:
+
+1. Reconstruct these seven commits from the accepted production lineage.
+2. Run the combined release gate.
+3. Build and publish one immutable Core artifact.
+4. Decide production rollout separately.
+
+Do not release every commit ahead of origin.
