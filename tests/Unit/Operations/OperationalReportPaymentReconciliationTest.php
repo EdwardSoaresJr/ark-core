@@ -110,6 +110,7 @@ test('previous advanced pay adds pre-range payments on ro posted in range', func
     ])->save();
 
     addApprovedSoldLine($fixture['repairOrder'], $fixture['concern'], 37757);
+    freezePostedInvoiceSnapshot($fixture['repairOrder'], 37757, 0);
 
     RepairOrderLedgerEntry::query()->create([
         'repair_order_id' => $fixture['repairOrder']->id,
@@ -248,6 +249,7 @@ test('tekmetric jun 8 style day reconciles posted sales to cashiered cash', func
         'posted_at' => $from->copy()->addHours(8),
     ])->save();
     addApprovedSoldLine($postedToday['repairOrder'], $postedToday['concern'], 37757);
+    freezePostedInvoiceSnapshot($postedToday['repairOrder'], 37757, 0);
 
     RepairOrderLedgerEntry::query()->create([
         'repair_order_id' => $postedToday['repairOrder']->id,
