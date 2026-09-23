@@ -58,6 +58,11 @@
         ])
         : null;
     $identityChromePadding = ($embeddedInServiceLaneBand ?? false) ? 'px-2 py-1.5' : 'px-2.5 py-2';
+    $billingClass = $identity['customer']['type'] ?? 'Retail';
+    $billingClassPillClass = isset($repairOrder)
+        ? \App\Ark\Operations\Settings\ShopSettings::current()->billingClassPillClass($billingClass)
+        : \App\Ark\Operations\Settings\BillingClassPillColor::classFor(null, $billingClass);
+    $billingClassHelp = 'Billing class sets default scope billing and standing discounts. Scope billing posture on each concern is financial authority. Changing billing class does not change billing on scopes already on this estimate.';
 @endphp
 
 <div @class([
@@ -66,13 +71,20 @@
     'bg-white' => in_array($identityVariant, ['document', 'document-pdf'], true),
 ]) @if (empty($embeddedInServiceLaneBand)) id="ro-identity-band" @endif>
     <section @class(['ops-ro-identity-col min-w-0 border-b border-slate-200 md:border-b-0 md:border-r md:border-slate-200', $identityChromePadding])>
-        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Customer</p>
+        @if ($customerProfileHref && $identityVariant === 'staff')
+            <a href="{{ $customerProfileHref }}" class="ops-identity-column-link">Customer</a>
+        @else
+            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Customer</p>
+        @endif
         @if ($canEditCustomer)
             @include('operations.repair-orders.partials.repair-order-identity-customer-inline', [
                 'repairOrder' => $repairOrder,
                 'identity' => $identity,
                 'scheduleFromRoHref' => $scheduleFromRoHref,
                 'newRoFromExistingHref' => $newRoFromExistingHref,
+                'billingClass' => $billingClass,
+                'billingClassHelp' => $billingClassHelp,
+                'billingClassPillClass' => $billingClassPillClass,
             ])
         @else
             <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -81,15 +93,14 @@
                 @else
                     <p class="text-[15px] font-extrabold leading-5 tracking-tight text-slate-950">{{ $identity['customer']['title'] }}</p>
                 @endif
-                <span class="ops-state-pill shrink-0">{{ $identity['customer']['type'] ?? 'Retail' }}</span>
-                @if ($identityVariant === 'staff' && isset($repairOrder))
-                    <a href="#communication-rail" class="ops-page-link shrink-0 text-[11px]">Message</a>
-                @endif
-                @if ($scheduleFromRoHref)
-                    <a href="{{ $scheduleFromRoHref }}" class="ops-page-link shrink-0 text-[11px]">Schedule Follow-up</a>
-                @endif
-                @if (! empty($newRoFromExistingHref))
-                    <a href="{{ $newRoFromExistingHref }}" class="ops-page-link shrink-0 text-[11px]" title="Open another repair order for this customer and vehicle">New RO</a>
+                @if ($identityVariant === 'staff')
+                    <x-operations.help-tip class="ops-help-tip--align-start" :text="$billingClassHelp" label="Billing class">
+                        <x-slot:trigger>
+                            <span class="{{ $billingClassPillClass }}">{{ $billingClass }}</span>
+                        </x-slot:trigger>
+                    </x-operations.help-tip>
+                @else
+                    <span class="{{ $billingClassPillClass }}">{{ $billingClass }}</span>
                 @endif
             </div>
             @if ($identityVariant === 'staff' && isset($repairOrder) && $repairOrder->customerIdentityPressure()->showsChip())
@@ -114,6 +125,12 @@
                     </div>
                 @endforeach
             </dl>
+            @if ($identityVariant === 'staff' && isset($repairOrder))
+                @include('operations.repair-orders.partials.repair-order-identity-customer-actions', [
+                    'scheduleFromRoHref' => $scheduleFromRoHref,
+                    'newRoFromExistingHref' => $newRoFromExistingHref ?? null,
+                ])
+            @endif
         @endif
     </section>
 
@@ -180,13 +197,13 @@
                 'inspectionPosture' => $inspectionPosture,
             ])
         @endif
-        @if ($showMileageInlineEditor)
-            @include('operations.repair-orders.partials.repair-order-mileage-inline', [
-                'repairOrder' => $repairOrder,
-                'estimateVersion' => $estimateVersion,
-            ])
-        @endif
         <dl class="mt-1.5 space-y-0.5">
+            @if ($showMileageInlineEditor)
+                @include('operations.repair-orders.partials.repair-order-mileage-inline', [
+                    'repairOrder' => $repairOrder,
+                    'estimateVersion' => $estimateVersion,
+                ])
+            @endif
             @foreach ($identity['visit']['lines'] as $line)
                 @if ($showMileageInlineEditor && in_array($line['label'], $mileageLineLabels, true))
                     @continue

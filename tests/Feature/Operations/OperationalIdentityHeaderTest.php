@@ -67,7 +67,7 @@ test('operational identity presenter includes mileage and advisor when data exis
         ->not->toContain('Engine')
         ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Mileage')['value'])->toBe('165,604')
         ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Advisor')['value'])->toBe('Lane Advisor')
-        ->and(collect($identity['visit']['lines'])->firstWhere('label', 'Technician')['value'])->toBe('Bay Tech')
+        ->and(collect($identity['visit']['lines'])->pluck('label')->all())->not->toContain('Technician')
         ->and($identity['visit']['title'])->toBe('RO #'.$repairOrder->repair_order_id);
 
     $repairOrder->concerns()->create([
@@ -86,7 +86,7 @@ test('operational identity presenter includes mileage and advisor when data exis
 
     $split = OperationalIdentityPresenter::forRepairOrder($repairOrder->fresh());
 
-    expect(collect($split['visit']['lines'])->firstWhere('label', 'Technician')['value'])->toBe('Other Tech');
+    expect(collect($split['visit']['lines'])->pluck('label')->all())->not->toContain('Technician');
 });
 
 test('operational identity presenter surfaces customer preferred contact method', function () {
@@ -128,14 +128,16 @@ test('repair order review header shows service lane identity band without presen
     $response = $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('ops-service-lane-band', false)
-        ->assertSee('>Customer</p>', false)
+        ->assertSee('ops-identity-column-link', false)
+        ->assertSee('>Customer</a>', false)
+        ->assertSee('ops-billing-class-pill--slate', false)
+        ->assertSee(route('operations.customers.show', $repairOrder->customer), false)
         ->assertSee('>Vehicle</p>', false)
         ->assertSee('>Visit</p>', false)
         ->assertSee('Amber Adams')
         ->assertSee('(719) 229-7105')
         ->assertSee('165,604')
         ->assertSee('Lane Advisor')
-        ->assertSee('Bay Tech')
         ->assertDontSee('ops-service-lane-footer', false)
         ->assertSee('ops-mileage-inline')
         ->assertSee('data-workspace-modal-form="mileage"', false)
@@ -149,11 +151,14 @@ test('repair order review header shows service lane identity band without presen
     $vehiclePos = strpos($html, '>Vehicle</p>');
     $visitPos = strpos($html, '>Visit</p>');
     $mileagePos = strpos($html, 'ops-mileage-inline');
+    $visitEnd = strpos($html, 'id="review-toolbar"');
+    $visitHtml = substr($html, $visitPos, $visitEnd - $visitPos);
 
     expect($vehiclePos)->toBeInt()
         ->and($visitPos)->toBeGreaterThan($vehiclePos)
         ->and($mileagePos)->toBeGreaterThan($visitPos)
-        ->and(substr($html, $vehiclePos, $visitPos - $vehiclePos))->not->toContain('ops-mileage-inline');
+        ->and(substr($html, $vehiclePos, $visitPos - $vehiclePos))->not->toContain('ops-mileage-inline')
+        ->and($visitHtml)->not->toContain('>Technician<');
 });
 
 test('repair order identity band owns customer and vehicle presentation once', function () {

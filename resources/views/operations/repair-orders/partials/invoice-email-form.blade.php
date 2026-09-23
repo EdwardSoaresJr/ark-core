@@ -7,7 +7,7 @@
         <form
             method="POST"
             action="{{ route('operations.repair-orders.invoice.email', $repairOrder) }}"
-            data-refresh-scope="rail"
+            data-refresh-scope="financial"
             data-saving-label="Sending invoice email…"
             class="ops-estimate-email-form px-0 py-0"
             @submit.prevent="window.arkWorksheetFormSubmit($event)"

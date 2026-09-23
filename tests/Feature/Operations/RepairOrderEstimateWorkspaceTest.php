@@ -1715,7 +1715,7 @@ test('large grouped estimates remain renderable in review and builder hot paths'
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Recommended Work')
+        ->assertSee('Customer total')
         ->assertSee('12 scopes · 72 lines')
         ->assertSee('submitWorksheetForm', false)
         ->assertSee('id="estimate-total-panel"', false)

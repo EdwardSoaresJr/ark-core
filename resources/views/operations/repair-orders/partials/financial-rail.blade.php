@@ -50,7 +50,7 @@
                             method="POST"
                             action="{{ route('operations.repair-orders.invoice.refresh', $repairOrder) }}"
                             class="mt-2"
-                            data-refresh-scope="rail"
+                            data-refresh-scope="financial"
                             @submit.prevent="submitWorksheetForm($event)"
                         >
                             @csrf
@@ -73,7 +73,7 @@
                 <form
                     method="POST"
                     action="{{ route('operations.repair-orders.post', $repairOrder) }}"
-                    data-refresh-scope="rail"
+                    data-refresh-scope="financial"
                     @submit.prevent="submitWorksheetForm($event)"
                 >
                     @csrf
@@ -213,7 +213,7 @@
                             id="waive-balance"
                             method="POST"
                             action="{{ route('operations.repair-orders.waive-balance.store', $repairOrder) }}"
-                            data-refresh-scope="rail"
+                            data-refresh-scope="financial"
                             data-continuity-focus="#waive-reason-{{ $repairOrder->repair_order_id }}"
                             @submit.prevent="submitWorksheetForm($event)"
                             class="grid gap-2 border border-amber-200 bg-amber-50/50 p-3 scroll-mt-6"
@@ -266,7 +266,7 @@
                         <form
                             method="POST"
                             action="{{ route('operations.repair-orders.refund.store', $repairOrder) }}"
-                            data-refresh-scope="rail"
+                            data-refresh-scope="financial"
                             data-continuity-focus="#refund-amount-{{ $repairOrder->repair_order_id }}"
                             @submit.prevent="submitWorksheetForm($event)"
                             class="grid gap-2 border border-slate-200 bg-white p-3"
@@ -377,7 +377,7 @@
                                         <form
                                             method="POST"
                                             action="{{ route('operations.repair-orders.ledger-entries.destroy', [$repairOrder, $entry['id']]) }}"
-                                            data-refresh-scope="rail"
+                                            data-refresh-scope="financial"
                                             class="mt-2"
                                             @submit.prevent="if (confirm('Void this ledger entry? Balance due will be recalculated.')) { submitWorksheetForm($event); }"
                                         >

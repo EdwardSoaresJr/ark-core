@@ -169,12 +169,13 @@ test('advisor worksheet presents visit reason as intake context with add concern
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
+        ->assertSee('ops-visit-reason', false)
         ->assertSee('Reason for Visit', false)
         ->assertSee('Customer says brakes squeal on hard stops.', false)
         ->assertSee("task: 'visit-reason'", false)
         ->assertSee('+ Add Work', false)
         ->assertSee('Front Brake Service', false)
-        ->assertSee('Recommended Work', false)
+        ->assertSee('Customer total', false)
         ->assertDontSee('What brings them in today?', false);
 });
 

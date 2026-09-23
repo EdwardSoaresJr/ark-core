@@ -1033,6 +1033,9 @@
                 rail: 'estimate-builder-rail',
                 toolbar: 'review-toolbar',
             },
+            workspaceTabReloadMap: {
+                financial: 'financial',
+            },
         }), {
             partsMatrices: @js($partsMatrices),
             defaultPartsMatrixKey: @js($defaultPartsMatrixKey),
@@ -1063,7 +1066,7 @@
             laborGuideDefaultKey: @js($laborGuideDefault),
             laborGuideItems: @js($laborGuides),
             estimateToolbarPersistUrl: @js($estimateToolbarPersistUrl),
-            estimateContext: @js(($partsBlockingCount ?? 0) > 0 ? 'parts' : null),
+            estimateContext: null,
             clearLaborGuideNotice() {
                 this.laborGuideNotice = '';
             },
@@ -1497,6 +1500,7 @@
         @ark:partstech-warning.window="partstechNotice = $event.detail.message || ''; partstechCartLocked = Boolean($event.detail.cartLocked)"
         @ark:partstech-pull-quote-state.window="partstechPullLoading = Boolean($event.detail?.loading); partstechPullStatus = $event.detail?.status || ''"
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
+        @ark-estimate-home.window="estimateContext = null"
         @keydown.escape.window="partsCatalogMenu = false; laborGuideMenu = false"
     >
         @include('operations.repair-orders.partials.worksheet-busy-overlay')
@@ -1583,8 +1587,6 @@
                 : (partstechPullStatus || ('Pulling ' + (partsCatalogActionLabel || 'PT Cart') + '…'))"></span>
         </div>
 
-        <div class="ops-estimate-layout">
-            <div class="ops-estimate-main min-w-0">
                 <x-operations.repair-order-workspace-tabs
                     workspaceMode="review"
                     :repairOrder="$repairOrder"
@@ -1662,6 +1664,16 @@
                         ])
                     </div>
                 </div>
+
+                @include('operations.repair-orders.partials.repair-order-estimate-context-strip', [
+                    'repairOrder' => $repairOrder,
+                    'totals' => $totals,
+                    'isTerminal' => $isTerminal,
+                    'estimateVersion' => $estimateVersion,
+                    'recommendationAwareness' => $recommendationAwareness ?? null,
+                    'partsBlockingCount' => $partsBlockingCount ?? 0,
+                    'partsReadinessCounts' => $partsReadinessCounts ?? [],
+                ])
             </div>
 
             @include('operations.repair-orders.partials.repair-order-visit-reason', [
@@ -1860,9 +1872,7 @@
 
                     </div>
                 </div>
-                </x-operations.repair-order-workspace-tabs>
-            </div>
-
+                <x-slot:rail>
             <aside id="estimate-builder-rail" class="ops-review-rail ops-review-rail--pinned">
                 <x-operations.estimate-totals-panel
                     id="estimate-total-panel"
@@ -1887,47 +1897,11 @@
                     @endif
                 </x-operations.estimate-totals-panel>
 
-                <div class="ops-estimate-instruments-shell">
-                    @include('operations.repair-orders.partials.repair-order-estimate-workspace-header', [
-                        'repairOrder' => $repairOrder,
-                        'totals' => $totals,
-                    ])
-                </div>
-
-                @include('operations.repair-orders.partials.repair-order-estimate-context-strip', [
-                    'repairOrder' => $repairOrder,
-                    'totals' => $totals,
-                    'isTerminal' => $isTerminal,
-                    'estimateVersion' => $estimateVersion,
-                    'recommendationAwareness' => $recommendationAwareness ?? null,
-                    'partsBlockingCount' => $partsBlockingCount ?? 0,
-                    'partsReadinessCounts' => $partsReadinessCounts ?? [],
-                ])
-
                 <div class="ops-review-rail__scroll">
-                    @include('operations.repair-orders.partials.repair-order-rail-posture', [
-                        'postureLayout' => 'rail',
-                        'repairOrder' => $repairOrder,
-                        'nextAction' => $nextAction ?? null,
-                        'approvalPosture' => $approvalPosture ?? null,
-                        'approvedConcerns' => $approvedConcerns ?? collect(),
-                        'deferredConcerns' => $deferredConcerns ?? collect(),
-                        'recommendedConcerns' => $recommendedConcerns ?? collect(),
-                        'lastApprovalEvent' => $lastApprovalEvent ?? null,
-                        'financial' => $financial ?? [],
-                        'partsBlockingCount' => $partsBlockingCount ?? 0,
-                    ])
-
                     @include('operations.repair-orders.partials.operational-journey-card', [
                         'operationalJourney' => $operationalJourney ?? null,
                         'journeyComparison' => $journeyComparison ?? null,
                     ])
-
-                    @if ($financial['showFinancialRail'])
-                        @include('operations.repair-orders.partials.financial-rail')
-                    @endif
-
-                    @include('operations.repair-orders.partials.repair-order-lifecycle-panel')
 
                     @include('operations.work.partials.advisor-work-context-panel', [
                         'followUps' => $openFollowUps ?? [],
@@ -1935,7 +1909,8 @@
                     ])
                 </div>
             </aside>
-        </div>
+                </x-slot:rail>
+                </x-operations.repair-order-workspace-tabs>
 
         @include('operations.repair-orders.partials.repair-order-rte-labor-panel', [
             'rteLaborGuide' => $rteLaborGuide,
@@ -1955,30 +1930,5 @@
             'lastApprovalEvent' => $lastApprovalEvent ?? null,
         ])
 
-        <script>
-            (() => {
-                const fit = () => {
-                    const rail = document.getElementById('estimate-builder-rail');
-                    const bar = document.querySelector('.ops-ro-orientation-header--dock');
-                    if (!rail || !bar || window.innerWidth < 1024) {
-                        if (rail) {
-                            rail.style.maxHeight = '';
-                        }
-                        return;
-                    }
-
-                    const available = bar.getBoundingClientRect().top - rail.getBoundingClientRect().top;
-                    rail.style.maxHeight = Math.max(0, Math.floor(available)) + 'px';
-                };
-
-                fit();
-                document.addEventListener('scroll', fit, { passive: true, capture: true });
-                window.addEventListener('resize', fit);
-                const workspace = document.querySelector('.ops-estimate-workspace');
-                if (workspace) {
-                    new MutationObserver(fit).observe(workspace, { childList: true, subtree: true });
-                }
-            })();
-        </script>
     </section>
 </x-operations.app>

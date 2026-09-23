@@ -87,6 +87,8 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Fleet shop fees')
         ->assertSee('Warranty parts matrix')
         ->assertSee('Standard billing class')
+        ->assertSee('Pill color')
+        ->assertSee('name="customer_types[0][pill_color]"', false)
         ->assertSee('name="customer_types[0][shop_fees_enabled]"', false)
         ->assertSee('name="customer_types[2][shop_fees_enabled]"', false)
         ->assertDontSee('Default estimate state')
@@ -243,6 +245,7 @@ test('admin can persist authoritative operational defaults', function () {
         'estimate_disclaimer' => 'Estimates are based on visible conditions at time of inspection.',
         'recommendation_disclaimer' => 'Recommendations may change after disassembly or further testing.',
         'estimate_validity_days' => '14',
+        'customer_part_description_mode' => 'cleaned',
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
     $this->patch(route('operations.settings.shop.workflow.update'), [
@@ -270,6 +273,7 @@ test('admin can persist authoritative operational defaults', function () {
         ->and(collect($settings->partsMatrices())->pluck('name')->all())->toBe(['AFT Parts', 'Warranty (No Markup)'])
         ->and(collect($settings->customer_types)->firstWhere('name', 'Warranty')['name'])->toBe('Warranty')
         ->and(collect($settings->customer_types)->firstWhere('name', 'Warranty')['shop_fees_enabled'])->toBeFalse()
+        ->and(collect($settings->customer_types)->firstWhere('name', 'Warranty')['pill_color'])->toBe('green')
         ->and(collect($settings->customer_types)->firstWhere('name', 'Warranty')['default_parts_matrix_key'])->toBe('aft-parts')
         ->and($settings->customer_types[2]['discount_amount'])->toBe('10.00')
         ->and($settings->customer_types[2]['default_parts_matrix_key'])->toBe('warranty-no-markup')

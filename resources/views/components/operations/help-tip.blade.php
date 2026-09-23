@@ -10,7 +10,11 @@
 @endphp
 
 <span {{ $attributes->class(['ops-help-tip', 'ops-help-tip--rich' => $hasItems]) }} tabindex="0" role="button" aria-label="{{ $label }}">
-    <span class="ops-help-tip__trigger" aria-hidden="true">?</span>
+    @if (isset($trigger) && $trigger->isNotEmpty())
+        {{ $trigger }}
+    @else
+        <span class="ops-help-tip__trigger" aria-hidden="true">?</span>
+    @endif
     <span
         @class([
             'ops-help-tip__content',

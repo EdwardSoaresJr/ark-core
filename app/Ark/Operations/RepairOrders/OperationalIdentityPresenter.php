@@ -335,7 +335,7 @@ final class OperationalIdentityPresenter
             $lines[] = ['label' => 'Advisor', 'value' => $advisorName];
         }
 
-        if (! $customerDocument || ! self::isPlaceholderTechnician($technicianLabel)) {
+        if ($customerDocument && ! self::isPlaceholderTechnician($technicianLabel)) {
             $lines[] = [
                 'label' => 'Technician',
                 'value' => self::technicianDisplayLabel($technicianLabel),

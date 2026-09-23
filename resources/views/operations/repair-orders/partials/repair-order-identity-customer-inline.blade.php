@@ -22,20 +22,11 @@
             </button>
         </span>
         @unless ($serviceLaneLayout)
-            <span class="inline-flex items-center gap-0.5">
-                <span class="ops-state-pill shrink-0">{{ $identity['customer']['type'] ?? ($customer->customer_type ?: 'Retail') }}</span>
-                <x-operations.help-tip
-                    text="Billing class sets default scope billing and standing discounts. Scope billing posture on each concern is financial authority. Changing billing class does not change billing on scopes already on this estimate."
-                    label="Billing class help"
-                />
-            </span>
-            <a href="#communication-rail" class="ops-page-link shrink-0 text-[11px]">Message</a>
-            @if (! empty($scheduleFromRoHref))
-                <a href="{{ $scheduleFromRoHref }}" class="ops-page-link shrink-0 text-[11px]">Schedule Follow-up</a>
-            @endif
-            @if (! empty($newRoFromExistingHref))
-                <a href="{{ $newRoFromExistingHref }}" class="ops-page-link shrink-0 text-[11px]" title="Open another repair order for this customer and vehicle">New RO</a>
-            @endif
+            <x-operations.help-tip class="ops-help-tip--align-start" :text="$billingClassHelp" label="Billing class">
+                <x-slot:trigger>
+                    <span class="{{ $billingClassPillClass ?? 'ops-billing-class-pill ops-billing-class-pill--slate' }}">{{ $billingClass ?? ($identity['customer']['type'] ?? ($customer->customer_type ?: 'Retail')) }}</span>
+                </x-slot:trigger>
+            </x-operations.help-tip>
         @endunless
     </div>
 
@@ -95,5 +86,10 @@
                 </div>
             @endforeach
         </dl>
+
+        @include('operations.repair-orders.partials.repair-order-identity-customer-actions', [
+            'scheduleFromRoHref' => $scheduleFromRoHref ?? null,
+            'newRoFromExistingHref' => $newRoFromExistingHref ?? null,
+        ])
     @endif
 </div>

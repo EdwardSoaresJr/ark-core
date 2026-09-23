@@ -101,12 +101,10 @@ test('canonical repair order dock is footer-first without posture dashboard', fu
         ->assertSee('ops-ro-footer__top', false)
         ->assertDontSee('Waiting on Diagnosis', false)
         ->assertDontSee('data-posture-layout="dock"', false)
+        ->assertDontSee('data-posture-layout="rail"', false)
         ->assertDontSee('>Editing<', false)
         ->assertDontSee('>Viewing<', false)
         ->assertDontSee('id="builder-add-work"', false);
-
-    // Persistent Context posture remains on the right rail - not the footer dock.
-    expect($response->getContent())->toContain('data-posture-layout="rail"');
 });
 
 test('legacy edit builder and estimate-review urls redirect to canonical show', function () {

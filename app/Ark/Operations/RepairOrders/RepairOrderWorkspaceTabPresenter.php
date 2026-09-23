@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 final class RepairOrderWorkspaceTabPresenter
 {
     /** @var list<string> */
-    public const TABS = ['comms', 'portal', 'auth', 'parts', 'history', 'inspect', 'recommendations'];
+    public const TABS = ['comms', 'portal', 'auth', 'parts', 'history', 'inspect', 'recommendations', 'financial'];
 
     public function __construct(
         private readonly EstimateTotalsCalculator $calculator,
@@ -65,6 +65,11 @@ final class RepairOrderWorkspaceTabPresenter
             'recommendations' => [
                 ...$shared,
                 ...$this->recommendationsData($repairOrder),
+            ],
+            'financial' => [
+                ...$shared,
+                'financial' => app(\App\Ark\Operations\Financial\RepairOrderFinancialPresenter::class)
+                    ->for($repairOrder, $totals),
             ],
             default => $shared,
         };

@@ -26,6 +26,22 @@ const formatMileageDisplay = (value) => {
     return Number(value).toLocaleString('en-US');
 };
 
+function worksheetRootData() {
+    const root = document.querySelector('[data-worksheet-root]');
+
+    return window.Alpine?.$data?.(root) ?? null;
+}
+
+function refreshMileageStatusGates() {
+    window.setTimeout(() => {
+        const worksheet = worksheetRootData();
+
+        if (typeof worksheet?.refreshScope === 'function') {
+            worksheet.refreshScope('toolbar');
+        }
+    }, 0);
+}
+
 export const arkRepairOrderMileage = (config) => ({
     mileageIn: formatMileageInput(config.mileageIn),
     mileageOut: formatMileageInput(config.mileageOut),
@@ -94,6 +110,12 @@ export const arkRepairOrderMileage = (config) => ({
         this.saving = true;
         this.error = null;
 
+        const worksheet = worksheetRootData();
+
+        if (worksheet) {
+            worksheet.localEstimateWrite = true;
+        }
+
         const body = new FormData();
         body.append('_token', this.csrf);
         body.append('_method', 'PATCH');
@@ -146,10 +168,16 @@ export const arkRepairOrderMileage = (config) => ({
                         input.value = payload.estimate_version;
                     });
             }
+
+            refreshMileageStatusGates();
         } catch {
             this.error = 'Could not save mileage.';
         } finally {
             this.saving = false;
+
+            if (worksheet) {
+                worksheet.localEstimateWrite = false;
+            }
         }
     },
 });

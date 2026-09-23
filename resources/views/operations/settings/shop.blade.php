@@ -824,15 +824,35 @@
                                     </select>
                                 </div>
                                 <div class="grid gap-4 lg:grid-cols-[minmax(180px,1fr)_2fr]">
-                                    <div>
-                                        <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                            Billing class name
-                                            <x-operations.help-tip
-                                                text="Shown on the customer record. Warranty and Fleet names activate billing profiles for matching scope billing settings."
-                                                label="Billing class name help"
-                                            />
+                                    <div class="space-y-3">
+                                        <div>
+                                            <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
+                                                Billing class name
+                                                <x-operations.help-tip
+                                                    text="Shown on the customer record. Warranty and Fleet names activate billing profiles for matching scope billing settings."
+                                                    label="Billing class name help"
+                                                />
+                                            </div>
+                                            <input name="customer_types[{{ $index }}][name]" value="{{ old('customer_types.'.$index.'.name', $type['name']) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
                                         </div>
-                                        <input name="customer_types[{{ $index }}][name]" value="{{ old('customer_types.'.$index.'.name', $type['name']) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                        <div>
+                                            <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
+                                                Pill color
+                                                <x-operations.help-tip
+                                                    text="Color of this billing class next to the customer name on a repair order."
+                                                    label="Pill color help for {{ $type['name'] }}"
+                                                />
+                                            </div>
+                                            @php
+                                                $pillColor = old('customer_types.'.$index.'.pill_color', $type['pill_color'] ?? 'slate');
+                                            @endphp
+                                            <select name="customer_types[{{ $index }}][pill_color]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                @foreach (\App\Ark\Operations\Settings\BillingClassPillColor::options() as $option)
+                                                    <option value="{{ $option['key'] }}" @selected($pillColor === $option['key'])>{{ $option['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            <span class="{{ \App\Ark\Operations\Settings\BillingClassPillColor::classFor($pillColor, $type['name']) }} mt-2">{{ $type['name'] }}</span>
+                                        </div>
                                     </div>
 
                                     @if ($billingProfile === 'fleet')
@@ -997,6 +1017,11 @@
                             <p class="mt-1 text-xs text-slate-500">Use names Fleet or Warranty to create a billing profile. Other names are standard billing classes.</p>
                             <div class="mt-3 grid gap-3 sm:grid-cols-3">
                                 <input :name="`customer_types[${nextCustomerTypeIndex}][name]`" placeholder="Billing class name" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
+                                <select :name="`customer_types[${nextCustomerTypeIndex}][pill_color]`" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950">
+                                    @foreach (\App\Ark\Operations\Settings\BillingClassPillColor::options() as $option)
+                                        <option value="{{ $option['key'] }}" @selected($option['key'] === 'slate')>{{ $option['label'] }}</option>
+                                    @endforeach
+                                </select>
                                 <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][shop_fees_enabled]`" value="1">
                                 <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][shop_fee_rate_override]`" value="">
                                 <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][default_parts_matrix_key]`" value="">

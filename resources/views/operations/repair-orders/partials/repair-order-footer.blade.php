@@ -81,6 +81,11 @@
             @endforeach
         </div>
 
+        @include('operations.repair-orders.partials.repair-order-footer-instruments', [
+            'repairOrder' => $repairOrder,
+            'totals' => $totals ?? null,
+        ])
+
         <div
             class="ops-ro-footer__utilities"
             x-data="{ open: false }"

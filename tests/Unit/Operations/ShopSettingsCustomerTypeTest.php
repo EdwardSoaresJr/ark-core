@@ -29,5 +29,17 @@ test('legacy fee_override none maps to disabled shop fees', function () {
     ]);
 
     expect($row['shop_fees_enabled'])->toBeFalse()
-        ->and($row['shop_fee_rate_override'])->toBeNull();
+        ->and($row['shop_fee_rate_override'])->toBeNull()
+        ->and($row['pill_color'])->toBe('green');
+});
+
+test('billing class pill color uses the saved choice', function () {
+    $settings = new ShopSettings([
+        'customer_types' => [
+            ['name' => 'Retail', 'pill_color' => 'rose'],
+        ],
+    ]);
+
+    expect($settings->billingClassPillClass('Retail'))->toBe('ops-billing-class-pill ops-billing-class-pill--rose')
+        ->and($settings->billingClassPillClass('Fleet'))->toBe('ops-billing-class-pill ops-billing-class-pill--blue');
 });

@@ -159,6 +159,7 @@ public function updateCustomerTypes(Request $request): RedirectResponse
             'customer_types.*.discount_type' => ['nullable', 'string', Rule::in(['none', 'labor', 'parts', 'both'])],
             'customer_types.*.discount_amount' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'customer_types.*.document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
+            'customer_types.*.pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
         ]);
 
         $settings = ShopSettings::current();

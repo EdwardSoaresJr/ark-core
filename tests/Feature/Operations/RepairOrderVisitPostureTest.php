@@ -23,6 +23,7 @@ test('advisor can update visit posture from repair order workspace', function ()
         ->assertOk()
         ->assertSee('Visit', false)
         ->assertSee('RO #'.$repairOrder->repair_order_id, false)
+        ->assertSee('ops-visit-mode-pill', false)
         ->assertSee("task: 'visit-posture'", false)
         ->assertSee('data-workspace-modal-form="visit-posture"', false)
         ->assertSee('value="drop_off"', false);

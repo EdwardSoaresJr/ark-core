@@ -21,11 +21,20 @@ test('ro review shows generate final invoice when ready for pickup without invoi
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Generate Final Invoice')
+        ->assertSee('Record deposit in ledger')
+        ->assertDontSee('id="financial-rail"', false)
+        ->assertDontSee(route('operations.repair-orders.payment.update', $repairOrder), false)
+        ->assertDontSee('Mark Payment Received');
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [
+        'repairOrder' => $repairOrder,
+        'tab' => 'financial',
+    ]))
+        ->assertOk()
+        ->assertSee('id="financial-rail"', false)
         ->assertSee('Ready for final invoice')
         ->assertSee('Not issued')
-        ->assertSee('Record deposit in ledger')
-        ->assertDontSee('Record Payment')
-        ->assertDontSee('Mark Payment Received');
+        ->assertSee('Ledger', false);
 });
 
 test('moving to ready pickup auto issues final invoice', function () {
@@ -57,6 +66,14 @@ test('builder surface surfaces financial rail for deposits and payments', functi
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Record deposit in ledger')
+        ->assertSee("selectTab('financial')", false)
+        ->assertDontSee('id="financial-rail"', false);
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [
+        'repairOrder' => $repairOrder,
+        'tab' => 'financial',
+    ]))
+        ->assertOk()
         ->assertSee('id="financial-rail"', false);
 });
 
@@ -69,8 +86,14 @@ test('financial rail surfaces deposit capture before ready pickup', function () 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Record deposit in ledger')
-        ->assertSee('Pre-invoice')
         ->assertDontSee('Generate Final Invoice');
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [
+        'repairOrder' => $repairOrder,
+        'tab' => 'financial',
+    ]))
+        ->assertOk()
+        ->assertSee('Pre-invoice');
 });
 
 test('estimate totals panel shows balance due when deposit is on file', function () {
@@ -176,7 +199,7 @@ test('payment form is hidden before invoice and visible after invoice', function
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Record deposit in ledger')
-        ->assertDontSee('Record Payment');
+        ->assertDontSee(route('operations.repair-orders.payment.update', $repairOrder), false);
 
     issueFinalInvoiceFor($repairOrder);
 
@@ -251,9 +274,16 @@ test('partial payment posture surfaces on ro review', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
-        ->assertSee('Partially paid')
         ->assertSee('$100.00')
         ->assertSee('Settlement balance');
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [
+        'repairOrder' => $repairOrder,
+        'tab' => 'financial',
+    ]))
+        ->assertOk()
+        ->assertSee('Partially paid')
+        ->assertSee('Payment History', false);
 });
 
 test('paid posture surfaces when balance is zero', function () {
@@ -266,9 +296,15 @@ test('paid posture surfaces when balance is zero', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
+        ->assertDontSee(route('operations.repair-orders.payment.update', $repairOrder), false);
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [
+        'repairOrder' => $repairOrder,
+        'tab' => 'financial',
+    ]))
+        ->assertOk()
         ->assertSee('Paid / ready to close')
-        ->assertSee('Eligible to close')
-        ->assertDontSee('Record Payment');
+        ->assertSee('Eligible to close');
 });
 
 test('close is blocked before invoice and with balance due', function () {

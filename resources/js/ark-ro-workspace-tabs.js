@@ -18,6 +18,8 @@ const hashAliases = {
     'customer-communication': 'comms',
     recommendations: 'recommendations',
     recs: 'recommendations',
+    'financial-rail': 'financial',
+    financial: 'financial',
 };
 
 export function arkRoWorkspaceTabs(config = {}) {
@@ -42,6 +44,14 @@ export function arkRoWorkspaceTabs(config = {}) {
 
                 return;
             }
+
+            window.addEventListener('hashchange', () => {
+                const fromHash = this.hashTab();
+
+                if (fromHash) {
+                    this.selectTab(fromHash);
+                }
+            });
 
             if (this.applyHash()) {
                 this.queueTabLoad(this.tab);

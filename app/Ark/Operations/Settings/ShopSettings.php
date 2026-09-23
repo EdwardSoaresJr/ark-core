@@ -1522,7 +1522,18 @@ TEXT;
                     ? number_format((float) ($row['discount_amount'] ?? $defaults['discount_amount']), 2, '.', '')
                     : null),
             'default_parts_matrix_key' => $row['default_parts_matrix_key'] ?? $defaults['default_parts_matrix_key'] ?? null,
+            'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
         ];
+    }
+
+    public function billingClassPillClass(?string $name): string
+    {
+        $name = trim((string) ($name !== null && $name !== '' ? $name : 'Retail'));
+        $row = collect($this->customerTypeRows())->first(
+            fn (array $type): bool => strcasecmp($type['name'], $name) === 0,
+        );
+
+        return BillingClassPillColor::classFor($row['pill_color'] ?? null, $name);
     }
 
     /**

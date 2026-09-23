@@ -18,6 +18,14 @@
     <div class="ops-estimate-context-rail__items" role="toolbar" aria-label="Estimate context">
         <button
             type="button"
+            class="ops-estimate-context-rail__item"
+            :class="!estimateContext ? 'is-active' : ''"
+            :aria-pressed="(!estimateContext).toString()"
+            @click="estimateContext = null; window.arkSelectRepairOrderWorkspaceTab && window.arkSelectRepairOrderWorkspaceTab('builder')"
+        >Home</button>
+
+        <button
+            type="button"
             id="authorization-rail"
             class="ops-estimate-context-rail__item"
             :class="estimateContext === 'auth' ? 'is-active' : ''"

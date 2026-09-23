@@ -34,6 +34,7 @@ test('repair order workspace exposes primary advisor workspaces', function () {
         ->assertSee('data-workspace-tab-panel="recommendations"', false)
         ->assertSee('Authorization')
         ->assertSee('Customer View')
+        ->assertSee('>Home</button>', false)
         ->assertSee('Labor Guide', false)
         ->assertSee('ops-estimate-context-rail', false)
         ->assertDontSee('ops-estimate-build-toolbar', false)

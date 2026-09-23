@@ -27,7 +27,7 @@ final class ServiceLaneIdentityPresenter
         $plateLine = collect($identity['vehicle']['lines'])->firstWhere('label', 'Plate');
         $visitMode = RepairOrderVisitMode::fromRepairOrder($repairOrder);
 
-        $technicianLine = collect($identity['visit']['lines'])->firstWhere('label', 'Technician');
+        $technicianLabel = $repairOrder->technicianOwnershipLabel();
 
         return [
             'customer' => [
@@ -50,7 +50,9 @@ final class ServiceLaneIdentityPresenter
                 'repairOrderId' => $repairOrder->repair_order_id,
                 'visitModeLabel' => $visitMode?->label(),
                 'advisor' => collect($identity['visit']['lines'])->firstWhere('label', 'Advisor')['value'] ?? null,
-                'technician' => $technicianLine['value'] ?? 'Unassigned',
+                'technician' => in_array($technicianLabel, ['', 'Unassigned', 'Unassigned tech', 'Unassigned technician', 'Needs owner'], true)
+                    ? 'Unassigned'
+                    : $technicianLabel,
             ],
             'financial' => $totals !== null ? self::financialOrientation($repairOrder, $totals) : null,
         ];

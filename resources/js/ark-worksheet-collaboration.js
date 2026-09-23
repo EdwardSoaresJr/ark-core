@@ -48,6 +48,7 @@ export const arkWorksheetCollaboration = (config = {}) => ({
     staleNotice: '',
     conflictFragment: config.conflictFragment ?? 'estimate-lines',
     currentUserId: config.currentUserId ?? null,
+    localEstimateWrite: false,
 
     isSelfAuthoredEstimateChange(payload) {
         const actorId = Number.parseInt(String(payload?.actor_id ?? payload?.conflict?.actor_id ?? ''), 10);
@@ -84,7 +85,12 @@ export const arkWorksheetCollaboration = (config = {}) => ({
             this.sendWorksheetHeartbeat();
         });
 
-        this.heartbeatTimer = window.setInterval(() => this.sendWorksheetHeartbeat(), 90_000);
+        const liveSocket = this.broadcastEnabled && this.broadcastChannel && arkEchoEnabled();
+
+        this.heartbeatTimer = window.setInterval(
+            () => this.sendWorksheetHeartbeat(),
+            liveSocket ? 90_000 : 10_000,
+        );
 
         document.addEventListener('visibilitychange', () => {
             if (! document.hidden) {
@@ -137,6 +143,7 @@ export const arkWorksheetCollaboration = (config = {}) => ({
             }
 
             await this.refreshScope('rail');
+            await this.refreshLoadedFinancialTab();
             window.ARK?.workspace?.refreshActivity?.();
         }, 150);
     },
@@ -187,13 +194,18 @@ export const arkWorksheetCollaboration = (config = {}) => ({
     async handleRemoteEstimateChange(payload) {
         const version = Number.parseInt(String(payload?.estimate_version ?? ''), 10);
 
-        if (this.isSelfAuthoredEstimateChange(payload)) {
-            this.syncSelfAuthoredEstimateVersion(payload);
-
+        if (Number.isNaN(version) || version <= this.renderedEstimateVersion) {
             return;
         }
 
-        if (Number.isNaN(version) || version <= this.renderedEstimateVersion) {
+        // This tab is writing the change. The save response paints the page.
+        // Another tab or computer for the same person still needs the refresh.
+        if (
+            this.isSelfAuthoredEstimateChange(payload)
+            && (this.worksheetBusyPending || this.worksheetSaving || this.localEstimateWrite)
+        ) {
+            this.syncSelfAuthoredEstimateVersion(payload);
+
             return;
         }
 
@@ -240,9 +252,21 @@ export const arkWorksheetCollaboration = (config = {}) => ({
                 window.location.href.split('#')[0],
                 document.getElementById(this.worksheetScopeId ?? this.conflictFragment ?? 'estimate-lines'),
             );
+            await this.refreshLoadedFinancialTab();
 
             this.clearStaleNotice();
         }, 150);
+    },
+
+    async refreshLoadedFinancialTab() {
+        const root = document.getElementById('repair-order-workspace-tabs');
+        const tabs = window.Alpine?.$data?.(root);
+
+        if (! tabs?.loadedTabs?.financial || typeof tabs.reloadTab !== 'function') {
+            return;
+        }
+
+        await tabs.reloadTab('financial');
     },
 
     clearStaleNotice() {
@@ -324,12 +348,6 @@ export const arkWorksheetCollaboration = (config = {}) => ({
             this.worksheetLeaseValid = payload.lease_valid !== false;
 
             if (payload.version_drifted) {
-                if (this.isSelfAuthoredEstimateChange(payload.conflict ?? payload)) {
-                    this.syncSelfAuthoredEstimateVersion(payload);
-
-                    return;
-                }
-
                 await this.handleRemoteEstimateChange({
                     estimate_version: payload.estimate_version,
                     message: payload.conflict?.message,
@@ -340,8 +358,12 @@ export const arkWorksheetCollaboration = (config = {}) => ({
 
                 if (! Number.isNaN(heartbeatVersion) && heartbeatVersion === this.renderedEstimateVersion) {
                     this.versionDriftNotice = '';
-                } else if (! Number.isNaN(heartbeatVersion)) {
-                    this.markEstimateRendered(heartbeatVersion);
+                } else if (! Number.isNaN(heartbeatVersion) && heartbeatVersion > this.renderedEstimateVersion) {
+                    await this.handleRemoteEstimateChange({
+                        estimate_version: heartbeatVersion,
+                        actor_id: this.currentUserId,
+                        message: 'This repair order was updated.',
+                    });
                 }
             }
         } catch {
