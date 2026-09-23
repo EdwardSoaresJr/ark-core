@@ -17,6 +17,11 @@
 @endphp
 
 <div id="history-rail" class="ops-review-rail-tab-panel divide-y divide-slate-100 text-sm">
+    @include('operations.repair-orders.partials.repair-order-lifecycle-panel', [
+        'lifecyclePlacement' => 'history',
+        'repairOrder' => $repairOrder,
+    ])
+
     <div class="ops-review-panel-header">
         <p class="ops-eyebrow">Vehicle History</p>
         <p class="ops-meta mt-0.5">Prior visits and deferred work for this vehicle - advisory context only. Calls and texts live on Comms.</p>

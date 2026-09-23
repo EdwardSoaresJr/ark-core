@@ -1609,24 +1609,19 @@
                     'totals' => $totals,
                 ])
 
-                @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
-                    'repairOrder' => $repairOrder,
-                ])
+                <div id="review-toolbar" class="ops-review-actions">
+                    <div class="ops-review-toolbar">
+                        @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
+                            'repairOrder' => $repairOrder,
+                        ])
 
-                <div id="review-toolbar" class="ops-review-actions ops-review-actions--quiet">
-                    <details
-                        class="ops-scope-more ops-ro-page-more"
-                        x-data
-                        @click.outside="$el.open = false"
-                        @keydown.escape.prevent="$el.open = false"
-                    >
-                            <summary class="ops-scope-more__trigger" aria-label="Repair order actions">More</summary>
-                            <div class="ops-scope-more__panel ops-ro-page-more__panel">
-                                @unless ($isTerminal)
-                                    @if ($canAuthorRepairOrder ?? false)
+                        @unless ($isTerminal)
+                            @if ($canAuthorRepairOrder ?? false)
+                                <div class="ops-review-toolbar-section">
+                                    <div class="ops-review-toolbar-row">
                                         <button
                                             type="button"
-                                            class="ops-scope-more__item"
+                                            class="ops-review-action"
                                             @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'review-estimate-notes', context: {}, invokeEl: $event.currentTarget } }))"
                                         >
                                             Review Estimate Notes
@@ -1634,7 +1629,7 @@
                                         @if (($evidenceGallery['items'] ?? collect())->count() > 0)
                                             <button
                                                 type="button"
-                                                class="ops-scope-more__item"
+                                                class="ops-review-action"
                                                 data-workspace-modal-trigger="evidence"
                                                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'evidence', invokeEl: $event.currentTarget } }))"
                                             >
@@ -1643,28 +1638,29 @@
                                         @endif
                                         <button
                                             type="button"
-                                            class="ops-scope-more__item"
+                                            class="ops-review-action"
                                             @click="$dispatch('ark:dealer-quote-capture-open')"
                                         >
                                             Import
                                         </button>
-                                    @endif
-                                @endunless
+                                    </div>
+                                </div>
+                            @endif
+                        @endunless
 
-                                @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
-                                    'repairOrder' => $repairOrder,
-                                    'isTerminal' => $isTerminal,
-                                    'lifecycleOptions' => $lifecycleOptions,
-                                    'closeVariantOptions' => $closeVariantOptions,
-                                    'technicians' => $technicians,
-                                    'soloOwnerShop' => $soloOwnerShop,
-                                    'estimateVersion' => $estimateVersion,
-                                    'financial' => $financial,
-                                    'balanceProjection' => $balanceProjection ?? null,
-                                    'mode' => 'edit',
-                                ])
-                            </div>
-                        </details>
+                        @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
+                            'repairOrder' => $repairOrder,
+                            'isTerminal' => $isTerminal,
+                            'lifecycleOptions' => $lifecycleOptions,
+                            'closeVariantOptions' => $closeVariantOptions,
+                            'technicians' => $technicians,
+                            'soloOwnerShop' => $soloOwnerShop,
+                            'estimateVersion' => $estimateVersion,
+                            'financial' => $financial,
+                            'balanceProjection' => $balanceProjection ?? null,
+                            'mode' => 'edit',
+                        ])
+                    </div>
                 </div>
             </div>
 

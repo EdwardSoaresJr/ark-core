@@ -236,6 +236,15 @@ test('repair order workspace renders lifecycle panel', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
+        ->assertSee("selectTab('history')", false)
+        ->assertDontSee('aria-label="Repair order status history"', false)
+        ->assertDontSee('aria-label="Repair order actions"', false);
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [
+        'repairOrder' => $repairOrder,
+        'tab' => 'history',
+    ]))
+        ->assertOk()
         ->assertSee('Status history')
         ->assertSee('Pickup notified');
 });
