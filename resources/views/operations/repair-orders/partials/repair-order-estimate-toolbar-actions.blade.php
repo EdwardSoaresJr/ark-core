@@ -82,16 +82,5 @@
                 @endif
             @endif
         </div>
-
-        <div class="ops-estimate-build-toolbar__customer">
-            <button
-                type="button"
-                class="ops-estimate-build-toolbar__quiet"
-                :class="estimateContext === 'portal' ? 'is-active' : ''"
-                @click="toggleEstimateContext('portal')"
-            >
-                Customer View
-            </button>
-        </div>
     </div>
 @endif

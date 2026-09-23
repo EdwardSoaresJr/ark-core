@@ -127,6 +127,10 @@
     </nav>
     @endif
 
+    @isset($header)
+        {{ $header }}
+    @endisset
+
     <div class="ops-ro-workspace-tabs__panels">
         <div x-show="tab === 'builder'" role="tabpanel">
             {{ $slot }}

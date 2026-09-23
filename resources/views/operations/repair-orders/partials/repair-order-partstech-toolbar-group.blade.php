@@ -12,7 +12,8 @@
     <div
         class="relative"
         data-toolbar-group="parts-catalog"
-        @click.outside="partsCatalogMenu = false"
+        x-data="{ catalogMenu: false }"
+        @click.outside="catalogMenu = false"
     >
         <div class="ops-review-action-group ops-review-action-group--procurement" role="group" aria-label="Parts catalog">
             <button
@@ -21,7 +22,7 @@
                 :class="partsCatalogSelected()?.button_class || 'ops-review-action--procurement'"
                 :data-parts-catalog="partsCatalogSelected()?.key"
                 data-parts-catalog="{{ $selectedCatalog['key'] ?? '' }}"
-                @click="openPartsCatalog(partsCatalogSelected()?.key)"
+                @click="openPartsCatalog(partsCatalogSelected()?.key, false, {{ (int) ($concernId ?? 0) }} || null)"
                 :disabled="partsCatalogSelected()?.kind === 'partstech' && partsCatalogSelected()?.mode === 'catalog'
                     ? (partstechCatalogOpening || partstechPullLoading || ! partsCatalogSelected()?.can_open)
                     : ! partsCatalogSelected()?.can_open"
@@ -51,12 +52,12 @@
                 :class="partsCatalogSelected()?.button_class || 'ops-review-action--procurement'"
                 x-show="partsCatalogItems.length > 1"
                 x-cloak
-                @click="partsCatalogMenu = ! partsCatalogMenu"
-                @keydown.arrow-down.prevent="partsCatalogMenu = true"
-                @keydown.arrow-up.prevent="partsCatalogMenu = true"
-                :aria-expanded="partsCatalogMenu ? 'true' : 'false'"
+                @click="catalogMenu = ! catalogMenu"
+                @keydown.arrow-down.prevent="catalogMenu = true"
+                @keydown.arrow-up.prevent="catalogMenu = true"
+                :aria-expanded="catalogMenu ? 'true' : 'false'"
                 aria-haspopup="menu"
-                aria-controls="parts-catalog-selector-menu"
+                aria-controls="parts-catalog-selector-{{ (int) ($concernId ?? 0) }}"
                 :aria-label="'Choose parts catalog, ' + (partsCatalogSelected()?.label || 'none')"
                 title="Choose a catalog or open a parts link"
             >
@@ -80,12 +81,12 @@
             </button>
         </div>
         <div
-            id="parts-catalog-selector-menu"
-            x-show="partsCatalogMenu"
+            id="parts-catalog-selector-{{ (int) ($concernId ?? 0) }}"
+            x-show="catalogMenu"
             x-cloak
             class="absolute left-0 z-20 mt-1 min-w-[13rem] border border-slate-200 bg-white py-1 shadow-sm"
             role="menu"
-            @keydown.escape.stop="partsCatalogMenu = false"
+            @keydown.escape.stop="catalogMenu = false"
         >
             <template x-for="item in partsCatalogItems" :key="item.key">
                 <div class="border-t border-slate-100 first:border-t-0">
@@ -95,7 +96,7 @@
                         :class="item.key === partsCatalogSelectedKey && item.mode === 'catalog' ? 'bg-slate-50' : ''"
                         :title="item.mode === 'link' ? ('Open ' + item.label + ' in a new tab') : ('Use ' + item.label + ' on this repair order')"
                         :aria-current="item.key === partsCatalogSelectedKey && item.mode === 'catalog' ? 'true' : 'false'"
-                        @click="activatePartsCatalogItem(item)"
+                        @click="if (item.mode === 'link') { openPartsCatalog(item.key, false, {{ (int) ($concernId ?? 0) }} || null); } else { selectPartsCatalog(item.key); } catalogMenu = false"
                         role="menuitem"
                     >
                         <span class="inline-block size-2.5 shrink-0 rounded-sm" :class="item.swatch_class" aria-hidden="true"></span>
