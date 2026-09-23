@@ -41,6 +41,21 @@ Communications workspace tests on this commit: 7 passed, 4 failed, 1 error. The 
 
 Publish to `ghcr.io/edwardsoaresjr/ark-core`. Pin the digest. Do not deploy a floating tag. This release branch does not share history with `origin/main`. Do not merge them together.
 
+## Production schema and the running image
+
+Observed 2026-09-22 on the live LNP database while Core was pinned to `sha256:6f81679961b092ca23a2b073684bdabfc7a1242b2e9ee2ac1079f459d7c9b6c9` (source `b6bfb8c1562466cb0fa516ecd62f7f9897668263`). `migrate:status --pending` reported nothing pending. The migrations table still has six rows whose files are not in that image:
+
+- `2026_06_26_140001_add_workstation_fields_to_communication_devices`
+- `2026_07_23_220000_migrate_concern_advisor_notes_to_private_note_lines`
+- `2026_08_08_110000_create_customer_documents_table`
+- `2026_09_06_090000_add_platform_connection_columns_to_shop_settings`
+- `2026_09_18_010000_drop_shop_settings_postmark_columns`
+- `2026_09_21_230000_add_companion_suggestion_dismissed_hash_to_repair_orders`
+
+A database built only by migrating that image does not fully reproduce production. Confirmed on production and absent from that fresh schema: table `customer_documents`, and column `repair_orders.companion_suggestion_dismissed_hash`. These rows are older than the local candidate on `main`.
+
+SQLite can prove a new migration’s order. It does not prove MySQL foreign keys. Before any production rollout that adds tables or changes deletes, confirm the foreign keys on MySQL. An image rollback does not roll back the database. Once `approved_work_scopes` or `authorization_exceptions` rows exist, leave those tables and their delete protection in place.
+
 ## QZ label printing
 
 A Core image build fails if `public/vendor/qz/qz-tray.js` or `public/js/ark/qz-tray.js` is missing. `.dockerignore` ignores `/vendor` and keeps `public/vendor`. `scripts/assert-canonical-core-publish.sh` refuses to publish a tree that drops either file or the Dockerfile check. `/up` returning 200 does not accept a release. `scripts/qz-label-smoke.sh` must see both script URLs return 200.
