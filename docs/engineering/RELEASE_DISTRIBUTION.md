@@ -17,18 +17,18 @@ A git push is not a release. Each target has its own deploy and verification res
 Running 2026-09-23 on Demo and LNP. Local Herd is this checkout. Fleet deployment automation stays disabled.
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:98b32040de8774668fcfdf05f604d9b7a17a5725cce5e45656c2acccdc669faf
+ghcr.io/edwardsoaresjr/ark-core@sha256:229e7e863f9a75ef8a36af2039b9903cc4cf03700c720ed0f4d172e21c0af891
 ```
 
-Source commit `fe9efbcc94c019b125c3ea4fcb63ac0114dc9a65` on `main`. `/up` returned 200 on local, Demo, and LNP. Only Demo `app` and LNP `core` were recreated.
+Source commit `7b04db46f4073067f1d8378d02413d835efd9f87` on `main`. `/up` returned 200 on local, Demo, and LNP. Only Demo `app` and LNP `core` were recreated.
 
 Immediate rollback is the image that was running before this recreate:
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:d5e5642d37462b8bcaea4f8292655b39a9f19d9a233047e9680d4f4d5a188766
+ghcr.io/edwardsoaresjr/ark-core@sha256:98b32040de8774668fcfdf05f604d9b7a17a5725cce5e45656c2acccdc669faf
 ```
 
-Source commit `637baa907ad4a53d6b6096c6df08f9954b02bfc0`. Compose backups: `/root/demo-compose-image-pre-fe9efbcc.yml` and `/root/lnp-core-compose-pre-fe9efbcc.yml`.
+Source commit `fe9efbcc94c019b125c3ea4fcb63ac0114dc9a65`. Compose backups: `/root/demo-compose-image-pre-7b04db46.yml` and `/root/lnp-core-compose-pre-7b04db46.yml`.
 
 LNP Core accepted 2026-09-22. Shop confirmation: one physical label on one sticker, and the inbound SMS popup appeared.
 
