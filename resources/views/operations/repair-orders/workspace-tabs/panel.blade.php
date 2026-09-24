@@ -9,7 +9,6 @@
         'history' => 'repair-order-rail-tab-history',
         'inspect' => 'repair-order-rail-tab-inspect',
         'recommendations' => 'repair-order-rail-tab-recommendations',
-        'financial' => 'repair-order-rail-tab-financial',
         default => null,
     };
 @endphp

@@ -2319,12 +2319,6 @@
         max-width: 100%;
     }
 
-    @media (min-width: 1100px) {
-        .ops-ro-footer__row {
-            flex-wrap: nowrap;
-        }
-    }
-
     .ops-ro-footer__workflow {
         display: flex;
         align-items: center;
@@ -2352,66 +2346,7 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 0.25rem 0.75rem;
-        flex: 0 1 auto;
-    }
-
-    .ops-ro-footer__instruments {
-        display: flex;
-        min-width: 0;
         flex: 1 1 auto;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 0.55rem;
-        margin-left: auto;
-        font-size: 0.6875rem;
-        line-height: 1;
-        white-space: nowrap;
-    }
-
-    .ops-ro-footer__instrument {
-        flex-shrink: 0;
-        cursor: pointer;
-    }
-
-    .ops-ro-footer__instrument-trigger {
-        display: inline-flex;
-        align-items: baseline;
-        gap: 0.3rem;
-    }
-
-    .ops-ro-footer__instrument-label {
-        color: theme('colors.slate.500');
-        font-weight: 600;
-        letter-spacing: 0.01em;
-        text-transform: uppercase;
-    }
-
-    .ops-ro-footer__instrument-value {
-        color: theme('colors.slate.950');
-        font-size: 0.75rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .ops-ro-footer__instrument-badge {
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-    }
-
-    .ops-ro-footer__instrument-badge--excellent,
-    .ops-ro-footer__instrument-badge--healthy,
-    .ops-ro-footer__instrument-badge--good {
-        color: theme('colors.emerald.700');
-    }
-
-    .ops-ro-footer__instrument-badge--thin,
-    .ops-ro-footer__instrument-badge--warn {
-        color: theme('colors.amber.700');
-    }
-
-    .ops-ro-footer__instrument-badge--low {
-        color: theme('colors.rose.700');
     }
 
     .ops-ro-footer__quiet {
@@ -2427,8 +2362,7 @@
 
     .ops-ro-footer__utilities {
         position: relative;
-        flex-shrink: 0;
-        margin-left: 0.75rem;
+        margin-left: auto;
     }
 
     .ops-ro-footer__overflow {
@@ -2493,112 +2427,6 @@
     .ops-ro-footer__top:hover {
         border-color: theme('colors.slate.400');
         color: theme('colors.slate.950');
-    }
-
-    .ops-ro-footer__compose {
-        width: 100%;
-        min-width: 0;
-        margin-bottom: 0.35rem;
-        padding-bottom: 0.35rem;
-        border-bottom: 1px solid theme('colors.slate.200');
-    }
-
-    .ops-ro-footer__compose-track {
-        display: flex;
-        width: 100%;
-        min-width: 0;
-        flex-wrap: nowrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        overflow: hidden;
-    }
-
-    .ops-ro-footer__compose [hidden] {
-        display: none !important;
-    }
-
-    .ops-ro-footer__compose-btn {
-        display: inline-flex;
-        height: 2rem;
-        min-width: 0;
-        flex: 0 0 auto;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-        border: 1px solid transparent;
-        border-radius: 0.375rem;
-        padding: 0 0.7rem;
-        font-size: 0.75rem;
-        font-weight: 650;
-        line-height: 1;
-        white-space: nowrap;
-    }
-
-    .ops-ro-footer__compose-btn--guide,
-    .ops-ro-footer__compose-btn--more {
-        border-color: theme('colors.slate.300');
-        background: theme('colors.white');
-        color: theme('colors.slate.800');
-    }
-
-    .ops-ro-footer__compose-btn--guide:hover,
-    .ops-ro-footer__compose-btn--more:hover,
-    .ops-ro-footer__compose-btn--guide:focus-visible,
-    .ops-ro-footer__compose-btn--more:focus-visible {
-        border-color: theme('colors.slate.500');
-        color: theme('colors.slate.950');
-    }
-
-    .ops-ro-footer__compose-btn:disabled {
-        opacity: 0.45;
-    }
-
-    .ops-ro-footer__compose-btn--labor {
-        background: #3d9a66;
-        border-color: #3d9a66;
-        color: #ffffff;
-    }
-
-    .ops-ro-footer__compose-btn--part {
-        background: #4a84c4;
-        border-color: #4a84c4;
-        color: #ffffff;
-    }
-
-    .ops-ro-footer__compose-btn--note {
-        background: #c9a227;
-        border-color: #c9a227;
-        color: #ffffff;
-    }
-
-    .ops-ro-footer__compose-btn--sublet {
-        background: #7c3aed;
-        border-color: #7c3aed;
-        color: #ffffff;
-    }
-
-    .ops-ro-footer__compose-btn--saved-work {
-        background: #0f766e;
-        border-color: #0f766e;
-        color: #ffffff;
-    }
-
-    .ops-ro-footer__compose-btn--evidence {
-        background: #475569;
-        border-color: #475569;
-        color: #ffffff;
-    }
-
-    .ops-ro-footer__compose-more {
-        position: relative;
-        flex: 0 0 auto;
-    }
-
-    .ops-ro-footer__compose .ops-repair-action__compose-icon,
-    .ops-ro-footer__compose .ops-repair-action__compose-icon svg {
-        height: 0.95rem;
-        width: 0.95rem;
     }
 
     @media (max-width: 640px) {
@@ -3066,12 +2894,7 @@
     }
 
     .ops-main:has(.ops-estimate-workspace) {
-        overflow-x: visible;
         scroll-padding-bottom: 12rem;
-    }
-
-    body:has(.ops-estimate-workspace) {
-        overflow-x: clip;
     }
 
     .ops-main:has(.ops-advisor-home),
@@ -3108,9 +2931,10 @@
     .ops-estimate-layout {
         display: grid;
         align-items: start;
-        gap: 0.75rem;
+        gap: 0.5rem;
         grid-template-columns: minmax(0, 1fr);
         min-width: 0;
+        overflow-x: clip;
     }
 
     .ops-estimate-main {
@@ -4782,28 +4606,6 @@
     html.dark .ops-estimate-workspace .ops-identity-title-link,
     .dark .ops-estimate-workspace .ops-identity-title-link {
         color: rgb(241 245 249);
-    }
-
-    html.dark .ops-estimate-workspace .ops-identity-column-link,
-    .dark .ops-estimate-workspace .ops-identity-column-link {
-        color: rgb(148 163 184);
-    }
-
-    html.dark .ops-estimate-workspace .ops-billing-class-pill--slate,
-    .dark .ops-estimate-workspace .ops-billing-class-pill--slate {
-        background: rgb(51 65 85);
-        color: rgb(203 213 225);
-    }
-
-    html.dark .ops-estimate-workspace .ops-visit-reason,
-    .dark .ops-estimate-workspace .ops-visit-reason {
-        border-bottom-color: rgb(51 65 85);
-        background: rgb(30 41 59);
-    }
-
-    html.dark .ops-estimate-workspace .ops-visit-reason__text,
-    .dark .ops-estimate-workspace .ops-visit-reason__text {
-        color: rgb(226 232 240);
     }
 
     html.dark .ops-estimate-workspace .ops-identity-title-link:hover,
@@ -8242,14 +8044,9 @@
 
     .ops-review-toolbar-section--workflow {
         margin-left: auto;
-        flex: 0 0 auto;
+        flex-shrink: 0;
         align-items: center;
         gap: 0.375rem;
-    }
-
-    .ops-review-toolbar-section--workflow select {
-        width: 11.5rem;
-        max-width: 11.5rem;
     }
 
     .ops-review-toolbar-section--print {
@@ -8548,184 +8345,6 @@
     .ops-identity-title-link:hover {
         color: theme('colors.slate.800');
         text-decoration-color: theme('colors.slate.500');
-    }
-
-    .ops-identity-column-link {
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        line-height: 1rem;
-        text-transform: uppercase;
-        color: theme('colors.slate.500');
-        text-decoration: underline;
-        text-decoration-color: theme('colors.slate.300');
-        text-underline-offset: 2px;
-    }
-
-    .ops-identity-column-link:hover {
-        color: theme('colors.slate.800');
-        text-decoration-color: theme('colors.slate.500');
-    }
-
-    .ops-billing-class-pill {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 9999px;
-        background: theme('colors.slate.200');
-        padding: 0.0625rem 0.4375rem;
-        color: theme('colors.slate.600');
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        line-height: 1rem;
-        text-transform: uppercase;
-        cursor: help;
-    }
-
-    .ops-billing-class-pill--slate {
-        background: theme('colors.slate.200');
-        color: theme('colors.slate.600');
-    }
-
-    .ops-billing-class-pill--blue {
-        background: theme('colors.sky.100');
-        color: theme('colors.sky.900');
-    }
-
-    .ops-billing-class-pill--green {
-        background: theme('colors.emerald.100');
-        color: theme('colors.emerald.900');
-    }
-
-    .ops-billing-class-pill--amber {
-        background: theme('colors.amber.100');
-        color: theme('colors.amber.950');
-    }
-
-    .ops-billing-class-pill--orange {
-        background: theme('colors.orange.100');
-        color: theme('colors.orange.950');
-    }
-
-    .ops-billing-class-pill--rose {
-        background: theme('colors.rose.100');
-        color: theme('colors.rose.900');
-    }
-
-    .ops-billing-class-pill--violet {
-        background: theme('colors.violet.100');
-        color: theme('colors.violet.900');
-    }
-
-    .ops-help-tip:hover .ops-billing-class-pill,
-    .ops-help-tip:focus-visible .ops-billing-class-pill {
-        filter: brightness(0.96);
-    }
-
-    button.ops-visit-mode-pill {
-        border: 0;
-        cursor: pointer;
-    }
-
-    button.ops-visit-mode-pill:hover,
-    button.ops-visit-mode-pill:focus-visible {
-        filter: brightness(0.96);
-    }
-
-    .ops-visit-reason {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0.25rem 0.75rem;
-        border-bottom: 1px solid theme('colors.slate.200');
-        background: transparent;
-        padding: 0.4rem 0.5rem 0.35rem;
-    }
-
-    .ops-visit-reason__label {
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        line-height: 1rem;
-        text-transform: uppercase;
-        color: theme('colors.slate.500');
-    }
-
-    .ops-visit-reason__line {
-        display: flex;
-        min-width: 0;
-        flex: 1 1 12rem;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0.25rem 0.625rem;
-    }
-
-    .ops-visit-reason__text {
-        min-width: 0;
-        max-width: 100%;
-        white-space: pre-line;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        line-height: 1.25rem;
-        color: theme('colors.slate.800');
-    }
-
-    .ops-visit-reason__text--empty {
-        font-weight: 600;
-        color: theme('colors.slate.400');
-    }
-
-    .ops-visit-reason__actions {
-        display: inline-flex;
-        flex-shrink: 0;
-        align-items: center;
-        gap: 0.625rem;
-    }
-
-    .ops-visit-reason__actions .ops-identity-action {
-        min-height: 0;
-        border: 0;
-        background: transparent;
-        padding: 0;
-        color: theme('colors.slate.500');
-        font-size: 0.6875rem;
-        font-weight: 600;
-    }
-
-    .ops-visit-reason__actions .ops-identity-action:hover {
-        border: 0;
-        color: theme('colors.slate.950');
-    }
-
-    .ops-visit-reason__proposals {
-        flex: 1 1 100%;
-    }
-
-    .ops-identity-actions {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.25rem;
-        margin-top: 0.375rem;
-    }
-
-    .ops-identity-action {
-        display: inline-flex;
-        min-height: 1.25rem;
-        align-items: center;
-        border: 1px solid theme('colors.slate.300');
-        background: theme('colors.white');
-        padding: 0 0.375rem;
-        color: theme('colors.slate.600');
-        font-size: 0.6875rem;
-        font-weight: 700;
-        line-height: 1rem;
-        text-decoration: none;
-    }
-
-    .ops-identity-action:hover {
-        border-color: theme('colors.slate.400');
-        color: theme('colors.slate.950');
     }
 
     .ops-identity-inline .ops-identity-input {
@@ -10084,7 +9703,7 @@
         margin: 0;
         min-width: 0;
         color: theme('colors.slate.950');
-        font-size: 1rem;
+        font-size: 0.8125rem;
         font-weight: 800;
         line-height: 1.2;
         letter-spacing: -0.01em;
@@ -10346,7 +9965,7 @@
     .ops-scope-more__panel {
         position: absolute;
         top: calc(100% + 0.25rem);
-        left: 0;
+        right: 0;
         z-index: 40;
         min-width: 11.5rem;
         border: 1px solid theme('colors.slate.200');
@@ -10380,102 +9999,6 @@
     .ops-scope-more__item:focus-visible {
         background: theme('colors.slate.100');
         color: theme('colors.slate.950');
-    }
-
-    .ops-scope-more__field {
-        display: grid;
-        gap: 0.25rem;
-        padding: 0.35rem 0.4rem 0.15rem;
-    }
-
-    .ops-scope-more__label {
-        margin: 0;
-        color: theme('colors.slate.500');
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        line-height: 1;
-        text-transform: uppercase;
-    }
-
-    .ops-scope-more__field .ops-disposition-select,
-    .ops-scope-more__field .ops-production-status-select,
-    .ops-scope-more__field .ops-billing-posture-select {
-        width: 100%;
-        max-width: 16rem;
-    }
-
-    .ops-scope-production-quiet {
-        border: 0;
-        background: transparent;
-        padding: 0.125rem 0.25rem;
-        color: theme('colors.slate.500');
-        font-size: 0.6875rem;
-        font-weight: 600;
-        line-height: 1rem;
-    }
-
-.ops-write-path__identity {
-    position: relative;
-}
-
-.ops-review-actions--quiet {
-    position: absolute;
-    right: 0.55rem;
-    bottom: 0.45rem;
-    z-index: 6;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-    .ops-review-actions--quiet .ops-review-toolbar {
-        padding: 0;
-    }
-
-    details.ops-builder-present-card > summary {
-        list-style: none;
-        cursor: pointer;
-    }
-
-    details.ops-builder-present-card > summary::-webkit-details-marker {
-        display: none;
-    }
-
-    .ops-ro-page-more__panel {
-        min-width: 16rem;
-        padding: 0.35rem;
-    }
-
-    .ops-ro-page-more__panel .ops-review-toolbar-section,
-    .ops-ro-page-more__panel .ops-review-action {
-        width: 100%;
-    }
-
-    .ops-ro-page-more__panel .ops-review-toolbar-section {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .ops-review-toolbar:has(.ops-ro-page-more[open]) {
-        overflow: visible;
-    }
-
-    @media (max-width: 639px) {
-        .ops-review-toolbar:has(.ops-scope-more) {
-            overflow: visible;
-        }
-
-        .ops-scope-more__panel {
-            position: static;
-            width: min(100%, 20rem);
-            margin-top: 0.25rem;
-        }
-
-        .ops-scope-more__item,
-        .ops-ro-page-more__panel .ops-review-action {
-            min-height: 2.75rem;
-        }
     }
 
     .ops-worksheet-concern-header {
@@ -10942,19 +10465,17 @@
     @media (min-width: 1024px) {
         .ops-review-rail--pinned {
             position: sticky;
-            top: calc(var(--ops-sticky-stack-offset) + 0.5rem);
-            z-index: 2;
+            top: var(--ops-sticky-stack-offset);
+            z-index: 1;
             align-self: start;
             display: flex;
             flex-direction: column;
             gap: 0.375rem;
-            overflow: visible;
-            margin-bottom: var(--ops-ro-footer-offset);
-            padding: 0.5rem 0.5rem 0.625rem;
-            border: 1px solid rgb(203 213 225);
-            border-left: 3px solid var(--ops-accent-800);
-            background: rgb(248 250 252);
-            box-shadow: 0 10px 24px rgb(15 23 42 / 0.08);
+            max-height: calc(100dvh - var(--ops-sticky-stack-offset) - var(--ops-ro-footer-offset, 5.5rem));
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-bottom: 0.5rem;
         }
 
         .ops-review-rail-totals-pinned {
@@ -35156,16 +34677,8 @@ body:has([data-ro-orientation-header]) {
     --ops-ro-dock-reserve: 5.25rem;
 }
 
-body:has([data-ro-footer-compose]) {
-    --ops-ro-dock-reserve: 8.25rem;
-}
-
 body:has([data-ro-orientation-header]) .ops-estimate-workspace {
-    padding-bottom: calc(var(--ops-ro-dock-reserve, 5.25rem) + 0.75rem);
-}
-
-body:has([data-ro-orientation-header]) .ops-main-shell:has(.ops-estimate-workspace) {
-    --ops-ro-footer-offset: calc(var(--ops-ro-dock-reserve, 5.25rem) + 0.5rem);
+    padding-bottom: max(5.25rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)));
 }
 
 .ops-ro-orientation-header.ops-ro-orientation-header--dock {

@@ -1,7 +1,6 @@
 import Alpine from 'alpinejs';
 import { initPublicSurfaceTheme } from './public-surface-theme';
 import { arkRepairOrderMileage } from './ark-repair-order-mileage';
-import { initRoFooterCompose } from './ark-ro-footer-compose';
 import { arkRepairOrderVisitPosture } from './ark-repair-order-visit-posture';
 import {
     arkRepairOrderIdentityCustomer,
@@ -155,7 +154,6 @@ initCommsNavPressure();
 initOpsGlobalSearch();
 initDepositBreakdowns();
 initRepairOrderLifecycleSelect();
-initRoFooterCompose();
 initPartProcurementSelect();
 initRoModeControl();
 initWorkspaceStrip();

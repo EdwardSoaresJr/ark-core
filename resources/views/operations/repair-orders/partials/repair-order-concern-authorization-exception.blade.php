@@ -17,28 +17,38 @@
 @endphp
 
 @if ($exceptionSurface === 'menu' && $canRecordException)
-    <button
-        type="button"
-        class="ops-scope-more__item"
-        role="menuitem"
-        data-authorization-exception-action="record"
-        aria-haspopup="dialog"
-        @click="
-            const menu = $el.closest('details');
-            window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', {
-                detail: {
-                    concernId: {{ $concern->id }},
-                    mode: 'record',
-                    invokeEl: menu?.querySelector('summary') ?? $el,
-                },
-            }));
-            if (menu) {
-                menu.open = false;
-            }
-        "
+    <details
+        class="ops-scope-more"
+        x-data
+        @click.outside="$el.open = false"
+        @keydown.escape.prevent="$el.open = false"
     >
-        Record exception
-    </button>
+        <summary class="ops-scope-more__trigger" aria-label="More actions" aria-haspopup="menu">More</summary>
+        <div class="ops-scope-more__panel" role="menu">
+            <button
+                type="button"
+                class="ops-scope-more__item"
+                role="menuitem"
+                data-authorization-exception-action="record"
+                aria-haspopup="dialog"
+                @click="
+                    const menu = $el.closest('details');
+                    window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', {
+                        detail: {
+                            concernId: {{ $concern->id }},
+                            mode: 'record',
+                            invokeEl: menu?.querySelector('summary') ?? $el,
+                        },
+                    }));
+                    if (menu) {
+                        menu.open = false;
+                    }
+                "
+            >
+                Record exception
+            </button>
+        </div>
+    </details>
 @endif
 
 @if ($exceptionSurface === 'dialog' && ($canRecordException || $recordedExceptions->isNotEmpty()))

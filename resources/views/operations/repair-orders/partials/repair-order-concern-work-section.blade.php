@@ -13,16 +13,6 @@
     $concernDefaultPartSell = $concernDefaultPartPricingMode === 'manual' ? '0' : '';
 @endphp
 
-@unless ($isTerminal)
-    @if ($concernUsesRepairActions)
-        <div class="ops-repair-action__compose-actions ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
-            @include('operations.repair-orders.partials.repair-order-concern-write-tools', [
-                'concern' => $concern,
-            ])
-        </div>
-    @endif
-@endunless
-
 @include('operations.repair-orders.partials.repair-order-scope-repair-action-suggestions', [
     'repairOrder' => $repairOrder,
     'concern' => $concern,
@@ -156,14 +146,7 @@
                     };
 
                     return compact('value', 'label', 'ariaLabel', 'icon', 'btnClass');
-                })->sortBy(fn (array $button): int => match ($button['value']) {
-                    'labor' => 0,
-                    'part' => 1,
-                    'note' => 2,
-                    'sublet' => 3,
-                    'fee' => 4,
-                    default => 5,
-                })->values();
+                });
             @endphp
             <div class="ops-repair-action__compose-actions">
                 @foreach ($composeButtons as $composeButton)
@@ -283,33 +266,6 @@
             });
         @endphp
         <div class="ops-repair-action__compose-actions ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
-            @foreach ($scopeComposeButtons->filter(fn ($button) => in_array($button['value'], ['labor', 'part'], true)) as $composeButton)
-                <button
-                    type="button"
-                    class="{{ $composeButton['btnClass'] }}"
-                    aria-label="{{ $composeButton['ariaLabel'] }}"
-                    title="{{ $composeButton['ariaLabel'] }}"
-                    @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $composeButton['value'] }}', context: { lineType: '{{ $composeButton['value'] }}', concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
-                >
-                    @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])
-                    <span class="ops-repair-action__compose-label">{{ $composeButton['label'] }}</span>
-                </button>
-            @endforeach
-            @include('operations.repair-orders.partials.repair-order-concern-write-tools', [
-                'concern' => $concern,
-            ])
-            @foreach ($scopeComposeButtons->reject(fn ($button) => in_array($button['value'], ['labor', 'part'], true)) as $composeButton)
-                <button
-                    type="button"
-                    class="{{ $composeButton['btnClass'] }}"
-                    aria-label="{{ $composeButton['ariaLabel'] }}"
-                    title="{{ $composeButton['ariaLabel'] }}"
-                    @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $composeButton['value'] }}', context: { lineType: '{{ $composeButton['value'] }}', concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
-                >
-                    @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])
-                    <span class="ops-repair-action__compose-label">{{ $composeButton['label'] }}</span>
-                </button>
-            @endforeach
             <button
                 type="button"
                 class="ops-repair-action__compose-btn ops-repair-action__compose-btn--saved-work"
@@ -320,6 +276,18 @@
                 @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'saved-work'])
                 <span class="ops-repair-action__compose-label">Common Job</span>
             </button>
+            @foreach ($scopeComposeButtons as $composeButton)
+                <button
+                    type="button"
+                    class="{{ $composeButton['btnClass'] }}"
+                    aria-label="{{ $composeButton['ariaLabel'] }}"
+                    title="{{ $composeButton['ariaLabel'] }}"
+                    @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $composeButton['value'] }}', context: { lineType: '{{ $composeButton['value'] }}', concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
+                >
+                    @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])
+                    <span class="ops-repair-action__compose-label">{{ $composeButton['label'] }}</span>
+                </button>
+            @endforeach
             <button
                 type="button"
                 class="ops-repair-action__compose-btn ops-repair-action__compose-btn--evidence"

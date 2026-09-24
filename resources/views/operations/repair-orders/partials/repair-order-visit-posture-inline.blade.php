@@ -6,7 +6,7 @@
 
 <div class="ops-visit-posture-inline ops-identity-present" data-identity-present="visit-posture">
     <div @class([
-        'flex flex-wrap items-center gap-x-2 gap-y-0.5',
+        'flex flex-wrap items-baseline gap-x-2 gap-y-0.5',
         'mt-0.5' => ! $serviceLaneLayout,
         'ops-service-lane-ownership-visit-scan' => $serviceLaneLayout,
     ])>
@@ -35,12 +35,20 @@
         @if ($canEdit)
             <button
                 type="button"
-                class="ops-billing-class-pill ops-billing-class-pill--slate ops-visit-mode-pill"
+                @class([
+                    'font-bold text-slate-600 hover:text-slate-950',
+                    'text-xs' => ! $serviceLaneLayout,
+                    'ops-service-lane-ownership-visit-mode' => $serviceLaneLayout,
+                ])
                 title="Open to edit visit type"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-posture', invokeEl: $event.currentTarget } }))"
             >{{ $visitLabel }}</button>
         @else
-            <span class="ops-billing-class-pill ops-billing-class-pill--slate ops-visit-mode-pill">{{ $visitLabel }}</span>
+            <span @class([
+                'font-bold text-slate-600',
+                'text-xs' => ! $serviceLaneLayout,
+                'ops-service-lane-ownership-visit-mode' => $serviceLaneLayout,
+            ])>{{ $visitLabel }}</span>
         @endif
     </div>
 </div>

@@ -10,20 +10,22 @@
         && is_array($visitReasonProposals)
         && $visitReasonProposals !== [];
 @endphp
-<div id="visit-reason" class="ops-visit-reason scroll-mt-6">
-    <p class="ops-visit-reason__label">Reason for Visit</p>
-    <div class="ops-visit-reason__line">
-        @if ($visitReasonText !== '')
-            <p class="ops-visit-reason__text">{!! \App\Ark\Operations\RepairOrders\RepairOrderMention::html($visitReasonText, $priorVisitMentions['href_by_number'] ?? []) !!}</p>
-        @else
-            <p class="ops-visit-reason__text ops-visit-reason__text--empty">Not recorded</p>
-        @endif
+<div id="visit-reason" class="scroll-mt-6 border-x border-t border-slate-200 bg-slate-50/70 px-4 py-2.5">
+    <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Reason for Visit</h2>
+            @if ($visitReasonText !== '')
+                <p class="mt-1.5 whitespace-pre-line text-sm leading-5 text-slate-700">{!! \App\Ark\Operations\RepairOrders\RepairOrderMention::html($visitReasonText, $priorVisitMentions['href_by_number'] ?? []) !!}</p>
+            @else
+                <p class="mt-1.5 text-sm italic text-slate-400">Not recorded yet.</p>
+            @endif
+        </div>
         @if ($visitReasonEditable)
-            <div class="ops-visit-reason__actions">
+            <div class="flex shrink-0 items-center gap-2">
                 @if ($visitReasonText !== '')
                     <button
                         type="button"
-                        class="ops-identity-action"
+                        class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
                         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'dragon-service-advisor-visit-reason', context: {}, invokeEl: $event.currentTarget } }))"
                     >
                         Rewrite
@@ -31,7 +33,7 @@
                 @endif
                 <button
                     type="button"
-                    class="ops-identity-action"
+                    class="ops-builder-present-action"
                     @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-reason', invokeEl: $event.currentTarget } }))"
                 >
                     {{ $visitReasonText !== '' ? 'Edit' : 'Add' }}
@@ -51,7 +53,7 @@
                 ->all();
         @endphp
         <div
-            class="ops-visit-reason__proposals mt-2.5 border border-slate-200 bg-white px-3 py-2.5"
+            class="mt-2.5 border border-slate-200 bg-white px-3 py-2.5"
             x-data="{ proposals: @js($visitReasonProposalState) }"
         >
             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Suggested concerns</p>

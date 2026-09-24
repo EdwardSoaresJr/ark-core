@@ -25,7 +25,7 @@
         'installed' => 0,
     ];
     $workspaceTabs = $workspaceMode === 'review'
-        ? ['builder', 'inspect', 'recommendations', 'comms', 'history', 'financial']
+        ? ['builder', 'inspect', 'recommendations', 'comms', 'history']
         : ['builder'];
     $lazyTabs = array_values(array_filter(
         $workspaceTabs,
@@ -59,7 +59,7 @@
             role="tab"
             class="ops-ro-workspace-tab"
             :class="tabClass('builder')"
-            x-on:click="selectTab('builder'); $dispatch('ark-estimate-home')"
+            x-on:click="selectTab('builder')"
             :aria-selected="tab === 'builder'"
         >
             {{ $builderLabel }}
@@ -109,18 +109,6 @@
                 Communications
             </button>
         @endif
-        @if (in_array('financial', $workspaceTabs, true))
-            <button
-                type="button"
-                role="tab"
-                class="ops-ro-workspace-tab"
-                :class="tabClass('financial')"
-                x-on:click="selectTab('financial')"
-                :aria-selected="tab === 'financial'"
-            >
-                Financial
-            </button>
-        @endif
         @if (in_array('history', $workspaceTabs, true))
             <button
                 type="button"
@@ -139,27 +127,17 @@
     </nav>
     @endif
 
-    @isset($header)
-        {{ $header }}
-    @endisset
-
-    <div class="ops-estimate-layout">
-        <div class="ops-ro-workspace-tabs__panels ops-estimate-main min-w-0">
-            <div x-show="tab === 'builder'" role="tabpanel">
-                {{ $slot }}
-            </div>
-
-            @foreach ($lazyTabs as $lazyTab)
-                <div x-show="tab === '{{ $lazyTab }}'" :class="panelShellClass('{{ $lazyTab }}')" role="tabpanel">
-                    <p x-show="tabErrors['{{ $lazyTab }}']" x-cloak class="px-3 py-3 text-xs font-semibold text-rose-700">Could not load this tab. Try selecting it again.</p>
-                    <p x-show="tabLoading['{{ $lazyTab }}']" x-cloak class="px-3 py-3 text-xs font-semibold text-slate-500">Loading…</p>
-                    <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
-                </div>
-            @endforeach
+    <div class="ops-ro-workspace-tabs__panels">
+        <div x-show="tab === 'builder'" role="tabpanel">
+            {{ $slot }}
         </div>
 
-        @isset($rail)
-            {{ $rail }}
-        @endisset
+        @foreach ($lazyTabs as $lazyTab)
+            <div x-show="tab === '{{ $lazyTab }}'" :class="panelShellClass('{{ $lazyTab }}')" role="tabpanel">
+                <p x-show="tabErrors['{{ $lazyTab }}']" x-cloak class="px-3 py-3 text-xs font-semibold text-rose-700">Could not load this tab. Try selecting it again.</p>
+                <p x-show="tabLoading['{{ $lazyTab }}']" x-cloak class="px-3 py-3 text-xs font-semibold text-slate-500">Loading…</p>
+                <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
+            </div>
+        @endforeach
     </div>
 </div>

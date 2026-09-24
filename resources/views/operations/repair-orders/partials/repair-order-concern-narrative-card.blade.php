@@ -30,14 +30,11 @@
         ->first();
 @endphp
 
-<details id="concern-narrative-{{ $concern->id }}" class="ops-builder-present-card" @if ($hasNarrativeBody || $activeDragonApp) open @endif>
-    <summary class="ops-builder-present-card__header">
+<div id="concern-narrative-{{ $concern->id }}" class="ops-builder-present-card">
+    <div class="ops-builder-present-card__header">
         <h3 class="ops-builder-present-card__title">Narrative</h3>
-    </summary>
-
-    <div class="ops-builder-present-card__body">
         @unless ($isTerminal)
-            <div class="mb-2 flex items-center justify-end gap-2">
+            <div class="flex items-center gap-2">
                 @if ($hasNarrativeBody || filled($concern->summary))
                     <button
                         type="button"
@@ -63,6 +60,23 @@
                 </button>
             </div>
         @endunless
+    </div>
+
+    <div class="ops-builder-present-card__body">
+        <div class="flex items-start justify-between gap-2">
+            <p class="ops-builder-present-card__lead">{!! \App\Ark\Operations\RepairOrders\RepairOrderMention::html((string) $concern->summary, $priorVisitMentions['href_by_number'] ?? []) !!}</p>
+            @unless ($isTerminal)
+                @if (filled($concern->summary))
+                    <button
+                        type="button"
+                        class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
+                        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'dragon-service-advisor', context: { concernId: {{ $concern->id }}, field: 'summary' }, invokeEl: $event.currentTarget } }))"
+                    >
+                        Rewrite
+                    </button>
+                @endif
+            @endunless
+        </div>
 
         @if ($hasNarrativeBody)
             <div class="ops-builder-present-card__grid">
@@ -111,4 +125,4 @@
             </div>
         @endif
     </div>
-</details>
+</div>

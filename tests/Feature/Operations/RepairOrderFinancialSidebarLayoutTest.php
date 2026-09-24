@@ -73,13 +73,6 @@ test('invoiced repair order keeps amount and method paired and date and referenc
         ->assertSee('name="paid_at"', false)
         ->assertSee('name="reference"', false)
         ->assertSee('Record Payment')
-        ->assertDontSee('id="financial-rail"', false);
-
-    $this->get(route('operations.repair-orders.workspace-tabs.show', [
-        'repairOrder' => $repairOrder,
-        'tab' => 'financial',
-    ]))
-        ->assertOk()
         ->assertSee('id="financial-rail"', false);
 });
 

@@ -31,8 +31,6 @@
                 <span class="ops-ro-orientation-header__segment ops-ro-orientation-header__segment--customer font-extrabold text-slate-950">{{ $strip->customerLabel }}</span>
                 <span class="ops-ro-orientation-header__sep text-slate-400" aria-hidden="true">·</span>
                 <span class="ops-ro-orientation-header__segment ops-ro-orientation-header__segment--vehicle font-extrabold text-slate-950">{{ $strip->vehicleLabel }}</span>
-                <span class="ops-ro-orientation-header__sep text-slate-400" aria-hidden="true">·</span>
-                <span class="ops-ro-orientation-header__segment ops-ro-orientation-header__segment--meta text-xs font-semibold text-slate-400">{{ $repairOrder->concerns->count() }} scopes · {{ $repairOrder->lines->count() }} lines</span>
             </div>
 
             <div class="ops-ro-orientation-header__situation-inline">
@@ -53,7 +51,6 @@
             @include('operations.repair-orders.partials.repair-order-footer', [
                 'repairOrder' => $repairOrder,
                 'repairOrderFooter' => $repairOrderFooter,
-                'totals' => $totals ?? null,
                 'docked' => true,
             ])
         @endisset

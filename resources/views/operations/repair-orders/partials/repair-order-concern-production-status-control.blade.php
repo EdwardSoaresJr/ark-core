@@ -3,7 +3,6 @@
     $productionToneStyle = $concern->productionStatus()->worksheetToneStyle();
     $returnMode = $returnMode ?? null;
     $authorViaModal = (bool) ($authorViaModal ?? false);
-    $quiet = (bool) ($quiet ?? false);
 @endphp
 
 @if (! $concern->tracksProduction())
@@ -17,11 +16,8 @@
 @elseif ($authorViaModal)
     <button
         type="button"
-        @class([
-            'ops-scope-production-quiet' => $quiet,
-            'ops-builder-present-chip' => ! $quiet,
-        ])
-        @unless ($quiet) style="{{ $productionToneStyle }}" @endunless
+        class="ops-builder-present-chip"
+        style="{{ $productionToneStyle }}"
         title="Production status"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-production', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
     >
