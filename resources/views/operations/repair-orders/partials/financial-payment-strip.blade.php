@@ -172,7 +172,7 @@
         </div>
     @endif
 
-    <a href="#financial-rail" class="ops-financial-payment-strip__more">
+    <a href="#financial-rail" class="ops-financial-payment-strip__more" @click="$dispatch('ops-show-closeout')">
         Full ledger &amp; closeout
     </a>
 </div>

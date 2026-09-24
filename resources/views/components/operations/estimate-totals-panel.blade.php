@@ -30,13 +30,41 @@
     $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum(
         fn ($line): int => (int) ($line->total_cents ?? 0),
     );
+    $hasCloseout = isset($closeout) && trim($closeout) !== '';
 @endphp
 
-<div {{ $attributes->class(['ops-review-panel']) }}>
+<div
+    {{ $attributes->class(['ops-review-panel']) }}
+    @if ($hasCloseout)
+        x-data="{ totalsTab: window.location.hash === '#financial-rail' ? 'closeout' : 'estimate' }"
+        @ops-show-closeout.window="totalsTab = 'closeout'"
+        @hashchange.window="if (window.location.hash === '#financial-rail') totalsTab = 'closeout'"
+    @endif
+>
     <div class="ops-review-panel-header">
-        <p class="ops-eyebrow">Estimate Total</p>
+        @if ($hasCloseout)
+            <div class="ops-totals-tabs" role="tablist" aria-label="Estimate money">
+                <button
+                    type="button"
+                    class="ops-totals-tabs__tab"
+                    role="tab"
+                    :aria-selected="totalsTab === 'estimate'"
+                    @click="totalsTab = 'estimate'; if (window.location.hash === '#financial-rail') history.replaceState(null, '', window.location.pathname + window.location.search)"
+                >Estimate Total</button>
+                <button
+                    type="button"
+                    class="ops-totals-tabs__tab"
+                    role="tab"
+                    :aria-selected="totalsTab === 'closeout'"
+                    @click="totalsTab = 'closeout'; history.replaceState(null, '', '#financial-rail')"
+                >Closeout</button>
+            </div>
+        @else
+            <p class="ops-eyebrow">Estimate Total</p>
+        @endif
     </div>
 
+    <div @if ($hasCloseout) x-show="totalsTab === 'estimate'" @endif>
     @include('operations.repair-orders.partials.repair-order-approval-forecast', [
         'approvalForecast' => $approvalForecast,
     ])
@@ -160,6 +188,13 @@
     @if (trim($slot ?? '') !== '')
         <div class="space-y-2 border-t border-slate-100 px-3 py-2">
             {{ $slot }}
+        </div>
+    @endif
+    </div>
+
+    @if ($hasCloseout)
+        <div x-show="totalsTab === 'closeout'" x-cloak>
+            {{ $closeout }}
         </div>
     @endif
 

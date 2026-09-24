@@ -1934,32 +1934,19 @@
                             {{ session('status') ? session('status').' Totals refreshed.' : ($repairOrder->lines->isNotEmpty() ? 'Review concerns and line totals before approval.' : 'Add at least one estimate line before approval review.') }}
                         </p>
                     @endif
+
+                    @if ($financial['showFinancialRail'])
+                        <x-slot:closeout>
+                            @include('operations.repair-orders.partials.financial-rail', ['embedded' => true])
+                        </x-slot:closeout>
+                    @endif
                 </x-operations.estimate-totals-panel>
 
                 <div class="ops-review-rail__scroll">
-                    @include('operations.repair-orders.partials.repair-order-rail-posture', [
-                        'postureLayout' => 'rail',
-                        'repairOrder' => $repairOrder,
-                        'nextAction' => $nextAction ?? null,
-                        'approvalPosture' => $approvalPosture ?? null,
-                        'approvedConcerns' => $approvedConcerns ?? collect(),
-                        'deferredConcerns' => $deferredConcerns ?? collect(),
-                        'recommendedConcerns' => $recommendedConcerns ?? collect(),
-                        'lastApprovalEvent' => $lastApprovalEvent ?? null,
-                        'financial' => $financial ?? [],
-                        'partsBlockingCount' => $partsBlockingCount ?? 0,
-                    ])
-
                     @include('operations.repair-orders.partials.operational-journey-card', [
                         'operationalJourney' => $operationalJourney ?? null,
                         'journeyComparison' => $journeyComparison ?? null,
                     ])
-
-                    @if ($financial['showFinancialRail'])
-                        @include('operations.repair-orders.partials.financial-rail')
-                    @endif
-
-                    @include('operations.repair-orders.partials.repair-order-lifecycle-panel')
 
                     @include('operations.work.partials.advisor-work-context-panel', [
                         'followUps' => $openFollowUps ?? [],

@@ -1,4 +1,5 @@
 @php
+    $embedded = (bool) ($embedded ?? false);
     $tone = match ($financial['workflowPosture']) {
         'paid_ready_to_close', 'closed' => 'border-emerald-300',
         'partially_paid', 'invoice_issued' => 'border-amber-300',
@@ -6,10 +7,18 @@
     };
 @endphp
 
-<div id="financial-rail" class="ops-review-panel {{ $tone }} scroll-mt-6 border-x-0 border-b-0">
-    <div class="ops-review-panel-header">
-        <p class="ops-eyebrow">Closeout</p>
-    </div>
+<div
+    id="financial-rail"
+    @class([
+        'scroll-mt-6',
+        'ops-review-panel border-x-0 border-b-0 '.$tone => ! $embedded,
+    ])
+>
+    @unless ($embedded)
+        <div class="ops-review-panel-header">
+            <p class="ops-eyebrow">Closeout</p>
+        </div>
+    @endunless
 
     <div class="ops-financial-rail-primary grid gap-2 p-3 text-sm">
         <div class="min-w-0">
