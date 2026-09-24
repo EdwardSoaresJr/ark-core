@@ -2,9 +2,10 @@
 
 namespace App\Ark\Operations\Maintenance;
 
-use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -14,9 +15,10 @@ use RuntimeException;
  */
 final class AddExtraOilQuartsAtCostAction
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __construct(
         private readonly EstimateTotalsCalculator $calculator,
-        private readonly EstimateDocumentService $documents,
     ) {}
 
     /**
@@ -27,6 +29,7 @@ final class AddExtraOilQuartsAtCostAction
         string|float $quarts,
         string|float $costPerQuart,
         ?string $description = null,
+        ?User $actor = null,
     ) {
         if ($service->kind !== MaintenanceServiceKind::EngineOil) {
             throw ValidationException::withMessages([
@@ -66,7 +69,7 @@ final class AddExtraOilQuartsAtCostAction
             $label = 'Additional oil (beyond package)';
         }
 
-        return DB::transaction(function () use ($service, $qty, $cost, $label) {
+        return DB::transaction(function () use ($service, $qty, $cost, $label, $actor) {
             $repairOrder = $service->repairOrder()->firstOrFail();
             $repairOrder->ensureOpenForEditing();
 
@@ -97,7 +100,7 @@ final class AddExtraOilQuartsAtCostAction
             ]);
 
             $this->calculator->recalculateRepairOrder($repairOrder);
-            $this->documents->markDirtyForRepairOrder($repairOrder);
+            $this->recordRepairOrderEstimateMutation($repairOrder, $actor);
 
             return $line->fresh() ?? throw new RuntimeException('Extra quarts line missing after create.');
         });

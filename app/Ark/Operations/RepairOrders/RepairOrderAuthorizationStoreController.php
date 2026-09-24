@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
-use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\Approvals\ApprovalSource;
 use App\Ark\Operations\Approvals\RecordCustomerAuthorizationAction;
 use App\Ark\Operations\Approvals\ResolveStaffAuthorizationType;
@@ -13,7 +12,6 @@ use Illuminate\Validation\Rule;
 
 class RepairOrderAuthorizationStoreController
 {
-    use RecordsRepairOrderEstimateMutation;
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
@@ -58,8 +56,6 @@ class RepairOrderAuthorizationStoreController
         );
 
         $totalsCalculator->recalculateRepairOrder($repairOrder->fresh());
-
-        $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
 
         return redirect()
             ->route('operations.repair-orders.show', $repairOrder)

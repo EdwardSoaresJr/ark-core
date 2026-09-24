@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\Approvals;
 
 use App\Ark\Operations\RepairOrders\RepairOrder;
-use App\Ark\Operations\RepairOrders\RepairOrderEstimateVersion;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,14 +36,6 @@ class ApprovalEvent extends Model
 
     protected static function booted(): void
     {
-        static::created(function (ApprovalEvent $event): void {
-            $repairOrder = $event->visit;
-
-            if ($repairOrder instanceof RepairOrder) {
-                app(RepairOrderEstimateVersion::class)->bump($repairOrder);
-            }
-        });
-
         static::updating(fn (): bool => throw new LogicException('Approval events are immutable.'));
         static::deleting(fn (): bool => throw new LogicException('Approval events are append-only.'));
     }

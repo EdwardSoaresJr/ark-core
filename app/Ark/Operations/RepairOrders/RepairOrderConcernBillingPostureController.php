@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
-use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -11,12 +10,13 @@ use Illuminate\Validation\Rule;
 
 class RepairOrderConcernBillingPostureController
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
         RepairOrderConcern $concern,
         EstimateTotalsCalculator $calculator,
-        EstimateDocumentService $documents,
         RepairOrderConcurrency $concurrency,
     ): RedirectResponse|JsonResponse {
         abort_unless($concern->repair_order_id === $repairOrder->id, 404);
@@ -28,12 +28,16 @@ class RepairOrderConcernBillingPostureController
             'billing_posture' => ['required', Rule::enum(ConcernBillingPosture::class)],
         ]);
 
-        $concern->update([
-            'billing_posture' => $data['billing_posture'],
-        ]);
+        $next = ConcernBillingPosture::from($data['billing_posture']);
 
-        $calculator->recalculateRepairOrder($repairOrder);
-        $documents->markDirtyForRepairOrder($repairOrder);
+        if ($concern->billing_posture !== $next) {
+            $concern->update([
+                'billing_posture' => $next,
+            ]);
+
+            $calculator->recalculateRepairOrder($repairOrder);
+            $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
+        }
 
         if ($request->expectsJson()) {
             return response()->json([

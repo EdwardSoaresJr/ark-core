@@ -7,6 +7,7 @@ use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\AdvanceRepairOrderAfterCustomerAuthorizationAction;
 use App\Ark\Operations\RepairOrders\RecordApprovedWorkScopeAction;
+use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 final class RecordCustomerAuthorizationAction
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __construct(
         private readonly EstimateTotalsCalculator $totalsCalculator,
         private readonly EstimateDocumentService $documents,
@@ -91,6 +94,8 @@ final class RecordCustomerAuthorizationAction
                 $actor,
                 'no_approved_work_after_authorization',
             );
+
+            $this->recordRepairOrderEstimateMutation($repairOrder, $actor);
 
             return $approval;
         });

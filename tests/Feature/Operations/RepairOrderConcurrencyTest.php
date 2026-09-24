@@ -2,6 +2,7 @@
 
 use App\Ark\Operations\Approvals\ApprovalSource;
 use App\Ark\Operations\Approvals\ApprovalType;
+use App\Ark\Operations\Approvals\RecordCustomerAuthorizationAction;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -112,15 +113,18 @@ test('approval arrival blocks stale estimate document snapshot generation', func
     [$repairOrder, $concern] = concurrencyRepairOrderFixture();
     $openedVersion = app(RepairOrderConcurrency::class)->openedVersion($repairOrder);
 
-    $repairOrder->approvalEvents()->create([
-        'estimate_snapshot_reference' => 'approval-arrived',
-        'approval_type' => ApprovalType::Repair,
-        'approved_amount_cents' => 22500,
-        'source' => ApprovalSource::Phone,
-        'approved_by' => 'Customer',
-        'approved_at' => now(),
-        'notes' => 'Customer approved while advisor had an old review open.',
-    ]);
+    app(RecordCustomerAuthorizationAction::class)->execute(
+        repairOrder: $repairOrder->fresh(),
+        approvalType: ApprovalType::Repair,
+        source: ApprovalSource::Phone,
+        approvedBy: 'Customer',
+        approvedAmountCents: 22500,
+        notes: 'Customer approved while advisor had an old review open.',
+        concernDispositions: [],
+        actor: $advisor,
+    );
+
+    expect((int) $repairOrder->fresh()->estimate_version)->toBe($openedVersion + 1);
 
     $this->post(route('operations.repair-orders.estimate-documents.store', $repairOrder), [
         RepairOrderConcurrency::FIELD => $openedVersion,

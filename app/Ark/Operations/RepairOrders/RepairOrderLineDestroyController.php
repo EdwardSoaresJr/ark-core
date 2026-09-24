@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 
 class RepairOrderLineDestroyController
 {
-    use RecordsRepairOrderEstimateMutation;
-
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
@@ -28,9 +26,7 @@ class RepairOrderLineDestroyController
             ->first();
 
         if ($maintenance !== null && ! $maintenance->hasConfirmedEvent()) {
-            $cancelEngineOil->handle($maintenance);
-
-            $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
+            $cancelEngineOil->handle($maintenance, $request->user());
 
             return redirect()
                 ->route('operations.repair-orders.show', $repairOrder)

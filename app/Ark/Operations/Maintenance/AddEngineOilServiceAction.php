@@ -12,6 +12,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
+use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkflowStatus;
@@ -26,6 +27,8 @@ use RuntimeException;
  */
 final class AddEngineOilServiceAction
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __construct(
         private readonly ResolveEngineOilPreparedAction $resolvePrepared,
         private readonly EstimateTotalsCalculator $calculator,
@@ -154,6 +157,8 @@ final class AddEngineOilServiceAction
                     'prepared_source' => $prepared['source'],
                 ],
             );
+
+            $this->recordRepairOrderEstimateMutation($repairOrder, $actor);
 
             return $service->fresh() ?? throw new RuntimeException('Maintenance service missing after create.');
         });

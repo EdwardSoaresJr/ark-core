@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 class RepairOrderVisitReasonUpdateController
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
@@ -21,10 +23,15 @@ class RepairOrderVisitReasonUpdateController
         ]);
 
         $visitReason = trim((string) ($data['visit_reason'] ?? ''));
+        $next = $visitReason !== '' ? $visitReason : null;
 
-        $repairOrder->forceFill([
-            'visit_reason' => $visitReason !== '' ? $visitReason : null,
-        ])->save();
+        if ($repairOrder->visit_reason !== $next) {
+            $repairOrder->forceFill([
+                'visit_reason' => $next,
+            ])->save();
+
+            $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
+        }
 
         $status = 'Reason for visit updated.';
 

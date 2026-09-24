@@ -2,9 +2,12 @@
 
 namespace App\Ark\Operations\Maintenance;
 
-use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
+use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -13,12 +16,13 @@ use Illuminate\Validation\ValidationException;
  */
 final class CancelEngineOilServiceAction
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __construct(
         private readonly EstimateTotalsCalculator $calculator,
-        private readonly EstimateDocumentService $documents,
     ) {}
 
-    public function handle(MaintenanceService $service): void
+    public function handle(MaintenanceService $service, ?User $actor = null): void
     {
         if ($service->hasConfirmedEvent() || $service->current_event_id !== null) {
             throw ValidationException::withMessages([
@@ -26,7 +30,7 @@ final class CancelEngineOilServiceAction
             ]);
         }
 
-        DB::transaction(function () use ($service): void {
+        DB::transaction(function () use ($service, $actor): void {
             $service = MaintenanceService::query()->lockForUpdate()->findOrFail($service->id);
             $repairOrder = $service->repairOrder()->firstOrFail();
             $repairOrder->ensureOpenForEditing();
@@ -42,20 +46,26 @@ final class CancelEngineOilServiceAction
                 'repair_order_work_group_id' => null,
             ]);
 
-            if ($lineId !== null) {
-                RepairOrderLine::query()->whereKey($lineId)->delete();
+            $removedEstimateContent = false;
+
+            if ($lineId !== null && RepairOrderLine::query()->whereKey($lineId)->delete() > 0) {
+                $removedEstimateContent = true;
             }
 
-            if ($workGroupId !== null) {
-                $service->workGroup()->delete();
+            if ($workGroupId !== null && RepairOrderWorkGroup::query()->whereKey($workGroupId)->delete() > 0) {
+                $removedEstimateContent = true;
             }
 
-            if ($concernId !== null) {
-                $service->concern()->delete();
+            if ($concernId !== null && RepairOrderConcern::query()->whereKey($concernId)->delete() > 0) {
+                $removedEstimateContent = true;
+            }
+
+            if (! $removedEstimateContent) {
+                return;
             }
 
             $this->calculator->recalculateRepairOrder($repairOrder->fresh() ?? $repairOrder);
-            $this->documents->markDirtyForRepairOrder($repairOrder);
+            $this->recordRepairOrderEstimateMutation($repairOrder, $actor);
         });
     }
 }

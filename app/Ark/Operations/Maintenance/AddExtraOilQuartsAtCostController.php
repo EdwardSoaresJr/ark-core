@@ -35,6 +35,7 @@ final class AddExtraOilQuartsAtCostController
             $data['quarts'],
             $data['cost_per_quart'],
             $data['description'] ?? null,
+            $request->user(),
         );
 
         return redirect()

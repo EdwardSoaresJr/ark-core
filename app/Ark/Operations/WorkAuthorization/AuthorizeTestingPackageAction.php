@@ -2,12 +2,12 @@
 
 namespace App\Ark\Operations\WorkAuthorization;
 
-use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -22,9 +22,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class AuthorizeTestingPackageAction
 {
+    use RecordsRepairOrderEstimateMutation;
+
     public function __construct(
         private readonly EstimateTotalsCalculator $calculator,
-        private readonly EstimateDocumentService $documents,
         private readonly OperationalEventRecorder $events,
     ) {}
 
@@ -99,7 +100,6 @@ final class AuthorizeTestingPackageAction
             ]);
 
             $this->calculator->recalculateRepairOrder($repairOrder->fresh());
-            $this->documents->markDirtyForRepairOrder($repairOrder->fresh());
 
             $this->events->record(
                 OperationalEventName::WorkAuthorizationCreated,
@@ -113,6 +113,8 @@ final class AuthorizeTestingPackageAction
                     'line_id' => $line->id,
                 ],
             );
+
+            $this->recordRepairOrderEstimateMutation($repairOrder, $actor);
 
             return $authorization->fresh(['concern', 'workGroup', 'packageLine'])
                 ?? throw new \RuntimeException('Work authorization missing after create.');

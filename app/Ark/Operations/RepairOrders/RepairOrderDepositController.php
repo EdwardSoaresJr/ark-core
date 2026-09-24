@@ -3,10 +3,12 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\NotifyRepairOrderFinancialChange;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class RepairOrderDepositController
@@ -44,6 +46,16 @@ class RepairOrderDepositController
             $request->user(),
             filled($data['reference'] ?? null) ? trim((string) $data['reference']) : null,
         );
+
+        $actor = $request->user();
+
+        DB::afterCommit(function () use ($repairOrder, $actor): void {
+            app(NotifyRepairOrderFinancialChange::class)->notify(
+                $repairOrder,
+                reason: 'deposit_recorded',
+                actor: $actor,
+            );
+        });
 
         return redirect()
             ->back()
