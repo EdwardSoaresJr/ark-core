@@ -41,28 +41,30 @@
         @hashchange.window="if (window.location.hash === '#financial-rail') totalsTab = 'closeout'"
     @endif
 >
-    <div class="ops-review-panel-header">
-        @if ($hasCloseout)
-            <div class="ops-totals-tabs" role="tablist" aria-label="Estimate money">
-                <button
-                    type="button"
-                    class="ops-totals-tabs__tab"
-                    role="tab"
-                    :aria-selected="totalsTab === 'estimate'"
-                    @click="totalsTab = 'estimate'; if (window.location.hash === '#financial-rail') history.replaceState(null, '', window.location.pathname + window.location.search)"
-                >Estimate Total</button>
-                <button
-                    type="button"
-                    class="ops-totals-tabs__tab"
-                    role="tab"
-                    :aria-selected="totalsTab === 'closeout'"
-                    @click="totalsTab = 'closeout'; history.replaceState(null, '', '#financial-rail')"
-                >Closeout</button>
-            </div>
-        @else
+    @if ($hasCloseout)
+        <div class="ops-ro-workspace-tabs__nav ops-totals-tabs" role="tablist" aria-label="Estimate money">
+            <button
+                type="button"
+                class="ops-ro-workspace-tab"
+                role="tab"
+                :class="{ 'ops-ro-workspace-tab--active': totalsTab === 'estimate' }"
+                :aria-selected="totalsTab === 'estimate'"
+                @click="totalsTab = 'estimate'; if (window.location.hash === '#financial-rail') history.replaceState(null, '', window.location.pathname + window.location.search)"
+            >Estimate Total</button>
+            <button
+                type="button"
+                class="ops-ro-workspace-tab"
+                role="tab"
+                :class="{ 'ops-ro-workspace-tab--active': totalsTab === 'closeout' }"
+                :aria-selected="totalsTab === 'closeout'"
+                @click="totalsTab = 'closeout'; history.replaceState(null, '', '#financial-rail')"
+            >Closeout</button>
+        </div>
+    @else
+        <div class="ops-review-panel-header">
             <p class="ops-eyebrow">Estimate Total</p>
-        @endif
-    </div>
+        </div>
+    @endif
 
     <div @if ($hasCloseout) x-show="totalsTab === 'estimate'" @endif>
     @include('operations.repair-orders.partials.repair-order-approval-forecast', [
