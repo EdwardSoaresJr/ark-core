@@ -13,6 +13,12 @@ use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
+use Illuminate\Support\Str;
+
+function financialSubmissionKey(): string
+{
+    return (string) Str::uuid();
+}
 
 function financialCloseoutRepairOrder(
     RepairOrderStatus $status = RepairOrderStatus::ReadyPickup,

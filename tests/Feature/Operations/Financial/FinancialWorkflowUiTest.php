@@ -1,9 +1,12 @@
 <?php
 
 use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Financial\FinancialSubmissionIntentGate;
 use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\PaymentMethod;
+use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentPaidAt;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -71,6 +74,7 @@ test('financial rail surfaces deposit capture before ready pickup', function () 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Record deposit in ledger')
+        ->assertSee('name="'.FinancialSubmissionIntentGate::FIELD.'"', false)
         ->assertSee('Pre-invoice')
         ->assertDontSee('Generate Final Invoice');
 });
@@ -85,6 +89,7 @@ test('estimate totals panel shows balance due when deposit is on file', function
         'amount' => '50.00',
         'payment_method' => PaymentMethod::Cash->value,
         'deposit_confirmed' => '1',
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
@@ -105,6 +110,7 @@ test('estimate totals panel shows balance due after partial payment', function (
     $this->patch(route('operations.repair-orders.payment.update', $repairOrder->fresh()), [
         'amount' => '60.00',
         'payment_method' => PaymentMethod::Cash->value,
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
@@ -126,6 +132,7 @@ test('deposit can be recorded before final invoice at any open stage', function 
         'payment_method' => PaymentMethod::Cash->value,
         'reference' => 'Drop-off deposit',
         'deposit_confirmed' => '1',
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $entry = RepairOrderLedgerEntry::query()
@@ -188,6 +195,7 @@ test('payment form is hidden before invoice and visible after invoice', function
         ->assertSee('name="amount"', false)
         ->assertSee('name="payment_method"', false)
         ->assertSee('name="paid_at"', false)
+        ->assertSee('name="'.FinancialSubmissionIntentGate::FIELD.'"', false)
         ->assertDontSee('Generate Final Invoice');
 });
 
@@ -205,6 +213,7 @@ test('record payment accepts optional backdated paid date', function () {
         'payment_method' => 'cash',
         'paid_at' => $paidDate,
         'reference' => 'Historical reconciliation',
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $entry = RepairOrderLedgerEntry::query()
@@ -230,6 +239,7 @@ test('record cash card and check payments through ledger authority', function (s
         'amount' => '50.00',
         'payment_method' => $method,
         'reference' => strtoupper($method).' tender',
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     expect(RepairOrderLedgerEntry::query()
@@ -249,6 +259,7 @@ test('partial payment posture surfaces on ro review', function () {
     $this->patch(route('operations.repair-orders.payment.update', $repairOrder->fresh()), [
         'amount' => '50.00',
         'payment_method' => PaymentMethod::Cash->value,
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
@@ -326,6 +337,7 @@ test('financial rail renders calculator balance not estimate total as balance du
     $this->patch(route('operations.repair-orders.payment.update', $repairOrder->fresh()), [
         'amount' => '60.00',
         'payment_method' => PaymentMethod::Cash->value,
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
@@ -347,6 +359,7 @@ test('mark paid route requires amount and uses ledger entries', function () {
     $this->patch(route('operations.repair-orders.payment.update', $repairOrder->fresh()), [
         'amount' => '150.00',
         'payment_method' => PaymentMethod::Cash->value,
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     expect((int) RepairOrderLedgerEntry::query()
@@ -365,6 +378,7 @@ test('payment route is rejected before invoice issuance', function () {
     $this->patch(route('operations.repair-orders.payment.update', $repairOrder), [
         'amount' => '10.00',
         'payment_method' => PaymentMethod::Cash->value,
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertStatus(422);
 });
 
@@ -389,7 +403,7 @@ test('additional manual deposit is accepted after suggested deposit is already o
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
     $repairOrder = repairOrderWithSuggestedPartDeposit();
-    $guard = app(\App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard::class);
+    $guard = app(RepairOrderDepositRecordingGuard::class);
     $remainingCents = $guard->remainingSuggestedDepositCents($repairOrder);
     expect($remainingCents)->toBeInt()->toBeGreaterThan(0);
 
@@ -399,6 +413,7 @@ test('additional manual deposit is accepted after suggested deposit is already o
         'amount' => $remainingDecimal,
         'payment_method' => PaymentMethod::Cash->value,
         'deposit_confirmed' => '1',
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $this->from(route('operations.repair-orders.show', $repairOrder->fresh()))
@@ -406,6 +421,7 @@ test('additional manual deposit is accepted after suggested deposit is already o
             'amount' => '25.00',
             'payment_method' => PaymentMethod::Cash->value,
             'deposit_confirmed' => '1',
+            FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
         ])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
@@ -421,10 +437,10 @@ test('manual deposit form stays available after suggested deposit is satisfied',
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
     $repairOrder = repairOrderWithSuggestedPartDeposit();
-    $guard = app(\App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard::class);
+    $guard = app(RepairOrderDepositRecordingGuard::class);
     $remainingCents = $guard->remainingSuggestedDepositCents($repairOrder);
 
-    app(\App\Ark\Operations\Financial\RecordLedgerEntryAction::class)->recordDeposit(
+    app(RecordLedgerEntryAction::class)->recordDeposit(
         $repairOrder,
         $remainingCents,
         PaymentMethod::Cash,

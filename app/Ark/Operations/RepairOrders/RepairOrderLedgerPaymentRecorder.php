@@ -3,8 +3,10 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Financial\BalanceDueCalculator;
+use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\Financial\RepairOrderPaymentPostureSync;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -24,7 +26,7 @@ class RepairOrderLedgerPaymentRecorder
         ?User $actor = null,
         ?string $reference = null,
         ?Carbon $paidAt = null,
-    ): RepairOrder {
+    ): RepairOrderLedgerEntry {
         $repairOrder = $repairOrder->fresh();
         $repairOrder->ensureOpenForEditing();
 
@@ -36,8 +38,16 @@ class RepairOrderLedgerPaymentRecorder
             'Generate the final invoice before recording payment.',
         );
 
-        $this->ledger->recordPayment($repairOrder, $amountCents, $method, $actor, $reference, $paidAt);
+        $entries = $this->ledger->recordPayment($repairOrder, $amountCents, $method, $actor, $reference, $paidAt);
 
-        return $this->paymentPosture->sync($repairOrder->fresh());
+        $this->paymentPosture->sync($repairOrder->fresh());
+
+        foreach ($entries as $entry) {
+            if ($entry->entry_type === LedgerEntryType::Payment) {
+                return $entry;
+            }
+        }
+
+        return $entries[0];
     }
 }

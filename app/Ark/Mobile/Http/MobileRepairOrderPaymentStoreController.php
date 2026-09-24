@@ -4,10 +4,11 @@ namespace App\Ark\Mobile\Http;
 
 use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\FinancialSubmissionIntentGate;
+use App\Ark\Operations\Financial\ManualPaymentSubmission;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
-use App\Ark\Operations\RepairOrders\RepairOrderLedgerPaymentRecorder;
 use App\Ark\Operations\RepairOrders\RepairOrderPaymentPaidAt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,10 @@ final class MobileRepairOrderPaymentStoreController
         Request $request,
         RepairOrder $repairOrder,
         MobileStaffAccess $access,
-        RepairOrderLedgerPaymentRecorder $payments,
         EstimateTotalsCalculator $totalsCalculator,
         RepairOrderConcurrency $concurrency,
+        FinancialSubmissionIntentGate $intents,
+        ManualPaymentSubmission $payments,
     ): JsonResponse {
         abort_unless($access->canRecordPayment($request->user(), $repairOrder), 403);
 
@@ -36,16 +38,17 @@ final class MobileRepairOrderPaymentStoreController
             ])],
             'paid_at' => ['nullable', 'date', 'before_or_equal:today'],
             'reference' => ['nullable', 'string', 'max:255'],
+            FinancialSubmissionIntentGate::FIELD => ['nullable', 'uuid'],
         ]);
 
-        $amountCents = $totalsCalculator->unitPriceCents($data['amount']);
-
-        $payments->record(
+        $payments->execute(
             $repairOrder,
-            $amountCents,
-            PaymentMethod::from($data['payment_method']),
             $request->user(),
+            $data[FinancialSubmissionIntentGate::FIELD] ?? null,
+            $totalsCalculator->unitPriceCents($data['amount']),
+            PaymentMethod::from($data['payment_method']),
             filled($data['reference'] ?? null) ? trim((string) $data['reference']) : null,
+            $intents->paidOn($data['paid_at'] ?? null),
             RepairOrderPaymentPaidAt::fromDateInput($data['paid_at'] ?? null),
         );
 

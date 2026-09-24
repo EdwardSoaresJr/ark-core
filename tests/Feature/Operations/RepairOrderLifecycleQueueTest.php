@@ -6,6 +6,7 @@ use App\Ark\Operations\Documents\PdfRenderer;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\FinancialSubmissionIntentGate;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairActionOwnerType;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -17,7 +18,6 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
-use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 
@@ -335,6 +335,7 @@ test('paid ready pickup can close and leaves active queue', function () {
     $this->patch(route('operations.repair-orders.payment.update', $repairOrder), [
         'amount' => '150.00',
         'payment_method' => 'cash',
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $paymentEvent = OperationalEvent::query()

@@ -23,6 +23,7 @@
     @csrf
     @method('PATCH')
     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+    <input type="hidden" name="{{ App\Ark\Operations\Financial\FinancialSubmissionIntentGate::FIELD }}" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
     <input type="hidden" name="deposit_confirmed" value="0">
 
     <div>
@@ -65,6 +66,9 @@
         <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
     @enderror
     @error('deposit_confirmed')
+        <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+    @enderror
+    @error(App\Ark\Operations\Financial\FinancialSubmissionIntentGate::FIELD)
         <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
     @enderror
 

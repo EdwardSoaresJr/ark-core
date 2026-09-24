@@ -4,11 +4,11 @@ namespace App\Ark\Mobile\Http;
 
 use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\FinancialSubmissionIntentGate;
+use App\Ark\Operations\Financial\ManualDepositSubmission;
 use App\Ark\Operations\Financial\PaymentMethod;
-use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
-use App\Ark\Operations\RepairOrders\RepairOrderLedgerDepositRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,10 +19,9 @@ final class MobileRepairOrderDepositStoreController
         Request $request,
         RepairOrder $repairOrder,
         MobileStaffAccess $access,
-        RepairOrderLedgerDepositRecorder $deposits,
         EstimateTotalsCalculator $totalsCalculator,
-        RepairOrderDepositRecordingGuard $depositGuard,
         RepairOrderConcurrency $concurrency,
+        ManualDepositSubmission $deposits,
     ): JsonResponse {
         abort_unless($access->canRecordDeposit($request->user(), $repairOrder), 403);
 
@@ -36,17 +35,17 @@ final class MobileRepairOrderDepositStoreController
                 PaymentMethod::Check->value,
             ])],
             'reference' => ['nullable', 'string', 'max:255'],
+            FinancialSubmissionIntentGate::FIELD => ['nullable', 'uuid'],
         ]);
 
-        $amountCents = $totalsCalculator->unitPriceCents($data['amount']);
-        $depositGuard->validateAmount($repairOrder, $amountCents);
-
-        $deposits->record(
+        $deposits->execute(
             $repairOrder,
-            $amountCents,
-            PaymentMethod::from($data['payment_method']),
             $request->user(),
+            $data[FinancialSubmissionIntentGate::FIELD] ?? null,
+            $totalsCalculator->unitPriceCents($data['amount']),
+            PaymentMethod::from($data['payment_method']),
             filled($data['reference'] ?? null) ? trim((string) $data['reference']) : null,
+            broadcastFinancialChange: false,
         );
 
         $repairOrder = $repairOrder->fresh();

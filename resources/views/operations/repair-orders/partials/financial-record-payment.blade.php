@@ -9,6 +9,7 @@
     @csrf
     @method('PATCH')
     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+    <input type="hidden" name="{{ App\Ark\Operations\Financial\FinancialSubmissionIntentGate::FIELD }}" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
     <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Record Payment</p>
     <div class="ops-rail-payment-fields">
         <div class="ops-rail-payment-fields__pair">
@@ -49,6 +50,9 @@
         </div>
     </div>
     @error('paid_at')
+        <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+    @enderror
+    @error(App\Ark\Operations\Financial\FinancialSubmissionIntentGate::FIELD)
         <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
     @enderror
     <label class="sr-only" for="payment-reference-{{ $repairOrder->repair_order_id }}">Reference</label>

@@ -3,12 +3,11 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\Financial\NotifyRepairOrderFinancialChange;
+use App\Ark\Operations\Financial\FinancialSubmissionIntentGate;
+use App\Ark\Operations\Financial\ManualDepositSubmission;
 use App\Ark\Operations\Financial\PaymentMethod;
-use App\Ark\Operations\Financial\RepairOrderDepositRecordingGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class RepairOrderDepositController
@@ -16,10 +15,9 @@ class RepairOrderDepositController
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
-        RepairOrderLedgerDepositRecorder $deposits,
         EstimateTotalsCalculator $totalsCalculator,
-        RepairOrderDepositRecordingGuard $depositGuard,
         RepairOrderConcurrency $concurrency,
+        ManualDepositSubmission $deposits,
     ): RedirectResponse {
         $concurrency->guard($request, $repairOrder);
 
@@ -32,30 +30,20 @@ class RepairOrderDepositController
             ])],
             'reference' => ['nullable', 'string', 'max:255'],
             'deposit_confirmed' => ['accepted'],
+            FinancialSubmissionIntentGate::FIELD => ['required', 'uuid'],
         ], [
             'deposit_confirmed.accepted' => 'Confirm that the customer paid before recording this deposit.',
         ]);
 
-        $amountCents = $totalsCalculator->unitPriceCents($data['amount']);
-        $depositGuard->validateAmount($repairOrder, $amountCents);
-
-        $deposits->record(
+        $deposits->execute(
             $repairOrder,
-            $amountCents,
-            PaymentMethod::from($data['payment_method']),
             $request->user(),
+            $data[FinancialSubmissionIntentGate::FIELD],
+            $totalsCalculator->unitPriceCents($data['amount']),
+            PaymentMethod::from($data['payment_method']),
             filled($data['reference'] ?? null) ? trim((string) $data['reference']) : null,
+            broadcastFinancialChange: true,
         );
-
-        $actor = $request->user();
-
-        DB::afterCommit(function () use ($repairOrder, $actor): void {
-            app(NotifyRepairOrderFinancialChange::class)->notify(
-                $repairOrder,
-                reason: 'deposit_recorded',
-                actor: $actor,
-            );
-        });
 
         return redirect()
             ->back()

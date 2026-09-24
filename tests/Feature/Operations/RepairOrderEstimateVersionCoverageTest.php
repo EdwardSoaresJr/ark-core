@@ -1,11 +1,12 @@
 <?php
 
 use App\Ark\Operations\Approvals\ApprovalEvent;
-use App\Ark\Operations\Maintenance\CancelEngineOilServiceAction;
 use App\Ark\Operations\Approvals\ApprovalSource;
+use App\Ark\Operations\Financial\FinancialSubmissionIntentGate;
 use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
+use App\Ark\Operations\Maintenance\CancelEngineOilServiceAction;
 use App\Ark\Operations\Maintenance\MaintenanceService;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -280,6 +281,7 @@ test('manual deposit emits financial changed after commit without advancing the 
         'payment_method' => PaymentMethod::Cash->value,
         'deposit_confirmed' => '1',
         RepairOrderConcurrency::FIELD => $before,
+        FinancialSubmissionIntentGate::FIELD => financialSubmissionKey(),
     ])->assertRedirect();
 
     $repairOrder->refresh();
