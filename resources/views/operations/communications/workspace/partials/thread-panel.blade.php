@@ -18,6 +18,7 @@
         @if ($identity !== null)
             <div class="ops-comms-inbox__identity-title">
                 <h3 class="ops-comms-workspace__thread-title">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
+                <span class="ops-comms-workspace__switch" aria-hidden="true"><span class="ops-comms-workspace__switch-spin"></span></span>
                 @if (filled($identity['lane_label'] ?? null))
                     <span @class(['ops-comms-inbox__badge', 'ops-comms-inbox__badge--'.($identity['lane'] ?? 'needs')])>{{ $identity['lane_label'] }}</span>
                 @endif
@@ -51,7 +52,10 @@
                 @endif
             </div>
         @else
-            <h3 class="ops-comms-workspace__thread-title">Select a conversation</h3>
+            <div class="ops-comms-inbox__identity-title">
+                <h3 class="ops-comms-workspace__thread-title">Select a conversation</h3>
+                <span class="ops-comms-workspace__switch" aria-hidden="true"><span class="ops-comms-workspace__switch-spin"></span></span>
+            </div>
         @endif
     </header>
 

@@ -91,6 +91,18 @@ function hrefKey(href) {
     }
 }
 
+const SELECTION_FEEDBACK_MS = 180;
+
+function wait(ms) {
+    if (ms <= 0) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+        window.setTimeout(resolve, ms);
+    });
+}
+
 function markSelectedRow(href) {
     if (! href) {
         return;
@@ -104,6 +116,26 @@ function markSelectedRow(href) {
             hrefKey(row.getAttribute('href')) === selected,
         );
     });
+}
+
+function setSelectionSwitching(active) {
+    const thread = document.getElementById('ops-comms-workspace-thread');
+
+    if (! thread) {
+        return;
+    }
+
+    thread.classList.toggle('is-switching', active);
+
+    if (active) {
+        thread.setAttribute('aria-busy', 'true');
+    } else {
+        thread.removeAttribute('aria-busy');
+    }
+}
+
+function selectionFeedbackRemaining(startedAt, now = performance.now()) {
+    return Math.max(0, SELECTION_FEEDBACK_MS - (now - startedAt));
 }
 
 function syncFragmentUrl(nextUrl) {
@@ -361,23 +393,46 @@ export function initCommsWorkspace() {
         });
 
         fragment.searchParams.delete('signature');
+
+        const selectedHref = `${nextUrl.pathname}${nextUrl.search}`;
+        const currentHref = document.querySelector('.ops-comms-workspace__list-row--active')?.getAttribute('href') ?? '';
+        const changing = hrefKey(currentHref) !== hrefKey(selectedHref);
+
+        markSelectedRow(selectedHref);
+
+        if (changing) {
+            setSelectionSwitching(true);
+        }
+
         inflight = true;
         selectionGeneration += 1;
         const generation = selectionGeneration;
+        const startedAt = performance.now();
+        const stillCurrent = () => generation === selectionGeneration;
 
         try {
             const payload = await fetchWorkspace(`${fragment.pathname}${fragment.search}`);
 
-            if (generation !== selectionGeneration) {
-                return false;
+            if (! stillCurrent()) {
+                return 'stale';
             }
 
             if (! payload || (payload.unchanged === true && ! payload.thread)) {
+                setSelectionSwitching(false);
+
                 return false;
             }
 
+            if (changing) {
+                await wait(selectionFeedbackRemaining(startedAt));
+            }
+
+            if (! stillCurrent()) {
+                return 'stale';
+            }
+
             lastSignature = String(payload.signature ?? lastSignature);
-            const selectedHref = `${nextUrl.pathname}${nextUrl.search}`;
+            setSelectionSwitching(false);
             applyPayload(payload, { replaceList: false, selectedHref });
             syncFragmentUrl(nextUrl);
 
@@ -392,9 +447,15 @@ export function initCommsWorkspace() {
 
             return true;
         } catch {
+            if (! stillCurrent()) {
+                return 'stale';
+            }
+
+            setSelectionSwitching(false);
+
             return false;
         } finally {
-            if (generation === selectionGeneration) {
+            if (stillCurrent()) {
                 inflight = false;
             }
         }
@@ -505,7 +566,7 @@ export function initCommsWorkspace() {
 
         const opened = await openSelection(next);
 
-        if (! opened) {
+        if (opened === false) {
             window.location.assign(href);
         }
     });

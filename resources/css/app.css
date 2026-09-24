@@ -17839,6 +17839,18 @@
     .ops-comms-inbox__owner-mark { margin-left: auto; font-size: 0.6875rem; font-weight: 700; color: theme('colors.slate.500'); }
     .ops-comms-inbox__identity { display: grid; gap: 0.25rem; padding: 0.75rem 1rem 0.5rem; }
     .ops-comms-inbox__identity-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+    .ops-comms-workspace__switch { display: none; flex-shrink: 0; align-items: center; }
+    .ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: inline-flex; }
+    .ops-comms-workspace__switch-spin {
+        box-sizing: border-box;
+        width: 0.75rem;
+        height: 0.75rem;
+        border: 2px solid theme('colors.slate.300');
+        border-top-color: theme('colors.slate.700');
+        border-radius: 999px;
+        animation: ops-comms-switch-spin 0.7s linear infinite;
+    }
+    @keyframes ops-comms-switch-spin { to { transform: rotate(360deg); } }
     .ops-comms-inbox__identity-contact, .ops-comms-inbox__identity-visit { display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.8125rem; color: theme('colors.slate.600'); }
     .ops-comms-inbox__last { margin-left: auto; color: theme('colors.slate.400'); }
     .ops-comms-inbox__match { font-size: 0.75rem; font-weight: 600; color: theme('colors.slate.500'); }
