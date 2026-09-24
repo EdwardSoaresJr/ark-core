@@ -35,12 +35,13 @@ test('conversation switching shows a short header cue and ignores stale completi
         ->and(strpos($afterWait, 'setSelectionSwitching(false)'))->toBeLessThan(strpos($afterWait, 'applyPayload(payload'));
 
     expect($css)
-        ->toContain('.ops-comms-workspace__switch { display: none;')
-        ->toContain('.ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: inline-flex; }')
+        ->toContain('.ops-comms-workspace__switch {')
+        ->toContain('position: fixed;')
+        ->toContain('.ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: flex; }')
         ->not->toContain('.ops-comms-workspace.is-switching');
 });
 
-test('detail fragments keep the switch cue beside the conversation name', function () {
+test('detail fragments include the centered switch overlay', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
     Http::fake();

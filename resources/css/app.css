@@ -17839,15 +17839,26 @@
     .ops-comms-inbox__owner-mark { margin-left: auto; font-size: 0.6875rem; font-weight: 700; color: theme('colors.slate.500'); }
     .ops-comms-inbox__identity { display: grid; gap: 0.25rem; padding: 0.75rem 1rem 0.5rem; }
     .ops-comms-inbox__identity-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-    .ops-comms-workspace__switch { display: none; flex-shrink: 0; align-items: center; }
-    .ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: inline-flex; }
+    .ops-comms-workspace__switch {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        align-items: center;
+        justify-content: center;
+        background: rgb(15 23 42 / 0.38);
+        pointer-events: none;
+    }
+    .ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: flex; }
     .ops-comms-workspace__switch-spin {
         box-sizing: border-box;
-        width: 0.75rem;
-        height: 0.75rem;
-        border: 2px solid theme('colors.slate.300');
-        border-top-color: theme('colors.slate.700');
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 3px solid theme('colors.slate.300');
+        border-top-color: theme('colors.slate.900');
         border-radius: 999px;
+        background: white;
+        box-shadow: 0 0 0 0.7rem white, 0 12px 32px rgb(15 23 42 / 0.22);
         animation: ops-comms-switch-spin 0.7s linear infinite;
     }
     @keyframes ops-comms-switch-spin { to { transform: rotate(360deg); } }
