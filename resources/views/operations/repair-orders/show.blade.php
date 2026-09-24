@@ -1976,26 +1976,60 @@
 
         <script>
             (() => {
+                const rail = document.getElementById('estimate-builder-rail');
+                const footer = document.querySelector('.ops-ro-orientation-header--dock');
+                if (!rail) {
+                    return;
+                }
+
+                const gap = 16;
+                let stack = null;
+                let lastHeight = 0;
+
                 const fit = () => {
-                    const rail = document.getElementById('estimate-builder-rail');
-                    const bar = document.querySelector('.ops-ro-orientation-header--dock');
-                    if (!rail || !bar || window.innerWidth < 1024) {
-                        if (rail) {
-                            rail.style.maxHeight = '';
-                        }
+                    if (window.innerWidth < 1024) {
+                        rail.style.top = '';
+                        lastHeight = rail.offsetHeight;
                         return;
                     }
 
-                    const available = bar.getBoundingClientRect().top - rail.getBoundingClientRect().top;
-                    rail.style.maxHeight = Math.max(0, Math.floor(available)) + 'px';
+                    if (stack === null) {
+                        rail.style.top = '';
+                        stack = parseFloat(getComputedStyle(rail).top) || 0;
+                    }
+
+                    const footerHeight = footer ? footer.offsetHeight : 0;
+                    const available = window.innerHeight - stack - footerHeight - gap;
+                    const height = rail.offsetHeight;
+                    const grew = lastHeight > 0 && height > lastHeight + 1;
+                    const overflow = Math.max(0, height - available);
+                    const nextTop = (stack - overflow) + 'px';
+                    const before = rail.getBoundingClientRect().top;
+
+                    if (rail.style.top !== nextTop) {
+                        rail.style.top = nextTop;
+                        const shift = before - rail.getBoundingClientRect().top;
+                        if (Math.abs(shift) > 1) {
+                            document.scrollingElement.scrollTop -= shift;
+                        }
+                    }
+
+                    lastHeight = height;
+
+                    if (!grew || height > available || !footer) {
+                        return;
+                    }
+
+                    const hidden = rail.getBoundingClientRect().bottom - (footer.getBoundingClientRect().top - gap);
+                    if (hidden > 1) {
+                        document.scrollingElement.scrollTop += hidden;
+                    }
                 };
 
                 fit();
-                document.addEventListener('scroll', fit, { passive: true, capture: true });
                 window.addEventListener('resize', fit);
-                const workspace = document.querySelector('.ops-estimate-workspace');
-                if (workspace) {
-                    new MutationObserver(fit).observe(workspace, { childList: true, subtree: true });
+                if (typeof ResizeObserver !== 'undefined') {
+                    new ResizeObserver(fit).observe(rail);
                 }
             })();
         </script>

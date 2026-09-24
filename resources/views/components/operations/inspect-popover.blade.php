@@ -19,6 +19,7 @@
     ]) }}
     :class="{ 'ops-inspect-popover--open': open }"
     data-line-card-ignore
+    @mouseenter="place()"
     @click="toggle($event)"
     @click.outside="close()"
     @keydown.escape.window="close()"
