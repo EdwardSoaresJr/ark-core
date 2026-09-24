@@ -48,7 +48,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
     $hasRecordsNav = (auth()->user()?->can('customers.manage') ?? false)
         || (auth()->user()?->can('repair_orders.view') ?? false);
     $canManageSettings = auth()->user()?->can('settings.manage') ?? false;
-    $hasBusinessNav = $canAccessBusinessWorkspace || $canManageSettings;
+    $canViewScoreboard = \App\Ark\Operations\Scoreboard\ShopOperatingScoreboardAccess::allows(auth()->user());
+    $hasBusinessNav = $canAccessBusinessWorkspace || $canManageSettings || $canViewScoreboard;
     $showArkademyNav = $canUseProductionShell || $usesAdvisorWorkSurface;
     $hasSystemNav = $showArkademyNav || $canManageSettings;
     $commsChannelTabs = app(CommsChannelStripResolver::class)->tabsFor(auth()->user(), $previousLastSeenAt);
@@ -306,6 +307,16 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                     <span>Reports</span>
                                 </a>
                             @endcan
+                            @if ($canViewScoreboard)
+                                <a href="{{ route('operations.owner.scoreboard') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.scoreboard') ? 'ops-rail-link--active' : '' }}">
+                                    <span class="ops-rail-icon">
+                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+                                            <path d="M4 15.5h12M6 15.5V9M10 15.5V4.5M14 15.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                        </svg>
+                                    </span>
+                                    <span>Scoreboard</span>
+                                </a>
+                            @endif
                             @if ($canAccessOwnerWorkspace)
                                 <a href="{{ route('operations.owner.day-review') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.day-review', 'operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">

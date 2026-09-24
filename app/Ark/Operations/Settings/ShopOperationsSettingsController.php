@@ -314,6 +314,11 @@ public function updateExcellence(Request $request): RedirectResponse
             'owner_digest_enabled' => ['nullable', 'boolean'],
             'owner_digest_time' => ['required', 'date_format:H:i'],
             'mark_target_reviewed' => ['nullable', 'boolean'],
+            'opportunity_ros_per_open_day' => ['nullable', 'numeric', 'min:0', 'max:999'],
+            'dollar_close_target_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'sold_labor_hours_per_open_day' => ['nullable', 'numeric', 'min:0', 'max:999'],
+            'median_cycle_target_days' => ['nullable', 'numeric', 'min:0', 'max:365'],
+            'parts_margin_target_active' => ['nullable', 'boolean'],
         ]);
 
         $timezone = ShopDisplayTimezone::resolve();
@@ -341,6 +346,11 @@ public function updateExcellence(Request $request): RedirectResponse
             'owner_digest_enabled' => (bool) ($data['owner_digest_enabled'] ?? false),
             'owner_digest_time' => (string) $data['owner_digest_time'],
             'last_target_review' => $lastReview,
+            'opportunity_ros_per_open_day' => $data['opportunity_ros_per_open_day'] ?? null,
+            'dollar_close_target_percent' => $data['dollar_close_target_percent'] ?? null,
+            'sold_labor_hours_per_open_day' => $data['sold_labor_hours_per_open_day'] ?? null,
+            'median_cycle_target_days' => $data['median_cycle_target_days'] ?? null,
+            'parts_margin_target_active' => (bool) ($data['parts_margin_target_active'] ?? false),
         ]);
 
         return redirect()

@@ -27,6 +27,11 @@ final class ShopExcellenceTargets
         'income_tax_reserve_percent' => 25,
         'payroll_tax_reserve_percent' => 10,
         'monthly_payroll_tax_cents' => null,
+        'opportunity_ros_per_open_day' => null,
+        'dollar_close_target_percent' => null,
+        'sold_labor_hours_per_open_day' => null,
+        'median_cycle_target_days' => null,
+        'parts_margin_target_active' => false,
     ];
 
     /**
@@ -48,7 +53,12 @@ final class ShopExcellenceTargets
      *     net_profit_target_percent: int,
      *     income_tax_reserve_percent: int,
      *     payroll_tax_reserve_percent: int,
-     *     monthly_payroll_tax_cents: int|null
+     *     monthly_payroll_tax_cents: int|null,
+     *     opportunity_ros_per_open_day: float|null,
+     *     dollar_close_target_percent: float|null,
+     *     sold_labor_hours_per_open_day: float|null,
+     *     median_cycle_target_days: float|null,
+     *     parts_margin_target_active: bool
      * }
      */
     public static function current(): array
@@ -78,6 +88,11 @@ final class ShopExcellenceTargets
             'income_tax_reserve_percent' => (int) ($parsed['income_tax_reserve_percent'] ?? self::DEFAULTS['income_tax_reserve_percent']),
             'payroll_tax_reserve_percent' => (int) ($parsed['payroll_tax_reserve_percent'] ?? self::DEFAULTS['payroll_tax_reserve_percent']),
             'monthly_payroll_tax_cents' => self::nullableInt($parsed['monthly_payroll_tax_cents'] ?? null),
+            'opportunity_ros_per_open_day' => self::nullableFloat($parsed['opportunity_ros_per_open_day'] ?? null),
+            'dollar_close_target_percent' => self::nullableFloat($parsed['dollar_close_target_percent'] ?? null),
+            'sold_labor_hours_per_open_day' => self::nullableFloat($parsed['sold_labor_hours_per_open_day'] ?? null),
+            'median_cycle_target_days' => self::nullableFloat($parsed['median_cycle_target_days'] ?? null),
+            'parts_margin_target_active' => (bool) ($parsed['parts_margin_target_active'] ?? false),
         ];
     }
 
@@ -172,7 +187,12 @@ final class ShopExcellenceTargets
      *     payroll_tax_reserve_percent?: int,
      *     monthly_payroll_tax_cents?: int|null,
      *     last_target_review?: string|null,
-     *     posted_labor_rate_cents?: int|null
+     *     posted_labor_rate_cents?: int|null,
+     *     opportunity_ros_per_open_day?: float|null,
+     *     dollar_close_target_percent?: float|null,
+     *     sold_labor_hours_per_open_day?: float|null,
+     *     median_cycle_target_days?: float|null,
+     *     parts_margin_target_active?: bool
      * }  $data
      */
     public static function persist(array $data): void
@@ -199,6 +219,21 @@ final class ShopExcellenceTargets
             'payroll_tax_reserve_percent' => (int) ($data['payroll_tax_reserve_percent'] ?? ($existing['payroll_tax_reserve_percent'] ?? self::DEFAULTS['payroll_tax_reserve_percent'])),
             'monthly_payroll_tax_cents' => $data['monthly_payroll_tax_cents'] ?? ($existing['monthly_payroll_tax_cents'] ?? null),
             'last_target_review' => $data['last_target_review'] ?? ($existing['last_target_review'] ?? null),
+            'opportunity_ros_per_open_day' => array_key_exists('opportunity_ros_per_open_day', $data)
+                ? self::nullableFloat($data['opportunity_ros_per_open_day'])
+                : self::nullableFloat($existing['opportunity_ros_per_open_day'] ?? null),
+            'dollar_close_target_percent' => array_key_exists('dollar_close_target_percent', $data)
+                ? self::nullableFloat($data['dollar_close_target_percent'])
+                : self::nullableFloat($existing['dollar_close_target_percent'] ?? null),
+            'sold_labor_hours_per_open_day' => array_key_exists('sold_labor_hours_per_open_day', $data)
+                ? self::nullableFloat($data['sold_labor_hours_per_open_day'])
+                : self::nullableFloat($existing['sold_labor_hours_per_open_day'] ?? null),
+            'median_cycle_target_days' => array_key_exists('median_cycle_target_days', $data)
+                ? self::nullableFloat($data['median_cycle_target_days'])
+                : self::nullableFloat($existing['median_cycle_target_days'] ?? null),
+            'parts_margin_target_active' => array_key_exists('parts_margin_target_active', $data)
+                ? (bool) $data['parts_margin_target_active']
+                : (bool) ($existing['parts_margin_target_active'] ?? false),
         ]));
     }
 
@@ -256,6 +291,15 @@ final class ShopExcellenceTargets
         ShopSettings::current()->update([
             'shop_excellence_targets' => $data,
         ]);
+    }
+
+    private static function nullableFloat(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return round((float) $value, 2);
     }
 
     private static function nullableInt(mixed $value): ?int

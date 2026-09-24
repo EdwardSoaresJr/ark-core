@@ -166,6 +166,33 @@
         </div>
 
         <div class="border border-slate-200 bg-white px-3 py-3">
+            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Operating scoreboard</p>
+            <p class="mt-0.5 text-xs text-slate-500">Blank means this shop has not set a target. The scoreboard shows the actual number and does not mark it good or behind.</p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                <label class="block text-xs font-medium text-slate-500">
+                    ROs / open day
+                    <input type="number" name="opportunity_ros_per_open_day" min="0" max="999" step="0.1" value="{{ old('opportunity_ros_per_open_day', $excellenceTargets['opportunity_ros_per_open_day']) }}" class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
+                </label>
+                <label class="block text-xs font-medium text-slate-500">
+                    Dollar close (%)
+                    <input type="number" name="dollar_close_target_percent" min="0" max="100" step="0.1" value="{{ old('dollar_close_target_percent', $excellenceTargets['dollar_close_target_percent']) }}" class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
+                </label>
+                <label class="block text-xs font-medium text-slate-500">
+                    Sold hours / open day
+                    <input type="number" name="sold_labor_hours_per_open_day" min="0" max="999" step="0.1" value="{{ old('sold_labor_hours_per_open_day', $excellenceTargets['sold_labor_hours_per_open_day']) }}" class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
+                </label>
+                <label class="block text-xs font-medium text-slate-500">
+                    Median cycle (days)
+                    <input type="number" name="median_cycle_target_days" min="0" max="365" step="0.1" value="{{ old('median_cycle_target_days', $excellenceTargets['median_cycle_target_days']) }}" class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
+                </label>
+            </div>
+            <label class="mt-3 flex items-center gap-2 text-xs font-medium text-slate-600">
+                <input type="checkbox" name="parts_margin_target_active" value="1" @checked(old('parts_margin_target_active', $excellenceTargets['parts_margin_target_active'])) class="rounded border-slate-300 text-slate-900">
+                Judge parts margin on the scoreboard against the parts margin target above
+            </label>
+        </div>
+
+        <div class="border border-slate-200 bg-white px-3 py-3">
             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Owner rhythm</p>
             <p class="mt-0.5 text-xs text-slate-500">Daily digest timing and quarterly target review.</p>
 

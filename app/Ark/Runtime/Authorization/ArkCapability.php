@@ -27,4 +27,9 @@ enum ArkCapability: string
     case CommunicationsInternalManage = 'communications.internal.manage';
     case AttentionView = 'attention.view';
     case AttentionManage = 'attention.manage';
+    case ScoreboardOperationalView = 'scoreboard.operational.view';
+    case ScoreboardFinancialView = 'scoreboard.financial.view';
+    case ScoreboardQueuesView = 'scoreboard.queues.view';
+    case ScoreboardFollowUpWork = 'scoreboard.follow_up.work';
+    case ScoreboardDrilldownView = 'scoreboard.drilldown.view';
 }

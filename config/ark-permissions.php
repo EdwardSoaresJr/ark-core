@@ -27,6 +27,11 @@ return [
             ArkCapability::CommunicationsInternalManage->value,
             ArkCapability::AttentionView->value,
             ArkCapability::AttentionManage->value,
+            ArkCapability::ScoreboardOperationalView->value,
+            ArkCapability::ScoreboardFinancialView->value,
+            ArkCapability::ScoreboardQueuesView->value,
+            ArkCapability::ScoreboardFollowUpWork->value,
+            ArkCapability::ScoreboardDrilldownView->value,
         ],
 
         ArkRole::Advisor->value => [
@@ -48,6 +53,11 @@ return [
             ArkCapability::CommunicationsInternalManage->value,
             ArkCapability::AttentionView->value,
             ArkCapability::AttentionManage->value,
+            ArkCapability::ScoreboardOperationalView->value,
+            ArkCapability::ScoreboardFinancialView->value,
+            ArkCapability::ScoreboardQueuesView->value,
+            ArkCapability::ScoreboardFollowUpWork->value,
+            ArkCapability::ScoreboardDrilldownView->value,
         ],
 
         ArkRole::Technician->value => [

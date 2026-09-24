@@ -23,6 +23,7 @@ docs/shop-excellence/
   margin-levers.md          # ELR, matrix, ARO, workflow
   owner-rhythm.md           # daily / weekly / Day Review habit
   daily-kpis.md             # preferred management KPIs
+  shop-operating-playbook.md # shop-agnostic operating model and scoreboard definitions
   lugs-n-plugs/             # pointer: targets live in Settings
   private/                  # gitignored paid notes
   ark-mapping/              # KPI → ARK implementation
@@ -37,5 +38,6 @@ docs/shop-excellence/
 | Daily digest email | `shop-excellence:owner-digest` (scheduled) |
 | Report KPIs | Operations → Operational Report |
 | Owner targets | Settings → Owner Targets |
+| Shop scoreboard | `/app/owner/scoreboard` (`?display=wall` for a monitor) |
 | AI builders | `.cursor/rules/ark-shop-excellence.mdc` |
 | Private notes | `private/` (gitignored) |

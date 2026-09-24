@@ -246,6 +246,7 @@ use App\Ark\Operations\Reports\OperationalReportController;
 use App\Ark\Operations\Reports\ReportsEndOfDayController;
 use App\Ark\Operations\Reports\ReportsIndexController;
 use App\Ark\Operations\Search\OperationsGlobalSearchController;
+use App\Ark\Operations\Scoreboard\ShopOperatingScoreboardController;
 use App\Ark\Operations\ShopExcellence\OwnerDayReviewController;
 use App\Ark\Operations\ShopExcellence\PartsMatrixTuneController;
 use App\Ark\Operations\Staff\OwnerStaffCoachingController;
@@ -772,6 +773,13 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/app/reports/operations', OperationalReportController::class)
             ->middleware('permission:'.ArkCapability::FinancialView->value)
             ->name('operations.reports.operational');
+
+        Route::get('/app/owner/scoreboard', ShopOperatingScoreboardController::class)
+            ->middleware('permission:'.implode('|', array_map(
+                static fn (\App\Ark\Runtime\Authorization\ArkCapability $capability): string => $capability->value,
+                \App\Ark\Operations\Scoreboard\ShopOperatingScoreboardAccess::capabilities(),
+            )))
+            ->name('operations.owner.scoreboard');
 
         Route::middleware('owner.workspace')->group(function (): void {
             Route::get('/app/owner/day-review', OwnerDayReviewController::class)

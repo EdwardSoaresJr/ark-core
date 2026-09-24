@@ -134,6 +134,34 @@ class EstimateTotalsCalculator
     }
 
     /**
+     * Read-only deferred-work totals. GET-safe.
+     */
+    public function deferredTotalsForRead(RepairOrder $repairOrder): EstimateTotals
+    {
+        return $this->dispositionTotalsForRead($repairOrder, RepairOrderConcernDisposition::Deferred);
+    }
+
+    /**
+     * Read-only draft totals. Draft is not customer-facing. GET-safe.
+     */
+    public function draftTotalsForRead(RepairOrder $repairOrder): EstimateTotals
+    {
+        return $this->dispositionTotalsForRead($repairOrder, RepairOrderConcernDisposition::Draft);
+    }
+
+    private function dispositionTotalsForRead(RepairOrder $repairOrder, RepairOrderConcernDisposition $disposition): EstimateTotals
+    {
+        $repairOrder->loadMissing(['lines.concern']);
+
+        $lines = $repairOrder->lines
+            ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === $disposition
+                && ! $line->type->isNote())
+            ->values();
+
+        return $this->totalsForLines($lines, $lines, ShopSettings::current());
+    }
+
+    /**
      * @return Collection<int, RepairOrderLine>
      */
     private function approvedInvoiceableLines(RepairOrder $repairOrder): Collection
