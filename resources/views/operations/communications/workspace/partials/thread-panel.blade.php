@@ -124,6 +124,10 @@
     @endif
 
     <div class="ops-comms-workspace__switch" aria-hidden="true">
-        <span class="ops-comms-workspace__switch-spin"></span>
+        <span class="ops-comms-workspace__switch-bubble">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
     </div>
 </div>

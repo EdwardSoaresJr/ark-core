@@ -17850,18 +17850,40 @@
         pointer-events: none;
     }
     .ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: flex; }
-    .ops-comms-workspace__switch-spin {
-        box-sizing: border-box;
-        width: 2.75rem;
-        height: 2.75rem;
-        border: 3px solid theme('colors.slate.300');
-        border-top-color: theme('colors.slate.900');
-        border-radius: 999px;
+    .ops-comms-workspace__switch-bubble {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        width: 4.75rem;
+        height: 3.25rem;
+        border-radius: 1.35rem;
         background: white;
-        box-shadow: 0 0 0 0.7rem white, 0 12px 32px rgb(15 23 42 / 0.22);
-        animation: ops-comms-switch-spin 0.7s linear infinite;
+        box-shadow: 0 14px 36px rgb(15 23 42 / 0.24);
     }
-    @keyframes ops-comms-switch-spin { to { transform: rotate(360deg); } }
+    .ops-comms-workspace__switch-bubble::after {
+        content: "";
+        position: absolute;
+        left: 1.15rem;
+        bottom: -0.42rem;
+        border-width: 0.55rem 0.5rem 0 0;
+        border-style: solid;
+        border-color: white transparent transparent transparent;
+    }
+    .ops-comms-workspace__switch-bubble span {
+        width: 0.48rem;
+        height: 0.48rem;
+        border-radius: 999px;
+        background: theme('colors.slate.700');
+        animation: ops-comms-switch-dot 1s ease-in-out infinite;
+    }
+    .ops-comms-workspace__switch-bubble span:nth-child(2) { animation-delay: 0.15s; }
+    .ops-comms-workspace__switch-bubble span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes ops-comms-switch-dot {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+        40% { transform: translateY(-0.28rem); opacity: 1; }
+    }
     .ops-comms-inbox__identity-contact, .ops-comms-inbox__identity-visit { display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.8125rem; color: theme('colors.slate.600'); }
     .ops-comms-inbox__last { margin-left: auto; color: theme('colors.slate.400'); }
     .ops-comms-inbox__match { font-size: 0.75rem; font-weight: 600; color: theme('colors.slate.500'); }

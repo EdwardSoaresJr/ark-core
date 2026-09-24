@@ -91,8 +91,8 @@ test('detail fragments include the centered switch overlay', function () {
         ->assertOk()
         ->json('thread');
 
-    expect($empty)->toContain('ops-comms-workspace__switch')
+    expect($empty)->toContain('ops-comms-workspace__switch-bubble')
         ->and($open)->toContain('Dana Wait')
-        ->and($open)->toContain('ops-comms-workspace__switch')
+        ->and($open)->toContain('ops-comms-workspace__switch-bubble')
         ->and(strpos($open, 'Dana Wait'))->toBeLessThan(strpos($open, 'ops-comms-workspace__switch'));
 });
