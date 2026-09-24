@@ -51,6 +51,38 @@ final class CallRecordingPlayback
     }
 
     /**
+     * @param  iterable<CallSession>  $sessions
+     */
+    public function prime(iterable $sessions): void
+    {
+        $sids = [];
+        foreach ($sessions as $session) {
+            foreach ($this->recordingSids($session) as $sid) {
+                $sids[$sid] = $sid;
+            }
+        }
+
+        $this->media->primeRecordingSids(array_values($sids));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function recordingSids(CallSession $callSession): array
+    {
+        $sids = [];
+        foreach ([$callSession->recording_url, $callSession->voicemail_url] as $url) {
+            $sid = CallSessionMediaUri::parse(is_string($url) ? $url : null)?->twilioRecordingSid;
+            if (! is_string($sid) || preg_match('/^RE[a-fA-F0-9]{32}$/', $sid) !== 1) {
+                continue;
+            }
+            $sids[$sid] = $sid;
+        }
+
+        return array_values($sids);
+    }
+
+    /**
      * @return array{
      *     has_recording: bool,
      *     has_voicemail: bool,
@@ -62,15 +94,22 @@ final class CallRecordingPlayback
      *     voicemail_capture_label: ?string,
      *     show_play_recording_action: bool,
      *     show_play_voicemail_action: bool,
+     *     recording_state: string,
+     *     voicemail_state: string,
      * }
      */
     public function projectFor(CallSession $callSession): array
     {
+        $this->prime([$callSession]);
+
         $recordingUrl = $this->urlFor($callSession, 'recording');
         $voicemailUrl = $this->urlFor($callSession, 'voicemail');
+        $recordingStored = filled($callSession->recording_url) || filled($callSession->recording_sid);
+        $voicemailStored = filled($callSession->voicemail_url) || filled($callSession->voicemail_sid);
 
         if ($voicemailUrl !== null && $this->isSameArtifact($callSession)) {
             $recordingUrl = null;
+            $recordingStored = false;
         }
 
         return [
@@ -84,7 +123,22 @@ final class CallRecordingPlayback
             'voicemail_capture_label' => $callSession->voicemail_capture_status?->operationalLabel('Voicemail'),
             'show_play_recording_action' => $recordingUrl !== null,
             'show_play_voicemail_action' => $voicemailUrl !== null,
+            'recording_state' => $this->mediaState($recordingUrl, $recordingStored, $callSession->recording_capture_status),
+            'voicemail_state' => $this->mediaState($voicemailUrl, $voicemailStored, $callSession->voicemail_capture_status),
         ];
+    }
+
+    private function mediaState(?string $playbackUrl, bool $stored, ?CallSessionMediaCaptureStatus $capture): string
+    {
+        if ($playbackUrl !== null) {
+            return 'playable';
+        }
+
+        if ($capture === CallSessionMediaCaptureStatus::Failed || $stored) {
+            return 'unavailable';
+        }
+
+        return 'none';
     }
 
     private function isSameArtifact(CallSession $callSession): bool

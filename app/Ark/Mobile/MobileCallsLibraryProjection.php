@@ -6,7 +6,6 @@ use App\Ark\Operations\Communications\CallLibraryQuery;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Telephony\CallRecordingPlayback;
 use App\Ark\Operations\Telephony\CallSession;
-use App\Ark\Operations\Telephony\CallSessionDirection;
 use App\Ark\Operations\Telephony\InboundCallerDisplayPhone;
 use Illuminate\Http\Request;
 
@@ -29,8 +28,10 @@ final class MobileCallsLibraryProjection
         $filters = $this->query->filters($request);
         $paginator = $this->query->paginate($request);
         $timezone = ShopDisplayTimezone::resolve();
+        $sessions = collect($paginator->items());
+        $this->playback->prime($sessions);
 
-        $items = collect($paginator->items())
+        $items = $sessions
             ->map(fn (CallSession $session): array => $this->presentRow($session, $timezone))
             ->all();
 

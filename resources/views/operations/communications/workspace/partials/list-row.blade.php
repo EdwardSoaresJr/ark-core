@@ -8,6 +8,8 @@
     $badgeTone = (string) ($item['badge_tone'] ?? 'needs');
     $initials = (string) ($item['initials'] ?? '');
     $ownerInitials = (string) ($item['owner_initials'] ?? '');
+    $sourceLabel = trim((string) ($item['source_label'] ?? ''));
+    $assignedLabel = trim((string) ($item['assigned_label'] ?? ''));
     $roHint = trim(implode(' · ', array_filter([
         $item['ro_label'] ?? null,
         $item['vehicle_label'] ?? null,
@@ -39,8 +41,14 @@
             <span class="ops-comms-inbox__preview">{{ $preview }}</span>
         @endif
         <span class="ops-comms-inbox__card-meta">
+            @if ($sourceLabel !== '')
+                <span class="ops-comms-inbox__badge">{{ $sourceLabel }}</span>
+            @endif
             @if ($badge !== '')
                 <span @class(['ops-comms-inbox__badge', 'ops-comms-inbox__badge--'.$badgeTone])>{{ $badge }}</span>
+            @endif
+            @if ($sourceLabel !== '' && $assignedLabel !== '')
+                <span class="ops-comms-inbox__ro">{{ $assignedLabel }}</span>
             @endif
             @if ($roHint !== '')
                 <span class="ops-comms-inbox__ro">{{ $roHint }}</span>

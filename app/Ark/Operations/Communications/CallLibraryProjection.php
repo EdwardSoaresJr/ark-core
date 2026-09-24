@@ -32,8 +32,10 @@ final class CallLibraryProjection
         $filters = $this->query->filters($request);
         $paginator = $this->query->paginate($request);
         $timezone = ShopDisplayTimezone::resolve();
+        $sessions = collect($paginator->items());
+        $this->playback->prime($sessions);
 
-        $rows = collect($paginator->items())
+        $rows = $sessions
             ->map(fn (CallSession $session): array => $this->presentRow($session, $timezone))
             ->all();
 
@@ -74,6 +76,8 @@ final class CallLibraryProjection
             'recording_url' => $media['recording_url'],
             'has_voicemail' => $media['has_voicemail'],
             'has_recording' => $media['has_recording'],
+            'voicemail_state' => $media['voicemail_state'],
+            'recording_state' => $media['recording_state'],
             'voicemail_duration' => $session->voicemail_duration_seconds,
             'recording_duration' => $session->recording_duration_seconds,
             'customer_url' => $session->customer_id !== null

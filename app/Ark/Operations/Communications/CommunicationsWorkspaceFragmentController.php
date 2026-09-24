@@ -32,6 +32,8 @@ class CommunicationsWorkspaceFragmentController
                 $request->string('platform_conversation')->toString() ?: null,
                 $filter,
                 $request->string('owner')->toString() ?: 'everyone',
+                $request->integer('conversation') ?: null,
+                $request->integer('lead') ?: null,
             );
             $pollSignature = (string) ($workspace['poll_signature'] ?? '');
 

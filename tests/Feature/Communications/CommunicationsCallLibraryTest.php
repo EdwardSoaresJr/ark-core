@@ -24,10 +24,10 @@ test('advisor can open dedicated calls and voicemail library', function (): void
         ->get(route('operations.communications.calls'))
         ->assertOk()
         ->assertSee('Calls &amp; Voicemail', false)
-        ->assertSee('Calls &amp; VM', false);
+        ->assertSee('Calls & VM', false);
 });
 
-test('calls library shows inline voicemail player for sessions with voicemail', function (): void {
+test('calls library does not pretend a stored voicemail can play from Core', function (): void {
     ShopSettings::current()->update([
     ]);
 
@@ -56,17 +56,14 @@ test('calls library shows inline voicemail player for sessions with voicemail', 
         'started_at' => now()->subHour(),
     ]);
 
-    $playbackUrl = route('operations.telephony.call-sessions.recording', [
-        'callSession' => $session,
-        'kind' => 'voicemail',
-    ]);
-
     $this->actingAs($advisor)
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
         ->get(route('operations.communications.calls', ['filter' => 'voicemail']))
         ->assertOk()
         ->assertSee('Voicemail Tester', false)
+        ->assertSee('Voicemail unavailable', false)
         ->assertSee('Text', false)
         ->assertSee(route('operations.customers.show', $customer).'?compose=text#customer-communication', false)
-        ->assertSee('<audio controls preload="none" class="ops-call-library__audio" src="'.$playbackUrl.'">', false);
+        ->assertDontSee('No audio', false)
+        ->assertDontSee('<audio controls preload="none" class="ops-call-library__audio"', false);
 });

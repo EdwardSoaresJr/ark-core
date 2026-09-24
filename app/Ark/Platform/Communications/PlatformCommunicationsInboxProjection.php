@@ -2,18 +2,27 @@
 
 namespace App\Ark\Platform\Communications;
 
+use App\Ark\Operations\Communications\CommunicationsInboxPresentation;
+use App\Ark\Operations\Communications\OperationalCommunicationChannel;
+use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
+use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Conversations\CustomerCallContext;
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Leads\Lead;
+use App\Ark\Operations\Leads\LeadConfirmationAuditConversation;
+use App\Ark\Operations\Leads\LeadSource;
+use App\Ark\Operations\Leads\LeadState;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Native inbox data plane backed by Platform conversation authority.
@@ -31,8 +40,14 @@ final class PlatformCommunicationsInboxProjection
     /**
      * @return array<string, mixed>
      */
-    public function inbox(?User $viewer, ?string $selectedPublicId = null, string $filter = 'needs', string $ownerFilter = 'everyone'): array
-    {
+    public function inbox(
+        ?User $viewer,
+        ?string $selectedPublicId = null,
+        string $filter = 'needs',
+        string $ownerFilter = 'everyone',
+        ?int $selectedConversationId = null,
+        ?int $selectedLeadId = null,
+    ): array {
         if ($viewer === null) {
             return $this->empty($filter);
         }
@@ -42,8 +57,11 @@ final class PlatformCommunicationsInboxProjection
         $listed = $this->client->listConversations((int) $viewer->id, 80);
         if (! ($listed['ok'] ?? false)) {
             return $this->coreFallbackInbox(
+                $viewer,
                 $filter,
                 (string) ($listed['message'] ?? 'ARK Communications is unavailable.'),
+                $selectedConversationId,
+                $selectedLeadId,
             );
         }
 
@@ -123,6 +141,8 @@ final class PlatformCommunicationsInboxProjection
             ];
         }
 
+        $this->mergeWebsiteLeads($allItems, $filter);
+
         usort($allItems, function (array $a, array $b): int {
             return strcmp((string) ($b['sort_at'] ?? ''), (string) ($a['sort_at'] ?? ''));
         });
@@ -147,7 +167,7 @@ final class PlatformCommunicationsInboxProjection
                 fn (array $item): bool => ($item['lane'] ?? 'needs') === $filter,
             ));
 
-        $presentation = app(\App\Ark\Operations\Communications\CommunicationsInboxPresentation::class);
+        $presentation = app(CommunicationsInboxPresentation::class);
         $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
         $listItems = $presentation->decorateList($listItems);
         $ownerCounts = [
@@ -157,18 +177,13 @@ final class PlatformCommunicationsInboxProjection
         ];
         $listItems = $presentation->applyOwnerFilter($listItems, $ownerFilter, $viewer);
 
-        $selected = null;
-        if ($selectedPublicId !== null && $selectedPublicId !== '') {
-            foreach ($allItems as $item) {
-                if (($item['platform_conversation_public_id'] ?? null) === $selectedPublicId) {
-                    $selected = $item;
-                    break;
-                }
-            }
-        }
-        if ($selected === null && $listItems !== []) {
-            $selected = $listItems[0];
-        }
+        $selected = $this->selectItem(
+            $allItems,
+            $listItems,
+            $selectedPublicId,
+            $selectedConversationId,
+            $selectedLeadId,
+        );
 
         $thread = null;
         $context = null;
@@ -181,6 +196,7 @@ final class PlatformCommunicationsInboxProjection
             if (is_array($thread) && is_array($context['work'] ?? null)) {
                 $thread['decision']['work'] = $context['work'];
             }
+            $thread = $this->applyLeadThreadHints($thread, $selected);
         }
 
         $workspace = [
@@ -216,7 +232,11 @@ final class PlatformCommunicationsInboxProjection
      */
     private function selectedThread(User $viewer, array $selected, array $advisors, string $filter): array
     {
-        $publicId = (string) $selected['platform_conversation_public_id'];
+        $publicId = (string) ($selected['platform_conversation_public_id'] ?? '');
+        if ($publicId === '') {
+            return $this->coreLeadThread($selected, $advisors, $filter);
+        }
+
         $shown = $this->client->showConversation($publicId);
         if (! ($shown['ok'] ?? false)) {
             return ['thread' => null, 'context' => null];
@@ -383,8 +403,13 @@ final class PlatformCommunicationsInboxProjection
      *
      * @return array<string, mixed>
      */
-    private function coreFallbackInbox(string $filter, string $error): array
-    {
+    private function coreFallbackInbox(
+        User $viewer,
+        string $filter,
+        string $error,
+        ?int $selectedConversationId = null,
+        ?int $selectedLeadId = null,
+    ): array {
         $conversations = Conversation::query()
             ->with('owner:id,name')
             ->where('contact_surface', ConversationContactSurface::Phone)
@@ -429,6 +454,12 @@ final class PlatformCommunicationsInboxProjection
             ];
         }
 
+        $this->mergeWebsiteLeads($allItems, $filter);
+
+        usort($allItems, function (array $a, array $b): int {
+            return strcmp((string) ($b['sort_at'] ?? ''), (string) ($a['sort_at'] ?? ''));
+        });
+
         $filterCounts = [
             'needs' => 0,
             'waiting' => 0,
@@ -449,14 +480,29 @@ final class PlatformCommunicationsInboxProjection
                 fn (array $item): bool => ($item['lane'] ?? 'needs') === $filter,
             ));
 
+        $presentation = app(CommunicationsInboxPresentation::class);
+        $listItems = $presentation->decorateList($listItems);
+        $selected = $this->selectItem($allItems, $listItems, null, $selectedConversationId, $selectedLeadId);
+        $thread = null;
+        $context = null;
+        if ($selected !== null) {
+            $built = $this->selectedThread($viewer, $selected, $this->assignableAdvisors(), $filter);
+            $thread = $presentation->decorateThread($built['thread'], $selected);
+            $context = $presentation->decorateContext($built['context'], $selected, $filter, 'everyone');
+            if (is_array($thread) && is_array($context['work'] ?? null)) {
+                $thread['decision']['work'] = $context['work'];
+            }
+            $thread = $this->applyLeadThreadHints($thread, $selected);
+        }
+
         $workspace = [
             'section' => 'inbox',
             'list_items' => $listItems,
             'list_count' => count($listItems),
             'filter_counts' => $filterCounts,
-            'selected' => $listItems[0] ?? null,
-            'thread' => null,
-            'context' => null,
+            'selected' => $selected,
+            'thread' => $thread,
+            'context' => $context,
             'platform_backed' => true,
             'list_filter' => $filter,
             'list_title' => match ($filter) {
@@ -480,6 +526,313 @@ final class PlatformCommunicationsInboxProjection
             ->addDay()
             ->setTime(8, 0)
             ->format('Y-m-d\TH:i');
+    }
+
+    /**
+     * Open website quotes waiting on the shop join the same lane list as SMS.
+     * A quote that already has a conversation or phone row is enriched, not duplicated.
+     * Popup dismissal is not an input.
+     *
+     * @param  list<array<string, mixed>>  $allItems
+     */
+    private function mergeWebsiteLeads(array &$allItems, string $filter): void
+    {
+        $leads = Lead::query()
+            ->with(['conversation.owner'])
+            ->where('source', LeadSource::Website)
+            ->where('state', LeadState::Received)
+            ->whereNull('first_contacted_at')
+            ->orderByDesc('id')
+            ->limit(80)
+            ->get();
+
+        if ($leads->isEmpty()) {
+            return;
+        }
+
+        $audit = app(LeadConfirmationAuditConversation::class);
+
+        foreach ($leads as $lead) {
+            $conversation = $lead->conversation;
+            if ($conversation instanceof Conversation && $audit->suppressFromShopTurn($conversation, $lead)) {
+                continue;
+            }
+
+            $lane = $conversation instanceof Conversation ? $this->work->lane($conversation) : 'needs';
+            $phone = PhoneNumber::normalize($lead->contact_phone) ?? '';
+            $displayPhone = (string) ($lead->display_phone ?? PhoneNumber::display($phone) ?? '');
+            $name = trim((string) $lead->contact_name);
+            $headline = $name !== '' ? $name : ($displayPhone !== '' ? $displayPhone : 'Website Lead');
+            $concern = trim((string) Str::limit(trim((string) $lead->concern), 160));
+            $vehicle = $lead->roughVehicleLabel();
+            $ownerName = $conversation?->owner?->name ?? 'Unassigned';
+            $sortAt = $conversation?->posture_changed_at?->toIso8601String()
+                ?? $lead->created_at?->toIso8601String();
+
+            $matched = false;
+            foreach ($allItems as &$item) {
+                $itemPhone = PhoneNumber::normalize((string) ($item['normalized_phone'] ?? $item['phone'] ?? '')) ?? '';
+                $sameConversation = $conversation instanceof Conversation
+                    && (int) ($item['conversation_id'] ?? 0) === (int) $conversation->id;
+                $samePhone = $phone !== '' && $itemPhone === $phone;
+                if (! $sameConversation && ! $samePhone) {
+                    continue;
+                }
+
+                $matched = true;
+                if ($name !== '' && $this->headlineIsOnlyPhone((string) ($item['headline'] ?? ''), $displayPhone, $phone)) {
+                    $item['headline'] = $headline;
+                    $item['title'] = $headline;
+                    $item['name'] = $headline;
+                }
+                $item['source_label'] = 'Website Lead';
+                $item['lead_id'] = $lead->id;
+                $item['check_in_url'] = route('operations.leads.intake', $lead);
+                if ($concern !== '') {
+                    $item['snippet'] = $concern;
+                }
+                if ($vehicle !== null && ! filled($item['vehicle_label'] ?? null)) {
+                    $item['vehicle_label'] = $vehicle;
+                }
+                if (! filled($item['assigned_label'] ?? null)) {
+                    $item['assigned_label'] = $ownerName;
+                }
+                $item['unread'] = true;
+                break;
+            }
+            unset($item);
+
+            if ($matched) {
+                continue;
+            }
+
+            $allItems[] = [
+                'key' => $conversation instanceof Conversation
+                    ? 'conversation:'.$conversation->id
+                    : 'lead:'.$lead->id,
+                'kind' => 'conversation',
+                'conversation_id' => $conversation?->id,
+                'lead_id' => $lead->id,
+                'lane' => $lane,
+                'lane_label' => $conversation instanceof Conversation
+                    ? $this->work->laneLabel($conversation)
+                    : 'Needs attention',
+                'headline' => $headline,
+                'title' => $headline,
+                'name' => $headline,
+                'subtitle' => $displayPhone,
+                'phone' => $displayPhone,
+                'normalized_phone' => $phone,
+                'email' => $lead->contact_email,
+                'preview' => $concern !== '' ? $concern : 'Website Lead',
+                'snippet' => $concern,
+                'unread' => true,
+                'sort_at' => $sortAt,
+                'age_label' => $this->ageLabel($lead->created_at),
+                'pressure_score' => $lane === 'needs' ? 50 : 0,
+                'customer_id' => $lead->customer_id,
+                'known_customer' => $lead->customer_id !== null,
+                'link_status' => $ownerName,
+                'channel_label' => 'Website Lead',
+                'source_label' => 'Website Lead',
+                'turn_label' => $ownerName,
+                'shop_hint' => $vehicle ?? 'No current visit',
+                'assigned_label' => $ownerName,
+                'vehicle_label' => $vehicle,
+                'check_in_url' => route('operations.leads.intake', $lead),
+                'select_url' => $conversation instanceof Conversation
+                    ? route('operations.communications.inbox', [
+                        'filter' => $filter,
+                        'conversation' => $conversation->id,
+                    ])
+                    : route('operations.communications.inbox', [
+                        'filter' => $filter,
+                        'lead' => $lead->id,
+                    ]),
+            ];
+        }
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $allItems
+     * @param  list<array<string, mixed>>  $listItems
+     * @return array<string, mixed>|null
+     */
+    private function selectItem(
+        array $allItems,
+        array $listItems,
+        ?string $selectedPublicId,
+        ?int $selectedConversationId,
+        ?int $selectedLeadId,
+    ): ?array {
+        if (filled($selectedPublicId)) {
+            foreach ($allItems as $item) {
+                if (($item['platform_conversation_public_id'] ?? null) === $selectedPublicId) {
+                    return $item;
+                }
+            }
+        }
+
+        if ($selectedConversationId) {
+            foreach ($allItems as $item) {
+                if ((int) ($item['conversation_id'] ?? 0) === $selectedConversationId) {
+                    return $item;
+                }
+            }
+        }
+
+        if ($selectedLeadId) {
+            foreach ($allItems as $item) {
+                if ((int) ($item['lead_id'] ?? 0) === $selectedLeadId) {
+                    return $item;
+                }
+            }
+        }
+
+        return $listItems[0] ?? null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $thread
+     * @param  array<string, mixed>  $selected
+     * @return array<string, mixed>|null
+     */
+    private function applyLeadThreadHints(?array $thread, array $selected): ?array
+    {
+        if ($thread === null || ! filled($selected['check_in_url'] ?? null)) {
+            return $thread;
+        }
+
+        $thread['decision']['check_in_url'] = $selected['check_in_url'];
+        if (
+            filled($selected['vehicle_label'] ?? null)
+            && is_array($thread['identity'] ?? null)
+            && ! filled($thread['identity']['vehicle_label'] ?? null)
+        ) {
+            $thread['identity']['vehicle_label'] = $selected['vehicle_label'];
+        }
+
+        return $thread;
+    }
+
+    /**
+     * @param  array<string, mixed>  $selected
+     * @param  list<array{id: int, name: string}>  $advisors
+     * @return array{thread: array<string, mixed>, context: array<string, mixed>}
+     */
+    private function coreLeadThread(array $selected, array $advisors, string $filter): array
+    {
+        $conversation = isset($selected['conversation_id'])
+            ? Conversation::query()->with('owner:id,name')->find((int) $selected['conversation_id'])
+            : null;
+        $lead = isset($selected['lead_id'])
+            ? Lead::query()->find((int) $selected['lead_id'])
+            : null;
+        $displayPhone = (string) ($selected['phone'] ?? '');
+        $headline = (string) ($selected['headline'] ?? $displayPhone);
+        $vehicle = $lead?->roughVehicleLabel() ?? ($selected['vehicle_label'] ?? null);
+        $events = [];
+
+        if ($conversation instanceof Conversation) {
+            $messages = ConversationMessage::query()
+                ->where('conversation_id', $conversation->id)
+                ->orderBy('occurred_at')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($messages as $message) {
+                $direction = $message->direction === OperationalCommunicationDirection::Outbound
+                    ? 'outbound'
+                    : ($message->direction === OperationalCommunicationDirection::Internal ? 'internal' : 'inbound');
+                $events[] = [
+                    'kind' => 'sms',
+                    'direction' => $direction,
+                    'direction_label' => match ($direction) {
+                        'outbound' => 'Sent',
+                        'internal' => 'Internal',
+                        default => 'Received',
+                    },
+                    'channel_label' => $message->channel === OperationalCommunicationChannel::Website
+                        ? 'Website Lead'
+                        : $message->channel->label(),
+                    'body' => (string) $message->body,
+                    'occurred_at' => $message->occurred_at?->toIso8601String(),
+                    'occurred_at_label' => $this->occurredLabel($message->occurred_at),
+                ];
+            }
+        }
+
+        if ($events === [] && $lead instanceof Lead && filled($lead->concern)) {
+            $events[] = [
+                'kind' => 'sms',
+                'direction' => 'inbound',
+                'direction_label' => 'Received',
+                'channel_label' => 'Website Lead',
+                'body' => (string) $lead->concern,
+                'occurred_at' => $lead->created_at?->toIso8601String(),
+                'occurred_at_label' => $this->occurredLabel($lead->created_at),
+            ];
+        }
+
+        $thread = [
+            'title' => $headline,
+            'subtitle' => $displayPhone,
+            'events' => $events,
+            'identity' => [
+                'name' => $headline,
+                'phone' => $displayPhone,
+                'email' => $lead?->contact_email ?? ($selected['email'] ?? null),
+                'known_customer' => (bool) ($selected['known_customer'] ?? false),
+                'customer_status' => ($selected['known_customer'] ?? false) ? 'Customer' : 'Unknown Customer',
+                'link_status' => (string) ($selected['assigned_label'] ?? 'Unassigned'),
+                'turn_label' => (string) ($selected['lane_label'] ?? 'Needs attention'),
+                'vehicle_label' => $vehicle,
+                'can_mark_handled' => false,
+            ],
+            'composer' => $conversation instanceof Conversation ? [
+                'kind' => 'conversation',
+                'conversation' => $conversation,
+                'display_phone' => $displayPhone,
+                'customer' => null,
+                'repair_order' => null,
+                'open_repair_orders' => collect(),
+            ] : null,
+        ];
+
+        $context = [
+            'headline' => $headline,
+            'phone' => $displayPhone,
+            'customer_id' => $conversation?->customer_id ?? $lead?->customer_id,
+            'conversation_id' => $conversation?->id,
+            'sections' => [
+                'who' => array_filter([
+                    'Name' => $headline,
+                    'Phone' => $displayPhone,
+                    'Email' => $lead?->contact_email,
+                ]),
+                'current_visit' => array_filter([
+                    'Vehicle' => $vehicle,
+                ]),
+            ],
+            'work' => [
+                'advisors' => $advisors,
+                'filter' => $filter,
+            ],
+        ];
+
+        return ['thread' => $thread, 'context' => $context];
+    }
+
+    private function headlineIsOnlyPhone(string $headline, string $displayPhone, string $normalized): bool
+    {
+        $headline = trim($headline);
+        if ($headline === '' || $headline === $displayPhone || $headline === $normalized) {
+            return true;
+        }
+
+        $digits = preg_replace('/\D+/', '', $headline) ?? '';
+
+        return $digits !== '' && ($digits === $normalized || $digits === ltrim($normalized, '1'));
     }
 
     /**

@@ -41,6 +41,8 @@ class CommunicationsWorkspaceController
                     $request->string('platform_conversation')->toString() ?: null,
                     $filter,
                     $request->string('owner')->toString() ?: 'everyone',
+                    $request->integer('conversation') ?: null,
+                    $request->integer('lead') ?: null,
                 );
 
             return view('operations.communications.workspace.inbox', [

@@ -12,8 +12,9 @@ final class CallSessionMediaLocator
 
     public function __construct(
         private readonly OutboundSmsTransport $messaging,
+        PlatformRecordingMediaSource $recordings,
     ) {
-        $this->sources = [];
+        $this->sources = [$recordings];
     }
 
     public function parse(?string $reference): ?CallSessionMediaUri
@@ -56,7 +57,25 @@ final class CallSessionMediaLocator
 
     public function playbackAvailable(): bool
     {
+        foreach ($this->sources as $source) {
+            if ($source instanceof PlatformRecordingMediaSource) {
+                return $source->configured();
+            }
+        }
+
         return false;
+    }
+
+    /**
+     * @param  list<string>  $recordingSids
+     */
+    public function primeRecordingSids(array $recordingSids): void
+    {
+        foreach ($this->sources as $source) {
+            if ($source instanceof PlatformRecordingMediaSource) {
+                $source->prime($recordingSids);
+            }
+        }
     }
 
     private function sourceFor(CallSessionMediaUri $uri): ?CallSessionMediaSource

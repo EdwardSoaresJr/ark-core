@@ -112,20 +112,28 @@
                         </div>
 
                         <div class="ops-call-library__media">
-                            @if ($row['has_voicemail'] && filled($row['voicemail_url']))
+                            @php
+                                $voicemailState = $row['voicemail_state'] ?? (! empty($row['has_voicemail']) ? 'playable' : 'none');
+                                $recordingState = $row['recording_state'] ?? (! empty($row['has_recording']) ? 'playable' : 'none');
+                            @endphp
+                            @if ($voicemailState === 'playable' && filled($row['voicemail_url'] ?? null))
                                 <div class="ops-call-library__audio-block">
                                     <span class="ops-call-library__audio-label">Voicemail</span>
                                     <audio controls preload="none" class="ops-call-library__audio" src="{{ $row['voicemail_url'] }}"></audio>
                                 </div>
+                            @elseif ($voicemailState === 'unavailable')
+                                <span class="ops-call-library__no-media">Voicemail unavailable</span>
                             @endif
-                            @if ($row['has_recording'] && filled($row['recording_url']))
+                            @if ($recordingState === 'playable' && filled($row['recording_url'] ?? null))
                                 <div class="ops-call-library__audio-block">
                                     <span class="ops-call-library__audio-label">Recording</span>
                                     <audio controls preload="none" class="ops-call-library__audio" src="{{ $row['recording_url'] }}"></audio>
                                 </div>
+                            @elseif ($recordingState === 'unavailable')
+                                <span class="ops-call-library__no-media">Recording unavailable</span>
                             @endif
-                            @if (! $row['has_voicemail'] && ! $row['has_recording'])
-                                <span class="ops-call-library__no-media">No audio</span>
+                            @if ($voicemailState === 'none' && $recordingState === 'none')
+                                <span class="ops-call-library__no-media">No recording</span>
                             @endif
                         </div>
 

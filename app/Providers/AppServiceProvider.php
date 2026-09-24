@@ -24,6 +24,7 @@ use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
 use App\Ark\Operations\Parts\PartsTechHttpClient;
 use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
 use App\Ark\Platform\Parts\PartsTechPlatformGateway;
+use App\Ark\Platform\Voice\PlatformRecordingClient;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
@@ -73,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
             ]);
         }
 
+        $this->app->scoped(PlatformRecordingClient::class);
         $this->app->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {
             $resolver = $app->make(PartsTechCredentialsResolver::class);
             $credentials = $resolver->forUser(auth()->user());

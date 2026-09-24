@@ -20,7 +20,7 @@ class CallRecordingPlaybackController
             : $callSession->recording_url;
 
         if ($url === null || $url === '') {
-            abort(404);
+            abort(404, $kind === 'voicemail' ? 'No voicemail.' : 'No recording.');
         }
 
         $path = $this->media->streamPath($url);

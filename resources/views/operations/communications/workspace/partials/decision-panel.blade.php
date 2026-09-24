@@ -22,6 +22,12 @@
         <p class="ops-comms-inbox__decision-next">{{ $prompt }}</p>
     @endif
 
+    @if (filled($decision['check_in_url'] ?? null))
+        <div class="ops-comms-inbox__decision-actions">
+            <a href="{{ $decision['check_in_url'] }}" class="ops-comms-inbox__decision-btn ops-comms-inbox__decision-btn--primary">Check In</a>
+        </div>
+    @endif
+
     @if (is_array($work) && filled($work['url'] ?? null) && $lane !== 'resolved')
         <div class="ops-comms-inbox__decision-actions">
             <a href="#comms-thread-composer" class="ops-comms-inbox__decision-btn ops-comms-inbox__decision-btn--primary">Reply</a>
