@@ -1,5 +1,15 @@
 import { arkEchoEnabled, getArkEcho } from './ark-echo';
 import { blockedPanelIds, dirtyFormsIn, draftMarkersIn, inputIsInsideDraft, versionToSubmit } from './ark-worksheet-draft';
+import {
+    flushDeferredWorksheetRecovery,
+    heartbeatShouldReconcileVersion,
+    noteWorksheetSocketEvent as applyWorksheetSocketEvent,
+    queueWorksheetRecovery,
+    SOCKET_LOSS_EVENTS,
+    visibilityNeedsRecovery,
+    WORKSHEET_HEARTBEAT_WITH_SOCKET_MS,
+    WORKSHEET_RECOVERY_COALESCE_MS,
+} from './ark-worksheet-recovery';
 
 const sessionStorageKey = (repairOrderId) => `ark:ro:${repairOrderId}:session`;
 
@@ -57,6 +67,14 @@ export const arkWorksheetCollaboration = (config = {}) => ({
     conflictFragment: config.conflictFragment ?? 'estimate-lines',
     currentUserId: config.currentUserId ?? null,
     localEstimateWrite: false,
+    socketPhase: 'initial',
+    socketRecoveryBound: false,
+    worksheetDocumentHidden: false,
+    worksheetRecoveryTimer: null,
+    worksheetRecoveryInFlight: false,
+    worksheetRecoveryDeferred: false,
+    worksheetRecoveryFollowUp: false,
+    worksheetRecoveryBusyWrapped: false,
 
     isSelfAuthoredEstimateChange(payload) {
         const actorId = Number.parseInt(String(payload?.actor_id ?? payload?.conflict?.actor_id ?? ''), 10);
@@ -97,13 +115,26 @@ export const arkWorksheetCollaboration = (config = {}) => ({
 
         this.heartbeatTimer = window.setInterval(
             () => this.sendWorksheetHeartbeat(),
-            liveSocket ? 90_000 : 10_000,
+            liveSocket ? WORKSHEET_HEARTBEAT_WITH_SOCKET_MS : 10_000,
         );
 
+        this.wrapWorksheetBusyForRecovery();
+        this.worksheetDocumentHidden = document.hidden;
+
         document.addEventListener('visibilitychange', () => {
-            if (! document.hidden) {
-                this.sendWorksheetHeartbeat();
+            const wasHidden = this.worksheetDocumentHidden;
+            this.worksheetDocumentHidden = document.hidden;
+
+            if (! visibilityNeedsRecovery(wasHidden, document.hidden)) {
+                return;
             }
+
+            this.requestWorksheetRecovery();
+            this.sendWorksheetHeartbeat();
+        });
+
+        window.addEventListener('online', () => {
+            this.requestWorksheetRecovery();
         });
 
         window.addEventListener('pagehide', () => {
@@ -132,10 +163,68 @@ export const arkWorksheetCollaboration = (config = {}) => ({
         this.realtimeChannel.listen('.financial.changed', (payload) => {
             this.handleRemoteFinancialChange(payload);
         });
+        this.bindWorksheetSocketRecovery(echo);
+    },
+
+    wrapWorksheetBusyForRecovery() {
+        if (this.worksheetRecoveryBusyWrapped || typeof this.endWorksheetBusy !== 'function') {
+            return;
+        }
+
+        const endBusy = this.endWorksheetBusy.bind(this);
+        this.worksheetRecoveryBusyWrapped = true;
+        this.endWorksheetBusy = (...args) => {
+            const result = endBusy(...args);
+            flushDeferredWorksheetRecovery(this);
+
+            return result;
+        };
+    },
+
+    scheduleRecoveryTimer(callback) {
+        return window.setTimeout(callback, WORKSHEET_RECOVERY_COALESCE_MS);
+    },
+
+    bindWorksheetSocketRecovery(echo) {
+        const connection = echo?.connector?.pusher?.connection;
+
+        if (! connection || this.socketRecoveryBound) {
+            return;
+        }
+
+        this.socketRecoveryBound = true;
+
+        if (connection.state === 'connected') {
+            this.socketPhase = 'live';
+        }
+
+        connection.bind('connected', () => {
+            this.noteWorksheetSocketEvent('connected');
+        });
+
+        SOCKET_LOSS_EVENTS.forEach((event) => {
+            connection.bind(event, () => {
+                this.noteWorksheetSocketEvent(event);
+            });
+        });
+    },
+
+    noteWorksheetSocketEvent(event) {
+        applyWorksheetSocketEvent(this, event);
+    },
+
+    requestWorksheetRecovery() {
+        queueWorksheetRecovery(this);
     },
 
     async handleRemoteFinancialChange(payload) {
         if (typeof this.refreshScope !== 'function') {
+            return;
+        }
+
+        if (this.worksheetRecoveryTimer || this.worksheetRecoveryInFlight) {
+            this.worksheetRecoveryFollowUp = true;
+
             return;
         }
 
@@ -165,6 +254,11 @@ export const arkWorksheetCollaboration = (config = {}) => ({
         if (this.financialRefreshTimer) {
             window.clearTimeout(this.financialRefreshTimer);
             this.financialRefreshTimer = null;
+        }
+
+        if (this.worksheetRecoveryTimer) {
+            window.clearTimeout(this.worksheetRecoveryTimer);
+            this.worksheetRecoveryTimer = null;
         }
 
         if (! this.broadcastChannel) {
@@ -218,6 +312,17 @@ export const arkWorksheetCollaboration = (config = {}) => ({
             || 'This estimate changed while you were working. Refresh the worksheet before saving.';
 
         window.ARK?.workspace?.refreshActivity?.();
+
+        if (this.worksheetRecoveryTimer || this.worksheetRecoveryInFlight) {
+            this.worksheetRecoveryFollowUp = true;
+
+            if (this.worksheetHasDraft()) {
+                this.remoteDrift = true;
+                this.versionDriftNotice = message;
+            }
+
+            return;
+        }
 
         if (this.worksheetBusyPending || this.worksheetSaving) {
             this.remoteDrift = true;
@@ -410,6 +515,10 @@ export const arkWorksheetCollaboration = (config = {}) => ({
             const payload = await response.json();
             this.presenceMessage = payload.presence_message || '';
             this.worksheetLeaseValid = payload.lease_valid !== false;
+
+            if (! heartbeatShouldReconcileVersion(this)) {
+                return;
+            }
 
             if (payload.version_drifted) {
                 await this.handleRemoteEstimateChange({
