@@ -19,6 +19,37 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 
+test('same user on a second session cannot overwrite with a stale estimate version', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    [$repairOrder, $concern, $line] = concurrencyRepairOrderFixture();
+    $openedVersion = app(RepairOrderConcurrency::class)->openedVersion($repairOrder);
+
+    $this->actingAs($advisor)->patch(route('operations.repair-orders.lines.update', [$repairOrder, $line]), [
+        RepairOrderConcurrency::FIELD => $openedVersion,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Labor->value,
+        'description' => 'Session A labor',
+        'quantity' => '1.00',
+        'unit_price' => '120.00',
+    ])->assertRedirect();
+
+    expect($repairOrder->fresh()->estimate_version)->toBe($openedVersion + 1);
+
+    $this->actingAs($advisor)->patchJson(route('operations.repair-orders.lines.update', [$repairOrder, $line]), [
+        RepairOrderConcurrency::FIELD => $openedVersion,
+        'repair_order_concern_id' => $concern->id,
+        'type' => RepairOrderLineType::Labor->value,
+        'description' => 'Session B stale labor',
+        'quantity' => '1.00',
+        'unit_price' => '120.00',
+    ])->assertStatus(409)
+        ->assertJsonPath('conflict', true);
+
+    expect($line->fresh()->description)->toBe('Session A labor');
+});
+
 test('stale estimate line update is rejected after another advisor changes the repair order', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);

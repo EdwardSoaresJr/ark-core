@@ -16,7 +16,7 @@ class InvoiceDocumentEmailController
         InvoiceDocumentEmailDelivery $delivery,
         RepairOrderConcurrency $concurrency,
     ): RedirectResponse {
-        $concurrency->guard($request, $repairOrder);
+        $concurrency->guardWithoutHolding($request, $repairOrder);
 
         $data = $request->validate([
             'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255'],

@@ -7,6 +7,7 @@ use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\UpdateConcernDispositionAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ final class MobileConcernDispositionController
         MobileStaffAccess $access,
         UpdateConcernDispositionAction $updateDisposition,
         MobileRepairOrderProjection $projection,
+        RepairOrderConcurrency $concurrency,
     ): JsonResponse {
         $user = $request->user();
 
@@ -35,6 +37,7 @@ final class MobileConcernDispositionController
         abort_unless((int) $concern->repair_order_id === (int) $repairOrder->id, 404);
 
         $repairOrder->ensureOpenForEditing();
+        $concurrency->guard($request, $repairOrder);
 
         $data = $request->validate([
             'disposition' => ['required', Rule::enum(RepairOrderConcernDisposition::class)],

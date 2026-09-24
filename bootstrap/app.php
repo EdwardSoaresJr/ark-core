@@ -20,6 +20,7 @@ use App\Http\Middleware\PreventPortalSearchIndexing;
 use App\Http\Middleware\RecordStaffFrontDoorLanding;
 use App\Ark\Install\Middleware\RedirectUninstalledToSetup;
 use App\Ark\Install\Middleware\UseInstallerRuntime;
+use App\Http\Middleware\CommitRepairOrderEstimateLock;
 use App\Http\Middleware\ConfigureSessionCookieDomain;
 use App\Http\Middleware\RedirectCrossSurfaceRequests;
 use App\Http\Middleware\SyncEcosystemDisplayThemeCookie;
@@ -96,6 +97,11 @@ return Application::configure(basePath: dirname(__DIR__))
             TrackStaffCallPresence::class,
             EnsureAdvisorCommsCleared::class,
             SyncEcosystemDisplayThemeCookie::class,
+            CommitRepairOrderEstimateLock::class,
+        ]);
+
+        $middleware->api(append: [
+            CommitRepairOrderEstimateLock::class,
         ]);
 
         $middleware->alias([

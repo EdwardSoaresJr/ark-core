@@ -6,6 +6,7 @@ use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\RepairOrders\AuthorizationExceptionReason;
 use App\Ark\Operations\RepairOrders\RecordAuthorizationExceptionAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,10 +20,12 @@ final class MobileAuthorizationExceptionController
         RepairOrderConcern $concern,
         MobileStaffAccess $access,
         RecordAuthorizationExceptionAction $recordException,
+        RepairOrderConcurrency $concurrency,
     ): JsonResponse {
         abort_unless($access->canViewRepairOrder($request->user(), $repairOrder), 403);
         abort_unless((int) $concern->repair_order_id === (int) $repairOrder->id, 404);
         $repairOrder->ensureOpenForEditing();
+        $concurrency->guard($request, $repairOrder);
 
         $data = $request->validate([
             'reason' => ['required', Rule::enum(AuthorizationExceptionReason::class)],

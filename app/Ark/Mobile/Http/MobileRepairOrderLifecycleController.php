@@ -6,6 +6,7 @@ use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Mobile\RepairOrderWorkspaceProjection;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
 use App\Ark\Operations\RepairOrders\RepairOrderLostReason;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -31,6 +32,7 @@ final class MobileRepairOrderLifecycleController
         MobileStaffAccess $access,
         RepairOrderLifecycleTransition $lifecycle,
         RepairOrderWorkspaceProjection $workspace,
+        RepairOrderConcurrency $concurrency,
     ): JsonResponse {
         $user = $request->user();
 
@@ -38,6 +40,7 @@ final class MobileRepairOrderLifecycleController
         abort_unless($access->canChangeRepairOrderLifecycle($user, $repairOrder), 403);
 
         $repairOrder->ensureOpenForEditing();
+        $concurrency->guard($request, $repairOrder);
 
         $data = $request->validate([
             'status' => ['required', 'string', 'max:120'],

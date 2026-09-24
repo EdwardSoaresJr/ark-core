@@ -88,6 +88,7 @@ final class RepairOrderWorkspaceProjection
             : null;
 
         return [
+            'estimate_version' => (int) $repairOrder->estimate_version,
             'profile' => $profile,
             'question' => $this->workspaceQuestion($profile),
             'sections' => $sections,

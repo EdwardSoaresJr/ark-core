@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class RepairOrderEstimateVersion
 {
@@ -17,10 +18,13 @@ class RepairOrderEstimateVersion
         $repairOrder = $repairOrder->fresh();
 
         if (RepairOrderEstimateBroadcast::enabled()) {
-            rescue(
-                fn () => RepairOrderEstimateChanged::dispatch($repairOrder),
-                report: false,
-            );
+            $committed = $repairOrder->fresh();
+            DB::afterCommit(function () use ($committed): void {
+                rescue(
+                    fn () => RepairOrderEstimateChanged::dispatch($committed),
+                    report: false,
+                );
+            });
         }
 
         return $repairOrder;

@@ -19,7 +19,7 @@ final class RepairOrderPaymentCaptureController
         EstimateTotalsCalculator $totals,
         RepairOrderConcurrency $concurrency,
     ): RedirectResponse|JsonResponse {
-        $concurrency->guard($request, $repairOrder);
+        $concurrency->guardWithoutHolding($request, $repairOrder);
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999.99'],

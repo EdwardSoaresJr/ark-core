@@ -6,6 +6,7 @@ use App\Ark\Mobile\MobileRepairOrderProjection;
 use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 use App\Ark\Operations\RepairOrders\UpdateConcernProductionStatusAction;
 use Illuminate\Http\JsonResponse;
@@ -21,12 +22,14 @@ final class MobileConcernProductionStatusController
         MobileStaffAccess $access,
         MobileRepairOrderProjection $projection,
         UpdateConcernProductionStatusAction $updateProductionStatus,
+        RepairOrderConcurrency $concurrency,
     ): JsonResponse {
         abort_unless($access->canViewRepairOrder($request->user(), $repairOrder), 403);
         abort_unless($access->canUpdateConcernProductionStatus($request->user(), $repairOrder), 403);
         abort_unless((int) $concern->repair_order_id === (int) $repairOrder->id, 404);
 
         $repairOrder->ensureOpenForEditing();
+        $concurrency->guard($request, $repairOrder);
 
         $data = $request->validate([
             'production_status' => ['required', Rule::enum(ScopeProductionStatus::class)],

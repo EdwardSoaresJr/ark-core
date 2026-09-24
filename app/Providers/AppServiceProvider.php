@@ -25,6 +25,7 @@ use App\Ark\Operations\Parts\PartsTechHttpClient;
 use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
 use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(ShopIntegrationCredentials::class, fn (): ShopIntegrationCredentials => ShopIntegrationCredentials::forCurrentShop());
         $this->app->bind(OutboundSmsTransport::class, PlatformOutboundSmsTransport::class);
         $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);
+        $this->app->scoped(RepairOrderConcurrency::class);
         $this->app->scoped(RepairOrderStatusCatalog::class);
         $this->app->scoped(JobBoardLaneCatalog::class);
 
@@ -158,6 +160,12 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('testing')) {
             \Tests\ParallelTestingConfiguration::register();
         }
+
+        $this->app->terminating(function (): void {
+            if ($this->app->resolved(RepairOrderConcurrency::class)) {
+                $this->app->make(RepairOrderConcurrency::class)->abandonIfStillHolding();
+            }
+        });
 
         PublicRootUrlConfigurator::apply();
 

@@ -18,7 +18,7 @@ class EstimateDocumentEmailController
         RepairOrderConcurrency $concurrency,
         RecordEstimateSentWithMissingVinAction $recordMissingVinOverride,
     ): RedirectResponse {
-        $concurrency->guard($request, $repairOrder);
+        $concurrency->guardWithoutHolding($request, $repairOrder);
 
         if ($repairOrder->lines()->doesntExist()) {
             throw ValidationException::withMessages([

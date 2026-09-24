@@ -274,7 +274,7 @@ test('stale estimate version token is rejected when another advisor changed the 
     expect(RepairOrderLine::query()->where('description', 'Stale token part line')->exists())->toBeFalse();
 });
 
-test('same advisor sequential edits succeed even when the version token lags', function () {
+test('same advisor stale version is rejected when a second session still holds the old token', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
@@ -298,9 +298,11 @@ test('same advisor sequential edits succeed even when the version token lags', f
         'description' => 'Second line with stale token',
         'quantity' => '1.00',
         'unit_price' => '12.00',
-    ])->assertRedirect();
+    ])->assertStatus(409)
+        ->assertJsonPath('conflict', true);
 
-    expect(RepairOrderLine::query()->where('description', 'Second line with stale token')->exists())->toBeTrue();
+    expect(RepairOrderLine::query()->where('description', 'Second line with stale token')->exists())->toBeFalse()
+        ->and(RepairOrderLine::query()->where('description', 'First labor line')->exists())->toBeTrue();
 });
 
 test('part lines ignore zero sell placeholder when matrix pricing applies', function () {

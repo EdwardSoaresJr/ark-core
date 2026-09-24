@@ -6,6 +6,7 @@ use App\Ark\Mobile\MobileRepairOrderProjection;
 use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\StoreRepairOrderConcernNoteLine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,10 +20,12 @@ final class MobileConcernNoteStoreController
         MobileStaffAccess $access,
         StoreRepairOrderConcernNoteLine $store,
         MobileRepairOrderProjection $projection,
+        RepairOrderConcurrency $concurrency,
     ): JsonResponse {
         abort_unless($access->canViewRepairOrder($request->user(), $repairOrder), 403);
         abort_unless($access->canRecordFinding($request->user(), $repairOrder), 403);
         abort_unless((int) $concern->repair_order_id === (int) $repairOrder->id, 404);
+        $concurrency->guard($request, $repairOrder);
 
         $data = $request->validate([
             'description' => ['required', 'string', 'max:2000'],

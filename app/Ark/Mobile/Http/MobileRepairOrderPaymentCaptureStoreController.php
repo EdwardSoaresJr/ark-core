@@ -42,7 +42,7 @@ final class MobileRepairOrderPaymentCaptureStoreController
             403,
         );
 
-        $concurrency->guard($request, $repairOrder);
+        $concurrency->guardWithoutHolding($request, $repairOrder);
 
         if (blank($data['device_ref'])) {
             return response()->json(['message' => 'Select a terminal device.'], 422);

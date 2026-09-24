@@ -30,7 +30,7 @@ class SendReviewRequestController
             403,
         );
 
-        $concurrency->guard($request, $repairOrder);
+        $concurrency->guardWithoutHolding($request, $repairOrder);
 
         $data = $request->validate([
             'delivery' => ['required', Rule::enum(OutboundDeliveryMode::class)],
@@ -62,6 +62,8 @@ class SendReviewRequestController
         }
 
         $status = $result['status_label'];
+
+        $concurrency->guard($request, $repairOrder);
 
         if ($request->boolean('close_paid') && ! $repairOrder->fresh()->isTerminal()) {
             $lifecycle->move(

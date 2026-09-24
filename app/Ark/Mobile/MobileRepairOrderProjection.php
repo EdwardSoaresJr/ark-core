@@ -47,6 +47,7 @@ final class MobileRepairOrderProjection
             'id' => $repairOrder->repair_order_id,
             'repair_order_id' => $repairOrder->repair_order_id,
             'status' => $status->value,
+            'estimate_version' => (int) $repairOrder->estimate_version,
             'status_label' => $status->label(),
             'status_tone' => MobileRepairOrderStatusTone::forStatus($status),
             'concern_summary' => $repairOrder->concern_summary,
