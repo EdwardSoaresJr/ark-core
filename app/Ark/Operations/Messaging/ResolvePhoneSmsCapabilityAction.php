@@ -100,12 +100,18 @@ class ResolvePhoneSmsCapabilityAction
         );
     }
 
-    public function assertCapableOrFail(string $phone): PhoneSmsCapability
+    public function assertCapableOrFail(string $phone): ?PhoneSmsCapability
     {
-        $capability = $this->execute($phone);
+        $normalized = PhoneNumber::normalize($phone);
+
+        if ($normalized === null || strlen($normalized) !== 10) {
+            throw new \RuntimeException('The phone number on file is incomplete or invalid.');
+        }
+
+        $capability = PhoneSmsCapability::findByNormalizedPhone($normalized);
 
         if ($capability === null) {
-            throw new \RuntimeException('Phone number is invalid.');
+            return null;
         }
 
         if (! $capability->sms_capable) {
