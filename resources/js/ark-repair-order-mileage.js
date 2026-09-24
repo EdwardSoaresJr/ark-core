@@ -63,9 +63,20 @@ export const arkRepairOrderMileage = (config) => ({
     displayOut() {
         return formatMileageDisplay(this.savedMileageOut);
     },
+    syncDraftMarker() {
+        const dirtyIn = this.editingIn && normalizeMileage(this.mileageIn) !== this.savedMileageIn;
+        const dirtyOut = this.editingOut && normalizeMileage(this.mileageOut) !== this.savedMileageOut;
+
+        if (dirtyIn || dirtyOut) {
+            this.$root.dataset.worksheetDraft = '1';
+        } else {
+            delete this.$root.dataset.worksheetDraft;
+        }
+    },
     openIn() {
         this.editingIn = true;
         this.error = null;
+        this.syncDraftMarker();
 
         this.$nextTick(() => this.$refs.mileageInInput?.focus());
     },
@@ -79,11 +90,15 @@ export const arkRepairOrderMileage = (config) => ({
         this.mileageIn = formatMileageInput(this.savedMileageIn);
         this.editingIn = false;
         this.error = null;
+        this.syncDraftMarker();
+        worksheetRootData()?.reconcileIfDraftCleared?.();
     },
     cancelOut() {
         this.mileageOut = formatMileageInput(this.savedMileageOut);
         this.editingOut = false;
         this.error = null;
+        this.syncDraftMarker();
+        worksheetRootData()?.reconcileIfDraftCleared?.();
     },
     async finishIn() {
         await this.save();

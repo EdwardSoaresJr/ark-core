@@ -1,3 +1,5 @@
+import { blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
+
 const WORKSHEET_FETCH_INIT = {
     credentials: 'same-origin',
     cache: 'no-store',
@@ -403,6 +405,76 @@ export const arkWorksheetContinuity = (config = {}) => {
             flash.classList.add('ops-worksheet-status-flash--pulse');
         },
 
+        freshCounterpart(doc, node) {
+            if (node?.id) {
+                const byId = doc.getElementById(node.id);
+
+                if (byId) {
+                    return byId;
+                }
+            }
+
+            if (typeof node?.matches === 'function' && node.matches('form')) {
+                const kind = node.getAttribute('data-workspace-modal-form');
+                const action = node.getAttribute('action');
+
+                if (kind && action) {
+                    return [...doc.querySelectorAll('form')].find((form) => {
+                        return form.getAttribute('data-workspace-modal-form') === kind
+                            && form.getAttribute('action') === action;
+                    }) ?? null;
+                }
+            }
+
+            return null;
+        },
+
+        replaceDiscardedDraft(doc) {
+            const discarded = this.discardingDraft;
+
+            if (! discarded?.isConnected) {
+                return 0;
+            }
+
+            const drafts = draftNodesIn(document);
+            const targets = [discarded];
+            const surfaceId = discarded.getAttribute?.('data-worksheet-surface');
+            const surface = surfaceId ? document.getElementById(surfaceId) : null;
+
+            if (surface && surface !== discarded) {
+                targets.push(surface);
+            }
+
+            let replaced = 0;
+
+            for (const current of targets) {
+                if (! current.isConnected || ! cancelWouldReplace(current, drafts, discarded)) {
+                    continue;
+                }
+
+                const fresh = this.freshCounterpart(doc, current);
+
+                if (! fresh) {
+                    continue;
+                }
+
+                try {
+                    if (window.Alpine?.destroyTree) {
+                        window.Alpine.destroyTree(current);
+                    }
+
+                    const next = fresh.cloneNode(true);
+                    current.replaceWith(next);
+                    window.Alpine?.initTree?.(next);
+                    replaced += 1;
+                } catch (error) {
+                    console.error('[ARK worksheet] Failed to replace discarded draft', current.id || current.getAttribute?.('action'), error);
+                }
+            }
+
+            return replaced;
+        },
+
         replaceFromDocument(doc, anchor) {
             const scopedTarget = anchor?.dataset.refreshScope
                 ? document.getElementById(this.resolveRefreshScope(anchor.dataset.refreshScope))
@@ -412,10 +484,17 @@ export const arkWorksheetContinuity = (config = {}) => {
                 ...this.continuityPanelIds,
                 'estimate-total-panel',
             ]);
+            const blocked = this.forceRefreshDrafts
+                ? new Set()
+                : blockedPanelIds(document, ids, this.discardingDraft ?? null);
             const missing = [];
             let replaced = 0;
 
             ids.forEach((id) => {
+                if (blocked.has(id)) {
+                    return;
+                }
+
                 const current = document.getElementById(id);
                 const fresh = doc.getElementById(id);
 
@@ -444,6 +523,10 @@ export const arkWorksheetContinuity = (config = {}) => {
                     missing.push(id);
                 }
             });
+
+            if (! this.forceRefreshDrafts) {
+                replaced += this.replaceDiscardedDraft(doc);
+            }
 
             // DOM baselines reset - sticky dirty from before refresh must re-check forms.
             if (typeof window.ARK?.workspace?.syncDirty === 'function') {
@@ -582,7 +665,14 @@ export const arkWorksheetContinuity = (config = {}) => {
 
                 this.replaceFromDocument(doc, anchor);
                 this.syncEstimateVersion(doc);
-                this.clearStaleNotice();
+
+                if (typeof this.worksheetHasDraft !== 'function' || ! this.worksheetHasDraft()) {
+                    this.clearStaleNotice();
+
+                    if (typeof this.remoteDrift !== 'undefined') {
+                        this.remoteDrift = false;
+                    }
+                }
                 this.restoreOpenState(anchor);
                 this.restoreAnchor(anchorId, anchorTop);
                 this.restoreFocus(focusTarget);
@@ -764,9 +854,10 @@ export const arkWorksheetContinuity = (config = {}) => {
             try {
                 const body = new FormData(form);
                 const versionField = this.estimateVersionField ?? 'opened_estimate_version';
+                const token = versionToSubmit(form, this.openedEstimateVersion, versionField);
 
-                if (this.openedEstimateVersion) {
-                    body.set(versionField, String(this.openedEstimateVersion));
+                if (token !== '') {
+                    body.set(versionField, token);
                 }
 
                 const response = await fetch(form.action, {
@@ -791,7 +882,10 @@ export const arkWorksheetContinuity = (config = {}) => {
                 if (response.status === 409) {
                     this._pendingDragonRewrite = null;
                     await this.applyWorksheetConflict(response);
-                    this.surfaceWorksheetMessage("Couldn't save. Retry", { tone: 'error' });
+                    this.surfaceWorksheetMessage(
+                        this.versionDriftNotice || 'This repair order changed somewhere else. What you typed is still here.',
+                        { tone: 'error' },
+                    );
                     window.dispatchEvent(new CustomEvent('ark-workspace-modal-save-failed'));
 
                     return false;

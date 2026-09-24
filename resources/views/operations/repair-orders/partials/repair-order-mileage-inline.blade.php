@@ -19,6 +19,7 @@
         mileageOut: @js($repairOrder->mileage_out),
         legacyMileageIn: @js($legacyMileageIn),
     })"
+    x-effect="syncDraftMarker()"
 >
     <div class="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-x-2 text-xs leading-4">
         <dt class="font-semibold text-slate-500">Mileage</dt>

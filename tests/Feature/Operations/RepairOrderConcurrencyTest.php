@@ -164,8 +164,10 @@ test('review renders estimate version token and collaboration hooks', function (
         ->assertSee(RepairOrderConcurrency::FIELD)
         ->assertSee('data-worksheet-root')
         ->assertSee('arkWorksheetContinuity')
-        ->assertSee('estimate-details')
-        ->assertSee('estimate-review-rail')
+        ->assertSee('id="estimate-lines"', false)
+        ->assertSee('id="review-toolbar"', false)
+        ->assertSee('id="estimate-builder-rail"', false)
+        ->assertSee('ops-review-rail--pinned', false)
         ->assertSee('worksheet-sessions');
 });
 

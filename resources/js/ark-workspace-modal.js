@@ -2,6 +2,8 @@
  * Repair Order authoring chrome - advisors see task titles only (Add Work, Edit Labor).
  * Presentation stays on the Builder; this modal authors through existing worksheet continuity.
  */
+import { adoptRenderedBaseline } from './ark-worksheet-draft';
+import { formHasChanges } from './ark-form-unsaved';
 import { arkSelectRepairOrderWorkspaceTab } from './ark-ro-workspace-tabs';
 
 function ensureBuilderTabBeforeModalOpen(callback) {
@@ -476,6 +478,9 @@ export function arkWorkspaceModal(config = {}) {
                 this.$nextTick(() => {
                     this.syncLineCreateForm();
                     this.syncDeleteAvailability();
+                    requestAnimationFrame(() => {
+                        adoptRenderedBaseline(this.activeForm());
+                    });
 
                     if (this.context?.autoGenerate) {
                         const auto = this.context.autoGenerate;
@@ -781,25 +786,7 @@ export function arkWorkspaceModal(config = {}) {
         },
 
         formIsDirty(form) {
-            if (! (form instanceof HTMLFormElement)) {
-                return false;
-            }
-
-            return [...form.elements].some((el) => {
-                if (! (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) {
-                    return false;
-                }
-
-                if (el.type === 'hidden' || el.disabled || el.name === '' || el.name === '_token') {
-                    return false;
-                }
-
-                if (el.type === 'checkbox' || el.type === 'radio') {
-                    return el.checked !== el.defaultChecked;
-                }
-
-                return el.value !== el.defaultValue;
-            });
+            return formHasChanges(form);
         },
 
         requestClose() {
@@ -863,6 +850,10 @@ export function arkWorkspaceModal(config = {}) {
                 return;
             }
 
+            const worksheet = this.worksheetRoot();
+            const discarded = this.activeForm();
+            const drifted = Boolean(worksheet?.remoteDrift);
+
             this.open = false;
             this.clearDeleteConfirm();
             this.canDeleteLine = false;
@@ -882,6 +873,10 @@ export function arkWorkspaceModal(config = {}) {
                     invokeEl.focus();
                 }
             });
+
+            if (drifted && typeof worksheet?.reconcileAfterDraftDiscard === 'function') {
+                worksheet.reconcileAfterDraftDiscard(discarded);
+            }
         },
 
         onEscape() {

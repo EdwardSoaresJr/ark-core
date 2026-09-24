@@ -371,9 +371,11 @@
         x-cloak
     >
         <form
+            id="workspace-concern-narrative-{{ $concern->id }}"
             method="POST"
             action="{{ route('operations.repair-orders.concerns.update', [$repairOrder, $concern]) }}"
             data-workspace-modal-form="concern-narrative"
+            data-worksheet-surface="concern-narrative-{{ $concern->id }}"
             data-refresh-scope="worksheet"
             data-saving-label="Saving…"
             @submit.prevent="submitWorksheetForm($event)"

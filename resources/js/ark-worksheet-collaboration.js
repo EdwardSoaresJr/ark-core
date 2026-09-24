@@ -1,4 +1,5 @@
 import { arkEchoEnabled, getArkEcho } from './ark-echo';
+import { blockedPanelIds, dirtyFormsIn, draftMarkersIn, inputIsInsideDraft, versionToSubmit } from './ark-worksheet-draft';
 
 const sessionStorageKey = (repairOrderId) => `ark:ro:${repairOrderId}:session`;
 
@@ -14,16 +15,20 @@ export const resolveWorksheetSessionToken = (repairOrderId) => {
     return token;
 };
 
-export const syncEstimateVersionInputs = (fieldName, version) => {
+export const syncEstimateVersionInputs = (fieldName, version, root = document) => {
     if (! fieldName || version === undefined || version === null) {
         return;
     }
 
-    document
-        .querySelectorAll(`input[name="${CSS.escape(fieldName)}"]`)
-        .forEach((input) => {
-            input.value = String(version);
-        });
+    const scope = root ?? document;
+
+    scope.querySelectorAll(`input[name="${CSS.escape(fieldName)}"]`).forEach((input) => {
+        if (inputIsInsideDraft(input)) {
+            return;
+        }
+
+        input.value = String(version);
+    });
 };
 
 export const arkWorksheetCollaboration = (config = {}) => ({
@@ -46,6 +51,9 @@ export const arkWorksheetCollaboration = (config = {}) => ({
     financialRefreshTimer: null,
     staleNoticeStorageKey: `ark:repair-order:${config.repairOrderId}:stale-notice`,
     staleNotice: '',
+    remoteDrift: false,
+    forceRefreshDrafts: false,
+    discardingDraft: null,
     conflictFragment: config.conflictFragment ?? 'estimate-lines',
     currentUserId: config.currentUserId ?? null,
     localEstimateWrite: false,
@@ -138,7 +146,7 @@ export const arkWorksheetCollaboration = (config = {}) => ({
         this.financialRefreshTimer = window.setTimeout(async () => {
             this.financialRefreshTimer = null;
 
-            if (this.isWorksheetEditActive()) {
+            if (this.worksheetBusyPending || this.worksheetSaving) {
                 return;
             }
 
@@ -167,16 +175,13 @@ export const arkWorksheetCollaboration = (config = {}) => ({
         this.realtimeChannel = null;
     },
 
+    worksheetHasDraft() {
+        return blockedPanelIds(document, this.continuityPanelIds ?? []).size > 0
+            || blockedPanelIds(document, [this.worksheetScopeId ?? 'estimate-lines']).size > 0;
+    },
+
     isWorksheetEditActive() {
-        if (this.worksheetBusyPending || this.worksheetSaving) {
-            return true;
-        }
-
-        if (new URL(window.location.href).searchParams.has('editing_line')) {
-            return true;
-        }
-
-        return Boolean(document.querySelector('form[id^="line-update-"]'));
+        return Boolean(this.worksheetBusyPending || this.worksheetSaving || this.worksheetHasDraft());
     },
 
     markEstimateRendered(version) {
@@ -214,14 +219,21 @@ export const arkWorksheetCollaboration = (config = {}) => ({
 
         window.ARK?.workspace?.refreshActivity?.();
 
-        if (this.isWorksheetEditActive()) {
+        if (this.worksheetBusyPending || this.worksheetSaving) {
+            this.remoteDrift = true;
             this.versionDriftNotice = message;
 
             return;
         }
 
+        if (this.worksheetHasDraft()) {
+            this.remoteDrift = true;
+            this.versionDriftNotice = message;
+        }
+
         if (typeof this.refreshWorksheet !== 'function') {
             this.versionDriftNotice = message;
+            this.remoteDrift = true;
 
             return;
         }
@@ -242,10 +254,16 @@ export const arkWorksheetCollaboration = (config = {}) => ({
                 return;
             }
 
-            if (this.isWorksheetEditActive()) {
+            if (this.worksheetBusyPending || this.worksheetSaving) {
+                this.remoteDrift = true;
                 this.versionDriftNotice = message;
 
                 return;
+            }
+
+            if (this.worksheetHasDraft()) {
+                this.remoteDrift = true;
+                this.versionDriftNotice = message;
             }
 
             await this.refreshWorksheet(
@@ -254,12 +272,58 @@ export const arkWorksheetCollaboration = (config = {}) => ({
             );
             await this.refreshLoadedFinancialTab();
 
-            this.clearStaleNotice();
+            if (this.worksheetHasDraft()) {
+                this.remoteDrift = true;
+                this.versionDriftNotice = message;
+            }
         }, 150);
+    },
+
+    async reconcileAfterDraftDiscard(discarded = null) {
+        this.discardingDraft = discarded;
+        this.forceRefreshDrafts = discarded == null;
+
+        try {
+            if (typeof this.refreshWorksheet === 'function') {
+                await this.refreshWorksheet(
+                    window.location.href.split('#')[0],
+                    document.getElementById(this.worksheetScopeId ?? this.conflictFragment ?? 'estimate-lines'),
+                );
+            }
+
+            await this.refreshLoadedFinancialTab();
+        } finally {
+            this.discardingDraft = null;
+            this.forceRefreshDrafts = false;
+        }
+
+        if (! this.worksheetHasDraft()) {
+            this.remoteDrift = false;
+            this.clearStaleNotice();
+        }
+    },
+
+    reconcileIfDraftCleared() {
+        if (! this.remoteDrift || typeof this.refreshWorksheet !== 'function') {
+            return;
+        }
+
+        this.refreshWorksheet(
+            window.location.href.split('#')[0],
+            document.getElementById(this.worksheetScopeId ?? this.conflictFragment ?? 'estimate-lines'),
+        );
     },
 
     async refreshLoadedFinancialTab() {
         const root = document.getElementById('repair-order-workspace-tabs');
+        const panel = root?.querySelector('[data-workspace-tab-panel="financial"]');
+
+        if (! this.forceRefreshDrafts && panel && (dirtyFormsIn(panel).length > 0 || draftMarkersIn(panel).length > 0)) {
+            this.remoteDrift = true;
+
+            return;
+        }
+
         const tabs = window.Alpine?.$data?.(root);
 
         if (! tabs?.loadedTabs?.financial || typeof tabs.reloadTab !== 'function') {
@@ -357,7 +421,10 @@ export const arkWorksheetCollaboration = (config = {}) => ({
                 const heartbeatVersion = Number.parseInt(String(payload.estimate_version ?? ''), 10);
 
                 if (! Number.isNaN(heartbeatVersion) && heartbeatVersion === this.renderedEstimateVersion) {
-                    this.versionDriftNotice = '';
+                    if (! this.worksheetHasDraft()) {
+                        this.versionDriftNotice = '';
+                        this.remoteDrift = false;
+                    }
                 } else if (! Number.isNaN(heartbeatVersion) && heartbeatVersion > this.renderedEstimateVersion) {
                     await this.handleRemoteEstimateChange({
                         estimate_version: heartbeatVersion,
@@ -402,7 +469,7 @@ export const arkWorksheetCollaboration = (config = {}) => ({
     async applyWorksheetConflict(response) {
         const payload = await response.json().catch(() => ({}));
 
-        if (this.isSelfAuthoredEstimateChange(payload)) {
+        if (this.isSelfAuthoredEstimateChange(payload) && ! this.worksheetHasDraft()) {
             this.syncSelfAuthoredEstimateVersion(payload);
 
             if (typeof this.refreshWorksheet === 'function') {
@@ -418,11 +485,18 @@ export const arkWorksheetCollaboration = (config = {}) => ({
         const message = payload?.message
             || 'This estimate changed while you were working. Refresh the worksheet before saving.';
 
-        if (payload?.estimate_version) {
+        const preserveDraft = this.worksheetHasDraft();
+
+        if (! preserveDraft && payload?.estimate_version) {
             this.applyEstimateVersion(payload.estimate_version);
         }
 
         this.staleNotice = message;
+
+        if (preserveDraft) {
+            this.remoteDrift = true;
+            this.versionDriftNotice = message;
+        }
 
         if (typeof this.refreshWorksheet === 'function') {
             await this.refreshWorksheet(
