@@ -1,5 +1,6 @@
 @php
     use App\Ark\Customer\CustomerSurfaceNavigation;
+    use App\Ark\Customer\CustomerSurfaceUrls;
     use App\Ark\Operations\Settings\ShopSettings;
 
     $shop ??= ShopSettings::current();
@@ -21,9 +22,7 @@
     ]);
     $addressLine = implode(' · ', $addressParts);
     $navItems = app(CustomerSurfaceNavigation::class)->items();
-    $homeUrl = \Illuminate\Support\Facades\Route::has('public.home')
-        ? route('public.home')
-        : \App\Ark\Customer\CustomerSurfaceUrls::portalHome();
+    $homeUrl = CustomerSurfaceUrls::shopHome();
 @endphp
 
 <header

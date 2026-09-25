@@ -83,7 +83,7 @@ final class CustomerSurfaceBreadcrumbProjection
      */
     private function publicTrail(string $label, ?string $parentHref = null): array
     {
-        $home = ['label' => 'Home', 'href' => route('public.home')];
+        $home = ['label' => 'Home', 'href' => CustomerSurfaceUrls::shopHome()];
 
         if ($parentHref === null) {
             return $this->trail($home, ['label' => $label]);

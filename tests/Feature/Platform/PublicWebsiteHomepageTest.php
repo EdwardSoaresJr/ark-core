@@ -153,7 +153,10 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertSee('/common-problems/check-engine-light', false)
         ->assertSee('/common-problems/electrical-diagnostics', false)
         ->assertDontSee('Auto Repair Colorado Springs')
-        ->assertSee('https://lugsnplugs.com/services', false);
+        ->assertSee('https://lugsnplugs.com/services', false)
+        ->assertSee('href="https://lugsnplugs.com" class="text-[#0099cc] no-underline hover:text-[#0088b8]">Home', false)
+        ->assertDontSee('href="https://lugsnplugs.arksms.com" class="customer-header__brand"', false)
+        ->assertDontSee('href="https://lugsnplugs.arksms.com" class="text-[#0099cc]', false);
 
     $hub = $this->get('http://lugsnplugs.com/common-problems');
     $hub->assertOk()

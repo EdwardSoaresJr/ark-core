@@ -12,6 +12,15 @@ final class CustomerSurfaceUrls
         return self::portalAccess();
     }
 
+    public static function shopHome(): string
+    {
+        if (! Route::has('public.home')) {
+            return self::portalHome();
+        }
+
+        return rtrim(url('/'), '/');
+    }
+
     public static function portalAccess(): string
     {
         if (SurfaceRouting::enabled()) {
