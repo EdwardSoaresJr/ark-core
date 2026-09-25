@@ -43,6 +43,23 @@ final class PublicWebsiteController
         ]);
     }
 
+    public function about(Request $request): View|Response|RedirectResponse
+    {
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        $seo = $this->seo($website, 'about', $request);
+        $seo['title'] = 'About LugsNPlugs';
+        $seo['description'] = 'LugsNPlugs Automotive is owned and operated by Edward and Molly Soares in Colorado Springs.';
+
+        return view('website.about', [
+            'website' => $website,
+            'seo' => $seo,
+        ]);
+    }
+
     public function book(Request $request): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
@@ -291,6 +308,7 @@ final class PublicWebsiteController
 
         $paths = [
             '/',
+            '/about',
             '/book',
             '/contact',
             '/common-problems',

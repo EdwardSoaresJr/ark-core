@@ -30470,6 +30470,130 @@ html.dark .ops-printing-cmd,
         max-width: 42rem;
     }
 
+    .public-home {
+        width: min(72rem, 100%);
+        margin-inline: auto;
+        padding: 2.5rem 1rem 4rem;
+    }
+
+    @media (min-width: 640px) {
+        .public-home {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+
+    .public-home__hero,
+    .public-home__split {
+        display: grid;
+        gap: 1.75rem;
+        align-items: center;
+    }
+
+    .public-home__copy {
+        max-width: 40rem;
+    }
+
+    .public-home__section {
+        margin-top: 4rem;
+    }
+
+    .public-home__section--first {
+        margin-top: 0;
+    }
+
+    .public-home__subhead {
+        margin-top: 2.25rem;
+    }
+
+    .public-home .public-section-title {
+        font-size: 1.75rem;
+        line-height: 1.15;
+    }
+
+    .public-home__figure {
+        margin: 0;
+        min-width: 0;
+    }
+
+    .public-home__figure img {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .public-home__figure--about {
+        margin-top: 1.5rem;
+        max-width: 40rem;
+    }
+
+    .public-home__caption {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        color: theme('colors.slate.600');
+    }
+
+    .public-home__photos {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 1.75rem;
+    }
+
+    .public-home__concerns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        margin: 1.25rem 0 0;
+        padding: 0;
+        list-style: none;
+        max-width: 40rem;
+    }
+
+    .public-home__noise summary {
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .public-home__noise ul {
+        margin: 0.5rem 0 0;
+        padding-left: 1.1rem;
+    }
+
+    .public-home__quote {
+        margin: 1.25rem 0 0;
+        max-width: 40rem;
+    }
+
+    .public-home__quote p {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .public-home__quote footer {
+        margin-top: 0.35rem;
+        font-size: 0.875rem;
+        color: theme('colors.slate.600');
+    }
+
+    .public-home .public-cta--secondary {
+        width: auto;
+        max-width: none;
+    }
+
+    @media (min-width: 900px) {
+        .public-home__hero,
+        .public-home__split {
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+            gap: 2.5rem;
+        }
+
+        .public-home__photos {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
     .public-shop-experience {
         margin-top: 1.5rem;
         border-radius: 1rem;
@@ -30909,6 +31033,8 @@ html.dark .ops-printing-cmd,
     html.dark .public-surface .customer-connect__description,
     html.dark .public-surface .public-hero__lede,
     html.dark .public-surface .public-page-lede,
+    html.dark .public-surface .public-home__caption,
+    html.dark .public-surface .public-home__quote footer,
     html.dark .public-surface .public-content-section p,
     html.dark .public-surface .public-content-section li,
     html.dark .public-surface .public-content-section dd,
@@ -30919,6 +31045,18 @@ html.dark .ops-printing-cmd,
     html.dark .public-surface .public-proof-list__detail,
     html.dark .public-surface .public-bullet-list li {
         color: theme('colors.slate.300');
+    }
+
+    html.dark .public-surface .public-home .public-cta--secondary {
+        border-color: rgb(148 163 184 / 0.35);
+        background: transparent;
+        color: theme('colors.slate.50');
+    }
+
+    html.dark .public-surface .public-home .public-cta--secondary:hover {
+        border-color: rgb(226 232 240 / 0.55);
+        background: rgb(148 163 184 / 0.08);
+        color: theme('colors.slate.50');
     }
 
     html.dark .public-surface .customer-header__nav {

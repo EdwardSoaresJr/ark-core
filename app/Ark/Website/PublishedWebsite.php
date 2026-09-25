@@ -4,8 +4,10 @@ namespace App\Ark\Website;
 
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Telephony\TelephonyBusinessHoursLabel;
 use App\Ark\Platform\Website\WebsitePublication;
 use App\Ark\Platform\Website\WebsiteSite;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Current published website for one public host.
@@ -280,6 +282,142 @@ final class PublishedWebsite
         $financing = $this->document['financing'] ?? [];
 
         return is_array($financing) ? trim((string) ($financing['lede'] ?? '')) : '';
+    }
+
+    public function financingSummary(): ?string
+    {
+        $names = $this->financingOfferNames();
+        $wisetack = in_array('Wisetack', $names, true);
+        $synchrony = in_array('Synchrony Car Care', $names, true);
+
+        if ($wisetack && $synchrony) {
+            return 'If the job qualifies, Wisetack and Synchrony Car Care can spread the cost out.';
+        }
+
+        if ($synchrony) {
+            return 'If the job qualifies, Synchrony Car Care can spread the cost out.';
+        }
+
+        if ($wisetack) {
+            return 'If the job qualifies, Wisetack can spread the cost out.';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function financingOfferNames(): array
+    {
+        $trust = $this->document['trust_signals'] ?? [];
+        if (is_array($trust) && array_key_exists('financing_available', $trust) && $trust['financing_available'] !== true) {
+            return [];
+        }
+
+        $names = [];
+        foreach ($this->financingPrograms() as $program) {
+            if ($program['name'] === '' || $program['url'] === '') {
+                continue;
+            }
+            $names[] = $program['name'];
+        }
+
+        return $names;
+    }
+
+    /**
+     * @return array{quote: string, attribution: string}|null
+     */
+    public function reviewByAttribution(string $attribution): ?array
+    {
+        foreach ($this->reviews() as $review) {
+            if ($review['attribution'] === $attribution) {
+                return $review;
+            }
+        }
+
+        return null;
+    }
+
+    public function hoursLabel(): string
+    {
+        return TelephonyBusinessHoursLabel::fromCallFlow();
+    }
+
+    public function streetLine(): string
+    {
+        return $this->shop->googleMatchedStreetAddress();
+    }
+
+    public function localityLine(): string
+    {
+        $city = trim((string) ($this->shop->city ?? ''));
+        $region = trim(implode(' ', array_filter([
+            trim((string) ($this->shop->state ?? '')),
+            trim((string) ($this->shop->postal_code ?? '')),
+        ])));
+
+        if ($city === '') {
+            return $region;
+        }
+
+        return $region === '' ? $city : $city.', '.$region;
+    }
+
+    /**
+     * Shop photos matched by the alt text stored on the publication.
+     *
+     * @return array{bay: ?array{alt: string, url: string}, team: ?array{alt: string, url: string}, pressure: ?array{alt: string, url: string}, findings: ?array{alt: string, url: string}}
+     */
+    public function storyPhotos(): array
+    {
+        $wanted = [
+            'bay' => 'Inside the LugsNPlugs service bays',
+            'team' => 'The LugsNPlugs Team',
+            'pressure' => 'Technician pressure testing a vehicle cooling system',
+            'findings' => 'Technician verifying findings before advising',
+        ];
+        $byAlt = [];
+        foreach ($this->shopPhotos() as $photo) {
+            $byAlt[$photo['alt']] = $photo;
+        }
+
+        $picked = [];
+        foreach ($wanted as $key => $alt) {
+            $picked[$key] = $byAlt[$alt] ?? null;
+        }
+
+        return $picked;
+    }
+
+    /**
+     * @return list<array{alt: string, url: string}>
+     */
+    public function shopPhotos(): array
+    {
+        $photos = $this->document['shop_photos'] ?? [];
+        if (! is_array($photos)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($photos as $photo) {
+            if (! is_array($photo)) {
+                continue;
+            }
+            $path = trim((string) ($photo['path'] ?? ''));
+            $alt = trim((string) ($photo['alt'] ?? ''));
+            if ($path === '' || $alt === '') {
+                continue;
+            }
+            $normalized[] = [
+                'alt' => $alt,
+                'url' => Storage::disk('public')->url($path),
+            ];
+        }
+
+        return $normalized;
     }
 
     /**

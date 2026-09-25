@@ -275,9 +275,10 @@ test('native host keeps system routes and renders the website', function (): voi
         ->assertHeader('Location', 'https://lugsnplugs.arksms.com/book');
 
     $this->get('http://lugsnplugs.arksms.com/about')
-        ->assertNotFound()
+        ->assertOk()
         ->assertHeader('X-ARK-Website', 'core')
-        ->assertSee('This website is not published.');
+        ->assertSee('A repair shop built around doing it right')
+        ->assertDontSee('This website is not published.');
 });
 
 test('custom domain renders the website and does not serve staff routes', function (): void {
@@ -306,8 +307,9 @@ test('custom domain renders the website and does not serve staff routes', functi
         ->assertHeader('Location', 'https://lugsnplugs.com/book?concern=Brakes');
 
     $this->get('http://lugsnplugs.com/about')
-        ->assertNotFound()
-        ->assertHeader('X-ARK-Website', 'core');
+        ->assertOk()
+        ->assertHeader('X-ARK-Website', 'core')
+        ->assertSee('A repair shop built around doing it right');
 
     $this->get('http://lugsnplugs.com/app/login')
         ->assertRedirect('https://lugsnplugs.arksms.com/app/login')

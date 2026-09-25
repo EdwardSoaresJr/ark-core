@@ -47,6 +47,10 @@ final class CustomerSurfaceFooterData
 
         /** @var list<array{label: string, href: string}> $navLinks */
         $navLinks = array_values(array_filter([
+            Route::has('public.about') ? [
+                'label' => 'About',
+                'href' => route('public.about'),
+            ] : null,
             filled($portalUrl) ? [
                 'label' => auth('portal')->check() ? 'My Account' : 'Sign In',
                 'href' => auth('portal')->check() ? CustomerSurfaceUrls::portalHome() : $portalUrl,

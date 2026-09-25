@@ -16,7 +16,6 @@ final class PublicLegacyRedirect
      * @var array<string, string>
      */
     public const HOMEPAGE_ONLY = [
-        '/about' => '/',
         '/about-us' => '/',
         '/services' => '/',
         '/from-the-bay' => '/',

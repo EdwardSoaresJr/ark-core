@@ -65,6 +65,7 @@ final class PublicLlmsTxt
 
         $pages = [
             '/' => 'Home',
+            '/about' => 'About',
             '/book' => 'Appointment request',
             '/contact' => 'Contact',
             '/common-problems' => 'Common problems',

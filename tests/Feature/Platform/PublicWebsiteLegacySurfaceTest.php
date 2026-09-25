@@ -82,7 +82,9 @@ test('useful legacy urls redirect and homepage dumps do not', function (): void 
         ->assertStatus(301)
         ->assertHeader('Location', 'https://lugsnplugs.com/common-problems/jeep-overheating');
 
-    $this->get('http://lugsnplugs.com/about')->assertNotFound();
+    $this->get('http://lugsnplugs.com/about')
+        ->assertOk()
+        ->assertSee('A repair shop built around doing it right');
     $this->get('http://lugsnplugs.com/services/oil-change')->assertNotFound();
     $this->get('http://lugsnplugs.com/posts/hello')->assertNotFound();
     $this->get('http://lugsnplugs.com/tag/random')->assertNotFound();

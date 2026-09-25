@@ -23,6 +23,14 @@ final class CustomerSurfaceNavigation
             return $items;
         }
 
+        if (Route::has('public.about')) {
+            $items[] = [
+                'label' => 'About',
+                'href' => route('public.about'),
+                'active' => request()->routeIs('public.about'),
+            ];
+        }
+
         if (Route::has('portal.access')) {
             $items[] = [
                 'label' => 'Sign In',

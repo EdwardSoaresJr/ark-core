@@ -26,10 +26,12 @@
                     </div>
                 </div>
 
-                @if (filled($footer['portal_url']))
+                @if (($footer['nav_links'] ?? []) !== [])
                     <nav class="customer-footer__nav" aria-label="Footer">
                         <ul class="customer-footer__links">
-                            <li><a href="{{ $footer['portal_url'] }}">{{ auth('portal')->check() ? 'My Account' : 'Sign In' }}</a></li>
+                            @foreach ($footer['nav_links'] as $link)
+                                <li><a href="{{ $link['href'] }}">{{ $link['label'] }}</a></li>
+                            @endforeach
                         </ul>
                     </nav>
                 @endif
