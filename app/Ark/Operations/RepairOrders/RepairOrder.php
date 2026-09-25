@@ -684,8 +684,36 @@ class RepairOrder extends Model
         return ! ($this->vehicle?->hasVin() ?? false);
     }
 
+    public const ESTIMATE_SEND_DRAFT_ONLY_MESSAGE = 'This estimate only contains Draft concerns. Draft work is not shown to the customer. Mark the work you are recommending before sending it.';
+
+    public function outgoingEstimateIsDraftOnly(): bool
+    {
+        $dispositions = $this->concerns()->pluck('disposition');
+
+        if ($dispositions->isEmpty()) {
+            return false;
+        }
+
+        return $dispositions->every(function (mixed $disposition): bool {
+            if ($disposition instanceof RepairOrderConcernDisposition) {
+                return $disposition === RepairOrderConcernDisposition::Draft;
+            }
+
+            return $disposition === RepairOrderConcernDisposition::Draft->value;
+        });
+    }
+
+    public function estimateConcernReviewUrl(): string
+    {
+        return route('operations.repair-orders.show', $this).'#estimate-lines';
+    }
+
     public function ensureEstimateSendAllowed(bool $acknowledgeMissingVin = false): void
     {
+        if ($this->outgoingEstimateIsDraftOnly()) {
+            throw new \RuntimeException(self::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE);
+        }
+
         if ($this->missingVehicleVin() && ! $acknowledgeMissingVin) {
             throw new \RuntimeException(VehicleIdentityPressure::NoVin->estimateSendBlockedMessage());
         }

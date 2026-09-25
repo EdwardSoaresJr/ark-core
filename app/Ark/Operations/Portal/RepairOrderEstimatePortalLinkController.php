@@ -15,6 +15,11 @@ class RepairOrderEstimatePortalLinkController
 
         abort_unless($repairOrder->customer !== null, 422, 'Repair order does not have a customer.');
         abort_unless($repairOrder->lines()->exists(), 422, 'Add estimate lines before sharing a portal link.');
+        abort_unless(
+            ! $repairOrder->outgoingEstimateIsDraftOnly(),
+            422,
+            RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE,
+        );
 
         $accessToken = $tokens->execute($repairOrder, request()->user());
         $url = route('portal.estimates.show', ['token' => $accessToken->plainToken]);

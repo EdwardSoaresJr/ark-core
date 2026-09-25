@@ -273,7 +273,10 @@
         >
             @if ($contextProjection !== null && filled($contextProjection['estimate']['send_block_reason'] ?? null))
                 <div class="border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                    {{ $contextProjection['estimate']['send_block_reason'] }}
+                    <p>{{ $contextProjection['estimate']['send_block_reason'] }}</p>
+                    @if ($repairOrder instanceof RepairOrder && $contextProjection['estimate']['send_block_reason'] === RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE)
+                        <a href="{{ $repairOrder->estimateConcernReviewUrl() }}" class="mt-1 inline-block font-semibold underline">Review concerns</a>
+                    @endif
                 </div>
             @elseif ($contextProjection !== null && filled($contextProjection['payment']['send_block_reason'] ?? null))
                 <div class="border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">

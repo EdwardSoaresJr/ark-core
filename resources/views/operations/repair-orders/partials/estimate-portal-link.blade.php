@@ -163,6 +163,9 @@
                     <div class="rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-950">
                         <p class="font-semibold">Send Portal unavailable</p>
                         <p class="mt-0.5 leading-4">{{ $portalSendBlockedReason }}</p>
+                        @if ($portalSendBlockedReason === \App\Ark\Operations\RepairOrders\RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE)
+                            <a href="{{ $repairOrder->estimateConcernReviewUrl() }}" class="mt-1 inline-block font-semibold underline">Review concerns</a>
+                        @endif
                     </div>
                 @endif
                 <button

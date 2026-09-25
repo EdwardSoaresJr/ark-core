@@ -106,6 +106,14 @@ final class RepairOrderConversationSendProjection
             );
         }
 
+        if ($repairOrder->outgoingEstimateIsDraftOnly()) {
+            return $this->blockedEstimateChannels(
+                RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE,
+                $missingVin,
+                $vinBlockMessage,
+            );
+        }
+
         $smsEligibility = CustomerSmsSendEligibility::for(
             $repairOrder->customer,
             $this->credentials,

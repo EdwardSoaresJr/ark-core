@@ -37,6 +37,33 @@ beforeEach(function (): void {
     bindFakeOutboundSms();
 });
 
+test('tomorrow morning does not schedule an estimate that only contains draft concerns', function () {
+    Queue::fake();
+    Carbon::setTestNow(Carbon::parse('2026-07-22 04:30:00', 'UTC'));
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = scheduledOutboundEstimateRepairOrder();
+    $repairOrder->concerns()->update([
+        'disposition' => RepairOrderConcernDisposition::Draft,
+    ]);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder), [
+            'delivery' => 'sms',
+            'timing' => 'tomorrow_morning',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE);
+
+    expect(ScheduledOutboundMessage::query()->count())->toBe(0)
+        ->and(ConversationMessage::query()->count())->toBe(0)
+        ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::EstimateSent)->exists())->toBeFalse()
+        ->and($repairOrder->fresh()->status->is(RepairOrderStatus::Estimate))->toBeTrue()
+        ->and($repairOrder->concerns()->firstOrFail()->disposition)->toBe(RepairOrderConcernDisposition::Draft);
+
+    Queue::assertNothingPushed();
+});
+
 test('tomorrow morning schedules outbound intent without sending', function () {
     Queue::fake();
     // 2026-07-21 22:30 America/Denver == 2026-07-22 04:30 UTC

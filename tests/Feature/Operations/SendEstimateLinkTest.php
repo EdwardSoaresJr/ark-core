@@ -19,6 +19,8 @@ use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Today\TodayPipelineInventoryQuery;
+use App\Ark\Operations\Workboard\WorkboardSwimlaneCatalog;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -352,6 +354,186 @@ test('portal estimate shows step indicator and collapsible service details', fun
         ->assertDontSee('Water pump assembly', false)
         ->assertSee('Price details', false)
         ->assertSee('portal-estimate-mobile-bar');
+});
+
+test('send is blocked when every concern on the estimate is still draft', function () {
+    bindFakeOutboundSms();
+    seedMobileSmsCapability('7195558080');
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = estimateLinkRepairOrder();
+    $repairOrder->concerns()->update([
+        'disposition' => RepairOrderConcernDisposition::Draft,
+    ]);
+
+    RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Draft coolant leak',
+        'disposition' => RepairOrderConcernDisposition::Draft,
+        'position' => 2,
+    ]);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder))
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE);
+
+    expect(ConversationMessage::query()->count())->toBe(0)
+        ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::EstimateSent)->exists())->toBeFalse()
+        ->and(EstimateAccessToken::query()->count())->toBe(0)
+        ->and($repairOrder->fresh()->status->is(RepairOrderStatus::Estimate))->toBeTrue()
+        ->and($repairOrder->fresh()->concerns->every(
+            fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Draft,
+        ))->toBeTrue();
+
+    $this->actingAs($advisor)
+        ->post(route('operations.repair-orders.estimate.email', $repairOrder), [
+            'email' => 'estimate.customer@example.test',
+        ])
+        ->assertSessionHasErrors([
+            'email' => RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE,
+        ]);
+
+    $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.estimate-portal-link', $repairOrder))
+        ->assertStatus(422)
+        ->assertJsonPath('message', RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE);
+
+    $projection = app(\App\Ark\Operations\Messaging\RepairOrderConversationSendProjection::class)
+        ->forRepairOrder($repairOrder->fresh(), $advisor)['estimate'];
+
+    expect($projection['can_sms'])->toBeFalse()
+        ->and($projection['can_email'])->toBeFalse()
+        ->and($projection['send_block_reason'])->toBe(RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.workspace-tabs.show', [
+            'repairOrder' => $repairOrder,
+            'tab' => 'comms',
+        ]))
+        ->assertOk()
+        ->assertSee(RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE, false)
+        ->assertSee('Review concerns', false)
+        ->assertSee('#estimate-lines', false);
+});
+
+test('a mixed estimate sends recommended work and leaves draft concerns draft', function () {
+    bindFakeOutboundSms();
+    seedMobileSmsCapability('7195558080');
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = estimateLinkRepairOrder();
+    $recommended = $repairOrder->concerns()->firstOrFail();
+
+    $includedDraft = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Draft brake inspection',
+        'disposition' => RepairOrderConcernDisposition::Draft,
+        'position' => 2,
+    ]);
+
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $includedDraft->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Inspect brakes',
+        'quantity' => '1.00',
+        'unit_price_cents' => 8000,
+        'subtotal_cents' => 8000,
+        'total_cents' => 8000,
+        'position' => 1,
+    ]);
+
+    $unrelatedDraft = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Draft alignment note',
+        'disposition' => RepairOrderConcernDisposition::Draft,
+        'position' => 3,
+    ]);
+
+    $response = $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder));
+
+    $response->assertOk()
+        ->assertJsonPath('awaiting_approval.moved', true)
+        ->assertJsonPath('awaiting_approval.to_status', RepairOrderStatus::WaitingApproval->value);
+
+    expect($recommended->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($includedDraft->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Draft)
+        ->and($unrelatedDraft->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Draft)
+        ->and($repairOrder->fresh()->status->is(RepairOrderStatus::WaitingApproval))->toBeTrue()
+        ->and(WorkboardSwimlaneCatalog::laneKeyForRepairOrder($repairOrder->fresh()))->toBe('waiting_approval')
+        ->and(TodayPipelineInventoryQuery::apply(
+            RepairOrder::query(),
+            TodayPipelineInventoryQuery::AWAITING_APPROVAL,
+        )->whereKey($repairOrder->id)->exists())->toBeTrue();
+
+    $snapshot = app(\App\Ark\Operations\Documents\EstimateSnapshotBuilder::class)->build($repairOrder->fresh());
+    $presented = app(\App\Ark\Operations\Documents\CustomerFacingDocumentBoundary::class)->sanitize($snapshot);
+    $summaries = collect($presented['concerns'] ?? [])->pluck('summary');
+
+    expect($summaries->all())->toContain('Water pump replacement')
+        ->and($summaries->all())->not->toContain('Draft brake inspection')
+        ->and($summaries->all())->not->toContain('Draft alignment note')
+        ->and(app(\App\Ark\Operations\Portal\PortalEstimateAuthorization::class)
+            ->presentedConcerns($repairOrder->fresh())
+            ->pluck('id')
+            ->all())->toBe([$recommended->id]);
+});
+
+test('sending an estimate does not authorize work', function () {
+    bindFakeOutboundSms();
+    seedMobileSmsCapability('7195558080');
+    ShopSettings::current()->update(['portal_signature_required' => false]);
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = estimateLinkRepairOrder();
+    $recommended = $repairOrder->concerns()->firstOrFail();
+    $draft = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Draft coolant leak',
+        'disposition' => RepairOrderConcernDisposition::Draft,
+        'position' => 2,
+    ]);
+
+    $response = $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder))
+        ->assertOk();
+
+    expect($recommended->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($draft->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Draft);
+
+    $plainToken = (string) str($response->json('estimate_url'))->after('/portal/estimates/');
+
+    $this->post(route('portal.estimates.authorize', ['token' => $plainToken]), [
+        'confirmed_name' => 'Morgan Brown',
+        'concern_dispositions' => [
+            $recommended->id => RepairOrderConcernDisposition::Approved->value,
+            $draft->id => RepairOrderConcernDisposition::Approved->value,
+        ],
+    ])->assertRedirect(route('portal.estimates.show', ['token' => $plainToken]));
+
+    expect($recommended->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and($draft->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Draft);
+});
+
+test('a failed estimate text does not move the repair order to waiting approval', function () {
+    bindFailingOutboundSms('Outbound SMS failed.');
+    seedMobileSmsCapability('7195558080');
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = estimateLinkRepairOrder();
+    $concern = $repairOrder->concerns()->firstOrFail();
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder))
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Outbound SMS failed.');
+
+    expect(ConversationMessage::query()->count())->toBe(0)
+        ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::EstimateSent)->exists())->toBeFalse()
+        ->and($repairOrder->fresh()->status->is(RepairOrderStatus::Estimate))->toBeTrue()
+        ->and($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended);
 });
 
 function estimateLinkRepairOrder(): RepairOrder

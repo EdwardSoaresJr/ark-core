@@ -49,6 +49,10 @@ class SendEstimateLinkAction
     ): array {
         $repairOrder->loadMissing('customer');
 
+        if ($repairOrder->outgoingEstimateIsDraftOnly()) {
+            throw new RuntimeException(RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE);
+        }
+
         if ($repairOrder->customer === null) {
             throw new RuntimeException('Repair order does not have a customer.');
         }
