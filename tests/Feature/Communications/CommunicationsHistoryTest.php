@@ -24,6 +24,7 @@ test('advisor can open communications history workspace', function (): void {
         ->assertSee('History', false)
         ->assertSee('ops-comms-history-filters', false)
         ->assertSee('Phone or customer name', false)
+        ->assertSee('threadOpen: false', false)
         ->getContent();
 
     $filtersAt = strpos($html, 'ops-comms-history-filters');
@@ -43,7 +44,8 @@ test('working queue does not render history search controls', function (): void 
         ->get(route('operations.communications.inbox', ['filter' => 'needs']))
         ->assertOk()
         ->assertDontSee('ops-comms-history-filters', false)
-        ->assertDontSee('Phone or customer name', false);
+        ->assertDontSee('Phone or customer name', false)
+        ->assertSee('threadOpen: false', false);
 });
 
 test('history defaults to the last 30 days without a search', function (): void {
@@ -158,6 +160,57 @@ test('history recorded filter shows the recording on file and a customer match f
         ->assertSee('(719) 555-4343', false)
         ->assertSee('Find customer', false)
         ->assertDontSee('Play recording', false);
+});
+
+test('history back to list keeps the search and page without the open call', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    $session = CallSession::query()->create([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CAhistoryback001',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195554343',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195554343',
+        'status' => CallSessionStatus::Completed,
+        'recording_url' => 'https://api.twilio.com/2010-04-01/Accounts/ACtestaccount/Recordings/REarchive001',
+        'started_at' => now()->subMonths(14),
+        'worked_at' => now()->subMonths(14),
+    ]);
+
+    $back = route('operations.communications.history', [
+        'q' => '7195554343',
+        'from' => '2024-09-25',
+        'to' => '2026-09-25',
+        'media' => 'recorded',
+        'page' => 3,
+    ]);
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.communications.history', [
+            'call' => $session->id,
+            'q' => '7195554343',
+            'from' => '2024-09-25',
+            'to' => '2026-09-25',
+            'media' => 'recorded',
+            'page' => 3,
+        ]))
+        ->assertOk()
+        ->assertSee('Back to list', false)
+        ->assertSee('ops-comms-inbox__context-toggle', false)
+        ->assertSee('threadOpen: true', false)
+        ->assertSee('ops-comms-history-filters', false)
+        ->getContent();
+
+    $filtersAt = strpos($html, 'ops-comms-history-filters');
+    $refreshTargetAt = strpos($html, 'id="ops-comms-workspace-list-body"');
+
+    expect($html)->toContain('href="'.e($back).'"')
+        ->and($filtersAt)->toBeInt()
+        ->and($refreshTargetAt)->toBeInt()
+        ->and($filtersAt)->toBeLessThan($refreshTargetAt)
+        ->and(str_contains($back, 'call='))->toBeFalse()
+        ->and(str_contains($back, 'conversation='))->toBeFalse();
 });
 
 test('history phone search also surfaces matching sms conversations', function (): void {

@@ -31,6 +31,8 @@ test('conversation switching shows a short header cue and ignores stale completi
 
     expect($mark)->toBeInt()->toBeLessThan($fetch)
         ->and($fetch)->toBeLessThan($wait)
+        ->and(strpos($open, 'setThreadOpen(selectionHref(nextUrl))'))->toBeGreaterThan($fetch)
+        ->and(strpos($open, 'setThreadOpen(selectionHref(nextUrl))'))->toBeLessThan($wait)
         ->and(strpos($afterWait, "return 'stale'"))->toBeLessThan(strpos($afterWait, 'setSelectionSwitching(false)'))
         ->and(strpos($afterWait, 'setSelectionSwitching(false)'))->toBeLessThan(strpos($afterWait, 'applyPayload(payload'));
 
@@ -103,7 +105,12 @@ test('detail fragments include the centered switch overlay', function () {
         ->json('thread');
 
     expect($empty)->toContain('ops-comms-workspace__switch-bubble')
+        ->and($empty)->toContain('Back to list')
+        ->and($empty)->toContain('filter=waiting')
         ->and($open)->toContain('Dana Wait')
+        ->and($open)->toContain('Customer')
+        ->and($open)->toContain('filter=waiting')
+        ->and($open)->not->toContain('ops-comms-history-filters')
         ->and($open)->toContain('ops-comms-workspace__switch-bubble')
         ->and(strpos($open, 'Dana Wait'))->toBeLessThan(strpos($open, 'ops-comms-workspace__switch'));
 });

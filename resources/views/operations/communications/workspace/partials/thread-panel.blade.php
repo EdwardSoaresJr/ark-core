@@ -8,12 +8,20 @@
     $ownerFilter = $ownerFilter ?? 'everyone';
     $events = $thread['events'] ?? [];
     $lastDate = null;
+    $backHref = match ($section ?? '') {
+        'history' => route('operations.communications.history', request()->only(['q', 'from', 'to', 'media', 'page'])),
+        'inbox' => route('operations.communications.inbox', array_filter([
+            'filter' => $listFilter,
+            'owner' => $ownerFilter !== 'everyone' ? $ownerFilter : null,
+        ])),
+        default => null,
+    };
 @endphp
 
 <div class="ops-comms-workspace__panel ops-comms-workspace__panel--thread">
     <header class="ops-comms-inbox__identity">
-        @if (($section ?? '') === 'inbox')
-            <a class="ops-comms-inbox__back" href="{{ route('operations.communications.inbox', array_filter(['filter' => $listFilter, 'owner' => $ownerFilter !== 'everyone' ? $ownerFilter : null])) }}">Back to list</a>
+        @if ($backHref !== null)
+            <a class="ops-comms-inbox__back" href="{{ $backHref }}">Back to list</a>
         @endif
         @if ($identity !== null)
             <div class="ops-comms-inbox__identity-title">

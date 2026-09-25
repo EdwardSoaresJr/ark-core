@@ -134,6 +134,8 @@ class CommunicationsWorkspaceFragmentController
                 'thread' => $workspace['thread'],
                 'selected' => $workspace['selected'],
                 'section' => $section,
+                'listFilter' => $workspace['list_filter'] ?? $listFilter,
+                'ownerFilter' => $workspace['owner_filter'] ?? 'everyone',
             ])->render(),
             'context' => view('operations.communications.workspace.partials.context-panel', [
                 'context' => $workspace['context'],

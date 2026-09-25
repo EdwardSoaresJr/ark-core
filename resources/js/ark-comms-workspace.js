@@ -186,6 +186,17 @@ function selectionHref(url) {
         || url.searchParams.has('platform_conversation');
 }
 
+function setThreadOpen(open) {
+    const workspace = document.querySelector('.ops-comms-workspace');
+    const state = window.Alpine?.$data?.(workspace) ?? workspace?._x_dataStack?.[0];
+
+    if (! state || ! ('threadOpen' in state)) {
+        return;
+    }
+
+    state.threadOpen = Boolean(open);
+}
+
 function threadMessagesEl() {
     return document.getElementById('comms-workspace-thread-messages');
 }
@@ -440,8 +451,14 @@ export function initCommsWorkspace() {
             if (! payload || (payload.unchanged === true && ! payload.thread)) {
                 setSelectionSwitching(false);
 
+                if (payload?.unchanged === true) {
+                    setThreadOpen(selectionHref(nextUrl));
+                }
+
                 return false;
             }
+
+            setThreadOpen(selectionHref(nextUrl));
 
             if (changing) {
                 await wait(selectionFeedbackRemaining(startedAt));

@@ -24,14 +24,16 @@
 
 @php
     $isInbox = $section === 'inbox';
+    $threadOpen = request()->filled('conversation')
+        || request()->filled('lead')
+        || request()->filled('call')
+        || request()->filled('platform_conversation');
 @endphp
 
 <section
     @class(['ops-comms-workspace', 'ops-comms-workspace--inbox' => $isInbox])
-    @if ($isInbox)
-        x-data="{ threadOpen: {{ $selected ? 'true' : 'false' }}, contextOpen: false }"
-        :class="{ 'is-thread-open': threadOpen, 'is-context-open': contextOpen }"
-    @endif
+    x-data="{ threadOpen: {{ $threadOpen ? 'true' : 'false' }}, contextOpen: false }"
+    :class="{ 'is-thread-open': threadOpen, 'is-context-open': contextOpen }"
 >
     @unless ($isInbox)
         <x-operations.queue-page-header

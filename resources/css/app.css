@@ -17719,6 +17719,7 @@
 
     .ops-comms-workspace {
         display: flex;
+        position: relative;
         flex: 1;
         flex-direction: column;
         gap: 0.5rem;
@@ -17749,9 +17750,9 @@
         grid-template-columns: minmax(12.5rem, 19%) minmax(0, 1fr) minmax(16rem, 27%);
     }
 
-    .ops-comms-workspace__grid--inbox > .ops-comms-workspace__list,
-    .ops-comms-workspace__grid--inbox > .ops-comms-workspace__thread,
-    .ops-comms-workspace__grid--inbox > .ops-comms-workspace__context {
+    .ops-comms-workspace__grid > .ops-comms-workspace__list,
+    .ops-comms-workspace__grid > .ops-comms-workspace__thread,
+    .ops-comms-workspace__grid > .ops-comms-workspace__context {
         min-width: 0;
     }
 
@@ -17917,9 +17918,9 @@
     .ops-comms-inbox__rail-form { display: grid; gap: 0.375rem; }
 
     @media (max-width: 1100px) {
-        .ops-comms-workspace__grid.ops-comms-workspace__grid--inbox { grid-template-columns: minmax(16rem, 32%) minmax(0, 1fr); }
-        .ops-comms-workspace--inbox .ops-comms-workspace__context { display: none; }
-        .ops-comms-workspace--inbox.is-context-open .ops-comms-workspace__context {
+        .ops-comms-workspace__grid { grid-template-columns: minmax(16rem, 32%) minmax(0, 1fr); }
+        .ops-comms-workspace .ops-comms-workspace__context { display: none; }
+        .ops-comms-workspace.is-context-open .ops-comms-workspace__context {
             display: flex; position: absolute; top: 3.5rem; right: 0.5rem; bottom: 0.5rem; z-index: 20;
             width: min(22rem, calc(100vw - 1rem)); border: 1px solid theme('colors.slate.200'); border-radius: 0.5rem;
             background: theme('colors.white'); box-shadow: 0 12px 40px rgb(15 23 42 / 0.16);
@@ -17928,10 +17929,10 @@
     }
 
     @media (max-width: 760px) {
-        .ops-comms-workspace__grid.ops-comms-workspace__grid--inbox { grid-template-columns: minmax(0, 1fr); }
-        .ops-comms-workspace--inbox:not(.is-thread-open) .ops-comms-workspace__thread,
-        .ops-comms-workspace--inbox:not(.is-thread-open) .ops-comms-workspace__context { display: none; }
-        .ops-comms-workspace--inbox.is-thread-open .ops-comms-workspace__list { display: none; }
+        .ops-comms-workspace__grid { grid-template-columns: minmax(0, 1fr); }
+        .ops-comms-workspace:not(.is-thread-open) .ops-comms-workspace__thread,
+        .ops-comms-workspace:not(.is-thread-open) .ops-comms-workspace__context { display: none; }
+        .ops-comms-workspace.is-thread-open .ops-comms-workspace__list { display: none; }
         .ops-comms-inbox__back { display: inline-flex; font-size: 0.75rem; font-weight: 700; }
     }
 
@@ -19373,18 +19374,6 @@
     .ops-comms-workspace__context-section--next .ops-comms-workspace__control-actions {
         padding: 0 0 0.5rem;
         flex-wrap: wrap;
-    }
-
-    @media (max-width: 1100px) {
-        .ops-comms-workspace__grid {
-            grid-template-columns: 16rem minmax(0, 1fr) 12rem;
-        }
-    }
-
-    @media (max-width: 860px) {
-        .ops-comms-workspace__grid {
-            grid-template-columns: 14rem minmax(0, 1fr) 11rem;
-        }
     }
 
     .ops-comms-work-card {
