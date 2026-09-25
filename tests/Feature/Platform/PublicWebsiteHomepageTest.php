@@ -378,6 +378,21 @@ test('complaint and code pages keep their own presentations', function (): void 
         ->assertSee('What is included in a tune-up today?');
 });
 
+test('public canvas inset leaves service articles in place', function (): void {
+    $css = file_get_contents(base_path('resources/css/app.css'));
+
+    expect($css)->toContain("min(42rem, calc(min(72rem, 100%) - 3rem))")
+        ->and($css)->toContain("min(var(--public-read-max), calc(min(72rem, 100%) - 3rem))")
+        ->and($css)->toContain(<<<'CSS'
+    .public-service .public-cp-article {
+        width: auto;
+        margin-left: 0;
+    }
+CSS
+        )
+        ->and($css)->toContain("html.dark .public-surface input:not([type])");
+});
+
 test('homepage omits financing names that are not offered', function (): void {
     publishHomepageSurface([
         'trust_signals' => ['financing_available' => false],

@@ -30621,7 +30621,33 @@ html.dark .ops-printing-cmd,
     }
 
     .public-static-page {
+        width: min(42rem, calc(min(72rem, 100%) - 2rem));
         max-width: 42rem;
+        margin-left: calc((100% - min(72rem, 100%)) / 2 + 1rem);
+    }
+
+    .public-cp-index,
+    .public-cp-article {
+        width: min(var(--public-read-max), calc(min(72rem, 100%) - 2rem));
+        margin-left: calc((100% - min(72rem, 100%)) / 2 + 1rem);
+    }
+
+    @media (min-width: 640px) {
+        .public-static-page {
+            width: min(42rem, calc(min(72rem, 100%) - 3rem));
+            margin-left: calc((100% - min(72rem, 100%)) / 2 + 1.5rem);
+        }
+
+        .public-cp-index,
+        .public-cp-article {
+            width: min(var(--public-read-max), calc(min(72rem, 100%) - 3rem));
+            margin-left: calc((100% - min(72rem, 100%)) / 2 + 1.5rem);
+        }
+    }
+
+    .public-service .public-cp-article {
+        width: auto;
+        margin-left: 0;
     }
 
     .public-home {
@@ -31623,6 +31649,7 @@ html.dark .ops-printing-cmd,
 
     html.dark .public-surface .public-lead-form__textarea,
     html.dark .public-surface input[type='text'],
+    html.dark .public-surface input:not([type]),
     html.dark .public-surface input[type='email'],
     html.dark .public-surface input[type='tel'],
     html.dark .public-surface input[type='number'],
