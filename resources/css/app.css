@@ -17848,7 +17848,7 @@
         align-items: center;
         justify-content: center;
         background: rgb(15 23 42 / 0.38);
-        pointer-events: none;
+        pointer-events: auto;
     }
     .ops-comms-workspace__thread.is-switching .ops-comms-workspace__switch { display: flex; }
     .ops-comms-workspace__switch-bubble {
@@ -18060,6 +18060,13 @@
         line-height: 1.25;
         text-align: center;
         color: color-mix(in srgb, var(--ops-accent-600) 90%, black);
+    }
+
+    .ops-comms-workspace__list-body {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
     }
 
     .ops-comms-workspace__list,

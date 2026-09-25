@@ -18,11 +18,32 @@ beforeEach(function (): void {
 test('advisor can open communications history workspace', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    $this->actingAs($advisor)
+    $html = $this->actingAs($advisor)
         ->get(route('operations.communications.history'))
         ->assertOk()
         ->assertSee('History', false)
-        ->assertSee('ops-comms-history-filters', false);
+        ->assertSee('ops-comms-history-filters', false)
+        ->assertSee('Phone or customer name', false)
+        ->getContent();
+
+    $filtersAt = strpos($html, 'ops-comms-history-filters');
+    $refreshTargetAt = strpos($html, 'id="ops-comms-workspace-list-body"');
+
+    expect($filtersAt)->toBeInt()
+        ->and($refreshTargetAt)->toBeInt()
+        ->and($filtersAt)->toBeLessThan($refreshTargetAt)
+        ->and(file_get_contents(resource_path('js/ark-comms-workspace.js')))
+        ->toContain("replaceSection('ops-comms-workspace-list-body'");
+});
+
+test('working queue does not render history search controls', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs']))
+        ->assertOk()
+        ->assertDontSee('ops-comms-history-filters', false)
+        ->assertDontSee('Phone or customer name', false);
 });
 
 test('history defaults to the last 30 days without a search', function (): void {
@@ -99,8 +120,7 @@ test('history finds old calls by phone search across all time', function (): voi
         ->assertDontSee('Log call note', false);
 });
 
-test('history recorded filter and playback action surface for old calls', function (): void {
-        
+test('history recorded filter shows the recording on file and a customer match for old calls', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $session = CallSession::query()->create([
@@ -133,7 +153,11 @@ test('history recorded filter and playback action surface for old calls', functi
             'to' => now()->toDateString(),
         ]))
         ->assertOk()
-        ->assertSee('Play recording', false);
+        ->assertSee('Recording on file', false)
+        ->assertSee('ops-comms-workspace__call-media-note', false)
+        ->assertSee('(719) 555-4343', false)
+        ->assertSee('Find customer', false)
+        ->assertDontSee('Play recording', false);
 });
 
 test('history phone search also surfaces matching sms conversations', function (): void {

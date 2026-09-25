@@ -108,6 +108,33 @@ export function arkConversationQuickReply(config = {}) {
                 this.open = true;
                 this.focusReplyInput();
             }
+
+            this.$watch('sending', (active) => {
+                this.syncCommsActionBubble(active);
+            });
+        },
+
+        syncCommsActionBubble(active) {
+            const inWorkspace = Boolean(this.$el?.closest?.('#ops-comms-workspace-live'));
+
+            if (! inWorkspace && ! this.commsBubbleOn) {
+                return;
+            }
+
+            const next = Boolean(active);
+
+            if (next === Boolean(this.commsBubbleOn)) {
+                return;
+            }
+
+            this.commsBubbleOn = next;
+            document.dispatchEvent(new CustomEvent('ark:comms-action-busy', {
+                detail: { active: next },
+            }));
+        },
+
+        destroy() {
+            this.syncCommsActionBubble(false);
         },
 
         bindComposerPrefillRequests() {

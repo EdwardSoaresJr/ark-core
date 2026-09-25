@@ -76,6 +76,7 @@
             @if (is_array($filters))
                 @include('operations.communications.workspace.partials.history-filters', ['filters' => $filters])
             @endif
+            <div id="ops-comms-workspace-list-body" class="ops-comms-workspace__list-body">
             @include('operations.communications.workspace.partials.list-panel', [
                 'title' => $listTitle,
                 'count' => $listCount,
@@ -91,6 +92,7 @@
                 'section' => $section,
                 'platformBacked' => $platformBacked,
             ])
+            </div>
             @if ($paginator !== null)
                 <div class="ops-comms-workspace__pagination">
                     {{ $paginator->withQueryString()->links() }}

@@ -118,12 +118,17 @@ function markSelectedRow(href) {
     });
 }
 
-function setSelectionSwitching(active) {
+let selectionSwitching = false;
+let actionBusyDepth = 0;
+
+function paintActionBubble() {
     const thread = document.getElementById('ops-comms-workspace-thread');
 
     if (! thread) {
         return;
     }
+
+    const active = selectionSwitching || actionBusyDepth > 0;
 
     thread.classList.toggle('is-switching', active);
 
@@ -132,6 +137,21 @@ function setSelectionSwitching(active) {
     } else {
         thread.removeAttribute('aria-busy');
     }
+}
+
+function setSelectionSwitching(active) {
+    selectionSwitching = active;
+    paintActionBubble();
+}
+
+function setActionBusy(active) {
+    actionBusyDepth += active ? 1 : -1;
+
+    if (actionBusyDepth < 0) {
+        actionBusyDepth = 0;
+    }
+
+    paintActionBubble();
 }
 
 function selectionFeedbackRemaining(startedAt, now = performance.now()) {
@@ -335,7 +355,7 @@ export function initCommsWorkspace() {
             ?? null;
 
         if (replaceList && typeof payload.list === 'string' && payload.list !== '') {
-            replaceSection('ops-comms-workspace-list', payload.list);
+            replaceSection('ops-comms-workspace-list-body', payload.list);
         }
         if (typeof payload.thread === 'string' && payload.thread !== '') {
             replaceSection('ops-comms-workspace-thread', payload.thread);
@@ -462,7 +482,7 @@ export function initCommsWorkspace() {
     };
 
     const refresh = async () => {
-        if (inflight || document.hidden) {
+        if (inflight || document.hidden || actionBusyDepth > 0) {
             return;
         }
 
@@ -532,6 +552,28 @@ export function initCommsWorkspace() {
     };
 
     document.addEventListener('ark:call-queue-changed', refresh);
+
+    document.addEventListener('ark:comms-action-busy', (event) => {
+        if (! document.getElementById('ops-comms-workspace-live')) {
+            return;
+        }
+
+        setActionBusy(Boolean(event.detail?.active));
+    });
+
+    root.addEventListener('submit', (event) => {
+        const form = event.target;
+
+        if (! (form instanceof HTMLFormElement) || event.defaultPrevented) {
+            return;
+        }
+
+        if ((form.method || 'get').toLowerCase() !== 'post') {
+            return;
+        }
+
+        setActionBusy(true);
+    });
 
     root.addEventListener('click', async (event) => {
         const row = event.target instanceof Element

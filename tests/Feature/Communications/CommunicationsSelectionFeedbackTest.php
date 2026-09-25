@@ -41,6 +41,17 @@ test('conversation switching shows a short header cue and ignores stale completi
         ->not->toContain('.ops-comms-workspace.is-switching');
 });
 
+test('communications actions show the switch bubble while they run', function () {
+    $workspace = (string) file_get_contents(resource_path('js/ark-comms-workspace.js'));
+    $composer = (string) file_get_contents(resource_path('js/ark-conversation-quick-reply.js'));
+
+    expect($workspace)->toContain("root.addEventListener('submit'")
+        ->and($workspace)->toContain('ark:comms-action-busy')
+        ->and($workspace)->toContain('setActionBusy(true)')
+        ->and($composer)->toContain("this.\$watch('sending'")
+        ->and($composer)->toContain('ark:comms-action-busy');
+});
+
 test('detail fragments include the centered switch overlay', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
