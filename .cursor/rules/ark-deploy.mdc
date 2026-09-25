@@ -15,7 +15,7 @@ Read [`ops/releases/distribution.yaml`](../../ops/releases/distribution.yaml) an
 
 Last verified image:
 
-`ghcr.io/edwardsoaresjr/ark-core@sha256:668659f57b19bd1e7953e09371f42ce8bb8cf3c4ed5b20eb11da8be29bc9a90e`
+`ghcr.io/edwardsoaresjr/ark-core@sha256:f62f8db6e990f8e320fcfd5f6d450ec1f959bb9c9d1602ed3622d8fcc4141ec8`
 
 Publish to `ghcr.io/edwardsoaresjr/ark-core`.
 
