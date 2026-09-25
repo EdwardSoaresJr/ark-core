@@ -340,13 +340,17 @@ test('portal estimate shows step indicator and collapsible service details', fun
 
     $this->get(route('portal.estimates.show', ['token' => $plainToken]))
         ->assertOk()
-        ->assertSee('Authorize')
+        ->assertSee('Approve')
         ->assertSee('Approved total', false)
         ->assertSee('portal-estimate-authorize-shell', false)
         ->assertDontSee('Authorize work', false)
         ->assertSee('Review')
         ->assertSee('Recommended Work')
-        ->assertSee('Service 1')
+        ->assertSee('Water pump replacement')
+        ->assertSee('Replace water pump', false)
+        ->assertSee('Water Pump', false)
+        ->assertDontSee('Water pump assembly', false)
+        ->assertSee('Price details', false)
         ->assertSee('portal-estimate-mobile-bar');
 });
 

@@ -237,11 +237,6 @@
                     'totalsBreakdown' => $totalsBreakdown,
                     'approvalForecast' => $approvalForecast,
                 ])
-
-                @include('partials.public.financing-note', [
-                    'class' => 'mt-5',
-                    'showProgramButtons' => true,
-                ])
             </div>
 
             @if ($canAuthorize || $showDeposit)
@@ -340,10 +335,6 @@
                                     'approvalForecast' => $approvalForecast,
                                 ])
                             </div>
-                            @include('partials.public.financing-note', [
-                                'class' => 'mt-4',
-                                'showProgramButtons' => true,
-                            ])
                         </div>
                     @endif
 
@@ -376,10 +367,6 @@
                             'approvalForecast' => $approvalForecast,
                         ])
                     </div>
-
-                    @include('partials.public.financing-note', [
-                        'showProgramButtons' => true,
-                    ])
                 </aside>
             </div>
 

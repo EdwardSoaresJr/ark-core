@@ -5,6 +5,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Platform\Http\VerifyPlatformFabricSignature;
 use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\Voice\ManagedVoiceGate;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -170,4 +171,36 @@ function postSignedFabricEvent(string $operation, array $payload): TestResponse
         ],
         $body,
     );
+}
+
+function fakeHostedPlatformPaymentCapture(): void
+{
+    enableHostedPlatformPayments();
+
+    Http::fake(function (Request $request) {
+        if (str_contains($request->url(), '/readiness')) {
+            return Http::response(platformPaymentReadinessPayload(), 200);
+        }
+
+        if ($request->method() === 'POST' && str_contains($request->url(), '/captures')) {
+            $json = $request->data();
+
+            return Http::response(platformCaptureKeyedSucceededPayload(
+                (string) $json['idempotency_key'],
+                (string) $json['capture_attempt_public_id'],
+                (int) $json['amount_cents'],
+            ), 200);
+        }
+
+        if (str_contains($request->url(), '/api/v1/status')) {
+            return Http::response([
+                'ok' => true,
+                'services' => [
+                    ['key' => 'voice', 'label' => 'ARK Voice', 'status' => 'not_enabled', 'status_label' => 'Not enabled', 'detail' => null, 'runtime_owner' => 'core'],
+                ],
+            ], 200);
+        }
+
+        return Http::response(['ok' => false], 500);
+    });
 }

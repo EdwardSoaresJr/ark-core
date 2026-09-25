@@ -18,8 +18,6 @@ use App\Ark\Operations\Financial\LedgerEntryType;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
 use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
-use App\Ark\Operations\Payments\Contracts\SquarePaymentsClient;
-use App\Ark\Operations\Payments\FakeSquarePaymentsClient;
 use App\Ark\Operations\Payments\PaymentCaptureSurface;
 use App\Ark\Operations\Payments\PaymentGatewayAttemptStatus;
 use App\Ark\Operations\Portal\EstimateAccessToken;
@@ -39,6 +37,38 @@ use Illuminate\Support\Facades\Mail;
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
     ShopSettings::current()->update(['portal_signature_required' => false]);
+});
+
+test('a valid estimate token renders recommended work and hides draft work', function () {
+    [$repairOrder, , $recommendedConcern] = portalAuthorizationRepairOrder();
+
+    $draft = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Draft internal diagnostic',
+        'disposition' => RepairOrderConcernDisposition::Draft,
+        'position' => 2,
+    ]);
+
+    RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $draft->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Internal draft labor',
+        'quantity' => '1.00',
+        'unit_price_cents' => 9900,
+    ]);
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertSee($recommendedConcern->summary, false)
+        ->assertSee('A/C performance diagnostic', false)
+        ->assertDontSee('Draft internal diagnostic', false)
+        ->assertDontSee('Internal draft labor', false)
+        ->assertDontSee('public-financing-note', false)
+        ->assertSee('Choose what to approve', false);
+
+    $this->get(route('portal.estimates.show', ['token' => str_repeat('d', 64)]))
+        ->assertNotFound();
 });
 
 test('portal authorization submit button reflects default all-approved selection', function () {
@@ -313,10 +343,10 @@ test('staff portal preview uses the trust customer footer', function () {
         ->get(route('operations.repair-orders.portal-preview', $repairOrder))
         ->assertOk()
         ->assertSee('Staff preview', false)
-        ->assertSee('customer-footer__columns', false)
+        ->assertSee('customer-footer', false)
+        ->assertSee('customer-footer__grid', false)
         ->assertDontSee('Why customers choose us', false)
-        ->assertSee('Helpful links', false)
-        ->assertDontSee('customer-footer__grid', false);
+        ->assertDontSee('customer-footer__columns', false);
 });
 
 test('staff portal preview does not record estimate viewed or touch last viewed timestamp', function () {
@@ -367,19 +397,7 @@ test('customer portal open after advisor preview still records estimate viewed o
 });
 
 test('portal estimate deposit completes after authorization', function () {
-    config()->set('services.square.application_id', 'sq0idp-test-app');
-    config()->set('services.square.access_token', 'test-token');
-    config()->set('services.square.location_id', 'LOC123');
-    config()->set('services.square.webhook_signature_key', 'test-signature-key');
-
-    ShopSettings::current()->update([
-        'square_enabled' => true,
-        'square_portal_pay_enabled' => true,
-    ]);
-
-    $fakeSquare = new FakeSquarePaymentsClient;
-    $this->app->instance(FakeSquarePaymentsClient::class, $fakeSquare);
-    $this->app->bind(SquarePaymentsClient::class, fn () => $fakeSquare);
+    fakeHostedPlatformPaymentCapture();
 
     [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -414,24 +432,15 @@ test('portal estimate deposit completes after authorization', function () {
 });
 
 test('portal estimate still collects remaining balance after a deposit is on file', function () {
-    config()->set('services.square.application_id', 'sq0idp-test-app');
-    config()->set('services.square.access_token', 'test-token');
-    config()->set('services.square.location_id', 'LOC123');
-    config()->set('services.square.webhook_signature_key', 'test-signature-key');
+    fakeHostedPlatformPaymentCapture();
 
     ShopSettings::current()->update([
-        'square_enabled' => true,
-        'square_portal_pay_enabled' => true,
         'default_deposit_enabled' => true,
         'default_deposit_include_parts' => true,
         'default_deposit_include_diagnostics' => false,
         'shop_fee_enabled' => false,
         'tax_enabled' => false,
     ]);
-
-    $fakeSquare = new FakeSquarePaymentsClient;
-    $this->app->instance(FakeSquarePaymentsClient::class, $fakeSquare);
-    $this->app->bind(SquarePaymentsClient::class, fn () => $fakeSquare);
 
     [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -590,18 +599,24 @@ test('portal estimate deposit initiate returns json when portal pay is disabled'
         'approval_id' => $approval->id,
     ])->assertStatus(503)
         ->assertJsonPath('message', 'Online deposits are not enabled.');
-});
-
-test('staff portal preview disables live card deposit', function () {
-    config()->set('services.square.application_id', 'sq0idp-test-app');
-    config()->set('services.square.access_token', 'test-token');
-    config()->set('services.square.location_id', 'LOC123');
-    config()->set('services.square.webhook_signature_key', 'test-signature-key');
 
     ShopSettings::current()->update([
         'square_enabled' => true,
         'square_portal_pay_enabled' => true,
     ]);
+
+    $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))
+        ->assertOk()
+        ->assertDontSee('Step 3 - Pay deposit');
+
+    $this->postJson(route('portal.estimates.deposits.store', ['token' => portalAuthorizationPlainToken()]), [
+        'approval_id' => $approval->id,
+    ])->assertStatus(503)
+        ->assertJsonPath('message', 'Online deposits are not enabled.');
+});
+
+test('staff portal preview disables live card deposit', function () {
+    fakeHostedPlatformPaymentCapture();
 
     [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -621,15 +636,7 @@ test('staff portal preview disables live card deposit', function () {
 });
 
 test('portal estimate deposit complete url keeps zeros inside the access token', function () {
-    config()->set('services.square.application_id', 'sq0idp-test-app');
-    config()->set('services.square.access_token', 'test-token');
-    config()->set('services.square.location_id', 'LOC123');
-    config()->set('services.square.webhook_signature_key', 'test-signature-key');
-
-    ShopSettings::current()->update([
-        'square_enabled' => true,
-        'square_portal_pay_enabled' => true,
-    ]);
+    fakeHostedPlatformPaymentCapture();
 
     [$repairOrder, $tokenModel, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -658,15 +665,7 @@ test('portal estimate deposit complete url keeps zeros inside the access token',
 });
 
 test('portal estimate deposit panel persists after session flash expires', function () {
-    config()->set('services.square.application_id', 'sq0idp-test-app');
-    config()->set('services.square.access_token', 'test-token');
-    config()->set('services.square.location_id', 'LOC123');
-    config()->set('services.square.webhook_signature_key', 'test-signature-key');
-
-    ShopSettings::current()->update([
-        'square_enabled' => true,
-        'square_portal_pay_enabled' => true,
-    ]);
+    fakeHostedPlatformPaymentCapture();
 
     [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
 
@@ -690,15 +689,7 @@ test('portal estimate deposit panel persists after session flash expires', funct
 });
 
 test('portal estimate shows authorize instructions when deposit is enabled', function () {
-    config()->set('services.square.application_id', 'sq0idp-test-app');
-    config()->set('services.square.access_token', 'test-token');
-    config()->set('services.square.location_id', 'LOC123');
-    config()->set('services.square.webhook_signature_key', 'test-signature-key');
-
-    ShopSettings::current()->update([
-        'square_enabled' => true,
-        'square_portal_pay_enabled' => true,
-    ]);
+    fakeHostedPlatformPaymentCapture();
 
     portalAuthorizationRepairOrder();
 
@@ -743,6 +734,7 @@ test('estimate email includes portal review link', function () {
         ->from(route('operations.repair-orders.show', $repairOrder))
         ->post(route('operations.repair-orders.estimate.email', $repairOrder), [
             'message' => 'Please review online.',
+            'acknowledge_missing_vin' => true,
         ])
         ->assertRedirect();
 
@@ -772,6 +764,7 @@ function portalAuthorizationRepairOrder(): array
         'year' => 2013,
         'make' => 'Chevrolet',
         'model' => 'Tahoe',
+        'vin' => '1GNSKBE0XDR000001',
     ]);
 
     $repairOrder = RepairOrder::query()->create([

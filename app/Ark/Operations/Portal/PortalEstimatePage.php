@@ -119,7 +119,6 @@ final class PortalEstimatePage
         }
 
         $customerFirstName = trim((string) ($repairOrder->customer->first_name ?? ''));
-        $publicSurface = \App\Ark\Operations\Leads\Public\PublicSurfaceSettings::current();
 
         return view('portal.estimate', [
             'repairOrder' => $repairOrder,
@@ -151,7 +150,7 @@ final class PortalEstimatePage
             'customerName' => trim($repairOrder->customer->first_name.' '.$repairOrder->customer->last_name),
             'customerFirstName' => $customerFirstName !== '' ? $customerFirstName : null,
             'shopDisplayName' => ShopSettings::current()->displayName(),
-            'shopHeadline' => filled($publicSurface['headline'] ?? null) ? (string) $publicSurface['headline'] : null,
+            'shopHeadline' => null,
             'customerStatusLabel' => $this->estimateStatus->labelForRepairOrder($repairOrder),
             'signatureRequired' => ShopSettings::current()->portalSignatureRequired(),
             'authorizationLanguage' => ShopSettings::current()->authorizationLanguage(),
