@@ -9,6 +9,7 @@ SurfaceRouting::publicRoutes(function (): void {
     Route::middleware(['web', CoreWebsiteResponse::class])->group(function (): void {
         Route::get('/', [PublicWebsiteController::class, 'home'])->name('public.home');
         Route::get('/about', [PublicWebsiteController::class, 'about'])->name('public.about');
+        Route::get('/services', [PublicWebsiteController::class, 'services'])->name('public.services');
         Route::get('/book', [PublicWebsiteController::class, 'book'])->name('public.book');
         Route::get('/contact', [PublicWebsiteController::class, 'contact'])->name('public.contact');
         Route::get('/common-problems', [PublicWebsiteController::class, 'problems'])->name('public.common-problems.index');

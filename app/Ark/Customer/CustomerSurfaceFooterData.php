@@ -17,7 +17,9 @@ final class CustomerSurfaceFooterData
         $shop = ShopSettings::current();
         $shopName = $shop->displayName();
 
-        $streetAddress = $shop->publicationStreetAddress();
+        $streetAddress = trim((string) $shop->address_line_1) !== ''
+            ? $shop->googleMatchedStreetAddress()
+            : '';
         $cityState = trim(implode(', ', array_filter([$shop->city, $shop->state]))) ?: null;
         $postalCode = trim((string) ($shop->postal_code ?? '')) ?: null;
 
@@ -43,19 +45,21 @@ final class CustomerSurfaceFooterData
             ? 'https://www.google.com/maps/search/?api=1&query='.$mapsQuery
             : null;
 
-        $portalUrl = Route::has('portal.access') ? CustomerSurfaceUrls::portalAccess() : null;
-
-        /** @var list<array{label: string, href: string}> $navLinks */
-        $navLinks = array_values(array_filter([
-            Route::has('public.about') ? [
-                'label' => 'About',
-                'href' => route('public.about'),
-            ] : null,
-            filled($portalUrl) ? [
-                'label' => auth('portal')->check() ? 'My Account' : 'Sign In',
-                'href' => auth('portal')->check() ? CustomerSurfaceUrls::portalHome() : $portalUrl,
-            ] : null,
-        ]));
+        $navigation = app(CustomerSurfaceNavigation::class);
+        $navLinks = [];
+        foreach ($navigation->shopLinks() as $link) {
+            $navLinks[] = [
+                'label' => $link['label'],
+                'href' => $link['href'],
+            ];
+        }
+        $utility = $navigation->utilityLink();
+        if ($utility !== null) {
+            $navLinks[] = [
+                'label' => $utility['label'],
+                'href' => $utility['href'],
+            ];
+        }
 
         return [
             'shop_name' => $shopName,
@@ -66,7 +70,7 @@ final class CustomerSurfaceFooterData
             'phone_tel' => $phoneTel,
             'business_hours_label' => TelephonyBusinessHoursLabel::fromCallFlow(),
             'google_maps_url' => $googleMapsUrl,
-            'portal_url' => $portalUrl,
+            'portal_url' => Route::has('portal.access') ? CustomerSurfaceUrls::portalAccess() : null,
             'nav_links' => $navLinks,
         ];
     }

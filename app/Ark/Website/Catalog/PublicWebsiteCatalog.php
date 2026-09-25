@@ -95,10 +95,10 @@ final class PublicWebsiteCatalog
             'seo' => [
                 'home' => [
                     'title' => 'Auto Repair Colorado Springs | Verified Diagnostics',
-                    'description' => 'Colorado Springs auto repair with testing and live data before parts. 24-month shop warranty on qualifying work. Book an appointment online.',
+                    'description' => 'Colorado Springs auto repair with testing and live data before parts. 24-month shop warranty on qualifying work. Request an appointment online.',
                 ],
                 'book' => [
-                    'title' => 'Book an Appointment',
+                    'title' => 'Request an appointment',
                     'description' => 'Request an appointment. We verify the problem, provide a clear estimate, and repair only what you approve.',
                 ],
                 'contact' => [
@@ -122,8 +122,8 @@ final class PublicWebsiteCatalog
                     'description' => 'Basic terms for using the shop website and My Account.',
                 ],
                 'common_problems' => [
-                    'title' => 'Common problems',
-                    'description' => 'What a symptom can mean, whether you can keep driving, and how the shop finds the cause.',
+                    'title' => 'Problems and codes',
+                    'description' => 'What a symptom or code can mean, whether you can keep driving, and how the shop finds the cause.',
                 ],
                 'repairpal' => [
                     'title' => 'RepairPal',

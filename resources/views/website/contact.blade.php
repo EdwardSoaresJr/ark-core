@@ -1,7 +1,7 @@
 <x-website.layout :website="$website" :seo="$seo" page="contact">
     <article class="public-static-page">
         <h1 class="public-page-title">Contact {{ $website->shopName() }}</h1>
-        <p class="public-page-lede">Call, text, or send a message. For service, book a time and we will confirm it.</p>
+        <p class="public-page-lede">Call, text, or send a message. For service, request an appointment and we will confirm a time. It does not reserve a bay.</p>
         <ul class="mt-4 text-sm leading-6">
             @if ($website->phone() !== '')
                 <li>Phone: {{ $website->phoneDisplay() }}</li>
@@ -13,7 +13,7 @@
                 <li>{{ $website->address() }}</li>
             @endif
         </ul>
-        <p class="mt-4"><a class="public-cta public-cta--primary" href="{{ route('public.book') }}">Book an appointment</a></p>
+        <p class="mt-4"><a class="public-cta public-cta--primary" href="{{ route('public.book') }}">Request an appointment</a></p>
 
         @if ($website->faqs() !== [])
             <section class="mt-8">

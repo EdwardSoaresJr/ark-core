@@ -25857,6 +25857,14 @@ html.dark .ops-printing-cmd,
         border-top: 0;
     }
 
+    .public-cp-index__catalog h2 {
+        margin: 0;
+        font-size: 1.0625rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--public-navy);
+    }
+
     .public-cp-index__list {
         margin: 0.875rem 0 0;
         padding: 0;
@@ -26198,6 +26206,30 @@ html.dark .ops-printing-cmd,
     .public-surface .customer-header__nav-link--book {
         color: var(--public-red);
         font-weight: 700;
+    }
+
+    .public-surface .customer-header__nav-link {
+        white-space: nowrap;
+    }
+
+    @media (min-width: 768px) {
+        .public-surface .customer-header__nav--desktop .customer-header__nav-link--utility {
+            margin-left: auto;
+            font-weight: 600;
+        }
+    }
+
+    .public-surface .customer-header__nav--mobile .customer-header__nav-link {
+        padding: 0.75rem 0.125rem;
+    }
+
+    .public-services__links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 1rem;
+        margin: 0.75rem 0 0;
+        padding: 0;
+        list-style: none;
     }
 
     .public-surface .customer-header__trust {
@@ -31232,6 +31264,16 @@ html.dark .ops-printing-cmd,
     html.dark .public-surface .customer-header__nav-link--active {
         color: theme('colors.slate.50');
         background: rgb(148 163 184 / 0.08);
+    }
+
+    html.dark .public-surface .customer-header__nav-link--book {
+        color: var(--public-red);
+    }
+
+    html.dark .public-surface .customer-header__menu-toggle {
+        border-color: rgb(148 163 184 / 0.18);
+        background: rgb(30 41 59 / 0.85);
+        color: theme('colors.slate.50');
     }
 
     html.dark .public-surface .customer-header__theme-toggle {

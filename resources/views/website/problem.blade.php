@@ -99,14 +99,17 @@
                 <h2>Related</h2>
                 <ul>
                     @foreach ($problem['related_problem_slugs'] as $related)
-                        <li><a class="public-link" href="{{ route('public.common-problems.show', $related) }}">{{ $related }}</a></li>
+                        @php $relatedProblem = $website->problem($related); @endphp
+                        @if ($relatedProblem !== null)
+                            <li><a class="public-link" href="{{ route('public.common-problems.show', $related) }}">{{ $relatedProblem['title'] ?? $related }}</a></li>
+                        @endif
                     @endforeach
                 </ul>
             </section>
         @endif
 
         <p class="mt-6">
-            <a class="public-cta public-cta--primary" href="{{ route('public.book') }}">Book an appointment</a>
+            <a class="public-cta public-cta--primary" href="{{ route('public.book', array_filter(['concern' => $problem['concern_prefill'] ?? null])) }}">Request an appointment</a>
         </p>
     </article>
 </x-website.layout>

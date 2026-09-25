@@ -17,7 +17,6 @@ final class PublicLegacyRedirect
      */
     public const HOMEPAGE_ONLY = [
         '/about-us' => '/',
-        '/services' => '/',
         '/from-the-bay' => '/',
         '/request-estimate' => '/',
         '/request-a-quote' => '/',

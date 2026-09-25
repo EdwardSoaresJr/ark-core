@@ -115,6 +115,94 @@ test('about page uses the team photo and shop facts', function (): void {
         ->assertSee('https://lugsnplugs.com/about', false);
 });
 
+test('site foundation exposes services, problems, and an appointment request', function (): void {
+    publishHomepageSurface([
+        'shop_services' => [
+            'Auto Repair Colorado Springs',
+            'Mechanic Colorado Springs',
+            'Car Diagnostics Colorado Springs',
+            'Brake Repair Colorado Springs',
+            'Tune Up Colorado Springs',
+            'Audi Repair Colorado Springs',
+        ],
+    ]);
+
+    $home = $this->get('http://lugsnplugs.com/');
+
+    $home->assertOk()
+        ->assertSee('customer-header__brand', false)
+        ->assertSee('href="https://lugsnplugs.com" class="customer-header__brand"', false)
+        ->assertSee('Services')
+        ->assertSee('Problems')
+        ->assertSee('Warranty')
+        ->assertSee('Financing')
+        ->assertSee('Contact')
+        ->assertSee('Request an appointment')
+        ->assertSee('Sign In')
+        ->assertSee('customer-header__nav--mobile', false)
+        ->assertSee('customer-header__menu-toggle', false)
+        ->assertSee('href="https://lugsnplugs.com/services"', false)
+        ->assertDontSee('Demo City');
+
+    $this->get('http://lugsnplugs.com/services')
+        ->assertOk()
+        ->assertSee('Diagnostics')
+        ->assertSee('Brakes')
+        ->assertSee('Maintenance')
+        ->assertSee('We test the vehicle against how that system is supposed to work', false)
+        ->assertSee('/common-problems/check-engine-light', false)
+        ->assertSee('/common-problems/electrical-diagnostics', false)
+        ->assertDontSee('Auto Repair Colorado Springs')
+        ->assertSee('https://lugsnplugs.com/services', false);
+
+    $hub = $this->get('http://lugsnplugs.com/common-problems');
+    $hub->assertOk()
+        ->assertSee('Problems and symptoms')
+        ->assertSee('Diagnostic codes')
+        ->assertSee('Check Engine Light')
+        ->assertSee('P0300 Check Engine Code')
+        ->assertDontSee('Auto Repair Colorado Springs')
+        ->assertDontSee('Electrical System Diagnostics')
+        ->assertSee('/services', false);
+
+    $this->get('http://lugsnplugs.com/common-problems/check-engine-light')
+        ->assertOk()
+        ->assertSee('Request an appointment')
+        ->assertDontSee('>Book an appointment<', false)
+        ->assertSee('concern=My%20check%20engine%20light%20is%20on.', false)
+        ->assertSee('>Rough Idle</a>', false)
+        ->assertDontSee('>rough-idle</a>', false);
+
+    $this->get('http://lugsnplugs.com/common-problems/p0300')
+        ->assertOk()
+        ->assertSee('>Check Engine Light</a>', false)
+        ->assertDontSee('>check-engine-light</a>', false);
+
+    $this->get('http://lugsnplugs.com/contact')
+        ->assertOk()
+        ->assertSee('Request an appointment')
+        ->assertSee('It does not reserve a bay.')
+        ->assertDontSee('Book an appointment');
+
+    $this->get('http://lugsnplugs.com/book')
+        ->assertOk()
+        ->assertSee('<title>Request an appointment', false)
+        ->assertDontSee('Book an Appointment');
+
+    $llms = $this->get('http://lugsnplugs.com/llms.txt')->assertOk()->getContent();
+    $services = \Illuminate\Support\Str::between($llms, "## Services\n", "\n## ");
+    expect($services)->toContain('Diagnostics: https://lugsnplugs.com/services#diagnostics')
+        ->and($services)->toContain('Brakes: https://lugsnplugs.com/services#brakes')
+        ->and($services)->not->toContain('Auto Repair Colorado Springs')
+        ->and($services)->not->toContain('Mechanic Colorado Springs');
+
+    $this->get('http://lugsnplugs.com/sitemap.xml')
+        ->assertOk()
+        ->assertSee('https://lugsnplugs.com/services', false);
+
+    $this->get('http://lugsnplugs.com/services/oil-change')->assertNotFound();
+});
+
 test('homepage omits financing names that are not offered', function (): void {
     publishHomepageSurface([
         'trust_signals' => ['financing_available' => false],

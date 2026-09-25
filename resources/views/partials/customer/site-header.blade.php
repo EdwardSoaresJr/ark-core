@@ -7,15 +7,23 @@
     $phoneDisplay = \App\Ark\Operations\PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
     $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '7194136227';
     $smsHref = 'sms:'.$phoneTel;
-    $cityState = trim(implode(', ', array_filter([$shop->city, $shop->state]))) ?: 'Demo City, ST';
+    $cityState = trim(implode(', ', array_filter([
+        trim((string) $shop->city),
+        trim((string) $shop->state),
+    ])));
+    $street = trim((string) $shop->address_line_1) !== ''
+        ? $shop->googleMatchedStreetAddress()
+        : '';
     $addressParts = array_filter([
-        $shop->publicationStreetAddress(),
+        $street,
         $cityState,
-        trim((string) $shop->postal_code) !== '' ? $shop->postal_code : '80909',
+        trim((string) $shop->postal_code),
     ]);
     $addressLine = implode(' · ', $addressParts);
     $navItems = app(CustomerSurfaceNavigation::class)->items();
-    $homeUrl = \App\Ark\Customer\CustomerSurfaceUrls::publicHome();
+    $homeUrl = \Illuminate\Support\Facades\Route::has('public.home')
+        ? route('public.home')
+        : \App\Ark\Customer\CustomerSurfaceUrls::portalHome();
 @endphp
 
 <header
@@ -50,31 +58,37 @@
             >
                 Text
             </a>
+
+            @if ($navItems !== [])
+                <button
+                    type="button"
+                    class="customer-header__menu-toggle"
+                    @click="menuOpen = ! menuOpen"
+                    :aria-expanded="menuOpen.toString()"
+                    aria-controls="customer-nav-mobile"
+                    aria-label="Menu"
+                >
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path stroke-linecap="round" d="M3 5h14M3 10h14M3 15h14" />
+                    </svg>
+                </button>
+            @endif
         </div>
     </div>
 
     @if ($navItems !== [])
         <nav class="customer-header__nav customer-header__nav--desktop" aria-label="Customer">
-            @foreach ($navItems as $item)
-                <a
-                    href="{{ $item['href'] }}"
-                    @class([
-                        'customer-header__nav-link',
-                        'customer-header__nav-link--active' => $item['active'],
-                    ])
-                >
-                    {{ $item['label'] }}
-                </a>
-            @endforeach
-
-            @if (auth('portal')->check())
-                <form method="POST" action="{{ route('portal.logout') }}" class="customer-header__sign-out">
-                    @csrf
-                    <button type="submit" class="customer-header__sign-out-btn">
-                        Sign out
-                    </button>
-                </form>
-            @endif
+            @include('partials.customer.site-nav-links', ['navItems' => $navItems])
+        </nav>
+        <nav
+            id="customer-nav-mobile"
+            class="customer-header__nav customer-header__nav--mobile"
+            aria-label="Customer"
+            x-show="menuOpen"
+            x-cloak
+            @click="menuOpen = false"
+        >
+            @include('partials.customer.site-nav-links', ['navItems' => $navItems])
         </nav>
     @endif
 </header>

@@ -15,6 +15,8 @@ use App\Ark\Operations\PhoneNumber;
 use Illuminate\Support\Facades\Auth;
 use App\Ark\Website\PublicLegacyRedirect;
 use App\Ark\Website\PublicLlmsTxt;
+use App\Ark\Website\PublicProblemGroups;
+use App\Ark\Website\PublicServiceIndex;
 use App\Ark\Website\PublishedWebsite;
 use App\Ark\Website\PublishedWebsiteResolver;
 use App\Ark\Website\WebsiteHosts;
@@ -37,9 +39,12 @@ final class PublicWebsiteController
             return $website;
         }
 
+        $seo = $this->seo($website, 'home', $request);
+        $seo['description'] = str_ireplace('Book an appointment', 'Request an appointment', $seo['description']);
+
         return view('website.home', [
             'website' => $website,
-            'seo' => $this->seo($website, 'home', $request),
+            'seo' => $seo,
         ]);
     }
 
@@ -56,6 +61,24 @@ final class PublicWebsiteController
 
         return view('website.about', [
             'website' => $website,
+            'seo' => $seo,
+        ]);
+    }
+
+    public function services(Request $request): View|Response|RedirectResponse
+    {
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        $seo = $this->seo($website, 'services', $request);
+        $seo['title'] = 'Services';
+        $seo['description'] = 'Diagnostics, brakes, maintenance, electrical, cooling, and the other work '.$website->shopName().' does.';
+
+        return view('website.services', [
+            'website' => $website,
+            'services' => PublicServiceIndex::categories($website),
             'seo' => $seo,
         ]);
     }
@@ -81,9 +104,12 @@ final class PublicWebsiteController
             $details = $prefill;
         }
 
+        $seo = $this->seo($website, 'book', $request);
+        $seo['title'] = 'Request an appointment';
+
         return view('website.book', [
             'website' => $website,
-            'seo' => $this->seo($website, 'book', $request),
+            'seo' => $seo,
             'closed' => ! ($availability['accepting_requests'] ?? false),
             'dates' => $availability['dates'] ?? [],
             'periods' => $availability['periods'] ?? [],
@@ -140,9 +166,13 @@ final class PublicWebsiteController
             return $website;
         }
 
+        $seo = $this->seo($website, 'common_problems', $request);
+        $seo['title'] = 'Problems and codes';
+
         return view('website.problems-index', [
             'website' => $website,
-            'seo' => $this->seo($website, 'common_problems', $request),
+            'groups' => PublicProblemGroups::split($website->problems()),
+            'seo' => $seo,
         ]);
     }
 
@@ -309,6 +339,7 @@ final class PublicWebsiteController
         $paths = [
             '/',
             '/about',
+            '/services',
             '/book',
             '/contact',
             '/common-problems',

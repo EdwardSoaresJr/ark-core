@@ -46,7 +46,7 @@
                         <div class="public-panel">
                             <p class="text-sm leading-6 text-slate-600">No vehicles are linked to this account yet.</p>
                             <p class="mt-3 text-sm text-slate-600">
-                                <a href="{{ \App\Ark\Customer\CustomerSurfaceUrls::publicHome() }}" class="font-semibold text-[#0099cc] no-underline hover:text-[#0088b8]">
+                                <a href="{{ Route::has('public.contact') ? route('public.contact') : url('/contact') }}" class="font-semibold text-[#0099cc] no-underline hover:text-[#0088b8]">
                                     Contact the shop
                                 </a>
                                 if that looks wrong.

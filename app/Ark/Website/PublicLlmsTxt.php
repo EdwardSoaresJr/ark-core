@@ -34,13 +34,11 @@ final class PublicLlmsTxt
             $lines[] = 'Email: '.$website->email();
         }
 
-        $services = $website->serviceNames();
-        if ($services !== []) {
-            $lines[] = '';
-            $lines[] = '## Services';
-            foreach ($services as $service) {
-                $lines[] = '- '.$service;
-            }
+        $lines[] = '';
+        $lines[] = '## Services';
+        $lines[] = 'Service menu: '.$website->canonicalUrl('/services');
+        foreach (PublicServiceIndex::definitions() as $service) {
+            $lines[] = '- '.$service['name'].': '.$website->canonicalUrl('/services').'#'.$service['id'];
         }
 
         $facts = [];
@@ -66,9 +64,10 @@ final class PublicLlmsTxt
         $pages = [
             '/' => 'Home',
             '/about' => 'About',
+            '/services' => 'Services',
             '/book' => 'Appointment request',
             '/contact' => 'Contact',
-            '/common-problems' => 'Common problems',
+            '/common-problems' => 'Problems',
         ];
         foreach ([
             'financing' => '/financing',
