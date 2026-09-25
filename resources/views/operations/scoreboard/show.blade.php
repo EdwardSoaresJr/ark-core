@@ -1,4 +1,5 @@
 <x-operations.app title="Shop scoreboard">
+    @include('operations.dashboard.tabs')
     <div class="space-y-4">
         <form method="GET" action="{{ route('operations.owner.scoreboard') }}" class="flex flex-wrap items-center gap-2">
             @if ($focus)

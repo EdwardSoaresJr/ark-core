@@ -373,6 +373,10 @@ SurfaceRouting::appRoutes(function (): void {
     })->where('path', '.*');
 
     Route::middleware(['auth', 'permission:'.StaffFrontDoor::STAFF_SHELL_PERMISSION])->group(function () {
+        Route::get('/app/dashboard', TodayController::class)
+            ->middleware('front_door:today')
+            ->name('operations.dashboard');
+
         Route::get('/app/today', TodayController::class)
             ->middleware('front_door:today')
             ->name('operations.today');

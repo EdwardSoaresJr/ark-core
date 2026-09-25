@@ -10716,6 +10716,7 @@
         letter-spacing: 0;
         text-transform: none;
         color: theme('colors.slate.600');
+        text-decoration: none;
         white-space: nowrap;
     }
 

@@ -49,7 +49,13 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         || (auth()->user()?->can('repair_orders.view') ?? false);
     $canManageSettings = auth()->user()?->can('settings.manage') ?? false;
     $canViewScoreboard = \App\Ark\Operations\Scoreboard\ShopOperatingScoreboardAccess::allows(auth()->user());
-    $hasBusinessNav = $canAccessBusinessWorkspace || $canManageSettings || $canViewScoreboard;
+    $hasBusinessNav = $canAccessBusinessWorkspace || $canManageSettings;
+    $dashboardNavActive = request()->routeIs(
+        'operations.dashboard',
+        'operations.today',
+        'operations.briefing',
+        'operations.owner.scoreboard',
+    );
     $showArkademyNav = $canUseProductionShell || $usesAdvisorWorkSurface;
     $hasSystemNav = $showArkademyNav || $canManageSettings;
     $commsChannelTabs = app(CommsChannelStripResolver::class)->tabsFor(auth()->user(), $previousLastSeenAt);
@@ -162,16 +168,16 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                 </a>
 
                 <nav aria-label="Primary operations" class="ops-rail-nav">
-                    @if ($canUseProductionShell)
+                    @if ($canUseProductionShell || $canViewScoreboard)
                         <div class="ops-rail-section">
-                            <a href="{{ route('operations.today') }}" class="ops-rail-link {{ request()->routeIs('operations.today', 'operations.briefing') ? 'ops-rail-link--active' : '' }}">
+                            <a href="{{ route('operations.dashboard') }}" class="ops-rail-link {{ $dashboardNavActive ? 'ops-rail-link--active' : '' }}">
                                 <span class="ops-rail-icon">
                                     <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
                                         <path d="M4 4.5h12v11H4v-11z" stroke="currentColor" stroke-width="1.4" />
                                         <path d="M7 8h6M7 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
                                     </svg>
                                 </span>
-                                <span>Today</span>
+                                <span>Dashboard</span>
                             </a>
                             @if ($canUseTimeClock)
                                 <a href="{{ route('operations.time-clock.index') }}" class="ops-rail-link {{ request()->routeIs('operations.time-clock.*') ? 'ops-rail-link--active' : '' }}">
@@ -307,16 +313,6 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                                     <span>Reports</span>
                                 </a>
                             @endcan
-                            @if ($canViewScoreboard)
-                                <a href="{{ route('operations.owner.scoreboard') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.scoreboard') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M4 15.5h12M6 15.5V9M10 15.5V4.5M14 15.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Scoreboard</span>
-                                </a>
-                            @endif
                             @if ($canAccessOwnerWorkspace)
                                 <a href="{{ route('operations.owner.day-review') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.day-review', 'operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
                                     <span class="ops-rail-icon">

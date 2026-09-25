@@ -118,6 +118,7 @@
 @endphp
 
 <x-operations.app title="Today">
+    @include('operations.dashboard.tabs')
     @if ($dashboard !== null)
         <section class="ops-today ops-today--dashboard">
             <div class="ops-today__body">
