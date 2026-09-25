@@ -14,21 +14,21 @@ A git push is not a release. Each target has its own deploy and verification res
 | Demo | `https://demo.arksms.com` | Docker Compose at `/opt/ark` on `104.238.144.183` | Disabled |
 | LNP Production | `https://lugsnplugs.arksms.com` | Compose recreate-core on `149.28.249.13` | **Disabled** |
 
-Running 2026-09-23 on Demo and LNP. Local Herd is this checkout. Fleet deployment automation stays disabled.
+Running 2026-09-24 on Demo and LNP. Local Herd is this checkout. Fleet deployment automation stays disabled.
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:229e7e863f9a75ef8a36af2039b9903cc4cf03700c720ed0f4d172e21c0af891
+ghcr.io/edwardsoaresjr/ark-core@sha256:668659f57b19bd1e7953e09371f42ce8bb8cf3c4ed5b20eb11da8be29bc9a90e
 ```
 
-Source commit `7b04db46f4073067f1d8378d02413d835efd9f87` on `main`. `/up` returned 200 on local, Demo, and LNP. Only Demo `app` and LNP `core` were recreated.
+Source commit `bc6cc893a85730ec9dd48a172362324167cdc042` on `main`. `/up` returned 200 on local, Demo, and LNP. Only Demo `app` and LNP `core` were recreated. LNP QZ check passed. Voice registrar stayed configured.
 
 Immediate rollback is the image that was running before this recreate:
 
 ```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:98b32040de8774668fcfdf05f604d9b7a17a5725cce5e45656c2acccdc669faf
+ghcr.io/edwardsoaresjr/ark-core@sha256:bea7d58bdaf5a1a232fcc2a5b28a163219c5053afc108dc79744807836a55c44
 ```
 
-Source commit `fe9efbcc94c019b125c3ea4fcb63ac0114dc9a65`. Compose backups: `/root/demo-compose-image-pre-7b04db46.yml` and `/root/lnp-core-compose-pre-7b04db46.yml`.
+Source commit `1c5c10af0b912d9789f9187031cd910507696236`. Compose backups: `/root/demo-compose-image-pre-bc6cc893.yml` and `/root/lnp-core-compose-pre-bc6cc893-20260925T001349Z.yml`.
 
 LNP Core accepted 2026-09-22. Shop confirmation: one physical label on one sticker, and the inbound SMS popup appeared.
 
