@@ -53,6 +53,17 @@ final class CustomerSurfaceBreadcrumbProjection
                 $this->home(),
                 ['label' => 'Inspection'],
             ),
+            $route->named('public.book') => $this->publicTrail('Book'),
+            $route->named('public.contact') => $this->publicTrail('Contact'),
+            $route->named('public.financing') => $this->publicTrail('Financing'),
+            $route->named('public.warranty') => $this->publicTrail('Warranty'),
+            $route->named('public.privacy') => $this->publicTrail('Privacy'),
+            $route->named('public.terms') => $this->publicTrail('Terms'),
+            $route->named('public.common-problems.index') => $this->publicTrail('Common problems'),
+            $route->named('public.common-problems.show') => $this->publicTrail(
+                (string) $route->parameter('slug'),
+                route('public.common-problems.index'),
+            ),
             default => [],
         };
     }
@@ -64,6 +75,24 @@ final class CustomerSurfaceBreadcrumbProjection
     private function trail(array ...$items): array
     {
         return $items;
+    }
+
+    /**
+     * @return list<array{label: string, href?: string|null}>
+     */
+    private function publicTrail(string $label, ?string $parentHref = null): array
+    {
+        $home = ['label' => 'Home', 'href' => route('public.home')];
+
+        if ($parentHref === null) {
+            return $this->trail($home, ['label' => $label]);
+        }
+
+        return $this->trail(
+            $home,
+            ['label' => 'Common problems', 'href' => $parentHref],
+            ['label' => $label],
+        );
     }
 
     /**

@@ -1,8 +1,5 @@
 <?php
 
-it('returns a successful response', function () {
-    $response = $this->get('/');
-
-    $response->assertOk()
-        ->assertSee('Repair shop operations without the noise.');
+it('shows an unpublished website until a publication exists', function () {
+    $this->get('/')->assertNotFound()->assertSee('This website is not published.');
 });

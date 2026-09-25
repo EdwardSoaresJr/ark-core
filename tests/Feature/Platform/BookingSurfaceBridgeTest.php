@@ -16,22 +16,16 @@ beforeEach(function (): void {
     ]);
 });
 
-test('public.book route name stays unregistered', function (): void {
-    expect(Route::has('public.book'))->toBeFalse();
+test('public.book is a core route', function (): void {
+    expect(Route::has('public.book'))->toBeTrue();
 });
 
-test('book is absent when booking surface is not configured', function (): void {
-    $this->get('/book')->assertNotFound();
-});
-
-test('book redirects to external booking surface when configured', function (): void {
+test('book does not redirect to an external booking origin', function (): void {
     config(['booking_surface.base_url' => 'https://lugsnplugs.com']);
 
-    // Route registration reads config at boot; re-register for this process.
-    Route::middleware('web')->get('/book', \App\Ark\Runtime\Booking\BookingSurfaceRedirectController::class);
-
-    $this->get('/book?apikey=test')
-        ->assertRedirect('https://lugsnplugs.com/book?apikey=test');
+    $this->get('/book')
+        ->assertNotFound()
+        ->assertSee('This website is not published.');
 });
 
 test('guard passes when protected marketing hosts are not claimed', function (): void {
@@ -42,15 +36,16 @@ test('guard passes when protected marketing hosts are not claimed', function ():
     expect(BookingSurface::claimedProtectedHosts())->toBe([]);
 });
 
-test('guard fails when protected host is claimed without booking base url', function (): void {
+test('guard allows a protected host without an external booking url', function (): void {
     config([
         'booking_surface.enforce' => true,
         'booking_surface.base_url' => '',
         'surfaces.public' => 'lugsnplugs.com',
     ]);
 
-    expect(fn () => BookingSurfaceGuard::assertCutoverSafe())
-        ->toThrow(RuntimeException::class, 'BOOKING_SURFACE_BASE_URL');
+    BookingSurfaceGuard::assertCutoverSafe();
+
+    expect(BookingSurface::isConfigured())->toBeFalse();
 });
 
 test('guard passes when protected host is claimed with booking base url', function (): void {
