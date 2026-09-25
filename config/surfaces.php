@@ -12,8 +12,13 @@ return [
 
     'learn' => env('LEARN_DOMAIN'),
 
-    // Production: PUBLIC_DOMAIN=demo-auto.test. Local: falls back to SHOP_LOCAL_PARENT_DOMAIN (demo-auto.test).
+    // Canonical public hostname. Aliases resolve the same website publication.
     'public' => env('PUBLIC_DOMAIN', env('SHOP_LOCAL_PARENT_DOMAIN')),
+
+    'public_aliases' => array_values(array_filter(array_map(
+        static fn (string $host): string => strtolower(trim($host)),
+        explode(',', (string) env('SURFACE_PUBLIC_ALIASES', '')),
+    ))),
 
     // ARK Platform product - company domain (never a Shop).
     'company' => env('COMPANY_DOMAIN'),

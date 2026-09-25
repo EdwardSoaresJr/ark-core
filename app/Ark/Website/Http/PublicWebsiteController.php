@@ -5,7 +5,6 @@ namespace App\Ark\Website\Http;
 use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Runtime\Surfaces\SurfaceRouting;
 use App\Ark\Website\PublishedWebsite;
 use App\Ark\Website\PublishedWebsiteResolver;
 use Illuminate\Http\RedirectResponse;
@@ -102,7 +101,12 @@ final class PublicWebsiteController
         return view('website.problem', [
             'website' => $website,
             'problem' => $problem,
-            'seo' => $this->meta($request, $title, $description),
+            'seo' => [
+                'title' => $title,
+                'description' => $description,
+                'canonical' => $website->canonicalUrl('/common-problems/'.$slug),
+                'shop_name' => $website->shopName(),
+            ],
         ]);
     }
 
@@ -115,7 +119,12 @@ final class PublicWebsiteController
 
         return view('website.thanks', [
             'website' => $website,
-            'seo' => $this->meta($request, 'Message received', 'Your message reached the shop.'),
+            'seo' => [
+                'title' => 'Message received',
+                'description' => 'Your message reached the shop.',
+                'canonical' => $website->canonicalUrl('/leads/thanks'),
+                'shop_name' => $website->shopName(),
+            ],
             'indexable' => false,
         ]);
     }
@@ -159,6 +168,7 @@ final class PublicWebsiteController
             'metadata' => [
                 'public_page' => $data['page'] ?? 'contact',
                 'public_host' => $request->getHost(),
+                'canonical_host' => $website->canonicalHost(),
             ],
         ]);
 
@@ -167,6 +177,7 @@ final class PublicWebsiteController
 
     public function robots(Request $request): Response
     {
+        $website = $this->websites->forRequest($request);
         $lines = [
             'User-agent: *',
             'Allow: /',
@@ -174,9 +185,12 @@ final class PublicWebsiteController
             'Disallow: /portal/',
             'Disallow: /leads/thanks',
             '',
-            'Sitemap: '.$this->absolute($request, '/sitemap.xml'),
-            '',
         ];
+
+        if ($website instanceof PublishedWebsite) {
+            $lines[] = 'Sitemap: '.$website->canonicalUrl('/sitemap.xml');
+            $lines[] = '';
+        }
 
         return response(implode("\n", $lines), 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
@@ -197,7 +211,9 @@ final class PublicWebsiteController
         ];
 
         $website = $this->websites->forRequest($request);
-        if ($website instanceof PublishedWebsite) {
+        if (! $website instanceof PublishedWebsite) {
+            $paths = [];
+        } else {
             foreach ($website->problems() as $problem) {
                 $slug = trim((string) ($problem['slug'] ?? ''));
                 if ($slug !== '') {
@@ -208,7 +224,7 @@ final class PublicWebsiteController
 
         $urls = '';
         foreach ($paths as $path) {
-            $loc = htmlspecialchars($this->absolute($request, $path), ENT_XML1);
+            $loc = htmlspecialchars($website->canonicalUrl($path), ENT_XML1);
             $urls .= "  <url><loc>{$loc}</loc></url>\n";
         }
 
@@ -252,37 +268,16 @@ XML;
     private function seo(PublishedWebsite $website, string $key, Request $request): array
     {
         $seo = $website->seo($key);
-
-        return $this->meta($request, $seo['title'], $seo['description'], $website->shopName());
-    }
-
-    /**
-     * @return array{title: string, description: string, canonical: string, shop_name: string}
-     */
-    private function meta(Request $request, string $title, string $description, string $shopName = ''): array
-    {
-        return [
-            'title' => $title,
-            'description' => $description,
-            'canonical' => $this->absolute($request, '/'.ltrim($request->path(), '/')),
-            'shop_name' => $shopName,
-        ];
-    }
-
-    private function absolute(Request $request, string $path): string
-    {
-        $path = '/'.ltrim($path, '/');
+        $path = '/'.ltrim($request->path(), '/');
         if ($path === '//') {
             $path = '/';
         }
 
-        if (SurfaceRouting::publicEnabled()) {
-            $host = SurfaceRouting::publicHost();
-            if (is_string($host) && $host !== '') {
-                return SurfaceRouting::urlForHost($host, $path === '//' ? '/' : $path);
-            }
-        }
-
-        return rtrim($request->getSchemeAndHttpHost(), '/').($path === '/' ? '/' : $path);
+        return [
+            'title' => $seo['title'],
+            'description' => $seo['description'],
+            'canonical' => $website->canonicalUrl($path),
+            'shop_name' => $website->shopName(),
+        ];
     }
 }

@@ -25,6 +25,23 @@ final class PublishedWebsite
         private readonly array $document,
     ) {}
 
+    public function canonicalHost(): string
+    {
+        return strtolower(trim((string) $this->site->public_host));
+    }
+
+    public function canonicalUrl(string $path = '/'): string
+    {
+        $path = '/'.ltrim($path, '/');
+        if ($path === '//') {
+            $path = '/';
+        }
+
+        $host = $this->canonicalHost();
+
+        return 'https://'.$host.($path === '/' ? '/' : $path);
+    }
+
     public function headline(): string
     {
         return $this->string('headline');

@@ -1,4 +1,4 @@
-<form class="public-panel mt-6 max-w-xl" method="post" action="{{ route('public.leads.store') }}">
+<form class="public-panel mt-6 max-w-xl" method="post" action="/leads">
     @csrf
     <input type="hidden" name="page" value="{{ $page ?? 'contact' }}">
     <p class="hidden" aria-hidden="true">
