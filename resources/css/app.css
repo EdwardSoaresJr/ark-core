@@ -29889,6 +29889,22 @@ html.dark .ops-printing-cmd,
         margin: 1.5rem 0 0;
     }
 
+    .public-service__rail > .public-service__related:first-child {
+        margin-top: 0;
+    }
+
+    .public-problem__service .public-link {
+        font-weight: 700;
+    }
+
+    .public-problem__note {
+        margin: 0.35rem 0 0;
+        max-width: 18rem;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        color: var(--public-text-muted);
+    }
+
     .public-service__close {
         margin-top: 2.75rem;
         margin-left: -1rem;
@@ -29916,7 +29932,8 @@ html.dark .ops-printing-cmd,
 
     @media (max-width: 959px) {
         .public-service__promise,
-        .public-service__rail-action {
+        .public-service__rail-action,
+        .public-problem__note {
             display: none;
         }
 

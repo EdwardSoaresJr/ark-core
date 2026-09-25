@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Ark\Website\PublicLegacyRedirect;
 use App\Ark\Website\PublicLlmsTxt;
 use App\Ark\Website\PublicProblemGroups;
+use App\Ark\Website\PublicProblemPresentation;
+use App\Ark\Website\PublicProblemServiceLinks;
 use App\Ark\Website\PublicServiceIndex;
 use App\Ark\Website\PublicServicePages;
 use App\Ark\Website\PublishedWebsite;
@@ -221,9 +223,13 @@ final class PublicWebsiteController
         $title = trim((string) ($problem['seo_title'] ?? $problem['page_title'] ?? $problem['title'] ?? 'Common problem'));
         $description = trim((string) ($problem['meta_description'] ?? ''));
 
+        $presentation = PublicProblemPresentation::type($slug);
+
         return view('website.problem', [
             'website' => $website,
             'problem' => $problem,
+            'presentation' => $presentation,
+            'serviceLinks' => $presentation === null ? [] : PublicProblemServiceLinks::forSlug($slug),
             'seo' => [
                 'title' => $title,
                 'description' => $description,

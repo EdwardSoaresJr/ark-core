@@ -288,6 +288,96 @@ test('diagnostics brakes and maintenance share one service page pattern', functi
         ->assertSee('https://lugsnplugs.com/services/maintenance', false);
 });
 
+test('complaint and code pages keep their own presentations', function (): void {
+    publishHomepageSurface();
+
+    $checkEngine = $this->get('http://lugsnplugs.com/common-problems/check-engine-light');
+    $checkEngine->assertOk()
+        ->assertSee('Still dealing with this problem?')
+        ->assertSee('Tell us what the vehicle is doing.')
+        ->assertSee('Related service')
+        ->assertSee('Related problems and codes')
+        ->assertSee('href="https://lugsnplugs.com/services/diagnostics"', false)
+        ->assertSee('See how we test a vehicle before recommending parts.')
+        ->assertDontSee('Often confused with')
+        ->assertDontSee('Repair overview')
+        ->assertDontSee('https://lugsnplugs.com/services/brakes', false)
+        ->assertDontSee('https://lugsnplugs.com/services/maintenance', false);
+    $checkBody = $checkEngine->getContent();
+    expect(strpos($checkBody, '>Common causes<'))->toBeLessThan(strpos($checkBody, 'Can I keep driving with the check engine light on?'));
+
+    $this->get('http://lugsnplugs.com/common-problems/wheel-bearing-noise')
+        ->assertOk()
+        ->assertSee('Often confused with')
+        ->assertSee('If you ignore it')
+        ->assertSee('Related problems and codes')
+        ->assertDontSee('Repair overview')
+        ->assertDontSee('Related service')
+        ->assertDontSee('/services/brakes', false);
+
+    $this->get('http://lugsnplugs.com/common-problems/jeep-death-wobble')
+        ->assertOk()
+        ->assertSee('Repair overview')
+        ->assertSee('Still dealing with this problem?')
+        ->assertDontSee('Related service');
+
+    $this->get('http://lugsnplugs.com/common-problems/brake-noise')
+        ->assertOk()
+        ->assertSee('href="https://lugsnplugs.com/services/brakes"', false)
+        ->assertDontSee('href="https://lugsnplugs.com/services/diagnostics"', false);
+
+    $this->get('http://lugsnplugs.com/common-problems/abs-light')
+        ->assertOk()
+        ->assertSee('href="https://lugsnplugs.com/services/brakes"', false)
+        ->assertDontSee('Related problems and codes');
+
+    $this->get('http://lugsnplugs.com/common-problems/oil-leak')
+        ->assertOk()
+        ->assertSee('Still dealing with this problem?')
+        ->assertDontSee('Related service')
+        ->assertDontSee('Related problems and codes');
+
+    $this->get('http://lugsnplugs.com/common-problems/engine-overheating')
+        ->assertDontSee('Related service')
+        ->assertDontSee('/services/diagnostics', false);
+
+    $p0300 = $this->get('http://lugsnplugs.com/common-problems/p0300');
+    $p0300->assertOk()
+        ->assertSee('Have this code on your vehicle?')
+        ->assertSee('A code gives us a place to start.')
+        ->assertSee('Related symptoms and codes')
+        ->assertSee('href="https://lugsnplugs.com/services/diagnostics"', false)
+        ->assertSee('What does P0300 mean?');
+    $p0300Body = $p0300->getContent();
+    expect(strpos($p0300Body, '>Often confused with<'))->toBeLessThan(strpos($p0300Body, '>If you ignore it<'))
+        ->and(strpos($p0300Body, '>If you ignore it<'))->toBeLessThan(strpos($p0300Body, '>Repair overview<'));
+
+    $this->get('http://lugsnplugs.com/common-problems/p0420')
+        ->assertOk()
+        ->assertSee('Do I always need a new catalytic converter for P0420?')
+        ->assertSee('Have this code on your vehicle?')
+        ->assertSee('href="https://lugsnplugs.com/services/diagnostics"', false);
+
+    $this->get('http://lugsnplugs.com/common-problems/p0302')
+        ->assertOk()
+        ->assertSee('What does P0302 mean?')
+        ->assertSee('Have this code on your vehicle?')
+        ->assertDontSee('What does P0300 mean?');
+
+    $this->get('http://lugsnplugs.com/common-problems/electrical-diagnostics')
+        ->assertOk()
+        ->assertDontSee('Still dealing with this problem?')
+        ->assertDontSee('Have this code on your vehicle?')
+        ->assertDontSee('public-problem', false)
+        ->assertSee('What happens next');
+
+    $this->get('http://lugsnplugs.com/common-problems/tune-up-colorado-springs')
+        ->assertOk()
+        ->assertDontSee('Still dealing with this problem?')
+        ->assertDontSee('Have this code on your vehicle?')
+        ->assertSee('What is included in a tune-up today?');
+});
+
 test('homepage omits financing names that are not offered', function (): void {
     publishHomepageSurface([
         'trust_signals' => ['financing_available' => false],
