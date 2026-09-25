@@ -142,6 +142,16 @@ export const arkWorksheetContinuity = (config = {}) => {
                 );
         },
 
+        lineStoreConcernIds(anchor) {
+            if (! this.isLineStoreForm(anchor)) {
+                return [];
+            }
+
+            const concernId = anchor.querySelector?.('input[name="repair_order_concern_id"]')?.value?.trim() ?? '';
+
+            return concernId !== '' ? [`concern-${concernId}`] : [];
+        },
+
         submittedLineStoreType(form) {
             const state = form?._x_dataStack?.[0];
 
@@ -475,18 +485,21 @@ export const arkWorksheetContinuity = (config = {}) => {
             return replaced;
         },
 
-        replaceFromDocument(doc, anchor) {
+        replaceFromDocument(doc, anchor, ignoreDraft = null) {
             const scopedTarget = anchor?.dataset.refreshScope
                 ? document.getElementById(this.resolveRefreshScope(anchor.dataset.refreshScope))
                 : this.scopedWorksheetTarget(anchor);
             const ids = uniqueIds([
                 scopedTarget?.id,
+                ...this.lineStoreConcernIds(anchor),
                 ...this.continuityPanelIds,
                 'estimate-total-panel',
             ]);
+            // The form that just saved is not an unsaved draft. If it still
+            // blocks the worksheet, the new line stays hidden until reload.
             const blocked = this.forceRefreshDrafts
                 ? new Set()
-                : blockedPanelIds(document, ids, this.discardingDraft ?? null);
+                : blockedPanelIds(document, ids, ignoreDraft ?? this.discardingDraft ?? null);
             const missing = [];
             let replaced = 0;
 
@@ -577,7 +590,7 @@ export const arkWorksheetContinuity = (config = {}) => {
             focusTarget = null,
             lineStoreSubmission = null,
         } = {}) {
-            this.replaceFromDocument(doc, form);
+            this.replaceFromDocument(doc, form, form instanceof HTMLFormElement ? form : null);
             this.syncEstimateVersion(doc);
             this.markEstimateRendered(this.openedEstimateVersion);
             this.clearStaleNotice();
@@ -663,7 +676,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                 const html = await response.text();
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
-                this.replaceFromDocument(doc, anchor);
+                this.replaceFromDocument(doc, anchor, anchor instanceof HTMLFormElement ? anchor : null);
                 this.syncEstimateVersion(doc);
 
                 if (typeof this.worksheetHasDraft !== 'function' || ! this.worksheetHasDraft()) {
@@ -854,7 +867,14 @@ export const arkWorksheetContinuity = (config = {}) => {
             try {
                 const body = new FormData(form);
                 const versionField = this.estimateVersionField ?? 'opened_estimate_version';
-                const token = versionToSubmit(form, this.openedEstimateVersion, versionField);
+                // A new line is not an edit of a loaded row. A dirty composer
+                // must not keep an older estimate version and reject the next add.
+                const token = versionToSubmit(
+                    form,
+                    this.openedEstimateVersion,
+                    versionField,
+                    this.isLineStoreForm(form) ? { dirty: false } : {},
+                );
 
                 if (token !== '') {
                     body.set(versionField, token);
