@@ -27,9 +27,11 @@ final class CustomerSurfaceNavigation
                 continue;
             }
 
-            $active = $name === 'public.common-problems.index'
-                ? request()->routeIs('public.common-problems.index', 'public.common-problems.show')
-                : request()->routeIs($name);
+            $active = match ($name) {
+                'public.common-problems.index' => request()->routeIs('public.common-problems.index', 'public.common-problems.show'),
+                'public.services' => request()->routeIs('public.services', 'public.services.show'),
+                default => request()->routeIs($name),
+            };
 
             $links[] = [
                 'label' => $label,

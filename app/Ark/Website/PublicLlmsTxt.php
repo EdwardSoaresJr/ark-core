@@ -38,7 +38,11 @@ final class PublicLlmsTxt
         $lines[] = '## Services';
         $lines[] = 'Service menu: '.$website->canonicalUrl('/services');
         foreach (PublicServiceIndex::definitions() as $service) {
-            $lines[] = '- '.$service['name'].': '.$website->canonicalUrl('/services').'#'.$service['id'];
+            $path = PublicServicePages::path($service['id']);
+            $url = $path !== null
+                ? $website->canonicalUrl($path)
+                : $website->canonicalUrl('/services').'#'.$service['id'];
+            $lines[] = '- '.$service['name'].': '.$url;
         }
 
         $facts = [];

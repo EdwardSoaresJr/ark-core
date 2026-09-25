@@ -17,6 +17,7 @@ use App\Ark\Website\PublicLegacyRedirect;
 use App\Ark\Website\PublicLlmsTxt;
 use App\Ark\Website\PublicProblemGroups;
 use App\Ark\Website\PublicServiceIndex;
+use App\Ark\Website\PublicServicePages;
 use App\Ark\Website\PublishedWebsite;
 use App\Ark\Website\PublishedWebsiteResolver;
 use App\Ark\Website\WebsiteHosts;
@@ -79,6 +80,30 @@ final class PublicWebsiteController
         return view('website.services', [
             'website' => $website,
             'services' => PublicServiceIndex::categories($website),
+            'seo' => $seo,
+        ]);
+    }
+
+    public function service(Request $request, string $service): View|Response|RedirectResponse
+    {
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        $page = PublicServicePages::find($service);
+        if ($page === null) {
+            return $this->missing();
+        }
+
+        $page = PublicServicePages::present($website, $page);
+        $seo = $this->seo($website, 'services', $request);
+        $seo['title'] = $page['name'];
+        $seo['description'] = $page['description'];
+
+        return view('website.service', [
+            'website' => $website,
+            'page' => $page,
             'seo' => $seo,
         ]);
     }
@@ -340,6 +365,9 @@ final class PublicWebsiteController
             '/',
             '/about',
             '/services',
+            '/services/diagnostics',
+            '/services/brakes',
+            '/services/maintenance',
             '/book',
             '/contact',
             '/common-problems',

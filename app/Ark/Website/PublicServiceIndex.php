@@ -2,6 +2,8 @@
 
 namespace App\Ark\Website;
 
+use Illuminate\Support\Facades\Route;
+
 /**
  * Customer-facing service menu for /services and /llms.txt.
  *
@@ -123,7 +125,7 @@ final class PublicServiceIndex
     }
 
     /**
-     * @return list<array{id: string, name: string, summary: string, links: list<array{href: string, label: string}>}>
+     * @return list<array{id: string, name: string, summary: string, links: list<array{href: string, label: string}>, page_href: string|null, page_label: string|null}>
      */
     public static function categories(PublishedWebsite $website): array
     {
@@ -142,11 +144,16 @@ final class PublicServiceIndex
                 ];
             }
 
+            $page = PublicServicePages::find($definition['id']);
             $categories[] = [
                 'id' => $definition['id'],
                 'name' => $definition['name'],
                 'summary' => $definition['summary'],
                 'links' => $links,
+                'page_href' => $page !== null && Route::has('public.services.show')
+                    ? route('public.services.show', ['service' => $definition['id']])
+                    : null,
+                'page_label' => $page['index_label'] ?? null,
             ];
         }
 

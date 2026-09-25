@@ -3,6 +3,7 @@
 namespace App\Ark\Customer;
 
 use App\Ark\Operations\Vehicles\Vehicle;
+use App\Ark\Website\PublicServicePages;
 use App\Ark\Website\PublishedWebsiteResolver;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -57,6 +58,7 @@ final class CustomerSurfaceBreadcrumbProjection
             ),
             $route->named('public.about') => $this->publicTrail('About'),
             $route->named('public.services') => $this->publicTrail('Services'),
+            $route->named('public.services.show') => $this->serviceTrail($route),
             $route->named('public.book') => $this->publicTrail('Appointment'),
             $route->named('public.contact') => $this->publicTrail('Contact'),
             $route->named('public.financing') => $this->publicTrail('Financing'),
@@ -93,6 +95,21 @@ final class CustomerSurfaceBreadcrumbProjection
             $home,
             ['label' => 'Problems', 'href' => $parentHref],
             ['label' => $label],
+        );
+    }
+
+    /**
+     * @return list<array{label: string, href?: string|null}>
+     */
+    private function serviceTrail(Route $route): array
+    {
+        $id = (string) $route->parameter('service');
+        $page = PublicServicePages::find($id);
+
+        return $this->trail(
+            ['label' => 'Home', 'href' => CustomerSurfaceUrls::shopHome()],
+            ['label' => 'Services', 'href' => route('public.services')],
+            ['label' => $page['name'] ?? $id],
         );
     }
 

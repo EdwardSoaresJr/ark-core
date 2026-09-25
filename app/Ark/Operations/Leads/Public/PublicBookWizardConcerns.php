@@ -13,6 +13,7 @@ final class PublicBookWizardConcerns
     {
         return [
             'Check Engine Light',
+            'Diagnostics',
             'Strange Noise',
             'Brakes',
             'A/C',
@@ -52,6 +53,7 @@ final class PublicBookWizardConcerns
             'Electrical' => ['electrical', 'battery', 'alternator'],
             'Suspension / Steering' => ['suspension', 'steering', 'alignment'],
             'Pre-Purchase Inspection' => ['pre-purchase', 'ppi', 'pre purchase'],
+            'Diagnostics' => ['diagnos'],
         ];
 
         foreach ($patterns as $category => $needles) {

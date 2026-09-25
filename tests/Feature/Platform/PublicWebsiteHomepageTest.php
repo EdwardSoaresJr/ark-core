@@ -194,8 +194,10 @@ test('site foundation exposes services, problems, and an appointment request', f
 
     $llms = $this->get('http://lugsnplugs.com/llms.txt')->assertOk()->getContent();
     $services = \Illuminate\Support\Str::between($llms, "## Services\n", "\n## ");
-    expect($services)->toContain('Diagnostics: https://lugsnplugs.com/services#diagnostics')
-        ->and($services)->toContain('Brakes: https://lugsnplugs.com/services#brakes')
+    expect($services)->toContain('Diagnostics: https://lugsnplugs.com/services/diagnostics')
+        ->and($services)->toContain('Brakes: https://lugsnplugs.com/services/brakes')
+        ->and($services)->toContain('Maintenance: https://lugsnplugs.com/services/maintenance')
+        ->and($services)->toContain('Electrical: https://lugsnplugs.com/services#electrical')
         ->and($services)->not->toContain('Auto Repair Colorado Springs')
         ->and($services)->not->toContain('Mechanic Colorado Springs');
 
@@ -204,6 +206,86 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertSee('https://lugsnplugs.com/services', false);
 
     $this->get('http://lugsnplugs.com/services/oil-change')->assertNotFound();
+});
+
+test('diagnostics brakes and maintenance share one service page pattern', function (): void {
+    publishHomepageSurface();
+
+    $this->get('http://lugsnplugs.com/services')
+        ->assertOk()
+        ->assertSee('href="https://lugsnplugs.com/services/diagnostics"', false)
+        ->assertSee('How a diagnosis works')
+        ->assertSee('href="https://lugsnplugs.com/services/brakes"', false)
+        ->assertSee('How brake repair works')
+        ->assertSee('href="https://lugsnplugs.com/services/maintenance"', false)
+        ->assertSee('How maintenance works')
+        ->assertDontSee('Auto Repair Colorado Springs');
+
+    $diagnostics = $this->get('http://lugsnplugs.com/services/diagnostics');
+    $diagnostics->assertOk()
+        ->assertSee('<h1 class="public-cp-title public-page-title">Diagnostics</h1>', false)
+        ->assertSee('Complaint')
+        ->assertSee('Testing')
+        ->assertSee('Evidence')
+        ->assertSee('Finding')
+        ->assertSee('Recommendation')
+        ->assertSee('Verification')
+        ->assertSee('https://lugsnplugs.com/common-problems/check-engine-light', false)
+        ->assertSee('https://lugsnplugs.com/common-problems/car-wont-start', false)
+        ->assertSee('https://lugsnplugs.com/common-problems/electrical-diagnostics', false)
+        ->assertSee('https://lugsnplugs.com/common-problems/p0300', false)
+        ->assertSee('href="https://lugsnplugs.com/book?concern=I%20need%20a%20diagnosis%20before%20parts%20are%20recommended."', false)
+        ->assertSee('At LugsNPlugs')
+        ->assertSee('Not sure what your car needs?')
+        ->assertSee('Tell us what it\'s doing. We\'ll start with the evidence.')
+        ->assertSee('https://lugsnplugs.com/services/diagnostics', false)
+        ->assertSee('Home')
+        ->assertSee('Services')
+        ->assertDontSee('Auto Repair Colorado Springs');
+
+    $this->get('http://lugsnplugs.com/book?concern=I%20need%20a%20diagnosis%20before%20parts%20are%20recommended.')
+        ->assertOk()
+        ->assertSee('value="Diagnostics" selected', false)
+        ->assertSee('I need a diagnosis before parts are recommended.');
+
+    $this->get('http://lugsnplugs.com/services/brakes')
+        ->assertOk()
+        ->assertSee('Symptoms')
+        ->assertSee('What we measure')
+        ->assertSee('Repair standard')
+        ->assertSee('https://lugsnplugs.com/common-problems/brake-noise', false)
+        ->assertSee('https://lugsnplugs.com/common-problems/brake-fluid-service', false)
+        ->assertSee('href="https://lugsnplugs.com/book?concern=My%20brakes%20need%20to%20be%20inspected."', false)
+        ->assertSee('Not sure the noise is the brakes?');
+
+    $this->get('http://lugsnplugs.com/book?concern=My%20brakes%20need%20to%20be%20inspected.')
+        ->assertOk()
+        ->assertSee('value="Brakes" selected', false)
+        ->assertSee('My brakes need to be inspected.');
+
+    $this->get('http://lugsnplugs.com/services/maintenance')
+        ->assertOk()
+        ->assertSee('Fluids')
+        ->assertSee('Scheduled maintenance')
+        ->assertSee('Inspection')
+        ->assertSee('Tune-up')
+        ->assertSee('https://lugsnplugs.com/common-problems/car-fluid-service', false)
+        ->assertSee('https://lugsnplugs.com/common-problems/oil-leak', false)
+        ->assertSee('href="https://lugsnplugs.com/book?concern=The%20car%20is%20due%20for%20maintenance."', false)
+        ->assertSee('Not sure what service is due?')
+        ->assertDontSee('30,000')
+        ->assertDontSee('Tune Up Colorado Springs');
+
+    $this->get('http://lugsnplugs.com/book?concern=The%20car%20is%20due%20for%20maintenance.')
+        ->assertOk()
+        ->assertSee('value="Maintenance" selected', false)
+        ->assertSee('The car is due for maintenance.');
+
+    $this->get('http://lugsnplugs.com/sitemap.xml')
+        ->assertOk()
+        ->assertSee('https://lugsnplugs.com/services/diagnostics', false)
+        ->assertSee('https://lugsnplugs.com/services/brakes', false)
+        ->assertSee('https://lugsnplugs.com/services/maintenance', false);
 });
 
 test('homepage omits financing names that are not offered', function (): void {

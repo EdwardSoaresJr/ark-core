@@ -10,6 +10,9 @@ SurfaceRouting::publicRoutes(function (): void {
         Route::get('/', [PublicWebsiteController::class, 'home'])->name('public.home');
         Route::get('/about', [PublicWebsiteController::class, 'about'])->name('public.about');
         Route::get('/services', [PublicWebsiteController::class, 'services'])->name('public.services');
+        Route::get('/services/{service}', [PublicWebsiteController::class, 'service'])
+            ->where('service', 'diagnostics|brakes|maintenance')
+            ->name('public.services.show');
         Route::get('/book', [PublicWebsiteController::class, 'book'])->name('public.book');
         Route::get('/contact', [PublicWebsiteController::class, 'contact'])->name('public.contact');
         Route::get('/common-problems', [PublicWebsiteController::class, 'problems'])->name('public.common-problems.index');

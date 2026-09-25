@@ -11,6 +11,9 @@
                     <div class="public-home__copy">
                         <h2 class="public-section-title">{{ $service['name'] }}</h2>
                         <p class="public-page-lede">{{ $service['summary'] }}</p>
+                        @if (! empty($service['page_href']))
+                            <p class="public-page-lede"><a class="public-link" href="{{ $service['page_href'] }}">{{ $service['page_label'] }}</a></p>
+                        @endif
                         @if ($service['links'] !== [])
                             <ul class="public-services__links">
                                 @foreach ($service['links'] as $link)
