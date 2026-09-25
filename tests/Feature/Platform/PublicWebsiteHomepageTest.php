@@ -132,6 +132,7 @@ test('site foundation exposes services, problems, and an appointment request', f
     $home->assertOk()
         ->assertSee('customer-header__brand', false)
         ->assertSee('href="https://lugsnplugs.com" class="customer-header__brand"', false)
+        ->assertSee('Home')
         ->assertSee('Services')
         ->assertSee('Problems')
         ->assertSee('Warranty')
@@ -143,6 +144,15 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertSee('customer-header__menu-toggle', false)
         ->assertSee('href="https://lugsnplugs.com/services"', false)
         ->assertDontSee('Demo City');
+
+    $desktopNav = strstr($home->getContent(), 'customer-header__nav--desktop');
+    $desktopNav = substr($desktopNav, 0, strpos($desktopNav, 'customer-header__nav--mobile'));
+    $mobileNav = strstr($home->getContent(), 'customer-header__nav--mobile');
+    expect(strpos($desktopNav, 'Home'))->toBeLessThan(strpos($desktopNav, 'Services'))
+        ->and(strpos($desktopNav, 'Contact'))->toBeLessThan(strpos($desktopNav, 'Request an appointment'))
+        ->and(strpos($desktopNav, 'Request an appointment'))->toBeLessThan(strpos($desktopNav, 'Sign In'))
+        ->and(strpos($mobileNav, 'Home'))->toBeLessThan(strpos($mobileNav, 'Services'))
+        ->and($desktopNav)->toContain('href="https://lugsnplugs.com"');
 
     $this->get('http://lugsnplugs.com/services')
         ->assertOk()
@@ -185,11 +195,19 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertOk()
         ->assertSee('Request an appointment')
         ->assertSee('It does not reserve a bay.')
+        ->assertSee('public-contact-page__map', false)
+        ->assertSee('output=embed', false)
+        ->assertSee('LugsNPlugs%20Automotive', false)
         ->assertDontSee('Book an appointment');
 
     $this->get('http://lugsnplugs.com/book')
         ->assertOk()
         ->assertSee('<title>Request an appointment', false)
+        ->assertSee('public-book-form', false)
+        ->assertSee('name="concern_category"', false)
+        ->assertSee('name="preferred_date"', false)
+        ->assertSee('name="contact_preference"', false)
+        ->assertSee('Send appointment request')
         ->assertDontSee('Book an Appointment');
 
     $llms = $this->get('http://lugsnplugs.com/llms.txt')->assertOk()->getContent();
@@ -391,6 +409,82 @@ test('public canvas inset leaves service articles in place', function (): void {
 CSS
         )
         ->and($css)->toContain("html.dark .public-surface input:not([type])");
+});
+
+test('contact corrects three answers and financing keeps one set of destinations', function (): void {
+    publishHomepageSurface([
+        'contact_faqs' => [
+            2 => [
+                'question' => 'Do you accept customer-supplied parts?',
+                'answer' => 'We do install customer-supplied parts, but we generally recommend using parts sourced through our shop whenever possible.',
+            ],
+            3 => [
+                'question' => 'Do you offer towing?',
+                'answer' => "Need a tow? We work with Pinky's Towing.",
+            ],
+            4 => [
+                'question' => 'Do you perform inspections?',
+                'answer' => 'Yes. We can inspect the vehicle and tell you what we find. If the cause of a problem is not clear, we can diagnose it too.',
+            ],
+            5 => [
+                'question' => 'What forms of payment do you accept?',
+                'answer' => 'We accept major cards and approved financing options when available. Ask about Wisetack or Synchrony Car Care on the estimate.',
+            ],
+        ],
+    ]);
+
+    $contact = $this->get('http://lugsnplugs.com/contact');
+    $contact->assertOk()
+        ->assertSee('Customer-supplied parts are not covered by our parts warranty.', false)
+        ->assertSee('Yes. We provide vehicle inspections, including pre-purchase and post-purchase inspections.', false)
+        ->assertSee('offer financing options for qualifying repairs.', false)
+        ->assertSee('href="https://lugsnplugs.com/financing"', false)
+        ->assertSee(">financing options</a>", false)
+        ->assertSee('We work with Pinky', false)
+        ->assertDontSee('generally recommend using parts', false)
+        ->assertDontSee('Yes. We can inspect', false)
+        ->assertDontSee('Ask about Wisetack or Synchrony Car Care on the estimate.', false)
+        ->assertDontSee('car-care/prospecting', false)
+        ->assertDontSee('wisetack.us/example', false);
+
+    $contactBody = $contact->getContent();
+    expect(substr_count($contactBody, '>financing options</a>'))->toBe(1);
+
+    $this->get('http://lugsnplugs.com/financing')
+        ->assertOk()
+        ->assertSee('https://wisetack.us/example', false)
+        ->assertSee('https://www.synchrony.com/example', false)
+        ->assertDontSee('car-care/prospecting', false);
+
+    publishHomepageSurface([
+        'trust_signals' => [
+            'wisetack_url' => '',
+            'synchrony_url' => '',
+        ],
+    ]);
+
+    $this->get('http://lugsnplugs.com/financing')
+        ->assertOk()
+        ->assertSee('https://wisetack.us/#/uz8sh8e/prequalify', false)
+        ->assertSee('https://www.synchrony.com/mmc/CR243778456?sitecode=acewel401', false)
+        ->assertDontSee('car-care/prospecting', false);
+
+    publishHomepageSurface([
+        'trust_signals' => [
+            'wisetack_url' => '',
+            'synchrony_url' => '',
+        ],
+        'financing' => [
+            'programs' => [
+                1 => ['url' => 'https://www.synchrony.com/financing/car-care/prospecting'],
+            ],
+        ],
+    ]);
+
+    $this->get('http://lugsnplugs.com/financing')
+        ->assertOk()
+        ->assertSee('https://www.synchrony.com/mmc/CR243778456?sitecode=acewel401', false)
+        ->assertDontSee('car-care/prospecting', false);
 });
 
 test('homepage omits financing names that are not offered', function (): void {

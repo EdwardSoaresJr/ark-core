@@ -15,6 +15,14 @@ final class CustomerSurfaceNavigation
     {
         $links = [];
 
+        if (Route::has('public.home')) {
+            $links[] = [
+                'label' => 'Home',
+                'href' => CustomerSurfaceUrls::shopHome(),
+                'active' => request()->routeIs('public.home'),
+            ];
+        }
+
         foreach ([
             'public.services' => 'Services',
             'public.common-problems.index' => 'Problems',

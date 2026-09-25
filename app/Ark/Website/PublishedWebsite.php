@@ -7,6 +7,7 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Telephony\TelephonyBusinessHoursLabel;
 use App\Ark\Platform\Website\WebsitePublication;
 use App\Ark\Platform\Website\WebsiteSite;
+use App\Ark\Website\Catalog\PublicWebsiteCatalog;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -96,6 +97,21 @@ final class PublishedWebsite
         return implode(', ', $parts);
     }
 
+    public function mapEmbedUrl(): ?string
+    {
+        $address = $this->address();
+        if ($address === '') {
+            return null;
+        }
+
+        $query = trim($this->shopName().' '.$address);
+        if ($query === '') {
+            return null;
+        }
+
+        return 'https://maps.google.com/maps?q='.rawurlencode($query).'&z=15&output=embed';
+    }
+
     public function googleReviewsUrl(): string
     {
         return trim((string) ($this->shop->google_reviews_url ?? ''));
@@ -158,6 +174,10 @@ final class PublishedWebsite
             $answer = trim((string) ($faq['answer'] ?? ''));
             if ($question === '' || $answer === '') {
                 continue;
+            }
+            $corrected = $this->correctedContactAnswers()[$question] ?? null;
+            if (is_string($corrected) && $corrected !== '') {
+                $answer = $corrected;
             }
             $normalized[] = ['question' => $question, 'answer' => $answer];
         }
@@ -272,6 +292,24 @@ final class PublishedWebsite
                 'body' => trim((string) ($program['body'] ?? '')),
                 'url' => trim((string) ($program['url'] ?? '')),
             ];
+        }
+
+        $destinations = $this->financingDestinationUrls();
+        foreach ($normalized as $index => $program) {
+            $destination = $destinations[$program['name']] ?? '';
+            if ($destination !== '') {
+                $normalized[$index]['url'] = $destination;
+            }
+        }
+
+        foreach ($normalized as $index => $program) {
+            if ($program['name'] !== 'Synchrony Car Care' || ! $this->isGenericSynchronyUrl($program['url'])) {
+                continue;
+            }
+            $merchantUrl = $this->catalogFinancingUrl('Synchrony Car Care');
+            if ($merchantUrl !== '') {
+                $normalized[$index]['url'] = $merchantUrl;
+            }
         }
 
         return $normalized;
@@ -472,5 +510,71 @@ final class PublishedWebsite
     private function string(string $key): string
     {
         return trim((string) ($this->document[$key] ?? ''));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function correctedContactAnswers(): array
+    {
+        $questions = [
+            'Do you accept customer-supplied parts?',
+            'Do you perform inspections?',
+            'What forms of payment do you accept?',
+        ];
+
+        $answers = [];
+        foreach (PublicWebsiteCatalog::document()['contact_faqs'] ?? [] as $faq) {
+            if (! is_array($faq)) {
+                continue;
+            }
+            $question = trim((string) ($faq['question'] ?? ''));
+            $answer = trim((string) ($faq['answer'] ?? ''));
+            if ($answer !== '' && in_array($question, $questions, true)) {
+                $answers[$question] = $answer;
+            }
+        }
+
+        return $answers;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function financingDestinationUrls(): array
+    {
+        $trust = $this->document['trust_signals'] ?? [];
+        if (! is_array($trust)) {
+            return [];
+        }
+
+        $urls = [
+            'Wisetack' => trim((string) ($trust['wisetack_url'] ?? '')),
+            'Synchrony Car Care' => trim((string) ($trust['synchrony_url'] ?? '')),
+        ];
+
+        return array_filter($urls, fn (string $url): bool => $url !== '');
+    }
+
+    private function catalogFinancingUrl(string $name): string
+    {
+        foreach (PublicWebsiteCatalog::document()['financing']['programs'] ?? [] as $program) {
+            if (! is_array($program) || trim((string) ($program['name'] ?? '')) !== $name) {
+                continue;
+            }
+
+            return trim((string) ($program['url'] ?? ''));
+        }
+
+        return '';
+    }
+
+    private function isGenericSynchronyUrl(string $url): bool
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $path = rtrim((string) parse_url($url, PHP_URL_PATH), '/');
+
+        return in_array($host, ['www.synchrony.com', 'synchrony.com', 'www.mysynchrony.com', 'mysynchrony.com'], true)
+            && ($path === '' || str_contains($path, '/financing/car-care/prospecting') || str_contains($path, '/merchants/car-care-financing'));
     }
 }

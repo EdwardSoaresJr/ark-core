@@ -11,7 +11,7 @@
                 <p class="mt-4">{{ session('book_status') }}</p>
             @endif
 
-            <form class="public-panel mt-6 max-w-xl" method="post" action="/leads">
+            <form class="public-panel public-book-form mt-6" method="post" action="/leads">
                 @csrf
                 <input type="hidden" name="page" value="book">
                 <p class="hidden" aria-hidden="true">
@@ -93,8 +93,8 @@
                     @error('phone_code')
                         <p class="mt-1 text-sm text-red-700">{{ $message }}</p>
                     @enderror
-                    <button class="mt-2 text-sm underline" type="submit" name="book_intent" value="send_phone_code">Text me a code</button>
-                    <button class="mt-2 ml-3 text-sm underline" type="submit" name="book_intent" value="check_phone_code">Verify phone</button>
+                    <button class="public-book-form__action" type="submit" name="book_intent" value="send_phone_code">Text me a code</button>
+                    <button class="public-book-form__action" type="submit" name="book_intent" value="check_phone_code">Verify phone</button>
                 @endif
 
                 <label class="mt-4 block text-sm font-medium" for="contact_email">Email</label>
@@ -108,8 +108,8 @@
                     @error('email_code')
                         <p class="mt-1 text-sm text-red-700">{{ $message }}</p>
                     @enderror
-                    <button class="mt-2 text-sm underline" type="submit" name="book_intent" value="send_email_code">Email me a code</button>
-                    <button class="mt-2 ml-3 text-sm underline" type="submit" name="book_intent" value="check_email_code">Verify email</button>
+                    <button class="public-book-form__action" type="submit" name="book_intent" value="send_email_code">Email me a code</button>
+                    <button class="public-book-form__action" type="submit" name="book_intent" value="check_email_code">Verify email</button>
                 @endif
 
                 <fieldset class="mt-4">

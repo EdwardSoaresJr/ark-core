@@ -12,7 +12,20 @@
             @if ($website->address() !== '')
                 <li>{{ $website->address() }}</li>
             @endif
+            @if ($website->hoursLabel() !== '')
+                <li>Hours: {{ $website->hoursLabel() }}</li>
+            @endif
         </ul>
+        @if ($website->mapEmbedUrl() !== null)
+            <div class="public-contact-page__map">
+                <iframe
+                    title="Map to {{ $website->shopName() }}"
+                    src="{{ $website->mapEmbedUrl() }}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                ></iframe>
+            </div>
+        @endif
         <p class="mt-4"><a class="public-cta public-cta--primary" href="{{ route('public.book') }}">Request an appointment</a></p>
 
         @if ($website->faqs() !== [])
@@ -20,7 +33,18 @@
                 <h2 class="public-page-title">Questions</h2>
                 @foreach ($website->faqs() as $faq)
                     <h3 class="mt-4 font-semibold">{{ $faq['question'] }}</h3>
-                    <p class="public-page-lede">{{ $faq['answer'] }}</p>
+                    <p class="public-page-lede">
+                        @php
+                            $faqAnswer = $faq['answer'];
+                            $faqPhrase = 'financing options';
+                            $faqLinkAt = strrpos($faqAnswer, $faqPhrase);
+                        @endphp
+                        @if ($faq['question'] === 'What forms of payment do you accept?' && $faqLinkAt !== false)
+                            {{ substr($faqAnswer, 0, $faqLinkAt) }}<a href="{{ route('public.financing') }}">{{ $faqPhrase }}</a>{{ substr($faqAnswer, $faqLinkAt + strlen($faqPhrase)) }}
+                        @else
+                            {{ $faqAnswer }}
+                        @endif
+                    </p>
                 @endforeach
             </section>
         @endif

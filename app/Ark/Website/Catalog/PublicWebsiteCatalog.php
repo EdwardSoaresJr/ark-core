@@ -62,7 +62,7 @@ final class PublicWebsiteCatalog
                 ],
                 [
                     'question' => 'Do you accept customer-supplied parts?',
-                    'answer' => 'Yes, in most cases. There is an extra labor fee, and the part itself is not covered by our parts warranty. Ask us before buying the part so we can make sure it will work for the repair.',
+                    'answer' => 'Yes, in most cases. Customer-supplied parts are not covered by our parts warranty. Ask us before buying the part so we can make sure it is appropriate for the repair.',
                 ],
                 [
                     'question' => 'Do you offer towing?',
@@ -70,11 +70,11 @@ final class PublicWebsiteCatalog
                 ],
                 [
                     'question' => 'Do you perform inspections?',
-                    'answer' => 'Yes. We can inspect the vehicle and tell you what we find. If the cause of a problem is not clear, we can diagnose it too.',
+                    'answer' => 'Yes. We provide vehicle inspections, including pre-purchase and post-purchase inspections. If you have a specific concern or the cause of a problem isn\'t clear, we can also perform diagnostic testing.',
                 ],
                 [
                     'question' => 'What forms of payment do you accept?',
-                    'answer' => 'Major cards, and financing when the repair qualifies. Ask about Wisetack or Synchrony Car Care on the estimate.',
+                    'answer' => 'We accept major cards and offer financing options for qualifying repairs. Learn more about our financing options, including Wisetack and Synchrony Car Care.',
                 ],
             ],
             'financing' => [
@@ -88,7 +88,7 @@ final class PublicWebsiteCatalog
                     [
                         'name' => 'Synchrony Car Care',
                         'body' => 'A credit card made for auto repair and maintenance at shops that take Synchrony.',
-                        'url' => 'https://www.synchrony.com/financing/car-care/prospecting',
+                        'url' => 'https://www.synchrony.com/mmc/CR243778456?sitecode=acewel401',
                     ],
                 ],
             ],
