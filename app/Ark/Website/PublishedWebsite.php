@@ -27,7 +27,7 @@ final class PublishedWebsite
 
     public function canonicalHost(): string
     {
-        return strtolower(trim((string) $this->site->public_host));
+        return WebsiteHosts::preferredPublicHost((string) $this->site->public_host);
     }
 
     public function canonicalUrl(string $path = '/'): string

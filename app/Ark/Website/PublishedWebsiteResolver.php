@@ -43,33 +43,20 @@ final class PublishedWebsiteResolver
 
     private function siteForHost(string $host): ?WebsiteSite
     {
-        $canonical = strtolower(trim((string) config('surfaces.public')));
-        $aliases = $this->aliases();
+        if (str_starts_with($host, 'www.')) {
+            return null;
+        }
 
-        if ($canonical !== '' && ($host === $canonical || in_array($host, $aliases, true))) {
-            return $this->siteByHost($canonical);
+        if (WebsiteHosts::isCustomDomain($host)) {
+            $native = WebsiteHosts::nativeHostForCustomDomain($host);
+            if ($native === null) {
+                return null;
+            }
+
+            return $this->siteByHost($native);
         }
 
         return $this->siteByHost($host);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function aliases(): array
-    {
-        $canonical = strtolower(trim((string) config('surfaces.public')));
-        $aliases = [];
-
-        foreach ((array) config('surfaces.public_aliases', []) as $alias) {
-            $alias = strtolower(trim((string) $alias));
-            if ($alias === '' || $alias === $canonical || str_contains($alias, '/') || str_contains($alias, ' ')) {
-                continue;
-            }
-            $aliases[] = $alias;
-        }
-
-        return array_values(array_unique($aliases));
     }
 
     private function siteByHost(string $host): ?WebsiteSite

@@ -12,9 +12,11 @@ return [
 
     'learn' => env('LEARN_DOMAIN'),
 
-    // Canonical public hostname. Aliases resolve the same website publication.
+    // Customer-facing hostname for portal routing and the www redirect.
+    // Website site identity is website_sites.public_host, not this value.
     'public' => env('PUBLIC_DOMAIN', env('SHOP_LOCAL_PARENT_DOMAIN')),
 
+    // Extra route hosts for this installation. Not per-shop website identity.
     'public_aliases' => array_values(array_filter(array_map(
         static fn (string $host): string => strtolower(trim($host)),
         explode(',', (string) env('SURFACE_PUBLIC_ALIASES', '')),

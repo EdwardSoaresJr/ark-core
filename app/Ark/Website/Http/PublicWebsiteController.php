@@ -7,6 +7,7 @@ use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Website\PublishedWebsite;
 use App\Ark\Website\PublishedWebsiteResolver;
+use App\Ark\Website\WebsiteHosts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,10 +20,10 @@ final class PublicWebsiteController
         private readonly LeadRecorder $leads,
     ) {}
 
-    public function home(Request $request): View|Response
+    public function home(Request $request): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -32,20 +33,20 @@ final class PublicWebsiteController
         ]);
     }
 
-    public function book(Request $request): View|Response
+    public function book(Request $request): View|Response|RedirectResponse
     {
         return $this->formPage($request, 'book', 'website.book');
     }
 
-    public function contact(Request $request): View|Response
+    public function contact(Request $request): View|Response|RedirectResponse
     {
         return $this->formPage($request, 'contact', 'website.contact');
     }
 
-    public function financing(Request $request): View|Response
+    public function financing(Request $request): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -55,10 +56,10 @@ final class PublicWebsiteController
         ]);
     }
 
-    public function page(Request $request, string $key): View|Response
+    public function page(Request $request, string $key): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -70,10 +71,10 @@ final class PublicWebsiteController
         ]);
     }
 
-    public function problems(Request $request): View|Response
+    public function problems(Request $request): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -83,10 +84,10 @@ final class PublicWebsiteController
         ]);
     }
 
-    public function problem(Request $request, string $slug): View|Response
+    public function problem(Request $request, string $slug): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -110,10 +111,10 @@ final class PublicWebsiteController
         ]);
     }
 
-    public function thanks(Request $request): View|Response
+    public function thanks(Request $request): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -132,7 +133,7 @@ final class PublicWebsiteController
     public function storeLead(Request $request): RedirectResponse|Response
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -175,8 +176,12 @@ final class PublicWebsiteController
         return redirect()->route('public.leads.thanks');
     }
 
-    public function robots(Request $request): Response
+    public function robots(Request $request): Response|RedirectResponse
     {
+        if ($redirect = $this->wwwRedirect($request)) {
+            return $redirect;
+        }
+
         $website = $this->websites->forRequest($request);
         $lines = [
             'User-agent: *',
@@ -197,8 +202,12 @@ final class PublicWebsiteController
         ]);
     }
 
-    public function sitemap(Request $request): Response
+    public function sitemap(Request $request): Response|RedirectResponse
     {
+        if ($redirect = $this->wwwRedirect($request)) {
+            return $redirect;
+        }
+
         $paths = [
             '/',
             '/book',
@@ -239,10 +248,10 @@ XML;
         ]);
     }
 
-    private function formPage(Request $request, string $seoKey, string $view): View|Response
+    private function formPage(Request $request, string $seoKey, string $view): View|Response|RedirectResponse
     {
         $website = $this->requireWebsite($request);
-        if ($website instanceof Response) {
+        if (! $website instanceof PublishedWebsite) {
             return $website;
         }
 
@@ -252,9 +261,23 @@ XML;
         ]);
     }
 
-    private function requireWebsite(Request $request): PublishedWebsite|Response
+    private function requireWebsite(Request $request): PublishedWebsite|Response|RedirectResponse
     {
+        if ($redirect = $this->wwwRedirect($request)) {
+            return $redirect;
+        }
+
         return $this->websites->forRequest($request) ?? $this->missing();
+    }
+
+    private function wwwRedirect(Request $request): ?RedirectResponse
+    {
+        $apex = WebsiteHosts::wwwApex($request->getHost());
+        if ($apex === null) {
+            return null;
+        }
+
+        return redirect()->away('https://'.$apex.$request->getRequestUri(), 301);
     }
 
     private function missing(): Response
