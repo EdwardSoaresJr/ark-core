@@ -4,7 +4,7 @@
 
 <x-website.layout :website="$website" :seo="$seo" page="about">
     <div class="public-home">
-        <article class="public-home__section public-home__section--first">
+        <article class="public-home__about">
             <h1 class="public-page-title">A repair shop built around doing it right</h1>
             @if ($photos['team'] !== null)
                 <figure class="public-home__figure public-home__figure--about">
@@ -15,7 +15,7 @@
             <div class="public-home__copy">
                 <p class="public-page-lede">LugsNPlugs Automotive is owned and operated by Edward and Molly Soares. What started with Edward working as a mobile mechanic grew into a Colorado Springs repair shop built around a simple idea: diagnose the vehicle first, explain what we found, and let the customer make an informed decision.</p>
                 <p class="public-page-lede">We're not trying to move cars through as fast as possible. Every vehicle that comes through our shop belongs to somebody who depends on it.</p>
-                <p class="public-page-lede">Every job is personal.</p>
+                <p class="public-home__personal">Every job is personal.</p>
                 @if ($website->streetLine() !== '')
                     <p class="public-page-lede">{{ $website->streetLine() }}</p>
                 @endif

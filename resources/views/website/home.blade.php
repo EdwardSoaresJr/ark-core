@@ -44,7 +44,7 @@
                     <h2 class="public-section-title">A repair shop built around doing it right</h2>
                     <p class="public-page-lede">LugsNPlugs Automotive is owned and operated by Edward and Molly Soares. What started with Edward working as a mobile mechanic grew into a Colorado Springs repair shop built around a simple idea: diagnose the vehicle first, explain what we found, and let the customer make an informed decision.</p>
                     <p class="public-page-lede">We're not trying to move cars through as fast as possible. Every vehicle that comes through our shop belongs to somebody who depends on it.</p>
-                    <p class="public-page-lede">Every job is personal.</p>
+                    <p class="public-home__personal">Every job is personal.</p>
                 </div>
             </div>
         </section>
@@ -79,36 +79,36 @@
             </div>
             <ul class="public-home__concerns">
                 @if ($website->problem('check-engine-light') !== null)
-                    <li><a class="public-link" href="{{ route('public.common-problems.show', 'check-engine-light') }}">Check engine light</a></li>
+                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', 'check-engine-light') }}">Check engine light</a></li>
                 @endif
                 @if ($website->problem('car-wont-start') !== null)
-                    <li><a class="public-link" href="{{ route('public.common-problems.show', 'car-wont-start') }}">Won't start</a></li>
+                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', 'car-wont-start') }}">Won't start</a></li>
                 @endif
                 @if ($website->problem('engine-overheating') !== null)
-                    <li><a class="public-link" href="{{ route('public.common-problems.show', 'engine-overheating') }}">Overheating</a></li>
+                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', 'engine-overheating') }}">Overheating</a></li>
                 @endif
                 <li>
                     <details class="public-home__noise">
-                        <summary>Strange noise</summary>
+                        <summary class="public-home__choice">Strange noise</summary>
                         <ul>
                             @foreach ($noise as $slug => $label)
                                 @if ($website->problem($slug) !== null)
-                                    <li><a class="public-link" href="{{ route('public.common-problems.show', $slug) }}">{{ $label }}</a></li>
+                                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', $slug) }}">{{ $label }}</a></li>
                                 @endif
                             @endforeach
                         </ul>
                     </details>
                 </li>
                 @if ($website->problem('ac-not-cold') !== null)
-                    <li><a class="public-link" href="{{ route('public.common-problems.show', 'ac-not-cold') }}">A/C not cold</a></li>
+                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', 'ac-not-cold') }}">A/C not cold</a></li>
                 @endif
                 @if ($website->problem('electrical-diagnostics') !== null)
-                    <li><a class="public-link" href="{{ route('public.common-problems.show', 'electrical-diagnostics') }}">Electrical problem</a></li>
+                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', 'electrical-diagnostics') }}">Electrical problem</a></li>
                 @endif
                 @if ($website->problem('misfire-under-load') !== null)
-                    <li><a class="public-link" href="{{ route('public.common-problems.show', 'misfire-under-load') }}">Running poorly</a></li>
+                    <li><a class="public-home__choice" href="{{ route('public.common-problems.show', 'misfire-under-load') }}">Running poorly</a></li>
                 @endif
-                <li><a class="public-link" href="{{ route('public.book', ['concern' => 'Something Else']) }}">Something else</a></li>
+                <li><a class="public-home__choice" href="{{ route('public.book', ['concern' => 'Something Else']) }}">Something else</a></li>
             </ul>
         </section>
 
@@ -131,19 +131,26 @@
                         @endif
                     </blockquote>
                 @endforeach
-
-                <h2 class="public-section-title public-home__subhead">Warranty</h2>
-                <p class="public-page-lede">Qualifying shop repairs are covered for 24 months or 24,000 miles on parts and labor, whichever comes first. <a class="public-link" href="{{ route('public.warranty') }}">Shop warranty</a></p>
-                <p class="public-page-lede">RepairPal Certified coverage is separate: 12 months or 12,000 miles nationwide on qualifying repairs. <a class="public-link" href="{{ route('public.repairpal') }}">RepairPal</a></p>
-
+            </div>
+            <div class="public-home__trust-items">
+                <div>
+                    <h3>Warranty</h3>
+                    <p>Qualifying shop repairs are covered for 24 months or 24,000 miles on parts and labor, whichever comes first. <a class="public-link" href="{{ route('public.warranty') }}">Shop warranty</a></p>
+                </div>
+                <div>
+                    <h3>RepairPal</h3>
+                    <p>RepairPal Certified coverage is separate: 12 months or 12,000 miles nationwide on qualifying repairs. <a class="public-link" href="{{ route('public.repairpal') }}">RepairPal</a></p>
+                </div>
                 @if ($website->financingSummary() !== null)
-                    <h2 class="public-section-title public-home__subhead">Financing</h2>
-                    <p class="public-page-lede">{{ $website->financingSummary() }} <a class="public-link" href="{{ route('public.financing') }}">Financing</a></p>
+                    <div>
+                        <h3>Financing</h3>
+                        <p>{{ $website->financingSummary() }} <a class="public-link" href="{{ route('public.financing') }}">Financing</a></p>
+                    </div>
                 @endif
             </div>
         </section>
 
-        <section class="public-home__section">
+        <section class="public-home__close">
             <div class="public-home__copy">
                 <h2 class="public-section-title">Tell us what's happening</h2>
                 <p class="public-page-lede">An appointment request is how we start. It does not reserve a bay. Tell us the concern, the vehicle, and when you would like to come in. An advisor confirms the time during business hours.</p>

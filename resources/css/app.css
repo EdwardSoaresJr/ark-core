@@ -30490,8 +30490,20 @@ html.dark .ops-printing-cmd,
         align-items: center;
     }
 
+    .public-home__hero .public-home__copy {
+        max-width: none;
+    }
+
     .public-home__copy {
         max-width: 40rem;
+    }
+
+    .public-home__personal {
+        margin: 1.15rem 0 0;
+        font-size: 1.0625rem;
+        font-weight: 600;
+        line-height: 1.45;
+        color: theme('colors.slate.900');
     }
 
     .public-home__section {
@@ -30525,7 +30537,15 @@ html.dark .ops-printing-cmd,
 
     .public-home__figure--about {
         margin-top: 1.5rem;
-        max-width: 40rem;
+        max-width: none;
+    }
+
+    .public-home__about {
+        max-width: 50rem;
+    }
+
+    .public-home__about .public-home__copy {
+        max-width: none;
     }
 
     .public-home__caption {
@@ -30544,37 +30564,131 @@ html.dark .ops-printing-cmd,
     .public-home__concerns {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.75rem 1.5rem;
-        margin: 1.25rem 0 0;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin: 1.35rem 0 0;
         padding: 0;
         list-style: none;
-        max-width: 40rem;
+        max-width: 48rem;
+    }
+
+    .public-home__concerns > li {
+        display: contents;
+    }
+
+    .public-home__choice {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.75rem;
+        padding: 0.35rem 0.95rem;
+        border: 1px solid rgb(15 23 42 / 0.14);
+        border-radius: 999px;
+        background: rgb(15 23 42 / 0.03);
+        color: theme('colors.slate.900');
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1.2;
+        text-decoration: none;
+    }
+
+    a.public-home__choice:hover,
+    .public-home__noise summary:hover {
+        border-color: rgb(15 23 42 / 0.28);
+        background: rgb(15 23 42 / 0.06);
+        color: theme('colors.slate.950');
+    }
+
+    .public-home__noise {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .public-home__noise[open] {
+        flex-basis: 100%;
     }
 
     .public-home__noise summary {
         cursor: pointer;
-        font-weight: 600;
+        list-style: none;
+    }
+
+    .public-home__noise summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .public-home__noise summary::after {
+        content: "";
+        width: 0.4rem;
+        height: 0.4rem;
+        margin-left: 0.5rem;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg) translateY(-0.05rem);
+    }
+
+    .public-home__noise[open] summary::after {
+        transform: rotate(225deg) translateY(-0.05rem);
     }
 
     .public-home__noise ul {
-        margin: 0.5rem 0 0;
-        padding-left: 1.1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
     }
 
     .public-home__quote {
-        margin: 1.25rem 0 0;
-        max-width: 40rem;
+        margin: 1.75rem 0 0;
+        max-width: 42rem;
+        padding: 0.15rem 0 0.15rem 1rem;
+        border-left: 2px solid rgb(15 23 42 / 0.22);
     }
 
     .public-home__quote p {
-        font-size: 1rem;
-        line-height: 1.6;
+        font-size: 1.125rem;
+        line-height: 1.55;
+        color: theme('colors.slate.900');
     }
 
     .public-home__quote footer {
-        margin-top: 0.35rem;
+        margin-top: 0.55rem;
         font-size: 0.875rem;
+        font-weight: 600;
         color: theme('colors.slate.600');
+    }
+
+    .public-home__trust-items {
+        display: grid;
+        gap: 1.35rem 2rem;
+        margin-top: 2.25rem;
+    }
+
+    .public-home__trust-items h3 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        line-height: 1.3;
+        color: theme('colors.slate.950');
+    }
+
+    .public-home__trust-items p {
+        margin: 0.35rem 0 0;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        color: theme('colors.slate.700');
+    }
+
+    .public-home__close {
+        margin-top: 4.5rem;
+        margin-bottom: -4rem;
+        margin-inline: -1rem;
+        padding: 3.25rem 1rem 3.5rem;
+        background: #e6edf3;
     }
 
     .public-home .public-cta--secondary {
@@ -30582,10 +30696,26 @@ html.dark .ops-printing-cmd,
         max-width: none;
     }
 
+    @media (min-width: 640px) {
+        .public-home__close {
+            margin-inline: -1.5rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        .public-home__trust-items {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
     @media (min-width: 900px) {
-        .public-home__hero,
+        .public-home__hero {
+            grid-template-columns: minmax(0, 1.18fr) minmax(18rem, 0.82fr);
+            gap: 3rem;
+        }
+
         .public-home__split {
-            grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+            grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
             gap: 2.5rem;
         }
 
@@ -31057,6 +31187,37 @@ html.dark .ops-printing-cmd,
         border-color: rgb(226 232 240 / 0.55);
         background: rgb(148 163 184 / 0.08);
         color: theme('colors.slate.50');
+    }
+
+    html.dark .public-surface .public-home__personal,
+    html.dark .public-surface .public-home__quote p,
+    html.dark .public-surface .public-home__trust-items h3 {
+        color: theme('colors.slate.50');
+    }
+
+    html.dark .public-surface .public-home__quote {
+        border-left-color: rgb(148 163 184 / 0.45);
+    }
+
+    html.dark .public-surface .public-home__choice {
+        border-color: rgb(148 163 184 / 0.32);
+        background: rgb(255 255 255 / 0.04);
+        color: theme('colors.slate.100');
+    }
+
+    html.dark .public-surface a.public-home__choice:hover,
+    html.dark .public-surface .public-home__noise summary:hover {
+        border-color: rgb(226 232 240 / 0.5);
+        background: rgb(255 255 255 / 0.07);
+        color: theme('colors.slate.50');
+    }
+
+    html.dark .public-surface .public-home__trust-items p {
+        color: theme('colors.slate.300');
+    }
+
+    html.dark .public-surface .public-home__close {
+        background: #161e2e;
     }
 
     html.dark .public-surface .customer-header__nav {
