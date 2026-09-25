@@ -23,6 +23,32 @@ function loadSquareSdk(url) {
 }
 
 /**
+ * Write the live capture fields onto the form before submit.
+ * Alpine updates x-bind values on a later turn, so FormData would otherwise
+ * post an empty card token on the first click.
+ */
+export function stampPaymentCaptureFields(form, state) {
+    if (! form?.querySelector) {
+        return;
+    }
+
+    const method = state?.method ?? '';
+    const values = {
+        capture_method: method,
+        source_token: method === 'keyed' ? (state?.sourceToken ?? '') : '',
+        device_ref: method === 'terminal' ? (state?.deviceRef ?? '') : '',
+    };
+
+    for (const [name, value] of Object.entries(values)) {
+        const input = form.querySelector(`input[name="${name}"]`);
+
+        if (input) {
+            input.value = value;
+        }
+    }
+}
+
+/**
  * Take Payment rail - Terminal or Square Web Payments tokenized keyed entry.
  * Core never sees PAN/CVV; only source_token from Square.js.
  */
@@ -106,6 +132,11 @@ export function arkPaymentCapture(config = {}) {
                 } else {
                     this.sourceToken = '';
                 }
+
+                const form = event?.target instanceof HTMLFormElement
+                    ? event.target
+                    : event?.target?.closest?.('form');
+                stampPaymentCaptureFields(form, this);
 
                 // Walk up to the RO worksheet Alpine scope (nested x-data).
                 let el = event.target;
