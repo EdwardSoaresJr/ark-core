@@ -4,6 +4,7 @@
         <p class="public-page-lede">What a symptom or a code can mean, whether you can keep driving, and how we find the cause.</p>
         <p class="public-cp-index__lede-secondary">The work itself is on <a class="public-link" href="{{ route('public.services') }}">Services</a>.</p>
 
+        <div class="public-cp-index__columns">
         <section class="public-cp-index__catalog">
             <h2>Problems and symptoms</h2>
             <ul class="public-cp-index__list">
@@ -35,5 +36,6 @@
                 @endforeach
             </ul>
         </section>
+        </div>
     </article>
 </x-website.layout>

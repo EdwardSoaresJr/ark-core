@@ -1,17 +1,16 @@
 <x-website.layout :website="$website" :seo="$seo" page="book">
-    <article class="public-static-page">
+    <div class="public-canvas">
         <h1 class="public-page-title">Request an appointment</h1>
-        <p class="public-page-lede">Tell us what the car is doing and when you would like to come in. An advisor confirms the time during business hours. This is a request. It does not reserve a bay.</p>
-
+        <div class="public-canvas__layout public-canvas__layout--form">
+            <div>
         @if ($closed)
-            <p class="public-page-lede mt-4">Online appointment requests are paused. Call or text the shop and we will help you find a time.</p>
-            <p class="mt-4"><a class="public-link" href="{{ route('public.contact') }}">Contact the shop</a></p>
+            <p class="public-page-lede">Online appointment requests are paused. Call or text the shop and we will help you find a time.</p>
         @else
             @if (session('book_status'))
                 <p class="mt-4">{{ session('book_status') }}</p>
             @endif
 
-            <form class="public-panel public-book-form mt-6" method="post" action="/leads">
+            <form class="public-panel public-book-form" method="post" action="/leads">
                 @csrf
                 <input type="hidden" name="page" value="book">
                 <p class="hidden" aria-hidden="true">
@@ -125,5 +124,22 @@
                 <button class="public-cta public-cta--primary mt-6" type="submit">Send appointment request</button>
             </form>
         @endif
-    </article>
+            </div>
+            <aside class="public-canvas__rail">
+                <p class="public-page-lede">Tell us what the car is doing and when you would like to come in. An advisor confirms the time during business hours. This is a request. It does not reserve a bay.</p>
+                <ul class="public-canvas__facts">
+                    @if ($website->hoursLabel() !== '')
+                        <li>Hours: {{ $website->hoursLabel() }}</li>
+                    @endif
+                    @if ($website->phone() !== '')
+                        <li>Phone: <a class="public-link" href="tel:{{ preg_replace('/\D+/', '', $website->phone()) }}">{{ $website->phoneDisplay() }}</a></li>
+                    @endif
+                    @if ($website->address() !== '')
+                        <li>{{ $website->address() }}</li>
+                    @endif
+                </ul>
+                <p class="mt-4"><a class="public-link" href="{{ route('public.contact') }}">Contact the shop</a></p>
+            </aside>
+        </div>
+    </div>
 </x-website.layout>

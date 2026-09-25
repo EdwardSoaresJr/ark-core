@@ -30685,6 +30685,132 @@ html.dark .ops-printing-cmd,
         margin-left: 0;
     }
 
+    .public-cp-index {
+        width: min(72rem, 100%);
+        max-width: none;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0 1rem 2.5rem;
+    }
+
+    .public-canvas {
+        width: min(72rem, 100%);
+        margin-inline: auto;
+        padding: 0 1rem 2.5rem;
+    }
+
+    @media (min-width: 640px) {
+        .public-cp-index,
+        .public-canvas {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+
+    .public-canvas__prose {
+        max-width: var(--public-read-max);
+    }
+
+    .public-canvas__layout,
+    .public-contact-page__lower,
+    .public-financing__programs,
+    .public-services__grid,
+    .public-cp-index__columns {
+        display: grid;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .public-canvas__layout,
+    .public-contact-page__columns,
+    .public-contact-page__lower {
+        margin-top: 1.5rem;
+    }
+
+    .public-services__grid,
+    .public-cp-index__columns,
+    .public-financing__programs {
+        margin-top: 2rem;
+    }
+
+    .public-cp-index__columns .public-cp-index__catalog {
+        margin-top: 0;
+    }
+
+    .public-canvas__rail .public-page-lede {
+        margin-top: 0;
+    }
+
+    .public-canvas__rail .public-page-lede + .public-page-lede {
+        margin-top: 1rem;
+    }
+
+    .public-canvas__facts {
+        margin: 1rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+    }
+
+    .public-canvas__facts li + li {
+        margin-top: 0.35rem;
+    }
+
+    .public-contact-page__columns .public-contact-page__map {
+        margin-top: 0;
+    }
+
+    .public-contact-page__lower .public-panel {
+        margin-top: 0;
+    }
+
+    .public-financing__program {
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--public-border);
+    }
+
+    .public-financing__program h3 {
+        margin: 0;
+        font-size: 1.0625rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--public-text);
+    }
+
+    .public-financing__program p {
+        margin: 0.5rem 0 0;
+        font-size: 1rem;
+        line-height: 1.65;
+        color: var(--public-text-muted);
+    }
+
+    @media (min-width: 900px) {
+        .public-home__split--start {
+            align-items: start;
+        }
+
+        .public-services__grid,
+        .public-cp-index__columns,
+        .public-financing__programs {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            column-gap: 3rem;
+        }
+    }
+
+    @media (min-width: 960px) {
+        .public-canvas__layout--read {
+            grid-template-columns: minmax(0, 40rem) minmax(16rem, 1fr);
+            column-gap: 3rem;
+        }
+
+        .public-canvas__layout--form,
+        .public-contact-page__lower {
+            grid-template-columns: minmax(0, 42rem) minmax(16rem, 1fr);
+            column-gap: 3rem;
+        }
+    }
+
     .public-home {
         width: min(72rem, 100%);
         margin-inline: auto;

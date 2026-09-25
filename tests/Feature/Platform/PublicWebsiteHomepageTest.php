@@ -99,6 +99,7 @@ test('about page uses the team photo and shop facts', function (): void {
 
     $about->assertOk()
         ->assertSee('About LugsNPlugs', false)
+        ->assertSee('public-home__split', false)
         ->assertSee('A repair shop built around doing it right')
         ->assertSee('public-surface-photos/team.webp', false)
         ->assertSee('The LugsNPlugs Automotive team.')
@@ -156,6 +157,7 @@ test('site foundation exposes services, problems, and an appointment request', f
 
     $this->get('http://lugsnplugs.com/services')
         ->assertOk()
+        ->assertSee('public-services__grid', false)
         ->assertSee('Diagnostics')
         ->assertSee('Brakes')
         ->assertSee('Maintenance')
@@ -170,6 +172,7 @@ test('site foundation exposes services, problems, and an appointment request', f
 
     $hub = $this->get('http://lugsnplugs.com/common-problems');
     $hub->assertOk()
+        ->assertSee('public-cp-index__columns', false)
         ->assertSee('Problems and symptoms')
         ->assertSee('Diagnostic codes')
         ->assertSee('Check Engine Light')
@@ -195,6 +198,9 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertOk()
         ->assertSee('Request an appointment')
         ->assertSee('It does not reserve a bay.')
+        ->assertSee('public-canvas', false)
+        ->assertSee('public-contact-page__columns', false)
+        ->assertSee('public-contact-page__lower', false)
         ->assertSee('public-contact-page__map', false)
         ->assertSee('output=embed', false)
         ->assertSee('LugsNPlugs%20Automotive', false)
@@ -203,6 +209,8 @@ test('site foundation exposes services, problems, and an appointment request', f
     $this->get('http://lugsnplugs.com/book')
         ->assertOk()
         ->assertSee('<title>Request an appointment', false)
+        ->assertSee('public-canvas__layout--form', false)
+        ->assertSee('This is a request. It does not reserve a bay.', false)
         ->assertSee('public-book-form', false)
         ->assertSee('name="concern_category"', false)
         ->assertSee('name="preferred_date"', false)
@@ -496,4 +504,53 @@ test('homepage omits financing names that are not offered', function (): void {
         ->assertOk()
         ->assertDontSee('Wisetack')
         ->assertDontSee('Synchrony');
+});
+
+test('wide pages use the canvas and documents stay narrow', function (): void {
+    publishHomepageSurface();
+
+    $this->get('http://lugsnplugs.com/warranty')
+        ->assertOk()
+        ->assertSee('public-canvas__layout--read', false)
+        ->assertSee('24 months / 24,000 miles', false)
+        ->assertSee('12 months / 12,000 miles', false)
+        ->assertSee('What it covers')
+        ->assertDontSee('public-static-page', false);
+
+    $this->get('http://lugsnplugs.com/financing')
+        ->assertOk()
+        ->assertSee('public-financing__programs', false)
+        ->assertSee('public-canvas__prose', false)
+        ->assertSee('How it works');
+
+    $this->get('http://lugsnplugs.com/privacy')
+        ->assertOk()
+        ->assertSee('public-static-page', false)
+        ->assertDontSee('public-canvas', false);
+
+    $this->get('http://lugsnplugs.com/terms')
+        ->assertOk()
+        ->assertSee('public-static-page', false)
+        ->assertDontSee('public-canvas', false);
+
+    $this->get('http://lugsnplugs.com/repairpal')
+        ->assertOk()
+        ->assertSee('public-static-page', false)
+        ->assertDontSee('public-canvas', false);
+
+    $this->get('http://lugsnplugs.com/leads/thanks')
+        ->assertOk()
+        ->assertSee('public-static-page', false)
+        ->assertDontSee('public-canvas', false);
+
+    $this->get('http://lugsnplugs.com/services/diagnostics')
+        ->assertOk()
+        ->assertSee('public-service', false)
+        ->assertDontSee('public-canvas', false);
+
+    $this->get('http://lugsnplugs.com/common-problems/electrical-diagnostics')
+        ->assertOk()
+        ->assertSee('public-cp-article', false)
+        ->assertDontSee('public-service', false)
+        ->assertDontSee('public-canvas', false);
 });
