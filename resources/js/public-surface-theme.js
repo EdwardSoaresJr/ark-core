@@ -18,8 +18,8 @@ function readCookieTheme() {
 function readStoredTheme() {
     const fromCookie = readCookieTheme();
 
-    if (fromCookie === 'light' || fromCookie === 'dark' || fromCookie === 'system') {
-        return fromCookie === 'system' ? null : fromCookie;
+    if (fromCookie === 'light' || fromCookie === 'dark') {
+        return fromCookie;
     }
 
     try {
@@ -70,6 +70,7 @@ function applyPublicSurfaceTheme() {
 
     root.classList.toggle('dark', dark);
     root.dataset.customerTheme = stored ?? 'system';
+    root.style.colorScheme = dark ? 'dark' : 'light';
 
     document.querySelectorAll('[data-public-surface-theme-toggle]').forEach((toggle) => {
         toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');

@@ -5,9 +5,23 @@
     var cookieDomain = @json(config('ark-ecosystem.cookie_domain'));
 
     function readCookie(name) {
-        var match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'));
+        var pattern = new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)', 'g');
+        var fallback = null;
+        var match;
 
-        return match ? decodeURIComponent(match[1]) : null;
+        // A host cookie and a parent-domain cookie can both be present.
+        // An explicit day/night choice wins over a leftover "system" value.
+        while ((match = pattern.exec(document.cookie)) !== null) {
+            var value = decodeURIComponent(match[1]);
+
+            if (value === 'light' || value === 'dark') {
+                return value;
+            }
+
+            fallback = value;
+        }
+
+        return fallback;
     }
 
     function writeCookie(name, value) {
@@ -42,9 +56,11 @@
         fromStorage = null;
     }
 
-    var stored = fromCookie || fromStorage;
+    var explicitCookie = fromCookie === 'light' || fromCookie === 'dark' ? fromCookie : null;
+    var explicitStorage = fromStorage === 'light' || fromStorage === 'dark' ? fromStorage : null;
+    var stored = explicitCookie || explicitStorage;
     var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var dark = stored === 'dark' || ((stored === null || stored === 'system') && systemDark);
+    var dark = stored === 'dark' || (stored === null && systemDark);
 
     if (stored === 'light') {
         dark = false;
@@ -52,6 +68,7 @@
 
     document.documentElement.classList.toggle('dark', dark);
     document.documentElement.dataset.customerTheme = stored === 'light' || stored === 'dark' ? stored : 'system';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
 
     // Keep localStorage and shared cookie aligned across website + portal hosts.
     if (stored === 'light' || stored === 'dark') {

@@ -30847,10 +30847,33 @@ html.dark .ops-printing-cmd,
         margin-top: 0.75rem;
     }
 
-    /* Customer public surface - dark theme (system default + html.dark manual override) */
+    /* Customer public surface - dark theme follows html.dark, not the device scheme. */
     html.dark .public-surface {
+        color-scheme: dark;
+        --public-surface-shop: #0f172a;
+        --public-surface-shop-alt: #111827;
+        --public-text: theme('colors.slate.100');
+        --public-text-muted: theme('colors.slate.400');
+        --public-border: rgb(148 163 184 / 0.18);
         color: theme('colors.slate.100');
         background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    }
+
+    html:not(.dark) .public-surface {
+        color-scheme: light;
+    }
+
+    html.dark .public-surface--shop,
+    html.dark .public-book-band,
+    html.dark .public-home-symptoms,
+    html.dark .public-surface--action,
+    html.dark .public-surface--shop-alt {
+        --public-navy: theme('colors.slate.50');
+    }
+
+    html.dark .public-book-band__steps li {
+        background: #111827;
+        border-color: rgb(148 163 184 / 0.18);
     }
 
     html.dark .public-surface .customer-header {
