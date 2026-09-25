@@ -21,6 +21,30 @@ body_has() {
   grep -q -F -- "$pattern" <<<"$content"
 }
 
+http_status() {
+  local url="$1"
+  local headers
+  headers="$(mktemp)"
+  curl -fsS -o /dev/null -D "$headers" "$url" || {
+    rm -f "$headers"
+    return 1
+  }
+  head -n 1 "$headers"
+  rm -f "$headers"
+}
+
+asset_status() {
+  local status
+  status="$(http_status "$1")" || return 1
+  grep -q '200' <<<"$status"
+}
+
+redirect_status() {
+  local status
+  status="$(http_status "$1")" || return 1
+  grep -q "$2" <<<"$status"
+}
+
 same_origin_asset() {
   local base="$1"
   local kind="$2"
@@ -53,7 +77,7 @@ DTC=(p0016 p0101 p0128 p0135 p0174 p0300 p0301 p0302 p0303 p0304 p0340 p0401 p04
 
 check_host() {
   local base="$1"
-  local body headers js css
+  local body headers js css problem repairpal warranty
   echo "== ${base}"
 
   headers="$(mktemp)"
@@ -69,8 +93,8 @@ check_host() {
   css="$(same_origin_asset "$base" css "$body" || true)"
   [[ -n "$js" ]] || fail "${base} homepage has no same-origin script"
   [[ -n "$css" ]] || fail "${base} homepage has no same-origin stylesheet"
-  curl -fsS -o /dev/null -D - "$js" | head -n 1 | grep -q '200' || fail "script ${js}"
-  curl -fsS -o /dev/null -D - "$css" | head -n 1 | grep -q '200' || fail "stylesheet ${css}"
+  asset_status "$js" || fail "script ${js}"
+  asset_status "$css" || fail "stylesheet ${css}"
   [[ "$js" != https://lugsnplugs.com/* || "$base" == https://lugsnplugs.com ]] || true
   case "$js" in
     "${base}"/*) ;;
@@ -84,14 +108,17 @@ check_host() {
   grep -q 'value="Brakes"' <<<"$book" || fail "${base}/book did not prefill Brakes"
 
   curl -fsS -o /dev/null "${base}/common-problems/check-engine-light" || fail "symptom page"
-  curl -fsS "${base}/common-problems/p0420" | grep -q 'P0420' || fail "p0420"
+  problem="$(curl -fsS "${base}/common-problems/p0420")" || fail "p0420"
+  body_has 'P0420' "$problem" || fail "p0420"
   local code
   for code in "${DTC[@]}"; do
     curl -fsS -o /dev/null "${base}/common-problems/${code}" || fail "DTC ${code}"
   done
 
-  curl -fsS "${base}/repairpal-warranty" | grep -q '12 months / 12,000 miles' || fail "repairpal warranty"
-  curl -fsS "${base}/warranty" | grep -q '24 months / 24,000 miles' || fail "shop warranty"
+  repairpal="$(curl -fsS "${base}/repairpal-warranty")" || fail "repairpal warranty"
+  body_has '12 months / 12,000 miles' "$repairpal" || fail "repairpal warranty"
+  warranty="$(curl -fsS "${base}/warranty")" || fail "shop warranty"
+  body_has '24 months / 24,000 miles' "$warranty" || fail "shop warranty"
 
   local sitemap robots llms
   sitemap="$(curl -fsS "${base}/sitemap.xml")" || fail "sitemap"
@@ -107,7 +134,7 @@ check_host() {
   body_has 'LugsNPlugs' "$body" || fail "JSON-LD shop name"
 
   curl -fsS -o /dev/null "${base}/portal/access" || fail "portal access"
-  curl -fsS -o /dev/null -D - "${base}/appointment?concern=Brakes" | grep -q '301' || fail "legacy appointment redirect"
+  redirect_status "${base}/appointment?concern=Brakes" "301" || fail "legacy appointment redirect"
 
   echo "ok ${base}"
 }
