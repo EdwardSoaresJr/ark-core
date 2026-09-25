@@ -2,9 +2,17 @@
 
 namespace App\Ark\Website\Http;
 
+use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Customers\Recognition\CustomerRecognitionProjection;
+use App\Ark\Operations\Leads\LeadContactPreference;
 use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
+use App\Ark\Operations\Leads\Public\LeadEmailVerification;
+use App\Ark\Operations\Leads\Public\LeadPhoneVerification;
+use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
+use App\Ark\Operations\Leads\Public\PublicBookWizardConcerns;
 use App\Ark\Operations\PhoneNumber;
+use Illuminate\Support\Facades\Auth;
 use App\Ark\Website\PublishedWebsite;
 use App\Ark\Website\PublishedWebsiteResolver;
 use App\Ark\Website\WebsiteHosts;
@@ -35,7 +43,42 @@ final class PublicWebsiteController
 
     public function book(Request $request): View|Response|RedirectResponse
     {
-        return $this->formPage($request, 'book', 'website.book');
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        $availability = PublicAppointmentRequest::availabilityProjection();
+        $customer = Auth::guard('portal')->user();
+        $recognition = $customer instanceof Customer
+            ? app(CustomerRecognitionProjection::class)->forCustomer($customer)
+            : null;
+        $prefill = trim((string) $request->query('concern', ''));
+        $selected = PublicBookWizardConcerns::matchCategory($prefill);
+        $details = '';
+        if ($selected === PublicBookWizardConcerns::SOMETHING_ELSE) {
+            $details = $prefill;
+        } elseif ($selected !== null && $prefill !== '' && strcasecmp($prefill, $selected) !== 0) {
+            $details = $prefill;
+        }
+
+        return view('website.book', [
+            'website' => $website,
+            'seo' => $this->seo($website, 'book', $request),
+            'closed' => ! ($availability['accepting_requests'] ?? false),
+            'dates' => $availability['dates'] ?? [],
+            'periods' => $availability['periods'] ?? [],
+            'concerns' => PublicBookWizardConcerns::options(),
+            'selectedConcern' => $selected ?? PublicBookWizardConcerns::options()[0],
+            'concernDetails' => $details,
+            'vehicles' => $recognition['vehicles'] ?? [],
+            'contactName' => trim((string) ($recognition['customer']['first_name'] ?? '').' '.($recognition['customer']['last_name'] ?? '')),
+            'contactPhone' => (string) ($recognition['customer']['phone'] ?? ''),
+            'contactEmail' => (string) ($recognition['customer']['email'] ?? ''),
+            'contactPreferences' => LeadContactPreference::cases(),
+            'phoneVerificationReady' => app(LeadPhoneVerification::class)->bookIdentityGateReady(),
+            'emailVerificationReady' => app(LeadEmailVerification::class)->ready(),
+        ]);
     }
 
     public function contact(Request $request): View|Response|RedirectResponse
@@ -141,6 +184,10 @@ final class PublicWebsiteController
             return redirect()->route('public.leads.thanks');
         }
 
+        if ($request->filled('concern_category') || $request->filled('preferred_date') || $request->filled('book_intent')) {
+            return app(PublicBookSubmission::class)->store($request, $website);
+        }
+
         $data = $request->validate([
             'contact_name' => ['nullable', 'string', 'max:120'],
             'contact_phone' => ['required', 'string', 'max:32'],
@@ -223,6 +270,17 @@ final class PublicWebsiteController
         if (! $website instanceof PublishedWebsite) {
             $paths = [];
         } else {
+            foreach ([
+                'repairpal' => '/repairpal',
+                'repairpal-certified' => '/repairpal-certified',
+                'repairpal-reviews' => '/repairpal-reviews',
+                'repairpal-warranty' => '/repairpal-warranty',
+            ] as $key => $path) {
+                if ($website->page($key)['title'] !== '') {
+                    $paths[] = $path;
+                }
+            }
+
             foreach ($website->problems() as $problem) {
                 $slug = trim((string) ($problem['slug'] ?? ''));
                 if ($slug !== '') {

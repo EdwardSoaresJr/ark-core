@@ -4,6 +4,13 @@
         @if ($page['lede'] !== '')
             <p class="public-page-lede">{{ $page['lede'] }}</p>
         @endif
+        @if (($page['links'] ?? []) !== [])
+            <ul class="mt-4">
+                @foreach ($page['links'] as $link)
+                    <li><a class="public-link" href="{{ $link['path'] }}">{{ $link['label'] }}</a></li>
+                @endforeach
+            </ul>
+        @endif
         @foreach ($page['sections'] as $section)
             <section class="public-content-section mt-6">
                 @if ($section['heading'] !== '')

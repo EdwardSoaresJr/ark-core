@@ -201,7 +201,7 @@ final class PublishedWebsite
     }
 
     /**
-     * @return array{title: string, lede: string, sections: list<array{heading: string, body: string}>}
+     * @return array{title: string, lede: string, sections: list<array{heading: string, body: string}>, links: list<array{path: string, label: string}>}
      */
     public function page(string $key): array
     {
@@ -224,10 +224,24 @@ final class PublishedWebsite
             $sections[] = ['heading' => $heading, 'body' => $body];
         }
 
+        $links = [];
+        foreach ($page['links'] ?? [] as $link) {
+            if (! is_array($link)) {
+                continue;
+            }
+            $path = trim((string) ($link['path'] ?? ''));
+            $label = trim((string) ($link['label'] ?? ''));
+            if ($path === '' || $label === '') {
+                continue;
+            }
+            $links[] = ['path' => $path, 'label' => $label];
+        }
+
         return [
             'title' => trim((string) ($page['title'] ?? '')),
             'lede' => trim((string) ($page['lede'] ?? '')),
             'sections' => $sections,
+            'links' => $links,
         ];
     }
 

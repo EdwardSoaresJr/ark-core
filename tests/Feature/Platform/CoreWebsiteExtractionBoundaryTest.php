@@ -122,7 +122,7 @@ test('public pages, robots, and sitemap render from the publication', function (
     publishLocalWebsite();
     Http::fake();
 
-    $this->get('/book')->assertOk()->assertSee('Book an appointment');
+    $this->get('/book')->assertOk()->assertSee('Request an appointment');
     $this->get('/contact')->assertOk()->assertSee('Do I need an appointment?');
     $this->get('/common-problems')->assertOk()->assertSee('Check Engine Light');
     $this->get('/common-problems/check-engine-light')->assertOk()->assertSee('Loose gas cap');

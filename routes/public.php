@@ -15,6 +15,10 @@ SurfaceRouting::publicRoutes(function (): void {
             ->name('public.common-problems.show');
         Route::get('/financing', [PublicWebsiteController::class, 'financing'])->name('public.financing');
         Route::get('/warranty', [PublicWebsiteController::class, 'page'])->name('public.warranty')->defaults('key', 'warranty');
+        Route::get('/repairpal', [PublicWebsiteController::class, 'page'])->name('public.repairpal')->defaults('key', 'repairpal');
+        Route::get('/repairpal-certified', [PublicWebsiteController::class, 'page'])->name('public.repairpal.certified')->defaults('key', 'repairpal-certified');
+        Route::get('/repairpal-reviews', [PublicWebsiteController::class, 'page'])->name('public.repairpal.reviews')->defaults('key', 'repairpal-reviews');
+        Route::get('/repairpal-warranty', [PublicWebsiteController::class, 'page'])->name('public.repairpal.warranty')->defaults('key', 'repairpal-warranty');
         Route::get('/privacy', [PublicWebsiteController::class, 'page'])->name('public.privacy')->defaults('key', 'privacy');
         Route::get('/terms', [PublicWebsiteController::class, 'page'])->name('public.terms')->defaults('key', 'terms');
         Route::get('/robots.txt', [PublicWebsiteController::class, 'robots'])->name('public.robots');

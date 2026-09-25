@@ -38,12 +38,68 @@
             </section>
         @endif
 
+        @if (! empty($problem['often_confused_with']))
+            <section class="public-content-section mt-6">
+                <h2>Often confused with</h2>
+                <ul>
+                    @foreach ($problem['often_confused_with'] as $line)
+                        <li>{{ $line }}</li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
+        @if (! empty($problem['if_you_ignore']))
+            <section class="public-content-section mt-6">
+                <h2>If you ignore it</h2>
+                <ul>
+                    @foreach ($problem['if_you_ignore'] as $line)
+                        <li>{{ $line }}</li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
+        @if (! empty($problem['repair_overview']))
+            <section class="public-content-section mt-6">
+                <h2>Repair overview</h2>
+                <ul>
+                    @foreach ($problem['repair_overview'] as $line)
+                        <li>{{ $line }}</li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         @if (! empty($problem['what_happens_next']))
             <section class="public-content-section mt-6">
                 <h2>What happens next</h2>
                 <ul>
                     @foreach ($problem['what_happens_next'] as $step)
                         <li>{{ $step }}</li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
+        @if (! empty($problem['faq']))
+            <section class="public-content-section mt-6">
+                <h2>Questions</h2>
+                @foreach ($problem['faq'] as $item)
+                    @if (! empty($item['question']))
+                        <h3 class="mt-4 font-semibold">{{ $item['question'] }}</h3>
+                        <p>{{ $item['answer'] ?? '' }}</p>
+                    @endif
+                @endforeach
+            </section>
+        @endif
+
+        @if (! empty($problem['related_problem_slugs']))
+            <section class="public-content-section mt-6">
+                <h2>Related</h2>
+                <ul>
+                    @foreach ($problem['related_problem_slugs'] as $related)
+                        <li><a class="public-link" href="{{ route('public.common-problems.show', $related) }}">{{ $related }}</a></li>
                     @endforeach
                 </ul>
             </section>

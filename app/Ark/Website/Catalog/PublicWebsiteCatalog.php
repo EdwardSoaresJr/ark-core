@@ -22,6 +22,9 @@ final class PublicWebsiteCatalog
     {
         /** @var list<array<string, mixed>> $problems */
         $problems = require __DIR__.'/common_problems.php';
+        /** @var list<array<string, mixed>> $dtcCodes */
+        $dtcCodes = require __DIR__.'/common_problem_dtc_codes.php';
+        $problems = array_merge($problems, $dtcCodes);
 
         return [
             'source' => 'foundry-public-catalog-and-php-defaults',
@@ -122,6 +125,22 @@ final class PublicWebsiteCatalog
                     'title' => 'Common problems',
                     'description' => 'What a symptom can mean, whether you can keep driving, and how the shop finds the cause.',
                 ],
+                'repairpal' => [
+                    'title' => 'RepairPal',
+                    'description' => 'RepairPal Certified shop pages: certification, reviews, and the nationwide warranty.',
+                ],
+                'repairpal-certified' => [
+                    'title' => 'RepairPal Certified',
+                    'description' => 'What RepairPal Certified means at this shop, and how to check the listing.',
+                ],
+                'repairpal-reviews' => [
+                    'title' => 'RepairPal Reviews',
+                    'description' => 'RepairPal reviews sit on RepairPal. Google reviews remain the local record on this site.',
+                ],
+                'repairpal-warranty' => [
+                    'title' => 'RepairPal Warranty',
+                    'description' => 'RepairPal Certified warranty is 12 months / 12,000 miles nationwide. The shop warranty is separate.',
+                ],
             ],
             'pages' => [
                 'privacy' => [
@@ -158,6 +177,115 @@ final class PublicWebsiteCatalog
                             'heading' => 'Changes',
                             'body' => 'We may update this page as our online services change. Continued use of the site after changes means you accept the updated terms.',
                         ],
+                    ],
+                ],
+                'repairpal' => [
+                    'title' => 'RepairPal at this shop',
+                    'lede' => 'This shop is a RepairPal Certified auto repair shop in Colorado Springs. These pages explain what that certification means before you leave the site to check it on RepairPal.',
+                    'sections' => [
+                        [
+                            'heading' => 'Start here',
+                            'body' => 'RepairPal Certified explains the certification. RepairPal Reviews explains where those reviews live. RepairPal Warranty is the nationwide 12 month / 12,000 mile program. It is not the shop warranty.',
+                        ],
+                        [
+                            'heading' => 'Check it yourself',
+                            'body' => 'The official RepairPal profile is the source of record for certification status and RepairPal reviews: https://www.repairpal.com/auto-repair-near-me/auto-repair-in-colorado-springs-colorado/lugs-n-plugs-automotive-auto-repair-in-colorado-springs-co',
+                        ],
+                    ],
+                    'links' => [
+                        ['path' => '/repairpal-certified', 'label' => 'RepairPal Certified'],
+                        ['path' => '/repairpal-reviews', 'label' => 'RepairPal Reviews'],
+                        ['path' => '/repairpal-warranty', 'label' => 'RepairPal Warranty'],
+                    ],
+                ],
+                'repairpal-certified' => [
+                    'title' => 'RepairPal Certified',
+                    'lede' => 'This shop is a RepairPal Certified shop. RepairPal is an independent network. They review shops for workmanship standards, fair pricing practices, and customer experience.',
+                    'sections' => [
+                        [
+                            'heading' => 'What RepairPal is',
+                            'body' => 'RepairPal is an independent auto repair marketplace and certification network. Drivers use it to find shops that meet published quality and pricing standards, compare estimates, and read reviews collected outside any one shop website.',
+                        ],
+                        [
+                            'heading' => 'What RepairPal Certified means',
+                            'body' => 'Certification is not a paid marketing sticker. RepairPal evaluates shops against published criteria that include trained technicians, parts practices, pricing transparency, and customer service. When you see RepairPal Certified on this site, you can check the same status on the public RepairPal listing.',
+                        ],
+                        [
+                            'heading' => 'Why this shop chose certification',
+                            'body' => 'The shop already finds the problem before recommending a repair. Certification lets you verify that with a third party. If you arrive from RepairPal, or you recognize the badge from elsewhere, you should be able to confirm the shop meets the same bar it claims on its own pages.',
+                        ],
+                        [
+                            'heading' => 'What customers gain',
+                            'body' => 'A shop credential you can verify independently. Access to RepairPal review and estimate tools when you use that platform. Nationwide RepairPal Certified warranty (12 months / 12,000 miles) on qualifying repairs done at this shop. The same diagnostic standard used for every Colorado Springs customer: verify the problem before recommending the repair.',
+                        ],
+                        [
+                            'heading' => 'How we diagnose',
+                            'body' => 'Codes and check-engine lights are clues, not a parts list. The shop uses diagnostic tools and live data from the car to confirm the fault, then explains what is wrong, what can wait, and what should be repaired now. RepairPal Certification sits beside that promise. It does not replace it.',
+                        ],
+                        [
+                            'heading' => 'Common questions',
+                            'body' => 'RepairPal is not the same as Google reviews. Google reviews stay on Google. RepairPal collects its own reviews through its platform. You do not have to book through RepairPal. You can request service on this site, call or text the shop, or use RepairPal if you prefer that estimate flow. The work is done at this shop either way. To verify the shop is still certified, open the official RepairPal profile. That listing is the third-party source of record.',
+                        ],
+                    ],
+                    'links' => [
+                        ['path' => '/repairpal', 'label' => 'RepairPal'],
+                        ['path' => '/repairpal-warranty', 'label' => 'RepairPal Warranty'],
+                    ],
+                ],
+                'repairpal-reviews' => [
+                    'title' => 'RepairPal reviews',
+                    'lede' => 'Independent review sites help you check a shop without relying only on the shop website. RepairPal reviews sit alongside Google reviews. They do not replace them.',
+                    'sections' => [
+                        [
+                            'heading' => 'How RepairPal collects reviews',
+                            'body' => 'RepairPal invites customers who use its marketplace to leave feedback on the shop listing. Those reviews live on RepairPal, under RepairPal terms. This site does not rewrite them.',
+                        ],
+                        [
+                            'heading' => 'Why independent reviews matter',
+                            'body' => 'A shop can choose what to put on its homepage. An independent platform cannot be fully controlled by the shop. When you read RepairPal reviews on RepairPal, you are reading that platform record, the same way Google reviews live on Google.',
+                        ],
+                        [
+                            'heading' => 'Google reviews still matter',
+                            'body' => 'Most Colorado Springs drivers find the shop through Google Maps and Search. The homepage shows the Google rating because it is a primary local signal. RepairPal is a second signal for drivers who already use that network, or who arrive from a RepairPal estimate.',
+                        ],
+                        [
+                            'heading' => 'Read RepairPal reviews on RepairPal',
+                            'body' => 'This site does not republish RepairPal review text. The live profile is the accurate, up-to-date source, including ratings, recent feedback, and certification status.',
+                        ],
+                    ],
+                    'links' => [
+                        ['path' => '/repairpal', 'label' => 'RepairPal'],
+                        ['path' => '/repairpal-certified', 'label' => 'RepairPal Certified'],
+                    ],
+                ],
+                'repairpal-warranty' => [
+                    'title' => 'RepairPal nationwide warranty',
+                    'lede' => 'The RepairPal Certified warranty is 12 months / 12,000 miles on qualifying parts and labor, whichever comes first. That coverage is nationwide through the RepairPal Certified warranty program. The shop also offers a separate shop warranty of 24 months / 24,000 miles on qualifying parts and labor, where applicable.',
+                    'sections' => [
+                        [
+                            'heading' => 'What is covered',
+                            'body' => 'Under the RepairPal Certified warranty, qualifying parts and labor are covered for 12 months or 12,000 miles, whichever comes first. The advisor confirms which items on the estimate qualify before work starts.',
+                        ],
+                        [
+                            'heading' => 'Nationwide coverage',
+                            'body' => 'This warranty is meant for travel, not only for drivers who stay in Colorado Springs. If a related issue shows up while you are away, participating RepairPal Certified shops can look at warranty work under the program terms.',
+                        ],
+                        [
+                            'heading' => 'If you need warranty help while traveling',
+                            'body' => 'Keep your invoice and repair paperwork. Contact the shop first when you can, and tell them what changed. If you need local help on the road, ask for a RepairPal Certified shop in that area and share your invoice so they can coordinate coverage under the program. Exact claim steps depend on the repair and the shop helping you.',
+                        ],
+                        [
+                            'heading' => 'Why this matters on the road',
+                            'body' => 'A covered problem should not leave you stuck far from home with no path forward. Nationwide warranty coverage on qualifying work is one reason certification matters. It can extend help beyond this building.',
+                        ],
+                        [
+                            'heading' => 'Shop warranty is separate',
+                            'body' => 'The shop warranty is 24 months / 24,000 miles on qualifying parts and labor, where applicable. It is not the RepairPal Certified warranty. Not every repair is covered. Qualifying repairs are confirmed on the estimate. Certification status and program details are published on the official RepairPal profile.',
+                        ],
+                    ],
+                    'links' => [
+                        ['path' => '/warranty', 'label' => 'Shop warranty'],
+                        ['path' => '/repairpal-certified', 'label' => 'RepairPal Certified'],
                     ],
                 ],
                 'warranty' => [
