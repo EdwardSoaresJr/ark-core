@@ -1,5 +1,5 @@
 <x-website.layout :website="$website" :seo="$seo" page="services">
-    <div class="public-home">
+    <div class="public-home public-home--interior">
         <h1 class="public-page-title">Services</h1>
         <div class="public-home__copy">
             <p class="public-page-lede">LugsNPlugs diagnoses and repairs the systems that keep a car safe and reliable. If you already know the symptom or the code, start with <a class="public-link" href="{{ route('public.common-problems.index') }}">Problems</a>.</p>

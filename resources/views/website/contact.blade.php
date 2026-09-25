@@ -56,6 +56,8 @@
                 </section>
             @endif
 
+        </div>
+        <div class="public-contact-page__form">
             @include('website.lead-form', ['page' => 'contact'])
         </div>
     </div>

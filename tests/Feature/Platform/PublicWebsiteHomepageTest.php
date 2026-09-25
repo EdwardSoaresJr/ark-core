@@ -99,6 +99,7 @@ test('about page uses the team photo and shop facts', function (): void {
 
     $about->assertOk()
         ->assertSee('About LugsNPlugs', false)
+        ->assertSee('public-home public-home--interior', false)
         ->assertSee('public-home__split', false)
         ->assertSee('A repair shop built around doing it right')
         ->assertSee('public-surface-photos/team.webp', false)
@@ -201,6 +202,15 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertSee('public-canvas', false)
         ->assertSee('public-contact-page__columns', false)
         ->assertSee('public-contact-page__lower', false)
+        ->assertSee('public-contact-page__form', false)
+        ->assertSeeInOrder([
+            'public-contact-page__lower',
+            'public-contact-page__form',
+            'public-lead-form',
+            'type="tel"',
+            'type="email"',
+            'Send message',
+        ], false)
         ->assertSee('public-contact-page__map', false)
         ->assertSee('output=embed', false)
         ->assertSee('LugsNPlugs%20Automotive', false)
@@ -209,13 +219,22 @@ test('site foundation exposes services, problems, and an appointment request', f
     $this->get('http://lugsnplugs.com/book')
         ->assertOk()
         ->assertSee('<title>Request an appointment', false)
-        ->assertSee('public-canvas__layout--form', false)
-        ->assertSee('This is a request. It does not reserve a bay.', false)
+        ->assertSeeInOrder([
+            'public-page-title',
+            'This is a request. It does not reserve a bay.',
+            'public-canvas__layout--form',
+        ], false)
         ->assertSee('public-book-form', false)
+        ->assertSee('public-lead-form__section', false)
         ->assertSee('name="concern_category"', false)
         ->assertSee('name="preferred_date"', false)
         ->assertSee('name="contact_preference"', false)
+        ->assertSee('type="tel"', false)
+        ->assertSee('type="email"', false)
+        ->assertSee('action="/leads"', false)
         ->assertSee('Send appointment request')
+        ->assertDontSee('name="phone_code"', false)
+        ->assertDontSee('name="email_code"', false)
         ->assertDontSee('Book an Appointment');
 
     $llms = $this->get('http://lugsnplugs.com/llms.txt')->assertOk()->getContent();
@@ -553,4 +572,28 @@ test('wide pages use the canvas and documents stay narrow', function (): void {
         ->assertSee('public-cp-article', false)
         ->assertDontSee('public-service', false)
         ->assertDontSee('public-canvas', false);
+});
+
+test('interior pages share an opening and the homepage stays a hero', function (): void {
+    publishHomepageSurface();
+
+    $this->get('http://lugsnplugs.com/')
+        ->assertOk()
+        ->assertSee('public-home', false)
+        ->assertDontSee('public-home--interior', false)
+        ->assertSee('public-page-eyebrow', false);
+
+    $this->get('http://lugsnplugs.com/services')
+        ->assertOk()
+        ->assertSee('public-home public-home--interior', false)
+        ->assertSee('public-services__grid', false);
+
+    $this->get('http://lugsnplugs.com/warranty')
+        ->assertOk()
+        ->assertSeeInOrder([
+            '<h1 class="public-page-title">',
+            'public-canvas__layout--read',
+        ], false)
+        ->assertSee('24 months / 24,000 miles', false)
+        ->assertSee('12 months / 12,000 miles', false);
 });

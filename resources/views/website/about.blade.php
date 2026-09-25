@@ -3,7 +3,7 @@
 @endphp
 
 <x-website.layout :website="$website" :seo="$seo" page="about">
-    <div class="public-home">
+    <div class="public-home public-home--interior">
         <section class="public-home__split public-home__split--start">
             @if ($photos['team'] !== null)
                 <figure class="public-home__figure">

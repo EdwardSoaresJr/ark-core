@@ -208,7 +208,8 @@ test('book verification is required when the phone gate is ready and does not se
     $this->get('http://lugsnplugs.arksms.com/book')
         ->assertOk()
         ->assertSee('Camry')
-        ->assertSee('Text me a code');
+        ->assertDontSee('Text me a verification code')
+        ->assertDontSee('name="phone_code"', false);
 
     $this->post('http://lugsnplugs.arksms.com/leads', bookPayload([
         'vehicle_selection' => (string) $vehicle->id,
@@ -259,6 +260,70 @@ test('book verification is required when the phone gate is ready and does not se
     ]))->assertSessionHas('book_status', 'Verification code sent.');
 
     Mail::assertSent(BookIdentityCodeMail::class);
+});
+
+test('book verification controls follow the sent and verified state', function (): void {
+    publishCutoverSite();
+    Http::fake();
+    Mail::fake();
+    config(['mail.from.address' => 'shop@example.test']);
+
+    ShopSettings::current()->update(['telephony_inbound_number' => '7195559999']);
+    ShopSettings::forgetCurrent();
+    bindFakeOutboundSms();
+
+    $this->get('http://lugsnplugs.arksms.com/book')
+        ->assertOk()
+        ->assertSee('Text me a verification code')
+        ->assertSee('Verify with email instead')
+        ->assertDontSee('name="phone_code"', false)
+        ->assertDontSee('name="email_code"', false)
+        ->assertSee('name="concern_category"', false)
+        ->assertSee('name="preferred_period"', false);
+
+    $this->followingRedirects()
+        ->post('http://lugsnplugs.arksms.com/leads', bookPayload([
+            'book_intent' => 'send_phone_code',
+            'contact_phone' => '7195550188',
+        ]))
+        ->assertOk()
+        ->assertSee('Verification code sent.')
+        ->assertSee('name="phone_code"', false)
+        ->assertSee('>Verify</button>', false)
+        ->assertDontSee('name="email_code"', false);
+
+    PhoneVerification::query()->latest('id')->first()->forceFill([
+        'code_hash' => PhoneVerification::hashCode('483291'),
+    ])->save();
+
+    $this->followingRedirects()
+        ->post('http://lugsnplugs.arksms.com/leads', bookPayload([
+            'book_intent' => 'check_phone_code',
+            'phone_code' => '483291',
+            'contact_phone' => '7195550188',
+            'contact_name' => 'Pat Driver',
+        ]))
+        ->assertOk()
+        ->assertSee('Phone verified.')
+        ->assertDontSee('name="phone_code"', false)
+        ->assertDontSee('>Verify</button>', false);
+
+    auth('portal')->logout();
+    session()->forget('verified_phone_session');
+
+    $this->followingRedirects()
+        ->post('http://lugsnplugs.arksms.com/leads', bookPayload([
+            'book_intent' => 'send_email_code',
+            'contact_email' => 'pat@example.test',
+            'contact_phone' => '7195550199',
+        ]))
+        ->assertOk()
+        ->assertSee('name="email_code"', false)
+        ->assertSee('Verify email')
+        ->assertSee('Verify with email instead');
+
+    Mail::assertSent(BookIdentityCodeMail::class);
+    expect(Lead::query()->count())->toBe(0);
 });
 
 test('indexed code pages and repairpal pages are on the canonical sitemap', function (): void {

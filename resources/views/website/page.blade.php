@@ -1,9 +1,9 @@
 <x-website.layout :website="$website" :seo="$seo" :page="$pageKey">
     @if ($pageKey === 'warranty')
         <div class="public-canvas">
+            <h1 class="public-page-title">{{ $page['title'] }}</h1>
             <div class="public-canvas__layout public-canvas__layout--read">
                 <article>
-                    <h1 class="public-page-title">{{ $page['title'] }}</h1>
                     @if (($page['links'] ?? []) !== [])
                         <ul class="mt-4">
                             @foreach ($page['links'] as $link)
