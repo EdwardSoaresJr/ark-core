@@ -13,6 +13,8 @@ use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
 use App\Ark\Operations\Leads\Public\PublicBookWizardConcerns;
 use App\Ark\Operations\PhoneNumber;
 use Illuminate\Support\Facades\Auth;
+use App\Ark\Website\PublicLegacyRedirect;
+use App\Ark\Website\PublicLlmsTxt;
 use App\Ark\Website\PublishedWebsite;
 use App\Ark\Website\PublishedWebsiteResolver;
 use App\Ark\Website\WebsiteHosts;
@@ -136,6 +138,11 @@ final class PublicWebsiteController
 
         $problem = $website->problem($slug);
         if ($problem === null) {
+            $target = PublicLegacyRedirect::resolve('/common-problems/'.$slug, $website);
+            if ($target !== null) {
+                return $this->legacyRedirect($request, $target);
+            }
+
             return $this->missing();
         }
 
@@ -223,6 +230,33 @@ final class PublicWebsiteController
         return redirect()->route('public.leads.thanks');
     }
 
+    public function llms(Request $request): Response|RedirectResponse
+    {
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        return response(PublicLlmsTxt::body($website), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
+    public function legacy(Request $request, string $legacyPath): RedirectResponse|Response
+    {
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        $target = PublicLegacyRedirect::resolve($legacyPath, $website);
+        if ($target === null) {
+            return $this->missing();
+        }
+
+        return $this->legacyRedirect($request, $target);
+    }
+
     public function robots(Request $request): Response|RedirectResponse
     {
         if ($redirect = $this->wwwRedirect($request)) {
@@ -264,6 +298,7 @@ final class PublicWebsiteController
             '/warranty',
             '/privacy',
             '/terms',
+            '/llms.txt',
         ];
 
         $website = $this->websites->forRequest($request);
@@ -336,6 +371,16 @@ XML;
         }
 
         return redirect()->away('https://'.$apex.$request->getRequestUri(), 301);
+    }
+
+    private function legacyRedirect(Request $request, string $target): RedirectResponse
+    {
+        $query = $request->getQueryString();
+        if (is_string($query) && $query !== '' && ! str_contains($target, '?')) {
+            $target .= '?'.$query;
+        }
+
+        return redirect()->to($target, 301);
     }
 
     private function missing(): Response

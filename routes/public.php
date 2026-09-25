@@ -1,11 +1,12 @@
 <?php
 
 use App\Ark\Runtime\Surfaces\SurfaceRouting;
+use App\Ark\Website\Http\CoreWebsiteResponse;
 use App\Ark\Website\Http\PublicWebsiteController;
 use Illuminate\Support\Facades\Route;
 
 SurfaceRouting::publicRoutes(function (): void {
-    Route::middleware('web')->group(function (): void {
+    Route::middleware(['web', CoreWebsiteResponse::class])->group(function (): void {
         Route::get('/', [PublicWebsiteController::class, 'home'])->name('public.home');
         Route::get('/book', [PublicWebsiteController::class, 'book'])->name('public.book');
         Route::get('/contact', [PublicWebsiteController::class, 'contact'])->name('public.contact');
@@ -23,9 +24,13 @@ SurfaceRouting::publicRoutes(function (): void {
         Route::get('/terms', [PublicWebsiteController::class, 'page'])->name('public.terms')->defaults('key', 'terms');
         Route::get('/robots.txt', [PublicWebsiteController::class, 'robots'])->name('public.robots');
         Route::get('/sitemap.xml', [PublicWebsiteController::class, 'sitemap'])->name('public.sitemap');
+        Route::get('/llms.txt', [PublicWebsiteController::class, 'llms'])->name('public.llms');
         Route::get('/leads/thanks', [PublicWebsiteController::class, 'thanks'])->name('public.leads.thanks');
         Route::post('/leads', [PublicWebsiteController::class, 'storeLead'])
             ->middleware('throttle:10,1')
             ->name('public.leads.store');
+        Route::get('/{legacyPath}', [PublicWebsiteController::class, 'legacy'])
+            ->where('legacyPath', '.+')
+            ->name('public.legacy');
     });
 });

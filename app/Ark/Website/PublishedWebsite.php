@@ -283,6 +283,33 @@ final class PublishedWebsite
     }
 
     /**
+     * @return list<string>
+     */
+    public function serviceNames(): array
+    {
+        $services = $this->document['shop_services'] ?? [];
+        if (! is_array($services)) {
+            return [];
+        }
+
+        $names = [];
+        foreach ($services as $service) {
+            if (is_string($service)) {
+                $name = trim($service);
+            } elseif (is_array($service)) {
+                $name = trim((string) ($service['name'] ?? $service['title'] ?? $service['label'] ?? ''));
+            } else {
+                continue;
+            }
+            if ($name !== '') {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
      * @return array{title: string, description: string}
      */
     public function seo(string $key): array
