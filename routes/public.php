@@ -29,8 +29,11 @@ SurfaceRouting::publicRoutes(function (): void {
         Route::post('/leads', [PublicWebsiteController::class, 'storeLead'])
             ->middleware('throttle:10,1')
             ->name('public.leads.store');
+        // Laravel matches domain routes before domain-less routes. This has
+        // to be a fallback or it swallows /up and other explicit Core routes.
         Route::get('/{legacyPath}', [PublicWebsiteController::class, 'legacy'])
             ->where('legacyPath', '.+')
+            ->fallback()
             ->name('public.legacy');
     });
 });

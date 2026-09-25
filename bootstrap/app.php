@@ -47,7 +47,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function (): void {
             require __DIR__.'/../routes/install.php';
-            // Cloud + OIDC before public - legacy catch-all must not swallow /cloud or issuer paths.
             require __DIR__.'/../routes/cloud.php';
             require __DIR__.'/../routes/cloud-ingress.php';
             require __DIR__.'/../routes/portal.php';
