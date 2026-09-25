@@ -8,12 +8,17 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Documents\DocumentFooterPresenter;
 use App\Ark\Operations\Documents\DocumentPdfPresenter;
 use App\Ark\Operations\Documents\EstimateSnapshotBuilder;
+use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
+use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
+use App\Ark\Operations\RepairOrders\RecommendationIntent;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -79,21 +84,251 @@ test('advisor authorization derives partial type from mixed scope dispositions',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#authorization-rail');
 
     $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first();
+    $recommendedConcern->refresh();
 
     expect($approval->approval_type)->toBe(ApprovalType::Partial)
-        ->and($approval->source)->toBe(ApprovalSource::Phone);
+        ->and($approval->source)->toBe(ApprovalSource::Phone)
+        ->and($recommendedConcern->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and(ApprovedWorkScope::query()->where('repair_order_concern_id', $recommendedConcern->id)->exists())->toBeFalse();
 });
 
-test('advisor cannot record authorization before any scope is approved', function () {
+test('recording approval authorizes every recommended concern and line on the presented estimate', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $this->actingAs($advisor);
 
-    [$repairOrder, $recommendedConcern] = repairOrderForCustomerAuthorization();
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    $diagnosticLine = $diagnostic->lines()->first();
+    $brakeLine = $brakes->lines()->first();
+    $ledgerBefore = RepairOrderLedgerEntry::query()->where('repair_order_id', $repairOrder->id)->count();
 
-    $recommendedConcern->update(['disposition' => RepairOrderConcernDisposition::Recommended]);
-    $repairOrder->concerns()->where('disposition', RepairOrderConcernDisposition::Approved)->update([
-        'disposition' => RepairOrderConcernDisposition::Recommended,
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Records the customer\'s approval of the recommended work on this estimate.', false)
+        ->assertDontSee('Set each concern to Approved or Declined', false);
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+        'notes' => 'Customer approved the estimate at the counter.',
+    ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#authorization-rail');
+
+    $diagnostic->refresh();
+    $brakes->refresh();
+    $repairOrder = $repairOrder->fresh(['lines.concern', 'concerns']);
+    $coverage = app(WorkCompletionAuthorization::class);
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder);
+    $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->sole();
+    $scopes = ApprovedWorkScope::query()->where('repair_order_id', $repairOrder->id)->get();
+
+    expect($diagnostic->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and($brakes->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and($coverage->customerApprovalCovers($diagnosticLine->fresh(['concern'])))->toBeTrue()
+        ->and($coverage->customerApprovalCovers($brakeLine->fresh(['concern'])))->toBeTrue()
+        ->and($coverage->linesRequiringAuthorization($repairOrder))->toHaveCount(0)
+        ->and($scopes)->toHaveCount(2)
+        ->and($scopes->every(fn (ApprovedWorkScope $scope): bool => $scope->recorded_by_user_id === $advisor->id))->toBeTrue()
+        ->and($scopes->flatMap(fn (ApprovedWorkScope $scope): array => $scope->lineIds())->sort()->values()->all())
+        ->toEqual(collect([$diagnosticLine->id, $brakeLine->id])->sort()->values()->all())
+        ->and($approval->approval_type)->toBe(ApprovalType::Repair)
+        ->and($approval->source)->toBe(ApprovalSource::InPerson)
+        ->and($approval->approved_by)->toBe('Morgan Brown')
+        ->and($approval->notes)->toBe('Customer approved the estimate at the counter.')
+        ->and($approval->approved_amount_cents)->toBe($approved->totalCents())
+        ->and($approved->lines->pluck('id')->sort()->values()->all())
+        ->toEqual(collect([$diagnosticLine->id, $brakeLine->id])->sort()->values()->all())
+        ->and(RepairOrderLedgerEntry::query()->where('repair_order_id', $repairOrder->id)->count())->toBe($ledgerBefore);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertDontSee('Needs authorization', false);
+});
+
+test('work added after estimate authorization stays unauthorized', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic] = presentedEstimateForAuthorization();
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+    ])->assertRedirect();
+
+    $authorizedCents = app(EstimateTotalsCalculator::class)
+        ->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))
+        ->totalCents();
+
+    $addedLine = RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $diagnostic->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Additional repair',
+        'quantity' => '1.00',
+        'unit_price_cents' => 35000,
     ]);
+
+    $addedConcern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Later coolant leak',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'position' => 3,
+    ]);
+
+    $addedConcernLine = RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $addedConcern->id,
+        'type' => RepairOrderLineType::Labor,
+        'description' => 'Coolant leak diagnosis',
+        'quantity' => '1.00',
+        'unit_price_cents' => 16500,
+    ]);
+
+    $repairOrder = $repairOrder->fresh(['lines.concern', 'concerns']);
+    $coverage = app(WorkCompletionAuthorization::class);
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder);
+
+    expect($coverage->customerApprovalCovers($addedLine->fresh(['concern'])))->toBeFalse()
+        ->and($coverage->linesRequiringAuthorization($repairOrder)->pluck('id')->all())->toContain($addedLine->id)
+        ->and($addedConcern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($coverage->customerApprovalCovers($addedConcernLine->fresh(['concern'])))->toBeFalse()
+        ->and($approved->totalCents())->toBe($authorizedCents)
+        ->and($approved->lines->pluck('id')->all())->not->toContain($addedLine->id)
+        ->and($approved->lines->pluck('id')->all())->not->toContain($addedConcernLine->id);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Needs authorization', false)
+        ->assertSee('Additional repair', false);
+});
+
+test('declined deferred and draft work is not authorized with the presented estimate', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    $brakes->update(['disposition' => RepairOrderConcernDisposition::Declined]);
+
+    $deferred = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Deferred coolant hose',
+        'disposition' => RepairOrderConcernDisposition::Deferred,
+        'position' => 3,
+    ]);
+
+    $deferredLine = RepairOrderLine::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $deferred->id,
+        'type' => RepairOrderLineType::Part,
+        'description' => 'Coolant hose',
+        'quantity' => '1.00',
+        'unit_price_cents' => 4200,
+    ]);
+
+    $draft = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'Draft overheating diagnostic',
+        'disposition' => RepairOrderConcernDisposition::Draft,
+        'position' => 4,
+    ]);
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+        'source' => ApprovalSource::Phone->value,
+        'approved_by' => 'Morgan Brown',
+    ])->assertRedirect();
+
+    $diagnostic->refresh();
+    $brakes->refresh();
+    $deferred->refresh();
+    $draft->refresh();
+    $repairOrder = $repairOrder->fresh(['lines.concern']);
+    $coverage = app(WorkCompletionAuthorization::class);
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder);
+    $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->sole();
+
+    expect($diagnostic->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and($brakes->disposition)->toBe(RepairOrderConcernDisposition::Declined)
+        ->and($deferred->disposition)->toBe(RepairOrderConcernDisposition::Deferred)
+        ->and($draft->disposition)->toBe(RepairOrderConcernDisposition::Draft)
+        ->and($coverage->customerApprovalCovers($diagnostic->lines()->first()->fresh(['concern'])))->toBeTrue()
+        ->and($coverage->customerApprovalCovers($brakes->lines()->first()->fresh(['concern'])))->toBeFalse()
+        ->and($coverage->customerApprovalCovers($deferredLine->fresh(['concern'])))->toBeFalse()
+        ->and(ApprovedWorkScope::query()->where('repair_order_concern_id', $brakes->id)->exists())->toBeFalse()
+        ->and(ApprovedWorkScope::query()->where('repair_order_concern_id', $deferred->id)->exists())->toBeFalse()
+        ->and($approval->approval_type)->toBe(ApprovalType::Partial)
+        ->and($approved->lines->pluck('id')->all())->toBe([$diagnostic->lines()->first()->id])
+        ->and($approval->approved_amount_cents)->toBe($approved->totalCents());
+});
+
+test('a later recording does not authorize recommended work left beside an earlier approval', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $recommendedConcern, $approvedConcern] = repairOrderForCustomerAuthorization();
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+    ])->assertRedirect();
+
+    $recommendedConcern->refresh();
+
+    expect($recommendedConcern->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
+        ->and($approvedConcern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and(ApprovedWorkScope::query()->where('repair_order_concern_id', $recommendedConcern->id)->exists())->toBeFalse()
+        ->and(app(WorkCompletionAuthorization::class)->customerApprovalCovers($recommendedConcern->lines()->first()->fresh(['concern'])))->toBeFalse();
+});
+
+test('an entered authorization amount is kept when it is not the presented default', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder] = presentedEstimateForAuthorization();
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+        'approved_amount' => '10.00',
+    ])->assertRedirect();
+
+    $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->sole();
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+
+    expect($approval->approved_amount_cents)->toBe(1000)
+        ->and($approved->totalCents())->not->toBe(1000)
+        ->and($approved->lines)->toHaveCount(2);
+});
+
+test('a diagnostic estimate records the recommended amount instead of zero', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $diagnostic, $brakes] = presentedEstimateForAuthorization();
+    $diagnostic->update(['recommendation_intent' => RecommendationIntent::Diagnostic]);
+    $brakes->update(['recommendation_intent' => RecommendationIntent::Diagnostic]);
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+        'approved_amount' => '0.00',
+    ])->assertRedirect();
+
+    $approval = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->sole();
+    $approved = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+
+    expect($approval->approval_type)->toBe(ApprovalType::Diagnostic)
+        ->and($approved->totalCents())->toBeGreaterThan(0)
+        ->and($approval->approved_amount_cents)->toBe($approved->totalCents())
+        ->and($diagnostic->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and($brakes->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved);
+});
+
+test('advisor cannot record authorization when nothing on the estimate is recommended or approved', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $this->actingAs($advisor);
+
+    [$repairOrder, $recommendedConcern, $approvedConcern] = repairOrderForCustomerAuthorization();
+    $recommendedConcern->update(['disposition' => RepairOrderConcernDisposition::Declined]);
+    $approvedConcern->update(['disposition' => RepairOrderConcernDisposition::Deferred]);
 
     $this->post(route('operations.repair-orders.authorization.store', $repairOrder->fresh()), [
         'source' => ApprovalSource::InPerson->value,
@@ -101,6 +336,27 @@ test('advisor cannot record authorization before any scope is approved', functio
     ])->assertSessionHasErrors('authorization');
 
     expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count())->toBe(0);
+});
+
+test('recording customer authorization does not grant access to staff who cannot manage repair orders', function () {
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $this->actingAs($technician);
+
+    [$repairOrder] = presentedEstimateForAuthorization();
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+    ])->assertForbidden();
+
+    expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count())->toBe(0);
+
+    auth()->logout();
+
+    $this->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::InPerson->value,
+        'approved_by' => 'Morgan Brown',
+    ])->assertRedirect(route('login'));
 });
 
 test('advisor can revoke customer authorization and revert approved scopes', function () {
@@ -356,4 +612,20 @@ function repairOrderForCustomerAuthorization(): array
     ]);
 
     return [$repairOrder->fresh(['customer', 'concerns.lines']), $recommendedConcern, $approvedConcern];
+}
+
+/**
+ * @return array{0: RepairOrder, 1: RepairOrderConcern, 2: RepairOrderConcern}
+ */
+function presentedEstimateForAuthorization(): array
+{
+    [$repairOrder, $first, $second] = repairOrderForCustomerAuthorization();
+
+    $second->update(['disposition' => RepairOrderConcernDisposition::Recommended]);
+
+    return [
+        $repairOrder->fresh(['customer', 'concerns.lines', 'lines']),
+        $first->fresh('lines'),
+        $second->fresh('lines'),
+    ];
 }

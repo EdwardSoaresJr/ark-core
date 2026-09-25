@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Approvals\ApprovalSource;
+use App\Ark\Operations\Approvals\ApprovalType;
 use App\Ark\Operations\Approvals\RecordCustomerAuthorizationAction;
 use App\Ark\Operations\Approvals\ResolveStaffAuthorizationType;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -32,26 +33,26 @@ class RepairOrderAuthorizationStoreController
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        if (! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
+        $concernDispositions = $this->presentedRecommendedDispositions($repairOrder);
+
+        if ($concernDispositions === [] && ! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
             return back()
-                ->withErrors(['authorization' => 'Mark at least one scope as approved on the estimate before recording customer authorization.'])
+                ->withErrors(['authorization' => 'There is no approved work on this estimate to record.'])
                 ->withInput();
         }
 
-        $approvedAmountCents = isset($data['approved_amount'])
-            ? (int) round(((float) $data['approved_amount']) * 100)
-            : null;
-
-        $approvalType = $resolveAuthorizationType->fromRepairOrder($repairOrder);
+        $approvalType = $concernDispositions === []
+            ? $resolveAuthorizationType->fromRepairOrder($repairOrder)
+            : $resolveAuthorizationType->assumingDispositions($repairOrder, $concernDispositions);
 
         $recordAuthorization->execute(
             repairOrder: $repairOrder,
             approvalType: $approvalType,
             source: ApprovalSource::from($data['source']),
             approvedBy: $data['approved_by'],
-            approvedAmountCents: $approvedAmountCents,
+            approvedAmountCents: $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
             notes: $data['notes'] ?? null,
-            concernDispositions: [],
+            concernDispositions: $concernDispositions,
             actor: $request->user(),
         );
 
@@ -61,5 +62,73 @@ class RepairOrderAuthorizationStoreController
             ->route('operations.repair-orders.show', $repairOrder)
             ->withFragment('authorization-rail')
             ->with('status', 'Customer authorization recorded.');
+    }
+
+    /**
+     * Recommended work is included only when the estimate has no approved scope yet.
+     * Draft, deferred, and declined decisions stay as they are. A later recording
+     * does not pull in work that was still recommended after an earlier approval.
+     *
+     * @return array<int, string>
+     */
+    private function presentedRecommendedDispositions(RepairOrder $repairOrder): array
+    {
+        $concerns = $repairOrder->concerns;
+
+        if ($concerns->contains(
+            fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved,
+        )) {
+            return [];
+        }
+
+        $dispositions = [];
+
+        foreach ($concerns as $concern) {
+            if ($concern->disposition !== RepairOrderConcernDisposition::Recommended) {
+                continue;
+            }
+
+            $dispositions[$concern->id] = RepairOrderConcernDisposition::Approved->value;
+        }
+
+        return $dispositions;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, string>  $concernDispositions
+     */
+    private function approvedAmountCents(
+        array $data,
+        RepairOrder $repairOrder,
+        array $concernDispositions,
+        ApprovalType $approvalType,
+        EstimateTotalsCalculator $totalsCalculator,
+    ): ?int {
+        $posted = isset($data['approved_amount'])
+            ? (int) round(((float) $data['approved_amount']) * 100)
+            : null;
+
+        if ($concernDispositions === []) {
+            return $posted;
+        }
+
+        $approvedNow = $totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
+        $recommendedNow = $totalsCalculator->recommendedTotalsForRead($repairOrder)->totalCents();
+        $leftAsDefault = $posted === null || $posted === $approvedNow || $posted === $recommendedNow;
+
+        if (! $leftAsDefault) {
+            return $posted;
+        }
+
+        if ($approvalType !== ApprovalType::Diagnostic) {
+            return null;
+        }
+
+        $totalsCalculator->recalculateRepairOrder($repairOrder);
+
+        return $totalsCalculator
+            ->recommendedTotalsForRead($repairOrder->fresh(['lines.concern']))
+            ->totalCents();
     }
 }

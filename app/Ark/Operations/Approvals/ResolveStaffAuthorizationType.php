@@ -10,12 +10,47 @@ use Illuminate\Support\Collection;
 
 final class ResolveStaffAuthorizationType
 {
+    /**
+     * @param  array<int, string>  $concernDispositions  concern_id => disposition value
+     */
+    public function assumingDispositions(RepairOrder $repairOrder, array $concernDispositions): ApprovalType
+    {
+        $repairOrder->loadMissing('concerns');
+
+        $concerns = $repairOrder->concerns->map(function (RepairOrderConcern $concern) use ($concernDispositions): RepairOrderConcern {
+            if (! array_key_exists($concern->id, $concernDispositions)) {
+                return $concern;
+            }
+
+            $next = RepairOrderConcernDisposition::tryFrom((string) $concernDispositions[$concern->id]);
+
+            if (! $next instanceof RepairOrderConcernDisposition || $concern->disposition === $next) {
+                return $concern;
+            }
+
+            $copy = clone $concern;
+            $copy->disposition = $next;
+
+            return $copy;
+        });
+
+        return $this->fromConcerns($concerns);
+    }
+
     public function fromRepairOrder(RepairOrder $repairOrder): ApprovalType
     {
         $repairOrder->loadMissing('concerns');
 
+        return $this->fromConcerns($repairOrder->concerns);
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderConcern>  $concerns
+     */
+    public function fromConcerns(Collection $concerns): ApprovalType
+    {
         /** @var Collection<int, RepairOrderConcern> $scopes */
-        $scopes = $repairOrder->concerns
+        $scopes = $concerns
             ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition->showsInScopeHeader())
             ->values();
 

@@ -72,7 +72,7 @@
             </div>
         @empty
             <div class="px-3 py-2 text-xs leading-4 text-slate-500">
-                No customer approval has been recorded yet. Set each concern to Approved or Declined, then record how they said yes.
+                No customer approval has been recorded yet. Record approval once for the recommended work on this estimate.
             </div>
         @endforelse
     </div>

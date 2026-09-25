@@ -1,14 +1,34 @@
 @php
     use App\Ark\Operations\Approvals\ApprovalSource;
+    use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+    use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 
-    $defaultApprovedAmount = number_format(($approvedTotals ?? $totals)->totalCents() / 100, 2, '.', '');
+    $hasApprovedScope = $repairOrder->concerns->contains(
+        fn ($concern) => $concern->disposition === RepairOrderConcernDisposition::Approved,
+    );
+    $hasRecommendedScope = $repairOrder->concerns->contains(
+        fn ($concern) => $concern->disposition === RepairOrderConcernDisposition::Recommended,
+    );
+    $includesRecommendedWork = ! $hasApprovedScope && $hasRecommendedScope;
+    $defaultTotals = $includesRecommendedWork
+        ? app(EstimateTotalsCalculator::class)->recommendedTotalsForRead($repairOrder)
+        : ($approvedTotals ?? $totals);
+    $defaultApprovedAmount = number_format($defaultTotals->totalCents() / 100, 2, '.', '');
 @endphp
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
     @unless ($isTerminal ?? false)
         <div class="border-b border-slate-200 px-3 py-3">
             <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Record approval</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Record how the customer authorized the scopes already marked approved on this estimate.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">
+                @if ($includesRecommendedWork)
+                    Records the customer's approval of the recommended work on this estimate. Deferred and declined work is not included. Work added after this stays unauthorized.
+                @elseif ($hasApprovedScope)
+                    Records the scopes already marked approved. This does not add recommended, deferred, or declined work.
+                @else
+                    There is no recommended work to authorize. Deferred and declined work stays as it is.
+                @endif
+            </p>
 
             <form
                 method="POST"
@@ -53,7 +73,13 @@
                             class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950"
                             placeholder="0.00"
                         >
-                        <span class="mt-0.5 block text-[10px] text-slate-400">Defaults to approved scope total when left blank.</span>
+                        <span class="mt-0.5 block text-[10px] text-slate-400">
+                            @if ($includesRecommendedWork)
+                                Defaults to the recommended work on this estimate.
+                            @else
+                                Defaults to approved scope total when left blank.
+                            @endif
+                        </span>
                     </label>
 
                     <label class="block text-[11px] font-medium text-slate-500">
