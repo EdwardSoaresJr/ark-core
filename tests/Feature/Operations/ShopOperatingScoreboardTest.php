@@ -13,6 +13,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderLostReason;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Reports\OperationalReportDateScope;
 use App\Ark\Operations\Scoreboard\ShopOperatingScoreboard;
 use App\Ark\Operations\Scoreboard\ShopOperatingScoreboardPeriod;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -250,7 +251,83 @@ test('operating targets persist without becoming universal defaults', function (
         ->and($targets['dollar_close_target_percent'])->toBe(60.0)
         ->and($targets['sold_labor_hours_per_open_day'])->toBe(5.0)
         ->and($targets['median_cycle_target_days'])->toBe(3.0)
+        ->and($targets['stalled_ro_age_days'])->toBeNull()
         ->and($targets['parts_margin_target_active'])->toBeFalse();
+});
+
+test('current open work includes repair orders from before the reporting floor', function () {
+    $old = scoreboardRepairOrder('2026-05-15 10:00:00', RepairOrderStatus::InProgress, 'Old', 'Floor');
+    scoreboardLabor($old, RepairOrderConcernDisposition::Approved, 10000);
+    $current = scoreboardRepairOrder('2026-09-20 10:00:00', RepairOrderStatus::Estimate, 'New', 'Month');
+    scoreboardLabor($current, RepairOrderConcernDisposition::Approved, 5000);
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $snapshot = app(ShopOperatingScoreboard::class)->snapshot(ShopOperatingScoreboardPeriod::resolve('this_month'));
+
+    $mayWindow = OperationalReportDateScope::openedBetween(
+        RepairOrder::query(),
+        Carbon::parse('2026-05-01', 'America/Denver'),
+        Carbon::parse('2026-05-31 23:59:59', 'America/Denver'),
+    )->count();
+
+    expect($snapshot['metrics']['opened_count'])->toBe(1)
+        ->and($mayWindow)->toBe(0)
+        ->and($snapshot['now']['open_count'])->toBe(2)
+        ->and($snapshot['now']['authorized_cents'])->toBe(15000)
+        ->and($snapshot['now']['authorized_count'])->toBe(2);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.owner.scoreboard', ['focus' => 'authorized']))
+        ->assertOk()
+        ->assertSee('Old Floor')
+        ->assertSee('New Month');
+});
+
+test('not authorized backlog excludes approved and declined dollars', function () {
+    $repairOrder = scoreboardRepairOrder('2026-09-10 10:00:00', RepairOrderStatus::Estimate);
+    scoreboardLabor($repairOrder, RepairOrderConcernDisposition::Approved, 10000);
+    scoreboardLabor($repairOrder, RepairOrderConcernDisposition::Declined, 80000);
+    scoreboardLabor($repairOrder, RepairOrderConcernDisposition::Recommended, 2000);
+    scoreboardLabor($repairOrder, RepairOrderConcernDisposition::Deferred, 4000);
+    scoreboardLabor($repairOrder, RepairOrderConcernDisposition::Draft, 3000);
+
+    $snapshot = app(ShopOperatingScoreboard::class)->snapshot(ShopOperatingScoreboardPeriod::resolve('this_month'));
+
+    expect($snapshot['now']['authorized_cents'])->toBe(10000)
+        ->and($snapshot['now']['authorized_count'])->toBe(1)
+        ->and($snapshot['now']['not_authorized_cents'])->toBe(9000)
+        ->and($snapshot['now']['not_authorized_count'])->toBe(1);
+});
+
+test('stalled age comes from shop configuration', function () {
+    scoreboardRepairOrder('2026-09-10 10:00:00', RepairOrderStatus::WaitingApproval, 'Waiting', 'Long');
+    scoreboardRepairOrder('2026-09-22 10:00:00', RepairOrderStatus::WaitingApproval, 'Waiting', 'Short');
+    scoreboardRepairOrder('2026-09-01 10:00:00', RepairOrderStatus::WaitingApproval, 'Waiting', 'Older');
+    scoreboardRepairOrder('2026-08-20 10:00:00', RepairOrderStatus::InProgress, 'In', 'Production');
+
+    $snapshot = app(ShopOperatingScoreboard::class)->snapshot(ShopOperatingScoreboardPeriod::resolve('this_month'));
+    $stalled = collect($snapshot['queues'])->firstWhere('key', 'stalled');
+
+    expect($stalled['count'])->toBeNull();
+
+    $targets = ShopExcellenceTargets::current();
+    $targets['median_cycle_target_days'] = 3;
+    ShopExcellenceTargets::persist($targets);
+
+    $snapshot = app(ShopOperatingScoreboard::class)->snapshot(ShopOperatingScoreboardPeriod::resolve('this_month'));
+    $stalled = collect($snapshot['queues'])->firstWhere('key', 'stalled');
+
+    expect($stalled['count'])->toBe(2)
+        ->and($stalled['hint'])->toContain('3.0 day cycle target');
+
+    $targets['stalled_ro_age_days'] = 20;
+    ShopExcellenceTargets::persist($targets);
+
+    $snapshot = app(ShopOperatingScoreboard::class)->snapshot(ShopOperatingScoreboardPeriod::resolve('this_month'));
+    $stalled = collect($snapshot['queues'])->firstWhere('key', 'stalled');
+
+    expect($stalled['count'])->toBe(1)
+        ->and($stalled['hint'])->toContain('20.0 days');
 });
 
 function scoreboardRepairOrder(

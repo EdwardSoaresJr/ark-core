@@ -30,6 +30,8 @@ Posted car count, posted sales, payments, and amount due stay on the existing sa
 
 Authorized backlog is approved dollars on open repair orders. Not authorized is draft, recommended, and deferred dollars on open repair orders. Declined work is not backlog. A full lot is not the same thing as sold work.
 
+Period rates respect the reporting floor. Open counts, backlog dollars, aging, and queues include every repair order that is still open, including one opened before that floor.
+
 ## Shop configuration
 
 Settings, Owner Targets, Operating scoreboard:
@@ -38,6 +40,7 @@ Settings, Owner Targets, Operating scoreboard:
 - Dollar close percent
 - Sold hours / open day
 - Median cycle days
+- Stall age in days. Blank uses the median cycle target. If both are blank, the stalled queue stays off.
 - Whether parts margin should be judged against the existing parts margin target
 
 Leave a field blank until the shop chooses a number. The scoreboard still shows the actual result. It does not mark a metric good or behind when the shop has not set a target. Parts margin stays display-only until the shop turns that judgment on. The parts margin percent used by Margin Health is a separate setting and is not a scoreboard verdict by itself.
@@ -50,7 +53,7 @@ The scoreboard lists work that needs a person. Labels stay inside what ARK can p
 - Follow-up: recommended dollars, or the repair order is waiting on approval. Last contact appears only when a communication event is stored on that repair order.
 - Aging authorized work: approved work older than the shop's cycle target, or older than five days when no target is set.
 - Ready for pickup: includes a balance due when an invoice exists.
-- Stalled: open at least ten days and not in production, waiting on parts, quality check, or pickup.
+- Stalled: open at least as long as the shop's stall age, or its median cycle target when no stall age is set, and not in production, waiting on parts, quality check, or pickup. No number is assumed when the shop has set neither.
 
 ## What this is not yet
 

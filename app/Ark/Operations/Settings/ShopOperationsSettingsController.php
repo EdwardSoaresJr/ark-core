@@ -318,6 +318,7 @@ public function updateExcellence(Request $request): RedirectResponse
             'dollar_close_target_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'sold_labor_hours_per_open_day' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'median_cycle_target_days' => ['nullable', 'numeric', 'min:0', 'max:365'],
+            'stalled_ro_age_days' => ['nullable', 'numeric', 'min:0.1', 'max:365'],
             'parts_margin_target_active' => ['nullable', 'boolean'],
         ]);
 
@@ -350,6 +351,7 @@ public function updateExcellence(Request $request): RedirectResponse
             'dollar_close_target_percent' => $data['dollar_close_target_percent'] ?? null,
             'sold_labor_hours_per_open_day' => $data['sold_labor_hours_per_open_day'] ?? null,
             'median_cycle_target_days' => $data['median_cycle_target_days'] ?? null,
+            'stalled_ro_age_days' => $data['stalled_ro_age_days'] ?? null,
             'parts_margin_target_active' => (bool) ($data['parts_margin_target_active'] ?? false),
         ]);
 

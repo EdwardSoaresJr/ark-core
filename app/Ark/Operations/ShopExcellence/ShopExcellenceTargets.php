@@ -31,6 +31,7 @@ final class ShopExcellenceTargets
         'dollar_close_target_percent' => null,
         'sold_labor_hours_per_open_day' => null,
         'median_cycle_target_days' => null,
+        'stalled_ro_age_days' => null,
         'parts_margin_target_active' => false,
     ];
 
@@ -58,6 +59,7 @@ final class ShopExcellenceTargets
      *     dollar_close_target_percent: float|null,
      *     sold_labor_hours_per_open_day: float|null,
      *     median_cycle_target_days: float|null,
+     *     stalled_ro_age_days: float|null,
      *     parts_margin_target_active: bool
      * }
      */
@@ -92,6 +94,7 @@ final class ShopExcellenceTargets
             'dollar_close_target_percent' => self::nullableFloat($parsed['dollar_close_target_percent'] ?? null),
             'sold_labor_hours_per_open_day' => self::nullableFloat($parsed['sold_labor_hours_per_open_day'] ?? null),
             'median_cycle_target_days' => self::nullableFloat($parsed['median_cycle_target_days'] ?? null),
+            'stalled_ro_age_days' => self::nullableFloat($parsed['stalled_ro_age_days'] ?? null),
             'parts_margin_target_active' => (bool) ($parsed['parts_margin_target_active'] ?? false),
         ];
     }
@@ -192,6 +195,7 @@ final class ShopExcellenceTargets
      *     dollar_close_target_percent?: float|null,
      *     sold_labor_hours_per_open_day?: float|null,
      *     median_cycle_target_days?: float|null,
+     *     stalled_ro_age_days?: float|null,
      *     parts_margin_target_active?: bool
      * }  $data
      */
@@ -231,6 +235,9 @@ final class ShopExcellenceTargets
             'median_cycle_target_days' => array_key_exists('median_cycle_target_days', $data)
                 ? self::nullableFloat($data['median_cycle_target_days'])
                 : self::nullableFloat($existing['median_cycle_target_days'] ?? null),
+            'stalled_ro_age_days' => array_key_exists('stalled_ro_age_days', $data)
+                ? self::nullableFloat($data['stalled_ro_age_days'])
+                : self::nullableFloat($existing['stalled_ro_age_days'] ?? null),
             'parts_margin_target_active' => array_key_exists('parts_margin_target_active', $data)
                 ? (bool) $data['parts_margin_target_active']
                 : (bool) ($existing['parts_margin_target_active'] ?? false),

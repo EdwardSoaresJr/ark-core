@@ -126,6 +126,9 @@
                 <h2 class="text-sm font-black uppercase tracking-[0.08em] text-slate-700">Right now</h2>
                 <p class="text-sm font-semibold text-slate-600">{{ $snapshot['now']['open_count'] }} open repair orders</p>
             </div>
+            @unless ($wall)
+                <p class="mt-1 text-[11px] leading-4 text-slate-500">Every repair order still open. The period rates above keep the reporting floor.</p>
+            @endunless
             <dl class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
                 @foreach ($snapshot['now']['counts'] as $count)
                     <div>
@@ -146,9 +149,9 @@
                     <article class="min-w-0 border border-slate-200 px-3 py-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ $queue['label'] }}</p>
                         @if ($queueHref)
-                            <a href="{{ $queueHref }}" class="mt-1 block text-3xl font-black text-slate-950 hover:underline">{{ $queue['count'] }}</a>
+                            <a href="{{ $queueHref }}" class="mt-1 block text-3xl font-black text-slate-950 hover:underline">{{ $queue['count'] === null ? 'n/a' : $queue['count'] }}</a>
                         @else
-                            <p class="mt-1 text-3xl font-black text-slate-950">{{ $queue['count'] }}</p>
+                            <p class="mt-1 text-3xl font-black text-slate-950">{{ $queue['count'] === null ? 'n/a' : $queue['count'] }}</p>
                         @endif
                         @unless ($wall)
                             <p class="mt-1 text-[11px] leading-4 text-slate-500">{{ $queue['hint'] }}</p>

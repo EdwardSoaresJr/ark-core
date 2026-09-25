@@ -167,7 +167,7 @@
 
         <div class="border border-slate-200 bg-white px-3 py-3">
             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Operating scoreboard</p>
-            <p class="mt-0.5 text-xs text-slate-500">Blank means this shop has not set a target. The scoreboard shows the actual number and does not mark it good or behind.</p>
+            <p class="mt-0.5 text-xs text-slate-500">Blank means this shop has not set a target. The scoreboard shows the actual number and does not mark it good or behind. A blank stall age uses the median cycle target. If that is also blank, the stalled queue stays off.</p>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
                 <label class="block text-xs font-medium text-slate-500">
                     ROs / open day
@@ -184,6 +184,10 @@
                 <label class="block text-xs font-medium text-slate-500">
                     Median cycle (days)
                     <input type="number" name="median_cycle_target_days" min="0" max="365" step="0.1" value="{{ old('median_cycle_target_days', $excellenceTargets['median_cycle_target_days']) }}" class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
+                </label>
+                <label class="block text-xs font-medium text-slate-500">
+                    Stall age (days)
+                    <input type="number" name="stalled_ro_age_days" min="0.1" max="365" step="0.1" value="{{ old('stalled_ro_age_days', $excellenceTargets['stalled_ro_age_days']) }}" class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
                 </label>
             </div>
             <label class="mt-3 flex items-center gap-2 text-xs font-medium text-slate-600">

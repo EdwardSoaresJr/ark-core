@@ -213,6 +213,7 @@ final class ShopOperatingScoreboard
         $contacts = $this->contactsFor($open->pluck('id'));
         $targets = ShopExcellenceTargets::current();
         $agingThreshold = $targets['median_cycle_target_days'] ?? 5.0;
+        $stall = $this->stallRule($targets);
         $authorizedCents = 0;
         $authorizedCount = 0;
         $notAuthorizedCents = 0;
@@ -294,15 +295,7 @@ final class ShopOperatingScoreboard
             ) {
                 $queues['aging_authorized']++;
             }
-            if ($age >= 10 && ! in_array($status, [
-                RepairOrderStatus::InProgress,
-                RepairOrderStatus::WaitingParts,
-                RepairOrderStatus::QualityCheck,
-                RepairOrderStatus::ReadyPickup,
-                RepairOrderStatus::ReadyForWork,
-                RepairOrderStatus::Completed,
-                RepairOrderStatus::Invoiced,
-            ], true)) {
+            if ($stall !== null && $age >= $stall['days'] && ! $this->isActiveProduction($status)) {
                 $queues['stalled']++;
             }
         }
@@ -363,8 +356,10 @@ final class ShopOperatingScoreboard
                 [
                     'key' => 'stalled',
                     'label' => 'Stalled',
-                    'count' => $queues['stalled'],
-                    'hint' => 'Open 10 days or more and not in production, parts, quality check, or pickup.',
+                    'count' => $stall === null ? null : $queues['stalled'],
+                    'hint' => $stall === null
+                        ? 'No stall age is set. Set a stall age, or a median cycle target, before a repair order can be marked stalled.'
+                        : $stall['hint'],
                     'focus' => 'stalled',
                 ],
             ],
@@ -883,6 +878,7 @@ final class ShopOperatingScoreboard
         $contacts = $this->contactsFor($open->pluck('id'));
         $targets = ShopExcellenceTargets::current();
         $agingThreshold = (float) ($targets['median_cycle_target_days'] ?? 5);
+        $stall = $this->stallRule($targets);
         $rows = [];
 
         foreach ($open as $repairOrder) {
@@ -896,15 +892,7 @@ final class ShopOperatingScoreboard
                     && ! $sent,
                 'follow_up' => $money['recommended'] > 0 || $status === RepairOrderStatus::WaitingApproval,
                 'pickup' => in_array($status, [RepairOrderStatus::ReadyPickup, RepairOrderStatus::Completed, RepairOrderStatus::Invoiced], true),
-                'stalled' => $age >= 10 && ! in_array($status, [
-                    RepairOrderStatus::InProgress,
-                    RepairOrderStatus::WaitingParts,
-                    RepairOrderStatus::QualityCheck,
-                    RepairOrderStatus::ReadyPickup,
-                    RepairOrderStatus::ReadyForWork,
-                    RepairOrderStatus::Completed,
-                    RepairOrderStatus::Invoiced,
-                ], true),
+                'stalled' => $stall !== null && $age >= $stall['days'] && ! $this->isActiveProduction($status),
                 default => in_array($status, [RepairOrderStatus::Approved, RepairOrderStatus::ReadyForWork, RepairOrderStatus::InProgress, RepairOrderStatus::WaitingParts], true)
                     && $age > $agingThreshold,
             };
@@ -953,11 +941,14 @@ final class ShopOperatingScoreboard
 
         return [
             'title' => $titles[$queue] ?? 'Aging authorized work',
-            'note' => $queue === 'presentation'
-                ? 'No estimate link is on file. ARK is not claiming the estimate was never presented in person.'
-                : ($queue === 'follow_up'
-                    ? 'Largest recommended dollars first. Contact time comes only from communication events on the repair order.'
-                    : null),
+            'note' => match ($queue) {
+                'presentation' => 'No estimate link is on file. ARK is not claiming the estimate was never presented in person.',
+                'follow_up' => 'Largest recommended dollars first. Contact time comes only from communication events on the repair order.',
+                'stalled' => $stall === null
+                    ? 'No stall age is set. Set a stall age, or a median cycle target, before a repair order can be marked stalled.'
+                    : $stall['hint'],
+                default => null,
+            },
             'rows' => $rows,
         ];
     }
@@ -989,6 +980,12 @@ final class ShopOperatingScoreboard
     /**
      * @return Collection<int, RepairOrder>
      */
+    /**
+     * Current cars in the building. Period rates keep the reporting floor.
+     * This list does not, so an old open repair order stays visible.
+     *
+     * @return Collection<int, RepairOrder>
+     */
     private function openRepairOrders(): Collection
     {
         return RepairOrder::query()
@@ -999,11 +996,52 @@ final class ShopOperatingScoreboard
                 'assignedTechnician:id,name',
             ])
             ->where('status', '!=', RepairOrderStatus::Closed->value)
-            ->tap(fn ($query) => OperationalReportDateScope::applyTrustworthyDataFloor($query))
             ->orderBy('repair_order_id')
             ->get()
             ->filter(fn (RepairOrder $repairOrder): bool => ! $repairOrder->status->isTerminal() && $repairOrder->close_variant_key !== 'lost')
             ->values();
+    }
+
+    /**
+     * @param  array<string, mixed>  $targets
+     * @return array{days: float, hint: string}|null
+     */
+    private function stallRule(array $targets): ?array
+    {
+        $explicit = $targets['stalled_ro_age_days'] ?? null;
+        if ($explicit !== null && (float) $explicit > 0) {
+            $days = (float) $explicit;
+
+            return [
+                'days' => $days,
+                'hint' => 'Open '.number_format($days, 1).' days or more, and not in production, parts, quality check, or pickup.',
+            ];
+        }
+
+        $cycle = $targets['median_cycle_target_days'] ?? null;
+        if ($cycle !== null && (float) $cycle > 0) {
+            $days = (float) $cycle;
+
+            return [
+                'days' => $days,
+                'hint' => 'Open longer than the '.number_format($days, 1).' day cycle target, and not in production, parts, quality check, or pickup.',
+            ];
+        }
+
+        return null;
+    }
+
+    private function isActiveProduction(RepairOrderStatus $status): bool
+    {
+        return in_array($status, [
+            RepairOrderStatus::InProgress,
+            RepairOrderStatus::WaitingParts,
+            RepairOrderStatus::QualityCheck,
+            RepairOrderStatus::ReadyPickup,
+            RepairOrderStatus::ReadyForWork,
+            RepairOrderStatus::Completed,
+            RepairOrderStatus::Invoiced,
+        ], true);
     }
 
     /**
