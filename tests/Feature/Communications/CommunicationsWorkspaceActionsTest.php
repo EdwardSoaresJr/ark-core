@@ -152,6 +152,26 @@ test('communications inbox shows send estimate when customer is linked', functio
         ->assertSee('Send Estimate', false);
 });
 
+test('resolving a conversation stays on the queue being worked', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $conversation = workspaceConversationFixture('7195558092');
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.conversations.work', $conversation), [
+            'action' => 'resolve',
+            'filter' => 'waiting',
+            'owner' => 'mine',
+        ])
+        ->assertRedirect(route('operations.communications.inbox', [
+            'filter' => 'waiting',
+            'conversation' => $conversation->id,
+            'owner' => 'mine',
+        ]))
+        ->assertSessionHas('status', 'Conversation resolved.');
+
+    expect($conversation->refresh()->status)->toBe(ConversationStatus::Resolved);
+});
+
 test('marking a call handled returns to the list without re-selecting the cleared row', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 

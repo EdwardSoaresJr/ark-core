@@ -86,11 +86,13 @@ final class PlatformConversationWorkController
             'reopen' => 'Conversation reopened.',
         };
 
-        $filter = match ($lane) {
-            'waiting' => 'waiting',
-            'resolved' => 'resolved',
-            default => 'needs',
-        };
+        $filter = $data['action'] === 'resolve'
+            ? $this->workingFilter($data['filter'] ?? null)
+            : match ($lane) {
+                'waiting' => 'waiting',
+                'resolved' => 'resolved',
+                default => 'needs',
+            };
 
         return redirect()
             ->route('operations.communications.inbox', [
@@ -98,6 +100,13 @@ final class PlatformConversationWorkController
                 'platform_conversation' => $platformConversation,
             ])
             ->with('status', $status);
+    }
+
+    private function workingFilter(?string $filter): string
+    {
+        return in_array($filter, ['needs', 'waiting', 'resolved', 'all'], true)
+            ? $filter
+            : 'needs';
     }
 
     /**

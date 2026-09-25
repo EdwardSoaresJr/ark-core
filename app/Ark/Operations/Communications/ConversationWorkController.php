@@ -51,11 +51,13 @@ final class ConversationWorkController
         };
 
         $conversation = $conversation->fresh();
-        $filter = match ($work->lane($conversation)) {
-            'waiting' => 'waiting',
-            'resolved' => 'resolved',
-            default => 'needs',
-        };
+        $filter = $data['action'] === 'resolve'
+            ? $this->workingFilter($data['filter'] ?? null)
+            : match ($work->lane($conversation)) {
+                'waiting' => 'waiting',
+                'resolved' => 'resolved',
+                default => 'needs',
+            };
         $status = match ($data['action']) {
             'assign' => 'Assigned.',
             'follow_up' => 'Follow-up scheduled.',
@@ -71,6 +73,13 @@ final class ConversationWorkController
                 'owner' => ($data['owner'] ?? 'everyone') !== 'everyone' ? $data['owner'] : null,
             ]))
             ->with('status', $status);
+    }
+
+    private function workingFilter(?string $filter): string
+    {
+        return in_array($filter, ['needs', 'waiting', 'resolved', 'all'], true)
+            ? $filter
+            : 'needs';
     }
 
     /**

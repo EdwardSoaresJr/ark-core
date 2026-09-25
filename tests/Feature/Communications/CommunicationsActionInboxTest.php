@@ -191,3 +191,43 @@ test('follow-up moves a platform thread to Waiting', function () {
         ->and($conversation->follow_up_due_at)->not->toBeNull()
         ->and(app(ConversationWork::class)->lane($conversation))->toBe('waiting');
 });
+
+test('resolving a platform thread stays on the queue being worked', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $customer = repairOrderForCommunication(RepairOrderStatus::InProgress, 'Nora Queue')->customer;
+    $customer->forceFill(['phone' => '7195558801'])->save();
+
+    Http::fake([
+        'https://cloud.test/api/v1/services/communications/conversations*' => Http::response([
+            'ok' => true,
+            'conversation' => [
+                'public_id' => 'pc_nora',
+                'contact_address' => '+17195558801',
+                'core_customer_id' => null,
+            ],
+            'messages' => [],
+        ], 200),
+    ]);
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.platform-conversations.work', [
+            'platformConversation' => 'pc_nora',
+        ]), [
+            'action' => 'resolve',
+            'filter' => 'needs',
+        ])
+        ->assertRedirect(route('operations.communications.inbox', [
+            'filter' => 'needs',
+            'platform_conversation' => 'pc_nora',
+        ]))
+        ->assertSessionHas('status', 'Conversation resolved.');
+
+    $phone = PhoneNumber::normalize((string) $customer->phone);
+    $conversation = Conversation::query()
+        ->where('contact_surface', ConversationContactSurface::Phone)
+        ->where('contact_address', $phone)
+        ->sole();
+
+    expect($conversation->status)->toBe(ConversationStatus::Resolved)
+        ->and(app(ConversationWork::class)->lane($conversation))->toBe('resolved');
+});
