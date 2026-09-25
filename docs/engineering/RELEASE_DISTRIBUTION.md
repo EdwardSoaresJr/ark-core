@@ -14,21 +14,29 @@ A git push is not a release. Each target has its own deploy and verification res
 | Demo | `https://demo.arksms.com` | Docker Compose at `/opt/ark` on `104.238.144.183` | Disabled |
 | LNP Production | `https://lugsnplugs.arksms.com` | Compose recreate-core on `149.28.249.13` | **Disabled** |
 
-Running 2026-09-25 on Demo and LNP. Local Herd is this checkout. Fleet deployment automation stays disabled.
+LNP production running 2026-09-25. Local Herd is this checkout. Demo was not recreated. Fleet deployment automation stays disabled.
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:c1ee277936cfd79abd99652a1ee2a9f4397cc4e09e270b3673f05c656d376ba8
+```
+
+Source commit `68c638a71dffb78cc019bdc71e2ac14d11ca8e04` on `main`. `https://lugsnplugs.arksms.com/up` returned 200. Only LNP `core` was recreated. The public shop site on `lugsnplugs.com` is Foundry, not this Core container.
+
+Immediate rollback is the image that was running on LNP before this recreate:
+
+```text
+ghcr.io/edwardsoaresjr/ark-core@sha256:d1e8e619e7571dbe549b671f7ee6d1a41a48fd0284e52b6266d45fa2883db04d
+```
+
+Compose backup: `/root/lnp-core-compose-pre-68c638a7-20260925T235450Z.yml`.
+
+Demo remains on the earlier pin and was not part of this recreate:
 
 ```text
 ghcr.io/edwardsoaresjr/ark-core@sha256:f62f8db6e990f8e320fcfd5f6d450ec1f959bb9c9d1602ed3622d8fcc4141ec8
 ```
 
-Source commit `187efd06794bc1e03762202894eef0c08565ee6c` on `main`. `/up` returned 200 on local, Demo, and LNP. Only Demo `app` and LNP `core` were recreated. LNP QZ check passed. Voice registrar stayed configured. The public shop site on `lugsnplugs.com` is Foundry, not this Core container.
-
-Immediate rollback is the image that was running before this recreate:
-
-```text
-ghcr.io/edwardsoaresjr/ark-core@sha256:668659f57b19bd1e7953e09371f42ce8bb8cf3c4ed5b20eb11da8be29bc9a90e
-```
-
-Source commit `bc6cc893a85730ec9dd48a172362324167cdc042`. Compose backups: `/root/demo-compose-image-pre-187efd06.yml` and `/root/lnp-core-compose-pre-187efd06-20260925T012037Z.yml`.
+Source commit `187efd06794bc1e03762202894eef0c08565ee6c`.
 
 LNP Core accepted 2026-09-22. Shop confirmation: one physical label on one sticker, and the inbound SMS popup appeared.
 

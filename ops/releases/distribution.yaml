@@ -14,7 +14,7 @@ products:
   core:
     name: ARK Core
     image_repository: ghcr.io/edwardsoaresjr/ark-core
-    # Live Demo and LNP were verified on this digest. Publish to ark-core only.
+    # Demo's last recorded pin. LNP production is pinned on the lnp-production target.
     last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:f62f8db6e990f8e320fcfd5f6d450ec1f959bb9c9d1602ed3622d8fcc4141ec8
     publish_script: infra/build-runner/mac/publish-ghcr-ark.sh
     publish_script_default_image: ghcr.io/edwardsoaresjr/ark-core
@@ -95,8 +95,8 @@ targets:
     adapter: docker_compose
     url: https://lugsnplugs.arksms.com
     deploy_enabled: false
-    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:f62f8db6e990f8e320fcfd5f6d450ec1f959bb9c9d1602ed3622d8fcc4141ec8
-    observed_at: "2026-09-25T01:21:00Z"
+    last_verified_image: ghcr.io/edwardsoaresjr/ark-core@sha256:c1ee277936cfd79abd99652a1ee2a9f4397cc4e09e270b3673f05c656d376ba8
+    observed_at: "2026-09-25T23:55:08Z"
     live:
       host: 149.28.249.13
       hostname: ark-lugsnplugs-production
@@ -107,7 +107,7 @@ targets:
       service: core
       observed_actuator: compose_recreate_core
       installation_uuid: 7d115599-cae5-4a10-a4cf-4ebe11af47ed
-      source_commit_in_image: 187efd06794bc1e03762202894eef0c08565ee6c
+      source_commit_in_image: 68c638a71dffb78cc019bdc71e2ac14d11ca8e04
     platform_adopt:
       host: 144.202.74.190
       reachable: false
@@ -136,6 +136,9 @@ targets:
     notes: >
       Live shop is 149. Adopted Platform host 144 timed out on SSH and must not
       be a deploy target. Do not Coolify Deploy. Fleet automation stays off.
+      2026-09-25 recreate pinned core only. Immediate rollback image
+      sha256:d1e8e619e7571dbe549b671f7ee6d1a41a48fd0284e52b6266d45fa2883db04d.
+      Compose backup /root/lnp-core-compose-pre-68c638a7-20260925T235450Z.yml.
 
   hosted-fleet:
     product: core
