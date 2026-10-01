@@ -1,0 +1,61 @@
+{
+    "sources": [
+        {
+            "source_id": "website",
+            "source_type": "website",
+            "display_name": "Demo Auto Repair website",
+            "authority_class": "public_company_statement",
+            "location": "https://demo-auto.test"
+        },
+        {
+            "source_id": "arkademy",
+            "source_type": "arkademy",
+            "display_name": "ARKademy",
+            "authority_class": "approved_training",
+            "location": "https://learn.demo-auto.test"
+        }
+    ],
+    "documents": [
+        {
+            "document_id": "web-diagnostics-1",
+            "source_id": "website",
+            "title": "Verified Diagnostics",
+            "source_ref": "https://demo-auto.test/diagnostics",
+            "normalized_text": "Accurate diagnostics. We find the real problem first. You get a clear estimate before any repairs.",
+            "content_hash": "abc",
+            "ingested_at": "2026-08-01T00:00:00Z"
+        },
+        {
+            "document_id": "academy-dvi-1",
+            "source_id": "arkademy",
+            "title": "DVI findings language",
+            "source_ref": "https://learn.demo-auto.test/dvi",
+            "normalized_text": "Record measurements, side, and certainty. Do not invent failed parts.",
+            "content_hash": "def",
+            "ingested_at": "2026-08-01T00:00:00Z"
+        }
+    ],
+    "memories": [
+        {
+            "id": "e642d05d-b10e-48e6-b1b1-77d77052d3d0",
+            "memory_type": "shop_standard",
+            "source_operator": "Edward",
+            "content": "Demo Auto Repair never condemns an alternator from battery voltage alone.",
+            "created_at": "2026-07-01T00:00:00Z"
+        },
+        {
+            "id": "b0a49c02-c9f3-4a8e-b786-82a136c881eb",
+            "memory_type": "shop_standard",
+            "source_operator": "Edward",
+            "content": "[resource:how-the-shop-answers] How Demo Auto Repair answers shop questions. Also mentions alternator testing only as an example.",
+            "created_at": "2026-07-01T00:00:00Z"
+        },
+        {
+            "id": 99,
+            "memory_type": "chat",
+            "source_operator": "Edward",
+            "content": "This is a chat transcript and must not become memory.",
+            "created_at": "2026-07-01T00:00:00Z"
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+:root {
+  --arksms-navy: #0A1A2F;
+  --arksms-teal: #2AB7CA;
+  --arksms-charcoal: #1F2A44;
+  --arksms-light-gray: #F5F7FA;
+  --arksms-white: #FFFFFF;
+}
+
+/* Usage Examples */
+
+.btn-primary {
+  background-color: var(--arksms-navy);
+  color: var(--arksms-white);
+}
+
+.btn-accent {
+  background-color: var(--arksms-teal);
+  color: var(--arksms-white);
+}
+
+.navbar {
+  background-color: var(--arksms-navy);
+}
+
+.card {
+  background-color: var(--arksms-white);
+  border: 1px solid var(--arksms-light-gray);
+}

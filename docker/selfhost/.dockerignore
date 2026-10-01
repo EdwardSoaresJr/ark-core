@@ -1,0 +1,7 @@
+/public/hot
+
+# Ignore local compose overrides / env
+.env
+.env.*
+!.env.example
+docker-compose.override.yml

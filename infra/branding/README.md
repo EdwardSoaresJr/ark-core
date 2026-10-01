@@ -1,0 +1,39 @@
+# ARK Ecosystem Branding
+
+**Source of truth:** `public/assets/ARK_SMS_FINAL_DROP_IN_PACK/`
+
+**Ownership doc:** `docs/branding/ownership.md`
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `sync-ecosystem-favicons.sh` | Confirm the ARK favicon pack is present |
+| `deploy-arkify-branding.sh` | Control plane Arkify favicons + layout patch |
+| `apply-arkify-branding.sh` | Run on control plane (also called by guardrails cron) |
+| `verify-ecosystem-branding.sh` | HTTP verification for all surfaces |
+
+## ARK V2
+
+Runtime: `App\Support\Branding\Branding` → `partials/branding/_favicons.blade.php`
+
+## Arkify
+
+```bash
+./infra/branding/deploy-arkify-branding.sh
+```
+
+A control-plane cron can rerun `apply-arkify-branding.sh` after an upgrade so favicons stay in place.
+
+## Public Surface (shop host)
+
+**Exception:** `demo-auto.test` is a placeholder shop domain for favicon/OG - served by ARK V2 Public Surface (not ARK-WEB / Botble).
+
+## Verify
+
+```bash
+chmod +x infra/branding/*.sh
+./infra/branding/verify-ecosystem-branding.sh
+```
+
+Doctrine: `docs/branding/ecosystem-identity.md`

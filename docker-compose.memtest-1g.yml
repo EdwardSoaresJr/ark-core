@@ -1,0 +1,30 @@
+# ~1 GiB envelope with swap headroom (starter 1 GB host + swap).
+
+services:
+  mysql:
+    mem_limit: 448m
+    memswap_limit: 1024m
+    cpus: "1.0"
+    volumes:
+      - ./docker/mysql/small-vps.cnf:/etc/mysql/conf.d/small-vps.cnf:ro
+    command:
+      - --innodb-buffer-pool-size=192M
+      - --innodb-buffer-pool-instances=1
+      - --performance-schema=OFF
+      - --max-connections=40
+
+  redis:
+    mem_limit: 64m
+    memswap_limit: 128m
+    cpus: "0.25"
+    command:
+      - redis-server
+      - --maxmemory
+      - 48mb
+      - --maxmemory-policy
+      - allkeys-lru
+
+  app:
+    mem_limit: 512m
+    memswap_limit: 1024m
+    cpus: "1.0"
