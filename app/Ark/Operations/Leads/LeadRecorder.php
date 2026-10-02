@@ -14,6 +14,7 @@ class LeadRecorder
 {
     public function __construct(
         private readonly ConversationRecorder $conversations,
+        private readonly LeadSpamSignature $spamSignatures,
     ) {}
 
     /**
@@ -44,6 +45,10 @@ class LeadRecorder
         $phone = PhoneNumber::normalize($data['contact_phone']);
         $concern = trim($data['concern']);
         $state = $forcedState ?? LeadState::Received;
+        if ($state !== LeadState::Spam && $this->spamSignatures->matches($concern)) {
+            $state = LeadState::Spam;
+            $spamSignals[] = 'learned_signature';
+        }
         $contactPreference = $data['contact_preference'] ?? LeadContactPreference::Text;
         $metadata = is_array($data['metadata'] ?? null) ? $data['metadata'] : [];
         if (isset($data['preferred_period']) && is_string($data['preferred_period']) && $data['preferred_period'] !== '') {

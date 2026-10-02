@@ -727,6 +727,9 @@ final class PlatformCommunicationsInboxProjection
         }
 
         $thread['decision']['check_in_url'] = $selected['check_in_url'];
+        if (filled($selected['lead_id'] ?? null)) {
+            $thread['decision']['spam_url'] = route('operations.leads.state', ['lead' => $selected['lead_id']]);
+        }
         if (
             filled($selected['vehicle_label'] ?? null)
             && is_array($thread['identity'] ?? null)

@@ -22,9 +22,19 @@
         <p class="ops-comms-inbox__decision-next">{{ $prompt }}</p>
     @endif
 
-    @if (filled($decision['check_in_url'] ?? null))
+    @php
+        $spamUrl = filled($decision['spam_url'] ?? null) ? (string) $decision['spam_url'] : '';
+        $spamInWorkRow = $spamUrl !== '' && is_array($work) && filled($work['url'] ?? null) && $lane !== 'resolved';
+    @endphp
+
+    @if (filled($decision['check_in_url'] ?? null) || ($spamUrl !== '' && ! $spamInWorkRow))
         <div class="ops-comms-inbox__decision-actions">
-            <a href="{{ $decision['check_in_url'] }}" class="ops-comms-inbox__decision-btn ops-comms-inbox__decision-btn--primary">Check In</a>
+            @if (filled($decision['check_in_url'] ?? null))
+                <a href="{{ $decision['check_in_url'] }}" class="ops-comms-inbox__decision-btn ops-comms-inbox__decision-btn--primary">Check In</a>
+            @endif
+            @if ($spamUrl !== '' && ! $spamInWorkRow)
+                @include('operations.communications.workspace.partials.decision-spam', ['spamUrl' => $spamUrl])
+            @endif
         </div>
     @endif
 
@@ -75,6 +85,9 @@
                 @endif
                 <button type="submit" class="ops-comms-inbox__decision-btn">Resolve</button>
             </form>
+            @if ($spamInWorkRow)
+                @include('operations.communications.workspace.partials.decision-spam', ['spamUrl' => $spamUrl])
+            @endif
         </div>
     @elseif (is_array($work) && filled($work['url'] ?? null))
         <form method="POST" action="{{ $work['url'] }}">

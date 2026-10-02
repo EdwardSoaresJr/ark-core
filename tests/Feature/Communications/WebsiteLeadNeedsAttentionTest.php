@@ -2,6 +2,7 @@
 
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationRecorder;
+use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadSource;
@@ -129,6 +130,33 @@ test('resolving the conversation removes the website quote from needs attention'
         ->and($lead->fresh()->first_contacted_at)->toBeNull();
 });
 
+test('marking a website lead spam removes the thread from needs attention', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    [$lead, $conversation] = openWebsiteQuote();
+    $sibling = Lead::query()->create([
+        'source' => LeadSource::Website,
+        'state' => LeadState::Received,
+        'concern' => 'Как совмещать несколько трудовых доходов. https://best-marafon.ru/2778176/',
+        'contact_name' => 'Markilla S Smith',
+        'contact_phone' => '7195556289',
+        'conversation_id' => $conversation->id,
+    ]);
+
+    $this->actingAs($advisor)
+        ->from(route('operations.communications.inbox', ['filter' => 'needs', 'conversation' => $conversation->id]))
+        ->patch(route('operations.leads.state', $lead), ['state' => LeadState::Spam->value])
+        ->assertRedirect();
+
+    expect($lead->fresh()->state)->toBe(LeadState::Spam)
+        ->and($sibling->fresh()->state)->toBe(LeadState::Spam)
+        ->and($conversation->fresh()->status)->toBe(ConversationStatus::Resolved);
+
+    $headlines = collect(app(PlatformCommunicationsInboxProjection::class)->inbox($advisor, null, 'needs')['list_items'])
+        ->pluck('headline');
+
+    expect($headlines->all())->not->toContain('Markilla S Smith');
+});
+
 test('contacted spam and lost website leads stay out of needs attention', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
@@ -187,6 +215,8 @@ test('opening the website quote reaches check in without a memorized lead url', 
         ]))
         ->assertOk()
         ->assertSee('Check In')
+        ->assertSee('Spam')
+        ->assertSee(route('operations.leads.state', $lead), false)
         ->assertSee(route('operations.leads.intake', $lead), false)
         ->assertSee('I would like a quote')
         ->assertSee('Website request')

@@ -2,6 +2,10 @@
 
 namespace App\Ark\Operations\Leads;
 
+use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationStatus;
+use App\Ark\Operations\Conversations\ConversationWork;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -45,10 +49,40 @@ class AdvisorLeadStateController
 
         $lead->save();
 
+        if ($state === LeadState::Spam) {
+            $this->closeSpamThread($lead, $request->user());
+        }
+
         if ($lead->first_contacted_at !== null || ! $lead->isOpen()) {
             app(WebsiteLeadInterruptBroadcaster::class)->clearForLead($lead->id);
         }
 
         return back()->with('status', 'Lead updated - '.$state->label().'.');
+    }
+
+    private function closeSpamThread(Lead $lead, mixed $actor): void
+    {
+        if ($lead->conversation_id !== null) {
+            Lead::query()
+                ->where('conversation_id', $lead->conversation_id)
+                ->whereKeyNot($lead->id)
+                ->where('source', LeadSource::Website)
+                ->open()
+                ->get()
+                ->each(function (Lead $sibling): void {
+                    $sibling->state = LeadState::Spam;
+                    $sibling->save();
+                    app(WebsiteLeadInterruptBroadcaster::class)->clearForLead($sibling->id);
+                });
+        }
+
+        $conversation = $lead->conversation;
+        if (
+            $conversation instanceof Conversation
+            && $actor instanceof User
+            && $conversation->status !== ConversationStatus::Resolved
+        ) {
+            app(ConversationWork::class)->resolve($conversation, $actor);
+        }
     }
 }
