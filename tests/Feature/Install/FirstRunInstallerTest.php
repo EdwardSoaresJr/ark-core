@@ -7,11 +7,14 @@ use App\Ark\Install\InstallerEnvironmentWriter;
 use App\Ark\Install\PendingInstallPayload;
 use App\Ark\Install\SystemRequirementsChecker;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\RateLimiter;
 
 
 beforeEach(function () {
     InstallationState::resetForTests();
     InstallFinalizeRunner::$fakeStart = null;
+    config(['cache.default' => 'file']);
+    RateLimiter::clear('install-finalize|127.0.0.1');
 });
 
 afterEach(function () {

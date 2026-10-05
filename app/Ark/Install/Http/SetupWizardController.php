@@ -6,7 +6,8 @@ use App\Ark\Install\DatabaseConnectionTester;
 use App\Ark\Install\DatabaseSafetyInspector;
 use App\Ark\Install\InstallDraft;
 use App\Ark\Install\InstallFinalizeRunner;
-use App\Ark\Install\InstallStorage;
+use App\Ark\Install\InstallJourney;
+use App\Ark\Install\InstallMode;
 use App\Ark\Install\InstallationState;
 use App\Ark\Install\InstallerEnvironmentWriter;
 use App\Ark\Install\PendingInstallPayload;
@@ -193,10 +194,11 @@ final class SetupWizardController
         $draft = InstallDraft::all();
 
         return view('install.shop', [
-            'step' => 4,
+            'step' => $this->stepNumber('Shop'),
             'steps' => $this->steps(),
             'draft' => $draft,
             'timezones' => timezone_identifiers_list(),
+            'managedInstall' => InstallMode::isManaged(),
         ]);
     }
 
@@ -238,7 +240,7 @@ final class SetupWizardController
         }
 
         return view('install.admin', [
-            'step' => 5,
+            'step' => $this->stepNumber('Admin'),
             'steps' => $this->steps(),
             'draft' => InstallDraft::all(),
         ]);
@@ -246,6 +248,10 @@ final class SetupWizardController
 
     public function storeAdmin(Request $request): RedirectResponse
     {
+        if (! $this->databaseReady() || blank(InstallDraft::all()['shop_name'] ?? null)) {
+            return redirect()->route('install.shop');
+        }
+
         $data = $request->validate([
             'admin_name' => ['required', 'string', 'max:120'],
             'admin_email' => ['required', 'email', 'max:255'],
@@ -261,45 +267,6 @@ final class SetupWizardController
         session([
             'install.admin_password' => $data['password'],
         ]);
-
-        return redirect()->route('install.integrations');
-    }
-
-    public function integrations(): View|RedirectResponse
-    {
-        if (! $this->adminReady()) {
-            return redirect()->route('install.admin');
-        }
-
-        return view('install.integrations', [
-            'step' => 6,
-            'steps' => $this->steps(),
-        ]);
-    }
-
-    public function skipIntegrations(): RedirectResponse
-    {
-        InstallDraft::merge(['integrations_skipped' => true]);
-        session()->forget('install.connect_cloud_after_install');
-        @unlink(InstallStorage::path('connect_cloud_after_install'));
-
-        return redirect()->route('install.review');
-    }
-
-    public function connectIntegrations(): RedirectResponse
-    {
-        if (! $this->adminReady()) {
-            return redirect()->route('install.admin');
-        }
-
-        InstallDraft::merge([
-            'integrations_skipped' => true,
-            'connect_cloud_after_install' => true,
-        ]);
-        session(['install.connect_cloud_after_install' => true]);
-        $marker = InstallStorage::path('connect_cloud_after_install');
-        @mkdir(dirname($marker), 0775, true);
-        file_put_contents($marker, '1');
 
         return redirect()->route('install.review');
     }
@@ -317,12 +284,10 @@ final class SetupWizardController
         $draft = InstallDraft::all();
 
         return view('install.review', [
-            'step' => 7,
+            'step' => $this->stepNumber('Review'),
             'steps' => $this->steps(),
             'draft' => $draft,
             'httpWarning' => str_starts_with(strtolower((string) ($draft['app_url'] ?? '')), 'http://'),
-            'connectCloudAfterInstall' => (bool) session('install.connect_cloud_after_install')
-                || is_file(InstallStorage::path('connect_cloud_after_install')),
         ]);
     }
 
@@ -418,7 +383,7 @@ final class SetupWizardController
         $state = InstallationState::read();
 
         return view('install.progress', [
-            'step' => 7,
+            'step' => $this->stepNumber('Review'),
             'steps' => $this->steps(),
             'checkpoint' => $state['checkpoint'],
             'label' => InstallationState::checkpointLabel($state['checkpoint']),
@@ -482,10 +447,8 @@ final class SetupWizardController
         }
 
         return view('install.complete', [
-            'step' => 8,
+            'step' => $this->stepNumber('Review'),
             'steps' => $this->steps(),
-            'connectCloudAfterInstall' => (bool) session('install.connect_cloud_after_install')
-                || is_file(InstallStorage::path('connect_cloud_after_install')),
         ]);
     }
 
@@ -494,15 +457,33 @@ final class SetupWizardController
      */
     private function steps(): array
     {
+        if (InstallMode::isManaged()) {
+            return [
+                ['n' => 1, 'label' => 'Shop'],
+                ['n' => 2, 'label' => 'Admin'],
+                ['n' => 3, 'label' => 'Review'],
+            ];
+        }
+
         return [
             ['n' => 1, 'label' => 'Welcome'],
             ['n' => 2, 'label' => 'System'],
             ['n' => 3, 'label' => 'Database'],
             ['n' => 4, 'label' => 'Shop'],
             ['n' => 5, 'label' => 'Admin'],
-            ['n' => 6, 'label' => 'ARK Platform'],
-            ['n' => 7, 'label' => 'Review'],
+            ['n' => 6, 'label' => 'Review'],
         ];
+    }
+
+    private function stepNumber(string $label): int
+    {
+        foreach ($this->steps() as $step) {
+            if ($step['label'] === $label) {
+                return $step['n'];
+            }
+        }
+
+        return 1;
     }
 
     /**
@@ -536,19 +517,12 @@ final class SetupWizardController
 
     private function databaseReady(): bool
     {
-        $draft = InstallDraft::all();
-
-        return (bool) ($draft['db_tested'] ?? false);
+        return InstallJourney::databaseReady();
     }
 
     private function adminReady(): bool
     {
-        $draft = InstallDraft::all();
-
-        return $this->databaseReady()
-            && filled($draft['shop_name'] ?? null)
-            && filled($draft['admin_email'] ?? null)
-            && filled(session('install.admin_password'));
+        return InstallJourney::adminReady();
     }
 
     private function suggestedAppUrl(): string

@@ -21,14 +21,12 @@
         <dd>{{ $draft['admin_email'] ?? '-' }}</dd>
         <dt>Workstation</dt>
         <dd>{{ !empty($draft['create_workstation']) ? 'Main Shop (default)' : 'None' }}</dd>
-        <dt>ARK Services</dt>
-        <dd>Connect ARK Platform after installation in Settings</dd>
     </dl>
 
     <form method="post" action="{{ route('install.run') }}" id="install-run-form">
         @csrf
         <div class="actions">
-            <a class="btn btn-secondary" href="{{ route('install.integrations') }}">Back</a>
+            <a class="btn btn-secondary" href="{{ route('install.admin') }}">Back</a>
             <button class="btn btn-primary" type="submit" id="install-run-button">Install ARK</button>
         </div>
     </form>

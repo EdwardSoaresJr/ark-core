@@ -47,7 +47,9 @@
         <input id="postal_code" name="postal_code" value="{{ old('postal_code', $draft['postal_code'] ?? '') }}">
 
         <div class="actions">
-            <a class="btn btn-secondary" href="{{ route('install.database') }}">Back</a>
+            @unless ($managedInstall)
+                <a class="btn btn-secondary" href="{{ route('install.database') }}">Back</a>
+            @endunless
             <button class="btn btn-primary" type="submit">Continue</button>
         </div>
     </form>
