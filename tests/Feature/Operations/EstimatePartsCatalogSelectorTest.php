@@ -55,6 +55,14 @@ function enableRepairLinkCatalog(string $url = 'https://repairlink.test/catalog'
     ]);
 }
 
+test('pull cart is registered with alpine', function () {
+    $source = file_get_contents(base_path('resources/js/app.js'));
+
+    expect($source)
+        ->toContain("import { arkPartsTechQuoteImport } from './ark-partstech-quote-import';")
+        ->toContain("Alpine.data('arkPartsTechQuoteImport', (config = {}) => arkPartsTechQuoteImport(config));");
+});
+
 test('partstech default selects partstech actions on a new repair order', function () {
     enablePartsTechCatalog();
     enableRepairLinkCatalog();
@@ -73,6 +81,7 @@ test('partstech default selects partstech actions on a new repair order', functi
         ->toContain('>PartsTech</span>')
         ->toContain('title="Open PartsTech"')
         ->toContain('>Pull Cart</span>')
+        ->toContain('arkPartsTechQuoteImport(')
         ->toContain('Open RepairLink')
         ->toContain('activatePartsCatalogItem(item)')
         ->toContain('selectPartsCatalog(')
