@@ -14,7 +14,7 @@
 @if ($concern->workGroups->isNotEmpty() || $displayLines->isNotEmpty())
     <div class="ops-review-lines-head hidden md:grid">
         <span aria-hidden="true"></span>
-        <span class="text-right">Qty</span>
+        <span class="text-right">Qty/Hrs</span>
         <span class="text-right">Price</span>
         <span class="text-right">Subtotal</span>
         <span class="text-right">Fees</span>
@@ -22,7 +22,7 @@
         <span class="text-right">Total</span>
     </div>
     <div class="grid grid-cols-3 gap-2 border-b border-slate-200 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 md:hidden">
-        <span class="text-right">Qty</span>
+        <span class="text-right">Qty/Hrs</span>
         <span class="text-right">Price</span>
         <span class="text-right">Total</span>
     </div>

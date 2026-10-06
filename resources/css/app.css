@@ -9954,7 +9954,7 @@
     }
 
     .ops-review-lines-head {
-        grid-template-columns: minmax(0, 1fr) 52px 78px 64px 64px 64px 88px;
+        grid-template-columns: minmax(0, 1fr) 4.25rem 78px 64px 64px 64px 88px;
         gap: 0.5rem;
         border-bottom: 1px solid theme('colors.slate.100');
         background: transparent;
@@ -10718,6 +10718,10 @@
         border-bottom: 1px solid theme('colors.slate.200');
         background: theme('colors.slate.50');
         padding: 0.3125rem 0.75rem;
+    }
+
+    .ops-estimate-workspace .ops-worksheet-lines-head {
+        grid-template-columns: minmax(0, 1fr) 4.25rem 78px 64px 64px 64px 88px;
     }
 
     .ops-review-lines .ops-line-row {

@@ -1713,6 +1713,7 @@ test('large grouped estimates remain renderable in review and builder hot paths'
         ->assertOk()
         ->assertSee('Dense concern 12')
         ->assertSee('Dense line 12-6')
+        ->assertSee('Qty/Hrs')
         ->assertSee('Estimate Total');
 
     $this->get(route('operations.repair-orders.show', $repairOrder))

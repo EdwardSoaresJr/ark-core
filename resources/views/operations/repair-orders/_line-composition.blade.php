@@ -7,7 +7,7 @@
     $showProcurement = $showProcurement ?? true;
     $lineGrid = $lineGrid ?? 'worksheet';
     $isTerminal = $isTerminal ?? true;
-    $lineGridClass = 'md:grid-cols-[minmax(0,1fr)_52px_78px_64px_64px_64px_88px]';
+    $lineGridClass = 'md:grid-cols-[minmax(0,1fr)_4.25rem_78px_64px_64px_64px_88px]';
     $lineMoneyDash = '-';
     $partStateOptions = $partStateOptions ?? [];
     $estimateVersion = $estimateVersion ?? null;

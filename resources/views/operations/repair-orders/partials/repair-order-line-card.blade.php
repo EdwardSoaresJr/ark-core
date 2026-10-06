@@ -27,7 +27,7 @@
     $factPriceValue = $isPartLine || $line->type->value === 'sublet'
         ? ($line->part_cost_cents !== null ? $totals->format($line->part_cost_cents) : $totals->format($line->unit_price_cents))
         : $totals->format($line->unit_price_cents);
-    $lineGridClass = $lineGridClass ?? 'md:grid-cols-[minmax(0,1fr)_52px_78px_64px_64px_64px_88px]';
+    $lineGridClass = $lineGridClass ?? 'md:grid-cols-[minmax(0,1fr)_4.25rem_78px_64px_64px_64px_88px]';
     $contextLines = $isViewMode
         ? RepairOrderLineItemPresentation::viewContextLines($line)
         : RepairOrderLineItemPresentation::editContextLines($line);
@@ -264,9 +264,9 @@
         ])>
             <div class="md:block">
                 @if ($lineGrid === 'review')
-                    <p class="ops-line-column-label max-md:block md:hidden">Qty</p>
+                    <p class="ops-line-column-label max-md:block md:hidden">Qty/Hrs</p>
                 @else
-                    <p class="ops-line-column-label">Qty</p>
+                    <p class="ops-line-column-label">Qty/Hrs</p>
                 @endif
                 <p class="ops-line-ledger__value tabular-nums">{{ $line->quantity }}</p>
             </div>
