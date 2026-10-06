@@ -29,6 +29,7 @@ use App\Ark\Operations\Telephony\IncomingCallContextBroadcaster;
 use App\Ark\Operations\Telephony\IncomingCallPayload;
 use App\Ark\Operations\Telephony\Media\CallSessionMediaMetadata;
 use App\Ark\Operations\Telephony\ProcessIncomingCallAction;
+use App\Ark\Operations\Telephony\ProcessOutboundCallAction;
 use App\Ark\Operations\Telephony\ScheduleMissedCallRescueAction;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Ark\Platform\Communications\ManagedCommunicationsGate;
@@ -47,6 +48,7 @@ final class FabricIngressController
         private readonly CommsInterruptBroadcast $interruptBroadcast,
         private readonly InboundSmsConversationIngress $smsIngress,
         private readonly ProcessIncomingCallAction $incomingCalls,
+        private readonly ProcessOutboundCallAction $outboundCalls,
         private readonly CallSessionRecorder $callSessions,
         private readonly IncomingCallContextBroadcaster $callBroadcaster,
     ) {}
@@ -69,6 +71,7 @@ final class FabricIngressController
 
         return match ((string) $data['operation']) {
             'voice.incoming.started' => $this->voiceIncomingStarted($payload),
+            'voice.outgoing.started' => $this->voiceOutgoingStarted($payload),
             'voice.incoming.answered' => $this->voiceIncomingAnswered($payload),
             'voice.incoming.ended' => $this->voiceIncomingEnded($payload),
             'voice.recording.available' => $this->voiceRecordingAvailable($payload, voicemail: false),
@@ -239,6 +242,33 @@ final class FabricIngressController
     /**
      * @param  array<string, mixed>  $payload
      */
+    private function voiceOutgoingStarted(array $payload): JsonResponse
+    {
+        $callPayload = $this->incomingCallPayloadFromFabric(
+            $payload,
+            preferStatus: CallSessionStatus::Ringing,
+            direction: CallSessionDirection::Outbound,
+        );
+        if ($callPayload === null) {
+            Log::warning('ark_voice.fabric.outbound_invalid', [
+                'keys' => array_keys($payload),
+            ]);
+
+            return response()->json(['ok' => false, 'error' => 'invalid_voice_payload'], 422);
+        }
+
+        $result = $this->outboundCalls->execute($callPayload, null);
+
+        return response()->json([
+            'ok' => true,
+            'ingested' => $result['created'],
+            'call_session_id' => $result['session']?->id,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
     private function voiceIncomingAnswered(array $payload): JsonResponse
     {
         $outcome = $this->hostedOutcomeFromPayload($payload) ?? HostedCallOutcome::Answered;
@@ -372,6 +402,7 @@ final class FabricIngressController
         CallSessionStatus $preferStatus,
         ?HostedCallOutcome $outcome = null,
         bool $callEnded = false,
+        CallSessionDirection $direction = CallSessionDirection::Inbound,
     ): ?IncomingCallPayload {
         $providerCallSid = (string) ($payload['provider_call_sid'] ?? $payload['CallSid'] ?? '');
         $fromPhone = (string) ($payload['from_phone'] ?? $payload['From'] ?? '');
@@ -389,6 +420,10 @@ final class FabricIngressController
         $normalizedFrom = PhoneNumber::normalize($fromPhone) ?? preg_replace('/\D+/', '', $fromPhone) ?? '';
         $normalizedTo = PhoneNumber::normalize($toPhone);
 
+        if (strtolower((string) ($payload['direction'] ?? '')) === 'outbound') {
+            $direction = CallSessionDirection::Outbound;
+        }
+
         return new IncomingCallPayload(
             provider: TelephonyProviderType::Twilio,
             providerCallSid: $providerCallSid,
@@ -398,6 +433,7 @@ final class FabricIngressController
             normalizedTo: $normalizedTo,
             status: $outcome?->sessionStatus() ?? $preferStatus,
             rawPayload: $payload,
+            direction: $direction,
             hostedOutcome: $outcome,
             dialDurationSeconds: $this->positiveSeconds($payload['dial_duration_seconds'] ?? null),
             answeredAt: $this->instant($payload['answered_at'] ?? null),

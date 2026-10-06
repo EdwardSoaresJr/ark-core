@@ -4,6 +4,9 @@ use App\Ark\Install\InstallationIdentity;
 use App\Ark\Operations\Communications\Events\CommsInterruptReceived;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Telephony\CallSession;
+use App\Ark\Operations\Telephony\CallSessionDirection;
+use App\Ark\Operations\Telephony\CallSessionStatus;
 use App\Ark\Operations\Telephony\Events\IncomingCallReceived;
 use App\Ark\Platform\Http\VerifyPlatformFabricSignature;
 use App\Ark\Platform\PlatformConnection;
@@ -150,6 +153,72 @@ test('fabric ingress rejects unknown operation', function () {
     $this->call('POST', '/webhooks/cloud/fabric/events', [], [], [], $server, $raw)
         ->assertStatus(422)
         ->assertJson(['ok' => false, 'error' => 'unknown_operation']);
+});
+
+test('fabric ingress persists voice.outgoing.started as an outbound call session', function () {
+    Event::fake();
+
+    $callSid = 'CA-fabric-outbound-1';
+    $body = [
+        'operation' => 'voice.outgoing.started',
+        'installation_id' => InstallationIdentity::uuid(),
+        'occurred_at' => now()->toIso8601String(),
+        'payload' => [
+            'provider_call_sid' => $callSid,
+            'from_phone' => '+17195550100',
+            'to_phone' => '+17195550142',
+            'call_status' => 'ringing',
+            'direction' => 'outbound',
+        ],
+    ];
+
+    [$raw, $server] = fabricSignedRequest($body);
+
+    $response = $this->call('POST', '/webhooks/cloud/fabric/events', [], [], [], $server, $raw)
+        ->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonPath('ingested', true);
+
+    $session = CallSession::query()
+        ->where('provider_call_sid', $callSid)
+        ->first();
+
+    expect($session)->not->toBeNull()
+        ->and($session->direction)->toBe(CallSessionDirection::Outbound)
+        ->and($session->from_number)->toBe('+17195550100')
+        ->and($session->to_number)->toBe('+17195550142')
+        ->and($session->status)->toBe(CallSessionStatus::Ringing)
+        ->and($response->json('call_session_id'))->toBe($session->id);
+});
+
+test('fabric voice.outgoing.started is idempotent on provider call sid', function () {
+    Event::fake();
+
+    $body = [
+        'operation' => 'voice.outgoing.started',
+        'installation_id' => InstallationIdentity::uuid(),
+        'payload' => [
+            'provider_call_sid' => 'CA-fabric-outbound-dup',
+            'from_phone' => '+17195550100',
+            'to_phone' => '+17195550142',
+            'call_status' => 'ringing',
+            'direction' => 'outbound',
+        ],
+    ];
+
+    [$raw, $server] = fabricSignedRequest($body);
+    $this->call('POST', '/webhooks/cloud/fabric/events', [], [], [], $server, $raw)
+        ->assertOk()
+        ->assertJsonPath('ingested', true);
+
+    [$raw2, $server2] = fabricSignedRequest($body);
+    $this->call('POST', '/webhooks/cloud/fabric/events', [], [], [], $server2, $raw2)
+        ->assertOk()
+        ->assertJsonPath('ingested', false);
+
+    expect(CallSession::query()
+        ->where('provider_call_sid', 'CA-fabric-outbound-dup')
+        ->count())->toBe(1);
 });
 
 test('fabric ingress rejects when cloud not connected', function () {
