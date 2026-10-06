@@ -10,8 +10,7 @@
 |--------|---------|
 | `sync-ecosystem-favicons.sh` | Confirm the ARK favicon pack is present |
 | `deploy-arkify-branding.sh` | Control plane Arkify favicons + layout patch |
-| `apply-arkify-branding.sh` | Run on control plane (also called by guardrails cron) |
-| `verify-ecosystem-branding.sh` | HTTP verification for all surfaces |
+| `apply-arkify-branding.sh` | Run on the host that serves Arkify |
 
 ## ARK V2
 
@@ -23,17 +22,10 @@ Runtime: `App\Support\Branding\Branding` → `partials/branding/_favicons.blade.
 ./infra/branding/deploy-arkify-branding.sh
 ```
 
-A control-plane cron can rerun `apply-arkify-branding.sh` after an upgrade so favicons stay in place.
+Survives Coolify upgrades via `/data/coolify/custom/ark-branding/` + guardrails cron.
 
 ## Public Surface (shop host)
 
 **Exception:** `demo-auto.test` is a placeholder shop domain for favicon/OG - served by ARK V2 Public Surface (not ARK-WEB / Botble).
-
-## Verify
-
-```bash
-chmod +x infra/branding/*.sh
-./infra/branding/verify-ecosystem-branding.sh
-```
 
 Doctrine: `docs/branding/ecosystem-identity.md`

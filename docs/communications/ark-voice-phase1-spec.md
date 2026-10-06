@@ -1,7 +1,6 @@
 # ARK Voice Phase 1 - Parallel Ingress Spec
 
 **Status:** Active build contract  
-**Doctrine:** doctrine `ark-authority-vs-configuration.mdc` · doctrine `ark-telephony-settings-doctrine.mdc`  
 **Vision:** [ark-voice-vision.md](ark-voice-vision.md)
 
 ---

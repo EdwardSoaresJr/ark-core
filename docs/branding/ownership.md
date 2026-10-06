@@ -7,11 +7,11 @@
 
 | Layer | Location | Owner |
 |-------|----------|-------|
-| **Asset pack** | `public/assets/ARK_SMS_FINAL_DROP_IN_PACK/` | This repository |
+| **Asset pack** | `public/assets/ARK_SMS_FINAL_DROP_IN_PACK/` | ARK V2 repo (`arksmsv2`) |
 | **Runtime registry** | `App\Support\Branding\Branding` + `BrandingAssetRegistry` | ARK V2 |
 | **Blade partial** | `resources/views/partials/branding/_favicons.blade.php` | ARK V2 |
 | **BookStack theme** | `infra/coolify/bookstack/themes/arkademy/public/` | ARK V2 infra |
-| **Arkify static assets** | Applied by `infra/branding/apply-arkify-branding.sh` | ARK infra scripts |
+| **Arkify static assets** | `/data/coolify/custom/ark-branding/public/ark/` on control plane | ARK infra scripts |
 
 When favicons change, update the **pack first**, then sync downstream surfaces.
 
@@ -34,7 +34,7 @@ When favicons change, update the **pack first**, then sync downstream surfaces.
 |---------|---------------------|
 | ARK V2 | Assets in git + deploy pipeline |
 | ARKademy | Bind mount `/data/ark-shared/bookstack-config`; re-run `apply-branding.sh` after BookStack image bump if settings reset |
-| Arkify | Re-run `apply-arkify-branding.sh` after an upgrade so favicons and the layout patch stay in place |
+| Arkify | Host assets at `/data/coolify/custom/ark-branding/`; `ark-guardrails/apply.sh` cron re-copies favicons and re-patches `base.blade.php` after Coolify upgrade |
 
 ## Operational commands
 
@@ -45,11 +45,6 @@ When favicons change, update the **pack first**, then sync downstream surfaces.
 # Production ARKademy
 ./infra/branding/deploy-bookstack-branding.sh
 
-# Production Arkify, on the control plane
-./infra/branding/apply-arkify-branding.sh
-
-# Verify all surfaces
-./infra/branding/verify-ecosystem-branding.sh
 ```
 
 ## Verification artifacts
@@ -60,4 +55,3 @@ See `docs/branding/verification/` for fetched favicon binaries and audit notes.
 
 - `docs/branding/ecosystem-identity.md` - doctrine
 - `docs/branding/inventory.md` - full asset inventory
-- doctrine `ark-ecosystem-identity.mdc` - agent enforcement

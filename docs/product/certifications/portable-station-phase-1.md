@@ -40,8 +40,8 @@ Edward can leave the Front Counter without leaving the operation - phone opens i
 
 ## Notes
 
-- Engineering ships API + Flutter orientation home; Operational requires Edward's device + floor 8:10 scenario.
-- Production FCM transport enabled 2026-06-27 (`demo-auto-ark-mobile`). See `docs/mobile/firebase-mobile-push-setup-doctrine-v1.md`.
+- Engineering ships API + Flutter orientation home. Operational certification needs a physical device and a real morning arrival.
+- Push setup: `docs/mobile/firebase-mobile-push-setup-doctrine-v1.md`.
 - Technician profile uses assigned RO items on orientation home (not Attention).
 
 ## Corrections

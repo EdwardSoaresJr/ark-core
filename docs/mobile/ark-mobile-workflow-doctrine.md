@@ -346,4 +346,4 @@ Do not optimize for feature count. Optimize for **uninterrupted shop workflow**.
 | [Production Workspace v1](./ark-mobile-production-workspace-v1.md) | Technician production surface - concerns, camera-first, tablet |
 | [Notification doctrine](./ark-mobile-notification-doctrine.md) | Poll-first; push deferred |
 | [Projection v1](./ark-mobile-projection-v1.md) | API transport layer |
-| doctrine `ark-mobile-workflow-doctrine.mdc` | doctrine enforcement |
+|  | enforcement |

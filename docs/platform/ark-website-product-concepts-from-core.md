@@ -30,4 +30,4 @@
 
 ## Lead handoff (future)
 
-Core keeps lead **authority**. Website should submit into Core (authenticated install webhook or Platform-mediated ingest) calling the same `LeadRecorder` path advisors/tests use today. Do not recreate a Core-hosted marketing lead form.
+Core keeps lead **authority**. Website should submit into Core through an authenticated install webhook calling the same `LeadRecorder` path advisors/tests use today. Do not recreate a Core-hosted marketing lead form.

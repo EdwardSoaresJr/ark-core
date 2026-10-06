@@ -1,6 +1,6 @@
 # ARK Operation Videos
 
-**Status:** Primary engineering artifact  
+**Status:** Primary engineering artifact
 **North star:** [operation-follows-operator-v1.md](../product/operation-follows-operator-v1.md)
 
 ---
@@ -60,10 +60,10 @@ Evolved gate:
 
 If the new recording has:
 
-- fewer interruptions  
-- fewer searches  
-- fewer forgotten steps  
-- fewer context switches  
+- fewer interruptions
+- fewer searches
+- fewer forgotten steps
+- fewer context switches
 
 …then the PR improved the product.
 
@@ -101,10 +101,9 @@ Doctrine explains *why*. Operation videos show *how this shop*.
 
 ## Onboarding (engineers)
 
-1. Watch `01-customer-arrival.mp4` and `06-shop-walk.mp4` minimum  
-2. Read [operation-follows-operator-v1.md](../product/operation-follows-operator-v1.md) (one page)  
-3. Read [CURRENT_MILESTONE.md](../engineering/CURRENT_MILESTONE.md)  
-4. Only then touch code  
+1. Watch `01-customer-arrival.mp4` and `06-shop-walk.mp4` minimum
+2. Read [operation-follows-operator-v1.md](../product/operation-follows-operator-v1.md) (one page)
+3. Only then touch code
 
 Skip the fifty-page doctrine tour until a specific decision requires it.
 
@@ -112,5 +111,5 @@ Skip the fifty-page doctrine tour until a specific decision requires it.
 
 ## Companions
 
-- [workflow-completion-certification.md](../engineering/workflow-completion-certification.md) - workflow checklists map to operations 01–06  
+- [workflow-completion-certification.md](../engineering/workflow-completion-certification.md) - workflow checklists map to operations 01–06
 - [certifications/README.md](../product/certifications/README.md) - formal sign-off when needed; videos are primary

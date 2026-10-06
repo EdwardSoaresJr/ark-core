@@ -85,7 +85,7 @@ If Edward answers from Companion, desktop, or desk phone, **Edward** owns the th
 
 **Freeze (Companion phase):** Do not extend workstation automation, IP inference, lock screens, or browser binding as comms ownership. Revisit only after Companion reaches production quality.
 
-Doctrine: doctrine `ark-advisor-communications-identity.mdc`
+The advisor owns the conversation. The station is optional context.
 
 ---
 
@@ -103,13 +103,15 @@ Every design decision begins with the product doctrine question above - optimize
 
 Companion shares authorities with ARKv2 (conversations, calls, repair orders, observations) but is optimized for **interrupt and recovery**, not for running the full shop floor.
 
+**UX benchmark:** OpenPhone / Quo interaction quality - inbox density, thread navigation, live call, push-first workflow.
+
 **ARK differentiation:** Every conversation surfaces customer, vehicle, active RO, estimate/inspection status, parts pressure, advisor ownership, and observations **inline** - communication first; operations available within communication.
 
 **Design philosophy:** Every tap should reduce uncertainty for the advisor - *what do they need to know before speaking?* - not a dump of every authority field.
 
 **Deep-link boundary (sacred):** Answering a customer → Companion. Sustained operational work (RO editing, parts, production, reporting, scheduling) → ARKv2.
 
-**Product frame:** ARK Companion organizes **advisor awareness**. It is not a phone-app clone and not a CRM.
+**Competitive frame:** OpenPhone organizes conversations; GHL organizes CRM records; shop software organizes repair orders. ARK Companion organizes **advisor awareness**.
 
 ---
 

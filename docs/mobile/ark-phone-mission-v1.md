@@ -1,7 +1,7 @@
 # ARK Phone Mission v1
 
 **Status:** Engineering doctrine - research before code  
-**Companions:** ark-phone-production-telephony-lock.mdc · [ark-voice-endpoint-architecture-v1.md](../communications/ark-voice-endpoint-architecture-v1.md) · `ark-mobile` repo
+**Companions:** [ark-voice-endpoint-architecture-v1.md](../communications/ark-voice-endpoint-architecture-v1.md) · `ark-mobile` repo. Production desk phones stay the baseline. The mobile app adapts to them.
 
 ---
 
@@ -74,7 +74,7 @@ Do **not** modify to make mobile work:
 - production PJSIP
 - production trunks
 
-Mobile must adapt to the PBX baseline. See ark-phone-production-telephony-lock.mdc.
+Mobile must adapt to the PBX baseline.
 
 **VVX first:** If mobile fails and VVX would succeed under the same conditions, the problem is in the mobile client until proven otherwise.
 
@@ -209,6 +209,6 @@ Repo: `ark-mobile` · transport: `ArkVoiceTransport` → `sip_ua` over WSS to sh
 
 ## Related certifications
 
-- VVX + ARK Phone: ark-phone-production-telephony-lock.mdc
+- A working desk phone is the baseline. The mobile app adapts to it.
 - Phone-first shop week: [phone-first-shop.md](../product/certifications/phone-first-shop.md)
 - Voice transport cert: [voice-transport.md](../product/certifications/voice-transport.md)

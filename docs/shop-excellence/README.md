@@ -8,7 +8,7 @@ This library captures:
 
 - Owner habits and financial discipline that ARK reinforces in product
 - KPI definitions and report mapping
-- Cursor/AI guardrails (see `.cursor/rules/ark-shop-excellence.mdc`)
+- How those habits show up in ARK reports
 
 ## Rules
 
@@ -24,8 +24,6 @@ docs/shop-excellence/
   owner-rhythm.md           # daily / weekly / Day Review habit
   daily-kpis.md             # preferred management KPIs
   shop-operating-playbook.md # shop-agnostic operating model and scoreboard definitions
-  lugs-n-plugs/             # pointer: targets live in Settings
-  private/                  # gitignored paid notes
   ark-mapping/              # KPI → ARK implementation
 ```
 
@@ -39,5 +37,3 @@ docs/shop-excellence/
 | Report KPIs | Operations → Operational Report |
 | Owner targets | Settings → Owner Targets |
 | Shop scoreboard | `/app/owner/scoreboard` (`?display=wall` for a monitor) |
-| AI builders | `.cursor/rules/ark-shop-excellence.mdc` |
-| Private notes | `private/` (gitignored) |

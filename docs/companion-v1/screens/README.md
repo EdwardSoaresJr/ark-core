@@ -46,5 +46,4 @@ Full inventory: [`../01-screen-inventory.md`](../01-screen-inventory.md)
 ## Sign-off gate
 
 - [x] P0 advisor + inspection specs drafted
-- [ ] Edward completes [`product-review/edward-sign-off-checklist.md`](../product-review/edward-sign-off-checklist.md) P0
 - [ ] Flutter follows [`08-flutter-build-order.md`](../08-flutter-build-order.md)

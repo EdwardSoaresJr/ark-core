@@ -165,4 +165,4 @@ Setup wiring: [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push
 - [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push-setup-doctrine-v1.md)
 - [ark-mobile-projection-v1.md](./ark-mobile-projection-v1.md)
 - [ark-mobile-communications-authority-contract.md](./ark-mobile-communications-authority-contract.md)
-- ark-pressure-first.mdc - observe before automate
+- Observe before automate

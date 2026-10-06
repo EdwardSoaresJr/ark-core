@@ -30,11 +30,11 @@ Owner mode in More · separate from Edward advisor tabs during counter hours
 
 ## Doctrine
 
-[`ark-shop-excellence.mdc`](../../../.cursor/rules/ark-shop-excellence.mdc) - workflow truth vs closed sales truth
+Workflow truth is not the same thing as closed sales truth.
 
 ---
 
-## Edward sign-off
+## Review
 
 - [ ] Distinct from advisor Home
 - [ ] Ready for Flutter

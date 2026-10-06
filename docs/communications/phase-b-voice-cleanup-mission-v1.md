@@ -34,7 +34,7 @@ If any code contradicts this model, assume obsolete until proven otherwise.
 | 1 | No new abstractions without two production implementations |
 | 2 | Keep **`ArkVoiceTransport`** - never rename to `AsteriskVoiceTransport` |
 | 3 | Delete - do not deprecate, wrap, or leave for later |
-| 4 | **No behavior changes** - cleanup only (see ark-cleanup-sprint-discipline.mdc) |
+| 4 | **No behavior changes** - cleanup only |
 
 ---
 
@@ -78,7 +78,7 @@ Run the shop after Phase B before deleting backend PV. See [voice-runtime-author
 
 **Not allowed:** Asterisk execution layer changes
 
-See [voice-runtime-inventory-v1.md](./voice-runtime-inventory-v1.md) for Core classification.
+See [voice-runtime-inventory-v1.md](./voice-runtime-inventory-v1.md) for arksmsv2 classification.
 
 ---
 

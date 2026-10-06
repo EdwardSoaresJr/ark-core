@@ -243,7 +243,7 @@ As a user with `settings.manage`:
 ## Production migration path (if POC succeeds)
 
 1. **Pilot** - One advisor workstation with `override.crt` + dev certs pointed at staging/local
-2. **Generate production pair** - Separate script invocation with production OU/CN; store PEMs on VPS outside `public/` (see `docs/printing/qz-certificate-investigation.md` paths)
+2. **Generate production pair** - Separate script invocation with production OU/CN; store PEMs outside `public/`
 3. **Env** - `QZ_CERTIFICATE_PATH` / `QZ_PRIVATE_KEY_PATH` on shared `.env`
 4. **Workstation rollout** - Install same ARK Root CA on each print PC (MSI/script/keychain profile)
 5. **Verify** - `GET /app/api/qz/sign-health` on production; print key tag on each machine
@@ -265,7 +265,5 @@ Do **not** copy `infra/qz-dev/certs/` to production verbatim - generate a produc
 
 ## Related docs
 
-- `docs/printing/qz-certificate-investigation.md` - production PEM deployment paths
-- `docs/printing/ark-sms-printing-audit.md` - V1 → V2 signing migration
 - `infra/qz-dev/generate-ark-printing-certs.sh` - dev cert generator
 - `infra/qz-dev/verify-ark-printing-certs.sh` - attribute verifier

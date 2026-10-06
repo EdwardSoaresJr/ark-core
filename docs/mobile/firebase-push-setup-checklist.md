@@ -1,16 +1,18 @@
-# Firebase push setup (transport only)
+# Firebase push setup - LugsNPlugs (transport only)
 
 **Doctrine:** [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push-setup-doctrine-v1.md)  
 **Cost:** Spark (free) plan only. Register apps + Cloud Messaging. Do not enable Blaze or add Firestore/Auth/Analytics.
+
+**Production status (2026-06-27):** Server push **operational** (`lugsnplugs-ark-mobile`, credentials in shop settings). **APNs `.p8` not yet uploaded** - iOS push pending. Android floor test next.
 
 ## App identifiers (copy into Firebase Console)
 
 | Platform | Identifier |
 |----------|------------|
-| Android | `com.example.ark_mobile` |
-| iOS | `com.example.arkMobile` |
+| Android | `com.lugsnplugs.ark_mobile` |
+| iOS | `com.lugsnplugs.arkMobile` |
 
-Suggested Firebase project ID: `example-ark-mobile` (any unique ID works).
+Suggested Firebase project ID: `lugsnplugs-ark-mobile` (any unique ID works).
 
 ---
 
@@ -35,18 +37,24 @@ Do **not** add Firestore, Authentication, or Functions.
 
 ## Part 2 - Run setup script (local Mac)
 
-From the Core checkout (expects `ark-mobile` as a sibling directory):
+From this repository (`ark-mobile` is a sibling checkout):
 
-Install the Firebase client files into the `ark-mobile` sibling checkout, then set:
-
-```text
-FIREBASE_CREDENTIALS=/app/storage/app/private/firebase-mobile-service-account.json
-FCM_ENABLED=true
+```bash
+./infra/scripts/firebase-mobile-push-setup.sh \
+  --project-id your-firebase-project \
+  --service-account ~/Downloads/firebase-adminsdk.json \
+  --google-services ~/Downloads/google-services.json \
+  --google-service-info ~/Downloads/GoogleService-Info.plist
 ```
 
-Confirm with `php artisan ark:mobile-push:verify`.
+If `ark-mobile` lives elsewhere, add `--ark-mobile-dir /path/to/ark-mobile`.
 
-Place the client config in `ark-mobile/android/app/` and `ark-mobile/ios/Runner/`. Keep the service-account JSON on the server, outside the image, and point `FIREBASE_CREDENTIALS` at the in-container path.
+This will:
+
+- Copy client config into `../ark-mobile/android/app/` and `../ark-mobile/ios/Runner/`
+- Copy the service account to `storage/app/private/` for local development
+
+Point `FIREBASE_CREDENTIALS` at that file on the server. Do not commit it.
 
 ---
 
@@ -61,19 +69,7 @@ flutter run   # or release build to device
 2. `POST /api/mobile/device` response: `push_registered: true`, `push_enabled: true`.
 3. Inbound SMS to shop → push notification → tap → conversation thread.
 
-**Settings UI:** Settings, Communications, Mobile.
-
----
-
-## Current status (LugsNPlugs)
-
-**Transport is live on production** as of 2026-06-27. `MobilePushSettings::current()->isOperational()` returns true.
-
-Remaining for full Portable Station operational cert:
-
-1. Upload APNs `.p8` to Firebase Console (iOS)
-2. Rebuild `ark-mobile` on physical device
-3. Advisor login + inbound SMS → push → tap → conversation (8:10 AM scenario)
+**Settings UI:** Settings → Communications → Mobile.
 
 ---
 

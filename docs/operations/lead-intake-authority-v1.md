@@ -383,7 +383,4 @@ Architecture gets simpler; business capability gets larger.
 
 ## Companion docs
 
-- `docs/deployment/demo-auto-public-surface-cutover-v1.md` - Botble → public surface cutover
 - `docs/communications-authority.md` - Conversation as relationship authority
-- `.cursor/rules/ark-no-encounters.mdc` - Encounter retired
-- `.cursor/rules/ark-pressure-first.mdc` - observe before automate

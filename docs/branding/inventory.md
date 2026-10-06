@@ -93,6 +93,7 @@ No login illustrations or background images were migrated (ARK-SMS apt-book `boo
 | Demo Auto Repair seed logo | `resources/seed-assets/operations/demo-auto-logo.webp` | Demo shop logo |
 | Laravel Breeze SVG | `components/application-logo.blade.php` | **Unused placeholder** |
 | Laravel welcome SVG | `welcome.blade.php` | **Orphaned** |
+| Design reference captures | local only, not in this repository | UX research |
 
 ---
 

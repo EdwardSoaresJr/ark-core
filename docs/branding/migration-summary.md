@@ -33,6 +33,7 @@
 - Shop-uploaded estimate/PDF logos (`shop_settings.logo_path`) - per-shop authority, not platform branding
 - CSS, colors, typography, layout structure
 - Text-only shop identity in customer estimate/invoice emails
+- Local design-reference captures are not part of this repository
 
 ## Verification checklist
 

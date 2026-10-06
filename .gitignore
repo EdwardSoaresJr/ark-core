@@ -1,19 +1,21 @@
 *.log
 .DS_Store
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
 .phpactor.json
 .phpunit.result.cache
 /.codex
-# Private IDE / agent workflow - not part of the public product.
-# Keep the Core identity rule and the punctuation rule cloneable so new Cursor sessions see them.
-/.cursor/*
-!/.cursor/rules/
-/.cursor/rules/*
-!/.cursor/rules/ark-canonical-repository.mdc
-!/.cursor/rules/ark-deploy.mdc
-!/.cursor/rules/ark-no-em-dash.mdc
+/.claude
+/.cursor/
+
+# Local design research. Not part of the public repository.
+/resources/design-reference/tekmetric/
+/resources/design-reference/autoleap/
+/docs/companion-v1/references/external/quo/
+/public/companion-preview/refs/
 /.idea
 /.nova
 /.phpunit.cache
@@ -44,6 +46,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+arksmsv2
 /apps/*/build/
 /apps/*/.dart_tool/
 /build/
@@ -63,3 +66,8 @@ Thumbs.db
 **/.flutter-plugins-dependencies
 .env.installer-bak
 .env.tmp
+*.dump
+*.sql.gz
+**/*firebase-adminsdk*.json
+**/google-services.json
+**/GoogleService-Info.plist

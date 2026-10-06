@@ -325,14 +325,14 @@ test('platform empty quote is not framed as a login failure', function () {
         return Http::response([
             'ok' => false,
             'reason_code' => 'partstech_provider_error',
-            'message' => 'PartsTech cart R1737 is open but has no parts to import. Add parts in PartsTech (signed in as edward@lugsnplugs.com), save the quote, then pull again.',
+            'message' => 'PartsTech cart R1737 is open but has no parts to import. Add parts in PartsTech (signed in as advisor@example.com), save the quote, then pull again.',
         ], 422);
     });
 
     $repairOrder = hostedPartsRepairOrder();
     $advisor = actingAsLearnCurrentAdvisor();
     $advisor->forceFill([
-        'partstech_username' => 'edward@lugsnplugs.com',
+        'partstech_username' => 'advisor@example.com',
         'partstech_password' => 'seat-password',
     ])->save();
 
@@ -341,7 +341,7 @@ test('platform empty quote is not framed as a login failure', function () {
         ->assertStatus(422)
         ->assertJsonPath(
             'message',
-            'PartsTech cart R1737 is open but has no parts to import. Add parts in PartsTech (signed in as edward@lugsnplugs.com), save the quote, then pull again.',
+            'PartsTech cart R1737 is open but has no parts to import. Add parts in PartsTech (signed in as advisor@example.com), save the quote, then pull again.',
         );
 });
 

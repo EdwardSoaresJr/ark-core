@@ -6,7 +6,7 @@ One ecosystem, multiple products. Users should recognize ARK in every browser ta
 
 | Product | Host / surface | Repo | Favicon status |
 |---------|----------------|------|----------------|
-| **ARK SMS** | `app.demo-auto.test`, `portal.demo-auto.test` | this repository | **Standard** - `Branding::favicon()` on all layouts |
+| **ARK SMS** | `app.demo-auto.test`, `portal.demo-auto.test` | `arksmsv2` → **`arksms`** (Phase 2) | **Standard** - `Branding::favicon()` on all layouts |
 | **ARKademy** | `learn.demo-auto.test` | BookStack theme: ARK favicon + `header-logo.blade.php` mark + cerulean colors |
 | **ARK-WEB** | `demo-auto.test` | `EdwardSoaresJr/arkweb` | **Audit required** - copy pack into `arkweb` public assets |
 | **Arkify** | `platform.autorepairkeeper.com` | Coolify (vendor) | **Manual** - instance branding / uploaded favicon |
@@ -51,7 +51,7 @@ Copy the ARK pack into arkweb only if a future **staff/admin** surface is added 
 
 ## Arkify / Coolify control plane
 
-Automated: `infra/branding/deploy-arkify-branding.sh` reapplies Arkify favicons after an upgrade.
+Automated: `infra/branding/deploy-arkify-branding.sh` → `/data/coolify/custom/ark-branding/`
 
 Guardrails cron re-applies layout patch and `docker cp` favicons after Coolify upgrades.
 
@@ -64,8 +64,6 @@ Guardrails cron re-applies layout patch and `docker cp` favicons after Coolify u
 | Login / header logo family | ARK transparent light | BookStack app name | Demo Auto Repair | Instance name |
 | Primary blue `#0099cc` | Ops chrome | BookStack + theme CSS | Shop theme | - |
 
-Run: `./infra/branding/verify-ecosystem-branding.sh`
-
 Ownership: `docs/branding/ownership.md`
 
 ## Future (not now)
@@ -74,4 +72,6 @@ Per-product accent on the **same** ARK mark (blue V2, teal ARKademy, purple Arki
 
 ## Branding enforcement
 
-Favicon, login, and cross-product head metadata stay on the shared ARK mark.
+Follow this document before changing favicons, login branding, or cross-product head metadata.
+
+Ecosystem UX (switcher, bridges, ARKademy landing): `docs/ecosystem/ecosystem-ux-doctrine.md`

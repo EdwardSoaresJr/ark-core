@@ -493,7 +493,7 @@ See [`ark-scoped-event-streams-v1.md`](../ecosystem/ark-scoped-event-streams-v1.
 
 | | |
 |--|--|
-| **Verdict** | Configuration (see `ark-authority-vs-configuration.mdc`) |
+| **Verdict** | Configuration. Authority is not a setting. |
 | **Source of truth** | `shop_settings`, telephony settings, owner targets |
 | **Must not** | Become operational truth - history test fails if settings rewrite past |
 | **Projections** | Settings surfaces, theme, business hours |
@@ -583,6 +583,7 @@ Not nav profiles - **different projection sets on different authorities**:
 | RO timeline projection | `OperationalTimeline` |
 | Workspace projection | `MobileCustomerWorkspaceProjection`, layout engine |
 | Shell (today) | `MobileUserPresenter` - **needs authority-aware redesign** |
+| Truth stack doctrine | `docs/ecosystem/ark-truth-stack-v1.md` |
 
 ---
 

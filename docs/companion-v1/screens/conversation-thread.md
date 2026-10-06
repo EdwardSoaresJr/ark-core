@@ -2,6 +2,7 @@
 
 **ID:** `companion.screen.conversation-thread`  
 **Role(s):** Advisor  
+**Craft notes:** [`references/external/quo.md`](../references/external/quo.md)
 **Status:** 📝 draft - Edward review
 
 ---
@@ -15,10 +16,10 @@ Read and reply in **one thread** with customer · vehicle · RO visible - send e
 ## Product quality gate
 
 
-| | ARK Companion |
-|---|---------------|
-| **Verdict** | **Target: Yes** |
-| **Why** | Identity strip + **shop Manage sheet** + quick actions on every message |
+| | Reference CRM | Quo | ARK Companion |
+|---|-----|-----|---------------|
+| **Verdict** | Unified timeline · CRM Manage sheet | Clean thread · minimal header | **Target: Yes** |
+| **Why** | Create Opportunity · Review request | No vehicle · RO · estimate | Identity strip + **shop Manage sheet** + quick actions on every message |
 
 ---
 
@@ -169,6 +170,8 @@ Link: [`../02-flows.md`](../02-flows.md#notification--customer-replied)
 ---
 
 
+
+**Quo gets right:** calm density · readable previews · shared inbox clarity
 
 **ARK adds:** vehicle + RO always in strip · shop Manage actions · estimate/pay/inspection quick row · system events from authority · **no CRM opportunity noise**
 

@@ -4,7 +4,7 @@
 
 If a page stops helping decisions, delete or rewrite it.
 
-**Companion rules:** ark-subsystem-lifecycle.mdc · ark-cleanup-sprint-discipline.mdc · ark-two-implementations.mdc
+**Companion rules:** A cleanup may rename, move, or delete. It does not change runtime behavior. One behavior has one implementation.
 
 ---
 
@@ -43,8 +43,6 @@ Evolution
 | **Converging** | Inventory · cleanup · architecture OK | Backend PV still loaded (Phase D) |
 | **Observing** | Frozen · logs · bug fixes only | **Mobile + floor certification** |
 | **Evolving** | Features after baseline trust | Not yet |
-
-See ark-subsystem-lifecycle.mdc.
 
 ---
 

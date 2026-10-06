@@ -1,9 +1,7 @@
-# Flutter build order - after Edward sign-off
+# Flutter build order
 
 > **Superseded for product guidance** by [`MISSION.md`](MISSION.md) milestone model (Inbox → Thread → Calling → …).  
 > Kept for historical slice tracking and API reference.
-
-**Do not start until:** [`product-review/edward-sign-off-checklist.md`](product-review/edward-sign-off-checklist.md) P0 ✅
 
 **Build from:** [`screens/`](screens/) + [`07-api-projection-backlog.md`](07-api-projection-backlog.md)  
 **Legacy UI:** frozen - [`frozen-flutter-ui.md`](frozen-flutter-ui.md)  

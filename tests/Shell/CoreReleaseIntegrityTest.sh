@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-# Release context is the commit. LugsNPlugs only moves forward.
+# Release context is the commit.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 MATERIALIZE="$ROOT/scripts/materialize-core-release-context.sh"
-FORWARD="$ROOT/scripts/assert-lnp-core-forward.sh"
 PUBLISH="$ROOT/infra/build-runner/mac/publish-ghcr-ark.sh"
 CLEAN="$ROOT/scripts/assert-core-worktree-clean.sh"
 PUBLISHED="$ROOT/scripts/assert-core-source-published.sh"
 IMAGE_REF="$ROOT/scripts/assert-lnp-core-image-ref.sh"
-VERIFY="$ROOT/scripts/verify-lnp-core-release.sh"
 WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/ark-release-integrity-XXXXXX")"
 trap 'rm -rf "$WORKDIR"' EXIT
 
@@ -102,17 +100,6 @@ git -C "$FIXTURE" add app/a.php
 git -C "$FIXTURE" -c user.email=release@example.com -c user.name=release commit -m side >/dev/null
 side="$(git -C "$FIXTURE" rev-parse HEAD)"
 
-LNP_RUNNING_COMMIT="$base" "$FORWARD" --repo "$FIXTURE" "$child" >/dev/null || fail "descendant was refused"
-if LNP_RUNNING_COMMIT="$child" "$FORWARD" --repo "$FIXTURE" "$base" >/dev/null 2>&1; then
-  fail "ancestor deploy was allowed"
-fi
-if LNP_RUNNING_COMMIT="$child" "$FORWARD" --repo "$FIXTURE" "$side" >/dev/null 2>&1; then
-  fail "sideways deploy was allowed"
-fi
-if LNP_RUNNING_COMMIT="$child" "$FORWARD" --repo "$FIXTURE" "$child" >/dev/null 2>&1; then
-  fail "same commit was treated as forward"
-fi
-
 bare="$WORKDIR/origin.git"
 git init --bare -b main "$bare" >/dev/null
 git -C "$FIXTURE" remote add origin "$bare"
@@ -139,29 +126,6 @@ if "$IMAGE_REF" "ghcr.io/edwardsoaresjr/ark-core:${child}" >/dev/null 2>&1; then
 fi
 if "$IMAGE_REF" "ghcr.io/edwardsoaresjr/ark@sha256:$(printf 'b%.0s' {1..64})" >/dev/null 2>&1; then
   fail "wrong repository was allowed"
-fi
-
-LNP_VERIFY_OFFLINE=1 \
-  LNP_OBSERVED_COMMIT="$child" \
-  LNP_OBSERVED_IMAGE="$good_image" \
-  LNP_OBSERVED_STATUS="running" \
-  LNP_OBSERVED_UP="200" \
-  "$VERIFY" --repo "$FIXTURE" "$child" "$good_image" >/dev/null || fail "matching release verification was refused"
-if LNP_VERIFY_OFFLINE=1 \
-  LNP_OBSERVED_COMMIT="$base" \
-  LNP_OBSERVED_IMAGE="$good_image" \
-  LNP_OBSERVED_STATUS="running" \
-  LNP_OBSERVED_UP="200" \
-  "$VERIFY" --repo "$FIXTURE" "$child" "$good_image" >/dev/null 2>&1; then
-  fail "wrong running source passed verification"
-fi
-if LNP_VERIFY_OFFLINE=1 \
-  LNP_OBSERVED_COMMIT="$child" \
-  LNP_OBSERVED_IMAGE="$good_image" \
-  LNP_OBSERVED_STATUS="running" \
-  LNP_OBSERVED_UP="500" \
-  "$VERIFY" --repo "$FIXTURE" "$child" "$good_image" >/dev/null 2>&1; then
-  fail "failed /up passed verification"
 fi
 
 echo "Core release integrity ok"

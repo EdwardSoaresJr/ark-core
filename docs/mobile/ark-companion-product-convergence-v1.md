@@ -25,7 +25,7 @@ Desktop users **browse**. Phone users **react**.
 
 **Out of scope:** Voice Phase D backend cleanup - voice subsystem remains **Observing**.
 
-**Companions:** [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md) · doctrine `ark-staff-product-constitution.mdc`
+**Companions:** [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md)
 
 ---
 
@@ -453,7 +453,7 @@ Landon never opens Customers.
 
 Corrections incorporated above. No Flutter until Phase 1 contract frozen.
 
-### Phase 1 - Backend projection (Core)
+### Phase 1 - Backend projection (arksmsv2)
 
 | Work | Notes |
 |------|-------|
@@ -516,7 +516,7 @@ Once you stop thinking in pages and modules, the next thing to stop thinking in 
 
 **Goal:** One event vocabulary - mobile, desktop, notifications, voice, PTT - instead of each inventing its own model.
 
-**Existing foundation (Core):**
+**Existing foundation (arksmsv2):**
 
 - `OperationalEventEntry` + mappers (`CommunicationEvent`, `CallSession`, `ConversationMessage`, …)
 - `OperationalEventRecorder` / `CommunicationEventRecorder`

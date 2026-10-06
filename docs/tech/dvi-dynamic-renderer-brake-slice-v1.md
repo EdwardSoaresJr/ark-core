@@ -34,4 +34,4 @@ Login shell: `theme.accent_theme` added beside `display_mode` / `accent_color`.
 15–18. Theme from ARK login; semantic Good/Monitor/Needs Attention colors are fixed. **Yes.**
 19. One primary action: Save & Next. **Yes.**
 
-Floor cert: `docs/tech/hardware-learning-log.md`.
+Floor cert: run the brake slice on the tablet the technician actually carries.

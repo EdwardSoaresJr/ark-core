@@ -23,7 +23,6 @@ return [
     | Authoritative shop media should use this disk name in application code
     | once stores are cut over. Default remains "local" (storage/app/private).
     | Hosted: set ARK_MEDIA_DISK=s3 and configure the s3 disk for R2/S3.
-    | See docs/deployment/ark-complete-hosted-storage-doctrine-v1.md
     |
     */
     'media_disk' => env('ARK_MEDIA_DISK', 'local'),

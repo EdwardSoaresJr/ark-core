@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>What you are deploying</h3>
-    <p><strong>ARK Mobile</strong> is the Flutter staff app for advisors and technicians on the lot. Package ID: <code>com.lugsnplugs.ark_mobile</code>. It talks to the same ARK backend as desktop - API host is the shop operations URL (LugsNPlugs: <code>https://lugsnplugs.arksms.com</code>).</p>
+    <p><strong>ARK Mobile</strong> is the Flutter staff app for advisors and technicians on the lot. Package ID: <code>com.lugsnplugs.ark_mobile</code>. It talks to the same ARK backend as desktop. The API host is the shop operations URL.</p>
     <p>This guide covers getting a <strong>native Android build</strong> onto shop devices. OBD / iCar Pro scanning requires the installed app - it does not work in a mobile browser.</p>
 
     <h3>Recommended path - sideload release APK</h3>

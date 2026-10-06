@@ -12,8 +12,6 @@
 
 Do **not** edit frozen Conversations doctrine for wording polish. Enforce alignment here and in companion doctrine.
 
-**Doctrine: ** doctrine `ark-communications-workspace-guardrail.mdc`
-
 ---
 
 ## Design bar (read first)
@@ -84,7 +82,7 @@ Conversation
 
 The conversation is below the operational context, not above it.
 
-ARK centers relationship and work state. The conversation is the supporting story.
+That is the biggest difference between ARK and OpenPhone: OpenPhone centers the message stream; ARK centers relationship + work state, with conversation as supporting story.
 
 ---
 
@@ -198,7 +196,7 @@ Same renderer. Different filter. Chronology organizes the story panel. Transport
 
 ## Left list is not a CRM
 
-Borrow interaction patterns when they help the advisor. **Do not inherit CRM concepts.**
+Borrow interaction patterns from products like OpenPhone / GHL when useful. **Do not inherit CRM concepts.**
 
 The left list remains a **customer relationship list**:
 
@@ -282,7 +280,7 @@ Reject any PR that introduces:
 | --- | --- |
 | [ark-conversations-v1.md](../communications/ark-conversations-v1.md) | Frozen product doctrine (The Six Ones) - do not reword for this guardrail |
 | [communications-foundational-doctrine-v1.md](../communications/communications-foundational-doctrine-v1.md) | Frozen authorities + transport doctrine (bounded context name may remain Communications) |
-| ark-attention-queue.mdc | Attention is recovery triage - not a channel inbox |
-| ark-comms-call-surfaces-lock.mdc | Calls & VM evidence library stays discoverable |
-| ark-projection-rule.mdc | RO / customer surfaces project conversation - never become authority |
-| ark-advisor-communications-identity.mdc | Advisor owns the conversation; station is optional metadata |
+| Attention queue | Attention is recovery triage - not a channel inbox |
+| Comms call surfaces lock | Calls & VM evidence library stays discoverable |
+| Projection rule | RO / customer surfaces project conversation - never become authority |
+| Advisor communications identity | Advisor owns the conversation; station is optional metadata |

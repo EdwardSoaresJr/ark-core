@@ -11,7 +11,7 @@ Core is the shop operating system: repair orders, customers, communications, por
 
 Marketing website, SEO, Growth marketing tools, and the website **editor UI** are **not** Core.
 
-Core may hold website **records** (sites, drafts, publications) and a signed read API so Platform and Foundry can use shop identity without a second editor in Core.
+Core may hold website **records** (sites, drafts, publications) and a signed read API so another product can read shop identity without a second editor in Core.
 
 ## What stays in Core (KEEP)
 

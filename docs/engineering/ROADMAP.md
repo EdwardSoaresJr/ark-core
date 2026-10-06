@@ -1,6 +1,6 @@
 # Engineering Roadmap
 
-High-level engineering milestones for ARK Voice endpoint infrastructure. No implementation details - see [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md) and [ACTIVE_PR.md](ACTIVE_PR.md) for active work.
+High-level engineering milestones for ARK Voice endpoint infrastructure.
 
 ---
 

@@ -1,7 +1,7 @@
 # ARK Mobile - Android release deploy
 
-**App ID:** `com.lugsnplugs.ark_mobile`  
-**API default:** shop operations origin (`APP_URL` / pairing). LugsNPlugs: `https://lugsnplugs.arksms.com`  
+**App ID:** `com.lugsnplugs.ark_mobile`
+**API default:** shop operations origin (`APP_URL`).
 **Repo:** `ark-mobile` (Flutter)
 
 Release signing lives in `android/app/build.gradle.kts`. With `android/key.properties` present, release builds use the upload keystore. Without it, release falls back to debug keys (USB floor test only - not Play Store).

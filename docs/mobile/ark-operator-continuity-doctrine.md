@@ -169,6 +169,6 @@ Do **not** build more notification features. Build continuity surfaces.
 ## Companions
 
 - [ark-mobile-notification-doctrine.md](./ark-mobile-notification-doctrine.md) - transport boundary
-- ark-observations.mdc - observation vocabulary
-- ark-projection-rule.mdc - compute once, render many
-- ark-orientation-pattern.mdc - briefing before action
+- Observation is interpretive vocabulary, not a second store of truth
+- Compute once, render many
+- Brief before asking the operator to act

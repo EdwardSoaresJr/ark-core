@@ -156,5 +156,3 @@ Infrastructure PRs name **which operation** they unblock.
 
 - [operations/README.md](../operations/README.md) - **start here for engineers**
 - [phone-first-shop.md](../product/certifications/phone-first-shop.md)
-- [CURRENT_MILESTONE.md](./CURRENT_MILESTONE.md)
-- [ACTIVE_PR.md](./ACTIVE_PR.md)

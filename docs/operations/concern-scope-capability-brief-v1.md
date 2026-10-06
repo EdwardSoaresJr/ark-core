@@ -90,7 +90,7 @@ After the slice ships: write ~10 real repair orders.
 - Feels natural → earn foundational status (doctrine / close later).
 - Still fights → refine from floor pressure before committing the platform.
 
-No doctrine `.mdc` until that evidence.
+Do not add a separate rule until that evidence.
 
 ---
 

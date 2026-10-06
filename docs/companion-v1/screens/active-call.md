@@ -2,6 +2,7 @@
 
 **ID:** `companion.screen.active-call`  
 **Role(s):** Advisor  
+**Craft notes:** [`references/external/quo.md`](../references/external/quo.md)
 **Status:** 📝 draft - Edward review
 
 ---

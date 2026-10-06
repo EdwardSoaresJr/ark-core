@@ -1,7 +1,6 @@
 # ARK Staff - Shop Posture Audit v3
 
 **Status:** **Frozen** - philosophy complete. Implement against [`ark-staff-product-constitution-v1.md`](ark-staff-product-constitution-v1.md).  
-**Rule:** doctrine `ark-staff-product-constitution.mdc`
 
 **Standing review criterion (every ARK Staff UI change):**
 
@@ -52,7 +51,7 @@ We are **designing ARK**, not reacting to reference CRM.
 |---------|---------|
 | **Screen** | Wrong design unit |
 | **State** | What the operator walks into (*slammed* · *caught up* · *everyone waiting on me*) |
-| **Observation** | Interpretive truth - what happened and why it matters (`ark-observations.mdc`) |
+| **Observation** | Interpretive truth - what happened and why it matters () |
 | **Posture** | How that reads to a human - at shop, station, or workspace scope |
 
 **Do not add "Moments" as a layer.**  

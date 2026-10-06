@@ -1,10 +1,10 @@
 # ark-mobile Voice Cleanup Inventory v1
 
-**Status:** B1 ✅ · **B2 ✅ (ark-mobile)** - pending commit  
-**Report:** [ark-mobile-voice-runtime-authority-report-v1.md](../mobile/ark-mobile-voice-runtime-authority-report-v1.md)  
-**Date:** 2026-07-04  
-**Repo:** `ark-mobile` (sibling checkout, not redistributed)  
-**Mission (architecture):** [phase-b-voice-cleanup-mission-v1.md](../communications/phase-b-voice-cleanup-mission-v1.md) · **Runtime:** [../runtime/voice-runtime-authority.md](../runtime/voice-runtime-authority.md)  
+**Status:** B1 ✅ · **B2 ✅ (ark-mobile)** - pending commit
+**Report:** [ark-mobile-voice-runtime-authority-report-v1.md](../mobile/ark-mobile-voice-runtime-authority-report-v1.md)
+**Date:** 2026-07-04
+**Repo:** `private ark-mobile sibling (not redistributed)` (sibling to `arksmsv2`)
+**Mission (architecture):** [phase-b-voice-cleanup-mission-v1.md](../communications/phase-b-voice-cleanup-mission-v1.md) · **Runtime:** [../runtime/voice-runtime-authority.md](../runtime/voice-runtime-authority.md)
 **Sprint (evidence):** [communications-voice-cleanup-sprint-v1.md](../communications/communications-voice-cleanup-sprint-v1.md)
 
 ---
@@ -17,7 +17,7 @@
 - [x] **Zero Unknown rows**
 - [x] Reviewer approves B2 scope
 
-**B1 rule observed:** No code changes in ark-mobile or Core.
+**B1 rule observed:** No code changes in ark-mobile or arksmsv2.
 
 ---
 
@@ -41,7 +41,7 @@ sip_ua (+ flutter_webrtc)         pubspec.yaml · package:sip_ua
 Asterisk (WSS REGISTER/INVITE)    Session from POST /api/mobile/telephony/voice-session
         │
         ▼
-Twilio Elastic SIP Trunk          Core backend only - not referenced in ark-mobile code
+Twilio Elastic SIP Trunk          arksmsv2 backend only - not referenced in ark-mobile code
 ```
 
 **Production proof (backend issues `transport: ark_voice` only today):**
@@ -271,7 +271,7 @@ Mechanical only. Each PR ends with `Behavior changes: 0`.
 
 ---
 
-## Core backend (Phase B2 - separate track)
+## arksmsv2 backend (Phase B2 - separate track)
 
 Not inventoried row-by-row in this document. Pre-classified in [voice-runtime-inventory-v1.md](../communications/voice-runtime-inventory-v1.md).
 
@@ -290,5 +290,3 @@ Deleted: XX files
 Renamed: XX symbols
 Behavior changes: 0
 ```
-
-See ark-cleanup-sprint-discipline.mdc.

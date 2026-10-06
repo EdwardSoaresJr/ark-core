@@ -6,7 +6,6 @@
 **Runtime authority:** [docs/runtime/voice-runtime-authority.md](../runtime/voice-runtime-authority.md) · [runtime catalog](../runtime/README.md)  
 **Hard rule:** Zero change in production telephony behavior until each phase explicitly says otherwise (dialplan, PJSIP, VVX, trunk routing, registration, call routing, Twilio trunk).
 
-**Platform rules:** ark-two-implementations.mdc · ark-cleanup-sprint-discipline.mdc
 
 ---
 
@@ -443,7 +442,7 @@ Delete multi-transport selection (`VoiceTransport` interface, `TwilioVoiceTransp
 
 ### Phase B1 - Inventory (no code changes)
 
-Walk the entire **ark-mobile** repo (sibling checkout). **Zero code changes.** Deliverable: [ark-mobile-voice-cleanup-inventory-v1.md](../mobile/ark-mobile-voice-cleanup-inventory-v1.md).
+Walk the entire **ark-mobile** repo (sibling to `arksmsv2`). **Zero code changes.** Deliverable: [ark-mobile-voice-cleanup-inventory-v1.md](../mobile/ark-mobile-voice-cleanup-inventory-v1.md).
 
 Search terms (minimum):
 
@@ -564,7 +563,7 @@ Exactly zero - not expected. Cannot honestly write that line → different sprin
 2. Prove app builds, APK launches, voice path unchanged
 3. **Then** remove from `pubspec.yaml`
 
-Forbidden in B2: architecture, SIP fixes, registration work, UI redesign, backend changes in `Core`.
+Forbidden in B2: architecture, SIP fixes, registration work, UI redesign, backend changes in `arksmsv2`.
 
 ### Phase B acceptance (engineering - 30 second test)
 
@@ -620,7 +619,7 @@ Nothing else. No enums. No transport switching. No factories. No provider select
 ### Sequencing (locked)
 
 ```text
-Phase A     ✅  UI vocabulary (Core)
+Phase A     ✅  UI vocabulary (arksmsv2)
 Phase A½    ✅  Dead owner language (learn + TelephonyHealth)
 ────────────────────────────────────────
 Phase B     ✅  ark-mobile runtime collapse
@@ -631,7 +630,7 @@ Stabilize       ≥1 uneventful business week - no telephony commits
 ────────────────────────────────────────
 Baseline frozen ← known-good date in voice-baseline-v1.md
 ────────────────────────────────────────
-Phase C         Call Routing Policy (Core)
+Phase C         Call Routing Policy (arksmsv2)
 ────────────────────────────────────────
 Phase D         Delete backend PV runtime (one-way door; rollback closed)
 ```
@@ -666,7 +665,7 @@ Phase D         Delete backend PV runtime (one-way door; rollback closed)
 
 - Single production path: **`ArkVoiceTransport`** (not `AsteriskVoiceTransport`)
 - Remove Twilio mobile SDK and all transport selection
-- **No** Core backend provider collapse in this phase
+- **No** arksmsv2 backend provider collapse in this phase
 
 **Acceptance:** 30-second engineer test (Flutter section); floor unchanged; VVX unchanged.
 

@@ -9,8 +9,6 @@ Architecture documents are **reviewed**. Implementation documents are **updated*
 | `ARCHITECTURE.md` | Architecture review required |
 | `adr/` | Immutable once accepted - supersede, never edit |
 | `STANDARDS.md` | Architecture review required |
-| `CURRENT_MILESTONE.md` | Keep current and short |
-| `ACTIVE_PR.md` | Keep current and short |
 
 Treat `docs/engineering/adr/` and permanent architecture docs like a core domain model: almost never change without intentional architecture review. A CODEOWNERS rule (or team convention) should protect these paths.
 
@@ -76,7 +74,7 @@ Friction notebook: [forge-observation-notebook.md](research/forge-observation-no
 
 ## Customer shell contract
 
-**Status:** Stable - do not revisit without compelling reason. Product doctrine: [ark-website-doctrine-v1.md](../platform/ark-website-doctrine-v1.md).
+**Status:** Stable - do not revisit without compelling reason. Product boundary: [ark-core-website-boundary.md](../platform/ark-core-website-boundary.md).
 
 **Rule:** No customer-facing page may bypass `x-customer.shell` without an **explicit documented exception** in the PR.
 
@@ -96,7 +94,7 @@ Delegates are allowed - they must render through the shell:
 
 **Vocabulary:** Customer UI uses Sign In, My Account, My Vehicles, My Repairs, My Estimates. `portal.*` routes and `Portal*` classes are implementation detail - not customer copy.
 
-**When customer-shell work is allowed** (otherwise → Growth lane; see [CURRENT_MILESTONE.md](CURRENT_MILESTONE.md)):
+**When customer-shell work is allowed:**
 
 1. A page violates the shell contract
 2. Production visual drift between anonymous and authenticated states

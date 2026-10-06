@@ -505,7 +505,7 @@ Prioritized fixes - behavior preserved, substrate aligned.
 ### Phase 0 - Document + lint (this PR)
 
 - [x] This constitution in `docs/ark-v2-interface-constitution.md`
-- [x] Doctrine pointer: `ark-interface-constitution.mdc` → link here + PR checklist
+- [x] This document is the public interface constitution
 
 ### Phase 1 - Shared components (1–2 passes)
 

@@ -20,7 +20,7 @@ ARK V2's job: **achieve parity** - not invent a better printing system.
 
 Same discipline as Financial Authority and Labor Authority: audit proven behavior, port authority boundaries, verify parity, then refine.
 
-**No QZ code in V2 until** `docs/printing/ark-sms-printing-audit.md` status is `AUDITED` (completed 2026-06-06 from production server).
+Match the labels the shop already prints. Do not redesign them during the port.
 
 Printing is **not** a convenience feature, UI feature, or document feature - it is **operational infrastructure** in the same class as invoices, payments, and estimate PDFs.
 

@@ -17,7 +17,7 @@
 
 **Audit inventory:** [workspace-surface-audit-v1.md](../operations/workspace-surface-audit-v1.md)
 
-**Active retirements (Phase 1):** Comms Inbox/History/Workboard routes → Attention; ops rail admin links → Settings; legacy conversation reply page → Attention thread. **Next:** Observation Sprint - [floor-observations-july-2026.md](../operations/floor-observations-july-2026.md).
+**Active retirements (Phase 1):** Comms Inbox/History/Workboard routes → Attention; ops rail admin links → Settings; legacy conversation reply page → Attention thread.
 
 **Rule:** Before shipping a new workspace route, name what surface becomes simpler. If nothing - do not ship the page.
 

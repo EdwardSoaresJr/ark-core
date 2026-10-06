@@ -1,6 +1,12 @@
 .git
 .github
 .cursor
+.claude
+.codex
+resources/design-reference/tekmetric
+resources/design-reference/autoleap
+docs/companion-v1/references/external/quo
+public/companion-preview/refs
 node_modules
 /vendor
 !public/vendor

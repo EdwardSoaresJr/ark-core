@@ -2,6 +2,7 @@
 
 **ID:** `companion.screen.global-search`  
 **Role(s):** Advisor · Owner  
+**Craft notes:** [`references/external/quo.md`](../references/external/quo.md)
 **Status:** 📝 draft - Edward review
 
 ---
@@ -14,10 +15,10 @@
 
 ## Product quality gate
 
-| | ARK Companion |
-|---|---------------|
-| **Verdict** | **Target: Yes** |
-| **Why** | **Command palette for the shop** - results are **actions**, not just records |
+| | Reference CRM | Quo | ARK Companion |
+|---|-----|-----|---------------|
+| **Verdict** | "Search across all Apps" · launcher | Contact/number search | **Target: Yes** |
+| **Why** | CRM app grid | No RO · pay · schedule from search | **Command palette for the shop** - results are **actions**, not just records |
 
 ---
 
@@ -153,5 +154,5 @@ Link: [`../02-flows.md`](../02-flows.md#search--act-emma)
 
 ## Edward sign-off
 
-- [ ] Find the customer, open the repair order, and take payment without hunting
+- [ ] Faster than Quo for "find Emma's RO and take payment"
 - [ ] Ready for Flutter

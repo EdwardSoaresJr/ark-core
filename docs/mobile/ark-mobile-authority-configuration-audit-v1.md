@@ -1,10 +1,9 @@
 # ARK Mobile - Authority vs Configuration Audit v1
 
-**Status:** Observation artifact - not a backlog  
-**Date:** 2026-06-15  
-**Doctrine:** doctrine `ark-authority-vs-configuration.mdc`  
-**Companion:** [ark-mobile-projection-v1.md](ark-mobile-projection-v1.md) · [ark-mobile-migration-audit-v1.md](ark-mobile-migration-audit-v1.md)  
-**Flutter repo:** `ark-mobile` (sibling checkout)  
+**Status:** Observation artifact - not a backlog
+**Date:** 2026-06-15
+**Companion:** [ark-mobile-projection-v1.md](ark-mobile-projection-v1.md) · [ark-mobile-migration-audit-v1.md](ark-mobile-migration-audit-v1.md)
+**Flutter repo:** `ark-mobile` (sibling to `arksmsv2`)
 **Backend shell:** `app/Ark/Mobile/MobileUserPresenter.php` → `GET /api/mobile/me`
 
 ---
@@ -97,130 +96,130 @@ Repeated pattern → earned change. **Observe first.** No shop-specific mobile c
 
 ### O1 - Visit mode labels hardcoded in Flutter
 
-**Observation**  
+**Observation**
 `check_in_screen.dart` defines Waiting, Drop-off, Shuttle, Tow-in chips with fixed labels and values. Web intake may already reflect shop vocabulary from Settings.
 
-**Doctrine impact**  
+**Doctrine impact**
 Configuration not projected from authority/settings. Shops that rename visit language or disable modes would still see mobile defaults.
 
-**Decision**  
+**Decision**
 Observe until intake/mobile usage (advisors, counter) proves vocabulary mismatch matters. Do not build mobile intake config UI until then.
 
 ---
 
 ### O2 - Customer type / billing class absent on mobile check-in
 
-**Observation**  
+**Observation**
 `MobileIntakeStoreController` accepts `billing_class` from `ShopSettings::customerTypeRows()`. Flutter check-in never collects or displays it.
 
-**Doctrine impact**  
+**Doctrine impact**
 Shop intake behavior exists in authority/settings but is not projected to mobile. Mobile intake may create incomplete customer records vs web.
 
-**Decision**  
+**Decision**
 Observe whether mobile check-in is used for full intake or quick capture only. Compare to web intake adoption before projecting customer type rows.
 
 ---
 
 ### O3 - Bottom nav labels and order are compile-time
 
-**Observation**  
+**Observation**
 `home_shell.dart` uses fixed tab order and English labels. Capabilities gate visibility; presentation does not.
 
-**Doctrine impact**  
+**Doctrine impact**
 Partial compliance - visibility is capability-driven; vocabulary and order are configuration leaks.
 
-**Decision**  
+**Decision**
 Observe. Rename/order only matters if shops disagree on nav semantics or non-English floor language becomes a requirement.
 
 ---
 
 ### O4 - Attention tab shown when capability is false
 
-**Observation**  
+**Observation**
 Fourth tab always renders. When `capabilities.attention` is false, content is `NotificationsScreen` but label remains "Attention".
 
-**Doctrine impact**  
+**Doctrine impact**
 Technician mental model may not match tab name. Configuration/semantics leak, not authority leak.
 
-**Decision**  
+**Decision**
 Observe with Landon (technician) and advisors - does the label confuse daily use? Fix presentation only if observation proves friction.
 
 ---
 
 ### O5 - Coarse `intake` capability vs finer endpoint gates
 
-**Observation**  
+**Observation**
 Shell shows Check-in when `intake` is true (`repair_orders.manage`). Customer or vehicle create may 403 without `customers.manage` / `vehicles.manage`.
 
-**Doctrine impact**  
+**Doctrine impact**
 Capabilities partially correct; bundle coherence leak. Future shops with custom permission matrices may hit silent failures.
 
-**Decision**  
+**Decision**
 Observe permission shapes in production roles. If no shop splits intake permissions, document bundle as intentional. Split shell capabilities only if repeated 403s appear in support/observation.
 
 ---
 
 ### O6 - Poll and push hints ignored in Flutter
 
-**Observation**  
+**Observation**
 Backend returns `poll_after_seconds` and `push_enabled` on attention, notifications, and device register. Flutter hardcodes 45s polling; push registration is stubbed; `AttentionFeed.pushEnabled` unused.
 
-**Doctrine impact**  
+**Doctrine impact**
 Configuration exists server-side but is not consumed - same class of leak as telephony before settings wiring, but mobile push **settings** already exist server-side.
 
-**Decision**  
+**Decision**
 Observe push vs poll reliance on floor. Wire transport only when mobile push settings are enabled <strong>and</strong> observation proves polling failed - per notification doctrine. Do not wire <code>firebase_messaging</code> in Flutter preemptively.
 
 ---
 
 ### O7 - No shop-level mobile surface toggles
 
-**Observation**  
+**Observation**
 Unlike `mobile_push`, there is no Settings control to disable mobile intake, comms, or attention per shop. Visibility is entirely Spatie permissions.
 
-**Doctrine impact**  
+**Doctrine impact**
 Fails deploy test for *shop preference* (two shops disabling a surface without permission surgery). May be acceptable if mobile is always permission-gated platform-wide.
 
-**Decision**  
+**Decision**
 Observe. Do **not** build shop mobile configuration screens until repeated sentences prove shops want different mobile surfaces. Pressure First / Authority Adoption apply.
 
 ---
 
 ### O8 - Call rows inattention deep links
 
-**Observation**  
+**Observation**
 `MobileAttentionProjection` can emit `deep_link: 'call'`. Flutter `AttentionScreen` handles repair order and conversation only.
 
-**Doctrine impact**  
+**Doctrine impact**
 Projection emitted but not consumed. Incomplete mobile attention recovery for calls.
 
-**Decision**  
+**Decision**
 Observe whether advisors attempt call actions from mobile attention. Hide call rows or implement handling only when mobile call UX is in scope - not parallel to desk pop authority.
 
 ---
 
 ### O9 - Demo Auto Repair compile-time defaults in ark-mobile
 
-**Observation**  
+**Observation**
 Default API URL, debug login prefill, Android bundle id, and demo data reference Demo Auto Repair. Not runtime tenant branching.
 
-**Doctrine impact**  
+**Doctrine impact**
 Product/deployment posture - not shop configuration. Matters for Shop #2 onboarding and Arkify builds, not for Authority vs Configuration per se.
 
-**Decision**  
+**Decision**
 Observe at second-shop provisioning. Neutral defaults + build flavors when fleet grows; no urgency for single-shop floor.
 
 ---
 
 ### O10 - `quick_actions` vs shell capabilities divergence
 
-**Observation**  
+**Observation**
 `MobileRepairOrderProjection` / `MobileConcernProjection` expose `quick_actions.add_finding`; Flutter gates on shell `capabilities.findings` instead.
 
-**Doctrine impact**  
+**Doctrine impact**
 Two authority surfaces for the same question. Drift risk if they disagree.
 
-**Decision**  
+**Decision**
 Observe. Prefer single projection source when next mobile RO/concern pass touches compose affordances - not a standalone project.
 
 ---

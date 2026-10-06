@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# LugsNPlugs Core deploys by immutable digest. Floating tags are refused.
+# Core images are pinned by immutable digest. Floating tags are refused.
 set -euo pipefail
 
 ref="${1:-}"
@@ -14,6 +14,6 @@ if [[ "$ref" =~ ^ghcr.io/edwardsoaresjr/ark-core@sha256:[0-9a-f]{64}$ ]]; then
   exit 0
 fi
 
-echo "REFUSING: LugsNPlugs Core must be pinned to ghcr.io/edwardsoaresjr/ark-core@sha256:<digest>." >&2
+echo "REFUSING: Core must be pinned to ghcr.io/edwardsoaresjr/ark-core@sha256:<digest>." >&2
 echo "Refused: ${ref}" >&2
 exit 1

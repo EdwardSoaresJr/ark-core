@@ -5,8 +5,6 @@
  *
  * Provisioning reads these values; operators never configure them in UI.
  * Desk phones register to Twilio Elastic SIP - not a shop PBX.
- *
- * @see docs/platform/shop-identity-v1.md
  */
 return [
 

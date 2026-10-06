@@ -2,7 +2,7 @@
 
 **Status:** Frozen baseline (2026-06-26)  
 **Supersedes:** ad-hoc provisioning design in migration plan drafts v1–v3  
-**Companions:** [communications-bounded-context-v1.md](communications-bounded-context-v1.md) · [ark-voice-vision.md](ark-voice-vision.md) · [production-voice-cutover-v1.md](production-voice-cutover-v1.md) · ark-projection-rule.mdc
+**Companions:** [communications-bounded-context-v1.md](communications-bounded-context-v1.md) · [ark-voice-vision.md](ark-voice-vision.md) · [production-voice-cutover-v1.md](production-voice-cutover-v1.md)
 
 **Change policy:** Architectural changes must justify departure from this document. Do not reopen fundamentals without floor evidence.
 

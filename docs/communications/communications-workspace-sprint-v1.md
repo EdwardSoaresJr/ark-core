@@ -253,5 +253,4 @@ Stop when locked success criteria pass on the floor.
 | --- | --- |
 | [communications-bounded-context-v1.md](communications-bounded-context-v1.md) | Authority frozen |
 | [communications-authority.md](../communications-authority.md) | Conversation + events |
-| ark-attention-queue.mdc | Needs Attention doctrine |
-| [CURRENT_MILESTONE.md](../engineering/CURRENT_MILESTONE.md) | Active lane |
+| Needs Attention | Recovery triage, not a channel inbox |

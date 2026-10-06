@@ -50,7 +50,6 @@ Before any surface ships or survives a prune pass, write its survival sentence. 
 
 - `operations.communications.calls` (Calls & VM library - recordings, voicemail, missed calls)
 - Calls & VM section nav link
-- See `.cursor/rules/ark-comms-call-surfaces-lock.mdc`
 
 ---
 
@@ -228,7 +227,7 @@ Pass: **recover without rebuilding your mental model.**
 
 ## Observation notebook (structured)
 
-When friction appears during click-through or the Observation Sprint, record in [floor-observations-july-2026.md](floor-observations-july-2026.md):
+When friction appears during click-through, record:
 
 | Field | Example |
 |-------|---------|
@@ -244,8 +243,7 @@ When friction appears during click-through or the Observation Sprint, record in 
 
 ## Observation Sprint (after Phase 1 commit)
 
-**Duration:** 2 weeks  
-**Notebook:** [floor-observations-july-2026.md](floor-observations-july-2026.md)
+**Duration:** 2 weeks
 
 Use ARK. Watch it. Learn from it - not "don't touch anything."
 
@@ -287,7 +285,7 @@ Likely priorities after rail prune - only ship when notebook clusters:
 
 ## Related doctrine
 
-- `ark-attention-queue.mdc` - Attention is projection, not parallel inbox authority
-- `ark-cursor-doctrine.mdc` - Attention → Work → RO primary flow
-- `ark-technician-scope.mdc` - technician never primary on comms/queues
+- Attention is a projection, not a second inbox
+- Primary flow is Attention, then Work, then the repair order
+- A technician is not the primary person on communications or queues
 - `docs/communications/communications-workspace-sprint-v1.md` - sprint that shipped Attention without retiring siblings

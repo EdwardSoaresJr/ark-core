@@ -35,7 +35,7 @@ Examples:
 **Date:** YYYY-MM-DD  
 **Status:** Approved | Approved with concerns | Blocked  
 **Reviewer:** {name or role}  
-**Related:** PR1 | ADR-0005 | CURRENT_MILESTONE
+**Related:** PR1 | ADR-0005
 
 ## Reason
 

@@ -35,26 +35,30 @@ ARK SMS sends push via `FirebasePushTransport` → FCM HTTP v1. Flutter register
 
 ## Canonical setup path
 
-Install the client files in the mobile app and keep the service-account JSON on the server.
+**Prefer the script over manual steps.** It validates JSON, installs client files, and copies a local dev fallback. It does not upload credentials to a server.
 
-`ark-mobile` is a sibling checkout. Point client-file install at that directory when it does not sit next to Core.
+```bash
+./infra/scripts/firebase-mobile-push-setup.sh \
+  --project-id your-firebase-project \
+  --service-account ~/Downloads/*-firebase-adminsdk-*.json \
+  --google-services ~/Downloads/google-services.json \
+  --google-service-info ~/Downloads/GoogleService-Info.plist
+```
 
-## Production wiring
+`ark-mobile` defaults to a sibling checkout (`../ark-mobile`). Override with `--ark-mobile-dir` when layout differs.
+
+## Server wiring
 
 | Item | Value |
 | --- | --- |
-| Firebase project | The shop's Firebase project id |
-| Android package | The shop app's application id |
-| iOS bundle ID | The shop app's bundle id |
 | Server operational check | `php artisan ark:mobile-push:verify` |
-| Container env | `FIREBASE_CREDENTIALS=/app/storage/app/private/firebase-mobile-service-account.json` |
+| Credentials file | outside the web root, mode 600 |
+| Container env | `FIREBASE_CREDENTIALS` points at that file inside the container |
 | Container env | `FCM_ENABLED=true` |
 | Shop toggle only | `mobile_push.enabled` - dispatch on/off per shop |
 | Settings surface | `/app/settings/shop?section=communications&communications-tab=mobile` |
 
-**Do not** point `FIREBASE_CREDENTIALS` at a host path inside the container. Use the path inside `/app`.
-
-Production enablement stores credentials on the **mounted platform file**, not in shop settings JSON. Shop settings hold only the dispatch toggle.
+`FIREBASE_CREDENTIALS` must be a path the app process can read. Shop settings hold only the dispatch toggle.
 
 **Cost:** Firebase Spark (free). Register apps + Cloud Messaging only. Do not enable Blaze unless adding non-FCM Firebase products (forbidden by transport doctrine).
 
@@ -98,7 +102,7 @@ If any of those stop, Firebase has leaked across the authority boundary - that i
 - Committing `google-services.json`, `GoogleService-Info.plist`, or Admin SDK JSON
 - Using Firebase Auth, Firestore, Realtime Database, Functions, Analytics, or Remote Config as ARK authority
 - Treating FCM token as device authority (token is a transport hint on `mobile_devices`)
-- Enabling push before observation justified transport (see Pressure First) - **LugsNPlugs exception:** Portable Station Phase 1 operational cert earned transport for advisor continuity
+- Enabling push before the shop actually needs a phone notification
 
 ## Agent checklist
 
@@ -115,4 +119,3 @@ When touching mobile push setup:
 - `infra/scripts/firebase-mobile-push-setup.sh`
 - `ark-mobile/docs/firebase-transport-only.md`
 - `docs/product/certifications/portable-station-phase-1.md`
-- `.cursor/rules/ark-firebase-mobile-push-setup.mdc`

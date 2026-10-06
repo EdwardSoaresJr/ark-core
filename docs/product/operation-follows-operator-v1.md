@@ -62,8 +62,6 @@ Phone · VVX · Tablet · Desktop · Wallboard · Watch
 
 The device is almost irrelevant. Continuity is not.
 
-See ark-station-doctrine.mdc.
-
 ---
 
 ## The "wow" moment
@@ -140,4 +138,3 @@ Fewer interruptions · fewer searches · fewer forgotten steps · fewer context 
 
 - [operations/README.md](../operations/README.md) - operation video catalog (primary artifact)
 - [workflow-completion-certification.md](../engineering/workflow-completion-certification.md)
-- [CURRENT_MILESTONE.md](../engineering/CURRENT_MILESTONE.md)
