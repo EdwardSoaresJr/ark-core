@@ -146,8 +146,15 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
             })();
         </script>
 
-        <div class="ops-shell min-h-screen">
-            <aside class="ops-left-rail">
+        <div class="ops-shell min-h-screen" data-ops-mobile-nav>
+            <div class="ops-mobile-nav-backdrop" data-ops-mobile-nav-backdrop hidden></div>
+            <aside id="ops-mobile-nav" class="ops-left-rail" data-ops-mobile-nav-drawer>
+                <div class="ops-rail-drawer-head">
+                    <p class="ops-rail-drawer-head__label">Close</p>
+                    <button type="button" class="ops-rail-drawer-head__close" data-ops-mobile-nav-close aria-label="Close navigation">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
                 <a href="{{ $staffFrontDoorUrl }}" class="ops-rail-brand">
                     <span class="ops-rail-brand-logo-wrap">
                         <img
@@ -374,9 +381,45 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                     @endif
                 </nav>
 
+                @auth
+                    <form method="POST" action="{{ route('logout') }}" class="ops-rail-drawer-signout">
+                        @csrf
+                        <button type="submit">Sign out</button>
+                    </form>
+                @endauth
             </aside>
 
-            <div class="ops-main-shell">
+            <div class="ops-main-shell" data-ops-mobile-nav-main>
+                <div class="ops-mobile-bar">
+                    <a href="{{ $staffFrontDoorUrl }}" class="ops-mobile-bar__brand">
+                        <img
+                            src="{{ \App\Support\Branding\Branding::sidebarLogo() }}"
+                            alt="{{ \App\Support\Branding\Branding::tabTitle() }}"
+                            class="ops-mobile-bar__logo dark:hidden"
+                            width="1432"
+                            height="434"
+                        >
+                        <img
+                            src="{{ \App\Support\Branding\Branding::logo('full_white') }}"
+                            alt=""
+                            class="ops-mobile-bar__logo hidden dark:block"
+                            width="1432"
+                            height="434"
+                        >
+                    </a>
+                    <button
+                        type="button"
+                        class="ops-mobile-bar__menu"
+                        data-ops-mobile-nav-open
+                        aria-controls="ops-mobile-nav"
+                        aria-expanded="false"
+                        aria-label="Open navigation"
+                    >
+                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+                            <path d="M3.5 5h13M3.5 10h13M3.5 15h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
                 <div class="ops-shell-chrome">
                     <header @class([
                         'ops-topbar',

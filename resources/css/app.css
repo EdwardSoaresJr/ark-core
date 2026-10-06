@@ -17902,6 +17902,151 @@
         font-weight: 600;
     }
 
+    .ops-mobile-bar,
+    .ops-rail-drawer-head,
+    .ops-rail-drawer-signout,
+    .ops-mobile-nav-backdrop {
+        display: none;
+    }
+
+    .ops-mobile-bar__logo {
+        display: block;
+        height: 1.75rem;
+        width: auto;
+    }
+
+    .ops-mobile-bar__menu,
+    .ops-rail-drawer-head__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 0;
+        background: transparent;
+        color: rgb(15 23 42);
+    }
+
+    .ops-mobile-bar__menu svg,
+    .ops-rail-drawer-head__close {
+        flex-shrink: 0;
+    }
+
+    .ops-mobile-bar__menu svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .ops-rail-drawer-head__close {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .ops-rail-drawer-head__label {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    .ops-rail-drawer-signout button {
+        width: 100%;
+        min-height: 2.75rem;
+        border: 0;
+        background: transparent;
+        padding: 0 0.5rem;
+        color: rgb(71 85 105);
+        font-size: 0.875rem;
+        font-weight: 800;
+        text-align: left;
+    }
+
+    body.ops-mobile-nav-lock {
+        overflow: hidden;
+    }
+
+    @media (max-width: 767px) {
+        .ops-mobile-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            min-height: 3rem;
+            padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+            border-bottom: 1px solid rgb(203 213 225);
+            background: #f8fafc;
+        }
+
+        .ops-shell.is-mobile-nav-open .ops-mobile-nav-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgb(15 23 42 / 0.45);
+        }
+
+        .ops-shell.is-mobile-nav-open .ops-left-rail {
+            display: flex;
+            position: fixed;
+            z-index: 70;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: min(20rem, calc(100vw - 2.5rem));
+            height: 100dvh;
+            max-height: 100dvh;
+            flex-direction: column;
+            overscroll-behavior: contain;
+        }
+
+        .ops-shell.is-mobile-nav-open .ops-rail-drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            min-height: 2.75rem;
+        }
+
+        .ops-shell.is-mobile-nav-open .ops-rail-nav {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .ops-shell.is-mobile-nav-open .ops-rail-drawer-signout {
+            display: block;
+            flex-shrink: 0;
+            margin-top: auto;
+            border-top: 1px solid rgb(203 213 225);
+            padding-top: 0.25rem;
+        }
+
+        .ops-shell.is-mobile-nav-open .ops-main-shell {
+            overflow: hidden;
+        }
+    }
+
+    html.dark .ops-mobile-bar,
+    .dark .ops-mobile-bar {
+        border-bottom-color: rgb(51 65 85);
+        background: rgb(15 23 42);
+    }
+
+    html.dark .ops-mobile-bar__menu,
+    .dark .ops-mobile-bar__menu,
+    html.dark .ops-rail-drawer-head,
+    .dark .ops-rail-drawer-head,
+    html.dark .ops-rail-drawer-head__close,
+    .dark .ops-rail-drawer-head__close,
+    html.dark .ops-rail-drawer-signout button,
+    .dark .ops-rail-drawer-signout button {
+        color: rgb(226 232 240);
+    }
+
+    html.dark .ops-shell.is-mobile-nav-open .ops-rail-drawer-signout,
+    .dark .ops-shell.is-mobile-nav-open .ops-rail-drawer-signout {
+        border-top-color: rgb(51 65 85);
+    }
+
     @media (min-width: 768px) {
         .ops-left-rail {
             display: flex;
