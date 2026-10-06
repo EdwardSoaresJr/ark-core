@@ -1,6 +1,7 @@
 <form class="public-panel public-lead-form" method="post" action="/leads">
     @csrf
     <input type="hidden" name="page" value="{{ $page ?? 'contact' }}">
+    <input type="hidden" name="form_rendered_at" value="{{ old('form_rendered_at', \App\Ark\Operations\Leads\LeadFormRenderStamp::issue()) }}">
     <p class="hidden" aria-hidden="true">
         <label>Company website <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
     </p>

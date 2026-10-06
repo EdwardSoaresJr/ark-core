@@ -3,6 +3,7 @@
 namespace App\Ark\Runtime\Ecosystem;
 
 use App\Ark\Runtime\Authorization\ArkCapability;
+use App\Ark\Runtime\DemoInstall;
 use App\Ark\Runtime\Identity\Oidc\OidcProduct;
 use App\Ark\Runtime\Identity\Oidc\OidcProductAccessResolver;
 use App\Models\User;
@@ -38,7 +39,7 @@ final class EcosystemSwitcherProjection
             );
         }
 
-        if ($this->canAccessArkademy($user)) {
+        if ($this->canAccessArkademy($user) && ! DemoInstall::isDemo()) {
             $items[] = $this->item(
                 EcosystemProduct::Arkademy,
                 $this->arkademyHomeUrl(),
@@ -46,7 +47,7 @@ final class EcosystemSwitcherProjection
             );
         }
 
-        if ($this->canAccessPlatform($user)) {
+        if ($this->canAccessPlatform($user) && ! DemoInstall::isDemo()) {
             $items[] = $this->item(
                 EcosystemProduct::Platform,
                 config('ark-ecosystem.platform_url'),

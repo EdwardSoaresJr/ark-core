@@ -29,6 +29,9 @@
         @endif
     </head>
     <body class="font-sans text-slate-950 antialiased">
+        @if (\App\Ark\Runtime\DemoInstall::isDemo())
+            @include('demo.bar')
+        @endif
         <div class="flex min-h-screen flex-col items-center bg-slate-100 pt-6 sm:justify-center sm:pt-0">
             <div>
                 <a href="/">

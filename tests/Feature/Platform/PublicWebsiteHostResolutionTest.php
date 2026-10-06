@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\Leads\Lead;
+use App\Ark\Operations\Leads\LeadFormRenderStamp;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Platform\Website\WebsitePublication;
 use App\Ark\Platform\Website\WebsiteSite;
@@ -206,6 +207,7 @@ test('leads from the native host and the custom domain reach the same site', fun
         'contact_phone' => '7195550142',
         'concern' => 'From the ARK host.',
         'page' => 'book',
+        'form_rendered_at' => LeadFormRenderStamp::issue(now()->subSeconds(10)),
     ])->assertRedirect();
 
     $this->post('http://lugsnplugs.com/leads', [
@@ -213,6 +215,7 @@ test('leads from the native host and the custom domain reach the same site', fun
         'contact_phone' => '7195550143',
         'concern' => 'From the custom domain.',
         'page' => 'contact',
+        'form_rendered_at' => LeadFormRenderStamp::issue(now()->subSeconds(10)),
     ])->assertRedirect();
 
     $leads = Lead::query()->orderBy('id')->get();

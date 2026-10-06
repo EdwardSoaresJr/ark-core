@@ -4,7 +4,7 @@
             active: (() => {
                 const candidate = @js($initialSection) || new URLSearchParams(window.location.search).get('section') || localStorage.getItem('ark:shop-settings:section') || 'general';
 
-                if (candidate === 'dragon-memory') {
+                if (candidate === 'dragon-memory' || (@js(\App\Ark\Runtime\DemoInstall::isDemo()) && candidate === 'ark-cloud')) {
                     return 'general';
                 }
 
@@ -214,7 +214,9 @@
                     <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
                     <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
                     <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
-                    <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
+                    @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                        <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
+                    @endunless
                     <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
                     <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
                     <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
@@ -1056,7 +1058,9 @@
                     'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
                 ])
 
-                @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
+                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                    @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
+                @endunless
 
                 <section x-show="active === 'overhead'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
@@ -1065,7 +1069,7 @@
                         <p class="mt-0.5 text-xs leading-5 text-slate-500">Build the shop’s monthly fixed-cost pool and spread it across expected <strong class="font-semibold text-slate-700">billed labor hours</strong>. That produces <strong class="font-semibold text-slate-700">shop overhead / billed hr</strong>, which feeds each technician’s loaded cost under Staff. Technician wages are entered per tech - not here.</p>
                         <p class="mt-1 text-xs leading-5 text-slate-500">
                             Full walkthrough:
-                            <x-operations.learn.guide-link role="admin" article="shop-overhead-setup" :label="\App\Support\Branding\Branding::learnName().' → Shop overhead and loaded labor cost'" class="font-semibold text-slate-700 decoration-slate-300 hover:text-slate-950" />
+                            <x-operations.learn.guide-link role="admin" article="shop-overhead-setup" :label="\App\Ark\Runtime\DemoInstall::isDemo() ? 'Shop overhead and loaded labor cost' : \App\Support\Branding\Branding::learnName().' → Shop overhead and loaded labor cost'" class="font-semibold text-slate-700 decoration-slate-300 hover:text-slate-950" />
                         </p>
                     </div>
 

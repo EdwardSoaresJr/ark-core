@@ -21,6 +21,10 @@ final class ArkMailClient
 
     public function send(TransactionalMailEnvelope $envelope): TransactionalMailResult
     {
+        if (! $this->isConfigured()) {
+            return TransactionalMailResult::notConfigured();
+        }
+
         $cloud = PlatformConnection::current();
         $base = $cloud->baseUrl();
         $path = '/api/v1/services/mail/messages/transactional';

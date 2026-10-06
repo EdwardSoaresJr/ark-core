@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\Leads\Lead;
+use App\Ark\Operations\Leads\LeadFormRenderStamp;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Website\Catalog\PublicWebsiteCatalog;
@@ -150,6 +151,7 @@ test('lead form writes a core website lead', function (): void {
         'contact_phone' => '7195550142',
         'concern' => 'Check engine light is on.',
         'page' => 'book',
+        'form_rendered_at' => LeadFormRenderStamp::issue(now()->subSeconds(10)),
     ])->assertRedirect(route('public.leads.thanks'));
 
     $lead = Lead::query()->first();

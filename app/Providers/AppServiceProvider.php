@@ -212,7 +212,7 @@ class AppServiceProvider extends ServiceProvider
             $learnTrainingSnooze = null;
             $canSnoozeTraining = false;
 
-            if ($user !== null) {
+            if ($user !== null && ! \App\Ark\Runtime\DemoInstall::isDemo()) {
                 $shell = app(LearnArkProgressResolver::class)
                     ->shellProjectionFor($user);
 

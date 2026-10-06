@@ -9,13 +9,17 @@
         <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Customer Email</p>
         <p class="mt-1 text-xs leading-5 text-slate-500">
             Transactional customer email (estimates, invoices, documents) is delivered through ARK Email.
-            Connect and disconnect the shop in Settings → ARK Platform.
+            @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                Connect and disconnect the shop in Settings → ARK Platform.
+            @endunless
         </p>
         <p class="mt-2 text-xs font-semibold text-slate-800">Status: {{ $statusLabel }}</p>
         @unless ($mailReady)
             <p class="mt-2 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
                 Outbound customer email is not connected. You can still set reply-to.
-                <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold underline">Connect in ARK Platform</a>
+                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold underline">Connect in ARK Platform</a>
+                @endunless
             </p>
         @endunless
         @if ($mailReady)

@@ -1,5 +1,8 @@
 @php
+    use App\Ark\Runtime\DemoInstall;
     use App\Support\Branding\Branding;
+
+    $guideProductName = DemoInstall::isDemo() ? 'Guide' : Branding::learnName();
 @endphp
 
 <div
@@ -11,7 +14,7 @@
     class="ops-learn-guide-modal"
     role="dialog"
     aria-modal="true"
-    :aria-label="title || '{{ Branding::learnName() }} guide'"
+    :aria-label="title || '{{ $guideProductName }} guide'"
 >
     <button
         type="button"
@@ -24,7 +27,7 @@
         <header class="ops-learn-guide-modal__header">
             <div class="ops-learn-guide-modal__heading min-w-0">
                 <p class="ops-learn-guide-modal__eyebrow" x-show="sectionLabel" x-text="sectionLabel"></p>
-                <h2 class="ops-learn-guide-modal__title" x-text="title || '{{ Branding::learnName() }}'"></h2>
+                <h2 class="ops-learn-guide-modal__title" x-text="title || '{{ $guideProductName }}'"></h2>
                 <p class="ops-learn-guide-modal__summary" x-show="summary" x-text="summary"></p>
             </div>
             <button type="button" class="ops-learn-guide-modal__close" @click="close()">Close</button>
@@ -41,18 +44,22 @@
         </div>
 
         <footer class="ops-learn-guide-modal__footer">
-            <p class="ops-learn-guide-modal__footer-note">Preview from ARK - open {{ Branding::learnName() }} for search, print, and full navigation.</p>
+            @unless (DemoInstall::isDemo())
+                <p class="ops-learn-guide-modal__footer-note">Preview from ARK - open {{ Branding::learnName() }} for search, print, and full navigation.</p>
+            @endunless
             <div class="ops-learn-guide-modal__footer-actions">
                 <button type="button" class="ops-learn-guide-modal__secondary" @click="close()">Close</button>
-                <a
-                    :href="arkademyUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="ops-learn-guide-modal__primary"
-                    x-show="arkademyUrl"
-                >
-                    Open in {{ Branding::learnName() }}
-                </a>
+                @unless (DemoInstall::isDemo())
+                    <a
+                        :href="arkademyUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="ops-learn-guide-modal__primary"
+                        x-show="arkademyUrl"
+                    >
+                        Open in {{ Branding::learnName() }}
+                    </a>
+                @endunless
             </div>
         </footer>
     </div>

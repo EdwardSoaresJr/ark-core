@@ -10,6 +10,8 @@ use App\Ark\Runtime\Exceptions\ExceptionReporter;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Http\Middleware\ApplyDevRolePretend;
 use App\Http\Middleware\EnsureAdvisorCommsCleared;
+use App\Http\Middleware\HideDemoCompanionSurfaces;
+use App\Http\Middleware\PresentPublicDemo;
 use App\Http\Middleware\EnsureApiStaffActive;
 use App\Http\Middleware\EnsureAppointmentsSurfaceEnabled;
 use App\Http\Middleware\EnsureBusinessWorkspaceAccess;
@@ -88,6 +90,8 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->web(append: [
+            PresentPublicDemo::class,
+            HideDemoCompanionSurfaces::class,
             ApplyDevRolePretend::class,
             EnsureUserIsActive::class,
             EnsurePasswordIsSet::class,

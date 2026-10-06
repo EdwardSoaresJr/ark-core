@@ -30,6 +30,15 @@ final class ArkMailClient
      */
     private function request(string $method, string $path, ?array $body = null, int $timeout = 20): array
     {
+        if (! $this->isConfigured()) {
+            return [
+                'ok' => false,
+                'http_status' => 0,
+                'reason_code' => 'not_connected',
+                'message' => 'Shop email is not connected.',
+            ];
+        }
+
         $cloud = PlatformConnection::current();
         $base = $cloud->baseUrl();
         $credential = (string) $cloud->credential();

@@ -300,6 +300,7 @@ use App\Ark\Operations\WorkTemplates\HistoricalWorkRecallController;
 use App\Ark\Operations\WorkTemplates\WorkTemplateSearchController;
 use App\Ark\Platform\ClusterIndexController;
 use App\Ark\Runtime\Authorization\ArkCapability;
+use App\Ark\Runtime\DemoGithubClickController;
 use App\Ark\Runtime\Exceptions\ExceptionReportCopyController;
 use App\Ark\Runtime\Surfaces\SurfaceRouting;
 use App\Ark\ShopMemory\Rewrite\RepairOrderAiRewriteController;
@@ -317,6 +318,10 @@ Route::get('/error-reports/{reportId}/copy', ExceptionReportCopyController::clas
     ->name('runtime.exception-reports.copy');
 
 SurfaceRouting::appRoutes(function (): void {
+    Route::get('/demo/github', DemoGithubClickController::class)
+        ->middleware('throttle:30,1')
+        ->name('demo.github');
+
     if (SurfaceRouting::enabled()) {
         Route::get('/', function () {
             if (auth()->check()) {

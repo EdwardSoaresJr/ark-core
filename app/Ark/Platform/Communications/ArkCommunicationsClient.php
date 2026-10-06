@@ -162,6 +162,14 @@ final class ArkCommunicationsClient
      */
     private function request(string $method, string $path, ?array $body = null, ?array $query = null): array
     {
+        if (! $this->isConfigured()) {
+            return [
+                'ok' => false,
+                'reason_code' => 'not_connected',
+                'message' => 'Texting is not connected.',
+            ];
+        }
+
         $cloud = PlatformConnection::current();
         $base = $cloud->baseUrl();
         $credential = (string) $cloud->credential();

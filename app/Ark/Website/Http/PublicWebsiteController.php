@@ -5,6 +5,9 @@ namespace App\Ark\Website\Http;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\Recognition\CustomerRecognitionProjection;
 use App\Ark\Operations\Leads\LeadContactPreference;
+use App\Ark\Operations\Leads\LeadFormRenderStamp;
+use App\Ark\Operations\Leads\LeadIngressContext;
+use App\Ark\Operations\Leads\LeadIngressHygiene;
 use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\Leads\Public\LeadEmailVerification;
@@ -33,6 +36,7 @@ final class PublicWebsiteController
     public function __construct(
         private readonly PublishedWebsiteResolver $websites,
         private readonly LeadRecorder $leads,
+        private readonly LeadIngressHygiene $hygiene,
     ) {}
 
     public function home(Request $request): View|Response|RedirectResponse
@@ -289,6 +293,21 @@ final class PublicWebsiteController
             return back()->withErrors(['contact_phone' => 'Enter a 10-digit phone number.'])->withInput();
         }
 
+        $render = LeadFormRenderStamp::read($request->input('form_rendered_at'));
+        if ($render['status'] === LeadFormRenderStamp::Stale) {
+            return back()
+                ->withErrors(['concern' => 'This form sat too long. Send it again.'])
+                ->withInput($request->except('form_rendered_at'));
+        }
+
+        $ingress = LeadIngressContext::fromRequest($request);
+        $signals = $this->hygiene->signals($ingress);
+        if (in_array('too_fast', $signals, true)) {
+            return back()
+                ->withErrors(['concern' => 'Wait a few seconds, then send it again.'])
+                ->withInput();
+        }
+
         $this->leads->recordWebsiteSubmission([
             'source' => LeadSource::Website,
             'concern' => $data['concern'],
@@ -303,7 +322,7 @@ final class PublicWebsiteController
                 'public_host' => $request->getHost(),
                 'canonical_host' => $website->canonicalHost(),
             ],
-        ]);
+        ], ingress: $ingress, forcedState: $this->hygiene->autoSpamState($signals), spamSignals: $signals);
 
         return redirect()->route('public.leads.thanks');
     }

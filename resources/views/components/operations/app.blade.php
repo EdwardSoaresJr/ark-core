@@ -56,7 +56,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         'operations.briefing',
         'operations.owner.scoreboard',
     );
-    $showArkademyNav = $canUseProductionShell || $usesAdvisorWorkSurface;
+    $showArkademyNav = ($canUseProductionShell || $usesAdvisorWorkSurface)
+        && ! \App\Ark\Runtime\DemoInstall::isDemo();
     $hasSystemNav = $showArkademyNav || $canManageSettings;
     $commsChannelTabs = app(CommsChannelStripResolver::class)->tabsFor(auth()->user(), $previousLastSeenAt);
     $showTopbarCommsStrip = $commsChannelTabs !== [] && ! request()->routeIs('operations.communications.*');
@@ -97,6 +98,9 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen overflow-x-hidden bg-slate-100 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">
+        @if (\App\Ark\Runtime\DemoInstall::isDemo())
+            @include('demo.bar')
+        @endif
         <script>
             (() => {
                 const serverTheme = @json($displayTheme);

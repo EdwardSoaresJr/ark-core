@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Operations\Leads\Lead;
+use App\Ark\Operations\Leads\LeadFormRenderStamp;
 use App\Ark\Operations\Leads\LeadIngressContext;
 use App\Ark\Operations\Leads\LeadIngressHygiene;
 use App\Ark\Operations\Leads\LeadPressure;
@@ -8,6 +9,7 @@ use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\Leads\LeadState;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Website\PublishWebsiteCatalog;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
@@ -100,3 +102,102 @@ test('advisor can mark lead spam manually', function (): void {
 
     expect($lead->fresh()->state)->toBe(LeadState::Spam);
 });
+
+test('contact form without a render stamp is stored as spam', function (): void {
+    publishContactWebsite();
+
+    $this->post(route('public.leads.store'), [
+        'contact_name' => 'Bot Spam',
+        'contact_phone' => '7195550001',
+        'concern' => 'Casino bonus now',
+    ])->assertRedirect(route('public.leads.thanks'));
+
+    $lead = Lead::query()->sole();
+
+    expect($lead->state)->toBe(LeadState::Spam)
+        ->and($lead->spam_signals)->toContain('missing_form')
+        ->and($lead->conversation_id)->toBeNull();
+});
+
+test('a raw render timestamp does not count as the contact form', function (): void {
+    publishContactWebsite();
+
+    $this->post(route('public.leads.store'), [
+        'contact_name' => 'Bot Spam',
+        'contact_phone' => '7195550002',
+        'concern' => 'Buy cheap followers',
+        'form_rendered_at' => now()->subSeconds(30)->timestamp,
+    ])->assertRedirect(route('public.leads.thanks'));
+
+    expect(Lead::query()->sole()->state)->toBe(LeadState::Spam)
+        ->and(Lead::query()->sole()->conversation_id)->toBeNull();
+});
+
+test('contact form submitted too fast asks for another try and keeps the message', function (): void {
+    publishContactWebsite();
+
+    $this->from(route('public.contact'))->post(route('public.leads.store'), [
+        'contact_name' => 'Alex Morgan',
+        'contact_phone' => '7195550142',
+        'concern' => 'Brakes squeal when stopping.',
+        'form_rendered_at' => LeadFormRenderStamp::issue(now()),
+    ])->assertRedirect(route('public.contact'))
+        ->assertSessionHasErrors('concern');
+
+    expect(Lead::query()->count())->toBe(0);
+});
+
+test('contact form left open too long asks for another try', function (): void {
+    publishContactWebsite();
+    Carbon::setTestNow(Carbon::parse('2026-10-05 12:00:00'));
+    $stamp = LeadFormRenderStamp::issue();
+    Carbon::setTestNow(Carbon::parse('2026-10-07 12:00:01'));
+
+    try {
+        $this->from(route('public.contact'))->post(route('public.leads.store'), [
+            'contact_name' => 'Alex Morgan',
+            'contact_phone' => '7195550142',
+            'concern' => 'Brakes squeal when stopping.',
+            'form_rendered_at' => $stamp,
+        ])->assertRedirect(route('public.contact'))
+            ->assertSessionHasErrors('concern');
+    } finally {
+        Carbon::setTestNow();
+    }
+
+    expect(Lead::query()->count())->toBe(0);
+});
+
+test('contact form filled at a normal pace is a real lead', function (): void {
+    publishContactWebsite();
+
+    $this->get(route('public.contact'))
+        ->assertOk()
+        ->assertSee('name="form_rendered_at"', false);
+
+    $this->post(route('public.leads.store'), [
+        'contact_name' => 'Alex Morgan',
+        'contact_phone' => '7195550142',
+        'concern' => 'Brakes squeal when stopping.',
+        'page' => 'contact',
+        'form_rendered_at' => LeadFormRenderStamp::issue(now()->subSeconds(10)),
+    ])->assertRedirect(route('public.leads.thanks'));
+
+    $lead = Lead::query()->sole();
+
+    expect($lead->state)->toBe(LeadState::Received)
+        ->and($lead->conversation_id)->not->toBeNull()
+        ->and($lead->form_rendered_at)->not->toBeNull();
+});
+
+function publishContactWebsite(): void
+{
+    $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'localhost';
+
+    app(PublishWebsiteCatalog::class)->publish($host, [
+        'headline' => 'Shop',
+        'seo' => [
+            'contact' => ['title' => 'Contact', 'description' => 'Call or send a message.'],
+        ],
+    ], true);
+}

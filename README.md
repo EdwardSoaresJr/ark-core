@@ -1,6 +1,22 @@
 # ARK
 
-**Shop management software for independent auto repair shops.**
+Shop management software for independent auto repair shops.
+
+## ARK is open source
+
+ARK Core is free and open source. Run it on your own hardware or infrastructure and keep control of your shop and its data.
+
+Don't want to manage a server?
+
+Managed hosting from ARK is coming soon.
+
+[Try the live demo](https://demo.arksms.com) · [Hosted ARK - Coming Soon](#hosted-ark)
+
+## Hosted ARK
+
+ARK Core is the software. You can run it yourself.
+
+Hosted ARK is that same software, operated for you. It is not a separate edition. Managed hosting is coming soon, and there is nothing to buy on this page yet.
 
 **Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
 
@@ -86,8 +102,8 @@ composer test:serial     # single-process diagnostic
 MySQL · Redis · app (nginx, PHP-FPM, Horizon, Reverb, scheduler) · persistent storage
 
 ```bash
-git clone https://github.com/EdwardSoaresJr/ark.git
-cd ark
+git clone https://github.com/EdwardSoaresJr/ark-core.git
+cd ark-core
 docker compose up -d --build
 ```
 
@@ -183,4 +199,4 @@ The licensing information in this repository describes the project's licensing c
 
 ARK is publicly available at:
 
-https://github.com/EdwardSoaresJr/ark
+https://github.com/EdwardSoaresJr/ark-core

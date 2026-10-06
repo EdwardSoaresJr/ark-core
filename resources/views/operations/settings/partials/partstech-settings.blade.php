@@ -42,8 +42,12 @@
                 <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">PartsTech</p>
                 <h2 class="mt-1 text-lg font-black text-slate-950">Parts catalog</h2>
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    This shop does not store a shop-wide PartsTech password. Connect ARK Platform for shop catalog access. Optional personal seats stay on each person’s profile (avatar menu → Profile).
-                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold text-slate-700 underline">Connect in ARK Platform</a>
+                    @if (\App\Ark\Runtime\DemoInstall::isDemo())
+                        This shop does not store a shop-wide PartsTech password. Optional personal seats stay on each person’s profile (avatar menu → Profile).
+                    @else
+                        This shop does not store a shop-wide PartsTech password. Connect ARK Platform for shop catalog access. Optional personal seats stay on each person’s profile (avatar menu → Profile).
+                        <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold text-slate-700 underline">Connect in ARK Platform</a>
+                    @endif
                 </p>
             </div>
             <form method="POST" action="{{ route('operations.settings.shop.partstech.update') }}" class="max-w-xs">
@@ -131,7 +135,11 @@
             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nexpart</p>
             <h2 class="mt-1 text-lg font-black text-slate-950">Catalog or new-tab link</h2>
             <p class="mt-1 text-xs leading-5 text-slate-500">
-                If this shop pays for ARK Platform parts catalog, Nexpart sits on the estimate catalog button (Open and VIN copy; no cart pull). Otherwise it opens in a new tab like RepairLink. ARK does not sign in or pull a Nexpart cart.
+                @if (\App\Ark\Runtime\DemoInstall::isDemo())
+                    Nexpart opens in a new tab like RepairLink. ARK does not sign in or pull a Nexpart cart.
+                @else
+                    If this shop pays for ARK Platform parts catalog, Nexpart sits on the estimate catalog button (Open and VIN copy; no cart pull). Otherwise it opens in a new tab like RepairLink. ARK does not sign in or pull a Nexpart cart.
+                @endif
             </p>
         </div>
 

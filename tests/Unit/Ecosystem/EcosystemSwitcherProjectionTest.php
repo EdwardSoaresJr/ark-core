@@ -33,6 +33,18 @@ test('advisor sees operations and arkademy without platform', function () {
         ->and(collect($items)->pluck('id')->all())->toEqual(['operations', 'arkademy']);
 });
 
+test('demo hides arkademy and platform from the switcher', function () {
+    config(['app.url' => 'https://demo.arksms.com']);
+    $user = User::factory()->create()->assignRole('admin');
+
+    $projection = app(EcosystemSwitcherProjection::class);
+    $items = $projection->forUser($user, EcosystemProduct::Operations);
+
+    expect($items)->toHaveCount(1)
+        ->and($items[0]['id'])->toBe('operations')
+        ->and($projection->shouldRender($user))->toBeFalse();
+});
+
 test('switcher hidden when only one product available', function () {
     $user = User::factory()->create()->assignRole('customer');
 

@@ -23,5 +23,8 @@ class DatabaseSeeder extends Seeder
         $this->call(InternalChannelSeeder::class);
         $this->call(DemoWorkflowSeeder::class);
         $this->call(BulkOperationalDemoSeeder::class);
+        $this->call(DemoScheduleSeeder::class);
+        $this->call(DemoReportingSeeder::class);
+        $this->call(DemoCommunicationsSeeder::class);
     }
 }

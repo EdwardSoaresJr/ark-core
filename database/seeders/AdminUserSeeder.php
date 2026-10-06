@@ -21,6 +21,11 @@ class AdminUserSeeder extends Seeder
                 'role' => ArkRole::Admin,
             ],
             [
+                'name' => 'Demo',
+                'email' => 'demo@arksms.com',
+                'role' => ArkRole::Admin,
+            ],
+            [
                 'name' => 'Demo Advisor',
                 'email' => 'advisor@ark.test',
                 'role' => ArkRole::Advisor,

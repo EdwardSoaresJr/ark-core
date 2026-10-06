@@ -17,7 +17,7 @@ final class LeadIngressContext
 
     public static function fromRequest(Request $request): self
     {
-        $renderedAt = self::parseFormRenderedAt($request->input('form_rendered_at'));
+        $renderedAt = LeadFormRenderStamp::read($request->input('form_rendered_at'))['rendered_at'];
 
         return new self(
             ip: $request->ip(),
@@ -48,27 +48,6 @@ final class LeadIngressContext
             'ingress_referrer' => $this->referrer,
             'form_rendered_at' => $this->formRenderedAt,
         ];
-    }
-
-    private static function parseFormRenderedAt(mixed $value): ?Carbon
-    {
-        if (! is_numeric($value)) {
-            return null;
-        }
-
-        $timestamp = (int) $value;
-
-        if ($timestamp <= 0) {
-            return null;
-        }
-
-        $renderedAt = Carbon::createFromTimestamp($timestamp);
-
-        if ($renderedAt->isFuture() || $renderedAt->lt(now()->subDay())) {
-            return null;
-        }
-
-        return $renderedAt;
     }
 
     private static function truncate(?string $value, int $max): ?string

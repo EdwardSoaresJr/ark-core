@@ -225,7 +225,9 @@
                                 ARK Texting is connected.
                             @else
                                 ARK Texting is not connected. The composer still works; messages will not send until the service is connected.
-                                <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold underline">Connect in ARK Platform</a>
+                                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                                    <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold underline">Connect in ARK Platform</a>
+                                @endunless
                             @endif
                         </p>
                     </div>

@@ -24,6 +24,7 @@ use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Ark\Platform\Payments\ManagedPaymentsGate;
 use App\Ark\Platform\Voice\ManagedVoiceGate;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Runtime\DemoInstall;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,9 @@ class ShopSettingsPageController
         }
 
         $initialSection = $request->query('section');
+        if (DemoInstall::isDemo() && $initialSection === 'ark-cloud') {
+            $initialSection = null;
+        }
         $allowedSections = ['general', 'financial', 'payments', 'partstech', 'communications', 'ark-cloud', 'overhead', 'excellence', 'estimates', 'workflow', 'operations', 'printing', 'staff', 'runtime-health'];
 
         if (! in_array($initialSection, $allowedSections, true)) {

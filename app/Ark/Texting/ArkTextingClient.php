@@ -33,6 +33,14 @@ final class ArkTextingClient
         ?string $correlationId = null,
         array $context = [],
     ): array {
+        if (! $this->isConfigured()) {
+            return [
+                'ok' => false,
+                'reason_code' => 'not_connected',
+                'message' => 'Texting is not connected.',
+            ];
+        }
+
         $cloud = PlatformConnection::current();
         $base = $cloud->baseUrl();
         $path = '/api/v1/services/sms/messages/conversation';
