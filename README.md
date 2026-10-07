@@ -1,57 +1,112 @@
-# ARK
+# ARK Core
 
-Shop management software for independent auto repair shops.
+Free, open-source shop management for independent auto repair shops.
 
-## ARK is open source
-
-ARK Core is free and open source. Run it on your own hardware or infrastructure and keep control of your shop and its data.
-
-Don't want to manage a server?
-
-Managed hosting from ARK is coming soon.
-
-[Try the live demo](https://demo.arksms.com) · [Hosted ARK - Coming Soon](#hosted-ark)
-
-## Hosted ARK
-
-ARK Core is the software. You can run it yourself.
-
-Hosted ARK is that same software, operated for you. It is not a separate edition. Managed hosting is coming soon, and there is nothing to buy on this page yet.
+ARK Core is the shop-management system itself. A shop can run it on its own server: customers, vehicles, repair orders, estimates, inspections, scheduling, production, reporting, documents, and the payment ledger. It is free under the AGPL. It is not a trial, a time limit, or a teaser for a hosted service.
 
 **Copyright (C) 2026 Edward Soares Jr.** · Licensed under **AGPL-3.0-only** (see `LICENSE`).
 
-ARK is shop management software built around the way an automotive repair shop actually operates. It handles repair orders, customers, vehicles, estimates, inspections, scheduling, communications, and the day-to-day workflows between advisors and technicians.
-
-Under the hood, ARK is designed around clear sources of truth, predictable system behavior, and server-side business rules rather than duplicating important logic throughout the application.
-
-This repository contains the **public open-source distribution of ARK**. It is the **canonical Core** repository.
-
-ARK Platform is a separate repository.
-
-It is a clean public snapshot and does not include private shop data, production credentials or infrastructure, licensed automotive datasets, or private Dragon knowledge sources.
+[Try the live demo](https://demo.arksms.com)
 
 ## What you get
 
-* **ARK Web** - the Laravel-based core shop management system (operations, portal, installer)
-* Database migrations, automated tests, and configuration examples
-* Synthetic/demo shop seed data
-* **Dragon runtime** with support for your own model provider credentials
-* Labor-guide import interfaces for integrating supported external data sources
-* Server-side **API contracts** for mobile and third-party clients (`/api/mobile`, station pairing, and related endpoints)
+A stock install (Docker Compose and `/setup`) includes the workflows below. No ARK SaaS account is required.
 
-Marketing website CMS and SEO tools are not part of Core. Core may hold shop website **records** (drafts and publications) for Platform and Foundry. The editor UI belongs in Platform. See `docs/platform/ark-core-website-boundary.md`.
+**The work**
+
+- Customer and vehicle records, with search, CSV import, and NHTSA VIN decode
+- Repair orders with concerns, labor, parts, fees, and notes
+- Estimates with quantity and hours, server-side totals, tax, and customer authorization
+- Digital vehicle inspections, including templates, photos, and prior-visit history
+- Scheduling, including appointment bays
+- Job board, shop display, and the daily production view
+- Technician workflows and a time clock
+- Parts and labor lines, parts pricing matrices, and labor rates
+- Engine-oil service on the repair order, including what was installed
+
+**The business**
+
+- Dashboard, day review, and technician production
+- Reports: end of day, sales and payments, margin health, owner P&L, operations, and production
+- A ledger for payments the shop already took (cash, check, or a card charged outside ARK)
+- Tax, shop fees, deposits, and customer types
+- Documents, estimate and invoice PDFs, and printing settings
+- Label printing (QZ Tray) after the shop supplies its own certificate and private key
+- A customer portal for estimates, approvals, inspections, photos, and documents
+- Staff, roles, workstations, and shop configuration
+- A responsive shop interface, including phone-sized navigation
+
+The customer portal can show an amount owed. Showing that amount is not card processing. Charging a card inside ARK is Hosted ARK.
+
+AllData and ProDemand buttons open the vendor site and copy the VIN. The shop uses its own login. Core also includes a labor-guide import interface. Licensed labor-guide datasets are not in this repository.
+
+**For developers**
+
+- First-run installer
+- Database migrations, tests, and configuration examples
+- Optional demo shop seed data
+- Dragon, so you can connect your own model provider. No ARK-hosted model is included.
+- API contracts for separate client apps (`/api/mobile`, `/api/desk`, `/api/tech`, `/api/station`). The apps themselves are not in this repository.
+
+The shop website editor is not part of Core. Core can keep shop identity and lead records. See [docs/platform/ark-core-website-boundary.md](docs/platform/ark-core-website-boundary.md).
+
+## You do not need Hosted ARK to use ARK Core
+
+A stock Core installation can operate the shop on your own infrastructure. Repair orders, estimates, authorization, inspections, scheduling, the job board, the time clock, reporting, documents, the customer portal, and the ledger all work without an ARK SaaS account.
+
+## Hosted ARK
+
+Hosted ARK (ARK SaaS) is a private commercial product. It is built from a pinned ARK Core release, plus services ARK operates, commercial integrations, and managed infrastructure.
+
+Revenue from Hosted ARK helps fund continued development and maintenance of free, open-source ARK Core.
+
+Hosted ARK is being built as the fully managed way to run ARK, including infrastructure, deployment, updates, backups, monitoring, communications, payments, and commercial integrations. It is not open for general customer signup or provisioning today.
+
+**Commercial capabilities already implemented**
+
+These ARK-operated services already exist in the ARK ecosystem. They belong to Hosted ARK, not to a stock Core install. Listing them is not a statement that a new shop can sign up for Hosted ARK today.
+
+- Customer email
+- Customer texting
+- Hosted phone service
+- In-app card capture
+- PartsTech shop catalog access
+
+**Managed infrastructure, in development**
+
+The fully managed Hosted ARK product is still being built. Managed infrastructure, deployment, updates, backups, and operational monitoring are not available today.
+
+Also not available today: ARK Backup, ARK Storage, ARK Data, moving a shop between self-hosted Core and Hosted ARK, ARK Connect, and an ARK-hosted Dragon model.
+
+This page does not publish prices or packaging.
+
+## Why some Hosted work is not in this repository
+
+ARK Core is intentionally open source. Hosted ARK adds paid services and integrations around it.
+
+Some commercial integrations use partner APIs, documentation, or implementation details that we are not permitted to redistribute publicly. Those integrations are available only as part of Hosted ARK.
+
+PartsTech is one example. Shop catalog access is part of Hosted ARK. This repository does not publish the partner API materials for that integration.
+
+## A screen is not the service
+
+Core includes shop screens for communications, conversations, calls, parts catalogs, and payments. Those screens are the shop workflow. They do not mean the ARK-operated service ships with a free install.
+
+Sending customer texts or email, operating hosted phones, capturing a card inside ARK, and opening the shop parts catalog require Hosted ARK. When those services are not connected, Core says so and the rest of the shop keeps running.
+
+Settings can still show Communications, Parts catalogs, or Square Payments. A settings screen is not a self-hosted texting, catalog, or card-processing product.
+
+See [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md).
 
 ## What is not included
 
-Some parts of the environment used to operate and develop ARK cannot or should not be distributed publicly. This repository does not include:
-
-* Production deployment runbooks or infrastructure configuration
-* Credentials, backups, or live secrets
-* Real-Time Labor Guide (RTE) or other licensed automotive datasets
-* Private Dragon knowledge imports or ARKademy data
-* Republished third-party training material
-
-**Open the engine. Bring your own fuel.**
+- The Hosted ARK services above, including services still in development
+- Licensed automotive datasets, including labor-guide data
+- Desk, Tech, Companion, and similar client applications
+- The shop website editor
+- Production credentials or live shop data
+- Private Dragon knowledge or training imports
+- An ARK-hosted model
 
 ## See ARK in action
 
@@ -71,7 +126,9 @@ Some parts of the environment used to operate and develop ARK cannot or should n
 
 ![ARK Customer Estimate](docs/images/ark-estimate-customer.png)
 
-### Customer communication built into the workflow
+### Communications workspace
+
+The communications screen is part of Core. Sending texts or email, and hosted phones, are Hosted ARK.
 
 ![ARK Communications](docs/images/ark-communications.png)
 
@@ -95,11 +152,9 @@ composer test:serial     # single-process diagnostic
 
 ## Quick start with Docker Compose
 
-**Self-hosted installation.** This builds from the local tree. LugsNPlugs production does not. LugsNPlugs Core is a git archive of a commit on `origin/main`, published to `ghcr.io/edwardsoaresjr/ark-core` and pinned by digest.
+This builds from the local tree and is the normal way to try Core on your own machine.
 
-**Recommended for a local shop install.** Compose boots the same runtime architecture ARK runs in production:
-
-MySQL · Redis · app (nginx, PHP-FPM, Horizon, Reverb, scheduler) · persistent storage
+Compose boots MySQL, Redis, and the app (nginx, PHP-FPM, Horizon, Reverb, scheduler), with persistent storage.
 
 ```bash
 git clone https://github.com/EdwardSoaresJr/ark-core.git
@@ -139,64 +194,40 @@ Environment-based bootstrap configuration is also available for advanced deploym
 
 Development seeders may create example staff accounts such as `admin@ark.test`. These accounts are for development and demonstration use only. A normal production installation creates its own administrator during setup.
 
-## Optional integrations and ARK Services
+## Dragon
 
-ARK Core operates as a complete shop management system without third-party integrations or ARK Platform.
+Dragon ships with Core. Stock Core does not include an ARK-hosted model.
 
-Optional integrations include:
-
-* External / manual payment recording (ledger)
-* ARK Email and other managed services through **ARK Platform** pairing
-* External labor-guide imports
-* NHTSA VIN decode (built in)
-
-First-party client applications (Desk, Tech, Companion, and similar) are separate products and are not included in this repository. Third-party developers can build alternative clients against the Core API contracts documented under `docs/` and exposed at `/api/mobile`.
-
-Features that depend on an integration or managed service remain disabled or clearly report that configuration is required when credentials are not available.
-
-Configure only the integrations and services you intend to use.
-
-### Dragon
-
-Dragon runtime ships with Core. Configure model providers through **Settings → Dragon** after install, or use `DRAGON_PROVIDER=fake` in development and tests.
-
-Stock Core does not include private shop knowledge sources or proprietary knowledge imports.
+Configure your own model provider under Settings after install, or set `DRAGON_PROVIDER` in the environment. The default is `none`. Tests may use `fake`. Private shop knowledge and training imports are not included.
 
 ## Architecture
 
-A few architectural rules are important when working on ARK:
+A few rules matter when working on Core:
 
-* **Database per tenant** - ARK does not use a shared-database `shop_id` tenancy model.
-* **Workstations and stations** represent physical locations within a shop, not separate tenants.
-* **Authoritative services own business truth.** Projections and views present that information rather than independently recreating it.
-* **Financial calculations stay server-side.** Important totals should come from authoritative calculators instead of being duplicated in client-side JavaScript.
+* **One database per shop.** Core does not use a shared-database `shop_id` tenancy model.
+* **Workstations and stations** are places in one shop, not separate tenants.
+* **Financial totals stay on the server.** The repair-order screen shows those totals. It does not calculate them again in the browser.
 
-These boundaries are intentional and should be preserved when extending the application.
-
-See `docs/engineering/` for additional architecture and engineering documentation. Some historical documentation may still reference the shop environment where ARK was originally developed and tested.
+See `docs/engineering/` for more. See `docs/PRODUCT_BOUNDARY.md` for what belongs in Core and what belongs in Hosted ARK.
 
 ## License
 
 **Copyright (C) 2026 Edward Soares Jr.**
 
-ARK is open-source software licensed under the **GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`).
+ARK Core is open-source software licensed under the **GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`).
 
 See:
 
 * `LICENSE`
 * `NOTICE`
+* `TRADEMARKS.md`
 
-Core records external payments on the ledger. Managed processor connectivity is
-not part of this repository - see `docs/platform/ark-payments-boundary-v1.md`.
+You may modify and fork Core under the AGPL. Modified distributions should not be presented as the official ARK distribution without permission.
 
-For project naming and branding guidelines, see `TRADEMARKS.md`.
-
-You may modify and fork ARK under the terms of the AGPL. Modified distributions should not be presented as the official ARK distribution without permission.
-
-The licensing information in this repository describes the project's licensing choices and is not legal advice.
+ARK SaaS is not licensed by this file. The note above is not legal advice.
 
 ## Status
 
-ARK is publicly available at:
+ARK Core is publicly available at:
 
 https://github.com/EdwardSoaresJr/ark-core

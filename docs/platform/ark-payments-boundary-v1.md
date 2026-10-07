@@ -1,5 +1,7 @@
 # ARK Payments Boundary v1
 
+This is a historical payments implementation note. It is not the current Core/Hosted product description. For that, see [PRODUCT_BOUNDARY.md](../PRODUCT_BOUNDARY.md).
+
 **Status:** Locked product doctrine · Documentation only  
 **Does not implement:** ARK Payments (Cloud), Square/Stripe in Core, billing, Hosted transfer, ARK Data, full ARK Connect
 

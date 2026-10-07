@@ -2,7 +2,7 @@
 
 ARK Core is licensed **AGPL-3.0-only**. See `LICENSE` and `NOTICE`.
 
-This repository is shop Core. It is not ARK Platform and it is not the client apps. Read [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md) before adding features.
+This repository is the free shop product. It is not ARK SaaS and it is not the client apps. Read [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md) before adding features.
 
 ## Setup
 
@@ -20,8 +20,9 @@ That is the default check for behavior changes. `composer test:serial` is the si
 
 - Commit `.env`, credentials, shop data, or licensed labor-guide CSVs
 - Paste provider tokens or model-provider secrets into Core
-- Advertise a Core feature that only works when ARK Platform is connected
-- Treat leftover Twilio or Square names as a supported self-host integration
+- Advertise a Core feature that only works in Hosted ARK
+- Treat a Core screen (communications, parts catalogs, payments) as proof that the matching Hosted ARK service ships with Core
+- Treat Twilio, Square, or PartsTech names as a supported self-host integration
 - Put financial totals, tax, or approval rules in browser code
 
 ## Pull requests
