@@ -400,6 +400,8 @@ final class StationAttentionProjection
                 'customer_label' => $row['customer_label'] ?? null,
                 'vehicle_label' => $row['vehicle_label'] ?? null,
                 'repair_order_id' => $row['repair_order_id'] ?? null,
+                'repair_order_status' => $row['repair_order_status'] ?? null,
+                'appointment_status' => $row['appointment_status'] ?? null,
                 'kind' => $kind,
                 'kind_label' => match ($kind) {
                     'return' => 'Return',
