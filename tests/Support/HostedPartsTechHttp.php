@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Parts\PartsTechCatalogLauncher;
 use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
 use App\Ark\Operations\Parts\PartsTechHttpClient;
 
@@ -11,6 +12,11 @@ function bindHostedPartsTechHttpClient(): void
     }
 
     require_once $path;
+    $launcher = dirname($path).'/HostedPartsTechCatalogLauncher.php';
+    if (is_file($launcher)) {
+        require_once $launcher;
+        app()->bind(PartsTechCatalogLauncher::class, \Ark\Saas\Catalog\HostedPartsTechCatalogLauncher::class);
+    }
     app()->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {
         $resolver = $app->make(PartsTechCredentialsResolver::class);
 
