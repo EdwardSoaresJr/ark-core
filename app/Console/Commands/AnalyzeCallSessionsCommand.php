@@ -17,7 +17,7 @@ class AnalyzeCallSessionsCommand extends Command
     public function handle(CallSessionAnalyzer $analyzer): int
     {
         if (! CallSessionAnalyzer::enabled()) {
-            $this->error('OpenAI API key is not configured in Settings → Communications → Recording.');
+            $this->error('Call analysis is not part of this shop installation.');
 
             return self::FAILURE;
         }

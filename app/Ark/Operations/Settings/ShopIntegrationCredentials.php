@@ -251,12 +251,12 @@ final class ShopIntegrationCredentials
 
     public function openaiTranscriptionModel(): string
     {
-        return 'whisper-1';
+        return '';
     }
 
     public function openaiAnalysisModel(): string
     {
-        return 'gpt-4o-mini';
+        return '';
     }
 
     public function openaiCredentialSource(): string

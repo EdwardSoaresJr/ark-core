@@ -50,7 +50,7 @@ final class ConversationSmsIntelligenceAnalyzer
         if (! $this->credentials->openaiConfigured()) {
             $slice->forceFill([
                 'analysis_status' => CallSessionAnalysisStatus::Skipped,
-                'analysis_error' => 'OpenAI API key is not configured in shop settings.',
+                'analysis_error' => 'Call and SMS summaries are not part of this shop installation.',
             ])->saveQuietly();
 
             return;
