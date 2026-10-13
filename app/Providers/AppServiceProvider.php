@@ -42,7 +42,6 @@ use App\Ark\Platform\Provisioning\Coolify\CoolifyClient;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyDeploymentMapper;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyExecutionStore;
 use App\Ark\Platform\Provisioning\Coolify\FakeCoolifyClient;
-use App\Ark\Platform\Provisioning\Coolify\HttpCoolifyClient;
 use App\Ark\Platform\Mail\ArkMailClient;
 use App\Ark\Platform\Mail\PlatformAwareMailManager;
 use App\Ark\Platform\Mail\PlatformMailTransport;
@@ -96,25 +95,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(ProvisionBuilder::class, fn (): ProvisionBuilder => ProvisionBuilder::default());
 
-        $this->app->bind(CoolifyClient::class, function (): CoolifyClient {
-            if (app()->environment('testing')) {
-                return new FakeCoolifyClient;
-            }
-
-            $enabled = (bool) config('ark-platform.coolify.enabled', false);
-            $token = (string) config('ark-platform.coolify.token', '');
-
-            if (! $enabled || $token === '') {
-                return new FakeCoolifyClient;
-            }
-
-            return new HttpCoolifyClient(
-                (string) config('ark-platform.coolify.base_url'),
-                $token,
-                (int) config('ark-platform.coolify.timeout', 15),
-                (int) config('ark-platform.coolify.connect_timeout', 5),
-            );
-        });
+        $this->app->bind(CoolifyClient::class, fn (): CoolifyClient => new FakeCoolifyClient);
 
         $this->app->bind(CoolifyAdapter::class, function ($app): CoolifyAdapter {
             $enabled = (bool) config('ark-platform.coolify.enabled', false);
