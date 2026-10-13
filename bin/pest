@@ -267,11 +267,36 @@ function relocateCheckoutList(array $entries, string $vendorOwner, string $vendo
 
 function relocateCheckoutPath(string $path, string $vendorOwner, string $vendorRoot, string $projectRoot): string
 {
-    $prefix = $vendorOwner.'/';
+    $normalized = normalizeCheckoutPath($path);
+    $ownerPrefix = $vendorOwner.'/';
 
-    if (! str_starts_with($path, $prefix) || str_starts_with($path, $vendorRoot.'/')) {
+    if (str_starts_with($normalized, $vendorRoot.'/') || ! str_starts_with($normalized, $ownerPrefix)) {
         return $path;
     }
 
-    return $projectRoot.'/'.substr($path, strlen($prefix));
+    return $projectRoot.'/'.substr($normalized, strlen($ownerPrefix));
+}
+
+function normalizeCheckoutPath(string $path): string
+{
+    $absolute = str_starts_with($path, '/');
+    $parts = [];
+
+    foreach (explode('/', $path) as $part) {
+        if ($part === '' || $part === '.') {
+            continue;
+        }
+
+        if ($part === '..') {
+            array_pop($parts);
+
+            continue;
+        }
+
+        $parts[] = $part;
+    }
+
+    $normalized = implode('/', $parts);
+
+    return $absolute ? '/'.$normalized : $normalized;
 }
