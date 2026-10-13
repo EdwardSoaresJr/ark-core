@@ -12,6 +12,12 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Support\Facades\Http;
 
+require_once __DIR__.'/../../Support/HostedPartsTechHttp.php';
+
+beforeEach(function (): void {
+    bindHostedPartsTechHttpClient();
+});
+
 test('parts catalog toolbar lists each connected catalog by name', function () {
     config()->set('services.partstech.username', 'ark-shop');
     config()->set('services.partstech.password', 'shop-password');
