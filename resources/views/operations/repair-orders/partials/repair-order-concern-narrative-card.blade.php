@@ -109,6 +109,11 @@
             <p class="ops-builder-present-card__empty">No customer story or findings recorded yet.</p>
         @endif
 
+        @include('operations.repair-orders.partials.finding-from-verified-findings-nudge', [
+            'repairOrder' => $repairOrder,
+            'concern' => $concern,
+        ])
+
         @if ($activeDragonApp && ! $isTerminal)
             <div
                 class="mt-3 rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"

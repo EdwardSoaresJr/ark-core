@@ -429,6 +429,10 @@
                     <label class="block text-[11px] font-medium text-slate-500">
                         Verified findings
                         <textarea name="verified_findings" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What was verified…">{{ old('verified_findings', $concern->verified_findings) }}</textarea>
+                        @include('operations.repair-orders.partials.finding-from-verified-findings-nudge', [
+                            'repairOrder' => $repairOrder,
+                            'concern' => $concern,
+                        ])
                     </label>
                     <label class="block text-[11px] font-medium text-slate-500">
                         DTCs, if present
