@@ -180,9 +180,8 @@ test('voice proposal does not write until confirm', function (): void {
 });
 
 test('dragon rewrite failure leaves original text for manual dvi', function (): void {
-    Http::fake([
-        'api.openai.com/*' => Http::response(['error' => 'down'], 503),
-    ]);
+    migrateHostedDragon();
+    Http::fake();
 
     $tech = User::factory()->create()->assignRole(ArkRole::Technician->value);
     $token = $tech->createToken('ark-tech:test')->plainTextToken;
@@ -194,6 +193,8 @@ test('dragon rewrite failure leaves original text for manual dvi', function (): 
         ->assertStatus(503)
         ->assertJsonPath('available', false)
         ->assertJsonPath('original', 'lf outer tie rod loose boot torn');
+
+    Http::assertNothingSent();
 });
 
 test('schema speech parser maps only configured slots', function (): void {
