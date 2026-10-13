@@ -10,7 +10,6 @@ use App\Ark\Operations\Parts\PartsCatalogButtonColor;
 use App\Ark\Operations\Parts\PartsCatalogLinks;
 use App\Ark\Operations\Parts\PartsCatalogProvider;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
-use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\PlatformConnectOrchestrator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,11 +76,9 @@ class ShopIntegrationSettingsController
             ])
             ->with('status', 'Email settings saved.');
 
-        if (PlatformConnection::current()->isConnected()) {
-            $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
-            if (! $synced) {
-                $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
-            }
+        $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
+        if (! $synced && filled(ShopSettings::current()->postmark_reply_to ?: ShopSettings::current()->email)) {
+            $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
         }
 
         return $redirect;

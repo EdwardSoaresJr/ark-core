@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-final class ArkPartsClient
+class ArkPartsClient
 {
     public function isConfigured(): bool
     {

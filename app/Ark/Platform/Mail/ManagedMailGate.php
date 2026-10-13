@@ -4,16 +4,26 @@ namespace App\Ark\Platform\Mail;
 
 use App\Ark\Platform\PlatformConnection;
 
-final class ManagedMailGate
+class ManagedMailGate
 {
     public static function platformConnected(): bool
+    {
+        return app(self::class)->connected();
+    }
+
+    public function connected(): bool
     {
         return PlatformConnection::current()->isConnected();
     }
 
     public static function platformSend(): bool
     {
-        if (! self::platformConnected()) {
+        return app(self::class)->sendEnabled();
+    }
+
+    public function sendEnabled(): bool
+    {
+        if (! $this->connected()) {
             return false;
         }
 

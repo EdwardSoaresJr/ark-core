@@ -47,12 +47,6 @@ final class InitiatePaymentCaptureAction
             ]);
         }
 
-        if (! PlatformConnection::current()->isConnected()) {
-            throw ValidationException::withMessages([
-                'capture' => 'Payment capture is unavailable - Platform is not connected. Use Record Payment for external card payments.',
-            ]);
-        }
-
         $attempt = DB::transaction(function () use ($repairOrder, $actor, $amountCents, $contextKind, $method, $input) {
             $publicId = (string) Str::uuid();
 
@@ -108,8 +102,12 @@ final class InitiatePaymentCaptureAction
             $attempt->completed_at = now();
             $attempt->save();
 
+            $detail = ($response['reason_code'] ?? null) === 'cloud_unavailable'
+                ? 'Payment capture is unavailable - Platform is not connected. Use Record Payment for external card payments.'
+                : 'Payment capture is unavailable - Platform did not respond. Use Record Payment if the card was taken outside ARK.';
+
             throw ValidationException::withMessages([
-                'capture' => 'Payment capture is unavailable - Platform did not respond. Use Record Payment if the card was taken outside ARK.',
+                'capture' => $detail,
             ]);
         }
 

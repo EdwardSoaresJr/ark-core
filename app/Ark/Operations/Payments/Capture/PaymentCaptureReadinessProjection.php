@@ -2,8 +2,6 @@
 
 namespace App\Ark\Operations\Payments\Capture;
 
-use App\Ark\Platform\PlatformConnection;
-
 /**
  * Disposable readiness projection for Take Payment (devices + public SDK config).
  * Never includes provider secrets.
@@ -32,7 +30,8 @@ final class PaymentCaptureReadinessProjection
             return self::$memo;
         }
 
-        if (! PlatformConnection::current()->isConnected()) {
+        $response = app(ArkPaymentsClient::class)->readiness();
+        if (($response['reason_code'] ?? null) === 'cloud_unavailable') {
             return self::$memo = [
                 'ready' => false,
                 'status' => 'cloud_disconnected',
@@ -46,7 +45,6 @@ final class PaymentCaptureReadinessProjection
             ];
         }
 
-        $response = app(ArkPaymentsClient::class)->readiness();
         if (($response['unavailable'] ?? false) === true || ($response['ok'] ?? false) !== true) {
             return self::$memo = [
                 'ready' => false,

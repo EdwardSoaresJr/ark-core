@@ -19,7 +19,6 @@ use App\Ark\Operations\Telephony\TelephonyEndpointType;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Ark\Operations\Telephony\TelephonyRingSchedule;
 use App\Ark\Operations\Telephony\TelephonyStaffPhoneForRing;
-use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -135,11 +134,9 @@ class ShopCommunicationsSettingsController
             ->route('operations.settings.shop.edit', ['section' => 'customer-messaging'])
             ->with('status', 'Customer messaging settings saved.');
 
-        if (PlatformConnection::current()->isConnected()) {
-            $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
-            if (! $synced) {
-                $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
-            }
+        $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
+        if (! $synced && filled(ShopSettings::current()->postmark_reply_to ?: ShopSettings::current()->email)) {
+            $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
         }
 
         return $redirect;

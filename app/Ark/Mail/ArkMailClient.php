@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-final class ArkMailClient
+class ArkMailClient
 {
     public function isConfigured(): bool
     {

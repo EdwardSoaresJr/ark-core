@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /**
  * Fetches the Cloud-authored service projection for this Box.
  */
-final class PlatformStatusClient
+class PlatformStatusClient
 {
     /**
      * @return array{

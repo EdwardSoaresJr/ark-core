@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Log;
 /**
  * Pushes shop-owned Reply-To to ARK Platform Mail.
  */
-final class ArkMailIdentityClient
+class ArkMailIdentityClient
 {
     public function syncShopReplyTo(): bool
     {
         $cloud = PlatformConnection::current();
         if (! $cloud->isConnected() || ! filled($cloud->credential())) {
-            return false;
+            return true;
         }
 
         $settings = ShopSettings::current();

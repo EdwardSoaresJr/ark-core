@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /**
  * Core → Platform managed Payments client.
  */
-final class ArkPaymentsClient
+class ArkPaymentsClient
 {
     public function isConfigured(): bool
     {
