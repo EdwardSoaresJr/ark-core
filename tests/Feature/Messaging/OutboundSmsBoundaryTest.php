@@ -5,18 +5,21 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Messaging\SendOutboundMessageAction;
+use App\Ark\Operations\Messaging\TwilioOutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Ark\Texting\ArkTextingClient;
 use App\Ark\Texting\PlatformOutboundSmsTransport;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-test('stock core binds platform outbound sms transport', function () {
+test('stock core binds the native twilio outbound sms transport', function () {
     $transport = app(OutboundSmsTransport::class);
 
-    expect($transport)->toBeInstanceOf(PlatformOutboundSmsTransport::class)
+    expect($transport)->toBeInstanceOf(TwilioOutboundSmsTransport::class)
+        ->and($transport)->not->toBeInstanceOf(PlatformOutboundSmsTransport::class)
         ->and($transport)->not->toBeInstanceOf(NotConfiguredOutboundSmsTransport::class)
         ->and($transport->isConfigured())->toBeFalse();
 });
@@ -67,7 +70,7 @@ test('platform outbound sms transport sends conversation.send through platform',
         ], 200),
     ]);
 
-    $result = app(OutboundSmsTransport::class)->send('+17195550100', 'Hello Molly');
+    $result = (new PlatformOutboundSmsTransport(app(ArkTextingClient::class)))->send('+17195550100', 'Hello Molly');
 
     expect($result->messageId)->toBe('SMfake001')
         ->and($result->status)->toBe('provider_sent');
@@ -107,7 +110,7 @@ test('platform outbound sms transport sends attachments through the same convers
         ], 200),
     ]);
 
-    $result = app(OutboundSmsTransport::class)->send('+17195550100', 'Photo attached', [
+    $result = (new PlatformOutboundSmsTransport(app(ArkTextingClient::class)))->send('+17195550100', 'Photo attached', [
         'https://files.example.test/mms/a.jpg',
         'https://files.example.test/mms/b.jpg',
     ]);

@@ -51,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             require __DIR__.'/../routes/install.php';
             require __DIR__.'/../routes/cloud.php';
             require __DIR__.'/../routes/cloud-ingress.php';
+            require __DIR__.'/../routes/messaging-webhooks.php';
             require __DIR__.'/../routes/portal.php';
             require __DIR__.'/../routes/oidc.php';
             require __DIR__.'/../routes/public.php';
