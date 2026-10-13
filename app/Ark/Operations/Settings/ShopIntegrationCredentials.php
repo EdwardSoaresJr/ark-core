@@ -2,10 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
-use App\Ark\Operations\Messaging\MessagingAccount;
-use App\Ark\Operations\Messaging\MessagingAccountResolver;
 use Illuminate\Support\Facades\Schema;
-use Throwable;
 
 final class ShopIntegrationCredentials
 {
@@ -30,26 +27,22 @@ final class ShopIntegrationCredentials
 
     public function twilioAccountSid(): ?string
     {
-        $account = $this->messagingAccount();
-
-        return $account === null || $account->accountSid === '' ? null : $account->accountSid;
+        return null;
     }
 
     public function twilioAuthToken(): ?string
     {
-        $account = $this->messagingAccount();
-
-        return $account === null || $account->authToken === '' ? null : $account->authToken;
+        return null;
     }
 
     public function hasStoredTwilioAuthToken(): bool
     {
-        return $this->twilioAuthToken() !== null;
+        return false;
     }
 
     public function twilioCredentialSource(): string
     {
-        return $this->messagingAccount() === null ? 'none' : 'encrypted';
+        return 'none';
     }
 
     public function partsTechBaseUrl(): string
@@ -275,21 +268,9 @@ final class ShopIntegrationCredentials
     {
         return match ($source) {
             'database' => 'Currently loaded from shop settings.',
-            'encrypted' => 'Currently loaded from the encrypted messaging account.',
             'env' => 'Currently loaded from server environment fallback.',
             default => 'Not configured yet.',
         };
-    }
-
-    private function messagingAccount(): ?MessagingAccount
-    {
-        try {
-            $account = app(MessagingAccountResolver::class)->current();
-        } catch (Throwable) {
-            return null;
-        }
-
-        return $account?->complete() === true ? $account : null;
     }
 
     private function resolve(?string $databaseValue, mixed $environmentValue): ?string
