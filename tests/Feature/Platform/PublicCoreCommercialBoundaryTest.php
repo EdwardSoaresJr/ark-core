@@ -1,5 +1,16 @@
 <?php
 
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
+
+test('the outbound sms port stays a fail-closed seam and does not grow provider methods', function () {
+    $methods = array_map(
+        static fn (ReflectionMethod $method): string => $method->getName(),
+        (new ReflectionClass(OutboundSmsTransport::class))->getMethods(),
+    );
+
+    expect($methods)->toBe(['isConfigured', 'send']);
+});
+
 test('public core application code does not call twilio or the legacy platform texting client', function () {
     $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
     $packages = array_keys(array_merge($composer['require'] ?? [], $composer['require-dev'] ?? []));

@@ -14,6 +14,8 @@ Do not add provider credential screens, setup wizards, turnkey adapters, or a pl
 
 SaaS consumes a pinned Core release. Core does not depend on SaaS. Landlord provisions hosts and is not on a shop's request path.
 
+Shop screens that already offer a text call `OutboundSmsTransport`. A stock install binds that port to a sender that is not configured, so the shop keeps running and no message is sent. The port stays in Core because those screens already depend on it, and because SaaS replaces the binding when texting is installed. It is not a supported integration contract. Do not add credentials, webhooks, provider selection, or media retrieval to it. It cannot move into SaaS: Core must not import SaaS, and deleting the port would stop those screens from compiling.
+
 ## Core
 
 ARK Core is the free, open-source shop-management product for one repair location. This repository is that product. It is not a trial or a teaser for Hosted ARK.
