@@ -11,7 +11,6 @@ use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
-use App\Ark\Texting\PlatformOutboundSmsTransport;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;
@@ -81,13 +80,6 @@ class SendOutboundContactMessageAction
         $result = $this->transport->send($phone, $advisorBody, $mediaUrls);
 
         $this->linkKnownCustomer($conversation, $phone);
-
-        if ($this->transport instanceof PlatformOutboundSmsTransport) {
-            return [
-                'message' => null,
-                'provider_message_sid' => $result->messageId,
-            ];
-        }
 
         $message = $this->recorder->recordOutboundSmsToConversation(
             conversation: $conversation,

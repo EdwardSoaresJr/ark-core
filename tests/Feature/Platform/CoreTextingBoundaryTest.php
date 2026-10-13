@@ -2,14 +2,13 @@
 
 use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
-use App\Ark\Texting\PlatformOutboundSmsTransport;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 test('public core does not ship a twilio account or messaging webhook', function () {
-    expect(class_exists('App\\Ark\\Operations\\Messaging\\TwilioOutboundSmsTransport'))->toBeFalse()
-        ->and(class_exists('App\\Ark\\Operations\\Messaging\\TwilioMessagingWebhookController'))->toBeFalse()
-        ->and(class_exists('App\\Ark\\Operations\\Messaging\\MessagingCredentialStore'))->toBeFalse()
+    expect(is_file(base_path('app/Ark/Texting/PlatformOutboundSmsTransport.php')))->toBeFalse()
+        ->and(is_file(base_path('app/Ark/Texting/ArkTextingClient.php')))->toBeFalse()
+        ->and(is_dir(base_path('app/Ark/Texting')))->toBeFalse()
         ->and(Route::has('webhooks.twilio.messaging.inbound'))->toBeFalse()
         ->and(Route::has('webhooks.twilio.messaging.status'))->toBeFalse();
 
@@ -19,13 +18,12 @@ test('public core does not ship a twilio account or messaging webhook', function
         ->and($envExample)->not->toMatch('/^TWILIO_PHONE_NUMBER=/m');
 });
 
-test('stock core leaves outbound sms unconfigured and does not call platform', function () {
+test('stock core leaves outbound sms unconfigured and does not call a provider', function () {
     Http::fake();
 
     $transport = app(OutboundSmsTransport::class);
 
     expect($transport)->toBeInstanceOf(NotConfiguredOutboundSmsTransport::class)
-        ->and($transport)->not->toBeInstanceOf(PlatformOutboundSmsTransport::class)
         ->and($transport->isConfigured())->toBeFalse();
 
     expect(fn () => $transport->send('+17195550100', 'Hello'))

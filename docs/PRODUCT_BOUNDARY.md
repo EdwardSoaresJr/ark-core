@@ -2,7 +2,17 @@
 
 What this repository is, what a stock Core install does, and what lives in Hosted ARK.
 
-This page is the current public product split. It is not a roadmap and it does not publish prices.
+This page is the current public product split. It is not a roadmap and it does not publish prices. It is the policy for changes in ARK Core, ARK SaaS, and ARK Landlord. Do not keep a second copy.
+
+## Rule for changes
+
+Public Core runs the shop. Private SaaS sells the extras. Private Landlord runs the infrastructure. Only the project owner authorizes an exception.
+
+A change belongs in this repository when a shop needs it to operate with no ARK SaaS account. Optional texting, voice, commercial AI, parts catalogs, card capture, subscriptions, and provider accounts do not. If that is unclear, stop and ask the project owner.
+
+Do not add provider credential screens, setup wizards, turnkey adapters, or a plugin system to make those services easier to wire up. A developer may write an integration in their own Laravel code. The maintained version is ARK SaaS.
+
+SaaS consumes a pinned Core release. Core does not depend on SaaS. Landlord provisions hosts and is not on a shop's request path.
 
 ## Core
 
@@ -98,15 +108,14 @@ PartsTech is one example. Shop catalog access is part of Hosted ARK. This reposi
 | Product | Relationship to Core |
 | --- | --- |
 | Hosted ARK / ARK SaaS | Private commercial product. Pinned Core, plus ARK-operated services, commercial integrations, and managed infrastructure. |
+| ARK Landlord | Private. Host provisioning, deployment, monitoring, and recovery. Not on a shop's request path. |
 | Shop website | Customer-facing site and editor. Core may keep shop identity and lead records. See [platform/ark-core-website-boundary.md](platform/ark-core-website-boundary.md). |
 | Desk, Tech, Companion, and similar clients | Separate apps. Core exposes `/api/mobile`, `/api/desk`, `/api/tech`, and `/api/station`. |
 | Licensed labor guides | Data you license separately. Not redistributed. |
 
 ## Dragon
 
-Dragon ships with Core. Stock Core does not include an ARK-hosted model.
-
-Configure your own model provider under Settings, or set `DRAGON_PROVIDER` in the environment. The default is `none`. Tests may use `fake`. Private shop knowledge and training imports are not included.
+Core includes Dragon settings so a shop can point at a model it already runs. The default is `none`. Tests may use `fake`. An ARK-hosted model, provider credential store, and new AI product are not added here. Those belong to ARK SaaS.
 
 ## Not a supported self-host integration
 

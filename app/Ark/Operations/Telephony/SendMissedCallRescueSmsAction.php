@@ -12,7 +12,6 @@ use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Texting\PlatformOutboundSmsTransport;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -104,19 +103,17 @@ class SendMissedCallRescueSmsAction
         try {
             $result = $this->transport->send($normalizedPhone, $body);
 
-            if (! $this->transport instanceof PlatformOutboundSmsTransport) {
-                $conversation = $this->conversations->forPhone($normalizedPhone);
+            $conversation = $this->conversations->forPhone($normalizedPhone);
 
-                $this->recorder->recordSystemOutboundSms(
-                    $conversation,
-                    $body,
-                    $result->messageId,
-                    metadata: [
-                        'missed_call_rescue' => true,
-                        'call_session_id' => $session->id,
-                    ],
-                );
-            }
+            $this->recorder->recordSystemOutboundSms(
+                $conversation,
+                $body,
+                $result->messageId,
+                metadata: [
+                    'missed_call_rescue' => true,
+                    'call_session_id' => $session->id,
+                ],
+            );
 
             Cache::put($cooldownKey, true, now()->addMinutes($flow->missedCallRescueCooldownMinutes()));
 

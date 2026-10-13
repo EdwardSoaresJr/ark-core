@@ -14,7 +14,6 @@ use App\Ark\Operations\Observations\CustomerRepliedObservationEmitter;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\CommunicationMessageContext;
-use App\Ark\Texting\PlatformOutboundSmsTransport;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;
@@ -93,15 +92,6 @@ class SendOutboundMessageAction
             'last_sms_delivery_status' => $result->status !== '' ? $result->status : 'queued',
         ])->save();
 
-        if ($this->transport instanceof PlatformOutboundSmsTransport) {
-            $this->linkExistingConversation($conversation, $customer, $repairOrder);
-
-            return [
-                'message' => null,
-                'provider_message_sid' => $result->messageId,
-            ];
-        }
-
         $message = $this->recordOutboundMessage(
             customer: $customer,
             actor: $actor,
@@ -133,19 +123,6 @@ class SendOutboundMessageAction
             'message' => $message,
             'provider_message_sid' => $result->messageId,
         ];
-    }
-
-    private function linkExistingConversation(?Conversation $conversation, Customer $customer, ?RepairOrder $repairOrder): void
-    {
-        if ($conversation === null) {
-            return;
-        }
-
-        $this->linker->link($conversation, $customer);
-
-        if ($repairOrder !== null) {
-            $this->linker->linkRepairOrderContext($conversation, $repairOrder);
-        }
     }
 
     /**
