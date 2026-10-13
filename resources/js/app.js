@@ -25,7 +25,6 @@ import { arkWorksheetContinuity, arkWorksheetFormSubmit, initPartProcurementSele
 import { loadedLaborCostCalculator } from './ark-loaded-labor-cost-calculator';
 import { shopOverheadCalculator } from './ark-shop-overhead-calculator';
 import { arkOperationalClock } from './ark-operational-clock';
-import { arkPortalEstimateDeposit, arkPortalInvoicePay } from './ark-square-payments';
 import { arkPortalEstimateForm } from './ark-portal-estimate-authorization';
 import { arkPortalSignature } from './ark-portal-signature';
 import { initWorkspaceTabs } from './ark-workspace-tabs';
@@ -63,8 +62,6 @@ import { initDepositBreakdowns } from './ark-deposit-breakdown';
 import { arkRoModeControl, initRoModeControl } from './ark-ro-mode-control';
 import { arkWorkspaceModal } from './ark-workspace-modal';
 import { arkSavedWorkPicker } from './ark-saved-work-picker';
-import { arkDragonServiceAdvisor } from './ark-dragon-service-advisor';
-import { arkReviewEstimateNotes } from './ark-review-estimate-notes';
 import { arkDocumentAdd } from './ark-document-add';
 import { initWorkspaceStrip } from './ark-workspace-strip';
 import { arkScopeEntryIntake } from './ark-scope-entry-intake';
@@ -112,10 +109,8 @@ Alpine.data('arkIntakeVehicleSelect', (config = {}) => arkIntakeVehicleSelect(co
 Alpine.data('arkVinDisplay', arkVinDisplay);
 Alpine.data('loadedLaborCostCalculator', (config = {}) => loadedLaborCostCalculator(config));
 Alpine.data('shopOverheadCalculator', (config = {}) => shopOverheadCalculator(config));
-Alpine.data('arkPortalInvoicePay', (config = {}) => arkPortalInvoicePay(config));
 Alpine.data('arkPortalSignature', (config = {}) => arkPortalSignature(config));
 Alpine.data('arkPortalEstimateForm', (config = {}) => arkPortalEstimateForm(config));
-Alpine.data('arkPortalEstimateDeposit', (config = {}) => arkPortalEstimateDeposit(config));
 Alpine.data('arkCommsInterrupt', arkCommsInterrupt);
 Alpine.data('arkCallQueue', () => arkCallQueue());
 Alpine.data('arkTelephonyCallback', arkTelephonyCallback);
@@ -139,8 +134,6 @@ Alpine.data('arkOperationalClock', (config = {}) => arkOperationalClock(config))
 Alpine.data('arkRoModeControl', (config = {}) => arkRoModeControl(config));
 Alpine.data('arkWorkspaceModal', (config = {}) => arkWorkspaceModal(config));
 Alpine.data('arkSavedWorkPicker', (config = {}) => arkSavedWorkPicker(config));
-Alpine.data('arkDragonServiceAdvisor', (config = {}) => arkDragonServiceAdvisor(config));
-Alpine.data('arkReviewEstimateNotes', (config = {}) => arkReviewEstimateNotes(config));
 Alpine.data('arkDocumentAdd', (config = {}) => arkDocumentAdd(config));
 Alpine.data('arkRoMention', (visits = []) => arkRoMention(visits));
 

@@ -25,6 +25,8 @@
 /node_modules
 /public/build
 /public/build.bak-*/
+/public/build-saas
+/public/saas-hot
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
