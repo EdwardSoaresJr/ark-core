@@ -7,11 +7,14 @@ use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Schema;
+use Tests\Support\AssertDisposableTestDatabase;
 
 abstract class TestCase extends BaseTestCase
 {
     protected function setUp(): void
     {
+        AssertDisposableTestDatabase::reconcilePhpUnitEnvironmentIntoProcess();
+
         parent::setUp();
 
         $this->withoutVite();

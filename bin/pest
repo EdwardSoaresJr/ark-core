@@ -142,6 +142,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
     $_ENV['APP_BASE_PATH'] = $rootPath;
     $_SERVER['APP_BASE_PATH'] = $rootPath;
     putenv('APP_BASE_PATH='.$rootPath);
+    ensureFrameworkDirectories($rootPath);
 
     if (! configurationWasProvided($originalArguments) && is_file($rootPath.'/phpunit.xml')) {
         $configuration = testingConfiguration($rootPath);
@@ -275,6 +276,24 @@ function relocateCheckoutList(array $entries, string $vendorOwner, string $vendo
     }
 
     return $entries;
+}
+
+function ensureFrameworkDirectories(string $rootPath): void
+{
+    foreach ([
+        'storage/framework/views',
+        'storage/framework/sessions',
+        'storage/framework/cache/data',
+        'storage/logs',
+        'bootstrap/cache',
+    ] as $directory) {
+        $path = $rootPath.'/'.$directory;
+
+        if (! is_dir($path) && ! mkdir($path, 0775, true) && ! is_dir($path)) {
+            fwrite(STDERR, "Could not create {$path}\n");
+            exit(1);
+        }
+    }
 }
 
 function configurationWasProvided(array $arguments): bool
