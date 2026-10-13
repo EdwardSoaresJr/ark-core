@@ -66,6 +66,9 @@ final class ArkPaymentsClient
     private function request(string $method, string $path, ?array $body = null, ?array $query = null, int $timeout = 20): array
     {
         $cloud = PlatformConnection::current();
+        if (! $cloud->isConnected()) {
+            return ['ok' => false, 'reason_code' => 'not_connected'];
+        }
         $base = $cloud->baseUrl();
         $credential = (string) $cloud->credential();
         $installationUuid = InstallationIdentity::uuid();

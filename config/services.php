@@ -25,7 +25,7 @@ return [
 
     /* @deprecated Use services.ark_platform - retained while ARK Cloud terminology is retired. */
     'ark_cloud' => [
-        'base_url' => env('ARK_PLATFORM_BASE_URL', env('ARK_CLOUD_BASE_URL', env('ARK_MAIL_SERVICE_URL', 'https://cloud.arksms.com'))),
+        'base_url' => env('ARK_PLATFORM_BASE_URL', env('ARK_CLOUD_BASE_URL', env('ARK_MAIL_SERVICE_URL'))),
         'offline_recovery_public_key' => env('ARK_PLATFORM_OFFLINE_RECOVERY_PUBLIC_KEY', env('ARK_CLOUD_OFFLINE_RECOVERY_PUBLIC_KEY', 'AJJroSsitWeaIjsqIaK30jDB8Y7ifkbwfNoEBuRstu8')),
     ],
 
