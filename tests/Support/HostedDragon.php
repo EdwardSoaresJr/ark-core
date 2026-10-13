@@ -31,6 +31,20 @@ function bootHostedDragon(): bool
     return true;
 }
 
+function grantHostedDragon(): void
+{
+    if (! bootHostedDragon()) {
+        return;
+    }
+
+    require_once __DIR__.'/AllowDragonEntitlement.php';
+
+    app()->instance(
+        \Ark\Saas\Entitlement\Entitlement::class,
+        new \Tests\Support\AllowDragonEntitlement,
+    );
+}
+
 function migrateHostedDragon(): void
 {
     if (! bootHostedDragon()) {
@@ -42,4 +56,5 @@ function migrateHostedDragon(): void
         '--realpath' => true,
         '--force' => true,
     ]);
+    grantHostedDragon();
 }
