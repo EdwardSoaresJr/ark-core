@@ -139,6 +139,18 @@ use Symfony\Component\Console\Output\ConsoleOutput;
         relocateSharedVendor($loader, $rootPath);
     }
 
+    $_ENV['APP_BASE_PATH'] = $rootPath;
+    $_SERVER['APP_BASE_PATH'] = $rootPath;
+    putenv('APP_BASE_PATH='.$rootPath);
+
+    if (! configurationWasProvided($originalArguments) && is_file($rootPath.'/phpunit.xml')) {
+        $configuration = testingConfiguration($rootPath);
+        $arguments[] = '--configuration';
+        $arguments[] = $configuration;
+        $originalArguments[] = '--configuration';
+        $originalArguments[] = $configuration;
+    }
+
     $input = new ArgvInput;
 
     $testSuite = TestSuite::getInstance(
@@ -263,6 +275,37 @@ function relocateCheckoutList(array $entries, string $vendorOwner, string $vendo
     }
 
     return $entries;
+}
+
+function configurationWasProvided(array $arguments): bool
+{
+    foreach ($arguments as $argument) {
+        if (! is_string($argument)) {
+            continue;
+        }
+
+        if ($argument === '--configuration' || $argument === '-c' || str_starts_with($argument, '--configuration=') || str_starts_with($argument, '-c=')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function testingConfiguration(string $rootPath): string
+{
+    $source = file_get_contents($rootPath.'/phpunit.xml');
+    $configured = preg_replace(
+        '/(<ini\s+name="memory_limit"\s+value=")[^"]+("\s*\/>)/',
+        '${1}2048M${2}',
+        $source,
+        1,
+    );
+
+    $path = sys_get_temp_dir().'/ark-core-phpunit-'.substr(hash('sha256', $rootPath), 0, 12).'.xml';
+    file_put_contents($path, $configured === null ? $source : $configured);
+
+    return $path;
 }
 
 function relocateCheckoutPath(string $path, string $vendorOwner, string $vendorRoot, string $projectRoot): string
