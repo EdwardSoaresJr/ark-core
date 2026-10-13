@@ -1,12 +1,13 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonAgentMemory;
-use App\Ark\Dragon\Agent\DragonMemoryContext;
-use App\Ark\Dragon\Agent\DragonModelTurn;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
-use App\Ark\Dragon\Agent\RecallDragonMemory;
-use App\Ark\Dragon\Agent\Tools\MemoryRecallTool;
-use App\Ark\Dragon\Agent\Tools\ShopFinancialSnapshotTool;
+
+use Ark\Saas\Dragon\Agent\DragonAgentMemory;
+use Ark\Saas\Dragon\Agent\DragonMemoryContext;
+use Ark\Saas\Dragon\Agent\DragonModelTurn;
+use Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider;
+use Ark\Saas\Dragon\Agent\RecallDragonMemory;
+use Ark\Saas\Dragon\Agent\Tools\MemoryRecallTool;
+use Ark\Saas\Dragon\Agent\Tools\ShopFinancialSnapshotTool;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Workstations\Workstation;
 use App\Ark\Runtime\Authorization\ArkRole;
@@ -14,6 +15,13 @@ use App\Ark\Station\StationDeviceToken;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Str;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK SaaS.');
+    }
+    migrateHostedDragon();
+});
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);

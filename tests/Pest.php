@@ -38,6 +38,7 @@ require_once __DIR__.'/Support/HostedPlatformParts.php';
 require_once __DIR__.'/Support/HostedPlatformMail.php';
 require_once __DIR__.'/Support/HostedPlatformVoice.php';
 require_once __DIR__.'/Support/RteWorksheetFixture.php';
+require_once __DIR__.'/Support/HostedDragon.php';
 
 /*
 |--------------------------------------------------------------------------

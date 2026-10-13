@@ -1,9 +1,17 @@
 <?php
 
-use App\Ark\Dragon\Agent\Contracts\DragonModelProvider;
-use App\Ark\Dragon\Agent\DragonProviderUnavailable;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
-use App\Ark\Dragon\Agent\Providers\NotConfiguredDragonProvider;
+
+use Ark\Saas\Dragon\Agent\Contracts\DragonModelProvider;
+use Ark\Saas\Dragon\Agent\DragonProviderUnavailable;
+use Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider;
+use Ark\Saas\Dragon\Agent\Providers\NotConfiguredDragonProvider;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK SaaS.');
+    }
+    migrateHostedDragon();
+});
 
 test('default dragon model provider is not configured', function (): void {
     config(['dragon.provider' => 'none']);

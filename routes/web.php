@@ -1,15 +1,6 @@
 <?php
 
 use App\Ark\Communications\Provisioning\EndpointProvisionController;
-use App\Ark\Dragon\ReviewEstimateNotes\Http\ApplyReviewEstimateNotesProposalController;
-use App\Ark\Dragon\ReviewEstimateNotes\Http\RequestReviewEstimateNotesController;
-use App\Ark\Dragon\ServiceAdvisor\Http\ApplyLineNoteRewriteController;
-use App\Ark\Dragon\ServiceAdvisor\Http\ApplyServiceAdvisorRewriteController;
-use App\Ark\Dragon\ServiceAdvisor\Http\ApplyVisitReasonRewriteController;
-use App\Ark\Dragon\ServiceAdvisor\Http\RequestLineNoteRewriteController;
-use App\Ark\Dragon\ServiceAdvisor\Http\RequestServiceAdvisorRewriteController;
-use App\Ark\Dragon\ServiceAdvisor\Http\RequestVisitReasonRewriteController;
-use App\Ark\Dragon\ServiceAdvisor\Http\RevertServiceAdvisorRewriteController;
 use App\Ark\Operations\Appointments\AppointmentAssignController;
 use App\Ark\Operations\Appointments\AppointmentConfirmationSmsController;
 use App\Ark\Operations\Appointments\AppointmentCreateController;
@@ -294,8 +285,6 @@ use App\Ark\Operations\Workstations\StoreWorkstationController;
 use App\Ark\Operations\Workstations\UpdateWorkstationController;
 use App\Ark\Operations\Workstations\WorkstationOperatorController;
 use App\Ark\Operations\WorkTemplates\ApplyWorkTemplateController;
-use App\Ark\Operations\WorkTemplates\HistoricalWorkRecallAssistController;
-use App\Ark\Operations\WorkTemplates\HistoricalWorkRecallAssistStatusController;
 use App\Ark\Operations\WorkTemplates\HistoricalWorkRecallController;
 use App\Ark\Operations\WorkTemplates\WorkTemplateSearchController;
 use App\Ark\Platform\ClusterIndexController;
@@ -1259,50 +1248,6 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/app/repair-orders/{repairOrder}/work-templates/{workTemplate}/historical-recall', HistoricalWorkRecallController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.work-templates.historical-recall');
-
-        Route::post('/app/repair-orders/{repairOrder}/work-templates/{workTemplate}/historical-recall/assist', HistoricalWorkRecallAssistController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.work-templates.historical-recall.assist');
-
-        Route::get('/app/repair-orders/{repairOrder}/dragon-assist/{assistRequest}', HistoricalWorkRecallAssistStatusController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.dragon-assist.show');
-
-        Route::post('/app/repair-orders/{repairOrder}/concerns/{concern}/dragon-service-advisor', RequestServiceAdvisorRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.concerns.dragon-service-advisor');
-
-        Route::post('/app/repair-orders/{repairOrder}/concerns/{concern}/dragon-service-advisor/{assistRequest}/apply', ApplyServiceAdvisorRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.concerns.dragon-service-advisor.apply');
-
-        Route::post('/app/repair-orders/{repairOrder}/dragon-service-advisor/visit-reason', RequestVisitReasonRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.dragon-service-advisor.visit-reason');
-
-        Route::post('/app/repair-orders/{repairOrder}/dragon-service-advisor/visit-reason/{assistRequest}/apply', ApplyVisitReasonRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.dragon-service-advisor.visit-reason.apply');
-
-        Route::post('/app/repair-orders/{repairOrder}/lines/{line}/dragon-service-advisor', RequestLineNoteRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.lines.dragon-service-advisor');
-
-        Route::post('/app/repair-orders/{repairOrder}/lines/{line}/dragon-service-advisor/{assistRequest}/apply', ApplyLineNoteRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.lines.dragon-service-advisor.apply');
-
-        Route::post('/app/repair-orders/{repairOrder}/dragon-service-advisor/{application}/revert', RevertServiceAdvisorRewriteController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.dragon-service-advisor.revert');
-
-        Route::post('/app/repair-orders/{repairOrder}/review-estimate-notes', RequestReviewEstimateNotesController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.review-estimate-notes');
-
-        Route::post('/app/repair-orders/{repairOrder}/review-estimate-notes/{assistRequest}/apply', ApplyReviewEstimateNotesProposalController::class)
-            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
-            ->name('operations.repair-orders.review-estimate-notes.apply');
 
         Route::post('/app/repair-orders/{repairOrder}/work-templates/apply', ApplyWorkTemplateController::class)
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

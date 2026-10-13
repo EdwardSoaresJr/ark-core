@@ -1,7 +1,7 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonModelTurn;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
+use Ark\Saas\Dragon\Agent\DragonModelTurn;
+use Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider;
 use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Appointments\AppointmentKind;
 use App\Ark\Operations\Appointments\AppointmentStatus;
@@ -21,6 +21,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function (): void {
+    migrateHostedDragon();
     $this->seed(ArkAuthorizationSeeder::class);
     config(['shop.identity' => 'test.demo-auto.local']);
     config(['dragon.provider' => 'fake']);
@@ -252,6 +253,8 @@ test('station dashboard serves attention rows and coming in without dragon', fun
 });
 
 test('hosted attention nudge uses snapshot only and failure does not break dashboard', function (): void {
+    config()->set('dragon.hosted_chat_enabled', true);
+
     $issued = StationDeviceToken::issue('front-counter-glass', 'test.demo-auto.local');
     $customer = attentionCustomer('Dana', 'Miles', '7195550101');
     attentionRepairOrder(

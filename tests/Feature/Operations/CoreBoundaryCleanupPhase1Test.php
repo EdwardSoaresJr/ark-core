@@ -1,6 +1,6 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonAgentMemory;
+use Ark\Saas\Dragon\Agent\DragonAgentMemory;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -9,6 +9,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Str;
 
 beforeEach(function (): void {
+    migrateHostedDragon();
     $this->seed(ArkAuthorizationSeeder::class);
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
 });

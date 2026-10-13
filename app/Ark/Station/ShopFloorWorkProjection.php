@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Ark\Dragon;
+namespace App\Ark\Station;
 
 use App\Ark\Mobile\MobileRepairOrderStatusTone;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -8,14 +8,14 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Support\Collection;
 
 /**
- * Minimized shop-floor projection for Dragon - read-only, no customer PII.
+ * Shop-floor work cards. Read-only, no customer PII.
  *
  * Summary counts are computed across ALL open repair orders.
  * Item cards may be capped (config shop.dragon_work_items_limit) with truncation flagged.
  *
  * Oldest active RO uses displayOpenedAt() = opened_at ?? created_at (not updated_at).
  */
-final class DragonWorkProjection
+final class ShopFloorWorkProjection
 {
     /**
      * @return array{

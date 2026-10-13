@@ -1,19 +1,20 @@
 <?php
 
-use App\Ark\Dragon\Assist\DragonAssistProjection;
-use App\Ark\Dragon\Assist\DragonAssistRequest;
-use App\Ark\Dragon\Assist\DragonAssistStatus;
-use App\Ark\Dragon\Assist\DragonAssistTaskType;
-use App\Ark\Dragon\Assist\RequestDragonAssistAction;
-use App\Ark\Dragon\ServiceAdvisor\ApplyServiceAdvisorRewriteAction;
-use App\Ark\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication;
-use App\Ark\Dragon\ServiceAdvisor\RequestServiceAdvisorRewriteAction;
-use App\Ark\Dragon\ServiceAdvisor\RevertServiceAdvisorRewriteAction;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorRewriteResultSchema;
+
+use Ark\Saas\Dragon\Assist\DragonAssistProjection;
+use Ark\Saas\Dragon\Assist\DragonAssistRequest;
+use Ark\Saas\Dragon\Assist\DragonAssistStatus;
+use Ark\Saas\Dragon\Assist\DragonAssistTaskType;
+use Ark\Saas\Dragon\Assist\RequestDragonAssistAction;
+use Ark\Saas\Dragon\ServiceAdvisor\ApplyServiceAdvisorRewriteAction;
+use Ark\Saas\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication;
+use Ark\Saas\Dragon\ServiceAdvisor\RequestServiceAdvisorRewriteAction;
+use Ark\Saas\Dragon\ServiceAdvisor\RevertServiceAdvisorRewriteAction;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorRewriteResultSchema;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -22,6 +23,13 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Validation\ValidationException;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK SaaS.');
+    }
+    migrateHostedDragon();
+});
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -157,7 +165,7 @@ test('rewrite without a dragon node completes through hosted dragon', function (
 
 test('completed rewrite with failed fact check is rejected and apply unavailable', function (): void {
     [$ro, $concern] = saRo();
-    app(\App\Ark\Dragon\Agent\Providers\FakeDragonProvider::class)->structuredQueue = [[
+    app(\Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider::class)->structuredQueue = [[
         'proposal' => 'Pads are worn. Replace immediately - unsafe to drive.',
         'facts_preserved' => [],
         'material_changes' => [],

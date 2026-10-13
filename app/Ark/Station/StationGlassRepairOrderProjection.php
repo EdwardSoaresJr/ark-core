@@ -2,7 +2,7 @@
 
 namespace App\Ark\Station;
 
-use App\Ark\Dragon\DragonWorkProjection;
+use App\Ark\Station\ShopFloorWorkProjection;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -11,7 +11,7 @@ use App\Ark\Operations\Work\AdvisorTask;
 final class StationGlassRepairOrderProjection
 {
     public function __construct(
-        private readonly DragonWorkProjection $work,
+        private readonly ShopFloorWorkProjection $work,
         private readonly EstimateTotalsCalculator $totals,
         private readonly StationAttentionProjection $attention,
         private readonly StationGlassTasksProjection $tasks,

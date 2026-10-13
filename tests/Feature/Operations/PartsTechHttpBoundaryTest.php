@@ -5,6 +5,11 @@ use App\Ark\Operations\Parts\PartsTechLoginCredentials;
 use Illuminate\Support\Facades\Http;
 
 test('stock core does not call PartsTech', function () {
+    if (Http::getFacadeApplication() === null) {
+        $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+    }
+
     Http::fake();
     $client = new PartsTechHttpClient(new PartsTechLoginCredentials(
         username: 'shop-user',

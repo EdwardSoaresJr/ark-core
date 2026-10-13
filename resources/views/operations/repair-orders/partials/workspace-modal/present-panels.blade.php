@@ -5,6 +5,11 @@
 
     $shopSettingsForBilling = ShopSettings::current();
     $techniciansForMeta = $technicians ?? collect();
+    $dragonReady = class_exists(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::class)
+        && \Illuminate\Support\Facades\Route::has('operations.repair-orders.dragon-service-advisor.visit-reason');
+    $dragonModeOptions = $dragonReady
+        ? collect(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())->map(fn ($mode) => ['value' => $mode->value, 'label' => $mode->label()])->values()->all()
+        : [];
 @endphp
 
 <div class="ops-workspace-modal__panel" x-show="task === 'visit-reason'" x-cloak>
@@ -44,19 +49,20 @@
     </form>
 </div>
 
+@if ($dragonReady)
 <div
     class="ops-workspace-modal__panel"
     x-show="task === 'dragon-service-advisor-visit-reason'"
     x-cloak
     x-data="arkDragonServiceAdvisor({
-        requestUrl: @js(route('operations.repair-orders.dragon-service-advisor.visit-reason', $repairOrder)),
+        requestUrl: @js($dragonReady ? route('operations.repair-orders.dragon-service-advisor.visit-reason', $repairOrder) : null),
         statusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
         applyUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-service-advisor/visit-reason/__ASSIST__/apply'),
         revertUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-service-advisor/__APP__/revert'),
         estimateVersion: @js($estimateVersion),
         csrfToken: @js(csrf_token()),
         fields: @js([['value' => 'visit_reason', 'label' => 'Reason for visit']]),
-        modes: @js(collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()])->values()->all()),
+        modes: @js($dragonModeOptions),
         defaultField: 'visit_reason',
         defaultMode: 'service_advisor_rewrite',
         hideFieldPicker: true,
@@ -109,7 +115,9 @@
         </template>
     </div>
 </div>
+@endif
 
+@if ($dragonReady)
 <div
     class="ops-workspace-modal__panel"
     x-show="task === 'dragon-service-advisor-line-note'"
@@ -122,7 +130,7 @@
         estimateVersion: @js($estimateVersion),
         csrfToken: @js(csrf_token()),
         fields: @js([['value' => 'line_note', 'label' => 'Line note']]),
-        modes: @js(collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()])->values()->all()),
+        modes: @js($dragonModeOptions),
         defaultField: 'line_note',
         defaultMode: 'service_advisor_rewrite',
         hideFieldPicker: true,
@@ -176,13 +184,15 @@
         </template>
     </div>
 </div>
+@endif
 
+@if ($dragonReady)
 <div
     class="ops-workspace-modal__panel"
     x-show="task === 'review-estimate-notes'"
     x-cloak
     x-data="arkReviewEstimateNotes({
-        requestUrl: @js(route('operations.repair-orders.review-estimate-notes', $repairOrder)),
+        requestUrl: @js($dragonReady ? route('operations.repair-orders.review-estimate-notes', $repairOrder) : null),
         statusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
         applyUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/review-estimate-notes/__ASSIST__/apply'),
         estimateVersion: @js($estimateVersion),
@@ -358,6 +368,7 @@
         </template>
     </div>
 </div>
+@endif
 
 @foreach ($repairOrder->concerns as $concern)
     @php
@@ -476,35 +487,40 @@
     </div>
 
     @php
-        $dragonFieldOptions = collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::cases())
-            ->filter(fn (\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => $f->isConcernNarrative())
-            ->map(fn (\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => [
-                'value' => $f->value,
-                'label' => $f->label(),
-                'has_text' => filled(match ($f) {
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::Summary => $concern->summary,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::CustomerStates => $concern->customer_states,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::VerifiedFindings => $concern->verified_findings,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::DtcsSummary => $concern->dtcs_summary,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::Recommendation => $concern->recommendation,
-                }),
-            ])
-            ->values()
-            ->all();
-        $defaultDragonField = collect($dragonFieldOptions)->firstWhere('value', 'verified_findings')['value']
-            ?? ($dragonFieldOptions[0]['value'] ?? 'summary');
-        $dragonModeOptions = collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())
-            ->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()])
-            ->values()
-            ->all();
+        $dragonFieldOptions = [];
+        $defaultDragonField = 'summary';
+        if ($dragonReady) {
+            $dragonFieldOptions = collect(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::cases())
+                ->filter(fn (\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => $f->isConcernNarrative())
+                ->map(fn (\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => [
+                    'value' => $f->value,
+                    'label' => $f->label(),
+                    'has_text' => filled(match ($f) {
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::Summary => $concern->summary,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::CustomerStates => $concern->customer_states,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::VerifiedFindings => $concern->verified_findings,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::DtcsSummary => $concern->dtcs_summary,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::Recommendation => $concern->recommendation,
+                    }),
+                ])
+                ->values()
+                ->all();
+            $defaultDragonField = collect($dragonFieldOptions)->firstWhere('value', 'verified_findings')['value']
+                ?? ($dragonFieldOptions[0]['value'] ?? 'summary');
+            $dragonModeOptions = collect(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())
+                ->map(fn ($mode) => ['value' => $mode->value, 'label' => $mode->label()])
+                ->values()
+                ->all();
+        }
     @endphp
 
+    @if ($dragonReady)
     <div
         class="ops-workspace-modal__panel"
         x-show="task === 'dragon-service-advisor' && String(context.concernId) === '{{ $concern->id }}'"
         x-cloak
         x-data="arkDragonServiceAdvisor({
-            requestUrl: @js(route('operations.repair-orders.concerns.dragon-service-advisor', [$repairOrder, $concern])),
+            requestUrl: @js($dragonReady ? route('operations.repair-orders.concerns.dragon-service-advisor', [$repairOrder, $concern]) : null),
             statusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
             applyUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/concerns/'.$concern->id.'/dragon-service-advisor/__ASSIST__/apply'),
             revertUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-service-advisor/__APP__/revert'),
@@ -574,6 +590,7 @@
             </template>
         </div>
     </div>
+    @endif
 
     <div
         class="ops-workspace-modal__panel"

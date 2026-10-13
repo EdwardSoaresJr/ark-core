@@ -1,33 +1,38 @@
 @php
-    use App\Ark\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication;
-    use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField;
-
     $narrativeRows = [
-        ServiceAdvisorField::CustomerStates->value => [
-            'label' => ServiceAdvisorField::CustomerStates->label(),
+        'customer_states' => [
+            'label' => 'Customer states',
             'value' => $concern->customer_states,
         ],
-        ServiceAdvisorField::VerifiedFindings->value => [
-            'label' => ServiceAdvisorField::VerifiedFindings->label(),
+        'verified_findings' => [
+            'label' => 'Verified findings',
             'value' => $concern->verified_findings,
         ],
-        ServiceAdvisorField::DtcsSummary->value => [
-            'label' => ServiceAdvisorField::DtcsSummary->label(),
+        'dtcs_summary' => [
+            'label' => 'DTCs',
             'value' => $concern->dtcs_summary,
         ],
-        ServiceAdvisorField::Recommendation->value => [
-            'label' => ServiceAdvisorField::Recommendation->label(),
+        'recommendation' => [
+            'label' => 'Recommendation',
             'value' => $concern->recommendation,
         ],
     ];
     $hasNarrativeBody = collect($narrativeRows)->filter(fn ($row) => filled($row['value']))->isNotEmpty();
+    $dragonReady = class_exists(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::class)
+        && \Illuminate\Support\Facades\Route::has('operations.repair-orders.concerns.dragon-service-advisor');
 
-    $activeDragonApp = DragonServiceAdvisorApplication::query()
-        ->where('concern_id', $concern->id)
-        ->whereNotNull('applied_at')
-        ->whereNull('reverted_at')
-        ->latest('applied_at')
-        ->first();
+    $activeDragonApp = null;
+    if (
+        class_exists(\Ark\Saas\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication::class)
+        && \Illuminate\Support\Facades\Schema::hasTable('dragon_service_advisor_applications')
+    ) {
+        $activeDragonApp = \Ark\Saas\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication::query()
+            ->where('concern_id', $concern->id)
+            ->whereNotNull('applied_at')
+            ->whereNull('reverted_at')
+            ->latest('applied_at')
+            ->first();
+    }
 @endphp
 
 <div id="concern-narrative-{{ $concern->id }}" class="ops-builder-present-card">
@@ -35,7 +40,7 @@
         <h3 class="ops-builder-present-card__title">Narrative</h3>
         @unless ($isTerminal)
             <div class="flex items-center gap-2">
-                @if ($hasNarrativeBody || filled($concern->summary))
+                @if ($dragonReady && ($hasNarrativeBody || filled($concern->summary)))
                     <button
                         type="button"
                         class="ops-builder-present-action"
@@ -66,7 +71,7 @@
         <div class="flex items-start justify-between gap-2">
             <p class="ops-builder-present-card__lead">{!! \App\Ark\Operations\RepairOrders\RepairOrderMention::html((string) $concern->summary, $priorVisitMentions['href_by_number'] ?? []) !!}</p>
             @unless ($isTerminal)
-                @if (filled($concern->summary))
+                @if ($dragonReady && filled($concern->summary))
                     <button
                         type="button"
                         class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
@@ -85,7 +90,7 @@
                         <div>
                             <div class="flex items-center justify-between gap-2">
                                 <p class="ops-builder-present-card__label">{{ $row['label'] }}</p>
-                                @unless ($isTerminal)
+                                @if ($dragonReady && ! $isTerminal)
                                     <button
                                         type="button"
                                         class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
@@ -93,7 +98,7 @@
                                     >
                                         Rewrite
                                     </button>
-                                @endunless
+                                @endif
                             </div>
                             <p class="ops-builder-present-card__copy">{{ $row['value'] }}</p>
                         </div>

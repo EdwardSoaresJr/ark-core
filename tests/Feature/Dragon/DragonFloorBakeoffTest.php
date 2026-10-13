@@ -1,7 +1,15 @@
 <?php
 
-use App\Ark\Dragon\Agent\Bakeoff\DragonFloorBakeoffCatalog;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
+
+use Ark\Saas\Dragon\Agent\Bakeoff\DragonFloorBakeoffCatalog;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK SaaS.');
+    }
+    migrateHostedDragon();
+});
 
 test('floor bake-off catalog is thirty real shop tasks', function (): void {
     $tasks = DragonFloorBakeoffCatalog::tasks();

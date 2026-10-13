@@ -1,6 +1,12 @@
 <?php
 
-use App\Ark\Dragon\Assist\CompleteHostedDragonAssistAction;
+use Ark\Saas\Dragon\Assist\CompleteHostedDragonAssistAction;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK SaaS.');
+    }
+});
 
 function assertOpenAiStrictObject(array $schema): void
 {

@@ -2,7 +2,7 @@
 
 namespace App\Ark\Station;
 
-use App\Ark\Dragon\DragonWorkProjection;
+use App\Ark\Station\ShopFloorWorkProjection;
 use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Appointments\AppointmentKind;
 use App\Ark\Operations\Appointments\AppointmentsBoardProjection;
@@ -37,7 +37,7 @@ final class StationAttentionProjection
     public function __construct(
         private readonly ApprovalForecastProjection $approvals,
         private readonly AppointmentsBoardProjection $appointments,
-        private readonly DragonWorkProjection $work,
+        private readonly ShopFloorWorkProjection $work,
     ) {}
 
     /**

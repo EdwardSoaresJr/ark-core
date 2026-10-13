@@ -43,8 +43,7 @@
     39 => 'App\\Providers\\BookingSurfaceServiceProvider',
     40 => 'App\\Providers\\HorizonServiceProvider',
     41 => 'App\\Providers\\ShopMemoryServiceProvider',
-    42 => 'App\\Ark\\Dragon\\Agent\\DragonAgentServiceProvider',
-    43 => 'App\\Ark\\Platform\\Website\\PlatformWebsiteServiceProvider',
+    42 => 'App\\Ark\\Platform\\Website\\PlatformWebsiteServiceProvider',
   ),
   'eager' => 
   array (
@@ -73,8 +72,7 @@
     22 => 'App\\Providers\\BookingSurfaceServiceProvider',
     23 => 'App\\Providers\\HorizonServiceProvider',
     24 => 'App\\Providers\\ShopMemoryServiceProvider',
-    25 => 'App\\Ark\\Dragon\\Agent\\DragonAgentServiceProvider',
-    26 => 'App\\Ark\\Platform\\Website\\PlatformWebsiteServiceProvider',
+    25 => 'App\\Ark\\Platform\\Website\\PlatformWebsiteServiceProvider',
   ),
   'deferred' => 
   array (

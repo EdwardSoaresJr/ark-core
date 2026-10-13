@@ -8,7 +8,6 @@ use App\Ark\Operations\Appointments\StoreScheduleBayController;
 use App\Ark\Operations\Appointments\UpdateScheduleBayController;
 use App\Ark\Operations\Inspections\InspectionTemplateSettingsController;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogSettingsController;
-use App\Ark\Operations\Settings\DragonMemorySettingsController;
 use App\Ark\Operations\Settings\LaborPolicySettingsController;
 use App\Ark\Operations\Settings\ShopPlatformSettingsController;
 use App\Ark\Operations\Settings\ShopCommunicationsSettingsController;
@@ -192,9 +191,4 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::delete('/app/settings/shop/parts-matrices/{matrixKey}', [ShopFinancialSettingsController::class, 'destroyPartsMatrix'])
         ->name('operations.settings.shop.parts-matrices.destroy');
 
-    Route::patch('/app/settings/shop/dragon-memory/{memory}', [DragonMemorySettingsController::class, 'update'])
-        ->name('operations.settings.shop.dragon-memory.update');
-
-    Route::post('/app/settings/shop/dragon-memory/{memory}/forget', [DragonMemorySettingsController::class, 'forget'])
-        ->name('operations.settings.shop.dragon-memory.forget');
 });
