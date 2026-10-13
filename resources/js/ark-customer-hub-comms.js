@@ -145,7 +145,7 @@ export function arkCustomerHubComms(config = {}) {
                 return;
             }
 
-            echo.private('operations.conversations')
+            echo.private(window.arkShopChannel('operations.conversations'))
                 .listen('.conversation.message.received', (payload) => {
                     if (Number(payload?.customer_id) !== Number(this.customerId)) {
                         return;

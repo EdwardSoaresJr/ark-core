@@ -13,6 +13,6 @@ final class ConversationBroadcast
 
     public static function channelName(): string
     {
-        return 'operations.conversations';
+        return \App\Ark\Runtime\ShopChannel::name('operations.conversations');
     }
 }

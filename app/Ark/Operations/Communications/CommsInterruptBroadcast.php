@@ -14,7 +14,7 @@ final class CommsInterruptBroadcast
 
     public static function channelName(): string
     {
-        return 'operations.comms-interrupts';
+        return \App\Ark\Runtime\ShopChannel::name('operations.comms-interrupts');
     }
 
     /**

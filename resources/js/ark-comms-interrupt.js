@@ -358,12 +358,12 @@ export function arkCommsInterrupt() {
                 return;
             }
 
-            echo.private('operations.comms-interrupts')
+            echo.private(window.arkShopChannel('operations.comms-interrupts'))
                 .listen('.comms.interrupt', (payload) => {
                     this.handleInterruptEvent(payload);
                 });
 
-            echo.private('operations.incoming-calls')
+            echo.private(window.arkShopChannel('operations.incoming-calls'))
                 .listen('.call.incoming', (payload) => {
                     this.showCall(payload);
                 })
@@ -371,7 +371,7 @@ export function arkCommsInterrupt() {
                     this.updateCall(payload);
                 });
 
-            echo.private('operations.conversations')
+            echo.private(window.arkShopChannel('operations.conversations'))
                 .listen('.conversation.message.received', (payload) => {
                     if (payload?.interrupt) {
                         this.showMessage(payload.interrupt, Number(payload?.message_id ?? 0));

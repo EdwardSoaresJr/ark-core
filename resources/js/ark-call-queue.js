@@ -128,17 +128,17 @@ export function arkCallQueue(bootstrap = null) {
                 return;
             }
 
-            echo.private('operations.comms-interrupts')
+            echo.private(window.arkShopChannel('operations.comms-interrupts'))
                 .listen('.comms.interrupt', () => {
                     this.refresh();
                 });
 
-            echo.private('operations.incoming-calls')
+            echo.private(window.arkShopChannel('operations.incoming-calls'))
                 .listen('.call.updated', () => {
                     this.refresh();
                 });
 
-            echo.private('operations.conversations')
+            echo.private(window.arkShopChannel('operations.conversations'))
                 .listen('.conversation.message.received', () => {
                     this.refresh();
                 });

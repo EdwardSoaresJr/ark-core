@@ -74,6 +74,9 @@ import arkScheduleAppointmentPopover from './ark-schedule-appointment-popover';
 import { arkAuthorizationExceptionDialog } from './ark-authorization-exception-dialog';
 import { initNumericOnlyInputs } from './ark-numeric-only';
 window.Alpine = Alpine;
+if (typeof window.arkShopChannel !== 'function') {
+    window.arkShopChannel = (name) => name;
+}
 window.arkInitiateTelephonyCallback = initiateTelephonyCallback;
 window.arkMarkCallSessionHandled = markCallSessionHandled;
 window.arkRteLaborGuide = arkRteLaborGuide;

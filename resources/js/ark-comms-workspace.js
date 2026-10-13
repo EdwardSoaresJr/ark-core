@@ -558,13 +558,13 @@ export function initCommsWorkspace() {
             return;
         }
 
-        echo.private('operations.incoming-calls')
+        echo.private(window.arkShopChannel('operations.incoming-calls'))
             .listen('.call.updated', refresh);
 
-        echo.private('operations.conversations')
+        echo.private(window.arkShopChannel('operations.conversations'))
             .listen('.conversation.message.received', refresh);
 
-        echo.private('operations.comms-interrupts')
+        echo.private(window.arkShopChannel('operations.comms-interrupts'))
             .listen('.comms.interrupt', refresh);
     };
 

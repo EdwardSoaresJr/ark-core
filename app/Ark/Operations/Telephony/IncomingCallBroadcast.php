@@ -13,6 +13,6 @@ final class IncomingCallBroadcast
 
     public static function channelName(): string
     {
-        return 'operations.incoming-calls';
+        return \App\Ark\Runtime\ShopChannel::name('operations.incoming-calls');
     }
 }
