@@ -35,8 +35,16 @@ final class ShopTurnAttentionQueue
 
         $conversations = Conversation::query()
             ->openPosture()
-            ->where('waiting_on', ConversationWaitingOn::Shop->value)
-            ->whereNotNull('posture_changed_at')
+            ->where(function ($query): void {
+                $query->where(function ($shop): void {
+                    $shop->where('waiting_on', ConversationWaitingOn::Shop->value)
+                        ->whereNotNull('posture_changed_at');
+                })->orWhere(function ($overdue): void {
+                    $overdue->where('waiting_on', ConversationWaitingOn::Customer->value)
+                        ->whereNotNull('follow_up_due_at')
+                        ->where('follow_up_due_at', '<=', now());
+                });
+            })
             ->with([
                 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1),
                 'messages.attachments',

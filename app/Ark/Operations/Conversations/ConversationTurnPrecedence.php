@@ -24,7 +24,7 @@ final class ConversationTurnPrecedence
             return ConversationWaitingOn::Shop;
         }
 
-        return $conversation->waiting_on ?? ConversationWaitingOn::Shop;
+        return ConversationWaitingOn::Customer;
     }
 
     public function newestUnresolvedInboundOccurredAt(Conversation $conversation): ?CarbonInterface
@@ -85,6 +85,11 @@ final class ConversationTurnPrecedence
                 continue;
             }
 
+            $metadata = is_array($message->metadata) ? $message->metadata : [];
+            if (($metadata['portal_estimate_view'] ?? false) === true) {
+                continue;
+            }
+
             // Auto-handled Message Action replies do not create shop work.
             $reply = is_array($message->metadata)
                 ? ($message->metadata[MessageActionContract::META_REPLY] ?? null)
@@ -140,6 +145,19 @@ final class ConversationTurnPrecedence
         foreach ($this->inboundCallSessions($conversation) as $session) {
             if ($session->worked_at instanceof CarbonInterface) {
                 $times[] = $session->worked_at->copy();
+            }
+
+            $answered = $session->answered_at instanceof CarbonInterface
+                || $session->status === CallSessionStatus::Answered
+                || $session->hosted_outcome?->wasAnswered() === true;
+
+            if (! $answered) {
+                continue;
+            }
+
+            $answeredAt = $session->answered_at ?? $session->started_at ?? $session->created_at;
+            if ($answeredAt instanceof CarbonInterface) {
+                $times[] = $answeredAt->copy();
             }
         }
 
