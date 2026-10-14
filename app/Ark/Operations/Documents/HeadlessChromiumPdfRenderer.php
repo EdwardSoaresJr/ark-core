@@ -111,8 +111,9 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
             $browser->setChromePath((string) $chromePath);
         }
 
-        if ($includePath = config('services.pdf.include_path')) {
-            $browser->setIncludePath((string) $includePath);
+        $includePath = config('services.pdf.include_path');
+        if (is_string($includePath) && $includePath !== '' && preg_match('/[\s;`$|&<>"\'\\\\]/', $includePath) !== 1) {
+            $browser->setIncludePath($includePath);
         }
 
         if (config('services.pdf.no_sandbox')) {

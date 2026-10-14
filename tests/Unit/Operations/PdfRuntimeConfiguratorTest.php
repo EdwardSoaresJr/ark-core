@@ -31,6 +31,16 @@ it('does not crash application boot when discovery throws', function (): void {
     expect(true)->toBeTrue();
 });
 
+it('does not put a spaced node directory on the pdf include path', function (): void {
+    config(['services.pdf.include_path' => '/Users/example/Application Support/node/bin']);
+
+    PdfRuntimeConfigurator::apply();
+
+    $include = config('services.pdf.include_path');
+
+    expect($include === null || (is_string($include) && ! str_contains($include, ' ')))->toBeTrue();
+});
+
 it('leaves sandbox enabled outside linux containers', function (): void {
     config(['services.pdf.no_sandbox' => false]);
 
