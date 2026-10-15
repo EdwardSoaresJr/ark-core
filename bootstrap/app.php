@@ -1,10 +1,9 @@
 <?php
 
-use App\Ark\Operations\OperationsFeatures;
+use App\Ark\Console\HostedShopSchedule;
+use App\Ark\Console\ShopSchedule;
 use App\Ark\Operations\RepairOrders\RepairOrderEstimateConflictException;
 use App\Ark\Operations\Settings\SettingsAuthorizationFailureResponse;
-use App\Ark\Operations\Settings\ShopDisplayTimezone;
-use App\Ark\Operations\ShopExcellence\ShopExcellenceTargets;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Exceptions\ExceptionReporter;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
@@ -162,42 +161,11 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('shop-excellence:owner-digest')
-            ->dailyAt(ShopExcellenceTargets::ownerDigestTime())
-            ->timezone(ShopDisplayTimezone::resolve())
-            ->when(fn (): bool => ShopExcellenceTargets::ownerDigestEnabled())
-            ->onFailure(function (): void {
-                report(new RuntimeException('Scheduled owner daily digest failed.'));
-            })
-            ->appendOutputTo(storage_path('logs/scheduler-owner-digest.log'));
+        if (app()->bound(HostedShopSchedule::class)) {
+            app(HostedShopSchedule::class)->register($schedule);
 
-        $schedule->command('communications:daily-coaching-digest')
-            ->dailyAt(ShopExcellenceTargets::coachingDigestTime())
-            ->timezone(ShopDisplayTimezone::resolve())
-            ->when(fn (): bool => ShopExcellenceTargets::coachingDigestEnabled())
-            ->onFailure(function (): void {
-                report(new RuntimeException('Scheduled daily coaching digest failed.'));
-            })
-            ->appendOutputTo(storage_path('logs/scheduler-coaching-digest.log'));
+            return;
+        }
 
-        $schedule->command('comms:escalate-unhandled')
-            ->everyMinute()
-            ->withoutOverlapping();
-
-        $schedule->command('time-clock:sync-auto')
-            ->everyFiveMinutes()
-            ->withoutOverlapping();
-
-        $schedule->command('comms:reconcile-stale-call-sessions')
-            ->everyMinute()
-            ->withoutOverlapping();
-
-        $schedule->command('appointments:send-reminders')
-            ->everyFiveMinutes()
-            ->withoutOverlapping()
-            ->when(fn (): bool => OperationsFeatures::appointmentsEnabled());
-
-        $schedule->command('ark:platform-heartbeat')
-            ->everyFiveMinutes()
-            ->withoutOverlapping();
+        ShopSchedule::register($schedule);
     })->create();
