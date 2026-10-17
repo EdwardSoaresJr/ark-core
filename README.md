@@ -10,7 +10,7 @@ ARK Core is the shop-management system itself. A shop can run it on its own serv
 
 ## What you get
 
-A stock install (Docker Compose and `/setup`) includes the workflows below. No ARK SaaS account is required.
+A stock install (Docker Compose and `/setup`) includes the workflows below. No ARK Shop account is required.
 
 **The work**
 
@@ -36,7 +36,7 @@ A stock install (Docker Compose and `/setup`) includes the workflows below. No A
 - Staff, roles, workstations, and shop configuration
 - A responsive shop interface, including phone-sized navigation
 
-The customer portal can show an amount owed. Showing that amount is not card processing. Charging a card inside ARK is Hosted ARK.
+The customer portal can show an amount owed. Showing that amount is not card processing. Charging a card inside ARK is ARK Shop.
 
 AllData and ProDemand buttons open the vendor site and copy the VIN. The shop uses its own login. Core also includes a labor-guide import interface. Licensed labor-guide datasets are not in this repository.
 
@@ -50,21 +50,21 @@ AllData and ProDemand buttons open the vendor site and copy the VIN. The shop us
 
 The shop website editor is not part of Core. Core can keep shop identity and lead records. See [docs/platform/ark-core-website-boundary.md](docs/platform/ark-core-website-boundary.md).
 
-## You do not need Hosted ARK to use ARK Core
+## You do not need ARK Shop to use ARK Core
 
-A stock Core installation can operate the shop on your own infrastructure. Repair orders, estimates, authorization, inspections, scheduling, the job board, the time clock, reporting, documents, the customer portal, and the ledger all work without an ARK SaaS account.
+A stock Core installation can operate the shop on your own infrastructure. Repair orders, estimates, authorization, inspections, scheduling, the job board, the time clock, reporting, documents, the customer portal, and the ledger all work without an ARK Shop account.
 
-## Hosted ARK
+## ARK Shop
 
-Hosted ARK (ARK SaaS) is a private commercial product. It is built from a pinned ARK Core release, plus services ARK operates, commercial integrations, and managed infrastructure.
+ARK Shop is a private commercial product. It is built from a pinned ARK Core release, plus services ARK operates, commercial integrations, and managed infrastructure.
 
-Revenue from Hosted ARK helps fund continued development and maintenance of free, open-source ARK Core.
+Revenue from ARK Shop helps fund continued development and maintenance of free, open-source ARK Core.
 
-Hosted ARK is being built as the fully managed way to run ARK, including infrastructure, deployment, updates, backups, monitoring, communications, payments, and commercial integrations. It is not open for general customer signup or provisioning today.
+ARK Shop is being built as the fully managed way to run ARK, including infrastructure, deployment, updates, backups, monitoring, communications, payments, and commercial integrations. It is not open for general customer signup or provisioning today.
 
 **Commercial capabilities already implemented**
 
-These ARK-operated services already exist in the ARK ecosystem. They belong to Hosted ARK, not to a stock Core install. Listing them is not a statement that a new shop can sign up for Hosted ARK today.
+These ARK-operated services already exist in the ARK ecosystem. They belong to ARK Shop, not to a stock Core install. Listing them is not a statement that a new shop can sign up for ARK Shop today.
 
 - Customer email
 - Customer texting
@@ -74,25 +74,25 @@ These ARK-operated services already exist in the ARK ecosystem. They belong to H
 
 **Managed infrastructure, in development**
 
-The fully managed Hosted ARK product is still being built. Managed infrastructure, deployment, updates, backups, and operational monitoring are not available today.
+The fully managed ARK Shop product is still being built. Managed infrastructure, deployment, updates, backups, and operational monitoring are not available today.
 
-Also not available today: ARK Backup, ARK Storage, ARK Data, moving a shop between self-hosted Core and Hosted ARK, ARK Connect, and an ARK-hosted Dragon model.
+Also not available today: ARK Backup, ARK Storage, ARK Data, moving a shop between self-hosted Core and ARK Shop, ARK Connect, and an ARK-hosted Dragon model.
 
 This page does not publish prices or packaging.
 
 ## Why some Hosted work is not in this repository
 
-ARK Core is intentionally open source. Hosted ARK adds paid services and integrations around it.
+ARK Core is intentionally open source. ARK Shop adds paid services and integrations around it.
 
-Some commercial integrations use partner APIs, documentation, or implementation details that we are not permitted to redistribute publicly. Those integrations are available only as part of Hosted ARK.
+Some commercial integrations use partner APIs, documentation, or implementation details that we are not permitted to redistribute publicly. Those integrations are available only as part of ARK Shop.
 
-PartsTech is one example. Shop catalog access is part of Hosted ARK. This repository does not publish the partner API materials for that integration.
+PartsTech is one example. Shop catalog access is part of ARK Shop. This repository does not publish the partner API materials for that integration.
 
 ## A screen is not the service
 
 Core includes shop screens for communications, conversations, calls, parts catalogs, and payments. Those screens are the shop workflow. They do not mean the ARK-operated service ships with a free install.
 
-Sending customer texts or email, operating hosted phones, capturing a card inside ARK, and opening the shop parts catalog require Hosted ARK. When those services are not connected, Core says so and the rest of the shop keeps running.
+Sending customer texts or email, operating hosted phones, capturing a card inside ARK, and opening the shop parts catalog require ARK Shop. When those services are not connected, Core says so and the rest of the shop keeps running.
 
 Settings can still show Communications, Parts catalogs, or Square Payments. A settings screen is not a self-hosted texting, catalog, or card-processing product.
 
@@ -100,7 +100,7 @@ See [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md).
 
 ## What is not included
 
-- The Hosted ARK services above, including services still in development
+- The ARK Shop services above, including services still in development
 - Licensed automotive datasets, including labor-guide data
 - Desk, Tech, Companion, and similar client applications
 - The shop website editor
@@ -128,7 +128,7 @@ See [docs/PRODUCT_BOUNDARY.md](docs/PRODUCT_BOUNDARY.md).
 
 ### Communications workspace
 
-The communications screen is part of Core. Sending texts or email, and hosted phones, are Hosted ARK.
+The communications screen is part of Core. Sending texts or email, and hosted phones, are ARK Shop.
 
 ![ARK Communications](docs/images/ark-communications.png)
 
@@ -208,7 +208,7 @@ A few rules matter when working on Core:
 * **Workstations and stations** are places in one shop, not separate tenants.
 * **Financial totals stay on the server.** The repair-order screen shows those totals. It does not calculate them again in the browser.
 
-See `docs/engineering/` for more. See `docs/PRODUCT_BOUNDARY.md` for what belongs in Core and what belongs in Hosted ARK.
+See `docs/engineering/` for more. See `docs/PRODUCT_BOUNDARY.md` for what belongs in Core and what belongs in ARK Shop.
 
 ## License
 
@@ -224,7 +224,7 @@ See:
 
 You may modify and fork Core under the AGPL. Modified distributions should not be presented as the official ARK distribution without permission.
 
-ARK SaaS is not licensed by this file. The note above is not legal advice.
+ARK Shop is not licensed by this file. The note above is not legal advice.
 
 ## Status
 
