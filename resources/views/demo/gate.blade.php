@@ -79,7 +79,7 @@
                 <a class="action enter" href="{{ $enterUrl }}">Open the Demo</a>
                 <a class="action source" href="{{ $githubUrl }}">View on GitHub</a>
             </p>
-            <a class="hosted" href="{{ $hostedUrl }}">Hosted ARK coming soon</a>
+            <a class="hosted" href="{{ $hostedUrl }}">ARK Shop coming soon</a>
         </main>
     </body>
 </html>

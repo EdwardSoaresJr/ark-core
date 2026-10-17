@@ -34,7 +34,7 @@ test('demo hides arkademy and platform surfaces', function () {
         ->assertDontSee('>ARKademy<', false)
         ->assertSee('ARK Public Demo', false)
         ->assertSee('View on GitHub', false)
-        ->assertSee('Hosted ARK coming soon', false);
+        ->assertSee('ARK Shop coming soon', false);
 });
 
 test('shops outside the demo still show arkademy and platform', function () {

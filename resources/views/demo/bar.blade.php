@@ -56,6 +56,6 @@
     <span class="ark-demo-bar__links">
         <a class="ark-demo-bar__source" href="{{ route('demo.github', ['source_path' => $demoSourcePath]) }}">View on GitHub</a>
         <span aria-hidden="true">·</span>
-        <a class="ark-demo-bar__hosted" href="{{ route('demo.github', ['source_path' => $demoSourcePath, 'to' => 'hosted']) }}">Hosted ARK coming soon</a>
+        <a class="ark-demo-bar__hosted" href="{{ route('demo.github', ['source_path' => $demoSourcePath, 'to' => 'hosted']) }}">ARK Shop coming soon</a>
     </span>
 </div>

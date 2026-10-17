@@ -23,7 +23,7 @@ test('the public demo gate points at the repository without opening it yet', fun
         ->assertSee('Explore the open-source shop management system.', false)
         ->assertSee('Open the Demo', false)
         ->assertSee('View on GitHub', false)
-        ->assertSee('Hosted ARK coming soon', false)
+        ->assertSee('ARK Shop coming soon', false)
         ->assertSee(route('login'), false)
         ->assertSee(route('demo.github', ['source_path' => '/']), false)
         ->assertSee('to=hosted', false)
@@ -73,7 +73,7 @@ test('the sign-in page keeps a thin link back to the source', function () {
         ->assertOk()
         ->assertSee('ARK Public Demo', false)
         ->assertSee('Explore the open-source shop management system.', false)
-        ->assertSee('Hosted ARK coming soon', false)
+        ->assertSee('ARK Shop coming soon', false)
         ->assertSee(route('demo.github', ['source_path' => '/app/login']), false)
         ->assertSee('source_path=%2Fapp%2Flogin', false)
         ->assertSee('to=hosted', false);

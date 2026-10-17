@@ -14,7 +14,7 @@ Include:
 
 ## What this project will not treat as a Core bug
 
-- Missing customer email, texting, hosted phone service, in-app card capture, or PartsTech shop catalog access on a stock install that is not using ARK SaaS
+- Missing customer email, texting, hosted phone service, in-app card capture, or PartsTech shop catalog access on a stock install that is not using ARK Shop
 - A model assistant that has no provider configured (`DRAGON_PROVIDER` defaults to `none`)
 
 Provider API tokens do not belong in Core Settings or `.env` for a public install. Rotating a live credential is an operations task.

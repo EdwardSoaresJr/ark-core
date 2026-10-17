@@ -20,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 
 beforeEach(function (): void {
     if (! bootHostedDragon()) {
-        test()->markTestSkipped('Dragon is owned by ARK SaaS.');
+        test()->markTestSkipped('Dragon is owned by ARK Shop.');
     }
     migrateHostedDragon();
 });
