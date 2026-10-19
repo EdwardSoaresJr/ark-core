@@ -95,7 +95,7 @@ final class TwilioVoiceWebhookController
 
         if (in_array($dialStatus, ['no-answer', 'busy', 'canceled', 'failed'], true)) {
             $request->merge([
-                'CallStatus' => $dialStatus,
+                'CallStatus' => $dialStatus === 'failed' ? 'no-answer' : $dialStatus,
                 'Direction' => 'inbound',
             ]);
             $payload = TwilioCallPayload::fromRequest($request, CallSessionDirection::Inbound);

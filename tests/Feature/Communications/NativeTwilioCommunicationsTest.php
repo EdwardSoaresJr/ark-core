@@ -187,7 +187,7 @@ test('an unanswered dial stays missed after the parent call completes', function
         'CallSid' => 'CAnativedialmiss',
         'From' => '+17195551234',
         'To' => '+17195550100',
-        'DialCallStatus' => 'no-answer',
+        'DialCallStatus' => 'failed',
         'CallStatus' => 'in-progress',
     ])->assertOk()
         ->assertSee('<Record', false);
