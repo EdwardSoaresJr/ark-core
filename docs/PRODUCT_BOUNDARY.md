@@ -8,13 +8,15 @@ This page is the current public product split. It is not a roadmap and it does n
 
 Public Core runs the shop. Private ARK Shop sells the extras. Private Landlord runs the infrastructure. Only the project owner authorizes an exception.
 
-A change belongs in this repository when a shop needs it to operate with no ARK Shop account. Optional texting, voice, commercial AI, parts catalogs, card capture, subscriptions, and provider accounts do not. If that is unclear, stop and ask the project owner.
+A change belongs in this repository when a shop needs it to operate with no ARK Shop account. Commercial AI, parts catalogs, card capture, subscriptions, and managed provider accounts do not. If that is unclear, stop and ask the project owner.
+
+The project owner authorized this exception: a self-hosted shop can place calls and send texts with its own Twilio account, configured by environment, without an ARK Shop account. ARK Shop may still supply managed credentials, billing, entitlements, and routing. Those are additions. They do not replace Core's Twilio webhooks or the `OutboundSmsTransport` port, and a native provider connection is not an ARK Platform connection.
 
 Do not add provider credential screens, setup wizards, turnkey adapters, or a plugin system to make those services easier to wire up. A developer may write an integration in their own Laravel code. The maintained version is ARK Shop.
 
 ARK Shop consumes a pinned Core release. Core does not depend on ARK Shop. Landlord provisions hosts and is not on a shop's request path.
 
-Shop screens that already offer a text call `OutboundSmsTransport`. A stock install binds that port to a sender that is not configured, so the shop keeps running and no message is sent. The port stays in Core because those screens already depend on it, and because ARK Shop replaces the binding when texting is installed. It is not a supported integration contract. Do not add credentials, webhooks, provider selection, or media retrieval to it. It cannot move into ARK Shop: Core must not import ARK Shop, and deleting the port would stop those screens from compiling.
+Shop screens that already offer a text call `OutboundSmsTransport`. With no Twilio account configured, that port is a sender that does not send, so the shop keeps running. When `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and a from-number are set, Core binds a Twilio sender. ARK Shop may replace that binding when managed texting is installed. Do not add a credential screen or setup wizard. Core must not import ARK Shop.
 
 ## Core
 

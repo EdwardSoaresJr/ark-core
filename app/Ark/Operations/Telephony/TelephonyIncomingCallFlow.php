@@ -74,8 +74,8 @@ class TelephonyIncomingCallFlow
 
     public function buildVoicemailResponse(string $greeting): string
     {
-        $recordingCallback = '';
-        $voicemailAction = '';
+        $recordingCallback = route('webhooks.communications.twilio.voice.recording');
+        $voicemailAction = route('webhooks.communications.twilio.voice.dial-complete');
 
         return '<?xml version="1.0" encoding="UTF-8"?>'
             .'<Response>'
@@ -123,9 +123,9 @@ class TelephonyIncomingCallFlow
 
     private function dialAttributes(?string $parentCallSid = null): string
     {
-        $statusCallback = '';
-        $dialComplete = '';
-        $recordingCallback = '';
+        $statusCallback = route('webhooks.communications.twilio.voice.status');
+        $dialComplete = route('webhooks.communications.twilio.voice.dial-complete');
+        $recordingCallback = route('webhooks.communications.twilio.voice.recording');
         $timeout = $this->flow->dialTimeoutSeconds();
         $callerId = $parentCallSid !== null ? $this->customerCallerIdE164($parentCallSid) : null;
         $callerAttr = filled($callerId)
@@ -151,7 +151,7 @@ class TelephonyIncomingCallFlow
 
     private function staggeredConferenceDialAttributes(?string $parentCallSid = null): string
     {
-        $statusCallback = '';
+        $statusCallback = route('webhooks.communications.twilio.voice.status');
         $timeout = $this->flow->dialTimeoutSeconds();
         $callerId = $parentCallSid !== null ? $this->customerCallerIdE164($parentCallSid) : null;
         $callerAttr = filled($callerId)

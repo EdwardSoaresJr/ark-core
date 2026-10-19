@@ -31,6 +31,7 @@ use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
+use App\Ark\Operations\Messaging\TwilioOutboundSmsTransport;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopIntegrationRuntimeConfig;
@@ -87,7 +88,15 @@ class AppServiceProvider extends ServiceProvider
         });
         $this->app->scoped(PartsTechPlatformGateway::class);
         $this->app->scoped(ShopIntegrationCredentials::class, fn (): ShopIntegrationCredentials => ShopIntegrationCredentials::forCurrentShop());
-        $this->app->bind(OutboundSmsTransport::class, NotConfiguredOutboundSmsTransport::class);
+        $this->app->bind(OutboundSmsTransport::class, function (): OutboundSmsTransport {
+            $credentials = ShopIntegrationCredentials::forCurrentShop();
+
+            if ($credentials->twilioConfigured() && filled($credentials->twilioFromNumber())) {
+                return new TwilioOutboundSmsTransport($credentials);
+            }
+
+            return new NotConfiguredOutboundSmsTransport;
+        });
         $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);
         $this->app->scoped(RepairOrderConcurrency::class);
         $this->app->scoped(RepairOrderStatusCatalog::class);

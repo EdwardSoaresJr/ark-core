@@ -126,8 +126,9 @@ test('shop integration credentials fall back to env when database is empty', fun
 
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioAccountSid())->toBeNull()
-        ->and($credentials->twilioCredentialSource())->toBe('none');
+    expect($credentials->twilioAccountSid())->toBe('AC-env-only')
+        ->and($credentials->twilioAuthToken())->toBe('token-env-only')
+        ->and($credentials->twilioCredentialSource())->toBe('environment');
 });
 
 test('email settings save shop reply-to without postmark credentials', function () {
@@ -265,7 +266,7 @@ test('shop integration credentials prefer database square values over env fallba
     $settings = ShopSettings::current()->fresh();
     $credentials = ShopIntegrationCredentials::forCurrentShop();
 
-    expect($credentials->twilioAccountSid())->toBeNull()
+    expect($credentials->twilioAccountSid())->toBe('AC-from-env')
         ->and($settings->square_environment)->toBe('production')
         ->and($settings->square_application_id)->toBe('sq-db-app');
 });

@@ -53,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
             require __DIR__.'/../routes/portal.php';
             require __DIR__.'/../routes/oidc.php';
             require __DIR__.'/../routes/public.php';
+            require __DIR__.'/../routes/twilio-webhooks.php';
         },
     )
     ->withBroadcasting(

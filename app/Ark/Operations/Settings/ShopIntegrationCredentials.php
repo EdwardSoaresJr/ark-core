@@ -22,27 +22,44 @@ final class ShopIntegrationCredentials
 
     public function twilioConfigured(): bool
     {
-        return $this->messagingConfigured();
+        return filled($this->twilioAccountSid()) && filled($this->twilioAuthToken());
     }
 
     public function twilioAccountSid(): ?string
     {
-        return null;
+        $sid = trim((string) config('services.twilio.account_sid', ''));
+
+        return $sid !== '' ? $sid : null;
     }
 
     public function twilioAuthToken(): ?string
     {
-        return null;
+        $token = trim((string) config('services.twilio.auth_token', ''));
+
+        return $token !== '' ? $token : null;
     }
 
     public function hasStoredTwilioAuthToken(): bool
     {
-        return false;
+        return $this->twilioAuthToken() !== null;
+    }
+
+    public function twilioFromNumber(): ?string
+    {
+        $from = trim((string) config('services.twilio.from', ''));
+
+        if ($from !== '') {
+            return $from;
+        }
+
+        $inbound = trim((string) ($this->settings->telephony_inbound_number ?? ''));
+
+        return $inbound !== '' ? $inbound : null;
     }
 
     public function twilioCredentialSource(): string
     {
-        return 'none';
+        return $this->twilioConfigured() ? 'environment' : 'none';
     }
 
     public function partsTechBaseUrl(): string
