@@ -82,6 +82,9 @@ test('after hours and an unanswered dial go to voicemail', function (): void {
 });
 
 test('an answered call is marked answered once', function (): void {
+    Carbon::setTestNow(Carbon::parse('2026-10-14 10:00:00', 'America/Denver'));
+    ring('Front', '+17195550111');
+
     $this->post(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativeanswer',
         'From' => '+17195551234',
@@ -103,6 +106,7 @@ test('an answered call is marked answered once', function (): void {
         ->and($session->status)->toBe(CallSessionStatus::Answered)
         ->and($session->answered_at)->not->toBeNull()
         ->and(CallSession::query()->where('provider_call_sid', 'CAnativeanswer')->count())->toBe(1);
+    Carbon::setTestNow();
 });
 
 test('a missed call is recorded once and companion can read the session', function (): void {
@@ -134,6 +138,41 @@ test('a missed call is recorded once and companion can read the session', functi
         ->getJson(route('api.mobile.incoming-call.context', ['call_session_id' => $session->id]))
         ->assertOk()
         ->assertJsonPath('call_session_id', $session->id);
+});
+
+test('closed hours send the caller to voicemail and keep the session missed', function (): void {
+    $flow = \App\Ark\Operations\Settings\ShopSettings::current()->telephony_call_flow;
+    $flow['weekly_hours'] = [
+        'monday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+        'tuesday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+        'wednesday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+        'thursday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+        'friday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+        'saturday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+        'sunday' => ['enabled' => false, 'open' => '00:00', 'close' => '00:00'],
+    ];
+    \App\Ark\Operations\Settings\ShopSettings::current()->update(['telephony_call_flow' => $flow]);
+
+    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+        'CallSid' => 'CAnativeclosed',
+        'From' => '+17195551234',
+        'To' => '+17195550100',
+        'CallStatus' => 'ringing',
+    ])->assertOk()
+        ->assertSee('voicemail=1', false)
+        ->assertSee('<Record', false)
+        ->assertDontSee('<Dial', false);
+
+    $this->post(route('webhooks.communications.twilio.voice.status'), [
+        'CallSid' => 'CAnativeclosed',
+        'From' => '+17195551234',
+        'To' => '+17195550100',
+        'CallStatus' => 'in-progress',
+    ])->assertNoContent();
+
+    $session = CallSession::query()->where('provider_call_sid', 'CAnativeclosed')->first();
+    expect($session?->status)->toBe(CallSessionStatus::Missed)
+        ->and($session?->answered_at)->toBeNull();
 });
 
 test('an unanswered dial stays missed after the parent call completes', function (): void {

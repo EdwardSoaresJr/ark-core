@@ -106,9 +106,9 @@ class CallSessionRecorder
             return;
         }
 
-        $keepMissed = $payload->status === CallSessionStatus::Completed
-            && $session->status === CallSessionStatus::Missed
-            && $session->answered_at === null;
+        $keepMissed = $session->status === CallSessionStatus::Missed
+            && $session->answered_at === null
+            && in_array($payload->status, [CallSessionStatus::Completed, CallSessionStatus::Answered], true);
 
         $session->fill([
             'status' => $payload->status,
@@ -119,7 +119,7 @@ class CallSessionRecorder
             $session->status = CallSessionStatus::Missed;
         }
 
-        if ($payload->status === CallSessionStatus::Answered && $session->answered_at === null) {
+        if (! $keepMissed && $payload->status === CallSessionStatus::Answered && $session->answered_at === null) {
             $session->answered_at = now();
         }
 

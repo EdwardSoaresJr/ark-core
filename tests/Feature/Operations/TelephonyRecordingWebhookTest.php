@@ -43,6 +43,34 @@ test('recording webhook attaches media using parent call sid', function () {
         ->and($session->answered_at)->not->toBeNull();
 });
 
+test('a voicemail recording stays on the missed call', function () {
+    $session = CallSession::query()->create([
+        'provider' => TelephonyProviderType::Twilio,
+        'provider_call_sid' => 'CAvmrec01',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551234',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551234',
+        'status' => CallSessionStatus::Missed,
+        'started_at' => now()->subMinute(),
+    ]);
+
+    $this->post(route('webhooks.communications.twilio.voice.recording', ['voicemail' => 1]), [
+        'CallSid' => 'CAvmrec01',
+        'RecordingSid' => 'REcccccccccccccccccccccccccccccccc',
+        'RecordingUrl' => 'https://api.twilio.com/2010-04-01/Accounts/AC123/Recordings/REcccccccccccccccccccccccccccccccc',
+        'RecordingDuration' => '8',
+        'RecordingStatus' => 'completed',
+    ])->assertNoContent();
+
+    $session->refresh();
+
+    expect($session->voicemail_sid)->toBe('REcccccccccccccccccccccccccccccccc')
+        ->and($session->recording_sid)->toBeNull()
+        ->and($session->status)->toBe(CallSessionStatus::Missed)
+        ->and($session->answered_at)->toBeNull();
+});
+
 test('recording webhook returns 404 when the call session is unknown so Twilio retries', function () {
     $this->post(route('webhooks.communications.twilio.voice.recording'), [
         'CallSid' => 'CAmissingrec01',

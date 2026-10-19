@@ -76,7 +76,7 @@ class TelephonyIncomingCallFlow
 
     public function buildVoicemailResponse(string $greeting): string
     {
-        $recordingCallback = route('webhooks.communications.twilio.voice.recording');
+        $recordingCallback = route('webhooks.communications.twilio.voice.recording', ['voicemail' => 1]);
         $voicemailAction = route('webhooks.communications.twilio.voice.dial-complete');
 
         return '<?xml version="1.0" encoding="UTF-8"?>'

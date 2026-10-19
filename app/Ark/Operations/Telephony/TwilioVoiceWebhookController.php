@@ -29,6 +29,13 @@ final class TwilioVoiceWebhookController
             $payload->normalizedFrom,
         );
 
+        if ($payload->providerCallSid !== '' && str_contains($twiml, '<Record') && ! str_contains($twiml, '<Dial')) {
+            CallSession::query()
+                ->where('provider_call_sid', $payload->providerCallSid)
+                ->whereNull('answered_at')
+                ->update(['status' => CallSessionStatus::Missed]);
+        }
+
         return response($twiml, 200, ['Content-Type' => 'text/xml']);
     }
 
@@ -95,14 +102,18 @@ final class TwilioVoiceWebhookController
             if ($payload->providerCallSid !== '') {
                 $status->execute($payload);
             }
+
+            $flow = TelephonyIncomingCallFlow::forCurrentShop();
+            $twiml = $flow->buildVoicemailResponse(
+                TelephonyCallFlowSettings::fromShopSettings()->voicemailGreeting(),
+            );
+
+            return response($twiml, 200, ['Content-Type' => 'text/xml']);
         }
 
-        $flow = TelephonyIncomingCallFlow::forCurrentShop();
-        $twiml = $flow->buildVoicemailResponse(
-            TelephonyCallFlowSettings::fromShopSettings()->voicemailGreeting(),
-        );
-
-        return response($twiml, 200, ['Content-Type' => 'text/xml']);
+        return response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', 200, [
+            'Content-Type' => 'text/xml',
+        ]);
     }
 
     public function conferenceJoin(Request $request, TwilioWebhookVerifier $verifier): Response
