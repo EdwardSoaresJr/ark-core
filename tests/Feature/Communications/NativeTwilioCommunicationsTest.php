@@ -136,6 +136,37 @@ test('a missed call is recorded once and companion can read the session', functi
         ->assertJsonPath('call_session_id', $session->id);
 });
 
+test('an unanswered dial stays missed after the parent call completes', function (): void {
+    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+        'CallSid' => 'CAnativedialmiss',
+        'From' => '+17195551234',
+        'To' => '+17195550100',
+        'CallStatus' => 'ringing',
+    ])->assertOk();
+
+    $this->post(route('webhooks.communications.twilio.voice.dial-complete'), [
+        'CallSid' => 'CAnativedialmiss',
+        'From' => '+17195551234',
+        'To' => '+17195550100',
+        'DialCallStatus' => 'no-answer',
+        'CallStatus' => 'in-progress',
+    ])->assertOk()
+        ->assertSee('<Record', false);
+
+    $this->post(route('webhooks.communications.twilio.voice.status'), [
+        'CallSid' => 'CAnativedialmiss',
+        'From' => '+17195551234',
+        'To' => '+17195550100',
+        'CallStatus' => 'completed',
+        'CallDuration' => '12',
+    ])->assertNoContent();
+
+    $session = CallSession::query()->where('provider_call_sid', 'CAnativedialmiss')->first();
+    expect($session?->status)->toBe(CallSessionStatus::Missed)
+        ->and($session?->answered_at)->toBeNull()
+        ->and($session?->ended_at)->not->toBeNull();
+});
+
 test('inbound sms is stored once and a bad signature is rejected', function (): void {
     config()->set('broadcasting.default', 'null');
 

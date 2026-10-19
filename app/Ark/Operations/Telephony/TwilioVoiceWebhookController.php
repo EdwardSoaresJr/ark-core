@@ -73,6 +73,7 @@ final class TwilioVoiceWebhookController
     public function dialComplete(
         Request $request,
         TwilioWebhookVerifier $verifier,
+        ProcessCallStatusAction $status,
     ): Response {
         if (! $verifier->isValid($request)) {
             return response('Invalid signature.', 401);
@@ -83,6 +84,17 @@ final class TwilioVoiceWebhookController
             return response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', 200, [
                 'Content-Type' => 'text/xml',
             ]);
+        }
+
+        if (in_array($dialStatus, ['no-answer', 'busy', 'canceled', 'failed'], true)) {
+            $request->merge([
+                'CallStatus' => $dialStatus,
+                'Direction' => 'inbound',
+            ]);
+            $payload = TwilioCallPayload::fromRequest($request, CallSessionDirection::Inbound);
+            if ($payload->providerCallSid !== '') {
+                $status->execute($payload);
+            }
         }
 
         $flow = TelephonyIncomingCallFlow::forCurrentShop();

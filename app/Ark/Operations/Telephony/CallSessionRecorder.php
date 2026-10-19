@@ -90,13 +90,6 @@ class CallSessionRecorder
         return [$existing, false];
     }
 
-    private function connectedSeconds(IncomingCallPayload $payload): int
-    {
-        $raw = $payload->rawPayload['CallDuration'] ?? $payload->rawPayload['DialCallDuration'] ?? 0;
-
-        return max(0, (int) $raw);
-    }
-
     private function findByProviderCallSid(IncomingCallPayload $payload): ?CallSession
     {
         return CallSession::query()
@@ -113,16 +106,20 @@ class CallSessionRecorder
             return;
         }
 
+        $keepMissed = $payload->status === CallSessionStatus::Completed
+            && $session->status === CallSessionStatus::Missed
+            && $session->answered_at === null;
+
         $session->fill([
             'status' => $payload->status,
             'raw_payload' => $payload->rawPayload,
         ]);
 
-        if ($payload->status === CallSessionStatus::Answered && $session->answered_at === null) {
-            $session->answered_at = now();
+        if ($keepMissed) {
+            $session->status = CallSessionStatus::Missed;
         }
 
-        if ($payload->status === CallSessionStatus::Completed && $session->answered_at === null && $this->connectedSeconds($payload) > 0) {
+        if ($payload->status === CallSessionStatus::Answered && $session->answered_at === null) {
             $session->answered_at = now();
         }
 
