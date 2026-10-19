@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Runtime\HostedRuntime;
 use Throwable;
 
 /**
@@ -12,6 +13,10 @@ final class ShopIntegrationRuntimeConfig
 {
     public static function apply(): void
     {
+        if (! HostedRuntime::tenantDatabaseSelected()) {
+            return;
+        }
+
         try {
             $credentials = ShopIntegrationCredentials::forCurrentShop();
         } catch (Throwable) {
