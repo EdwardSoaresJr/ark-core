@@ -57,7 +57,10 @@ class CommunicationsQueueResolver
      */
     public function resolve(?User $viewer = null, ?Carbon $previousLastSeenAt = null): array
     {
-        return $this->buildQueue($viewer, $previousLastSeenAt, includeRecentActivity: true);
+        $resolved = $this->resolveAttention($viewer, $previousLastSeenAt);
+        $resolved['recent_activity'] = $this->recentActivity($viewer);
+
+        return $resolved;
     }
 
     /**
@@ -160,11 +163,10 @@ class CommunicationsQueueResolver
             ? []
             : collect($this->inboundMessageQueueChannels->enabled())
                 ->map(function (OperationalCommunicationChannel $channel) use ($viewer): array {
-                    $messages = $this->unreadInboundMessageQueue
-                        ->latestUnreadPerConversation($viewer, $channel)
-                        ->map(fn (ConversationMessage $message): array => $this->messagePresenter->present($message, unread: true))
-                        ->values()
-                        ->all();
+                    $messages = $this->messagePresenter->presentAll(
+                        $this->unreadInboundMessageQueue->latestUnreadPerConversation($viewer, $channel),
+                        unread: true,
+                    );
 
                     return [
                         'channel' => $channel->value,

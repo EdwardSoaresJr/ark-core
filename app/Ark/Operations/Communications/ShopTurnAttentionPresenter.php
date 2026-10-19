@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Communications;
 
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Conversations\CustomerCallContext;
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Intake\IntakeEntryQuery;
 use App\Ark\Operations\Leads\IngressCreateContactUrl;
@@ -24,15 +25,19 @@ final class ShopTurnAttentionPresenter
     /**
      * @return array<string, mixed>
      */
-    public function present(Conversation $conversation, ?Lead $lead = null): array
-    {
+    public function present(
+        Conversation $conversation,
+        ?Lead $lead = null,
+        ?CustomerCallContext $context = null,
+        ?bool $hasAdvisorOutbound = null,
+    ): array {
         $conversation->loadMissing(['owner:id,name', 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1)]);
 
         /** @var ConversationMessage|null $latest */
         $latest = $conversation->messages->first();
         $latest?->loadMissing('attachments');
         $contactAddress = (string) $conversation->contact_address;
-        $context = $this->callContextResolver->resolveForAttentionList($contactAddress);
+        $context ??= $this->callContextResolver->resolveForAttentionList($contactAddress);
         $customer = $context?->customer;
         $matched = $customer !== null;
 
@@ -44,7 +49,7 @@ final class ShopTurnAttentionPresenter
             default => $displayContactPreview,
         };
 
-        $turn = $this->turnReason->for($conversation, $lead);
+        $turn = $this->turnReason->for($conversation, $lead, $hasAdvisorOutbound, leadKnown: true);
         $channelLabel = $this->channelLabel($latest, $lead);
         $kind = $this->queueKind($latest, $lead);
 
