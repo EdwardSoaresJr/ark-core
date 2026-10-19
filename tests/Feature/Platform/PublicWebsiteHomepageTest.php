@@ -42,6 +42,11 @@ function publishHomepageSurface(array $documentOverrides = []): void
     $document = array_replace_recursive($document, $documentOverrides);
 
     app(PublishWebsiteCatalog::class)->publish('lugsnplugs.arksms.com', $document, true);
+
+    // These examples assert the public https URLs a TLS site emits. A fresh
+    // checkout has APP_URL=http://localhost, so force the scheme here instead
+    // of depending on a developer .env.
+    \Illuminate\Support\Facades\URL::forceScheme('https');
 }
 
 test('homepage tells the shop story with the published photos', function (): void {

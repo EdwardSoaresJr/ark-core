@@ -12,6 +12,10 @@ abstract class TestCase extends BaseTestCase
 {
     protected function setUp(): void
     {
+        // PHPUnit writes forced phpunit.xml values to $_ENV and putenv, not $_SERVER.
+        // Copy them before boot so a shell rehearsal database cannot stay selected.
+        \Tests\Support\AssertDisposableTestDatabase::reconcilePhpUnitEnvironmentIntoProcess();
+
         parent::setUp();
 
         $this->withoutVite();

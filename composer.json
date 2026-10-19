@@ -62,7 +62,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php -d memory_limit=512M vendor/bin/pest --no-coverage"
+            "@php -d memory_limit=2048M vendor/bin/pest --no-coverage"
         ],
         "test:parallel": [
             "@php artisan config:clear --ansi @no_additional_args",
@@ -70,7 +70,7 @@
         ],
         "test:serial": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php -d memory_limit=512M vendor/bin/pest --no-coverage"
+            "@php -d memory_limit=2048M vendor/bin/pest --no-coverage"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -101,6 +101,7 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
+        "process-timeout": 0,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,

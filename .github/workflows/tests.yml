@@ -10,6 +10,7 @@ permissions:
 jobs:
   pest:
     runs-on: ubuntu-latest
+    # The suite forces SQLite :memory: in phpunit.xml. It does not use MySQL.
     steps:
       - uses: actions/checkout@v4
 
