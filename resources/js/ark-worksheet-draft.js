@@ -68,6 +68,24 @@ export function adoptRenderedBaseline(form) {
     }
 }
 
+export function adoptRenderedBaselines(root) {
+    if (! root) {
+        return;
+    }
+
+    const forms = [];
+
+    if (typeof root.matches === 'function' && root.matches('form')) {
+        forms.push(root);
+    }
+
+    if (typeof root.querySelectorAll === 'function') {
+        forms.push(...root.querySelectorAll('form'));
+    }
+
+    forms.forEach((form) => adoptRenderedBaseline(form));
+}
+
 function nodeHolds(ignore, node) {
     if (! ignore || ! node) {
         return false;
