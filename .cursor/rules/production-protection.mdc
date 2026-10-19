@@ -1,0 +1,14 @@
+---
+description: Protect live shops from unapproved maintenance, worker stops, and disruptive deploys
+alwaysApply: true
+---
+
+# Production protection
+
+Do not create or restore `storage/framework/maintenance.php`, run `artisan down` or `artisan up`, stop or start Horizon or the scheduler, restart nginx, php-fpm, Reverb, or Traefik, or run a freeze, unfreeze, deploy, or DNS change on a live shop unless the current user message explicitly authorizes that exact operation.
+
+A maintenance file, stopped workers, or a 503 is not permission to reverse it. Another Cursor session may have frozen that host on purpose. Read the current state and say which session owns the change before touching it.
+
+These hosts are live: Vultr `149.28.249.13` and DigitalOcean `143.110.199.236`, including `lugsnplugs.com`, `lugsnplugs.arksms.com`, and `app.lugsnplugs.com`. Scripts named `freeze-vultr.sh` or `unfreeze-vultr.sh` are not authorized just because they already exist.
+
+Do not submit a customer form, send a verification code, or create a lead to test booking or analytics.
