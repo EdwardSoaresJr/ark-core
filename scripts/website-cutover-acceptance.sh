@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Read-only checks for both public hosts after Core is routed.
-# Does not change Traefik, Foundry, or the database.
+# Read-only checks for one shop website after Core is routed.
+# Not part of a stock Core install. Both hosts are required; nothing is contacted by default.
+# Does not change the proxy, control plane, or the database.
 #
 # Production lead tests, if a later pass needs one:
 # - use a dedicated test number that has no customer and no phone capability row;
@@ -71,8 +72,13 @@ if [[ "${1:-}" == "--self-check" ]]; then
   exit 0
 fi
 
-NATIVE="${1:-https://lugsnplugs.arksms.com}"
-CUSTOM="${2:-https://lugsnplugs.com}"
+if [[ $# -lt 2 ]]; then
+  echo "usage: scripts/website-cutover-acceptance.sh https://native.example.com https://shop.example.com" >&2
+  exit 2
+fi
+
+NATIVE="$1"
+CUSTOM="$2"
 DTC=(p0016 p0101 p0128 p0135 p0174 p0300 p0301 p0302 p0303 p0304 p0340 p0401 p0420 p0430 p0442 p0455)
 
 check_host() {

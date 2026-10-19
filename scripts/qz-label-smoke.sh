@@ -5,7 +5,7 @@ set -euo pipefail
 
 base="${1:-}"
 if [[ -z "$base" ]]; then
-  echo "usage: QZ_SMOKE_COOKIE='laravel_session=...' scripts/qz-label-smoke.sh https://lugsnplugs.arksms.com" >&2
+  echo "usage: QZ_SMOKE_COOKIE='laravel_session=...' scripts/qz-label-smoke.sh https://shop.example.com" >&2
   exit 2
 fi
 

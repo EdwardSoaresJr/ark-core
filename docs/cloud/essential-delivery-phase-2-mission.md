@@ -61,7 +61,7 @@ Core displays a fresh challenge, accepts a Cloud-signed `ARK2` authorization, ve
 
 | Item | Evidence |
 | --- | --- |
-| Core under test | Demo @ `7ee9009` · public key `AJJroSsitWeaIjsqIaK30jDB8Y7ifkbwfNoEBuRstu8` |
+| Core under test | Demo install. The recovery public key was injected for that run and is not stored in this repository. |
 | Isolation | Box OUTPUT DROP to Cloud IP before challenge; held through reset, login, replay |
 | Challenge | Issued on `/app/offline-recovery` while Cloud unreachable from Box |
 | Authorization | Cloud-signed `ARK2…` carried manually; verified locally only |

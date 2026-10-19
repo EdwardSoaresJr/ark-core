@@ -81,8 +81,8 @@ final class CustomerVehicleDetailProjection
         $activeVisitRow = $activeVisit !== null ? $this->activeVisitRow($activeVisit, $vehicle) : null;
 
         $shop = ShopSettings::current();
-        $phoneDisplay = PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
-        $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '7194136227';
+        $phoneDisplay = PhoneNumber::display($shop->phone);
+        $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '';
 
         return [
             'vehicle' => [

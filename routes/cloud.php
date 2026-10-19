@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 /*
 | ARK Platform product portal does not live on Core Boxes.
 |
-| Manage / Connect targets ARK Platform (ARK_CLOUD_BASE_URL / cloud.arksms.com).
+| Manage / Connect targets ARK Platform when ARK_PLATFORM_BASE_URL or ARK_CLOUD_BASE_URL is set.
 | Legacy /cloud bookmarks redirect away when a Cloud base URL is configured.
 */
 

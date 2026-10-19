@@ -5,13 +5,19 @@
 <div class="space-y-6">
     <section class="public-panel">
         <h2 class="text-sm font-bold uppercase tracking-wide text-slate-500">Questions?</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-600">
-            Call or text {{ $aside['phone_display'] }} during business hours.
-        </p>
-        @include('portal.partials._shop-call-text-actions', [
-            'phoneTel' => $aside['phone_tel'],
-            'class' => 'mt-4',
-        ])
+        @if (filled($aside['phone_display'] ?? null))
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+                Call or text {{ $aside['phone_display'] }} during business hours.
+            </p>
+            @include('portal.partials._shop-call-text-actions', [
+                'phoneTel' => $aside['phone_tel'],
+                'class' => 'mt-4',
+            ])
+        @else
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+                Contact the shop during business hours.
+            </p>
+        @endif
         @if (filled($aside['business_hours_label'] ?? null))
             <p class="mt-3 text-xs text-slate-500">{{ $aside['business_hours_label'] }}</p>
         @endif

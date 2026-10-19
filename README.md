@@ -179,6 +179,7 @@ See `docs/installation/README.md` for what the stack includes and for advanced (
 ```bash
 composer install
 cp .env.example .env
+# .env stays on this machine. Do not commit it.
 
 # You may configure APP_KEY and DB_* manually,
 # or allow /setup to guide configuration on writable installs.
@@ -231,3 +232,5 @@ ARK SaaS is not licensed by this file. The note above is not legal advice.
 ARK Core is publicly available at:
 
 https://github.com/EdwardSoaresJr/ark-core
+
+There are no versioned releases or tags yet. `main` is the current public line. Build this checkout to self-host, and pin a commit when you need a fixed revision. Pull requests are reviewed by the maintainer. Security reports go through [SECURITY.md](SECURITY.md), not public issues.

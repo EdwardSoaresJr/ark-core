@@ -8,8 +8,8 @@
 | Repo | Note |
 | --- | --- |
 | ARK (`Core`) | `11499f77` - *Add reversible Dragon Service Advisor note editing* |
-| Dragon (`arkai:/home/edward/dragon`) | `913f728` - *Add Dragon Service Advisor rewrite skill* (prior `4393816`; dirty Agent Core WIP **not** absorbed) |
-| Bridge (`~/dragon-bridge` on arkai) | Multi-capability client deployed + `dragon-assist-bridge` restarted |
+| Dragon (private appliance checkout) | Service Advisor rewrite skill. Private appliance history is not part of this repository. |
+| Bridge (private appliance) | Multi-capability client deployed. |
 
 ## UI placement
 
