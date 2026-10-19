@@ -65,18 +65,6 @@ export function initWorkspaceDirtyBindings() {
         syncDirty();
     }, true);
 
-    root.addEventListener('submit', (event) => {
-        const form = event.target;
-        if (!form?.closest || form.closest('[data-ark-workspace-dirty="off"]')) {
-            return;
-        }
-
-        if (form.matches('form')) {
-            // Optimistic clear; continuity / full navigation re-syncs after replace.
-            window.ARK.workspace.setDirty(key, false);
-        }
-    }, true);
-
     window.ARK = window.ARK || {};
     window.ARK.workspace = window.ARK.workspace || {};
     window.ARK.workspace.syncDirty = syncDirty;
