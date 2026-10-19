@@ -10,6 +10,8 @@ use App\Ark\Operations\EmailVerification\EmailVerificationException;
 use App\Ark\Operations\Leads\LeadContactPreference;
 use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
+use App\Ark\Operations\Leads\LeadState;
+use App\Ark\Operations\Leads\Measurement\AppointmentRequestConversion;
 use App\Ark\Operations\Leads\Public\LeadEmailVerification;
 use App\Ark\Operations\Leads\Public\LeadPhoneVerification;
 use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
@@ -109,7 +111,8 @@ final class PublicBookSubmission
             ]);
         }
 
-        if (! $this->identityAccepted($request, $data['contact_phone'], $data['contact_email'] ?? null)) {
+        $identity = $this->identityDecision($request, $data['contact_phone'], $data['contact_email'] ?? null);
+        if (! $identity['accepted']) {
             return back()->withInput()->withErrors([
                 'contact_phone' => 'Verify your phone number or email with the code before sending.',
             ]);
@@ -126,7 +129,7 @@ final class PublicBookSubmission
         }
         $preferredLabel = PublicAppointmentRequest::preferredLabel($dateLabel, $period);
 
-        $this->leads->recordWebsiteSubmission([
+        $lead = $this->leads->recordWebsiteSubmission([
             'source' => LeadSource::Website,
             'concern' => PublicAppointmentRequest::composeConcern($concern, $preferredLabel),
             'contact_phone' => PhoneNumber::normalize($data['contact_phone']) ?? $data['contact_phone'],
@@ -144,6 +147,10 @@ final class PublicBookSubmission
                 'canonical_host' => $website->canonicalHost(),
             ], $date, $period, $preferredLabel),
         ]);
+
+        if ($identity['verified'] && $lead->state === LeadState::Received) {
+            AppointmentRequestConversion::arm($request, $lead);
+        }
 
         return redirect()->route('public.leads.thanks');
     }
@@ -254,28 +261,35 @@ final class PublicBookSubmission
         $request->session()->put(CustomerRecognitionProjection::SESSION_GUEST_KEY, true);
     }
 
-    private function identityAccepted(Request $request, string $phone, ?string $email): bool
+    /**
+     * @return array{accepted: bool, verified: bool}
+     */
+    private function identityDecision(Request $request, string $phone, ?string $email): array
     {
         $customer = Auth::guard('portal')->user();
         if ($customer instanceof Customer) {
             $customerPhone = PhoneNumber::normalize((string) ($customer->phone ?? ''));
             $submitted = PhoneNumber::normalize($phone);
             if ($customerPhone !== null && $submitted !== null && $customerPhone === $submitted) {
-                return true;
+                return ['accepted' => true, 'verified' => true];
             }
         }
 
         $phoneReady = $this->phones->bookIdentityGateReady();
         $emailReady = $this->emails->ready();
         if (! $phoneReady && ! $emailReady) {
-            return true;
+            return ['accepted' => true, 'verified' => false];
         }
 
         if ($phoneReady && $this->phones->consumeBookProof($request->session(), $phone)) {
-            return true;
+            return ['accepted' => true, 'verified' => true];
         }
 
-        return $emailReady && filled($email) && $this->emails->consumeBookProof($request->session(), $email);
+        if ($emailReady && filled($email) && $this->emails->consumeBookProof($request->session(), $email)) {
+            return ['accepted' => true, 'verified' => true];
+        }
+
+        return ['accepted' => false, 'verified' => false];
     }
 
     /**
