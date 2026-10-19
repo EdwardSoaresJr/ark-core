@@ -101,6 +101,10 @@ export function arkCallQueue(bootstrap = null) {
         panelStyle: '',
 
         init() {
+            if (this.pollTimer !== null) {
+                return;
+            }
+
             this.bindItemActions();
             this.refresh();
             this.pollTimer = window.setInterval(() => this.refresh(), 5000);
