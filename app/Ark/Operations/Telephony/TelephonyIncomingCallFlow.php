@@ -41,6 +41,8 @@ class TelephonyIncomingCallFlow
             return $this->buildVoicemailResponse($this->flow->voicemailGreeting());
         }
 
+        app(TelephonyRingState::class)->initializeParallel($parentCallSid, $callerNumber);
+
         return $this->buildOpenHoursDialResponse($dialChildren, $parentCallSid);
     }
 

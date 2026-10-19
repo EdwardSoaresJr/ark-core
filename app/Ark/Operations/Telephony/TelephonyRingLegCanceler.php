@@ -45,12 +45,14 @@ class TelephonyRingLegCanceler
     {
         $state = $this->ringState->get($parentCallSid);
 
-        if ($state === null || ($state['answered'] ?? false)) {
+        if (($state['answered'] ?? false) === true) {
             return;
         }
 
-        $this->ringState->markAnswered($parentCallSid, $endpointId);
-        $this->cancelCompetingLegs($parentCallSid, $endpointId);
+        if ($state !== null) {
+            $this->ringState->markAnswered($parentCallSid, $endpointId);
+            $this->cancelCompetingLegs($parentCallSid, $endpointId);
+        }
 
         $session = CallSession::query()
             ->where('provider_call_sid', $parentCallSid)
