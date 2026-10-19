@@ -157,7 +157,9 @@ test('call queue returns unworked recent sessions for all advisors', function ()
         ->assertJsonPath('calls.0.context_summary', 'Waiting on Customer Approval');
 });
 
-test('call queue exposes text customer action for matched callers when messaging is enabled', function () {
+test('call queue exposes text customer action for matched callers when Twilio is configured', function () {
+    config()->set('services.twilio.account_sid', 'ACtestaccount');
+    config()->set('services.twilio.auth_token', 'test-auth-token');
     bindFakeOutboundSms();
 
     ShopSettings::current()->update([
@@ -215,10 +217,16 @@ test('mark worked removes call from queue without deleting session', function ()
 
     expect($session->worked_at)->not->toBeNull();
 
-    $this->actingAs($advisor)
+    $queued = $this->actingAs($advisor)
         ->getJson(route('operations.telephony.call-queue'))
         ->assertOk()
-        ->assertJsonPath('count', 0);
+        ->assertJsonPath('summary.call_count', 0)
+        ->assertJsonPath('calls', []);
+
+    // A missed call opens shop work. Marking that call handled removes it from
+    // the call list and leaves the conversation waiting on the shop.
+    $queued->assertJsonPath('items.0.kind', 'message')
+        ->assertJsonPath('items.0.state', 'shop_turn');
 });
 
 test('mark worked clears all unworked sessions for the same caller', function () {
