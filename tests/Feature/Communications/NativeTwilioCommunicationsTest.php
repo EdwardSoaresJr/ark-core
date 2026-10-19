@@ -35,9 +35,13 @@ test('open hours voice webhook returns one dial for every ring destination', fun
     ])->assertOk();
 
     $xml = $response->getContent();
+    preg_match('/<Dial\b([^>]*)>/', $xml, $dial);
     expect($xml)->toContain('<Dial')
         ->and($xml)->toContain('+17195550111')
         ->and($xml)->toContain('+17195550222')
+        ->and($xml)->not->toContain('url=""')
+        ->and($dial[1] ?? '')->toContain('answerOnBridge="true"')
+        ->and($dial[1] ?? '')->not->toContain('statusCallback')
         ->and(substr_count($xml, '<Number'))->toBe(2)
         ->and(CallSession::query()->where('provider_call_sid', 'CAnativeopen01')->count())->toBe(1);
 

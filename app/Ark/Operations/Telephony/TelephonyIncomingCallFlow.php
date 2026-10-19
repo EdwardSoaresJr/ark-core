@@ -123,7 +123,6 @@ class TelephonyIncomingCallFlow
 
     private function dialAttributes(?string $parentCallSid = null): string
     {
-        $statusCallback = route('webhooks.communications.twilio.voice.status');
         $dialComplete = route('webhooks.communications.twilio.voice.dial-complete');
         $recordingCallback = route('webhooks.communications.twilio.voice.recording');
         $timeout = $this->flow->dialTimeoutSeconds();
@@ -134,9 +133,7 @@ class TelephonyIncomingCallFlow
 
         $attributes = $callerAttr
             .TelephonyCallerRingtone::forCurrentShop()->dialAttribute()
-            .' statusCallback="'.htmlspecialchars($statusCallback, ENT_XML1).'"'
-            .' statusCallbackEvent="initiated ringing answered completed"'
-            .' statusCallbackMethod="POST"'
+            .' answerOnBridge="true"'
             .' timeout="'.$timeout.'"'
             .' action="'.htmlspecialchars($dialComplete, ENT_XML1).'"';
 
@@ -151,7 +148,6 @@ class TelephonyIncomingCallFlow
 
     private function staggeredConferenceDialAttributes(?string $parentCallSid = null): string
     {
-        $statusCallback = route('webhooks.communications.twilio.voice.status');
         $timeout = $this->flow->dialTimeoutSeconds();
         $callerId = $parentCallSid !== null ? $this->customerCallerIdE164($parentCallSid) : null;
         $callerAttr = filled($callerId)
@@ -160,9 +156,7 @@ class TelephonyIncomingCallFlow
 
         return $callerAttr
             .TelephonyCallerRingtone::forCurrentShop()->dialAttribute()
-            .' statusCallback="'.htmlspecialchars($statusCallback, ENT_XML1).'"'
-            .' statusCallbackEvent="initiated ringing answered completed"'
-            .' statusCallbackMethod="POST"'
+            .' answerOnBridge="true"'
             .' timeout="'.$timeout.'"';
     }
 

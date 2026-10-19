@@ -57,15 +57,6 @@ class TelephonyRingLegStatusHandler
             return true;
         }
 
-        $endpoint = TelephonyEndpoint::query()->find($endpointId);
-
-        if ($endpoint?->type === TelephonyEndpointType::Cell) {
-            $this->ringState->markCellScreening($parentCallSid, $endpointId);
-            $this->broadcaster->broadcastForParentCallSid($parentCallSid);
-
-            return true;
-        }
-
         $this->canceler->markAnsweredAndCancel($parentCallSid, $endpointId);
 
         return true;

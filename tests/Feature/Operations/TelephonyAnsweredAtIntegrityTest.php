@@ -55,6 +55,43 @@ test('ring-leg answer stamps answered_at even when the endpoint has no owner', f
         ->and($session->owned_by_user_id)->toBeNull();
 });
 
+test('a cell answer records the parent session', function () {
+    $session = CallSession::query()->create([
+        'provider' => TelephonyProviderType::Twilio,
+        'provider_call_sid' => 'CAcellanswer01',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551234',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551234',
+        'status' => CallSessionStatus::Ringing,
+        'started_at' => now()->subMinute(),
+    ]);
+
+    $endpoint = TelephonyEndpoint::query()->create([
+        'name' => 'Handset',
+        'type' => TelephonyEndpointType::Cell,
+        'destination' => '7196414984',
+        'user_id' => null,
+        'enabled' => true,
+        'position' => 0,
+    ]);
+
+    app(TelephonyRingState::class)->initializeParallel('CAcellanswer01', '7195551234');
+
+    $this->post(route('webhooks.communications.twilio.voice.ring-status', [
+        'parentCallSid' => 'CAcellanswer01',
+        'endpointId' => $endpoint->id,
+    ]), [
+        'CallSid' => 'CAcellchild01',
+        'CallStatus' => 'answered',
+    ])->assertNoContent();
+
+    $session->refresh();
+
+    expect($session->status)->toBe(CallSessionStatus::Answered)
+        ->and($session->answered_at)->not->toBeNull();
+});
+
 test('child in-progress status callback sets answered_at on the parent session', function () {
     $session = CallSession::query()->create([
         'provider' => TelephonyProviderType::Twilio,
