@@ -48,13 +48,16 @@ use App\Ark\Platform\Mail\PlatformAwareMailManager;
 use App\Ark\Platform\Mail\PlatformMailTransport;
 use App\Ark\Platform\VoiceTransportRuntimeConfig;
 use App\Ark\Runtime\Broadcast\ReverbDeployment;
+use App\Ark\Runtime\HostedRuntime;
 use App\Ark\Runtime\Surfaces\PublicRootUrlConfigurator;
+use App\Http\Middleware\ApplyShopRuntimeConfig;
 use App\Ark\Vehicles\Providers\NhtsaProvider;
 use App\Ark\Vehicles\VehicleIntelligenceManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\MailServiceProvider;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -71,13 +74,22 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
-        if (\App\Ark\Install\InstallationState::isNotInstalled()) {
+        // A hosted shop's install marker lives in tenant storage, which is not active yet.
+        // Leaving the configured drivers in place keeps Redis sessions and the tenant-scoped
+        // shop cache store. Do not rename that store to the generic redis store.
+        if (HostedRuntime::shouldUseFileDriversBeforeInstall()) {
             config([
                 'session.driver' => 'file',
                 'cache.default' => 'file',
                 'queue.default' => 'sync',
             ]);
         }
+
+        $this->app->afterResolving(HttpKernel::class, function (HttpKernel $kernel): void {
+            if (HostedRuntime::catalogConfigured()) {
+                $kernel->prependMiddleware(ApplyShopRuntimeConfig::class);
+            }
+        });
 
         $this->app->scoped(PlatformRecordingClient::class);
         $this->app->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {

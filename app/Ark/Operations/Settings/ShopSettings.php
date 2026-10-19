@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Runtime\HostedRuntime;
 use App\Ark\Operations\Appointments\AppointmentCapacityBasis;
 use App\Ark\Operations\Appointments\AppointmentCapacityEnforcement;
 use App\Ark\Operations\Appointments\AppointmentRequestAvailability;
@@ -455,6 +456,10 @@ TEXT;
     {
         if (self::$current !== null) {
             return self::$current;
+        }
+
+        if (! HostedRuntime::tenantDatabaseSelected()) {
+            return self::unsavedInstallDefaults();
         }
 
         if (! Schema::hasTable('shop_settings')) {
