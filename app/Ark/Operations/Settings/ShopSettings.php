@@ -1561,10 +1561,43 @@ TEXT;
     }
 
     /**
+     * Shop reply-to. Production dropped the Postmark columns; the shop email remains.
+     */
+    public function customerReplyToAddress(): ?string
+    {
+        if (Schema::hasColumn($this->getTable(), 'postmark_reply_to')) {
+            $stored = $this->getAttributes()['postmark_reply_to'] ?? null;
+            if (filled($stored)) {
+                return (string) $stored;
+            }
+        }
+
+        return filled($this->email) ? (string) $this->email : null;
+    }
+
+    public function customerReplyToName(): ?string
+    {
+        if (Schema::hasColumn($this->getTable(), 'postmark_reply_to_name')) {
+            $stored = $this->getAttributes()['postmark_reply_to_name'] ?? null;
+            if (filled($stored)) {
+                return (string) $stored;
+            }
+        }
+
+        return filled($this->shop_name) ? (string) $this->shop_name : null;
+    }
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     public function persistTrusted(array $attributes): bool
     {
-        return $this->forceFill($attributes)->save();
+        $columns = array_flip(Schema::getColumnListing($this->getTable()));
+        $stored = array_intersect_key($attributes, $columns);
+        if ($stored === []) {
+            return true;
+        }
+
+        return $this->forceFill($stored)->save();
     }
 }

@@ -216,12 +216,12 @@ final class ShopIntegrationCredentials
 
     public function mailReplyTo(): ?string
     {
-        return $this->resolve($this->settings->postmark_reply_to, config('mail.reply_to.address'));
+        return $this->resolve($this->settings->customerReplyToAddress(), config('mail.reply_to.address'));
     }
 
     public function mailReplyToName(): ?string
     {
-        return $this->resolve($this->settings->postmark_reply_to_name, config('mail.reply_to.name'));
+        return $this->resolve($this->settings->customerReplyToName(), config('mail.reply_to.name'));
     }
 
     public function transactionalEmailConfigured(): bool

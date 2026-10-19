@@ -135,7 +135,7 @@ class ShopCommunicationsSettingsController
             ->with('status', 'Customer messaging settings saved.');
 
         $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
-        if (! $synced && filled(ShopSettings::current()->postmark_reply_to ?: ShopSettings::current()->email)) {
+        if (! $synced && filled(ShopSettings::current()->customerReplyToAddress())) {
             $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
         }
 
