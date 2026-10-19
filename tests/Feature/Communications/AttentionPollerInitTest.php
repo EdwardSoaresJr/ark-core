@@ -23,5 +23,7 @@ test('attention pollers are not started twice', function () {
     $commsInterrupt = file_get_contents(base_path('resources/js/ark-comms-interrupt.js'));
 
     expect($callQueue)->toContain('if (this.pollTimer !== null)')
+        ->and($callQueue)->toContain("url.searchParams.set('summary', '1')")
+        ->and($callQueue)->toContain('if (! this.open)')
         ->and($commsInterrupt)->toContain('if (this.pollTimer !== null)');
 });
