@@ -13,9 +13,13 @@ export function arkInspectionWalk(config = {}) {
         csrf: config.csrf ?? '',
         currentStatus: config.currentStatus ?? null,
         note: config.note ?? '',
+        savedNote: config.note ?? '',
         measurementValue: config.measurementValue ?? '',
+        savedMeasurementValue: config.measurementValue ?? '',
         measurementUnit: config.measurementUnit ?? '',
+        savedMeasurementUnit: config.measurementUnit ?? '',
         measurementSlots: slots,
+        savedSlotsKey: JSON.stringify(slots.map((slot) => [slot.key, slot.value])),
         rearAxleBrakeType: config.rearAxleBrakeType ?? null,
         isAxleGate: !!config.isAxleGate,
         roadTestFindingLocked: !!config.roadTestFindingLocked,
@@ -34,7 +38,11 @@ export function arkInspectionWalk(config = {}) {
         },
 
         async setCondition(status) {
-            if (! this.updateUrl || status === this.currentStatus) {
+            if (! this.updateUrl) {
+                return;
+            }
+
+            if (status === this.currentStatus && ! this.saveError) {
                 return;
             }
 
@@ -70,19 +78,42 @@ export function arkInspectionWalk(config = {}) {
                 return;
             }
 
-            await this.patch({ note: this.note, status: this.currentStatus });
-        },
-
-        async saveMeasurement() {
-            if (! this.updateUrl || this.measurementValue === '') {
+            if (this.note === this.savedNote && ! this.saveError) {
                 return;
             }
 
+            const note = this.note;
+            await this.patch({ note, status: this.currentStatus });
+
+            if (! this.saveError) {
+                this.savedNote = note;
+            }
+        },
+
+        async saveMeasurement() {
+            if (! this.updateUrl) {
+                return;
+            }
+
+            const unchanged = this.measurementValue === this.savedMeasurementValue
+                && this.measurementUnit === this.savedMeasurementUnit;
+
+            if (this.measurementValue === '' || (unchanged && ! this.saveError)) {
+                return;
+            }
+
+            const measurementValue = this.measurementValue;
+            const measurementUnit = this.measurementUnit;
             await this.patch({
                 status: this.currentStatus,
-                measurement_value: this.measurementValue,
-                measurement_unit: this.measurementUnit || null,
+                measurement_value: measurementValue,
+                measurement_unit: measurementUnit || null,
             });
+
+            if (! this.saveError) {
+                this.savedMeasurementValue = measurementValue;
+                this.savedMeasurementUnit = measurementUnit;
+            }
         },
 
         async saveSlots() {
@@ -103,10 +134,20 @@ export function arkInspectionWalk(config = {}) {
                 return;
             }
 
+            const nextKey = JSON.stringify(measurements);
+
+            if (nextKey === this.savedSlotsKey && ! this.saveError) {
+                return;
+            }
+
             await this.patch({
                 status: this.currentStatus ?? 'good',
                 measurements,
             });
+
+            if (! this.saveError) {
+                this.savedSlotsKey = nextKey;
+            }
         },
 
         async patch(payload) {

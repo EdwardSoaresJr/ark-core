@@ -1,5 +1,7 @@
 import { focusWorksheetConcernRepairAction } from './ark-scope-entry-intake';
-import { blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
+import { dirtyAfterSaveAttempt, refreshPresentsAsSaving } from './ark-worksheet-autosave';
+import { adoptRenderedBaselines, blockedPanelIds, cancelWouldReplace, draftNodesIn, versionToSubmit } from './ark-worksheet-draft';
+import { formHasChanges } from './ark-form-unsaved';
 import { applyContinuityScopes, applyEditorPresentation, CONTINUITY_REFRESH_FAILED_MESSAGE, replaceSubmittedRegion } from './ark-worksheet-continuity-scope';
 
 const WORKSHEET_FETCH_INIT = {
@@ -123,6 +125,38 @@ export const arkWorksheetContinuity = (config = {}) => {
         workspaceTabReloadMap,
         focusableSelector: 'a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
         worksheetIdempotencyField: 'worksheet_idempotency_key',
+
+        initReplacedWorksheetNode(node) {
+            if (! node) {
+                return;
+            }
+
+            window.Alpine?.initTree?.(node);
+            adoptRenderedBaselines(node);
+        },
+
+        rememberSaveDirty(form) {
+            this._saveHadUnsavedChanges = form instanceof HTMLFormElement && formHasChanges(form);
+        },
+
+        settleSaveDirty(form, ok) {
+            const formDiffers = form instanceof HTMLFormElement && formHasChanges(form);
+            const dirty = dirtyAfterSaveAttempt({
+                ok,
+                formDiffers,
+                hadUnsavedChanges: this._saveHadUnsavedChanges === true,
+            });
+
+            if (ok && typeof window.ARK?.workspace?.syncDirty === 'function') {
+                window.ARK.workspace.syncDirty();
+
+                return;
+            }
+
+            if (dirty) {
+                window.ARK?.workspace?.setDirty?.(true);
+            }
+        },
 
         resolveRefreshScope(scope) {
             return this.refreshScopeMap[scope] ?? this.worksheetScopeId;
@@ -564,7 +598,7 @@ export const arkWorksheetContinuity = (config = {}) => {
 
                     const next = fresh.cloneNode(true);
                     current.replaceWith(next);
-                    window.Alpine?.initTree?.(next);
+                    this.initReplacedWorksheetNode(next);
                     replaced += 1;
                 } catch (error) {
                     console.error('[ARK worksheet] Failed to replace discarded draft', current.id || current.getAttribute?.('action'), error);
@@ -618,7 +652,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                     // replaceWith() would otherwise move the node out of the parsed document.
                     const next = fresh.cloneNode(true);
                     current.replaceWith(next);
-                    window.Alpine?.initTree?.(next);
+                    this.initReplacedWorksheetNode(next);
                     replaced += 1;
                 } catch (error) {
                     console.error('[ARK worksheet] Failed to replace continuity panel', id, error);
@@ -630,12 +664,8 @@ export const arkWorksheetContinuity = (config = {}) => {
                 replaced += this.replaceDiscardedDraft(doc);
             }
 
-            // DOM baselines reset - sticky dirty from before refresh must re-check forms.
-            if (typeof window.ARK?.workspace?.syncDirty === 'function') {
-                window.ARK.workspace.syncDirty();
-            } else {
-                window.ARK?.workspace?.setDirty?.(false);
-            }
+            // Server HTML is the new baseline. Leave unsaved forms dirty.
+            window.ARK?.workspace?.syncDirty?.();
 
             const totalsMissing = missing.includes('estimate-builder-rail')
                 || (
@@ -687,12 +717,12 @@ export const arkWorksheetContinuity = (config = {}) => {
                     ignore: form instanceof HTMLFormElement ? form : null,
                     requiredIds: continuityRequiredIds(doc, scopes),
                     destroyTree: (node) => window.Alpine?.destroyTree?.(node),
-                    initTree: (node) => window.Alpine?.initTree?.(node),
+                    initTree: (node) => this.initReplacedWorksheetNode(node),
                 });
                 continuityOk = result.ok;
                 replaceSubmittedRegion(document, doc, form instanceof HTMLFormElement ? form : null, {
                     destroyTree: (node) => window.Alpine?.destroyTree?.(node),
-                    initTree: (node) => window.Alpine?.initTree?.(node),
+                    initTree: (node) => this.initReplacedWorksheetNode(node),
                 });
             } else if (participatesInWorksheetContinuity(form)) {
                 this.surfaceWorksheetMessage(CONTINUITY_REFRESH_FAILED_MESSAGE, { tone: 'warn' });
@@ -722,11 +752,7 @@ export const arkWorksheetContinuity = (config = {}) => {
             this.restoreFocus(focusTarget);
             this.reopenConcernStoreIfNeeded(doc);
 
-            if (scopes.length > 0) {
-                window.ARK?.workspace?.syncDirty?.();
-            } else {
-                window.ARK?.workspace?.setDirty?.(false);
-            }
+            window.ARK?.workspace?.syncDirty?.();
 
             if (scopes.length > 0 && ! continuityOk) {
                 this.surfaceWorksheetMessage(CONTINUITY_REFRESH_FAILED_MESSAGE, { tone: 'warn' });
@@ -737,7 +763,7 @@ export const arkWorksheetContinuity = (config = {}) => {
             this.surfaceWorksheetSaved();
         },
 
-        async refreshWorksheet(url, anchor) {
+        async refreshWorksheet(url, anchor, options = {}) {
             const scrollAnchor = anchor instanceof HTMLFormElement
                 ? this.scrollAnchor(anchor)
                 : this.scopedWorksheetTarget(anchor);
@@ -748,12 +774,17 @@ export const arkWorksheetContinuity = (config = {}) => {
                 ? anchor.dataset?.refreshScope
                 : anchor?.dataset?.refreshScope;
             const workspaceTab = refreshScope ? workspaceTabReloadMap[refreshScope] : null;
+            const showSaving = refreshPresentsAsSaving(options);
+            const quietLock = ! showSaving && ! this.worksheetBusyPending;
 
-            if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur();
+            // Background reload must not blur the focused control. Blur handlers
+            // commit mileage and other fields, so a focus return looked like a save.
+            if (showSaving) {
+                this.beginWorksheetBusy(options.label ?? null);
+            } else if (quietLock) {
+                this.worksheetBusyDepth = (this.worksheetBusyDepth ?? 0) + 1;
+                this.worksheetBusyPending = true;
             }
-
-            this.beginWorksheetBusy();
 
             try {
                 if (
@@ -777,7 +808,10 @@ export const arkWorksheetContinuity = (config = {}) => {
                     }
 
                     this.restoreFocus(focusTarget);
-                    this.revealWorksheetStatus();
+
+                    if (showSaving) {
+                        this.revealWorksheetStatus();
+                    }
 
                     return;
                 }
@@ -812,11 +846,16 @@ export const arkWorksheetContinuity = (config = {}) => {
                 this.restoreOpenState(anchor);
                 this.restoreAnchor(anchorId, anchorTop);
                 this.restoreFocus(focusTarget);
-                this.revealWorksheetStatus();
+
+                if (showSaving) {
+                    this.revealWorksheetStatus();
+                }
             } catch {
                 window.location.href = url;
             } finally {
-                this.endWorksheetBusy();
+                if (showSaving || quietLock) {
+                    this.endWorksheetBusy();
+                }
             }
         },
 
@@ -847,7 +886,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                 const doc = new DOMParser().parseFromString(html, 'text/html');
                 const applied = applyEditorPresentation(document, doc, {
                     destroyTree: (node) => window.Alpine?.destroyTree?.(node),
-                    initTree: (node) => window.Alpine?.initTree?.(node),
+                    initTree: (node) => this.initReplacedWorksheetNode(node),
                 });
 
                 if (! applied) {
@@ -1003,7 +1042,10 @@ export const arkWorksheetContinuity = (config = {}) => {
 
             // Claim the busy gate before any await so double-clicks cannot race two POSTs.
             if (this.worksheetBusyPending) {
-                this.surfaceWorksheetMessage('Still saving…', { tone: 'warn' });
+                this.surfaceWorksheetMessage(
+                    this.worksheetSaving ? 'Still saving…' : 'Still updating this repair order…',
+                    { tone: 'warn' },
+                );
 
                 return false;
             }
@@ -1026,6 +1068,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                 document.activeElement.blur();
             }
 
+            this.rememberSaveDirty(form);
             this.ensureWorksheetIdempotencyKey(form);
             this.beginWorksheetBusy(form);
 
@@ -1072,6 +1115,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                         { tone: 'error' },
                     );
                     window.dispatchEvent(new CustomEvent('ark-workspace-modal-save-failed'));
+                    this.settleSaveDirty(form, false);
 
                     return false;
                 }
@@ -1083,6 +1127,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                     window.dispatchEvent(new CustomEvent('ark-workspace-modal-save-failed', {
                         detail: { message: modalError || '' },
                     }));
+                    this.settleSaveDirty(form, false);
                     // Never native-submit modal forms on AJAX failure - form.submit()
                     // bypasses HTML5 required checks and re-posts the same empty/wrong form.
 
@@ -1098,6 +1143,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                         this.clearWorksheetIdempotencyKey(form);
                         this.surfaceWorksheetMessage(CONTINUITY_REFRESH_FAILED_MESSAGE, { tone: 'warn' });
                         window.dispatchEvent(new CustomEvent('ark-workspace-modal-save-failed'));
+                        this.settleSaveDirty(form, true);
 
                         return false;
                     }
@@ -1117,7 +1163,7 @@ export const arkWorksheetContinuity = (config = {}) => {
                     }
 
                     await this.refreshWorksheet(window.location.href, form);
-                    window.ARK?.workspace?.setDirty?.(false);
+                    this.settleSaveDirty(form, true);
                     this.surfaceWorksheetSaved();
                     this.reopenPendingDragonRewrite(null, resolveLineId());
 
@@ -1145,6 +1191,7 @@ export const arkWorksheetContinuity = (config = {}) => {
 
                     if (! acknowledged) {
                         this._pendingDragonRewrite = null;
+                        this.settleSaveDirty(form, false);
 
                         return false;
                     }
@@ -1161,12 +1208,14 @@ export const arkWorksheetContinuity = (config = {}) => {
 
                 const lineId = resolveLineId(doc);
                 this.reopenPendingDragonRewrite(doc, lineId);
+                this.settleSaveDirty(form, true);
 
                 return { ok: true, lineId };
             } catch {
                 this._pendingDragonRewrite = null;
                 this.surfaceWorksheetMessage("Couldn't save. Retry", { tone: 'error' });
                 window.dispatchEvent(new CustomEvent('ark-workspace-modal-save-failed'));
+                this.settleSaveDirty(form, false);
 
                 return false;
             } finally {
