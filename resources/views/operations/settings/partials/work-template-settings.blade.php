@@ -36,14 +36,21 @@
                 Internal note <span class="font-normal text-slate-400">(optional - becomes a private note line)</span>
                 <textarea name="internal_note" rows="2" maxlength="2000" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"></textarea>
             </label>
-            <label class="block text-xs font-medium text-slate-500 md:col-span-2">
-                Recommendation status
+            <label class="block text-xs font-medium text-slate-500">
+                Priority
+                @include('operations.repair-orders.partials.recommendation-priority-select', [
+                    'inputId' => 'work-template-create-priority',
+                    'selectClass' => 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950',
+                ])
+            </label>
+            <label class="block text-xs font-medium text-slate-500">
+                Work type
                 @include('operations.repair-orders.partials.recommendation-intent-select', [
                     'selected' => \App\Ark\Operations\RepairOrders\RecommendationIntent::Maintenance->value,
                     'inputId' => 'work-template-create-intent',
                     'selectClass' => 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950',
                 ])
-                <span class="mt-1 block font-normal text-slate-400">Used when this saved job creates a new concern. Attaching to an existing concern keeps that concern’s status.</span>
+                <span class="mt-1 block font-normal text-slate-400">Used when this saved job creates a new concern. Attaching to an existing concern keeps that concern’s priority and work type.</span>
             </label>
         </div>
 
@@ -102,7 +109,12 @@
                 <div class="flex flex-wrap items-start justify-between gap-2">
                     <div>
                         <h5 class="text-sm font-bold text-slate-950">{{ $template->title }}</h5>
-                        <p class="mt-0.5 text-[11px] font-semibold text-slate-600">{{ $template->recommendationIntent()->staffLabel() }}</p>
+                        <p class="mt-0.5 text-[11px] font-semibold text-slate-600">
+                            {{ $template->presentation()->staffLabel() ?? 'No priority' }}
+                            @if ($template->recommendationIntent())
+                                · {{ $template->recommendationIntent()->staffLabel() }}
+                            @endif
+                        </p>
                         @if ($template->description)
                             <p class="mt-0.5 text-xs text-slate-500">{{ $template->description }}</p>
                         @endif
@@ -174,9 +186,18 @@
                                 <textarea name="internal_note" rows="2" maxlength="2000" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">{{ $template->internal_note }}</textarea>
                             </label>
                             <label class="block text-xs font-medium text-slate-500">
-                                Recommendation status
+                                Priority
+                                @include('operations.repair-orders.partials.recommendation-priority-select', [
+                                    'selectedPriority' => $template->recommendationPriority()?->value,
+                                    'informationOnly' => $template->isInformationOnly(),
+                                    'inputId' => 'work-template-edit-priority-'.$template->id,
+                                    'selectClass' => 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950',
+                                ])
+                            </label>
+                            <label class="block text-xs font-medium text-slate-500">
+                                Work type
                                 @include('operations.repair-orders.partials.recommendation-intent-select', [
-                                    'selected' => $template->recommendationIntent()->value,
+                                    'selected' => $template->recommendationIntent()?->value,
                                     'inputId' => 'work-template-edit-intent-'.$template->id,
                                     'selectClass' => 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950',
                                 ])

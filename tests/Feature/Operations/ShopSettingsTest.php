@@ -251,7 +251,8 @@ test('admin can persist authoritative operational defaults', function () {
 
     $this->patch(route('operations.settings.shop.workflow.update'), [
         'default_visit_mode' => 'needs_shuttle',
-        'default_recommendation_intent' => 'immediate_attention',
+        'default_recommendation_intent' => 'maintenance',
+        'default_recommendation_posture' => 'must_do',
         'default_notes_private' => '1',
         'default_estimate_state' => RepairOrderStatus::Estimate->value,
     ])->assertRedirect(route('operations.settings.shop.edit'));
@@ -281,7 +282,8 @@ test('admin can persist authoritative operational defaults', function () {
         ->and($settings->customer_types[3]['discount_type'])->toBe('none')
         ->and($settings->estimate_validity_days)->toBe(14)
         ->and($settings->default_visit_mode)->toBe('needs_shuttle')
-        ->and($settings->default_recommendation_intent)->toBe('immediate_attention')
+        ->and($settings->default_recommendation_intent)->toBe('maintenance')
+        ->and($settings->default_recommendation_priority)->toBe('must_do')
         ->and($settings->default_notes_private)->toBeTrue()
         ->and($settings->default_estimate_state)->toBe(RepairOrderStatus::Estimate->value);
 });

@@ -414,9 +414,18 @@
                     @include('operations.repair-orders.partials.repair-order-mention-suggest')
                 </label>
                 <label class="block text-[11px] font-medium text-slate-500">
-                    Recommendation intent
+                    Priority
+                    @include('operations.repair-orders.partials.recommendation-priority-select', [
+                        'selectedPriority' => old('recommendation_posture', $concern->recommendationPriority()?->value),
+                        'informationOnly' => (bool) old('information_only', $concern->isInformationOnly()),
+                        'inputId' => 'workspace-concern-priority-'.$concern->id,
+                        'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                    ])
+                </label>
+                <label class="block text-[11px] font-medium text-slate-500">
+                    Work type
                     @include('operations.repair-orders.partials.recommendation-intent-select', [
-                        'selected' => old('recommendation_intent', $concern->recommendationIntent()->value),
+                        'selected' => old('recommendation_intent', $concern->recommendationIntent()?->value),
                         'inputId' => 'workspace-concern-intent-'.$concern->id,
                         'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
                     ])
@@ -651,20 +660,21 @@
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
             <label class="block text-[11px] font-medium text-slate-500" for="workspace-intent-only-{{ $concern->id }}">
-                Recommendation status
-                <select
-                    id="workspace-intent-only-{{ $concern->id }}"
-                    name="recommendation_intent"
-                    class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                >
-                    @foreach (RecommendationIntent::cases() as $option)
-                        <option
-                            value="{{ $option->value }}"
-                            title="{{ $option->helpText() }} Customer PDF: {{ $option->customerLabel() }}."
-                            @selected($concern->recommendationIntent() === $option)
-                        >{{ $option->staffLabel() }}</option>
-                    @endforeach
-                </select>
+                Priority
+                @include('operations.repair-orders.partials.recommendation-priority-select', [
+                    'selectedPriority' => $concern->recommendationPriority()?->value,
+                    'informationOnly' => $concern->isInformationOnly(),
+                    'inputId' => 'workspace-intent-only-'.$concern->id,
+                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                ])
+            </label>
+            <label class="mt-3 block text-[11px] font-medium text-slate-500" for="workspace-work-type-{{ $concern->id }}">
+                Work type
+                @include('operations.repair-orders.partials.recommendation-intent-select', [
+                    'selected' => $concern->recommendationIntent()?->value,
+                    'inputId' => 'workspace-work-type-'.$concern->id,
+                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                ])
             </label>
         </form>
     </div>

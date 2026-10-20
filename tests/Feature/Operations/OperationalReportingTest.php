@@ -714,7 +714,7 @@ test('operational intelligence sections surface queue approval liability and con
         ->assertSee('Courtesy')
         ->assertSee('Total Non-Billable')
         ->assertSee('Recommendation Conversion')
-        ->assertSee('Immediate Attention')
+        ->assertSee('Must Do')
         ->assertSee('$85.00')
         ->assertDontSee('Financial Mix')
         ->assertDontSee('Technician Production');

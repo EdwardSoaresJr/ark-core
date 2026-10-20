@@ -83,7 +83,8 @@ public function updateWorkflow(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'default_visit_mode' => ['required', Rule::enum(RepairOrderVisitMode::class)],
-            'default_recommendation_intent' => ['required', Rule::enum(RecommendationIntent::class)],
+            'default_recommendation_intent' => ['nullable', Rule::enum(\App\Ark\Operations\RepairOrders\RecommendationIntent::class)],
+            'default_recommendation_posture' => ['nullable', Rule::in(['must_do', 'should_do', 'could_do', 'information_only'])],
             'default_notes_private' => ['nullable', 'boolean'],
             'default_notes_visible_to_advisor' => ['nullable', 'boolean'],
             'default_notes_visible_to_technician' => ['nullable', 'boolean'],
@@ -91,9 +92,12 @@ public function updateWorkflow(Request $request): RedirectResponse
             'key_tag_mileage_requirement' => ['nullable', Rule::in([KeyTagPrintGate::NONE, KeyTagPrintGate::MILEAGE_IN])],
         ]);
 
+        $posture = (string) ($data['default_recommendation_posture'] ?? '');
         $payload = [
             'default_visit_mode' => $data['default_visit_mode'],
-            'default_recommendation_intent' => $data['default_recommendation_intent'],
+            'default_recommendation_intent' => $data['default_recommendation_intent'] ?? null,
+            'default_information_only' => $posture === 'information_only',
+            'default_recommendation_priority' => in_array($posture, ['must_do', 'should_do', 'could_do'], true) ? $posture : null,
         ];
 
         if (

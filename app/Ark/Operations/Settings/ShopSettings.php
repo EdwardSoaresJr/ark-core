@@ -64,6 +64,8 @@ use InvalidArgumentException;
     'customer_type_disclaimers',
     'estimate_validity_days',
     'default_recommendation_intent',
+    'default_recommendation_priority',
+    'default_information_only',
     'default_notes_private',
     'default_notes_visible_to_advisor',
     'default_notes_visible_to_technician',
@@ -378,6 +380,7 @@ TEXT;
 
     protected $casts = [
         'default_notes_private' => 'boolean',
+        'default_information_only' => 'boolean',
         'qz_printing_enabled' => 'boolean',
         'qz_key_tag_label_width_mm' => 'decimal:2',
         'qz_key_tag_label_height_mm' => 'decimal:2',
@@ -582,6 +585,8 @@ TEXT;
             'customer_type_disclaimers' => self::defaultCustomerTypeDisclaimerMap(),
             'estimate_validity_days' => 30,
             'default_recommendation_intent' => 'maintenance',
+            'default_recommendation_priority' => null,
+            'default_information_only' => false,
             'default_notes_private' => true,
             'default_notes_visible_to_advisor' => true,
             'default_notes_visible_to_technician' => false,
@@ -606,6 +611,20 @@ TEXT;
             'appointment_request_availability' => null,
             'quick_reply_templates' => CommunicationsQuickReplyTemplates::defaults(),
         ];
+    }
+
+    public function defaultRecommendationPriority(): ?\App\Ark\Operations\RepairOrders\RecommendationPriority
+    {
+        $priority = $this->default_recommendation_priority;
+
+        return $priority instanceof \App\Ark\Operations\RepairOrders\RecommendationPriority
+            ? $priority
+            : \App\Ark\Operations\RepairOrders\RecommendationPriority::tryFromStored(is_string($priority) ? $priority : null);
+    }
+
+    public function defaultsToInformationOnly(): bool
+    {
+        return (bool) $this->default_information_only;
     }
 
     /**

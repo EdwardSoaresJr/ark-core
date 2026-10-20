@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Recommendations;
 
+use App\Ark\Operations\RepairOrders\ConcernRecommendationDefaults;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
@@ -11,6 +12,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\ScopeEntryKind;
 use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkflowStatus;
@@ -83,7 +85,9 @@ final class AddRecommendationToEstimateAction
                 'production_status' => ScopeProductionStatus::Pending,
                 'billing_posture' => $source?->billing_posture
                     ?? ConcernBillingPosture::defaultForCustomerTag($repairOrder->customer?->customer_type),
-                'recommendation_intent' => $source?->recommendation_intent?->value ?? 'maintenance',
+                ...($source instanceof RepairOrderConcern
+                    ? $source->recommendationAttributes()
+                    : ConcernRecommendationDefaults::forEntryKind(ScopeEntryKind::CustomerRequested)),
                 'position' => max(1, $position),
             ]);
 

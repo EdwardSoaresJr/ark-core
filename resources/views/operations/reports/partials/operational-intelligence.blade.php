@@ -162,13 +162,13 @@
     <div class="overflow-hidden border border-slate-300 bg-white">
         <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
             <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Recommendation Conversion</p>
-            <p class="text-xs text-slate-400">What recommendations are converting? Concerns on ROs opened in range, grouped by recommendation intent.</p>
+            <p class="text-xs text-slate-400">What recommendations are converting? Concerns on ROs opened in range, grouped by priority.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-100 text-sm">
                 <thead class="bg-white text-left text-[10px] uppercase tracking-[0.08em] text-slate-400">
                     <tr>
-                        <th class="px-3 py-2 font-bold">Intent</th>
+                        <th class="px-3 py-2 font-bold">Priority</th>
                         <th class="px-3 py-2 text-right font-bold">Recommended</th>
                         <th class="px-3 py-2 text-right font-bold">Approved</th>
                         <th class="px-3 py-2 text-right font-bold">Deferred</th>

@@ -319,9 +319,16 @@ final class EstimateDocumentPdfSnapshot
                 continue;
             }
 
-            $intent = $live->recommendationIntent();
-            $concerns[$index]['recommendation_intent'] = $intent->value;
-            $concerns[$index]['recommendation_intent_label'] = $intent->staffLabel();
+            $hasStoredRecommendation = filled($concerns[$index]['recommendation_intent_label'] ?? null)
+                || array_key_exists('recommendation_priority', $concern);
+
+            if (! $hasStoredRecommendation) {
+                $concerns[$index] = [
+                    ...$concern,
+                    ...$live->recommendationDocumentAttributes(),
+                ];
+            }
+
             $concerns[$index]['disposition'] = $live->disposition->value;
             $concerns[$index]['disposition_label'] = $live->disposition->label();
         }
