@@ -9,7 +9,11 @@
 .phpunit.result.cache
 /.codex
 /.claude
-/.cursor/
+/.cursor/**
+!/.cursor/rules/
+/.cursor/rules/**
+!/.cursor/rules/production-protection.mdc
+!/.cursor/rules/release-protocol.mdc
 
 # Local design research. Not part of the public repository.
 /resources/design-reference/tekmetric/
