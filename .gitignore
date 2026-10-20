@@ -23,6 +23,9 @@
 /.zed
 /auth.json
 /node_modules
+/docs/knowledge-base/node_modules
+/docs/knowledge-base/.vitepress/dist
+/docs/knowledge-base/.vitepress/cache
 /public/build
 /public/build.bak-*/
 /public/build-saas

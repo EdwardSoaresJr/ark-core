@@ -208,7 +208,17 @@ A few rules matter when working on Core:
 * **Workstations and stations** are places in one shop, not separate tenants.
 * **Financial totals stay on the server.** The repair-order screen shows those totals. It does not calculate them again in the browser.
 
-See `docs/engineering/` for more. See `docs/PRODUCT_BOUNDARY.md` for what belongs in Core and what belongs in ARK Shop.
+See `docs/engineering/` for internal engineering notes. See `docs/PRODUCT_BOUNDARY.md` for what belongs in Core and what belongs in ARK Shop.
+
+## Knowledge base
+
+Publishable install, architecture, extension, and integration documentation lives in [`docs/knowledge-base`](docs/knowledge-base/README.md). It is a static VitePress site and is not part of the shop application's runtime.
+
+```bash
+cd docs/knowledge-base
+npm install
+npm run dev
+```
 
 ## License
 
