@@ -9,6 +9,7 @@ use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
+use App\Ark\Operations\RepairOrders\ConcernRecommendationDefaults;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -57,9 +58,10 @@ final class MobileConcernStoreController
             'customer_states' => $customerStates,
             'scope_entry_kind' => $entryKind->value,
             'position' => ((int) $repairOrder->concerns()->max('position')) + 1,
-            'recommendation_intent' => filled($data['recommendation_intent'] ?? null)
-                ? $data['recommendation_intent']
-                : $entryKind->defaultRecommendationIntent()->value,
+            ...ConcernRecommendationDefaults::forEntryKind(
+                $entryKind,
+                filled($data['recommendation_intent'] ?? null) ? (string) $data['recommendation_intent'] : null,
+            ),
             'disposition' => RepairOrderConcernDisposition::Draft,
             'billing_posture' => ConcernBillingPosture::defaultForCustomer($repairOrder->customer),
         ]);
@@ -81,7 +83,8 @@ final class MobileConcernStoreController
             payload: [
                 'concern_id' => $concern->id,
                 'scope_entry_kind' => $concern->entryKind()->value,
-                'recommendation_intent' => $concern->recommendationIntent()->value,
+                'recommendation_intent' => $concern->recommendationIntent()?->value,
+                'recommendation_priority' => $concern->recommendationPriority()?->value,
                 'position' => $concern->position,
             ],
         );

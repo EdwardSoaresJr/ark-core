@@ -21,9 +21,43 @@ final class ConversationTurnReason
     ) {}
 
     /**
+     * Conversations that already have an advisor reply. One query for a list row set.
+     *
+     * @param  iterable<Conversation>  $conversations
+     * @return array<int, true>
+     */
+    public function advisorOutboundConversationIds(iterable $conversations): array
+    {
+        $ids = collect($conversations)
+            ->map(fn (Conversation $conversation): int => (int) $conversation->id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $found = ConversationMessage::query()
+            ->whereIn('conversation_id', $ids)
+            ->where('direction', OperationalCommunicationDirection::Outbound)
+            ->whereHas('participant', fn ($query) => $query->where('participant_type', ConversationParticipantType::Advisor->value))
+            ->distinct()
+            ->pluck('conversation_id');
+
+        $map = [];
+        foreach ($found as $id) {
+            $map[(int) $id] = true;
+        }
+
+        return $map;
+    }
+
+    /**
      * @return array{state: string, state_label: string, turn_label: string}
      */
-    public function for(Conversation $conversation, ?Lead $lead = null): array
+    public function for(Conversation $conversation, ?Lead $lead = null, ?bool $hasAdvisorOutbound = null, bool $leadKnown = false): array
     {
         if ($conversation->waiting_on === ConversationWaitingOn::Customer) {
             return [
@@ -33,8 +67,10 @@ final class ConversationTurnReason
             ];
         }
 
-        $lead ??= $this->conversationLeads->forTurn($conversation);
-        $hasAdvisorOutbound = ConversationMessage::query()
+        if (! $leadKnown) {
+            $lead ??= $this->conversationLeads->forTurn($conversation);
+        }
+        $hasAdvisorOutbound ??= ConversationMessage::query()
             ->where('conversation_id', $conversation->id)
             ->where('direction', OperationalCommunicationDirection::Outbound)
             ->whereHas('participant', fn ($query) => $query->where('participant_type', ConversationParticipantType::Advisor->value))

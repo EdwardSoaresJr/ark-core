@@ -41,6 +41,8 @@ class TelephonyIncomingCallFlow
             return $this->buildVoicemailResponse($this->flow->voicemailGreeting());
         }
 
+        app(TelephonyRingState::class)->initializeParallel($parentCallSid, $callerNumber);
+
         return $this->buildOpenHoursDialResponse($dialChildren, $parentCallSid);
     }
 
@@ -74,8 +76,8 @@ class TelephonyIncomingCallFlow
 
     public function buildVoicemailResponse(string $greeting): string
     {
-        $recordingCallback = '';
-        $voicemailAction = '';
+        $recordingCallback = route('webhooks.communications.twilio.voice.recording', ['voicemail' => 1]);
+        $voicemailAction = route('webhooks.communications.twilio.voice.dial-complete');
 
         return '<?xml version="1.0" encoding="UTF-8"?>'
             .'<Response>'
@@ -123,9 +125,8 @@ class TelephonyIncomingCallFlow
 
     private function dialAttributes(?string $parentCallSid = null): string
     {
-        $statusCallback = '';
-        $dialComplete = '';
-        $recordingCallback = '';
+        $dialComplete = route('webhooks.communications.twilio.voice.dial-complete');
+        $recordingCallback = route('webhooks.communications.twilio.voice.recording');
         $timeout = $this->flow->dialTimeoutSeconds();
         $callerId = $parentCallSid !== null ? $this->customerCallerIdE164($parentCallSid) : null;
         $callerAttr = filled($callerId)
@@ -134,9 +135,7 @@ class TelephonyIncomingCallFlow
 
         $attributes = $callerAttr
             .TelephonyCallerRingtone::forCurrentShop()->dialAttribute()
-            .' statusCallback="'.htmlspecialchars($statusCallback, ENT_XML1).'"'
-            .' statusCallbackEvent="initiated ringing answered completed"'
-            .' statusCallbackMethod="POST"'
+            .' answerOnBridge="true"'
             .' timeout="'.$timeout.'"'
             .' action="'.htmlspecialchars($dialComplete, ENT_XML1).'"';
 
@@ -151,7 +150,6 @@ class TelephonyIncomingCallFlow
 
     private function staggeredConferenceDialAttributes(?string $parentCallSid = null): string
     {
-        $statusCallback = '';
         $timeout = $this->flow->dialTimeoutSeconds();
         $callerId = $parentCallSid !== null ? $this->customerCallerIdE164($parentCallSid) : null;
         $callerAttr = filled($callerId)
@@ -160,9 +158,7 @@ class TelephonyIncomingCallFlow
 
         return $callerAttr
             .TelephonyCallerRingtone::forCurrentShop()->dialAttribute()
-            .' statusCallback="'.htmlspecialchars($statusCallback, ENT_XML1).'"'
-            .' statusCallbackEvent="initiated ringing answered completed"'
-            .' statusCallbackMethod="POST"'
+            .' answerOnBridge="true"'
             .' timeout="'.$timeout.'"';
     }
 

@@ -441,8 +441,7 @@ final class OperationalSheetPresenter
             ->map(fn (RepairOrderConcern $concern): array => [
                 'summary' => $concern->summary,
                 'customer_states' => filled($concern->customer_states) ? $concern->customer_states : null,
-                'recommendation_intent' => $concern->recommendationIntent()->value,
-                'recommendation_intent_label' => $concern->recommendationIntent()->staffLabel(),
+                ...$concern->recommendationDocumentAttributes(),
             ])
             ->all();
     }

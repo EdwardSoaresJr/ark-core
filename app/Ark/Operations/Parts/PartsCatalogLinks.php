@@ -76,7 +76,7 @@ final class PartsCatalogLinks
      */
     public static function forShop(): array
     {
-        if (! Schema::hasColumn('shop_settings', 'parts_catalog_links')) {
+        if (! \App\Ark\Operations\Settings\ShopSettingsSchema::has('parts_catalog_links')) {
             return [];
         }
 
@@ -198,7 +198,7 @@ final class PartsCatalogLinks
      */
     public static function persistShop(array $links): void
     {
-        if (! Schema::hasColumn('shop_settings', 'parts_catalog_links')) {
+        if (! \App\Ark\Operations\Settings\ShopSettingsSchema::has('parts_catalog_links')) {
             return;
         }
 

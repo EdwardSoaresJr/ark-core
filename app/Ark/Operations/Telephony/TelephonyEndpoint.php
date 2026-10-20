@@ -88,10 +88,7 @@ class TelephonyEndpoint extends Model
         $legCallback = '';
 
         if ($legStatusCallbackUrl !== null && $legStatusCallbackUrl !== '') {
-            $events = match ($this->type) {
-                TelephonyEndpointType::Sip, TelephonyEndpointType::MobileApp => 'answered',
-                default => 'answered in-progress',
-            };
+            $events = 'initiated ringing answered completed';
 
             $legCallback = ' statusCallback="'.htmlspecialchars($legStatusCallbackUrl, ENT_XML1).'"'
                 .' statusCallbackEvent="'.$events.'" statusCallbackMethod="POST"';
@@ -109,15 +106,6 @@ class TelephonyEndpoint extends Model
         string $legCallback,
         ?string $parentCallSid,
     ): string {
-        $whisperUrl = '';
-
-        if ($parentCallSid !== null && $parentCallSid !== '' && $this->id > 0) {
-            $whisperUrl = ' url="'.htmlspecialchars(
-                '',
-                ENT_XML1,
-            ).'"';
-        }
-
-        return '<Number answerOnBridge="true"'.$whisperUrl.$legCallback.'>'.$destination.'</Number>';
+        return '<Number'.$legCallback.'>'.$destination.'</Number>';
     }
 }

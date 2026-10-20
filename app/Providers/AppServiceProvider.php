@@ -27,10 +27,15 @@ use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Ark\Platform\Voice\PlatformRecordingClient;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
+use App\Ark\Operations\Messaging\TwilioOutboundSmsTransport;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopIntegrationRuntimeConfig;
@@ -47,13 +52,16 @@ use App\Ark\Platform\Mail\PlatformAwareMailManager;
 use App\Ark\Platform\Mail\PlatformMailTransport;
 use App\Ark\Platform\VoiceTransportRuntimeConfig;
 use App\Ark\Runtime\Broadcast\ReverbDeployment;
+use App\Ark\Runtime\HostedRuntime;
 use App\Ark\Runtime\Surfaces\PublicRootUrlConfigurator;
+use App\Http\Middleware\ApplyShopRuntimeConfig;
 use App\Ark\Vehicles\Providers\NhtsaProvider;
 use App\Ark\Vehicles\VehicleIntelligenceManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\MailServiceProvider;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -69,14 +77,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(RepairOrderReadCache::class);
+
         // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
-        if (\App\Ark\Install\InstallationState::isNotInstalled()) {
+        // A hosted shop's install marker lives in tenant storage, which is not active yet.
+        // Leaving the configured drivers in place keeps Redis sessions and the tenant-scoped
+        // shop cache store. Do not rename that store to the generic redis store.
+        if (HostedRuntime::shouldUseFileDriversBeforeInstall()) {
             config([
                 'session.driver' => 'file',
                 'cache.default' => 'file',
                 'queue.default' => 'sync',
             ]);
         }
+
+        $this->app->afterResolving(HttpKernel::class, function (HttpKernel $kernel): void {
+            if (HostedRuntime::catalogConfigured()) {
+                $kernel->prependMiddleware(ApplyShopRuntimeConfig::class);
+            }
+        });
 
         $this->app->scoped(PlatformRecordingClient::class);
         $this->app->scoped(PartsTechHttpClient::class, function ($app): PartsTechHttpClient {
@@ -87,7 +106,15 @@ class AppServiceProvider extends ServiceProvider
         });
         $this->app->scoped(PartsTechPlatformGateway::class);
         $this->app->scoped(ShopIntegrationCredentials::class, fn (): ShopIntegrationCredentials => ShopIntegrationCredentials::forCurrentShop());
-        $this->app->bind(OutboundSmsTransport::class, NotConfiguredOutboundSmsTransport::class);
+        $this->app->bind(OutboundSmsTransport::class, function (): OutboundSmsTransport {
+            $credentials = ShopIntegrationCredentials::forCurrentShop();
+
+            if ($credentials->twilioConfigured() && filled($credentials->twilioFromNumber())) {
+                return new TwilioOutboundSmsTransport($credentials);
+            }
+
+            return new NotConfiguredOutboundSmsTransport;
+        });
         $this->app->bind(TelephonyProvider::class, NotConfiguredTelephonyProvider::class);
         $this->app->scoped(RepairOrderConcurrency::class);
         $this->app->scoped(RepairOrderStatusCatalog::class);
@@ -145,6 +172,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RepairOrderReadCache::registerFlushListeners();
+        $this->app['events']->listen(JobProcessing::class, static function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+        });
+        $this->app['events']->listen(JobProcessed::class, static function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+        });
+        $this->app['events']->listen(JobExceptionOccurred::class, static function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+        });
+
         $this->app->register(MailServiceProvider::class);
         $this->app->extend('mail.manager', function ($manager, $app) {
             $custom = new PlatformAwareMailManager($app);
@@ -159,6 +197,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->app->terminating(function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+
             if ($this->app->resolved(RepairOrderConcurrency::class)) {
                 $this->app->make(RepairOrderConcurrency::class)->abandonIfStillHolding();
             }

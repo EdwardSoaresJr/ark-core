@@ -31,7 +31,13 @@
             <p class="mt-1 text-xs leading-5 text-slate-500">
                 Customer replies go here. Defaults to shop email when blank.
             </p>
+            @unless (\Illuminate\Support\Facades\Schema::hasColumn('shop_settings', 'postmark_reply_to'))
+                <p class="mt-2 text-xs leading-5 text-slate-700">
+                    Replies go to {{ $settings->customerReplyToAddress() ?: 'the shop email' }}@if ($settings->customerReplyToName()) ({{ $settings->customerReplyToName() }})@endif.
+                </p>
+            @endunless
         </div>
+        @if (\Illuminate\Support\Facades\Schema::hasColumn('shop_settings', 'postmark_reply_to'))
 
         <div class="grid gap-3 sm:grid-cols-2">
             <label class="block">
@@ -61,5 +67,6 @@
                 Save reply-to settings
             </button>
         </div>
+        @endif
     </form>
 </div>

@@ -33,7 +33,8 @@ class RepairOrderConcernDestroyController
         $payload = [
             'concern_id' => $concern->id,
             'summary' => $concern->summary,
-            'recommendation_intent' => $concern->recommendationIntent()->value,
+            'recommendation_intent' => $concern->recommendationIntent()?->value,
+            'recommendation_priority' => $concern->recommendationPriority()?->value,
             'position' => $concern->position,
         ];
 

@@ -24,6 +24,7 @@ beforeEach(function (): void {
     $property->setValue(null, null);
 
     $this->refreshApplication();
+    $this->withoutVite();
 });
 
 test('portal estimate links use the Core application origin when a public website domain is set', function (): void {

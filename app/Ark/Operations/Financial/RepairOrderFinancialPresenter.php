@@ -205,8 +205,7 @@ final class RepairOrderFinancialPresenter
                     ])
                 ->values()
                 ->all(),
-            'canEmailInvoice' => $repairOrder->status->is(RepairOrderStatus::ReadyPickup)
-                && $balance->hasIssuedInvoice,
+            'canEmailInvoice' => $balance->hasIssuedInvoice,
             'invoiceNeedsRefresh' => $invoiceNeedsRefresh,
             'invoiceRefreshBlockedBySettlement' => $invoiceRefreshBlockedBySettlement,
             'canRefreshInvoice' => $canRefreshInvoice,

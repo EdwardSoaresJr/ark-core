@@ -1,3 +1,5 @@
+import { editShouldAutosave } from './ark-worksheet-autosave.js';
+
 const normalizeMileage = (value) => {
     const cleaned = String(value ?? '').replace(/,/g, '').trim();
 
@@ -114,11 +116,12 @@ export const arkRepairOrderMileage = (config) => ({
             this.editingOut = false;
         }
     },
-    async save() {
+    async save(reason = 'blur') {
         const mileageIn = this.normalizeMileage(this.mileageIn);
         const mileageOut = this.normalizeMileage(this.mileageOut);
+        const changed = mileageIn !== this.savedMileageIn || mileageOut !== this.savedMileageOut;
 
-        if (mileageIn === this.savedMileageIn && mileageOut === this.savedMileageOut) {
+        if (! editShouldAutosave({ changed, reason })) {
             return;
         }
 

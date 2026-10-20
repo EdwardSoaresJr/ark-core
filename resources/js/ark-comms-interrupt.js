@@ -230,6 +230,10 @@ export function arkCommsInterrupt() {
         },
 
         init() {
+            if (this.pollTimer !== null) {
+                return;
+            }
+
             requestBrowserNotificationPermission();
             this.bindRealtime();
             this.bindQueueWatch();

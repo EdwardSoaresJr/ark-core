@@ -8,8 +8,8 @@ export function arkSavedWorkPicker(config = {}) {
         assistUrlTemplate: config.assistUrlTemplate || '',
         assistStatusUrlTemplate: config.assistStatusUrlTemplate || '',
         concernId: config.concernId || null,
-        intents: config.intents || [],
-        recommendationIntent: config.defaultIntent || 'maintenance',
+        priorities: config.priorities || [],
+        recommendationPosture: config.defaultPosture || '',
         query: '',
         results: [],
         selected: null,
@@ -94,7 +94,9 @@ export function arkSavedWorkPicker(config = {}) {
             this.assistStatus = null;
             this.laborConfirmed = false;
             this.laborHours = this.templateLaborHours(item) ?? '';
-            this.recommendationIntent = item?.recommendation_intent || this.recommendationIntent;
+            this.recommendationPosture = item?.information_only
+                ? 'information_only'
+                : (item?.recommendation_priority || item?.recommendation_posture || '');
 
             if (! this.selectedId || ! this.recallUrlTemplate) {
                 return;

@@ -21,61 +21,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 $role = $argv[1] ?? 'parent';
 
-$database = 'ark_concurrency_phase2';
-$env = static function (string $key, string $default = ''): string {
-    $contents = (string) file_get_contents(dirname(__DIR__, 2).'/.env');
-    if (! preg_match('/^'.preg_quote($key, '/').'=(.*)$/m', $contents, $matches)) {
-        return $default;
-    }
-
-    return trim($matches[1], " \t\"'");
-};
-
-$host = $env('DB_HOST', '127.0.0.1');
-$port = $env('DB_PORT', '3306');
-$username = $env('DB_USERNAME', 'root');
-$password = $env('DB_PASSWORD', '');
-
-if ($role === 'parent') {
-    $server = new PDO(
-        "mysql:host={$host};port={$port}",
-        $username,
-        $password,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-    );
-    $server->exec(
-        "CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
-    );
-}
-
-foreach ([
-    'DB_CONNECTION' => 'mysql',
-    'DB_HOST' => $host,
-    'DB_PORT' => $port,
-    'DB_DATABASE' => $database,
-    'DB_USERNAME' => $username,
-    'DB_PASSWORD' => $password,
-] as $key => $value) {
-    putenv($key.'='.$value);
-    $_ENV[$key] = $value;
-    $_SERVER[$key] = $value;
-}
-
-putenv('DB_URL');
-unset($_ENV['DB_URL'], $_SERVER['DB_URL']);
-
 require dirname(__DIR__, 2).'/vendor/autoload.php';
+$mysql = \Tests\Support\DisposableMySqlIntegration::helperConfiguration();
+\Tests\Support\TestEnvironment::initialize($mysql);
+$mysqlEnvironment = \Tests\Support\DisposableMySqlIntegration::subprocessEnvironment(getenv('ARK_TEST_MYSQL_CONTEXT'));
 $app = require dirname(__DIR__, 2).'/bootstrap/app.php';
+\Tests\Support\TestEnvironment::configureApplication($app, $mysql);
 $kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-config([
-    'database.default' => 'mysql',
-    'database.connections.mysql.database' => $database,
-    'broadcasting.default' => 'log',
-]);
-DB::purge('mysql');
-DB::reconnect('mysql');
+config(['broadcasting.default' => 'log']);
 
 $mutate = static function (int $repairOrderId, int $lineId, ?int $openedVersion, string $description) use ($app): array {
     $repairOrder = RepairOrder::query()->findOrFail($repairOrderId);
@@ -135,7 +90,9 @@ if ($role === 'child') {
     exit(0);
 }
 
-$kernel->call('migrate', ['--force' => true, '--quiet' => true]);
+if ($kernel->call('migrate', ['--force' => true, '--quiet' => true]) !== 0) {
+    throw new RuntimeException('Isolated MySQL migrations failed.');
+}
 
 $customer = Customer::query()->create([
     'first_name' => 'Overlap',
@@ -176,7 +133,7 @@ $line = RepairOrderLine::query()->create([
 ]);
 
 $openedVersion = (int) $repairOrder->fresh()->estimate_version;
-$gateFile = sys_get_temp_dir().'/ark-ro-overlap-'.bin2hex(random_bytes(6));
+$gateFile = \Tests\Support\TestEnvironment::root().'/ark-ro-overlap-'.bin2hex(random_bytes(6));
 @unlink($gateFile);
 
 $childCommand = [
@@ -192,7 +149,7 @@ $pipes = [];
 $child = proc_open($childCommand, [
     1 => ['pipe', 'w'],
     2 => ['pipe', 'w'],
-], $pipes);
+], $pipes, dirname(__DIR__, 2), $mysqlEnvironment);
 
 if (! is_resource($child)) {
     fwrite(STDERR, "could not start the overlapping writer\n");

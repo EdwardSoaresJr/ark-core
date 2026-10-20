@@ -8,7 +8,7 @@ function bindHostedPartsTechHttpClient(): void
 {
     $path = dirname(base_path()).'/ark-saas/saas/src/Catalog/HostedPartsTechHttpClient.php';
     if (! is_file($path)) {
-        test()->markTestSkipped('PartsTech HTTP is owned by ARK SaaS.');
+        test()->markTestSkipped('PartsTech HTTP is owned by ARK Shop.');
     }
 
     require_once $path;

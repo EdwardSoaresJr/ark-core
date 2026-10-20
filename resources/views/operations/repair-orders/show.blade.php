@@ -1804,9 +1804,8 @@
                         @endif
 
                         @php
-                            // Priority order (Diagnostic → … → Plan Soon), then advisor position.
-                            // Each concern carries its own priority badge - no group wrappers.
-                            $worksheetConcerns = App\Ark\Operations\RepairOrders\RecommendationIntent::sortedModels($repairOrder->concerns);
+                            // Priority order (Must Do → Should Do → Could Do → Information Only), then advisor position.
+                            $worksheetConcerns = App\Ark\Operations\RepairOrders\RecommendationPresentation::sortedModels($repairOrder->concerns);
                         @endphp
                         <div id="worksheet-concerns">
                         @forelse ($worksheetConcerns as $concern)
@@ -1820,15 +1819,15 @@
                                 $concernDefaultLaborRate = $concernLaborDefaults['rate'];
                                 $concernDefaultLaborCategoryKey = $concernLaborDefaults['category_key'];
                             @endphp
-                            <section id="concern-{{ $concern->id }}" class="ops-worksheet-concern {{ $concern->recommendationIntent()->worksheetScopeClass() }} ops-worksheet-concern--{{ $concern->disposition->value }} scroll-mt-24">
+                            <section id="concern-{{ $concern->id }}" class="ops-worksheet-concern {{ $concern->presentation()->worksheetScopeClass() }} ops-worksheet-concern--{{ $concern->disposition->value }} scroll-mt-24">
                                 <x-operations.scope-header
                                     :continuity-region="'concern-money-'.$concern->id"
                                     :title="$concern->summary"
                                     :total="$totals->format($totals->concernSubtotalCents($concern->id))"
                                     :eyebrow="($isTerminal || ! $concern->shouldSurfaceRecommendationStatus())
-                                        ? $concern->recommendationIntent()->staffLabel()
+                                        ? $concern->presentation()->staffLabel()
                                         : null"
-                                    :eyebrow-class="$concern->recommendationIntent()->intentLabelClass()"
+                                    :eyebrow-class="$concern->presentation()->labelClass()"
                                 >
                                     <x-slot:subline>
                                         @include('operations.repair-orders.partials.repair-order-concern-meaning-subline', [

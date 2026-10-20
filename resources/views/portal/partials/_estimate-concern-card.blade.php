@@ -9,15 +9,8 @@
         && $disposition !== 'draft'
         && ! (($suppressPendingLabel ?? false) && $disposition === 'recommended');
 
-    $intent = \App\Ark\Operations\RepairOrders\RecommendationIntent::fromStored(
-        (string) ($concern['recommendation_intent'] ?? ''),
-    );
-    $priorityLabel = match ($intent) {
-        \App\Ark\Operations\RepairOrders\RecommendationIntent::Diagnostic => 'Needs more testing',
-        \App\Ark\Operations\RepairOrders\RecommendationIntent::RepairVerification => 'Checking a repair',
-        \App\Ark\Operations\RepairOrders\RecommendationIntent::InformationOnly => 'For your information',
-        default => $intent->customerLabel(),
-    };
+    $presentation = \App\Ark\Operations\RepairOrders\RecommendationPresentation::forSnapshot($concern);
+    $priorityLabel = $presentation->customerLabel();
 
     $accentClass = match ($disposition) {
         'approved' => 'border-l-emerald-500',
@@ -35,7 +28,9 @@
     <div class="px-4 py-4 sm:px-5">
         <div class="flex items-start justify-between gap-4">
             <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-bold uppercase tracking-[0.12em] {{ $intent->intentLabelClass() }}">{{ $priorityLabel }}</p>
+                @if ($priorityLabel)
+                    <p class="text-[10px] font-bold uppercase tracking-[0.12em] {{ $presentation->labelClass() }}">{{ $priorityLabel }}</p>
+                @endif
                 <p class="mt-1 text-[15px] font-semibold leading-snug text-slate-950 sm:text-base">{{ $concern['customer_title'] ?? $concern['summary'] }}</p>
 
                 @if ($showDispositionLabel)

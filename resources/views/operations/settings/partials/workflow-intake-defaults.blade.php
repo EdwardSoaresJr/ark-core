@@ -48,14 +48,25 @@
             <p class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Scopes &amp; concerns</p>
             <div class="grid gap-4 px-3 py-3 md:grid-cols-2">
                 <label class="block text-xs font-medium text-slate-500">
-                    Default recommendation intent
+                    Default priority
+                    @include('operations.repair-orders.partials.recommendation-priority-select', [
+                        'fieldName' => 'default_recommendation_posture',
+                        'selectedPriority' => old('default_recommendation_posture', $settings->default_recommendation_priority),
+                        'informationOnly' => (bool) old('default_information_only', $settings->defaultsToInformationOnly()),
+                        'inputId' => 'default_recommendation_posture',
+                        'selectClass' => 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950',
+                    ])
+                    <span class="mt-1 block font-normal leading-4 text-slate-500">Customer-facing order and color for new scopes. Information Only clears priority.</span>
+                </label>
+                <label class="block text-xs font-medium text-slate-500">
+                    Default work type
                     @include('operations.repair-orders.partials.recommendation-intent-select', [
                         'fieldName' => 'default_recommendation_intent',
                         'selected' => old('default_recommendation_intent', $settings->default_recommendation_intent),
                         'inputId' => 'default_recommendation_intent',
                         'selectClass' => 'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950',
                     ])
-                    <span class="mt-1 block font-normal leading-4 text-slate-500">Applied to new scopes at Check In and on the estimate worksheet.</span>
+                    <span class="mt-1 block font-normal leading-4 text-slate-500">Diagnostic, maintenance, or repair verification. This is not urgency.</span>
                 </label>
                 <div class="text-xs leading-5 text-slate-500">
                     <p class="font-semibold text-slate-700">Default labor category</p>

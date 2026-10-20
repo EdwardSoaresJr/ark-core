@@ -1,5 +1,6 @@
 import { arkEchoEnabled, getArkEcho } from './ark-echo';
 import { blockedPanelIds, dirtyFormsIn, draftMarkersIn, inputIsInsideDraft, versionToSubmit } from './ark-worksheet-draft';
+import { focusReturnPlan } from './ark-worksheet-autosave';
 import {
     flushDeferredWorksheetRecovery,
     heartbeatShouldReconcileVersion,
@@ -129,7 +130,19 @@ export const arkWorksheetCollaboration = (config = {}) => ({
                 return;
             }
 
-            this.requestWorksheetRecovery();
+            const plan = focusReturnPlan({
+                wasHidden,
+                hiddenNow: document.hidden,
+                socketPhase: this.socketPhase,
+            });
+
+            // Returning to an unchanged worksheet is not a save. Heartbeat
+            // reports version drift. A full reload runs only after socket loss,
+            // and that reload does not use the Saving indicator.
+            if (plan.refresh) {
+                this.requestWorksheetRecovery();
+            }
+
             this.sendWorksheetHeartbeat();
         });
 

@@ -22,7 +22,7 @@ final class PriorVisitMentionProjection
      */
     public static function for(
         ?int $customerId,
-        ?int $excludeRepairOrderId = null,
+        int|RepairOrder|null $excludeRepairOrder = null,
         ?int $preferVehicleId = null,
         int $suggestionLimit = 15,
     ): array {
@@ -33,6 +33,8 @@ final class PriorVisitMentionProjection
                 'deferred' => [],
             ];
         }
+
+        $excludeRepairOrderId = $excludeRepairOrder instanceof RepairOrder ? $excludeRepairOrder->id : $excludeRepairOrder;
 
         $rows = RepairOrder::query()
             ->with('vehicle')
@@ -87,9 +89,9 @@ final class PriorVisitMentionProjection
             ];
         }
 
-        $currentRepairOrder = $excludeRepairOrderId !== null
-            ? RepairOrder::query()->find($excludeRepairOrderId)
-            : null;
+        $currentRepairOrder = $excludeRepairOrder instanceof RepairOrder
+            ? $excludeRepairOrder
+            : ($excludeRepairOrderId !== null ? RepairOrder::query()->find($excludeRepairOrderId) : null);
 
         return [
             'suggestions' => $suggestions,

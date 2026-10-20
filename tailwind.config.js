@@ -62,16 +62,16 @@ export default {
             pattern: /^ops-intake(-[a-z-]+)?$/,
         },
         {
-            pattern: /^ops-(worksheet|review)-concern--intent-(immediate_attention|diagnostic|repair_verification|maintenance|plan_soon|information_only)$/,
+            pattern: /^ops-(worksheet|review)-concern--priority-(must_do|should_do|could_do|information_only|unset)$/,
         },
         {
-            pattern: /^ops-intent-label--(immediate_attention|diagnostic|repair_verification|maintenance|plan_soon|information_only)$/,
+            pattern: /^ops-priority-label--(must_do|should_do|could_do|information_only|unset)$/,
         },
         {
-            pattern: /^ops-intent-group-heading--(immediate_attention|diagnostic|repair_verification|maintenance|plan_soon|information_only)$/,
+            pattern: /^ops-priority-group-heading--(must_do|should_do|could_do|information_only|unset)$/,
         },
         {
-            pattern: /^ops-intent-group--intent-(immediate_attention|diagnostic|repair_verification|maintenance|plan_soon|information_only)$/,
+            pattern: /^ops-priority-choice(--[a-z0-9-]+)?$/,
         },
         {
             pattern: /^ops-scope-header-decision--(approved|deferred|declined|recommended)$/,

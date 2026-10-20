@@ -331,8 +331,9 @@ test('estimate pdf shows recommendation intent with customer facing label', func
     ])->render();
 
     expect($html)
-        ->toContain('concern--intent-immediate_attention')
-        ->toContain('concern-priority-badge--immediate_attention')
+        ->toContain('concern--priority-must_do')
+        ->toContain('concern-priority-badge--must_do')
+        ->toContain('Must Do')
         ->not->toContain('concern-intent-group');
 });
 

@@ -198,7 +198,12 @@ test('workstation lock screen retired - operational shell stays visible', functi
             ['HTTP_ACCEPT' => 'application/json', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'],
         )
         ->assertOk()
-        ->assertJsonPath('summary.station_privacy_active', false);
+        ->assertJsonMissing(['station_privacy_active' => true])
+        ->assertJsonStructure([
+            'call',
+            'messages',
+            'summary' => ['count', 'call_count', 'message_count', 'urgency', 'has_live_calls'],
+        ]);
 });
 
 test('workstation does not prompt for pin setup on load', function (): void {
@@ -243,7 +248,7 @@ test('workstation staff list includes avatar metadata for operator tiles', funct
         ->assertJsonFragment([
             'id' => $admin->id,
             'name' => 'Alex Rivera',
-            'initials' => 'ES',
+            'initials' => 'AR',
             'avatar_color' => '#ff6600',
             'has_pin' => true,
         ]);

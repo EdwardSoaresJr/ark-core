@@ -79,18 +79,6 @@ class CustomerCallContextResolver
             ->get()
             ->keyBy(fn (Customer $customer): string => (string) PhoneNumber::normalize((string) $customer->phone));
 
-        $unmatched = $normalizedPhones
-            ->reject(fn (string $phone): bool => $customersByPhone->has($phone))
-            ->values();
-
-        foreach ($unmatched as $phone) {
-            $matched = $this->matchCustomer($phone);
-
-            if ($matched !== null) {
-                $customersByPhone[$phone] = $matched;
-            }
-        }
-
         $customerIds = $customersByPhone
             ->map(fn (Customer $customer): int => $customer->id)
             ->unique()

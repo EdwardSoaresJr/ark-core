@@ -2,7 +2,7 @@
 
 namespace App\Ark\Operations\Recommendations;
 
-use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 
 enum RecommendationUrgency: string
 {
@@ -21,12 +21,11 @@ enum RecommendationUrgency: string
         };
     }
 
-    public static function fromIntent(?RecommendationIntent $intent): self
+    public static function fromPriority(?RecommendationPriority $priority): self
     {
-        return match ($intent) {
-            RecommendationIntent::ImmediateAttention => self::Now,
-            RecommendationIntent::PlanSoon => self::Soon,
-            RecommendationIntent::Diagnostic => self::Diagnostic,
+        return match ($priority) {
+            RecommendationPriority::MustDo => self::Now,
+            RecommendationPriority::ShouldDo => self::Soon,
             default => self::Maintenance,
         };
     }

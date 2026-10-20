@@ -14,6 +14,7 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Database\Seeders\RepairOrderStatusCatalogSeeder;
 
 test('caller context resolves customer vehicles open ros conversation and workflow posture', function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -108,6 +109,7 @@ test('fleet customer shows multiple open ros without choosing one', function () 
 
 test('caller lookup page renders resolved context', function () {
     $this->seed(ArkAuthorizationSeeder::class);
+    $this->seed(RepairOrderStatusCatalogSeeder::class);
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
     $customer = Customer::query()->create([
@@ -131,7 +133,7 @@ test('caller lookup page renders resolved context', function () {
         ->assertSee('Jane Doe')
         ->assertSee('2019 Honda Civic')
         ->assertSee('RO #2001')
-        ->assertSee('Awaiting Approval')
+        ->assertSee('Waiting Approval')
         ->assertSee('Lookup Caller');
 });
 

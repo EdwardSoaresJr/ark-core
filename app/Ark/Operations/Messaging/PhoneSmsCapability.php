@@ -33,7 +33,10 @@ class PhoneSmsCapability extends Model
             return null;
         }
 
-        return self::query()->where('normalized_phone', $normalizedPhone)->first();
+        return app(\App\Ark\Operations\RepairOrders\RepairOrderReadCache::class)->remember(
+            'phone-sms:'.$normalizedPhone,
+            fn (): ?self => self::query()->where('normalized_phone', $normalizedPhone)->first(),
+        );
     }
 
     public function blockReason(): ?string

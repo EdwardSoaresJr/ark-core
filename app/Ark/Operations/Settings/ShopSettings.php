@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Runtime\HostedRuntime;
 use App\Ark\Operations\Appointments\AppointmentCapacityBasis;
 use App\Ark\Operations\Appointments\AppointmentCapacityEnforcement;
 use App\Ark\Operations\Appointments\AppointmentRequestAvailability;
@@ -63,6 +64,8 @@ use InvalidArgumentException;
     'customer_type_disclaimers',
     'estimate_validity_days',
     'default_recommendation_intent',
+    'default_recommendation_priority',
+    'default_information_only',
     'default_notes_private',
     'default_notes_visible_to_advisor',
     'default_notes_visible_to_technician',
@@ -377,6 +380,7 @@ TEXT;
 
     protected $casts = [
         'default_notes_private' => 'boolean',
+        'default_information_only' => 'boolean',
         'qz_printing_enabled' => 'boolean',
         'qz_key_tag_label_width_mm' => 'decimal:2',
         'qz_key_tag_label_height_mm' => 'decimal:2',
@@ -455,6 +459,10 @@ TEXT;
     {
         if (self::$current !== null) {
             return self::$current;
+        }
+
+        if (! HostedRuntime::tenantDatabaseSelected()) {
+            return self::unsavedInstallDefaults();
         }
 
         if (! Schema::hasTable('shop_settings')) {
@@ -577,6 +585,8 @@ TEXT;
             'customer_type_disclaimers' => self::defaultCustomerTypeDisclaimerMap(),
             'estimate_validity_days' => 30,
             'default_recommendation_intent' => 'maintenance',
+            'default_recommendation_priority' => null,
+            'default_information_only' => false,
             'default_notes_private' => true,
             'default_notes_visible_to_advisor' => true,
             'default_notes_visible_to_technician' => false,
@@ -601,6 +611,20 @@ TEXT;
             'appointment_request_availability' => null,
             'quick_reply_templates' => CommunicationsQuickReplyTemplates::defaults(),
         ];
+    }
+
+    public function defaultRecommendationPriority(): ?\App\Ark\Operations\RepairOrders\RecommendationPriority
+    {
+        $priority = $this->default_recommendation_priority;
+
+        return $priority instanceof \App\Ark\Operations\RepairOrders\RecommendationPriority
+            ? $priority
+            : \App\Ark\Operations\RepairOrders\RecommendationPriority::tryFromStored(is_string($priority) ? $priority : null);
+    }
+
+    public function defaultsToInformationOnly(): bool
+    {
+        return (bool) $this->default_information_only;
     }
 
     /**
@@ -1561,10 +1585,43 @@ TEXT;
     }
 
     /**
+     * Shop reply-to. Production dropped the Postmark columns; the shop email remains.
+     */
+    public function customerReplyToAddress(): ?string
+    {
+        if (Schema::hasColumn($this->getTable(), 'postmark_reply_to')) {
+            $stored = $this->getAttributes()['postmark_reply_to'] ?? null;
+            if (filled($stored)) {
+                return (string) $stored;
+            }
+        }
+
+        return filled($this->email) ? (string) $this->email : null;
+    }
+
+    public function customerReplyToName(): ?string
+    {
+        if (Schema::hasColumn($this->getTable(), 'postmark_reply_to_name')) {
+            $stored = $this->getAttributes()['postmark_reply_to_name'] ?? null;
+            if (filled($stored)) {
+                return (string) $stored;
+            }
+        }
+
+        return filled($this->shop_name) ? (string) $this->shop_name : null;
+    }
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     public function persistTrusted(array $attributes): bool
     {
-        return $this->forceFill($attributes)->save();
+        $columns = array_flip(Schema::getColumnListing($this->getTable()));
+        $stored = array_intersect_key($attributes, $columns);
+        if ($stored === []) {
+            return true;
+        }
+
+        return $this->forceFill($stored)->save();
     }
 }

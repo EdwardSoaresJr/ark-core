@@ -45,6 +45,13 @@ return [
         'token' => null,
     ],
 
+    // Self-hosted Twilio. Empty unless the shop sets these. ARK Shop may replace the SMS binding.
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+        'from' => env('TWILIO_FROM_NUMBER'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],

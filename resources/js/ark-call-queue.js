@@ -101,6 +101,10 @@ export function arkCallQueue(bootstrap = null) {
         panelStyle: '',
 
         init() {
+            if (this.pollTimer !== null) {
+                return;
+            }
+
             this.bindItemActions();
             this.refresh();
             this.pollTimer = window.setInterval(() => this.refresh(), 5000);
@@ -172,10 +176,16 @@ export function arkCallQueue(bootstrap = null) {
         },
 
         async refresh() {
-            const url = queueUrl();
+            const base = queueUrl();
 
-            if (url === '') {
+            if (base === '') {
                 return;
+            }
+
+            const url = new URL(base, window.location.origin);
+
+            if (! this.open) {
+                url.searchParams.set('summary', '1');
             }
 
             this.loading = true;
@@ -195,14 +205,17 @@ export function arkCallQueue(bootstrap = null) {
 
                 const data = await response.json();
                 const payload = normalizeQueuePayload(data);
-                this.calls = payload.calls;
-                this.items = payload.items;
                 this.summary = payload.summary;
                 this.count = payload.count;
                 this.queueUrl = payload.queue_url;
 
-                if (typeof payload.html === 'string' && this.$refs.itemsRoot) {
-                    this.$refs.itemsRoot.innerHTML = payload.html;
+                if (data.summary_only !== true) {
+                    this.calls = payload.calls;
+                    this.items = payload.items;
+
+                    if (typeof data.html === 'string' && this.$refs.itemsRoot) {
+                        this.$refs.itemsRoot.innerHTML = data.html;
+                    }
                 }
 
                 notifyQueueChanged(payload);

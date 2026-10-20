@@ -92,7 +92,7 @@ final class ArkMailActivationClient
         );
 
         $settings = ShopSettings::current();
-        $replyTo = $settings->postmark_reply_to ?: $settings->email;
+        $replyTo = $settings->customerReplyToAddress();
         if (filled($replyTo)) {
             $settings->persistTrusted([
                 'postmark_reply_to' => strtolower((string) $replyTo),

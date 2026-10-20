@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'production_status',
     'billing_posture',
     'recommendation_intent',
+    'recommendation_priority',
+    'information_only',
     'position',
 ])]
 class RepairOrderConcern extends Model
@@ -33,9 +35,19 @@ class RepairOrderConcern extends Model
     protected $attributes = [
         'billing_posture' => 'default',
         'recommendation_intent' => 'maintenance',
+        'information_only' => false,
         'production_status' => 'pending',
         'scope_entry_kind' => 'customer_concern',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (RepairOrderConcern $concern): void {
+            if ($concern->isInformationOnly()) {
+                $concern->recommendation_priority = null;
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -44,7 +56,9 @@ class RepairOrderConcern extends Model
             'scope_entry_kind' => ScopeEntryKind::class,
             'production_status' => ScopeProductionStatus::class,
             'billing_posture' => ConcernBillingPostureCast::class,
-            'recommendation_intent' => RecommendationIntent::class,
+            'recommendation_intent' => RecommendationIntentCast::class,
+            'recommendation_priority' => RecommendationPriority::class,
+            'information_only' => 'boolean',
         ];
     }
 
@@ -56,13 +70,65 @@ class RepairOrderConcern extends Model
         );
     }
 
-    public function recommendationIntent(): RecommendationIntent
+    public function recommendationIntent(): ?RecommendationIntent
     {
         $intent = $this->recommendation_intent;
 
         return $intent instanceof RecommendationIntent
             ? $intent
-            : RecommendationIntent::fromStored(is_string($intent) ? $intent : null);
+            : RecommendationIntent::trySemantic(is_string($intent) ? $intent : null);
+    }
+
+    public function recommendationPriority(): ?RecommendationPriority
+    {
+        $priority = $this->recommendation_priority;
+
+        return $priority instanceof RecommendationPriority
+            ? $priority
+            : RecommendationPriority::tryFromStored(is_string($priority) ? $priority : null);
+    }
+
+    public function isInformationOnly(): bool
+    {
+        return (bool) $this->information_only;
+    }
+
+    public function presentation(): RecommendationPresentation
+    {
+        return RecommendationPresentation::forConcern($this);
+    }
+
+    /**
+     * @return array{recommendation_priority: ?string, information_only: bool, recommendation_intent: ?string}
+     */
+    public function recommendationAttributes(): array
+    {
+        return [
+            'recommendation_priority' => $this->isInformationOnly() ? null : $this->recommendationPriority()?->value,
+            'information_only' => $this->isInformationOnly(),
+            'recommendation_intent' => $this->recommendationIntent()?->value,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     recommendation_priority: ?string,
+     *     information_only: bool,
+     *     recommendation_intent: ?string,
+     *     recommendation_intent_label: ?string,
+     *     recommendation_intent_customer_label: ?string
+     * }
+     */
+    public function recommendationDocumentAttributes(): array
+    {
+        $presentation = $this->presentation();
+        $semantic = $this->recommendationIntent();
+
+        return [
+            ...$this->recommendationAttributes(),
+            'recommendation_intent_label' => $semantic?->staffLabel(),
+            'recommendation_intent_customer_label' => $presentation->customerLabel(),
+        ];
     }
 
     public function repairOrder(): BelongsTo

@@ -37,15 +37,15 @@ final class CustomerDisplayProjection
             ->filter(fn (array $row): bool => ($row['attachable_kind'] ?? null) === EvidenceAttachable::KIND_CONCERN && ($row['is_image'] ?? false))
             ->groupBy(fn (array $row): int => (int) ($row['attachable_id'] ?? 0));
 
-        $concerns = RecommendationIntent::sortedSnapshotConcerns($snapshot['concerns'] ?? [])
+        $concerns = RecommendationPresentation::sortedSnapshotConcerns($snapshot['concerns'] ?? [])
             ->map(function (array $concern) use ($photosByConcern): array {
                 $id = (int) ($concern['id'] ?? 0);
-                $intent = RecommendationIntent::fromStored((string) ($concern['recommendation_intent'] ?? ''));
+                $presentation = RecommendationPresentation::forSnapshot($concern);
 
                 return [
                     'id' => $id,
                     'summary' => (string) ($concern['summary'] ?? ''),
-                    'intent_label' => $intent->customerLabel(),
+                    'intent_label' => $presentation->customerLabel() ?? '',
                     'subtotal' => (string) ($concern['subtotal'] ?? ''),
                     'disposition_label' => (string) ($concern['disposition_label'] ?? ''),
                     'lines' => $this->linesForConcern($concern),

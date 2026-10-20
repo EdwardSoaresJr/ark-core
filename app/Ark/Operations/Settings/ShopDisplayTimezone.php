@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Settings;
 
+use App\Ark\Runtime\HostedRuntime;
 use Carbon\CarbonInterface;
 use DateTimeZone;
 use Illuminate\Support\Facades\Schema;
@@ -96,6 +97,10 @@ final class ShopDisplayTimezone
     {
         if (self::$schemaReady !== null) {
             return self::$schemaReady;
+        }
+
+        if (! HostedRuntime::tenantDatabaseSelected()) {
+            return false;
         }
 
         try {

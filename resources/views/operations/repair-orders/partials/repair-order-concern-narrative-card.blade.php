@@ -24,7 +24,7 @@
     $activeDragonApp = null;
     if (
         class_exists(\Ark\Saas\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication::class)
-        && \Illuminate\Support\Facades\Schema::hasTable('dragon_service_advisor_applications')
+        && \App\Ark\Runtime\Database\SchemaPresence::hasTable('dragon_service_advisor_applications')
     ) {
         $activeDragonApp = \Ark\Saas\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication::query()
             ->where('concern_id', $concern->id)
