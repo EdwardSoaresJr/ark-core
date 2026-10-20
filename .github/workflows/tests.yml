@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     # The suite forces SQLite :memory: in phpunit.xml. It does not use MySQL.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
