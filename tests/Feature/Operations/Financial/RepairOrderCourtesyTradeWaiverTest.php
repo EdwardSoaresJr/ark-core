@@ -76,14 +76,17 @@ test('waiving remaining balance as trade preserves invoice total and clears bala
         ->and($presenter['collectionDispositionLabel'])->toBe('Trade')
         ->and($presenter['excludesFromPostedSales'])->toBeTrue()
         ->and($presenter['showFinancialRail'])->toBeTrue()
-        ->and($presenter['financialRailReadOnly'])->toBeTrue();
+        ->and($presenter['financialRailReadOnly'])->toBeTrue()
+        ->and($presenter['canEmailInvoice'])->toBeTrue();
 
     $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
         ->assertSee('Would have cost')
         ->assertSee('$150.00')
         ->assertSee('Waived')
-        ->assertSee('Trade');
+        ->assertSee('Trade')
+        ->assertSee('Email invoice')
+        ->assertDontSee('Closed repair orders cannot send estimate links.');
 });
 
 test('courtesy and trade waivers keep the invoice and record the write-off separately', function () {

@@ -3,7 +3,7 @@
 
     $customerEmail = trim((string) $repairOrder->customer->email);
     $contactPreference = $repairOrder->customer->contact_preference;
-    $canEmail = ! $isTerminal && $repairOrder->lines->isNotEmpty();
+    $canEmail = $repairOrder->lines->isNotEmpty();
     $missingVin = $repairOrder->missingVehicleVin();
 @endphp
 

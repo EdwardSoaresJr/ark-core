@@ -141,10 +141,10 @@ test('deposit send projection allows email via platform without core postmark', 
         ->and($projection['email_block_reason'])->toBeNull();
 });
 
-test('estimate send projection blocks closed repair orders', function () {
+test('estimate send projection allows closed repair orders', function () {
     $repairOrder = repairOrderForCommunication(status: RepairOrderStatus::Closed);
     $projection = app(RepairOrderConversationSendProjection::class)
         ->forRepairOrder($repairOrder, actingAsLearnCurrentAdvisor())['estimate'];
 
-    expect($projection['send_block_reason'])->toBe('Closed repair orders cannot send estimate links.');
+    expect($projection['send_block_reason'])->toBeNull();
 });
