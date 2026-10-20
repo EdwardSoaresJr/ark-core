@@ -201,7 +201,7 @@
 
             <div class="mt-2.5 space-y-2">
                 @php
-                    $concernDisplayEntries = App\Ark\Operations\RepairOrders\RecommendationIntent::displayEntriesForSnapshot($snapshot['concerns']);
+                    $concernDisplayEntries = App\Ark\Operations\RepairOrders\RecommendationPresentation::displayEntriesForSnapshot($snapshot['concerns']);
                 @endphp
                 @forelse ($concernDisplayEntries as $entry)
                     @php
@@ -212,15 +212,15 @@
                                 mb_strtolower(trim((string) $concern['summary'])),
                                 mb_strtolower(trim((string) $snapshot['intake']['concern_summary'])),
                             ], true);
-                        $intent = App\Ark\Operations\RepairOrders\RecommendationIntent::fromStored($concern['recommendation_intent'] ?? null);
+                        $presentation = App\Ark\Operations\RepairOrders\RecommendationPresentation::forSnapshot($concern);
                     @endphp
-                    <section class="ops-review-concern {{ $intent->reviewScopeClass() }}">
+                    <section class="ops-review-concern {{ $presentation->reviewScopeClass() }}">
                         <x-operations.scope-header
                             class="ops-review-concern-header"
                             :title="$concern['summary']"
                             :total="$concern['subtotal']"
-                            :eyebrow="$intent->staffLabel()"
-                            :eyebrow-class="$intent->intentLabelClass()"
+                            :eyebrow="$presentation->staffLabel()"
+                            :eyebrow-class="$presentation->labelClass()"
                         >
                             <x-slot:status>
                                 @include('operations.repair-orders.partials.repair-order-concern-disposition-decision', [

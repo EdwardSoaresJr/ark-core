@@ -8,7 +8,6 @@ use App\Ark\Operations\Recommendations\RecommendationSourceKind;
 use App\Ark\Operations\Recommendations\RecommendationUrgency;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
-use App\Ark\Operations\RepairOrders\RecommendationIntent;
 use Illuminate\Console\Command;
 
 final class BackfillRecommendationsCommand extends Command
@@ -67,8 +66,8 @@ final class BackfillRecommendationsCommand extends Command
                         'originating_concern' => $concern,
                         'discovered_at' => $concern->created_at,
                         'discovered_mileage' => $repairOrder->resolvedMileageIn(),
-                        'urgency' => RecommendationUrgency::fromIntent($concern->recommendationIntent()),
-                        'safety_related' => $concern->recommendationIntent() === RecommendationIntent::ImmediateAttention,
+                        'urgency' => RecommendationUrgency::fromPriority($concern->recommendationPriority()),
+                        'safety_related' => $concern->recommendationPriority() === \App\Ark\Operations\RepairOrders\RecommendationPriority::MustDo,
                         'source_kind' => RecommendationSourceKind::Estimate,
                     ]);
 

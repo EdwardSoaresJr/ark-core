@@ -590,7 +590,7 @@ class RepairOrder extends Model
             return 'No future-work action pending';
         }
 
-        $intent = RecommendationIntent::strongestDeferredFollowUp($concerns);
+        $intent = RecommendationPresentation::strongestDeferred($concerns);
 
         if ($intent !== null) {
             return $intent->deferredFollowUpAction();

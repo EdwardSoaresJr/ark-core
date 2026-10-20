@@ -5,11 +5,11 @@ namespace App\Ark\Operations\Intake;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
-use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\ConcernRecommendationDefaults;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
-use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\RepairOrders\ScopeEntryKind;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -38,7 +38,7 @@ final class RepairOrderIntakeConcerns
             return [];
         }
 
-        $defaultIntent = RecommendationIntent::defaultForRepairOrder($repairOrder);
+        $defaults = ConcernRecommendationDefaults::forIntake($repairOrder);
         $created = [];
         $position = 0;
 
@@ -51,7 +51,7 @@ final class RepairOrderIntakeConcerns
                 'customer_states' => $parsedConcern['customer_states'],
                 'notes' => $position === 1 && $advisorNotes !== '' ? $advisorNotes : null,
                 'disposition' => RepairOrderConcernDisposition::Draft,
-                'recommendation_intent' => $defaultIntent,
+                ...$defaults,
                 'position' => $position,
             ]);
 
@@ -94,7 +94,7 @@ final class RepairOrderIntakeConcerns
         ?User $actor = null,
         string $intakeSource = 'advisor',
     ): array {
-        $defaultIntent = RecommendationIntent::defaultForRepairOrder($repairOrder);
+        $defaults = ConcernRecommendationDefaults::forIntake($repairOrder);
         $repairOrder->loadMissing('customer');
         $defaultBillingPosture = ConcernBillingPosture::defaultForCustomer($repairOrder->customer);
 
@@ -110,8 +110,10 @@ final class RepairOrderIntakeConcerns
 
             $position++;
 
-            $intent = RecommendationIntent::tryFromStored(trim((string) ($row['recommendation_intent'] ?? '')))
-                ?? $defaultIntent;
+            $explicit = trim((string) ($row['recommendation_intent'] ?? ''));
+            $intent = $explicit !== ''
+                ? ConcernRecommendationDefaults::forEntryKind(ScopeEntryKind::CustomerConcern, $explicit)
+                : $defaults;
 
             $billingPosture = ConcernBillingPosture::tryFrom(trim((string) ($row['billing_posture'] ?? '')))
                 ?? $defaultBillingPosture;
@@ -131,7 +133,7 @@ final class RepairOrderIntakeConcerns
                     ? trim((string) $row['recommendation'])
                     : null,
                 'disposition' => RepairOrderConcernDisposition::Draft,
-                'recommendation_intent' => $intent,
+                ...$intent,
                 'position' => $position,
                 'billing_posture' => $billingPosture,
             ]);

@@ -110,8 +110,7 @@ final class InvoiceSnapshotBuilder
         return [
             'id' => $concern->id,
             'summary' => $concern->summary,
-            'recommendation_intent' => $concern->recommendationIntent()->value,
-            'recommendation_intent_label' => $concern->recommendationIntent()->staffLabel(),
+            ...$concern->recommendationDocumentAttributes(),
             'position' => $concern->position,
             'disposition' => $concern->disposition->value,
             'disposition_label' => $concern->disposition->label(),

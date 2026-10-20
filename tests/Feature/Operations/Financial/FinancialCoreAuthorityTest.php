@@ -399,8 +399,8 @@ test('invoice pdf html groups approved concerns under severity intent headers', 
     ])->render();
 
     expect($html)
-        ->toContain('concern--intent-maintenance')
-        ->toContain('concern-priority-badge--maintenance')
+        ->toContain('concern--priority-unset')
+        ->not->toContain('concern-priority-badge--maintenance')
         ->not->toContain('concern-intent-group')
         ->toContain('Approved brakes')
         ->not->toContain('Reason for Visit')

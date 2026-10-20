@@ -12,7 +12,7 @@ use App\Ark\Operations\Inspections\Inspection;
 use App\Ark\Operations\Inspections\InspectionItem;
 use App\Ark\Operations\Inspections\InspectionObservedState;
 use App\Ark\Operations\RepairOrders\PartsPressure;
-use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -258,18 +258,13 @@ final class MobileOperationalContextProjection
 
         $concerns = $repairOrder->concerns;
         $immediate = $concerns->filter(
-            fn (RepairOrderConcern $concern): bool => in_array(
-                $concern->recommendationIntent(),
-                [RecommendationIntent::ImmediateAttention, RecommendationIntent::Diagnostic],
-                true,
-            ),
+            fn (RepairOrderConcern $concern): bool => $concern->recommendationPriority() === RecommendationPriority::MustDo,
         )->count();
         $future = $concerns->filter(
-            fn (RepairOrderConcern $concern): bool => in_array(
-                $concern->recommendationIntent(),
-                [RecommendationIntent::PlanSoon, RecommendationIntent::Maintenance],
-                true,
-            ),
+            fn (RepairOrderConcern $concern): bool => in_array($concern->recommendationPriority(), [
+                RecommendationPriority::ShouldDo,
+                RecommendationPriority::CouldDo,
+            ], true),
         )->count();
 
         $started = $inspection->started_at !== null || $checked > 0;

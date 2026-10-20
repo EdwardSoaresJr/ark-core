@@ -2,9 +2,7 @@
     $dispositionEnum = \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::fromStored((string) ($concern['disposition'] ?? ''));
     $disposition = $dispositionEnum?->value ?? '';
     $showConcernDisposition = $disposition !== '' && $disposition !== 'draft';
-    $intent = \App\Ark\Operations\RepairOrders\RecommendationIntent::fromStored(
-        (string) ($concern['recommendation_intent'] ?? ''),
-    );
+    $presentation = \App\Ark\Operations\RepairOrders\RecommendationPresentation::forSnapshot($concern);
     $customerTitle = trim((string) ($concern['customer_title'] ?? $concern['summary'] ?? ''));
     $findings = trim((string) ($concern['customer_findings'] ?? $concern['verified_findings'] ?? ''));
     $recommendation = trim((string) ($concern['customer_recommendation'] ?? $concern['recommendation'] ?? ''));
@@ -14,15 +12,15 @@
         $statusPills = [trim((string) ($concern['disposition_label'] ?? $dispositionEnum?->scopeHeaderLabel() ?? ''))];
     }
     $chargeLines = $concern['charge_lines'] ?? null;
-    $intentLabel = $intent->pdfGroupLabel();
+    $intentLabel = $presentation->customerLabel() ?? '';
     $titleAlreadyStatesIntent = $intentLabel !== '' && str_contains(mb_strtolower($customerTitle), mb_strtolower($intentLabel));
 @endphp
 
-<article class="concern concern--intent-{{ $intent->value }}">
+<article class="concern {{ $presentation->pdfScopeClass() }}">
     <div class="concern-header">
         <div class="concern-header-grid">
-            @unless ($titleAlreadyStatesIntent)
-                <p class="concern-priority-badge concern-priority-badge--{{ $intent->value }}">{{ $intentLabel }}</p>
+            @unless ($titleAlreadyStatesIntent || $intentLabel === '')
+                <p class="concern-priority-badge {{ $presentation->badgeClass() }}">{{ $intentLabel }}</p>
             @endunless
             <h2 class="concern-header-title">{{ $customerTitle }}</h2>
             @if ($statusPills !== [])

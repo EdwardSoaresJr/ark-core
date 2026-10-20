@@ -23,9 +23,9 @@
             $vehicleFutureWorkCount = $vehicleFutureWorkOrders->sum(fn ($repairOrder) => $repairOrder->futureWorkCount());
             $vehicleFutureWorkCents = $vehicleFutureWorkOrders->sum(fn ($repairOrder) => $repairOrder->futureWorkSubtotalCents());
             $vehicleFutureWorkConcerns = $vehicleFutureWorkOrders->flatMap(fn ($repairOrder) => $repairOrder->futureWorkConcerns());
-            $vehicleStrongestFutureWorkIntent = \App\Ark\Operations\RepairOrders\RecommendationIntent::strongestDeferredFollowUp($vehicleFutureWorkConcerns);
-            $vehicleUrgentFutureWork = $vehicleStrongestFutureWorkIntent === \App\Ark\Operations\RepairOrders\RecommendationIntent::ImmediateAttention;
-            $vehicleFutureWorkReminder = $vehicleStrongestFutureWorkIntent?->continuityReminder() ?? 'Deferred work retained for next-visit continuity.';
+            $vehicleStrongestFutureWork = \App\Ark\Operations\RepairOrders\RecommendationPresentation::strongestDeferred($vehicleFutureWorkConcerns);
+            $vehicleUrgentFutureWork = $vehicleStrongestFutureWork?->priority === \App\Ark\Operations\RepairOrders\RecommendationPriority::MustDo;
+            $vehicleFutureWorkReminder = $vehicleStrongestFutureWork?->continuityReminder() ?? 'Deferred work retained for next-visit continuity.';
             $vehiclePosture = $vehicleActiveRepairOrder
                 ? $vehicleActiveRepairOrder->status->label()
                 : ($vehicleLastRepairOrder ? 'Last seen '.$vehicleLastRepairOrder->updated_at->timezone(config('app.display_timezone'))->format('M j') : 'No service history');

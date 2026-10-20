@@ -16,6 +16,7 @@ use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use Throwable;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -233,7 +234,7 @@ class CloudScreenshotStageSeeder extends Seeder
             'repair_order_id' => $repairOrder->id,
             'position' => 1,
             'summary' => 'Front brakes',
-            'recommendation_intent' => RecommendationIntent::ImmediateAttention,
+            'recommendation_priority' => RecommendationPriority::MustDo,
             'notes' => 'Customer hears scrape on right turns.',
             'customer_states' => 'Scraping noise when braking from highway speeds.',
             'verified_findings' => 'Front pads at 2mm. Rotors within machine limit. Hardware rusty but reusable.',
@@ -264,7 +265,7 @@ class CloudScreenshotStageSeeder extends Seeder
             'repair_order_id' => $repairOrder->id,
             'position' => 2,
             'summary' => 'Ignition coils',
-            'recommendation_intent' => RecommendationIntent::ImmediateAttention,
+            'recommendation_priority' => RecommendationPriority::MustDo,
             'notes' => 'Rough idle after warm-up.',
             'customer_states' => 'Van shudders at stoplights. Check engine light flashing once last week.',
             'verified_findings' => 'Misfire on cylinder 3. Coil pack cracked at boot.',
@@ -530,7 +531,7 @@ class CloudScreenshotStageSeeder extends Seeder
                 'repair_order_id' => $repairOrder->id,
                 'position' => 1,
                 'summary' => $row['summary'],
-                'recommendation_intent' => RecommendationIntent::PlanSoon,
+                'recommendation_priority' => RecommendationPriority::ShouldDo,
                 'disposition' => in_array($row['status'], [RepairOrderStatus::Approved, RepairOrderStatus::InProgress, RepairOrderStatus::WaitingParts], true)
                     ? RepairOrderConcernDisposition::Approved
                     : RepairOrderConcernDisposition::Recommended,
