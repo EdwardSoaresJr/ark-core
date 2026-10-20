@@ -10,4 +10,5 @@ regexTarget = "match"
 regexes = [
   '''jeep-wrangler-2014''',
   '''BEGIN PRIVATE KEY-----\\ntest\\n-----END PRIVATE KEY''',
+  '''example-token-value-not-real''',
 ]
