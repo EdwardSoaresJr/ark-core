@@ -19,14 +19,33 @@ use Illuminate\Support\Carbon;
  */
 final class RepairOrderOrientationEngine
 {
+    public const ORIENTATION_RELATIONS = [
+        'concerns.lines',
+        'communicationEvents',
+        'assignedTechnician',
+        'inspection.items.photos',
+    ];
+
+    public function preload(iterable $repairOrders): void
+    {
+        $collection = $repairOrders instanceof \Illuminate\Support\Collection
+            ? $repairOrders
+            : collect($repairOrders);
+
+        $models = $collection
+            ->filter(fn ($item): bool => $item instanceof RepairOrder)
+            ->unique(fn (RepairOrder $repairOrder): int => (int) $repairOrder->id)
+            ->values()
+            ->all();
+
+        if ($models !== []) {
+            (new \Illuminate\Database\Eloquent\Collection($models))->loadMissing(self::ORIENTATION_RELATIONS);
+        }
+    }
+
     public function derive(RepairOrder $repairOrder): OperationalOrientation
     {
-        $repairOrder->loadMissing([
-            'concerns',
-            'communicationEvents',
-            'assignedTechnician',
-            'inspection.items.photos',
-        ]);
+        $repairOrder->loadMissing(self::ORIENTATION_RELATIONS);
 
         $ownerSignal = $this->ownerSignal($repairOrder);
 

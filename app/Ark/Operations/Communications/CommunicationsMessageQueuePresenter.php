@@ -53,6 +53,7 @@ class CommunicationsMessageQueuePresenter
         $contexts = $this->callContextResolver->mapForAttentionList(
             $conversations->map(fn ($conversation): string => (string) $conversation->contact_address)->all(),
         );
+        Orientation::preloadForContexts($contexts);
         $advisorOutbound = $this->turnReason->advisorOutboundConversationIds($conversations);
 
         return $messages

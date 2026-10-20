@@ -56,9 +56,7 @@ final class SoloShopOperations
         $sole = $this->soleStaffUser();
 
         if ($sole !== null) {
-            return User::query()
-                ->whereKey($sole->getKey())
-                ->get(['id', 'name']);
+            return new Collection([$sole]);
         }
 
         if ($this->isSoloOwnerShop()) {

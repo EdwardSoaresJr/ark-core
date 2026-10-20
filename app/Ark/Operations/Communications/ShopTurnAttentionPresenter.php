@@ -35,6 +35,9 @@ final class ShopTurnAttentionPresenter
 
         /** @var ConversationMessage|null $latest */
         $latest = $conversation->messages->first();
+        if ($latest !== null && ! $latest->relationLoaded('conversation')) {
+            $latest->setRelation('conversation', $conversation);
+        }
         $latest?->loadMissing('attachments');
         $contactAddress = (string) $conversation->contact_address;
         $context ??= $this->callContextResolver->resolveForAttentionList($contactAddress);

@@ -51,7 +51,7 @@ class RepairOrderShowController
             return app(RepairOrderProductionLandingController::class)($request, $repairOrder);
         }
 
-        $repairOrder->load(['customer', 'vehicle', 'encounter.creator', 'assignedTechnician', 'concerns.workGroups.lines', 'concerns.workGroups.ownerUser', 'concerns.lines', 'concerns.authorizationExceptions.recordedBy', 'lines', 'approvalEvents.revocation']);
+        $repairOrder->load(['customer', 'vehicle', 'encounter.creator', 'assignedTechnician', 'concerns.workGroups.lines.dealerQuoteLine.quote', 'concerns.workGroups.ownerUser', 'concerns.lines.dealerQuoteLine.quote', 'concerns.authorizationExceptions.recordedBy', 'lines.dealerQuoteLine.quote', 'approvalEvents.revocation']);
         $settings = ShopSettings::current();
         $technicians = $soloShop->assignableTechnicians();
         $totals = $calculator->totalsFor($repairOrder);
@@ -132,7 +132,7 @@ class RepairOrderShowController
             'visitReasonConcernProposals' => $visitReasonConcernProposals,
             'priorVisitMentions' => PriorVisitMentionProjection::for(
                 $repairOrder->customer_id,
-                $repairOrder->id,
+                $repairOrder,
                 $repairOrder->vehicle_id,
             ),
             ...InspectionWorkspaceTabBadgeProjection::for($repairOrder, $request->user()),

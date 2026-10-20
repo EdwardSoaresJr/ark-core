@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Telephony;
 
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\PhoneNumber;
+use App\Ark\Orientation\Orientation;
 use App\Models\User;
 
 class CallQueueResolver
@@ -25,6 +26,7 @@ class CallQueueResolver
             ->map(fn (CallSession $session): ?string => $this->attentionPhone($session, $display))
             ->all();
         $contexts = $this->callContextResolver->mapForAttentionList($phones);
+        Orientation::preloadForContexts($contexts);
 
         $calls = $sessions
             ->map(function (CallSession $session) use ($viewer, $display, $contexts): array {

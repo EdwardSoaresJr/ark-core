@@ -8,6 +8,7 @@ use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Leads\ConversationLeadResolver;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Leads\LeadConfirmationAuditConversation;
+use App\Ark\Orientation\Orientation;
 use App\Ark\Runtime\Database\SchemaPresence;
 use App\Models\User;
 
@@ -44,6 +45,7 @@ final class ShopTurnAttentionQueue
             ->with([
                 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1),
                 'messages.attachments',
+                'messages.participant.customer',
                 'owner:id,name',
             ])
             ->orderBy('posture_changed_at')
@@ -76,6 +78,7 @@ final class ShopTurnAttentionQueue
         $contexts = $this->callContextResolver->mapForAttentionList(
             $conversations->map(fn (Conversation $conversation): string => (string) $conversation->contact_address)->all(),
         );
+        Orientation::preloadForContexts($contexts);
         $advisorOutbound = $this->turnReason->advisorOutboundConversationIds($conversations);
 
         return $conversations
