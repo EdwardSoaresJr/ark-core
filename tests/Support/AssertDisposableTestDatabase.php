@@ -95,7 +95,7 @@ final class AssertDisposableTestDatabase
 
     public static function isPermitted(string $normalizedDatabase, string $driver = 'sqlite'): bool
     {
-        if ($normalizedDatabase === ':memory:') {
+        if ($normalizedDatabase === ':memory:' && $driver === 'sqlite') {
             return true;
         }
 

@@ -16,6 +16,8 @@ composer test:parallel
 
 That is the default check for behavior changes. `composer test:serial` is the single-process diagnostic. Documentation-only changes do not require the full suite.
 
+See [tests/README.md](tests/README.md) for database and filesystem isolation rules and the explicitly opt-in MySQL integration suite.
+
 ## Do not
 
 - Commit `.env`, credentials, shop data, or licensed labor-guide CSVs
