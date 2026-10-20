@@ -30,7 +30,7 @@ afterEach(function () {
  */
 function arkFreezeInstallerEnvMode(string $mode): array
 {
-    $path = base_path('.env');
+    $path = app()->environmentFilePath();
     $original = is_file($path) ? File::get($path) : null;
     if (! is_file($path)) {
         File::put($path, "APP_KEY=\n");
