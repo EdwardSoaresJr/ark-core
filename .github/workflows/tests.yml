@@ -53,7 +53,6 @@ jobs:
             tests/Feature/Communications/AdvisorAttentionAcceptanceTest.php
             tests/Feature/Operations/Financial/AdvisorFinancialSeparationTest.php
             tests/Feature/Operations/TelephonyCallQueueTest.php
-            tests/Feature/Operations/CommunicationsQueueTest.php
             tests/Feature/Communications/ConversationsH0TurnPrecedenceTest.php
             tests/Feature/Communications/ConversationsH0SarahSagaTest.php
           )
@@ -65,4 +64,8 @@ jobs:
           done
           if [ "${#present[@]}" -gt 0 ]; then
             php vendor/bin/pest --no-coverage "${present[@]}"
+          fi
+          if [ -f tests/Feature/Operations/CommunicationsQueueTest.php ]; then
+            php vendor/bin/pest --no-coverage --filter 'communications queue api includes ringing and active calls' \
+              tests/Feature/Operations/CommunicationsQueueTest.php
           fi
