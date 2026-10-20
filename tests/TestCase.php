@@ -5,6 +5,7 @@ namespace Tests;
 use App\Ark\Install\InstallationState;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Settings\ShopSettingsSchema;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Schema;
 use Tests\Support\AssertDisposableTestDatabase;
@@ -36,6 +37,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         ShopSettings::forgetCurrent();
+        ShopSettingsSchema::flush();
 
         $settings = ShopSettings::current();
         $updates = [

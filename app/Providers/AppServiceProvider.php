@@ -27,6 +27,7 @@ use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Ark\Platform\Voice\PlatformRecordingClient;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -73,6 +74,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(RepairOrderReadCache::class);
+
         // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
         // A hosted shop's install marker lives in tenant storage, which is not active yet.
         // Leaving the configured drivers in place keeps Redis sessions and the tenant-scoped
@@ -166,6 +169,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RepairOrderReadCache::registerFlushListeners();
+
         $this->app->register(MailServiceProvider::class);
         $this->app->extend('mail.manager', function ($manager, $app) {
             $custom = new PlatformAwareMailManager($app);

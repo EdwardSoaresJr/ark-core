@@ -138,7 +138,7 @@ final class ShopIntegrationCredentials
 
     public function repairLinkLaunchUrl(): ?string
     {
-        if (! $this->repairLinkEnabled() || ! Schema::hasColumn('shop_settings', 'repairlink_url')) {
+        if (! $this->repairLinkEnabled() || ! ShopSettingsSchema::has('repairlink_url')) {
             return null;
         }
 
@@ -147,7 +147,7 @@ final class ShopIntegrationCredentials
 
     public function repairLinkEnabled(): bool
     {
-        if (! Schema::hasColumn('shop_settings', 'repairlink_enabled')) {
+        if (! ShopSettingsSchema::has('repairlink_enabled')) {
             return false;
         }
 
@@ -161,7 +161,7 @@ final class ShopIntegrationCredentials
 
     public function nexpartLaunchUrl(): ?string
     {
-        if (! $this->nexpartEnabled() || ! Schema::hasColumn('shop_settings', 'nexpart_url')) {
+        if (! $this->nexpartEnabled() || ! ShopSettingsSchema::has('nexpart_url')) {
             return null;
         }
 
@@ -170,7 +170,7 @@ final class ShopIntegrationCredentials
 
     public function nexpartEnabled(): bool
     {
-        if (! Schema::hasColumn('shop_settings', 'nexpart_enabled')) {
+        if (! ShopSettingsSchema::has('nexpart_enabled')) {
             return false;
         }
 
