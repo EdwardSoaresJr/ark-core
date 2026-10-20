@@ -1,0 +1,107 @@
+name: Source release checks
+
+on:
+  pull_request:
+    branches:
+      - release-authorization
+    paths:
+      - 'releases/*.json'
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full source SHA named by the release record
+        required: true
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read the release record
+        id: record
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            sha="${{ inputs.source_sha }}"
+            record="releases/${sha}.json"
+          else
+            mapfile -t files < <(git diff --name-only --diff-filter=AM "${{ github.event.pull_request.base.sha }}" HEAD -- 'releases/*.json')
+            if [[ "${#files[@]}" -ne 1 ]]; then
+              echo "A source release pull request must add one releases/<full-sha>.json file." >&2
+              exit 1
+            fi
+            record="${files[0]}"
+            sha="$(basename "$record" .json)"
+          fi
+          if [[ ! "$sha" =~ ^[a-f0-9]{40}$ ]] || [[ ! -f "$record" ]]; then
+            echo "The release record is not releases/<full-sha>.json." >&2
+            exit 1
+          fi
+          source_sha="$(jq -r '.source_sha' "$record")"
+          baseline_sha="$(jq -r '.baseline_sha' "$record")"
+          diff_sha="$(jq -r '.diff_sha256' "$record")"
+          if [[ "$source_sha" != "$sha" ]]; then
+            echo "Record source_sha does not match the file name." >&2
+            exit 1
+          fi
+          git cat-file -e "${baseline_sha}^{commit}"
+          git cat-file -e "${source_sha}^{commit}"
+          git merge-base --is-ancestor "$baseline_sha" "$source_sha"
+          actual="$(scripts/core-release-diff-id.sh --repo "$PWD" --baseline "$baseline_sha" --source "$source_sha")"
+          if [[ "$actual" != "$diff_sha" ]]; then
+            echo "Record diff does not match ${baseline_sha}..${source_sha}." >&2
+            exit 1
+          fi
+          echo "source_sha=${source_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.record.outputs.source_sha }}
+          path: source
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+
+      - name: Scan the source commit
+        working-directory: source
+        run: gitleaks detect --source . --config .gitleaks.toml --redact --verbose --exit-code 1
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Run Pest on the source commit
+        working-directory: source
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          composer test:serial
+
+      - name: Record checks on the source commit
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.record.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          for name in gitleaks pest; do
+            jq -n \
+              --arg name "$name" \
+              --arg sha "$SOURCE_SHA" \
+              --arg url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{name:$name, head_sha:$sha, status:"completed", conclusion:"success", details_url:$url, output:{title:$name, summary:("Passed on "+$sha+".")}}' \
+              | gh api --method POST "repos/${{ github.repository }}/check-runs" --input -
+          done

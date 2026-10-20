@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Identity + source-commit checks for a public Core production image.
-# Does not build or push.
+# Identity checks for a public Core production image.
+# SOURCE_COMMIT is the tree that will be archived. It does not have to be HEAD.
+# The publisher checkout is checked separately and must be on origin/main.
+# Does not build, push, or deploy.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,19 +17,12 @@ fi
 
 if [[ -z "${SOURCE_COMMIT:-}" ]]; then
   echo "REFUSING: set SOURCE_COMMIT to the exact commit being published." >&2
-  echo "Example: SOURCE_COMMIT=\$(git rev-parse HEAD) ./infra/build-runner/mac/publish-ghcr-ark.sh" >&2
+  echo "Example: SOURCE_COMMIT=<full-sha> ./infra/build-runner/mac/publish-ghcr-ark.sh" >&2
   exit 1
 fi
 
 if ! wanted="$(git rev-parse --verify "${SOURCE_COMMIT}^{commit}" 2>/dev/null)"; then
   echo "REFUSING: SOURCE_COMMIT is not a commit in this repository: $SOURCE_COMMIT" >&2
-  exit 1
-fi
-
-head="$(git rev-parse HEAD)"
-if [[ "$wanted" != "$head" ]]; then
-  echo "REFUSING: SOURCE_COMMIT $SOURCE_COMMIT ($wanted) is not HEAD ($head)." >&2
-  echo "Checkout that commit before publishing." >&2
   exit 1
 fi
 
@@ -57,4 +52,5 @@ branch="$(git branch --show-current 2>/dev/null || true)"
 echo "Public Core publish identity ok"
 echo "  IMAGE=$IMAGE"
 echo "  SOURCE_COMMIT=$wanted"
+echo "  publisher_head=$(git rev-parse HEAD)"
 echo "  branch=${branch:-<detached>}"

@@ -1,0 +1,16 @@
+name: Release integrity
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  publication-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prove the publication contract
+        run: tests/Shell/CoreReleaseIntegrityTest.sh

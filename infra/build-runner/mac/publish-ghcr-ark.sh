@@ -2,12 +2,12 @@
 # Publish canonical public ARK Core to GHCR.
 #
 # Tags are the commit SHA only. Floating tags are refused.
-# The image is git archive of a commit already on origin/main.
+# The image is git archive of SOURCE_COMMIT. The scripts run from a publisher checkout on origin/main.
 # Docker does not see the worktree.
 #
-#   SOURCE_COMMIT=$(git rev-parse HEAD) ./infra/build-runner/mac/publish-ghcr-ark.sh
+#   SOURCE_COMMIT=<full-sha> ./infra/build-runner/mac/publish-ghcr-ark.sh
 #
-# Does not deploy Coolify. Does not touch LNP production or shadow hosts.
+# Does not deploy. Does not touch a shop. Source approval is not deployment approval.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,6 +23,7 @@ cd "$REPO_ROOT"
 "$REPO_ROOT/scripts/assert-core-worktree-clean.sh" --repo "$REPO_ROOT"
 
 SHA="$(git rev-parse --verify "${SOURCE_COMMIT}^{commit}")"
+"$REPO_ROOT/scripts/assert-core-publisher-revision.sh" --repo "$REPO_ROOT" --publisher HEAD --source "$SHA"
 "$REPO_ROOT/scripts/assert-core-source-published.sh" --repo "$REPO_ROOT" --commit "$SHA"
 SHORT_SHA="$(git rev-parse --short=12 "$SHA")"
 
