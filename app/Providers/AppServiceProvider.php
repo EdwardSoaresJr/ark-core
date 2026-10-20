@@ -31,6 +31,9 @@ use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
 use App\Ark\Operations\Messaging\TwilioOutboundSmsTransport;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
@@ -170,6 +173,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RepairOrderReadCache::registerFlushListeners();
+        $this->app['events']->listen(JobProcessing::class, static function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+        });
+        $this->app['events']->listen(JobProcessed::class, static function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+        });
+        $this->app['events']->listen(JobExceptionOccurred::class, static function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+        });
 
         $this->app->register(MailServiceProvider::class);
         $this->app->extend('mail.manager', function ($manager, $app) {
@@ -185,6 +197,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->app->terminating(function (): void {
+            RepairOrderReadCache::beginUnitOfWork();
+
             if ($this->app->resolved(RepairOrderConcurrency::class)) {
                 $this->app->make(RepairOrderConcurrency::class)->abandonIfStillHolding();
             }

@@ -11,6 +11,8 @@ use App\Ark\Operations\Inspections\InspectionItem;
 use App\Ark\Operations\Inspections\InspectionItemMeasurement;
 use App\Ark\Operations\Inspections\InspectionItemPhoto;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\Settings\ShopSettingsSchema;
+use App\Ark\Runtime\DatabaseReadScope;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -24,6 +26,8 @@ final class RepairOrderReadCache
 
     public function remember(string $key, callable $resolve): mixed
     {
+        $key = DatabaseReadScope::key()."\0".$key;
+
         if (array_key_exists($key, $this->values)) {
             return $this->values[$key];
         }
@@ -34,6 +38,19 @@ final class RepairOrderReadCache
     public function flush(): void
     {
         $this->values = [];
+    }
+
+    /**
+     * Drops remembered rows at a request or queue-job boundary.
+     * A long-running worker keeps this object, so the next unit of work must not see the last one.
+     */
+    public static function beginUnitOfWork(): void
+    {
+        ShopSettingsSchema::flush();
+
+        if (app()->resolved(self::class)) {
+            app(self::class)->flush();
+        }
     }
 
     public static function registerFlushListeners(): void
