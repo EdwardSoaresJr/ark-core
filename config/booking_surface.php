@@ -3,8 +3,10 @@
 /**
  * External booking host (marketing / Lead form). Not ARK Website CMS.
  *
- * LNP cutover: keep lugsnplugs.com on the booking-capable runtime.
- * Public Core must not claim that host without BOOKING_SURFACE_BASE_URL.
+ * The default protected host list is still shop-specific. It stays until that
+ * shop's production environment sets BOOKING_SURFACE_PROTECTED_HOSTS itself.
+ * Boot does not enforce the list: BookingSurfaceGuard::assertCutoverSafe()
+ * is currently a no-op. Do not clear the default until the environment does.
  */
 return [
     /*

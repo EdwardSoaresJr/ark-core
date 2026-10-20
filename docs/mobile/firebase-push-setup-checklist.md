@@ -1,9 +1,9 @@
-# Firebase push setup - LugsNPlugs (transport only)
+# Firebase push setup (transport only)
 
 **Doctrine:** [firebase-mobile-push-setup-doctrine-v1.md](./firebase-mobile-push-setup-doctrine-v1.md)  
 **Cost:** Spark (free) plan only. Register apps + Cloud Messaging. Do not enable Blaze or add Firestore/Auth/Analytics.
 
-**Production status (2026-06-27):** Server push **operational** (`lugsnplugs-ark-mobile`, credentials in shop settings). **APNs `.p8` not yet uploaded** - iOS push pending. Android floor test next.
+Service-account JSON, APNs keys, and `google-services.json` stay on the shop runtime. Do not commit them.
 
 ## App identifiers (copy into Firebase Console)
 

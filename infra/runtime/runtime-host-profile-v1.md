@@ -160,7 +160,7 @@ MySQL container `mem_swappiness: 10` in Coolify compose is complementary; host s
 
 Exceptions must be recorded in the shop implementation profile with owner, reason, and sunset date. Build-on-host is **legacy**, not a template for Shop In A Box.
 
-**Build authority:** `.github/workflows/docker-publish.yml` → `ghcr.io/edwardsoaresjr/ark-core`
+**Build authority:** a future image publish workflow may push `ghcr.io/edwardsoaresjr/ark-core`. That workflow is not in this repository. Self-hosted installs build with Docker Compose from this checkout.
 
 **Runtime authority:** Coolify env, bind mounts, entrypoint post-deploy - secrets never baked into image.
 

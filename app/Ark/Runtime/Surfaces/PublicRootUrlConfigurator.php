@@ -11,6 +11,17 @@ final class PublicRootUrlConfigurator
     {
         $configured = rtrim((string) config('app.url'), '/');
         $host = parse_url($configured, PHP_URL_HOST);
+        $port = parse_url($configured, PHP_URL_PORT);
+
+        // Docker publishes the app on a non-default host port. Trusting every
+        // proxy makes PHP see port 80 inside the container and drops :8088
+        // from setup links. Keep the port from APP_URL.
+        if (is_int($port) && ! in_array($port, [80, 443], true)) {
+            URL::forceRootUrl($configured);
+            URL::forceScheme(str_starts_with($configured, 'https://') ? 'https' : 'http');
+
+            return;
+        }
 
         if ($host !== null && ! self::isLocalHost($host)) {
             if (str_starts_with($configured, 'https://')) {

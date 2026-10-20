@@ -42,8 +42,8 @@ final class PortalHomeProjection
     {
         $shop = ShopSettings::current();
         $shopName = $shop->displayName();
-        $phoneDisplay = PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
-        $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '7194136227';
+        $phoneDisplay = PhoneNumber::display($shop->phone) ?? '';
+        $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '';
         $hoursLabel = TelephonyBusinessHoursLabel::fromCallFlow();
 
         $vehicles = $customer->vehicles()

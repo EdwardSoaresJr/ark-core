@@ -171,7 +171,7 @@ If lead pressure fills with junk, advisors learn to ignore it - worse than the s
 
 ## Unknown Inbound Contact Rule (frozen)
 
-**Production evidence (2026-06):** `303-905-6841` texted *"Are you open on the weekends?"* - Conversation ✓ · Comms Attention ✓ · Advisor read ✓ · **Lead ✗**. ARK handled the message and lost the opportunity.
+**Observed gap:** an unknown sender texted "Are you open on the weekends?" Conversation ✓ · Comms Attention ✓ · Advisor read ✓ · **Lead ✗**. ARK handled the message and lost the opportunity.
 
 **Rule:** Unknown inbound contact = **Lead candidate**, regardless of channel.
 

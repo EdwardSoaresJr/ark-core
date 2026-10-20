@@ -5,8 +5,8 @@
 
     $shop ??= ShopSettings::current();
     $shopName = $shop->displayName();
-    $phoneDisplay = \App\Ark\Operations\PhoneNumber::display($shop->phone) ?: '(719) 413-6227';
-    $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '7194136227';
+    $phoneDisplay = \App\Ark\Operations\PhoneNumber::display($shop->phone);
+    $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '';
     $smsHref = 'sms:'.$phoneTel;
     $cityState = trim(implode(', ', array_filter([
         trim((string) $shop->city),
@@ -44,19 +44,21 @@
         <div class="customer-header__contact">
             @include('partials.customer.theme-toggle')
 
-            <a
-                href="tel:{{ $phoneTel }}"
-                class="customer-header__contact-link customer-header__contact-link--primary"
-            >
-                <span class="customer-header__call-short">Call</span>
-                <span class="customer-header__call-full">{{ $phoneDisplay }}</span>
-            </a>
-            <a
-                href="{{ $smsHref }}"
-                class="customer-header__contact-link customer-header__contact-link--secondary"
-            >
-                Text
-            </a>
+            @if ($phoneTel !== '')
+                <a
+                    href="tel:{{ $phoneTel }}"
+                    class="customer-header__contact-link customer-header__contact-link--primary"
+                >
+                    <span class="customer-header__call-short">Call</span>
+                    <span class="customer-header__call-full">{{ $phoneDisplay }}</span>
+                </a>
+                <a
+                    href="{{ $smsHref }}"
+                    class="customer-header__contact-link customer-header__contact-link--secondary"
+                >
+                    Text
+                </a>
+            @endif
 
             @if ($navItems !== [])
                 <button

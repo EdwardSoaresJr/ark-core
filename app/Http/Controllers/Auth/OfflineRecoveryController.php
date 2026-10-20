@@ -16,11 +16,12 @@ class OfflineRecoveryController extends Controller
     public function create(OfflineRecoveryService $recovery): View
     {
         $challenge = $recovery->issueChallenge();
+        $cloudBase = rtrim((string) config('services.ark_cloud.base_url'), '/');
 
         return view('auth.offline-recovery', [
             'installationUuid' => InstallationIdentity::uuid(),
             'challenge' => $challenge->public_id,
-            'cloudUrl' => rtrim((string) config('services.ark_cloud.base_url'), '/').'/recovery/offline',
+            'cloudUrl' => $cloudBase !== '' ? $cloudBase.'/recovery/offline' : null,
         ]);
     }
 

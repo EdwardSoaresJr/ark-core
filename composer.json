@@ -2,10 +2,11 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "ARK Core: open-source shop management for independent auto repair shops.",
     "keywords": [
-        "laravel",
-        "framework"
+        "ark",
+        "auto-repair",
+        "shop-management"
     ],
     "license": "AGPL-3.0-only",
     "require": {
@@ -61,7 +62,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php -d memory_limit=512M vendor/bin/pest --no-coverage"
+            "@php -d memory_limit=2048M vendor/bin/pest --no-coverage"
         ],
         "test:parallel": [
             "@php artisan config:clear --ansi @no_additional_args",
@@ -69,7 +70,7 @@
         ],
         "test:serial": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php -d memory_limit=512M vendor/bin/pest --no-coverage"
+            "@php -d memory_limit=2048M vendor/bin/pest --no-coverage"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -100,6 +101,7 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
+        "process-timeout": 0,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,

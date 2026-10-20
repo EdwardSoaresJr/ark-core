@@ -18,7 +18,8 @@ That is the default check for behavior changes. `composer test:serial` is the si
 
 ## Do not
 
-- Commit `.env`, credentials, shop data, or licensed labor-guide CSVs
+- Commit `.env`, credentials, shop data, or licensed labor-guide CSVs. Local environment files and injected environment variables are how secrets are supplied. Git is not.
+- Commit Cursor rules, agent transcripts, private planning notes, or machine-local paths
 - Paste provider tokens or model-provider secrets into Core
 - Advertise a Core feature that only works in Hosted ARK
 - Treat a Core screen (communications, parts catalogs, payments) as proof that the matching Hosted ARK service ships with Core

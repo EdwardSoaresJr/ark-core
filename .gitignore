@@ -10,6 +10,9 @@
 /.codex
 /.claude
 /.cursor/
+/.junie/
+.cursorrules
+**/.envrc
 
 # Local design research. Not part of the public repository.
 /resources/design-reference/tekmetric/
@@ -40,8 +43,10 @@
 /database/*.sqlite
 /database/*.sqlite-*
 /storage/framework/testing/disks/
-/storage/framework/sessions/
-/storage/framework/views/
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
 _ide_helper.php
 Homestead.json
 Homestead.yaml
@@ -71,3 +76,9 @@ arksmsv2
 **/*firebase-adminsdk*.json
 **/google-services.json
 **/GoogleService-Info.plist
+*.pem
+*.p12
+*.p8
+id_rsa
+id_ed25519
+*.keystore

@@ -4,8 +4,12 @@
     </div>
 
     <div class="mb-4 rounded-sm border border-gray-200 bg-gray-50 p-3 text-sm">
-        <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Cloud recovery page</div>
-        <div class="mt-1 break-all font-mono text-xs">{{ $cloudUrl }}</div>
+        @if (filled($cloudUrl))
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">Cloud recovery page</div>
+            <div class="mt-1 break-all font-mono text-xs">{{ $cloudUrl }}</div>
+        @else
+            <div class="text-xs leading-5 text-gray-600">Hosted recovery is not configured for this installation. A platform base URL and recovery public key can be injected through the environment. Do not commit them.</div>
+        @endif
         <div class="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Installation</div>
         <div class="mt-1 break-all font-mono">{{ $installationUuid }}</div>
         <div class="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Challenge</div>

@@ -19,7 +19,7 @@ test('the same website message is filtered after it is marked spam', function ()
         'concern' => $concern,
         'contact_phone' => '7195550101',
         'contact_name' => 'Robertber',
-        'contact_email' => 'joshuaguerrero2v744d@gmail.com',
+        'contact_email' => 'spam-one@example.test',
         'source' => LeadSource::Website,
     ]);
 
@@ -31,7 +31,7 @@ test('the same website message is filtered after it is marked spam', function ()
         'concern' => $concern,
         'contact_phone' => '7195550102',
         'contact_name' => 'Robertber',
-        'contact_email' => 'potuaaguerrerc2v744d@gmail.com',
+        'contact_email' => 'spam-two@example.test',
         'source' => LeadSource::Website,
     ]);
 

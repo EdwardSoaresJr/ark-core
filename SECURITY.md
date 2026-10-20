@@ -17,4 +17,10 @@ Include:
 - Missing customer email, texting, hosted phone service, in-app card capture, or PartsTech shop catalog access on a stock install that is not using ARK SaaS
 - A model assistant that has no provider configured (`DRAGON_PROVIDER` defaults to `none`)
 
-Provider API tokens do not belong in Core Settings or `.env` for a public install. Rotating a live credential is an operations task.
+## Secrets and environment files
+
+Inject secrets through the process environment, a secret store, or a local `.env` file that is not committed. `.env.example` documents the variable names only.
+
+Do not commit `.env`, API tokens, database passwords, private keys, or shop data. A local `.env` is the right place for development secrets. Git is not.
+
+Hosted ARK credentials stay with the hosted service. A stock Core install leaves `ARK_PLATFORM_BASE_URL` and `ARK_PLATFORM_OFFLINE_RECOVERY_PUBLIC_KEY` empty unless that shop has opted into the hosted service. Rotating a live credential is an operations task.
