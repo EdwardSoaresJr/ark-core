@@ -192,7 +192,13 @@ class CommunicationsQueueResolver
 
         $actionableCalls = array_values(array_filter(
             $calls,
-            static fn (array $call): bool => ($call['status'] ?? '') !== CallSessionStatus::Answered->value,
+            static function (array $call): bool {
+                if (($call['status'] ?? '') !== CallSessionStatus::Answered->value) {
+                    return true;
+                }
+
+                return ($call['is_actively_live'] ?? false) === true;
+            },
         ));
 
         $needsAttention = $this->attentionDedupe->dedupe(

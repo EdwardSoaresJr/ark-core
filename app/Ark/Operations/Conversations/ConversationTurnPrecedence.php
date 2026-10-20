@@ -24,7 +24,13 @@ final class ConversationTurnPrecedence
             return ConversationWaitingOn::Shop;
         }
 
-        return ConversationWaitingOn::Customer;
+        // A missed call that was later answered is finished. Marking the call
+        // worked, or placing an outbound call, does not replace the stored turn.
+        if ($this->missedCallWasLaterAnswered($conversation)) {
+            return ConversationWaitingOn::Customer;
+        }
+
+        return $conversation->waiting_on ?? ConversationWaitingOn::Shop;
     }
 
     public function newestUnresolvedInboundOccurredAt(Conversation $conversation): ?CarbonInterface
@@ -61,6 +67,42 @@ final class ConversationTurnPrecedence
         }
 
         return $newestUnresolved;
+    }
+
+    /**
+     * An ended answer after a missed call closes that missed-call turn.
+     * An answer that is still live stays in Needs attention and does not do this.
+     */
+    private function missedCallWasLaterAnswered(Conversation $conversation): bool
+    {
+        $missedAt = null;
+        $answeredEndedAt = null;
+
+        foreach ($this->inboundCallSessions($conversation) as $session) {
+            $at = $session->started_at ?? $session->created_at;
+
+            if (! $at instanceof CarbonInterface) {
+                continue;
+            }
+
+            if ($session->status === CallSessionStatus::Missed) {
+                if ($missedAt === null || $at->greaterThan($missedAt)) {
+                    $missedAt = $at;
+                }
+            }
+
+            $answered = $session->answered_at instanceof CarbonInterface
+                || $session->status === CallSessionStatus::Answered
+                || $session->hosted_outcome?->wasAnswered() === true;
+
+            if ($answered && $session->ended_at !== null && ($answeredEndedAt === null || $at->greaterThan($answeredEndedAt))) {
+                $answeredEndedAt = $at;
+            }
+        }
+
+        return $missedAt !== null
+            && $answeredEndedAt !== null
+            && $answeredEndedAt->greaterThan($missedAt);
     }
 
     /**

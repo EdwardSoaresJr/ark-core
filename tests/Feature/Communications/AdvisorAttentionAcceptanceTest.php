@@ -1,7 +1,11 @@
 <?php
 
 use App\Ark\Operations\Communications\CommunicationsNavPressure;
+use App\Ark\Operations\Communications\CommunicationsQueueResolver;
+use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationRecorder;
+use App\Ark\Operations\Conversations\ConversationTurnPrecedence;
+use App\Ark\Operations\Conversations\ConversationWaitingOn;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -31,7 +35,9 @@ use Illuminate\Support\Carbon;
  * A follow-up that is now due is attention even when the last message was
  * outbound. A follow-up still in the future is not.
  * A missed call with no return and no handled mark is attention.
- * A missed call that was returned, or explicitly marked handled, is not.
+ * A missed call that was later answered is not. Marking it handled removes
+ * the call and leaves the shop-turn conversation.
+ * An answered call that is still live stays in Needs attention.
  * Shop history is not attention: an estimate, review request, or invoice
  * email, or a customer opening the estimate portal, with no promised follow-up.
  */
@@ -206,13 +212,68 @@ test('a later customer text makes a resolved conversation need attention again',
     expect(advisorAttentionCounts($advisor))->toBe(['inbox' => 1, 'badge' => 1]);
 });
 
-test('a missed call marked handled is not needs attention', function () {
+test('a missed call marked handled leaves the shop-turn conversation in needs attention', function () {
     $advisor = advisorAttentionAdvisor();
     $call = advisorAttentionMissedCall('CA-attention-handled', '7195552100');
 
     app(CallSessionQueue::class)->markCallerHandled($call);
 
-    expect(advisorAttentionCounts($advisor))->toBe(['inbox' => 0, 'badge' => 0]);
+    $queue = app(CommunicationsQueueResolver::class)->resolveAttention($advisor);
+
+    expect(advisorAttentionCounts($advisor))->toBe(['inbox' => 1, 'badge' => 1])
+        ->and(collect($queue['calls'])->pluck('call_session_id'))->not->toContain($call->id)
+        ->and(collect($queue['needs_attention'])->contains(
+            fn (array $row): bool => ($row['kind'] ?? null) === 'message' && ($row['state'] ?? null) === 'shop_turn',
+        ))->toBeTrue();
+});
+
+test('an active answered call stays in needs attention', function () {
+    $advisor = advisorAttentionAdvisor();
+
+    $call = CallSession::query()->create([
+        'provider' => TelephonyProviderType::Twilio,
+        'provider_call_sid' => 'CA-attention-live-answered',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195552400',
+        'to_number' => '+17195550100',
+        'normalized_from' => '7195552400',
+        'status' => CallSessionStatus::Answered,
+        'hosted_outcome' => HostedCallOutcome::Answered,
+        'started_at' => now()->subMinute(),
+        'answered_at' => now()->subMinute(),
+    ]);
+
+    $queue = app(CommunicationsQueueResolver::class)->resolveAttention($advisor);
+
+    expect(collect($queue['needs_attention'])->pluck('call_session_id'))->toContain($call->id);
+});
+
+test('an advisor outbound call after a worked missed call keeps waiting on the shop', function () {
+    $advisor = advisorAttentionAdvisor();
+    $call = advisorAttentionMissedCall('CA-attention-outbound', '7195552500');
+    app(CallSessionQueue::class)->markCallerHandled($call);
+
+    CallSession::query()->create([
+        'provider' => TelephonyProviderType::Twilio,
+        'provider_call_sid' => 'CA-attention-outbound-return',
+        'direction' => CallSessionDirection::Outbound,
+        'from_number' => '+17195550100',
+        'to_number' => '+17195552500',
+        'normalized_from' => '7195550100',
+        'normalized_to' => '7195552500',
+        'status' => CallSessionStatus::Completed,
+        'started_at' => now(),
+        'worked_at' => now(),
+        'owned_by_user_id' => $advisor->id,
+    ]);
+
+    $conversation = Conversation::query()
+        ->where('contact_address', '7195552500')
+        ->first();
+
+    expect($conversation)->not->toBeNull()
+        ->and($conversation->waiting_on)->toBe(ConversationWaitingOn::Shop)
+        ->and(app(ConversationTurnPrecedence::class)->waitingOn($conversation))->toBe($conversation->waiting_on);
 });
 
 function advisorAttentionAdvisor(): User
