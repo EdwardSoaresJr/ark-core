@@ -32,6 +32,14 @@ final class ApplyPaymentCaptureResultAction
             $status = PaymentCaptureAttemptStatus::tryFrom((string) ($result['status'] ?? ''))
                 ?? $locked->status;
 
+            if ($locked->hasLedgerEntry()) {
+                $locked->status = PaymentCaptureAttemptStatus::Succeeded;
+                $locked->completed_at ??= now();
+                $locked->save();
+
+                return $locked->fresh();
+            }
+
             $locked->cloud_capture_id = (string) ($result['capture_id'] ?? $locked->cloud_capture_id);
             $locked->provider = (string) ($result['provider'] ?? $locked->provider ?? 'platform');
             $locked->provider_payment_id = isset($result['provider_payment_id'])
@@ -44,9 +52,10 @@ final class ApplyPaymentCaptureResultAction
                 $locked->failure_reason = (string) $result['reason_code'];
             }
 
-            if ($locked->hasLedgerEntry()) {
-                $locked->status = PaymentCaptureAttemptStatus::Succeeded;
-                $locked->completed_at ??= now();
+            if ($status === PaymentCaptureAttemptStatus::Succeeded && ! $this->confirmedProviderSettlement($locked)) {
+                $locked->status = PaymentCaptureAttemptStatus::Failed;
+                $locked->failure_reason = 'unconfirmed_capture';
+                $locked->completed_at = now();
                 $locked->save();
 
                 return $locked->fresh();
@@ -82,6 +91,22 @@ final class ApplyPaymentCaptureResultAction
 
             return $locked->fresh();
         });
+    }
+
+    /**
+     * A card ledger entry requires a provider payment id from a processor that can settle.
+     * The local recorder and a bare success status do not qualify. Existing ledger rows are left alone.
+     */
+    private function confirmedProviderSettlement(PaymentCaptureAttempt $attempt): bool
+    {
+        $provider = strtolower(trim((string) $attempt->provider));
+        $paymentId = trim((string) $attempt->provider_payment_id);
+
+        if ($provider === '' || $provider === 'record' || $paymentId === '') {
+            return false;
+        }
+
+        return preg_match('/^capture-\d+$/', $paymentId) !== 1;
     }
 
     /**

@@ -1,10 +1,10 @@
 <?php
 
-use Ark\Saas\Dragon\Agent\DragonAgentMemory;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use App\Support\Branding\Branding;
+use Ark\Saas\Dragon\Agent\DragonAgentMemory;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Str;
 
@@ -57,7 +57,7 @@ test('hosted square settings hide provider secrets and keep capture surfaces', f
     $this->actingAs($admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()
-        ->assertSee('managed by ARK Platform', false)
+        ->assertSee('Card capture is connected for this shop', false)
         ->assertSee('Counter terminal', false)
         ->assertSee('Counter keyed entry', false)
         ->assertSee('Customer portal pay', false)
