@@ -42,7 +42,7 @@ final class PortalHomeProjection
     {
         $shop = ShopSettings::current();
         $shopName = $shop->displayName();
-        $phoneDisplay = PhoneNumber::display($shop->phone);
+        $phoneDisplay = PhoneNumber::display($shop->phone) ?? '';
         $phoneTel = preg_replace('/\D+/', '', (string) $shop->phone) ?: '';
         $hoursLabel = TelephonyBusinessHoursLabel::fromCallFlow();
 
