@@ -41,12 +41,14 @@ final class RepairOrderReadCache
     }
 
     /**
-     * Drops remembered rows at a request or queue-job boundary.
+     * Drops remembered repair-order rows at a request or queue-job boundary.
      * A long-running worker keeps this object, so the next unit of work must not see the last one.
+     * Shop-settings column memory is not repair-order data. It stays for the process
+     * and is checked against migration history on the next read.
      */
     public static function beginUnitOfWork(): void
     {
-        ShopSettingsSchema::flush();
+        ShopSettingsSchema::revalidate();
 
         if (app()->resolved(self::class)) {
             app(self::class)->flush();
