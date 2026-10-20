@@ -9,23 +9,20 @@
             <h2 class="mt-1 text-lg font-black text-slate-950">Card capture inside ARK</h2>
             @if ($platformPaymentsCapture)
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Card capture for this shop is managed by ARK Platform. Merchant credentials, webhooks, and reader pairing are not stored or configured here.
-                    Choose which shop surfaces may offer card capture. Take Payment and Record Payment stay on the repair order.
+                    Card capture is connected for this shop. Choose which surfaces may offer a card payment.
+                    Take Payment and Record Payment stay on the repair order.
                 </p>
             @else
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Connect ARK Payments to take cards in ARK. You can always record a card, cash, or check taken at the counter.
-                    Merchant credentials and reader pairing are not configured in Core.
-                    @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                        <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold text-slate-700 underline">Connect in ARK Platform</a>
-                    @endunless
+                    Card capture inside ARK is not connected. Record a card, cash, or check taken at the counter.
+                    A card button appears only when a processor can settle the charge.
                 </p>
             @endif
         </div>
 
         @if ($platformPaymentsCapture)
             <div class="mt-3 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
-                Square capture is connected through ARK Platform.
+                Card capture is connected for this shop.
             </div>
         @else
             <div class="mt-3 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
