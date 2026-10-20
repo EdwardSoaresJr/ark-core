@@ -1,0 +1,68 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pest:
+    runs-on: ubuntu-latest
+    # The suite forces SQLite :memory: in phpunit.xml. It does not use MySQL.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run tests
+        run: composer test:serial
+
+  targeted:
+    runs-on: ubuntu-latest
+    # Repair-order cache checks, plus the needs-attention regressions when that
+    # pull request is the one being tested. The full suite above is not a
+    # required check while its existing failures remain.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run targeted regression checks
+        run: |
+          set -euo pipefail
+          php vendor/bin/pest --no-coverage \
+            tests/Feature/Operations/RepairOrderReadCacheIsolationTest.php \
+            tests/Feature/Operations/RepairOrderQueryScalingRegressionTest.php
+          attention=(
+            tests/Feature/Communications/AdvisorAttentionAcceptanceTest.php
+            tests/Feature/Operations/Financial/AdvisorFinancialSeparationTest.php
+            tests/Feature/Operations/TelephonyCallQueueTest.php
+            tests/Feature/Operations/CommunicationsQueueTest.php
+            tests/Feature/Communications/ConversationsH0TurnPrecedenceTest.php
+            tests/Feature/Communications/ConversationsH0SarahSagaTest.php
+          )
+          present=()
+          for file in "${attention[@]}"; do
+            if [ -f "$file" ]; then
+              present+=("$file")
+            fi
+          done
+          if [ "${#present[@]}" -gt 0 ]; then
+            php vendor/bin/pest --no-coverage "${present[@]}"
+          fi

@@ -1,0 +1,13 @@
+title = "ARK Core"
+minVersion = "8.18.0"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures that are not credentials"
+regexTarget = "match"
+regexes = [
+  '''jeep-wrangler-2014''',
+  '''BEGIN PRIVATE KEY-----\\ntest\\n-----END PRIVATE KEY''',
+]
