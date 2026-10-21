@@ -44,7 +44,7 @@ final class InspectionTemplateSettingsUpdater
                         continue;
                     }
 
-                    $item->update([
+                    $changes = [
                         'label' => filled($itemData['label'] ?? null)
                             ? trim((string) $itemData['label'])
                             : $item->label,
@@ -60,9 +60,61 @@ final class InspectionTemplateSettingsUpdater
                         'measurement_unit' => array_key_exists('measurement_unit', $itemData)
                             ? (filled($itemData['measurement_unit']) ? trim((string) $itemData['measurement_unit']) : null)
                             : $item->measurement_unit,
-                    ]);
+                    ];
+
+                    $slots = $this->slots($item, $itemData['slots'] ?? null);
+                    if ($slots !== null) {
+                        $changes['measurement_slots'] = $slots;
+                    }
+
+                    $item->update($changes);
                 }
             }
         }
+    }
+
+    /**
+     * Keep each slot's key and required flag. Name, type, and unit come from the form.
+     *
+     * @param  mixed  $posted
+     * @return list<array{key: string, name: string, unit: ?string, required: bool, type: string}>|null
+     */
+    private function slots(InspectionTemplateItem $item, mixed $posted): ?array
+    {
+        if (! is_array($posted)) {
+            return null;
+        }
+
+        $existing = InspectionMeasurementSlots::fromTemplateItem($item);
+        if ($existing === []) {
+            return null;
+        }
+
+        $updated = [];
+        foreach ($existing as $index => $slot) {
+            $row = $posted[$index] ?? $posted[$slot['key']] ?? null;
+            if (! is_array($row)) {
+                $updated[] = $slot;
+
+                continue;
+            }
+
+            $type = (string) ($row['type'] ?? '');
+            if (! in_array($type, ['number', 'text', 'condition'], true)) {
+                $type = $slot['type'];
+            }
+
+            $updated[] = [
+                'key' => $slot['key'],
+                'name' => filled($row['name'] ?? null) ? trim((string) $row['name']) : $slot['name'],
+                'unit' => array_key_exists('unit', $row)
+                    ? (filled($row['unit']) ? trim((string) $row['unit']) : null)
+                    : $slot['unit'],
+                'required' => $slot['required'],
+                'type' => $type,
+            ];
+        }
+
+        return $updated;
     }
 }
