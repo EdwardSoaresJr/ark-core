@@ -160,6 +160,7 @@ use App\Ark\Operations\OperationsIndexController;
 use App\Ark\Operations\Parts\DealerQuoteShowController;
 use App\Ark\Operations\Parts\RepairOrderDealerQuoteCaptureController;
 use App\Ark\Operations\Parts\RepairOrderPartsTechCatalogController;
+use App\Ark\Operations\Parts\RepairOrderLinkedPartsQuoteController;
 use App\Ark\Operations\Parts\RepairOrderPartsTechQuoteImportController;
 use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureCancelController;
 use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureController;
@@ -1598,6 +1599,21 @@ SurfaceRouting::appRoutes(function (): void {
         Route::post('/app/repair-orders/{repairOrder}/partstech/import-quote', [RepairOrderPartsTechQuoteImportController::class, 'store'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.partstech.import');
+        Route::get('/app/repair-orders/{repairOrder}/linked-parts-quotes', [RepairOrderLinkedPartsQuoteController::class, 'show'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.linked-parts-quotes.show');
+        Route::post('/app/repair-orders/{repairOrder}/linked-parts-quotes/refresh', [RepairOrderLinkedPartsQuoteController::class, 'refresh'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.linked-parts-quotes.refresh');
+        Route::get('/app/repair-orders/{repairOrder}/linked-parts-quotes/candidates', [RepairOrderLinkedPartsQuoteController::class, 'candidates'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.linked-parts-quotes.candidates');
+        Route::post('/app/repair-orders/{repairOrder}/linked-parts-quotes', [RepairOrderLinkedPartsQuoteController::class, 'store'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.linked-parts-quotes.store');
+        Route::post('/app/repair-orders/{repairOrder}/linked-parts-quotes/current', [RepairOrderLinkedPartsQuoteController::class, 'current'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.linked-parts-quotes.current');
 
         Route::post('/app/repair-orders/{repairOrder}/dealer-quotes/analyze', [RepairOrderDealerQuoteCaptureController::class, 'analyze'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)

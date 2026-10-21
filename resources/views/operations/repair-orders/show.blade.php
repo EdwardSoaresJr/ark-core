@@ -1778,6 +1778,11 @@
                     ])
 
                     <div class="ops-worksheet-concerns">
+                        @if (app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->available())
+                            @include('operations.repair-orders.partials.repair-order-linked-quote', [
+                                'repairOrder' => $repairOrder,
+                            ])
+                        @endif
                         @if ($canImportPartstechQuote)
                             @include('operations.repair-orders.partials.repair-order-partstech-import', [
                                 'repairOrder' => $repairOrder,
