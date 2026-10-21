@@ -17,42 +17,71 @@
             candidates: [],
             mode: 'quote',
             notice: '',
+            cached: false,
             loading: false,
             async load() {
-                await this.send(this.config.showUrl, 'GET');
+                const payload = await this.request(this.config.showUrl, 'GET');
+                if (this.isPanel(payload)) {
+                    this.applyPanel(payload);
+                    this.cached = false;
+                }
             },
             async refresh() {
-                await this.send(this.config.refreshUrl, 'POST');
-                this.mode = 'quote';
+                const payload = await this.request(this.config.refreshUrl, 'POST');
+                if (! payload) {
+                    return;
+                }
+                this.notice = payload.message || '';
+                if (payload.ok === true) {
+                    await this.load();
+                    this.notice = payload.message || this.notice;
+                    this.mode = 'quote';
+                    return;
+                }
+                this.cached = true;
             },
             async choose() {
                 this.mode = 'choose';
-                this.loading = true;
-                try {
-                    const response = await fetch(this.config.candidatesUrl, {
-                        headers: { Accept: 'application/json' },
-                        credentials: 'same-origin',
-                    });
-                    const payload = await response.json();
-                    this.panel = payload;
-                    this.candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
-                    this.notice = payload.message || '';
-                } catch (error) {
-                    this.notice = 'The linked quote could not be loaded.';
-                } finally {
-                    this.loading = false;
+                const payload = await this.request(this.config.candidatesUrl, 'GET');
+                if (! payload) {
+                    return;
+                }
+                this.notice = payload.message || '';
+                this.candidates = payload.ok === true && Array.isArray(payload.candidates) ? payload.candidates : this.candidates;
+                if (payload.ok !== true) {
+                    this.cached = true;
                 }
             },
             async link(externalId) {
-                await this.send(this.config.linkUrl, 'POST', { external_id: externalId });
+                const payload = await this.request(this.config.linkUrl, 'POST', { external_id: externalId });
+                if (! payload) {
+                    return;
+                }
+                this.notice = payload.message || '';
+                if (payload.ok !== true) {
+                    this.cached = true;
+                    return;
+                }
+                await this.load();
+                this.notice = payload.message || this.notice;
                 this.mode = 'quote';
                 this.candidates = [];
             },
             async makeCurrent(linkId) {
-                await this.send(this.config.currentUrl, 'POST', { link_id: linkId });
+                const payload = await this.request(this.config.currentUrl, 'POST', { link_id: linkId });
+                if (! payload) {
+                    return;
+                }
+                this.notice = payload.message || '';
+                if (payload.ok !== true) {
+                    this.cached = true;
+                    return;
+                }
+                await this.load();
+                this.notice = payload.message || this.notice;
                 this.mode = 'quote';
             },
-            async send(url, method, body) {
+            async request(url, method, body) {
                 this.loading = true;
                 try {
                     const response = await fetch(url, {
@@ -65,14 +94,26 @@
                         },
                         body: method === 'GET' ? undefined : JSON.stringify(body || {}),
                     });
-                    const payload = await response.json();
-                    this.panel = payload;
-                    this.notice = payload.message || '';
+                    return await response.json();
                 } catch (error) {
                     this.notice = 'The linked quote could not be loaded.';
+                    this.cached = true;
+                    return null;
                 } finally {
                     this.loading = false;
                 }
+            },
+            isPanel(payload) {
+                return Boolean(payload) && Object.prototype.hasOwnProperty.call(payload, 'current') && Array.isArray(payload.history);
+            },
+            applyPanel(payload) {
+                this.panel = {
+                    available: payload.available,
+                    provider_label: payload.provider_label,
+                    open_note: payload.open_note,
+                    current: payload.current,
+                    history: payload.history,
+                };
             },
             quantity(value) {
                 const text = String(value ?? '');
@@ -118,6 +159,8 @@
     </div>
 
     <p class="px-4 py-2 text-xs text-slate-600" x-show="notice" x-cloak x-text="notice"></p>
+    <p class="px-4 pb-2 text-xs text-amber-800" x-show="cached && panel?.current" x-cloak>Showing the last saved quote. This check did not verify it.</p>
+    <p class="px-4 pb-2 text-xs text-slate-500" x-show="!cached && panel?.current?.confirmed" x-cloak>Verified with the catalog.</p>
     <p class="px-4 pt-3 text-xs text-slate-500" x-text="panel?.open_note || ''"></p>
 
     <div class="grid grid-cols-2 gap-2 px-4 py-3">

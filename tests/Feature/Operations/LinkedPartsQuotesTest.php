@@ -63,7 +63,9 @@ test('the repair order can show a provider neutral linked quote without importin
     expect($html)->toContain('Refresh quote')
         ->and($html)->toContain('Change linked cart')
         ->and($html)->toContain('Quote history')
-        ->and($html)->toContain('panel?.open_note')
+        ->and($html)->toContain('Showing the last saved quote. This check did not verify it.')
+        ->and($html)->toContain('applyPanel(payload)')
+        ->and($html)->not->toContain('this.panel = payload')
         ->and($html)->not->toContain('opens the linked quote')
         ->and($html)->not->toContain('>Open PartsTech<');
 

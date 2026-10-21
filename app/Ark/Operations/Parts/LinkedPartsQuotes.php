@@ -19,22 +19,26 @@ interface LinkedPartsQuotes
     public function present(RepairOrder $repairOrder): array;
 
     /**
-     * @return array<string, mixed>
+     * Action results are not the panel. `ok` and `message` describe the attempt.
+     * After a successful attempt, the repair order reloads `present()`.
+     * A failed attempt must not be copied over the quote already on screen.
+     *
+     * @return array{ok: bool, message: string|null}
      */
     public function refresh(RepairOrder $repairOrder, User $user): array;
 
     /**
-     * @return array<string, mixed>
+     * @return array{ok: bool, message: string|null, candidates?: list<array<string, mixed>>}
      */
     public function candidates(RepairOrder $repairOrder, User $user): array;
 
     /**
-     * @return array<string, mixed>
+     * @return array{ok: bool, message: string|null}
      */
     public function link(RepairOrder $repairOrder, User $user, string $externalId): array;
 
     /**
-     * @return array<string, mixed>
+     * @return array{ok: bool, message: string|null}
      */
     public function makeCurrent(RepairOrder $repairOrder, User $user, string $linkId): array;
 }
