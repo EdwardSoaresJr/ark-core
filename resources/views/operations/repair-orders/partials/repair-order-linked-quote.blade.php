@@ -1,4 +1,5 @@
 @php
+    $linkedQuotePanel = app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->present($repairOrder);
     $linkedQuoteConfig = [
         'showUrl' => route('operations.repair-orders.linked-parts-quotes.show', $repairOrder),
         'refreshUrl' => route('operations.repair-orders.linked-parts-quotes.refresh', $repairOrder),
@@ -6,190 +7,107 @@
         'linkUrl' => route('operations.repair-orders.linked-parts-quotes.store', $repairOrder),
         'currentUrl' => route('operations.repair-orders.linked-parts-quotes.current', $repairOrder),
         'csrf' => csrf_token(),
+        'panel' => $linkedQuotePanel,
     ];
 @endphp
 
-<script>
-    window.arkLinkedPartsQuote = window.arkLinkedPartsQuote || function (config) {
-        return {
-            config,
-            panel: null,
-            candidates: [],
-            mode: 'quote',
-            notice: '',
-            cached: false,
-            loading: false,
-            async load() {
-                const payload = await this.request(this.config.showUrl, 'GET');
-                if (this.isPanel(payload)) {
-                    this.applyPanel(payload);
-                    this.cached = false;
-                }
-            },
-            async refresh() {
-                const payload = await this.request(this.config.refreshUrl, 'POST');
-                if (! payload) {
-                    return;
-                }
-                this.notice = payload.message || '';
-                if (payload.ok === true) {
-                    await this.load();
-                    this.notice = payload.message || this.notice;
-                    this.mode = 'quote';
-                    return;
-                }
-                this.cached = true;
-            },
-            async choose() {
-                this.mode = 'choose';
-                const payload = await this.request(this.config.candidatesUrl, 'GET');
-                if (! payload) {
-                    return;
-                }
-                this.notice = payload.message || '';
-                this.candidates = payload.ok === true && Array.isArray(payload.candidates) ? payload.candidates : this.candidates;
-                if (payload.ok !== true) {
-                    this.cached = true;
-                }
-            },
-            async link(externalId) {
-                const payload = await this.request(this.config.linkUrl, 'POST', { external_id: externalId });
-                if (! payload) {
-                    return;
-                }
-                this.notice = payload.message || '';
-                if (payload.ok !== true) {
-                    this.cached = true;
-                    return;
-                }
-                await this.load();
-                this.notice = payload.message || this.notice;
-                this.mode = 'quote';
-                this.candidates = [];
-            },
-            async makeCurrent(linkId) {
-                const payload = await this.request(this.config.currentUrl, 'POST', { link_id: linkId });
-                if (! payload) {
-                    return;
-                }
-                this.notice = payload.message || '';
-                if (payload.ok !== true) {
-                    this.cached = true;
-                    return;
-                }
-                await this.load();
-                this.notice = payload.message || this.notice;
-                this.mode = 'quote';
-            },
-            async request(url, method, body) {
-                this.loading = true;
-                try {
-                    const response = await fetch(url, {
-                        method,
-                        credentials: 'same-origin',
-                        headers: {
-                            Accept: 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': this.config.csrf,
-                        },
-                        body: method === 'GET' ? undefined : JSON.stringify(body || {}),
-                    });
-                    return await response.json();
-                } catch (error) {
-                    this.notice = 'The linked quote could not be loaded.';
-                    this.cached = true;
-                    return null;
-                } finally {
-                    this.loading = false;
-                }
-            },
-            isPanel(payload) {
-                return Boolean(payload) && Object.prototype.hasOwnProperty.call(payload, 'current') && Array.isArray(payload.history);
-            },
-            applyPanel(payload) {
-                this.panel = {
-                    available: payload.available,
-                    provider_label: payload.provider_label,
-                    open_note: payload.open_note,
-                    current: payload.current,
-                    history: payload.history,
-                };
-            },
-            quantity(value) {
-                const text = String(value ?? '');
-                return text.endsWith('.00') ? text.slice(0, -3) : text;
-            },
-        };
-    };
-</script>
-
 <div
-    class="ops-worksheet-procurement-panel mb-3"
+    data-linked-parts-quote
+    class="mb-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
     x-data="arkLinkedPartsQuote(@js($linkedQuoteConfig))"
-    x-init="load()"
 >
-    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-4 py-3">
-        <div>
-            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500" x-text="(panel?.provider_label || 'Catalog') + ' · linked quote'"></p>
-            <p class="mt-1 text-sm font-semibold text-slate-900" x-text="panel?.current?.supplier || 'No quote linked'"></p>
-            <p class="mt-0.5 text-xs text-slate-600" x-show="panel?.current">
-                <span x-text="panel.current.purchase_order ? ('PO ' + panel.current.purchase_order) : 'No purchase order'"></span>
-                ·
-                <span x-text="panel.current.item_count + ' item' + (panel.current.item_count === 1 ? '' : 's')"></span>
-                ·
-                <span x-text="panel.current.status || 'Unknown'"></span>
-                ·
-                <span x-text="'···' + panel.current.reference_tail"></span>
-            </p>
-        </div>
-        <span
-            x-show="panel?.current?.is_current"
+    <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.2 11h11.3l2-7H7"></path>
+        <circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle>
+        <circle cx="18" cy="20" r="1.4" fill="currentColor" stroke="none"></circle>
+    </svg>
+    <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-semibold text-slate-900" x-text="summaryTitle()"></p>
+        <p class="truncate text-xs text-slate-500" x-text="summaryDetail()"></p>
+    </div>
+    <button
+        type="button"
+        class="shrink-0 text-sm font-semibold text-slate-800"
+        @click="openManage($event)"
+        :aria-expanded="open ? 'true' : 'false'"
+        aria-haspopup="dialog"
+    >Manage</button>
+
+    <template x-teleport="body">
+        <div
+            x-show="open"
             x-cloak
-            class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700"
-        >Current</span>
-    </div>
+            class="ops-workspace-modal"
+            role="dialog"
+            aria-modal="true"
+            data-linked-parts-quote-dialog
+            aria-labelledby="linked-parts-quote-title"
+            @keydown.escape.window="onEscape($event)"
+            @keydown.tab="trapFocus($event)"
+        >
+            <button type="button" class="ops-workspace-modal__backdrop" aria-label="Close" tabindex="-1" @click="close()"></button>
+            <div
+                class="ops-workspace-modal__dialog ops-workspace-modal__dialog--exception"
+                x-ref="dialog"
+                tabindex="-1"
+                @click.stop
+            >
+                <header class="ops-workspace-modal__header">
+                    <div class="ops-workspace-modal__heading min-w-0">
+                        <h2 id="linked-parts-quote-title" class="ops-workspace-modal__title" x-text="summaryTitle()"></h2>
+                        <p class="ops-workspace-modal__helper" x-text="summaryDetail()"></p>
+                    </div>
+                    <button type="button" class="ops-workspace-modal__close" @click="close()">Close</button>
+                </header>
 
-    <div class="divide-y divide-slate-100" x-show="panel?.current?.lines?.length" x-cloak>
-        <template x-for="line in (panel?.current?.lines || [])" :key="(line.part_number || '') + line.description">
-            <div class="flex items-center justify-between gap-4 px-4 py-2 text-sm">
-                <span class="text-slate-800" x-text="quantity(line.quantity) + ' × ' + line.description"></span>
-                <span class="font-medium text-slate-600" x-text="line.part_number"></span>
-            </div>
-        </template>
-    </div>
+                <div class="ops-workspace-modal__body">
+                    <p class="text-xs text-slate-500" x-show="panel?.open_note" x-cloak x-text="panel.open_note"></p>
+                    <p class="mt-2 text-xs text-slate-700" x-show="notice" x-cloak x-text="notice" role="status"></p>
+                    <p class="mt-2 text-xs text-amber-800" x-show="cached && panel?.current" x-cloak>Showing the last saved quote. This check did not verify it.</p>
+                    <p class="mt-2 text-xs text-slate-500" x-show="!cached && panel?.current?.confirmed" x-cloak>Verified with the catalog.</p>
+                    <p class="mt-2 text-xs text-rose-700" x-show="panel?.current?.message" x-cloak x-text="panel.current.message" role="alert"></p>
 
-    <p class="px-4 py-2 text-xs text-slate-600" x-show="notice" x-cloak x-text="notice"></p>
-    <p class="px-4 pb-2 text-xs text-amber-800" x-show="cached && panel?.current" x-cloak>Showing the last saved quote. This check did not verify it.</p>
-    <p class="px-4 pb-2 text-xs text-slate-500" x-show="!cached && panel?.current?.confirmed" x-cloak>Verified with the catalog.</p>
-    <p class="px-4 pt-3 text-xs text-slate-500" x-text="panel?.open_note || ''"></p>
+                    <div class="mt-3 divide-y divide-slate-100" x-show="panel?.current?.lines?.length" x-cloak>
+                        <template x-for="line in (panel?.current?.lines || [])" :key="(line.part_number || '') + line.description">
+                            <div class="flex items-center justify-between gap-4 py-2 text-sm">
+                                <span class="text-slate-800" x-text="quantity(line.quantity) + ' × ' + line.description"></span>
+                                <span class="font-medium text-slate-600" x-text="line.part_number"></span>
+                            </div>
+                        </template>
+                    </div>
 
-    <div class="grid grid-cols-2 gap-2 px-4 py-3">
-        <button type="button" class="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800" :disabled="loading || !panel?.current" @click="refresh()">Refresh quote</button>
-        <button type="button" class="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800" :disabled="loading" @click="mode === 'history' ? mode = 'quote' : mode = 'history'">Quote history</button>
-        <button type="button" class="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800" :disabled="loading" @click="choose()">Change linked cart</button>
-    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button type="button" class="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-800" :disabled="loading || !panel?.current" @click="refresh()">Refresh quote</button>
+                        <button type="button" class="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-800" :disabled="loading" @click="choose()">Change linked cart</button>
+                    </div>
 
-    <div class="border-t border-slate-200 px-4 py-3" x-show="mode === 'choose'" x-cloak>
-        <p class="text-xs font-semibold text-slate-700">Choose a quote. This does not import its parts.</p>
-        <template x-for="candidate in candidates" :key="candidate.external_id">
-            <button type="button" class="mt-2 block w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-xs" @click="link(candidate.external_id)">
-                <span class="font-semibold" x-text="(candidate.supplier || 'Quote') + ' · ' + (candidate.status || '')"></span>
-                <span class="mt-0.5 block text-slate-500" x-text="(candidate.purchase_order ? ('PO ' + candidate.purchase_order + ' · ') : '') + candidate.item_count + ' items · ···' + candidate.reference_tail"></span>
-            </button>
-        </template>
-        <p class="mt-2 text-xs text-slate-500" x-show="candidates.length === 0">No matching quotes were returned for this repair order.</p>
-    </div>
+                    <div class="mt-4" x-show="choosing" x-cloak>
+                        <p class="text-xs font-semibold text-slate-700">Choose a quote. This does not import its parts.</p>
+                        <template x-for="candidate in candidates" :key="candidate.external_id">
+                            <button type="button" class="mt-2 block w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-xs" :disabled="loading" @click="link(candidate.external_id)">
+                                <span class="font-semibold" x-text="(candidate.supplier || 'Quote') + (statusLabel(candidate.status) ? (' · ' + statusLabel(candidate.status)) : '')"></span>
+                                <span class="mt-0.5 block text-slate-500" x-text="quoteMeta(candidate)"></span>
+                            </button>
+                        </template>
+                        <p class="mt-2 text-xs text-slate-500" x-show="candidates.length === 0 && !loading" x-cloak>No matching quotes were returned for this repair order.</p>
+                    </div>
 
-    <div class="border-t border-slate-200 px-4 py-3" x-show="mode === 'history'" x-cloak>
-        <template x-for="row in (panel?.history || [])" :key="row.id">
-            <div class="flex items-center justify-between gap-3 border-b border-slate-100 py-2 text-xs">
-                <div>
-                    <p class="font-semibold text-slate-800" x-text="(row.supplier || 'Quote') + ' · ' + row.status"></p>
-                    <p class="text-slate-500" x-text="(row.purchase_order ? ('PO ' + row.purchase_order + ' · ') : '') + '···' + row.reference_tail"></p>
+                    <div class="mt-4 border-t border-slate-200 pt-3">
+                        <p class="text-xs font-semibold text-slate-700">Quote history</p>
+                        <template x-for="row in (panel?.history || [])" :key="row.id">
+                            <div class="flex items-center justify-between gap-3 border-b border-slate-100 py-2 text-xs">
+                                <div>
+                                    <p class="font-semibold text-slate-800" x-text="(row.supplier || 'Quote') + (statusLabel(row.status) ? (' · ' + statusLabel(row.status)) : '')"></p>
+                                    <p class="text-slate-500" x-text="quoteMeta(row)"></p>
+                                </div>
+                                <button type="button" class="font-semibold text-slate-700 underline" x-show="!row.is_current" :disabled="loading" @click="makeCurrent(row.id)">Make current</button>
+                                <span class="font-semibold text-emerald-700" x-show="row.is_current" x-cloak>Current</span>
+                            </div>
+                        </template>
+                        <p class="mt-2 text-xs text-slate-500" x-show="!(panel?.history || []).length">No earlier quotes are saved for this repair order.</p>
+                    </div>
                 </div>
-                <button type="button" class="font-semibold text-slate-700 underline" @click="makeCurrent(row.id)">Make current</button>
             </div>
-        </template>
-        <p class="text-xs text-slate-500" x-show="!(panel?.history || []).length">No earlier quotes are saved for this repair order.</p>
-    </div>
+        </div>
+    </template>
 </div>
