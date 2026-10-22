@@ -163,3 +163,56 @@ test('the destination policy recognises each dialing form', function (): void {
         ->and(TelephonySipOutboundDestination::resolve('sip:+18005550199@x', '+17195556227')['number'])->toBe('+18005550199')
         ->and(TelephonySipOutboundDestination::resolve('sip:1976555123@x', '+17195556227')['kind'])->toBe('rejected');
 });
+
+test('an emergency call goes out even from a phone ARK does not recognise', function (string $emergency): void {
+    $xml = deskDial($emergency, 'CAemergency'.$emergency, from: 'sip:stranger@lnp-chelton.sip.twilio.com');
+
+    expect($xml)->toContain('>'.$emergency.'</Number>')
+        ->and($xml)->toContain('callerId="+17195556227"')
+        ->and($xml)->not->toContain('record=');
+})->with(['911', '933']);
+
+test('an emergency call with no caller id tells the person to use another phone', function (): void {
+    ShopSettings::current()->persistTrusted(['telephony_inbound_number' => null]);
+
+    $xml = deskDial('911');
+
+    expect($xml)->not->toContain('<Dial')
+        ->and($xml)->toContain('Call nine one one from another phone');
+});
+
+test('NANP areas outside the US and Canada are refused unless enabled', function (string $dialed): void {
+    $xml = deskDial($dialed);
+
+    expect($xml)->not->toContain('<Dial')
+        ->and($xml)->toContain('not enabled for this phone')
+        ->and(CallSession::query()->count())->toBe(0);
+})->with(['8765551234', '18095551234', '2845551234', '7875551234', '6715551234']);
+
+test('Canadian and toll-free numbers are allowed and non-geographic codes are refused', function (): void {
+    expect(deskDial('4165551234', 'CAcanada'))->toContain('>+14165551234</Number>')
+        ->and(deskDial('8005551234', 'CAtollfree'))->toContain('>+18005551234</Number>')
+        ->and(deskDial('5005551234', 'CAnongeo'))->not->toContain('<Dial')
+        ->and(deskDial('7005551234', 'CAnongeo2'))->not->toContain('<Dial');
+});
+
+test('an area outside the US and Canada can be enabled explicitly', function (): void {
+    config()->set('telephony.sip_outbound.allowed_area_codes', ['787']);
+
+    expect(deskDial('7875551234'))->toContain('>+17875551234</Number>')
+        ->and(deskDial('8765551234', 'CAstillblocked'))->not->toContain('<Dial');
+});
+
+test('a recorded call with no notice text configured still announces the default notice first', function (): void {
+    ShopSettings::current()->persistTrusted(['telephony_call_flow' => array_merge(
+        ShopSettings::defaultTelephonyCallFlow(),
+        ['record_outbound_calls' => true, 'recording_disclaimer' => '   '],
+    )]);
+
+    $xml = deskDial('7195551234', 'CAdefaultnotice');
+    $notice = $this->post(route('webhooks.communications.twilio.voice.sip-outbound-notice'), ['CallSid' => 'CAchild'])->assertOk()->getContent();
+
+    expect($xml)->toContain('record="record-from-answer-dual"')
+        ->and($xml)->toContain('url="'.route('webhooks.communications.twilio.voice.sip-outbound-notice').'"')
+        ->and($notice)->toContain('This call may be recorded for quality and training purposes.');
+});

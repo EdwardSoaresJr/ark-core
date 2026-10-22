@@ -12,4 +12,10 @@ return [
         ],
     ],
 
+    'sip_outbound' => [
+        // North American area codes outside the US and Canada that desk phones may dial, comma separated.
+        // Empty by default: Caribbean, Atlantic and Pacific NANP destinations stay blocked.
+        'allowed_area_codes' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEPHONY_SIP_OUTBOUND_ALLOWED_AREA_CODES', ''))))),
+    ],
+
 ];

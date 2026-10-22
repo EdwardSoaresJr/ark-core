@@ -26,23 +26,32 @@ final class TwilioSipOutboundController
 
         $callSid = trim((string) $request->input('CallSid', ''));
         $origin = $endpoints->resolveSipOrigin((string) $request->input('From', ''));
-
-        if ($origin === null) {
-            Log::warning('telephony.sip_outbound.unknown_phone', ['call_sid' => $callSid]);
-
-            return $this->say('This phone is not set up to place calls.');
-        }
-
         $callerId = $callerIds->resolve();
-
-        if ($callerId === null) {
-            return $this->say('Outbound calling is not set up for this shop yet.');
-        }
-
         $destination = TelephonySipOutboundDestination::resolve((string) $request->input('To', ''), $callerId);
 
-        if ($destination['kind'] === 'rejected') {
-            return $this->say((string) $destination['reason']);
+        // An emergency call from any phone registered on the SIP domain goes out, even one ARK does not
+        // recognise. Twilio routes it with the emergency address registered on the caller ID number.
+        if ($destination['kind'] === 'emergency') {
+            if ($callerId === null) {
+                Log::critical('telephony.sip_outbound.emergency_without_caller_id', ['call_sid' => $callSid]);
+
+                return $this->say('Emergency calling is not set up on this phone. Call nine one one from another phone.');
+            }
+            if ($origin === null) {
+                Log::warning('telephony.sip_outbound.emergency_from_unknown_phone', ['call_sid' => $callSid]);
+            }
+        } else {
+            if ($origin === null) {
+                Log::warning('telephony.sip_outbound.unknown_phone', ['call_sid' => $callSid]);
+
+                return $this->say('This phone is not set up to place calls.');
+            }
+            if ($callerId === null) {
+                return $this->say('Outbound calling is not set up for this shop yet.');
+            }
+            if ($destination['kind'] === 'rejected') {
+                return $this->say((string) $destination['reason']);
+            }
         }
 
         if ($callSid !== '') {
@@ -106,7 +115,8 @@ final class TwilioSipOutboundController
     private function dialVerb(string $number, string $callerId, bool $emergency): string
     {
         $flow = TelephonyCallFlowSettings::fromShopSettings();
-        $record = $flow->recordOutboundCalls() && ! $emergency;
+        // Never record without the notice: the notice plays to the person called before the legs connect.
+        $record = $flow->recordOutboundCalls() && ! $emergency && trim($flow->recordingDisclaimer()) !== '';
 
         // Status callbacks belong on <Number>; Twilio rejects them as <Dial> attributes.
         $attributes = ' callerId="'.$this->attr($callerId).'"'

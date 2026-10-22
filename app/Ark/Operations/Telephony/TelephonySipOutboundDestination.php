@@ -5,14 +5,23 @@ namespace App\Ark\Operations\Telephony;
 use App\Ark\Operations\PhoneNumber;
 
 /**
- * Decides what a desk phone may dial. Emergency numbers always go through; everything else
- * must be a North American number outside premium-rate exchanges, which keeps toll fraud out.
+ * Decides what a desk phone may dial. Emergency numbers always go through. Everything else must be
+ * a US or Canadian number outside premium and non-geographic exchanges, which keeps toll fraud out.
+ * Other NANP areas are opened only through telephony.sip_outbound.allowed_area_codes.
  */
 final class TelephonySipOutboundDestination
 {
     public const EMERGENCY = ['911', '933'];
 
     private const PREMIUM_AREA_CODES = ['900', '976'];
+
+    private const NON_GEOGRAPHIC_AREA_CODES = ['456', '500', '521', '522', '523', '524', '525', '526', '527', '528', '529', '533', '544', '566', '577', '588', '700'];
+
+    /** NANP areas outside the US and Canada: Caribbean, Atlantic, and US Pacific and Caribbean territories. */
+    public const OUTSIDE_US_CANADA_AREA_CODES = [
+        '242', '246', '264', '268', '284', '340', '345', '441', '473', '649', '658', '664', '670', '671',
+        '684', '721', '758', '767', '784', '787', '809', '829', '849', '868', '869', '876', '939',
+    ];
 
     /**
      * @return array{kind: 'pstn'|'emergency'|'rejected', number: ?string, reason: ?string}
@@ -41,8 +50,15 @@ final class TelephonySipOutboundDestination
             return self::rejected('That number cannot be dialed.');
         }
 
-        if (in_array(substr($national, 0, 3), self::PREMIUM_AREA_CODES, true)) {
+        $areaCode = substr($national, 0, 3);
+
+        if (in_array($areaCode, self::PREMIUM_AREA_CODES, true) || in_array($areaCode, self::NON_GEOGRAPHIC_AREA_CODES, true)) {
             return self::rejected('Premium-rate numbers are not allowed from this phone.');
+        }
+
+        if (in_array($areaCode, self::OUTSIDE_US_CANADA_AREA_CODES, true)
+            && ! in_array($areaCode, (array) config('telephony.sip_outbound.allowed_area_codes', []), true)) {
+            return self::rejected('Calls to that area code are not enabled for this phone.');
         }
 
         return ['kind' => 'pstn', 'number' => '+1'.$national, 'reason' => null];
