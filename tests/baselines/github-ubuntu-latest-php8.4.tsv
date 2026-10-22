@@ -1,0 +1,5 @@
+# Known Pest failures on GitHub Actions ubuntu-latest, PHP 8.4, SQLite :memory:.
+# One line per test: <tests/path.php::test name><TAB><tracking note>.
+# A failure not listed here blocks source authorization. An entry added here must also be listed in the
+# release record's baseline_growth, id by id. Remove an entry when its test passes.
+# Not seeded yet. Seed it from the junit report of one Tests run on main, then commit it through a pull request.

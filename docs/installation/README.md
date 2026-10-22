@@ -55,7 +55,7 @@ Step-by-step for a small Ubuntu cloud server, Docker, HTTPS (Caddy), and `/setup
 
 ## Docker Compose (recommended)
 
-Self-hosted installation. `docker compose up -d --build` builds this checkout on the machine. A shop that runs a pinned release instead pulls `ghcr.io/edwardsoaresjr/ark-core@sha256:<digest>` built from `origin/main`.
+Self-hosted installation. `docker compose up -d --build` builds this checkout on the machine. A shop that runs a pinned release instead pulls `ghcr.io/edwardsoaresjr/ark-core@sha256:<digest>`. That digest is the image of one approved source commit. The procedure is [the release protocol](../engineering/RELEASE_PROTOCOL.md).
 
 Self-host stack - same runtime shape production uses:
 

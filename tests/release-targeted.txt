@@ -1,0 +1,10 @@
+# Every test in these files must pass on a source commit before it can be authorized for publication.
+# Add a file only when it passes in full. Do not remove one to make a release pass.
+tests/Unit/Platform/PublicCoreBoundaryTest.php
+tests/Unit/Platform/CoreApplicationOriginTest.php
+tests/Feature/Auth/AuthenticationTest.php
+tests/Feature/Operations/CustomerAuthorizationTest.php
+tests/Feature/Operations/Financial/FinancialCoreAuthorityTest.php
+tests/Feature/Operations/Payments/PaymentCaptureFoundationTest.php
+tests/Feature/Operations/Payments/FinancialIntegrityCaptureRepairTest.php
+tests/Feature/Operations/Payments/PaymentWorkspaceTest.php
