@@ -5,14 +5,15 @@ declare(strict_types=1);
 /**
  * Fails when public Core contains functional communications code. Policy: docs/PRODUCT_BOUNDARY.md.
  *
- *   php scripts/assert-no-communications.php --routes routes.json [--tables tables.json]
+ *   php scripts/assert-no-communications.php --routes routes.json [--tables tables.json] [--previous-baseline base.json]
  *   php scripts/assert-no-communications.php --routes routes.json --write-baseline   (only to shrink the baseline)
  *
  * routes.json is `php artisan route:list --json`. tables.json, when given, is the JSON list of tables a fresh
- * migration created. Every violation not in the baseline fails, every baseline entry that no longer occurs fails,
- * and a missing baseline or route list fails.
+ * migration created. base.json is the baseline on the branch being merged into; an entry it does not have fails,
+ * so the baseline can only shrink. Every violation not in the baseline fails, every baseline entry that no longer
+ * occurs fails, and a missing baseline or route list fails. The baseline reaches zero when the extraction is done.
  */
-$options = getopt('', ['root:', 'baseline:', 'routes:', 'tables:', 'write-baseline']);
+$options = getopt('', ['root:', 'baseline:', 'routes:', 'tables:', 'previous-baseline:', 'write-baseline']);
 $root = rtrim((string) ($options['root'] ?? dirname(__DIR__)), '/');
 $baselinePath = (string) ($options['baseline'] ?? $root.'/scripts/communications-baseline.json');
 $routesPath = (string) ($options['routes'] ?? '');
@@ -217,7 +218,7 @@ if (isset($options['write-baseline'])) {
     }
     file_put_contents($baselinePath, json_encode([
         'policy' => 'docs/PRODUCT_BOUNDARY.md',
-        'note' => 'Communications code still being moved to ARK Shop. Entries may only be removed.',
+        'note' => 'Communications code still being moved to ARK Shop. Entries may only be removed. The extraction ends with this list empty.',
         'violations' => $found,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
     fwrite(STDOUT, 'Baseline written: '.count($found)." entries.\n");
@@ -232,6 +233,16 @@ $baseline = json_decode((string) file_get_contents($baselinePath), true)['violat
 if (! is_array($baseline)) {
     fwrite(STDERR, "The communications baseline is not valid JSON.\n");
     exit(2);
+}
+
+$grown = [];
+if (isset($options['previous-baseline'])) {
+    $previous = json_decode((string) @file_get_contents((string) $options['previous-baseline']), true)['violations'] ?? null;
+    if (! is_array($previous)) {
+        fwrite(STDERR, "The previous baseline is missing or not valid JSON.\n");
+        exit(2);
+    }
+    $grown = array_values(array_diff($baseline, $previous));
 }
 
 $new = array_values(array_diff($found, $baseline));
@@ -251,4 +262,7 @@ if ($new !== []) {
 if ($stale !== []) {
     fwrite(STDERR, "These baseline entries no longer occur. Remove them with --write-baseline:\n- ".implode("\n- ", $stale)."\n");
 }
-exit($new === [] && $stale === [] ? 0 : 1);
+if ($grown !== []) {
+    fwrite(STDERR, "The baseline gained entries the target branch does not have. It may only shrink:\n- ".implode("\n- ", $grown)."\n");
+}
+exit($new === [] && $stale === [] && $grown === [] ? 0 : 1);

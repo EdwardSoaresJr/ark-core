@@ -117,6 +117,33 @@ test('a missing baseline or route list fails instead of passing', function (): v
     expect($noBaseline)->toBe(2)->and($noRoutes)->toBe(2);
 });
 
+test('a hand-edited baseline that adds entries the target branch lacks fails', function (): void {
+    $root = communicationsFixture();
+    mkdir($root.'/app/Ark/Voice', 0777, true);
+    file_put_contents($root.'/app/Ark/Voice/Added.php', "<?php\n");
+    file_put_contents($root.'/baseline.json', json_encode(['violations' => ['code: app/Ark/Voice/Added.php']]));
+    file_put_contents($root.'/previous.json', json_encode(['violations' => []]));
+    $args = ['--root', $root, '--baseline', $root.'/baseline.json', '--routes', $root.'/routes.json', '--previous-baseline', $root.'/previous.json'];
+
+    [$exit, $out] = communicationsCheck($args);
+    [$missingPrevious] = communicationsCheck(array_merge(array_slice($args, 0, 6), ['--previous-baseline', $root.'/missing.json']));
+
+    expect($exit)->toBe(1)
+        ->and($out)->toContain('It may only shrink')
+        ->and($out)->toContain('code: app/Ark/Voice/Added.php')
+        ->and($missingPrevious)->toBe(2);
+});
+
+test('a baseline that shrinks against the target branch passes', function (): void {
+    $root = communicationsFixture();
+    file_put_contents($root.'/baseline.json', json_encode(['violations' => []]));
+    file_put_contents($root.'/previous.json', json_encode(['violations' => ['code: app/Ark/Voice/Moved.php']]));
+
+    [$exit, $out] = communicationsCheck(['--root', $root, '--baseline', $root.'/baseline.json', '--routes', $root.'/routes.json', '--previous-baseline', $root.'/previous.json']);
+
+    expect($exit)->toBe(0, $out);
+});
+
 test('the baseline can shrink but never grow', function (): void {
     $root = communicationsFixture();
     mkdir($root.'/app/Ark/Voice', 0777, true);

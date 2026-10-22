@@ -1,6 +1,6 @@
 {
     "policy": "docs/PRODUCT_BOUNDARY.md",
-    "note": "Communications code still being moved to ARK Shop. Entries may only be removed.",
+    "note": "Communications code still being moved to ARK Shop. Entries may only be removed. The extraction ends with this list empty.",
     "violations": [
         "channel: operations.comms-interrupts",
         "channel: operations.conversations",
