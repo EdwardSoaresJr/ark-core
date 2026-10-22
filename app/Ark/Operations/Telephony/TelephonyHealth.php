@@ -212,7 +212,7 @@ final class TelephonyHealth
 
     public function sipOutboundWebhookUrl(): string
     {
-        return '';
+        return route('webhooks.communications.twilio.voice.sip-outbound');
     }
 
     public function clientOutboundWebhookUrl(): string
