@@ -77,7 +77,12 @@ class SendOutboundContactMessageAction
         );
         $messageBody = $advisorBody === '' ? '(attachment)' : $advisorBody;
 
-        $result = $this->transport->send($phone, $advisorBody, $mediaUrls);
+        $result = $this->transport->send(
+            $phone,
+            $advisorBody,
+            $mediaUrls,
+            filled($idempotencyKey) ? [['type' => 'idempotency_key', 'id' => 'conversation-send:'.$idempotencyKey]] : [],
+        );
 
         $this->linkKnownCustomer($conversation, $phone);
 
