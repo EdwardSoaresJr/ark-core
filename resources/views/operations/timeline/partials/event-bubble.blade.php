@@ -48,6 +48,9 @@
                 @endif
             @endif
             · {{ $occurredLabel }}
+            @if (filled($event->metadata['imported_label'] ?? null))
+                · <span class="font-semibold text-slate-500">{{ $event->metadata['imported_label'] }}</span>
+            @endif
         </p>
         @if (filled($body))
             <p class="ops-comms-workspace__bubble-body">{{ $body }}</p>
