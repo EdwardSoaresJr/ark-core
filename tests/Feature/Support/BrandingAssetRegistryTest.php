@@ -48,3 +48,15 @@ test('guest and operations layouts reference branding authority', function () {
         ->toContain('<title>'.Branding::tabTitle().'</title>')
         ->toContain(Branding::favicon('32'));
 });
+
+test('every web app manifest icon resolves to a file beside the manifest', function () {
+    $manifestPath = public_path('assets/ARK_SMS_FINAL_DROP_IN_PACK/manifest.json');
+    $manifest = json_decode((string) file_get_contents($manifestPath), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($manifest['icons'])->not->toBeEmpty();
+
+    foreach ($manifest['icons'] as $icon) {
+        expect($icon['src'])->not->toStartWith('/')
+            ->and(dirname($manifestPath).'/'.$icon['src'])->toBeFile();
+    }
+});
