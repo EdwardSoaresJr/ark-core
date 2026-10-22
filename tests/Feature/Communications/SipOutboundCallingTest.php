@@ -95,6 +95,7 @@ test('international, premium-rate and malformed numbers are refused', function (
 })->with(['011442071234567', '%2B442071234567', '9005551234', '411', 'abc']);
 
 test('emergency calls always go through and are never recorded', function (): void {
+    config()->set('telephony.sip_outbound.recording', true);
     recordOutbound(true);
 
     $xml = deskDial('911');
@@ -104,7 +105,18 @@ test('emergency calls always go through and are never recorded', function (): vo
         ->and($xml)->not->toContain('record=');
 });
 
+test('desk-phone calls are not recorded until outbound recording is enabled for the install', function (): void {
+    recordOutbound(true);
+
+    $xml = deskDial('7195551234', 'CAdesknorec01');
+
+    expect($xml)->toContain('>+17195551234</Number>')
+        ->and($xml)->not->toContain('record=')
+        ->and($xml)->not->toContain('sip-outbound/notice');
+});
+
 test('recorded outbound calls play the notice to the person called and report the recording', function (): void {
+    config()->set('telephony.sip_outbound.recording', true);
     recordOutbound(true);
 
     $xml = deskDial('7195551234', 'CAdeskrec001');
@@ -204,6 +216,7 @@ test('an area outside the US and Canada can be enabled explicitly', function ():
 });
 
 test('a recorded call with no notice text configured still announces the default notice first', function (): void {
+    config()->set('telephony.sip_outbound.recording', true);
     ShopSettings::current()->persistTrusted(['telephony_call_flow' => array_merge(
         ShopSettings::defaultTelephonyCallFlow(),
         ['record_outbound_calls' => true, 'recording_disclaimer' => '   '],

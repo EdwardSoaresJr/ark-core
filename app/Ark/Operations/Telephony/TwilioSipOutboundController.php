@@ -116,7 +116,10 @@ final class TwilioSipOutboundController
     {
         $flow = TelephonyCallFlowSettings::fromShopSettings();
         // Never record without the notice: the notice plays to the person called before the legs connect.
-        $record = $flow->recordOutboundCalls() && ! $emergency && trim($flow->recordingDisclaimer()) !== '';
+        $record = (bool) config('telephony.sip_outbound.recording')
+            && $flow->recordOutboundCalls()
+            && ! $emergency
+            && trim($flow->recordingDisclaimer()) !== '';
 
         // Status callbacks belong on <Number>; Twilio rejects them as <Dial> attributes.
         $attributes = ' callerId="'.$this->attr($callerId).'"'
