@@ -128,7 +128,7 @@ class ConversationRecorder
 
         $participant = $this->participants->system($conversation, displayName: 'Shop');
 
-        return $this->record(
+        $message = $this->record(
             $conversation,
             $participant,
             $channel,
@@ -139,6 +139,9 @@ class ConversationRecorder
                 'repair_order_id' => $repairOrder->id,
             ], $metadata), fn (mixed $value): bool => $value !== null && $value !== []),
         );
+        $this->leaveShopHistoryWaiting($conversation);
+
+        return $message;
     }
 
     public function recordAdvisorLog(
@@ -436,7 +439,7 @@ class ConversationRecorder
             $repairOrder->customer,
         );
 
-        return $this->record(
+        $message = $this->record(
             $conversation,
             $participant,
             OperationalCommunicationChannel::Website,
@@ -447,6 +450,31 @@ class ConversationRecorder
                 'portal_estimate_view' => true,
             ],
         );
+        $this->leaveShopHistoryWaiting($conversation);
+
+        return $message;
+    }
+
+    /**
+     * An estimate, invoice, review request, or portal open is shop history.
+     * It does not clear a real customer question, and it does not create one.
+     */
+    private function leaveShopHistoryWaiting(Conversation $conversation): void
+    {
+        $fresh = $conversation->fresh();
+        if (! $fresh instanceof Conversation || $fresh->status === ConversationStatus::Resolved) {
+            return;
+        }
+
+        if ($fresh->waiting_on === ConversationWaitingOn::Customer) {
+            return;
+        }
+
+        if (app(ConversationTurnPrecedence::class)->newestUnresolvedInboundOccurredAt($fresh) !== null) {
+            return;
+        }
+
+        $this->posture->waitOnCustomer($fresh);
     }
 
     public function recordWebsiteLead(
