@@ -39,6 +39,9 @@ final class InitiatePaymentCaptureAction
         $method = $input['capture_method'];
 
         $this->assertMayCapture($repairOrder, $amountCents, $contextKind);
+        if ($method === PaymentCaptureMethod::Terminal) {
+            $this->assertAvailableReader((string) ($input['device_ref'] ?? ''));
+        }
 
         $blocking = $this->blockingAmbiguousAttempt($repairOrder, $amountCents);
         if ($blocking !== null) {
@@ -190,6 +193,23 @@ final class InitiatePaymentCaptureAction
             abort_unless($balance->hasIssuedInvoice, 422, 'Generate the final invoice before capturing payment.');
             abort_if($balance->balanceDueCents < 1, 422, 'Nothing is due.');
             abort_if($amountCents > $balance->balanceDueCents, 422, 'Amount exceeds settlement balance.');
+        }
+    }
+
+    /**
+     * A reader payment goes only to a reader this shop has now. It is never moved to another one.
+     * Availability is read again here, not taken from the page that rendered the modal.
+     */
+    private function assertAvailableReader(string $deviceRef): void
+    {
+        PaymentCaptureReadinessProjection::resetMemo();
+        $available = collect(app(PaymentCaptureReadinessProjection::class)->current()['devices'] ?? [])
+            ->contains(fn (array $device): bool => $device['device_ref'] === $deviceRef && ($device['ready'] ?? true));
+
+        if ($deviceRef === '' || ! $available) {
+            throw ValidationException::withMessages([
+                'device_ref' => 'Choose an available card reader.',
+            ]);
         }
     }
 

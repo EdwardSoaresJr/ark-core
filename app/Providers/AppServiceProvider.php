@@ -20,7 +20,9 @@ use App\Ark\Operations\Learn\LearnArkProgressResolver;
 use App\Ark\Operations\Messaging\Events\ConversationMessageReceived;
 use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
 use App\Ark\Operations\Parts\NotConfiguredPartsCatalogLauncher;
+use App\Ark\Operations\Parts\LinkedPartsQuotes;
 use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
+use App\Ark\Operations\Parts\UnavailableLinkedPartsQuotes;
 use App\Ark\Operations\Parts\PartsTechHttpClient;
 use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
 use App\Ark\Platform\Parts\PartsTechPlatformGateway;
@@ -78,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(RepairOrderReadCache::class);
+        $this->app->bind(LinkedPartsQuotes::class, UnavailableLinkedPartsQuotes::class);
 
         // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
         // A hosted shop's install marker lives in tenant storage, which is not active yet.

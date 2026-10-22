@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Payments\Capture;
 
+use App\Ark\Operations\Settings\ShopSettings;
+
 /**
  * Disposable readiness projection for Take Payment (devices + public SDK config).
  * Never includes provider secrets.
@@ -60,6 +62,7 @@ final class PaymentCaptureReadinessProjection
         }
 
         $body = $response['body'];
+        $names = ShopSettings::current()->paymentReaderNames();
         $devices = is_array($body['available_devices'] ?? null)
             ? $body['available_devices']
             : (is_array($body['devices'] ?? null) ? $body['devices'] : []);
@@ -74,7 +77,7 @@ final class PaymentCaptureReadinessProjection
             'supports_terminal' => $supportsTerminal,
             'supports_keyed' => $supportsKeyed,
             'supports_portal' => (bool) ($body['supports_portal'] ?? false),
-            'devices' => array_values(array_filter(array_map(static function ($d): ?array {
+            'devices' => array_values(array_filter(array_map(static function ($d) use ($names): ?array {
                 if (! is_array($d)) {
                     return null;
                 }
@@ -85,7 +88,7 @@ final class PaymentCaptureReadinessProjection
 
                 return [
                     'device_ref' => $ref,
-                    'label' => (string) ($d['label'] ?? $ref),
+                    'label' => $names[$ref] ?? (string) ($d['label'] ?? $ref),
                     'ready' => (bool) ($d['ready'] ?? true),
                 ];
             }, $devices))),

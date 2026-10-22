@@ -18,8 +18,7 @@ final class InspectionTemplateCatalog
      *             label: string,
      *             enabled: bool,
      *             requires_photo: bool,
-     *             measurement_name: ?string,
-     *             measurement_unit: ?string,
+     *             measurement_slots: list<array{key: string, name: string, unit: ?string, required: bool, type: string}>,
      *         }>
      *     }>
      * }>
@@ -46,8 +45,7 @@ final class InspectionTemplateCatalog
                         'label' => $item->label,
                         'enabled' => $item->enabled,
                         'requires_photo' => $item->requires_photo,
-                        'measurement_name' => $item->measurement_name,
-                        'measurement_unit' => $item->measurement_unit,
+                        'measurement_slots' => InspectionMeasurementSlots::fromTemplateItem($item),
                     ])->all(),
                 ])->all(),
             ])

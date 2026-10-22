@@ -1,5 +1,15 @@
 @php
     $platformPaymentsCapture = (bool) ($platformPaymentsCapture ?? false);
+    $readerNames = $settings->paymentReaderNames();
+    $readers = [];
+    if ($platformPaymentsCapture) {
+        foreach (app(\App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection::class)->current()['devices'] ?? [] as $device) {
+            $readers[$device['device_ref']] = ['available' => (bool) ($device['ready'] ?? true)];
+        }
+    }
+    foreach (array_keys($readerNames) as $namedRef) {
+        $readers[$namedRef] ??= ['available' => false];
+    }
 @endphp
 
 <section x-show="active === 'payments'" x-cloak class="space-y-3">
@@ -55,6 +65,29 @@
             >
             <span class="mt-1 block text-[11px] leading-4 text-slate-500">Used for counter Take Payment when this shop has a reader. Leave blank if none is assigned yet.</span>
         </label>
+
+        @if ($readers !== [])
+            <div class="space-y-2" data-payment-reader-names>
+                <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Card readers</p>
+                <p class="text-[11px] leading-4 text-slate-500">Name each reader the way staff know it, such as Front Counter or Bay 1. Everyone in the shop sees these names. Leave a name blank to show the device ID.</p>
+                @foreach ($readers as $deviceRef => $reader)
+                    <label class="block">
+                        <input
+                            type="text"
+                            name="payment_reader_names[{{ $deviceRef }}]"
+                            value="{{ old('payment_reader_names.'.$deviceRef, $readerNames[$deviceRef] ?? '') }}"
+                            maxlength="60"
+                            class="h-9 w-full rounded-sm border-slate-300 text-sm text-slate-800"
+                            placeholder="Front Counter"
+                            autocomplete="off"
+                        >
+                        <span class="mt-1 block font-mono text-[11px] leading-4 text-slate-500">
+                            {{ $deviceRef }}@unless ($reader['available']) <span class="font-sans">· not currently available</span>@endunless
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+        @endif
 
         <div class="grid gap-2 sm:grid-cols-2">
             <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
