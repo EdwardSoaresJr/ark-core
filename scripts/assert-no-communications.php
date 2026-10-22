@@ -47,11 +47,13 @@ const CODE_DIRS = [
     'app/Ark/Platform/Mail',
 ];
 const TABLES = '/^(conversations|conversation_[a-z_]+|call_sessions|session_events|telephony_[a-z_]+|communication_[a-z_]+|operational_communications|scheduled_outbound_messages|internal_messages|phone_sms_capabilities|staff_coaching_logs|email_verifications|phone_verifications)$/';
-const ROUTE_URI = '#(^|/)(webhooks/communications|[^/]*twilio[^/]*|conversations?|communications|comms|inbox|calls?|telephony|voice|voicemail|sms|mms|recordings?|incoming-calls?|incoming-call|caller-lookup|softphone|sip[^/]*)(/|$)#i';
+const ROUTE_URI = '#(^|/)(webhooks/communications|[^/]*twilio[^/]*|conversations?|communications|comms|inbox|calls?|telephony|voice|voicemail|sms|mms|recordings?|incoming-calls?|incoming-call|caller-lookup|softphone|sip[^/]*|provision|outbound-mms|webhooks/cloud/fabric)(/|$)#i';
 const ROUTE_NAME = '/(^|\.)(webhooks\.communications|twilio|conversations?|communications|comms|inbox|calls?|telephony|voice|voicemail|sms|incoming-calls?|incoming-call|caller-lookup|softphone)(\.|$|-)/i';
 const CHANNEL = '/(incoming-calls?|conversations?|comms|communications|calls?|voice|telephony)/i';
 const PERMISSION = "/'((?:comms|communications|telephony|voice|messaging|conversations|calls)\\.[a-z0-9_.-]+)'/";
-const TEXT = ['api.twilio.com', 'sip.twilio.com', 'X-Twilio-Signature', '<Dial', '<Say', '<Record', '<Sip', '<Conference', 'api.postmarkapp.com', 'api.sendgrid.com', 'api.mailgun.net'];
+const TEXT = ['api.twilio.com', 'sip.twilio.com', 'X-Twilio-Signature', '<Dial', '<Say', '<Record', '<Sip', '<Conference', 'api.postmarkapp.com', 'api.sendgrid.com', 'api.mailgun.net', 'twilioConfigured(', "env('TWILIO_", "env('VOICE_SIP_", "env('PJSIP_", '.auth.password', 'twilio-webhooks.php'];
+// Artisan commands that send, receive, or route communications on the shop schedule.
+const SCHEDULED = '/^(comms|communications|telephony|voice|sms|messaging|conversations|calls?)[:.-]|^appointments:send-reminders$|^ark:platform-heartbeat$/';
 const PACKAGES = '#^(twilio/|@twilio/|vonage/|@vonage/|plivo/|telnyx/|sendgrid/|@sendgrid/|mailgun/|wildbit/|postmark|symfony/[a-z-]+-mailer$|aws/aws-sdk-php$)#';
 const CONFIGS = ['communications.php', 'telephony.php', 'voice.php', 'voice-transport.php', 'legacy-arksms-import.php'];
 const VIEW_PATH = '#(^|/)(communications|conversations|telephony|voice|sms|softphone|inbox|caller-lookup|calls?|incoming-calls?)(/|[-.]|$)#i';
@@ -119,8 +121,11 @@ foreach ($files('tests', ['.php']) as $path => $contents) {
         $add('test', $path);
     }
 }
-foreach (['app', 'routes', 'config', 'resources'] as $dir) {
+foreach (['app', 'routes', 'config', 'resources', 'bootstrap'] as $dir) {
     foreach ($files($dir, ['.php', '.js', '.ts', '.vue']) as $path => $contents) {
+        if (str_starts_with($path, 'bootstrap/cache/')) {
+            continue;
+        }
         foreach (TEXT as $needle) {
             if (str_contains($contents, $needle)) {
                 $add('text', $path.' contains '.$needle);
@@ -132,6 +137,19 @@ foreach ($files('resources', ['.blade.php', '.js', '.ts', '.vue', '.css']) as $p
     $relative = substr($path, strlen('resources/'));
     if (preg_match(VIEW_PATH, $relative) || str_contains($contents, "route('operations.communications.")) {
         $add('screen', $path);
+    }
+}
+foreach ($files('app', ['.php']) as $path => $contents) {
+    if (preg_match('/implements\s+[^{]*\bShouldQueue\b/', $contents) && ($inCodeDir($path) || $references($contents))) {
+        $add('job', $path);
+    }
+    if (str_contains($contents, 'Illuminate\\Console\\Scheduling\\Schedule')) {
+        preg_match_all("/'([a-z0-9-]+:[a-z0-9:-]+)'/", $contents, $matches);
+        foreach (array_unique($matches[1]) as $command) {
+            if (preg_match(SCHEDULED, $command)) {
+                $add('schedule', $command.' in '.$path);
+            }
+        }
     }
 }
 foreach (CONFIGS as $config) {

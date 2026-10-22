@@ -66,7 +66,40 @@ test('new communications code fails', function (string $path, string $contents, 
     'customer mail' => ['app/Ark/Operations/RepairOrders/Mailer.php', "<?php\nMail::to(\$c)->send(\$m);\n", 'mail: app/Ark/Operations/RepairOrders/Mailer.php'],
     'a config file' => ['config/telephony.php', "<?php\nreturn [];\n", 'config: config/telephony.php'],
     'a screen' => ['resources/views/operations/communications/inbox.blade.php', 'x', 'screen: resources/views/operations/communications/inbox.blade.php'],
+    'a provider credential in config' => ['config/services.php', "<?php\nreturn ['twilio' => ['auth_token' => env('TWILIO_AUTH_TOKEN')]];\n", "config/services.php contains env('TWILIO_"],
+    'a SIP password in a phone config' => ['app/Ark/Operations/RepairOrders/Phone.php', "<?php\n\$k = \"reg.1.auth.password\";\n", 'contains .auth.password'],
+    'a gate on Core provider credentials' => ['resources/views/operations/quick-reply.blade.php', '@if ($integrations->twilioConfigured())', 'contains twilioConfigured('],
+    'webhook routes loaded at boot' => ['bootstrap/app.php', "<?php\nrequire __DIR__.'/../routes/twilio-webhooks.php';\n", 'bootstrap/app.php contains twilio-webhooks.php'],
+    'a scheduled communications command' => ['app/Ark/Console/Schedule.php', "<?php\nuse Illuminate\\Console\\Scheduling\\Schedule;\n\$s->command('comms:escalate-unhandled');\n", 'schedule: comms:escalate-unhandled in app/Ark/Console/Schedule.php'],
+    'a queued communications job' => ['app/Ark/Operations/RepairOrders/TextLater.php', "<?php\nuse App\\Ark\\Operations\\Messaging\\Sender;\nclass TextLater implements ShouldQueue {}\n", 'job: app/Ark/Operations/RepairOrders/TextLater.php'],
 ]);
+
+test('provisioning, signed MMS media, and Platform fabric routes fail', function (string $uri): void {
+    $root = communicationsFixture();
+    file_put_contents($root.'/baseline.json', json_encode(['violations' => []]));
+    file_put_contents($root.'/routes.json', json_encode([['method' => 'GET|HEAD', 'uri' => $uri, 'name' => '']]));
+
+    [$exit, $out] = communicationsCheck(['--root', $root, '--baseline', $root.'/baseline.json', '--routes', $root.'/routes.json']);
+
+    expect($exit)->toBe(1)->and($out)->toContain('route: GET '.$uri);
+})->with([
+    'provision/{filename}',
+    'media/outbound-mms/{token}',
+    'webhooks/cloud/fabric/events',
+]);
+
+test("Laravel's password confirmation middleware and generated bootstrap caches are not communications", function (): void {
+    $root = communicationsFixture();
+    file_put_contents($root.'/baseline.json', json_encode(['violations' => []]));
+    @mkdir($root.'/bootstrap/cache', 0777, true);
+    file_put_contents($root.'/bootstrap/cache/services.php', "<?php\nreturn ['auth.password' => 1, 'twilio-webhooks.php' => 1];\n");
+    @mkdir($root.'/app/Http/Controllers', 0777, true);
+    file_put_contents($root.'/app/Http/Controllers/Confirm.php', "<?php\n\$m = 'auth.password';\n");
+
+    [$exit, $out] = communicationsCheck(['--root', $root, '--baseline', $root.'/baseline.json', '--routes', $root.'/routes.json']);
+
+    expect($exit)->toBe(0, $out);
+});
 
 test('a communications route fails', function (): void {
     $root = communicationsFixture();
