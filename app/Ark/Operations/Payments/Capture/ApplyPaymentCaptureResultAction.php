@@ -99,7 +99,10 @@ final class ApplyPaymentCaptureResultAction
     private function recordMoney(PaymentCaptureAttempt $attempt): int
     {
         $repairOrder = RepairOrder::query()->findOrFail($attempt->repair_order_id);
-        $repairOrder->ensureOpenForEditing();
+        // Only a capture still in flight may finish after its order closes. The order stays closed.
+        if (! $attempt->status->isOpen()) {
+            $repairOrder->ensureOpenForEditing();
+        }
         $actor = $attempt->initiated_by
             ? User::query()->find($attempt->initiated_by)
             : null;
