@@ -75,6 +75,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'oauth/token',
         ]);
 
+        // Provider webhooks are signed over the exact values sent; a customer's text keeps its spacing.
+        $providerWebhook = static fn (Request $request): bool => $request->is('webhooks/*');
+        $middleware->trimStrings(except: [$providerWebhook]);
+        $middleware->convertEmptyStringsToNull(except: [$providerWebhook]);
+
         $middleware->encryptCookies(except: [
             EcosystemDisplayTheme::COOKIE_NAME,
             WorkstationPresence::BINDING_COOKIE,

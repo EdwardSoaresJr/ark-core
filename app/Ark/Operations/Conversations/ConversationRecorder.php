@@ -29,13 +29,14 @@ class ConversationRecorder
         string $body,
         ?Carbon $occurredAt = null,
         ?array $metadata = null,
+        bool $keepBodyAsReceived = false,
     ): ConversationMessage {
         $message = ConversationMessage::query()->create([
             'conversation_id' => $conversation->id,
             'conversation_participant_id' => $participant->id,
             'channel' => $channel,
             'direction' => $direction,
-            'body' => trim($body),
+            'body' => $keepBodyAsReceived ? $body : trim($body),
             'occurred_at' => $occurredAt ?? now(),
             'metadata' => $metadata,
         ]);
@@ -202,7 +203,7 @@ class ConversationRecorder
             displayName: $customer?->name,
         );
 
-        $messageBody = trim($body);
+        $messageBody = trim($body) === '' ? '' : $body;
 
         if ($messageBody === '' && $media !== []) {
             $messageBody = '(attachment)';
@@ -220,6 +221,7 @@ class ConversationRecorder
                 'to_number' => $toNumber,
                 'media_count' => $media !== [] ? count($media) : null,
             ], $metadata), fn (mixed $value): bool => $value !== null && $value !== []),
+            keepBodyAsReceived: true,
         );
     }
 
