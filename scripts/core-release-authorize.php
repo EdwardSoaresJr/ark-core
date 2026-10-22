@@ -33,6 +33,19 @@ if ($command === 'record') {
     if (! is_int($pull) || $pull < 1) {
         refuse('The release record has no pull request approval.');
     }
+    $policy = $approval['policy'] ?? 'two-person/v1';
+    if (! in_array($policy, ['two-person/v1', 'single-maintainer/v1'], true)) {
+        refuse('The release record approval policy is not two-person/v1 or single-maintainer/v1.');
+    }
+    $growth = $record['baseline_growth'] ?? null;
+    if (! is_array($growth) || ! array_is_list($growth)) {
+        refuse('The release record has no baseline_growth list. Declare [] when the baseline did not grow.');
+    }
+    foreach ($growth as $id) {
+        if (! is_string($id) || ! str_starts_with($id, 'tests/') || ! str_contains($id, '.php::')) {
+            refuse('The release record baseline_growth has an entry that is not a test id.');
+        }
+    }
     $stages = $record['stages'] ?? null;
     if (! is_array($stages)) {
         refuse('The release record has no stages.');
@@ -49,7 +62,24 @@ if ($command === 'record') {
         'diff_sha256' => $diff,
         'repository' => $repository,
         'pull_request' => (string) $pull,
+        'policy' => $policy,
     ]);
+}
+
+if ($command === 'growth') {
+    $record = json_decode((string) file_get_contents($argv[2] ?? ''), true);
+    $declared = is_array($record) && is_array($record['baseline_growth'] ?? null) ? $record['baseline_growth'] : null;
+    if ($declared === null) {
+        refuse('The release record has no baseline_growth list.');
+    }
+    $actual = array_values(array_filter(array_map('trim', explode("\n", stream_get_contents(STDIN) ?: '')), fn (string $id): bool => $id !== ''));
+    sort($declared);
+    sort($actual);
+    if ($declared !== $actual) {
+        refuse('The test baseline grew by '.count($actual).' id(s) and the record declares '.count($declared).'. Growth must be declared in the record, id by id.');
+    }
+    fwrite(STDOUT, 'growth ok: '.count($actual)." declared\n");
+    exit(0);
 }
 
 if ($command === 'checks') {
@@ -72,7 +102,7 @@ if ($command === 'checks') {
     if (! is_array($runs)) {
         refuse('Check runs were not returned.');
     }
-    foreach (['gitleaks', 'pest'] as $name) {
+    foreach (['gitleaks', 'targeted', 'pest-baseline'] as $name) {
         $latest = null;
         foreach ($runs as $run) {
             if (! is_array($run) || ($run['name'] ?? null) !== $name) {
@@ -119,6 +149,30 @@ if ($command === 'approval') {
         refuse('The release record pull request is not merged into release-authorization.');
     }
     $author = (string) ($pull['user']['login'] ?? '');
+    $policy = (string) ($payload['policy'] ?? 'two-person/v1');
+
+    if ($policy === 'single-maintainer/v1') {
+        // One maintainer cannot approve their own pull request on GitHub. The authentication is instead
+        // the GitHub-verified merge commit made by a listed maintainer, and a record unchanged since that merge.
+        $maintainers = $payload['maintainers'] ?? null;
+        if (! is_array($maintainers) || $maintainers === []) {
+            refuse('No release maintainers are listed.');
+        }
+        $mergedBy = (string) ($pull['merged_by']['login'] ?? '');
+        if ($mergedBy === '' || ! in_array($mergedBy, $maintainers, true)) {
+            refuse('The release record was not merged by a listed release maintainer.');
+        }
+        $merge = $payload['merge'] ?? null;
+        if (! is_array($merge) || ($merge['sha'] ?? '') !== ($pull['merge_commit_sha'] ?? null) || ($merge['verified'] ?? null) !== true) {
+            refuse('The release record merge commit is not verified by GitHub.');
+        }
+        if (($payload['merge_blob'] ?? '') !== $tipBlob) {
+            refuse('The release record changed after its authenticated merge.');
+        }
+        fwrite(STDOUT, "approval ok (single-maintainer/v1, {$mergedBy})\n");
+        exit(0);
+    }
+
     $approved = false;
     foreach ($reviews as $review) {
         if (! is_array($review) || ($review['state'] ?? null) !== 'APPROVED') {

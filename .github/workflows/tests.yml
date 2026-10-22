@@ -24,4 +24,22 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run tests
-        run: composer test:serial
+        run: composer test:serial -- --log-junit junit.xml
+
+      - name: List failures in baseline format
+        if: always()
+        run: |
+          if [[ -f junit.xml ]]; then
+            php scripts/core-test-baseline.php failures junit.xml | sed 's/$/\tTODO: tracking note/' > baseline-candidate.tsv
+            php scripts/core-test-baseline.php compare junit.xml tests/baselines/github-ubuntu-latest-php8.4.tsv || true
+          fi
+
+      - name: Upload the test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pest-junit-${{ github.sha }}
+          path: |
+            junit.xml
+            baseline-candidate.tsv
+          if-no-files-found: ignore

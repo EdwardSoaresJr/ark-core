@@ -59,6 +59,12 @@ jobs:
             echo "Record diff does not match ${baseline_sha}..${source_sha}." >&2
             exit 1
           fi
+          php scripts/core-release-authorize.php record "$record" >/dev/null
+          baseline_file="tests/baselines/github-ubuntu-latest-php8.4.tsv"
+          git show "${baseline_sha}:${baseline_file}" > /tmp/baseline-old.tsv 2>/dev/null || : > /tmp/baseline-old.tsv
+          git show "${source_sha}:${baseline_file}" > /tmp/baseline-new.tsv
+          php scripts/core-test-baseline.php growth /tmp/baseline-old.tsv /tmp/baseline-new.tsv \
+            | php scripts/core-release-authorize.php growth "$record"
           echo "source_sha=${source_sha}" >> "$GITHUB_OUTPUT"
 
       - name: Check out the source commit
@@ -84,11 +90,26 @@ jobs:
           extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
           coverage: none
 
-      - name: Run Pest on the source commit
+      - name: Install dependencies on the source commit
+        working-directory: source
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run the targeted release tests on the source commit
         working-directory: source
         run: |
-          composer install --no-interaction --prefer-dist --no-progress
-          composer test:serial
+          set -euo pipefail
+          mapfile -t files < <(grep -v -e '^#' -e '^$' tests/release-targeted.txt)
+          php artisan config:clear --ansi
+          php -d memory_limit=2048M vendor/bin/pest --no-coverage "${files[@]}"
+
+      - name: Run Pest against the known-failure baseline
+        working-directory: source
+        run: |
+          set -euo pipefail
+          php artisan config:clear --ansi
+          php -d memory_limit=2048M vendor/bin/pest --no-coverage --log-junit /tmp/junit.xml || true
+          # Compare with the authorization branch's script so a source commit cannot change how it is judged.
+          php "$GITHUB_WORKSPACE/scripts/core-test-baseline.php" compare /tmp/junit.xml tests/baselines/github-ubuntu-latest-php8.4.tsv
 
       - name: Record checks on the source commit
         if: success()
@@ -97,7 +118,7 @@ jobs:
           SOURCE_SHA: ${{ steps.record.outputs.source_sha }}
         run: |
           set -euo pipefail
-          for name in gitleaks pest; do
+          for name in gitleaks targeted pest-baseline; do
             jq -n \
               --arg name "$name" \
               --arg sha "$SOURCE_SHA" \

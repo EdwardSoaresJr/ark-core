@@ -91,6 +91,7 @@ baseline_sha=""
 diff_sha256=""
 repository=""
 pull_request=""
+policy=""
 while IFS='=' read -r key value; do
   case "$key" in
     source_sha) source_sha="$value" ;;
@@ -98,6 +99,7 @@ while IFS='=' read -r key value; do
     diff_sha256) diff_sha256="$value" ;;
     repository) repository="$value" ;;
     pull_request) pull_request="$value" ;;
+    policy) policy="$value" ;;
     *)
       echo "REFUSING: unexpected release record field." >&2
       exit 1
@@ -105,7 +107,7 @@ while IFS='=' read -r key value; do
   esac
 done <<< "$fields"
 
-if [[ -z "$source_sha" || -z "$baseline_sha" || -z "$diff_sha256" || -z "$repository" || -z "$pull_request" ]]; then
+if [[ -z "$source_sha" || -z "$baseline_sha" || -z "$diff_sha256" || -z "$repository" || -z "$pull_request" || -z "$policy" ]]; then
   echo "REFUSING: the release record is incomplete." >&2
   exit 1
 fi
@@ -135,6 +137,18 @@ if [[ "$actual_diff" != "$diff_sha256" ]]; then
   echo "REFUSING: source diff ${actual_diff} does not match the approved diff ${diff_sha256}." >&2
   exit 1
 fi
+
+baseline_file="tests/baselines/github-ubuntu-latest-php8.4.tsv"
+old_baseline="$(mktemp "${TMPDIR:-/tmp}/ark-baseline-old-XXXXXX")"
+new_baseline="$(mktemp "${TMPDIR:-/tmp}/ark-baseline-new-XXXXXX")"
+trap 'rm -f "$record_tmp" "$old_baseline" "$new_baseline"' EXIT
+git -C "$repo" show "${baseline_sha}:${baseline_file}" > "$old_baseline" 2>/dev/null || : > "$old_baseline"
+if ! git -C "$repo" show "${sha}:${baseline_file}" > "$new_baseline" 2>/dev/null; then
+  echo "REFUSING: ${sha} has no ${baseline_file}." >&2
+  exit 1
+fi
+php "$script_dir/core-test-baseline.php" growth "$old_baseline" "$new_baseline" \
+  | php "$script_dir/core-release-authorize.php" growth "$record_tmp"
 
 if ! command -v gh >/dev/null 2>&1; then
   echo "REFUSING: gh is required to verify checks and approval." >&2
@@ -173,17 +187,44 @@ while IFS= read -r review_commit; do
   blob_pairs="${blob_pairs}\"${review_commit}\":\"${review_blob}\","
 done <<< "$review_commits"
 
+maintainers=""
+merge_json="{}"
+merge_blob=""
+if [[ "$policy" == "single-maintainer/v1" ]]; then
+  if ! git -C "$repo" fetch "$remote" "refs/heads/main:refs/remotes/${remote}/main" >/dev/null 2>&1 \
+    || ! maintainers="$(git -C "$repo" show "${remote}/main:.github/release-maintainers" 2>/dev/null)"; then
+    echo "REFUSING: ${remote}/main has no .github/release-maintainers." >&2
+    exit 1
+  fi
+  merge_sha="$(printf '%s' "$pull_json" | php -r '$p = json_decode(stream_get_contents(STDIN), true); echo is_array($p) ? (string) ($p["merge_commit_sha"] ?? "") : "";')"
+  if [[ ! "$merge_sha" =~ ^[a-f0-9]{40}$ ]]; then
+    echo "REFUSING: the release record pull request has no merge commit." >&2
+    exit 1
+  fi
+  merge_json="$(gh api "repos/${repository}/commits/${merge_sha}")"
+  if ! merge_blob="$(git -C "$repo" rev-parse "${merge_sha}:${record_path}" 2>/dev/null)"; then
+    echo "REFUSING: merge ${merge_sha} is not in the release-authorization history." >&2
+    exit 1
+  fi
+fi
+
 approval_json="$(php -r '
 $pull = json_decode($argv[1], true);
 $reviews = json_decode($argv[2], true);
 $blobs = json_decode("{".rtrim($argv[3], ",")."}", true);
+$merge = json_decode($argv[7], true);
+$maintainers = array_values(array_filter(array_map("trim", explode("\n", $argv[6])), fn ($l) => $l !== "" && $l[0] !== "#"));
 echo json_encode([
     "pull" => $pull,
     "reviews" => $reviews,
     "tip_blob" => $argv[4],
     "review_blobs" => is_array($blobs) ? $blobs : new stdClass(),
+    "policy" => $argv[5],
+    "maintainers" => $maintainers,
+    "merge" => ["sha" => (string) ($merge["sha"] ?? ""), "verified" => ($merge["commit"]["verification"]["verified"] ?? null) === true],
+    "merge_blob" => $argv[8],
 ]);
-' "$pull_json" "$reviews_json" "$blob_pairs" "$tip_blob")"
+' "$pull_json" "$reviews_json" "$blob_pairs" "$tip_blob" "$policy" "$maintainers" "$merge_json" "$merge_blob")"
 
 printf '%s' "$approval_json" | php "$script_dir/core-release-authorize.php" approval
 
@@ -191,4 +232,5 @@ echo "Source publication authorized"
 echo "  source: ${sha}"
 echo "  baseline: ${baseline_sha}"
 echo "  diff: ${diff_sha256}"
+echo "  approval policy: ${policy}"
 echo "  production deployment: not authorized"

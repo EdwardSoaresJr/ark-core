@@ -36,12 +36,13 @@ fi
 
 FIXTURE="$WORKDIR/repo"
 git init -b main "$FIXTURE" >/dev/null
-mkdir -p "$FIXTURE/public" "$FIXTURE/app"
+mkdir -p "$FIXTURE/public" "$FIXTURE/app" "$FIXTURE/.github"
 printf 'tracked\n' > "$FIXTURE/app/a.php"
 printf 'console.log(1)\n' > "$FIXTURE/public/js.js"
 printf '/public/hot\n/public/build.bak-*\n' > "$FIXTURE/.gitignore"
 printf 'hot\n' > "$FIXTURE/public/hot"
-git -C "$FIXTURE" add .gitignore app/a.php public/js.js
+printf '# maintainers\nmaintainer\n' > "$FIXTURE/.github/release-maintainers"
+git -C "$FIXTURE" add .gitignore app/a.php public/js.js .github/release-maintainers
 git -C "$FIXTURE" -c user.email=release@example.com -c user.name=release commit -m init >/dev/null
 base="$(git -C "$FIXTURE" rev-parse HEAD)"
 
@@ -95,7 +96,9 @@ if "$MATERIALIZE" --repo "$bak_repo" --commit HEAD --dest "$bak_dest" >/dev/null
 fi
 
 printf 'two\n' > "$FIXTURE/app/a.php"
-git -C "$FIXTURE" add app/a.php
+mkdir -p "$FIXTURE/tests/baselines"
+printf '# fixture\ntests/Unit/KnownTest.php::known failure\ttracked in fixture\n' > "$FIXTURE/tests/baselines/github-ubuntu-latest-php8.4.tsv"
+git -C "$FIXTURE" add app/a.php tests/baselines/github-ubuntu-latest-php8.4.tsv
 git -C "$FIXTURE" -c user.email=release@example.com -c user.name=release commit -m two >/dev/null
 child="$(git -C "$FIXTURE" rev-parse HEAD)"
 
@@ -131,6 +134,8 @@ git -C "$FIXTURE" checkout -q -B release-authorization "$base"
 mkdir -p "$FIXTURE/releases"
 write_release_record() {
   local deploy="$1"
+  local policy="${2:-two-person/v1}"
+  local growth="${3:-[\"tests/Unit/KnownTest.php::known failure\"]}"
   cat > "$FIXTURE/releases/${child}.json" <<EOF
 {
   "schema": "ark-core-source-release/v1",
@@ -138,7 +143,8 @@ write_release_record() {
   "source_sha": "${child}",
   "baseline_sha": "${base}",
   "diff_sha256": "${diff_id}",
-  "approval": {"state": "source_approved", "pull_request": 7},
+  "baseline_growth": ${growth},
+  "approval": {"state": "source_approved", "pull_request": 7, "policy": "${policy}"},
   "stages": {
     "source_approved": true,
     "tests_verified": true,
@@ -183,7 +189,18 @@ if [[ "$url" == *"/check-runs"* ]]; then
     printf '%s\n' '{"total_count":0,"check_runs":[]}'
     exit 0
   fi
-  printf '{"total_count":2,"check_runs":[{"name":"gitleaks","head_sha":"%s","status":"completed","conclusion":"%s","completed_at":"2026-10-20T00:00:00Z","app":{"slug":"github-actions"}},{"name":"pest","head_sha":"%s","status":"completed","conclusion":"%s","completed_at":"2026-10-20T00:00:01Z","app":{"slug":"github-actions"}}]}\n' "$head" "$conclusion" "$head" "$conclusion"
+  runs=""
+  for name in gitleaks targeted pest-baseline; do
+    [[ "$mode" == "no-baseline-check" && "$name" == "pest-baseline" ]] && continue
+    runs="${runs}{\"name\":\"${name}\",\"head_sha\":\"${head}\",\"status\":\"completed\",\"conclusion\":\"${conclusion}\",\"completed_at\":\"2026-10-20T00:00:00Z\",\"app\":{\"slug\":\"github-actions\"}},"
+  done
+  printf '{"total_count":3,"check_runs":[%s]}\n' "${runs%,}"
+  exit 0
+fi
+if [[ "$url" == *"/commits/"* ]]; then
+  verified=true
+  [[ "$mode" == "sm-unverified" ]] && verified=false
+  printf '{"sha":"%s","commit":{"verification":{"verified":%s,"reason":"valid"}}}\n' "${ARK_FIXTURE_MERGE}" "$verified"
   exit 0
 fi
 if [[ "$url" == *"/reviews" ]]; then
@@ -193,13 +210,15 @@ if [[ "$url" == *"/reviews" ]]; then
   fi
   reviewer="reviewer"
   if [[ "$mode" == "self-approval" ]]; then
-    reviewer="author"
+    reviewer="maintainer"
   fi
   printf '[{"state":"APPROVED","commit_id":"%s","user":{"login":"%s"}}]\n' "$review" "$reviewer"
   exit 0
 fi
 if [[ "$url" == *"/pulls/"* ]]; then
-  printf '{"merged":true,"base":{"ref":"release-authorization"},"user":{"login":"author"}}\n'
+  merger="maintainer"
+  [[ "$mode" == "sm-unlisted" ]] && merger="someone-else"
+  printf '{"merged":true,"base":{"ref":"release-authorization"},"user":{"login":"maintainer"},"merged_by":{"login":"%s"},"merge_commit_sha":"%s"}\n' "$merger" "${ARK_FIXTURE_MERGE}"
   exit 0
 fi
 echo "unexpected gh api: $url" >&2
@@ -210,6 +229,7 @@ export PATH="$WORKDIR/bin:$PATH"
 export ARK_FIXTURE_SHA="$child"
 export ARK_FIXTURE_STALE="$base"
 export ARK_FIXTURE_REVIEW="$record_commit"
+export ARK_FIXTURE_MERGE="$record_commit"
 
 export ARK_FIXTURE_MODE=success
 "$PUBLISHED" --repo "$FIXTURE" --commit "$child" | grep -q 'production deployment: not authorized' || fail "approved source was refused or implied deployment"
@@ -238,6 +258,45 @@ export ARK_FIXTURE_MODE=self-approval
 if "$PUBLISHED" --repo "$FIXTURE" --commit "$child" >/dev/null 2>&1; then
   fail "self-approval was allowed"
 fi
+export ARK_FIXTURE_MODE=no-baseline-check
+if "$PUBLISHED" --repo "$FIXTURE" --commit "$child" >/dev/null 2>&1; then
+  fail "a source without the pest-baseline check was allowed"
+fi
+
+export ARK_FIXTURE_MODE=success
+write_release_record false two-person/v1 '[]'
+if "$PUBLISHED" --repo "$FIXTURE" --commit "$child" >/dev/null 2>&1; then
+  fail "undeclared baseline growth was allowed"
+fi
+
+write_release_record false single-maintainer/v1
+sm_merge="$(git -C "$FIXTURE" rev-parse HEAD)"
+export ARK_FIXTURE_MERGE="$sm_merge"
+export ARK_FIXTURE_REVIEW="$sm_merge"
+export ARK_FIXTURE_MODE=no-approval
+sm_out="$("$PUBLISHED" --repo "$FIXTURE" --commit "$child" 2>&1)" \
+  || fail "a verified merge by a listed maintainer was refused under single-maintainer/v1: ${sm_out}"
+grep -q 'approval policy: single-maintainer/v1' <<< "$sm_out" || fail "single-maintainer authorization did not name its policy"
+export ARK_FIXTURE_MODE=sm-unverified
+if "$PUBLISHED" --repo "$FIXTURE" --commit "$child" >/dev/null 2>&1; then
+  fail "an unverified merge commit was allowed under single-maintainer/v1"
+fi
+export ARK_FIXTURE_MODE=sm-unlisted
+if "$PUBLISHED" --repo "$FIXTURE" --commit "$child" >/dev/null 2>&1; then
+  fail "a merge by an unlisted login was allowed under single-maintainer/v1"
+fi
+export ARK_FIXTURE_MODE=no-approval
+php -r '$p=$argv[1]; file_put_contents($p, file_get_contents($p)."\n");' "$FIXTURE/releases/${child}.json"
+git -C "$FIXTURE" add "releases/${child}.json"
+git -C "$FIXTURE" -c user.email=release@example.com -c user.name=release commit -q -m "edit after merge"
+git -C "$FIXTURE" push -q --force origin "HEAD:refs/heads/release-authorization"
+if "$PUBLISHED" --repo "$FIXTURE" --commit "$child" >/dev/null 2>&1; then
+  fail "a record changed after its authenticated merge was allowed"
+fi
+write_release_record false
+record_commit="$(git -C "$FIXTURE" rev-parse HEAD)"
+export ARK_FIXTURE_REVIEW="$record_commit"
+export ARK_FIXTURE_MERGE="$record_commit"
 
 export ARK_FIXTURE_MODE=success
 git -C "$FIXTURE" push -q --force origin "${base}:refs/tags/core-release/${child}"
