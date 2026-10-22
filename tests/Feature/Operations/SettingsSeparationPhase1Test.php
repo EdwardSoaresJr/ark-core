@@ -157,7 +157,7 @@ test('hosted square settings still hide provider secrets and keep capture surfac
     $this->actingAs($this->admin)
         ->get(route('operations.settings.shop.edit', ['section' => 'payments']))
         ->assertOk()
-        ->assertSee('managed by ARK Platform', false)
+        ->assertSee('Card capture is connected for this shop', false)
         ->assertSee('Counter terminal', false)
         ->assertSee('Take Payment', false)
         ->assertSee('Preferred terminal', false)

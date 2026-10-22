@@ -605,7 +605,7 @@ test('concern narrative disposition and order changes mark existing estimate doc
         'verified_findings' => 'Updated finding.',
         'dtcs_summary' => null,
         'recommendation' => 'Updated recommendation.',
-        'recommendation_intent' => 'immediate_attention',
+        'recommendation_posture' => 'must_do',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#estimate-lines');
 
     expect($narrativeDocument->fresh()->needs_pdf_refresh)->toBeTrue();

@@ -192,8 +192,19 @@ class CommunicationsQueueResolver
 
         $shopTurnRows = $this->shopTurnAttentionQueue->rowsFor($viewer, $unreadConversationIds);
 
+        $actionableCalls = array_values(array_filter(
+            $calls,
+            static function (array $call): bool {
+                if (($call['status'] ?? '') !== CallSessionStatus::Answered->value) {
+                    return true;
+                }
+
+                return ($call['is_actively_live'] ?? false) === true;
+            },
+        ));
+
         $needsAttention = $this->attentionDedupe->dedupe(
-            $this->sortNeedsAttention(array_merge($calls, $unreadMessages, $shopTurnRows)),
+            $this->sortNeedsAttention(array_merge($actionableCalls, $unreadMessages, $shopTurnRows)),
         );
         $sinceLastShift = $this->sinceLastShift->project($needsAttention, $viewer, $previousLastSeenAt);
         $unknown = array_values(array_filter(

@@ -8,6 +8,7 @@ import {
     arkRepairOrderVehicleChange,
 } from './ark-repair-order-identity-edit';
 import { arkPartsTechQuoteImport } from './ark-partstech-quote-import';
+import { arkLinkedPartsQuote } from './ark-linked-parts-quote';
 import { arkDealerQuoteCapture } from './ark-dealer-quote-capture';
 import { arkVehicleDecode } from './ark-vehicle-decode';
 import { arkCustomerVehicleRail } from './ark-customer-vehicle-rail';
@@ -97,6 +98,7 @@ Alpine.data('arkRepairOrderIdentityCustomer', arkRepairOrderIdentityCustomer);
 Alpine.data('arkRepairOrderIdentityVehicle', arkRepairOrderIdentityVehicle);
 Alpine.data('arkRepairOrderVehicleChange', arkRepairOrderVehicleChange);
 Alpine.data('arkPartsTechQuoteImport', (config = {}) => arkPartsTechQuoteImport(config));
+Alpine.data('arkLinkedPartsQuote', (config = {}) => arkLinkedPartsQuote(config));
 Alpine.data('arkDealerQuoteCapture', (config = {}) => arkDealerQuoteCapture(config));
 Alpine.data('arkVehicleDecode', (config = {}) => arkVehicleDecode(config));
 Alpine.data('arkCustomerVehicleRail', (config = {}) => arkCustomerVehicleRail(config));

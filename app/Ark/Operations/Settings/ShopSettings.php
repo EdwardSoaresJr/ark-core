@@ -102,6 +102,7 @@ use InvalidArgumentException;
     'message_actions',
     'quick_reply_templates',
     'manual_payment_methods',
+    'payment_reader_names',
     'square_application_id',
     'square_location_id',
     'square_environment',
@@ -407,6 +408,7 @@ TEXT;
         'message_actions' => 'array',
         'quick_reply_templates' => 'array',
         'manual_payment_methods' => 'array',
+        'payment_reader_names' => 'array',
         'default_notes_visible_to_advisor' => 'boolean',
         'default_notes_visible_to_technician' => 'boolean',
         'default_notes_visible_to_customer' => 'boolean',
@@ -1433,6 +1435,25 @@ TEXT;
     public function portalSignatureRequired(): bool
     {
         return (bool) $this->portal_signature_required;
+    }
+
+    /**
+     * Shop-wide display names for card readers, keyed by the processor's device reference.
+     *
+     * @return array<string, string>
+     */
+    public function paymentReaderNames(): array
+    {
+        $names = [];
+        foreach (is_array($this->payment_reader_names) ? $this->payment_reader_names : [] as $deviceRef => $name) {
+            $deviceRef = (string) $deviceRef;
+            $name = is_scalar($name) ? trim((string) $name) : '';
+            if ($deviceRef !== '' && $name !== '') {
+                $names[$deviceRef] = $name;
+            }
+        }
+
+        return $names;
     }
 
     public function customerPartDescriptionMode(): CustomerPartDescriptionMode

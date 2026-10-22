@@ -67,8 +67,8 @@ class CallSessionQueue
             })
             ->update(['worked_at' => now()]);
 
-        // Bulk update skips model events - resync conversation turn so a
-        // handled call clears the shop-turn posture it created.
+        // Bulk update skips model events. Resync the turn without erasing a
+        // shop-turn conversation that is still waiting on the shop.
         app(SyncConversationTurnAction::class)->forCallSession($session->refresh());
 
         return $cleared;

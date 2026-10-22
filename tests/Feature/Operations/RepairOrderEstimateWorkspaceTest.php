@@ -954,7 +954,7 @@ test('concerns carry compact diagnostic narrative into the estimate workspace', 
         'verified_findings' => 'Cylinder 3 misfire confirmed during loaded road test.',
         'dtcs_summary' => "P0303 current\nP0171 pending",
         'recommendation' => 'Replace failed ignition coil and retest system.',
-        'recommendation_intent' => 'immediate_attention',
+        'recommendation_intent' => 'diagnostic',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#concern-'.RepairOrderConcern::query()->latest('id')->value('id'));
 
     $concern = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->firstOrFail();
