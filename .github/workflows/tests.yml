@@ -69,3 +69,36 @@ jobs:
             php vendor/bin/pest --no-coverage --filter 'communications queue api includes ringing and active calls' \
               tests/Feature/Operations/CommunicationsQueueTest.php
           fi
+
+  communications-boundary:
+    runs-on: ubuntu-latest
+    # Public Core must not grow communications code (docs/PRODUCT_BOUNDARY.md). A missing route list or baseline fails.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: List routes
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          BROADCAST_CONNECTION: "null"
+        run: php artisan route:list --json > "$RUNNER_TEMP/routes.json"
+
+      - name: Reject new communications code
+        run: php scripts/assert-no-communications.php --routes "$RUNNER_TEMP/routes.json"
+
+      - name: Prove the check, including tables created by a fresh install
+        run: php vendor/bin/pest --no-coverage tests/Feature/Architecture/CommunicationsBoundaryTest.php

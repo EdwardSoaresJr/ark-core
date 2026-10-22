@@ -7,7 +7,7 @@
 
 A fact appearing on a website does **not** make it Website-owned. `shop_hours` can remain Core authority (operations need it). A future ARK Website **consumes** it. Homepage section titles, layout, styling, and SEO copy belong to Website.
 
-Core is the shop operating system: repair orders, customers, communications, portal, intake, leads, installer, reporting, and shop identity.
+Core is the shop operating system: repair orders, customers, portal, intake, leads, installer, reporting, and shop identity. Communications belong to ARK Shop ([PRODUCT_BOUNDARY.md](../PRODUCT_BOUNDARY.md)).
 
 Marketing website, SEO, Growth marketing tools, and the website **editor UI** are **not** Core.
 
@@ -16,10 +16,9 @@ Core may hold website **records** (sites, drafts, publications) and a signed rea
 ## What stays in Core (KEEP)
 
 - Shop identity (`ShopSettings`: name, address, phone, email, `scheduling_hours`, `shop_timezone`, logo, `website` URL for documents)
-- Google review destination (`shop_settings.google_reviews_url`) for post-repair review requests - Core messaging, not Website SEO
+- Google review destination (`shop_settings.google_reviews_url`). Sending the review request belongs to ARK Shop.
 - Customer portal and tokenized estimate / inspection / pay links
-- Leads as operational authority (advisor intake, `LeadSource::Website` for historical/source labeling, `LeadRecorder`)
-- Website-lead interrupt presenters for uncontacted leads already in Core
+- Leads as basic intake records: the website contact or booking request, `LeadSource::Website` for source labeling, `LeadRecorder`, and status. Lead conversations, replies, escalation, and interrupts for uncontacted leads belong to ARK Shop.
 - Ingress hygiene / spam observation on lead authority (no public marketing form required)
 - `PUBLIC_DOMAIN` / `surfaces.public` as an optional **host routing** seam for portal co-location - not a marketing CMS
 - Appointment **availability** configuration (when the shop can take requests) - presentation of booking UI is Website
