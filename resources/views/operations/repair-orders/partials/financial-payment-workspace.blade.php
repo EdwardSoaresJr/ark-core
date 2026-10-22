@@ -12,7 +12,15 @@
     $supportsTerminal = $captureReady && ($readiness['supports_terminal'] ?? false) && $devices !== [];
     $supportsKeyed = $captureReady && ($readiness['supports_keyed'] ?? false);
     $defaultMethod = $supportsTerminal ? 'terminal' : ($supportsKeyed ? 'keyed' : 'cash');
-    $defaultDevice = $devices[0]['device_ref'] ?? '';
+    $readers = array_values(array_map(
+        static fn (array $device): array => [
+            'device_ref' => $device['device_ref'],
+            'label' => $device['label'],
+            'available' => (bool) ($device['ready'] ?? true),
+        ],
+        $devices,
+    ));
+    $readerStorageKey = 'ark:payment-reader:'.(\App\Ark\Install\InstallationIdentity::read() ?? request()->getHost());
     $terminalWait = null;
     foreach ($captureAttempts as $attempt) {
         if (($attempt['terminal']['blocks_form'] ?? false) === true) {
@@ -42,7 +50,8 @@
         suggestedAmount: @js($suggestedAmount),
         publicConfig: @js($publicConfig),
         defaultMethod: @js($defaultMethod),
-        defaultDevice: @js($defaultDevice),
+        readers: @js($readers),
+        readerStorageKey: @js($readerStorageKey),
         manualMethods: @js($manualMethods),
         paidDateToday: @js($paidDateToday),
         paidDateTodayLabel: @js($paidDateTodayLabel),
@@ -229,13 +238,18 @@
                             <template x-if="method === 'terminal'">
                                 <label class="block">
                                     <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Reader</span>
-                                    <select class="mt-1 h-10 w-full rounded-sm border border-slate-300 px-2 text-sm" x-model="deviceRef">
-                                        @foreach ($devices as $device)
-                                            @if ($device['ready'] ?? true)
-                                                <option value="{{ $device['device_ref'] }}">{{ $device['label'] }}</option>
+                                    <select class="mt-1 h-10 w-full rounded-sm border border-slate-300 px-2 text-sm" x-model="deviceRef" @change="rememberReader()" data-payment-reader-select>
+                                        <option value="" :selected="deviceRef === ''">Choose a reader</option>
+                                        @foreach ($readers as $reader)
+                                            @if ($reader['available'])
+                                                <option value="{{ $reader['device_ref'] }}" data-payment-reader-label="{{ $reader['label'] }}">{{ $reader['label'] }}</option>
+                                            @else
+                                                <option value="{{ $reader['device_ref'] }}" data-payment-reader-label="{{ $reader['label'] }}" disabled>{{ $reader['label'] }} (offline)</option>
                                             @endif
                                         @endforeach
                                     </select>
+                                    <span class="mt-1 block text-[11px] text-amber-800" x-show="readerNotice()" x-text="readerNotice()"></span>
+                                    <span class="mt-1 block font-mono text-[11px] text-slate-400" x-show="selectedReader() && selectedReader().label !== selectedReader().device_ref" x-text="selectedReader()?.device_ref"></span>
                                 </label>
                             </template>
 
@@ -249,9 +263,9 @@
                             <button
                                 type="submit"
                                 class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-sky-700 px-3 text-sm font-bold text-white hover:bg-sky-800 disabled:opacity-50"
-                                :disabled="busy || !amountCanSubmit()"
+                                :disabled="busy || !amountCanSubmit() || (method === 'terminal' && !selectedReader())"
                             >
-                                <span x-show="method === 'terminal'" x-text="'Present $' + amount + ' to reader'">Present to reader</span>
+                                <span x-show="method === 'terminal'" x-text="presentToReaderLabel(amount)" data-payment-reader-button>Present to reader</span>
                                 <span x-show="method === 'keyed'" x-text="'Take $' + amount">Take payment</span>
                             </button>
                         </form>
