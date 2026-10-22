@@ -21,6 +21,8 @@ return [
         'mail_send' => env('ARK_MAIL_PLATFORM_SEND', true),
         'payments_capture' => env('ARK_PAYMENTS_PLATFORM_CAPTURE', true),
         'parts_catalog' => env('ARK_PARTS_PLATFORM_CATALOG', true),
+        // false keeps conversations in Core even when stale Platform connection data remains.
+        'communications_authority' => env('ARK_PLATFORM_COMMUNICATIONS_AUTHORITY', true),
     ],
 
     /* @deprecated Use services.ark_platform - retained while ARK Cloud terminology is retired. */
