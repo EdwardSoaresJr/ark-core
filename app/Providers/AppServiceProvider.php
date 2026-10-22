@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Ark\Install\DeferredMigrationLoader;
 use App\Ark\Communications\Provisioning\ProvisionBuilder;
+use App\Ark\Install\DeferredMigrationLoader;
 use App\Ark\Mobile\Push\DispatchMobilePushForInboundMessage;
 use App\Ark\Mobile\Push\DispatchMobilePushForOperationalEvent;
 use App\Ark\Mobile\Push\NotifyMobileLifecyclePushAction;
@@ -18,6 +18,9 @@ use App\Ark\Operations\Documents\PdfRuntimeConfigurator;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Learn\LearnArkProgressResolver;
 use App\Ark\Operations\Messaging\Events\ConversationMessageReceived;
+use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
+use App\Ark\Operations\Messaging\TwilioOutboundSmsTransport;
 use App\Ark\Operations\Parts\Contracts\PartsCatalogLauncher;
 use App\Ark\Operations\Parts\NotConfiguredPartsCatalogLauncher;
 use App\Ark\Operations\Parts\LinkedPartsQuotes;
@@ -25,45 +28,45 @@ use App\Ark\Operations\Parts\PartsTechCredentialsResolver;
 use App\Ark\Operations\Parts\UnavailableLinkedPartsQuotes;
 use App\Ark\Operations\Parts\PartsTechHttpClient;
 use App\Ark\Operations\Parts\PlatformPartsCatalogLauncher;
-use App\Ark\Platform\Parts\PartsTechPlatformGateway;
-use App\Ark\Platform\Voice\PlatformRecordingClient;
 use App\Ark\Operations\Recommendations\RecommendationWorkCompletionListener;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
-use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
-use Illuminate\Queue\Events\JobExceptionOccurred;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
-use App\Ark\Operations\Messaging\NotConfiguredOutboundSmsTransport;
-use App\Ark\Operations\Messaging\TwilioOutboundSmsTransport;
-use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopIntegrationRuntimeConfig;
+use App\Ark\Operations\Settings\ShopSettingsSchema;
 use App\Ark\Operations\Telephony\Contracts\TelephonyProvider;
 use App\Ark\Operations\Telephony\Providers\NotConfiguredTelephonyProvider;
+use App\Ark\Operations\Workboard\JobBoardLaneCatalog;
 use App\Ark\Operations\Workspace\WorkspaceTabBootEnricher;
+use App\Ark\Platform\Mail\ArkMailClient;
+use App\Ark\Platform\Mail\PlatformAwareMailManager;
+use App\Ark\Platform\Mail\PlatformMailTransport;
+use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyAdapter;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyClient;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyDeploymentMapper;
 use App\Ark\Platform\Provisioning\Coolify\CoolifyExecutionStore;
 use App\Ark\Platform\Provisioning\Coolify\FakeCoolifyClient;
-use App\Ark\Platform\Mail\ArkMailClient;
-use App\Ark\Platform\Mail\PlatformAwareMailManager;
-use App\Ark\Platform\Mail\PlatformMailTransport;
+use App\Ark\Platform\Voice\PlatformRecordingClient;
 use App\Ark\Platform\VoiceTransportRuntimeConfig;
 use App\Ark\Runtime\Broadcast\ReverbDeployment;
+use App\Ark\Runtime\DemoInstall;
 use App\Ark\Runtime\HostedRuntime;
 use App\Ark\Runtime\Surfaces\PublicRootUrlConfigurator;
-use App\Http\Middleware\ApplyShopRuntimeConfig;
 use App\Ark\Vehicles\Providers\NhtsaProvider;
 use App\Ark\Vehicles\VehicleIntelligenceManager;
+use App\Http\Middleware\ApplyShopRuntimeConfig;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\MailServiceProvider;
-use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -71,6 +74,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Tests\ParallelTestingConfiguration;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -185,6 +189,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app['events']->listen(JobExceptionOccurred::class, static function (): void {
             RepairOrderReadCache::beginUnitOfWork();
         });
+        $this->app['events']->listen(MigrationsEnded::class, static function (): void {
+            ShopSettingsSchema::flush();
+        });
 
         $this->app->register(MailServiceProvider::class);
         $this->app->extend('mail.manager', function ($manager, $app) {
@@ -196,7 +203,7 @@ class AppServiceProvider extends ServiceProvider
         Mail::clearResolvedInstances();
 
         if ($this->app->environment('testing')) {
-            \Tests\ParallelTestingConfiguration::register();
+            ParallelTestingConfiguration::register();
         }
 
         $this->app->terminating(function (): void {
@@ -236,7 +243,7 @@ class AppServiceProvider extends ServiceProvider
             $learnTrainingSnooze = null;
             $canSnoozeTraining = false;
 
-            if ($user !== null && ! \App\Ark\Runtime\DemoInstall::isDemo()) {
+            if ($user !== null && ! DemoInstall::isDemo()) {
                 $shell = app(LearnArkProgressResolver::class)
                     ->shellProjectionFor($user);
 
