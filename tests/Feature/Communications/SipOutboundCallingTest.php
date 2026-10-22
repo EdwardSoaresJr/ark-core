@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
+    config()->set('services.twilio.auth_token', 'test-token');
     config()->set('services.ark_platform.communications_authority', false);
     Http::fake();
     TelephonyEndpoint::query()->delete();
@@ -39,7 +39,7 @@ function recordOutbound(bool $on): void
 
 function deskDial(string $dialed, string $callSid = 'CAdesk000001', string $from = 'sip:wp820@lnp-chelton.sip.twilio.com'): string
 {
-    return test()->post(route('webhooks.communications.twilio.voice.sip-outbound'), [
+    return signedTwilioPost(route('webhooks.communications.twilio.voice.sip-outbound'), [
         'CallSid' => $callSid,
         'From' => $from,
         'To' => "sip:{$dialed}@lnp-chelton.sip.twilio.com",
@@ -125,10 +125,10 @@ test('recorded outbound calls play the notice to the person called and report th
         ->and($xml)->toContain('voice/recording')
         ->and($xml)->toContain('url="'.route('webhooks.communications.twilio.voice.sip-outbound-notice').'"');
 
-    $notice = $this->post(route('webhooks.communications.twilio.voice.sip-outbound-notice'), ['CallSid' => 'CAchild'])->assertOk()->getContent();
+    $notice = signedTwilioPost(route('webhooks.communications.twilio.voice.sip-outbound-notice'), ['CallSid' => 'CAchild'])->assertOk()->getContent();
     expect($notice)->toContain('<Say voice="alice">This call may be recorded.</Say>');
 
-    $this->post(route('webhooks.communications.twilio.voice.recording'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.recording'), [
         'CallSid' => 'CAdeskrec001',
         'RecordingSid' => 'RE00000000000000000000000000000001',
         'RecordingUrl' => 'https://api.twilio.com/2010-04-01/Accounts/AC/Recordings/RE00000000000000000000000000000001',
@@ -142,7 +142,7 @@ test('recorded outbound calls play the notice to the person called and report th
 test('an unanswered outbound call tells the caller and never plays the shop voicemail', function (): void {
     deskDial('7195551234', 'CAdesknoans1');
 
-    $xml = $this->post(route('webhooks.communications.twilio.voice.sip-outbound-complete'), [
+    $xml = signedTwilioPost(route('webhooks.communications.twilio.voice.sip-outbound-complete'), [
         'CallSid' => 'CAdesknoans1',
         'DialCallStatus' => 'no-answer',
     ])->assertOk()->getContent();
@@ -151,7 +151,7 @@ test('an unanswered outbound call tells the caller and never plays the shop voic
         ->and($xml)->not->toContain('<Record')
         ->and(CallSession::query()->sole()->direction)->toBe(CallSessionDirection::Outbound);
 
-    $answered = $this->post(route('webhooks.communications.twilio.voice.sip-outbound-complete'), [
+    $answered = signedTwilioPost(route('webhooks.communications.twilio.voice.sip-outbound-complete'), [
         'CallSid' => 'CAdesknoans1',
         'DialCallStatus' => 'completed',
     ])->assertOk()->getContent();
@@ -223,7 +223,7 @@ test('a recorded call with no notice text configured still announces the default
     )]);
 
     $xml = deskDial('7195551234', 'CAdefaultnotice');
-    $notice = $this->post(route('webhooks.communications.twilio.voice.sip-outbound-notice'), ['CallSid' => 'CAchild'])->assertOk()->getContent();
+    $notice = signedTwilioPost(route('webhooks.communications.twilio.voice.sip-outbound-notice'), ['CallSid' => 'CAchild'])->assertOk()->getContent();
 
     expect($xml)->toContain('record="record-from-answer-dual"')
         ->and($xml)->toContain('url="'.route('webhooks.communications.twilio.voice.sip-outbound-notice').'"')

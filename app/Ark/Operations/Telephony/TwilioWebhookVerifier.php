@@ -10,7 +10,7 @@ final class TwilioWebhookVerifier
     {
         $token = trim((string) config('services.twilio.auth_token', ''));
         if ($token === '') {
-            return true;
+            return false;
         }
 
         $given = trim((string) $request->header('X-Twilio-Signature', ''));

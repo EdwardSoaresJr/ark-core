@@ -1,9 +1,11 @@
 <?php
 
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\TelephonyEndpoint;
 use App\Ark\Operations\Telephony\TwilioWebhookVerifier;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 
 beforeEach(function (): void {
@@ -137,6 +139,79 @@ test('a signed voice webhook with a spaced caller name and a query string is acc
         'RecordingDuration' => '7',
     ])->assertSuccessful();
 });
+
+/**
+ * @return array<string, array{0: string, 1: array<string, mixed>}>
+ */
+function twilioWebhookRoutes(): array
+{
+    return [
+        'messaging incoming' => ['webhooks.communications.twilio.messaging.incoming', []],
+        'messaging status' => ['webhooks.communications.twilio.messaging.status', []],
+        'voice incoming' => ['webhooks.communications.twilio.voice.incoming', []],
+        'voice status' => ['webhooks.communications.twilio.voice.status', []],
+        'voice dial complete' => ['webhooks.communications.twilio.voice.dial-complete', []],
+        'voice recording' => ['webhooks.communications.twilio.voice.recording', ['voicemail' => 1]],
+        'voice ring status' => ['webhooks.communications.twilio.voice.ring-status', ['parentCallSid' => 'CAunsigned01', 'endpointId' => 1]],
+        'voice conference join' => ['webhooks.communications.twilio.voice.conference-join', ['conference' => 'unsigned']],
+        'sip outbound' => ['webhooks.communications.twilio.voice.sip-outbound', []],
+        'sip outbound complete' => ['webhooks.communications.twilio.voice.sip-outbound-complete', []],
+        'sip outbound notice' => ['webhooks.communications.twilio.voice.sip-outbound-notice', []],
+    ];
+}
+
+dataset('every twilio webhook', twilioWebhookRoutes());
+
+function forgedTwilioCall(): array
+{
+    return [
+        'AccountSid' => 'AC00000000000000000000000000000000',
+        'CallSid' => 'CAunsigned01',
+        'MessageSid' => 'SMunsigned01',
+        'From' => '+17195551234',
+        'To' => '+17195550100',
+        'Direction' => 'inbound',
+        'CallStatus' => 'ringing',
+        'DialCallStatus' => 'no-answer',
+        'Body' => 'Forged text.',
+        'RecordingSid' => 'REunsigned01',
+        'RecordingUrl' => 'https://api.twilio.com/recordings/REunsigned01',
+        'RecordingStatus' => 'completed',
+    ];
+}
+
+test('every twilio webhook is covered by the unsigned-request tests', function () {
+    $registered = collect(Route::getRoutes()->getRoutes())
+        ->map(fn ($route) => $route->getName())
+        ->filter(fn (?string $name) => is_string($name) && str_starts_with($name, 'webhooks.communications.twilio.'))
+        ->sort()
+        ->values()
+        ->all();
+
+    $covered = collect(twilioWebhookRoutes())->map(fn (array $row) => $row[0])->sort()->values()->all();
+
+    expect($registered)->toBe($covered);
+});
+
+test('an unsigned request to a twilio webhook is refused and nothing is stored', function (string $name, array $parameters) {
+    twilioWebhook($this, route($name, $parameters), forgedTwilioCall(), null)->assertStatus(401);
+
+    expect(ConversationMessage::query()->count())->toBe(0)
+        ->and(CallSession::query()->count())->toBe(0);
+})->with('every twilio webhook');
+
+test('without a twilio auth token every twilio webhook refuses the request', function (string $name, array $parameters, ?string $signWith) {
+    config()->set('services.twilio.auth_token', '');
+
+    twilioWebhook($this, route($name, $parameters), forgedTwilioCall(), $signWith)->assertStatus(401);
+
+    expect(ConversationMessage::query()->count())->toBe(0)
+        ->and(CallSession::query()->count())->toBe(0);
+})->with('every twilio webhook')->with([
+    'unsigned' => [null],
+    'signed with an empty token' => [''],
+    'signed with a guessed token' => ['twilio-test-token'],
+]);
 
 test('the form body parser keeps values exactly, including plus signs and spaces', function () {
     expect(TwilioWebhookVerifier::parseFormBody('Body=%20hi+there%20&From=%2B17195551234&Empty=&Flag'))
