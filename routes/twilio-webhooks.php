@@ -2,6 +2,7 @@
 
 use App\Ark\Operations\Messaging\TwilioMessagingWebhookController;
 use App\Ark\Operations\Telephony\TelephonyRecordingWebhookController;
+use App\Ark\Operations\Telephony\TwilioSipOutboundController;
 use App\Ark\Operations\Telephony\TwilioVoiceWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,7 @@ Route::prefix('webhooks/communications/twilio')->name('webhooks.communications.t
         ->whereNumber('endpointId')
         ->name('voice.ring-status');
     Route::post('/voice/conference-join', [TwilioVoiceWebhookController::class, 'conferenceJoin'])->name('voice.conference-join');
+    Route::post('/voice/sip-outbound', [TwilioSipOutboundController::class, 'dial'])->name('voice.sip-outbound');
+    Route::post('/voice/sip-outbound/complete', [TwilioSipOutboundController::class, 'complete'])->name('voice.sip-outbound-complete');
+    Route::post('/voice/sip-outbound/notice', [TwilioSipOutboundController::class, 'notice'])->name('voice.sip-outbound-notice');
 });
