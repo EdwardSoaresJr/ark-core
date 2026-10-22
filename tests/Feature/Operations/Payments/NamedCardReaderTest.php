@@ -76,6 +76,17 @@ test('take payment lists readers by their shop names and falls back to the devic
         ->assertSee('Choose a reader', false);
 });
 
+test('the reader name and device id share one control with no separate device line', function () {
+    nameReaders(['549CS149C4000527' => 'Front Counter']);
+
+    $page = $this->actingAs($this->advisor)->get(route('operations.repair-orders.show', $this->repairOrder->fresh()))->assertOk();
+
+    expect(substr_count($page->getContent(), 'data-payment-reader-control'))->toBe(1)
+        ->and($page->getContent())->toContain('x-text="readerDisplay().primary"')
+        ->and($page->getContent())->toContain('x-text="readerDisplay().secondary"')
+        ->and($page->getContent())->not->toContain('selectedReader()?.device_ref');
+});
+
 test('a reader that goes offline after the modal opened is refused at submission', function () {
     nameReaders(['549CS149C4000527' => 'Front Counter']);
     $this->actingAs($this->advisor)

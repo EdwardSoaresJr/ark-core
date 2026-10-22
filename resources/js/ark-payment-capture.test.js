@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyTerminalPayment, chooseReader, nextPaymentAmount, normalizePaymentAmount, payableReader, paymentCalendarCells, paymentWorkspaceIsTransactionBound, presentingTerminalPayment, readerButtonLabel, readerNotice, rememberReaderChoice, rememberedReader, shiftPaymentCalendarMonth, stampPaymentCaptureFields } from './ark-payment-capture.js';
+import { applyTerminalPayment, chooseReader, nextPaymentAmount, normalizePaymentAmount, payableReader, paymentCalendarCells, paymentWorkspaceIsTransactionBound, presentingTerminalPayment, readerButtonLabel, readerDisplay, readerNotice, rememberReaderChoice, rememberedReader, shiftPaymentCalendarMonth, stampPaymentCaptureFields } from './ark-payment-capture.js';
 
 function memoryStorage() {
     const values = new Map();
@@ -52,6 +52,14 @@ test('a remembered reader that is offline stays selected, blocks payment, and re
 test('an offline reader is not chosen as the only reader', () => {
     assert.deepEqual(chooseReader([{ ...frontCounter, available: false }], ''), { deviceRef: '', rememberedUnavailable: false });
     assert.deepEqual(chooseReader([{ ...frontCounter, available: false }, bayOne], ''), { deviceRef: bayOne.device_ref, rememberedUnavailable: false });
+});
+
+test('the reader control shows the shop name first and the device id as secondary text', () => {
+    assert.deepEqual(readerDisplay([frontCounter, bayOne], frontCounter.device_ref), { primary: 'Front Counter', secondary: '549CS149C4000527' });
+    assert.deepEqual(readerDisplay([{ device_ref: '549CS149C4000527', label: '549CS149C4000527' }], '549CS149C4000527'), { primary: '549CS149C4000527', secondary: '' });
+    assert.deepEqual(readerDisplay([{ ...frontCounter, available: false }], frontCounter.device_ref), { primary: 'Front Counter (offline)', secondary: '549CS149C4000527' });
+    assert.deepEqual(readerDisplay([bayOne], frontCounter.device_ref), { primary: 'Saved reader is not available', secondary: '549CS149C4000527' });
+    assert.deepEqual(readerDisplay([frontCounter, bayOne], ''), { primary: 'Choose a reader', secondary: '' });
 });
 
 test('the payment button names the chosen reader and waits for one', () => {

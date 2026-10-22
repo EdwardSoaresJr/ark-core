@@ -272,6 +272,27 @@ export function readerButtonLabel(amount, readers, deviceRef) {
     return 'Choose a reader';
 }
 
+/**
+ * What the closed reader control shows: the shop's name first, the device id as secondary text.
+ */
+export function readerDisplay(readers, deviceRef) {
+    const reader = (Array.isArray(readers) ? readers : []).find((candidate) => candidate?.device_ref === deviceRef);
+
+    if (reader) {
+        const name = reader.label || reader.device_ref;
+
+        return {
+            primary: readerIsAvailable(reader) ? name : `${name} (offline)`,
+            secondary: name !== reader.device_ref ? reader.device_ref : '',
+        };
+    }
+    if (deviceRef) {
+        return { primary: 'Saved reader is not available', secondary: deviceRef };
+    }
+
+    return { primary: 'Choose a reader', secondary: '' };
+}
+
 export function readerNotice(readers, deviceRef) {
     if (! deviceRef || payableReader(readers, deviceRef)) {
         return '';
@@ -362,6 +383,10 @@ export function arkPaymentCapture(config = {}) {
 
         readerNotice() {
             return readerNotice(this.readers, this.deviceRef);
+        },
+
+        readerDisplay() {
+            return readerDisplay(this.readers, this.deviceRef);
         },
 
         init() {
