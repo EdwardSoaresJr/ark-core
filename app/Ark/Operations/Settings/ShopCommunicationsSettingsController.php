@@ -201,6 +201,7 @@ class ShopCommunicationsSettingsController
             'telephony_call_flow.dial_timeout_seconds' => ['nullable', 'integer', 'min:10', 'max:60'],
             'telephony_call_flow.owned_popup_timeout_seconds' => ['nullable', 'integer', 'min:3', 'max:60'],
             'telephony_call_flow.presence_timeout_minutes' => ['nullable', 'integer', 'min:5', 'max:240'],
+            'telephony_call_flow.duty_max_hours' => ['nullable', 'integer', 'min:1', 'max:24'],
             'telephony_call_flow.comms_attention_gate_enabled' => ['nullable', 'boolean'],
             'telephony_call_flow.comms_escalation_enabled' => ['nullable', 'boolean'],
             'telephony_call_flow.comms_escalation_delay_minutes' => ['nullable', 'integer', 'min:1', 'max:30'],
@@ -219,6 +220,7 @@ class ShopCommunicationsSettingsController
             'endpoints.*.ring_schedule' => ['nullable', Rule::enum(TelephonyRingSchedule::class)],
             'endpoints.*.ring_delay_seconds' => ['nullable', 'integer', 'min:0', 'max:60'],
             'endpoints.*.presence_timeout_minutes' => ['nullable', 'integer', 'min:5', 'max:240'],
+            'endpoints.*.on_duty_after_minutes' => ['nullable', 'integer', 'min:0', 'max:240'],
             'endpoints.*.enabled' => ['nullable', 'boolean'],
             'message_actions' => ['nullable', 'array'],
             'message_actions.tow_company' => ['nullable', 'string', 'max:120'],
@@ -323,6 +325,7 @@ class ShopCommunicationsSettingsController
             'dial_timeout_seconds' => (int) ($callFlowInput['dial_timeout_seconds'] ?? $existingFlow['dial_timeout_seconds'] ?? 25),
             'owned_popup_timeout_seconds' => (int) ($callFlowInput['owned_popup_timeout_seconds'] ?? $existingFlow['owned_popup_timeout_seconds'] ?? 8),
             'presence_timeout_minutes' => (int) ($callFlowInput['presence_timeout_minutes'] ?? $existingFlow['presence_timeout_minutes'] ?? 30),
+            'duty_max_hours' => (int) ($callFlowInput['duty_max_hours'] ?? $existingFlow['duty_max_hours'] ?? 12),
             'comms_attention_gate_enabled' => $request->boolean(
                 'telephony_call_flow.comms_attention_gate_enabled',
                 (bool) ($existingFlow['comms_attention_gate_enabled'] ?? true),

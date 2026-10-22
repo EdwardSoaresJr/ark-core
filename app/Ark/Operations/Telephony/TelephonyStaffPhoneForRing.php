@@ -42,10 +42,20 @@ class TelephonyStaffPhoneForRing
                 continue;
             }
 
+            $entered = trim((string) ($endpoint['destination'] ?? ''));
+
+            if ($entered !== '') {
+                if (strlen((string) PhoneNumber::normalize($entered)) !== 10) {
+                    $errors->add("endpoints.{$index}.destination", 'Enter a 10-digit cell number for this endpoint.');
+                }
+
+                continue;
+            }
+
             if (PhoneNumber::normalize($user->phone) === null) {
                 $errors->add(
                     "endpoints.{$index}.user_id",
-                    "{$user->name} has no cell on their profile. Add it in Settings → Staff.",
+                    "Enter a cell number for this endpoint. {$user->name} has no cell on their profile.",
                 );
             }
         }

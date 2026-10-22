@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Telephony;
 
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Staff\Duty\StaffDuty;
 use App\Ark\Operations\Telephony\MobileVoice\MobileVoiceEndpointRegistrar;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -13,6 +14,7 @@ class TelephonyRingGroup
     public function __construct(
         private readonly StaffCallPresence $presence,
         private readonly MobileVoiceEndpointRegistrar $mobileVoiceEndpoints,
+        private readonly StaffDuty $duty,
     ) {}
 
     /**
@@ -171,6 +173,10 @@ class TelephonyRingGroup
 
         if ($endpoint->ring_schedule === TelephonyRingSchedule::Always) {
             return true;
+        }
+
+        if ($endpoint->ring_schedule === TelephonyRingSchedule::OnDuty) {
+            return $this->duty->isOnDuty($endpoint->user_id, $endpoint->onDutyAfterMinutes());
         }
 
         if ($endpoint->user_id === null) {

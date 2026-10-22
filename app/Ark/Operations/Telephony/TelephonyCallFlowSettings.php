@@ -77,6 +77,11 @@ class TelephonyCallFlowSettings
         return max(5, min(240, (int) ($this->config['presence_timeout_minutes'] ?? 30)));
     }
 
+    public function dutyMaxHours(): int
+    {
+        return max(1, min(24, (int) ($this->config['duty_max_hours'] ?? 12)));
+    }
+
     public function ownedPopupTimeoutSeconds(): int
     {
         return max(3, min(60, (int) ($this->config['owned_popup_timeout_seconds'] ?? 8)));
@@ -411,6 +416,7 @@ class TelephonyCallFlowSettings
             'record_outbound_calls' => $this->recordOutboundCalls(),
             'dial_timeout_seconds' => $this->dialTimeoutSeconds(),
             'presence_timeout_minutes' => $this->presenceTimeoutMinutes(),
+            'duty_max_hours' => $this->dutyMaxHours(),
             'owned_popup_timeout_seconds' => $this->ownedPopupTimeoutSeconds(),
             'comms_attention_gate_enabled' => $this->attentionGateEnabled(),
             'comms_escalation_enabled' => $this->escalationEnabled(),

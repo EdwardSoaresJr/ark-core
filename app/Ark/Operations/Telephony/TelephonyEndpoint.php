@@ -17,6 +17,7 @@ class TelephonyEndpoint extends Model
         'ring_schedule',
         'ring_delay_seconds',
         'presence_timeout_minutes',
+        'on_duty_after_minutes',
         'enabled',
         'position',
     ];
@@ -30,12 +31,18 @@ class TelephonyEndpoint extends Model
             'position' => 'integer',
             'ring_delay_seconds' => 'integer',
             'presence_timeout_minutes' => 'integer',
+            'on_duty_after_minutes' => 'integer',
         ];
     }
 
     public function presenceTimeoutMinutes(): int
     {
         return max(5, min(240, (int) ($this->presence_timeout_minutes ?? 30)));
+    }
+
+    public function onDutyAfterMinutes(): int
+    {
+        return max(0, min(240, (int) ($this->on_duty_after_minutes ?? 0)));
     }
 
     public function user(): BelongsTo
@@ -53,13 +60,14 @@ class TelephonyEndpoint extends Model
             return trim((string) $this->destination);
         }
 
-        $fromUser = $this->resolvedUserPhone();
+        // A cell endpoint owns its number; a profile phone change must not redirect the ring.
+        $owned = PhoneNumber::normalize($this->destination);
 
-        if ($fromUser !== '') {
-            return $fromUser;
+        if ($owned !== null) {
+            return $owned;
         }
 
-        return PhoneNumber::normalize($this->destination) ?? PhoneNumber::digits($this->destination);
+        return $this->resolvedUserPhone();
     }
 
     public function resolvedUserPhone(): string

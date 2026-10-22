@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Staff;
 
+use App\Ark\Operations\Staff\Duty\StaffDuty;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class StaffInvitationAcceptController
 
         Auth::login($user);
         $request->session()->regenerate();
+        app(StaffDuty::class)->startFromSignIn($user);
 
         return redirect()->route('account.setup');
     }

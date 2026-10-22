@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Workstations;
 
+use App\Ark\Operations\Staff\Duty\StaffDuty;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,6 +25,8 @@ final class SwitchWorkstationOperatorSessionAction
         if (request()->hasSession()) {
             request()->session()->regenerate();
         }
+
+        app(StaffDuty::class)->startFromSignIn($operator);
 
         $previousOperatorId = $workstation->current_operator_user_id;
 

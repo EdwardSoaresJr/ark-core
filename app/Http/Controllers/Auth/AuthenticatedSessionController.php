@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Ark\Operations\Staff\Duty\StaffDuty;
+use App\Ark\Operations\Staff\Duty\StaffDutyEndReason;
 use App\Ark\Operations\Staff\StaffFrontDoor;
 use App\Ark\Operations\Workstations\AssignWorkstationOperatorAction;
 use App\Ark\Operations\Workstations\Workstation;
@@ -37,6 +39,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->user() !== null) {
+            app(StaffDuty::class)->startFromSignIn($request->user());
+        }
+
         $binding = WorkstationPresence::resolveBinding($request);
 
         if ($binding !== null && $request->user() !== null) {
@@ -64,6 +70,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        if ($request->user() !== null) {
+            app(StaffDuty::class)->end($request->user(), StaffDutyEndReason::SignOut);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

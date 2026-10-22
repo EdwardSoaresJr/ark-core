@@ -38,8 +38,9 @@ class TelephonyEndpointSync
                     continue;
                 }
 
-                $user = User::query()->find($userId);
-                $destination = PhoneNumber::normalize($user?->phone) ?? '';
+                $destination = PhoneNumber::normalize((string) ($endpoint['destination'] ?? ''))
+                    ?? PhoneNumber::normalize(User::query()->find($userId)?->phone)
+                    ?? '';
             } else {
                 $destination = trim((string) ($endpoint['destination'] ?? ''));
 
@@ -52,6 +53,7 @@ class TelephonyEndpointSync
 
             $ringDelaySeconds = max(0, min(60, (int) ($endpoint['ring_delay_seconds'] ?? 0)));
             $presenceTimeoutMinutes = max(5, min(240, (int) ($endpoint['presence_timeout_minutes'] ?? 30)));
+            $onDutyAfterMinutes = max(0, min(240, (int) ($endpoint['on_duty_after_minutes'] ?? 0)));
 
             TelephonyEndpoint::query()->create([
                 'name' => $name,
@@ -61,6 +63,7 @@ class TelephonyEndpointSync
                 'ring_schedule' => $ringSchedule,
                 'ring_delay_seconds' => $ringDelaySeconds,
                 'presence_timeout_minutes' => $presenceTimeoutMinutes,
+                'on_duty_after_minutes' => $onDutyAfterMinutes,
                 'enabled' => filter_var($endpoint['enabled'] ?? true, FILTER_VALIDATE_BOOL),
                 'position' => $position,
             ]);

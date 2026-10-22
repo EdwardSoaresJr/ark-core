@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Ark\Operations\Staff\Duty\StaffDuty;
+use App\Ark\Operations\Staff\Duty\StaffDutyEndReason;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -28,6 +30,7 @@ class EnsureUserIsActive
             return $next($request);
         }
 
+        app(StaffDuty::class)->end($user, StaffDutyEndReason::SignOut);
         auth()->logout();
 
         $request->session()->invalidate();

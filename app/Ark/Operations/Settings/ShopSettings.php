@@ -732,6 +732,7 @@ TEXT;
             'record_outbound_calls' => false,
             'dial_timeout_seconds' => 25,
             'presence_timeout_minutes' => 30,
+            'duty_max_hours' => 12,
             'owned_popup_timeout_seconds' => 8,
             'comms_attention_gate_enabled' => true,
             'comms_escalation_enabled' => true,

@@ -53,6 +53,7 @@
         'ring_schedule' => $endpoint->ring_schedule?->value ?? 'always',
         'ring_delay_seconds' => $endpoint->ring_delay_seconds ?? 0,
         'presence_timeout_minutes' => $endpoint->presence_timeout_minutes ?? 30,
+        'on_duty_after_minutes' => $endpoint->on_duty_after_minutes ?? 0,
         'enabled' => $endpoint->enabled,
     ])->values()->all());
 
@@ -165,7 +166,7 @@
                     'hasPhone' => filled($member->phone),
                 ])->values()->all()),
                 addEndpoint() {
-                    this.endpoints.push({ name: '', type: 'cell', destination: '', user_id: '', ring_schedule: 'always', ring_delay_seconds: 0, presence_timeout_minutes: 30, enabled: true });
+                    this.endpoints.push({ name: '', type: 'cell', destination: '', user_id: '', ring_schedule: 'always', ring_delay_seconds: 0, presence_timeout_minutes: 30, on_duty_after_minutes: 0, enabled: true });
                 },
                 removeEndpoint(index) {
                     this.endpoints.splice(index, 1);
@@ -185,6 +186,9 @@
                     const member = this.staffMembers.find((entry) => entry.id === String(endpoint.user_id));
                     if (member && ! endpoint.name) {
                         endpoint.name = `${member.name} Cell`;
+                    }
+                    if (member?.phone && ! endpoint.destination) {
+                        endpoint.destination = member.phone;
                     }
                 },
             }"
@@ -730,7 +734,7 @@
                             <span>Type</span>
                             <span>Target</span>
                             <span>Rule / owner</span>
-                            <span title="Minutes after last ARK activity before this cell endpoint stops ringing">Presence</span>
+                            <span title="When present: minutes after last ARK activity. On duty: minutes after signing in before the cell rings.">Minutes</span>
                             <span>Delay</span>
                             <span>On</span>
                             <span></span>
@@ -780,6 +784,20 @@
                                                     x-text="endpointError(index, 'user_id')"
                                                     x-cloak
                                                 ></p>
+                                                <input
+                                                    type="tel"
+                                                    class="{{ $ringField }} mt-1"
+                                                    :name="`endpoints[${index}][destination]`"
+                                                    x-model="endpoint.destination"
+                                                    placeholder="Cell number"
+                                                    title="This endpoint rings this number. Changing the staff profile does not change it."
+                                                >
+                                                <p
+                                                    class="mt-0.5 text-[10px] font-semibold text-rose-700"
+                                                    x-show="endpointError(index, 'destination')"
+                                                    x-text="endpointError(index, 'destination')"
+                                                    x-cloak
+                                                ></p>
                                             </div>
                                         </template>
                                         <template x-if="endpoint.type === 'sip'">
@@ -824,16 +842,33 @@
                                     </div>
 
                                     <div class="min-w-0">
-                                        <template x-if="endpoint.type === 'cell'">
-                                            <input
-                                                type="number"
-                                                min="5"
-                                                max="240"
-                                                class="{{ $ringField }}"
-                                                :name="`endpoints[${index}][presence_timeout_minutes]`"
-                                                x-model.number="endpoint.presence_timeout_minutes"
-                                                title="Minutes after last ARK activity for When present rule"
-                                            >
+                                        <template x-if="endpoint.type === 'cell' && endpoint.ring_schedule !== 'on_duty'">
+                                            <div>
+                                                <input
+                                                    type="number"
+                                                    min="5"
+                                                    max="240"
+                                                    class="{{ $ringField }}"
+                                                    :name="`endpoints[${index}][presence_timeout_minutes]`"
+                                                    x-model.number="endpoint.presence_timeout_minutes"
+                                                    title="Minutes after last ARK activity for When present rule"
+                                                >
+                                                <input type="hidden" :name="`endpoints[${index}][on_duty_after_minutes]`" :value="endpoint.on_duty_after_minutes ?? 0">
+                                            </div>
+                                        </template>
+                                        <template x-if="endpoint.type === 'cell' && endpoint.ring_schedule === 'on_duty'">
+                                            <div>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="240"
+                                                    class="{{ $ringField }}"
+                                                    :name="`endpoints[${index}][on_duty_after_minutes]`"
+                                                    x-model.number="endpoint.on_duty_after_minutes"
+                                                    title="Minutes after signing in before this cell rings"
+                                                >
+                                                <input type="hidden" :name="`endpoints[${index}][presence_timeout_minutes]`" :value="endpoint.presence_timeout_minutes ?? 30">
+                                            </div>
                                         </template>
                                         <template x-if="endpoint.type === 'sip'">
                                             <input type="hidden" :name="`endpoints[${index}][presence_timeout_minutes]`" value="30">
