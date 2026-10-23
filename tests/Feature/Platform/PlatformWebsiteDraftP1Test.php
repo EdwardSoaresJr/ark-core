@@ -22,7 +22,6 @@ use Illuminate\Support\Str;
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     config()->set('platform_website.management_enabled', true);
-    config()->set('platform_website.uploads_enabled', false);
 });
 
 function platformWebsiteShop(string $slug = 'test-garage'): Shop
