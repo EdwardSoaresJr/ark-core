@@ -815,6 +815,9 @@
                             Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer - not billing class.
                         </p>
 
+                        @php
+                            $storedCustomerTypes = $settings->storedCustomerTypeRows();
+                        @endphp
                         @foreach ($settings->customerTypeRows() as $index => $type)
                             @php
                                 $billingProfile = $settings->customerTagBillingProfile($type['name']);
@@ -1014,6 +1017,10 @@
                                                     <option value="both" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'both')>Labor &amp; parts</option>
                                                 </select>
                                             </div>
+                                            @php
+                                                $builtInDiscountAmount = \App\Ark\Operations\Settings\ShopSettings::builtInDiscountAmountFor($type['name']);
+                                                $builtInDiscountLabel = $builtInDiscountAmount !== null ? rtrim(rtrim($builtInDiscountAmount, '0'), '.').'%' : null;
+                                            @endphp
                                             <div>
                                                 <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                                     Discount %
@@ -1024,11 +1031,18 @@
                                                 </div>
                                                 <input
                                                     name="customer_types[{{ $index }}][discount_amount]"
-                                                    value="{{ old('customer_types.'.$index.'.discount_amount', $type['discount_amount']) }}"
+                                                    value="{{ old('customer_types.'.$index.'.discount_amount', $storedCustomerTypes[$index]['discount_amount'] ?? null) }}"
                                                     inputmode="decimal"
-                                                    placeholder="0.00"
+                                                    placeholder="{{ $builtInDiscountLabel !== null ? 'Built-in '.$builtInDiscountLabel : 'No discount' }}"
                                                     class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400"
                                                 >
+                                                <p class="mt-1 text-xs text-slate-500">
+                                                    @if ($builtInDiscountLabel !== null)
+                                                        Uses the built-in {{ $builtInDiscountLabel }} when blank. Enter 0 for no discount.
+                                                    @else
+                                                        No discount when blank.
+                                                    @endif
+                                                </p>
                                             </div>
                                             <div class="sm:col-span-2 border-t border-slate-100 pt-2 text-xs leading-5 text-slate-500">
                                                 @php
