@@ -1147,7 +1147,7 @@ TEXT;
                     $row['default_parts_matrix_key'] = null;
                 }
 
-                return $this->normalizeCustomerTypeRow($row);
+                return $this->normalizeStoredCustomerTypeRow($row);
             })
             ->values()
             ->all();
@@ -1391,6 +1391,36 @@ TEXT;
     }
 
     /**
+     * Billing classes as saved, in the same order as customerTypeRows(). A null
+     * discount_amount here means the class has no discount % override.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function storedCustomerTypeRows(): array
+    {
+        return collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+            ->map(fn (array $row): array => $this->normalizeStoredCustomerTypeRow($row))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Discount % a built-in billing class uses when it has no override, such as Military.
+     */
+    public static function builtInDiscountAmountFor(?string $customerType): ?string
+    {
+        $default = collect(self::DEFAULT_CUSTOMER_TYPES)
+            ->first(fn (array $row): bool => strcasecmp($row['name'], trim((string) $customerType)) === 0);
+
+        return self::formatDiscountAmount($default['discount_amount'] ?? null);
+    }
+
+    private static function formatDiscountAmount(mixed $amount): ?string
+    {
+        return filled($amount) ? number_format((float) $amount, 2, '.', '') : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function defaultCustomerTypeDisclaimerMap(): array
@@ -1579,6 +1609,23 @@ TEXT;
             'default_parts_matrix_key' => $row['default_parts_matrix_key'] ?? $defaults['default_parts_matrix_key'] ?? null,
             'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
         ];
+    }
+
+    /**
+     * The row to save. Unlike normalizeCustomerTypeRow(), a blank discount % stays
+     * null, so a built-in class keeps resolving to its built-in percent.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    public function normalizeStoredCustomerTypeRow(array $row): array
+    {
+        $normalized = $this->normalizeCustomerTypeRow($row);
+        $normalized['discount_amount'] = $normalized['discount_type'] === 'none'
+            ? null
+            : self::formatDiscountAmount($row['discount_amount'] ?? null);
+
+        return $normalized;
     }
 
     public function billingClassPillClass(?string $name): string
