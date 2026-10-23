@@ -73,7 +73,10 @@ test('admin can open owner targets settings section', function () {
         ->assertSee('name="monthly_fixed_costs"', false)
         ->assertSee('its monthly total is used here instead.', false)
         ->assertSee('the monthly total replaces Owner Targets monthly fixed costs.', false)
-        ->assertDontSee('Usually matches', false);
+        ->assertDontSee('Usually matches', false)
+        ->assertSee('Percent of technician labor cost. Not used when Monthly payroll tax is above $0.')
+        ->assertSee('When above $0, used instead of the payroll tax reserve %.')
+        ->assertDontSee('Optional override');
 });
 
 /**

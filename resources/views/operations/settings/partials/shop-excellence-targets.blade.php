@@ -155,6 +155,7 @@
                         value="{{ old('payroll_tax_reserve_percent', $excellenceTargets['payroll_tax_reserve_percent']) }}"
                         class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950"
                     >
+                    <span class="mt-1 block text-[11px] text-slate-400">Percent of technician labor cost. Not used when Monthly payroll tax is above $0.</span>
                 </label>
 
                 <label class="block text-xs font-medium text-slate-500">
@@ -165,9 +166,10 @@
                         min="0"
                         step="0.01"
                         value="{{ old('monthly_payroll_tax', ($excellenceTargets['monthly_payroll_tax_cents'] ?? null) !== null ? number_format($excellenceTargets['monthly_payroll_tax_cents'] / 100, 2, '.', '') : '') }}"
-                        placeholder="Optional override"
+                        placeholder="Optional"
                         class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950"
                     >
+                    <span class="mt-1 block text-[11px] text-slate-400">When above $0, used instead of the payroll tax reserve %.</span>
                 </label>
             </div>
         </div>
