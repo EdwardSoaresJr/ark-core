@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use Illuminate\Http\RedirectResponse;
@@ -12,7 +13,9 @@ class RepairOrderLifecycleController
 {
     use RecordsRepairOrderEstimateMutation;
 
-    public function __invoke(Request $request, RepairOrder $repairOrder, RepairOrderLifecycleTransition $lifecycle, RepairOrderConcurrency $concurrency): RedirectResponse
+    public const FINAL_PDF_FAILED = 'The final estimate PDF could not be generated. Open the estimate PDF from Print to try again. Check Chromium runtime support.';
+
+    public function __invoke(Request $request, RepairOrder $repairOrder, RepairOrderLifecycleTransition $lifecycle, RepairOrderConcurrency $concurrency, EstimateDocumentService $documents): RedirectResponse
     {
         $concurrency->guard($request, $repairOrder);
 
@@ -94,14 +97,18 @@ class RepairOrderLifecycleController
                 );
         }
 
+        $finalPdfWarning = $repairOrder->isTerminal() && $documents->hasFailedPdfForRepairOrder($repairOrder)
+            ? ' '.self::FINAL_PDF_FAILED
+            : '';
+
         if ($toStatusSlug === RepairOrderStatus::Closed->value) {
             return redirect()
                 ->back()
-                ->with('status', 'RO closed as '.$repairOrder->statusDisplayLabel().'.');
+                ->with('status', 'RO closed as '.$repairOrder->statusDisplayLabel().'.'.$finalPdfWarning);
         }
 
         return redirect()
             ->back()
-            ->with('status', 'RO moved to '.$repairOrder->statusDisplayLabel().'.');
+            ->with('status', 'RO moved to '.$repairOrder->statusDisplayLabel().'.'.$finalPdfWarning);
     }
 }

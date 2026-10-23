@@ -4,7 +4,6 @@ namespace App\Ark\Operations\Documents;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 use Spatie\Browsershot\Browsershot;
 use Throwable;
 
@@ -83,11 +82,11 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
         $chrome = config('services.pdf.chrome_path');
 
         if (! is_string($node) || $node === '' || ! is_executable($node)) {
-            throw new RuntimeException('Estimate PDF runtime is missing Node. Set PDF_NODE_BINARY or run install-pdf-runtime.');
+            throw new PdfRuntimeUnavailable('Estimate PDF runtime is missing Node. Set PDF_NODE_BINARY or run install-pdf-runtime.');
         }
 
         if (! is_string($chrome) || $chrome === '' || ! is_executable($chrome)) {
-            throw new RuntimeException('Estimate PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
+            throw new PdfRuntimeUnavailable('Estimate PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
         }
     }
 

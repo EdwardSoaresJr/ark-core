@@ -133,7 +133,9 @@ class EstimateDocumentEmailDelivery
             return null;
         }
 
-        return $this->documents->hasViewablePdf($document) ? $document : null;
+        return $this->documents->hasViewablePdf($document) && ! $this->documents->finalPdfFailed($document)
+            ? $document
+            : null;
     }
 
     /**
