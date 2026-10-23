@@ -649,8 +649,9 @@ test('owner pl tab splits advisor payroll from shop fixed overhead', function ()
         ->assertSee('Advisor / office payroll')
         ->assertSee('Shop fixed overhead')
         ->assertSee('Shop Overhead → Office and advisor payroll')
-        ->assertSee('$591.39')
-        ->assertSee('$216.84');
+        ->assertSee('$295.69')
+        ->assertSee('$108.42')
+        ->assertSee('1 days in range');
 });
 
 test('owner pl names the payroll tax source the reserve actually uses', function (?int $monthlyPayrollTaxCents, string $source) {
@@ -673,11 +674,10 @@ test('owner pl names the payroll tax source the reserve actually uses', function
     [$from, $to] = OperationalReportDateScope::resolveRange(operationalReportingShopToday(), operationalReportingShopToday());
     $summary = (new \App\Ark\Operations\Reports\OperationalReportRangeMetrics($from, $to))->ownerPlSummary();
     $line = collect($summary['tax_lines'])->firstWhere('label', 'Payroll tax reserve (est.)');
-    $amount = ($monthlyPayrollTaxCents ?? 0) > 0
-        ? sprintf('$%.2f', round($monthlyPayrollTaxCents * ($summary['range_days'] / 30.437)) / 100)
-        : '$8.00';
+    $amount = ($monthlyPayrollTaxCents ?? 0) > 0 ? '$100.00' : '$8.00';
 
-    expect($line['source'])->toBe($source)
+    expect($summary['range_days'])->toBe(1)
+        ->and($line['source'])->toBe($source)
         ->and($line['amount'])->toBe($amount);
 
     $this->get(route('operations.reports.operational', [

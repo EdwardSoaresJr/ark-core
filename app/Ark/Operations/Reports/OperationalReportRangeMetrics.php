@@ -954,7 +954,7 @@ class OperationalReportRangeMetrics
     public function ownerPlSummary(): array
     {
         $targets = ShopExcellenceTargets::current();
-        $rangeDays = max(1, (int) $this->from->copy()->startOfDay()->diffInDays($this->to->copy()->startOfDay()) + 1);
+        $rangeDays = OperationalReportDateScope::shopCalendarDayCount($this->from, $this->to);
 
         $partsSalesCents = $this->partsSalesCents();
         $partsCostCents = $this->partsCostCents();
@@ -1158,7 +1158,7 @@ class OperationalReportRangeMetrics
 
     private function proratedMonthlyCents(int $monthlyCents, int $rangeDays): int
     {
-        return (int) round($monthlyCents * ($rangeDays / 30.437));
+        return ReportingStandardsV1::proratedMonthlyCents($monthlyCents, $rangeDays);
     }
 
     private function monthlyAdvisorPayrollCents(): int
@@ -1244,8 +1244,8 @@ class OperationalReportRangeMetrics
             return null;
         }
 
-        $rangeDays = max(1, (int) $this->from->copy()->startOfDay()->diffInDays($this->to->copy()->startOfDay()) + 1);
-        $proratedFixedCents = (int) round($monthlyFixedCents * ($rangeDays / 30.437));
+        $rangeDays = OperationalReportDateScope::shopCalendarDayCount($this->from, $this->to);
+        $proratedFixedCents = $this->proratedMonthlyCents($monthlyFixedCents, $rangeDays);
 
         $costsComplete = $this->postedCostsAreMatched();
         $grossProfitCents = $this->postedGrossProfitCents();
