@@ -649,8 +649,9 @@ test('owner pl tab splits advisor payroll from shop fixed overhead', function ()
         ->assertSee('Advisor / office payroll')
         ->assertSee('Shop fixed overhead')
         ->assertSee('Shop Overhead → Office and advisor payroll')
-        ->assertSee('$591.39')
-        ->assertSee('$216.84');
+        ->assertSee('$295.69')
+        ->assertSee('$108.42')
+        ->assertSee('1 days in range');
 });
 
 test('owner pl names the payroll tax source the reserve actually uses', function (?int $monthlyPayrollTaxCents, string $source) {
