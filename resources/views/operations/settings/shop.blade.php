@@ -351,7 +351,7 @@
                 <section x-show="active === 'financial'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Financial Rules</p>
-                        <h2 class="text-base font-black text-slate-950">Estimate pricing authority</h2>
+                        <h2 class="text-base font-black text-slate-950">How estimates are priced</h2>
                         <p class="mt-0.5 text-xs text-slate-500">These rules flow into line pricing, tax, shop supplies, totals, and estimate snapshots.</p>
                     </div>
 
@@ -524,7 +524,7 @@
                                 </fieldset>
                             </div>
                             <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
-                                Effective posture: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
+                                Saved tax setup: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
                             </div>
                         </div>
                         <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
@@ -650,17 +650,17 @@
                         <div class="space-y-4">
                             <div class="grid gap-px border border-slate-300 bg-slate-300 md:grid-cols-3">
                                 <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Editable authority</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">You set</p>
                                     <p class="mt-0.5 text-sm font-black text-slate-950">Markup %</p>
                                     <p class="text-[11px] text-slate-500">Changes sell price policy</p>
                                 </div>
                                 <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Read-only truth</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Calculated</p>
                                     <p class="mt-0.5 text-sm font-black text-slate-950">Margin %</p>
-                                    <p class="text-[11px] text-slate-500">Derived GP visibility</p>
+                                    <p class="text-[11px] text-slate-500">Parts gross profit from your markup</p>
                                 </div>
                                 <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Target posture</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Target</p>
                                     <p class="mt-0.5 text-sm font-black text-slate-950">{{ App\Ark\Operations\Settings\ShopSettings::SURVIVABILITY_TARGETS['parts_gp'] }}</p>
                                     <p class="text-[11px] text-slate-500">Parts GP health</p>
                                 </div>
@@ -1343,7 +1343,7 @@
                 <section x-show="active === 'printing'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">QZ Tray / Brother QL</p>
-                        <h2 class="text-base font-black text-slate-950">Label printing authority</h2>
+                        <h2 class="text-base font-black text-slate-950">Key tags and oil change stickers</h2>
                         <p class="mt-0.5 text-xs text-slate-500">Printer names must match the OS queue exactly. Defaults: Brother QL-800, 62 × 38.1 mm.</p>
                     </div>
 

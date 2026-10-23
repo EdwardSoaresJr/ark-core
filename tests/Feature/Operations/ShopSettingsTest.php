@@ -75,7 +75,8 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Tax labor')
         ->assertSee('Tax parts')
         ->assertSee('Used when calculating taxable estimate/invoice totals.')
-        ->assertSee('Effective posture')
+        ->assertSee('Saved tax setup:')
+        ->assertDontSee('Effective posture')
         ->assertSee('shop fees not taxable')
         ->assertSee('Tax shop fees')
         ->assertDontSee('Default tax rate')
@@ -89,9 +90,14 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Warranty')
         ->assertSee('Military')
         ->assertSee('Markup is the editable pricing policy')
-        ->assertSee('Editable authority')
-        ->assertSee('Read-only truth')
-        ->assertSee('Target posture')
+        ->assertSee('How estimates are priced')
+        ->assertSee('Key tags and oil change stickers')
+        ->assertSee('Parts gross profit from your markup')
+        ->assertDontSee('Estimate pricing authority')
+        ->assertDontSee('Label printing authority')
+        ->assertDontSee('Editable authority')
+        ->assertDontSee('Read-only truth')
+        ->assertDontSee('Target posture')
         ->assertSee('line overrides remain operational exceptions')
         ->assertSee('Save for margin')
         ->assertDontSee('marginFromMarkup(row.markup_percentage)', false)
@@ -131,7 +137,8 @@ test('admin can upload and remove shop estimate logo', function () {
         'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80903',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Shop identity saved.');
 
     $settings = ShopSettings::current();
 
