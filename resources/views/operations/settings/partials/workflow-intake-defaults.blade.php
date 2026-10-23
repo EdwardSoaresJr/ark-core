@@ -11,7 +11,7 @@
             <p class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Check In visit</p>
             <div class="grid gap-4 px-3 py-3 md:grid-cols-2">
                 <label class="block text-xs font-medium text-slate-500">
-                    Default visit posture
+                    Default visit type
                     <select name="default_visit_mode" required class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
                         @foreach (\App\Ark\Operations\RepairOrders\RepairOrderVisitMode::cases() as $mode)
                             <option value="{{ $mode->value }}" @selected(old('default_visit_mode', $defaultVisitMode) === $mode->value)>{{ $mode->label() }}</option>
@@ -20,7 +20,7 @@
                     <span class="mt-1 block font-normal leading-4 text-slate-500">Pre-selected when opening a repair order from Check In.</span>
                 </label>
                 <div class="text-xs leading-5 text-slate-500">
-                    <p class="font-semibold text-slate-700">Account posture at Check In</p>
+                    <p class="font-semibold text-slate-700">Billing at Check In</p>
                     <p class="mt-1">Fleet and warranty billing follow the billing class. Advisors can override per visit at Check In.</p>
                     <p class="mt-2">Fees and parts matrices: <button type="button" @click="setActive('financial'); setFinancialTab('billing-classes')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">Financial Rules → Billing classes</button>.</p>
                     <p class="mt-2">Whether a key tag needs mileage in before it prints: <button type="button" @click="setActive('printing'); setPrintingTab('printers')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">Label Printing → Printers &amp; labels</button>.</p>

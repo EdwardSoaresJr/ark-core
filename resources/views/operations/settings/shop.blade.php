@@ -378,7 +378,7 @@
                         <div class="overflow-hidden rounded-md border border-slate-200 bg-white">
                             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Labor categories</p>
-                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Category defaults drive labor authority on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked); its <strong class="font-semibold text-slate-700">Rate / hr</strong> is the shop default labor rate. Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment - never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
+                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked); its <strong class="font-semibold text-slate-700">Rate / hr</strong> is the shop default labor rate. Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment - never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
                             </div>
                             @error('labor_categories')
                                 <div class="border-b border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{{ $message }}</div>
@@ -537,7 +537,7 @@
 
                     <div x-show="financialTab === 'shop-fees'" x-cloak class="mt-4 max-w-3xl space-y-4">
                         <p class="text-xs leading-5 text-slate-500">
-                            Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own billing posture - billing classes do not turn fees on or off for the whole repair order.
+                            Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own Billing setting - billing classes do not turn fees on or off for the whole repair order.
                         </p>
                         @php
                             $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
@@ -579,7 +579,7 @@
                             $depositIncludeDiagnostics = (bool) old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics());
                         @endphp
                         <p class="text-xs leading-5 text-slate-500">
-                            Default deposit amount on the repair order financial rail and Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
+                            Suggested deposit shown with the repair order financials and used for Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
                         </p>
                         <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" x-data="{ depositEnabled: @js($depositEnabled), depositIncludeDiagnostics: @js($depositIncludeDiagnostics) }" class="grid gap-4 md:grid-cols-2">
                             @csrf
@@ -805,7 +805,7 @@
                             @csrf
                             @method('PATCH')
                         <p class="text-xs leading-5 text-slate-500">
-                            Billing classes identify the customer for billing and set the default when a new scope is added. Fees, parts matrix, and <strong class="font-semibold text-slate-700">customer document presentation</strong> follow the billing class unless a scope's <strong class="font-semibold text-slate-700">Billing posture</strong> overrides it.
+                            Billing classes identify the customer for billing and set the default when a new scope is added. Fees, parts matrix, and <strong class="font-semibold text-slate-700">customer document presentation</strong> follow the billing class unless a scope's <strong class="font-semibold text-slate-700">Billing</strong> setting on the estimate overrides it.
                         </p>
                         <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
                             Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer - not billing class.
@@ -829,7 +829,7 @@
                                     <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                         Customer document presentation
                                         <x-operations.help-tip
-                                            text="Controls how part lines appear on customer estimate PDFs for this billing class. Internal worksheet and purchasing data stay unchanged. Scope billing posture can override per concern."
+                                            text="Controls how part lines appear on customer estimate PDFs for this billing class. Internal worksheet and purchasing data stay unchanged. A scope's Billing setting on the estimate can override this."
                                             label="Customer document presentation help for {{ $type['name'] }}"
                                         />
                                     </div>
@@ -953,7 +953,7 @@
                                                 <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                                     Shop fees
                                                     <x-operations.help-tip
-                                                        text="Default shop fee posture for scopes that follow this billing class. Scope billing on the estimate can still override per concern."
+                                                        text="Whether shop fees apply by default to scopes that follow this billing class. Scope billing on the estimate can still override per concern."
                                                         label="Shop fees help for {{ $type['name'] }}"
                                                     />
                                                 </div>
@@ -1248,7 +1248,7 @@
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Workflow Defaults</p>
                         <h2 class="text-base font-black text-slate-950">Check In defaults and Job Board</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide check-in posture, Job Board lanes, and the repair order statuses that fill those lanes.</p>
+                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide Check In defaults, Job Board lanes, and the repair order statuses that fill those lanes.</p>
                     </div>
 
                     <div class="mt-4 grid gap-px border border-slate-300 bg-slate-300 text-sm sm:grid-cols-4">
@@ -1281,7 +1281,7 @@
                     <div x-show="workflowTab === 'defaults'" x-cloak>
                         <div class="mt-4 border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-black text-slate-950">Check In defaults</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Pre-select visit posture, recommendation intent, and note visibility for new work.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Pre-select the visit type, priority, work type, and note visibility for new work.</p>
                         </div>
                         @include('operations.settings.partials.workflow-intake-defaults')
                     </div>
@@ -1302,7 +1302,7 @@
                     <div x-show="workflowTab === 'inspections'" x-cloak>
                         <div class="mt-4 border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-black text-slate-950">Inspection checklists</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Mobile technician checklists - item labels, photo requirements, and measurements. Templates seed checklist rows on each RO; findings still live on InspectionItem authority.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Mobile technician checklists - item labels, photo requirements, and measurements. Templates add the checklist rows to each RO. Technicians record findings on each checklist item.</p>
                         </div>
                         @include('operations.settings.partials.inspection-template-settings', ['inspectionTemplates' => $inspectionTemplates])
                     </div>

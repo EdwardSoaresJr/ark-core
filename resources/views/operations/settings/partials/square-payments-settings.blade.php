@@ -19,7 +19,7 @@
             <h2 class="mt-1 text-lg font-black text-slate-950">Card capture inside ARK</h2>
             @if ($platformPaymentsCapture)
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Card capture is connected for this shop. Choose which surfaces may offer a card payment.
+                    Card capture is connected for this shop. Choose where a card payment may be offered.
                     Take Payment and Record Payment stay on the repair order.
                 </p>
             @else
@@ -45,7 +45,7 @@
         @csrf
         @method('PATCH')
 
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Capture surfaces</p>
+        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Where card payments are offered</p>
         <p class="text-[11px] leading-4 text-slate-500">
             These are shop rules for where a card payment may be offered. They do not store a processor account.
         </p>
@@ -110,7 +110,7 @@
         </div>
 
         <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-            Save payment surfaces
+            Save card payment options
         </button>
     </form>
 

@@ -64,7 +64,8 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Financial Rules')
         ->assertSee('Documents / Disclaimers')
         ->assertSee('Workflow Defaults')
-        ->assertSee('Default visit posture')
+        ->assertSee('Default visit type')
+        ->assertDontSee('Default visit posture')
         ->assertSee('Check In visit')
         ->assertSee('Worksheet notes')
         ->assertSee('Estimate logo')
@@ -118,6 +119,55 @@ test('admin can view operational shop settings defaults', function () {
         ->assertDontSee('name="default_estimate_state"', false)
         ->assertSee('150.00')
         ->assertSee('180.00');
+});
+
+test('settings pages use plain labels instead of posture, authority, truth, surface, and band wording', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $response = $this->get(route('operations.settings.shop.edit'))->assertOk();
+
+    foreach ([
+        'Default visit posture',
+        'Account posture at Check In',
+        'Category defaults drive labor authority',
+        'billing posture',
+        'Billing posture',
+        'Billing Posture',
+        'billing postures',
+        'shop fee posture',
+        'check-in posture',
+        'visit posture',
+        'InspectionItem authority',
+        'Customer and Vehicle authority',
+        'Fact authority',
+        'Capture surfaces',
+        'Save payment surfaces',
+        'Shop excellence bands',
+        'posted sales truth',
+        'planning bands',
+        'Owner rhythm',
+        'Resolver Preview',
+        'financial rail',
+    ] as $phrase) {
+        $response->assertDontSee($phrase);
+    }
+
+    $response
+        ->assertSee('Default visit type')
+        ->assertSee('Billing at Check In')
+        ->assertSee('Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet.')
+        ->assertSee('Columns are billing types.')
+        ->assertSee('Rate preview')
+        ->assertSee('Time zone sources')
+        ->assertSee('Where card payments are offered')
+        ->assertSee('Save card payment options')
+        ->assertSee('Shop performance targets')
+        ->assertSee('Creates customer and vehicle records only. Repair history is not imported.')
+        ->assertSee('Technicians record findings on each checklist item.')
+        ->assertSee('name="default_visit_mode"', false)
+        ->assertSee('name="lp_posture"', false)
+        ->assertSee(route('operations.settings.shop.payments.update'), false);
 });
 
 test('admin can upload and remove shop estimate logo', function () {

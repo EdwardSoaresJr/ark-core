@@ -33,7 +33,7 @@
     <div class="border border-slate-200 bg-slate-50 px-3 py-2">
         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Labor Policies</p>
         <p class="mt-0.5 text-xs leading-5 text-slate-600">
-            Rows are operation classes. Columns are billing postures. Each cell is an independent policy rate.
+            Rows are operation classes. Columns are billing types. Each cell is an independent policy rate.
             Click a cell to edit one policy. The shop currently keeps
             <span class="font-semibold text-slate-700">RepairPal, Warranty, Comeback, and Internal</span>
             equal across classes by configuration - the matrix does not force that.
@@ -184,15 +184,15 @@
     </div>
 
     <div class="max-w-md border border-slate-300 bg-white p-4">
-        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Resolver Preview</p>
-        <p class="mt-0.5 text-xs text-slate-500">Read-only check that policy resolves the same way estimates will.</p>
+        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Rate preview</p>
+        <p class="mt-0.5 text-xs text-slate-500">Pick a billing type and operation class to see the hourly rate an estimate will use. Nothing is saved here.</p>
 
         <form method="GET" action="{{ route('operations.settings.shop.edit') }}" class="mt-3 space-y-3">
             <input type="hidden" name="section" value="financial">
             <input type="hidden" name="financial-tab" value="labor-policies">
 
             <label class="block text-xs font-medium text-slate-500">
-                Billing Posture
+                Billing type
                 <select name="lp_posture" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950" onchange="this.form.submit()">
                     @foreach ($matrix['postures'] as $posture)
                         <option value="{{ $posture['value'] }}" @selected($preview['billing_posture'] === $posture['value'])>{{ $posture['label'] }}</option>
@@ -213,7 +213,7 @@
         </form>
 
         <div class="mt-4 border-t border-slate-200 pt-3">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Resolved Rate</p>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Hourly rate</p>
             @if ($preview['error'])
                 <p class="mt-1 text-sm font-medium text-rose-700">{{ $preview['error'] }}</p>
             @else

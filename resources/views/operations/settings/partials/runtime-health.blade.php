@@ -26,7 +26,7 @@
 
     <div class="grid gap-3 lg:grid-cols-2">
         <div class="border border-slate-300 bg-white px-4 py-3">
-            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Fact authority</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Time zone sources</p>
             <dl class="mt-3 space-y-2 text-xs">
                 <div class="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-2">
                     <dt class="font-semibold text-slate-600">Laravel <code class="text-[10px]">app.timezone</code></dt>
