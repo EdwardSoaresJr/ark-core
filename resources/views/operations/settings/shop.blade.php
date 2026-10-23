@@ -210,7 +210,7 @@
                     <div class="grid gap-1">
                         <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Your shop</p>
                         <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
-                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Operations</button>
+                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Appointments &amp; Setup</button>
                         @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
                             <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
                         @endcan
@@ -245,8 +245,8 @@
                 <section x-show="active === 'general'">
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Shop Identity</p>
-                        <h2 class="text-base font-black text-slate-950">Estimate-facing shop identity</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Feeds customer documents, PDFs, and operational contact context.</p>
+                        <h2 class="text-base font-black text-slate-950">Shop name, logo, and contact details</h2>
+                        <p class="mt-0.5 text-xs text-slate-500">Shown on estimates, invoices, and other customer documents.</p>
                     </div>
                     <form method="POST" action="{{ route('operations.settings.shop.general.update') }}" enctype="multipart/form-data" class="mt-4">
                         @csrf
@@ -342,7 +342,7 @@
                     </div>
                     <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
                         <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                            Save General
+                            Save Shop Identity
                         </button>
                     </div>
                     </form>
@@ -1315,7 +1315,7 @@
 
                 <section x-show="active === 'operations'" x-cloak>
                     <div class="border-b border-slate-200 px-3 py-3">
-                        <h3 class="text-sm font-black text-slate-950">Operations</h3>
+                        <h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>
                         <p class="mt-0.5 text-xs text-slate-500">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</p>
                     </div>
 

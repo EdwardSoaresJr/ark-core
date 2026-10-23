@@ -33,7 +33,7 @@ test('shop owner can enable appointments from settings', function () {
             'appointments_enabled' => '1',
         ]))
         ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'operations']))
-        ->assertSessionHas('status');
+        ->assertSessionHas('status', 'Appointment settings saved.');
 
     expect(ShopSettings::current()->fresh()->appointments_enabled)->toBeTrue()
         ->and(OperationsFeatures::appointmentsEnabled())->toBeTrue();

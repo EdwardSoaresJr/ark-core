@@ -279,7 +279,7 @@ public function updateWorkflow(Request $request): RedirectResponse
 
         $redirect = redirect()
             ->route('operations.settings.shop.edit', ['section' => 'operations'])
-            ->with('status', 'Operations settings saved.');
+            ->with('status', 'Appointment settings saved.');
 
         if ($windowWarnings !== []) {
             $redirect->with('warning', $windowWarnings[0]);
