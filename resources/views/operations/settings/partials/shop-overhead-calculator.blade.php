@@ -59,7 +59,7 @@
     <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-3 py-3">
         <div>
             <p class="font-bold uppercase tracking-[0.08em] text-slate-500">Monthly overhead pool</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Fixed shop costs for the whole business - not per technician. Click <strong class="font-semibold text-slate-700">Save shop overhead</strong> to persist; staff loaded cost calculators pick up the saved rate.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Fixed shop costs for the whole business - not per technician. Click <strong class="font-semibold text-slate-700">Save shop overhead</strong> to persist; staff loaded cost calculators pick up the saved rate, and the monthly total replaces Owner Targets monthly fixed costs.</p>
         </div>
         <p class="shrink-0 text-right">
             <span class="block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Shop overhead / billed hr</span>

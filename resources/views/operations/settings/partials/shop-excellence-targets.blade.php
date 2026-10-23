@@ -76,7 +76,7 @@
                     placeholder="25000.00"
                     class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950"
                 >
-                <span class="mt-1 block text-[11px] text-slate-400">Break-even on Margin Health. Usually matches <button type="button" class="font-semibold underline decoration-slate-300 hover:text-slate-700" @click="setActive('overhead')">Shop Overhead</button> monthly total.</span>
+                <span class="mt-1 block text-[11px] text-slate-400">Break-even on Margin Health. Saving the <button type="button" class="font-semibold underline decoration-slate-300 hover:text-slate-700" @click="setActive('overhead')">Shop Overhead</button> worksheet replaces this with its monthly total.</span>
             </label>
 
             <label class="block text-xs font-medium text-slate-500">
