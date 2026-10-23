@@ -472,7 +472,10 @@
                     </div>
 
                     <div x-show="financialTab === 'tax'" x-cloak class="mt-4 max-w-3xl">
-                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}">
+                        @php
+                            $taxEnabled = (bool) old('tax_enabled', $settings->tax_enabled);
+                        @endphp
+                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}" x-data="{ taxEnabled: @js($taxEnabled) }">
                             @csrf
                             @method('PATCH')
                         <div class="border border-slate-200 bg-slate-50 px-3 py-2">
@@ -481,45 +484,45 @@
                         </div>
 
                         <div class="mt-3 grid gap-4 md:grid-cols-2">
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax enabled
-                                <select name="tax_enabled" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('tax_enabled', $settings->tax_enabled))>No</option>
-                                    <option value="1" @selected((bool) old('tax_enabled', $settings->tax_enabled))>Yes</option>
-                                </select>
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                                <input type="hidden" name="tax_enabled" value="0">
+                                <input type="checkbox" name="tax_enabled" value="1" x-model="taxEnabled" @checked($taxEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                <span>Charge sales tax</span>
                             </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax display name
-                                <input name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Sales tax rate
-                                <div class="mt-1 flex rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
-                                    <input name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" class="min-w-0 flex-1 rounded-l-md border-0 px-3 py-2 text-sm text-slate-950 focus:ring-0">
-                                    <span class="inline-flex items-center rounded-r-md border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">%</span>
-                                </div>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax labor
-                                <select name="taxable_labor" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('taxable_labor', $settings->taxable_labor))>No</option>
-                                    <option value="1" @selected((bool) old('taxable_labor', $settings->taxable_labor))>Yes</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax parts
-                                <select name="taxable_parts" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('taxable_parts', $settings->taxable_parts))>No</option>
-                                    <option value="1" @selected((bool) old('taxable_parts', $settings->taxable_parts))>Yes</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax shop fees
-                                <select name="taxable_shop_fees" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('taxable_shop_fees', $settings->taxable_shop_fees))>No</option>
-                                    <option value="1" @selected((bool) old('taxable_shop_fees', $settings->taxable_shop_fees))>Yes</option>
-                                </select>
-                            </label>
+                            <p x-show="! taxEnabled" @if ($taxEnabled) x-cloak @endif class="md:col-span-2 text-xs leading-5 text-slate-500">Tax is off. Estimates and invoices show no sales tax. Turn it on to set the rate and what it applies to.</p>
+                            <div x-show="taxEnabled" @unless ($taxEnabled) x-cloak @endunless class="grid gap-4 md:col-span-2 md:grid-cols-2">
+                                <label class="block text-xs font-medium text-slate-500">
+                                    Tax display name
+                                    <input name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
+                                </label>
+                                <label class="block text-xs font-medium text-slate-500">
+                                    Sales tax rate
+                                    <div class="mt-1 flex rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
+                                        <input name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" class="min-w-0 flex-1 rounded-l-md border-0 px-3 py-2 text-sm text-slate-950 focus:ring-0">
+                                        <span class="inline-flex items-center rounded-r-md border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">%</span>
+                                    </div>
+                                </label>
+                                <fieldset class="md:col-span-2">
+                                    <legend class="text-xs font-medium text-slate-500">Apply tax to</legend>
+                                    <div class="mt-1 flex flex-wrap gap-x-6 gap-y-2">
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="taxable_labor" value="0">
+                                            <input type="checkbox" name="taxable_labor" value="1" @checked((bool) old('taxable_labor', $settings->taxable_labor)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Tax labor</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="taxable_parts" value="0">
+                                            <input type="checkbox" name="taxable_parts" value="1" @checked((bool) old('taxable_parts', $settings->taxable_parts)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Tax parts</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="taxable_shop_fees" value="0">
+                                            <input type="checkbox" name="taxable_shop_fees" value="1" @checked((bool) old('taxable_shop_fees', $settings->taxable_shop_fees)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Tax shop fees</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            </div>
                             <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
                                 Effective posture: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
                             </div>
@@ -536,24 +539,28 @@
                         <p class="text-xs leading-5 text-slate-500">
                             Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own billing posture - billing classes do not turn fees on or off for the whole repair order.
                         </p>
-                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" class="grid gap-4 md:grid-cols-3">
+                        @php
+                            $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
+                        @endphp
+                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" x-data="{ shopFeeEnabled: @js($shopFeeEnabled) }" class="grid gap-4 md:grid-cols-3">
                             @csrf
                             @method('PATCH')
-                        <label class="block text-xs font-medium text-slate-500">
-                            Shop fee enabled
-                            <select name="shop_fee_enabled" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                <option value="0" @selected(! old('shop_fee_enabled', $settings->shop_fee_enabled))>No</option>
-                                <option value="1" @selected((bool) old('shop_fee_enabled', $settings->shop_fee_enabled))>Yes</option>
-                            </select>
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-3">
+                            <input type="hidden" name="shop_fee_enabled" value="0">
+                            <input type="checkbox" name="shop_fee_enabled" value="1" x-model="shopFeeEnabled" @checked($shopFeeEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                            <span>Charge a shop fee</span>
                         </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Shop fee rate
-                            <input name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Estimate fee cap
-                            <input name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                        </label>
+                        <p x-show="! shopFeeEnabled" @if ($shopFeeEnabled) x-cloak @endif class="md:col-span-3 text-xs leading-5 text-slate-500">No shop fee is added to estimates. Turn it on to set the rate and cap.</p>
+                        <div x-show="shopFeeEnabled" @unless ($shopFeeEnabled) x-cloak @endunless class="grid gap-4 md:col-span-3 md:grid-cols-3">
+                            <label class="block text-xs font-medium text-slate-500">
+                                Shop fee rate
+                                <input name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                            </label>
+                            <label class="block text-xs font-medium text-slate-500">
+                                Estimate fee cap
+                                <input name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
+                            </label>
+                        </div>
                         <div class="md:col-span-3 flex justify-end border-t border-slate-200 pt-4">
                             <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
                                 Save Shop Fees
