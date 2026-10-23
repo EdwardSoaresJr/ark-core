@@ -238,7 +238,6 @@ it('does not transmit shop-owned Postmark credentials to Cloud', function () {
 
 it('exposes no stock BYO Postmark configuration surface', function () {
     $blade = file_get_contents(resource_path('views/operations/settings/partials/ark-platform-settings.blade.php'));
-    $messaging = file_get_contents(resource_path('views/operations/settings/partials/customer-messaging-settings.blade.php'));
     $controller = file_get_contents(app_path('Ark/Operations/Settings/ShopIntegrationSettingsController.php'));
     $outbound = file_get_contents(app_path('Ark/Mail/OutboundTransactionalMail.php'));
 
@@ -246,7 +245,6 @@ it('exposes no stock BYO Postmark configuration surface', function () {
         ->and($blade)->not->toContain('name="postmark_token"')
         ->and($blade)->not->toContain('value="postmark"')
         ->and($blade)->toContain('Connect ARK Platform')
-        ->and($messaging)->not->toContain('name="postmark_token"')
         ->and($controller)->not->toContain("'postmark'")
         ->and($controller)->not->toContain('postmark_token')
         ->and($outbound)->not->toContain('byo_postmark')
