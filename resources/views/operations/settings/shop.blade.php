@@ -364,15 +364,10 @@
                                 collect($settings->laborCategories())->firstWhere('is_default', true)['key'] ?? 'mechanical',
                             );
                         @endphp
-                        <label class="block text-xs font-medium text-slate-500">
-                            Default labor rate
-                            <input name="default_labor_rate" value="{{ old('default_labor_rate', $settings->defaultLaborRate()) }}" required inputmode="decimal" class="mt-1 w-full max-w-xs rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            <span class="mt-1 block text-[11px] leading-4 text-slate-500">Applied to the default category below. Other categories keep their own rates.</span>
-                        </label>
-                        <div class="mt-4 overflow-hidden rounded-md border border-slate-200 bg-white">
+                        <div class="overflow-hidden rounded-md border border-slate-200 bg-white">
                             <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
                                 <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Labor categories</p>
-                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Category defaults drive labor authority on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked). Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment - never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
+                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Category defaults drive labor authority on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked); its <strong class="font-semibold text-slate-700">Rate / hr</strong> is the shop default labor rate. Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment - never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
                             </div>
                             @error('labor_categories')
                                 <div class="border-b border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{{ $message }}</div>

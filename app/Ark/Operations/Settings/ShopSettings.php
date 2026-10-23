@@ -974,25 +974,21 @@ TEXT;
      * @param  array<int, array<string, mixed>>  $categories
      * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool}>
      */
-    public function normalizeLaborCategories(array $categories, string $defaultCategoryKey, float $defaultLaborRate): array
+    public function normalizeLaborCategories(array $categories, string $defaultCategoryKey): array
     {
         $existingCategories = collect($this->labor_categories ?: self::DEFAULT_LABOR_CATEGORIES)->keyBy('key');
-        $defaultRateCents = (int) round($defaultLaborRate * 100);
 
         return collect($categories)
             ->filter(fn (array $category): bool => filled($category['key'] ?? null))
-            ->map(function (array $category) use ($existingCategories, $defaultCategoryKey, $defaultRateCents): array {
+            ->map(function (array $category) use ($existingCategories, $defaultCategoryKey): array {
                 $key = (string) $category['key'];
                 $existing = $existingCategories->get($key, []);
                 $isDefault = $key === $defaultCategoryKey;
-                $rateCents = $isDefault
-                    ? $defaultRateCents
-                    : (int) round(((float) $category['rate']) * 100);
 
                 return [
                     'key' => $key,
                     'name' => trim((string) $category['name']),
-                    'rate_cents' => $rateCents,
+                    'rate_cents' => (int) round(((float) $category['rate']) * 100),
                     'minimum_hours' => number_format((float) $category['minimum_hours'], 2, '.', ''),
                     'rounding_rule' => (string) ($category['rounding_rule'] ?? $existing['rounding_rule'] ?? 'quarter'),
                     'is_default' => $isDefault,
