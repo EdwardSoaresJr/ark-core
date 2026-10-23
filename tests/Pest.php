@@ -28,6 +28,7 @@ require_once __DIR__.'/Support/IdentityHeaderFixture.php';
 require_once __DIR__.'/Support/LearnArkTraining.php';
 require_once __DIR__.'/Support/QueryBudget.php';
 require_once __DIR__.'/Support/QueryBudgetFixtures.php';
+require_once __DIR__.'/Support/TwilioSignedRequest.php';
 require_once __DIR__.'/Support/SmsConsentTestHelpers.php';
 require_once __DIR__.'/Support/InboundSmsTestHelpers.php';
 require_once __DIR__.'/Support/MessagingTransportTestHelpers.php';

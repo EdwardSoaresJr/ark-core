@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Http;
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
     config()->set('services.twilio.account_sid', null);
-    config()->set('services.twilio.auth_token', null);
+    config()->set('services.twilio.auth_token', 'test-token');
     config()->set('services.twilio.from', null);
     config()->set('services.ark_platform.communications_authority', true);
     TelephonyEndpoint::query()->delete();
@@ -27,7 +27,7 @@ test('open hours voice webhook returns one dial for every ring destination', fun
     ring('Front', '+17195550111');
     ring('Advisor', '+17195550222');
 
-    $response = $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    $response = signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativeopen01',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -45,7 +45,7 @@ test('open hours voice webhook returns one dial for every ring destination', fun
         ->and(substr_count($xml, '<Number'))->toBe(2)
         ->and(CallSession::query()->where('provider_call_sid', 'CAnativeopen01')->count())->toBe(1);
 
-    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativeopen01',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -60,7 +60,7 @@ test('after hours and an unanswered dial go to voicemail', function (): void {
     Carbon::setTestNow(Carbon::parse('2026-10-18 10:00:00', 'America/Denver'));
     ring('Front', '+17195550111');
 
-    $closed = $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    $closed = signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativeclosed1',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -71,7 +71,7 @@ test('after hours and an unanswered dial go to voicemail', function (): void {
         ->and($closed)->toContain('<Record');
 
     Carbon::setTestNow(Carbon::parse('2026-10-14 10:00:00', 'America/Denver'));
-    $unanswered = $this->post(route('webhooks.communications.twilio.voice.dial-complete'), [
+    $unanswered = signedTwilioPost(route('webhooks.communications.twilio.voice.dial-complete'), [
         'CallSid' => 'CAnativeclosed1',
         'DialCallStatus' => 'no-answer',
     ])->assertOk()->getContent();
@@ -85,7 +85,7 @@ test('an answered call is marked answered once', function (): void {
     Carbon::setTestNow(Carbon::parse('2026-10-14 10:00:00', 'America/Denver'));
     ring('Front', '+17195550111');
 
-    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativeanswer',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -98,8 +98,8 @@ test('an answered call is marked answered once', function (): void {
         'To' => '+17195550100',
         'CallStatus' => 'in-progress',
     ];
-    $this->post(route('webhooks.communications.twilio.voice.status'), $body)->assertNoContent();
-    $this->post(route('webhooks.communications.twilio.voice.status'), $body)->assertNoContent();
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), $body)->assertNoContent();
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), $body)->assertNoContent();
 
     $session = CallSession::query()->where('provider_call_sid', 'CAnativeanswer')->first();
     expect($session)->not->toBeNull()
@@ -110,20 +110,20 @@ test('an answered call is marked answered once', function (): void {
 });
 
 test('a missed call is recorded once and companion can read the session', function (): void {
-    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativemissed',
         'From' => '+17195551234',
         'To' => '+17195550100',
         'CallStatus' => 'ringing',
     ])->assertOk();
 
-    $this->post(route('webhooks.communications.twilio.voice.status'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), [
         'CallSid' => 'CAnativemissed',
         'From' => '+17195551234',
         'To' => '+17195550100',
         'CallStatus' => 'no-answer',
     ])->assertNoContent();
-    $this->post(route('webhooks.communications.twilio.voice.status'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), [
         'CallSid' => 'CAnativemissed',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -153,7 +153,7 @@ test('closed hours send the caller to voicemail and keep the session missed', fu
     ];
     \App\Ark\Operations\Settings\ShopSettings::current()->update(['telephony_call_flow' => $flow]);
 
-    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativeclosed',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -163,7 +163,7 @@ test('closed hours send the caller to voicemail and keep the session missed', fu
         ->assertSee('<Record', false)
         ->assertDontSee('<Dial', false);
 
-    $this->post(route('webhooks.communications.twilio.voice.status'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), [
         'CallSid' => 'CAnativeclosed',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -176,14 +176,14 @@ test('closed hours send the caller to voicemail and keep the session missed', fu
 });
 
 test('an unanswered dial stays missed after the parent call completes', function (): void {
-    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CAnativedialmiss',
         'From' => '+17195551234',
         'To' => '+17195550100',
         'CallStatus' => 'ringing',
     ])->assertOk();
 
-    $this->post(route('webhooks.communications.twilio.voice.dial-complete'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.dial-complete'), [
         'CallSid' => 'CAnativedialmiss',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -192,7 +192,7 @@ test('an unanswered dial stays missed after the parent call completes', function
     ])->assertOk()
         ->assertSee('<Record', false);
 
-    $this->post(route('webhooks.communications.twilio.voice.status'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), [
         'CallSid' => 'CAnativedialmiss',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -209,13 +209,13 @@ test('an unanswered dial stays missed after the parent call completes', function
 test('inbound sms is stored once and a bad signature is rejected', function (): void {
     config()->set('broadcasting.default', 'null');
 
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.messaging.incoming'), [
         'MessageSid' => 'SMnativeonce01',
         'From' => '+17195551234',
         'To' => '+17195550100',
         'Body' => 'The truck is ready.',
     ])->assertOk();
-    $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.messaging.incoming'), [
         'MessageSid' => 'SMnativeonce01',
         'From' => '+17195551234',
         'To' => '+17195550100',
@@ -224,7 +224,6 @@ test('inbound sms is stored once and a bad signature is rejected', function (): 
 
     expect(ConversationMessage::query()->where('body', 'The truck is ready.')->count())->toBe(1);
 
-    config()->set('services.twilio.auth_token', 'test-token');
     $this->post(route('webhooks.communications.twilio.messaging.incoming'), [
         'MessageSid' => 'SMnativebad01',
         'From' => '+17195551234',

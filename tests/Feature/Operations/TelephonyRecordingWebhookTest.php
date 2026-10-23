@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
+    config()->set('services.twilio.auth_token', 'test-token');
     config()->set('services.twilio.account_sid', null);
 });
 
@@ -26,7 +26,7 @@ test('recording webhook attaches media using parent call sid', function () {
         'started_at' => now()->subMinutes(3),
     ]);
 
-    $this->post(route('webhooks.communications.twilio.voice.recording'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.recording'), [
         'CallSid' => 'CAchildleg01',
         'ParentCallSid' => 'CAparentrec01',
         'RecordingSid' => 'REaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -55,7 +55,7 @@ test('a voicemail recording stays on the missed call', function () {
         'started_at' => now()->subMinute(),
     ]);
 
-    $this->post(route('webhooks.communications.twilio.voice.recording', ['voicemail' => 1]), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.recording', ['voicemail' => 1]), [
         'CallSid' => 'CAvmrec01',
         'RecordingSid' => 'REcccccccccccccccccccccccccccccccc',
         'RecordingUrl' => 'https://api.twilio.com/2010-04-01/Accounts/AC123/Recordings/REcccccccccccccccccccccccccccccccc',
@@ -72,7 +72,7 @@ test('a voicemail recording stays on the missed call', function () {
 });
 
 test('recording webhook returns 404 when the call session is unknown so Twilio retries', function () {
-    $this->post(route('webhooks.communications.twilio.voice.recording'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.recording'), [
         'CallSid' => 'CAmissingrec01',
         'RecordingSid' => 'REbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         'RecordingUrl' => 'https://api.twilio.com/2010-04-01/Accounts/AC123/Recordings/REbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
@@ -93,7 +93,7 @@ test('recording webhook records failure instead of silent success when completed
         'started_at' => now()->subMinute(),
     ]);
 
-    $this->post(route('webhooks.communications.twilio.voice.recording'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.recording'), [
         'CallSid' => 'CAemptyurl01',
         'RecordingSid' => 'REcccccccccccccccccccccccccccccccc',
         'RecordingUrl' => '',
