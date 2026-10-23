@@ -8,6 +8,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Browsershot\Exceptions\CouldNotTakeBrowsershot;
+use Spatie\Browsershot\Exceptions\RemoteConnectionException;
+use Spatie\Browsershot\Exceptions\UnsuccessfulResponse;
+use Symfony\Component\Process\Exception\RuntimeException as ProcessRuntimeException;
 use Throwable;
 
 class EstimateDocumentService
@@ -101,12 +105,49 @@ class EstimateDocumentService
         return $path;
     }
 
-    public function snapshotFinalPdfForRepairOrder(RepairOrder $repairOrder, ?User $user = null): EstimateDocument
+    /**
+     * Renders the final PDF for a closed repair order. A rendering failure leaves the
+     * document failed so the next open renders it again; any other error is rethrown.
+     */
+    public function generateFinalPdf(EstimateDocument $document): void
     {
-        $document = $this->createOrRefresh($repairOrder, $user);
-        $this->generatePdf($document);
+        try {
+            $this->generatePdf($document);
+        } catch (Throwable $exception) {
+            if (! $this->isPdfRenderingFailure($exception)) {
+                throw $exception;
+            }
 
-        return $document->refresh();
+            Log::warning('Final PDF could not be generated when the repair order closed.', [
+                'document_id' => $document->id,
+                'repair_order_id' => $document->repair_order_id,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            $document->forceFill([
+                'status' => 'failed',
+                'needs_pdf_refresh' => true,
+            ])->save();
+        }
+    }
+
+    public function hasFailedPdfForRepairOrder(RepairOrder $repairOrder): bool
+    {
+        return EstimateDocument::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->where('document_type', 'estimate')
+            ->where('status', 'failed')
+            ->exists();
+    }
+
+    private function isPdfRenderingFailure(Throwable $exception): bool
+    {
+        return $exception instanceof ProcessRuntimeException
+            || $exception instanceof PdfRuntimeUnavailable
+            || $exception instanceof CouldNotTakeBrowsershot
+            || $exception instanceof RemoteConnectionException
+            || $exception instanceof UnsuccessfulResponse;
     }
 
     public function markDirtyForRepairOrder(RepairOrder $repairOrder): int
@@ -202,11 +243,14 @@ class EstimateDocumentService
         $document->loadMissing('repairOrder');
 
         $isLivingEstimate = $this->isLivingEstimate($document);
+        $retryingFailedFinalPdf = false;
 
         if ($isLivingEstimate) {
             $shouldGenerate = true;
         } elseif (! $document->isInvoice() && $document->repairOrder->estimateDocumentIsFrozen()) {
-            $shouldGenerate = ! $this->pdfExists($document)
+            $retryingFailedFinalPdf = $document->status === 'failed';
+            $shouldGenerate = $retryingFailedFinalPdf
+                || ! $this->pdfExists($document)
                 || $this->frozenEstimateApprovalPresentationDrifted($document);
         } else {
             $shouldGenerate = $document->needs_pdf_refresh
@@ -236,7 +280,7 @@ class EstimateDocumentService
                 if ($isLivingEstimate && $this->pdfExists($document)) {
                     Storage::disk('local')->delete($document->pdf_path);
                     $attributes['pdf_path'] = null;
-                } elseif ($this->pdfExists($document) && ! $document->isInvoice()) {
+                } elseif ($this->pdfExists($document) && ! $document->isInvoice() && ! $retryingFailedFinalPdf) {
                     $attributes['status'] = 'generated';
                 }
 

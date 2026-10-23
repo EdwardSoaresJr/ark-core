@@ -2,8 +2,10 @@
 
 namespace App\Ark\Operations\Today;
 
+use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderLifecycleController;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
 use App\Ark\Operations\RepairOrders\RepairOrderLostReason;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -19,6 +21,7 @@ final class TodayRecommendationCloseLostController
     public function __invoke(
         Request $request,
         RepairOrderLifecycleTransition $lifecycle,
+        EstimateDocumentService $documents,
     ): RedirectResponse {
         $validator = Validator::make($request->all(), [
             'repair_order_id' => ['required', 'integer', 'min:1'],
@@ -78,11 +81,14 @@ final class TodayRecommendationCloseLostController
 
         $this->recordRepairOrderEstimateMutation($repairOrder->fresh(), $request->user());
 
+        $status = 'RO #'.$repairOrder->repair_order_id.' closed lost - '.$lostReason->label().'.';
+
+        if ($documents->hasFailedPdfForRepairOrder($repairOrder)) {
+            $status = $status.' '.RepairOrderLifecycleController::FINAL_PDF_FAILED;
+        }
+
         return redirect()
             ->route('operations.index')
-            ->with(
-                'status',
-                'RO #'.$repairOrder->repair_order_id.' closed lost - '.$lostReason->label().'.',
-            );
+            ->with('status', $status);
     }
 }
