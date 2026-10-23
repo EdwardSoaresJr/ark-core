@@ -45,9 +45,14 @@ test('admin can view operational shop settings defaults', function () {
 
     $this->get(route('operations.settings.shop.edit'))
         ->assertOk()
-        ->assertSee('Operational Settings')
+        ->assertSee('How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.')
+        ->assertDontSee('Operational Settings')
+        ->assertDontSee('Operational Domains')
         ->assertDontSee('Current outcomes')
-        ->assertSee('Financial rules, estimate defaults, and document language')
+        ->assertDontSee('Financial rules, estimate defaults, and document language')
+        ->assertSeeInOrder(['Your shop', 'Shop Identity', 'Operations', 'Money', 'Financial Rules', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Documents &amp; workflow', 'Documents / Disclaimers', 'Workflow Defaults', 'Label Printing', 'Connected services', 'Square Payments', 'Parts catalogs', 'Communications', 'Stations &amp; Phones'], false)
+        ->assertSee('Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.')
+        ->assertDontSee('Advisor work surface')
         ->assertSee('Shop Identity')
         ->assertSee('Financial Rules')
         ->assertSee('Documents / Disclaimers')
@@ -402,6 +407,80 @@ test('saving tax settings does not rewrite unrelated settings', function () {
         ->and($settings->estimate_disclaimer)->toBe('Stable estimate disclaimer.')
         ->and($settings->default_estimate_state)->toBe(RepairOrderStatus::WaitingApproval->value);
 });
+
+test('tax and shop fee switches are checkboxes that post 0 when off and 1 when on', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update(['tax_enabled' => true, 'shop_fee_enabled' => false]);
+
+    $response = $this->get(route('operations.settings.shop.edit', ['section' => 'financial']))->assertOk();
+
+    foreach (['tax_enabled', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees', 'shop_fee_enabled'] as $field) {
+        $response
+            ->assertSee('<input type="hidden" name="'.$field.'" value="0">', false)
+            ->assertSee('type="checkbox" name="'.$field.'" value="1"', false)
+            ->assertDontSee('<select name="'.$field.'"', false);
+    }
+
+    $response
+        ->assertSee('Charge sales tax')
+        ->assertSee('Charge a shop fee')
+        ->assertSee('x-data="{ taxEnabled: true }"', false)
+        ->assertSee('x-data="{ shopFeeEnabled: false }"', false);
+});
+
+test('saving tax with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update(['tax_enabled' => ! $expected]);
+
+    $this->patch(route('operations.settings.shop.tax.update'), [
+        'tax_enabled' => $posted,
+        'tax_label' => 'County Tax',
+        'default_tax_rate' => '7.500',
+        'taxable_labor' => '1',
+        'taxable_parts' => '0',
+        'taxable_shop_fees' => '1',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current()->fresh();
+
+    expect($settings->tax_enabled)->toBe($expected)
+        ->and($settings->tax_label)->toBe('County Tax')
+        ->and((string) $settings->default_tax_rate)->toBe('7.500')
+        ->and($settings->taxable_labor)->toBeTrue()
+        ->and($settings->taxable_parts)->toBeFalse()
+        ->and($settings->taxable_shop_fees)->toBeTrue();
+})->with([
+    'box off' => ['0', false],
+    'box on' => ['1', true],
+]);
+
+test('saving shop fees with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update(['shop_fee_enabled' => ! $expected]);
+
+    $this->patch(route('operations.settings.shop.fees.update'), [
+        'shop_fee_enabled' => $posted,
+        'shop_fee_rate' => '6.000',
+        'shop_fee_cap' => '45.00',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current()->fresh();
+
+    expect($settings->shop_fee_enabled)->toBe($expected)
+        ->and((string) $settings->shop_fee_rate)->toBe('6.000')
+        ->and($settings->shop_fee_cap_cents)->toBe(4500);
+})->with([
+    'box off' => ['0', false],
+    'box on' => ['1', true],
+]);
 
 test('saving a parts matrix does not rewrite tax settings', function () {
     $this->seed(ArkAuthorizationSeeder::class);

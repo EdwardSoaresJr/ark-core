@@ -184,8 +184,8 @@
         <div class="border border-slate-300 bg-white px-3 py-2">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Operational Settings</p>
-                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">Financial rules, estimate defaults, and document language for live repair order workflow.</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Shop settings</p>
+                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.</p>
                 </div>
                 @if (session('status'))
                     <p class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900">{{ session('status') }}</p>
@@ -201,31 +201,42 @@
                     </ul>
                 </div>
             @endif
-            <p class="mt-2 text-[11px] leading-4 text-slate-500">All shop configuration saves to the database. Parts matrix autosaves on edit; other sections need their save button.</p>
+            <p class="mt-2 text-[11px] leading-4 text-slate-500">Parts matrix changes save as you edit. Every other section has its own Save button.</p>
         </div>
 
         <div class="grid min-w-0 items-start gap-3 lg:grid-cols-[11rem_minmax(0,1fr)] xl:grid-cols-[12.5rem_minmax(0,1fr)]">
             <aside class="min-w-0 border border-slate-300 bg-white p-2 lg:sticky lg:top-6">
-                <p class="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Operational Domains</p>
-                <nav class="grid gap-1 text-sm">
-                    <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
-                    <button type="button" @click="setActive('financial')" :class="active === 'financial' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Financial Rules</button>
-                    <button type="button" @click="setActive('payments')" :class="active === 'payments' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Square Payments</button>
-                    <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
-                    <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
-                    <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
-                    @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                        <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
-                    @endunless
-                    <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
-                    <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
-                    <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
-                    <button type="button" @click="setActive('workflow')" :class="active === 'workflow' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Workflow Defaults</button>
-                    <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Operations</button>
-                    <button type="button" @click="setActive('printing')" :class="active === 'printing' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Label Printing</button>
-                    @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
-                        <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
-                    @endcan
+                <nav class="grid gap-3 text-sm" aria-label="Shop settings sections">
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Your shop</p>
+                        <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
+                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Operations</button>
+                        @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
+                            <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
+                        @endcan
+                    </div>
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Money</p>
+                        <button type="button" @click="setActive('financial')" :class="active === 'financial' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Financial Rules</button>
+                        <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
+                        <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
+                    </div>
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Documents &amp; workflow</p>
+                        <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
+                        <button type="button" @click="setActive('workflow')" :class="active === 'workflow' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Workflow Defaults</button>
+                        <button type="button" @click="setActive('printing')" :class="active === 'printing' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Label Printing</button>
+                    </div>
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Connected services</p>
+                        <button type="button" @click="setActive('payments')" :class="active === 'payments' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Square Payments</button>
+                        <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
+                        <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
+                        <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
+                        @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                            <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
+                        @endunless
+                    </div>
                 </nav>
             </aside>
 
@@ -461,7 +472,10 @@
                     </div>
 
                     <div x-show="financialTab === 'tax'" x-cloak class="mt-4 max-w-3xl">
-                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}">
+                        @php
+                            $taxEnabled = (bool) old('tax_enabled', $settings->tax_enabled);
+                        @endphp
+                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}" x-data="{ taxEnabled: @js($taxEnabled) }">
                             @csrf
                             @method('PATCH')
                         <div class="border border-slate-200 bg-slate-50 px-3 py-2">
@@ -470,45 +484,45 @@
                         </div>
 
                         <div class="mt-3 grid gap-4 md:grid-cols-2">
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax enabled
-                                <select name="tax_enabled" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('tax_enabled', $settings->tax_enabled))>No</option>
-                                    <option value="1" @selected((bool) old('tax_enabled', $settings->tax_enabled))>Yes</option>
-                                </select>
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                                <input type="hidden" name="tax_enabled" value="0">
+                                <input type="checkbox" name="tax_enabled" value="1" x-model="taxEnabled" @checked($taxEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                <span>Charge sales tax</span>
                             </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax display name
-                                <input name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Sales tax rate
-                                <div class="mt-1 flex rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
-                                    <input name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" class="min-w-0 flex-1 rounded-l-md border-0 px-3 py-2 text-sm text-slate-950 focus:ring-0">
-                                    <span class="inline-flex items-center rounded-r-md border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">%</span>
-                                </div>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax labor
-                                <select name="taxable_labor" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('taxable_labor', $settings->taxable_labor))>No</option>
-                                    <option value="1" @selected((bool) old('taxable_labor', $settings->taxable_labor))>Yes</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax parts
-                                <select name="taxable_parts" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('taxable_parts', $settings->taxable_parts))>No</option>
-                                    <option value="1" @selected((bool) old('taxable_parts', $settings->taxable_parts))>Yes</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Tax shop fees
-                                <select name="taxable_shop_fees" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('taxable_shop_fees', $settings->taxable_shop_fees))>No</option>
-                                    <option value="1" @selected((bool) old('taxable_shop_fees', $settings->taxable_shop_fees))>Yes</option>
-                                </select>
-                            </label>
+                            <p x-show="! taxEnabled" @if ($taxEnabled) x-cloak @endif class="md:col-span-2 text-xs leading-5 text-slate-500">Tax is off. Estimates and invoices show no sales tax. Turn it on to set the rate and what it applies to.</p>
+                            <div x-show="taxEnabled" @unless ($taxEnabled) x-cloak @endunless class="grid gap-4 md:col-span-2 md:grid-cols-2">
+                                <label class="block text-xs font-medium text-slate-500">
+                                    Tax display name
+                                    <input name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
+                                </label>
+                                <label class="block text-xs font-medium text-slate-500">
+                                    Sales tax rate
+                                    <div class="mt-1 flex rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
+                                        <input name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" class="min-w-0 flex-1 rounded-l-md border-0 px-3 py-2 text-sm text-slate-950 focus:ring-0">
+                                        <span class="inline-flex items-center rounded-r-md border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">%</span>
+                                    </div>
+                                </label>
+                                <fieldset class="md:col-span-2">
+                                    <legend class="text-xs font-medium text-slate-500">Apply tax to</legend>
+                                    <div class="mt-1 flex flex-wrap gap-x-6 gap-y-2">
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="taxable_labor" value="0">
+                                            <input type="checkbox" name="taxable_labor" value="1" @checked((bool) old('taxable_labor', $settings->taxable_labor)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Tax labor</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="taxable_parts" value="0">
+                                            <input type="checkbox" name="taxable_parts" value="1" @checked((bool) old('taxable_parts', $settings->taxable_parts)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Tax parts</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="taxable_shop_fees" value="0">
+                                            <input type="checkbox" name="taxable_shop_fees" value="1" @checked((bool) old('taxable_shop_fees', $settings->taxable_shop_fees)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Tax shop fees</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            </div>
                             <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
                                 Effective posture: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
                             </div>
@@ -525,24 +539,28 @@
                         <p class="text-xs leading-5 text-slate-500">
                             Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own billing posture - billing classes do not turn fees on or off for the whole repair order.
                         </p>
-                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" class="grid gap-4 md:grid-cols-3">
+                        @php
+                            $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
+                        @endphp
+                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" x-data="{ shopFeeEnabled: @js($shopFeeEnabled) }" class="grid gap-4 md:grid-cols-3">
                             @csrf
                             @method('PATCH')
-                        <label class="block text-xs font-medium text-slate-500">
-                            Shop fee enabled
-                            <select name="shop_fee_enabled" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                <option value="0" @selected(! old('shop_fee_enabled', $settings->shop_fee_enabled))>No</option>
-                                <option value="1" @selected((bool) old('shop_fee_enabled', $settings->shop_fee_enabled))>Yes</option>
-                            </select>
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-3">
+                            <input type="hidden" name="shop_fee_enabled" value="0">
+                            <input type="checkbox" name="shop_fee_enabled" value="1" x-model="shopFeeEnabled" @checked($shopFeeEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                            <span>Charge a shop fee</span>
                         </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Shop fee rate
-                            <input name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Estimate fee cap
-                            <input name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                        </label>
+                        <p x-show="! shopFeeEnabled" @if ($shopFeeEnabled) x-cloak @endif class="md:col-span-3 text-xs leading-5 text-slate-500">No shop fee is added to estimates. Turn it on to set the rate and cap.</p>
+                        <div x-show="shopFeeEnabled" @unless ($shopFeeEnabled) x-cloak @endunless class="grid gap-4 md:col-span-3 md:grid-cols-3">
+                            <label class="block text-xs font-medium text-slate-500">
+                                Shop fee rate
+                                <input name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                            </label>
+                            <label class="block text-xs font-medium text-slate-500">
+                                Estimate fee cap
+                                <input name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
+                            </label>
+                        </div>
                         <div class="md:col-span-3 flex justify-end border-t border-slate-200 pt-4">
                             <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
                                 Save Shop Fees
@@ -1289,13 +1307,13 @@
                 <section x-show="active === 'operations'" x-cloak>
                     <div class="border-b border-slate-200 px-3 py-3">
                         <h3 class="text-sm font-black text-slate-950">Operations</h3>
-                        <p class="mt-0.5 text-xs text-slate-500">Advisor work surface - scheduling, station presence, and shop workflow options.</p>
+                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</p>
                     </div>
 
                     <div class="p-3">
                         <div class="border-b border-slate-200 pb-3">
                             <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Appointments</h4>
-                            <p class="mt-0.5 text-xs text-slate-500">Scheduling surface and Today&apos;s Appointments band on Work.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Booking rules, scheduling hours, customer request windows, and bays. Also controls Today&apos;s Appointments on Work.</p>
                         </div>
 
                         @include('operations.settings.partials.appointments-settings', [
