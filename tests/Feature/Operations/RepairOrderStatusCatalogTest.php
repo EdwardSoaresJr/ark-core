@@ -208,7 +208,8 @@ test('admin can enable a previously unset transition from the settings matrix', 
         ->assertRedirect(route('operations.settings.shop.edit', [
             'section' => 'workflow',
             'workflow-tab' => 'statuses',
-        ]));
+        ]))
+        ->assertSessionHas('status', 'Status catalog saved.');
 
     app(RepairOrderStatusCatalog::class)->forgetCache();
 

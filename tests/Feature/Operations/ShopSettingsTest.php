@@ -315,7 +315,8 @@ test('admin can persist authoritative operational defaults', function () {
         'recommendation_disclaimer' => 'Recommendations may change after disassembly or further testing.',
         'estimate_validity_days' => '14',
         'customer_part_description_mode' => 'cleaned',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Document settings saved.');
 
     $this->patch(route('operations.settings.shop.workflow.update'), [
         'default_visit_mode' => 'needs_shuttle',
@@ -323,7 +324,8 @@ test('admin can persist authoritative operational defaults', function () {
         'default_recommendation_posture' => 'must_do',
         'default_notes_private' => '1',
         'default_estimate_state' => RepairOrderStatus::Estimate->value,
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Check In defaults saved.');
 
     $settings = ShopSettings::current();
 

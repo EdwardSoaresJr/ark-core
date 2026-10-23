@@ -384,7 +384,7 @@
 
     <div class="flex items-center gap-3">
         <button type="submit" class="h-9 rounded-sm border border-slate-800 bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-            Save operations settings
+            Save appointment settings
         </button>
         @if ($settings->appointments_enabled)
             <a href="{{ route('operations.appointments.index') }}" class="text-xs font-semibold text-slate-600 underline decoration-slate-300 hover:text-slate-950">

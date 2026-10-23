@@ -89,7 +89,8 @@ test('operations settings page shows appointments section', function () {
         ->assertSee('Follow Business Hours', false)
         ->assertSee('Bays', false)
         ->assertSee('Station presence', false)
-        ->assertSee('Save operations settings', false);
+        ->assertSee('Save appointment settings', false)
+        ->assertDontSee('Save operations settings', false);
 });
 
 test('scheduling hours follow business hours by default', function () {

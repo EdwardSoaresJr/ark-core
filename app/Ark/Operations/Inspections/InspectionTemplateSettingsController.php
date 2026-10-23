@@ -33,6 +33,6 @@ final class InspectionTemplateSettingsController
                 'section' => 'workflow',
                 'workflow-tab' => 'inspections',
             ])
-            ->with('status', 'Inspection checklist templates updated.');
+            ->with('status', 'Inspection checklists saved.');
     }
 }
