@@ -330,6 +330,10 @@ public function updateExcellence(Request $request): RedirectResponse
         $lastReview = (bool) ($data['mark_target_reviewed'] ?? false)
             ? now($timezone)->toDateString()
             : ShopExcellenceTargets::lastTargetReview();
+        $monthlyFixedCostsCents = ShopExcellenceTargets::overheadWorksheetMonthlyFixedCostsCents()
+            ?? (filled($data['monthly_fixed_costs'] ?? null)
+                ? (int) round(((float) $data['monthly_fixed_costs']) * 100)
+                : null);
 
         ShopExcellenceTargets::persist([
             'effective_labor_rate_floor_cents' => filled($data['effective_labor_rate_floor'] ?? null)
@@ -339,9 +343,7 @@ public function updateExcellence(Request $request): RedirectResponse
             'parts_margin_target_percent' => (int) $data['parts_margin_target_percent'],
             'labor_sales_target_percent' => (int) $data['labor_sales_target_percent'],
             'parts_sales_target_percent' => (int) $data['parts_sales_target_percent'],
-            'monthly_fixed_costs_cents' => filled($data['monthly_fixed_costs'] ?? null)
-                ? (int) round(((float) $data['monthly_fixed_costs']) * 100)
-                : null,
+            'monthly_fixed_costs_cents' => $monthlyFixedCostsCents,
             'net_profit_target_percent' => (int) $data['net_profit_target_percent'],
             'income_tax_reserve_percent' => (int) $data['income_tax_reserve_percent'],
             'payroll_tax_reserve_percent' => (int) $data['payroll_tax_reserve_percent'],

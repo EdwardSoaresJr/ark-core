@@ -70,6 +70,7 @@ class ShopSettingsPageController
             'telephonyExtensionDeviceTypes' => TelephonyExtensionDeviceType::cases(),
             'excellenceTargets' => ShopExcellenceTargets::current(),
             'excellenceTargetReview' => ShopExcellenceTargets::lastTargetReview(),
+            'overheadWorksheetMonthlyFixedCostsCents' => ShopExcellenceTargets::overheadWorksheetMonthlyFixedCostsCents(),
             'statusCatalogFormData' => app(RepairOrderStatusCatalog::class)->settingsFormData(),
             'jobBoardLanes' => app(JobBoardLaneCatalog::class)->all(),
             'inspectionTemplates' => InspectionTemplateCatalog::settingsFormData(),

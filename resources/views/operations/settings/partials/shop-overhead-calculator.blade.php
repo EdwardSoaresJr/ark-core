@@ -42,7 +42,7 @@
                 <ul class="mt-1 list-disc space-y-1 pl-4">
                     <li><strong class="font-semibold">Technician wages</strong> - Settings → Staff → each tech → Loaded cost calculator (base pay + burden % + shop overhead / hr).</li>
                     <li><strong class="font-semibold">Advisor, front desk, owner (non-billing)</strong> - Fixed Costs tab → <strong class="font-semibold">Office and advisor payroll</strong> (monthly total).</li>
-                    <li><strong class="font-semibold">Break-even on Margin Health</strong> - Owner Targets → Monthly fixed costs (often ≈ this worksheet’s monthly total + all tech payroll from your P&amp;L).</li>
+                    <li><strong class="font-semibold">Break-even on Margin Health</strong> - uses this worksheet’s fixed-cost monthly total once saved (shown under Owner Targets). Technician pay is already counted there as labor cost.</li>
                 </ul>
             </div>
             <ol class="list-decimal space-y-1.5 pl-4">
