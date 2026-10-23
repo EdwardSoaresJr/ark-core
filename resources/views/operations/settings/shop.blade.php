@@ -17,6 +17,10 @@
                     return 'billing-classes';
                 }
 
+                if (['labor', 'labor-policies', 'tax', 'shop-fees', 'deposits', 'parts'].includes(fromUrl)) {
+                    return fromUrl;
+                }
+
                 const stored = localStorage.getItem('ark:shop-settings:financial-tab') || 'labor';
 
                 if (stored === 'customer-types' || stored === 'customer-tags') {

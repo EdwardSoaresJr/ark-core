@@ -170,6 +170,27 @@ test('settings pages use plain labels instead of posture, authority, truth, surf
         ->assertSee(route('operations.settings.shop.payments.update'), false);
 });
 
+test('every financial rules tab opens from the financial-tab link that save redirects use', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor-policies']))
+        ->assertOk()
+        ->getContent();
+
+    expect(preg_match("/\[([^\]]*)\]\.includes\(fromUrl\)/", $html, $honored))->toBe(1);
+    preg_match_all("/financialTab === '([a-z-]+)'/", $html, $tabs);
+
+    $honoredTabs = collect(explode(',', $honored[1]))->map(fn (string $tab): string => trim($tab, " '"))->all();
+    $renderedTabs = collect($tabs[1])->unique()->reject(fn (string $tab): bool => in_array($tab, ['billing-classes', 'customer-types', 'customer-tags'], true))->values()->all();
+
+    expect($renderedTabs)->toContain('labor-policies', 'deposits');
+
+    foreach ($renderedTabs as $tab) {
+        expect($honoredTabs)->toContain($tab);
+    }
+});
+
 test('admin can upload and remove shop estimate logo', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     Storage::fake('public');
