@@ -1,7 +1,7 @@
 # Shop CSV import
 
 **Authority:** `Customer` · `Vehicle`  
-**Surface:** Settings → Operations → Shop import  
+**Surface:** Settings → Appointments & Setup → Shop import  
 **Not authority:** staging tables, import batches, competitor adapters
 
 ## Flow

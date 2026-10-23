@@ -1088,7 +1088,7 @@ class OperationalReportRangeMetrics
             [
                 'label' => 'Payroll tax reserve (est.)',
                 'amount' => $this->money($payrollTaxReserveCents),
-                'source' => ($targets['monthly_payroll_tax_cents'] ?? null) !== null
+                'source' => (int) ($targets['monthly_payroll_tax_cents'] ?? 0) > 0
                     ? 'Owner Targets monthly payroll tax'
                     : $targets['payroll_tax_reserve_percent'].'% of closed labor cost',
                 'tone' => null,

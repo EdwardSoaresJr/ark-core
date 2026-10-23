@@ -653,6 +653,46 @@ test('owner pl tab splits advisor payroll from shop fixed overhead', function ()
         ->assertSee('$216.84');
 });
 
+test('owner pl names the payroll tax source the reserve actually uses', function (?int $monthlyPayrollTaxCents, string $source) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+    $technician = User::factory()->create(['labor_cost_cents' => 4_000]);
+
+    ShopExcellenceTargets::persist(array_merge(ShopExcellenceTargets::DEFAULTS, [
+        'payroll_tax_reserve_percent' => 10,
+        'monthly_payroll_tax_cents' => $monthlyPayrollTaxCents,
+    ]));
+
+    $repairOrder = repairOrderForOperationalReporting('Payroll Source', RepairOrderStatus::Closed);
+    $repairOrder->forceFill(['assigned_technician_id' => $technician->id])->save();
+    closeForOperationalReporting($repairOrder);
+    $concern = concernForOperationalReporting($repairOrder, RepairOrderConcernDisposition::Approved);
+    lineForOperationalReporting($repairOrder, $concern, RepairOrderLineType::Labor, 30000, quantity: '2.00');
+    freezePostedInvoiceSnapshot($repairOrder, 30_000, 0);
+
+    [$from, $to] = OperationalReportDateScope::resolveRange(operationalReportingShopToday(), operationalReportingShopToday());
+    $summary = (new \App\Ark\Operations\Reports\OperationalReportRangeMetrics($from, $to))->ownerPlSummary();
+    $line = collect($summary['tax_lines'])->firstWhere('label', 'Payroll tax reserve (est.)');
+    $amount = ($monthlyPayrollTaxCents ?? 0) > 0
+        ? sprintf('$%.2f', round($monthlyPayrollTaxCents * ($summary['range_days'] / 30.437)) / 100)
+        : '$8.00';
+
+    expect($line['source'])->toBe($source)
+        ->and($line['amount'])->toBe($amount);
+
+    $this->get(route('operations.reports.operational', [
+        'from' => operationalReportingShopToday(),
+        'to' => operationalReportingShopToday(),
+        'tab' => 'owner-pl',
+    ]))
+        ->assertOk()
+        ->assertSeeInOrder(['Payroll tax reserve (est.)', $amount, $source]);
+})->with([
+    'no monthly amount' => [null, '10% of closed labor cost'],
+    'monthly amount of $0' => [0, '10% of closed labor cost'],
+    'monthly amount above $0' => [304_370, 'Owner Targets monthly payroll tax'],
+]);
+
 test('technician cannot access financial operational reports', function () {
     $this->seed(ArkAuthorizationSeeder::class);
 

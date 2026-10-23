@@ -279,7 +279,7 @@ public function updateWorkflow(Request $request): RedirectResponse
 
         $redirect = redirect()
             ->route('operations.settings.shop.edit', ['section' => 'operations'])
-            ->with('status', 'Operations settings saved.');
+            ->with('status', 'Appointment settings saved.');
 
         if ($windowWarnings !== []) {
             $redirect->with('warning', $windowWarnings[0]);
@@ -380,9 +380,17 @@ public function updatePrinting(Request $request): RedirectResponse
             'qz_raster_dpi' => ['nullable', 'integer', Rule::in([203, 300])],
             'oil_change_sticker_next_due_months' => ['required', 'integer', 'min:1', 'max:24'],
             'oil_change_interval_miles' => ['required', 'integer', 'min:1000', 'max:50000'],
+            'key_tag_mileage_requirement' => ['nullable', Rule::in([KeyTagPrintGate::NONE, KeyTagPrintGate::MILEAGE_IN])],
         ]);
 
+        $payload = [];
+
+        if ($request->exists('key_tag_mileage_requirement')) {
+            $payload['key_tag_mileage_requirement'] = $data['key_tag_mileage_requirement'] ?? KeyTagPrintGate::NONE;
+        }
+
         ShopSettings::current()->update([
+            ...$payload,
             'qz_printing_enabled' => (bool) ($data['qz_printing_enabled'] ?? false),
             'qz_printing_key_tag_printer' => filled($data['qz_printing_key_tag_printer'] ?? null)
                 ? trim((string) $data['qz_printing_key_tag_printer'])

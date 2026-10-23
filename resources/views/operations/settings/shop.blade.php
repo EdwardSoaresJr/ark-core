@@ -210,7 +210,7 @@
                     <div class="grid gap-1">
                         <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Your shop</p>
                         <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
-                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Operations</button>
+                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Appointments &amp; Setup</button>
                         @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
                             <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
                         @endcan
@@ -245,8 +245,8 @@
                 <section x-show="active === 'general'">
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Shop Identity</p>
-                        <h2 class="text-base font-black text-slate-950">Estimate-facing shop identity</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Feeds customer documents, PDFs, and operational contact context.</p>
+                        <h2 class="text-base font-black text-slate-950">Shop name, logo, and contact details</h2>
+                        <p class="mt-0.5 text-xs text-slate-500">Shown on estimates, invoices, and other customer documents.</p>
                     </div>
                     <form method="POST" action="{{ route('operations.settings.shop.general.update') }}" enctype="multipart/form-data" class="mt-4">
                         @csrf
@@ -342,7 +342,7 @@
                     </div>
                     <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
                         <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                            Save General
+                            Save Shop Identity
                         </button>
                     </div>
                     </form>
@@ -351,7 +351,7 @@
                 <section x-show="active === 'financial'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Financial Rules</p>
-                        <h2 class="text-base font-black text-slate-950">Estimate pricing authority</h2>
+                        <h2 class="text-base font-black text-slate-950">How estimates are priced</h2>
                         <p class="mt-0.5 text-xs text-slate-500">These rules flow into line pricing, tax, shop supplies, totals, and estimate snapshots.</p>
                     </div>
 
@@ -524,7 +524,7 @@
                                 </fieldset>
                             </div>
                             <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
-                                Effective posture: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
+                                Saved tax setup: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
                             </div>
                         </div>
                         <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
@@ -575,50 +575,54 @@
                                 'default_deposit_diagnostic_labor_category_keys',
                                 $settings->defaultDepositDiagnosticLaborCategoryKeys(),
                             );
+                            $depositEnabled = (bool) old('default_deposit_enabled', $settings->defaultDepositEnabled());
+                            $depositIncludeDiagnostics = (bool) old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics());
                         @endphp
                         <p class="text-xs leading-5 text-slate-500">
                             Default deposit amount on the repair order financial rail and Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
                         </p>
-                        <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" class="grid gap-4 md:grid-cols-2">
+                        <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" x-data="{ depositEnabled: @js($depositEnabled), depositIncludeDiagnostics: @js($depositIncludeDiagnostics) }" class="grid gap-4 md:grid-cols-2">
                             @csrf
                             @method('PATCH')
-                            <label class="block text-xs font-medium text-slate-500">
-                                Suggest default deposit
-                                <select name="default_deposit_enabled" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('default_deposit_enabled', $settings->defaultDepositEnabled()))>No</option>
-                                    <option value="1" @selected((bool) old('default_deposit_enabled', $settings->defaultDepositEnabled()))>Yes</option>
-                                </select>
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                                <input type="hidden" name="default_deposit_enabled" value="0">
+                                <input type="checkbox" name="default_deposit_enabled" value="1" x-model="depositEnabled" @checked($depositEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                <span>Suggest a default deposit</span>
                             </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Include parts
-                                <select name="default_deposit_include_parts" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('default_deposit_include_parts', $settings->defaultDepositIncludeParts()))>No</option>
-                                    <option value="1" @selected((bool) old('default_deposit_include_parts', $settings->defaultDepositIncludeParts()))>Yes</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Include diagnostics
-                                <select name="default_deposit_include_diagnostics" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics()))>No</option>
-                                    <option value="1" @selected((bool) old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics()))>Yes</option>
-                                </select>
-                            </label>
-                            <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-3">
-                                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Diagnostic labor categories</p>
-                                <p class="mt-1 text-xs leading-5 text-slate-500">On Diagnostics scopes only, labor in these categories counts toward the default deposit when diagnostics are included.</p>
-                                <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                                    @foreach ($settings->laborCategories() as $category)
-                                        <label class="flex items-center gap-2 text-sm text-slate-700">
-                                            <input
-                                                type="checkbox"
-                                                name="default_deposit_diagnostic_labor_category_keys[]"
-                                                value="{{ $category['key'] }}"
-                                                @checked(in_array($category['key'], $selectedDiagnosticKeys, true))
-                                                class="rounded border-slate-300 text-slate-950 focus:ring-slate-500"
-                                            >
-                                            <span>{{ $category['name'] }}</span>
+                            <p x-show="! depositEnabled" @if ($depositEnabled) x-cloak @endif class="md:col-span-2 text-xs leading-5 text-slate-500">No deposit is suggested on repair orders. Turn it on to choose what the deposit includes.</p>
+                            <div x-show="depositEnabled" @unless ($depositEnabled) x-cloak @endunless class="grid gap-4 md:col-span-2">
+                                <fieldset>
+                                    <legend class="text-xs font-medium text-slate-500">Include in the deposit</legend>
+                                    <div class="mt-1 flex flex-wrap gap-x-6 gap-y-2">
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="default_deposit_include_parts" value="0">
+                                            <input type="checkbox" name="default_deposit_include_parts" value="1" @checked((bool) old('default_deposit_include_parts', $settings->defaultDepositIncludeParts())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Include parts</span>
                                         </label>
-                                    @endforeach
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="default_deposit_include_diagnostics" value="0">
+                                            <input type="checkbox" name="default_deposit_include_diagnostics" value="1" x-model="depositIncludeDiagnostics" @checked($depositIncludeDiagnostics) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Include diagnostics</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                                <div x-show="depositIncludeDiagnostics" @unless ($depositIncludeDiagnostics) x-cloak @endunless class="border border-slate-200 bg-white px-3 py-3">
+                                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Diagnostic labor categories</p>
+                                    <p class="mt-1 text-xs leading-5 text-slate-500">On Diagnostics scopes only, labor in these categories counts toward the default deposit when diagnostics are included.</p>
+                                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                                        @foreach ($settings->laborCategories() as $category)
+                                            <label class="flex items-center gap-2 text-sm text-slate-700">
+                                                <input
+                                                    type="checkbox"
+                                                    name="default_deposit_diagnostic_labor_category_keys[]"
+                                                    value="{{ $category['key'] }}"
+                                                    @checked(in_array($category['key'], $selectedDiagnosticKeys, true))
+                                                    class="rounded border-slate-300 text-slate-950 focus:ring-slate-500"
+                                                >
+                                                <span>{{ $category['name'] }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                             <div class="md:col-span-2 flex justify-end border-t border-slate-200 pt-4">
@@ -646,17 +650,17 @@
                         <div class="space-y-4">
                             <div class="grid gap-px border border-slate-300 bg-slate-300 md:grid-cols-3">
                                 <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Editable authority</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">You set</p>
                                     <p class="mt-0.5 text-sm font-black text-slate-950">Markup %</p>
                                     <p class="text-[11px] text-slate-500">Changes sell price policy</p>
                                 </div>
                                 <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Read-only truth</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Calculated</p>
                                     <p class="mt-0.5 text-sm font-black text-slate-950">Margin %</p>
-                                    <p class="text-[11px] text-slate-500">Derived GP visibility</p>
+                                    <p class="text-[11px] text-slate-500">Parts gross profit from your markup</p>
                                 </div>
                                 <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Target posture</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Target</p>
                                     <p class="mt-0.5 text-sm font-black text-slate-950">{{ App\Ark\Operations\Settings\ShopSettings::SURVIVABILITY_TARGETS['parts_gp'] }}</p>
                                     <p class="text-[11px] text-slate-500">Parts GP health</p>
                                 </div>
@@ -870,8 +874,11 @@
                                         </div>
                                     </div>
 
+                                    @php
+                                        $shopFeesOn = (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']);
+                                    @endphp
                                     @if ($billingProfile === 'fleet')
-                                        <div class="grid gap-3 sm:grid-cols-2">
+                                        <div class="grid gap-3 sm:grid-cols-2" x-data="{ shopFeesOn: @js($shopFeesOn) }">
                                             <div>
                                                 <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                                     Fleet shop fees
@@ -880,9 +887,9 @@
                                                         label="Fleet shop fees help"
                                                     />
                                                 </div>
-                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="1" @selected((bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>Use shop rate</option>
-                                                    <option value="0" @selected(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>None</option>
+                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                    <option value="1" @selected($shopFeesOn)>Use shop rate</option>
+                                                    <option value="0" @selected(! $shopFeesOn)>None</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -898,7 +905,8 @@
                                                     value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
                                                     inputmode="decimal"
                                                     placeholder="Shop default"
-                                                    @disabled(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))
+                                                    @disabled(! $shopFeesOn)
+                                                    :disabled="! shopFeesOn"
                                                     class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
                                                 >
                                             </div>
@@ -937,7 +945,7 @@
                                             <input type="hidden" name="customer_types[{{ $index }}][shop_fee_rate_override]" value="">
                                         </div>
                                     @else
-                                        <div class="grid gap-3 sm:grid-cols-2">
+                                        <div class="grid gap-3 sm:grid-cols-2" x-data="{ shopFeesOn: @js($shopFeesOn) }">
                                             <div>
                                                 <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                                     Shop fees
@@ -946,9 +954,9 @@
                                                         label="Shop fees help for {{ $type['name'] }}"
                                                     />
                                                 </div>
-                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="1" @selected((bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>Use shop rate</option>
-                                                    <option value="0" @selected(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>None</option>
+                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                    <option value="1" @selected($shopFeesOn)>Use shop rate</option>
+                                                    <option value="0" @selected(! $shopFeesOn)>None</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -964,7 +972,8 @@
                                                     value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
                                                     inputmode="decimal"
                                                     placeholder="Shop default"
-                                                    @disabled(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))
+                                                    @disabled(! $shopFeesOn)
+                                                    :disabled="! shopFeesOn"
                                                     class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
                                                 >
                                             </div>
@@ -1306,7 +1315,7 @@
 
                 <section x-show="active === 'operations'" x-cloak>
                     <div class="border-b border-slate-200 px-3 py-3">
-                        <h3 class="text-sm font-black text-slate-950">Operations</h3>
+                        <h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>
                         <p class="mt-0.5 text-xs text-slate-500">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</p>
                     </div>
 
@@ -1334,7 +1343,7 @@
                 <section x-show="active === 'printing'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
                         <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">QZ Tray / Brother QL</p>
-                        <h2 class="text-base font-black text-slate-950">Label printing authority</h2>
+                        <h2 class="text-base font-black text-slate-950">Key tags and oil change stickers</h2>
                         <p class="mt-0.5 text-xs text-slate-500">Printer names must match the OS queue exactly. Defaults: Brother QL-800, 62 × 38.1 mm.</p>
                     </div>
 
@@ -1395,6 +1404,17 @@
                                     <option value="last8" @selected(old('qz_key_tag_vin_display', $settings->qz_key_tag_vin_display) === 'last8')>Last 8</option>
                                     <option value="full" @selected(old('qz_key_tag_vin_display', $settings->qz_key_tag_vin_display) === 'full')>Full VIN</option>
                                 </select>
+                            </label>
+                            <label class="block text-xs font-medium text-slate-500">
+                                Key tag mileage required
+                                @php
+                                    $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
+                                @endphp
+                                <select name="key_tag_mileage_requirement" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                    <option value="none" @selected($keyTagMileage === 'none')>None - print without mileage in</option>
+                                    <option value="in" @selected($keyTagMileage === 'in')>Mileage in - don't print until it is entered</option>
+                                </select>
+                                <span class="mt-1 block font-normal text-slate-400">A blocked print says mileage in is missing. It does not print a blank tag.</span>
                             </label>
                             <label class="block text-xs font-medium text-slate-500">
                                 Raster DPI override
