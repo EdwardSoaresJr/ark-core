@@ -551,6 +551,33 @@ test('saving billing classes after switching shop fees stores the override only 
         ->and($rows['Internal']['fee_override'])->toBe('3.250');
 });
 
+test('clearing a billing class fee rate override goes back to the shop rate, and an unposted override is kept', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '4.500', 'discount_type' => 'none'],
+            ['name' => 'Business', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '2.000', 'discount_type' => 'none'],
+        ],
+    ]);
+
+    $this->patch(route('operations.settings.shop.customer-types.update'), [
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => '1', 'shop_fee_rate_override' => '', 'discount_type' => 'none'],
+            ['name' => 'Business', 'shop_fees_enabled' => '1', 'discount_type' => 'none'],
+        ],
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $rows = collect(ShopSettings::current()->fresh()->customer_types)->keyBy('name');
+
+    expect($rows['Retail']['shop_fees_enabled'])->toBeTrue()
+        ->and($rows['Retail']['shop_fee_rate_override'])->toBeNull()
+        ->and($rows['Retail']['fee_override'])->toBeNull()
+        ->and($rows['Business']['shop_fee_rate_override'])->toBe('2.000');
+});
+
 test('saving a parts matrix does not rewrite tax settings', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));

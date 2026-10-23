@@ -85,7 +85,7 @@ trait NormalizesShopPartsMatrices
                         ? $row['document_presentation_profile']
                         : ($existing['document_presentation_profile'] ?? null),
                     'shop_fees_enabled' => (bool) ($row['shop_fees_enabled'] ?? $existing['shop_fees_enabled'] ?? true),
-                    'shop_fee_rate_override' => filled($row['shop_fee_rate_override'] ?? null)
+                    'shop_fee_rate_override' => array_key_exists('shop_fee_rate_override', $row)
                         ? $row['shop_fee_rate_override']
                         : ($existing['shop_fee_rate_override'] ?? null),
                     'discount_type' => $row['discount_type'] ?? $existing['discount_type'] ?? 'none',
