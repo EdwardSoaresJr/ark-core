@@ -17,6 +17,8 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -274,6 +276,110 @@ test('closing a paid repair order on mobile returns the workspace and a warning 
 
     expect($repairOrder->fresh()->status->is(RepairOrderStatus::Closed))->toBeTrue()
         ->and($repairOrder->fresh()->posted_at)->not->toBeNull();
+});
+
+function closedRepairOrderWithFailedFinalPdf(): array
+{
+    Storage::fake('local');
+    CountingCloseoutPdfRenderer::$renders = 0;
+    $repairOrder = paidRepairOrderReadyToClose();
+    $repairOrder->vehicle->forceFill(['vin' => '2HGFC2F59MH123456', 'normalized_vin' => '2HGFC2F59MH123456'])->save();
+
+    app()->bind(PdfRenderer::class, CountingCloseoutPdfRenderer::class);
+    test()->get(route('operations.repair-orders.estimate.pdf', $repairOrder))->assertOk();
+    $stalePdf = Storage::disk('local')->get(closeoutEstimateDocument($repairOrder)->pdf_path);
+
+    app()->bind(PdfRenderer::class, ProcessFailingCloseoutPdfRenderer::class);
+    test()->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => 'closed:paid',
+    ])->assertRedirect();
+
+    expect(closeoutEstimateDocument($repairOrder)->status)->toBe('failed');
+
+    return [$repairOrder->fresh(), $stalePdf];
+}
+
+/**
+ * @return array<int, string>
+ */
+function sentEstimateEmailAttachments(): array
+{
+    $attachments = [];
+
+    Http::assertSent(function (HttpRequest $request) use (&$attachments): bool {
+        if (! str_contains($request->url(), '/api/v1/services/mail/messages/transactional')) {
+            return false;
+        }
+
+        $attachments = collect(platformMailBody($request)['attachments'] ?? [])
+            ->map(fn (array $attachment): string => base64_decode($attachment['content_base64']))
+            ->all();
+
+        return true;
+    });
+
+    return $attachments;
+}
+
+test('emailing a closed repair order with a failed final pdf regenerates it and attaches the fresh pdf', function () {
+    [$repairOrder, $stalePdf] = closedRepairOrderWithFailedFinalPdf();
+    enableHostedPlatformMail();
+    fakeHostedPlatformMail();
+
+    app()->bind(PdfRenderer::class, CountingCloseoutPdfRenderer::class);
+    $rendersBefore = CountingCloseoutPdfRenderer::$renders;
+
+    $this->post(route('operations.repair-orders.estimate.email', $repairOrder), [
+        'email' => 'customer@example.test',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    $attachments = sentEstimateEmailAttachments();
+    $document = closeoutEstimateDocument($repairOrder);
+
+    expect(CountingCloseoutPdfRenderer::$renders)->toBe($rendersBefore + 1)
+        ->and($attachments)->toHaveCount(1)
+        ->and($attachments[0])->not->toBe($stalePdf)
+        ->and($attachments[0])->toBe(Storage::disk('local')->get($document->pdf_path))
+        ->and($document->status)->toBe('generated');
+});
+
+test('emailing a closed repair order whose final pdf still fails never attaches the stale pdf', function () {
+    [$repairOrder] = closedRepairOrderWithFailedFinalPdf();
+    enableHostedPlatformMail();
+    fakeHostedPlatformMail();
+
+    $this->post(route('operations.repair-orders.estimate.email', $repairOrder), [
+        'email' => 'customer@example.test',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    assertPlatformTransactionalMail('estimate.send', 'customer@example.test', '/portal/estimates/');
+
+    expect(sentEstimateEmailAttachments())->toBe([])
+        ->and(closeoutEstimateDocument($repairOrder)->status)->toBe('failed');
+});
+
+test('emailing a living estimate still attaches its existing pdf without regenerating', function () {
+    Storage::fake('local');
+    CountingCloseoutPdfRenderer::$renders = 0;
+    $repairOrder = paidRepairOrderReadyToClose();
+    $repairOrder->vehicle->forceFill(['vin' => '2HGFC2F59MH123456', 'normalized_vin' => '2HGFC2F59MH123456'])->save();
+
+    app()->bind(PdfRenderer::class, CountingCloseoutPdfRenderer::class);
+    $this->get(route('operations.repair-orders.estimate.pdf', $repairOrder))->assertOk();
+    $document = closeoutEstimateDocument($repairOrder);
+    $document->forceFill(['status' => 'failed', 'needs_pdf_refresh' => true])->save();
+    $existingPdf = Storage::disk('local')->get($document->pdf_path);
+    $rendersBefore = CountingCloseoutPdfRenderer::$renders;
+
+    enableHostedPlatformMail();
+    fakeHostedPlatformMail();
+
+    $this->post(route('operations.repair-orders.estimate.email', $repairOrder), [
+        'email' => 'customer@example.test',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect(CountingCloseoutPdfRenderer::$renders)->toBe($rendersBefore)
+        ->and(sentEstimateEmailAttachments())->toBe([$existingPdf]);
 });
 
 class ProcessFailingCloseoutPdfRenderer implements PdfRenderer

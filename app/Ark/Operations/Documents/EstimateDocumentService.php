@@ -231,11 +231,21 @@ class EstimateDocumentService
             ->where('document_type', 'estimate')
             ->first();
 
-        if ($document === null || ! $this->pdfExists($document)) {
+        if ($document === null || ! $this->pdfExists($document) || $this->finalPdfFailed($document)) {
             return null;
         }
 
         return $document;
+    }
+
+    /** The file on disk predates the close when the closed repair order's final PDF failed to render. */
+    public function finalPdfFailed(EstimateDocument $document): bool
+    {
+        $document->loadMissing('repairOrder');
+
+        return ! $document->isInvoice()
+            && $document->status === 'failed'
+            && $document->repairOrder?->estimateDocumentIsFrozen() === true;
     }
 
     private function ensurePdfGenerated(EstimateDocument $document): EstimateDocument
