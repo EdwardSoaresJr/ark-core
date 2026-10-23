@@ -482,6 +482,68 @@ test('saving shop fees with the switch on or off persists exactly the posted val
     'box on' => ['1', true],
 ]);
 
+test('deposit switches are checkboxes that post 0 when off and 1 when on, and reveal what the deposit includes', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+    ]);
+
+    $response = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))->assertOk();
+
+    foreach (['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics'] as $field) {
+        $response
+            ->assertSee('<input type="hidden" name="'.$field.'" value="0">', false)
+            ->assertSee('type="checkbox" name="'.$field.'" value="1"', false)
+            ->assertDontSee('<select name="'.$field.'"', false);
+    }
+
+    $response
+        ->assertSee('Suggest a default deposit')
+        ->assertSee('Include in the deposit')
+        ->assertSee('x-data="{ depositEnabled: true, depositIncludeDiagnostics: false }"', false)
+        ->assertSee('name="default_deposit_diagnostic_labor_category_keys[]"', false)
+        ->assertSee('Square deposit capture');
+
+    expect($response->getContent())
+        ->toMatch('/<div x-show="depositEnabled"\s+class="grid gap-4 md:col-span-2">/')
+        ->toMatch('/<div x-show="depositIncludeDiagnostics"\s+x-cloak\s+class="border border-slate-200 bg-white px-3 py-3">/');
+});
+
+test('saving deposits with each box on or off persists exactly the posted values', function (string $enabled, string $parts, string $diagnostics) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => $enabled !== '1',
+        'default_deposit_include_parts' => $parts !== '1',
+        'default_deposit_include_diagnostics' => $diagnostics !== '1',
+    ]);
+
+    $this->patch(route('operations.settings.shop.deposits.update'), [
+        'default_deposit_enabled' => $enabled,
+        'default_deposit_include_parts' => $parts,
+        'default_deposit_include_diagnostics' => $diagnostics,
+        'default_deposit_diagnostic_labor_category_keys' => ['diagnostic', 'programming'],
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->defaultDepositEnabled())->toBe($enabled === '1')
+        ->and($settings->defaultDepositIncludeParts())->toBe($parts === '1')
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBe($diagnostics === '1')
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['diagnostic', 'programming']);
+})->with([
+    'all off' => ['0', '0', '0'],
+    'all on' => ['1', '1', '1'],
+    'deposit off keeps the hidden choices' => ['0', '1', '1'],
+    'deposit on, parts only' => ['1', '1', '0'],
+]);
+
 test('billing class fee rate override enables and disables as soon as shop fees is changed', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));

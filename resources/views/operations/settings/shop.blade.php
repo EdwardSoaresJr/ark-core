@@ -575,50 +575,54 @@
                                 'default_deposit_diagnostic_labor_category_keys',
                                 $settings->defaultDepositDiagnosticLaborCategoryKeys(),
                             );
+                            $depositEnabled = (bool) old('default_deposit_enabled', $settings->defaultDepositEnabled());
+                            $depositIncludeDiagnostics = (bool) old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics());
                         @endphp
                         <p class="text-xs leading-5 text-slate-500">
                             Default deposit amount on the repair order financial rail and Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
                         </p>
-                        <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" class="grid gap-4 md:grid-cols-2">
+                        <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" x-data="{ depositEnabled: @js($depositEnabled), depositIncludeDiagnostics: @js($depositIncludeDiagnostics) }" class="grid gap-4 md:grid-cols-2">
                             @csrf
                             @method('PATCH')
-                            <label class="block text-xs font-medium text-slate-500">
-                                Suggest default deposit
-                                <select name="default_deposit_enabled" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('default_deposit_enabled', $settings->defaultDepositEnabled()))>No</option>
-                                    <option value="1" @selected((bool) old('default_deposit_enabled', $settings->defaultDepositEnabled()))>Yes</option>
-                                </select>
+                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                                <input type="hidden" name="default_deposit_enabled" value="0">
+                                <input type="checkbox" name="default_deposit_enabled" value="1" x-model="depositEnabled" @checked($depositEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                <span>Suggest a default deposit</span>
                             </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Include parts
-                                <select name="default_deposit_include_parts" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('default_deposit_include_parts', $settings->defaultDepositIncludeParts()))>No</option>
-                                    <option value="1" @selected((bool) old('default_deposit_include_parts', $settings->defaultDepositIncludeParts()))>Yes</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Include diagnostics
-                                <select name="default_deposit_include_diagnostics" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="0" @selected(! old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics()))>No</option>
-                                    <option value="1" @selected((bool) old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics()))>Yes</option>
-                                </select>
-                            </label>
-                            <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-3">
-                                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Diagnostic labor categories</p>
-                                <p class="mt-1 text-xs leading-5 text-slate-500">On Diagnostics scopes only, labor in these categories counts toward the default deposit when diagnostics are included.</p>
-                                <div class="mt-3 grid gap-2 sm:grid-cols-2">
-                                    @foreach ($settings->laborCategories() as $category)
-                                        <label class="flex items-center gap-2 text-sm text-slate-700">
-                                            <input
-                                                type="checkbox"
-                                                name="default_deposit_diagnostic_labor_category_keys[]"
-                                                value="{{ $category['key'] }}"
-                                                @checked(in_array($category['key'], $selectedDiagnosticKeys, true))
-                                                class="rounded border-slate-300 text-slate-950 focus:ring-slate-500"
-                                            >
-                                            <span>{{ $category['name'] }}</span>
+                            <p x-show="! depositEnabled" @if ($depositEnabled) x-cloak @endif class="md:col-span-2 text-xs leading-5 text-slate-500">No deposit is suggested on repair orders. Turn it on to choose what the deposit includes.</p>
+                            <div x-show="depositEnabled" @unless ($depositEnabled) x-cloak @endunless class="grid gap-4 md:col-span-2">
+                                <fieldset>
+                                    <legend class="text-xs font-medium text-slate-500">Include in the deposit</legend>
+                                    <div class="mt-1 flex flex-wrap gap-x-6 gap-y-2">
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="default_deposit_include_parts" value="0">
+                                            <input type="checkbox" name="default_deposit_include_parts" value="1" @checked((bool) old('default_deposit_include_parts', $settings->defaultDepositIncludeParts())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Include parts</span>
                                         </label>
-                                    @endforeach
+                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="hidden" name="default_deposit_include_diagnostics" value="0">
+                                            <input type="checkbox" name="default_deposit_include_diagnostics" value="1" x-model="depositIncludeDiagnostics" @checked($depositIncludeDiagnostics) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
+                                            <span>Include diagnostics</span>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                                <div x-show="depositIncludeDiagnostics" @unless ($depositIncludeDiagnostics) x-cloak @endunless class="border border-slate-200 bg-white px-3 py-3">
+                                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Diagnostic labor categories</p>
+                                    <p class="mt-1 text-xs leading-5 text-slate-500">On Diagnostics scopes only, labor in these categories counts toward the default deposit when diagnostics are included.</p>
+                                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                                        @foreach ($settings->laborCategories() as $category)
+                                            <label class="flex items-center gap-2 text-sm text-slate-700">
+                                                <input
+                                                    type="checkbox"
+                                                    name="default_deposit_diagnostic_labor_category_keys[]"
+                                                    value="{{ $category['key'] }}"
+                                                    @checked(in_array($category['key'], $selectedDiagnosticKeys, true))
+                                                    class="rounded border-slate-300 text-slate-950 focus:ring-slate-500"
+                                                >
+                                                <span>{{ $category['name'] }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                             <div class="md:col-span-2 flex justify-end border-t border-slate-200 pt-4">
