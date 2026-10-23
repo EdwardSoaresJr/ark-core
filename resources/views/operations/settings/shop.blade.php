@@ -870,8 +870,11 @@
                                         </div>
                                     </div>
 
+                                    @php
+                                        $shopFeesOn = (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']);
+                                    @endphp
                                     @if ($billingProfile === 'fleet')
-                                        <div class="grid gap-3 sm:grid-cols-2">
+                                        <div class="grid gap-3 sm:grid-cols-2" x-data="{ shopFeesOn: @js($shopFeesOn) }">
                                             <div>
                                                 <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                                     Fleet shop fees
@@ -880,9 +883,9 @@
                                                         label="Fleet shop fees help"
                                                     />
                                                 </div>
-                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="1" @selected((bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>Use shop rate</option>
-                                                    <option value="0" @selected(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>None</option>
+                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                    <option value="1" @selected($shopFeesOn)>Use shop rate</option>
+                                                    <option value="0" @selected(! $shopFeesOn)>None</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -898,7 +901,8 @@
                                                     value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
                                                     inputmode="decimal"
                                                     placeholder="Shop default"
-                                                    @disabled(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))
+                                                    @disabled(! $shopFeesOn)
+                                                    :disabled="! shopFeesOn"
                                                     class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
                                                 >
                                             </div>
@@ -937,7 +941,7 @@
                                             <input type="hidden" name="customer_types[{{ $index }}][shop_fee_rate_override]" value="">
                                         </div>
                                     @else
-                                        <div class="grid gap-3 sm:grid-cols-2">
+                                        <div class="grid gap-3 sm:grid-cols-2" x-data="{ shopFeesOn: @js($shopFeesOn) }">
                                             <div>
                                                 <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
                                                     Shop fees
@@ -946,9 +950,9 @@
                                                         label="Shop fees help for {{ $type['name'] }}"
                                                     />
                                                 </div>
-                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="1" @selected((bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>Use shop rate</option>
-                                                    <option value="0" @selected(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))>None</option>
+                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                    <option value="1" @selected($shopFeesOn)>Use shop rate</option>
+                                                    <option value="0" @selected(! $shopFeesOn)>None</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -964,7 +968,8 @@
                                                     value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
                                                     inputmode="decimal"
                                                     placeholder="Shop default"
-                                                    @disabled(! (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']))
+                                                    @disabled(! $shopFeesOn)
+                                                    :disabled="! shopFeesOn"
                                                     class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
                                                 >
                                             </div>
