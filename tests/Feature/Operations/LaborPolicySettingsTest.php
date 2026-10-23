@@ -23,10 +23,12 @@ test('admin can view labor policies matrix on shop settings', function () {
         ]))
         ->assertOk()
         ->assertSee('Labor Policies')
-        ->assertSee('Resolver Preview')
+        ->assertSee('Rate preview')
         ->assertSee('Maintenance')
         ->assertSee('Customer pay')
-        ->assertSee('Resolved Rate');
+        ->assertSee('Hourly rate')
+        ->assertDontSee('Resolver Preview')
+        ->assertDontSee('Billing Posture');
 });
 
 test('admin can save a single labor policy cell', function () {

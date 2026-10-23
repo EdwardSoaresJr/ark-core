@@ -55,7 +55,8 @@ test('saving inspection settings keeps slot identity and updates name and type',
         ->assertRedirect(route('operations.settings.shop.edit', [
             'section' => 'workflow',
             'workflow-tab' => 'inspections',
-        ]));
+        ]))
+        ->assertSessionHas('status', 'Inspection checklists saved.');
 
     $slots = $item->fresh()->measurement_slots;
 

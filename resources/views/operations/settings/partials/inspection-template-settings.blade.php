@@ -107,7 +107,7 @@
     @if ($inspectionTemplates !== [])
         <div>
             <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                Save inspection templates
+                Save inspection checklists
             </button>
         </div>
     @endif

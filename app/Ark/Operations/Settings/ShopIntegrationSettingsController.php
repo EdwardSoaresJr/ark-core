@@ -75,7 +75,7 @@ class ShopIntegrationSettingsController
 
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'payments'])
-            ->with('status', 'Payment capture surfaces saved.');
+            ->with('status', 'Card payment options saved.');
     }
 
     public function updateEmail(Request $request): RedirectResponse

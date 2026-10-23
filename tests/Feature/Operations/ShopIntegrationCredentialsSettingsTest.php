@@ -58,7 +58,8 @@ test('payments settings save capture surfaces without merchant credentials', fun
             'square_portal_pay_enabled' => '1',
             'square_email_pay_enabled' => '1',
         ])
-        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'payments']));
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'payments']))
+        ->assertSessionHas('status', 'Card payment options saved.');
 
     $settings = ShopSettings::current()->fresh();
 

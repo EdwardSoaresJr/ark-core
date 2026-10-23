@@ -9,7 +9,7 @@
         <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Shop import</h4>
         <p class="mt-0.5 text-xs text-slate-500">
             Bring customers (and vehicles) from a spreadsheet so the shop feels familiar on day one.
-            Writes Customer and Vehicle authority only - no staging tables, no repair history.
+            Creates customer and vehicle records only. Repair history is not imported.
         </p>
     </div>
 

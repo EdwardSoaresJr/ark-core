@@ -64,7 +64,8 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Financial Rules')
         ->assertSee('Documents / Disclaimers')
         ->assertSee('Workflow Defaults')
-        ->assertSee('Default visit posture')
+        ->assertSee('Default visit type')
+        ->assertDontSee('Default visit posture')
         ->assertSee('Check In visit')
         ->assertSee('Worksheet notes')
         ->assertSee('Estimate logo')
@@ -118,6 +119,76 @@ test('admin can view operational shop settings defaults', function () {
         ->assertDontSee('name="default_estimate_state"', false)
         ->assertSee('150.00')
         ->assertSee('180.00');
+});
+
+test('settings pages use plain labels instead of posture, authority, truth, surface, and band wording', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $response = $this->get(route('operations.settings.shop.edit'))->assertOk();
+
+    foreach ([
+        'Default visit posture',
+        'Account posture at Check In',
+        'Category defaults drive labor authority',
+        'billing posture',
+        'Billing posture',
+        'Billing Posture',
+        'billing postures',
+        'shop fee posture',
+        'check-in posture',
+        'visit posture',
+        'InspectionItem authority',
+        'Customer and Vehicle authority',
+        'Fact authority',
+        'Capture surfaces',
+        'Save payment surfaces',
+        'Shop excellence bands',
+        'posted sales truth',
+        'planning bands',
+        'Owner rhythm',
+        'Resolver Preview',
+        'financial rail',
+    ] as $phrase) {
+        $response->assertDontSee($phrase);
+    }
+
+    $response
+        ->assertSee('Default visit type')
+        ->assertSee('Billing at Check In')
+        ->assertSee('Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet.')
+        ->assertSee('Columns are billing types.')
+        ->assertSee('Rate preview')
+        ->assertSee('Time zone sources')
+        ->assertSee('Where card payments are offered')
+        ->assertSee('Save card payment options')
+        ->assertSee('Shop performance targets')
+        ->assertSee('Creates customer and vehicle records only. Repair history is not imported.')
+        ->assertSee('Technicians record findings on each checklist item.')
+        ->assertSee('name="default_visit_mode"', false)
+        ->assertSee('name="lp_posture"', false)
+        ->assertSee(route('operations.settings.shop.payments.update'), false);
+});
+
+test('every financial rules tab opens from the financial-tab link that save redirects use', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor-policies']))
+        ->assertOk()
+        ->getContent();
+
+    expect(preg_match("/\[([^\]]*)\]\.includes\(fromUrl\)/", $html, $honored))->toBe(1);
+    preg_match_all("/financialTab === '([a-z-]+)'/", $html, $tabs);
+
+    $honoredTabs = collect(explode(',', $honored[1]))->map(fn (string $tab): string => trim($tab, " '"))->all();
+    $renderedTabs = collect($tabs[1])->unique()->reject(fn (string $tab): bool => in_array($tab, ['billing-classes', 'customer-types', 'customer-tags'], true))->values()->all();
+
+    expect($renderedTabs)->toContain('labor-policies', 'deposits');
+
+    foreach ($renderedTabs as $tab) {
+        expect($honoredTabs)->toContain($tab);
+    }
 });
 
 test('admin can upload and remove shop estimate logo', function () {
@@ -265,7 +336,8 @@ test('admin can persist authoritative operational defaults', function () {
         'recommendation_disclaimer' => 'Recommendations may change after disassembly or further testing.',
         'estimate_validity_days' => '14',
         'customer_part_description_mode' => 'cleaned',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Document settings saved.');
 
     $this->patch(route('operations.settings.shop.workflow.update'), [
         'default_visit_mode' => 'needs_shuttle',
@@ -273,7 +345,8 @@ test('admin can persist authoritative operational defaults', function () {
         'default_recommendation_posture' => 'must_do',
         'default_notes_private' => '1',
         'default_estimate_state' => RepairOrderStatus::Estimate->value,
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Check In defaults saved.');
 
     $settings = ShopSettings::current();
 
@@ -557,6 +630,82 @@ test('saving deposits with each box on or off persists exactly the posted values
     'deposit off keeps the hidden choices' => ['0', '1', '1'],
     'deposit on, parts only' => ['1', '1', '0'],
 ]);
+
+test('saving deposits with diagnostics off and no labor categories keeps the selection empty', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_include_diagnostics' => true,
+        'default_deposit_diagnostic_labor_category_keys' => ['diagnostic', 'programming'],
+    ]);
+
+    $this->patch(route('operations.settings.shop.deposits.update'), [
+        'default_deposit_enabled' => '1',
+        'default_deposit_include_parts' => '1',
+        'default_deposit_include_diagnostics' => '0',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->default_deposit_diagnostic_labor_category_keys)->toBe([])
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBeFalse()
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe([]);
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))
+        ->assertOk()
+        ->getContent();
+
+    expect(substr_count($html, 'name="default_deposit_diagnostic_labor_category_keys[]"'))->toBeGreaterThan(0)
+        ->and(preg_match_all('/name="default_deposit_diagnostic_labor_category_keys\[\]"[^>]*\bchecked\b/', $html))->toBe(0);
+});
+
+test('saving deposits with diagnostics on and no labor categories is refused and keeps the saved categories', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+        'default_deposit_diagnostic_labor_category_keys' => ['programming'],
+    ]);
+
+    $this->from(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))
+        ->patch(route('operations.settings.shop.deposits.update'), [
+            'default_deposit_enabled' => '1',
+            'default_deposit_include_parts' => '0',
+            'default_deposit_include_diagnostics' => '1',
+        ])->assertSessionHasErrors([
+            'default_deposit_diagnostic_labor_category_keys' => 'Select at least one labor category when diagnostics are included.',
+        ]);
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->defaultDepositIncludeParts())->toBeTrue()
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBeFalse()
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming']);
+});
+
+test('deposit diagnostic categories fall back to the default list only when none were ever saved', function () {
+    $settings = ShopSettings::current();
+
+    $settings->forceFill([
+        'default_deposit_include_diagnostics' => false,
+        'default_deposit_diagnostic_labor_category_keys' => null,
+    ]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS);
+
+    $settings->forceFill(['default_deposit_diagnostic_labor_category_keys' => []]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe([]);
+
+    $settings->forceFill(['default_deposit_include_diagnostics' => true]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS);
+
+    $settings->forceFill(['default_deposit_diagnostic_labor_category_keys' => ['programming', 'diagnostic']]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming', 'diagnostic']);
+});
 
 test('billing class fee rate override enables and disables as soon as shop fees is changed', function () {
     $this->seed(ArkAuthorizationSeeder::class);

@@ -26,7 +26,7 @@ class JobBoardLaneSettingsController
 
         $message = filled(trim((string) ($data['create']['name'] ?? '')))
             ? 'Job Board lane added.'
-            : 'Job Board lanes updated.';
+            : 'Job Board lanes saved.';
 
         return redirect()
             ->route('operations.settings.shop.edit', [

@@ -52,7 +52,8 @@ test('lane color persists independently from status color', function () {
                 ],
             ],
         ])
-        ->assertRedirect();
+        ->assertRedirect()
+        ->assertSessionHas('status', 'Job Board lanes saved.');
 
     app(JobBoardLaneCatalog::class)->forgetCache();
 

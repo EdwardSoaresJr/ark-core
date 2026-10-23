@@ -76,7 +76,7 @@ public function updateEstimates(Request $request): RedirectResponse
 
         $this->syncOpenEstimateDocuments();
 
-        return $this->redirectWithStatus('Document disclaimer settings saved.');
+        return $this->redirectWithStatus('Document settings saved.');
     }
 
 public function updateWorkflow(Request $request): RedirectResponse
@@ -128,7 +128,7 @@ public function updateWorkflow(Request $request): RedirectResponse
 
         $this->syncOpenEstimateDocuments();
 
-        return $this->redirectWithStatus('Workflow settings saved.');
+        return $this->redirectWithStatus('Check In defaults saved.');
     }
 
     public function updateAppointments(Request $request): RedirectResponse
