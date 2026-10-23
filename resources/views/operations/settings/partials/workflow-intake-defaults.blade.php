@@ -23,24 +23,8 @@
                     <p class="font-semibold text-slate-700">Account posture at Check In</p>
                     <p class="mt-1">Fleet and warranty billing follow the billing class. Advisors can override per visit at Check In.</p>
                     <p class="mt-2">Fees and parts matrices: <button type="button" @click="setActive('financial'); setFinancialTab('billing-classes')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">Financial Rules → Billing classes</button>.</p>
+                    <p class="mt-2">Whether a key tag needs mileage in before it prints: <button type="button" @click="setActive('printing'); setPrintingTab('printers')" class="font-semibold text-slate-800 underline decoration-slate-300 hover:text-slate-950">Label Printing → Printers &amp; labels</button>.</p>
                 </div>
-            </div>
-        </div>
-
-        <div class="border border-slate-200">
-            <p class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Key tag</p>
-            <div class="px-3 py-3">
-                <label class="block max-w-sm text-xs font-medium text-slate-500">
-                    Mileage required
-                    @php
-                        $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
-                    @endphp
-                    <select name="key_tag_mileage_requirement" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        <option value="none" @selected($keyTagMileage === 'none')>None - print without mileage in</option>
-                        <option value="in" @selected($keyTagMileage === 'in')>Mileage in - don't print until it is entered</option>
-                    </select>
-                    <span class="mt-1 block font-normal leading-4 text-slate-500">A blocked print says mileage in is missing. It does not print a blank tag.</span>
-                </label>
             </div>
         </div>
 

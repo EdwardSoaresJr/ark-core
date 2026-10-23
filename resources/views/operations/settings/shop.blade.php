@@ -1406,6 +1406,17 @@
                                 </select>
                             </label>
                             <label class="block text-xs font-medium text-slate-500">
+                                Key tag mileage required
+                                @php
+                                    $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
+                                @endphp
+                                <select name="key_tag_mileage_requirement" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                    <option value="none" @selected($keyTagMileage === 'none')>None - print without mileage in</option>
+                                    <option value="in" @selected($keyTagMileage === 'in')>Mileage in - don't print until it is entered</option>
+                                </select>
+                                <span class="mt-1 block font-normal text-slate-400">A blocked print says mileage in is missing. It does not print a blank tag.</span>
+                            </label>
+                            <label class="block text-xs font-medium text-slate-500">
                                 Raster DPI override
                                 <select name="qz_raster_dpi" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
                                     <option value="" @selected(old('qz_raster_dpi', $settings->qz_raster_dpi) === null)>Auto</option>

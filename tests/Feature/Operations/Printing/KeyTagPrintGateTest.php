@@ -12,26 +12,68 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 
-test('check in defaults choose whether a key tag needs mileage in', function () {
+test('label printing chooses whether a key tag needs mileage in, and check in defaults points there', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
-    $this->actingAs($admin)
+    $html = $this->actingAs($admin)
         ->withSession([\App\Ark\Operations\Workstations\WorkstationPresence::SESSION_BIND_DISMISSED => true])
-        ->get(route('operations.settings.shop.edit', [
-            'section' => 'workflow',
-            'workflow-tab' => 'defaults',
-        ]))
+        ->get(route('operations.settings.shop.edit', ['section' => 'printing']))
         ->assertOk()
-        ->assertSee('Mileage required')
+        ->assertSee('Key tag mileage required')
         ->assertSee('print without mileage in', false)
-        ->assertSee("don't print until it is entered", false);
+        ->assertSee("don't print until it is entered", false)
+        ->assertSee('Whether a key tag needs mileage in before it prints:')
+        ->assertSee("setActive('printing'); setPrintingTab('printers')", false)
+        ->getContent();
+
+    $formFor = function (string $action) use ($html): string {
+        $start = strpos($html, 'action="'.$action.'"');
+        expect($start)->not->toBeFalse();
+
+        return substr($html, $start, strpos($html, '</form>', $start) - $start);
+    };
+
+    expect(substr_count($html, 'name="key_tag_mileage_requirement"'))->toBe(1)
+        ->and($formFor(route('operations.settings.shop.printing.update')))->toContain('name="key_tag_mileage_requirement"')
+        ->and($formFor(route('operations.settings.shop.workflow.update')))->not->toContain('name="key_tag_mileage_requirement"');
+
+    $printing = [
+        'qz_key_tag_vin_display' => 'last8',
+        'oil_change_sticker_next_due_months' => '6',
+        'oil_change_interval_miles' => '5000',
+    ];
+
+    $this->actingAs($admin)->patch(route('operations.settings.shop.printing.update'), [
+        ...$printing,
+        'key_tag_mileage_requirement' => KeyTagPrintGate::MILEAGE_IN,
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect(ShopSettings::current()->fresh()->key_tag_mileage_requirement)->toBe(KeyTagPrintGate::MILEAGE_IN);
 
     $this->actingAs($admin)->patch(route('operations.settings.shop.workflow.update'), [
         'default_visit_mode' => RepairOrderVisitMode::DropOff->value,
         'default_recommendation_intent' => RecommendationIntent::Maintenance->value,
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect(ShopSettings::current()->fresh()->key_tag_mileage_requirement)->toBe(KeyTagPrintGate::MILEAGE_IN);
+
+    $this->actingAs($admin)->patch(route('operations.settings.shop.printing.update'), [
+        ...$printing,
+        'key_tag_mileage_requirement' => KeyTagPrintGate::NONE,
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect(ShopSettings::current()->fresh()->key_tag_mileage_requirement)->toBe(KeyTagPrintGate::NONE);
+
+    $this->actingAs($admin)->patch(route('operations.settings.shop.workflow.update'), [
+        'default_visit_mode' => RepairOrderVisitMode::DropOff->value,
         'key_tag_mileage_requirement' => KeyTagPrintGate::MILEAGE_IN,
-    ])->assertRedirect();
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect(ShopSettings::current()->fresh()->key_tag_mileage_requirement)->toBe(KeyTagPrintGate::MILEAGE_IN);
+
+    $this->actingAs($admin)->patch(route('operations.settings.shop.printing.update'), $printing)
+        ->assertRedirect()->assertSessionHasNoErrors();
 
     expect(ShopSettings::current()->fresh()->key_tag_mileage_requirement)->toBe(KeyTagPrintGate::MILEAGE_IN);
 });
