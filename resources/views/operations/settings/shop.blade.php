@@ -184,8 +184,8 @@
         <div class="border border-slate-300 bg-white px-3 py-2">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Operational Settings</p>
-                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">Financial rules, estimate defaults, and document language for live repair order workflow.</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Shop settings</p>
+                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.</p>
                 </div>
                 @if (session('status'))
                     <p class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900">{{ session('status') }}</p>
@@ -201,31 +201,42 @@
                     </ul>
                 </div>
             @endif
-            <p class="mt-2 text-[11px] leading-4 text-slate-500">All shop configuration saves to the database. Parts matrix autosaves on edit; other sections need their save button.</p>
+            <p class="mt-2 text-[11px] leading-4 text-slate-500">Parts matrix changes save as you edit. Every other section has its own Save button.</p>
         </div>
 
         <div class="grid min-w-0 items-start gap-3 lg:grid-cols-[11rem_minmax(0,1fr)] xl:grid-cols-[12.5rem_minmax(0,1fr)]">
             <aside class="min-w-0 border border-slate-300 bg-white p-2 lg:sticky lg:top-6">
-                <p class="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Operational Domains</p>
-                <nav class="grid gap-1 text-sm">
-                    <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
-                    <button type="button" @click="setActive('financial')" :class="active === 'financial' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Financial Rules</button>
-                    <button type="button" @click="setActive('payments')" :class="active === 'payments' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Square Payments</button>
-                    <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
-                    <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
-                    <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
-                    @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                        <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
-                    @endunless
-                    <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
-                    <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
-                    <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
-                    <button type="button" @click="setActive('workflow')" :class="active === 'workflow' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Workflow Defaults</button>
-                    <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Operations</button>
-                    <button type="button" @click="setActive('printing')" :class="active === 'printing' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Label Printing</button>
-                    @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
-                        <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
-                    @endcan
+                <nav class="grid gap-3 text-sm" aria-label="Shop settings sections">
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Your shop</p>
+                        <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
+                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Operations</button>
+                        @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
+                            <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
+                        @endcan
+                    </div>
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Money</p>
+                        <button type="button" @click="setActive('financial')" :class="active === 'financial' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Financial Rules</button>
+                        <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
+                        <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
+                    </div>
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Documents &amp; workflow</p>
+                        <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
+                        <button type="button" @click="setActive('workflow')" :class="active === 'workflow' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Workflow Defaults</button>
+                        <button type="button" @click="setActive('printing')" :class="active === 'printing' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Label Printing</button>
+                    </div>
+                    <div class="grid gap-1">
+                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Connected services</p>
+                        <button type="button" @click="setActive('payments')" :class="active === 'payments' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Square Payments</button>
+                        <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
+                        <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
+                        <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
+                        @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                            <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
+                        @endunless
+                    </div>
                 </nav>
             </aside>
 
@@ -1289,13 +1300,13 @@
                 <section x-show="active === 'operations'" x-cloak>
                     <div class="border-b border-slate-200 px-3 py-3">
                         <h3 class="text-sm font-black text-slate-950">Operations</h3>
-                        <p class="mt-0.5 text-xs text-slate-500">Advisor work surface - scheduling, station presence, and shop workflow options.</p>
+                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</p>
                     </div>
 
                     <div class="p-3">
                         <div class="border-b border-slate-200 pb-3">
                             <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Appointments</h4>
-                            <p class="mt-0.5 text-xs text-slate-500">Scheduling surface and Today&apos;s Appointments band on Work.</p>
+                            <p class="mt-0.5 text-xs text-slate-500">Booking rules, scheduling hours, customer request windows, and bays. Also controls Today&apos;s Appointments on Work.</p>
                         </div>
 
                         @include('operations.settings.partials.appointments-settings', [
