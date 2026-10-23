@@ -69,5 +69,8 @@ test('admin can open owner targets settings section', function () {
     $this->get(route('operations.settings.shop.edit', ['section' => 'excellence']))
         ->assertOk()
         ->assertSee('Owner Targets & Reporting')
-        ->assertSee('Monthly fixed costs');
+        ->assertSee('Monthly fixed costs')
+        ->assertSee('worksheet replaces this with its monthly total.', false)
+        ->assertSee('the monthly total replaces Owner Targets monthly fixed costs.', false)
+        ->assertDontSee('Usually matches', false);
 });

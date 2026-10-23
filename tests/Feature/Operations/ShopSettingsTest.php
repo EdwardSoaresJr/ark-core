@@ -34,7 +34,6 @@ function laborSettingsPayload(array $overrides = []): array
         ->all();
 
     return array_merge([
-        'default_labor_rate' => '165.00',
         'default_labor_category_key' => ShopSettings::DEFAULT_LABOR_CATEGORY_KEY,
         'labor_categories' => $categories,
     ], $overrides);
@@ -57,7 +56,8 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Check In visit')
         ->assertSee('Worksheet notes')
         ->assertSee('Estimate logo')
-        ->assertSee('Default labor rate')
+        ->assertDontSee('name="default_labor_rate"', false)
+        ->assertSee('is the shop default labor rate', false)
         ->assertSee('Sales tax rate')
         ->assertSee('Tax display name')
         ->assertSee('Tax labor')
@@ -192,7 +192,6 @@ test('admin can persist authoritative operational defaults', function () {
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
-        'default_labor_rate' => '175.50',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -581,7 +580,6 @@ test('admin can update labor categories from shop settings', function () {
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
-        'default_labor_rate' => '180.00',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -607,6 +605,59 @@ test('admin can update labor categories from shop settings', function () {
         ->and($diagnostic['rate_cents'])->toBe(19500)
         ->and($diagnostic['minimum_hours'])->toBe('1.25')
         ->and(collect($settings->laborCategories())->firstWhere('key', 'courtesy')['rounding_rule'])->toBe('tenth');
+});
+
+test('the default category rate row is the shop default labor rate', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $payload = laborSettingsPayload();
+    $payload['labor_categories'] = collect($payload['labor_categories'])
+        ->map(function (array $category): array {
+            if ($category['key'] === ShopSettings::DEFAULT_LABOR_CATEGORY_KEY) {
+                $category['rate'] = '172.25';
+            }
+
+            return $category;
+        })
+        ->all();
+
+    $this->patch(route('operations.settings.shop.labor.update'), $payload)
+        ->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current();
+
+    expect($settings->default_labor_rate_cents)->toBe(17225)
+        ->and($settings->defaultLaborRate())->toBe('172.25')
+        ->and(collect($settings->laborCategories())->firstWhere('key', ShopSettings::DEFAULT_LABOR_CATEGORY_KEY)['rate_cents'])->toBe(17225);
+});
+
+test('changing the default labor category keeps every category rate', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $before = collect(ShopSettings::current()->laborCategories())->mapWithKeys(
+        fn (array $category): array => [$category['key'] => $category['rate_cents']],
+    );
+    $newDefault = $before->keys()->first(fn (string $key): bool => $key !== ShopSettings::DEFAULT_LABOR_CATEGORY_KEY
+        && $before[$key] !== $before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY]);
+
+    expect($newDefault)->not->toBeNull();
+
+    $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
+        'default_labor_category_key' => $newDefault,
+    ]))->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current();
+    $after = collect($settings->laborCategories())->mapWithKeys(
+        fn (array $category): array => [$category['key'] => $category['rate_cents']],
+    );
+
+    expect($after->all())->toEqual($before->all())
+        ->and(collect($settings->laborCategories())->firstWhere('is_default', true)['key'])->toBe($newDefault)
+        ->and($settings->default_labor_rate_cents)->toBe($before[$newDefault]);
 });
 
 test('labor categories default repairpal and warranty with adjust labor off', function () {
