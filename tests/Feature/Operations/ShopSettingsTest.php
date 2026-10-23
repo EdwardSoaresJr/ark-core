@@ -558,6 +558,82 @@ test('saving deposits with each box on or off persists exactly the posted values
     'deposit on, parts only' => ['1', '1', '0'],
 ]);
 
+test('saving deposits with diagnostics off and no labor categories keeps the selection empty', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_include_diagnostics' => true,
+        'default_deposit_diagnostic_labor_category_keys' => ['diagnostic', 'programming'],
+    ]);
+
+    $this->patch(route('operations.settings.shop.deposits.update'), [
+        'default_deposit_enabled' => '1',
+        'default_deposit_include_parts' => '1',
+        'default_deposit_include_diagnostics' => '0',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->default_deposit_diagnostic_labor_category_keys)->toBe([])
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBeFalse()
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe([]);
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))
+        ->assertOk()
+        ->getContent();
+
+    expect(substr_count($html, 'name="default_deposit_diagnostic_labor_category_keys[]"'))->toBeGreaterThan(0)
+        ->and(preg_match_all('/name="default_deposit_diagnostic_labor_category_keys\[\]"[^>]*\bchecked\b/', $html))->toBe(0);
+});
+
+test('saving deposits with diagnostics on and no labor categories is refused and keeps the saved categories', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+        'default_deposit_diagnostic_labor_category_keys' => ['programming'],
+    ]);
+
+    $this->from(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))
+        ->patch(route('operations.settings.shop.deposits.update'), [
+            'default_deposit_enabled' => '1',
+            'default_deposit_include_parts' => '0',
+            'default_deposit_include_diagnostics' => '1',
+        ])->assertSessionHasErrors([
+            'default_deposit_diagnostic_labor_category_keys' => 'Select at least one labor category when diagnostics are included.',
+        ]);
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->defaultDepositIncludeParts())->toBeTrue()
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBeFalse()
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming']);
+});
+
+test('deposit diagnostic categories fall back to the default list only when none were ever saved', function () {
+    $settings = ShopSettings::current();
+
+    $settings->forceFill([
+        'default_deposit_include_diagnostics' => false,
+        'default_deposit_diagnostic_labor_category_keys' => null,
+    ]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS);
+
+    $settings->forceFill(['default_deposit_diagnostic_labor_category_keys' => []]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe([]);
+
+    $settings->forceFill(['default_deposit_include_diagnostics' => true]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS);
+
+    $settings->forceFill(['default_deposit_diagnostic_labor_category_keys' => ['programming', 'diagnostic']]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming', 'diagnostic']);
+});
+
 test('billing class fee rate override enables and disables as soon as shop fees is changed', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));

@@ -139,9 +139,7 @@ public function updateFees(Request $request): RedirectResponse
             'default_deposit_enabled' => (bool) ($data['default_deposit_enabled'] ?? false),
             'default_deposit_include_parts' => (bool) ($data['default_deposit_include_parts'] ?? false),
             'default_deposit_include_diagnostics' => (bool) ($data['default_deposit_include_diagnostics'] ?? false),
-            'default_deposit_diagnostic_labor_category_keys' => $diagnosticKeys === []
-                ? ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS
-                : $diagnosticKeys,
+            'default_deposit_diagnostic_labor_category_keys' => $diagnosticKeys,
         ]);
 
         return $this->redirectWithStatus('Deposit settings saved.');

@@ -623,6 +623,9 @@
                                             </label>
                                         @endforeach
                                     </div>
+                                    @error('default_deposit_diagnostic_labor_category_keys')
+                                        <p class="mt-2 text-xs font-medium text-rose-800">{{ $message }}</p>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="md:col-span-2 flex justify-end border-t border-slate-200 pt-4">

@@ -1040,14 +1040,21 @@ TEXT;
      */
     public function defaultDepositDiagnosticLaborCategoryKeys(): array
     {
-        $keys = collect($this->default_deposit_diagnostic_labor_category_keys ?: self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS)
+        if ($this->default_deposit_diagnostic_labor_category_keys === null) {
+            return self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS;
+        }
+
+        $keys = collect($this->default_deposit_diagnostic_labor_category_keys)
             ->filter(fn (mixed $key): bool => filled($key))
             ->map(fn (mixed $key): string => (string) $key)
             ->unique()
             ->values()
             ->all();
 
-        return $keys === [] ? self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS : $keys;
+        // An empty selection is only valid while diagnostics are left out of the deposit.
+        return $keys === [] && $this->defaultDepositIncludeDiagnostics()
+            ? self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS
+            : $keys;
     }
 
     /**
