@@ -7,6 +7,7 @@ use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class CountingInvoicePdfRenderer implements PdfRenderer
@@ -100,6 +101,22 @@ test('a closed repair order invoice whose stored pdf is missing gets a clear 404
     expect(CountingInvoicePdfRenderer::$renders)->toBe($renders)
         ->and(Storage::disk('local')->exists($invoice->pdf_path))->toBeFalse()
         ->and(storedInvoiceRow($invoice))->toBe($before);
+});
+
+test('opening a closed repair order legacy invoice without a stored repair order section leaves its line totals as stored', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+    [$repairOrder, $invoice] = issuedInvoiceOnClosedRepairOrder();
+
+    $legacy = collect($invoice->snapshot_json)->except('repair_order')->put('schema_version', 'legacy_import')->all();
+    EstimateDocument::query()->whereKey($invoice->id)->update(['snapshot_json' => json_encode($legacy)]);
+    $repairOrder->lines()->update(['total_cents' => DB::raw('total_cents + 1')]);
+    $lines = fn (): array => $repairOrder->lines()->orderBy('id')->toBase()->get(['id', 'total_cents', 'tax_cents', 'shop_fee_cents', 'updated_at'])->map(fn ($line): array => (array) $line)->all();
+    $before = $lines();
+
+    $this->get(route('operations.repair-orders.estimate-documents.show', [$repairOrder, $invoice]))->assertOk();
+
+    expect($lines())->toBe($before);
 });
 
 test('opening an open repair order invoice as html does not render its pdf; its pdf still refreshes after a payment', function () {
