@@ -54,6 +54,7 @@ final class ShopTurnAttentionQueue
                 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1),
                 'messages.attachments',
                 'messages.participant.customer',
+                'latestInboundMessage',
                 'owner:id,name',
             ])
             ->orderBy('posture_changed_at')

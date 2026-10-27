@@ -1,4 +1,5 @@
 import { getArkEcho, arkEchoEnabled } from './ark-echo';
+import { arkRealtimeSync } from './ark-realtime-sync';
 import { initiateTelephonyCallback } from './ark-telephony-callback';
 import { markCallSessionHandled } from './ark-mark-call-handled';
 
@@ -107,7 +108,7 @@ export function arkCallQueue(bootstrap = null) {
 
             this.bindItemActions();
             this.refresh();
-            this.pollTimer = window.setInterval(() => this.refresh(), 5000);
+            this.pollTimer = arkRealtimeSync({ refresh: () => this.refresh(), fastMs: 5000, slowMs: 30000 });
             this.bindRealtime();
 
             document.addEventListener('ark:call-queue-refresh', () => {
@@ -132,20 +133,16 @@ export function arkCallQueue(bootstrap = null) {
                 return;
             }
 
+            const changed = () => this.pollTimer.trigger();
+
             echo.private(window.arkShopChannel('operations.comms-interrupts'))
-                .listen('.comms.interrupt', () => {
-                    this.refresh();
-                });
+                .listen('.comms.interrupt', changed);
 
             echo.private(window.arkShopChannel('operations.incoming-calls'))
-                .listen('.call.updated', () => {
-                    this.refresh();
-                });
+                .listen('.call.updated', changed);
 
             echo.private(window.arkShopChannel('operations.conversations'))
-                .listen('.conversation.message.received', () => {
-                    this.refresh();
-                });
+                .listen('.conversation.message.received', changed);
         },
 
         positionPanel() {

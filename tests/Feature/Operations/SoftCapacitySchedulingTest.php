@@ -713,3 +713,36 @@ test('schedule board defaults to day and month shows the following week', functi
 
     Carbon::setTestNow();
 });
+
+test('a month of capacity snapshots reads technicians and bays once', function () {
+    Carbon::setTestNow(Carbon::parse('2026-06-10 08:00:00'));
+    actingAsLearnCurrentStaff(ArkRole::Technician);
+    Workstation::query()->create([
+        'shop_settings_id' => ShopSettings::current()->id,
+        'name' => 'Bay 1',
+        'is_active' => true,
+        'accepts_scheduled_work' => true,
+    ]);
+
+    $calculator = app(SchedulingCapacityCalculator::class);
+    $measured = measureQueries(function () use ($calculator): array {
+        $snapshots = [];
+        for ($day = 0; $day < 30; $day++) {
+            $snapshots[] = $calculator->forDay(Carbon::parse('2026-06-01')->addDays($day));
+        }
+
+        return $snapshots;
+    });
+
+    $lookups = fn (string $table): int => count(array_filter(
+        $measured['queries'],
+        fn (array $query): bool => str_contains(strtolower((string) $query['query']), 'from "'.$table.'"'),
+    ));
+
+    expect($measured['result'])->toHaveCount(30)
+        ->and($measured['result'][9]->technicianCapacityHours)->toBe(9.0)
+        ->and($lookups('workstations'))->toBe(1)
+        ->and($lookups('users'))->toBe(1);
+
+    Carbon::setTestNow();
+});

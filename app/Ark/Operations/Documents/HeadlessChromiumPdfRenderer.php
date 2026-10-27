@@ -9,6 +9,8 @@ use Throwable;
 
 class HeadlessChromiumPdfRenderer implements PdfRenderer
 {
+    public const VIEW = 'operations.documents.pdf.document';
+
     public function __construct(
         private readonly EstimateDocumentPdfSnapshot $pdfSnapshot,
     ) {}
@@ -25,16 +27,25 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
 
         $path = DocumentPdfPath::for($document);
         $absolutePath = $this->prepareEstimateOutputPath($path);
-        $html = view('operations.documents.pdf.document', [
+        $html = view(self::VIEW, [
             'document' => $document,
             'snapshot' => $this->pdfSnapshot->resolve($document),
         ])->render();
 
         try {
             $this->assertRuntimeIsReady();
-            $this->browser($html)->savePdf($absolutePath);
-            @chmod($absolutePath, 0664);
+            // Readers of the stored PDF never see a partly written file.
+            $temporaryPath = $absolutePath.'.rendering-'.bin2hex(random_bytes(6)).'.pdf';
+            $this->browser($html)->savePdf($temporaryPath);
+            @chmod($temporaryPath, 0664);
+            if (! @rename($temporaryPath, $absolutePath)) {
+                throw new \RuntimeException('Rendered PDF could not be moved into place.');
+            }
         } catch (Throwable $exception) {
+            if (isset($temporaryPath)) {
+                @unlink($temporaryPath);
+            }
+
             if (! $document->isInvoice()) {
                 $document->forceFill([
                     'status' => 'failed',

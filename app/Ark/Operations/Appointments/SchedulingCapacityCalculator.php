@@ -13,6 +13,11 @@ use Illuminate\Support\Collection;
  */
 final class SchedulingCapacityCalculator
 {
+    /** @var Collection<int, \App\Models\User>|null Technicians and bays are the same for every day of one render. */
+    private ?Collection $technicians = null;
+
+    private ?int $bayCount = null;
+
     public function __construct(
         private readonly AppointmentStaffOptions $staff,
     ) {}
@@ -140,7 +145,7 @@ final class SchedulingCapacityCalculator
 
     private function technicianCapacityHours(Carbon $day, array $shopHours): ?float
     {
-        $technicians = $this->staff->technicians();
+        $technicians = $this->technicians ??= $this->staff->technicians();
         if ($technicians->isEmpty()) {
             return null;
         }
@@ -162,7 +167,7 @@ final class SchedulingCapacityCalculator
             return null;
         }
 
-        $bayCount = $this->staff->schedulableWorkstations()->count();
+        $bayCount = $this->bayCount ??= $this->staff->schedulableWorkstations()->count();
         if ($bayCount === 0) {
             return null;
         }

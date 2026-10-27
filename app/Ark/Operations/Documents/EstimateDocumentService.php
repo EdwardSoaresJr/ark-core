@@ -5,6 +5,8 @@ namespace App\Ark\Operations\Documents;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Models\User;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -18,12 +20,19 @@ class EstimateDocumentService
 {
     private const PDF_APPROVAL_PRESENTATION_KEY = '_pdf_approval_presentation';
 
+    private const PDF_CONTENT_FINGERPRINT_KEY = '_pdf_content_fingerprint';
+
+    private const RENDER_LOCK_SECONDS = 120;
+
+    private const RENDER_LOCK_WAIT_SECONDS = 90;
+
     public function __construct(
         private readonly EstimateSnapshotBuilder $snapshotBuilder,
         private readonly PdfRenderer $renderer,
         private readonly EstimateDocumentPdfSnapshot $pdfSnapshot,
         private readonly DocumentFooterPresenter $footerPresenter,
         private readonly CustomerFacingEstimateStatus $estimateStatus,
+        private readonly EstimatePdfContentFingerprint $contentFingerprint,
     ) {}
 
     public function createOrRefresh(RepairOrder $repairOrder, ?User $user = null): EstimateDocument
@@ -79,7 +88,7 @@ class EstimateDocumentService
         return $document;
     }
 
-    public function generatePdf(EstimateDocument $document): string
+    public function generatePdf(EstimateDocument $document, ?string $contentFingerprint = null): string
     {
         $path = $this->renderer->renderEstimate($document);
 
@@ -95,6 +104,11 @@ class EstimateDocumentService
 
         $snapshot = $document->snapshot_json ?? [];
         $snapshot[self::PDF_APPROVAL_PRESENTATION_KEY] = $this->approvalPresentationFingerprint($document);
+        if ($contentFingerprint !== null) {
+            $snapshot[self::PDF_CONTENT_FINGERPRINT_KEY] = $contentFingerprint;
+        } else {
+            unset($snapshot[self::PDF_CONTENT_FINGERPRINT_KEY]);
+        }
 
         $document->forceFill([
             'needs_pdf_refresh' => false,
@@ -216,16 +230,59 @@ class EstimateDocumentService
         }
 
         if ($document->isInvoice()) {
-            return $this->ensurePdfGenerated($document);
+            if ($this->isFrozenInvoice($document)) {
+                return $document;
+            }
+
+            return $this->whileRendering($document, fn (): EstimateDocument => $this->ensurePdfGenerated($document->refresh()));
         }
 
         if ($document->repairOrder->estimateDocumentIsFrozen()) {
-            return $this->ensurePdfGenerated($document);
+            return $this->whileRendering($document, fn (): EstimateDocument => $this->ensurePdfGenerated($document->refresh()));
         }
 
-        $document = $this->createOrRefresh($document->repairOrder, $user);
+        // A living estimate whose stored PDF was rendered from the same content is served as it is:
+        // no snapshot rewrite, no Chromium. Any change (lines, approvals, shop settings, templates) shows up in the fingerprint.
+        $fingerprint = $this->contentFingerprint->for($document);
+        if ($this->livingPdfMatches($document, $fingerprint)) {
+            return $document;
+        }
 
-        return $this->ensurePdfGenerated($document);
+        return $this->whileRendering($document, function () use ($document, $user): EstimateDocument {
+            $document->refresh();
+            $fingerprint = $this->contentFingerprint->for($document);
+            if ($this->livingPdfMatches($document, $fingerprint)) {
+                return $document;
+            }
+
+            $document = $this->createOrRefresh($document->repairOrder, $user);
+
+            return $this->ensurePdfGenerated($document, $fingerprint);
+        });
+    }
+
+    private function livingPdfMatches(EstimateDocument $document, string $fingerprint): bool
+    {
+        return $document->status === 'generated'
+            && ! $document->needs_pdf_refresh
+            && hash_equals((string) data_get($document->snapshot_json, self::PDF_CONTENT_FINGERPRINT_KEY, ''), $fingerprint)
+            && $this->pdfExists($document);
+    }
+
+    /**
+     * One render per document at a time: a concurrent request waits, then finds the PDF current.
+     *
+     * @param  callable(): EstimateDocument  $render
+     */
+    private function whileRendering(EstimateDocument $document, callable $render): EstimateDocument
+    {
+        $key = 'estimate-document-pdf:'.$document->getConnection()->getDatabaseName().':'.$document->id;
+
+        try {
+            return Cache::lock($key, self::RENDER_LOCK_SECONDS)->block(self::RENDER_LOCK_WAIT_SECONDS, $render);
+        } catch (LockTimeoutException) {
+            return $render();
+        }
     }
 
     public function attachablePdfForRepairOrder(RepairOrder $repairOrder): ?EstimateDocument
@@ -263,7 +320,7 @@ class EstimateDocumentService
         return $document->isInvoice() && $document->repairOrder?->estimateDocumentIsFrozen() === true;
     }
 
-    private function ensurePdfGenerated(EstimateDocument $document): EstimateDocument
+    private function ensurePdfGenerated(EstimateDocument $document, ?string $contentFingerprint = null): EstimateDocument
     {
         $document->loadMissing('repairOrder');
 
@@ -292,7 +349,7 @@ class EstimateDocumentService
 
         if ($shouldGenerate) {
             try {
-                $this->generatePdf($document);
+                $this->generatePdf($document, $isLivingEstimate ? $contentFingerprint : null);
             } catch (Throwable $exception) {
                 Log::warning('Estimate PDF could not be refreshed for repair order view.', [
                     'document_id' => $document->id,

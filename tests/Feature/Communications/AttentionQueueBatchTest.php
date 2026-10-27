@@ -1,6 +1,11 @@
 <?php
 
 use App\Ark\Operations\Communications\CommunicationsQueueResolver;
+use App\Ark\Operations\Communications\OperationalCommunicationChannel;
+use App\Ark\Operations\Communications\OperationalCommunicationDirection;
+use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Conversations\ConversationParticipant;
+use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Communications\ShopTurnAttentionQueue;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
@@ -40,6 +45,73 @@ test('shop attention batches customer lead and advisor lookups', function () {
         ->and(singlePhoneCustomerLookups($measured['queries']))->toBe([])
         ->and(whereInLookups($measured['queries'], 'conversation_messages'))->not->toBe([])
         ->and(whereInLookups($measured['queries'], 'customers'))->not->toBe([]);
+});
+
+test('shop attention reads every conversation\'s latest customer reply in one query', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $work = app(ConversationWork::class);
+
+    foreach (['7195552121', '7195552122', '7195552123', '7195552124'] as $index => $phone) {
+        $customer = Customer::query()->create([
+            'first_name' => 'Replied',
+            'last_name' => 'Caller '.$index,
+            'phone' => $phone,
+        ]);
+        $conversation = $work->ensureForPhone($phone, $customer);
+        $advisorParticipant = ConversationParticipant::query()->create([
+            'conversation_id' => $conversation->id,
+            'participant_type' => ConversationParticipantType::Advisor,
+            'user_id' => $advisor->id,
+        ]);
+        $customerParticipant = ConversationParticipant::query()->create([
+            'conversation_id' => $conversation->id,
+            'participant_type' => ConversationParticipantType::Customer,
+            'customer_id' => $customer->id,
+        ]);
+        ConversationMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'conversation_participant_id' => $advisorParticipant->id,
+            'channel' => OperationalCommunicationChannel::Sms,
+            'direction' => OperationalCommunicationDirection::Outbound,
+            'body' => 'Your estimate is ready.',
+            'occurred_at' => now()->subMinutes(30),
+        ]);
+        ConversationMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'conversation_participant_id' => $customerParticipant->id,
+            'channel' => OperationalCommunicationChannel::Sms,
+            'direction' => OperationalCommunicationDirection::Inbound,
+            'body' => 'An older reply.',
+            'occurred_at' => now()->subMinutes(20),
+        ]);
+        ConversationMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'conversation_participant_id' => $customerParticipant->id,
+            'channel' => OperationalCommunicationChannel::Sms,
+            'direction' => OperationalCommunicationDirection::Inbound,
+            'body' => 'Please call me back.',
+            'metadata' => $index === 0 ? ['message_action_reply' => 'callback'] : [],
+            'occurred_at' => now()->subMinutes(10),
+        ]);
+        $work->markNeedsAttention($conversation);
+    }
+
+    $measured = measureQueries(
+        fn () => app(ShopTurnAttentionQueue::class)->rowsFor($advisor),
+    );
+
+    $perConversationInbound = array_filter($measured['queries'], function (array $query): bool {
+        $sql = strtolower((string) $query['query']);
+
+        return str_contains($sql, 'conversation_messages')
+            && in_array('inbound', $query['bindings'] ?? [], true)
+            && str_contains($sql, '"conversation_id" = ?');
+    });
+
+    expect($measured['result'])->toHaveCount(4)
+        ->and(collect($measured['result'])->pluck('state_label')->sort()->values()->all())
+        ->toBe(['Customer replied', 'Customer replied', 'Customer replied', 'Customer requested callback'])
+        ->and($perConversationInbound)->toBe([]);
 });
 
 test('a request builds the attention queue once', function () {
