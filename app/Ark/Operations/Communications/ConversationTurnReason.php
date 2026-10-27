@@ -103,11 +103,13 @@ final class ConversationTurnReason
 
     private function messageActionAttentionLabel(Conversation $conversation): ?string
     {
-        $latest = ConversationMessage::query()
-            ->where('conversation_id', $conversation->id)
-            ->where('direction', OperationalCommunicationDirection::Inbound)
-            ->orderByDesc('occurred_at')
-            ->first();
+        $latest = $conversation->relationLoaded('latestInboundMessage')
+            ? $conversation->latestInboundMessage
+            : ConversationMessage::query()
+                ->where('conversation_id', $conversation->id)
+                ->where('direction', OperationalCommunicationDirection::Inbound)
+                ->orderByDesc('occurred_at')
+                ->first();
 
         if ($latest === null) {
             return null;

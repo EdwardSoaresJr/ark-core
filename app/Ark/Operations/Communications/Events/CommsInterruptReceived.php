@@ -6,10 +6,12 @@ use App\Ark\Operations\Communications\CommsInterruptBroadcast;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldRescue;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class CommsInterruptReceived implements ShouldBroadcastNow
+class CommsInterruptReceived implements ShouldBroadcastNow, ShouldDispatchAfterCommit, ShouldRescue
 {
     use Dispatchable;
     use InteractsWithSockets;

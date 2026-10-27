@@ -1,4 +1,5 @@
 import { arkEchoEnabled, getArkEcho } from './ark-echo';
+import { arkRealtimeSync } from './ark-realtime-sync';
 
 const POLL_MS = 4000;
 
@@ -547,6 +548,8 @@ export function initCommsWorkspace() {
         }
     };
 
+    const sync = arkRealtimeSync({ refresh, fastMs: POLL_MS, slowMs: 30000 });
+
     const bindRealtime = () => {
         if (! arkEchoEnabled()) {
             return;
@@ -559,16 +562,16 @@ export function initCommsWorkspace() {
         }
 
         echo.private(window.arkShopChannel('operations.incoming-calls'))
-            .listen('.call.updated', refresh);
+            .listen('.call.updated', sync.trigger);
 
         echo.private(window.arkShopChannel('operations.conversations'))
-            .listen('.conversation.message.received', refresh);
+            .listen('.conversation.message.received', sync.trigger);
 
         echo.private(window.arkShopChannel('operations.comms-interrupts'))
-            .listen('.comms.interrupt', refresh);
+            .listen('.comms.interrupt', sync.trigger);
     };
 
-    document.addEventListener('ark:call-queue-changed', refresh);
+    document.addEventListener('ark:call-queue-changed', sync.trigger);
 
     document.addEventListener('ark:comms-action-busy', (event) => {
         if (! document.getElementById('ops-comms-workspace-live')) {
@@ -639,7 +642,6 @@ export function initCommsWorkspace() {
     });
 
     bindRealtime();
-    window.setInterval(refresh, POLL_MS);
     refresh();
 
     requestAnimationFrame(() => {

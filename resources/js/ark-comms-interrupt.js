@@ -1,4 +1,5 @@
 import { getArkEcho, arkEchoEnabled } from './ark-echo';
+import { arkRealtimeSync } from './ark-realtime-sync';
 import {
     coreConversationId,
     interruptMessageKey,
@@ -415,8 +416,7 @@ export function arkCommsInterrupt() {
             };
 
             poll();
-            const intervalMs = arkEchoEnabled() ? 15000 : 5000;
-            this.pollTimer = window.setInterval(poll, intervalMs);
+            this.pollTimer = arkRealtimeSync({ refresh: poll, fastMs: arkEchoEnabled() ? 15000 : 5000, slowMs: 60000 });
         },
 
         handleInterruptEvent(payload) {
