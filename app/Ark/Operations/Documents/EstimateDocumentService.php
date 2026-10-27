@@ -192,6 +192,10 @@ class EstimateDocumentService
 
     public function hasViewablePdf(EstimateDocument $document): bool
     {
+        if ($this->isFrozenInvoice($document)) {
+            return filled($document->pdf_path) && Storage::disk('local')->exists($document->pdf_path);
+        }
+
         if (! $this->pdfExists($document)) {
             return false;
         }
@@ -248,9 +252,24 @@ class EstimateDocumentService
             && $document->repairOrder?->estimateDocumentIsFrozen() === true;
     }
 
+    /**
+     * An invoice on a closed repair order is the record the customer was given: its stored PDF is
+     * served as it is and never re-rendered when someone opens it.
+     */
+    public function isFrozenInvoice(EstimateDocument $document): bool
+    {
+        $document->loadMissing('repairOrder');
+
+        return $document->isInvoice() && $document->repairOrder?->estimateDocumentIsFrozen() === true;
+    }
+
     private function ensurePdfGenerated(EstimateDocument $document): EstimateDocument
     {
         $document->loadMissing('repairOrder');
+
+        if ($this->isFrozenInvoice($document)) {
+            return $document;
+        }
 
         $isLivingEstimate = $this->isLivingEstimate($document);
         $retryingFailedFinalPdf = false;
