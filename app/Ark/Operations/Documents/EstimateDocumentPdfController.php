@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Documents;
 
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,6 +36,13 @@ class EstimateDocumentPdfController
     private function ensureViewablePdf(RepairOrder $repairOrder, EstimateDocument $document, EstimateDocumentService $documents): void
     {
         abort_unless($document->repair_order_id === $repairOrder->id, 404);
+        if (! $documents->hasViewablePdf($document) && $documents->isFrozenInvoice($document)) {
+            throw new HttpResponseException(response(
+                'The stored PDF for this issued invoice is not available. Issued invoices are not re-created automatically.',
+                404,
+                ['Content-Type' => 'text/plain; charset=UTF-8'],
+            ));
+        }
         abort_unless($documents->hasViewablePdf($document), 404);
     }
 
