@@ -10,7 +10,8 @@
         $declinedCount = $snapshotConcerns->where('disposition', 'declined')->count();
         $recommendedCount = $snapshotConcerns->where('disposition', 'recommended')->count();
         $staff = $snapshot['staff'] ?? [];
-        $staffExecution = $staff['execution'] ?? [
+        // Invoice snapshots (and older estimates) record only some execution fields.
+        $staffExecution = array_filter((array) ($staff['execution'] ?? []), fn ($value) => $value !== null) + [
             'technician_name' => $snapshot['repair_order']['assigned_technician_name'] ?? 'Unassigned tech',
             'posture' => $snapshot['repair_order']['execution_posture'] ?? 'Execution posture not recorded',
             'next_action' => $snapshot['repair_order']['execution_next_action'] ?? 'Review repair order status',
@@ -205,7 +206,8 @@
                 @endphp
                 @forelse ($concernDisplayEntries as $entry)
                     @php
-                        $concern = $entry['concern'];
+                        // Invoice snapshots carry approved work without the estimate's diagnostic narrative.
+                        $concern = $entry['concern'] + ['customer_states' => null, 'verified_findings' => null, 'dtcs_summary' => null, 'recommendation' => null];
                         $customerStates = trim((string) $concern['customer_states']);
                         $duplicateCustomerStates = $customerStates !== ''
                             && in_array(mb_strtolower($customerStates), [
@@ -272,6 +274,9 @@
                                     <span class="text-right">Total</span>
                                 </div>
                                 @foreach ($concern['lines'] as $line)
+                                    @php
+                                        $line += ['matrix_suggested_price_cents' => null, 'pricing_matrix_name' => null];
+                                    @endphp
                                     @if ($line['type'] === 'note')
                                         <div class="ops-line-row ops-line-row--note text-sm">
                                             <div class="mb-1 flex min-w-0 flex-wrap items-center gap-2">
