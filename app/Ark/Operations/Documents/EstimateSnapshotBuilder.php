@@ -56,7 +56,7 @@ class EstimateSnapshotBuilder
     public function build(RepairOrder $repairOrder, ?User $user = null): array
     {
         $repairOrder->loadMissing(['customer', 'vehicle', 'assignedTechnician', 'encounter.creator', 'concerns.workGroups.lines', 'concerns.lines', 'lines', 'approvalEvents.revocation', 'communicationEvents']);
-        $this->calculator->recalculateRepairOrder($repairOrder);
+        $this->calculator->ensureFinancialTotalsAreCurrent($repairOrder);
         $repairOrder->load(['customer', 'vehicle', 'assignedTechnician', 'encounter.creator', 'concerns.workGroups.lines', 'concerns.lines', 'lines', 'approvalEvents.revocation', 'communicationEvents']);
 
         $settings = ShopSettings::current();
