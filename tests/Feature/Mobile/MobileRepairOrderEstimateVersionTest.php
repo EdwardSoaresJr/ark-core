@@ -108,3 +108,43 @@ test('mobile line update without an estimate version still saves', function (): 
 
     expect($line->fresh()->description)->toBe('Phone still omits the version');
 });
+
+test('every mobile repair order response reports the current estimate version in a header', function (): void {
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $other = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = mobileRepairOrder($technician, disposition: \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::Approved);
+    $concern = $repairOrder->concerns->first();
+    $token = $technician->createToken('test')->plainTextToken;
+    $base = '/api/mobile/repair-orders/'.$repairOrder->repair_order_id;
+    $current = fn (): string => (string) (int) $repairOrder->fresh()->estimate_version;
+
+    $this->withToken($token)->getJson($base)->assertOk()
+        ->assertHeader(\App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion::HEADER, $current());
+
+    // A change whose JSON body carries no estimate version still tells the app the version it left.
+    $afterStatus = $this->withToken($token)
+        ->patchJson($base.'/concerns/'.$concern->id.'/production-status', ['production_status' => \App\Ark\Operations\RepairOrders\ScopeProductionStatus::InProgress->value])
+        ->assertOk()
+        ->assertHeader(\App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion::HEADER, $current())
+        ->headers->get(\App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion::HEADER);
+
+    // Sending that version back is accepted; once someone else changes the estimate it is refused, and the 409 reports the newer version.
+    $note = fn (int $opened) => $this->withToken($token)->postJson($base.'/concerns/'.$concern->id.'/notes', [
+        RepairOrderConcurrency::FIELD => $opened, 'description' => 'Checked pad thickness.',
+    ]);
+    $note((int) $afterStatus)->assertSuccessful();
+    $opened = (int) $current();
+    app(RepairOrderEstimateVersion::class)->bump($repairOrder->fresh(), $other);
+    $note($opened)->assertStatus(409)
+        ->assertJsonPath('conflict', true)
+        ->assertHeader(\App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion::HEADER, $current());
+});
+
+test('responses that are not about one repair order carry no estimate version header', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $token = $advisor->createToken('test')->plainTextToken;
+
+    $response = $this->withToken($token)->getJson('/api/mobile/me')->assertOk();
+
+    expect($response->headers->has(\App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion::HEADER))->toBeFalse();
+});

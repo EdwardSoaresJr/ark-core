@@ -47,6 +47,10 @@ That sample keeps keys that `MobileRepairOrderProjection::forRepairOrder()` sets
 
 Other mobile routes on the same auth group include concerns, lines, findings, inspection checklist read and item update, inspection photo download, evidence upload, conversations, schedule, appointments, customer and vehicle workspace, intake, search, and VIN decode. The route list is the file. The matrix classifies them.
 
+### Estimate version on changes
+
+Every mobile response about one repair order carries its current estimate version in the `X-Ark-Estimate-Version` header, including changes whose JSON body does not include it. A client sends the last version it saw as `opened_estimate_version` (body, or query string for `DELETE`) with every repair-order change. If someone changed the estimate since, the change is refused with `409` and `{"conflict": true, "message", "estimate_version", "changed_by", "changed_at"}`; the client reloads the repair order before trying again. A change sent without `opened_estimate_version` is still accepted, for clients released before this contract, and is not checked for conflicts.
+
 ## Desk
 
 Desk is a smaller advisor surface: login, logout, `GET /me`, `GET /work`, workstation binding, call show and handle, tasks, and Dragon chat. It is not a second copy of the mobile repair-order API.
