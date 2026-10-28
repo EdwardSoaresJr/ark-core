@@ -14,6 +14,7 @@ use App\Ark\Mobile\Http\MobileAppointmentStatusController;
 use App\Ark\Mobile\Http\MobileAppointmentStoreController;
 use App\Ark\Mobile\Http\MobileAttentionIndexController;
 use App\Ark\Mobile\Http\MobileAuthLoginController;
+use App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion;
 use App\Ark\Mobile\Http\MobileAuthLogoutController;
 use App\Ark\Mobile\Http\MobileAuthorizationExceptionController;
 use App\Ark\Mobile\Http\MobileCallMarkHandledController;
@@ -137,7 +138,7 @@ Route::prefix('station')->name('api.station.')->middleware(AuthenticateStationDe
 Route::prefix('mobile')->name('api.mobile.')->group(function (): void {
     Route::post('/auth/login', MobileAuthLoginController::class)->name('auth.login');
 
-    Route::middleware(['auth:sanctum', EnsureApiStaffActive::class])->group(function (): void {
+    Route::middleware(['auth:sanctum', EnsureApiStaffActive::class, ReportRepairOrderEstimateVersion::class])->group(function (): void {
         Route::post('/auth/logout', MobileAuthLogoutController::class)->name('auth.logout');
         Route::post('/device', MobileDeviceRegisterController::class)->name('device.register');
         Route::get('/me', MobileMeController::class)->name('me');
