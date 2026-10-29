@@ -4,6 +4,7 @@ namespace App\Ark\Operations\WorkTemplates;
 
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,8 @@ final class WorkTemplateSettingsController
                 'description' => $payload['description'] ?? null,
                 'internal_note' => $payload['internal_note'] ?? null,
                 'recommendation_intent' => $payload['recommendation_intent'],
+                'recommendation_priority' => $payload['recommendation_priority'],
+                'information_only' => $payload['information_only'],
                 'position' => max(1, $position),
             ]);
 
@@ -46,6 +49,8 @@ final class WorkTemplateSettingsController
                 'description' => $payload['description'] ?? null,
                 'internal_note' => $payload['internal_note'] ?? null,
                 'recommendation_intent' => $payload['recommendation_intent'],
+                'recommendation_priority' => $payload['recommendation_priority'],
+                'information_only' => $payload['information_only'],
             ]);
 
             $workTemplate->lines()->delete();
@@ -66,7 +71,9 @@ final class WorkTemplateSettingsController
                 'title' => $workTemplate->title.' (copy)',
                 'description' => $workTemplate->description,
                 'internal_note' => $workTemplate->internal_note,
-                'recommendation_intent' => $workTemplate->recommendationIntent()->value,
+                'recommendation_intent' => $workTemplate->recommendationIntent()?->value,
+                'recommendation_priority' => $workTemplate->recommendationPriority()?->value,
+                'information_only' => $workTemplate->isInformationOnly(),
                 'position' => ((int) WorkTemplate::query()->max('position')) + 1,
             ]);
 
@@ -114,7 +121,8 @@ final class WorkTemplateSettingsController
             'title' => ['required', 'string', 'max:191'],
             'description' => ['nullable', 'string', 'max:1000'],
             'internal_note' => ['nullable', 'string', 'max:2000'],
-            'recommendation_intent' => ['required', Rule::enum(RecommendationIntent::class)],
+            'recommendation_intent' => ['nullable', 'string', 'max:32'],
+            'recommendation_posture' => ['nullable', Rule::in(['must_do', 'should_do', 'could_do', 'information_only'])],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.type' => ['required', Rule::in([
                 RepairOrderLineType::Labor->value,
@@ -128,12 +136,59 @@ final class WorkTemplateSettingsController
             'lines.*.part_cost' => ['nullable', 'string', 'max:32'],
         ]);
 
+        $assignment = $this->assignment($data);
+
         return [
             'title' => trim($data['title']),
             'description' => filled($data['description'] ?? null) ? trim((string) $data['description']) : null,
             'internal_note' => filled($data['internal_note'] ?? null) ? trim((string) $data['internal_note']) : null,
-            'recommendation_intent' => $data['recommendation_intent'],
+            'recommendation_intent' => $assignment['recommendation_intent'],
+            'recommendation_priority' => $assignment['recommendation_priority'],
+            'information_only' => $assignment['information_only'],
             'lines' => array_values($data['lines']),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{recommendation_intent: ?string, recommendation_priority: ?string, information_only: bool}
+     */
+    private function assignment(array $data): array
+    {
+        $semantic = RecommendationIntent::trySemantic(isset($data['recommendation_intent']) ? (string) $data['recommendation_intent'] : null);
+        $posture = isset($data['recommendation_posture']) ? (string) $data['recommendation_posture'] : '';
+
+        if ($posture === '' && $semantic === null) {
+            $legacy = isset($data['recommendation_intent']) ? (string) $data['recommendation_intent'] : '';
+            if (RecommendationPriority::isHistoricalInformationOnly($legacy)) {
+                return [
+                    'recommendation_intent' => null,
+                    'recommendation_priority' => null,
+                    'information_only' => true,
+                ];
+            }
+
+            $priority = RecommendationPriority::fromHistoricalIntent($legacy);
+
+            return [
+                'recommendation_intent' => null,
+                'recommendation_priority' => $priority?->value,
+                'information_only' => false,
+            ];
+        }
+
+        if ($posture === 'information_only') {
+            return [
+                'recommendation_intent' => $semantic?->value,
+                'recommendation_priority' => null,
+                'information_only' => true,
+            ];
+        }
+
+        return [
+            'recommendation_intent' => $semantic?->value ?? RecommendationIntent::Maintenance->value,
+            'recommendation_priority' => $posture !== '' ? $posture : null,
+            'information_only' => false,
         ];
     }
 

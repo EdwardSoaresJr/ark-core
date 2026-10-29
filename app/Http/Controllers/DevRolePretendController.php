@@ -11,7 +11,7 @@ class DevRolePretendController extends Controller
 {
     public function technician(Request $request): RedirectResponse
     {
-        abort_unless(DevRolePretend::authorizedUser($request->user()), 403);
+        abort_unless(DevRolePretend::canStart($request->user()), 403);
 
         DevRolePretend::activateTechnician();
 
@@ -21,12 +21,12 @@ class DevRolePretendController extends Controller
 
         return redirect()
             ->to(StaffFrontDoor::landingUrl($request->user()))
-            ->with('status', 'Testing as Technician. Use Admin to restore full access.');
+            ->with('status', 'Testing as Technician. Choose "Return to admin access" in the account menu to restore full access.');
     }
 
     public function clear(Request $request): RedirectResponse
     {
-        abort_unless(DevRolePretend::authorizedUser($request->user()), 403);
+        abort_unless(DevRolePretend::canStop($request->user()), 403);
 
         DevRolePretend::clear();
 

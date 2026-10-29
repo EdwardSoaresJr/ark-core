@@ -23,9 +23,9 @@ test('customer vehicle hub retains deferred work as vehicle continuity', functio
         ->assertOk()
         ->assertSee('future-work item')
         ->assertSee('$420.00')
-        ->assertSee('Safety/drivability recommendation should be revisited calmly.')
+        ->assertSee('Must-do item should be revisited calmly.')
         ->assertSee('RO #'.$priorRepairOrder->repair_order_id.' · 1 Deferred')
-        ->assertSee('Revisit safety/drivability recommendation at next contact')
+        ->assertSee('Revisit must-do item at next contact')
         ->assertDontSee('sales lead')
         ->assertDontSee('campaign');
 });
@@ -60,7 +60,7 @@ test('repeat vehicle RO review shows prior future work without sales pipeline po
         ->assertSee('From prior visits', false)
         ->assertSee('1 Deferred', false)
         ->assertSee('$420.00', false)
-        ->assertSee('Revisit immediate attention item at next contact', false);
+        ->assertSee('Revisit must-do item at next contact', false);
 });
 
 test('current deferred work feeds queue pressure and document snapshots', function () {

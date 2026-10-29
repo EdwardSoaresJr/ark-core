@@ -3,23 +3,27 @@
 use App\Ark\Install\InstallationIdentity;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\GenerateInvoiceSnapshotAction;
+use App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction;
+use App\Ark\Operations\Payments\Capture\InitiatePaymentCaptureAction;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttempt;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureAttemptStatus;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureContextKind;
 use App\Ark\Operations\Payments\Capture\PaymentCaptureMethod;
-use App\Ark\Operations\Payments\Capture\ApplyPaymentCaptureResultAction;
-use App\Ark\Operations\Payments\Capture\InitiatePaymentCaptureAction;
+use App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Platform\Http\VerifyPlatformFabricSignature;
 use App\Ark\Platform\PlatformConnection;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
-    \App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection::resetMemo();
+    PaymentCaptureReadinessProjection::resetMemo();
     $this->seed(ArkAuthorizationSeeder::class);
     InstallationIdentity::write((string) Str::uuid());
     ShopSettings::current()->persistTrusted([
@@ -92,7 +96,7 @@ test('successful capture records exactly one ledger payment and clears balance',
     expect($before)->toBeGreaterThan(0);
 
     $seenRequest = null;
-    Http::fake(function (\Illuminate\Http\Client\Request $request) use ($before, &$seenRequest) {
+    Http::fake(function (Request $request) use ($before, &$seenRequest) {
         $body = json_decode($request->body(), true) ?: [];
         if ($request->method() === 'POST' && str_contains($request->url(), '/payments/captures')) {
             $seenRequest = $body;
@@ -211,7 +215,7 @@ test('reconciliation_required blocks same amount recapture then status success r
         'context_kind' => PaymentCaptureContextKind::Payment,
         'capture_method' => PaymentCaptureMethod::Keyed,
         'source_token' => 'tok_test',
-    ]))->toThrow(\Illuminate\Validation\ValidationException::class);
+    ]))->toThrow(ValidationException::class);
 
     Http::fake([
         'cloud.example.test/api/v1/services/payments/captures/*' => Http::response([
@@ -315,25 +319,25 @@ test('cloud unavailable leaves record payment path intact and writes no ledger f
     $advisor = paymentCaptureAdvisor();
     $amount = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents;
 
-    Http::fake(fn () => throw new \RuntimeException('connection refused'));
+    Http::fake(fn () => throw new RuntimeException('connection refused'));
 
     expect(fn () => app(InitiatePaymentCaptureAction::class)->execute($repairOrder, $advisor, [
         'amount_cents' => $amount,
         'context_kind' => PaymentCaptureContextKind::Payment,
         'capture_method' => PaymentCaptureMethod::Keyed,
         'source_token' => 'tok_test',
-    ]))->toThrow(\Illuminate\Validation\ValidationException::class);
+    ]))->toThrow(ValidationException::class);
 
     expect(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe($amount)
         ->and($repairOrder->fresh()->ledgerEntries()->count())->toBe(0);
 });
 
 test('deposit context records deposit ledger entry once', function () {
-    $repairOrder = financialCloseoutRepairOrder(status: \App\Ark\Operations\RepairOrders\RepairOrderStatus::InProgress);
+    $repairOrder = financialCloseoutRepairOrder(status: RepairOrderStatus::InProgress);
     // No invoice - deposit path
     $advisor = paymentCaptureAdvisor();
 
-    Http::fake(function (\Illuminate\Http\Client\Request $request) {
+    Http::fake(function (Request $request) {
         $body = json_decode($request->body(), true) ?: [];
 
         return Http::response([
@@ -360,4 +364,96 @@ test('deposit context records deposit ledger entry once', function () {
     expect($result['attempt']->status)->toBe(PaymentCaptureAttemptStatus::Succeeded)
         ->and($result['attempt']->ledger_entry_id)->not->toBeNull()
         ->and($repairOrder->fresh()->ledgerEntries()->where('entry_type', 'deposit')->count())->toBe(1);
+});
+
+test('a recorded capture cannot settle a card payment and an existing ledger entry stays', function () {
+    $repairOrder = financialCloseoutRepairOrder();
+    app(GenerateInvoiceSnapshotAction::class)->execute($repairOrder);
+    $advisor = paymentCaptureAdvisor();
+    $amount = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents;
+
+    $makeAttempt = function () use ($repairOrder, $advisor, $amount): PaymentCaptureAttempt {
+        return PaymentCaptureAttempt::query()->create([
+            'public_id' => (string) Str::uuid(),
+            'repair_order_id' => $repairOrder->id,
+            'customer_id' => $repairOrder->customer_id,
+            'amount_cents' => $amount,
+            'currency' => 'USD',
+            'context_kind' => PaymentCaptureContextKind::Payment,
+            'capture_method' => PaymentCaptureMethod::Keyed,
+            'status' => PaymentCaptureAttemptStatus::Pending,
+            'idempotency_key' => 'core-'.Str::uuid(),
+            'initiated_by' => $advisor->id,
+            'initiated_at' => now(),
+        ]);
+    };
+
+    $recorded = app(ApplyPaymentCaptureResultAction::class)->apply($makeAttempt(), [
+        'status' => 'succeeded',
+        'provider' => 'record',
+        'provider_payment_id' => 'capture-1',
+        'capture_id' => 'capture-1',
+        'amount_cents' => $amount,
+    ]);
+    $unconfirmed = app(ApplyPaymentCaptureResultAction::class)->apply($makeAttempt(), [
+        'status' => 'succeeded',
+        'amount_cents' => $amount,
+    ]);
+    $pending = app(ApplyPaymentCaptureResultAction::class)->apply($makeAttempt(), [
+        'status' => 'pending',
+        'provider' => 'square',
+        'amount_cents' => $amount,
+    ]);
+    app(ApplyPaymentCaptureResultAction::class)->apply($pending, [
+        'status' => 'cancelled',
+    ]);
+
+    expect($recorded->status)->toBe(PaymentCaptureAttemptStatus::Failed)
+        ->and($recorded->failure_reason)->toBe('unconfirmed_capture')
+        ->and($recorded->ledger_entry_id)->toBeNull()
+        ->and($unconfirmed->status)->toBe(PaymentCaptureAttemptStatus::Failed)
+        ->and($unconfirmed->ledger_entry_id)->toBeNull()
+        ->and($pending->status)->toBe(PaymentCaptureAttemptStatus::Pending)
+        ->and($pending->ledger_entry_id)->toBeNull()
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe($amount);
+
+    Http::fake(function (Request $request) use ($amount) {
+        $body = json_decode($request->body(), true) ?: [];
+
+        return Http::response([
+            'ok' => true,
+            'status' => 'succeeded',
+            'capture_id' => (string) Str::uuid(),
+            'capture_attempt_public_id' => $body['capture_attempt_public_id'] ?? '',
+            'idempotency_key' => $body['idempotency_key'] ?? '',
+            'amount_cents' => $amount,
+            'currency' => 'USD',
+            'provider' => 'stub',
+            'provider_payment_id' => 'stub_pay_kept',
+        ], 200);
+    });
+
+    $settled = app(InitiatePaymentCaptureAction::class)->execute($repairOrder, $advisor, [
+        'amount_cents' => $amount,
+        'context_kind' => PaymentCaptureContextKind::Payment,
+        'capture_method' => PaymentCaptureMethod::Keyed,
+        'source_token' => 'tok_test',
+    ])['attempt'];
+
+    app(ApplyPaymentCaptureResultAction::class)->apply($settled, [
+        'status' => 'succeeded',
+        'provider' => 'record',
+        'provider_payment_id' => 'capture-9',
+        'capture_id' => 'capture-9',
+        'amount_cents' => $amount,
+    ]);
+
+    $fresh = $settled->fresh();
+
+    expect($fresh->status)->toBe(PaymentCaptureAttemptStatus::Succeeded)
+        ->and($fresh->ledger_entry_id)->toBe($settled->ledger_entry_id)
+        ->and($fresh->provider)->toBe('stub')
+        ->and($fresh->provider_payment_id)->toBe('stub_pay_kept')
+        ->and($repairOrder->fresh()->ledgerEntries()->where('entry_type', 'payment')->count())->toBe(1)
+        ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh())->balanceDueCents)->toBe(0);
 });

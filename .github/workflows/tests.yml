@@ -25,3 +25,95 @@ jobs:
 
       - name: Run tests
         run: composer test:serial
+
+  targeted:
+    runs-on: ubuntu-latest
+    # Repair-order cache checks, plus the needs-attention regressions when that
+    # pull request is the one being tested. The full suite above is not a
+    # required check while its existing failures remain.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run targeted regression checks
+        run: |
+          set -euo pipefail
+          php vendor/bin/pest --no-coverage \
+            tests/Feature/Operations/RepairOrderReadCacheIsolationTest.php \
+            tests/Feature/Operations/RepairOrderQueryScalingRegressionTest.php
+          attention=(
+            tests/Feature/Communications/AdvisorAttentionAcceptanceTest.php
+            tests/Feature/Operations/Financial/AdvisorFinancialSeparationTest.php
+            tests/Feature/Operations/TelephonyCallQueueTest.php
+            tests/Feature/Communications/ConversationsH0TurnPrecedenceTest.php
+            tests/Feature/Communications/ConversationsH0SarahSagaTest.php
+          )
+          present=()
+          for file in "${attention[@]}"; do
+            if [ -f "$file" ]; then
+              present+=("$file")
+            fi
+          done
+          if [ "${#present[@]}" -gt 0 ]; then
+            php vendor/bin/pest --no-coverage "${present[@]}"
+          fi
+          if [ -f tests/Feature/Operations/CommunicationsQueueTest.php ]; then
+            php vendor/bin/pest --no-coverage --filter 'communications queue api includes ringing and active calls' \
+              tests/Feature/Operations/CommunicationsQueueTest.php
+          fi
+
+  communications-boundary:
+    runs-on: ubuntu-latest
+    # Public Core must not grow communications code (docs/PRODUCT_BOUNDARY.md). A missing route list or baseline fails.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, curl, gd, intl, mbstring, pcntl, sqlite, sodium, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: List routes
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          BROADCAST_CONNECTION: "null"
+        run: php artisan route:list --json > "$RUNNER_TEMP/routes.json"
+
+      - name: Reject new communications code, and any baseline growth against the target branch
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD^' }}
+        run: |
+          set -euo pipefail
+          if git cat-file -e "$BASE:scripts/communications-baseline.json" 2>/dev/null; then
+            git show "$BASE:scripts/communications-baseline.json" > "$RUNNER_TEMP/previous-baseline.json"
+            php scripts/assert-no-communications.php --routes "$RUNNER_TEMP/routes.json" --previous-baseline "$RUNNER_TEMP/previous-baseline.json"
+          elif git cat-file -e "$BASE:scripts/assert-no-communications.php" 2>/dev/null; then
+            echo "The target branch has the communications check but no baseline." >&2
+            exit 1
+          else
+            echo "The target branch predates the communications check; this change introduces the baseline."
+            php scripts/assert-no-communications.php --routes "$RUNNER_TEMP/routes.json"
+          fi
+
+      - name: Prove the check, including tables created by a fresh install
+        run: php vendor/bin/pest --no-coverage tests/Feature/Architecture/CommunicationsBoundaryTest.php

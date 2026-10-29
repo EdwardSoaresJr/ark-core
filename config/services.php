@@ -21,6 +21,8 @@ return [
         'mail_send' => env('ARK_MAIL_PLATFORM_SEND', true),
         'payments_capture' => env('ARK_PAYMENTS_PLATFORM_CAPTURE', true),
         'parts_catalog' => env('ARK_PARTS_PLATFORM_CATALOG', true),
+        // false keeps conversations in Core even when stale Platform connection data remains.
+        'communications_authority' => env('ARK_PLATFORM_COMMUNICATIONS_AUTHORITY', true),
     ],
 
     /* @deprecated Use services.ark_platform - retained while ARK Cloud terminology is retired. */
@@ -43,6 +45,13 @@ return [
     // official ARK does not configure or document shop-held Postmark tokens.
     'postmark' => [
         'token' => null,
+    ],
+
+    // Self-hosted Twilio. Empty unless the shop sets these. ARK Shop may replace the SMS binding.
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+        'from' => env('TWILIO_FROM_NUMBER'),
     ],
 
     'resend' => [

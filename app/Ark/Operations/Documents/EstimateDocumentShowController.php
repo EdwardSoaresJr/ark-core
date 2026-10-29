@@ -16,7 +16,10 @@ class EstimateDocumentShowController
     ): View {
         abort_unless($document->repair_order_id === $repairOrder->id, 404);
 
-        $document = $documents->ensureCurrent($document, request()->user());
+        // The HTML view renders from the snapshot; an issued invoice's PDF is not touched by opening it.
+        if (! $document->isInvoice()) {
+            $document = $documents->ensureCurrent($document, request()->user());
+        }
 
         return view('operations.documents.estimates.show', [
             'repairOrder' => $repairOrder,

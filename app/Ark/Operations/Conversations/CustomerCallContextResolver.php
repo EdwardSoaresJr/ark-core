@@ -79,18 +79,6 @@ class CustomerCallContextResolver
             ->get()
             ->keyBy(fn (Customer $customer): string => (string) PhoneNumber::normalize((string) $customer->phone));
 
-        $unmatched = $normalizedPhones
-            ->reject(fn (string $phone): bool => $customersByPhone->has($phone))
-            ->values();
-
-        foreach ($unmatched as $phone) {
-            $matched = $this->matchCustomer($phone);
-
-            if ($matched !== null) {
-                $customersByPhone[$phone] = $matched;
-            }
-        }
-
         $customerIds = $customersByPhone
             ->map(fn (Customer $customer): int => $customer->id)
             ->unique()
@@ -170,6 +158,47 @@ class CustomerCallContextResolver
             $normalized,
             $messageLimit,
             displayPhone: $displayPhone,
+        );
+    }
+
+    /**
+     * Customer and display phone only, for call list rows that never show open work or messages.
+     * Same customer, normalized phone and display phone as resolveForCustomer().
+     */
+    public function resolveIdentityForCustomer(Customer $customer): CustomerCallContext
+    {
+        $normalized = PhoneNumber::normalize($customer->phone);
+
+        return new CustomerCallContext(
+            normalizedPhone: $normalized ?? '',
+            displayPhone: $normalized !== null
+                ? (PhoneNumber::display($normalized) ?? $normalized)
+                : ($customer->display_phone ?: 'No phone on file'),
+            customer: $customer,
+            vehicles: collect(),
+            openRepairOrders: collect(),
+            recentConversationMessages: collect(),
+        );
+    }
+
+    /**
+     * Customer and display phone only, for call list rows. Same match as resolve().
+     */
+    public function resolveIdentity(?string $phoneNumber): ?CustomerCallContext
+    {
+        $normalized = PhoneNumber::normalize($phoneNumber);
+
+        if ($normalized === null) {
+            return null;
+        }
+
+        return new CustomerCallContext(
+            normalizedPhone: $normalized,
+            displayPhone: PhoneNumber::display($normalized) ?? $normalized,
+            customer: $this->matchCustomer($normalized),
+            vehicles: collect(),
+            openRepairOrders: collect(),
+            recentConversationMessages: collect(),
         );
     }
 

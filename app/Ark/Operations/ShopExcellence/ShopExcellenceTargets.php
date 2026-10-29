@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\ShopExcellence;
 
+use App\Ark\Operations\Labor\ShopOverheadSnapshot;
 use App\Ark\Operations\Settings\ShopSettings;
 
 final class ShopExcellenceTargets
@@ -109,7 +110,25 @@ final class ShopExcellenceTargets
 
     public static function monthlyFixedCostsCents(): ?int
     {
-        return self::nullableInt(self::current()['monthly_fixed_costs_cents'] ?? null);
+        return self::overheadWorksheetMonthlyFixedCostsCents()
+            ?? self::nullableInt(self::current()['monthly_fixed_costs_cents'] ?? null);
+    }
+
+    /**
+     * Monthly fixed costs from a saved Shop Overhead worksheet, or null when no worksheet has a positive total.
+     * When this is set, the owner cannot override monthly fixed costs separately.
+     */
+    public static function overheadWorksheetMonthlyFixedCostsCents(): ?int
+    {
+        $state = ShopSettings::current()->shopOverheadStateArray();
+
+        if ($state === []) {
+            return null;
+        }
+
+        $cents = (int) round(ShopOverheadSnapshot::fromState($state)->monthlyFixedOverheadTotal() * 100);
+
+        return $cents > 0 ? $cents : null;
     }
 
     public static function ownerDigestEnabled(): bool

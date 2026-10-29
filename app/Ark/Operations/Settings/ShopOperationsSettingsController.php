@@ -76,14 +76,15 @@ public function updateEstimates(Request $request): RedirectResponse
 
         $this->syncOpenEstimateDocuments();
 
-        return $this->redirectWithStatus('Document disclaimer settings saved.');
+        return $this->redirectWithStatus('Document settings saved.');
     }
 
 public function updateWorkflow(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'default_visit_mode' => ['required', Rule::enum(RepairOrderVisitMode::class)],
-            'default_recommendation_intent' => ['required', Rule::enum(RecommendationIntent::class)],
+            'default_recommendation_intent' => ['nullable', Rule::enum(\App\Ark\Operations\RepairOrders\RecommendationIntent::class)],
+            'default_recommendation_posture' => ['nullable', Rule::in(['must_do', 'should_do', 'could_do', 'information_only'])],
             'default_notes_private' => ['nullable', 'boolean'],
             'default_notes_visible_to_advisor' => ['nullable', 'boolean'],
             'default_notes_visible_to_technician' => ['nullable', 'boolean'],
@@ -91,9 +92,12 @@ public function updateWorkflow(Request $request): RedirectResponse
             'key_tag_mileage_requirement' => ['nullable', Rule::in([KeyTagPrintGate::NONE, KeyTagPrintGate::MILEAGE_IN])],
         ]);
 
+        $posture = (string) ($data['default_recommendation_posture'] ?? '');
         $payload = [
             'default_visit_mode' => $data['default_visit_mode'],
-            'default_recommendation_intent' => $data['default_recommendation_intent'],
+            'default_recommendation_intent' => $data['default_recommendation_intent'] ?? null,
+            'default_information_only' => $posture === 'information_only',
+            'default_recommendation_priority' => in_array($posture, ['must_do', 'should_do', 'could_do'], true) ? $posture : null,
         ];
 
         if (
@@ -124,7 +128,7 @@ public function updateWorkflow(Request $request): RedirectResponse
 
         $this->syncOpenEstimateDocuments();
 
-        return $this->redirectWithStatus('Workflow settings saved.');
+        return $this->redirectWithStatus('Check In defaults saved.');
     }
 
     public function updateAppointments(Request $request): RedirectResponse
@@ -275,7 +279,7 @@ public function updateWorkflow(Request $request): RedirectResponse
 
         $redirect = redirect()
             ->route('operations.settings.shop.edit', ['section' => 'operations'])
-            ->with('status', 'Operations settings saved.');
+            ->with('status', 'Appointment settings saved.');
 
         if ($windowWarnings !== []) {
             $redirect->with('warning', $windowWarnings[0]);
@@ -326,6 +330,10 @@ public function updateExcellence(Request $request): RedirectResponse
         $lastReview = (bool) ($data['mark_target_reviewed'] ?? false)
             ? now($timezone)->toDateString()
             : ShopExcellenceTargets::lastTargetReview();
+        $monthlyFixedCostsCents = ShopExcellenceTargets::overheadWorksheetMonthlyFixedCostsCents()
+            ?? (filled($data['monthly_fixed_costs'] ?? null)
+                ? (int) round(((float) $data['monthly_fixed_costs']) * 100)
+                : null);
 
         ShopExcellenceTargets::persist([
             'effective_labor_rate_floor_cents' => filled($data['effective_labor_rate_floor'] ?? null)
@@ -335,9 +343,7 @@ public function updateExcellence(Request $request): RedirectResponse
             'parts_margin_target_percent' => (int) $data['parts_margin_target_percent'],
             'labor_sales_target_percent' => (int) $data['labor_sales_target_percent'],
             'parts_sales_target_percent' => (int) $data['parts_sales_target_percent'],
-            'monthly_fixed_costs_cents' => filled($data['monthly_fixed_costs'] ?? null)
-                ? (int) round(((float) $data['monthly_fixed_costs']) * 100)
-                : null,
+            'monthly_fixed_costs_cents' => $monthlyFixedCostsCents,
             'net_profit_target_percent' => (int) $data['net_profit_target_percent'],
             'income_tax_reserve_percent' => (int) $data['income_tax_reserve_percent'],
             'payroll_tax_reserve_percent' => (int) $data['payroll_tax_reserve_percent'],
@@ -374,9 +380,17 @@ public function updatePrinting(Request $request): RedirectResponse
             'qz_raster_dpi' => ['nullable', 'integer', Rule::in([203, 300])],
             'oil_change_sticker_next_due_months' => ['required', 'integer', 'min:1', 'max:24'],
             'oil_change_interval_miles' => ['required', 'integer', 'min:1000', 'max:50000'],
+            'key_tag_mileage_requirement' => ['nullable', Rule::in([KeyTagPrintGate::NONE, KeyTagPrintGate::MILEAGE_IN])],
         ]);
 
+        $payload = [];
+
+        if ($request->exists('key_tag_mileage_requirement')) {
+            $payload['key_tag_mileage_requirement'] = $data['key_tag_mileage_requirement'] ?? KeyTagPrintGate::NONE;
+        }
+
         ShopSettings::current()->update([
+            ...$payload,
             'qz_printing_enabled' => (bool) ($data['qz_printing_enabled'] ?? false),
             'qz_printing_key_tag_printer' => filled($data['qz_printing_key_tag_printer'] ?? null)
                 ? trim((string) $data['qz_printing_key_tag_printer'])

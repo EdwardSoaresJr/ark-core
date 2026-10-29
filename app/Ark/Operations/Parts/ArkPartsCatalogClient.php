@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Core → Platform parts catalog client. No PartsTech SDK in Public Core.
  */
-final class ArkPartsCatalogClient
+class ArkPartsCatalogClient
 {
     /**
      * @return array{ok: bool, status: int, body: array<string, mixed>, unavailable?: bool, reason_code?: string}

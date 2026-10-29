@@ -121,8 +121,8 @@ export function initCommsWorkboard() {
         }
 
         const channels = [
-            echo.private('operations.conversations'),
-            echo.private('operations.comms-interrupts'),
+            echo.private(window.arkShopChannel('operations.conversations')),
+            echo.private(window.arkShopChannel('operations.comms-interrupts')),
         ];
 
         for (const channel of channels) {

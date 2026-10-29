@@ -70,7 +70,7 @@ final class RepairOrderFinancialPresenter
         $suggestedDepositSatisfied = $remainingSuggestedDepositCents !== null
             && $remainingSuggestedDepositCents === 0;
 
-        $approvedWorkTotalCents = $estimateTotals->totalCents();
+        $approvedWorkTotalCents = $this->totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
         $position = FinancialPositionProjection::for($repairOrder);
         $oweTodayCents = $position->customerOwesTodayCents;
         $settlementBalanceDueCents = $balance->balanceDueCents;
@@ -205,8 +205,7 @@ final class RepairOrderFinancialPresenter
                     ])
                 ->values()
                 ->all(),
-            'canEmailInvoice' => $repairOrder->status->is(RepairOrderStatus::ReadyPickup)
-                && $balance->hasIssuedInvoice,
+            'canEmailInvoice' => $balance->hasIssuedInvoice,
             'invoiceNeedsRefresh' => $invoiceNeedsRefresh,
             'invoiceRefreshBlockedBySettlement' => $invoiceRefreshBlockedBySettlement,
             'canRefreshInvoice' => $canRefreshInvoice,

@@ -20,6 +20,10 @@ final class InspectionTemplateSettingsController
             'templates.*.categories.*.items.*.requires_photo' => ['nullable'],
             'templates.*.categories.*.items.*.measurement_name' => ['nullable', 'string', 'max:120'],
             'templates.*.categories.*.items.*.measurement_unit' => ['nullable', 'string', 'max:32'],
+            'templates.*.categories.*.items.*.slots' => ['nullable', 'array'],
+            'templates.*.categories.*.items.*.slots.*.name' => ['nullable', 'string', 'max:120'],
+            'templates.*.categories.*.items.*.slots.*.type' => ['nullable', 'string', 'in:number,text,condition'],
+            'templates.*.categories.*.items.*.slots.*.unit' => ['nullable', 'string', 'max:32'],
         ]);
 
         $updater->apply($data);
@@ -29,6 +33,6 @@ final class InspectionTemplateSettingsController
                 'section' => 'workflow',
                 'workflow-tab' => 'inspections',
             ])
-            ->with('status', 'Inspection checklist templates updated.');
+            ->with('status', 'Inspection checklists saved.');
     }
 }

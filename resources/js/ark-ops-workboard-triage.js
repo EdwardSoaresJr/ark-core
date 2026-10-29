@@ -83,7 +83,7 @@ export function initOpsWorkboardTriage() {
             return;
         }
 
-        echo.private('operations.conversations')
+        echo.private(window.arkShopChannel('operations.conversations'))
             .listen('.conversation.message.received', refresh);
     };
 

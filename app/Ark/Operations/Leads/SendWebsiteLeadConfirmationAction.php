@@ -16,7 +16,6 @@ use App\Ark\Operations\Messaging\ResolvePhoneSmsCapabilityAction;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\CommunicationMessageContext;
 use App\Ark\Platform\Mail\ManagedMailGate;
-use App\Ark\Texting\PlatformOutboundSmsTransport;
 use App\Support\Mail\ShopMailBranding;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -90,10 +89,6 @@ class SendWebsiteLeadConfirmationAction
                 [],
                 CommunicationMessageContext::reference([], 'website_lead', $lead->id),
             );
-
-            if ($this->transport instanceof PlatformOutboundSmsTransport) {
-                return;
-            }
 
             $this->recorder->recordSystemOutboundSms(
                 $conversation,

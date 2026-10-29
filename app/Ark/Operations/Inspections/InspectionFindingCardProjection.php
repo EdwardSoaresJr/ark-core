@@ -62,7 +62,9 @@ final class InspectionFindingCardProjection
 
     public static function recordedCountForRepairOrder(RepairOrder $repairOrder): int
     {
-        return InspectionItem::query()
+        return app(\App\Ark\Operations\RepairOrders\RepairOrderReadCache::class)->remember(
+            'inspection-recorded-count:'.$repairOrder->getKey(),
+            fn (): int => InspectionItem::query()
             ->whereHas('inspection', fn ($query) => $query->where('repair_order_id', $repairOrder->id))
             ->where(function ($query): void {
                 $query->where('observed_state', '!=', InspectionObservedState::NotChecked->value)
@@ -72,7 +74,8 @@ final class InspectionFindingCardProjection
                     ->orWhereHas('measurements')
                     ->orWhereHas('photos');
             })
-            ->count();
+            ->count(),
+        );
     }
 
     private static function intentTone(?InspectionFindingIntent $intent): string

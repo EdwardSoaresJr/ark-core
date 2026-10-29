@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  * Signed installation requests for recordings Platform already owns.
  * Availability is presentation state. Playback always uses a separate GET.
  */
-final class PlatformRecordingClient
+class PlatformRecordingClient
 {
     public const MAX_SIDS = 200;
 

@@ -2,14 +2,15 @@
 
 namespace App\Ark\Operations\Telephony;
 
-/**
- * Stock Core has no voice call control implementation.
- */
 final class OutboundVoiceCallControl
 {
+    public function __construct(
+        private readonly TwilioVoiceApi $twilio,
+    ) {}
+
     public function configured(): bool
     {
-        return false;
+        return $this->twilio->configured();
     }
 
     public function createOutboundCall(
@@ -19,16 +20,22 @@ final class OutboundVoiceCallControl
         string $statusCallbackUrl,
         ?int $timeout = null,
     ): ?string {
-        return null;
+        return $this->twilio->createOutboundCall($from, $to, $twimlUrl, $statusCallbackUrl, $timeout);
     }
 
     public function redirectCall(string $callSid, string $twimlUrl): bool
     {
-        return false;
+        return $this->twilio->redirectCall($callSid, $twimlUrl);
     }
 
     public function hangup(string $callSid): bool
     {
-        return false;
+        if (! $this->configured()) {
+            return false;
+        }
+
+        $this->twilio->hangup($callSid);
+
+        return true;
     }
 }

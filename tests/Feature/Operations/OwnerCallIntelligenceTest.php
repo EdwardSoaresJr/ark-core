@@ -400,6 +400,17 @@ test('core settings no longer expose call intelligence provider configuration', 
         ->assertOk()
         ->assertDontSee('OpenAI API key')
         ->assertDontSee('name="openai_api_key"');
+
+    $this->actingAs($admin)
+        ->patch(route('operations.settings.shop.telephony.update'), [
+            'communications_tab' => 'recording',
+            'openai_api_key' => 'sk-test-should-not-store',
+            'openai_transcription_model' => 'whisper-1',
+            'openai_analysis_model' => 'gpt-4o-mini',
+        ])
+        ->assertRedirect();
+
+    expect(\App\Ark\Operations\Settings\ShopSettings::query()->value('openai_api_key'))->toBeNull();
 });
 
 test('owner call intelligence lists analyzed sms threads', function () {

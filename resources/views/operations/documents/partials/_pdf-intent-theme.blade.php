@@ -1,18 +1,18 @@
 @php
-    use App\Ark\Operations\RepairOrders\RecommendationIntent;
+    use App\Ark\Operations\RepairOrders\RecommendationPresentation;
 @endphp
 
-@foreach (RecommendationIntent::cases() as $intent)
-    .concern-priority-badge--{{ $intent->value }},
-    .concern-header-intent--{{ $intent->value }},
-    .concern-header-meta--{{ $intent->value }} {
-        color: {{ $intent->accentColor() }};
+@foreach (RecommendationPresentation::catalog() as $presentation)
+    .{{ $presentation->badgeClass() }},
+    .concern-header-intent--{{ $presentation->key() }},
+    .concern-header-meta--{{ $presentation->key() }} {
+        color: {{ $presentation->accentColor() }};
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
 
-    .concern--intent-{{ $intent->value }} .concern-header {
-        background: {{ $intent->tintBackground() }};
+    .{{ $presentation->pdfScopeClass() }} .concern-header {
+        background: {{ $presentation->tintBackground() }};
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }

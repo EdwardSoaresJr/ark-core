@@ -313,30 +313,17 @@ test('hosted go pay fabric result is consumed exactly once and unsigned events a
 });
 
 test('hosted send pay link no longer requires Core Square and uses /go', function () {
-    $smsBodies = [];
-
-    Http::fake(function (Request $request) use (&$smsBodies) {
-        expect($request->url())->toStartWith('https://cloud.test/')
-            ->and($request->url())->not->toContain('squareup')
+    Http::fake(function (Request $request) {
+        expect($request->url())->not->toContain('squareup')
             ->and($request->url())->not->toContain('lugsnplugs.com');
 
         if (str_contains($request->url(), '/readiness')) {
             return Http::response(platformPaymentReadinessPayload(), 200);
         }
 
-        if (str_contains($request->url(), '/sms/messages/conversation')) {
-            $smsBodies[] = (string) ($request->data()['body'] ?? '');
-
-            return Http::response([
-                'ok' => true,
-                'message_id' => 'plat-msg-go',
-                'provider_message_id' => 'SMhostedgo01',
-                'status' => 'queued',
-            ], 200);
-        }
-
         return Http::response(['ok' => true], 200);
     });
+    $sms = bindFakeOutboundSms();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();
@@ -363,9 +350,32 @@ test('hosted send pay link no longer requires Core Square and uses /go', functio
         ->assertJsonPath('balance_due_display', '$150.00');
 
     expect($response->json('payment_url'))->toContain('/portal/pay/')
-        ->and($smsBodies)->not->toBeEmpty()
-        ->and($smsBodies[0])->toContain('/go/')
-        ->and($smsBodies[0])->not->toContain('/portal/pay/');
+        ->and($sms->sent)->not->toBeEmpty()
+        ->and($sms->sent[0]['body'])->toContain('/go/')
+        ->and($sms->sent[0]['body'])->not->toContain('/portal/pay/');
+});
+
+test('payment link is refused when outbound sms is not configured', function () {
+    Http::fake(function (Request $request) {
+        expect($request->url())->not->toContain('squareup');
+
+        if (str_contains($request->url(), '/readiness')) {
+            return Http::response(platformPaymentReadinessPayload(), 200);
+        }
+
+        return Http::response(['ok' => true], 200);
+    });
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = financialCloseoutRepairOrder();
+    $repairOrder->customer->forceFill(['phone' => '7195558080'])->save();
+    issueFinalInvoiceFor($repairOrder);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.repair-orders.conversation-actions.send-payment', $repairOrder))
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Outbound SMS is not configured.');
+
+    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), 'squareup'));
 });
 
 test('hosted repair order offers the reader in take payment after go pay wiring', function () {

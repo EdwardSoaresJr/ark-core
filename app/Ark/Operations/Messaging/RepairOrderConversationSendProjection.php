@@ -8,6 +8,7 @@ use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Vehicles\VehicleIdentityPressure;
 use App\Ark\Runtime\Authorization\ArkCapability;
@@ -65,13 +66,16 @@ final class RepairOrderConversationSendProjection
     {
         $repairOrder->loadMissing(['customer', 'vehicle']);
 
-        return [
-            'estimate' => $this->estimateChannels($repairOrder, $actor),
-            'payment' => $this->paymentChannels($repairOrder, $actor),
-            'deposit' => $this->depositChannels($repairOrder, $actor),
-            'inspection' => $this->inspectionChannels($repairOrder, $actor),
-            'schedule' => $this->scheduledOutbound->forRepairOrder($repairOrder->id),
-        ];
+        return app(RepairOrderReadCache::class)->remember(
+            'conversation-send:'.$repairOrder->getKey().':'.($actor?->getKey() ?? '0'),
+            fn (): array => [
+                'estimate' => $this->estimateChannels($repairOrder, $actor),
+                'payment' => $this->paymentChannels($repairOrder, $actor),
+                'deposit' => $this->depositChannels($repairOrder, $actor),
+                'inspection' => $this->inspectionChannels($repairOrder, $actor),
+                'schedule' => $this->scheduledOutbound->forRepairOrder($repairOrder->id),
+            ],
+        );
     }
 
     /**
@@ -90,15 +94,11 @@ final class RepairOrderConversationSendProjection
         $missingVin = $repairOrder->missingVehicleVin();
         $vinBlockMessage = VehicleIdentityPressure::NoVin->estimateSendBlockedMessage();
 
-        if ($repairOrder->isTerminal()) {
-            return $this->blockedEstimateChannels(
-                'Closed repair orders cannot send estimate links.',
-                $missingVin,
-                $vinBlockMessage,
-            );
-        }
+        $hasNoLines = $repairOrder->relationLoaded('lines')
+            ? $repairOrder->lines->isEmpty()
+            : $repairOrder->lines()->doesntExist();
 
-        if ($repairOrder->lines()->doesntExist()) {
+        if ($hasNoLines) {
             return $this->blockedEstimateChannels(
                 'Add at least one estimate line before sending the estimate.',
                 $missingVin,

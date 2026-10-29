@@ -27,7 +27,7 @@ final class CloudPublicPosture
         return $email !== '' ? $email : 'hello@autorepairkeeper.com';
     }
 
-    public static function interestMailto(string $subject = 'Hosted ARK interest'): string
+    public static function interestMailto(string $subject = 'ARK Shop interest'): string
     {
         return 'mailto:'.self::interestEmail().'?subject='.rawurlencode($subject);
     }

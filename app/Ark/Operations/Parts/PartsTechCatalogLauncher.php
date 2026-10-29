@@ -8,15 +8,15 @@ use App\Ark\Platform\Parts\PartsTechPlatformGateway;
 use App\Models\User;
 
 /**
- * Opens PartsTech in the browser. Hosted shops prepare carts through Platform.
- * Self-host still uses Core shop credentials and GraphQL.
+ * Shop parts references for a repair order.
+ * The external catalog address is owned by hosted SaaS.
  */
-final class PartsTechCatalogLauncher
+class PartsTechCatalogLauncher
 {
     public function __construct(
-        private readonly ShopIntegrationCredentials $credentials,
-        private readonly PartsTechCredentialsResolver $partsTechCredentials,
-        private readonly PartsTechPlatformGateway $platform,
+        protected readonly ShopIntegrationCredentials $credentials,
+        protected readonly PartsTechCredentialsResolver $partsTechCredentials,
+        protected readonly PartsTechPlatformGateway $platform,
     ) {}
 
     /** Numeric shop repair order id (ARK display, search, JSON APIs). */
@@ -131,35 +131,7 @@ final class PartsTechCatalogLauncher
 
     public function launchUrl(RepairOrder $repairOrder, ?int $concernId = null): ?string
     {
-        if (! $this->configured()) {
-            return null;
-        }
-
-        $ymm = $this->ymmForRepairOrder($repairOrder) ?? [];
-        $partsTechReference = $this->partsTechCartReference($repairOrder);
-        $poNumber = $this->poNumber($repairOrder);
-
-        $query = array_filter([
-            'vin' => $this->vinForRepairOrder($repairOrder),
-            'year' => $ymm['year'] ?? null,
-            'make' => $ymm['make'] ?? null,
-            'model' => $ymm['model'] ?? null,
-            'poNumber' => $poNumber,
-            'purchaseOrderNumber' => $poNumber,
-            'repairOrderNumber' => $partsTechReference,
-            'concern_id' => $concernId,
-            'ark_launch' => (string) now()->timestamp,
-        ], fn (mixed $value): bool => $value !== null && $value !== '');
-
-        if ($this->platform->usesPlatform()) {
-            return 'https://app.partstech.com?'.http_build_query($query);
-        }
-
-        $baseUrl = $this->credentials->partsTechBaseUrl();
-        $catalogPath = $this->credentials->partsTechCatalogPath();
-        $target = $catalogPath !== '' ? $baseUrl.'/'.$catalogPath : $baseUrl;
-
-        return $target.'?'.http_build_query($query);
+        return null;
     }
 
     public function blockedReason(RepairOrder $repairOrder): string

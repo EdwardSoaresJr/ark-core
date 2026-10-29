@@ -43,7 +43,7 @@ function actionInboxAdvisor(string $name = 'Edward'): User
     return User::factory()->create(['name' => $name])->assignRole(ArkRole::Advisor->value);
 }
 
-function fakePlatformThread(string $publicId, string $e164, string $preview = 'Latest preview'): void
+function actionInboxPlatformThread(string $publicId, string $e164, string $preview = 'Latest preview'): void
 {
     Http::fake([
         'https://cloud.test/api/v1/services/communications/conversations*' => function ($request) use ($publicId, $e164, $preview) {
@@ -95,7 +95,7 @@ test('gate: workflow state survives refresh logout and a new session', function 
     $conversationId = $conversation->id;
     $due = $conversation->fresh()->follow_up_due_at?->utc()->toIso8601String();
 
-    fakePlatformThread('pc_persist', '+17195556101', 'Still waiting');
+    actionInboxPlatformThread('pc_persist', '+17195556101', 'Still waiting');
 
     $this->actingAs($edward)
         ->get(route('operations.communications.inbox', ['filter' => 'waiting', 'platform_conversation' => 'pc_persist']))
@@ -127,7 +127,7 @@ test('gate: platform message refresh cannot overwrite core classification or ass
     $conversation = $work->ensureForPhone($phone, $customer);
     $work->followUp($conversation, $edward, now()->addDay());
 
-    fakePlatformThread('pc_refresh', '+17195556102', 'Brand new inbound preview');
+    actionInboxPlatformThread('pc_refresh', '+17195556102', 'Brand new inbound preview');
 
     $before = $conversation->fresh();
 
@@ -210,7 +210,7 @@ test('gate: follow-up deadlines and overdue transitions use the shop timezone', 
     expect($dueLocal->timezoneName)->toBe('America/Denver')
         ->and($dueLocal->copy()->utc()->format('Y-m-d H:i'))->toBe('2026-09-18 14:00');
 
-    fakePlatformThread('pc_due', '+17195556104', 'Need a callback');
+    actionInboxPlatformThread('pc_due', '+17195556104', 'Need a callback');
 
     $this->actingAs($edward)
         ->post(route('operations.communications.platform-conversations.work', ['platformConversation' => 'pc_due']), [
@@ -259,7 +259,7 @@ test('gate: unknown numbers stay actionable and keep history after customer matc
 
     $conversationId = $conversation->id;
 
-    fakePlatformThread('pc_unknown', '+17195556105', 'Do you have my car?');
+    actionInboxPlatformThread('pc_unknown', '+17195556105', 'Do you have my car?');
 
     $this->actingAs($edward)
         ->get(route('operations.communications.inbox', ['filter' => 'needs', 'platform_conversation' => 'pc_unknown']))

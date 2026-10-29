@@ -54,6 +54,8 @@ class UnreadInboundMessageQueue
             ->where('direction', OperationalCommunicationDirection::Inbound)
             ->where('channel', $channel)
             ->where('occurred_at', '>=', $windowStart)
+            // Imported history keeps its original time but was never a new arrival.
+            ->whereNull('metadata->backfilled_at')
             ->whereHas('conversation', fn ($query) => $query
                 ->where('contact_surface', $contactSurface)
                 // Resolved is a shop-level statement that the thread is done -

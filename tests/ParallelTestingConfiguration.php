@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Support\Facades\ParallelTesting;
+use RecursiveIteratorIterator;
 
 final class ParallelTestingConfiguration
 {

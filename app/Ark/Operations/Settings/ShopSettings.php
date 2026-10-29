@@ -64,6 +64,8 @@ use InvalidArgumentException;
     'customer_type_disclaimers',
     'estimate_validity_days',
     'default_recommendation_intent',
+    'default_recommendation_priority',
+    'default_information_only',
     'default_notes_private',
     'default_notes_visible_to_advisor',
     'default_notes_visible_to_technician',
@@ -100,6 +102,7 @@ use InvalidArgumentException;
     'message_actions',
     'quick_reply_templates',
     'manual_payment_methods',
+    'payment_reader_names',
     'square_application_id',
     'square_location_id',
     'square_environment',
@@ -378,6 +381,7 @@ TEXT;
 
     protected $casts = [
         'default_notes_private' => 'boolean',
+        'default_information_only' => 'boolean',
         'qz_printing_enabled' => 'boolean',
         'qz_key_tag_label_width_mm' => 'decimal:2',
         'qz_key_tag_label_height_mm' => 'decimal:2',
@@ -404,6 +408,7 @@ TEXT;
         'message_actions' => 'array',
         'quick_reply_templates' => 'array',
         'manual_payment_methods' => 'array',
+        'payment_reader_names' => 'array',
         'default_notes_visible_to_advisor' => 'boolean',
         'default_notes_visible_to_technician' => 'boolean',
         'default_notes_visible_to_customer' => 'boolean',
@@ -582,6 +587,8 @@ TEXT;
             'customer_type_disclaimers' => self::defaultCustomerTypeDisclaimerMap(),
             'estimate_validity_days' => 30,
             'default_recommendation_intent' => 'maintenance',
+            'default_recommendation_priority' => null,
+            'default_information_only' => false,
             'default_notes_private' => true,
             'default_notes_visible_to_advisor' => true,
             'default_notes_visible_to_technician' => false,
@@ -606,6 +613,20 @@ TEXT;
             'appointment_request_availability' => null,
             'quick_reply_templates' => CommunicationsQuickReplyTemplates::defaults(),
         ];
+    }
+
+    public function defaultRecommendationPriority(): ?\App\Ark\Operations\RepairOrders\RecommendationPriority
+    {
+        $priority = $this->default_recommendation_priority;
+
+        return $priority instanceof \App\Ark\Operations\RepairOrders\RecommendationPriority
+            ? $priority
+            : \App\Ark\Operations\RepairOrders\RecommendationPriority::tryFromStored(is_string($priority) ? $priority : null);
+    }
+
+    public function defaultsToInformationOnly(): bool
+    {
+        return (bool) $this->default_information_only;
     }
 
     /**
@@ -953,25 +974,21 @@ TEXT;
      * @param  array<int, array<string, mixed>>  $categories
      * @return array<int, array{key: string, name: string, rate_cents: int, minimum_hours: string, rounding_rule: string, is_default: bool, allows_modifiers: bool}>
      */
-    public function normalizeLaborCategories(array $categories, string $defaultCategoryKey, float $defaultLaborRate): array
+    public function normalizeLaborCategories(array $categories, string $defaultCategoryKey): array
     {
         $existingCategories = collect($this->labor_categories ?: self::DEFAULT_LABOR_CATEGORIES)->keyBy('key');
-        $defaultRateCents = (int) round($defaultLaborRate * 100);
 
         return collect($categories)
             ->filter(fn (array $category): bool => filled($category['key'] ?? null))
-            ->map(function (array $category) use ($existingCategories, $defaultCategoryKey, $defaultRateCents): array {
+            ->map(function (array $category) use ($existingCategories, $defaultCategoryKey): array {
                 $key = (string) $category['key'];
                 $existing = $existingCategories->get($key, []);
                 $isDefault = $key === $defaultCategoryKey;
-                $rateCents = $isDefault
-                    ? $defaultRateCents
-                    : (int) round(((float) $category['rate']) * 100);
 
                 return [
                     'key' => $key,
                     'name' => trim((string) $category['name']),
-                    'rate_cents' => $rateCents,
+                    'rate_cents' => (int) round(((float) $category['rate']) * 100),
                     'minimum_hours' => number_format((float) $category['minimum_hours'], 2, '.', ''),
                     'rounding_rule' => (string) ($category['rounding_rule'] ?? $existing['rounding_rule'] ?? 'quarter'),
                     'is_default' => $isDefault,
@@ -1023,14 +1040,21 @@ TEXT;
      */
     public function defaultDepositDiagnosticLaborCategoryKeys(): array
     {
-        $keys = collect($this->default_deposit_diagnostic_labor_category_keys ?: self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS)
+        if ($this->default_deposit_diagnostic_labor_category_keys === null) {
+            return self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS;
+        }
+
+        $keys = collect($this->default_deposit_diagnostic_labor_category_keys)
             ->filter(fn (mixed $key): bool => filled($key))
             ->map(fn (mixed $key): string => (string) $key)
             ->unique()
             ->values()
             ->all();
 
-        return $keys === [] ? self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS : $keys;
+        // An empty selection is only valid while diagnostics are left out of the deposit.
+        return $keys === [] && $this->defaultDepositIncludeDiagnostics()
+            ? self::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS
+            : $keys;
     }
 
     /**
@@ -1123,7 +1147,7 @@ TEXT;
                     $row['default_parts_matrix_key'] = null;
                 }
 
-                return $this->normalizeCustomerTypeRow($row);
+                return $this->normalizeStoredCustomerTypeRow($row);
             })
             ->values()
             ->all();
@@ -1367,6 +1391,36 @@ TEXT;
     }
 
     /**
+     * Billing classes as saved, in the same order as customerTypeRows(). A null
+     * discount_amount here means the class has no discount % override.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function storedCustomerTypeRows(): array
+    {
+        return collect($this->customer_types ?: self::DEFAULT_CUSTOMER_TYPES)
+            ->map(fn (array $row): array => $this->normalizeStoredCustomerTypeRow($row))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Discount % a built-in billing class uses when it has no override, such as Military.
+     */
+    public static function builtInDiscountAmountFor(?string $customerType): ?string
+    {
+        $default = collect(self::DEFAULT_CUSTOMER_TYPES)
+            ->first(fn (array $row): bool => strcasecmp($row['name'], trim((string) $customerType)) === 0);
+
+        return self::formatDiscountAmount($default['discount_amount'] ?? null);
+    }
+
+    private static function formatDiscountAmount(mixed $amount): ?string
+    {
+        return filled($amount) ? number_format((float) $amount, 2, '.', '') : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function defaultCustomerTypeDisclaimerMap(): array
@@ -1414,6 +1468,25 @@ TEXT;
     public function portalSignatureRequired(): bool
     {
         return (bool) $this->portal_signature_required;
+    }
+
+    /**
+     * Shop-wide display names for card readers, keyed by the processor's device reference.
+     *
+     * @return array<string, string>
+     */
+    public function paymentReaderNames(): array
+    {
+        $names = [];
+        foreach (is_array($this->payment_reader_names) ? $this->payment_reader_names : [] as $deviceRef => $name) {
+            $deviceRef = (string) $deviceRef;
+            $name = is_scalar($name) ? trim((string) $name) : '';
+            if ($deviceRef !== '' && $name !== '') {
+                $names[$deviceRef] = $name;
+            }
+        }
+
+        return $names;
     }
 
     public function customerPartDescriptionMode(): CustomerPartDescriptionMode
@@ -1538,6 +1611,23 @@ TEXT;
         ];
     }
 
+    /**
+     * The row to save. Unlike normalizeCustomerTypeRow(), a blank discount % stays
+     * null, so a built-in class keeps resolving to its built-in percent.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    public function normalizeStoredCustomerTypeRow(array $row): array
+    {
+        $normalized = $this->normalizeCustomerTypeRow($row);
+        $normalized['discount_amount'] = $normalized['discount_type'] === 'none'
+            ? null
+            : self::formatDiscountAmount($row['discount_amount'] ?? null);
+
+        return $normalized;
+    }
+
     public function billingClassPillClass(?string $name): string
     {
         $name = trim((string) ($name !== null && $name !== '' ? $name : 'Retail'));
@@ -1566,10 +1656,43 @@ TEXT;
     }
 
     /**
+     * Shop reply-to. Production dropped the Postmark columns; the shop email remains.
+     */
+    public function customerReplyToAddress(): ?string
+    {
+        if (Schema::hasColumn($this->getTable(), 'postmark_reply_to')) {
+            $stored = $this->getAttributes()['postmark_reply_to'] ?? null;
+            if (filled($stored)) {
+                return (string) $stored;
+            }
+        }
+
+        return filled($this->email) ? (string) $this->email : null;
+    }
+
+    public function customerReplyToName(): ?string
+    {
+        if (Schema::hasColumn($this->getTable(), 'postmark_reply_to_name')) {
+            $stored = $this->getAttributes()['postmark_reply_to_name'] ?? null;
+            if (filled($stored)) {
+                return (string) $stored;
+            }
+        }
+
+        return filled($this->shop_name) ? (string) $this->shop_name : null;
+    }
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     public function persistTrusted(array $attributes): bool
     {
-        return $this->forceFill($attributes)->save();
+        $columns = array_flip(Schema::getColumnListing($this->getTable()));
+        $stored = array_intersect_key($attributes, $columns);
+        if ($stored === []) {
+            return true;
+        }
+
+        return $this->forceFill($stored)->save();
     }
 }

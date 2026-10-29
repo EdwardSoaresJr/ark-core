@@ -1,4 +1,5 @@
 import { getArkEcho, arkEchoEnabled } from './ark-echo';
+import { arkRealtimeSync } from './ark-realtime-sync';
 import { initiateTelephonyCallback } from './ark-telephony-callback';
 import { markCallSessionHandled } from './ark-mark-call-handled';
 
@@ -101,9 +102,13 @@ export function arkCallQueue(bootstrap = null) {
         panelStyle: '',
 
         init() {
+            if (this.pollTimer !== null) {
+                return;
+            }
+
             this.bindItemActions();
             this.refresh();
-            this.pollTimer = window.setInterval(() => this.refresh(), 5000);
+            this.pollTimer = arkRealtimeSync({ refresh: () => this.refresh(), fastMs: 5000, slowMs: 30000 });
             this.bindRealtime();
 
             document.addEventListener('ark:call-queue-refresh', () => {
@@ -128,20 +133,16 @@ export function arkCallQueue(bootstrap = null) {
                 return;
             }
 
-            echo.private('operations.comms-interrupts')
-                .listen('.comms.interrupt', () => {
-                    this.refresh();
-                });
+            const changed = () => this.pollTimer.trigger();
 
-            echo.private('operations.incoming-calls')
-                .listen('.call.updated', () => {
-                    this.refresh();
-                });
+            echo.private(window.arkShopChannel('operations.comms-interrupts'))
+                .listen('.comms.interrupt', changed);
 
-            echo.private('operations.conversations')
-                .listen('.conversation.message.received', () => {
-                    this.refresh();
-                });
+            echo.private(window.arkShopChannel('operations.incoming-calls'))
+                .listen('.call.updated', changed);
+
+            echo.private(window.arkShopChannel('operations.conversations'))
+                .listen('.conversation.message.received', changed);
         },
 
         positionPanel() {
@@ -172,10 +173,16 @@ export function arkCallQueue(bootstrap = null) {
         },
 
         async refresh() {
-            const url = queueUrl();
+            const base = queueUrl();
 
-            if (url === '') {
+            if (base === '') {
                 return;
+            }
+
+            const url = new URL(base, window.location.origin);
+
+            if (! this.open) {
+                url.searchParams.set('summary', '1');
             }
 
             this.loading = true;
@@ -195,14 +202,17 @@ export function arkCallQueue(bootstrap = null) {
 
                 const data = await response.json();
                 const payload = normalizeQueuePayload(data);
-                this.calls = payload.calls;
-                this.items = payload.items;
                 this.summary = payload.summary;
                 this.count = payload.count;
                 this.queueUrl = payload.queue_url;
 
-                if (typeof payload.html === 'string' && this.$refs.itemsRoot) {
-                    this.$refs.itemsRoot.innerHTML = payload.html;
+                if (data.summary_only !== true) {
+                    this.calls = payload.calls;
+                    this.items = payload.items;
+
+                    if (typeof data.html === 'string' && this.$refs.itemsRoot) {
+                        this.$refs.itemsRoot.innerHTML = data.html;
+                    }
                 }
 
                 notifyQueueChanged(payload);

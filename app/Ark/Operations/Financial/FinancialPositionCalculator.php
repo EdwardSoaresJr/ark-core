@@ -2,7 +2,6 @@
 
 namespace App\Ark\Operations\Financial;
 
-use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Support\Collection;
 
@@ -14,12 +13,13 @@ final class FinancialPositionCalculator
 {
     public function __construct(
         private readonly EstimateTotalsCalculator $totals,
+        private readonly BalanceDueCalculator $balances,
     ) {}
 
     public function for(RepairOrder $repairOrder): FinancialPositionProjection
     {
-        $invoice = $this->issuedInvoice($repairOrder);
-        $entries = $this->activeEntries($repairOrder);
+        $invoice = $this->balances->issuedInvoice($repairOrder);
+        $entries = $this->balances->activeEntries($repairOrder);
 
         $coverageCents = 0; // F7 - keep interface; return zero.
 
@@ -67,26 +67,6 @@ final class FinancialPositionCalculator
             creditsCents: $creditsCents,
             customerOwesTodayCents: $customerOwesTodayCents,
         );
-    }
-
-    private function issuedInvoice(RepairOrder $repairOrder): ?EstimateDocument
-    {
-        return EstimateDocument::query()
-            ->where('repair_order_id', $repairOrder->id)
-            ->where('document_type', FinancialDocumentType::Invoice->value)
-            ->where('status', '!=', InvoiceStatus::Voided->value)
-            ->first();
-    }
-
-    /**
-     * @return Collection<int, RepairOrderLedgerEntry>
-     */
-    private function activeEntries(RepairOrder $repairOrder): Collection
-    {
-        return RepairOrderLedgerEntry::query()
-            ->where('repair_order_id', $repairOrder->id)
-            ->active()
-            ->get();
     }
 
     /**

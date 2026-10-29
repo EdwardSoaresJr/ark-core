@@ -8,6 +8,7 @@ use App\Ark\Operations\Evidence\Evidence;
 use App\Ark\Operations\Evidence\EvidenceProjection;
 use App\Ark\Operations\Evidence\RecordEvidenceCustomerPresentedAction;
 use App\Ark\Operations\Inspections\InspectionFindingCardProjection;
+use App\Ark\Operations\RepairOrders\RecommendationPresentation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Support\Carbon;
 
@@ -84,7 +85,7 @@ final class RepairPortalHubProjection
             'photo_count' => $sharedEvidence->where('is_image', true)->count(),
             'video_count' => $sharedEvidence->where('is_video', true)->count(),
             'shop' => $snapshot['shop'] ?? [],
-            'concerns' => \App\Ark\Operations\RepairOrders\RecommendationIntent::sortedSnapshotConcerns($snapshot['concerns'] ?? []),
+            'concerns' => RecommendationPresentation::sortedSnapshotConcerns($snapshot['concerns'] ?? []),
             'inspection' => [
                 'ready' => $inspectionReady,
                 'finding_count' => $inspectionFindingCount,

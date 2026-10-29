@@ -65,10 +65,10 @@ trait NormalizesShopPartsMatrices
      */
     protected function normalizeCustomerTypes(array $customerTypes, array $partsMatrices): array
     {
-        $existingTypes = collect(ShopSettings::current()->customerTypeRows())
+        $settings = ShopSettings::current();
+        $existingTypes = collect($settings->storedCustomerTypeRows())
             ->keyBy(fn (array $row): string => mb_strtolower($row['name']));
         $matrixKeys = collect($partsMatrices)->pluck('key');
-        $settings = ShopSettings::current();
 
         return collect($customerTypes)
             ->filter(fn (array $row): bool => filled($row['name'] ?? null))
@@ -79,17 +79,17 @@ trait NormalizesShopPartsMatrices
                     ? $row['default_parts_matrix_key']
                     : null;
 
-                return $settings->normalizeCustomerTypeRow([
+                return $settings->normalizeStoredCustomerTypeRow([
                     'name' => $name,
                     'document_presentation_profile' => filled($row['document_presentation_profile'] ?? null)
                         ? $row['document_presentation_profile']
                         : ($existing['document_presentation_profile'] ?? null),
                     'shop_fees_enabled' => (bool) ($row['shop_fees_enabled'] ?? $existing['shop_fees_enabled'] ?? true),
-                    'shop_fee_rate_override' => filled($row['shop_fee_rate_override'] ?? null)
+                    'shop_fee_rate_override' => array_key_exists('shop_fee_rate_override', $row)
                         ? $row['shop_fee_rate_override']
                         : ($existing['shop_fee_rate_override'] ?? null),
                     'discount_type' => $row['discount_type'] ?? $existing['discount_type'] ?? 'none',
-                    'discount_amount' => filled($row['discount_amount'] ?? null)
+                    'discount_amount' => array_key_exists('discount_amount', $row)
                         ? $row['discount_amount']
                         : ($existing['discount_amount'] ?? null),
                     'default_parts_matrix_key' => $matrixKey !== null && $matrixKeys->contains($matrixKey) ? $matrixKey : null,

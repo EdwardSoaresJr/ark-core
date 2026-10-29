@@ -2,7 +2,6 @@
 
 use App\Ark\Desk\Http\DeskCallHandleController;
 use App\Ark\Desk\Http\DeskCallShowController;
-use App\Ark\Desk\Http\DeskDragonChatController;
 use App\Ark\Desk\Http\DeskLoginController;
 use App\Ark\Desk\Http\DeskLogoutController;
 use App\Ark\Desk\Http\DeskMeController;
@@ -10,12 +9,12 @@ use App\Ark\Desk\Http\DeskTaskCompleteController;
 use App\Ark\Desk\Http\DeskTaskStoreController;
 use App\Ark\Desk\Http\DeskWorkController;
 use App\Ark\Desk\Http\DeskWorkstationStoreController;
-use App\Ark\Dragon\Agent\Http\ChatDragonAgentController;
 use App\Ark\Mobile\Http\MobileAdvisorBriefSuggestionFeedbackController;
 use App\Ark\Mobile\Http\MobileAppointmentStatusController;
 use App\Ark\Mobile\Http\MobileAppointmentStoreController;
 use App\Ark\Mobile\Http\MobileAttentionIndexController;
 use App\Ark\Mobile\Http\MobileAuthLoginController;
+use App\Ark\Mobile\Http\ReportRepairOrderEstimateVersion;
 use App\Ark\Mobile\Http\MobileAuthLogoutController;
 use App\Ark\Mobile\Http\MobileAuthorizationExceptionController;
 use App\Ark\Mobile\Http\MobileCallMarkHandledController;
@@ -90,9 +89,7 @@ use App\Ark\Operations\Messaging\SendEstimateLinkController;
 use App\Ark\Operations\Messaging\SendInspectionLinkController;
 use App\Ark\Operations\Messaging\SendPaymentLinkController;
 use App\Ark\Station\Http\AuthenticateStationDevice;
-use App\Ark\Station\Http\StationAttentionNudgeController;
 use App\Ark\Station\Http\StationDashboardController;
-use App\Ark\Station\Http\StationDragonChatController;
 use App\Ark\Station\Http\StationGlassCallHandleController;
 use App\Ark\Station\Http\StationGlassCallShowController;
 use App\Ark\Station\Http\StationGlassSettingsController;
@@ -101,7 +98,6 @@ use App\Ark\Station\Http\StationGlassTaskStoreController;
 use App\Ark\Station\Http\StationMeController;
 use App\Ark\Station\Http\StationRepairOrderController;
 use App\Ark\Tech\Http\EnsureTechStaff;
-use App\Ark\Tech\Http\TechDragonRewriteController;
 use App\Ark\Tech\Http\TechInspectionItemUpdateController;
 use App\Ark\Tech\Http\TechInspectionShowController;
 use App\Ark\Tech\Http\TechLoginController;
@@ -125,19 +121,12 @@ Route::prefix('desk')->name('api.desk.')->group(function (): void {
         Route::post('/calls/{call}/handled', DeskCallHandleController::class)->name('calls.handled');
         Route::post('/tasks', DeskTaskStoreController::class)->name('tasks.store');
         Route::post('/tasks/{task}/complete', DeskTaskCompleteController::class)->name('tasks.complete');
-        Route::post('/dragon/chat', DeskDragonChatController::class)->name('dragon.chat');
     });
-});
-
-Route::prefix('dragon-agent')->name('api.dragon-agent.')->middleware(['auth:sanctum', EnsureApiStaffActive::class])->group(function (): void {
-    Route::post('/chat', ChatDragonAgentController::class)->name('chat');
 });
 
 Route::prefix('station')->name('api.station.')->middleware(AuthenticateStationDevice::class)->group(function (): void {
     Route::get('/me', StationMeController::class)->name('me');
     Route::get('/dashboard', StationDashboardController::class)->name('dashboard');
-    Route::match(['GET', 'POST'], '/attention-nudge', StationAttentionNudgeController::class)->name('attention-nudge');
-    Route::post('/dragon/chat', StationDragonChatController::class)->name('dragon.chat');
     Route::get('/repair-orders/{repairOrder}', StationRepairOrderController::class)->name('repair-orders.show');
     Route::get('/calls/{call}', StationGlassCallShowController::class)->name('calls.show');
     Route::post('/calls/{call}/handled', StationGlassCallHandleController::class)->name('calls.handled');
@@ -149,7 +138,7 @@ Route::prefix('station')->name('api.station.')->middleware(AuthenticateStationDe
 Route::prefix('mobile')->name('api.mobile.')->group(function (): void {
     Route::post('/auth/login', MobileAuthLoginController::class)->name('auth.login');
 
-    Route::middleware(['auth:sanctum', EnsureApiStaffActive::class])->group(function (): void {
+    Route::middleware(['auth:sanctum', EnsureApiStaffActive::class, ReportRepairOrderEstimateVersion::class])->group(function (): void {
         Route::post('/auth/logout', MobileAuthLogoutController::class)->name('auth.logout');
         Route::post('/device', MobileDeviceRegisterController::class)->name('device.register');
         Route::get('/me', MobileMeController::class)->name('me');
@@ -302,6 +291,5 @@ Route::prefix('tech')->name('api.tech.')->group(function (): void {
             ->name('inspection-items.voice');
         Route::post('/repair-orders/{repairOrder}/inspection-items/{item}/voice/confirm', TechVoiceConfirmController::class)
             ->name('inspection-items.voice.confirm');
-        Route::post('/dragon/rewrite', TechDragonRewriteController::class)->name('dragon.rewrite');
     });
 });

@@ -10,7 +10,6 @@ use App\Ark\Operations\Parts\PartsCatalogButtonColor;
 use App\Ark\Operations\Parts\PartsCatalogLinks;
 use App\Ark\Operations\Parts\PartsCatalogProvider;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
-use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\PlatformConnectOrchestrator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,19 +42,40 @@ class ShopIntegrationSettingsController
             'square_keyed_enabled' => ['nullable', 'boolean'],
             'square_portal_pay_enabled' => ['nullable', 'boolean'],
             'square_email_pay_enabled' => ['nullable', 'boolean'],
+            'payment_reader_names' => ['nullable', 'array', 'max:50'],
+            'payment_reader_names.*' => ['nullable', 'string', 'max:60'],
         ]);
 
-        ShopSettings::current()->persistTrusted([
+        $settings = ShopSettings::current();
+        $attributes = [
             'square_terminal_device_id' => $this->nullableTrimmedString($data['square_terminal_device_id'] ?? null),
             'square_terminal_enabled' => $request->boolean('square_terminal_enabled'),
             'square_keyed_enabled' => $request->boolean('square_keyed_enabled'),
             'square_portal_pay_enabled' => $request->boolean('square_portal_pay_enabled'),
             'square_email_pay_enabled' => $request->boolean('square_email_pay_enabled'),
-        ]);
+        ];
+        if (array_key_exists('payment_reader_names', $data)) {
+            $names = $settings->paymentReaderNames();
+            foreach ((array) $data['payment_reader_names'] as $deviceRef => $name) {
+                $deviceRef = trim((string) $deviceRef);
+                if ($deviceRef === '' || strlen($deviceRef) > 128) {
+                    continue;
+                }
+                $name = trim((string) $name);
+                if ($name === '') {
+                    unset($names[$deviceRef]);
+                } else {
+                    $names[$deviceRef] = $name;
+                }
+            }
+            $attributes['payment_reader_names'] = $names === [] ? null : $names;
+        }
+
+        $settings->persistTrusted($attributes);
 
         return redirect()
             ->route('operations.settings.shop.edit', ['section' => 'payments'])
-            ->with('status', 'Payment capture surfaces saved.');
+            ->with('status', 'Card payment options saved.');
     }
 
     public function updateEmail(Request $request): RedirectResponse
@@ -77,11 +97,9 @@ class ShopIntegrationSettingsController
             ])
             ->with('status', 'Email settings saved.');
 
-        if (PlatformConnection::current()->isConnected()) {
-            $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
-            if (! $synced) {
-                $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
-            }
+        $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
+        if (! $synced && filled(ShopSettings::current()->postmark_reply_to ?: ShopSettings::current()->email)) {
+            $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
         }
 
         return $redirect;

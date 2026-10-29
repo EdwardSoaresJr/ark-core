@@ -1,6 +1,12 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonOpenAiFunctionNames;
+use Ark\Saas\Dragon\Agent\DragonOpenAiFunctionNames;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK Shop.');
+    }
+});
 
 test('canonical tool names round-trip through OpenAI-safe names', function (): void {
     $canonical = [

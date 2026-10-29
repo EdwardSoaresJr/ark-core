@@ -1,10 +1,10 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonAgentConversation;
-use App\Ark\Dragon\Agent\DragonModelTurn;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
-use App\Ark\Dragon\Agent\Tools\AdvisorTasksQueryTool;
-use App\Ark\Dragon\DragonServiceToken;
+use Ark\Saas\Dragon\Agent\DragonAgentConversation;
+use Ark\Saas\Dragon\Agent\DragonModelTurn;
+use Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider;
+use Ark\Saas\Dragon\Agent\Tools\AdvisorTasksQueryTool;
+use Ark\Saas\Dragon\DragonServiceToken;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -22,6 +22,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function (): void {
+    migrateHostedDragon();
     $this->seed(ArkAuthorizationSeeder::class);
     config(['shop.identity' => 'test.demo-auto.local']);
     config(['shop.dragon_work_items_limit' => 50]);

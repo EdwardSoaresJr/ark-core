@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
-    config()->set('services.twilio.auth_token', null);
+    config()->set('services.twilio.auth_token', 'test-token');
     config()->set('broadcasting.default', 'null');
     Http::fake(['https://api.twilio.com/*' => Http::response([], 200)]);
 });
@@ -40,7 +40,7 @@ test('ring-leg answer stamps answered_at even when the endpoint has no owner', f
 
     app(TelephonyRingState::class)->initializeParallel('CAringanswer01', '7195551234');
 
-    $this->post(route('webhooks.communications.twilio.voice.ring-status', [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.ring-status', [
         'parentCallSid' => 'CAringanswer01',
         'endpointId' => $endpoint->id,
     ]), [
@@ -55,6 +55,78 @@ test('ring-leg answer stamps answered_at even when the endpoint has no owner', f
         ->and($session->owned_by_user_id)->toBeNull();
 });
 
+test('a cell answer records the parent session', function () {
+    $session = CallSession::query()->create([
+        'provider' => TelephonyProviderType::Twilio,
+        'provider_call_sid' => 'CAcellanswer01',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551234',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551234',
+        'status' => CallSessionStatus::Ringing,
+        'started_at' => now()->subMinute(),
+    ]);
+
+    $endpoint = TelephonyEndpoint::query()->create([
+        'name' => 'Handset',
+        'type' => TelephonyEndpointType::Cell,
+        'destination' => '7196414984',
+        'user_id' => null,
+        'enabled' => true,
+        'position' => 0,
+    ]);
+
+    app(TelephonyRingState::class)->initializeParallel('CAcellanswer01', '7195551234');
+
+    signedTwilioPost(route('webhooks.communications.twilio.voice.ring-status', [
+        'parentCallSid' => 'CAcellanswer01',
+        'endpointId' => $endpoint->id,
+    ]), [
+        'CallSid' => 'CAcellchild01',
+        'CallStatus' => 'answered',
+    ])->assertNoContent();
+
+    $session->refresh();
+
+    expect($session->status)->toBe(CallSessionStatus::Answered)
+        ->and($session->answered_at)->not->toBeNull();
+});
+
+test('a cell answer records the parent session when ring state was not prepared', function () {
+    $session = CallSession::query()->create([
+        'provider' => TelephonyProviderType::Twilio,
+        'provider_call_sid' => 'CAcellnostate01',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551234',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551234',
+        'status' => CallSessionStatus::Ringing,
+        'started_at' => now()->subMinute(),
+    ]);
+
+    $endpoint = TelephonyEndpoint::query()->create([
+        'name' => 'Handset',
+        'type' => TelephonyEndpointType::Cell,
+        'destination' => '7196414984',
+        'user_id' => null,
+        'enabled' => true,
+        'position' => 0,
+    ]);
+
+    signedTwilioPost(route('webhooks.communications.twilio.voice.ring-status', [
+        'parentCallSid' => 'CAcellnostate01',
+        'endpointId' => $endpoint->id,
+    ]), [
+        'CallSid' => 'CAcellchild02',
+        'CallStatus' => 'answered',
+    ])->assertNoContent();
+
+    $session->refresh();
+
+    expect($session->status)->toBe(CallSessionStatus::Answered)
+        ->and($session->answered_at)->not->toBeNull();
+});
+
 test('child in-progress status callback sets answered_at on the parent session', function () {
     $session = CallSession::query()->create([
         'provider' => TelephonyProviderType::Twilio,
@@ -67,7 +139,7 @@ test('child in-progress status callback sets answered_at on the parent session',
         'started_at' => now()->subMinute(),
     ]);
 
-    $this->post(route('webhooks.communications.twilio.voice.status'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), [
         'CallSid' => 'CAchildstat01',
         'ParentCallSid' => 'CAparentstat01',
         'From' => '+17195551234',
@@ -97,7 +169,7 @@ test('losing child no-answer does not create a session or miss the parent', func
         'started_at' => now()->subMinute(),
     ]);
 
-    $this->post(route('webhooks.communications.twilio.voice.status'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.status'), [
         'CallSid' => 'CAlosingleg01',
         'ParentCallSid' => 'CAparentmiss01',
         'From' => '+17195559999',

@@ -95,6 +95,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @include('partials.branding._favicons')
 
         @fonts
+        @stack('commercial-scripts')
+        @include('partials.shop-channel')
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen overflow-x-hidden bg-slate-100 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">

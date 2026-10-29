@@ -13,13 +13,7 @@
 
             @unless ($analysisEnabled)
                 <div class="border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                    Add an OpenAI API key under
-                    @if (\App\Ark\Runtime\DemoInstall::isDemo())
-                        shop settings
-                    @else
-                        <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-bold underline">Settings → ARK Platform</a>
-                    @endif
-                    to enable transcription and analysis.
+                    Call and SMS summaries are not part of this shop installation. Recorded calls and messages stay on the repair order.
                 </div>
             @endunless
 

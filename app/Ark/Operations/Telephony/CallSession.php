@@ -163,6 +163,10 @@ class CallSession extends Model
             return false;
         }
 
+        if ($this->worked_at !== null) {
+            return false;
+        }
+
         if ($this->hosted_outcome?->wasAnswered() === true
             || $this->status === CallSessionStatus::Answered
             || $this->answered_at !== null) {

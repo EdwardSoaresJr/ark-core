@@ -389,11 +389,11 @@ test('settings managers can test incoming call from telephony page route', funct
 });
 
 test('twilio webhook records last successful webhook timestamp', function () {
-    config()->set('services.twilio.auth_token', null);
+    config()->set('services.twilio.auth_token', 'test-token');
     config()->set('services.twilio.account_sid', null);
     ShopSettings::reloadCurrent();
 
-    $this->post(route('webhooks.communications.twilio.voice.incoming'), [
+    signedTwilioPost(route('webhooks.communications.twilio.voice.incoming'), [
         'CallSid' => 'CA-webhook-health',
         'From' => '+17195551234',
         'To' => '+17195550100',

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Core → Platform Payment Capture client (provider-neutral).
  */
-final class ArkPaymentsClient
+class ArkPaymentsClient
 {
     /**
      * @param  array<string, mixed>  $body

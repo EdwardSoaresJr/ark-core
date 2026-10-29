@@ -5,11 +5,16 @@ namespace App\Ark\Platform\Voice;
 use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\PlatformStatusClient;
 
-final class ManagedVoiceGate
+class ManagedVoiceGate
 {
     private static ?bool $memo = null;
 
     public static function platformVoiceReady(): bool
+    {
+        return app(self::class)->voiceReady();
+    }
+
+    public function voiceReady(): bool
     {
         if (self::$memo !== null) {
             return self::$memo;

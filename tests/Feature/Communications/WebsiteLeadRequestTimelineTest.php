@@ -105,7 +105,7 @@ test('inbox timeline shows the appointment request before the acknowledgement te
         at: '2026-09-27T08:08:00Z',
     );
 
-    fakeWebsiteLeadPlatformThread('pc_aja', '+17195550164', [
+    websiteLeadTimelineFakePlatformThread('pc_aja', '+17195550164', [
         [
             'public_id' => 'pm_code',
             'direction' => 'outbound',
@@ -160,7 +160,7 @@ test('inbox timeline shows a website message that is not an appointment', functi
         at: '2026-09-26T07:02:00Z',
     );
 
-    fakeWebsiteLeadPlatformThread('pc_thomas', '+12025550111', [
+    websiteLeadTimelineFakePlatformThread('pc_thomas', '+12025550111', [
         [
             'public_id' => 'pm_thomas_ack',
             'direction' => 'outbound',
@@ -190,7 +190,7 @@ test('inbox timeline shows a website message that is not an appointment', functi
 test('a text thread with no website lead does not invent a request card', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    fakeWebsiteLeadPlatformThread('pc_plain', '+17195557700', [
+    websiteLeadTimelineFakePlatformThread('pc_plain', '+17195557700', [
         [
             'public_id' => 'pm_plain',
             'direction' => 'inbound',
@@ -253,7 +253,7 @@ function websiteRequestLead(
 /**
  * @param  list<array<string, mixed>>  $messages
  */
-function fakeWebsiteLeadPlatformThread(string $publicId, string $contact, array $messages): void
+function websiteLeadTimelineFakePlatformThread(string $publicId, string $contact, array $messages): void
 {
     $last = $messages[array_key_last($messages)] ?? [];
 

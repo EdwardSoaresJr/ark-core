@@ -68,15 +68,20 @@ enum ScopeEntryKind: string
         };
     }
 
-    public function defaultRecommendationIntent(): RecommendationIntent
+    public function defaultRecommendationIntent(): ?RecommendationIntent
     {
         return match ($this) {
             self::CustomerConcern => RecommendationIntent::Diagnostic,
             self::CustomerRequested => RecommendationIntent::Maintenance,
             self::Diagnostic => RecommendationIntent::Diagnostic,
             self::WarrantyRecheck => RecommendationIntent::RepairVerification,
-            self::CourtesyInspection => RecommendationIntent::InformationOnly,
+            self::CourtesyInspection => null,
         };
+    }
+
+    public function defaultsToInformationOnly(): bool
+    {
+        return $this === self::CourtesyInspection;
     }
 
     public static function inferFromSummary(string $summary): self

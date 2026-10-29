@@ -54,19 +54,7 @@ class EstimateDocumentEmailDelivery
     {
         $repairOrder->loadMissing(['customer', 'vehicle']);
 
-        $document = $this->documents->attachablePdfForRepairOrder($repairOrder);
-
-        if ($document === null) {
-            try {
-                $document = $this->documents->resolveForRepairOrder($repairOrder, $actor);
-            } catch (Throwable) {
-                throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
-            }
-
-            if (! $this->documents->hasViewablePdf($document)) {
-                throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
-            }
-        }
+        $document = $this->viewablePdf($repairOrder, $actor);
 
         $settings = ShopSettings::current();
         $shopName = $settings->shop_name ?: config('app.name', 'ARK-SMS');
@@ -117,7 +105,7 @@ class EstimateDocumentEmailDelivery
             actor: $actor,
             payload: [
                 'repair_order_id' => $repairOrder->id,
-                'estimate_document_id' => $document->id,
+                'estimate_document_id' => $document?->id,
                 'communication_event_id' => $event->id,
                 'conversation_message_id' => $message->id,
                 'recipient_email' => $recipientEmail,
@@ -132,20 +120,42 @@ class EstimateDocumentEmailDelivery
         ];
     }
 
+    private function viewablePdf(RepairOrder $repairOrder, User $actor): ?EstimateDocument
+    {
+        $document = $this->documents->attachablePdfForRepairOrder($repairOrder);
+        if ($document !== null) {
+            return $document;
+        }
+
+        try {
+            $document = $this->documents->resolveForRepairOrder($repairOrder, $actor);
+        } catch (Throwable) {
+            return null;
+        }
+
+        return $this->documents->hasViewablePdf($document) && ! $this->documents->finalPdfFailed($document)
+            ? $document
+            : null;
+    }
+
     /**
      * @param  array<string, string>  $variables
      */
     private function sendViaPlatform(
         RepairOrder $repairOrder,
-        EstimateDocument $document,
+        ?EstimateDocument $document,
         string $recipientEmail,
         string $pdfFilename,
         array $variables,
     ): void {
-        $pdf = Storage::disk('local')->get($document->pdf_path);
-
-        if (! is_string($pdf) || $pdf === '') {
-            throw EstimatePdfUnavailableException::forRepairOrder($repairOrder->repair_order_id);
+        $attachments = [];
+        $pdf = $document === null ? null : Storage::disk('local')->get($document->pdf_path);
+        if (is_string($pdf) && $pdf !== '') {
+            $attachments[] = [
+                'filename' => $pdfFilename,
+                'mime' => 'application/pdf',
+                'content_base64' => base64_encode($pdf),
+            ];
         }
 
         $result = $this->mail->sendTransactional(EmailIntent::payload(
@@ -155,15 +165,11 @@ class EstimateDocumentEmailDelivery
             idempotencyKey: 'estimate-send-'.Str::uuid(),
             domainObjectType: 'repair_order',
             domainObjectId: (string) $repairOrder->id,
-            attachments: [[
-                'filename' => $pdfFilename,
-                'mime' => 'application/pdf',
-                'content_base64' => base64_encode($pdf),
-            ]],
-            metadata: [
+            attachments: $attachments,
+            metadata: array_filter([
                 'repair_order_id' => $repairOrder->id,
-                'estimate_document_id' => $document->id,
-            ],
+                'estimate_document_id' => $document?->id,
+            ], fn (mixed $value): bool => $value !== null),
         ));
 
         if (($result['ok'] ?? false) !== true) {

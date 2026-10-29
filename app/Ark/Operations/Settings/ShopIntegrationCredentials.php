@@ -22,27 +22,44 @@ final class ShopIntegrationCredentials
 
     public function twilioConfigured(): bool
     {
-        return $this->messagingConfigured();
+        return filled($this->twilioAccountSid()) && filled($this->twilioAuthToken());
     }
 
     public function twilioAccountSid(): ?string
     {
-        return null;
+        $sid = trim((string) config('services.twilio.account_sid', ''));
+
+        return $sid !== '' ? $sid : null;
     }
 
     public function twilioAuthToken(): ?string
     {
-        return null;
+        $token = trim((string) config('services.twilio.auth_token', ''));
+
+        return $token !== '' ? $token : null;
     }
 
     public function hasStoredTwilioAuthToken(): bool
     {
-        return false;
+        return $this->twilioAuthToken() !== null;
+    }
+
+    public function twilioFromNumber(): ?string
+    {
+        $from = trim((string) config('services.twilio.from', ''));
+
+        if ($from !== '') {
+            return $from;
+        }
+
+        $inbound = trim((string) ($this->settings->telephony_inbound_number ?? ''));
+
+        return $inbound !== '' ? $inbound : null;
     }
 
     public function twilioCredentialSource(): string
     {
-        return $this->messagingConfigured() ? 'transport' : 'none';
+        return $this->twilioConfigured() ? 'environment' : 'none';
     }
 
     public function partsTechBaseUrl(): string
@@ -121,7 +138,7 @@ final class ShopIntegrationCredentials
 
     public function repairLinkLaunchUrl(): ?string
     {
-        if (! $this->repairLinkEnabled() || ! Schema::hasColumn('shop_settings', 'repairlink_url')) {
+        if (! $this->repairLinkEnabled() || ! ShopSettingsSchema::has('repairlink_url')) {
             return null;
         }
 
@@ -130,7 +147,7 @@ final class ShopIntegrationCredentials
 
     public function repairLinkEnabled(): bool
     {
-        if (! Schema::hasColumn('shop_settings', 'repairlink_enabled')) {
+        if (! ShopSettingsSchema::has('repairlink_enabled')) {
             return false;
         }
 
@@ -144,7 +161,7 @@ final class ShopIntegrationCredentials
 
     public function nexpartLaunchUrl(): ?string
     {
-        if (! $this->nexpartEnabled() || ! Schema::hasColumn('shop_settings', 'nexpart_url')) {
+        if (! $this->nexpartEnabled() || ! ShopSettingsSchema::has('nexpart_url')) {
             return null;
         }
 
@@ -153,7 +170,7 @@ final class ShopIntegrationCredentials
 
     public function nexpartEnabled(): bool
     {
-        if (! Schema::hasColumn('shop_settings', 'nexpart_enabled')) {
+        if (! ShopSettingsSchema::has('nexpart_enabled')) {
             return false;
         }
 
@@ -216,12 +233,12 @@ final class ShopIntegrationCredentials
 
     public function mailReplyTo(): ?string
     {
-        return $this->resolve($this->settings->postmark_reply_to, config('mail.reply_to.address'));
+        return $this->resolve($this->settings->customerReplyToAddress(), config('mail.reply_to.address'));
     }
 
     public function mailReplyToName(): ?string
     {
-        return $this->resolve($this->settings->postmark_reply_to_name, config('mail.reply_to.name'));
+        return $this->resolve($this->settings->customerReplyToName(), config('mail.reply_to.name'));
     }
 
     public function transactionalEmailConfigured(): bool
@@ -251,12 +268,12 @@ final class ShopIntegrationCredentials
 
     public function openaiTranscriptionModel(): string
     {
-        return 'whisper-1';
+        return '';
     }
 
     public function openaiAnalysisModel(): string
     {
-        return 'gpt-4o-mini';
+        return '';
     }
 
     public function openaiCredentialSource(): string

@@ -33,51 +33,67 @@
                     <p class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ $category['name'] }}</p>
                     <div class="mt-2 space-y-2">
                         @foreach ($category['items'] as $item)
-                            <div class="grid gap-2 border border-slate-100 bg-white p-2 md:grid-cols-[1fr_auto_auto] md:items-center">
-                                <div>
-                                    <input
-                                        type="text"
-                                        name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][label]"
-                                        value="{{ $item['label'] }}"
-                                        class="w-full rounded border-slate-300 text-sm font-medium text-slate-950"
-                                    >
-                                    <div class="mt-1 flex flex-wrap gap-3 text-[11px] text-slate-500">
-                                        <label class="inline-flex items-center gap-1">
-                                            <input
-                                                type="checkbox"
-                                                name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][enabled]"
-                                                value="1"
-                                                @checked($item['enabled'])
-                                                class="rounded border-slate-300"
-                                            >
-                                            Enabled
-                                        </label>
-                                        <label class="inline-flex items-center gap-1">
-                                            <input
-                                                type="checkbox"
-                                                name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][requires_photo]"
-                                                value="1"
-                                                @checked($item['requires_photo'])
-                                                class="rounded border-slate-300"
-                                            >
-                                            Photo required
-                                        </label>
-                                    </div>
+                            <div class="border border-slate-100 bg-white p-2">
+                                <input
+                                    type="text"
+                                    name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][label]"
+                                    value="{{ $item['label'] }}"
+                                    class="w-full rounded border-slate-300 text-sm font-medium text-slate-950"
+                                >
+                                <div class="mt-1 flex flex-wrap gap-3 text-[11px] text-slate-500">
+                                    <label class="inline-flex items-center gap-1">
+                                        <input
+                                            type="checkbox"
+                                            name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][enabled]"
+                                            value="1"
+                                            @checked($item['enabled'])
+                                            class="rounded border-slate-300"
+                                        >
+                                        Enabled
+                                    </label>
+                                    <label class="inline-flex items-center gap-1">
+                                        <input
+                                            type="checkbox"
+                                            name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][requires_photo]"
+                                            value="1"
+                                            @checked($item['requires_photo'])
+                                            class="rounded border-slate-300"
+                                        >
+                                        Photo required
+                                    </label>
                                 </div>
-                                <input
-                                    type="text"
-                                    name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][measurement_name]"
-                                    value="{{ $item['measurement_name'] }}"
-                                    placeholder="Measurement name"
-                                    class="rounded border-slate-300 text-xs"
-                                >
-                                <input
-                                    type="text"
-                                    name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][measurement_unit]"
-                                    value="{{ $item['measurement_unit'] }}"
-                                    placeholder="Unit"
-                                    class="rounded border-slate-300 text-xs"
-                                >
+                                @if (($item['measurement_slots'] ?? []) !== [])
+                                    <div class="mt-2 space-y-2">
+                                        @foreach ($item['measurement_slots'] as $slotIndex => $slot)
+                                            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_8rem_6rem] sm:items-center">
+                                                <input
+                                                    type="text"
+                                                    name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][slots][{{ $slotIndex }}][name]"
+                                                    value="{{ $slot['name'] }}"
+                                                    aria-label="Measurement name"
+                                                    class="w-full rounded border-slate-300 text-xs"
+                                                >
+                                                <select
+                                                    name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][slots][{{ $slotIndex }}][type]"
+                                                    aria-label="Measurement type"
+                                                    class="rounded border-slate-300 text-xs"
+                                                >
+                                                    <option value="number" @selected(($slot['type'] ?? 'number') === 'number')>Number</option>
+                                                    <option value="text" @selected(($slot['type'] ?? '') === 'text')>Text</option>
+                                                    <option value="condition" @selected(($slot['type'] ?? '') === 'condition')>Condition</option>
+                                                </select>
+                                                <input
+                                                    type="text"
+                                                    name="templates[{{ $template['id'] }}][categories][{{ $category['id'] }}][items][{{ $item['id'] }}][slots][{{ $slotIndex }}][unit]"
+                                                    value="{{ $slot['unit'] }}"
+                                                    placeholder="Unit"
+                                                    aria-label="Measurement unit"
+                                                    class="w-full rounded border-slate-300 text-xs"
+                                                >
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -91,7 +107,7 @@
     @if ($inspectionTemplates !== [])
         <div>
             <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                Save inspection templates
+                Save inspection checklists
             </button>
         </div>
     @endif

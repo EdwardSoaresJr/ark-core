@@ -2,7 +2,7 @@
 
 namespace App\Ark\Station;
 
-use App\Ark\Dragon\DragonWorkProjection;
+use App\Ark\Station\ShopFloorWorkProjection;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use Illuminate\Support\Carbon;
 
@@ -14,7 +14,7 @@ final class StationDashboardProjection
     public const STALE_AFTER_DAYS = 3;
 
     public function __construct(
-        private readonly DragonWorkProjection $work,
+        private readonly ShopFloorWorkProjection $work,
         private readonly StationAttentionProjection $attention,
         private readonly StationCallsProjection $calls,
         private readonly StationGlassConfig $glassConfig,

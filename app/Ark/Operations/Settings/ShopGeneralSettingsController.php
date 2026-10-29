@@ -115,6 +115,6 @@ class ShopGeneralSettingsController
 
         ShopDisplayTimezone::apply();
 
-        return $this->redirectWithStatus('General settings saved.');
+        return $this->redirectWithStatus('Shop identity saved.');
     }
 }

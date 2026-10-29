@@ -317,6 +317,7 @@ test('builder presents remaining editors as presentation cards into workspace mo
 });
 
 test('builder workspace modal keeps dormant rose text in Dragon slots without treating them as field errors', function () {
+    migrateHostedDragon();
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = repairOrderForWorkspaceModalBuilder();
@@ -339,6 +340,7 @@ test('builder workspace modal keeps dormant rose text in Dragon slots without tr
 });
 
 test('builder Dragon generate is labeled Generate and is not gated on empty field lists', function () {
+    migrateHostedDragon();
     $this->seed(ArkAuthorizationSeeder::class);
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = repairOrderForWorkspaceModalBuilder();

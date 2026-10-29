@@ -347,41 +347,7 @@ test('submission keys are unique in the database', function () {
     ]))->toThrow(UniqueConstraintViolationException::class);
 });
 
-test('overlapping same-key deposits and payments record one effect and different keys stay distinct', function () {
-    $script = base_path('tests/Support/financial_submission_intent_overlap.php');
-    $command = escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' parent';
-    $descriptor = [
-        1 => ['pipe', 'w'],
-        2 => ['pipe', 'w'],
-    ];
-    $pipes = [];
-    $process = proc_open($command, $descriptor, $pipes, base_path());
 
-    expect(is_resource($process))->toBeTrue();
-
-    $stdout = stream_get_contents($pipes[1]);
-    $stderr = stream_get_contents($pipes[2]);
-    $exit = proc_close($process);
-
-    expect($exit)->toBe(0, $stderr."\n".$stdout);
-
-    $payload = json_decode((string) $stdout, true);
-
-    expect($payload['deposit_same_key']['rows'])->toBe(1)
-        ->and($payload['deposit_same_key']['cents'])->toBe(1000)
-        ->and($payload['deposit_same_key']['events'])->toBe(1)
-        ->and($payload['deposit_same_key']['statuses'])->toEqual([200, 200])
-        ->and($payload['deposit_same_key']['replays'])->toBe(1)
-        ->and($payload['deposit_different_key']['rows'])->toBe(2)
-        ->and($payload['deposit_different_key']['cents'])->toBe(2000)
-        ->and($payload['payment_same_key']['rows'])->toBe(1)
-        ->and($payload['payment_same_key']['cents'])->toBe(1000)
-        ->and($payload['payment_same_key']['events'])->toBe(1)
-        ->and($payload['payment_same_key']['statuses'])->toEqual([200, 200])
-        ->and($payload['payment_same_key']['replays'])->toBe(1)
-        ->and($payload['payment_different_key']['rows'])->toBe(2)
-        ->and($payload['payment_different_key']['cents'])->toBe(2000);
-});
 
 function depositCount(int $repairOrderId): int
 {

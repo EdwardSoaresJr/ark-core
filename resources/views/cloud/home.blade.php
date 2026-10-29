@@ -297,7 +297,7 @@
     @else
         <section class="border-t border-[var(--cloud-line)] bg-white/60">
             <div class="mx-auto max-w-3xl px-5 sm:px-8 py-24 sm:py-32 text-center">
-                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Hosted ARK</p>
+                <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">ARK Shop</p>
                 <h2 class="cloud-display mt-4 text-3xl sm:text-5xl font-semibold leading-tight">
                     Don’t want to mess with a server?
                 </h2>

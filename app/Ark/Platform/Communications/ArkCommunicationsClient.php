@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /**
  * Core → Platform managed Communications client.
  */
-final class ArkCommunicationsClient
+class ArkCommunicationsClient
 {
     public function isConfigured(): bool
     {

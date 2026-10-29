@@ -34,7 +34,6 @@ function laborSettingsPayload(array $overrides = []): array
         ->all();
 
     return array_merge([
-        'default_labor_rate' => '165.00',
         'default_labor_category_key' => ShopSettings::DEFAULT_LABOR_CATEGORY_KEY,
         'labor_categories' => $categories,
     ], $overrides);
@@ -46,24 +45,39 @@ test('admin can view operational shop settings defaults', function () {
 
     $this->get(route('operations.settings.shop.edit'))
         ->assertOk()
-        ->assertSee('Operational Settings')
+        ->assertSee('How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.')
+        ->assertDontSee('Operational Settings')
+        ->assertDontSee('Operational Domains')
         ->assertDontSee('Current outcomes')
-        ->assertSee('Financial rules, estimate defaults, and document language')
+        ->assertDontSee('Financial rules, estimate defaults, and document language')
+        ->assertSeeInOrder(['Your shop', 'Shop Identity', 'Appointments &amp; Setup', 'Money', 'Financial Rules', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Documents &amp; workflow', 'Documents / Disclaimers', 'Workflow Defaults', 'Label Printing', 'Connected services', 'Square Payments', 'Parts catalogs', 'Communications', 'Stations &amp; Phones'], false)
+        ->assertSee("@click=\"setActive('operations')\"", false)
+        ->assertSee('<h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>', false)
+        ->assertSee('Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.')
+        ->assertSee('Shop name, logo, and contact details')
+        ->assertSee('Shown on estimates, invoices, and other customer documents.')
+        ->assertSee('Save Shop Identity')
+        ->assertDontSee('Estimate-facing shop identity')
+        ->assertDontSee('Save General')
+        ->assertDontSee('Advisor work surface')
         ->assertSee('Shop Identity')
         ->assertSee('Financial Rules')
         ->assertSee('Documents / Disclaimers')
         ->assertSee('Workflow Defaults')
-        ->assertSee('Default visit posture')
+        ->assertSee('Default visit type')
+        ->assertDontSee('Default visit posture')
         ->assertSee('Check In visit')
         ->assertSee('Worksheet notes')
         ->assertSee('Estimate logo')
-        ->assertSee('Default labor rate')
+        ->assertDontSee('name="default_labor_rate"', false)
+        ->assertSee('is the shop default labor rate', false)
         ->assertSee('Sales tax rate')
         ->assertSee('Tax display name')
         ->assertSee('Tax labor')
         ->assertSee('Tax parts')
         ->assertSee('Used when calculating taxable estimate/invoice totals.')
-        ->assertSee('Effective posture')
+        ->assertSee('Saved tax setup:')
+        ->assertDontSee('Effective posture')
         ->assertSee('shop fees not taxable')
         ->assertSee('Tax shop fees')
         ->assertDontSee('Default tax rate')
@@ -77,9 +91,14 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('Warranty')
         ->assertSee('Military')
         ->assertSee('Markup is the editable pricing policy')
-        ->assertSee('Editable authority')
-        ->assertSee('Read-only truth')
-        ->assertSee('Target posture')
+        ->assertSee('How estimates are priced')
+        ->assertSee('Key tags and oil change stickers')
+        ->assertSee('Parts gross profit from your markup')
+        ->assertDontSee('Estimate pricing authority')
+        ->assertDontSee('Label printing authority')
+        ->assertDontSee('Editable authority')
+        ->assertDontSee('Read-only truth')
+        ->assertDontSee('Target posture')
         ->assertSee('line overrides remain operational exceptions')
         ->assertSee('Save for margin')
         ->assertDontSee('marginFromMarkup(row.markup_percentage)', false)
@@ -102,6 +121,76 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('180.00');
 });
 
+test('settings pages use plain labels instead of posture, authority, truth, surface, and band wording', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $response = $this->get(route('operations.settings.shop.edit'))->assertOk();
+
+    foreach ([
+        'Default visit posture',
+        'Account posture at Check In',
+        'Category defaults drive labor authority',
+        'billing posture',
+        'Billing posture',
+        'Billing Posture',
+        'billing postures',
+        'shop fee posture',
+        'check-in posture',
+        'visit posture',
+        'InspectionItem authority',
+        'Customer and Vehicle authority',
+        'Fact authority',
+        'Capture surfaces',
+        'Save payment surfaces',
+        'Shop excellence bands',
+        'posted sales truth',
+        'planning bands',
+        'Owner rhythm',
+        'Resolver Preview',
+        'financial rail',
+    ] as $phrase) {
+        $response->assertDontSee($phrase);
+    }
+
+    $response
+        ->assertSee('Default visit type')
+        ->assertSee('Billing at Check In')
+        ->assertSee('Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet.')
+        ->assertSee('Columns are billing types.')
+        ->assertSee('Rate preview')
+        ->assertSee('Time zone sources')
+        ->assertSee('Where card payments are offered')
+        ->assertSee('Save card payment options')
+        ->assertSee('Shop performance targets')
+        ->assertSee('Creates customer and vehicle records only. Repair history is not imported.')
+        ->assertSee('Technicians record findings on each checklist item.')
+        ->assertSee('name="default_visit_mode"', false)
+        ->assertSee('name="lp_posture"', false)
+        ->assertSee(route('operations.settings.shop.payments.update'), false);
+});
+
+test('every financial rules tab opens from the financial-tab link that save redirects use', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'labor-policies']))
+        ->assertOk()
+        ->getContent();
+
+    expect(preg_match("/\[([^\]]*)\]\.includes\(fromUrl\)/", $html, $honored))->toBe(1);
+    preg_match_all("/financialTab === '([a-z-]+)'/", $html, $tabs);
+
+    $honoredTabs = collect(explode(',', $honored[1]))->map(fn (string $tab): string => trim($tab, " '"))->all();
+    $renderedTabs = collect($tabs[1])->unique()->reject(fn (string $tab): bool => in_array($tab, ['billing-classes', 'customer-types', 'customer-tags'], true))->values()->all();
+
+    expect($renderedTabs)->toContain('labor-policies', 'deposits');
+
+    foreach ($renderedTabs as $tab) {
+        expect($honoredTabs)->toContain($tab);
+    }
+});
+
 test('admin can upload and remove shop estimate logo', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     Storage::fake('public');
@@ -119,7 +208,8 @@ test('admin can upload and remove shop estimate logo', function () {
         'city' => 'Demo City',
         'state' => 'CO',
         'postal_code' => '80903',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Shop identity saved.');
 
     $settings = ShopSettings::current();
 
@@ -192,7 +282,6 @@ test('admin can persist authoritative operational defaults', function () {
     ])->assertRedirect(route('operations.settings.shop.edit'));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
-        'default_labor_rate' => '175.50',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -247,14 +336,17 @@ test('admin can persist authoritative operational defaults', function () {
         'recommendation_disclaimer' => 'Recommendations may change after disassembly or further testing.',
         'estimate_validity_days' => '14',
         'customer_part_description_mode' => 'cleaned',
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Document settings saved.');
 
     $this->patch(route('operations.settings.shop.workflow.update'), [
         'default_visit_mode' => 'needs_shuttle',
-        'default_recommendation_intent' => 'immediate_attention',
+        'default_recommendation_intent' => 'maintenance',
+        'default_recommendation_posture' => 'must_do',
         'default_notes_private' => '1',
         'default_estimate_state' => RepairOrderStatus::Estimate->value,
-    ])->assertRedirect(route('operations.settings.shop.edit'));
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHas('status', 'Check In defaults saved.');
 
     $settings = ShopSettings::current();
 
@@ -281,7 +373,8 @@ test('admin can persist authoritative operational defaults', function () {
         ->and($settings->customer_types[3]['discount_type'])->toBe('none')
         ->and($settings->estimate_validity_days)->toBe(14)
         ->and($settings->default_visit_mode)->toBe('needs_shuttle')
-        ->and($settings->default_recommendation_intent)->toBe('immediate_attention')
+        ->and($settings->default_recommendation_intent)->toBe('maintenance')
+        ->and($settings->default_recommendation_priority)->toBe('must_do')
         ->and($settings->default_notes_private)->toBeTrue()
         ->and($settings->default_estimate_state)->toBe(RepairOrderStatus::Estimate->value);
 });
@@ -400,6 +493,314 @@ test('saving tax settings does not rewrite unrelated settings', function () {
         ->and($settings->customer_types)->toBe($originalCustomerTypes)
         ->and($settings->estimate_disclaimer)->toBe('Stable estimate disclaimer.')
         ->and($settings->default_estimate_state)->toBe(RepairOrderStatus::WaitingApproval->value);
+});
+
+test('tax and shop fee switches are checkboxes that post 0 when off and 1 when on', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update(['tax_enabled' => true, 'shop_fee_enabled' => false]);
+
+    $response = $this->get(route('operations.settings.shop.edit', ['section' => 'financial']))->assertOk();
+
+    foreach (['tax_enabled', 'taxable_labor', 'taxable_parts', 'taxable_shop_fees', 'shop_fee_enabled'] as $field) {
+        $response
+            ->assertSee('<input type="hidden" name="'.$field.'" value="0">', false)
+            ->assertSee('type="checkbox" name="'.$field.'" value="1"', false)
+            ->assertDontSee('<select name="'.$field.'"', false);
+    }
+
+    $response
+        ->assertSee('Charge sales tax')
+        ->assertSee('Charge a shop fee')
+        ->assertSee('x-data="{ taxEnabled: true }"', false)
+        ->assertSee('x-data="{ shopFeeEnabled: false }"', false);
+});
+
+test('saving tax with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update(['tax_enabled' => ! $expected]);
+
+    $this->patch(route('operations.settings.shop.tax.update'), [
+        'tax_enabled' => $posted,
+        'tax_label' => 'County Tax',
+        'default_tax_rate' => '7.500',
+        'taxable_labor' => '1',
+        'taxable_parts' => '0',
+        'taxable_shop_fees' => '1',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current()->fresh();
+
+    expect($settings->tax_enabled)->toBe($expected)
+        ->and($settings->tax_label)->toBe('County Tax')
+        ->and((string) $settings->default_tax_rate)->toBe('7.500')
+        ->and($settings->taxable_labor)->toBeTrue()
+        ->and($settings->taxable_parts)->toBeFalse()
+        ->and($settings->taxable_shop_fees)->toBeTrue();
+})->with([
+    'box off' => ['0', false],
+    'box on' => ['1', true],
+]);
+
+test('saving shop fees with the switch on or off persists exactly the posted values', function (string $posted, bool $expected) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update(['shop_fee_enabled' => ! $expected]);
+
+    $this->patch(route('operations.settings.shop.fees.update'), [
+        'shop_fee_enabled' => $posted,
+        'shop_fee_rate' => '6.000',
+        'shop_fee_cap' => '45.00',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current()->fresh();
+
+    expect($settings->shop_fee_enabled)->toBe($expected)
+        ->and((string) $settings->shop_fee_rate)->toBe('6.000')
+        ->and($settings->shop_fee_cap_cents)->toBe(4500);
+})->with([
+    'box off' => ['0', false],
+    'box on' => ['1', true],
+]);
+
+test('deposit switches are checkboxes that post 0 when off and 1 when on, and reveal what the deposit includes', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+    ]);
+
+    $response = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))->assertOk();
+
+    foreach (['default_deposit_enabled', 'default_deposit_include_parts', 'default_deposit_include_diagnostics'] as $field) {
+        $response
+            ->assertSee('<input type="hidden" name="'.$field.'" value="0">', false)
+            ->assertSee('type="checkbox" name="'.$field.'" value="1"', false)
+            ->assertDontSee('<select name="'.$field.'"', false);
+    }
+
+    $response
+        ->assertSee('Suggest a default deposit')
+        ->assertSee('Include in the deposit')
+        ->assertSee('x-data="{ depositEnabled: true, depositIncludeDiagnostics: false }"', false)
+        ->assertSee('name="default_deposit_diagnostic_labor_category_keys[]"', false)
+        ->assertSee('Square deposit capture');
+
+    expect($response->getContent())
+        ->toMatch('/<div x-show="depositEnabled"\s+class="grid gap-4 md:col-span-2">/')
+        ->toMatch('/<div x-show="depositIncludeDiagnostics"\s+x-cloak\s+class="border border-slate-200 bg-white px-3 py-3">/');
+});
+
+test('saving deposits with each box on or off persists exactly the posted values', function (string $enabled, string $parts, string $diagnostics) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => $enabled !== '1',
+        'default_deposit_include_parts' => $parts !== '1',
+        'default_deposit_include_diagnostics' => $diagnostics !== '1',
+    ]);
+
+    $this->patch(route('operations.settings.shop.deposits.update'), [
+        'default_deposit_enabled' => $enabled,
+        'default_deposit_include_parts' => $parts,
+        'default_deposit_include_diagnostics' => $diagnostics,
+        'default_deposit_diagnostic_labor_category_keys' => ['diagnostic', 'programming'],
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->defaultDepositEnabled())->toBe($enabled === '1')
+        ->and($settings->defaultDepositIncludeParts())->toBe($parts === '1')
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBe($diagnostics === '1')
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['diagnostic', 'programming']);
+})->with([
+    'all off' => ['0', '0', '0'],
+    'all on' => ['1', '1', '1'],
+    'deposit off keeps the hidden choices' => ['0', '1', '1'],
+    'deposit on, parts only' => ['1', '1', '0'],
+]);
+
+test('saving deposits with diagnostics off and no labor categories keeps the selection empty', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_include_diagnostics' => true,
+        'default_deposit_diagnostic_labor_category_keys' => ['diagnostic', 'programming'],
+    ]);
+
+    $this->patch(route('operations.settings.shop.deposits.update'), [
+        'default_deposit_enabled' => '1',
+        'default_deposit_include_parts' => '1',
+        'default_deposit_include_diagnostics' => '0',
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->default_deposit_diagnostic_labor_category_keys)->toBe([])
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBeFalse()
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe([]);
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))
+        ->assertOk()
+        ->getContent();
+
+    expect(substr_count($html, 'name="default_deposit_diagnostic_labor_category_keys[]"'))->toBeGreaterThan(0)
+        ->and(preg_match_all('/name="default_deposit_diagnostic_labor_category_keys\[\]"[^>]*\bchecked\b/', $html))->toBe(0);
+});
+
+test('saving deposits with diagnostics on and no labor categories is refused and keeps the saved categories', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'default_deposit_enabled' => true,
+        'default_deposit_include_parts' => true,
+        'default_deposit_include_diagnostics' => false,
+        'default_deposit_diagnostic_labor_category_keys' => ['programming'],
+    ]);
+
+    $this->from(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'deposits']))
+        ->patch(route('operations.settings.shop.deposits.update'), [
+            'default_deposit_enabled' => '1',
+            'default_deposit_include_parts' => '0',
+            'default_deposit_include_diagnostics' => '1',
+        ])->assertSessionHasErrors([
+            'default_deposit_diagnostic_labor_category_keys' => 'Select at least one labor category when diagnostics are included.',
+        ]);
+
+    $settings = ShopSettings::reloadCurrent();
+
+    expect($settings->defaultDepositIncludeParts())->toBeTrue()
+        ->and($settings->defaultDepositIncludeDiagnostics())->toBeFalse()
+        ->and($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming']);
+});
+
+test('deposit diagnostic categories fall back to the default list only when none were ever saved', function () {
+    $settings = ShopSettings::current();
+
+    $settings->forceFill([
+        'default_deposit_include_diagnostics' => false,
+        'default_deposit_diagnostic_labor_category_keys' => null,
+    ]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS);
+
+    $settings->forceFill(['default_deposit_diagnostic_labor_category_keys' => []]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe([]);
+
+    $settings->forceFill(['default_deposit_include_diagnostics' => true]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS);
+
+    $settings->forceFill(['default_deposit_diagnostic_labor_category_keys' => ['programming', 'diagnostic']]);
+    expect($settings->defaultDepositDiagnosticLaborCategoryKeys())->toBe(['programming', 'diagnostic']);
+});
+
+test('billing class fee rate override enables and disables as soon as shop fees is changed', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '4.500', 'discount_type' => 'none'],
+            ['name' => 'Internal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
+            ['name' => 'Fleet', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
+        ],
+    ]);
+
+    $html = $this->get(route('operations.settings.shop.edit', ['section' => 'financial', 'financial-tab' => 'billing-classes']))
+        ->assertOk()
+        ->getContent();
+
+    $rowFor = function (int $index) use ($html): string {
+        $start = strpos($html, 'name="customer_types['.$index.'][shop_fees_enabled]"');
+        expect($start)->not->toBeFalse();
+        $scopeStart = strrpos(substr($html, 0, $start), 'x-data="{ shopFeesOn:');
+        $end = strpos($html, 'name="customer_types['.$index.'][default_parts_matrix_key]"', $start);
+
+        return substr($html, $scopeStart, $end - $scopeStart);
+    };
+
+    foreach ([0 => true, 1 => false, 2 => false] as $index => $on) {
+        $row = $rowFor($index);
+
+        expect($row)
+            ->toStartWith('x-data="{ shopFeesOn: '.($on ? 'true' : 'false').' }"')
+            ->toContain('@change="shopFeesOn = $event.target.value === \'1\'"')
+            ->toContain(':disabled="! shopFeesOn"');
+
+        $override = substr($row, strpos($row, 'name="customer_types['.$index.'][shop_fee_rate_override]"'));
+        $override = substr($override, 0, strpos($override, '>'));
+
+        expect(preg_match('/\sdisabled\s/', $override) === 1)->toBe(! $on);
+    }
+});
+
+test('saving billing classes after switching shop fees stores the override only when fees are on', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '4.500', 'discount_type' => 'none'],
+            ['name' => 'Internal', 'shop_fees_enabled' => false, 'shop_fee_rate_override' => null, 'discount_type' => 'none'],
+        ],
+    ]);
+
+    $this->patch(route('operations.settings.shop.customer-types.update'), [
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => '0', 'discount_type' => 'none'],
+            ['name' => 'Internal', 'shop_fees_enabled' => '1', 'shop_fee_rate_override' => '3.25', 'discount_type' => 'none'],
+        ],
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $rows = collect(ShopSettings::current()->fresh()->customer_types)->keyBy('name');
+
+    expect($rows['Retail']['shop_fees_enabled'])->toBeFalse()
+        ->and($rows['Retail']['shop_fee_rate_override'])->toBeNull()
+        ->and($rows['Retail']['fee_override'])->toBe('none')
+        ->and($rows['Internal']['shop_fees_enabled'])->toBeTrue()
+        ->and($rows['Internal']['shop_fee_rate_override'])->toBe('3.250')
+        ->and($rows['Internal']['fee_override'])->toBe('3.250');
+});
+
+test('clearing a billing class fee rate override goes back to the shop rate, and an unposted override is kept', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    ShopSettings::current()->update([
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '4.500', 'discount_type' => 'none'],
+            ['name' => 'Business', 'shop_fees_enabled' => true, 'shop_fee_rate_override' => '2.000', 'discount_type' => 'none'],
+        ],
+    ]);
+
+    $this->patch(route('operations.settings.shop.customer-types.update'), [
+        'customer_types' => [
+            ['name' => 'Retail', 'shop_fees_enabled' => '1', 'shop_fee_rate_override' => '', 'discount_type' => 'none'],
+            ['name' => 'Business', 'shop_fees_enabled' => '1', 'discount_type' => 'none'],
+        ],
+    ])->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $rows = collect(ShopSettings::current()->fresh()->customer_types)->keyBy('name');
+
+    expect($rows['Retail']['shop_fees_enabled'])->toBeTrue()
+        ->and($rows['Retail']['shop_fee_rate_override'])->toBeNull()
+        ->and($rows['Retail']['fee_override'])->toBeNull()
+        ->and($rows['Business']['shop_fee_rate_override'])->toBe('2.000');
 });
 
 test('saving a parts matrix does not rewrite tax settings', function () {
@@ -579,7 +980,6 @@ test('admin can update labor categories from shop settings', function () {
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
-        'default_labor_rate' => '180.00',
         'labor_categories' => collect(ShopSettings::DEFAULT_LABOR_CATEGORIES)->values()->map(function (array $category): array {
             return [
                 'key' => $category['key'],
@@ -605,6 +1005,59 @@ test('admin can update labor categories from shop settings', function () {
         ->and($diagnostic['rate_cents'])->toBe(19500)
         ->and($diagnostic['minimum_hours'])->toBe('1.25')
         ->and(collect($settings->laborCategories())->firstWhere('key', 'courtesy')['rounding_rule'])->toBe('tenth');
+});
+
+test('the default category rate row is the shop default labor rate', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $payload = laborSettingsPayload();
+    $payload['labor_categories'] = collect($payload['labor_categories'])
+        ->map(function (array $category): array {
+            if ($category['key'] === ShopSettings::DEFAULT_LABOR_CATEGORY_KEY) {
+                $category['rate'] = '172.25';
+            }
+
+            return $category;
+        })
+        ->all();
+
+    $this->patch(route('operations.settings.shop.labor.update'), $payload)
+        ->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current();
+
+    expect($settings->default_labor_rate_cents)->toBe(17225)
+        ->and($settings->defaultLaborRate())->toBe('172.25')
+        ->and(collect($settings->laborCategories())->firstWhere('key', ShopSettings::DEFAULT_LABOR_CATEGORY_KEY)['rate_cents'])->toBe(17225);
+});
+
+test('changing the default labor category keeps every category rate', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    $before = collect(ShopSettings::current()->laborCategories())->mapWithKeys(
+        fn (array $category): array => [$category['key'] => $category['rate_cents']],
+    );
+    $newDefault = $before->keys()->first(fn (string $key): bool => $key !== ShopSettings::DEFAULT_LABOR_CATEGORY_KEY
+        && $before[$key] !== $before[ShopSettings::DEFAULT_LABOR_CATEGORY_KEY]);
+
+    expect($newDefault)->not->toBeNull();
+
+    $this->patch(route('operations.settings.shop.labor.update'), laborSettingsPayload([
+        'default_labor_category_key' => $newDefault,
+    ]))->assertRedirect(route('operations.settings.shop.edit'))
+        ->assertSessionHasNoErrors();
+
+    $settings = ShopSettings::current();
+    $after = collect($settings->laborCategories())->mapWithKeys(
+        fn (array $category): array => [$category['key'] => $category['rate_cents']],
+    );
+
+    expect($after->all())->toEqual($before->all())
+        ->and(collect($settings->laborCategories())->firstWhere('is_default', true)['key'])->toBe($newDefault)
+        ->and($settings->default_labor_rate_cents)->toBe($before[$newDefault]);
 });
 
 test('labor categories default repairpal and warranty with adjust labor off', function () {

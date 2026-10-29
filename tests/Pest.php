@@ -28,6 +28,7 @@ require_once __DIR__.'/Support/IdentityHeaderFixture.php';
 require_once __DIR__.'/Support/LearnArkTraining.php';
 require_once __DIR__.'/Support/QueryBudget.php';
 require_once __DIR__.'/Support/QueryBudgetFixtures.php';
+require_once __DIR__.'/Support/TwilioSignedRequest.php';
 require_once __DIR__.'/Support/SmsConsentTestHelpers.php';
 require_once __DIR__.'/Support/InboundSmsTestHelpers.php';
 require_once __DIR__.'/Support/MessagingTransportTestHelpers.php';
@@ -38,6 +39,7 @@ require_once __DIR__.'/Support/HostedPlatformParts.php';
 require_once __DIR__.'/Support/HostedPlatformMail.php';
 require_once __DIR__.'/Support/HostedPlatformVoice.php';
 require_once __DIR__.'/Support/RteWorksheetFixture.php';
+require_once __DIR__.'/Support/HostedDragon.php';
 
 /*
 |--------------------------------------------------------------------------

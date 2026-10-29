@@ -23,11 +23,27 @@ class RepairOrderConcernUpdateController
             'verified_findings' => ['nullable', 'string'],
             'dtcs_summary' => ['nullable', 'string'],
             'recommendation' => ['nullable', 'string'],
-            'recommendation_intent' => ['required', Rule::enum(RecommendationIntent::class)],
+            'recommendation_intent' => ['nullable', Rule::enum(RecommendationIntent::class)],
+            'recommendation_posture' => ['nullable', Rule::in(['must_do', 'should_do', 'could_do', 'information_only'])],
             'return_mode' => ['nullable', Rule::in(['review'])],
         ]);
 
         unset($data['return_mode']);
+
+        if ($request->exists('recommendation_posture')) {
+            $posture = (string) ($data['recommendation_posture'] ?? '');
+            unset($data['recommendation_posture']);
+
+            if ($posture === '' || $posture === 'information_only') {
+                $data['information_only'] = $posture === 'information_only';
+                $data['recommendation_priority'] = null;
+            } else {
+                $data['information_only'] = false;
+                $data['recommendation_priority'] = $posture;
+            }
+        } else {
+            unset($data['recommendation_posture']);
+        }
 
         $concern->update($data);
         $documents->markDirtyForRepairOrder($repairOrder);

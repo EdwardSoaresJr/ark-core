@@ -19,7 +19,6 @@ use App\Ark\Operations\Telephony\TelephonyEndpointType;
 use App\Ark\Operations\Telephony\TelephonyProviderType;
 use App\Ark\Operations\Telephony\TelephonyRingSchedule;
 use App\Ark\Operations\Telephony\TelephonyStaffPhoneForRing;
-use App\Ark\Platform\PlatformConnection;
 use App\Ark\Platform\Voice\ManagedVoiceGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -135,11 +134,9 @@ class ShopCommunicationsSettingsController
             ->route('operations.settings.shop.edit', ['section' => 'customer-messaging'])
             ->with('status', 'Customer messaging settings saved.');
 
-        if (PlatformConnection::current()->isConnected()) {
-            $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
-            if (! $synced) {
-                $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
-            }
+        $synced = app(ArkMailIdentityClient::class)->syncShopReplyTo();
+        if (! $synced && filled(ShopSettings::current()->customerReplyToAddress())) {
+            $redirect->with('warning', 'Reply-To was saved here, but ARK Platform could not be updated right now. Try again from Settings → ARK Platform after Cloud is reachable.');
         }
 
         return $redirect;
@@ -223,9 +220,6 @@ class ShopCommunicationsSettingsController
             'endpoints.*.ring_delay_seconds' => ['nullable', 'integer', 'min:0', 'max:60'],
             'endpoints.*.presence_timeout_minutes' => ['nullable', 'integer', 'min:5', 'max:240'],
             'endpoints.*.enabled' => ['nullable', 'boolean'],
-            'openai_api_key' => ['nullable', 'string', 'max:512'],
-            'openai_transcription_model' => ['nullable', 'string', 'max:64'],
-            'openai_analysis_model' => ['nullable', 'string', 'max:64'],
             'message_actions' => ['nullable', 'array'],
             'message_actions.tow_company' => ['nullable', 'string', 'max:120'],
             'message_actions.tow_phone' => ['nullable', 'string', 'max:32'],
@@ -410,14 +404,6 @@ class ShopCommunicationsSettingsController
                     is_array($data['quick_reply_templates'] ?? null) ? $data['quick_reply_templates'] : [],
                 );
             }
-        }
-
-        if ($communicationsTab === 'recording' && ! $platformVoiceManaged) {
-            $this->mergeSecretField($settingsUpdates, 'openai_api_key', $data['openai_api_key'] ?? null);
-            $settingsUpdates['openai_transcription_model'] = $this->nullableTrimmedString($data['openai_transcription_model'] ?? null)
-                ?: 'whisper-1';
-            $settingsUpdates['openai_analysis_model'] = $this->nullableTrimmedString($data['openai_analysis_model'] ?? null)
-                ?: 'gpt-4o-mini';
         }
 
         $settings->persistTrusted($this->existingShopSettingColumns($settingsUpdates));

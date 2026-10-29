@@ -13,6 +13,6 @@ final class RepairOrderEstimateBroadcast
 
     public static function channelName(int $repairOrderId): string
     {
-        return 'operations.repair-orders.'.$repairOrderId;
+        return \App\Ark\Runtime\ShopChannel::name('operations.repair-orders.'.$repairOrderId);
     }
 }

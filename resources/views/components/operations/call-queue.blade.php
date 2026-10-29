@@ -48,7 +48,6 @@
     <div
         data-call-queue-root
         x-data="arkCallQueue()"
-        x-init="init()"
         @click.outside="open = false"
         @class([
             'ops-call-queue',

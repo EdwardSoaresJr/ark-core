@@ -4,12 +4,13 @@ namespace App\Ark\Operations\Documents;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 use Spatie\Browsershot\Browsershot;
 use Throwable;
 
 class HeadlessChromiumPdfRenderer implements PdfRenderer
 {
+    public const VIEW = 'operations.documents.pdf.document';
+
     public function __construct(
         private readonly EstimateDocumentPdfSnapshot $pdfSnapshot,
     ) {}
@@ -26,16 +27,25 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
 
         $path = DocumentPdfPath::for($document);
         $absolutePath = $this->prepareEstimateOutputPath($path);
-        $html = view('operations.documents.pdf.document', [
+        $html = view(self::VIEW, [
             'document' => $document,
             'snapshot' => $this->pdfSnapshot->resolve($document),
         ])->render();
 
         try {
             $this->assertRuntimeIsReady();
-            $this->browser($html)->savePdf($absolutePath);
-            @chmod($absolutePath, 0664);
+            // Readers of the stored PDF never see a partly written file.
+            $temporaryPath = $absolutePath.'.rendering-'.bin2hex(random_bytes(6)).'.pdf';
+            $this->browser($html)->savePdf($temporaryPath);
+            @chmod($temporaryPath, 0664);
+            if (! @rename($temporaryPath, $absolutePath)) {
+                throw new \RuntimeException('Rendered PDF could not be moved into place.');
+            }
         } catch (Throwable $exception) {
+            if (isset($temporaryPath)) {
+                @unlink($temporaryPath);
+            }
+
             if (! $document->isInvoice()) {
                 $document->forceFill([
                     'status' => 'failed',
@@ -83,11 +93,11 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
         $chrome = config('services.pdf.chrome_path');
 
         if (! is_string($node) || $node === '' || ! is_executable($node)) {
-            throw new RuntimeException('Estimate PDF runtime is missing Node. Set PDF_NODE_BINARY or run install-pdf-runtime.');
+            throw new PdfRuntimeUnavailable('Estimate PDF runtime is missing Node. Set PDF_NODE_BINARY or run install-pdf-runtime.');
         }
 
         if (! is_string($chrome) || $chrome === '' || ! is_executable($chrome)) {
-            throw new RuntimeException('Estimate PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
+            throw new PdfRuntimeUnavailable('Estimate PDF runtime is missing Chromium. Set PDF_CHROME_PATH or run: npx puppeteer browsers install chrome-headless-shell');
         }
     }
 
@@ -111,8 +121,9 @@ class HeadlessChromiumPdfRenderer implements PdfRenderer
             $browser->setChromePath((string) $chromePath);
         }
 
-        if ($includePath = config('services.pdf.include_path')) {
-            $browser->setIncludePath((string) $includePath);
+        $includePath = config('services.pdf.include_path');
+        if (is_string($includePath) && $includePath !== '' && preg_match('/[\s;`$|&<>"\'\\\\]/', $includePath) !== 1) {
+            $browser->setIncludePath($includePath);
         }
 
         if (config('services.pdf.no_sandbox')) {

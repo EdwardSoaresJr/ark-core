@@ -5,10 +5,10 @@
 
     $mode = $mode ?? 'edit';
     $isTerminal = $isTerminal ?? false;
-    $partsCatalogs = $partsCatalogs ?? [];
-
-    if ($partsCatalogs === [] && $mode === 'edit' && ! $isTerminal && isset($repairOrder)) {
-        $partsCatalogs = app(PartsCatalogConnections::class)->forRepairOrder($repairOrder, auth()->user());
+    if (! isset($partsCatalogs)) {
+        $partsCatalogs = $mode === 'edit' && ! $isTerminal && isset($repairOrder)
+            ? app(PartsCatalogConnections::class)->forRepairOrder($repairOrder, auth()->user())
+            : [];
     } elseif ($mode !== 'edit' || $isTerminal) {
         $partsCatalogs = [];
     }

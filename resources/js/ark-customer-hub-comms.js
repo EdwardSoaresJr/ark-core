@@ -1,4 +1,5 @@
 import { arkEchoEnabled, getArkEcho } from './ark-echo';
+import { arkRealtimeSync } from './ark-realtime-sync';
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -145,7 +146,7 @@ export function arkCustomerHubComms(config = {}) {
                 return;
             }
 
-            echo.private('operations.conversations')
+            echo.private(window.arkShopChannel('operations.conversations'))
                 .listen('.conversation.message.received', (payload) => {
                     if (Number(payload?.customer_id) !== Number(this.customerId)) {
                         return;
@@ -209,7 +210,7 @@ export function arkCustomerHubComms(config = {}) {
             };
 
             poll();
-            this.pollTimer = window.setInterval(poll, 2500);
+            this.pollTimer = arkRealtimeSync({ refresh: poll, fastMs: 2500, slowMs: 20000 });
         },
 
         ingestTimelineItem(item) {

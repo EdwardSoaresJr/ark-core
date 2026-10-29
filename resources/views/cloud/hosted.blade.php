@@ -1,6 +1,6 @@
 <x-cloud.shell title="We’ll host ARK for you">
     <div class="mx-auto max-w-3xl px-5 sm:px-8 py-20 sm:py-28 cloud-stage text-center">
-        <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">Hosted ARK</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--cloud-cerulean)]">ARK Shop</p>
         <h1 class="cloud-display mt-4 text-4xl sm:text-5xl font-semibold leading-tight">
             We’ll run the server. You run the shop.
         </h1>

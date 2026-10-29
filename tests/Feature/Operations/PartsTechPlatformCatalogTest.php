@@ -17,6 +17,12 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
+require_once __DIR__.'/../../Support/HostedPartsTechHttp.php';
+
+beforeEach(function (): void {
+    bindHostedPartsTechHttpClient();
+});
+
 function hostedPartsRepairOrder(): RepairOrder
 {
     $customer = Customer::query()->create([
