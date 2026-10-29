@@ -24,6 +24,12 @@ final class ConversationTurnPrecedence
             return ConversationWaitingOn::Shop;
         }
 
+        // A missed call that was later answered is finished. Marking the call
+        // worked, or placing an outbound call, does not replace the stored turn.
+        if ($this->missedCallWasLaterAnswered($conversation)) {
+            return ConversationWaitingOn::Customer;
+        }
+
         return $conversation->waiting_on ?? ConversationWaitingOn::Shop;
     }
 
@@ -64,6 +70,42 @@ final class ConversationTurnPrecedence
     }
 
     /**
+     * An ended answer after a missed call closes that missed-call turn.
+     * An answer that is still live stays in Needs attention and does not do this.
+     */
+    private function missedCallWasLaterAnswered(Conversation $conversation): bool
+    {
+        $missedAt = null;
+        $answeredEndedAt = null;
+
+        foreach ($this->inboundCallSessions($conversation) as $session) {
+            $at = $session->started_at ?? $session->created_at;
+
+            if (! $at instanceof CarbonInterface) {
+                continue;
+            }
+
+            if ($session->status === CallSessionStatus::Missed) {
+                if ($missedAt === null || $at->greaterThan($missedAt)) {
+                    $missedAt = $at;
+                }
+            }
+
+            $answered = $session->answered_at instanceof CarbonInterface
+                || $session->status === CallSessionStatus::Answered
+                || $session->hosted_outcome?->wasAnswered() === true;
+
+            if ($answered && $session->ended_at !== null && ($answeredEndedAt === null || $at->greaterThan($answeredEndedAt))) {
+                $answeredEndedAt = $at;
+            }
+        }
+
+        return $missedAt !== null
+            && $answeredEndedAt !== null
+            && $answeredEndedAt->greaterThan($missedAt);
+    }
+
+    /**
      * @return list<CarbonInterface>
      */
     private function inboundOccurrences(Conversation $conversation): array
@@ -82,6 +124,11 @@ final class ConversationTurnPrecedence
 
         foreach ($messages as $message) {
             if (! $message->occurred_at instanceof CarbonInterface) {
+                continue;
+            }
+
+            $metadata = is_array($message->metadata) ? $message->metadata : [];
+            if (($metadata['portal_estimate_view'] ?? false) === true) {
                 continue;
             }
 
@@ -140,6 +187,19 @@ final class ConversationTurnPrecedence
         foreach ($this->inboundCallSessions($conversation) as $session) {
             if ($session->worked_at instanceof CarbonInterface) {
                 $times[] = $session->worked_at->copy();
+            }
+
+            $answered = $session->answered_at instanceof CarbonInterface
+                || $session->status === CallSessionStatus::Answered
+                || $session->hosted_outcome?->wasAnswered() === true;
+
+            if (! $answered) {
+                continue;
+            }
+
+            $answeredAt = $session->answered_at ?? $session->started_at ?? $session->created_at;
+            if ($answeredAt instanceof CarbonInterface) {
+                $times[] = $answeredAt->copy();
             }
         }
 

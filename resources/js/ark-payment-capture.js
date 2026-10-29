@@ -220,17 +220,124 @@ export function applyTerminalPayment(payload) {
     };
 }
 
+function readerIsAvailable(reader) {
+    return Boolean(reader) && reader.available !== false;
+}
+
+/**
+ * The reader this browser should start with. A remembered reader is kept while it is offline
+ * or missing, so it comes back on its own. It is never swapped for another reader.
+ */
+export function chooseReader(readers, rememberedRef) {
+    const list = Array.isArray(readers) ? readers : [];
+    const remembered = typeof rememberedRef === 'string' ? rememberedRef : '';
+
+    if (remembered !== '') {
+        const known = list.find((reader) => reader?.device_ref === remembered);
+
+        return { deviceRef: remembered, rememberedUnavailable: ! readerIsAvailable(known) };
+    }
+
+    const available = list.filter(readerIsAvailable);
+    if (available.length === 1) {
+        return { deviceRef: String(available[0].device_ref ?? ''), rememberedUnavailable: false };
+    }
+
+    return { deviceRef: '', rememberedUnavailable: false };
+}
+
+/**
+ * The reader a payment may be sent to now, or null.
+ */
+export function payableReader(readers, deviceRef) {
+    const reader = (Array.isArray(readers) ? readers : []).find((candidate) => candidate?.device_ref === deviceRef);
+
+    return readerIsAvailable(reader) ? reader : null;
+}
+
+export function readerButtonLabel(amount, readers, deviceRef) {
+    const reader = (Array.isArray(readers) ? readers : []).find((candidate) => candidate?.device_ref === deviceRef);
+    const name = reader ? (reader.label || reader.device_ref) : '';
+
+    if (readerIsAvailable(reader)) {
+        return `Present $${amount} to ${name}`;
+    }
+    if (reader) {
+        return `${name} is offline`;
+    }
+    if (deviceRef) {
+        return 'Saved reader is not available';
+    }
+
+    return 'Choose a reader';
+}
+
+/**
+ * What the closed reader control shows: the shop's name first, the device id as secondary text.
+ */
+export function readerDisplay(readers, deviceRef) {
+    const reader = (Array.isArray(readers) ? readers : []).find((candidate) => candidate?.device_ref === deviceRef);
+
+    if (reader) {
+        const name = reader.label || reader.device_ref;
+
+        return {
+            primary: readerIsAvailable(reader) ? name : `${name} (offline)`,
+            secondary: name !== reader.device_ref ? reader.device_ref : '',
+        };
+    }
+    if (deviceRef) {
+        return { primary: 'Saved reader is not available', secondary: deviceRef };
+    }
+
+    return { primary: 'Choose a reader', secondary: '' };
+}
+
+export function readerNotice(readers, deviceRef) {
+    if (! deviceRef || payableReader(readers, deviceRef)) {
+        return '';
+    }
+    const reader = (Array.isArray(readers) ? readers : []).find((candidate) => candidate?.device_ref === deviceRef);
+
+    return reader
+        ? `${reader.label || reader.device_ref} is offline. Payment waits until it reconnects, or choose another reader.`
+        : 'The reader this browser used is not available. Choose another reader to continue.';
+}
+
+export function rememberedReader(storage, key) {
+    try {
+        return key ? (storage?.getItem(key) ?? '') : '';
+    } catch {
+        return '';
+    }
+}
+
+export function rememberReaderChoice(storage, key, deviceRef) {
+    try {
+        if (key && deviceRef) {
+            storage?.setItem(key, deviceRef);
+        }
+    } catch {
+        // Private browsing or blocked storage - the choice lasts for this page only.
+    }
+}
+
 /**
  * Take Payment rail - Terminal or Square Web Payments tokenized keyed entry.
  * Core never sees PAN/CVV; only source_token from Square.js.
  */
 export function arkPaymentCapture(config = {}) {
     const initialTerminal = applyTerminalPayment(config.terminal);
+    const readers = Array.isArray(config.readers) ? config.readers : [];
+    const readerStorageKey = String(config.readerStorageKey ?? '');
+    const initialReader = chooseReader(readers, rememberedReader(globalThis.localStorage, readerStorageKey));
 
     return {
         publicConfig: config.publicConfig ?? null,
         method: config.defaultMethod ?? 'keyed',
-        deviceRef: config.defaultDevice ?? '',
+        readers,
+        readerStorageKey,
+        deviceRef: initialReader.deviceRef,
         sourceToken: '',
         cardContainerId: config.cardContainerId ?? 'ark-payment-capture-card',
         card: null,
@@ -259,6 +366,28 @@ export function arkPaymentCapture(config = {}) {
         calendarMonth: paymentCalendarMonth(config.paidOn || config.paidDateToday),
         _terminalTimer: null,
         _terminalDestroyed: false,
+
+        selectedReader() {
+            return payableReader(this.readers, this.deviceRef);
+        },
+
+        rememberReader() {
+            if (this.selectedReader()) {
+                rememberReaderChoice(globalThis.localStorage, this.readerStorageKey, this.deviceRef);
+            }
+        },
+
+        presentToReaderLabel(amount) {
+            return readerButtonLabel(amount, this.readers, this.deviceRef);
+        },
+
+        readerNotice() {
+            return readerNotice(this.readers, this.deviceRef);
+        },
+
+        readerDisplay() {
+            return readerDisplay(this.readers, this.deviceRef);
+        },
 
         init() {
             this.$watch('open', () => this.syncPaymentLayer());
@@ -810,6 +939,12 @@ export function arkPaymentCapture(config = {}) {
         },
 
         async prepareAndSubmit(event) {
+            if (this.method === 'terminal' && ! this.selectedReader()) {
+                this.cardError = 'Choose a reader.';
+
+                return;
+            }
+
             this.busy = true;
             this.cardError = '';
             const form = event?.target instanceof HTMLFormElement

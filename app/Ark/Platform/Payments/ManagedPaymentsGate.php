@@ -4,19 +4,26 @@ namespace App\Ark\Platform\Payments;
 
 use App\Ark\Platform\PlatformConnection;
 
-/**
- * Hosted card capture goes through Platform. Self-host keeps Core Square.
- */
-final class ManagedPaymentsGate
+class ManagedPaymentsGate
 {
     public static function platformConnected(): bool
+    {
+        return app(self::class)->connected();
+    }
+
+    public function connected(): bool
     {
         return PlatformConnection::current()->isConnected();
     }
 
     public static function platformCapture(): bool
     {
-        if (! self::platformConnected()) {
+        return app(self::class)->captureEnabled();
+    }
+
+    public function captureEnabled(): bool
+    {
+        if (! $this->connected()) {
             return false;
         }
 

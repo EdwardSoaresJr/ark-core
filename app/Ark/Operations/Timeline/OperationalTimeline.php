@@ -11,22 +11,25 @@ use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 class OperationalTimeline
 {
+    private const REPAIR_ORDER_RELATIONS = [
+        'approvalEvents.revocation',
+        'communications.creator',
+        'communicationEvents.creator',
+        'concerns',
+        'lines',
+    ];
+
     /**
      * @return Collection<int, array{occurred_at: mixed, title: string, detail: string, actor: string, tone: string}>
      */
     public function forRepairOrder(RepairOrder $repairOrder, int $limit = 10): Collection
     {
-        $repairOrder->loadMissing([
-            'approvalEvents.revocation',
-            'communications.creator',
-            'communicationEvents.creator',
-            'concerns',
-            'lines',
-        ]);
+        $repairOrder->loadMissing(self::REPAIR_ORDER_RELATIONS);
 
         $events = OperationalEvent::query()
             ->with('actor:id,name')
@@ -99,6 +102,10 @@ class OperationalTimeline
      */
     public function forVehicleRepairOrders(Collection $repairOrders, int $limit = 8): Collection
     {
+        if ($repairOrders instanceof EloquentCollection) {
+            $repairOrders->loadMissing(self::REPAIR_ORDER_RELATIONS);
+        }
+
         return $repairOrders
             ->flatMap(fn (RepairOrder $repairOrder): Collection => $this->forRepairOrder($repairOrder, 4)
                 ->map(function (array $entry) use ($repairOrder): array {

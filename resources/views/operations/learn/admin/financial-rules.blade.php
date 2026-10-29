@@ -13,7 +13,7 @@
     />
 
     <h3>Labor and parts</h3>
-    <p>Default labor rate and categories set advisor line defaults - categories must match how the shop actually bills (diag, maintenance, engine, etc.).</p>
+    <p>Labor categories set advisor line defaults; the Default category's rate is the shop default labor rate - categories must match how the shop actually bills (diag, maintenance, engine, etc.).</p>
     <p>Parts matrices enforce sell pricing from cost - advisors should not discount matrix output routinely. Owner tune guide: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'parts-matrix-tune']) }}">Parts matrix tune</a>.</p>
     <p>Shop overhead and loaded cost: <a href="{{ route('operations.learn.show', ['role' => 'admin', 'article' => 'shop-overhead-setup']) }}">Shop overhead setup</a>.</p>
 

@@ -103,10 +103,10 @@ function paymentLinkAdvisor(): User
     return User::factory()->create()->assignRole(ArkRole::Advisor->value);
 }
 
-test('send payment link creates a pay token and sends through platform', function () {
+test('send payment link creates a pay token and sends through the shop sms port', function () {
     connectPaymentPortal();
-    $smsPosts = [];
-    fakePaymentPortalHttp(smsPosts: $smsPosts);
+    $sms = bindFakeOutboundSms();
+    fakePaymentPortalHttp();
 
     $advisor = paymentLinkAdvisor();
     $repairOrder = financialCloseoutRepairOrder();
@@ -117,29 +117,29 @@ test('send payment link creates a pay token and sends through platform', functio
     $response = $this->actingAs($advisor)
         ->postJson(route('operations.repair-orders.conversation-actions.send-payment', $repairOrder));
 
-    $response->assertOk()
-        ->assertJsonPath('message_id', null);
+    $response->assertOk();
 
-    expect($response->json('payment_url'))->toContain('/portal/pay/');
+    expect($response->json('payment_url'))->toContain('/portal/pay/')
+        ->and($response->json('message_id'))->not->toBeNull();
 
     $token = CustomerDocumentAccessToken::query()->sole();
-    $paymentReference = collect($smsPosts[0]['context'] ?? [])->firstWhere('type', 'payment_request');
+    $paymentReference = collect($sms->sent[0]['context'] ?? [])->firstWhere('type', 'payment_request');
 
-    expect($smsPosts)->toHaveCount(1)
-        ->and($smsPosts[0]['body'] ?? '')->toContain('/go/')
-        ->and($smsPosts[0]['body'] ?? '')->not->toContain('/portal/pay/')
-        ->and($smsPosts[0]['body'] ?? '')->toContain('Balance due')
+    expect($sms->sent)->toHaveCount(1)
+        ->and($sms->sent[0]['body'] ?? '')->toContain('/go/')
+        ->and($sms->sent[0]['body'] ?? '')->not->toContain('/portal/pay/')
+        ->and($sms->sent[0]['body'] ?? '')->toContain('Balance due')
         ->and($paymentReference['id'] ?? null)->toBe((string) $token->id)
         ->and($token->repair_order_id)->toBe($repairOrder->id)
         ->and($token->scope)->toBe(CustomerDocumentAccessToken::SCOPE_PAY_INVOICE)
-        ->and(ConversationMessage::query()->count())->toBe(0)
+        ->and(ConversationMessage::query()->count())->toBe(1)
         ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::InvoiceSent)->exists())->toBeTrue();
 });
 
 test('resending payment link reuses the same short url', function () {
     connectPaymentPortal();
-    $smsPosts = [];
-    fakePaymentPortalHttp(smsPosts: $smsPosts);
+    $sms = bindFakeOutboundSms();
+    fakePaymentPortalHttp();
 
     $advisor = paymentLinkAdvisor();
     $repairOrder = financialCloseoutRepairOrder();
@@ -155,15 +155,15 @@ test('resending payment link reuses the same short url', function () {
         ->postJson(route('operations.repair-orders.conversation-actions.send-payment', $repairOrder))
         ->assertOk();
 
-    $firstGo = (string) str($smsPosts[0]['body'] ?? '')->after('/go/');
-    $secondGo = (string) str($smsPosts[1]['body'] ?? '')->after('/go/');
+    $firstGo = (string) str($sms->sent[0]['body'] ?? '')->after('/go/');
+    $secondGo = (string) str($sms->sent[1]['body'] ?? '')->after('/go/');
 
-    expect($smsPosts)->toHaveCount(2)
+    expect($sms->sent)->toHaveCount(2)
         ->and($secondGo)->toBe($firstGo)
         ->and($firstGo)->not->toBe('')
         ->and(PortalShortLink::query()->count())->toBe(1)
         ->and(CustomerDocumentAccessToken::query()->count())->toBe(2)
-        ->and(ConversationMessage::query()->count())->toBe(0);
+        ->and(ConversationMessage::query()->count())->toBe(2);
 });
 
 test('send payment link requires issued invoice and balance due', function () {
@@ -229,8 +229,8 @@ test('ro review shows send payment link action when portal pay enabled', functio
 
 test('send payment link via sms ignores invalid customer email on file', function () {
     connectPaymentPortal();
-    $smsPosts = [];
-    fakePaymentPortalHttp(smsPosts: $smsPosts);
+    $sms = bindFakeOutboundSms();
+    fakePaymentPortalHttp();
 
     $advisor = paymentLinkAdvisor();
     $repairOrder = financialCloseoutRepairOrder();
@@ -241,20 +241,22 @@ test('send payment link via sms ignores invalid customer email on file', functio
     seedPaymentSmsCapablePhone('7195558080');
     issueFinalInvoiceFor($repairOrder);
 
-    $this->actingAs($advisor)
+    $response = $this->actingAs($advisor)
         ->postJson(route('operations.repair-orders.conversation-actions.send-payment', $repairOrder), [
             'delivery' => 'sms',
             'email' => 'not-an-email',
-        ])
-        ->assertOk()
-        ->assertJsonPath('message_id', null);
+        ]);
+
+    $response->assertOk();
+
+    expect($response->json('message_id'))->not->toBeNull();
 
     $mailPosts = collect(Http::recorded())
         ->filter(fn (array $pair): bool => str_contains($pair[0]->url(), '/mail/messages/transactional'));
 
-    expect($smsPosts)->toHaveCount(1)
+    expect($sms->sent)->toHaveCount(1)
         ->and($mailPosts)->toHaveCount(0)
-        ->and(ConversationMessage::query()->count())->toBe(0);
+        ->and(ConversationMessage::query()->count())->toBe(1);
 });
 
 test('send payment link via email creates conversation message', function () {
@@ -342,6 +344,7 @@ test('staff payment portal preview shows customer page without enabling card ent
 test('staff payment preview token does not invalidate existing customer pay link', function () {
     connectPaymentPortal();
     fakePaymentPortalHttp();
+    bindFakeOutboundSms();
 
     $advisor = paymentLinkAdvisor();
     $repairOrder = financialCloseoutRepairOrder();

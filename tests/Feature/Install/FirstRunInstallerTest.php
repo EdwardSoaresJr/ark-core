@@ -49,7 +49,7 @@ it('rejects arbitrary environment keys in the writer', function () {
 });
 
 it('preserves unrelated env lines when writing allowlisted keys', function () {
-    $path = base_path('.env');
+    $path = app()->environmentFilePath();
     $original = is_file($path) ? File::get($path) : null;
     File::put($path, "APP_NAME=ARK\nCUSTOM_KEEP=yes\nDB_HOST=old\n");
 

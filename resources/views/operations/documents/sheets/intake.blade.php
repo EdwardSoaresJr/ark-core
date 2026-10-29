@@ -38,12 +38,15 @@
             <p class="sheet-section-heading">Customer Concerns</p>
 
             @foreach ($sheet['concerns'] as $concern)
-                <article class="concern concern--intent-{{ $concern['recommendation_intent'] ?? 'maintenance' }}">
+                @php
+                    $presentation = \App\Ark\Operations\RepairOrders\RecommendationPresentation::forSnapshot($concern);
+                @endphp
+                <article class="concern {{ $presentation->pdfScopeClass() }}">
                     <div class="concern-header">
                         <div class="concern-header-grid">
                             <h2 class="concern-header-title">{{ $concern['summary'] }}</h2>
-                            @if (! empty($concern['recommendation_intent_label']))
-                                <p class="concern-header-meta concern-header-meta--{{ $concern['recommendation_intent'] ?? 'maintenance' }}">{{ $concern['recommendation_intent_label'] }}</p>
+                            @if ($presentation->staffLabel())
+                                <p class="concern-header-meta {{ $presentation->badgeClass() }}">{{ $presentation->staffLabel() }}</p>
                             @endif
                         </div>
                     </div>

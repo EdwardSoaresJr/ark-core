@@ -43,8 +43,8 @@
 
     <p>Full writing guide: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'repair-actions']) }}">Repair actions - scope vs repair action vs labor</a>.</p>
 
-    <h3>Recommendation status</h3>
-    <p>Status is advisor posture - <strong>what action the customer should take</strong> about this condition. It is not part type, part source, or warranty.</p>
+    <h3>Priority and work type</h3>
+    <p>Priority is what the customer should do about this concern. Work type says what kind of job it is. Inspection condition (Pass, Monitor, Needs Attention, Fail) stays on the inspection.</p>
     <table class="ops-learn-table">
         <thead>
             <tr>
@@ -54,28 +54,32 @@
         </thead>
         <tbody>
             <tr>
-                <td>Immediate Attention</td>
-                <td>Safety, breakdown risk, or drivability - address before return or further driving</td>
+                <td>Must Do</td>
+                <td>Address before the vehicle returns or is driven further</td>
             </tr>
             <tr>
-                <td>Plan Soon</td>
-                <td>Meaningful wear or failure risk - schedule in the near term</td>
+                <td>Should Do</td>
+                <td>Schedule in the near term</td>
             </tr>
             <tr>
-                <td>Maintenance</td>
-                <td>Interval service, fluids, filters, and planned upkeep</td>
-            </tr>
-            <tr>
-                <td>Diagnostic</td>
-                <td>Investigation, testing, or quoting after findings</td>
-            </tr>
-            <tr>
-                <td>Repair Verification</td>
-                <td>Post-repair checks or quality verification</td>
+                <td>Could Do</td>
+                <td>Worth doing when time and budget allow</td>
             </tr>
             <tr>
                 <td>Information Only</td>
-                <td>Observation or context - no repair recommendation yet</td>
+                <td>Observation or context - no recommended action, and no priority</td>
+            </tr>
+            <tr>
+                <td>Diagnostic</td>
+                <td>Work type. More testing is needed. It is not a priority.</td>
+            </tr>
+            <tr>
+                <td>Maintenance</td>
+                <td>Work type. Interval service and planned upkeep. It is not a priority.</td>
+            </tr>
+            <tr>
+                <td>Repair Verification</td>
+                <td>Work type. Confirm completed work. It is not a priority.</td>
             </tr>
         </tbody>
     </table>
@@ -88,7 +92,7 @@
     <p>Pre-approved scopes show read-only on the portal; customer status reflects visible scope state, not internal RO labels. See <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'customer-authorization']) }}">Customer authorization</a>.</p>
 
     <h3>Layered story on the PDF</h3>
-    <pre class="ops-learn-code">IMMEDIATE ATTENTION
+    <pre class="ops-learn-code">MUST DO
 Overheating                          ← scope (problem)
   Finding: Coolant leak at pump.
   Recommendation: Replace pump and radiator; refill system.

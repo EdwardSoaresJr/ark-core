@@ -138,11 +138,14 @@ class TelephonyRingGroup
 
     private function legStatusCallbackUrl(?string $parentCallSid, int $endpointId): string
     {
-        if ($parentCallSid !== null && $parentCallSid !== '' && $endpointId > 0) {
+        if ($parentCallSid === null || $parentCallSid === '' || $endpointId <= 0) {
             return '';
         }
 
-        return '';
+        return route('webhooks.communications.twilio.voice.ring-status', [
+            'parentCallSid' => $parentCallSid,
+            'endpointId' => $endpointId,
+        ]);
     }
 
     private function shouldRingEndpoint(TelephonyEndpoint $endpoint, TelephonyCallFlowSettings $flow, ?ShopSettings $settings = null): bool

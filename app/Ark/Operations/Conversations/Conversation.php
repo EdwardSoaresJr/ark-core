@@ -3,12 +3,14 @@
 namespace App\Ark\Operations\Conversations;
 
 use App\Ark\Growth\Models\GrowthSession;
+use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'growth_session_id',
@@ -73,6 +75,14 @@ class Conversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(ConversationMessage::class);
+    }
+
+    public function latestInboundMessage(): HasOne
+    {
+        return $this->hasOne(ConversationMessage::class)->ofMany(
+            ['occurred_at' => 'max', 'id' => 'max'],
+            fn (Builder $query) => $query->where('direction', OperationalCommunicationDirection::Inbound->value),
+        );
     }
 
     public function links(): HasMany

@@ -82,7 +82,7 @@ No login illustrations or background images were migrated (ARK-SMS apt-book `boo
 | Android icons | `android/ark-*.png` | Registry only |
 | iOS icons | `ios/ark-*.png` | `Branding::appleTouchIcon()` uses 180×180 |
 
-**Note:** `manifest.json` icon paths still reference `/icons/ark-*.png` as in ARK-SMS original (preserved verbatim). PWA icon files live under `pwa/`.
+**Note:** `manifest.json` icon paths are relative, `pwa/ark-*.png`, so they resolve beside the manifest. The ARK-SMS original pointed at `/icons/ark-*.png`, which does not exist.
 
 ---
 
@@ -91,7 +91,6 @@ No login illustrations or background images were migrated (ARK-SMS apt-book `boo
 | Asset | Location | Classification |
 |-------|----------|----------------|
 | Demo Auto Repair seed logo | `resources/seed-assets/operations/demo-auto-logo.webp` | Demo shop logo |
-| Laravel Breeze SVG | `components/application-logo.blade.php` | **Unused placeholder** |
 | Laravel welcome SVG | `welcome.blade.php` | **Orphaned** |
 | Design reference captures | local only, not in this repository | UX research |
 

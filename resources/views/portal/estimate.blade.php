@@ -2,7 +2,7 @@
     @php
         $shopPhone = $snapshot['shop']['phone_display'] ?? $snapshot['shop']['phone'] ?? null;
         $shopPhoneTel = preg_replace('/\D+/', '', (string) ($snapshot['shop']['phone'] ?? $shopPhone ?? ''));
-        $concerns = \App\Ark\Operations\RepairOrders\RecommendationIntent::sortedSnapshotConcerns($snapshot['concerns'] ?? []);
+        $concerns = \App\Ark\Operations\RepairOrders\RecommendationPresentation::sortedSnapshotConcerns($snapshot['concerns'] ?? []);
         $totals = $snapshot['totals'] ?? [];
         $totalsBreakdown = \App\Ark\Operations\Financial\CustomerEstimateTotalsPresentation::fromSnapshotTotals(
             $totals,

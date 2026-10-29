@@ -15,6 +15,8 @@ final class ReportingStandardsV1
 {
     public const INCOMPLETE_DATA = 'Incomplete data';
 
+    public const AVERAGE_DAYS_PER_MONTH = 30.437;
+
     public static function percentOrIncomplete(bool $complete, ?int $percent): string
     {
         if (! $complete) {
@@ -84,6 +86,15 @@ final class ReportingStandardsV1
         }
 
         return (int) round($approvedPreTaxServiceSalesCents / $openRepairOrderCount);
+    }
+
+    /**
+     * A monthly amount spread over shop-local calendar days at an average month length,
+     * so a 30-day month is slightly under the monthly amount and a 31-day month slightly over.
+     */
+    public static function proratedMonthlyCents(int $monthlyCents, int $days): int
+    {
+        return (int) round($monthlyCents * ($days / self::AVERAGE_DAYS_PER_MONTH));
     }
 
     public static function cashCollectedCents(int $receiptCents, int $refundCents): int

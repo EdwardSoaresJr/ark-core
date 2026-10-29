@@ -10,6 +10,7 @@ use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderEstimateVersion;
@@ -716,10 +717,11 @@ test('scope header shows recommendation intent and can update it inline', functi
         ->assertSee('id="workspace-intent-only-'.$concern->id.'"', false);
 
     $this->patch(route('operations.repair-orders.concerns.recommendation-intent', [$repairOrder, $concern]), [
-        'recommendation_intent' => 'immediate_attention',
+        'recommendation_posture' => 'must_do',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#concern-'.$concern->id);
 
-    expect($concern->fresh()->recommendationIntent())->toBe(RecommendationIntent::ImmediateAttention);
+    expect($concern->fresh()->recommendationPriority())->toBe(RecommendationPriority::MustDo)
+        ->and($concern->fresh()->recommendationIntent())->toBe(RecommendationIntent::Maintenance);
 });
 
 test('new scope intake infers entry kind and defaults recommendation status server-side', function () {
@@ -952,7 +954,7 @@ test('concerns carry compact diagnostic narrative into the estimate workspace', 
         'verified_findings' => 'Cylinder 3 misfire confirmed during loaded road test.',
         'dtcs_summary' => "P0303 current\nP0171 pending",
         'recommendation' => 'Replace failed ignition coil and retest system.',
-        'recommendation_intent' => 'immediate_attention',
+        'recommendation_intent' => 'diagnostic',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#concern-'.RepairOrderConcern::query()->latest('id')->value('id'));
 
     $concern = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->firstOrFail();
@@ -1001,7 +1003,7 @@ test('the shop can refine concern diagnostic narrative without touching estimate
         'verified_findings' => 'Front rotor pulsation verified on road test.',
         'dtcs_summary' => null,
         'recommendation' => 'Replace front pads and rotors, then retest.',
-        'recommendation_intent' => 'immediate_attention',
+        'recommendation_posture' => 'must_do',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#estimate-lines');
 
     $concern->refresh();
@@ -1009,7 +1011,8 @@ test('the shop can refine concern diagnostic narrative without touching estimate
     expect($concern->summary)->toBe('Brake vibration under deceleration')
         ->and($concern->verified_findings)->toBe('Front rotor pulsation verified on road test.')
         ->and($concern->recommendation)->toBe('Replace front pads and rotors, then retest.')
-        ->and($concern->recommendation_intent)->toBe(RecommendationIntent::ImmediateAttention)
+        ->and($concern->recommendationPriority())->toBe(RecommendationPriority::MustDo)
+        ->and($concern->recommendationIntent())->toBe(RecommendationIntent::Maintenance)
         ->and(RepairOrderLine::query()->where('repair_order_concern_id', $concern->id)->count())->toBe(1);
 });
 

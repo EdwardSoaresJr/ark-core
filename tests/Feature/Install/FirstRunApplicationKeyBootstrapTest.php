@@ -19,7 +19,7 @@ afterEach(function () {
  */
 function arkSwapEnvForKeyTest(string $contents): array
 {
-    $path = base_path('.env');
+    $path = app()->environmentFilePath();
     $original = is_file($path) ? File::get($path) : null;
     File::put($path, $contents);
 
@@ -116,7 +116,7 @@ it('does not regenerate APP_KEY when the application is already installed', func
 });
 
 it('fails closed when APP_KEY is missing and the environment is immutable', function () {
-    $path = base_path('.env');
+    $path = app()->environmentFilePath();
     $original = is_file($path) ? File::get($path) : null;
     if (! is_file($path)) {
         File::put($path, "APP_KEY=\n");
@@ -163,7 +163,7 @@ it('reuses a Docker-style install app_key file without rotating', function () {
 
 it('applies a durable Docker app_key on an immutable host without writing .env', function () {
     $existing = 'base64:'.base64_encode(random_bytes(32));
-    $path = base_path('.env');
+    $path = app()->environmentFilePath();
     $original = is_file($path) ? File::get($path) : null;
     if (! is_file($path)) {
         File::put($path, "APP_NAME=ARK\nAPP_KEY=\n");

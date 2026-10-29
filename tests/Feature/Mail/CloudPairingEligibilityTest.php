@@ -7,6 +7,9 @@ use Illuminate\Support\Str;
 
 it('lets a completed installation start Cloud pairing without a Core rollout flag', function () {
     $this->app['env'] = 'production';
+    // Production-mode assertions must use installed state in this process's fixture,
+    // rather than relying on the developer checkout's installation marker.
+    InstallationState::markInstalled();
 
     config([
         'services.ark_platform.base_url' => 'https://cloud.example.test',

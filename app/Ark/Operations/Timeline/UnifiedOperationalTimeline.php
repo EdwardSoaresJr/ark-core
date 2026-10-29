@@ -201,13 +201,17 @@ final class UnifiedOperationalTimeline
             ));
         }
 
+        $eventRepairOrders = $this->repairOrdersForOperationalEvents($scope['operational_events']);
+
         foreach ($scope['operational_events'] as $operationalEvent) {
             $mapped = $this->operationalEventMapper->map($operationalEvent);
 
             if ($mapped instanceof OperationalEventEntry) {
                 $entries->push($this->withVisitAttribution(
                     $mapped,
-                    $this->repairOrderForOperationalEvent($operationalEvent),
+                    $operationalEvent->aggregate_type === RepairOrder::class
+                        ? ($eventRepairOrders[(int) $operationalEvent->aggregate_id] ?? null)
+                        : null,
                 ));
             }
         }
@@ -294,13 +298,24 @@ final class UnifiedOperationalTimeline
         ]);
     }
 
-    private function repairOrderForOperationalEvent(OperationalEvent $event): ?RepairOrder
+    /**
+     * @param  iterable<OperationalEvent>  $events
+     * @return array<int, RepairOrder>
+     */
+    private function repairOrdersForOperationalEvents(iterable $events): array
     {
-        if ($event->aggregate_type !== RepairOrder::class) {
-            return null;
+        $ids = collect($events)
+            ->filter(fn (OperationalEvent $event): bool => $event->aggregate_type === RepairOrder::class)
+            ->map(fn (OperationalEvent $event): int => (int) $event->aggregate_id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return [];
         }
 
-        return RepairOrder::query()->with('vehicle')->find($event->aggregate_id);
+        return RepairOrder::query()->with('vehicle')->whereIn('id', $ids)->get()->keyBy('id')->all();
     }
 
     /**

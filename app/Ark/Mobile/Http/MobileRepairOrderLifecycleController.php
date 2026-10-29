@@ -4,6 +4,7 @@ namespace App\Ark\Mobile\Http;
 
 use App\Ark\Mobile\MobileStaffAccess;
 use App\Ark\Mobile\RepairOrderWorkspaceProjection;
+use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
@@ -33,6 +34,7 @@ final class MobileRepairOrderLifecycleController
         RepairOrderLifecycleTransition $lifecycle,
         RepairOrderWorkspaceProjection $workspace,
         RepairOrderConcurrency $concurrency,
+        EstimateDocumentService $documents,
     ): JsonResponse {
         $user = $request->user();
 
@@ -91,8 +93,15 @@ final class MobileRepairOrderLifecycleController
 
         $this->recordRepairOrderEstimateMutation($repairOrder->fresh(), $user);
 
-        return response()->json([
-            'workspace' => $workspace->forRepairOrder($repairOrder->fresh(), $user),
-        ]);
+        $repairOrder = $repairOrder->fresh();
+        $response = [
+            'workspace' => $workspace->forRepairOrder($repairOrder, $user),
+        ];
+
+        if ($repairOrder->isTerminal() && $documents->hasFailedPdfForRepairOrder($repairOrder)) {
+            $response['warning'] = 'The final estimate PDF could not be generated. Open the estimate PDF to try again.';
+        }
+
+        return response()->json($response);
     }
 }

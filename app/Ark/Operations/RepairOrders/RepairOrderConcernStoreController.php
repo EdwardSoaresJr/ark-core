@@ -76,9 +76,13 @@ class RepairOrderConcernStoreController
         $data['scope_entry_kind'] = $entryKind->value;
         $data['summary'] = $scopeSummary;
         $data['position'] = ((int) $repairOrder->concerns()->max('position')) + 1;
-        $data['recommendation_intent'] = filled($data['recommendation_intent'] ?? null)
-            ? $data['recommendation_intent']
-            : $entryKind->defaultRecommendationIntent()->value;
+        $data = [
+            ...$data,
+            ...ConcernRecommendationDefaults::forEntryKind(
+                $entryKind,
+                filled($data['recommendation_intent'] ?? null) ? (string) $data['recommendation_intent'] : null,
+            ),
+        ];
 
         unset($data['observed_summary'], $data['scope_entry_concept_id']);
 
@@ -107,7 +111,9 @@ class RepairOrderConcernStoreController
             payload: [
                 'concern_id' => $concern->id,
                 'scope_entry_kind' => $concern->entryKind()->value,
-                'recommendation_intent' => $concern->recommendationIntent()->value,
+                'recommendation_intent' => $concern->recommendationIntent()?->value,
+                'recommendation_priority' => $concern->recommendationPriority()?->value,
+                'information_only' => $concern->isInformationOnly(),
                 'position' => $concern->position,
             ],
         );

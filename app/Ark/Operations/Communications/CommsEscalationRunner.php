@@ -115,6 +115,8 @@ class CommsEscalationRunner
             ->notContacted()
             ->where('source', LeadSource::Website)
             ->where('created_at', '<=', $cutoff)
+            // Never replay old leads; only work that arrived inside the live queue window can escalate.
+            ->where('created_at', '>=', now()->subHours(CommunicationsQueueWindow::HOURS))
             ->orderBy('created_at')
             ->limit(25)
             ->get();

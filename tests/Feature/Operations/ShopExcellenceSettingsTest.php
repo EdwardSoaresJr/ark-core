@@ -69,5 +69,118 @@ test('admin can open owner targets settings section', function () {
     $this->get(route('operations.settings.shop.edit', ['section' => 'excellence']))
         ->assertOk()
         ->assertSee('Owner Targets & Reporting')
-        ->assertSee('Monthly fixed costs');
+        ->assertSee('Monthly fixed costs')
+        ->assertSee('name="monthly_fixed_costs"', false)
+        ->assertSee('its monthly total is used here instead.', false)
+        ->assertSee('the monthly total replaces Owner Targets monthly fixed costs.', false)
+        ->assertDontSee('Usually matches', false)
+        ->assertSee('Percent of technician labor cost. Not used when Monthly payroll tax is above $0.')
+        ->assertSee('When above $0, used instead of the payroll tax reserve %.')
+        ->assertDontSee('Optional override');
+});
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function ownerTargetsPayload(array $overrides = []): array
+{
+    return array_merge([
+        'aro_target' => '800.00',
+        'parts_margin_target_percent' => 56,
+        'labor_sales_target_percent' => 55,
+        'parts_sales_target_percent' => 45,
+        'net_profit_target_percent' => 22,
+        'income_tax_reserve_percent' => 28,
+        'payroll_tax_reserve_percent' => 12,
+        'owner_digest_time' => '17:30',
+    ], $overrides);
+}
+
+function saveOverheadWorksheet(array $fixedCostLines): void
+{
+    ShopSettings::current()->update([
+        'shop_overhead_state' => [
+            'fixed_cost_lines' => $fixedCostLines,
+            'technician_count' => '2',
+        ],
+    ]);
+}
+
+test('owner targets show worksheet monthly fixed costs read only with a link to the worksheet', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    saveOverheadWorksheet([
+        ['label' => 'Rent', 'amount' => '3200', 'period' => 'monthly'],
+        ['label' => 'Insurance', 'amount' => '1200', 'period' => 'annual'],
+    ]);
+
+    $this->get(route('operations.settings.shop.edit', ['section' => 'excellence']))
+        ->assertOk()
+        ->assertSee('3,300.00')
+        ->assertSee('Comes from the fixed costs in the', false)
+        ->assertSee(route('operations.settings.shop.edit', ['section' => 'overhead']), false)
+        ->assertDontSee('name="monthly_fixed_costs"', false);
+});
+
+test('saving owner targets keeps the worksheet monthly fixed costs and ignores a posted override', function (array $posted) {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    saveOverheadWorksheet([
+        ['label' => 'Rent', 'amount' => '3200', 'period' => 'monthly'],
+    ]);
+
+    $this->patch(route('operations.settings.shop.excellence.update'), ownerTargetsPayload($posted))
+        ->assertRedirect(route('operations.settings.shop.edit', ['section' => 'excellence']))
+        ->assertSessionHasNoErrors();
+
+    expect(ShopExcellenceTargets::current()['monthly_fixed_costs_cents'])->toBe(320000)
+        ->and(ShopExcellenceTargets::monthlyFixedCostsCents())->toBe(320000)
+        ->and(ShopExcellenceTargets::current()['aro_target_cents'])->toBe(80000);
+})->with([
+    'form as rendered, no field' => [[]],
+    'crafted override' => [['monthly_fixed_costs' => '99999.00']],
+    'crafted blank' => [['monthly_fixed_costs' => '']],
+]);
+
+test('owner targets keep monthly fixed costs editable when the worksheet has no fixed costs', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
+
+    saveOverheadWorksheet([]);
+
+    $this->get(route('operations.settings.shop.edit', ['section' => 'excellence']))
+        ->assertOk()
+        ->assertSee('name="monthly_fixed_costs"', false);
+
+    $this->patch(route('operations.settings.shop.excellence.update'), ownerTargetsPayload([
+        'monthly_fixed_costs' => '18000.00',
+    ]))->assertSessionHasNoErrors();
+
+    expect(ShopExcellenceTargets::monthlyFixedCostsCents())->toBe(1800000);
+
+    $this->patch(route('operations.settings.shop.excellence.update'), ownerTargetsPayload([
+        'monthly_fixed_costs' => '',
+    ]))->assertSessionHasNoErrors();
+
+    expect(ShopExcellenceTargets::monthlyFixedCostsCents())->toBeNull();
+});
+
+test('reports read the worksheet monthly fixed costs even when an older override was stored', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+
+    ShopExcellenceTargets::persist(array_merge(
+        ShopExcellenceTargets::DEFAULTS,
+        ['monthly_fixed_costs_cents' => 999900],
+    ));
+
+    expect(ShopExcellenceTargets::monthlyFixedCostsCents())->toBe(999900);
+
+    saveOverheadWorksheet([
+        ['label' => 'Rent', 'amount' => '3200', 'period' => 'monthly'],
+    ]);
+
+    expect(ShopExcellenceTargets::monthlyFixedCostsCents())->toBe(320000);
 });

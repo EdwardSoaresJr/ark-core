@@ -14,6 +14,12 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Support\Facades\Http;
 
+require_once __DIR__.'/../../Support/HostedPartsTechHttp.php';
+
+beforeEach(function (): void {
+    bindHostedPartsTechHttpClient();
+});
+
 /**
  * @return array<string, mixed>
  */

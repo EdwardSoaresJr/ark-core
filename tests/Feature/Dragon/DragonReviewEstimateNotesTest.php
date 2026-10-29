@@ -1,13 +1,14 @@
 <?php
 
-use App\Ark\Dragon\Assist\DragonAssistProjection;
-use App\Ark\Dragon\Assist\DragonAssistRequest;
-use App\Ark\Dragon\Assist\DragonAssistStatus;
-use App\Ark\Dragon\Assist\DragonAssistTaskType;
-use App\Ark\Dragon\Assist\RequestDragonAssistAction;
-use App\Ark\Dragon\ReviewEstimateNotes\RequestReviewEstimateNotesAction;
-use App\Ark\Dragon\ReviewEstimateNotes\ReviewEstimateNotesContextBuilder;
-use App\Ark\Dragon\ReviewEstimateNotes\ReviewEstimateNotesResultSchema;
+
+use Ark\Saas\Dragon\Assist\DragonAssistProjection;
+use Ark\Saas\Dragon\Assist\DragonAssistRequest;
+use Ark\Saas\Dragon\Assist\DragonAssistStatus;
+use Ark\Saas\Dragon\Assist\DragonAssistTaskType;
+use Ark\Saas\Dragon\Assist\RequestDragonAssistAction;
+use Ark\Saas\Dragon\ReviewEstimateNotes\RequestReviewEstimateNotesAction;
+use Ark\Saas\Dragon\ReviewEstimateNotes\ReviewEstimateNotesContextBuilder;
+use Ark\Saas\Dragon\ReviewEstimateNotes\ReviewEstimateNotesResultSchema;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -16,6 +17,13 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Validation\ValidationException;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK Shop.');
+    }
+    migrateHostedDragon();
+});
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -135,7 +143,7 @@ test('completed review estimate notes enriches proposals without mutating narrat
     $safeCustomerStates = 'Customer reports squeal when stopping.';
     $droppedFindings = 'Pads are worn.'; // drops 2 mm / 4 mm / LF / RF
 
-    app(\App\Ark\Dragon\Agent\Providers\FakeDragonProvider::class)->structuredQueue = [[
+    app(\Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider::class)->structuredQueue = [[
         'summary' => 'Brake concern is stronger than battery.',
         'strengths' => ['Brake findings include measurements'],
         'gaps' => ['Battery missing verified findings', 'Brake missing recommendation'],
@@ -218,7 +226,7 @@ test('apply review estimate notes proposal writes field and supports revert', fu
                     'original_text' => $original,
                     'proposed_text' => $proposal,
                     'reason' => 'Clarify',
-                    'original_hash' => \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder::hashText($original),
+                    'original_hash' => \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder::hashText($original),
                     'applyable' => true,
                     'rejected_reason' => null,
                 ],
@@ -238,7 +246,7 @@ test('apply review estimate notes proposal writes field and supports revert', fu
 
     expect($brake->fresh()->verified_findings)->toBe($proposal);
 
-    $app = \App\Ark\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication::query()->latest('id')->first();
+    $app = \Ark\Saas\Dragon\ServiceAdvisor\DragonServiceAdvisorApplication::query()->latest('id')->first();
     expect($app)->not->toBeNull()
         ->and($app->dragon_assist_request_id)->toBe($assist->id);
 
@@ -366,7 +374,7 @@ test('apply visit_reason and line_note proposals from whole-ro review', function
                     'original_text' => $visitOriginal,
                     'proposed_text' => $visitProposal,
                     'reason' => 'Tighten',
-                    'original_hash' => \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder::hashText($visitOriginal),
+                    'original_hash' => \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder::hashText($visitOriginal),
                     'applyable' => true,
                     'rejected_reason' => null,
                 ],
@@ -377,7 +385,7 @@ test('apply visit_reason and line_note proposals from whole-ro review', function
                     'original_text' => $lineOriginal,
                     'proposed_text' => $lineProposal,
                     'reason' => 'Tighten',
-                    'original_hash' => \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder::hashText($lineOriginal),
+                    'original_hash' => \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorContextBuilder::hashText($lineOriginal),
                     'applyable' => true,
                     'rejected_reason' => null,
                 ],
@@ -464,7 +472,7 @@ test('scoped review drops visit_reason proposals and out-of-scope line notes', f
         ],
     ];
 
-    $enriched = (new \App\Ark\Dragon\ReviewEstimateNotes\EnrichReviewEstimateNotesProposals)->enrich($assist, $result);
+    $enriched = (new \Ark\Saas\Dragon\ReviewEstimateNotes\EnrichReviewEstimateNotesProposals)->enrich($assist, $result);
     expect($enriched['proposals'])->toHaveCount(2);
     $byLine = collect($enriched['proposals'])->keyBy('line_id');
     expect($byLine[$brakeLine->id]['applyable'])->toBeTrue()
@@ -517,7 +525,7 @@ test('scoped review estimate notes only includes one concern and filters proposa
             ],
         ],
     ];
-    $enriched = (new \App\Ark\Dragon\ReviewEstimateNotes\EnrichReviewEstimateNotesProposals)->enrich($assist, $result);
+    $enriched = (new \Ark\Saas\Dragon\ReviewEstimateNotes\EnrichReviewEstimateNotesProposals)->enrich($assist, $result);
     expect($enriched['proposals'])->toHaveCount(1)
         ->and($enriched['proposals'][0]['concern_id'])->toBe($brake->id);
 });

@@ -5,7 +5,7 @@
     $sendProjection = app(RepairOrderConversationSendProjection::class)->forRepairOrder($repairOrder, auth()->user());
     $estimateSend = $sendProjection['estimate'];
 
-    $canShare = ! $isTerminal && $repairOrder->lines->isNotEmpty();
+    $canShare = $repairOrder->lines->isNotEmpty();
     $portalLinkUrl = route('operations.repair-orders.estimate-portal-link', $repairOrder);
     $sendPortalUrl = route('operations.repair-orders.conversation-actions.send-estimate', $repairOrder);
     $vehicleHistoryUrl = $repairOrder->vehicle

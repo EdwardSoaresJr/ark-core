@@ -37,7 +37,7 @@ final class InstallerEnvironmentWriter
 
     public function envPath(): string
     {
-        return base_path('.env');
+        return app()->environmentFilePath();
     }
 
     public function isWritable(): bool
@@ -47,7 +47,7 @@ final class InstallerEnvironmentWriter
             return is_writable($path);
         }
 
-        return is_writable(base_path());
+        return is_writable(dirname($path));
     }
 
     public function mode(): string

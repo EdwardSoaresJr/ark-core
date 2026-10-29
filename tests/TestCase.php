@@ -5,16 +5,28 @@ namespace Tests;
 use App\Ark\Install\InstallationState;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Settings\ShopSettingsSchema;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Schema;
+use Tests\Support\AssertDisposableTestDatabase;
+use Tests\Support\TestEnvironment;
 
 abstract class TestCase extends BaseTestCase
 {
+    public function createApplication()
+    {
+        TestEnvironment::initialize();
+        $app = require dirname(__DIR__).'/bootstrap/app.php';
+        TestEnvironment::configureApplication($app);
+        $this->traitsUsedByTest = class_uses_recursive(static::class);
+        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+        return $app;
+    }
+
     protected function setUp(): void
     {
-        // PHPUnit writes forced phpunit.xml values to $_ENV and putenv, not $_SERVER.
-        // Copy them before boot so a shell rehearsal database cannot stay selected.
-        \Tests\Support\AssertDisposableTestDatabase::reconcilePhpUnitEnvironmentIntoProcess();
+        AssertDisposableTestDatabase::reconcilePhpUnitEnvironmentIntoProcess();
 
         parent::setUp();
 
@@ -37,6 +49,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         ShopSettings::forgetCurrent();
+        ShopSettingsSchema::flush();
 
         $settings = ShopSettings::current();
         $updates = [

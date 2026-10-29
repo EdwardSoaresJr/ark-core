@@ -38,7 +38,6 @@ public function updateLabor(Request $request): RedirectResponse
         $allowedCategoryKeys = collect($settings->laborCategories())->pluck('key')->all();
 
         $data = $request->validate([
-            'default_labor_rate' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'default_labor_category_key' => ['required', 'string', Rule::in($allowedCategoryKeys)],
             'labor_categories' => ['required', 'array', 'min:1', 'max:20'],
             'labor_categories.*.key' => ['required', 'string', Rule::in($allowedCategoryKeys)],
@@ -52,7 +51,6 @@ public function updateLabor(Request $request): RedirectResponse
         $laborCategories = $settings->normalizeLaborCategories(
             $data['labor_categories'],
             $data['default_labor_category_key'],
-            (float) $data['default_labor_rate'],
         );
 
         $defaultRateCents = (int) collect($laborCategories)
@@ -141,9 +139,7 @@ public function updateFees(Request $request): RedirectResponse
             'default_deposit_enabled' => (bool) ($data['default_deposit_enabled'] ?? false),
             'default_deposit_include_parts' => (bool) ($data['default_deposit_include_parts'] ?? false),
             'default_deposit_include_diagnostics' => (bool) ($data['default_deposit_include_diagnostics'] ?? false),
-            'default_deposit_diagnostic_labor_category_keys' => $diagnosticKeys === []
-                ? ShopSettings::DEFAULT_DEPOSIT_DIAGNOSTIC_LABOR_CATEGORY_KEYS
-                : $diagnosticKeys,
+            'default_deposit_diagnostic_labor_category_keys' => $diagnosticKeys,
         ]);
 
         return $this->redirectWithStatus('Deposit settings saved.');

@@ -38,6 +38,9 @@ use Illuminate\Support\Str;
  */
 final class CommunicationsWorkspaceProjection
 {
+    /** @var array<string, CustomerCallContext|null> */
+    private array $callIdentityContexts = [];
+
     public function __construct(
         private readonly CommunicationsQueueResolver $queueResolver,
         private readonly ConversationWorkboardPresenter $conversationPresenter,
@@ -978,17 +981,27 @@ final class CommunicationsWorkspaceProjection
         ];
     }
 
+    /**
+     * Call rows only show the caller's name and phone, so they use the identity context,
+     * once per customer or phone for the request.
+     */
     private function callContextForSession(CallSession $session, ?string $normalizedPhone): ?CustomerCallContext
     {
         if ($session->customer_id !== null) {
-            return $this->callContextResolver->resolveForCustomer($session->customer);
+            return $this->callIdentityContexts['customer:'.$session->customer_id]
+                ??= $this->callContextResolver->resolveIdentityForCustomer($session->customer);
         }
 
         if ($normalizedPhone === null || $normalizedPhone === '') {
             return null;
         }
 
-        return $this->callContextResolver->resolve($normalizedPhone);
+        $key = 'phone:'.$normalizedPhone;
+        if (! array_key_exists($key, $this->callIdentityContexts)) {
+            $this->callIdentityContexts[$key] = $this->callContextResolver->resolveIdentity($normalizedPhone);
+        }
+
+        return $this->callIdentityContexts[$key];
     }
 
     /**

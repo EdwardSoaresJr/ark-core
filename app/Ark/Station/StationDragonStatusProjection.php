@@ -2,10 +2,8 @@
 
 namespace App\Ark\Station;
 
-use App\Ark\Dragon\Agent\Contracts\DragonModelProvider;
-
 /**
- * Glass Dragon chip + ARK-derived observations. No model call on dashboard poll.
+ * Glass status chip. Stock shops have no model. A hosted shop may bind one.
  */
 final class StationDragonStatusProjection
 {
@@ -32,7 +30,12 @@ final class StationDragonStatusProjection
             return false;
         }
 
-        return app(DragonModelProvider::class)->health()['ok'] ?? false;
+        $provider = 'Ark\\Saas\\Dragon\\Agent\\Contracts\\DragonModelProvider';
+        if (! class_exists($provider)) {
+            return false;
+        }
+
+        return (bool) (app($provider)->health()['ok'] ?? false);
     }
 
     /**

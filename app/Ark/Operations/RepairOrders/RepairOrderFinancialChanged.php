@@ -4,15 +4,19 @@ namespace App\Ark\Operations\RepairOrders;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldRescue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class RepairOrderFinancialChanged implements ShouldBroadcastNow
+class RepairOrderFinancialChanged implements ShouldBroadcast, ShouldRescue
 {
     use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
+
+    /** Sent by a queue worker once the change is committed, so the browser's refresh sees it. */
+    public bool $afterCommit = true;
 
     public function __construct(
         public RepairOrder $repairOrder,

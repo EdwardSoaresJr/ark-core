@@ -331,8 +331,9 @@ test('estimate pdf shows recommendation intent with customer facing label', func
     ])->render();
 
     expect($html)
-        ->toContain('concern--intent-immediate_attention')
-        ->toContain('concern-priority-badge--immediate_attention')
+        ->toContain('concern--priority-must_do')
+        ->toContain('concern-priority-badge--must_do')
+        ->toContain('Must Do')
         ->not->toContain('concern-intent-group');
 });
 
@@ -604,7 +605,7 @@ test('concern narrative disposition and order changes mark existing estimate doc
         'verified_findings' => 'Updated finding.',
         'dtcs_summary' => null,
         'recommendation' => 'Updated recommendation.',
-        'recommendation_intent' => 'immediate_attention',
+        'recommendation_posture' => 'must_do',
     ])->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#estimate-lines');
 
     expect($narrativeDocument->fresh()->needs_pdf_refresh)->toBeTrue();

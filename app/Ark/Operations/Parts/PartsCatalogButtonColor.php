@@ -101,7 +101,7 @@ final class PartsCatalogButtonColor
      */
     public static function shopMap(): array
     {
-        if (! Schema::hasColumn('shop_settings', 'parts_catalog_button_colors')) {
+        if (! \App\Ark\Operations\Settings\ShopSettingsSchema::has('parts_catalog_button_colors')) {
             return [];
         }
 
@@ -126,7 +126,7 @@ final class PartsCatalogButtonColor
 
     public static function persistShopColor(string $key, string $color): void
     {
-        if (! Schema::hasColumn('shop_settings', 'parts_catalog_button_colors')) {
+        if (! \App\Ark\Operations\Settings\ShopSettingsSchema::has('parts_catalog_button_colors')) {
             return;
         }
 

@@ -1057,9 +1057,9 @@
 
         <section class="section">
             @php
-                use App\Ark\Operations\RepairOrders\RecommendationIntent;
+                use App\Ark\Operations\RepairOrders\RecommendationPresentation;
 
-                $orderedConcerns = RecommendationIntent::sortedSnapshotConcerns($snapshot['concerns'] ?? [])
+                $orderedConcerns = RecommendationPresentation::sortedSnapshotConcerns($snapshot['concerns'] ?? [])
                     ->filter(function (array $concern): bool {
                         $disposition = \App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::fromStored(
                             (string) ($concern['disposition'] ?? ''),

@@ -18,8 +18,8 @@ final class PdfRuntimeConfigurator
 
         $node = config('services.pdf.node_binary');
 
-        if (! filled(config('services.pdf.include_path')) && filled($node)) {
-            config(['services.pdf.include_path' => dirname((string) $node)]);
+        if (! self::shellSafeIncludePath(config('services.pdf.include_path')) && filled($node)) {
+            config(['services.pdf.include_path' => self::shellSafeIncludePath(dirname((string) $node))]);
         }
 
         if (! filter_var(config('services.pdf.no_sandbox'), FILTER_VALIDATE_BOOLEAN) && self::runningInLinuxContainer()) {
@@ -68,5 +68,18 @@ final class PdfRuntimeConfigurator
     private static function isUsableExecutable(mixed $path): bool
     {
         return is_string($path) && $path !== '' && is_executable($path);
+    }
+
+    /**
+     * Browsershot assigns this value to PATH without quoting it.
+     * A directory such as Herd's "Application Support" node path splits the command.
+     */
+    private static function shellSafeIncludePath(mixed $path): ?string
+    {
+        if (! is_string($path) || $path === '' || preg_match('/[\s;`$|&<>"\'\\\\]/', $path) === 1) {
+            return null;
+        }
+
+        return $path;
     }
 }

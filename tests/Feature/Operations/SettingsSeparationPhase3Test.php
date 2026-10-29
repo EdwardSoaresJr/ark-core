@@ -47,12 +47,9 @@ test('communications and email settings do not host connection controls', functi
         ->assertDontSee('action="'.route('operations.settings.shop.email.ark-mail.claim').'"', false);
 
     $email = file_get_contents(resource_path('views/operations/settings/partials/communications-email-settings.blade.php'));
-    $legacyEmail = file_get_contents(resource_path('views/operations/settings/partials/customer-email-settings.blade.php'));
 
     expect($email)->not->toContain('ark-mail.enable')
-        ->and($email)->not->toContain('Disconnect ARK Email')
-        ->and($legacyEmail)->not->toContain('ark-mail.enable')
-        ->and($legacyEmail)->not->toContain('Disconnect ARK Email');
+        ->and($email)->not->toContain('Disconnect ARK Email');
 });
 
 test('connected platform still disconnects only from the platform settings section', function (): void {

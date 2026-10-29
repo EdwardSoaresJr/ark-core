@@ -49,7 +49,7 @@ class RepairOrderStatusCatalogSettingsController
         $message = match (true) {
             filled(trim((string) ($data['create']['name'] ?? ''))) => 'Custom status added and catalog updated.',
             filled(trim((string) ($data['create_transition']['from_slug'] ?? ''))) => 'Lifecycle move added and catalog updated.',
-            default => 'Repair order status catalog updated.',
+            default => 'Status catalog saved.',
         };
 
         return redirect()

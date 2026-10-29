@@ -3,6 +3,9 @@
 namespace App\Ark\Operations\WorkTemplates;
 
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationIntentCast;
+use App\Ark\Operations\RepairOrders\RecommendationPresentation;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,12 +20,15 @@ class WorkTemplate extends Model
         'description',
         'internal_note',
         'recommendation_intent',
+        'recommendation_priority',
+        'information_only',
         'position',
         'retired_at',
     ];
 
     protected $attributes = [
         'recommendation_intent' => 'maintenance',
+        'information_only' => false,
     ];
 
     protected function casts(): array
@@ -30,17 +36,55 @@ class WorkTemplate extends Model
         return [
             'retired_at' => 'datetime',
             'position' => 'integer',
-            'recommendation_intent' => RecommendationIntent::class,
+            'recommendation_intent' => RecommendationIntentCast::class,
+            'recommendation_priority' => RecommendationPriority::class,
+            'information_only' => 'boolean',
         ];
     }
 
-    public function recommendationIntent(): RecommendationIntent
+    protected static function booted(): void
+    {
+        static::saving(function (WorkTemplate $template): void {
+            if ($template->isInformationOnly()) {
+                $template->recommendation_priority = null;
+            }
+        });
+    }
+
+    public function recommendationIntent(): ?RecommendationIntent
     {
         $intent = $this->recommendation_intent;
 
         return $intent instanceof RecommendationIntent
             ? $intent
-            : RecommendationIntent::fromStored(is_string($intent) ? $intent : null);
+            : RecommendationIntent::trySemantic(is_string($intent) ? $intent : null);
+    }
+
+    public function recommendationPriority(): ?RecommendationPriority
+    {
+        $priority = $this->recommendation_priority;
+
+        return $priority instanceof RecommendationPriority
+            ? $priority
+            : RecommendationPriority::tryFromStored(is_string($priority) ? $priority : null);
+    }
+
+    public function isInformationOnly(): bool
+    {
+        return (bool) $this->information_only;
+    }
+
+    public function presentation(): RecommendationPresentation
+    {
+        if ($this->isInformationOnly()) {
+            return RecommendationPresentation::informationOnly();
+        }
+
+        $priority = $this->recommendationPriority();
+
+        return $priority instanceof RecommendationPriority
+            ? RecommendationPresentation::priority($priority)
+            : RecommendationPresentation::unset();
     }
 
     public function lines(): HasMany
@@ -102,8 +146,13 @@ class WorkTemplate extends Model
             'title' => $this->title,
             'description' => $this->description,
             'internal_note' => $this->internal_note,
-            'recommendation_intent' => $this->recommendationIntent()->value,
-            'recommendation_intent_label' => $this->recommendationIntent()->staffLabel(),
+            'recommendation_intent' => $this->recommendationIntent()?->value,
+            'recommendation_intent_label' => $this->recommendationIntent()?->staffLabel(),
+            'recommendation_priority' => $this->recommendationPriority()?->value,
+            'information_only' => $this->isInformationOnly(),
+            'recommendation_posture' => $this->isInformationOnly()
+                ? 'information_only'
+                : $this->recommendationPriority()?->value,
             'lines' => $this->lines->map(fn (WorkTemplateLine $line): array => [
                 'type' => $line->type->value,
                 'type_label' => $line->type->documentLabel(),

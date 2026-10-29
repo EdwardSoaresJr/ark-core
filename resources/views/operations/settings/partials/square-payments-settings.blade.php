@@ -1,5 +1,15 @@
 @php
     $platformPaymentsCapture = (bool) ($platformPaymentsCapture ?? false);
+    $readerNames = $settings->paymentReaderNames();
+    $readers = [];
+    if ($platformPaymentsCapture) {
+        foreach (app(\App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection::class)->current()['devices'] ?? [] as $device) {
+            $readers[$device['device_ref']] = ['available' => (bool) ($device['ready'] ?? true)];
+        }
+    }
+    foreach (array_keys($readerNames) as $namedRef) {
+        $readers[$namedRef] ??= ['available' => false];
+    }
 @endphp
 
 <section x-show="active === 'payments'" x-cloak class="space-y-3">
@@ -9,23 +19,20 @@
             <h2 class="mt-1 text-lg font-black text-slate-950">Card capture inside ARK</h2>
             @if ($platformPaymentsCapture)
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Card capture for this shop is managed by ARK Platform. Merchant credentials, webhooks, and reader pairing are not stored or configured here.
-                    Choose which shop surfaces may offer card capture. Take Payment and Record Payment stay on the repair order.
+                    Card capture is connected for this shop. Choose where a card payment may be offered.
+                    Take Payment and Record Payment stay on the repair order.
                 </p>
             @else
                 <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Connect ARK Payments to take cards in ARK. You can always record a card, cash, or check taken at the counter.
-                    Merchant credentials and reader pairing are not configured in Core.
-                    @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                        <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="font-semibold text-slate-700 underline">Connect in ARK Platform</a>
-                    @endunless
+                    Card capture inside ARK is not connected. Record a card, cash, or check taken at the counter.
+                    A card button appears only when a processor can settle the charge.
                 </p>
             @endif
         </div>
 
         @if ($platformPaymentsCapture)
             <div class="mt-3 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
-                Square capture is connected through ARK Platform.
+                Card capture is connected for this shop.
             </div>
         @else
             <div class="mt-3 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
@@ -38,7 +45,7 @@
         @csrf
         @method('PATCH')
 
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Capture surfaces</p>
+        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Where card payments are offered</p>
         <p class="text-[11px] leading-4 text-slate-500">
             These are shop rules for where a card payment may be offered. They do not store a processor account.
         </p>
@@ -55,6 +62,29 @@
             >
             <span class="mt-1 block text-[11px] leading-4 text-slate-500">Used for counter Take Payment when this shop has a reader. Leave blank if none is assigned yet.</span>
         </label>
+
+        @if ($readers !== [])
+            <div class="space-y-2" data-payment-reader-names>
+                <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Card readers</p>
+                <p class="text-[11px] leading-4 text-slate-500">Name each reader the way staff know it, such as Front Counter or Bay 1. Everyone in the shop sees these names. Leave a name blank to show the device ID.</p>
+                @foreach ($readers as $deviceRef => $reader)
+                    <label class="block">
+                        <input
+                            type="text"
+                            name="payment_reader_names[{{ $deviceRef }}]"
+                            value="{{ old('payment_reader_names.'.$deviceRef, $readerNames[$deviceRef] ?? '') }}"
+                            maxlength="60"
+                            class="h-9 w-full rounded-sm border-slate-300 text-sm text-slate-800"
+                            placeholder="Front Counter"
+                            autocomplete="off"
+                        >
+                        <span class="mt-1 block font-mono text-[11px] leading-4 text-slate-500">
+                            {{ $deviceRef }}@unless ($reader['available']) <span class="font-sans">· not currently available</span>@endunless
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+        @endif
 
         <div class="grid gap-2 sm:grid-cols-2">
             <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -80,7 +110,7 @@
         </div>
 
         <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-            Save payment surfaces
+            Save card payment options
         </button>
     </form>
 

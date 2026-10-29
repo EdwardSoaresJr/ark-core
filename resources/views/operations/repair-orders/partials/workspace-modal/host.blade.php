@@ -417,8 +417,8 @@
                 assistUrlTemplate: @js('/app/repair-orders/'.$repairOrder->id.'/work-templates/__TEMPLATE__/historical-recall/assist'),
                 assistStatusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
                 concernId: context.concernId || null,
-                intents: @js(collect(\App\Ark\Operations\RepairOrders\RecommendationIntent::cases())->map(fn ($intent) => ['value' => $intent->value, 'label' => $intent->staffLabel()])->values()->all()),
-                defaultIntent: @js(\App\Ark\Operations\RepairOrders\RecommendationIntent::Maintenance->value),
+                priorities: @js(collect(\App\Ark\Operations\RepairOrders\RecommendationPriority::cases())->map(fn ($priority) => ['value' => $priority->value, 'label' => $priority->staffLabel()])->push(['value' => 'information_only', 'label' => 'Information Only'])->values()->all()),
+                defaultPosture: @js(''),
             })"
             x-init="boot()"
         >
@@ -434,7 +434,7 @@
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="work_template_id" :value="selectedId || ''">
                 <input type="hidden" name="repair_order_concern_id" :value="concernId || ''">
-                <input type="hidden" name="recommendation_intent" :value="concernId ? '' : recommendationIntent">
+                <input type="hidden" name="recommendation_posture" :value="concernId ? '' : recommendationPosture">
                 <input type="hidden" name="historical_labor_hours" :value="applyHoursValue()">
                 <input type="hidden" name="historical_match_tier" :value="recall?.tier || ''">
                 <input type="hidden" name="historical_labor_confirmed" :value="laborConfirmed ? '1' : '0'">
@@ -472,13 +472,13 @@
                     <p class="text-slate-500" x-show="concernId">Adds a Repair Action under this concern.</p>
 
                     <label x-show="! concernId" x-cloak class="block text-[11px] font-medium text-slate-500">
-                        Recommendation status
-                        <select x-model="recommendationIntent" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-950">
-                            <template x-for="opt in intents" :key="opt.value">
+                        Priority
+                        <select x-model="recommendationPosture" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-950">
+                            <option value="">Use saved work priority</option>
+                            <template x-for="opt in priorities" :key="opt.value">
                                 <option :value="opt.value" x-text="opt.label"></option>
                             </template>
                         </select>
-                        <span class="mt-1 block font-normal text-slate-400">Creates a new concern with this status. Change it if this job is not Maintenance.</span>
                     </label>
 
                     <div x-show="recallLoading" class="text-slate-500">Checking shop history…</div>

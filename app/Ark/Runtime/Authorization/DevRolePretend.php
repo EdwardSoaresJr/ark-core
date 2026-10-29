@@ -15,7 +15,17 @@ final class DevRolePretend
 
     public static function switcherVisible(?User $user): bool
     {
-        return self::authorizedUser($user);
+        return self::isActive() || self::canStart($user);
+    }
+
+    public static function canStart(?User $user): bool
+    {
+        return ! app()->environment('production') && self::authorizedUser($user);
+    }
+
+    public static function canStop(?User $user): bool
+    {
+        return self::isActive() || self::authorizedUser($user);
     }
 
     public static function authorizedUser(?User $user): bool

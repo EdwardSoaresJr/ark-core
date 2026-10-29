@@ -1,21 +1,22 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonAgentLoop;
-use App\Ark\Dragon\Agent\DragonAgentMemory;
-use App\Ark\Dragon\Agent\DragonEmployeeContext;
-use App\Ark\Dragon\Agent\DragonModelTurn;
-use App\Ark\Dragon\Agent\DragonToolRegistry;
-use App\Ark\Dragon\Agent\ImportArkaiDragonDumpAction;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
-use App\Ark\Dragon\Agent\Tools\EstimatesAdvisorContextTool;
-use App\Ark\Dragon\Agent\Tools\EstimatesGetTool;
-use App\Ark\Dragon\Agent\Tools\KnowledgeSearchTool;
-use App\Ark\Dragon\Agent\Tools\MemoryRecallTool;
-use App\Ark\Dragon\Agent\Tools\RepairOrdersGetTool;
-use App\Ark\Dragon\Agent\Tools\RepairOrdersSearchTool;
-use App\Ark\Dragon\Agent\Tools\ShopFinancialSnapshotTool;
-use App\Ark\Dragon\DragonServiceToken;
-use App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
+
+use Ark\Saas\Dragon\Agent\DragonAgentLoop;
+use Ark\Saas\Dragon\Agent\DragonAgentMemory;
+use Ark\Saas\Dragon\Agent\DragonEmployeeContext;
+use Ark\Saas\Dragon\Agent\DragonModelTurn;
+use Ark\Saas\Dragon\Agent\DragonToolRegistry;
+use Ark\Saas\Dragon\Agent\ImportArkaiDragonDumpAction;
+use Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider;
+use Ark\Saas\Dragon\Agent\Tools\EstimatesAdvisorContextTool;
+use Ark\Saas\Dragon\Agent\Tools\EstimatesGetTool;
+use Ark\Saas\Dragon\Agent\Tools\KnowledgeSearchTool;
+use Ark\Saas\Dragon\Agent\Tools\MemoryRecallTool;
+use Ark\Saas\Dragon\Agent\Tools\RepairOrdersGetTool;
+use Ark\Saas\Dragon\Agent\Tools\RepairOrdersSearchTool;
+use Ark\Saas\Dragon\Agent\Tools\ShopFinancialSnapshotTool;
+use Ark\Saas\Dragon\DragonServiceToken;
+use Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorFactPreservationCheck;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -29,6 +30,13 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
+
+beforeEach(function (): void {
+    if (! bootHostedDragon()) {
+        test()->markTestSkipped('Dragon is owned by ARK Shop.');
+    }
+    migrateHostedDragon();
+});
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);

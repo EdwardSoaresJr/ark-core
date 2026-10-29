@@ -217,13 +217,13 @@
             @endif
 
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
-                @unless ($financial['financialRailReadOnly'] ?? false)
-                    @include('operations.repair-orders.partials.invoice-email-form', [
-                        'repairOrder' => $repairOrder,
-                        'financial' => $financial,
-                        'estimateVersion' => $estimateVersion,
-                    ])
+                @include('operations.repair-orders.partials.invoice-email-form', [
+                    'repairOrder' => $repairOrder,
+                    'financial' => $financial,
+                    'estimateVersion' => $estimateVersion,
+                ])
 
+                @unless ($financial['financialRailReadOnly'] ?? false)
                     @if ($financial['canWaiveBalance'] ?? false)
                         <form
                             id="waive-balance"

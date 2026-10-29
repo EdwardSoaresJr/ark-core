@@ -56,7 +56,7 @@ class EstimateSnapshotBuilder
     public function build(RepairOrder $repairOrder, ?User $user = null): array
     {
         $repairOrder->loadMissing(['customer', 'vehicle', 'assignedTechnician', 'encounter.creator', 'concerns.workGroups.lines', 'concerns.lines', 'lines', 'approvalEvents.revocation', 'communicationEvents']);
-        $this->calculator->recalculateRepairOrder($repairOrder);
+        $this->calculator->ensureFinancialTotalsAreCurrent($repairOrder);
         $repairOrder->load(['customer', 'vehicle', 'assignedTechnician', 'encounter.creator', 'concerns.workGroups.lines', 'concerns.lines', 'lines', 'approvalEvents.revocation', 'communicationEvents']);
 
         $settings = ShopSettings::current();
@@ -347,9 +347,7 @@ class EstimateSnapshotBuilder
             'disposition_label' => $concern->disposition->label(),
             'billing_posture' => $concern->billing_posture->value,
             'billing_posture_label' => $concern->billing_posture->label(),
-            'recommendation_intent' => $concern->recommendationIntent()->value,
-            'recommendation_intent_label' => $concern->recommendationIntent()->staffLabel(),
-            'recommendation_intent_customer_label' => $concern->recommendationIntent()->customerLabel(),
+            ...$concern->recommendationDocumentAttributes(),
             'position' => $concern->position,
             'subtotal_cents' => $totals->concernSubtotalCents($concern->id),
             'subtotal' => $totals->format($totals->concernSubtotalCents($concern->id)),

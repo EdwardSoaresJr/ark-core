@@ -1,12 +1,13 @@
 <?php
 
 use App\Ark\Runtime\Surfaces\SurfaceRouting;
+use App\Ark\Operations\Leads\Measurement\RememberAppointmentAttribution;
 use App\Ark\Website\Http\CoreWebsiteResponse;
 use App\Ark\Website\Http\PublicWebsiteController;
 use Illuminate\Support\Facades\Route;
 
 SurfaceRouting::publicRoutes(function (): void {
-    Route::middleware(['web', CoreWebsiteResponse::class])->group(function (): void {
+    Route::middleware(['web', CoreWebsiteResponse::class, RememberAppointmentAttribution::class])->group(function (): void {
         Route::get('/', [PublicWebsiteController::class, 'home'])->name('public.home');
         Route::get('/about', [PublicWebsiteController::class, 'about'])->name('public.about');
         Route::get('/services', [PublicWebsiteController::class, 'services'])->name('public.services');

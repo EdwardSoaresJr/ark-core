@@ -61,16 +61,20 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74,#86efac\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan reverb:start\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,reverb,logs,vite --kill-others"
         ],
         "test": [
-            "@php artisan config:clear --ansi @no_additional_args",
+            "Composer\\Config::disableProcessTimeout",
             "@php -d memory_limit=2048M vendor/bin/pest --no-coverage"
         ],
         "test:parallel": [
-            "@php artisan config:clear --ansi @no_additional_args",
+            "Composer\\Config::disableProcessTimeout",
             "@php -d memory_limit=768M vendor/bin/pest --parallel --processes=8 --no-coverage"
         ],
         "test:serial": [
-            "@php artisan config:clear --ansi @no_additional_args",
+            "Composer\\Config::disableProcessTimeout",
             "@php -d memory_limit=2048M vendor/bin/pest --no-coverage"
+        ],
+        "test:mysql": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php -d memory_limit=512M vendor/bin/pest --configuration=phpunit.mysql.xml --no-coverage"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

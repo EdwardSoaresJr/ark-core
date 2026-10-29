@@ -7,6 +7,7 @@ use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Conversations\SyncConversationTurnAction;
 use App\Ark\Operations\PhoneNumber;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Facades\Cache;
 
 class CallSessionQueue
 {
@@ -66,8 +67,8 @@ class CallSessionQueue
             })
             ->update(['worked_at' => now()]);
 
-        // Bulk update skips model events - resync conversation turn so a
-        // handled call clears the shop-turn posture it created.
+        // Bulk update skips model events. Resync the turn without erasing a
+        // shop-turn conversation that is still waiting on the shop.
         app(SyncConversationTurnAction::class)->forCallSession($session->refresh());
 
         return $cleared;
@@ -125,6 +126,20 @@ class CallSessionQueue
      *
      * Must run from poll endpoints, scheduled jobs, or write actions - not page-render GET paths.
      */
+    /**
+     * Pollers call this on every refresh. The recovery itself only needs to
+     * run once in a short window so two background polls do not write on
+     * every page the shop has open.
+     */
+    public function reconcileStaleLiveSessionsIfDue(): void
+    {
+        if (! Cache::add('ark.call-session.stale-reconcile', '1', now()->addSeconds(30))) {
+            return;
+        }
+
+        $this->reconcileStaleLiveSessions();
+    }
+
     public function reconcileStaleLiveSessions(): void
     {
         CallSession::query()

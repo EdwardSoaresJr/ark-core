@@ -42,7 +42,7 @@
                 <ul class="mt-1 list-disc space-y-1 pl-4">
                     <li><strong class="font-semibold">Technician wages</strong> - Settings → Staff → each tech → Loaded cost calculator (base pay + burden % + shop overhead / hr).</li>
                     <li><strong class="font-semibold">Advisor, front desk, owner (non-billing)</strong> - Fixed Costs tab → <strong class="font-semibold">Office and advisor payroll</strong> (monthly total).</li>
-                    <li><strong class="font-semibold">Break-even on Margin Health</strong> - Owner Targets → Monthly fixed costs (often ≈ this worksheet’s monthly total + all tech payroll from your P&amp;L).</li>
+                    <li><strong class="font-semibold">Break-even on Margin Health</strong> - uses this worksheet’s fixed-cost monthly total once saved (shown under Owner Targets). Technician pay is already counted there as labor cost.</li>
                 </ul>
             </div>
             <ol class="list-decimal space-y-1.5 pl-4">
@@ -59,7 +59,7 @@
     <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-3 py-3">
         <div>
             <p class="font-bold uppercase tracking-[0.08em] text-slate-500">Monthly overhead pool</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Fixed shop costs for the whole business - not per technician. Click <strong class="font-semibold text-slate-700">Save shop overhead</strong> to persist; staff loaded cost calculators pick up the saved rate.</p>
+            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Fixed shop costs for the whole business - not per technician. Click <strong class="font-semibold text-slate-700">Save shop overhead</strong> to persist; staff loaded cost calculators pick up the saved rate, and the monthly total replaces Owner Targets monthly fixed costs.</p>
         </div>
         <p class="shrink-0 text-right">
             <span class="block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Shop overhead / billed hr</span>

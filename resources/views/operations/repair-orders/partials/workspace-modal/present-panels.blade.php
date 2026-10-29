@@ -5,6 +5,11 @@
 
     $shopSettingsForBilling = ShopSettings::current();
     $techniciansForMeta = $technicians ?? collect();
+    $dragonReady = class_exists(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::class)
+        && \Illuminate\Support\Facades\Route::has('operations.repair-orders.dragon-service-advisor.visit-reason');
+    $dragonModeOptions = $dragonReady
+        ? collect(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())->map(fn ($mode) => ['value' => $mode->value, 'label' => $mode->label()])->values()->all()
+        : [];
 @endphp
 
 <div class="ops-workspace-modal__panel" x-show="task === 'visit-reason'" x-cloak>
@@ -44,19 +49,20 @@
     </form>
 </div>
 
+@if ($dragonReady)
 <div
     class="ops-workspace-modal__panel"
     x-show="task === 'dragon-service-advisor-visit-reason'"
     x-cloak
     x-data="arkDragonServiceAdvisor({
-        requestUrl: @js(route('operations.repair-orders.dragon-service-advisor.visit-reason', $repairOrder)),
+        requestUrl: @js($dragonReady ? route('operations.repair-orders.dragon-service-advisor.visit-reason', $repairOrder) : null),
         statusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
         applyUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-service-advisor/visit-reason/__ASSIST__/apply'),
         revertUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-service-advisor/__APP__/revert'),
         estimateVersion: @js($estimateVersion),
         csrfToken: @js(csrf_token()),
         fields: @js([['value' => 'visit_reason', 'label' => 'Reason for visit']]),
-        modes: @js(collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()])->values()->all()),
+        modes: @js($dragonModeOptions),
         defaultField: 'visit_reason',
         defaultMode: 'service_advisor_rewrite',
         hideFieldPicker: true,
@@ -109,7 +115,9 @@
         </template>
     </div>
 </div>
+@endif
 
+@if ($dragonReady)
 <div
     class="ops-workspace-modal__panel"
     x-show="task === 'dragon-service-advisor-line-note'"
@@ -122,7 +130,7 @@
         estimateVersion: @js($estimateVersion),
         csrfToken: @js(csrf_token()),
         fields: @js([['value' => 'line_note', 'label' => 'Line note']]),
-        modes: @js(collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()])->values()->all()),
+        modes: @js($dragonModeOptions),
         defaultField: 'line_note',
         defaultMode: 'service_advisor_rewrite',
         hideFieldPicker: true,
@@ -176,13 +184,15 @@
         </template>
     </div>
 </div>
+@endif
 
+@if ($dragonReady)
 <div
     class="ops-workspace-modal__panel"
     x-show="task === 'review-estimate-notes'"
     x-cloak
     x-data="arkReviewEstimateNotes({
-        requestUrl: @js(route('operations.repair-orders.review-estimate-notes', $repairOrder)),
+        requestUrl: @js($dragonReady ? route('operations.repair-orders.review-estimate-notes', $repairOrder) : null),
         statusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
         applyUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/review-estimate-notes/__ASSIST__/apply'),
         estimateVersion: @js($estimateVersion),
@@ -358,6 +368,7 @@
         </template>
     </div>
 </div>
+@endif
 
 @foreach ($repairOrder->concerns as $concern)
     @php
@@ -403,9 +414,18 @@
                     @include('operations.repair-orders.partials.repair-order-mention-suggest')
                 </label>
                 <label class="block text-[11px] font-medium text-slate-500">
-                    Recommendation intent
+                    Priority
+                    @include('operations.repair-orders.partials.recommendation-priority-select', [
+                        'selectedPriority' => old('recommendation_posture', $concern->recommendationPriority()?->value),
+                        'informationOnly' => (bool) old('information_only', $concern->isInformationOnly()),
+                        'inputId' => 'workspace-concern-priority-'.$concern->id,
+                        'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                    ])
+                </label>
+                <label class="block text-[11px] font-medium text-slate-500">
+                    Work type
                     @include('operations.repair-orders.partials.recommendation-intent-select', [
-                        'selected' => old('recommendation_intent', $concern->recommendationIntent()->value),
+                        'selected' => old('recommendation_intent', $concern->recommendationIntent()?->value),
                         'inputId' => 'workspace-concern-intent-'.$concern->id,
                         'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
                     ])
@@ -418,6 +438,10 @@
                     <label class="block text-[11px] font-medium text-slate-500">
                         Verified findings
                         <textarea name="verified_findings" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What was verified…">{{ old('verified_findings', $concern->verified_findings) }}</textarea>
+                        @include('operations.repair-orders.partials.finding-from-verified-findings-nudge', [
+                            'repairOrder' => $repairOrder,
+                            'concern' => $concern,
+                        ])
                     </label>
                     <label class="block text-[11px] font-medium text-slate-500">
                         DTCs, if present
@@ -476,35 +500,40 @@
     </div>
 
     @php
-        $dragonFieldOptions = collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::cases())
-            ->filter(fn (\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => $f->isConcernNarrative())
-            ->map(fn (\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => [
-                'value' => $f->value,
-                'label' => $f->label(),
-                'has_text' => filled(match ($f) {
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::Summary => $concern->summary,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::CustomerStates => $concern->customer_states,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::VerifiedFindings => $concern->verified_findings,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::DtcsSummary => $concern->dtcs_summary,
-                    \App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorField::Recommendation => $concern->recommendation,
-                }),
-            ])
-            ->values()
-            ->all();
-        $defaultDragonField = collect($dragonFieldOptions)->firstWhere('value', 'verified_findings')['value']
-            ?? ($dragonFieldOptions[0]['value'] ?? 'summary');
-        $dragonModeOptions = collect(\App\Ark\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())
-            ->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()])
-            ->values()
-            ->all();
+        $dragonFieldOptions = [];
+        $defaultDragonField = 'summary';
+        if ($dragonReady) {
+            $dragonFieldOptions = collect(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::cases())
+                ->filter(fn (\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => $f->isConcernNarrative())
+                ->map(fn (\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField $f) => [
+                    'value' => $f->value,
+                    'label' => $f->label(),
+                    'has_text' => filled(match ($f) {
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::Summary => $concern->summary,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::CustomerStates => $concern->customer_states,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::VerifiedFindings => $concern->verified_findings,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::DtcsSummary => $concern->dtcs_summary,
+                        \Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorField::Recommendation => $concern->recommendation,
+                    }),
+                ])
+                ->values()
+                ->all();
+            $defaultDragonField = collect($dragonFieldOptions)->firstWhere('value', 'verified_findings')['value']
+                ?? ($dragonFieldOptions[0]['value'] ?? 'summary');
+            $dragonModeOptions = collect(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::cases())
+                ->map(fn ($mode) => ['value' => $mode->value, 'label' => $mode->label()])
+                ->values()
+                ->all();
+        }
     @endphp
 
+    @if ($dragonReady)
     <div
         class="ops-workspace-modal__panel"
         x-show="task === 'dragon-service-advisor' && String(context.concernId) === '{{ $concern->id }}'"
         x-cloak
         x-data="arkDragonServiceAdvisor({
-            requestUrl: @js(route('operations.repair-orders.concerns.dragon-service-advisor', [$repairOrder, $concern])),
+            requestUrl: @js($dragonReady ? route('operations.repair-orders.concerns.dragon-service-advisor', [$repairOrder, $concern]) : null),
             statusUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-assist/__ASSIST__'),
             applyUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/concerns/'.$concern->id.'/dragon-service-advisor/__ASSIST__/apply'),
             revertUrlTemplate: @js('/app/repair-orders/'.$repairOrder->getRouteKey().'/dragon-service-advisor/__APP__/revert'),
@@ -574,6 +603,7 @@
             </template>
         </div>
     </div>
+    @endif
 
     <div
         class="ops-workspace-modal__panel"
@@ -630,20 +660,21 @@
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
             <label class="block text-[11px] font-medium text-slate-500" for="workspace-intent-only-{{ $concern->id }}">
-                Recommendation status
-                <select
-                    id="workspace-intent-only-{{ $concern->id }}"
-                    name="recommendation_intent"
-                    class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                >
-                    @foreach (RecommendationIntent::cases() as $option)
-                        <option
-                            value="{{ $option->value }}"
-                            title="{{ $option->helpText() }} Customer PDF: {{ $option->customerLabel() }}."
-                            @selected($concern->recommendationIntent() === $option)
-                        >{{ $option->staffLabel() }}</option>
-                    @endforeach
-                </select>
+                Priority
+                @include('operations.repair-orders.partials.recommendation-priority-select', [
+                    'selectedPriority' => $concern->recommendationPriority()?->value,
+                    'informationOnly' => $concern->isInformationOnly(),
+                    'inputId' => 'workspace-intent-only-'.$concern->id,
+                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                ])
+            </label>
+            <label class="mt-3 block text-[11px] font-medium text-slate-500" for="workspace-work-type-{{ $concern->id }}">
+                Work type
+                @include('operations.repair-orders.partials.recommendation-intent-select', [
+                    'selected' => $concern->recommendationIntent()?->value,
+                    'inputId' => 'workspace-work-type-'.$concern->id,
+                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                ])
             </label>
         </form>
     </div>

@@ -92,15 +92,16 @@ final class InboundSmsConversationIngress implements ConversationIngress
                 continue;
             }
             $url = trim((string) ($item['url'] ?? $item['provider_url'] ?? ''));
-            if ($url === '') {
+            $storagePath = trim((string) ($item['storage_path'] ?? ''));
+            if ($url === '' && $storagePath === '') {
                 continue;
             }
 
             ConversationMessageAttachment::query()->create([
                 'conversation_message_id' => $message->id,
                 'content_type' => (string) ($item['content_type'] ?? 'application/octet-stream'),
-                'storage_path' => null,
-                'provider_url' => $url,
+                'storage_path' => $storagePath !== '' ? $storagePath : null,
+                'provider_url' => $storagePath !== '' ? null : $url,
                 'provider_media_sid' => filled($item['provider_media_sid'] ?? null)
                     ? (string) $item['provider_media_sid']
                     : null,

@@ -3,6 +3,7 @@
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -90,7 +91,8 @@ test('shop can create a work template with labor and part lines', function () {
 
     expect($template)->not->toBeNull()
         ->and($template->lines)->toHaveCount(3)
-        ->and($template->recommendationIntent()->value)->toBe('immediate_attention')
+        ->and($template->recommendationPriority())->toBe(RecommendationPriority::MustDo)
+        ->and($template->recommendationIntent())->toBeNull()
         ->and($template->lines->pluck('type')->map->value->all())->toBe(['labor', 'part', 'part']);
 });
 
@@ -279,7 +281,11 @@ test('new concern from saved work uses template recommendation status unless ove
     $actor = User::factory()->create();
     $repairOrder = makeWorkTemplateRepairOrder();
     $template = makeWorkTemplateFixture();
-    $template->update(['recommendation_intent' => RecommendationIntent::ImmediateAttention->value]);
+    $template->update([
+        'recommendation_priority' => RecommendationPriority::MustDo,
+        'recommendation_intent' => RecommendationIntent::Maintenance,
+        'information_only' => false,
+    ]);
 
     $fromTemplate = app(ApplyWorkTemplateAction::class)->handle($repairOrder, $template, $actor);
     $overridden = app(ApplyWorkTemplateAction::class)->handle(
@@ -291,8 +297,10 @@ test('new concern from saved work uses template recommendation status unless ove
         RecommendationIntent::Diagnostic,
     );
 
-    expect($fromTemplate['concern']->recommendationIntent())->toBe(RecommendationIntent::ImmediateAttention)
-        ->and($overridden['concern']->recommendationIntent())->toBe(RecommendationIntent::Diagnostic);
+    expect($fromTemplate['concern']->recommendationPriority())->toBe(RecommendationPriority::MustDo)
+        ->and($fromTemplate['concern']->recommendationIntent())->toBe(RecommendationIntent::Maintenance)
+        ->and($overridden['concern']->recommendationIntent())->toBe(RecommendationIntent::Diagnostic)
+        ->and($overridden['concern']->recommendationPriority())->toBe(RecommendationPriority::MustDo);
 });
 
 test('attaching saved work does not rewrite an existing concern recommendation status', function () {
@@ -314,7 +322,7 @@ test('attaching saved work does not rewrite an existing concern recommendation s
         $actor,
         $concern,
         null,
-        RecommendationIntent::ImmediateAttention,
+        RecommendationIntent::Maintenance,
     );
 
     expect($result['concern']->fresh()->recommendationIntent())->toBe(RecommendationIntent::Diagnostic);
@@ -328,7 +336,8 @@ test('apply endpoint can attach saved work to an existing concern', function () 
         'repair_order_id' => $repairOrder->id,
         'summary' => 'Brake noise',
         'disposition' => RepairOrderConcernDisposition::Recommended,
-        'recommendation_intent' => RecommendationIntent::ImmediateAttention->value,
+        'recommendation_priority' => RecommendationPriority::MustDo,
+        'recommendation_intent' => RecommendationIntent::Diagnostic,
         'position' => 1,
     ]);
     $template = makeWorkTemplateFixture();
@@ -344,7 +353,8 @@ test('apply endpoint can attach saved work to an existing concern', function () 
 
     expect($repairOrder->fresh()->concerns)->toHaveCount(1)
         ->and($concern->fresh()->workGroups)->toHaveCount(1)
-        ->and($concern->fresh()->recommendationIntent())->toBe(RecommendationIntent::ImmediateAttention);
+        ->and($concern->fresh()->recommendationIntent())->toBe(RecommendationIntent::Diagnostic)
+        ->and($concern->fresh()->recommendationPriority())->toBe(RecommendationPriority::MustDo);
 });
 
 test('apply endpoint is idempotent for the same worksheet key', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Ark\Orientation;
 
+use App\Ark\Operations\Conversations\CustomerCallContext;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 
 /**
@@ -16,6 +17,26 @@ final class Orientation
     public function __construct(
         private readonly RepairOrderOrientationEngine $repairOrderEngine,
     ) {}
+
+    public static function preload(iterable $repairOrders): void
+    {
+        app(self::class)->preloadRepairOrders($repairOrders);
+    }
+
+    public static function preloadForContexts(iterable $contexts): void
+    {
+        $repairOrders = collect($contexts)
+            ->map(fn ($context) => $context instanceof CustomerCallContext ? $context->openRepairOrders->first()?->repairOrder : null)
+            ->filter()
+            ->values();
+
+        self::preload($repairOrders);
+    }
+
+    public function preloadRepairOrders(iterable $repairOrders): void
+    {
+        $this->repairOrderEngine->preload($repairOrders);
+    }
 
     public static function forRepairOrder(
         RepairOrder $repairOrder,

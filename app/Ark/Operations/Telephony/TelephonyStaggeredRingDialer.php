@@ -38,7 +38,10 @@ class TelephonyStaggeredRingDialer
                 'endpointId' => $endpointId,
             ]);
 
-        $statusCallbackUrl = '';
+        $statusCallbackUrl = route('webhooks.communications.twilio.voice.ring-status', [
+            'parentCallSid' => $parentCallSid,
+            'endpointId' => $endpointId,
+        ]);
 
         $outboundCallSid = $this->twilio->createOutboundCall(
             $state['shop_caller_id'],

@@ -6,6 +6,7 @@ use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPresentation;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -276,16 +277,17 @@ final class OperationalIntelligence
             ->with(['lines:id,repair_order_concern_id,subtotal_cents'])
             ->get();
 
-        return collect(RecommendationIntent::cases())
-            ->map(function (RecommendationIntent $intent) use ($concerns): array {
+        return collect(RecommendationPresentation::catalog())
+            ->reject(fn (RecommendationPresentation $presentation): bool => $presentation->priority === null && ! $presentation->informationOnly)
+            ->map(function (RecommendationPresentation $presentation) use ($concerns): array {
                 $intentConcerns = $concerns->filter(
-                    fn (RepairOrderConcern $concern): bool => $concern->recommendationIntent() === $intent,
+                    fn (RepairOrderConcern $concern): bool => $concern->presentation()->key() === $presentation->key(),
                 );
 
                 $deferredConcerns = $intentConcerns->where('disposition', RepairOrderConcernDisposition::Deferred);
 
                 return [
-                    'intent' => $intent->staffLabel(),
+                    'intent' => (string) $presentation->staffLabel(),
                     'recommended' => $intentConcerns->where('disposition', RepairOrderConcernDisposition::Recommended)->count(),
                     'approved' => $intentConcerns->where('disposition', RepairOrderConcernDisposition::Approved)->count(),
                     'deferred' => $deferredConcerns->count(),
@@ -294,6 +296,7 @@ final class OperationalIntelligence
                     )),
                 ];
             })
+            ->values()
             ->all();
     }
 

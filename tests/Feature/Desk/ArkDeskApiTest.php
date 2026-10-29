@@ -1,7 +1,7 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonModelTurn;
-use App\Ark\Dragon\Agent\Providers\FakeDragonProvider;
+use Ark\Saas\Dragon\Agent\DragonModelTurn;
+use Ark\Saas\Dragon\Agent\Providers\FakeDragonProvider;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function (): void {
+    migrateHostedDragon();
     $this->seed(ArkAuthorizationSeeder::class);
     config(['shop.identity' => 'test.demo-auto.local']);
     config(['dragon.provider' => 'fake']);

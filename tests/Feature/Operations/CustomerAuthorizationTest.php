@@ -515,8 +515,8 @@ test('estimate pdf scope header uses service title, status pills, and service to
     expect($html)
         ->toContain('A/C performance diagnostic')
         ->toContain('concern-status-pill')
-        ->toContain('concern-priority-badge--immediate_attention">Immediate Attention</p>')
-        ->toContain('concern-priority-badge--plan_soon">Plan Soon</p>')
+        ->toContain('concern-priority-badge--must_do">Must Do</p>')
+        ->toContain('concern-priority-badge--should_do">Should Do</p>')
         ->toContain('concern-status-pill--approved')
         ->toContain('concern-status-pill--deferred')
         ->toContain('concern-status-pill--recommended')
@@ -539,7 +539,7 @@ test('estimate pdf scope header uses service title, status pills, and service to
         ->toContain('concern-status-pill--approved')
         ->toContain('Work subtotal')
         ->not->toContain('Customer decision')
-        ->not->toContain('concern-header-intent">Immediate Attention</span>');
+        ->not->toContain('concern-header-intent">Must Do</span>');
 
     $pendingScope = (string) Str::of($html)->after('A/C performance diagnostic')->before('</article>');
 

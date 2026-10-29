@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Documents;
 
 use App\Ark\Operations\RepairOrders\LaborDescriptionPresentation;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPresentation;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\ScopeProductionStatus;
 
@@ -235,7 +236,7 @@ final class CustomerDocumentScopeNarrative
      */
     private function fallbackServiceTitle(array $concern, array $lines): string
     {
-        $intent = RecommendationIntent::fromStored((string) ($concern['recommendation_intent'] ?? ''));
+        $semantic = RecommendationIntent::trySemantic((string) ($concern['recommendation_intent'] ?? ''));
         $laborDescriptions = [];
 
         foreach ($lines as $line) {
@@ -253,11 +254,15 @@ final class CustomerDocumentScopeNarrative
             return implode(' · ', $laborDescriptions);
         }
 
-        if ($intent === RecommendationIntent::Diagnostic) {
+        if ($semantic === RecommendationIntent::Diagnostic) {
             return 'Diagnostic Testing';
         }
 
-        return $intent->customerLabel();
+        if ($semantic instanceof RecommendationIntent) {
+            return $semantic->staffLabel();
+        }
+
+        return RecommendationPresentation::forSnapshot($concern)->customerLabel() ?? 'Recommended service';
     }
 
     /**

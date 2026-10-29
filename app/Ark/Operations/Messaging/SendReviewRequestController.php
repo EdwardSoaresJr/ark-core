@@ -2,8 +2,10 @@
 
 namespace App\Ark\Operations\Messaging;
 
+use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
+use App\Ark\Operations\RepairOrders\RepairOrderLifecycleController;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
@@ -23,6 +25,7 @@ class SendReviewRequestController
         SendReviewRequestDeliveryAction $send,
         RepairOrderLifecycleTransition $lifecycle,
         RepairOrderConcurrency $concurrency,
+        EstimateDocumentService $documents,
     ): RedirectResponse {
         abort_unless(
             $request->user()?->can(ArkCapability::RepairOrdersManage->value)
@@ -74,6 +77,10 @@ class SendReviewRequestController
             );
             $this->recordRepairOrderEstimateMutation($repairOrder->fresh(), $request->user());
             $status = $status.' RO closed as Paid.';
+
+            if ($documents->hasFailedPdfForRepairOrder($repairOrder)) {
+                $status = $status.' '.RepairOrderLifecycleController::FINAL_PDF_FAILED;
+            }
         } else {
             $this->recordRepairOrderEstimateMutation($repairOrder->fresh(), $request->user());
         }

@@ -14,7 +14,7 @@ class CommsInterruptController
         CallSessionQueue $callSessionQueue,
         CommsInterruptResolver $resolver,
     ): JsonResponse {
-        $callSessionQueue->reconcileStaleLiveSessions();
+        $callSessionQueue->reconcileStaleLiveSessionsIfDue();
 
         if (WorkstationPresence::resolve($request)->operationalPrivacyActive()) {
             return response()

@@ -157,7 +157,9 @@ test('call queue returns unworked recent sessions for all advisors', function ()
         ->assertJsonPath('calls.0.context_summary', 'Waiting on Customer Approval');
 });
 
-test('call queue exposes text customer action for matched callers when messaging is enabled', function () {
+test('call queue exposes text customer action for matched callers when Twilio is configured', function () {
+    config()->set('services.twilio.account_sid', 'ACtestaccount');
+    config()->set('services.twilio.auth_token', 'test-auth-token');
     bindFakeOutboundSms();
 
     ShopSettings::current()->update([
@@ -215,10 +217,16 @@ test('mark worked removes call from queue without deleting session', function ()
 
     expect($session->worked_at)->not->toBeNull();
 
-    $this->actingAs($advisor)
+    $queued = $this->actingAs($advisor)
         ->getJson(route('operations.telephony.call-queue'))
         ->assertOk()
-        ->assertJsonPath('count', 0);
+        ->assertJsonPath('summary.call_count', 0)
+        ->assertJsonPath('calls', []);
+
+    // A missed call opens shop work. Marking that call handled removes it from
+    // the call list and leaves the conversation waiting on the shop.
+    $queued->assertJsonPath('items.0.kind', 'message')
+        ->assertJsonPath('items.0.state', 'shop_turn');
 });
 
 test('mark worked clears all unworked sessions for the same caller', function () {
@@ -531,6 +539,45 @@ test('stale ringing calls stop projecting as live attention', function () {
         ->assertOk()
         ->assertJsonPath('summary.has_live_calls', false)
         ->assertJsonPath('summary.call_count', 0);
+});
+
+test('a closed attention poll returns the badge without the row list', function () {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    $customer = Customer::query()->create([
+        'first_name' => 'Badge',
+        'last_name' => 'Only',
+        'phone' => '7195551400',
+    ]);
+
+    CallSession::query()->create([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CAsummary001',
+        'direction' => CallSessionDirection::Inbound,
+        'from_number' => '+17195551400',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551400',
+        'status' => CallSessionStatus::Missed,
+        'customer_id' => $customer->id,
+        'started_at' => now()->subMinutes(8),
+    ]);
+
+    $full = $this->actingAs($advisor)
+        ->getJson(route('operations.telephony.call-queue'))
+        ->assertOk()
+        ->assertJsonPath('summary_only', false);
+
+    $summary = $this->actingAs($advisor)
+        ->getJson(route('operations.telephony.call-queue', ['summary' => 1]))
+        ->assertOk()
+        ->assertJsonPath('summary_only', true)
+        ->assertJsonPath('count', $full->json('count'))
+        ->assertJsonPath('summary.call_count', $full->json('summary.call_count'))
+        ->assertJsonMissingPath('html')
+        ->assertJsonMissingPath('items')
+        ->assertJsonMissingPath('calls');
+
+    expect(strlen($summary->getContent()))->toBeLessThan(strlen($full->getContent()));
 });
 
 test('comms interrupt api projects actively ringing calls from queue without cache', function () {

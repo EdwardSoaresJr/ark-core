@@ -11,17 +11,17 @@ use Illuminate\Support\Facades\Log;
 /**
  * Pushes shop-owned Reply-To to ARK Platform Mail.
  */
-final class ArkMailIdentityClient
+class ArkMailIdentityClient
 {
     public function syncShopReplyTo(): bool
     {
         $cloud = PlatformConnection::current();
         if (! $cloud->isConnected() || ! filled($cloud->credential())) {
-            return false;
+            return true;
         }
 
         $settings = ShopSettings::current();
-        $replyTo = $settings->postmark_reply_to ?: $settings->email;
+        $replyTo = $settings->customerReplyToAddress();
         if (! filled($replyTo)) {
             Log::warning('ark_mail.identity.missing_reply_to');
 
@@ -32,8 +32,8 @@ final class ArkMailIdentityClient
         $path = '/api/v1/services/mail/identity';
         $payload = [
             'reply_to_email' => strtolower(trim((string) $replyTo)),
-            'reply_to_name' => filled($settings->postmark_reply_to_name)
-                ? trim((string) $settings->postmark_reply_to_name)
+            'reply_to_name' => filled($settings->customerReplyToName())
+                ? trim((string) $settings->customerReplyToName())
                 : (string) ($settings->shop_name ?: config('app.name', 'ARK')),
             'shop_display_name' => (string) ($settings->shop_name ?: config('app.name', 'ARK')),
         ];

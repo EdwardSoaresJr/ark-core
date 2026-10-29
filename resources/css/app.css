@@ -4452,54 +4452,47 @@
         background: rgb(30 41 59);
     }
 
-    html.dark .ops-estimate-workspace .ops-worksheet-concern[class*='--intent-'],
-    html.dark .ops-estimate-workspace .ops-review-concern[class*='--intent-'],
-    .dark .ops-estimate-workspace .ops-worksheet-concern[class*='--intent-'],
-    .dark .ops-estimate-workspace .ops-review-concern[class*='--intent-'] {
+    html.dark .ops-estimate-workspace .ops-worksheet-concern[class*='--priority-'],
+    html.dark .ops-estimate-workspace .ops-review-concern[class*='--priority-'],
+    .dark .ops-estimate-workspace .ops-worksheet-concern[class*='--priority-'],
+    .dark .ops-estimate-workspace .ops-review-concern[class*='--priority-'] {
         border-color: rgb(51 65 85);
         background: rgb(30 41 59);
     }
 
-    html.dark .ops-estimate-workspace .ops-review-concern--intent-immediate_attention,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern--intent-immediate_attention,
-    .dark .ops-estimate-workspace .ops-review-concern--intent-immediate_attention,
-    .dark .ops-estimate-workspace .ops-worksheet-concern--intent-immediate_attention {
+    html.dark .ops-estimate-workspace .ops-review-concern--priority-must_do,
+    html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-must_do,
+    .dark .ops-estimate-workspace .ops-review-concern--priority-must_do,
+    .dark .ops-estimate-workspace .ops-worksheet-concern--priority-must_do {
         --ops-scope-accent-tint: color-mix(in srgb, #9f1239 22%, rgb(30 41 59));
     }
 
-    html.dark .ops-estimate-workspace .ops-review-concern--intent-diagnostic,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern--intent-diagnostic,
-    .dark .ops-estimate-workspace .ops-review-concern--intent-diagnostic,
-    .dark .ops-estimate-workspace .ops-worksheet-concern--intent-diagnostic {
-        --ops-scope-accent-tint: color-mix(in srgb, #0f766e 22%, rgb(30 41 59));
-    }
-
-    html.dark .ops-estimate-workspace .ops-review-concern--intent-repair_verification,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern--intent-repair_verification,
-    .dark .ops-estimate-workspace .ops-review-concern--intent-repair_verification,
-    .dark .ops-estimate-workspace .ops-worksheet-concern--intent-repair_verification {
-        --ops-scope-accent-tint: color-mix(in srgb, #7c3aed 22%, rgb(30 41 59));
-    }
-
-    html.dark .ops-estimate-workspace .ops-review-concern--intent-maintenance,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern--intent-maintenance,
-    .dark .ops-estimate-workspace .ops-review-concern--intent-maintenance,
-    .dark .ops-estimate-workspace .ops-worksheet-concern--intent-maintenance {
-        --ops-scope-accent-tint: color-mix(in srgb, #b45309 22%, rgb(30 41 59));
-    }
-
-    html.dark .ops-estimate-workspace .ops-review-concern--intent-plan_soon,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern--intent-plan_soon,
-    .dark .ops-estimate-workspace .ops-review-concern--intent-plan_soon,
-    .dark .ops-estimate-workspace .ops-worksheet-concern--intent-plan_soon {
+    html.dark .ops-estimate-workspace .ops-review-concern--priority-should_do,
+    html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-should_do,
+    .dark .ops-estimate-workspace .ops-review-concern--priority-should_do,
+    .dark .ops-estimate-workspace .ops-worksheet-concern--priority-should_do {
         --ops-scope-accent-tint: color-mix(in srgb, #4338ca 22%, rgb(30 41 59));
     }
 
-    html.dark .ops-estimate-workspace .ops-review-concern--intent-information_only,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern--intent-information_only,
-    .dark .ops-estimate-workspace .ops-review-concern--intent-information_only,
-    .dark .ops-estimate-workspace .ops-worksheet-concern--intent-information_only {
+    html.dark .ops-estimate-workspace .ops-review-concern--priority-could_do,
+    html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-could_do,
+    .dark .ops-estimate-workspace .ops-review-concern--priority-could_do,
+    .dark .ops-estimate-workspace .ops-worksheet-concern--priority-could_do {
+        --ops-scope-accent-tint: color-mix(in srgb, #b45309 22%, rgb(30 41 59));
+    }
+
+    html.dark .ops-estimate-workspace .ops-review-concern--priority-information_only,
+    html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-information_only,
+    .dark .ops-estimate-workspace .ops-review-concern--priority-information_only,
+    .dark .ops-estimate-workspace .ops-worksheet-concern--priority-information_only {
         --ops-scope-accent-tint: color-mix(in srgb, #0369a1 22%, rgb(30 41 59));
+    }
+
+    html.dark .ops-estimate-workspace .ops-review-concern--priority-unset,
+    html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-unset,
+    .dark .ops-estimate-workspace .ops-review-concern--priority-unset,
+    .dark .ops-estimate-workspace .ops-worksheet-concern--priority-unset {
+        --ops-scope-accent-tint: color-mix(in srgb, #64748b 22%, rgb(30 41 59));
     }
 
     html.dark .ops-estimate-workspace .ops-worksheet-concern-header,
@@ -4517,16 +4510,16 @@
         border-bottom-color: rgb(51 65 85);
     }
 
-    html.dark .ops-estimate-workspace .ops-review-concern[class*='--intent-'] .ops-review-concern-header,
-    .dark .ops-estimate-workspace .ops-review-concern[class*='--intent-'] .ops-review-concern-header {
+    html.dark .ops-estimate-workspace .ops-review-concern[class*='--priority-'] .ops-review-concern-header,
+    .dark .ops-estimate-workspace .ops-review-concern[class*='--priority-'] .ops-review-concern-header {
         border-bottom-color: rgb(51 65 85);
         background: var(--ops-scope-accent-tint);
     }
 
     html.dark .ops-estimate-workspace .ops-review-concern-header .ops-money,
-    html.dark .ops-estimate-workspace .ops-review-concern[class*='--intent-'] .ops-review-concern-header .ops-money,
+    html.dark .ops-estimate-workspace .ops-review-concern[class*='--priority-'] .ops-review-concern-header .ops-money,
     .dark .ops-estimate-workspace .ops-review-concern-header .ops-money,
-    .dark .ops-estimate-workspace .ops-review-concern[class*='--intent-'] .ops-review-concern-header .ops-money {
+    .dark .ops-estimate-workspace .ops-review-concern[class*='--priority-'] .ops-review-concern-header .ops-money {
         color: rgb(226 232 240);
     }
 
@@ -4901,9 +4894,9 @@
     }
 
     html.dark .ops-estimate-workspace .ops-worksheet-concern-header .ops-money,
-    html.dark .ops-estimate-workspace .ops-worksheet-concern[class*='--intent-'] .ops-worksheet-concern-header .ops-money,
+    html.dark .ops-estimate-workspace .ops-worksheet-concern[class*='--priority-'] .ops-worksheet-concern-header .ops-money,
     .dark .ops-estimate-workspace .ops-worksheet-concern-header .ops-money,
-    .dark .ops-estimate-workspace .ops-worksheet-concern[class*='--intent-'] .ops-worksheet-concern-header .ops-money {
+    .dark .ops-estimate-workspace .ops-worksheet-concern[class*='--priority-'] .ops-worksheet-concern-header .ops-money {
         color: rgb(226 232 240);
     }
 
@@ -9626,27 +9619,27 @@
         background: var(--ops-intent-accent, theme('colors.slate.500'));
     }
 
-    .ops-intent-group--intent-immediate_attention {
+    .ops-intent-group--priority-immediate_attention {
         --ops-intent-accent: #9f1239;
     }
 
-    .ops-intent-group--intent-diagnostic {
+    .ops-intent-group--priority-diagnostic {
         --ops-intent-accent: #0f766e;
     }
 
-    .ops-intent-group--intent-repair_verification {
+    .ops-intent-group--priority-repair_verification {
         --ops-intent-accent: #7c3aed;
     }
 
-    .ops-intent-group--intent-maintenance {
+    .ops-intent-group--priority-maintenance {
         --ops-intent-accent: #b45309;
     }
 
-    .ops-intent-group--intent-plan_soon {
+    .ops-intent-group--priority-plan_soon {
         --ops-intent-accent: #4338ca;
     }
 
-    .ops-intent-group--intent-information_only {
+    .ops-intent-group--priority-information_only {
         --ops-intent-accent: #0369a1;
     }
 
@@ -9654,34 +9647,29 @@
         margin: 0;
     }
 
-    .ops-intent-group-heading--immediate_attention,
-    .ops-intent-group--intent-immediate_attention .ops-eyebrow {
+    .ops-intent-group-heading--must_do,
+    .ops-priority-group-heading--must_do {
         color: #9f1239;
     }
 
-    .ops-intent-group-heading--diagnostic,
-    .ops-intent-group--intent-diagnostic .ops-eyebrow {
-        color: #0f766e;
-    }
-
-    .ops-intent-group-heading--repair_verification,
-    .ops-intent-group--intent-repair_verification .ops-eyebrow {
-        color: #7c3aed;
-    }
-
-    .ops-intent-group-heading--maintenance,
-    .ops-intent-group--intent-maintenance .ops-eyebrow {
-        color: #b45309;
-    }
-
-    .ops-intent-group-heading--plan_soon,
-    .ops-intent-group--intent-plan_soon .ops-eyebrow {
+    .ops-intent-group-heading--should_do,
+    .ops-priority-group-heading--should_do {
         color: #4338ca;
     }
 
+    .ops-intent-group-heading--could_do,
+    .ops-priority-group-heading--could_do {
+        color: #b45309;
+    }
+
     .ops-intent-group-heading--information_only,
-    .ops-intent-group--intent-information_only .ops-eyebrow {
+    .ops-priority-group-heading--information_only {
         color: #0369a1;
+    }
+
+    .ops-intent-group-heading--unset,
+    .ops-priority-group-heading--unset {
+        color: #64748b;
     }
 
     .ops-intent-group-scopes {
@@ -9760,58 +9748,51 @@
         transition: width 140ms ease;
     }
 
-    /* Recommendation intent palette - sync with RecommendationIntent::accentColor() + tintBackground() */
-    .ops-worksheet-concern--intent-immediate_attention,
-    .ops-review-concern--intent-immediate_attention {
+    /* Recommendation priority palette - sync with RecommendationPriority and RecommendationPresentation. */
+    .ops-worksheet-concern--priority-must_do,
+    .ops-review-concern--priority-must_do {
         --ops-scope-accent-500: #9f1239;
         --ops-scope-accent-900: #881337;
         --ops-scope-accent-tint: #fff1f2;
     }
 
-    .ops-worksheet-concern--intent-diagnostic,
-    .ops-review-concern--intent-diagnostic {
-        --ops-scope-accent-500: #0f766e;
-        --ops-scope-accent-900: #115e59;
-        --ops-scope-accent-tint: #f0fdfa;
-    }
-
-    .ops-worksheet-concern--intent-repair_verification,
-    .ops-review-concern--intent-repair_verification {
-        --ops-scope-accent-500: #7c3aed;
-        --ops-scope-accent-900: #5b21b6;
-        --ops-scope-accent-tint: #f5f3ff;
-    }
-
-    .ops-worksheet-concern--intent-maintenance,
-    .ops-review-concern--intent-maintenance {
-        --ops-scope-accent-500: #b45309;
-        --ops-scope-accent-900: #92400e;
-        --ops-scope-accent-tint: #fffbeb;
-    }
-
-    .ops-worksheet-concern--intent-plan_soon,
-    .ops-review-concern--intent-plan_soon {
+    .ops-worksheet-concern--priority-should_do,
+    .ops-review-concern--priority-should_do {
         --ops-scope-accent-500: #4338ca;
         --ops-scope-accent-900: #3730a3;
         --ops-scope-accent-tint: #eef2ff;
     }
 
-    .ops-worksheet-concern--intent-information_only,
-    .ops-review-concern--intent-information_only {
+    .ops-worksheet-concern--priority-could_do,
+    .ops-review-concern--priority-could_do {
+        --ops-scope-accent-500: #b45309;
+        --ops-scope-accent-900: #92400e;
+        --ops-scope-accent-tint: #fffbeb;
+    }
+
+    .ops-worksheet-concern--priority-information_only,
+    .ops-review-concern--priority-information_only {
         --ops-scope-accent-500: #0369a1;
         --ops-scope-accent-900: #075985;
         --ops-scope-accent-tint: #f0f9ff;
     }
 
-    .ops-worksheet-concern[class*='--intent-'],
-    .ops-review-concern[class*='--intent-'] {
+    .ops-worksheet-concern--priority-unset,
+    .ops-review-concern--priority-unset {
+        --ops-scope-accent-500: #64748b;
+        --ops-scope-accent-900: #475569;
+        --ops-scope-accent-tint: #f8fafc;
+    }
+
+    .ops-worksheet-concern[class*='--priority-'],
+    .ops-review-concern[class*='--priority-'] {
         border-color: theme('colors.slate.200');
         background: theme('colors.white');
         box-shadow: none;
     }
 
-    .ops-worksheet-concern[class*='--intent-']::before,
-    .ops-review-concern[class*='--intent-']::before {
+    .ops-worksheet-concern[class*='--priority-']::before,
+    .ops-review-concern[class*='--priority-']::before {
         display: none;
     }
 
@@ -9843,34 +9824,79 @@
         text-transform: uppercase;
     }
 
-    .ops-intent-label--immediate_attention {
+    .ops-intent-label--must_do,
+    .ops-priority-label--must_do {
         color: #9f1239;
     }
 
-    .ops-intent-label--diagnostic {
-        color: #0f766e;
-    }
-
-    .ops-intent-label--repair_verification {
-        color: #7c3aed;
-    }
-
-    .ops-intent-label--maintenance {
-        color: #b45309;
-    }
-
-    .ops-intent-label--plan_soon {
+    .ops-priority-label--should_do {
         color: #4338ca;
     }
 
-    .ops-intent-label--information_only {
+    .ops-priority-label--could_do {
+        color: #b45309;
+    }
+
+    .ops-priority-label--information_only {
         color: #0369a1;
     }
 
-    .ops-intent-select {
+    .ops-priority-label--unset {
+        color: #64748b;
+    }
+
+    .ops-priority-choices {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    .ops-priority-choice {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.5rem;
+        border: 1px solid theme('colors.slate.300');
+        border-radius: 0.125rem;
+        background: theme('colors.white');
+        padding: 0.125rem 0.375rem;
+        font-size: 0.625rem;
         font-weight: 800;
         letter-spacing: 0.04em;
+        line-height: 1rem;
         text-transform: uppercase;
+        color: theme('colors.slate.600');
+        cursor: pointer;
+    }
+
+    .ops-priority-choice input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .ops-priority-choice:has(input:checked) {
+        border-color: currentColor;
+        background: color-mix(in srgb, currentColor 8%, white);
+    }
+
+    .ops-priority-work-type {
+        min-height: 1.5rem;
+        border: 0;
+        background: transparent;
+        padding: 0 0.25rem;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: theme('colors.slate.500');
+    }
+
+    .ops-priority-work-type:hover {
+        color: theme('colors.slate.950');
     }
 
     .ops-review-narrative {
@@ -10310,7 +10336,7 @@
         padding: 0.3rem 0.5rem 0.35rem;
     }
 
-    .ops-worksheet-concern[class*='--intent-'] .ops-worksheet-concern-header {
+    .ops-worksheet-concern[class*='--priority-'] .ops-worksheet-concern-header {
         border-top: 2px solid var(--ops-scope-accent-500);
         border-bottom-color: theme('colors.slate.200');
         background: var(--ops-scope-accent-tint);
@@ -10327,7 +10353,7 @@
         font-variant-numeric: tabular-nums;
     }
 
-    .ops-worksheet-concern[class*='--intent-'] .ops-worksheet-concern-header .ops-money {
+    .ops-worksheet-concern[class*='--priority-'] .ops-worksheet-concern-header .ops-money {
         color: theme('colors.slate.700');
     }
 
@@ -10687,7 +10713,7 @@
         padding: 0.3rem 0.5rem 0.35rem;
     }
 
-    .ops-review-concern[class*='--intent-'] .ops-review-concern-header {
+    .ops-review-concern[class*='--priority-'] .ops-review-concern-header {
         border-top: 2px solid var(--ops-scope-accent-500);
         border-bottom-color: theme('colors.slate.200');
         background: var(--ops-scope-accent-tint);
@@ -10698,7 +10724,7 @@
         font-variant-numeric: tabular-nums;
     }
 
-    .ops-review-concern[class*='--intent-'] .ops-review-concern-header .ops-money {
+    .ops-review-concern[class*='--priority-'] .ops-review-concern-header .ops-money {
         color: theme('colors.slate.700');
     }
 

@@ -6,6 +6,7 @@ use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -28,16 +29,19 @@ final class ReviewRequestAuthority
      */
     public function messagesFor(RepairOrder $repairOrder): Collection
     {
-        return ConversationMessage::query()
-            ->where('direction', OperationalCommunicationDirection::Outbound)
-            ->where(function ($query) use ($repairOrder): void {
-                $query->where('metadata->kind', self::METADATA_KIND)
-                    ->where('metadata->repair_order_id', $repairOrder->id);
-            })
-            ->with(['participant.user'])
-            ->orderBy('occurred_at')
-            ->orderBy('id')
-            ->get();
+        return app(RepairOrderReadCache::class)->remember(
+            'review-messages:'.$repairOrder->getKey(),
+            fn (): Collection => ConversationMessage::query()
+                ->where('direction', OperationalCommunicationDirection::Outbound)
+                ->where(function ($query) use ($repairOrder): void {
+                    $query->where('metadata->kind', self::METADATA_KIND)
+                        ->where('metadata->repair_order_id', $repairOrder->id);
+                })
+                ->with(['participant.user'])
+                ->orderBy('occurred_at')
+                ->orderBy('id')
+                ->get(),
+        );
     }
 
     public function latestMessage(RepairOrder $repairOrder): ?ConversationMessage

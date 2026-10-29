@@ -13,6 +13,7 @@ use App\Ark\Operations\RepairOrders\AssignRepairActionOwnerAction;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\NoteAudience;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairActionOwnerType;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -61,6 +62,8 @@ final class ApplyWorkTemplateAction
         ?RepairOrderConcern $attachToConcern = null,
         ?array $laborOverride = null,
         ?RecommendationIntent $newConcernIntent = null,
+        ?RecommendationPriority $newConcernPriority = null,
+        ?bool $newConcernInformationOnly = null,
     ): array {
         $repairOrder->ensureOpenForEditing();
 
@@ -89,7 +92,7 @@ final class ApplyWorkTemplateAction
             }
         }
 
-        return DB::transaction(function () use ($repairOrder, $template, $actor, $attachToConcern, $laborOverride, $newConcernIntent): array {
+        return DB::transaction(function () use ($repairOrder, $template, $actor, $attachToConcern, $laborOverride, $newConcernIntent, $newConcernPriority, $newConcernInformationOnly): array {
             $repairOrder->loadMissing('customer');
 
             if ($attachToConcern !== null) {
@@ -97,12 +100,26 @@ final class ApplyWorkTemplateAction
                 $concern = $attachToConcern;
             } else {
                 $position = ((int) $repairOrder->concerns()->max('position')) + 1;
+                $informationOnly = $newConcernInformationOnly ?? $template->isInformationOnly();
+                $priority = $newConcernPriority ?? $template->recommendationPriority();
+
+                if ($newConcernPriority instanceof RecommendationPriority) {
+                    $informationOnly = false;
+                }
+
+                if ($informationOnly) {
+                    $priority = null;
+                }
+
+                $semantic = $newConcernIntent ?? $template->recommendationIntent();
                 $concern = RepairOrderConcern::query()->create([
                     'repair_order_id' => $repairOrder->id,
                     'summary' => $template->title,
                     'disposition' => RepairOrderConcernDisposition::Recommended,
                     'billing_posture' => ConcernBillingPosture::defaultForCustomerTag($repairOrder->customer?->customer_type),
-                    'recommendation_intent' => ($newConcernIntent ?? $template->recommendationIntent())->value,
+                    'recommendation_intent' => $semantic?->value,
+                    'recommendation_priority' => $priority?->value,
+                    'information_only' => $informationOnly,
                     'position' => max(1, $position),
                 ]);
             }

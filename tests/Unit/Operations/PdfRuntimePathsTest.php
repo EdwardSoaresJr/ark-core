@@ -54,28 +54,57 @@ it('discovers chrome-headless-shell from a linux puppeteer cache layout', functi
     file_put_contents($chrome, "#!/bin/sh\n");
     chmod($chrome, 0755);
 
-    $previousCache = getenv('PUPPETEER_CACHE_DIR');
-    $previousChrome = getenv('PDF_CHROME_PATH');
+    $previousCacheEnv = array_key_exists('PUPPETEER_CACHE_DIR', $_ENV) ? $_ENV['PUPPETEER_CACHE_DIR'] : null;
+    $previousCacheServer = array_key_exists('PUPPETEER_CACHE_DIR', $_SERVER) ? $_SERVER['PUPPETEER_CACHE_DIR'] : null;
+    $previousCacheGetEnv = getenv('PUPPETEER_CACHE_DIR');
+
+    $previousChromeEnv = array_key_exists('PDF_CHROME_PATH', $_ENV) ? $_ENV['PDF_CHROME_PATH'] : null;
+    $previousChromeServer = array_key_exists('PDF_CHROME_PATH', $_SERVER) ? $_SERVER['PDF_CHROME_PATH'] : null;
+    $previousChromeGetEnv = getenv('PDF_CHROME_PATH');
 
     putenv('PUPPETEER_CACHE_DIR='.$cache);
     putenv('PDF_CHROME_PATH');
     $_ENV['PUPPETEER_CACHE_DIR'] = $cache;
+    $_SERVER['PUPPETEER_CACHE_DIR'] = $cache;
     unset($_ENV['PDF_CHROME_PATH'], $_SERVER['PDF_CHROME_PATH']);
 
     try {
         expect(PdfRuntimePaths::resolveChromePath())->toBe($chrome);
     } finally {
-        if (is_string($previousCache) && $previousCache !== '') {
-            putenv('PUPPETEER_CACHE_DIR='.$previousCache);
-            $_ENV['PUPPETEER_CACHE_DIR'] = $previousCache;
+        if ($previousCacheGetEnv !== false) {
+            putenv('PUPPETEER_CACHE_DIR='.$previousCacheGetEnv);
         } else {
             putenv('PUPPETEER_CACHE_DIR');
+        }
+
+        if ($previousCacheEnv !== null) {
+            $_ENV['PUPPETEER_CACHE_DIR'] = $previousCacheEnv;
+        } else {
             unset($_ENV['PUPPETEER_CACHE_DIR']);
         }
 
-        if (is_string($previousChrome) && $previousChrome !== '') {
-            putenv('PDF_CHROME_PATH='.$previousChrome);
-            $_ENV['PDF_CHROME_PATH'] = $previousChrome;
+        if ($previousCacheServer !== null) {
+            $_SERVER['PUPPETEER_CACHE_DIR'] = $previousCacheServer;
+        } else {
+            unset($_SERVER['PUPPETEER_CACHE_DIR']);
+        }
+
+        if ($previousChromeGetEnv !== false) {
+            putenv('PDF_CHROME_PATH='.$previousChromeGetEnv);
+        } else {
+            putenv('PDF_CHROME_PATH');
+        }
+
+        if ($previousChromeEnv !== null) {
+            $_ENV['PDF_CHROME_PATH'] = $previousChromeEnv;
+        } else {
+            unset($_ENV['PDF_CHROME_PATH']);
+        }
+
+        if ($previousChromeServer !== null) {
+            $_SERVER['PDF_CHROME_PATH'] = $previousChromeServer;
+        } else {
+            unset($_SERVER['PDF_CHROME_PATH']);
         }
 
         @unlink($chrome);

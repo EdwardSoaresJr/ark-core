@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Financial;
 
 use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use Illuminate\Support\Collection;
 
 final class BalanceDueCalculator
@@ -79,13 +80,24 @@ final class BalanceDueCalculator
         return $this->queryIssuedInvoice($repairOrder);
     }
 
+    /**
+     * @return Collection<int, RepairOrderLedgerEntry>
+     */
+    public function activeEntries(RepairOrder $repairOrder): Collection
+    {
+        return $this->queryActiveEntries($repairOrder);
+    }
+
     private function queryIssuedInvoice(RepairOrder $repairOrder): ?EstimateDocument
     {
-        return EstimateDocument::query()
-            ->where('repair_order_id', $repairOrder->id)
-            ->where('document_type', FinancialDocumentType::Invoice->value)
-            ->where('status', '!=', InvoiceStatus::Voided->value)
-            ->first();
+        return app(RepairOrderReadCache::class)->remember(
+            'issued-invoice:'.$repairOrder->getKey(),
+            fn (): ?EstimateDocument => EstimateDocument::query()
+                ->where('repair_order_id', $repairOrder->id)
+                ->where('document_type', FinancialDocumentType::Invoice->value)
+                ->where('status', '!=', InvoiceStatus::Voided->value)
+                ->first(),
+        );
     }
 
     /**
@@ -93,10 +105,13 @@ final class BalanceDueCalculator
      */
     private function queryActiveEntries(RepairOrder $repairOrder): Collection
     {
-        return RepairOrderLedgerEntry::query()
-            ->where('repair_order_id', $repairOrder->id)
-            ->active()
-            ->get();
+        return app(RepairOrderReadCache::class)->remember(
+            'active-ledger:'.$repairOrder->getKey(),
+            fn (): Collection => RepairOrderLedgerEntry::query()
+                ->where('repair_order_id', $repairOrder->id)
+                ->active()
+                ->get(),
+        );
     }
 
     /**

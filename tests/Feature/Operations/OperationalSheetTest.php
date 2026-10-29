@@ -295,7 +295,7 @@ test('operational sheet blade views render intake and tech content', function ()
     ])->render();
 
     expect($intakeHtml)
-        ->toContain('concern--intent-')
+        ->toContain('concern--priority-')
         ->toContain('identity-band')
         ->toContain('Customer')
         ->toContain('Vehicle')

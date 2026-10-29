@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\WorkTemplates;
 
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
+use App\Ark\Operations\RepairOrders\RecommendationPriority;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
@@ -42,6 +43,7 @@ final class ApplyWorkTemplateController
             'historical_match_tier' => ['nullable', 'string', 'in:exact,likely,possible,none'],
             'historical_labor_confirmed' => ['nullable', 'boolean'],
             'recommendation_intent' => ['nullable', Rule::enum(RecommendationIntent::class)],
+            'recommendation_posture' => ['nullable', Rule::in(['must_do', 'should_do', 'could_do', 'information_only'])],
             WorksheetMutationIdempotency::FIELD => ['nullable', 'string', 'max:80'],
         ]);
 
@@ -58,6 +60,15 @@ final class ApplyWorkTemplateController
         $newConcernIntent = $concern === null && filled($data['recommendation_intent'] ?? null)
             ? RecommendationIntent::from($data['recommendation_intent'])
             : null;
+        $newConcernPriority = null;
+        $newConcernInformationOnly = null;
+
+        if ($concern === null && ($data['recommendation_posture'] ?? null) === 'information_only') {
+            $newConcernInformationOnly = true;
+        } elseif ($concern === null && filled($data['recommendation_posture'] ?? null)) {
+            $newConcernPriority = RecommendationPriority::from($data['recommendation_posture']);
+            $newConcernInformationOnly = false;
+        }
 
         $result = $apply->handle(
             $repairOrder,
@@ -66,6 +77,8 @@ final class ApplyWorkTemplateController
             $concern,
             $laborOverride,
             $newConcernIntent,
+            $newConcernPriority,
+            $newConcernInformationOnly,
         );
 
         WorksheetMutationIdempotency::remember($repairOrder, 'work_template.apply', $idempotencyKey, [

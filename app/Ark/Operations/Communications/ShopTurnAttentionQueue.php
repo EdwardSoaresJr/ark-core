@@ -4,8 +4,11 @@ namespace App\Ark\Operations\Communications;
 
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
+use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Leads\ConversationLeadResolver;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Leads\LeadConfirmationAuditConversation;
+use App\Ark\Orientation\Orientation;
 use App\Ark\Runtime\Database\SchemaPresence;
 use App\Models\User;
 
@@ -21,6 +24,8 @@ final class ShopTurnAttentionQueue
         private readonly ShopTurnAttentionPresenter $presenter,
         private readonly LeadConfirmationAuditConversation $confirmationAudit,
         private readonly ConversationLeadResolver $conversationLeads,
+        private readonly CustomerCallContextResolver $callContextResolver,
+        private readonly ConversationTurnReason $turnReason,
     ) {}
 
     /**
@@ -35,11 +40,21 @@ final class ShopTurnAttentionQueue
 
         $conversations = Conversation::query()
             ->openPosture()
-            ->where('waiting_on', ConversationWaitingOn::Shop->value)
-            ->whereNotNull('posture_changed_at')
+            ->where(function ($query): void {
+                $query->where(function ($shop): void {
+                    $shop->where('waiting_on', ConversationWaitingOn::Shop->value)
+                        ->whereNotNull('posture_changed_at');
+                })->orWhere(function ($overdue): void {
+                    $overdue->where('waiting_on', ConversationWaitingOn::Customer->value)
+                        ->whereNotNull('follow_up_due_at')
+                        ->where('follow_up_due_at', '<=', now());
+                });
+            })
             ->with([
                 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->limit(1),
                 'messages.attachments',
+                'messages.participant.customer',
+                'latestInboundMessage',
                 'owner:id,name',
             ])
             ->orderBy('posture_changed_at')
@@ -69,11 +84,23 @@ final class ShopTurnAttentionQueue
             return [];
         }
 
+        $contexts = $this->callContextResolver->mapForAttentionList(
+            $conversations->map(fn (Conversation $conversation): string => (string) $conversation->contact_address)->all(),
+        );
+        Orientation::preloadForContexts($contexts);
+        $advisorOutbound = $this->turnReason->advisorOutboundConversationIds($conversations);
+
         return $conversations
-            ->map(fn (Conversation $conversation): array => $this->presenter->present(
-                $conversation,
-                $leadsByConversationId[$conversation->id] ?? null,
-            ))
+            ->map(function (Conversation $conversation) use ($leadsByConversationId, $contexts, $advisorOutbound): array {
+                $phone = PhoneNumber::normalize((string) $conversation->contact_address);
+
+                return $this->presenter->present(
+                    $conversation,
+                    $leadsByConversationId[$conversation->id] ?? null,
+                    $phone !== null ? ($contexts[$phone] ?? null) : null,
+                    isset($advisorOutbound[$conversation->id]),
+                );
+            })
             ->values()
             ->all();
     }

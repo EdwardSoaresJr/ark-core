@@ -16,7 +16,7 @@ class TelephonyRecordingWebhookController
             return response('Invalid signature.', 401);
         }
 
-        $outcome = $process->execute($request, voicemail: false);
+        $outcome = $process->execute($request, voicemail: $request->boolean('voicemail'));
 
         if ($outcome === ProcessCallRecordingOutcome::Unmatched) {
             return response('', 404);

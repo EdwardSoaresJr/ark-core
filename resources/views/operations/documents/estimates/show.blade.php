@@ -10,7 +10,8 @@
         $declinedCount = $snapshotConcerns->where('disposition', 'declined')->count();
         $recommendedCount = $snapshotConcerns->where('disposition', 'recommended')->count();
         $staff = $snapshot['staff'] ?? [];
-        $staffExecution = $staff['execution'] ?? [
+        // Invoice snapshots (and older estimates) record only some execution fields.
+        $staffExecution = array_filter((array) ($staff['execution'] ?? []), fn ($value) => $value !== null) + [
             'technician_name' => $snapshot['repair_order']['assigned_technician_name'] ?? 'Unassigned tech',
             'posture' => $snapshot['repair_order']['execution_posture'] ?? 'Execution posture not recorded',
             'next_action' => $snapshot['repair_order']['execution_next_action'] ?? 'Review repair order status',
@@ -201,26 +202,27 @@
 
             <div class="mt-2.5 space-y-2">
                 @php
-                    $concernDisplayEntries = App\Ark\Operations\RepairOrders\RecommendationIntent::displayEntriesForSnapshot($snapshot['concerns']);
+                    $concernDisplayEntries = App\Ark\Operations\RepairOrders\RecommendationPresentation::displayEntriesForSnapshot($snapshot['concerns']);
                 @endphp
                 @forelse ($concernDisplayEntries as $entry)
                     @php
-                        $concern = $entry['concern'];
+                        // Invoice snapshots carry approved work without the estimate's diagnostic narrative.
+                        $concern = $entry['concern'] + ['customer_states' => null, 'verified_findings' => null, 'dtcs_summary' => null, 'recommendation' => null];
                         $customerStates = trim((string) $concern['customer_states']);
                         $duplicateCustomerStates = $customerStates !== ''
                             && in_array(mb_strtolower($customerStates), [
                                 mb_strtolower(trim((string) $concern['summary'])),
                                 mb_strtolower(trim((string) $snapshot['intake']['concern_summary'])),
                             ], true);
-                        $intent = App\Ark\Operations\RepairOrders\RecommendationIntent::fromStored($concern['recommendation_intent'] ?? null);
+                        $presentation = App\Ark\Operations\RepairOrders\RecommendationPresentation::forSnapshot($concern);
                     @endphp
-                    <section class="ops-review-concern {{ $intent->reviewScopeClass() }}">
+                    <section class="ops-review-concern {{ $presentation->reviewScopeClass() }}">
                         <x-operations.scope-header
                             class="ops-review-concern-header"
                             :title="$concern['summary']"
                             :total="$concern['subtotal']"
-                            :eyebrow="$intent->staffLabel()"
-                            :eyebrow-class="$intent->intentLabelClass()"
+                            :eyebrow="$presentation->staffLabel()"
+                            :eyebrow-class="$presentation->labelClass()"
                         >
                             <x-slot:status>
                                 @include('operations.repair-orders.partials.repair-order-concern-disposition-decision', [
@@ -272,6 +274,9 @@
                                     <span class="text-right">Total</span>
                                 </div>
                                 @foreach ($concern['lines'] as $line)
+                                    @php
+                                        $line += ['matrix_suggested_price_cents' => null, 'pricing_matrix_name' => null];
+                                    @endphp
                                     @if ($line['type'] === 'note')
                                         <div class="ops-line-row ops-line-row--note text-sm">
                                             <div class="mb-1 flex min-w-0 flex-wrap items-center gap-2">

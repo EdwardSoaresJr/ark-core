@@ -61,6 +61,9 @@ final class ConversationMessageEventMapper
                 'channel_label' => $channelLabel,
                 'direction' => $message->direction->value,
                 'call_note' => $isCallNote,
+                'imported_label' => filled($message->metadata['backfilled_at'] ?? null)
+                    ? 'Imported history'.((int) ($message->metadata['media_count'] ?? 0) > 0 && $message->attachments->isEmpty() ? ' · photo not recovered' : '')
+                    : null,
                 'attachment_count' => $message->attachments->count(),
                 'attachments' => $message->attachments
                     ->map(fn ($attachment): array => [

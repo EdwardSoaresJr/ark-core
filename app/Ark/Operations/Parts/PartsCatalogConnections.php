@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Parts;
 
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderReadCache;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Parts\ManagedPartsGate;
 use App\Models\User;
@@ -18,7 +19,10 @@ final class PartsCatalogConnections
      */
     public function forRepairOrder(RepairOrder $repairOrder, ?User $user = null): array
     {
-        return $this->rows($user, $repairOrder);
+        return app(RepairOrderReadCache::class)->remember(
+            'parts-catalogs:'.($repairOrder?->getKey() ?? '0').':'.($user?->getKey() ?? '0'),
+            fn (): array => $this->rows($user, $repairOrder),
+        );
     }
 
     /**

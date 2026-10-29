@@ -22,7 +22,6 @@
 |------|--------|
 | `layouts/guest.blade.php` | Favicons + login logo via `Branding::loginImage()` |
 | `components/operations/app.blade.php` | Favicons + sidebar icon via `Branding::sidebarIcon()` |
-| `layouts/app.blade.php` | Favicons |
 | `components/public/app.blade.php` | Favicons |
 | `components/portal/app.blade.php` | Favicons |
 | `components/errors/page.blade.php` | Favicons |

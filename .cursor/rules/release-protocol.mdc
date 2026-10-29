@@ -1,0 +1,16 @@
+---
+description: ARK release commands for implement, prepare, and deploy
+alwaysApply: true
+---
+
+# Release protocol
+
+When the user says "Implement and PR this.", "Prepare this for release.", or "Deploy the approved release.", follow docs/engineering/RELEASE_PROTOCOL.md. Do not restate the product boundary.
+
+Implement and PR never deploys. Prepare stops at READY FOR DEPLOYMENT. Deploy runs only when that same message names the artifact and the production target. Otherwise stop BLOCKED BEFORE CUTOVER.
+
+Passing checks do not mean the pull request is merged. Do not weaken production protection.
+
+A hosted shop release, including a communications-only change, runs Landlord `host/shop-release/shop-release.sh` through the `cursor-release` key. Never write a cutover script, start the shop container by hand, or use the shared root key. Diagnostics use the `cursor-comms` key.
+
+End every feature response with one release state from that protocol. Only DEPLOYED AND HEALTHY means `lugsnplugs.arksms.com` is running it. `lnp.arksms.com` is an older deployment and is not that target.

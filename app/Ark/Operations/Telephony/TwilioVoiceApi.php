@@ -3,18 +3,14 @@
 namespace App\Ark\Operations\Telephony;
 
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
+use DateTimeInterface;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class TwilioVoiceApi
 {
-    public function __construct(
-        private readonly ShopIntegrationCredentials $credentials,
-    ) {}
-
     public function configured(): bool
     {
-        return $this->credentials->twilioConfigured();
+        return ShopIntegrationCredentials::forCurrentShop()->twilioConfigured();
     }
 
     public function createOutboundCall(
@@ -24,139 +20,88 @@ class TwilioVoiceApi
         string $statusCallbackUrl,
         ?int $timeout = null,
     ): ?string {
-        if (! $this->configured()) {
+        if (! $this->configured() || $to === '') {
             return null;
         }
-
-        $accountSid = (string) $this->credentials->twilioAccountSid();
 
         $payload = [
             'From' => $from,
             'To' => $to,
             'Url' => $twimlUrl,
-            'Method' => 'POST',
-            'StatusCallback' => $statusCallbackUrl,
-            'StatusCallbackEvent' => 'initiated ringing answered completed',
-            'StatusCallbackMethod' => 'POST',
         ];
-
-        if ($timeout !== null && $timeout > 0) {
+        if ($statusCallbackUrl !== '') {
+            $payload['StatusCallback'] = $statusCallbackUrl;
+            $payload['StatusCallbackMethod'] = 'POST';
+        }
+        if ($timeout !== null) {
             $payload['Timeout'] = $timeout;
         }
 
-        $response = Http::withBasicAuth($accountSid, (string) $this->credentials->twilioAuthToken())
-            ->asForm()
-            ->post("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Calls.json", $payload);
+        $response = $this->post('Calls.json', $payload);
 
-        if (! $response->successful()) {
-            Log::warning('twilio.outbound_call_failed', [
-                'to' => $to,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
+        $sid = $response['sid'] ?? null;
 
-            return null;
-        }
-
-        $callSid = trim((string) ($response->json('sid') ?? ''));
-
-        return $callSid !== '' ? $callSid : null;
+        return is_string($sid) && $sid !== '' ? $sid : null;
     }
 
     public function redirectCall(string $callSid, string $twimlUrl): bool
     {
-        if (! $this->configured() || $callSid === '' || $twimlUrl === '') {
+        if (! $this->configured() || $callSid === '') {
             return false;
         }
 
-        $accountSid = (string) $this->credentials->twilioAccountSid();
-
-        $response = Http::withBasicAuth($accountSid, (string) $this->credentials->twilioAuthToken())
-            ->asForm()
-            ->post("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Calls/{$callSid}.json", [
-                'Url' => $twimlUrl,
-                'Method' => 'POST',
-            ]);
-
-        if (! $response->successful()) {
-            Log::warning('twilio.redirect_call_failed', [
-                'call_sid' => $callSid,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return false;
-        }
-
-        return true;
+        return $this->post('Calls/'.$callSid.'.json', [
+            'Url' => $twimlUrl,
+            'Method' => 'POST',
+        ]) !== null;
     }
 
     /**
      * @return list<array{sid: string, call_sid: string, duration: int, url: string, status: string}>
      */
-    public function listRecordingsSince(\DateTimeInterface $since): array
+    public function listRecordingsSince(DateTimeInterface $since): array
     {
         if (! $this->configured()) {
             return [];
         }
 
-        $accountSid = (string) $this->credentials->twilioAccountSid();
-        $recordings = [];
-        $url = "https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Recordings.json";
-        $query = [
-            'DateCreated>' => \Illuminate\Support\Carbon::parse($since)->utc()->format('Y-m-d\TH:i:s\Z'),
-            'PageSize' => 100,
-        ];
+        $credentials = ShopIntegrationCredentials::forCurrentShop();
+        $sid = (string) $credentials->twilioAccountSid();
+        $token = (string) $credentials->twilioAuthToken();
+        $response = Http::withBasicAuth($sid, $token)
+            ->timeout(20)
+            ->get('https://api.twilio.com/2010-04-01/Accounts/'.$sid.'/Recordings.json', [
+                'DateCreated>' => $since->format('Y-m-d'),
+            ]);
 
-        while ($url !== null && $url !== '') {
-            $response = Http::withBasicAuth($accountSid, (string) $this->credentials->twilioAuthToken())
-                ->get($url, $query);
-
-            $query = [];
-
-            if (! $response->successful()) {
-                Log::warning('twilio.list_recordings_failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                break;
-            }
-
-            $rows = $response->json('recordings') ?? [];
-
-            if (! is_array($rows)) {
-                break;
-            }
-
-            foreach ($rows as $row) {
-                if (! is_array($row)) {
-                    continue;
-                }
-
-                $sid = trim((string) ($row['sid'] ?? ''));
-                $callSid = trim((string) ($row['call_sid'] ?? ''));
-
-                if ($sid === '' || $callSid === '') {
-                    continue;
-                }
-
-                $recordings[] = [
-                    'sid' => $sid,
-                    'call_sid' => $callSid,
-                    'duration' => (int) ($row['duration'] ?? 0),
-                    'status' => (string) ($row['status'] ?? ''),
-                    'url' => "https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Recordings/{$sid}",
-                ];
-            }
-
-            $next = $response->json('next_page_uri');
-            $url = is_string($next) && $next !== ''
-                ? (str_starts_with($next, 'http') ? $next : 'https://api.twilio.com'.$next)
-                : null;
+        if (! $response->successful()) {
+            return [];
         }
 
-        return $recordings;
+        $rows = $response->json('recordings');
+        if (! is_array($rows)) {
+            return [];
+        }
+
+        $mapped = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $recordingSid = (string) ($row['sid'] ?? $row['recording_sid'] ?? '');
+            if ($recordingSid === '') {
+                continue;
+            }
+            $mapped[] = [
+                'sid' => $recordingSid,
+                'call_sid' => (string) ($row['call_sid'] ?? $row['callSid'] ?? ''),
+                'duration' => (int) ($row['duration'] ?? 0),
+                'url' => (string) ($row['url'] ?? 'https://api.twilio.com/2010-04-01/Accounts/'.$sid.'/Recordings/'.$recordingSid),
+                'status' => (string) ($row['status'] ?? ''),
+            ];
+        }
+
+        return $mapped;
     }
 
     public function hangup(string $callSid): void
@@ -165,12 +110,30 @@ class TwilioVoiceApi
             return;
         }
 
-        $accountSid = (string) $this->credentials->twilioAccountSid();
+        $this->post('Calls/'.$callSid.'.json', ['Status' => 'completed']);
+    }
 
-        Http::withBasicAuth($accountSid, (string) $this->credentials->twilioAuthToken())
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>|null
+     */
+    private function post(string $path, array $payload): ?array
+    {
+        $credentials = ShopIntegrationCredentials::forCurrentShop();
+        $sid = (string) $credentials->twilioAccountSid();
+        $token = (string) $credentials->twilioAuthToken();
+
+        $response = Http::withBasicAuth($sid, $token)
             ->asForm()
-            ->post("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Calls/{$callSid}.json", [
-                'Status' => 'completed',
-            ]);
+            ->timeout(20)
+            ->post('https://api.twilio.com/2010-04-01/Accounts/'.$sid.'/'.$path, $payload);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $json = $response->json();
+
+        return is_array($json) ? $json : null;
     }
 }

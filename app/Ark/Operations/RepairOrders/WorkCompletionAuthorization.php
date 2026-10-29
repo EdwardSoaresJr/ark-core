@@ -160,6 +160,19 @@ final class WorkCompletionAuthorization
      */
     public function customerApprovedLaborAndPartIdSet(RepairOrder $repairOrder): array
     {
+        return app(RepairOrderReadCache::class)->remember(
+            'approved-lines:'.$repairOrder->getKey(),
+            function () use ($repairOrder): array {
+                return $this->resolveCustomerApprovedLaborAndPartIdSet($repairOrder);
+            },
+        );
+    }
+
+    /**
+     * @return array<int, true>
+     */
+    private function resolveCustomerApprovedLaborAndPartIdSet(RepairOrder $repairOrder): array
+    {
         $repairOrder->loadMissing(['lines.concern']);
 
         $concerns = $repairOrder->lines

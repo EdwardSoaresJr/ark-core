@@ -54,7 +54,7 @@ final class RepairOrderVisitReasonConcernAcceptController
                 'summary' => $summary,
                 'customer_states' => null,
                 'disposition' => RepairOrderConcernDisposition::Draft,
-                'recommendation_intent' => $entryKind->defaultRecommendationIntent(),
+                ...ConcernRecommendationDefaults::forEntryKind($entryKind),
                 'billing_posture' => ConcernBillingPosture::defaultForCustomer($repairOrder->customer),
                 'scope_entry_kind' => $entryKind,
                 'position' => $position,

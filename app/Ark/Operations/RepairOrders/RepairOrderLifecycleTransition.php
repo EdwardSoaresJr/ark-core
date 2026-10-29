@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\Documents\EstimateDocument;
 use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
@@ -10,6 +11,7 @@ use App\Ark\Operations\Financial\RepairOrderCloseoutAuthority;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
 use App\Ark\Operations\Staff\SoloShopOperations;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
@@ -175,38 +177,55 @@ class RepairOrderLifecycleTransition
             }
         }
 
-        $repairOrder->update($attributes);
+        $applyMove = function () use ($repairOrder, $attributes, $toStatusSlug, $fromStatus, $actor, $closeVariantKey, $lostReason, $reviewRequestSent, $operationalDates): ?EstimateDocument {
+            $repairOrder->update($attributes);
 
-        if ($toStatusSlug === RepairOrderStatus::ReadyPickup->value || $this->statusCatalog->isTerminalSlug($toStatusSlug)) {
-            $operationalDates->applyClose($repairOrder->fresh());
+            if ($toStatusSlug === RepairOrderStatus::ReadyPickup->value || $this->statusCatalog->isTerminalSlug($toStatusSlug)) {
+                $operationalDates->applyClose($repairOrder->fresh());
+            }
+
+            if ($toStatusSlug === RepairOrderStatus::ReadyPickup->value) {
+                $this->issueFinalInvoiceIfEligible($repairOrder->fresh(), $actor);
+            }
+
+            $finalDocument = null;
+
+            if ($this->statusCatalog->isTerminalSlug($toStatusSlug)) {
+                $finalDocument = $this->documents->createOrRefresh($repairOrder->fresh(), $actor);
+            } else {
+                $this->documents->markDirtyForRepairOrder($repairOrder);
+            }
+
+            if ($toStatusSlug === RepairOrderStatus::Closed->value && $closeVariantKey === 'paid') {
+                app(RepairOrderPosting::class)->postWhenReady($repairOrder->fresh(), $actor);
+            }
+
+            $this->events->record(
+                OperationalEventName::RepairOrderLifecycleChanged,
+                $repairOrder,
+                actor: $actor,
+                payload: [
+                    'from_status' => $fromStatus,
+                    'to_status' => $toStatusSlug,
+                    'close_variant_key' => $closeVariantKey,
+                    'lost_reason_key' => $lostReason?->value,
+                    'review_request_sent' => $reviewRequestSent,
+                ],
+            );
+
+            return $finalDocument;
+        };
+
+        // Ready for Pickup issues the invoice, which renders its PDF, so only terminal
+        // moves open a transaction here. The final PDF renders outside it, and a
+        // rendering failure must not undo the close.
+        $finalDocument = $this->statusCatalog->isTerminalSlug($toStatusSlug)
+            ? DB::transaction($applyMove)
+            : $applyMove();
+
+        if ($finalDocument !== null) {
+            $this->documents->generateFinalPdf($finalDocument);
         }
-
-        if ($toStatusSlug === RepairOrderStatus::ReadyPickup->value) {
-            $this->issueFinalInvoiceIfEligible($repairOrder->fresh(), $actor);
-        }
-
-        if ($this->statusCatalog->isTerminalSlug($toStatusSlug)) {
-            $this->documents->snapshotFinalPdfForRepairOrder($repairOrder->fresh(), $actor);
-        } else {
-            $this->documents->markDirtyForRepairOrder($repairOrder);
-        }
-
-        if ($toStatusSlug === RepairOrderStatus::Closed->value && $closeVariantKey === 'paid') {
-            app(RepairOrderPosting::class)->postWhenReady($repairOrder->fresh(), $actor);
-        }
-
-        $this->events->record(
-            OperationalEventName::RepairOrderLifecycleChanged,
-            $repairOrder,
-            actor: $actor,
-            payload: [
-                'from_status' => $fromStatus,
-                'to_status' => $toStatusSlug,
-                'close_variant_key' => $closeVariantKey,
-                'lost_reason_key' => $lostReason?->value,
-                'review_request_sent' => $reviewRequestSent,
-            ],
-        );
 
         return $repairOrder->refresh();
     }

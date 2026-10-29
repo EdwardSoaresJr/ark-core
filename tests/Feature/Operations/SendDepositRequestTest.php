@@ -99,10 +99,10 @@ function seedDepositSmsCapablePhone(string $phone = '7195558080'): void
     );
 }
 
-test('send deposit request creates a deposit token and sends through platform', function () {
+test('send deposit request creates a deposit token and sends through the shop sms port', function () {
     connectDepositPortal();
-    $smsPosts = [];
-    fakeDepositPortalHttp(smsPosts: $smsPosts);
+    $sms = bindFakeOutboundSms();
+    fakeDepositPortalHttp();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();
@@ -115,32 +115,32 @@ test('send deposit request creates a deposit token and sends through platform', 
             'delivery' => 'sms',
         ]);
 
-    $response->assertOk()
-        ->assertJsonPath('message_id', null);
+    $response->assertOk();
 
     expect($response->json('deposit_url'))->toContain('/portal/pay/')
-        ->and($response->json('amount_display'))->toContain('50');
+        ->and($response->json('amount_display'))->toContain('50')
+        ->and($response->json('message_id'))->not->toBeNull();
 
     $token = CustomerDocumentAccessToken::query()->sole();
-    $depositReference = collect($smsPosts[0]['context'] ?? [])->firstWhere('type', 'deposit_request');
+    $depositReference = collect($sms->sent[0]['context'] ?? [])->firstWhere('type', 'deposit_request');
 
-    expect($smsPosts)->toHaveCount(1)
-        ->and($smsPosts[0]['body'] ?? '')->toContain('/go/')
-        ->and($smsPosts[0]['body'] ?? '')->toContain('Deposit requested')
-        ->and($smsPosts[0]['body'] ?? '')->not->toContain('/portal/pay/')
+    expect($sms->sent)->toHaveCount(1)
+        ->and($sms->sent[0]['body'] ?? '')->toContain('/go/')
+        ->and($sms->sent[0]['body'] ?? '')->toContain('Deposit requested')
+        ->and($sms->sent[0]['body'] ?? '')->not->toContain('/portal/pay/')
         ->and($depositReference['id'] ?? null)->toBe((string) $token->id)
         ->and($token->repair_order_id)->toBe($repairOrder->id)
         ->and($token->scope)->toBe(CustomerDocumentAccessToken::SCOPE_PAY_DEPOSIT)
         ->and($token->amount_cents)->toBe(5000)
         ->and($token->financial_document_id)->toBeNull()
-        ->and(ConversationMessage::query()->count())->toBe(0)
+        ->and(ConversationMessage::query()->count())->toBe(1)
         ->and(CommunicationEvent::query()->where('event_type', OperationalCommunicationType::InvoiceSent)->exists())->toBeTrue();
 });
 
 test('resending deposit request reuses the same short url', function () {
     connectDepositPortal();
-    $smsPosts = [];
-    fakeDepositPortalHttp(smsPosts: $smsPosts);
+    $sms = bindFakeOutboundSms();
+    fakeDepositPortalHttp();
 
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = financialCloseoutRepairOrder();
@@ -161,15 +161,15 @@ test('resending deposit request reuses the same short url', function () {
         ])
         ->assertOk();
 
-    $firstGo = (string) str($smsPosts[0]['body'] ?? '')->after('/go/');
-    $secondGo = (string) str($smsPosts[1]['body'] ?? '')->after('/go/');
+    $firstGo = (string) str($sms->sent[0]['body'] ?? '')->after('/go/');
+    $secondGo = (string) str($sms->sent[1]['body'] ?? '')->after('/go/');
 
-    expect($smsPosts)->toHaveCount(2)
+    expect($sms->sent)->toHaveCount(2)
         ->and($secondGo)->toBe($firstGo)
         ->and($firstGo)->not->toBe('')
         ->and(PortalShortLink::query()->count())->toBe(1)
         ->and(CustomerDocumentAccessToken::query()->count())->toBe(2)
-        ->and(ConversationMessage::query()->count())->toBe(0);
+        ->and(ConversationMessage::query()->count())->toBe(2);
 });
 
 test('send deposit request via email creates conversation message', function () {

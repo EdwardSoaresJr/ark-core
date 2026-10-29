@@ -1,6 +1,6 @@
 <?php
 
-use App\Ark\Dragon\Agent\DragonToolRegistry;
+use Ark\Saas\Dragon\Agent\DragonToolRegistry;
 use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Appointments\AppointmentKind;
 use App\Ark\Operations\Appointments\AppointmentStatus;
@@ -18,6 +18,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function (): void {
+    migrateHostedDragon();
     ShopSettings::current()->update([
         'appointments_enabled' => true,
         'shop_timezone' => 'America/Denver',

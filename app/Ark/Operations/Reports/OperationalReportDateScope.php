@@ -177,6 +177,18 @@ final class OperationalReportDateScope
             ->whereBetween(DB::raw(self::closedAtSql('repair_orders')), [$from, $to]);
     }
 
+    /**
+     * Shop-local calendar days from $from through $to, inclusive. UTC dates and daylight saving
+     * changes do not affect the count.
+     */
+    public static function shopCalendarDayCount(Carbon $from, Carbon $to): int
+    {
+        $firstDay = Carbon::parse(self::shopDateString($from), 'UTC');
+        $lastDay = Carbon::parse(self::shopDateString($to), 'UTC');
+
+        return max(1, (int) $firstDay->diffInDays($lastDay) + 1);
+    }
+
     public static function weekdayCount(Carbon $from, Carbon $to): int
     {
         return self::shopOpenDayCount($from, $to);

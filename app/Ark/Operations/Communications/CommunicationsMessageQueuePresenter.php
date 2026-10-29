@@ -5,6 +5,8 @@ namespace App\Ark\Operations\Communications;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationMessageAttachment;
 use App\Ark\Operations\Conversations\CustomerCallContext;
+use App\Ark\Operations\Leads\Lead;
+use Illuminate\Support\Collection;
 use App\Ark\Operations\Conversations\CustomerCallContextOpenRepairOrder;
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Conversations\MessengerCustomerResolver;
@@ -31,12 +33,56 @@ class CommunicationsMessageQueuePresenter
     ) {}
 
     /**
+     * @param  Collection<int, ConversationMessage>|array<int, ConversationMessage>  $messages
+     * @return list<array<string, mixed>>
+     */
+    public function presentAll(Collection|array $messages, bool $unread = false): array
+    {
+        $messages = collect($messages);
+        if ($messages->isEmpty()) {
+            return [];
+        }
+
+        $messages->each(fn (ConversationMessage $message) => $message->loadMissing(['conversation', 'attachments', 'participant.customer']));
+        $conversations = $messages
+            ->map(fn (ConversationMessage $message) => $message->conversation)
+            ->filter()
+            ->unique('id')
+            ->values();
+        $leads = $this->conversationLeads->mapForConversations($conversations);
+        $contexts = $this->callContextResolver->mapForAttentionList(
+            $conversations->map(fn ($conversation): string => (string) $conversation->contact_address)->all(),
+        );
+        Orientation::preloadForContexts($contexts);
+        $advisorOutbound = $this->turnReason->advisorOutboundConversationIds($conversations);
+
+        return $messages
+            ->map(function (ConversationMessage $message) use ($unread, $leads, $contexts, $advisorOutbound): array {
+                $phone = PhoneNumber::normalize((string) ($message->conversation->contact_address ?? ''));
+
+                return $this->present(
+                    $message,
+                    $phone !== null ? ($contexts[$phone] ?? null) : null,
+                    $unread,
+                    $leads[$message->conversation_id] ?? null,
+                    isset($advisorOutbound[(int) $message->conversation_id]),
+                    leadKnown: true,
+                );
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function present(
         ConversationMessage $message,
         ?CustomerCallContext $context = null,
         bool $unread = false,
+        ?Lead $lead = null,
+        ?bool $hasAdvisorOutbound = null,
+        bool $leadKnown = false,
     ): array {
         $message->loadMissing(['conversation', 'attachments', 'participant.customer']);
 
@@ -58,7 +104,7 @@ class CommunicationsMessageQueuePresenter
             default => [$message->channel->value, $message->channel->label()],
         };
         $phone = $message->channel === OperationalCommunicationChannel::Messenger ? '' : $contactAddress;
-        $stateLabel = $this->stateLabel($message, $unread, $hasAttachments, $channelKind);
+        $stateLabel = $this->stateLabel($message, $unread, $hasAttachments, $channelKind, $lead, $hasAdvisorOutbound, $leadKnown);
         $headline = $matched ? (string) $customer->name : 'Unknown';
         $canReply = match ($message->channel) {
             OperationalCommunicationChannel::Messenger => $matched && MetaMessengerConfiguration::current()->isConfigured(),
@@ -178,12 +224,21 @@ class CommunicationsMessageQueuePresenter
         ];
     }
 
-    private function stateLabel(ConversationMessage $message, bool $unread, bool $hasAttachments, string $channelKind): string
-    {
+    private function stateLabel(
+        ConversationMessage $message,
+        bool $unread,
+        bool $hasAttachments,
+        string $channelKind,
+        ?Lead $lead = null,
+        ?bool $hasAdvisorOutbound = null,
+        bool $leadKnown = false,
+    ): string {
         if ($unread) {
-            $lead = $this->conversationLeads->forTurn($message->conversation);
+            if (! $leadKnown) {
+                $lead = $this->conversationLeads->forTurn($message->conversation);
+            }
 
-            $turn = $this->turnReason->for($message->conversation, $lead);
+            $turn = $this->turnReason->for($message->conversation, $lead, $hasAdvisorOutbound, $leadKnown);
 
             if (in_array($turn['turn_label'], ['Customer replied', 'Needs first response'], true)) {
                 return $turn['state_label'];
