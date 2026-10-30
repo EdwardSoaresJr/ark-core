@@ -1,0 +1,191 @@
+@php
+    // Same items and permission flags as the legacy rail in components/operations/app.blade.php. Change both together.
+    $user = auth()->user();
+    $canOperate = $user?->can('operations.access') ?? false;
+    $navSections = [
+        [
+            'label' => null,
+            'show' => $canUseProductionShell || $canViewScoreboard,
+            'items' => [
+                ['label' => 'Dashboard', 'icon' => 'dashboard', 'url' => route('operations.dashboard'), 'active' => $dashboardNavActive, 'show' => true],
+                ['label' => 'Time clock', 'icon' => 'clock', 'url' => route('operations.time-clock.index'), 'active' => request()->routeIs('operations.time-clock.*'), 'show' => $canUseTimeClock],
+            ],
+        ],
+        [
+            'label' => 'Operations',
+            'show' => $hasOperationsNav,
+            'items' => [
+                ['label' => 'Job Board', 'icon' => 'layout-grid', 'url' => route('operations.index'), 'active' => request()->routeIs('operations.index', 'operations.workboard'), 'show' => $canOperate],
+                ['label' => 'Workboard', 'icon' => 'layout-grid', 'url' => route('operations.workboard'), 'active' => request()->routeIs('operations.workboard'), 'show' => $canUseProductionShell && ! $canOperate],
+                ['label' => 'Schedule', 'icon' => 'calendar', 'url' => route('operations.appointments.index'), 'active' => request()->routeIs('operations.appointments.*'), 'show' => $canOperate && \App\Ark\Operations\Settings\ShopSettings::current()->appointmentsEnabled()],
+                ['label' => 'Communications', 'icon' => 'message', 'url' => $commsPressure['attention_url'], 'active' => request()->routeIs('operations.communications.*'), 'show' => $canOperate, 'live_count' => true],
+            ],
+        ],
+        [
+            'label' => 'Records',
+            'show' => $hasRecordsNav,
+            'items' => [
+                ['label' => 'Repair Orders', 'icon' => 'file-text', 'url' => route('operations.repair-orders.index'), 'active' => request()->routeIs('operations.repair-orders.*'), 'show' => $user?->can('repair_orders.view') ?? false],
+                ['label' => 'Vehicles', 'icon' => 'car', 'url' => route('operations.vehicles.search'), 'active' => request()->routeIs('operations.vehicles.*'), 'show' => $user?->can('customers.manage') ?? false],
+                ['label' => 'Customers', 'icon' => 'users', 'url' => route('operations.customers.search'), 'active' => request()->routeIs('operations.customers.*'), 'show' => $user?->can('customers.manage') ?? false],
+            ],
+        ],
+        [
+            'label' => 'Business',
+            'show' => $hasBusinessNav,
+            'items' => [
+                ['label' => 'Cockpit', 'icon' => 'gauge', 'url' => route('operations.business'), 'active' => request()->routeIs('operations.business'), 'show' => $canAccessBusinessWorkspace],
+                ['label' => 'Reports', 'icon' => 'chart-bar', 'url' => route('operations.reports.index'), 'active' => request()->routeIs('operations.reports.*'), 'show' => $user?->can('financial.view') ?? false],
+                ['label' => 'Day Review', 'icon' => 'calendar-stats', 'url' => route('operations.owner.day-review'), 'active' => request()->routeIs('operations.owner.day-review', 'operations.owner.bookend'), 'show' => $canAccessOwnerWorkspace],
+                ['label' => 'Tech production', 'icon' => 'tool', 'url' => route('operations.owner.technician-production.index'), 'active' => request()->routeIs('operations.owner.technician-production.*'), 'show' => $canAccessOwnerWorkspace],
+            ],
+        ],
+        [
+            'label' => 'System',
+            'show' => $hasSystemNav,
+            'items' => [
+                ['label' => \App\Support\Branding\Branding::learnName(), 'icon' => 'school', 'url' => \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl(), 'active' => request()->routeIs('operations.learn.*'), 'show' => $showArkademyNav],
+                ['label' => 'Stations & Phones', 'icon' => 'device-desktop', 'url' => route('operations.shop.communications'), 'active' => request()->routeIs('operations.shop.*'), 'show' => $canManageSettings],
+                ['label' => 'Settings', 'icon' => 'settings', 'url' => route('operations.settings.shop.edit'), 'active' => request()->routeIs('operations.settings.*'), 'show' => $canManageSettings],
+            ],
+        ],
+    ];
+    $commsBadgeClass = match (true) {
+        (bool) ($commsPressure['has_live_calls'] ?? false) => 'bg-red text-red-fg',
+        ($commsNavSummary['since_last_shift_count'] ?? 0) > 0 => 'bg-orange text-orange-fg',
+        default => 'bg-red-lt',
+    };
+    $topbarAvatarUser = $workstationPresence->currentOperator ?? $user;
+@endphp
+
+<div class="page">
+    <aside class="navbar navbar-vertical navbar-expand-lg d-print-none" data-bs-theme="dark" aria-label="Primary operations">
+        <div class="container-fluid">
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#ark-sidebar-menu"
+                aria-controls="ark-sidebar-menu"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-brand">
+                <a href="{{ $staffFrontDoorUrl }}">
+                    <img
+                        src="{{ \App\Support\Branding\Branding::logo('full_white') }}"
+                        alt="{{ \App\Support\Branding\Branding::tabTitle() }}"
+                        class="navbar-brand-image"
+                        width="1432"
+                        height="434"
+                    >
+                </a>
+            </div>
+            <div class="collapse navbar-collapse" id="ark-sidebar-menu">
+                <ul class="navbar-nav pt-lg-3">
+                    @foreach ($navSections as $section)
+                        @continue (! $section['show'])
+                        @if ($section['label'] !== null)
+                            <li class="nav-item mt-3">
+                                <div class="subheader px-3 pb-1">{{ $section['label'] }}</div>
+                            </li>
+                        @endif
+                        @foreach ($section['items'] as $item)
+                            @continue (! $item['show'])
+                            <li @class(['nav-item', 'active' => $item['active']])>
+                                <a
+                                    href="{{ $item['url'] }}"
+                                    class="nav-link"
+                                    @if ($item['active']) aria-current="page" @endif
+                                    @if ($item['live_count'] ?? false)
+                                        data-ops-comms-nav-link
+                                        data-ops-comms-nav-style="tabler"
+                                        data-initial-count="{{ $commsNavCount }}"
+                                    @endif
+                                >
+                                    <span class="nav-link-icon">
+                                        <x-tabler.icon :name="$item['icon']" />
+                                    </span>
+                                    <span class="nav-link-title">{{ $item['label'] }}</span>
+                                    @if (($item['live_count'] ?? false) && $commsNavCount > 0)
+                                        <span class="badge ms-auto {{ $commsBadgeClass }}" data-ops-comms-nav-count aria-label="{{ $commsNavCount }} need attention">{{ $commsNavCount }}</span>
+                                    @endif
+                                </a>
+                            </li>
+                        @endforeach
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <div class="page-wrapper">
+        <header class="navbar navbar-expand-md d-print-none">
+            <div class="container-xl gap-2">
+                <div class="ark-legacy flex-fill overflow-auto">
+                    @if ($showTopbarCommsStrip)
+                        @include('operations.communications.partials.channel-strip', [
+                            'comms_channel_tabs' => $commsChannelTabs,
+                            'variant' => 'topbar',
+                        ])
+                    @endif
+                </div>
+                <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
+                    <div class="ark-legacy">
+                        <x-operations.workstation-presence :presence="$workstationPresence" />
+                    </div>
+                    @include('components.operations.shell.tabler-user-menu', [
+                        'menuUser' => $user,
+                        'avatarUser' => $topbarAvatarUser,
+                    ])
+                </div>
+            </div>
+        </header>
+
+        <div class="ark-legacy">
+            @include('components.operations.workspace-tabs')
+
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                @if ($commsAccountabilityEnabled && $commsNavCount > 0 && ! request()->routeIs('operations.index', 'operations.communications.attention', 'operations.communications.inbox', 'operations.communications.history', 'operations.communications.calls', 'operations.communications.internal', 'operations.communications.internal.channel'))
+                    <x-operations.comms-pressure-bar :pressure="[
+                        'count' => $commsNavCount,
+                        'summary' => $commsNavSummary,
+                        'attention_url' => $commsPressure['attention_url'],
+                        'has_live_calls' => (bool) ($commsNavSummary['has_live_calls'] ?? false),
+                    ]" />
+                @endif
+            @endcan
+        </div>
+
+        @if ($learnTrainingSnooze || session('learn_snoozed'))
+            <div class="container-xl pt-3">
+                <div class="alert alert-info mb-0" role="status">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="flex-fill">
+                            @if ($learnTrainingSnooze)
+                                Required training snoozed until <strong>{{ $learnTrainingSnooze['snoozed_until_label'] }}</strong>.
+                            @else
+                                Training snoozed for {{ session('learn_snoozed.hours') }} hours - back at <strong>{{ session('learn_snoozed.until_label') }}</strong>.
+                            @endif
+                        </div>
+                        <a href="{{ \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl() }}" class="alert-link">Resume guides</a>
+                        @if ($learnTrainingSnooze && ($canSnoozeTraining ?? false))
+                            <form method="POST" action="{{ route('operations.learn.progress.snooze') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-sm">
+                                    Snooze {{ \App\Ark\Operations\Learn\LearnArkCurriculum::SNOOZE_HOURS }}h more
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <main>
+            {{ $slot }}
+        </main>
+    </div>
+</div>

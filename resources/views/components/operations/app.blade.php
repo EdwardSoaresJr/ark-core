@@ -1,4 +1,4 @@
-@props(['title' => null, 'printing' => false])
+@props(['title' => null, 'printing' => false, 'ui' => 'legacy'])
 
 @php
 use App\Ark\Operations\Communications\AdvisorCommsPressure;
@@ -62,6 +62,8 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
     $commsChannelTabs = app(CommsChannelStripResolver::class)->tabsFor(auth()->user(), $previousLastSeenAt);
     $showTopbarCommsStrip = $commsChannelTabs !== [] && ! request()->routeIs('operations.communications.*');
     $workstationPresence = WorkstationPresence::resolve(request());
+    // Tabler views still load app.css for the shell components that have not migrated. See docs/engineering/TABLER.md.
+    $usesTabler = $ui === 'tabler';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full" @foreach ($accentHtml as $attribute => $value) {{ $attribute }}="{{ $value }}" @endforeach>
@@ -97,9 +99,15 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @fonts
         @stack('commercial-scripts')
         @include('partials.shop-channel')
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @if ($usesTabler)
+            @vite(['resources/css/app.css', 'resources/css/tabler.css', 'resources/js/app.js', 'resources/js/tabler.js'])
+        @else
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @endif
     </head>
-    <body class="min-h-screen overflow-x-hidden bg-slate-100 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">
+    <body @class([
+        'min-h-screen overflow-x-hidden bg-slate-100 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100' => ! $usesTabler,
+    ])>
         @if (\App\Ark\Runtime\DemoInstall::isDemo())
             @include('demo.bar')
         @endif
@@ -121,6 +129,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                 const applyTheme = (theme) => {
                     const isDark = theme === 'dark';
                     document.documentElement.classList.toggle('dark', isDark);
+                    document.documentElement.setAttribute('data-bs-theme', theme);
                     localStorage.setItem('ark_theme', theme);
                     localStorage.removeItem('hs_theme');
                 };
@@ -152,6 +161,9 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
             })();
         </script>
 
+        @if ($usesTabler)
+            @include('components.operations.shell.tabler')
+        @else
         <div class="ops-shell min-h-screen" data-ops-mobile-nav>
             <div class="ops-mobile-nav-backdrop" data-ops-mobile-nav-backdrop hidden></div>
             <aside id="ops-mobile-nav" class="ops-left-rail" data-ops-mobile-nav-drawer>
@@ -501,6 +513,11 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                 </main>
             </div>
         </div>
+        @endif
+
+        @if ($usesTabler)
+            <div class="ark-legacy">
+        @endif
 
         @stack('ops-ro-orientation-dock')
 
@@ -520,5 +537,9 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
             <x-operations.call-queue :poller-only="true" />
         @endcan
+
+        @if ($usesTabler)
+            </div>
+        @endif
     </body>
 </html>

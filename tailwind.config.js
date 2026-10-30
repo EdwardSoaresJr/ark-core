@@ -49,7 +49,8 @@ export default {
         },
     },
 
-    plugins: [forms],
+    // Element styles only. Tabler owns .form-select, .form-check, and the other .form-* classes.
+    plugins: [forms({ strategy: 'base' })],
 
     safelist: [
         {

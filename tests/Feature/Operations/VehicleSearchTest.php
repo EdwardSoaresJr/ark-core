@@ -25,9 +25,9 @@ test('customer index loads customers without a search query', function () {
         ->assertSee('Customers', false)
         ->assertSee('Any type', false)
         ->assertSee('From', false)
-        ->assertSee('ops-ro-card--move', false)
-        ->assertSee('ops-job-card__activity', false)
-        ->assertSee('ops-status-chip--move', false)
+        ->assertSee('card-status-start bg-secondary', false)
+        ->assertSee('role="group" aria-label="Open"', false)
+        ->assertSee('badge bg-secondary-lt', false)
         ->assertDontSee('Start typing to find a customer.');
 });
 
@@ -258,9 +258,9 @@ test('customer search cards link vehicle customer documents and ro separately', 
         ->assertSee(route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]), false)
         ->assertSee(route('operations.customers.show', ['customer' => $customer, 'tab' => 'documents']), false)
         ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
-        ->assertSee('ops-job-card__activity', false)
-        ->assertSee('ops-status-chip', false)
-        ->assertSee('class="ops-job-card__vehicle truncate"', false)
+        ->assertSee('role="group" aria-label="Open"', false)
+        ->assertSee('class="badge bg-', false)
+        ->assertSee('2016 Subaru Outback')
         ->assertDontSee('ops-ro-card-body-link', false)
         ->assertDontSee('ops-job-card__chip--quiet', false);
 });
