@@ -9,7 +9,7 @@
                 @endif
                 <h2 class="page-title">{{ $title }}</h2>
                 @if (filled($subtitle))
-                    <div class="text-secondary mt-1">{{ $subtitle }}</div>
+                    <div class="text-secondary mt-1 d-none d-md-block">{{ $subtitle }}</div>
                 @endif
             </div>
             @isset($actions)

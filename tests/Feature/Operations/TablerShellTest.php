@@ -86,6 +86,37 @@ test('the Tabler sidebar keeps the live communications count hook', function ():
         ->assertSee('data-ops-comms-nav-style="tabler"', false);
 });
 
+test('below desktop width the channel strip becomes one menu with the same destinations', function (): void {
+    $html = $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
+        ->get(route('operations.customers.search'))
+        ->assertOk()
+        ->assertSee('class="ark-legacy flex-fill overflow-auto d-none d-lg-block"', false)
+        ->assertSee('aria-label="Communications, 0 need attention"', false)
+        ->getContent();
+
+    $menuHrefs = primaryNavHrefs($html, '<span class="dropdown-header">Communications</span>', '</div>');
+    $stripHrefs = primaryNavHrefs($html, 'class="ops-comms-channel-strip-metrics"', '</section>');
+
+    expect($menuHrefs)->not->toBeEmpty()
+        ->and($menuHrefs)->toBe($stripHrefs);
+});
+
+test('customer filters stay collapsed on phones until one is active', function (): void {
+    $advisor = actingAsLearnCurrentAdvisor();
+
+    $this->actingAs($advisor)
+        ->get(route('operations.customers.search', ['q' => 'Rosa']))
+        ->assertOk()
+        ->assertSee('class="col-12 col-lg-6 collapse d-md-block" id="customer-filters"', false)
+        ->assertDontSee('aria-expanded="true"', false);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.customers.search', ['created_from' => '2026-01-01']))
+        ->assertOk()
+        ->assertSee('class="col-12 col-lg-6 collapse d-md-block show" id="customer-filters"', false)
+        ->assertSee('aria-expanded="true"', false);
+});
+
 test('the Tabler account menu keeps profile, theme, and sign out', function (): void {
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.customers.search'))

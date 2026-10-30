@@ -56,6 +56,7 @@
         default => 'bg-red-lt',
     };
     $topbarAvatarUser = $workstationPresence->currentOperator ?? $user;
+    $channelTotal = (int) (collect($commsChannelTabs)->firstWhere('slug', 'all')['count'] ?? 0);
 @endphp
 
 <div class="page">
@@ -122,16 +123,45 @@
     </aside>
 
     <div class="page-wrapper">
-        <header class="navbar navbar-expand-md d-print-none">
+        <header class="navbar navbar-expand d-print-none">
             <div class="container-xl gap-2">
-                <div class="ark-legacy flex-fill overflow-auto">
-                    @if ($showTopbarCommsStrip)
+                @if ($showTopbarCommsStrip)
+                    <div class="navbar-nav d-lg-none">
+                        <div class="nav-item dropdown">
+                            <a
+                                href="#"
+                                class="nav-link px-2"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Communications, {{ $channelTotal }} need attention"
+                            >
+                                <x-tabler.icon name="message" />
+                                @if ($channelTotal > 0)
+                                    <span class="badge bg-red text-red-fg badge-notification badge-pill">{{ $channelTotal }}</span>
+                                @endif
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-arrow">
+                                <span class="dropdown-header">Communications</span>
+                                @foreach ($commsChannelTabs as $tab)
+                                    <a href="{{ $tab['url'] }}" class="dropdown-item">
+                                        {{ $tab['label'] }}
+                                        <span @class([
+                                            'badge ms-auto',
+                                            'bg-red text-red-fg' => $tab['count'] > 0,
+                                            'bg-secondary-lt' => $tab['count'] === 0,
+                                        ])>{{ $tab['count'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ark-legacy flex-fill overflow-auto d-none d-lg-block">
                         @include('operations.communications.partials.channel-strip', [
                             'comms_channel_tabs' => $commsChannelTabs,
                             'variant' => 'topbar',
                         ])
-                    @endif
-                </div>
+                    </div>
+                @endif
                 <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
                     <div class="ark-legacy">
                         <x-operations.workstation-presence :presence="$workstationPresence" />

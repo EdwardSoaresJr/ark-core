@@ -5,13 +5,19 @@
         subtitle="Browse customers or search by name, phone, email, plate, or VIN - then open the hub."
     >
         <x-slot:actions>
-            <a href="{{ route('operations.vehicles.search') }}" class="btn">
+            <a href="{{ route('operations.vehicles.search') }}" class="btn d-none d-sm-inline-flex">
                 <x-tabler.icon name="car" />
                 Vehicles
             </a>
-            <a href="{{ route('operations.workboard') }}" class="btn">
+            <a href="{{ route('operations.vehicles.search') }}" class="btn btn-icon d-sm-none" title="Vehicles" aria-label="Vehicles">
+                <x-tabler.icon name="car" />
+            </a>
+            <a href="{{ route('operations.workboard') }}" class="btn d-none d-sm-inline-flex">
                 <x-tabler.icon name="layout-grid" />
                 Workboard
+            </a>
+            <a href="{{ route('operations.workboard') }}" class="btn btn-icon d-sm-none" title="Workboard" aria-label="Workboard">
+                <x-tabler.icon name="layout-grid" />
             </a>
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
                 <a href="{{ route('operations.intake.create') }}" class="btn btn-primary">
@@ -24,16 +30,20 @@
 
     <div class="page-body">
         <div class="container-xl">
+            @php
+                $clearUrl = route('operations.customers.search', ($intakeMode ?? false) ? ['intake' => 1] : []);
+                $activeFilterCount = collect([$selectedType ?? '', $createdFrom ?? '', $createdTo ?? ''])->filter(fn ($value) => filled($value))->count();
+            @endphp
             <div class="card mb-3">
-                <div class="card-body">
+                <div class="card-body p-2 p-md-3">
                     <form method="GET" action="{{ route('operations.customers.search') }}" role="search" aria-label="Search customers">
                         @if ($intakeMode ?? false)
                             <input type="hidden" name="intake" value="1">
                         @endif
 
                         <div class="row g-2 align-items-end">
-                            <div class="col-12 col-lg">
-                                <label for="customer-search" class="form-label">Search</label>
+                            <div class="col col-lg">
+                                <label for="customer-search" class="form-label d-none d-md-block">Search</label>
                                 <div class="input-icon">
                                     <span class="input-icon-addon">
                                         <x-tabler.icon name="search" />
@@ -46,40 +56,64 @@
                                         autofocus
                                         autocomplete="off"
                                         placeholder="Name, phone, email, plate, or VIN"
+                                        aria-label="Search customers"
                                         class="form-control"
                                     >
                                 </div>
                             </div>
 
-                            <div class="col-12 col-sm-4 col-lg-2">
-                                <label for="customer-type" class="form-label">Type</label>
-                                <select id="customer-type" name="type" class="form-select">
-                                    <option value="">Any type</option>
-                                    @foreach ($customerTypes as $customerType)
-                                        <option value="{{ $customerType['name'] }}" @selected(($selectedType ?? '') === $customerType['name'])>{{ $customerType['name'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-6 col-sm-4 col-lg-2">
-                                <label for="customer-created-from" class="form-label">From</label>
-                                <input id="customer-created-from" name="created_from" type="date" value="{{ $createdFrom ?? '' }}" class="form-control">
-                            </div>
-
-                            <div class="col-6 col-sm-4 col-lg-2">
-                                <label for="customer-created-to" class="form-label">To</label>
-                                <input id="customer-created-to" name="created_to" type="date" value="{{ $createdTo ?? '' }}" class="form-control">
-                            </div>
-
-                            <div class="col-12 col-lg-auto">
-                                <div class="btn-list">
+                            <div class="col-auto order-lg-last">
+                                <div class="btn-list flex-nowrap">
                                     <button type="submit" class="btn btn-primary">Search</button>
                                     @if ($hasFilters ?? false)
-                                        <a
-                                            href="{{ route('operations.customers.search', ($intakeMode ?? false) ? ['intake' => 1] : []) }}"
-                                            class="btn btn-ghost-secondary"
-                                        >Clear</a>
+                                        <a href="{{ $clearUrl }}" class="btn btn-ghost-secondary d-none d-md-inline-flex">Clear</a>
                                     @endif
+                                </div>
+                            </div>
+
+                            <div class="col-12 d-md-none">
+                                <div class="d-flex align-items-center">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-ghost-secondary"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#customer-filters"
+                                        aria-controls="customer-filters"
+                                        aria-expanded="{{ $activeFilterCount > 0 ? 'true' : 'false' }}"
+                                    >
+                                        <x-tabler.icon name="adjustments-horizontal" />
+                                        Filters
+                                        @if ($activeFilterCount > 0)
+                                            <span class="badge bg-primary text-primary-fg ms-2">{{ $activeFilterCount }}</span>
+                                        @endif
+                                    </button>
+                                    @if ($hasFilters ?? false)
+                                        <a href="{{ $clearUrl }}" class="btn btn-sm btn-ghost-secondary ms-auto">Clear</a>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div @class(['col-12 col-lg-6 collapse d-md-block', 'show' => $activeFilterCount > 0]) id="customer-filters">
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-4">
+                                        <label for="customer-type" class="form-label">Type</label>
+                                        <select id="customer-type" name="type" class="form-select">
+                                            <option value="">Any type</option>
+                                            @foreach ($customerTypes as $customerType)
+                                                <option value="{{ $customerType['name'] }}" @selected(($selectedType ?? '') === $customerType['name'])>{{ $customerType['name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-6 col-md-4">
+                                        <label for="customer-created-from" class="form-label">From</label>
+                                        <input id="customer-created-from" name="created_from" type="date" value="{{ $createdFrom ?? '' }}" class="form-control">
+                                    </div>
+
+                                    <div class="col-6 col-md-4">
+                                        <label for="customer-created-to" class="form-label">To</label>
+                                        <input id="customer-created-to" name="created_to" type="date" value="{{ $createdTo ?? '' }}" class="form-control">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -87,7 +121,7 @@
                 </div>
             </div>
 
-            <div class="d-flex align-items-center mb-3">
+            <div class="d-flex align-items-center mb-2 mb-md-3">
                 <h3 class="mb-0">Customers</h3>
                 <span class="ms-auto text-secondary">{{ $customers->total() }} total</span>
             </div>
@@ -107,7 +141,7 @@
                         </p>
                         @if ($hasFilters ?? false)
                             <div class="empty-action">
-                                <a href="{{ route('operations.customers.search', ($intakeMode ?? false) ? ['intake' => 1] : []) }}" class="btn">Clear search</a>
+                                <a href="{{ $clearUrl }}" class="btn">Clear search</a>
                             </div>
                         @endif
                     </div>
@@ -186,7 +220,7 @@
                                         <div class="text-truncate text-secondary mt-1">{{ $primaryVehicle?->display_name ?? 'No vehicle on file' }}</div>
                                     @endif
                                     <div class="text-secondary">{{ $customer->display_phone ?: 'No phone' }}</div>
-                                    <div class="text-secondary small mt-2">{{ $clockLabel }}</div>
+                                    <div class="text-secondary small mt-1 mt-md-2">{{ $clockLabel }}</div>
                                 </div>
                                 <div class="card-footer py-2">
                                     @include('operations.partials.tabler-index-card-actions', ['indexActions' => $indexActions])
