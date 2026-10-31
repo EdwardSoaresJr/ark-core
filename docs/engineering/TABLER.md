@@ -216,3 +216,11 @@ Before: `ops-today`, `ops-shop-dash-*` (toolbar, command cards, workflow bar, KP
 After: Tabler `fluid` page. The date is the pretitle; the open-queue count, Job Board, Comms, and Business are page actions with their existing permission checks. Today and Scoreboard are `nav-pills` from the shared `operations.dashboard.tabs` partial (`'ui' => 'tabler'`); the Scoreboard page keeps the legacy tabs. The four command cards, the status bar and legend, and status dots use the shop's status colors through `RepairOrderStatusColor::tablerColorForChipTone()`. Tabler's `dark` is the dark theme's card color, so a status in the closed tone (Draft, by default) uses `secondary` on the bar and legend. The sales table is a `card-table` that scrolls inside its card on phones. Unchanged: `TodayController`, the projection, every count, amount, link, and hint.
 
 Still legacy: the technician lanes (`operations.today.partials.technician-lanes`) render in an `.ark-legacy` island for staff without a shop dashboard. Their panel stays light in the dark theme.
+
+### Shop settings (`operations.settings.shop.edit`)
+
+Settings is one page with an Alpine section switcher and about 30 section partials. This pass migrates the page and two sections; the rest are unchanged legacy markup in one island.
+
+Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
+
+Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active: Appointments & Setup, Staff, Financial Rules (labor, policies, tax, fees, deposits, parts matrix, billing classes), Shop Overhead, Owner Targets, Workflow Defaults, Label Printing, Square Payments, Parts catalogs, Communications, ARK Platform, and Runtime health. Migrate them section by section; each moves out of the island when it does.
