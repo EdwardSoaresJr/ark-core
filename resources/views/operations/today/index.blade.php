@@ -110,6 +110,21 @@
     $headlineDate = $dashboard === null
         ? ''
         : \Illuminate\Support\Carbon::parse($dashboard->asOfDate)->format('l, F j');
+    // Tabler's dark matches the dark theme's card, so a status in the closed tone would vanish from the bar and legend.
+    $statusColor = function (string $key): string {
+        $color = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
+            \App\Ark\Operations\RepairOrders\RepairOrderStatus::tryFrom($key)?->indexTone() ?? 'move',
+        );
+
+        return $color === 'dark' ? 'secondary' : $color;
+    };
+    $cardColors = [
+        'estimate' => $statusColor($estimateKey),
+        'decision' => $statusColor($decisionKey),
+        'approved' => $statusColor(App\Ark\Operations\RepairOrders\RepairOrderStatus::Approved->value),
+        'pickup' => $statusColor(App\Ark\Operations\RepairOrders\RepairOrderStatus::ReadyPickup->value),
+    ];
+    $flowTotal = max(1, array_sum(array_map(fn (array $row): int => max(1, (int) $row['car_count']), $dashboard?->statusRows ?? [])));
     $openRepairOrdersLabel = $dashboard === null
         ? ''
         : ($dashboard->carCount === 1
@@ -117,196 +132,194 @@
             : $dashboard->carCount.' open repair orders');
 @endphp
 
-<x-operations.app title="Today">
-    @include('operations.dashboard.tabs')
+<x-operations.app title="Today" ui="tabler">
     @if ($dashboard !== null)
-        <section class="ops-today ops-today--dashboard">
-            <div class="ops-today__body">
-                <div class="ops-shop-dash-toolbar">
-                    <div class="ops-shop-dash-toolbar__brand">
-                        <h1 class="ops-shop-dash-toolbar__title">Shop Dashboard</h1>
-                        <p class="ops-shop-dash-toolbar__meta">
-                            <time class="ops-shop-dash-toolbar__date" datetime="{{ $dashboard->asOfDate }}">{{ $headlineDate }}</time>
-                            <span class="ops-shop-dash-toolbar__sep" aria-hidden="true">·</span>
-                            <a href="{{ $dashboard->openQueueUrl }}" class="ops-shop-dash-toolbar__queue">{{ $openRepairOrdersLabel }}</a>
-                        </p>
+        <x-tabler.page layout="fluid" title="Shop Dashboard" :pretitle="$headlineDate" actions-label="Dashboard shortcuts">
+            <x-slot:actions>
+                <x-tabler.page-action :href="$dashboard->openQueueUrl" icon="file-text" :label="$openRepairOrdersLabel" />
+                <x-tabler.page-action :href="$dashboard->jobBoardUrl" icon="layout-grid" label="Job Board" />
+                @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                    <x-tabler.page-action :href="\App\Ark\Operations\Communications\CommunicationsNeedsYou::url()" icon="message" label="Comms" />
+                @endcan
+                @if (\App\Ark\Operations\Business\BusinessWorkspaceAccess::allows(auth()->user()))
+                    <x-tabler.page-action :href="route('operations.business')" icon="gauge" label="Business" />
+                @endif
+            </x-slot:actions>
+
+            @include('operations.dashboard.tabs', ['ui' => 'tabler'])
+
+            <section class="row row-cards mb-3" aria-label="What needs you">
+                @foreach ($commandCards as $card)
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <a
+                            href="{{ $card['url'] }}"
+                            class="card card-link card-link-pop h-100 text-reset"
+                            data-dashboard-card="{{ $card['tone'] }}"
+                            aria-label="{{ $card['title'] }}: {{ $card['count'] }} {{ $card['count'] === 1 ? 'repair order' : 'repair orders' }}, {{ $card['money'] }}. {{ rtrim($card['hint'], '.') }}. {{ $card['cta'] }}"
+                        >
+                            <div class="card-status-top bg-{{ $cardColors[$card['tone']] }}"></div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader">{{ $card['title'] }}</div>
+                                    <span class="badge bg-{{ $cardColors[$card['tone']] }}-lt ms-auto">{{ $card['count'] === 1 ? '1 RO' : $card['count'].' ROs' }}</span>
+                                </div>
+                                <div class="h1 mb-1 mt-2">{{ $card['money'] }}</div>
+                                <div class="text-secondary">{{ $card['hint'] }}</div>
+                                <div class="mt-2 text-primary fw-medium">{{ $card['cta'] }} &rarr;</div>
+                            </div>
+                        </a>
                     </div>
-                    <div class="ops-shop-dash-toolbar__aside">
-                        <span class="ops-shop-dash-toolbar__live">Open queue</span>
-                        <nav class="ops-shop-dash-toolbar__tools" aria-label="Dashboard shortcuts">
-                            <a href="{{ $dashboard->jobBoardUrl }}" class="ops-page-link">Job Board</a>
-                            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-                                <a href="{{ \App\Ark\Operations\Communications\CommunicationsNeedsYou::url() }}" class="ops-page-link">Comms</a>
-                            @endcan
-                            @if (\App\Ark\Operations\Business\BusinessWorkspaceAccess::allows(auth()->user()))
-                                <a href="{{ route('operations.business') }}" class="ops-page-link">Business</a>
-                            @endif
-                        </nav>
+                @endforeach
+            </section>
+
+            <section class="card mb-3" aria-label="Repair order workflow">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Repair order workflow</h2>
+                        <div class="card-subtitle">{{ $openRepairOrdersLabel }} by current status</div>
                     </div>
                 </div>
-
-                <section class="ops-shop-dash-focus" aria-label="What needs you">
-                    <div class="ops-shop-dash-next">
-                        @foreach ($commandCards as $card)
-                            <a
-                                href="{{ $card['url'] }}"
-                                class="ops-shop-dash-next__item"
-                                data-tone="{{ $card['tone'] }}"
-                                aria-label="{{ $card['title'] }}: {{ $card['count'] }} {{ $card['count'] === 1 ? 'repair order' : 'repair orders' }}, {{ $card['money'] }}. {{ rtrim($card['hint'], '.') }}. {{ $card['cta'] }}"
-                            >
-                                <span class="ops-shop-dash-next__top">
-                                    <span class="ops-shop-dash-next__kicker">{{ $card['title'] }}</span>
-                                    <span class="ops-shop-dash-next__count">{{ $card['count'] === 1 ? '1 RO' : $card['count'].' ROs' }}</span>
-                                </span>
-                                <span class="ops-shop-dash-next__money">{{ $card['money'] }}</span>
-                                <span class="ops-shop-dash-next__hint">{{ $card['hint'] }}</span>
-                                <span class="ops-shop-dash-next__cta">
-                                    {{ $card['cta'] }}
-                                    <span class="ops-shop-dash-next__go" aria-hidden="true">→</span>
-                                </span>
-                            </a>
-                        @endforeach
-                    </div>
-                </section>
-
-                <section class="ops-shop-dash-flow" aria-label="Repair order workflow">
-                    <div class="ops-shop-dash-flow__head">
-                        <h2 class="ops-shop-dash-flow__title">Repair order workflow</h2>
-                        <p class="ops-shop-dash-flow__meta">{{ $openRepairOrdersLabel }} by current status</p>
-                    </div>
+                <div class="card-body">
                     @if ($dashboard->statusRows === [])
-                        <p class="ops-shop-dash-flow__empty">No open repair orders.</p>
+                        <p class="text-secondary mb-0">No open repair orders.</p>
                     @else
-                        <div class="ops-shop-dash-flow__bar" aria-hidden="true">
+                        <div class="progress progress-separated progress-lg mb-3" aria-hidden="true">
                             @foreach ($dashboard->statusRows as $row)
                                 <a
                                     href="{{ $row['status_url'] }}"
-                                    class="ops-shop-dash-flow__seg"
-                                    data-flow="{{ $row['key'] }}"
-                                    style="flex-grow: {{ max(1, (int) $row['car_count']) }}"
+                                    class="progress-bar bg-{{ $statusColor($row['key']) }}"
+                                    style="width: {{ round(max(1, (int) $row['car_count']) / $flowTotal * 100, 2) }}%"
                                     tabindex="-1"
                                     title="{{ $row['label'] }}: {{ $row['car_count'] }}"
                                 ></a>
                             @endforeach
                         </div>
-                        <div class="ops-shop-dash-flow__legend">
+                        <div class="d-flex flex-wrap gap-3">
                             @foreach ($dashboard->statusRows as $row)
                                 <a
                                     href="{{ $row['status_url'] }}"
-                                    class="ops-shop-dash-flow__item"
+                                    class="d-inline-flex align-items-center text-reset"
+                                    data-flow="{{ $row['key'] }}"
                                     aria-label="{{ $row['label'] }}: {{ $row['car_count'] }} {{ $row['car_count'] === 1 ? 'repair order' : 'repair orders' }}"
                                 >
-                                    <span class="ops-shop-dash-flow__dot" data-flow="{{ $row['key'] }}" aria-hidden="true"></span>
-                                    <span class="ops-shop-dash-flow__label">{{ $row['label'] }}</span>
-                                    <span class="ops-shop-dash-flow__count">{{ $row['car_count'] }}</span>
+                                    <span class="legend me-2 bg-{{ $statusColor($row['key']) }}" aria-hidden="true"></span>
+                                    {{ $row['label'] }}
+                                    <span class="ms-2 fw-bold">{{ $row['car_count'] }}</span>
                                 </a>
                             @endforeach
                         </div>
                     @endif
-                </section>
+                </div>
+            </section>
 
-                <section class="ops-shop-dash-finance" aria-label="Financial overview">
-                    <div class="ops-shop-dash-finance__head">
-                        <h2 class="ops-shop-dash-finance__title">Financial overview</h2>
-                    </div>
-                    <div class="ops-shop-dash-kpis" role="list" aria-label="Shop KPIs">
-                        @foreach ($dashboard->kpis as $kpi)
-                            @continue($kpi['label'] === 'Car Count' || $kpi['label'] === 'Declined Sales')
+            <section class="mb-3" aria-label="Financial overview">
+                <h2 class="mb-2">Financial overview</h2>
+                <div class="row row-cards" role="list" aria-label="Shop KPIs">
+                    @foreach ($dashboard->kpis as $kpi)
+                        @continue($kpi['label'] === 'Car Count' || $kpi['label'] === 'Declined Sales')
+                        <div class="col-6 col-md-4 col-xl" role="listitem">
                             @if (filled($kpi['url'] ?? null))
-                                <a
-                                    href="{{ $kpi['url'] }}"
-                                    class="ops-shop-dash-kpi ops-shop-dash-kpi--link"
-                                    role="listitem"
-                                    aria-label="{{ $kpi['label'] }} {{ $kpi['value'] }}. {{ $kpi['hint'] }}"
-                                >
-                                    <span class="ops-shop-dash-kpi__label">{{ $kpi['label'] }}</span>
-                                    <span class="ops-shop-dash-kpi__value">{{ $kpi['value'] }}</span>
-                                    @if (filled($kpi['hint'] ?? null))
-                                        <span class="ops-shop-dash-kpi__hint">{{ $kpi['hint'] }}</span>
-                                    @endif
-                                </a>
+                                <a href="{{ $kpi['url'] }}" class="card card-sm card-link h-100 text-reset" aria-label="{{ $kpi['label'] }} {{ $kpi['value'] }}. {{ $kpi['hint'] }}">
                             @else
-                                <div class="ops-shop-dash-kpi" role="listitem">
-                                    <span class="ops-shop-dash-kpi__label">{{ $kpi['label'] }}</span>
-                                    <span class="ops-shop-dash-kpi__value">{{ $kpi['value'] }}</span>
+                                <div class="card card-sm h-100">
+                            @endif
+                                <div class="card-body">
+                                    <div class="subheader">{{ $kpi['label'] }}</div>
+                                    <div class="h2 mb-0 mt-1">{{ $kpi['value'] }}</div>
                                     @if (filled($kpi['hint'] ?? null))
-                                        <span class="ops-shop-dash-kpi__hint">{{ $kpi['hint'] }}</span>
+                                        <div class="text-secondary small mt-1">{{ $kpi['hint'] }}</div>
                                     @endif
                                 </div>
+                            @if (filled($kpi['url'] ?? null))
+                                </a>
+                            @else
+                                </div>
                             @endif
-                        @endforeach
-                    </div>
-                    <p class="ops-shop-dash-finance__note">
-                        Approved sales includes all approved dollars on open repair orders. The cards highlight approved work still in the shop and work on pickup-ready repair orders.
-                    </p>
+                        </div>
+                    @endforeach
+                </div>
+                <p class="text-secondary small mt-2 mb-0">
+                    Approved sales includes all approved dollars on open repair orders. The cards highlight approved work still in the shop and work on pickup-ready repair orders.
+                </p>
+            </section>
 
-                    <div class="ops-shop-dash-table-wrap">
-                    <h2 class="ops-shop-dash-table-wrap__title">Sales by status</h2>
-                    <p class="ops-shop-dash-table-wrap__note">{{ $dashboard->footnote }}</p>
-                    <table class="ops-shop-dash-table">
+            <section class="card" aria-label="Sales by status">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Sales by status</h2>
+                        <div class="card-subtitle">{{ $dashboard->footnote }}</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
                         <thead>
                             <tr>
                                 <th scope="col">Status</th>
-                                <th scope="col" class="ops-shop-dash-table__num">Pending ($)</th>
-                                <th scope="col" class="ops-shop-dash-table__num">Declined ($)</th>
-                                <th scope="col" class="ops-shop-dash-table__num">Approved ($)</th>
-                                <th scope="col" class="ops-shop-dash-table__num" title="Approved sales divided by cars in this status">Approved / RO</th>
-                                <th scope="col" class="ops-shop-dash-table__num">Car Count</th>
+                                <th scope="col" class="text-end">Pending ($)</th>
+                                <th scope="col" class="text-end">Declined ($)</th>
+                                <th scope="col" class="text-end">Approved ($)</th>
+                                <th scope="col" class="text-end" title="Approved sales divided by cars in this status">Approved / RO</th>
+                                <th scope="col" class="text-end">Car Count</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="ops-shop-dash-table__totals">
+                            <tr class="fw-bold">
                                 <th scope="row">Totals</th>
-                                <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $dashboard->pendingCents === 0])>
-                                    <a href="{{ $dashboard->pendingUrl }}" class="ops-shop-dash-table__link">{{ $dashboard->pendingLabel }}</a>
+                                <td @class(['text-end', 'text-secondary' => $dashboard->pendingCents === 0])>
+                                    <a href="{{ $dashboard->pendingUrl }}" class="text-reset">{{ $dashboard->pendingLabel }}</a>
                                 </td>
-                                <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $dashboard->declinedCents === 0])>
-                                    <a href="{{ $dashboard->declinedUrl }}" class="ops-shop-dash-table__link">{{ $dashboard->declinedLabel }}</a>
+                                <td @class(['text-end', 'text-secondary' => $dashboard->declinedCents === 0])>
+                                    <a href="{{ $dashboard->declinedUrl }}" class="text-reset">{{ $dashboard->declinedLabel }}</a>
                                 </td>
-                                <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $dashboard->approvedCents === 0])>
-                                    <a href="{{ $dashboard->approvedUrl }}" class="ops-shop-dash-table__link">{{ $dashboard->approvedLabel }}</a>
+                                <td @class(['text-end', 'text-secondary' => $dashboard->approvedCents === 0])>
+                                    <a href="{{ $dashboard->approvedUrl }}" class="text-reset">{{ $dashboard->approvedLabel }}</a>
                                 </td>
-                                <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $dashboard->aroCents === 0])>
-                                    <a href="{{ $dashboard->approvedUrl }}" class="ops-shop-dash-table__link">{{ $dashboard->aroLabel }}</a>
+                                <td @class(['text-end', 'text-secondary' => $dashboard->aroCents === 0])>
+                                    <a href="{{ $dashboard->approvedUrl }}" class="text-reset">{{ $dashboard->aroLabel }}</a>
                                 </td>
-                                <td class="ops-shop-dash-table__num">
-                                    <a href="{{ $dashboard->openQueueUrl }}" class="ops-shop-dash-table__link">{{ $dashboard->carCount }}</a>
+                                <td class="text-end">
+                                    <a href="{{ $dashboard->openQueueUrl }}" class="text-reset">{{ $dashboard->carCount }}</a>
                                 </td>
                             </tr>
                             @forelse ($dashboard->statusRows as $row)
-                                <tr @class(['ops-shop-dash-table__row', 'ops-shop-dash-table__row--peak' => $row['peak']])>
-                                    <th scope="row">
-                                        <a href="{{ $row['status_url'] }}" class="ops-shop-dash-table__link">{{ $row['label'] }}</a>
+                                <tr @class(['table-active' => $row['peak']])>
+                                    <th scope="row" class="fw-normal">
+                                        <a href="{{ $row['status_url'] }}" class="text-reset">{{ $row['label'] }}</a>
                                     </th>
-                                    <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $row['pending_cents'] === 0])>
-                                        <a href="{{ $row['pending_url'] }}" class="ops-shop-dash-table__link">{{ $row['pending_label'] }}</a>
+                                    <td @class(['text-end', 'text-secondary' => $row['pending_cents'] === 0])>
+                                        <a href="{{ $row['pending_url'] }}" class="text-reset">{{ $row['pending_label'] }}</a>
                                     </td>
-                                    <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $row['declined_cents'] === 0])>
-                                        <a href="{{ $row['declined_url'] }}" class="ops-shop-dash-table__link">{{ $row['declined_label'] }}</a>
+                                    <td @class(['text-end', 'text-secondary' => $row['declined_cents'] === 0])>
+                                        <a href="{{ $row['declined_url'] }}" class="text-reset">{{ $row['declined_label'] }}</a>
                                     </td>
-                                    <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $row['approved_cents'] === 0])>
-                                        <a href="{{ $row['approved_url'] }}" class="ops-shop-dash-table__link">{{ $row['approved_label'] }}</a>
+                                    <td @class(['text-end', 'text-secondary' => $row['approved_cents'] === 0])>
+                                        <a href="{{ $row['approved_url'] }}" class="text-reset">{{ $row['approved_label'] }}</a>
                                     </td>
-                                    <td @class(['ops-shop-dash-table__num', 'ops-shop-dash-table__num--zero' => $row['aro_cents'] === 0])>
-                                        <a href="{{ $row['approved_url'] }}" class="ops-shop-dash-table__link">{{ $row['aro_label'] }}</a>
+                                    <td @class(['text-end', 'text-secondary' => $row['aro_cents'] === 0])>
+                                        <a href="{{ $row['approved_url'] }}" class="text-reset">{{ $row['aro_label'] }}</a>
                                     </td>
-                                    <td class="ops-shop-dash-table__num">
-                                        <a href="{{ $row['status_url'] }}" class="ops-shop-dash-table__link">{{ $row['car_count'] }}</a>
+                                    <td class="text-end">
+                                        <a href="{{ $row['status_url'] }}" class="text-reset">{{ $row['car_count'] }}</a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="ops-shop-dash-table__empty">No open repair orders.</td>
+                                    <td colspan="6" class="text-secondary">No open repair orders.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
-                    </div>
-                </section>
-            </div>
-        </section>
+                </div>
+            </section>
+        </x-tabler.page>
     @else
-        {{-- Technician assigned-work lanes --}}
-        @include('operations.today.partials.technician-lanes', ['today' => $today, 'sections' => $sections])
+        {{-- Technician assigned-work lanes stay legacy until their own migration. --}}
+        <div class="page-body">
+            <div class="container-fluid">
+                <div class="ark-legacy">
+                    @include('operations.today.partials.technician-lanes', ['today' => $today, 'sections' => $sections])
+                </div>
+            </div>
+        </div>
     @endif
 </x-operations.app>
