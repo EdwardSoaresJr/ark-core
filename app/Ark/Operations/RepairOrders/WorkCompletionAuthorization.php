@@ -219,7 +219,8 @@ final class WorkCompletionAuthorization
 
     /**
      * Amounts recorded by each approved concern's latest approval, keyed by line id.
-     * Concerns whose latest approval kept no amounts are absent: nothing is inferred for them.
+     * Where that approval kept no amounts, a line raised since then is held to its
+     * amounts from just before the raise (LegacyApprovalCeiling); other lines are absent.
      *
      * @return array<int, array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}>
      */
@@ -238,11 +239,36 @@ final class WorkCompletionAuthorization
                     ->values();
 
                 $amounts = [];
+                $recordedConcernIds = [];
 
-                foreach ($this->latestScopes($concerns) as $scope) {
-                    foreach ($scope->lineAmounts() ?? [] as $lineId => $lineAmounts) {
+                foreach ($this->latestScopes($concerns) as $concernId => $scope) {
+                    if ($scope->lineAmounts() === null) {
+                        continue;
+                    }
+
+                    $recordedConcernIds[(int) $concernId] = true;
+
+                    foreach ($scope->lineAmounts() as $lineId => $lineAmounts) {
                         $amounts[$lineId] = $lineAmounts;
                     }
+                }
+
+                foreach ($repairOrder->lines as $line) {
+                    if (isset($recordedConcernIds[(int) $line->repair_order_concern_id])
+                        || ! is_array($line->legacy_approved_amounts)
+                        || ! $concerns->contains('id', $line->repair_order_concern_id)) {
+                        continue;
+                    }
+
+                    $amounts[(int) $line->id] = [
+                        'quantity' => (string) ($line->legacy_approved_amounts['quantity'] ?? '0'),
+                        'unit_price_cents' => (int) ($line->legacy_approved_amounts['unit_price_cents'] ?? 0),
+                        'subtotal_cents' => (int) ($line->legacy_approved_amounts['subtotal_cents'] ?? 0),
+                        'standing_discount_cents' => (int) ($line->legacy_approved_amounts['standing_discount_cents'] ?? 0),
+                        'shop_fee_cents' => (int) ($line->legacy_approved_amounts['shop_fee_cents'] ?? 0),
+                        'tax_cents' => (int) ($line->legacy_approved_amounts['tax_cents'] ?? 0),
+                        'total_cents' => (int) ($line->legacy_approved_amounts['total_cents'] ?? 0),
+                    ];
                 }
 
                 return $amounts;

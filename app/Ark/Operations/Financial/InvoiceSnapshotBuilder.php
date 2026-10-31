@@ -107,6 +107,8 @@ final class InvoiceSnapshotBuilder
      */
     private function concernSnapshot(RepairOrderConcern $concern, EstimateTotals $totals): array
     {
+        $approvedLines = $totals->lines->keyBy('id');
+
         return [
             'id' => $concern->id,
             'summary' => $concern->summary,
@@ -120,10 +122,10 @@ final class InvoiceSnapshotBuilder
             'subtotal' => $this->formatCents($totals->concernSubtotalCents($concern->id)),
             'lines' => $concern->lines
                 ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved && $line->isVisibleToCustomer())
+                // Labor and parts the approval does not cover are not billed, so they are not listed.
+                ->reject(fn (RepairOrderLine $line): bool => ($line->isPart() || $line->type->isLabor()) && ! $approvedLines->has($line->id))
                 // A line priced above its approval is billed at the approved amounts the totals use.
-                ->map(fn (RepairOrderLine $line): array => $this->lineSnapshot(
-                    $totals->lines->first(fn (RepairOrderLine $approved): bool => (int) $approved->id === (int) $line->id) ?? $line,
-                ))
+                ->map(fn (RepairOrderLine $line): array => $this->lineSnapshot($approvedLines->get($line->id, $line)))
                 ->values()
                 ->all(),
         ];

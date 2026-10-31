@@ -468,6 +468,7 @@ test('living invoice snapshot refreshes when approved work changes before any pa
     $line->forceFill(['unit_price_cents' => 20000])->save();
 
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern', 'concerns']));
+    approveCurrentAmounts($repairOrder);
     app(RefreshLivingInvoiceSnapshotAction::class)->syncIfEligible($repairOrder->fresh());
 
     $balance = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh());
@@ -493,6 +494,7 @@ test('living invoice snapshot still refreshes when only a deposit is on file', f
     $line->forceFill(['unit_price_cents' => 20000])->save();
 
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern', 'concerns']));
+    approveCurrentAmounts($repairOrder);
     $refreshed = app(RefreshLivingInvoiceSnapshotAction::class)->syncIfEligible($repairOrder->fresh());
 
     $balance = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh());
@@ -539,6 +541,7 @@ test('living invoice does not silently refresh after the customer was shown the 
     $line->forceFill(['unit_price_cents' => 20000])->save();
 
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern', 'concerns']));
+    approveCurrentAmounts($repairOrder);
     $refreshed = app(RefreshLivingInvoiceSnapshotAction::class)->syncIfEligible($repairOrder->fresh());
 
     $invoiceAfter = app(BalanceDueCalculator::class)->issuedInvoice($repairOrder->fresh());
@@ -678,6 +681,7 @@ test('explicit invoice refresh archives prior snapshot and matches approved work
     $line = $repairOrder->lines()->firstOrFail();
     $line->forceFill(['unit_price_cents' => 22000])->save();
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern', 'concerns']));
+    approveCurrentAmounts($repairOrder);
 
     $refreshed = app(\App\Ark\Operations\Financial\RefreshCustomerInvoiceAction::class)
         ->execute($repairOrder->fresh());
@@ -706,6 +710,7 @@ test('explicit invoice refresh after partial payment revises billed total and ke
     $line = $repairOrder->lines()->firstOrFail();
     $line->forceFill(['unit_price_cents' => 20000])->save();
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh(['lines.concern', 'concerns']));
+    approveCurrentAmounts($repairOrder);
 
     $refreshed = app(\App\Ark\Operations\Financial\RefreshCustomerInvoiceAction::class)
         ->execute($repairOrder->fresh());

@@ -34,8 +34,12 @@ class RepairOrderAuthorizationStoreController
         ]);
 
         $concernDispositions = $this->presentedRecommendedDispositions($repairOrder);
+        $awaitingConcernIds = $totalsCalculator->approvedConcernIdsAwaitingAuthorization($repairOrder);
+        $pendingCents = $totalsCalculator->pendingAuthorizationCents($repairOrder);
 
-        if ($concernDispositions === [] && ! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
+        if ($concernDispositions === []
+            && $awaitingConcernIds === []
+            && ! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
             return back()
                 ->withErrors(['authorization' => 'There is no approved work on this estimate to record.'])
                 ->withInput();
@@ -50,9 +54,15 @@ class RepairOrderAuthorizationStoreController
             approvalType: $approvalType,
             source: ApprovalSource::from($data['source']),
             approvedBy: $data['approved_by'],
-            approvedAmountCents: $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
+            approvedAmountCents: $awaitingConcernIds !== [] && $this->leftAtAwaitingDefault($data, $repairOrder, $pendingCents, $totalsCalculator)
+                ? null
+                : $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
             notes: $data['notes'] ?? null,
-            concernDispositions: $concernDispositions,
+            // Approved concerns with added or raised lines are re-scoped; earlier scopes stay on file.
+            concernDispositions: $concernDispositions + array_fill_keys(
+                $awaitingConcernIds,
+                RepairOrderConcernDisposition::Approved->value,
+            ),
             actor: $request->user(),
         );
 
@@ -97,6 +107,28 @@ class RepairOrderAuthorizationStoreController
         }
 
         return $dispositions;
+    }
+
+    /**
+     * The form offers the approved total plus the work awaiting authorization. Left as
+     * offered, the recorded amount is the approved total after this approval.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function leftAtAwaitingDefault(
+        array $data,
+        RepairOrder $repairOrder,
+        int $pendingCents,
+        EstimateTotalsCalculator $totalsCalculator,
+    ): bool {
+        if (! isset($data['approved_amount'])) {
+            return true;
+        }
+
+        $posted = (int) round(((float) $data['approved_amount']) * 100);
+        $approvedNow = $totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
+
+        return in_array($posted, [$approvedNow, $approvedNow + $pendingCents], true);
     }
 
     /**

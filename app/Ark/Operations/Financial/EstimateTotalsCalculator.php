@@ -215,6 +215,37 @@ class EstimateTotalsCalculator
     }
 
     /**
+     * Money on approved concerns that waits for the customer: lines the approval does
+     * not cover at their total, and raised lines at the increase.
+     */
+    public function pendingAuthorizationCents(RepairOrder $repairOrder): int
+    {
+        $repairOrder->loadMissing(['lines.concern']);
+
+        return (int) app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder)->sum('total_cents')
+            + (int) $this->pendingAuthorizationIncreases($repairOrder)->sum('pending_cents');
+    }
+
+    /**
+     * Approved concerns with uncovered lines or raised lines. Recording an approval re-scopes these.
+     *
+     * @return list<int>
+     */
+    public function approvedConcernIdsAwaitingAuthorization(RepairOrder $repairOrder): array
+    {
+        $repairOrder->loadMissing(['lines.concern']);
+
+        return app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder)
+            ->toBase()
+            ->map(fn (RepairOrderLine $line): int => (int) $line->repair_order_concern_id)
+            ->merge($this->pendingAuthorizationIncreases($repairOrder)
+                ->map(fn (array $increase): int => (int) $increase['line']->repair_order_concern_id))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * A line priced above its approval counts at the approved amounts. The copy is never saved.
      *
      * @param  array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null  $authorized

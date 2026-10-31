@@ -229,24 +229,120 @@ test('the final invoice bills a raised line at its approved quantity and amounts
         ->and((string) $part->fresh()->quantity)->toBe('2.00');
 });
 
-test('an approval recorded without line amounts keeps counting the current amount', function () {
+test('raising a line under an approval without amounts holds it to its amounts before the raise', function () {
     $advisor = integrityAdvisor();
     [$repairOrder, $concern, $part] = integrityRepairOrder();
-    $concern->update(['disposition' => RepairOrderConcernDisposition::Approved]);
-    ApprovedWorkScope::query()->create([
-        'repair_order_id' => $repairOrder->id,
-        'repair_order_concern_id' => $concern->id,
-        'line_ids' => [$part->id],
-        'recorded_by_user_id' => $advisor->id,
-    ]);
+    legacyApproval($repairOrder, $concern, $part, $advisor);
 
     $calculator = app(EstimateTotalsCalculator::class);
-    $part->update(['quantity' => '2.00']);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    $beforeRaise = $part->fresh();
+    $scope = ApprovedWorkScope::query()->sole();
+
+    $part->fresh()->update(['description' => 'Front brake pads, ceramic']);
+    expect($part->fresh()->legacy_approved_amounts)->toBeNull();
+
+    $part->fresh()->update(['quantity' => '2.00']);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    $part->fresh()->update(['quantity' => '3.00']);
     $calculator->recalculateRepairOrder($repairOrder->fresh());
 
-    expect(ApprovedWorkScope::query()->sole()->line_amounts)->toBeNull()
+    $raised = $part->fresh();
+    $increases = $calculator->pendingAuthorizationIncreases($repairOrder->fresh());
+    $snapshot = app(InvoiceSnapshotBuilder::class)->build($repairOrder->fresh());
+
+    expect($raised->legacy_approved_amounts['total_cents'])->toBe((int) $beforeRaise->total_cents)
+        ->and($raised->legacy_approved_amounts['quantity'])->toBe((string) $beforeRaise->quantity)
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe((int) $beforeRaise->total_cents)
+        ->and($snapshot['totals']['total_cents'])->toBe((int) $beforeRaise->total_cents)
+        ->and($increases)->toHaveCount(1)
+        ->and($increases->first()['pending_cents'])->toBe((int) $raised->total_cents - (int) $beforeRaise->total_cents)
+        ->and($scope->fresh()->line_amounts)->toBeNull()
+        ->and($scope->fresh()->lineIds())->toBe([$part->id])
+        ->and(app(WorkCompletionAuthorization::class)->installBlockedReason($raised->fresh(['concern'])))->toBeNull();
+});
+
+test('lowering a line under an approval without amounts counts the lower amount and records no ceiling', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    legacyApproval($repairOrder, $concern, $part, $advisor);
+
+    $calculator = app(EstimateTotalsCalculator::class);
+    $part->fresh()->update(['unit_price_cents' => 5000]);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+
+    expect($part->fresh()->legacy_approved_amounts)->toBeNull()
         ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe((int) $part->fresh()->total_cents)
         ->and($calculator->pendingAuthorizationIncreases($repairOrder->fresh()))->toBeEmpty();
+});
+
+test('recording approval brings a raised legacy line in and keeps the old approval on file', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    legacyApproval($repairOrder, $concern, $part, $advisor);
+    $legacyScope = ApprovedWorkScope::query()->sole();
+
+    $calculator = app(EstimateTotalsCalculator::class);
+    $part->fresh()->update(['quantity' => '2.00']);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    $raisedCents = (int) $part->fresh()->total_cents;
+
+    $this->actingAs($advisor)
+        ->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+            'source' => ApprovalSource::Phone->value,
+            'approved_by' => 'Paul Howell',
+        ])
+        ->assertRedirect();
+
+    $latest = ApprovedWorkScope::query()->latest('id')->first();
+
+    expect(ApprovedWorkScope::query()->count())->toBe(2)
+        ->and($legacyScope->fresh()->line_amounts)->toBeNull()
+        ->and($latest->lineAmounts()[$part->id]['total_cents'])->toBe($raisedCents)
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($raisedCents)
+        ->and($calculator->pendingAuthorizationIncreases($repairOrder->fresh()))->toBeEmpty();
+});
+
+test('recording approval of a raised line keeps a job in progress where it is', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    customerApproves($repairOrder, $concern, $advisor);
+    $repairOrder->fresh()->forceFill(['status' => RepairOrderStatus::InProgress])->saveQuietly();
+
+    $calculator = app(EstimateTotalsCalculator::class);
+    $part->fresh()->update(['quantity' => '2.00']);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    $defaultCents = $calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents()
+        + $calculator->pendingAuthorizationCents($repairOrder->fresh());
+
+    $this->actingAs($advisor)
+        ->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+            'source' => ApprovalSource::InPerson->value,
+            'approved_by' => 'Paul Howell',
+            'approved_amount' => number_format($defaultCents / 100, 2, '.', ''),
+        ])
+        ->assertRedirect();
+
+    $approval = App\Ark\Operations\Approvals\ApprovalEvent::query()->latest('id')->first();
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::InProgress))->toBeTrue()
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe((int) $part->fresh()->total_cents)
+        ->and($approval->approved_amount_cents)->toBe((int) $part->fresh()->total_cents)
+        ->and($calculator->pendingAuthorizationIncreases($repairOrder->fresh()))->toBeEmpty();
+});
+
+test('the final invoice does not list labor or parts it does not bill', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    customerApproves($repairOrder, $concern, $advisor);
+    $added = addLabor($repairOrder, $concern);
+
+    $snapshot = app(InvoiceSnapshotBuilder::class)->build($repairOrder->fresh());
+    $lineIds = collect($snapshot['concerns'][0]['lines'])->pluck('id')->all();
+
+    expect($lineIds)->toContain($part->id)
+        ->and($lineIds)->not->toContain($added->id)
+        ->and($snapshot['totals']['total_cents'])->toBe((int) $part->fresh()->total_cents);
 });
 
 test('a new customer approval records the raised amounts without changing the earlier one', function () {
@@ -1098,4 +1194,15 @@ function customerApproves(RepairOrder $repairOrder, RepairOrderConcern $concern,
         concernDispositions: [$concern->id => RepairOrderConcernDisposition::Approved->value],
         actor: $advisor,
     );
+}
+
+function legacyApproval(RepairOrder $repairOrder, RepairOrderConcern $concern, RepairOrderLine $line, User $advisor): void
+{
+    $concern->update(['disposition' => RepairOrderConcernDisposition::Approved]);
+    ApprovedWorkScope::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'repair_order_concern_id' => $concern->id,
+        'line_ids' => [$line->id],
+        'recorded_by_user_id' => $advisor->id,
+    ]);
 }

@@ -12,10 +12,18 @@ return new class extends Migration
         Schema::table('approved_work_scopes', function (Blueprint $table) {
             $table->json('line_amounts')->nullable()->after('line_ids');
         });
+
+        Schema::table('repair_order_lines', function (Blueprint $table) {
+            $table->json('legacy_approved_amounts')->nullable();
+        });
     }
 
     public function down(): void
     {
+        Schema::table('repair_order_lines', function (Blueprint $table) {
+            $table->dropColumn('legacy_approved_amounts');
+        });
+
         Schema::table('approved_work_scopes', function (Blueprint $table) {
             $table->dropColumn('line_amounts');
         });

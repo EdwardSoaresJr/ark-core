@@ -2,7 +2,7 @@
 
 How ARK decides whether labor and parts on a repair order are covered by the customer's approval, what that blocks, and where it is going.
 
-> **Approvals recorded before amounts were kept ([#66](https://github.com/EdwardSoaresJr/ark-core/issues/66)).** A scope recorded before per-line amounts were stored has `line_amounts` null. For those concerns, ARK still counts a raised line's whole current amount as approved, as it always did: no amount is inferred and the old scope is not rewritten. A new approval of the concern records amounts and ends this.
+> **Approvals recorded before amounts were kept ([#66](https://github.com/EdwardSoaresJr/ark-core/issues/66)).** A scope recorded before per-line amounts were stored has `line_amounts` null, and older approvals may have no scope at all. ARK does not infer what those approvals were worth and does not rewrite them. Instead, the first time staff raise the quantity or price of a line on such a concern, `LegacyApprovalCeiling` saves the line's amounts from just before the raise in `repair_order_lines.legacy_approved_amounts`. That is the most ARK had counted as approved for the line, so it becomes the line's ceiling: the increase is pending until a recorded approval stores real amounts. Lowering a line, editing its text, and moving the job forward record nothing and block nothing.
 
 ## What coverage is
 
@@ -29,7 +29,11 @@ Unchanged:
 - A concern with an approval or exception on file still cannot be deleted.
 - Staff permissions and estimate-version concurrency checks are unchanged.
 
-Editing an existing line keeps its id, so it stays covered by the approval that included it. If its price or quantity rises, only the approved amounts count; the difference is pending until a new approval of the concern records the new amounts. The repair-order-level amount on a customer approval event (`approval_events.approved_amount_cents`) is preserved.
+Editing an existing line keeps its id, so it stays covered by the approval that included it. If its price or quantity rises, only the approved amounts count; the difference is pending until a new approval of the concern records the new amounts.
+
+**Record approval** brings pending work in. Besides recommended work on an estimate with no approval yet, it re-scopes every Approved concern that has uncovered lines or a pending increase (`approvedConcernIdsAwaitingAuthorization()`). Its default amount is the approved total plus `pendingAuthorizationCents()`. Each re-scope appends a scope with current amounts; earlier scopes and approval events are not changed. A job already past approval (Waiting Parts through Ready Pickup) keeps its status.
+
+The final invoice lists only lines its total bills: labor and parts the approval does not cover are left off the invoice, as they are left out of its total. The repair-order-level amount on a customer approval event (`approval_events.approved_amount_cents`) is preserved.
 
 When the shop fee has a cap, raising one line moves part of the capped fee off the other lines. The raised line still counts at its recorded fee and the others at their lower current fee, so approved dollars can come out slightly below the original approval, never above it. The moved fee is part of the pending increase.
 
