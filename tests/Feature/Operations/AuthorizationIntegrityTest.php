@@ -234,6 +234,76 @@ test('#66: a raised line keeps exactly the tax and shop fee recorded with its ap
         ->toBe((int) $part->fresh()->total_cents - (int) $authorized->total_cents);
 });
 
+test('#66: a tax or shop fee rise with the subtotal unchanged waits for authorization', function (array $before, array $after) {
+    ShopSettings::current()->update([
+        'tax_enabled' => true,
+        'taxable_parts' => true,
+        'shop_fee_rate' => '5.000',
+        'shop_fee_cap_cents' => null,
+        ...$before,
+    ]);
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    approveConcern($repairOrder, $concern, $advisor);
+    $authorized = $part->fresh();
+
+    ShopSettings::current()->update($after);
+    $calculator = app(EstimateTotalsCalculator::class);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    $current = $part->fresh();
+    $coverage = app(WorkCompletionAuthorization::class);
+    $invoice = app(InvoiceSnapshotBuilder::class)->build($repairOrder->fresh(), $advisor);
+
+    expect((int) $current->subtotal_cents)->toBe((int) $authorized->subtotal_cents)
+        ->and((int) $current->total_cents)->toBeGreaterThan((int) $authorized->total_cents)
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe((int) $authorized->total_cents)
+        ->and($invoice['totals']['total_cents'])->toBe((int) $authorized->total_cents)
+        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->toBe([$part->id])
+        ->and($coverage->workOutsideApprovedSalesCents($repairOrder->fresh()))->toBe((int) $current->total_cents - (int) $authorized->total_cents);
+})->with([
+    'tax rate rises' => [['default_tax_rate' => '5.000', 'shop_fee_enabled' => false], ['default_tax_rate' => '9.000']],
+    'shop fee turned on' => [['default_tax_rate' => '5.000', 'shop_fee_enabled' => false], ['shop_fee_enabled' => true]],
+]);
+
+test('#66: a legacy line raised, lowered, and raised again stays held to its first ceiling until approval', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    legacyApproval($repairOrder, $concern, $part, $advisor);
+
+    $calculator = app(EstimateTotalsCalculator::class);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+    expect($part->fresh()->legacy_approved_amounts)->toBeNull();
+
+    $ceilingCents = (int) $part->fresh()->total_cents;
+    $approvedFor = fn (): int => $calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents();
+    $edit = function (array $attributes) use ($part, $calculator, $repairOrder): void {
+        $part->fresh()->update($attributes);
+        $calculator->recalculateRepairOrder($repairOrder->fresh());
+    };
+
+    $edit(['quantity' => '2.00']);
+    expect($approvedFor())->toBe($ceilingCents);
+
+    $edit(['quantity' => '1.00', 'unit_price_cents' => 4000]);
+    $lowered = (int) $part->fresh()->total_cents;
+    expect($lowered)->toBeLessThan($ceilingCents)
+        ->and($approvedFor())->toBe($lowered)
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh()))->toBeEmpty();
+
+    $edit(['quantity' => '4.00']);
+    expect((int) $part->fresh()->total_cents)->toBeGreaterThan($ceilingCents)
+        ->and($approvedFor())->toBe($ceilingCents)
+        ->and($part->fresh()->legacy_approved_amounts['total_cents'])->toBe($ceilingCents)
+        ->and(app(WorkCompletionAuthorization::class)->workOutsideApprovedSalesCents($repairOrder->fresh()))
+        ->toBe((int) $part->fresh()->total_cents - $ceilingCents);
+
+    approveConcern($repairOrder->fresh(), $concern->fresh(), $advisor);
+
+    expect($approvedFor())->toBe((int) $part->fresh()->total_cents)
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh()))->toBeEmpty();
+});
+
 test('#66: raising a line under an approval without amounts holds it to its amounts before the raise', function () {
     $advisor = integrityAdvisor();
     [$repairOrder, $concern, $part] = integrityRepairOrder();

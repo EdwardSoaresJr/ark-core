@@ -7,8 +7,9 @@ use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 /**
  * An approval recorded before per-line amounts were kept says which lines were
  * approved but not at what price. The first time such a line is raised, its
- * amounts from just before the edit become its approved ceiling, so the increase
- * waits for a fresh authorization. The old approval record is not touched.
+ * amounts from just before the edit become its ceiling, so the increase waits for
+ * a fresh authorization. The ceiling is a conservative operational limit, not proof
+ * of what the customer authorized. It is saved once and the old approval is not touched.
  */
 final class LegacyApprovalCeiling
 {

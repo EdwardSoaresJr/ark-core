@@ -230,6 +230,21 @@ final class WorkCompletionAuthorization
             ->sum(fn (RepairOrderLine $line): int => $this->pendingApprovalCents($repairOrder, $line));
     }
 
+    /**
+     * With every amount on file, any rise in what the line bills is a raise: price and quantity,
+     * and also tax, shop fee, or discount. An entry with only a subtotal compares the subtotal.
+     *
+     * @param  array{subtotal_cents: int, amounts: array{total_cents: int}|null}  $approved
+     */
+    private function raisedAboveApproval(RepairOrderLine $line, array $approved): bool
+    {
+        if ($approved['amounts'] !== null) {
+            return (int) $line->total_cents > $approved['amounts']['total_cents'];
+        }
+
+        return $this->approvalSubtotalCents($line) > $approved['subtotal_cents'];
+    }
+
     public function approvalSubtotalCents(RepairOrderLine $line): int
     {
         return app(EstimateTotalsCalculator::class)->lineTotalCents($line->quantity ?? 0, (int) $line->unit_price_cents);
@@ -291,7 +306,7 @@ final class WorkCompletionAuthorization
                         $approved = $ceiling === null ? null : ['subtotal_cents' => $ceiling['subtotal_cents'], 'amounts' => $ceiling];
                     }
 
-                    if ($approved !== null && $this->approvalSubtotalCents($line) > $approved['subtotal_cents']) {
+                    if ($approved !== null && $this->raisedAboveApproval($line, $approved)) {
                         $increased[(int) $line->id] = ['subtotal_cents' => $approved['subtotal_cents'], 'amounts' => $approved['amounts']];
                         $changed[$concernId] = true;
                     }
