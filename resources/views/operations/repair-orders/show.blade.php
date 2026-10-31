@@ -1867,7 +1867,6 @@
                                                 'canMoveScopeToNewRo' => ! ($financial['hasIssuedInvoice'] ?? false),
                                                 'partsCatalogs' => $partsCatalogs,
                                                 'partsCatalogDefault' => $partsCatalogDefault,
-                                                'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
                                             ])
                                         </x-slot:toolbar>
                                     @endunless

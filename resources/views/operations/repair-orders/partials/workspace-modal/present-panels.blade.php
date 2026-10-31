@@ -1,9 +1,7 @@
 {{-- Presentation → modal authoring panels (visit reason, narrative, scope chips, RA meta) --}}
 @php
     use App\Ark\Operations\RepairOrders\RecommendationIntent;
-    use App\Ark\Operations\Settings\ShopSettings;
 
-    $shopSettingsForBilling = ShopSettings::current();
     $techniciansForMeta = $technicians ?? collect();
     $dragonReady = class_exists(\Ark\Saas\Dragon\ServiceAdvisor\ServiceAdvisorMode::class)
         && \Illuminate\Support\Facades\Route::has('operations.repair-orders.dragon-service-advisor.visit-reason');
@@ -561,46 +559,6 @@
         </div>
     </div>
     @endif
-
-    <div
-        class="ops-workspace-modal__panel"
-        x-show="task === 'concern-billing' && String(context.concernId) === '{{ $concern->id }}'"
-        x-cloak
-    >
-        <form
-            method="POST"
-            action="{{ route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]) }}"
-            data-workspace-modal-form="concern-billing"
-            data-refresh-scope="worksheet"
-            data-saving-label="Saving…"
-            @submit.prevent="submitWorksheetForm($event)"
-        >
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="block text-[11px] font-medium text-slate-500" for="workspace-billing-{{ $concern->id }}">
-                Billing
-                <select
-                    id="workspace-billing-{{ $concern->id }}"
-                    name="billing_posture"
-                    class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                >
-                    @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $option)
-                        @php
-                            $billingOption = $shopSettingsForBilling->billingPostureOptionPresentation($option);
-                        @endphp
-                        <option
-                            value="{{ $option->value }}"
-                            title="{{ $billingOption['title'] }}"
-                            @selected($concern->billing_posture === $option)
-                        >{{ $billingOption['label'] }}</option>
-                    @endforeach
-                </select>
-            </label>
-        </form>
-    </div>
-
-
 
     @foreach ($concern->workGroups as $workGroup)
         @php

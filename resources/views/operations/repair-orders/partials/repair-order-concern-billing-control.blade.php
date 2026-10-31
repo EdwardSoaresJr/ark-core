@@ -4,8 +4,10 @@
     $posture = $concern->billing_posture;
     $laborRate = $laborRate ?? null;
     $shopSettings = ShopSettings::current();
-    $authorViaModal = (bool) ($authorViaModal ?? false);
-    $billingLabel = $shopSettings->billingPostureOptionPresentation($posture)['label'] ?? $posture->shortLabel();
+    $billingDetail = function (array $presentation): string {
+        return '$'.$presentation['rate'].'/hr · '.$presentation['matrix_name'].' · '.$presentation['shop_fee_summary'];
+    };
+    $currentBilling = $shopSettings->billingPostureOptionPresentation($posture);
 @endphp
 
 @if ($isTerminal ?? false)
@@ -21,52 +23,59 @@
             label="Billing help for {{ $concern->summary }}"
         />
     </div>
-@elseif ($authorViaModal)
-    <button
-        type="button"
-        class="btn btn-sm btn-ghost-secondary"
-        title="Billing for this scope"
-        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-billing', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
-    >
-        {{ $billingLabel }}
-    </button>
 @else
-    <div class="d-flex align-items-center gap-1">
-        <form
-            method="POST"
-            action="{{ route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]) }}"
-            data-refresh-scope="worksheet"
-            data-continuity-focus="#concern-{{ $concern->id }} select[name='billing_posture']"
-            @submit.prevent="submitWorksheetForm($event)"
-        >
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="visually-hidden" for="concern-billing-{{ $concern->id }}">Billing for {{ $concern->summary }}</label>
-            <select
-                id="concern-billing-{{ $concern->id }}"
-                name="billing_posture"
-                class="form-select form-select-sm"
-                style="width: auto"
-                onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
+    <form
+        method="POST"
+        action="{{ route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]) }}"
+        data-refresh-scope="worksheet"
+        data-continuity-focus="#concern-{{ $concern->id }} [data-concern-billing-choices] .dropdown-toggle"
+        @submit.prevent="submitWorksheetForm($event)"
+    >
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+        <input type="hidden" name="billing_posture" value="{{ $posture->value }}">
+        <div class="dropdown" data-concern-billing-choices>
+            <button
+                type="button"
+                class="btn btn-sm dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                aria-label="Billing for {{ $concern->summary }}: {{ $posture->label() }}, {{ $billingDetail($currentBilling) }}"
+                title="{{ $currentBilling['title'] }}"
+                data-billing-current="{{ $posture->value }}"
             >
+                <x-tabler.icon name="receipt" class="text-secondary me-1" />
+                <span class="fw-medium">{{ $posture->label() }}</span>
+            </button>
+            <div class="dropdown-menu">
+                <h6 class="dropdown-header">Billing</h6>
                 @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $option)
                     @php
                         $billingOption = $shopSettings->billingPostureOptionPresentation($option);
+                        $isCurrent = $option === $posture;
                     @endphp
-                    <option
-                        value="{{ $option->value }}"
+                    <button
+                        type="button"
+                        class="dropdown-item"
                         title="{{ $billingOption['title'] }}"
-                        @selected($posture === $option)
-                    >{{ $billingOption['label'] }}</option>
+                        data-billing-option="{{ $option->value }}"
+                        @if ($isCurrent)
+                            aria-current="true"
+                        @else
+                            @click="preserveRepairOrderConcernScroll({{ $concern->id }}); $el.form.elements.billing_posture.value = @js($option->value); $el.form.requestSubmit()"
+                        @endif
+                    >
+                        <span class="d-flex flex-column me-3">
+                            <span>{{ $option->label() }}</span>
+                            <span class="small text-secondary">{{ $billingDetail($billingOption) }}</span>
+                        </span>
+                        @if ($isCurrent)
+                            <x-tabler.icon name="check" class="ms-auto text-primary" />
+                        @endif
+                    </button>
                 @endforeach
-            </select>
-        </form>
-        <x-operations.help-tip
-            :items="App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorHelpOverviewItems()"
-            title="Scope billing"
-            label="Scope billing help"
-            class="ops-help-tip--above"
-        />
-    </div>
+            </div>
+        </div>
+    </form>
 @endif
