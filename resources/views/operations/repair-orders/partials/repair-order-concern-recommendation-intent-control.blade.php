@@ -3,7 +3,6 @@
     use App\Ark\Operations\RepairOrders\RecommendationPriority;
 
     $presentation = $concern->presentation();
-    $semantic = $concern->recommendationIntent();
     $posture = $concern->isInformationOnly()
         ? RecommendationPresentation::INFORMATION_ONLY
         : $concern->recommendationPriority()?->value;
@@ -19,9 +18,6 @@
             <span class="badge bg-{{ $presentation->tablerColor() }}-lt">{{ $presentation->staffLabel() }}</span>
         @else
             <span class="badge bg-secondary-lt">No priority</span>
-        @endif
-        @if ($semantic)
-            <span class="subheader">{{ $semantic->staffLabel() }}</span>
         @endif
     </div>
 @else

@@ -27,14 +27,6 @@
                 'estimateVersion' => $estimateVersion,
             ])
         </div>
-        @if ($concern->shouldSurfaceRecommendationStatus())
-            @include('operations.repair-orders.partials.repair-order-concern-work-type-control', [
-                'repairOrder' => $repairOrder,
-                'concern' => $concern,
-                'estimateVersion' => $estimateVersion,
-                'authorViaModal' => $authorViaModal,
-            ])
-        @endif
         @include('operations.repair-orders.partials.repair-order-concern-billing-control', [
             'repairOrder' => $repairOrder,
             'concern' => $concern,
