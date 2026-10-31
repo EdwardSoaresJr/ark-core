@@ -131,7 +131,7 @@ test('advisor estimate review renders shared inspection posture on the review to
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-review-toolbar-section--visit-signals', false)
+        ->assertSee('data-ro-visit-signals', false)
         ->assertSee('data-inspection-posture="not_started"', false)
         ->assertSee('Not Started', false);
 });

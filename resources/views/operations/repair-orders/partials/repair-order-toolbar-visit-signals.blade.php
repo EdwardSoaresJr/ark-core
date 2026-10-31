@@ -11,21 +11,20 @@
 @endphp
 
 @if ($showArrival || $showInspection)
-    <div class="ops-review-toolbar-section ops-review-toolbar-section--visit-signals">
-        <div class="ops-review-toolbar-row ops-visit-signals" role="group" aria-label="Appointment and inspection">
-            @if ($showArrival)
-                @include('operations.repair-orders.partials.repair-order-arrival-posture-inline', [
-                    'arrivalPosture' => $arrivalPosture,
-                    'variant' => 'toolbar',
-                ])
-            @endif
+    {{-- The posture chips are shared with the customer documents, so they stay legacy here. --}}
+    <div class="ark-legacy ops-visit-signals d-flex align-items-center" data-ro-visit-signals role="group" aria-label="Appointment and inspection">
+        @if ($showArrival)
+            @include('operations.repair-orders.partials.repair-order-arrival-posture-inline', [
+                'arrivalPosture' => $arrivalPosture,
+                'variant' => 'toolbar',
+            ])
+        @endif
 
-            @if ($showInspection)
-                @include('operations.repair-orders.partials.repair-order-inspection-posture-inline', [
-                    'inspectionPosture' => $inspectionPosture,
-                    'variant' => 'toolbar',
-                ])
-            @endif
-        </div>
+        @if ($showInspection)
+            @include('operations.repair-orders.partials.repair-order-inspection-posture-inline', [
+                'inspectionPosture' => $inspectionPosture,
+                'variant' => 'toolbar',
+            ])
+        @endif
     </div>
 @endif

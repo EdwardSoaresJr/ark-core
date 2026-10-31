@@ -54,6 +54,8 @@ Known differences inside `.ark-legacy`:
 
 Check migrated views against `npm run build` output, not only the Vite dev server. Herd starts the dev server and writes `public/hot`, which serves unminified CSS; delete `public/hot` to load `public/build`.
 
+The repair order worksheet needs a secure context: `ark-worksheet-collaboration.js` calls `crypto.randomUUID()`, which browsers only provide over HTTPS or on localhost. On a plain-HTTP Herd site the worksheet component fails to start, on legacy and Tabler pages alike, and its toolbar and line controls do nothing. Run `herd secure` for the site before checking worksheet behavior.
+
 `vite.config.js` excludes the `light-dark()` feature from the CSS minifier. Its polyfill resolves `light-dark()` once at `:root`, so Tabler's dark sidebar (`data-bs-theme="dark"` inside a light page) rendered white text on a white background in built assets. Do not remove the exclusion. Tabler pages therefore need native `light-dark()`: Chrome and Edge 123, Safari 17.5, Firefox 120, or later. Tabler's published CSS has the same requirement. Legacy pages do not use `light-dark()`.
 
 `resources/css/postcss-exclude-legacy-islands.test.js` covers the selector rewrite. Run it with `node --test resources/css/postcss-exclude-legacy-islands.test.js` after changing the plugin or upgrading Tabler.
@@ -232,3 +234,11 @@ Migrated: the page header (the focus date or week as title, the appointment coun
 Still legacy, in one `.ark-legacy bg-white text-dark` island: the appointment request controls, the capacity rail, the day, week, and month boards, and the appointment popover (`ark-schedule-appointment-popover.js`).
 
 FullCalendar: Tabler 1.7.3 ships the FullCalendar 6.1.22 Standard bundle as a global script (`@tabler/core/dist/libs/fullcalendar/index.global.min.js`) and no `.fc` styles. ARK's boards are server-rendered, not a JavaScript calendar. The day board has a lane per bay and the week board allocates by technician or bay; those are resource views, which FullCalendar provides only in its separately licensed Scheduler, not the Standard bundle. Moving the boards to FullCalendar would also need a JSON event feed and a rewrite of the lenses, capacity rail, request controls, and popovers. That is a separate decision, not a presentation change.
+
+### Repair order workspace: shell and toolbar (`operations.repair-orders.show`)
+
+The first slice of the repair order workspace. The page uses the Tabler shell; the worksheet, rail, and footer dock are unchanged inside one legacy island.
+
+Migrated: the page header (RO number, customer and vehicle) and the toolbar as its actions: Review Estimate Notes, Paperwork / Add Document, the Print menu (a Tabler dropdown with the same items, links, and `arkPrintDocument` calls), the technician select, the lifecycle select with its lost-reason panel, the review-request follow-up, and the PartsTech busy notice. The toolbar keeps `id="review-toolbar"`, so worksheet refreshes still replace it from the server, and every form, hidden field, data attribute, Alpine handler, and permission check is unchanged.
+
+Still legacy, in `.ark-legacy.ops-main > .ops-estimate-workspace` (the wrapper legacy dark-mode and layout rules expect): the flash messages, collaboration banners, intake band, identity band, workspace tabs, the estimate worksheet, the totals and financial rail, the labor guide panel, and the footer dock. The appointment and inspection chips in the toolbar stay legacy because the customer documents share them. `tabler.css` sets `--ops-left-rail-width` inside islands to the Tabler sidebar width, so the fixed footer dock starts at the sidebar edge.

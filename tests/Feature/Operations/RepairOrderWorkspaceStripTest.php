@@ -147,8 +147,8 @@ test('print dropdown still renders on the canonical repair order', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-review-print-menu', false)
-        ->assertSee('>PRINT<', false)
+        ->assertSee('data-ro-print-menu', false)
+        ->assertSee('data-bs-toggle="dropdown"', false)
         ->assertSee('Check In sheet', false)
         ->assertSee('Estimate PDF', false);
 });

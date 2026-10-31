@@ -1,4 +1,4 @@
-<x-operations.app title="Repair Order - RO #{{ $repairOrder->repair_order_id }}" :printing="true">
+<x-operations.app title="Repair Order - RO #{{ $repairOrder->repair_order_id }}" :printing="true" ui="tabler">
     @php
         $isTerminal = $repairOrder->isTerminal();
         $statusCatalog = app(\App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog::class);
@@ -1514,12 +1514,75 @@
             },
         })"
         x-init="initWorksheetCollaboration(); initEstimateContextFromHash()"
-        class="ops-estimate-workspace ops-estimate-workspace--builder"
         @ark:partstech-warning.window="partstechNotice = $event.detail.message || ''; partstechCartLocked = Boolean($event.detail.cartLocked)"
         @ark:partstech-pull-quote-state.window="partstechPullLoading = Boolean($event.detail?.loading); partstechPullStatus = $event.detail?.status || ''"
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
         @keydown.escape.window="partsCatalogMenu = false; laborGuideMenu = false"
     >
+        @php
+            $roHeaderSubtitle = collect([$repairOrder->customer?->name, $repairOrder->vehicle?->display_name])->filter()->implode(' · ');
+        @endphp
+        <x-tabler.page layout="fluid" :title="'RO #'.$repairOrder->repair_order_id" pretitle="Repair order" :subtitle="$roHeaderSubtitle" actions-label="Repair order commands" stack-actions>
+            <x-slot:actions>
+                <div id="review-toolbar" class="d-flex flex-wrap align-items-start gap-2" style="max-width: 100%">
+                    @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
+                        'repairOrder' => $repairOrder,
+                    ])
+
+                    @unless ($isTerminal)
+                        @if ($canAuthorRepairOrder ?? false)
+                            <button
+                                type="button"
+                                class="btn"
+                                @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'review-estimate-notes', context: {}, invokeEl: $event.currentTarget } }))"
+                            >
+                                Review Estimate Notes
+                            </button>
+                        @endif
+                    @endunless
+
+                    @include('operations.repair-orders.partials.repair-order-toolbar-print-slot', [
+                        'repairOrder' => $repairOrder,
+                        'financial' => $financial,
+                        'customerDocumentsCount' => ($customerDocuments ?? collect())->count(),
+                        'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
+                        'isTerminal' => $isTerminal,
+                    ])
+
+                    @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
+                        'repairOrder' => $repairOrder,
+                        'isTerminal' => $isTerminal,
+                        'lifecycleOptions' => $lifecycleOptions,
+                        'closeVariantOptions' => $closeVariantOptions,
+                        'technicians' => $technicians,
+                        'soloOwnerShop' => $soloOwnerShop,
+                        'estimateVersion' => $estimateVersion,
+                        'financial' => $financial,
+                        'balanceProjection' => $balanceProjection ?? null,
+                        'mode' => 'edit',
+                    ])
+
+                    @include('operations.repair-orders.partials.repair-order-toolbar-mode-slot', [
+                        'repairOrder' => $repairOrder,
+                        'mode' => 'edit',
+                        'isTerminal' => $isTerminal,
+                        'registerModeShortcut' => false,
+                    ])
+                </div>
+            </x-slot:actions>
+
+            <div x-show="partstechCatalogOpening || partstechPullLoading" x-cloak role="status" aria-live="polite">
+                <div class="alert alert-info d-flex align-items-center gap-2">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span x-text="partstechCatalogOpening
+                        ? ('Preparing ' + (partsCatalogActionLabel || 'PartsTech') + ' cart…')
+                        : (partstechPullStatus || ('Pulling ' + (partsCatalogActionLabel || 'PT Cart') + '…'))"></span>
+                </div>
+            </div>
+
+            {{-- The worksheet, rail, and footer dock keep their legacy markup and scripts until their own slices. --}}
+            <div class="ark-legacy ops-main">
+            <div class="ops-estimate-workspace ops-estimate-workspace--builder">
         @include('operations.repair-orders.partials.worksheet-busy-overlay')
 
         <div id="worksheet-status-flash">
@@ -1599,70 +1662,6 @@
                 'totals' => $totals,
             ])
 
-            <div id="review-toolbar" class="ops-review-actions">
-                <div class="ops-review-toolbar">
-                    @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
-                        'repairOrder' => $repairOrder,
-                    ])
-
-                    @unless ($isTerminal)
-                        @if ($canAuthorRepairOrder ?? false)
-                            <div class="ops-review-toolbar-section">
-                                <div class="ops-review-toolbar-row">
-                                    <button
-                                        type="button"
-                                        class="ops-review-action"
-                                        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'review-estimate-notes', context: {}, invokeEl: $event.currentTarget } }))"
-                                    >
-                                        Review Estimate Notes
-                                    </button>
-                                </div>
-                            </div>
-                        @endif
-                    @endunless
-
-                    @include('operations.repair-orders.partials.repair-order-toolbar-print-slot', [
-                        'repairOrder' => $repairOrder,
-                        'financial' => $financial,
-                        'customerDocumentsCount' => ($customerDocuments ?? collect())->count(),
-                        'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
-                        'isTerminal' => $isTerminal,
-                    ])
-
-                    @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
-                        'repairOrder' => $repairOrder,
-                        'isTerminal' => $isTerminal,
-                        'lifecycleOptions' => $lifecycleOptions,
-                        'closeVariantOptions' => $closeVariantOptions,
-                        'technicians' => $technicians,
-                        'soloOwnerShop' => $soloOwnerShop,
-                        'estimateVersion' => $estimateVersion,
-                        'financial' => $financial,
-                        'balanceProjection' => $balanceProjection ?? null,
-                        'mode' => 'edit',
-                    ])
-
-                    @include('operations.repair-orders.partials.repair-order-toolbar-mode-slot', [
-                        'repairOrder' => $repairOrder,
-                        'mode' => 'edit',
-                        'isTerminal' => $isTerminal,
-                        'registerModeShortcut' => false,
-                    ])
-                </div>
-
-                <div
-                    x-show="partstechCatalogOpening || partstechPullLoading"
-                    x-cloak
-                    class="ops-partstech-busy-strip"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span class="ops-partstech-loader shrink-0" aria-hidden="true"></span>
-                    <span x-text="partstechCatalogOpening
-                        ? ('Preparing ' + (partsCatalogActionLabel || 'PartsTech') + ' cart…')
-                        : (partstechPullStatus || ('Pulling ' + (partsCatalogActionLabel || 'PT Cart') + '…'))"></span>
-                </div>
-            </div>
         </div>
 
         <div class="ops-estimate-layout">
@@ -2042,5 +2041,8 @@
                 }
             })();
         </script>
+            </div>
+            </div>
+        </x-tabler.page>
     </section>
 </x-operations.app>

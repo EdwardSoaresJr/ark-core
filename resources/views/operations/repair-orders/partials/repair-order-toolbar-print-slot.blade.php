@@ -8,21 +8,19 @@
         : '+ Add Document';
 @endphp
 
-<div class="ops-review-toolbar-section ops-review-toolbar-section--print">
-    @if ($showPaperwork)
-        <button
-            type="button"
-            class="ops-review-action shrink-0"
-            title="Scan, upload, or attach paperwork for this visit"
-            data-workspace-modal-trigger="document"
-            @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'document', invokeEl: $event.currentTarget } }))"
-        >
-            {{ $paperworkLabel }}
-        </button>
-    @endif
+@if ($showPaperwork)
+    <button
+        type="button"
+        class="btn"
+        title="Scan, upload, or attach paperwork for this visit"
+        data-workspace-modal-trigger="document"
+        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'document', invokeEl: $event.currentTarget } }))"
+    >
+        {{ $paperworkLabel }}
+    </button>
+@endif
 
-    @include('operations.repair-orders.partials.repair-order-estimate-print-menu', [
-        'repairOrder' => $repairOrder,
-        'financial' => $financial ?? null,
-    ])
-</div>
+@include('operations.repair-orders.partials.repair-order-estimate-print-menu', [
+    'repairOrder' => $repairOrder,
+    'financial' => $financial ?? null,
+])
