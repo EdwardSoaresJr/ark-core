@@ -696,7 +696,7 @@ test('manual labor sell price overrides the shop default labor rate', function (
         ->and($line->labor_rate_override_reason)->toBe('competitive_match');
 });
 
-test('scope header shows recommendation intent and can update it inline', function () {
+test('scope header leaves work type out and a priority change keeps the stored work type', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
 
@@ -709,12 +709,24 @@ test('scope header shows recommendation intent and can update it inline', functi
         'position' => 1,
     ]);
 
-    $this->get(route('operations.repair-orders.show', $repairOrder))
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('Maintenance')
-        ->assertSee("task: 'concern-intent'", false)
-        ->assertSee('data-workspace-modal-form="concern-intent"', false)
-        ->assertSee('id="workspace-intent-only-'.$concern->id.'"', false);
+        ->assertDontSee("task: 'concern-intent'", false)
+        ->assertDontSee('data-workspace-modal-form="concern-intent"', false)
+        ->assertSee('id="workspace-concern-intent-'.$concern->id.'"', false)
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $controls = (new DOMXPath($document))
+        ->query('//*[@id="concern-'.$concern->id.'"]//*[@data-concern-status-controls]')
+        ->item(0);
+
+    expect($controls)->toBeInstanceOf(DOMElement::class)
+        ->and($controls->textContent)->not->toContain('Maintenance')
+        ->and($controls->textContent)->not->toContain('Work type');
 
     $this->patch(route('operations.repair-orders.concerns.recommendation-intent', [$repairOrder, $concern]), [
         'recommendation_posture' => 'must_do',
@@ -722,6 +734,29 @@ test('scope header shows recommendation intent and can update it inline', functi
 
     expect($concern->fresh()->recommendationPriority())->toBe(RecommendationPriority::MustDo)
         ->and($concern->fresh()->recommendationIntent())->toBe(RecommendationIntent::Maintenance);
+});
+
+test('saving a concern without a work type field keeps its stored work type', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $repairOrder = repairOrderForEstimateWorkspace();
+    $concern = RepairOrderConcern::query()->create([
+        'repair_order_id' => $repairOrder->id,
+        'summary' => 'No start',
+        'disposition' => RepairOrderConcernDisposition::Recommended,
+        'recommendation_intent' => 'diagnostic',
+        'position' => 1,
+    ]);
+
+    $this->patch(route('operations.repair-orders.concerns.update', [$repairOrder, $concern]), [
+        'summary' => 'No start, cranks slowly',
+        'recommendation_posture' => 'must_do',
+    ])->assertRedirect();
+
+    expect($concern->fresh()->summary)->toBe('No start, cranks slowly')
+        ->and($concern->fresh()->recommendationPriority())->toBe(RecommendationPriority::MustDo)
+        ->and($concern->fresh()->recommendationIntent())->toBe(RecommendationIntent::Diagnostic);
 });
 
 test('new scope intake infers entry kind and defaults recommendation status server-side', function () {

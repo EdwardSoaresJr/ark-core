@@ -600,41 +600,6 @@
         </form>
     </div>
 
-    <div
-        class="ops-workspace-modal__panel"
-        x-show="task === 'concern-intent' && String(context.concernId) === '{{ $concern->id }}'"
-        x-cloak
-    >
-        <form
-            method="POST"
-            action="{{ route('operations.repair-orders.concerns.recommendation-intent', [$repairOrder, $concern]) }}"
-            data-workspace-modal-form="concern-intent"
-            data-refresh-scope="worksheet"
-            data-saving-label="Saving…"
-            @submit.prevent="submitWorksheetForm($event)"
-        >
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="block text-[11px] font-medium text-slate-500" for="workspace-intent-only-{{ $concern->id }}">
-                Priority
-                @include('operations.repair-orders.partials.recommendation-priority-select', [
-                    'selectedPriority' => $concern->recommendationPriority()?->value,
-                    'informationOnly' => $concern->isInformationOnly(),
-                    'inputId' => 'workspace-intent-only-'.$concern->id,
-                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
-                ])
-            </label>
-            <label class="mt-3 block text-[11px] font-medium text-slate-500" for="workspace-work-type-{{ $concern->id }}">
-                Work type
-                @include('operations.repair-orders.partials.recommendation-intent-select', [
-                    'selected' => $concern->recommendationIntent()?->value,
-                    'inputId' => 'workspace-work-type-'.$concern->id,
-                    'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
-                ])
-            </label>
-        </form>
-    </div>
 
 
     @foreach ($concern->workGroups as $workGroup)
