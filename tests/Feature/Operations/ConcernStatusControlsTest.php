@@ -29,6 +29,16 @@ function statusControlsConcern($repairOrder, RepairOrderConcernDisposition $disp
     ]);
 }
 
+/** The option's opening tag as rendered. HTML parsers differ on Alpine's @click attribute name. */
+function statusControlsOptionTag(string $html, string $attribute, string $value): string
+{
+    preg_match('/<button\b[^>]*\b'.preg_quote($attribute, '/').'="'.preg_quote($value, '/').'"[^>]*>/s', $html, $match);
+
+    expect($match)->not->toBeEmpty();
+
+    return $match[0];
+}
+
 function statusControlsXPath(string $html): DOMXPath
 {
     $document = new DOMDocument;
@@ -73,7 +83,8 @@ test('the decision dropdown offers every disposition and posts only a changed on
     $repairOrder = repairOrderForEstimateWorkspace();
     $concern = statusControlsConcern($repairOrder, RepairOrderConcernDisposition::Approved);
 
-    $xpath = statusControlsXPath($this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent());
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $xpath = statusControlsXPath($html);
     $dropdown = $xpath->query('//*[@id="concern-disposition-'.$concern->id.'"]//*[@data-concern-decision-choices]')->item(0);
     $form = $xpath->query('ancestor::form', $dropdown)->item(0);
 
@@ -90,9 +101,9 @@ test('the decision dropdown offers every disposition and posts only a changed on
         ))
         ->and(trim($options['recommended']->textContent))->toBe('Pending Approval')
         ->and($options['approved']->getAttribute('aria-current'))->toBe('true')
-        ->and($options['approved']->hasAttribute('@click'))->toBeFalse()
-        ->and($options['declined']->getAttribute('@click'))->toContain("disposition.value = 'declined'")
-        ->and($options['declined']->getAttribute('@click'))->toContain('requestSubmit()');
+        ->and(statusControlsOptionTag($html, 'data-disposition-option', 'approved'))->not->toContain('requestSubmit()')
+        ->and(statusControlsOptionTag($html, 'data-disposition-option', 'declined'))->toContain("disposition.value = 'declined'")
+        ->and(statusControlsOptionTag($html, 'data-disposition-option', 'declined'))->toContain('requestSubmit()');
 });
 
 test('the current priority and work status show a checkmark and do not resubmit', function (): void {
@@ -100,20 +111,19 @@ test('the current priority and work status show a checkmark and do not resubmit'
     $repairOrder = repairOrderForEstimateWorkspace();
     $concern = statusControlsConcern($repairOrder, RepairOrderConcernDisposition::Approved);
 
-    $xpath = statusControlsXPath($this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent());
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $xpath = statusControlsXPath($html);
     $scope = '//*[@id="concern-'.$concern->id.'"]';
     $currentPriority = $xpath->query($scope.'//*[@data-priority-option="must_do"]')->item(0);
-    $otherPriority = $xpath->query($scope.'//*[@data-priority-option="should_do"]')->item(0);
     $currentWork = $xpath->query($scope.'//*[@data-production-option="waiting_parts"]')->item(0);
-    $otherWork = $xpath->query($scope.'//*[@data-production-option="in_progress"]')->item(0);
     $workForm = $xpath->query('ancestor::form', $currentWork)->item(0);
 
     expect($currentPriority->getAttribute('aria-current'))->toBe('true')
-        ->and($currentPriority->hasAttribute('@click'))->toBeFalse()
-        ->and($otherPriority->getAttribute('@click'))->toContain("recommendation_posture.value = 'should_do'")
+        ->and(statusControlsOptionTag($html, 'data-priority-option', 'must_do'))->not->toContain('requestSubmit()')
+        ->and(statusControlsOptionTag($html, 'data-priority-option', 'should_do'))->toContain("recommendation_posture.value = 'should_do'")
         ->and($currentWork->getAttribute('aria-current'))->toBe('true')
-        ->and($currentWork->hasAttribute('@click'))->toBeFalse()
-        ->and($otherWork->getAttribute('@click'))->toContain("production_status.value = 'in_progress'")
+        ->and(statusControlsOptionTag($html, 'data-production-option', 'waiting_parts'))->not->toContain('requestSubmit()')
+        ->and(statusControlsOptionTag($html, 'data-production-option', 'in_progress'))->toContain("production_status.value = 'in_progress'")
         ->and($workForm->getAttribute('action'))->toBe(route('operations.repair-orders.concerns.production-status', [$repairOrder, $concern]))
         ->and(trim($xpath->query($scope.'//*[@data-production-option="pending"]')->item(0)->textContent))->toBe('Not started');
 });
