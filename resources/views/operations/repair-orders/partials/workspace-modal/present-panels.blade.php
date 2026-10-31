@@ -371,10 +371,6 @@
 @endif
 
 @foreach ($repairOrder->concerns as $concern)
-    @php
-        $concernDispositions = App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::cases();
-        $productionStatuses = App\Ark\Operations\RepairOrders\ScopeProductionStatus::cases();
-    @endphp
 
     <div
         class="ops-workspace-modal__panel"
@@ -459,45 +455,6 @@
         </form>
     </div>
 
-    <div
-        id="concern-authoring-disposition-{{ $concern->id }}"
-        data-concern-authoring="{{ $concern->id }}"
-        class="ops-workspace-modal__panel"
-        x-show="task === 'concern-disposition' && String(context.concernId) === '{{ $concern->id }}'"
-        x-cloak
-    >
-        <form
-            id="concern-disposition-form-{{ $concern->id }}"
-            method="POST"
-            action="{{ route('operations.repair-orders.concerns.disposition', [$repairOrder, $concern]) }}"
-            data-workspace-modal-form="concern-disposition"
-            data-worksheet-continuity
-            data-continuity-region="concern-authorization"
-            data-refresh-scope="worksheet"
-            data-saving-label="Saving…"
-            @submit.prevent="submitWorksheetForm($event)"
-        >
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="block text-[11px] font-medium text-slate-500" for="workspace-disposition-{{ $concern->id }}">
-                Customer decision
-                <select
-                    id="workspace-disposition-{{ $concern->id }}"
-                    name="disposition"
-                    class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                >
-                    @foreach ($concernDispositions as $disposition)
-                        <option
-                            value="{{ $disposition->value }}"
-                            title="{{ $disposition->helpText() }}"
-                            @selected($concern->disposition === $disposition)
-                        >{{ $disposition->label() }}</option>
-                    @endforeach
-                </select>
-            </label>
-        </form>
-    </div>
 
     @php
         $dragonFieldOptions = [];
@@ -679,42 +636,6 @@
         </form>
     </div>
 
-    @if ($concern->tracksProduction())
-        <div
-            class="ops-workspace-modal__panel"
-            x-show="task === 'concern-production' && String(context.concernId) === '{{ $concern->id }}'"
-            x-cloak
-        >
-            <form
-                method="POST"
-                action="{{ route('operations.repair-orders.concerns.production-status', [$repairOrder, $concern]) }}"
-                data-workspace-modal-form="concern-production"
-                data-refresh-scope="worksheet"
-                data-saving-label="Saving…"
-                @submit.prevent="submitWorksheetForm($event)"
-            >
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                <label class="block text-[11px] font-medium text-slate-500" for="workspace-production-{{ $concern->id }}">
-                    Production status
-                    <select
-                        id="workspace-production-{{ $concern->id }}"
-                        name="production_status"
-                        class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                    >
-                        @foreach ($productionStatuses as $status)
-                            <option
-                                value="{{ $status->value }}"
-                                title="{{ $status->helpText() }}"
-                                @selected($concern->productionStatus() === $status)
-                            >{{ $status->label() }}</option>
-                        @endforeach
-                    </select>
-                </label>
-            </form>
-        </div>
-    @endif
 
     @foreach ($concern->workGroups as $workGroup)
         @php

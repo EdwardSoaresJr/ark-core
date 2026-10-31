@@ -10,13 +10,11 @@
 @if ($concernRegionId !== null)
 <div id="concern-authorization-{{ $concernRegionId }}" data-continuity-region="concern-authorization">
 @endif
-    @if ($disposition->showsInScopeHeader())
+    @if ($disposition->showsInScopeHeader() && ($showDecision ?? true))
         @if ($ui === 'tabler')
             <span class="badge bg-{{ $disposition->tablerColor() }}-lt" data-concern-decision="{{ $disposition->value }}">
-                @if ($disposition->decisionMark() !== '')
-                    <span aria-hidden="true">{{ $disposition->decisionMark() }}</span>
-                @endif
-                {{ $disposition->scopeHeaderLabel() }}
+                <x-tabler.icon :name="$disposition->tablerIcon()" class="me-1" />
+                {{ $disposition->decisionLabel() }}
             </span>
         @else
             <span class="ops-scope-header-decision {{ $disposition->scopeHeaderDecisionClass() }}">

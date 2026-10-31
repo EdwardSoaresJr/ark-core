@@ -19,6 +19,15 @@ enum ScopeProductionStatus: string
         };
     }
 
+    /** Concern card control, where a bare "Pending" would read as pending approval. */
+    public function workStatusLabel(): string
+    {
+        return match ($this) {
+            self::Pending => 'Not started',
+            default => $this->label(),
+        };
+    }
+
     public function helpText(): string
     {
         return match ($this) {
@@ -42,6 +51,16 @@ enum ScopeProductionStatus: string
             self::InProgress => 'azure',
             self::WaitingParts => 'yellow',
             self::Completed => 'green',
+        };
+    }
+
+    public function tablerIcon(): string
+    {
+        return match ($this) {
+            self::Pending => 'circle-dashed',
+            self::InProgress => 'tool',
+            self::WaitingParts => 'package',
+            self::Completed => 'circle-check',
         };
     }
 

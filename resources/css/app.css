@@ -4471,14 +4471,14 @@
     html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-should_do,
     .dark .ops-estimate-workspace .ops-review-concern--priority-should_do,
     .dark .ops-estimate-workspace .ops-worksheet-concern--priority-should_do {
-        --ops-scope-accent-tint: color-mix(in srgb, #4338ca 22%, rgb(30 41 59));
+        --ops-scope-accent-tint: color-mix(in srgb, #a16207 22%, rgb(30 41 59));
     }
 
     html.dark .ops-estimate-workspace .ops-review-concern--priority-could_do,
     html.dark .ops-estimate-workspace .ops-worksheet-concern--priority-could_do,
     .dark .ops-estimate-workspace .ops-review-concern--priority-could_do,
     .dark .ops-estimate-workspace .ops-worksheet-concern--priority-could_do {
-        --ops-scope-accent-tint: color-mix(in srgb, #b45309 22%, rgb(30 41 59));
+        --ops-scope-accent-tint: color-mix(in srgb, #15803d 22%, rgb(30 41 59));
     }
 
     html.dark .ops-estimate-workspace .ops-review-concern--priority-information_only,
@@ -9636,7 +9636,7 @@
     }
 
     .ops-intent-group--priority-plan_soon {
-        --ops-intent-accent: #4338ca;
+        --ops-intent-accent: #a16207;
     }
 
     .ops-intent-group--priority-information_only {
@@ -9654,12 +9654,12 @@
 
     .ops-intent-group-heading--should_do,
     .ops-priority-group-heading--should_do {
-        color: #4338ca;
+        color: #a16207;
     }
 
     .ops-intent-group-heading--could_do,
     .ops-priority-group-heading--could_do {
-        color: #b45309;
+        color: #15803d;
     }
 
     .ops-intent-group-heading--information_only,
@@ -9758,16 +9758,16 @@
 
     .ops-worksheet-concern--priority-should_do,
     .ops-review-concern--priority-should_do {
-        --ops-scope-accent-500: #4338ca;
-        --ops-scope-accent-900: #3730a3;
-        --ops-scope-accent-tint: #eef2ff;
+        --ops-scope-accent-500: #a16207;
+        --ops-scope-accent-900: #713f12;
+        --ops-scope-accent-tint: #fefce8;
     }
 
     .ops-worksheet-concern--priority-could_do,
     .ops-review-concern--priority-could_do {
-        --ops-scope-accent-500: #b45309;
-        --ops-scope-accent-900: #92400e;
-        --ops-scope-accent-tint: #fffbeb;
+        --ops-scope-accent-500: #15803d;
+        --ops-scope-accent-900: #14532d;
+        --ops-scope-accent-tint: #f0fdf4;
     }
 
     .ops-worksheet-concern--priority-information_only,
@@ -9830,11 +9830,11 @@
     }
 
     .ops-priority-label--should_do {
-        color: #4338ca;
+        color: #a16207;
     }
 
     .ops-priority-label--could_do {
-        color: #b45309;
+        color: #15803d;
     }
 
     .ops-priority-label--information_only {
