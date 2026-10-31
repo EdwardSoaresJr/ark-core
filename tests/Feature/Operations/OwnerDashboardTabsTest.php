@@ -18,11 +18,10 @@ test('owner navigation uses dashboard and keeps scoreboard off the rail', functi
     $this->actingAs($advisor)
         ->get(route('operations.dashboard'))
         ->assertOk()
-        ->assertSee('<span>Dashboard</span>', false)
-        ->assertDontSee('<span>Today</span>', false)
-        ->assertDontSee('<span>Scoreboard</span>', false)
-        ->assertSee('href="'.route('operations.dashboard').'"', false)
-        ->assertDontSee('href="'.route('operations.owner.scoreboard').'" class="ops-rail-link', false);
+        ->assertSee('<span class="nav-link-title">Dashboard</span>', false)
+        ->assertDontSee('<span class="nav-link-title">Today</span>', false)
+        ->assertDontSee('<span class="nav-link-title">Scoreboard</span>', false)
+        ->assertSee('href="'.route('operations.dashboard').'"', false);
 });
 
 test('dashboard defaults to today and exposes both tabs', function () {
@@ -34,7 +33,7 @@ test('dashboard defaults to today and exposes both tabs', function () {
         ->assertSee('Shop Dashboard')
         ->assertSee('aria-label="Dashboard"', false)
         ->assertSeeInOrder([
-            'ops-ro-workspace-tab--active',
+            'class="nav-link active"',
             '>Today</a>',
             '>Scoreboard</a>',
         ], false);
@@ -49,7 +48,7 @@ test('today route still renders the today dashboard tab', function () {
         ->assertSee('Shop Dashboard')
         ->assertSee('Estimates to finish')
         ->assertSeeInOrder([
-            'ops-ro-workspace-tab--active',
+            'class="nav-link active"',
             '>Today</a>',
             'href="'.route('operations.owner.scoreboard').'"',
             '>Scoreboard</a>',
