@@ -83,6 +83,19 @@ final class RepairOrderStatusColor
         };
     }
 
+    /** Tabler color name for a chip tone. Follows swatch(), not the Bootstrap meaning of the key. */
+    public static function tablerColorForChipTone(string $tone): string
+    {
+        return match ($tone) {
+            'approval' => 'orange',
+            'blocked' => 'yellow',
+            'motion' => 'azure',
+            'ready' => 'green',
+            'closed' => 'dark',
+            default => 'secondary',
+        };
+    }
+
     /** ops-status-chip / ops-ro-card tone. */
     public static function chipTone(?string $color): string
     {

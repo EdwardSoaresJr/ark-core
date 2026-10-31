@@ -43,6 +43,19 @@ after `npm install`) and is also published at https://preline.co/docs/license.ht
 
 ---
 
+## Tabler Icons (copied SVG paths - MIT)
+
+`resources/views/components/tabler/icon.blade.php` contains SVG path data copied
+from the Tabler Icons outline set (https://github.com/tabler/tabler-icons).
+
+- Copyright (c) 2020-2026 Paweł Kuna
+- License: MIT
+
+Tabler UI itself (`@tabler/core`, MIT) is an npm dependency; see the lockfile
+section below.
+
+---
+
 ## `smalot/pdfparser` (Composer - LGPL-3.0)
 
 Used unmodified via Composer for dealer-quote PDF text extraction

@@ -6,7 +6,9 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/tabler.css',
                 'resources/js/app.js',
+                'resources/js/tabler.js',
                 'resources/js/cloud-funnel.js',
             ],
             buildDirectory: process.env.VITE_BUILD_DIRECTORY || 'build',

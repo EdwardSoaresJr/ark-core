@@ -1,3 +1,5 @@
+import { tablerBadgeClasses } from './ark-nav-count-badge';
+
 function communicationsNavLink() {
     return document.querySelector('[data-ops-comms-nav-link]');
 }
@@ -12,6 +14,26 @@ function navUrgencyClass(summary = {}) {
     }
 
     return 'ops-rail-link--pressure';
+}
+
+function syncTablerCommunicationsNav(link, count, summary) {
+    let badge = link.querySelector('[data-ops-comms-nav-count]');
+
+    if (count <= 0) {
+        badge?.remove();
+
+        return;
+    }
+
+    if (! badge) {
+        badge = document.createElement('span');
+        badge.dataset.opsCommsNavCount = '';
+        link.appendChild(badge);
+    }
+
+    badge.className = ['badge', 'ms-auto', ...tablerBadgeClasses(summary)].join(' ');
+    badge.textContent = String(count);
+    badge.setAttribute('aria-label', `${count} need attention`);
 }
 
 function playNavChime() {
@@ -45,6 +67,12 @@ function syncCommunicationsNav(payload = {}) {
 
     const count = Number(payload.nav_pressure_count ?? payload.count ?? 0);
     const summary = payload.summary ?? {};
+
+    if (link.dataset.opsCommsNavStyle === 'tabler') {
+        syncTablerCommunicationsNav(link, count, summary);
+
+        return;
+    }
 
     link.classList.remove(
         'ops-rail-link--pressure',
