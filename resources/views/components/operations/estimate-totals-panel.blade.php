@@ -27,9 +27,14 @@
         && ($financial['suggestedDepositDiagnostics'] ?? null);
     $showDepositDiagnosticsRow = $showDepositPartsRow;
     $linesNeedingAuthorization = collect($linesNeedingAuthorization ?? []);
-    $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum(
-        fn ($line): int => (int) ($line->total_cents ?? 0),
-    );
+    $workAuthorization = $repairOrder ? app(\App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class) : null;
+    $approvedBeforeIncrease = $workAuthorization?->approvedSubtotalsBeforeIncrease($repairOrder) ?? [];
+    $removedSinceApproval = $workAuthorization?->approvedLinesRemoved($repairOrder) ?? [];
+    $pendingCentsFor = fn ($line): int => $workAuthorization
+        ? $workAuthorization->pendingApprovalCents($repairOrder, $line)
+        : (int) ($line->total_cents ?? 0);
+    $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum($pendingCentsFor);
+    $hasAddedLines = $linesNeedingAuthorization->contains(fn ($line): bool => ! isset($approvedBeforeIncrease[(int) $line->id]));
     $hasCloseout = isset($closeout) && trim($closeout) !== '';
 @endphp
 
@@ -120,13 +125,40 @@
                 </div>
                 <ul class="mt-1 space-y-0.5 text-xs leading-4 text-amber-950">
                     @foreach ($linesNeedingAuthorization as $unauthorizedLine)
-                        <li class="flex items-baseline justify-between gap-3">
-                            <span class="min-w-0">{{ $unauthorizedLine->description }}</span>
-                            <span class="shrink-0 tabular-nums">{{ $totals->format((int) $unauthorizedLine->total_cents) }}</span>
+                        @php($approvedSubtotal = $approvedBeforeIncrease[(int) $unauthorizedLine->id] ?? null)
+                        <li class="flex items-baseline justify-between gap-3" @if ($approvedSubtotal !== null) data-approved-line-increase="{{ $unauthorizedLine->id }}" @endif>
+                            <span class="min-w-0">
+                                {{ $unauthorizedLine->description }}
+                                @if ($approvedSubtotal !== null)
+                                    <span class="block text-[10px] text-slate-500">Increase · approved at {{ $totals->format($approvedSubtotal) }}</span>
+                                @endif
+                            </span>
+                            <span class="shrink-0 tabular-nums">{{ $approvedSubtotal !== null ? '+' : '' }}{{ $totals->format($pendingCentsFor($unauthorizedLine)) }}</span>
                         </li>
                     @endforeach
                 </ul>
-                <p class="mt-1 text-[11px] leading-4 text-slate-500">On the estimate. Not in approved sales until the customer approves these lines.</p>
+                @if ($hasAddedLines)
+                    <p class="mt-1 text-[11px] leading-4 text-slate-500">On the estimate. Not in approved sales until the customer approves these lines.</p>
+                @endif
+                @if ($approvedBeforeIncrease !== [])
+                    <p class="mt-1 text-[11px] leading-4 text-slate-500">Approved lines priced above the customer's approval. The increase needs the customer's approval.</p>
+                @endif
+            </div>
+        @endif
+        @if ($removedSinceApproval !== [])
+            <div class="px-3 py-2 text-sm" data-approved-lines-removed>
+                <div class="ops-total-row">
+                    <dt class="text-slate-600">Removed after approval</dt>
+                </div>
+                <ul class="mt-1 space-y-0.5 text-xs leading-4 text-slate-600">
+                    @foreach ($removedSinceApproval as $removedLine)
+                        <li class="flex items-baseline justify-between gap-3">
+                            <span class="min-w-0 line-through">{{ $removedLine['description'] }}</span>
+                            <span class="shrink-0 tabular-nums">{{ $totals->format($removedLine['subtotal_cents']) }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                <p class="mt-1 text-[11px] leading-4 text-slate-500">Approved earlier and no longer on the estimate. The approval stays on file.</p>
             </div>
         @endif
     </div>

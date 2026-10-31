@@ -165,6 +165,21 @@
                 ])
             @endif
 
+            @if (($approvedWorkAwaitingApproval ?? []) !== [])
+                <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" data-approved-work-awaiting-approval>
+                    <p class="font-semibold">Changes waiting for your approval</p>
+                    <p class="mt-1">Your advisor added or changed work on repairs you already approved. These changes are not approved yet. Your earlier approval stays on file.</p>
+                    <ul class="mt-2 space-y-1">
+                        @foreach ($approvedWorkAwaitingApproval as $awaitingLine)
+                            <li class="flex items-baseline justify-between gap-3">
+                                <span class="min-w-0">{{ $awaitingLine['description'] }}@if ($awaitingLine['is_increase']) <span class="text-amber-800">· price increase</span>@endif</span>
+                                <span class="shrink-0 font-semibold tabular-nums">{{ $awaitingLine['is_increase'] ? '+' : '' }}{{ $awaitingLine['amount'] }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @php
                 $notice = is_array($paymentNotice ?? null) ? $paymentNotice : null;
                 $noticeKind = $notice['kind'] ?? null;
