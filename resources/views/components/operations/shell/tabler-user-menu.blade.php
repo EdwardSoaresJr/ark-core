@@ -1,5 +1,4 @@
 @php
-    // Same actions as components/operations/user-menu.blade.php. Change both together.
     /** @var \App\Models\User|null $menuUser */
     /** @var \App\Models\User|null $avatarUser */
 @endphp
@@ -25,47 +24,55 @@
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
             <span class="dropdown-item-text small text-secondary">{{ $menuUser->email }}</span>
 
-            @if ($workstationPresence->workstation !== null)
-                <button type="button" class="dropdown-item" data-ark-workstation-switch>Switch station</button>
-            @endif
+            @foreach ($accountMenu as $entry)
+                @switch($entry['key'])
+                    @case('switch-station')
+                        <button type="button" class="dropdown-item" data-ark-workstation-switch>{{ $entry['label'] }}</button>
+                        @break
+                    @case('change-pin')
+                        <button
+                            type="button"
+                            class="dropdown-item"
+                            data-ark-workstation-change-pin
+                            data-profile-pin-url="{{ $entry['url'] }}"
+                        >{{ $entry['label'] }}</button>
+                        @break
+                    @case('profile')
+                        <a href="{{ $entry['url'] }}" class="dropdown-item">
+                            <x-tabler.icon name="user" class="dropdown-item-icon" />
+                            {{ $entry['label'] }}
+                        </a>
+                        @break
+                    @case('theme')
+                        <button type="button" class="dropdown-item" onclick="window.arkToggleTheme()">
+                            <span class="hide-theme-dark"><x-tabler.icon name="moon" class="dropdown-item-icon" />{{ $entry['label'] }}</span>
+                            <span class="hide-theme-light"><x-tabler.icon name="sun" class="dropdown-item-icon" />{{ $entry['alternate_label'] }}</span>
+                        </button>
+                        @break
+                    @case('sign-out')
+                        <div class="dropdown-divider"></div>
 
-            @if ($menuUser->hasOperatorPin())
-                <button
-                    type="button"
-                    class="dropdown-item"
-                    data-ark-workstation-change-pin
-                    data-profile-pin-url="{{ route('profile.edit', ['tab' => 'workstation-pin']) }}"
-                >Change station PIN</button>
-            @endif
-
-            <a href="{{ route('profile.edit') }}" class="dropdown-item">
-                <x-tabler.icon name="user" class="dropdown-item-icon" />
-                Profile
-            </a>
-
-            <button type="button" class="dropdown-item" onclick="window.arkToggleTheme()">
-                <span class="hide-theme-dark"><x-tabler.icon name="moon" class="dropdown-item-icon" />Dark mode</span>
-                <span class="hide-theme-light"><x-tabler.icon name="sun" class="dropdown-item-icon" />Light mode</span>
-            </button>
-
-            @if ($devRolePretendVisible)
-                <form method="POST" action="{{ $devRolePretendActive ? route('dev-role-pretend.clear') : route('dev-role-pretend.technician') }}">
-                    @csrf
-                    <button type="submit" class="dropdown-item">
-                        {{ $devRolePretendActive ? 'Return to admin access' : 'Test as technician' }}
-                    </button>
-                </form>
-            @endif
-
-            <div class="dropdown-divider"></div>
-
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="dropdown-item text-danger">
-                    <x-tabler.icon name="logout" class="dropdown-item-icon" />
-                    Sign out
-                </button>
-            </form>
+                        <form method="POST" action="{{ $entry['url'] }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger">
+                                <x-tabler.icon name="logout" class="dropdown-item-icon" />
+                                {{ $entry['label'] }}
+                            </button>
+                        </form>
+                        @break
+                    @default
+                        @if ($entry['kind'] === 'link')
+                            <a href="{{ $entry['url'] }}" class="dropdown-item">{{ $entry['label'] }}</a>
+                        @else
+                            <form method="POST" action="{{ $entry['url'] }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    {{ $entry['label'] }}
+                                </button>
+                            </form>
+                        @endif
+                @endswitch
+            @endforeach
         </div>
     </div>
 @endif

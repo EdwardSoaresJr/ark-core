@@ -114,20 +114,6 @@
 
 ---
 
-## Staff UI
-
-### Two staff navigation definitions
-
-**Location:** `resources/views/components/operations/app.blade.php` (legacy rail) and `resources/views/components/operations/shell/tabler.blade.php` (Tabler sidebar). The account menus are duplicated the same way: `components/operations/user-menu.blade.php` and `components/operations/shell/tabler-user-menu.blade.php`.
-
-**Problem:** A parallel path. Each shell lists the same destinations and permission checks in its own markup. `TablerShellTest` catches drift between them; it does not prevent it.
-
-**Replacement:** One navigation definition (sections, items, permissions, active routes, live counts) rendered by whichever shell a view uses. See [TABLER.md](TABLER.md#navigation).
-
-**Remove when:** Before a change adds, removes, or re-permissions a destination, or before the fifth view migrates, whichever comes first. The account menu follows the same rule.
-
----
-
 ## Tests
 
 ### The Core test suite is not green on `main`

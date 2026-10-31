@@ -5,15 +5,13 @@ use App\Ark\Operations\Communications\AdvisorCommsPressure;
 use App\Ark\Operations\Communications\CommsChannelStripResolver;
 use App\Ark\Operations\Communications\CommunicationsNavPressure;
 use App\Ark\Operations\Communications\CommsPressureSettings;
+use App\Ark\Operations\Staff\StaffNavigation;
 use App\Ark\Operations\Telephony\IncomingCallBroadcast;
 use App\Ark\Operations\Telephony\TelephonyCallFlowSettings;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\DevRolePretend;
 
     $accentHtml = auth()->user()?->accentHtmlAttributes() ?? ['data-accent' => 'ark2'];
-    $canAccessOwnerWorkspace = auth()->user()?->canAccessOwnerWorkspace() ?? false;
-    $canUseTimeClock = \App\Ark\Operations\Labor\TechnicianTimeClockProjection::canAccess(auth()->user());
-    $canAccessBusinessWorkspace = \App\Ark\Operations\Business\BusinessWorkspaceAccess::allows(auth()->user());
     $commsPressureSettings = CommsPressureSettings::fromShopSettings();
     $commsAccountabilityEnabled = $commsPressureSettings->attentionGateEnabled();
     // One attention cache key for rail badge + channel strip + Needs You list.
@@ -28,6 +26,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         ? app(CommunicationsNavPressure::class)->resolve(auth()->user(), $previousLastSeenAt)
         : ['nav_pressure_count' => 0, 'summary' => [], 'workboard_counts' => []];
     $commsNavCount = (int) ($commsNavPressure['nav_pressure_count'] ?? 0);
+    $navSections = StaffNavigation::sections(auth()->user(), request(), $commsPressure['attention_url']);
     $commsNavSummary = is_array($commsNavPressure['summary'] ?? null) ? $commsNavPressure['summary'] : [];
     $commsNavPressureClass = $commsNavCount > 0
         ? match (true) {
@@ -38,30 +37,12 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         : '';
     $canManageRepairOrders = auth()->user()?->can('repair_orders.manage') ?? false;
     $displayTheme = auth()->user()?->displayTheme()->value ?? 'system';
-    $devRolePretendVisible = DevRolePretend::switcherVisible(auth()->user());
     $devRolePretendActive = DevRolePretend::isActive();
     $staffFrontDoorUrl = \App\Ark\Operations\Staff\StaffFrontDoor::landingUrl();
-    $usesAdvisorWorkSurface = \App\Ark\Operations\Staff\StaffFrontDoor::usesAdvisorWorkSurface();
-    $canUseProductionShell = auth()->user()?->can(App\Ark\Runtime\Authorization\ArkCapability::ProductionAccess->value) ?? false;
-    $hasOperationsNav = auth()->user()?->can('operations.access')
-        || ($canUseProductionShell && ! auth()->user()?->can('operations.access'));
-    $hasRecordsNav = (auth()->user()?->can('customers.manage') ?? false)
-        || (auth()->user()?->can('repair_orders.view') ?? false);
-    $canManageSettings = auth()->user()?->can('settings.manage') ?? false;
-    $canViewScoreboard = \App\Ark\Operations\Scoreboard\ShopOperatingScoreboardAccess::allows(auth()->user());
-    $hasBusinessNav = $canAccessBusinessWorkspace || $canManageSettings;
-    $dashboardNavActive = request()->routeIs(
-        'operations.dashboard',
-        'operations.today',
-        'operations.briefing',
-        'operations.owner.scoreboard',
-    );
-    $showArkademyNav = ($canUseProductionShell || $usesAdvisorWorkSurface)
-        && ! \App\Ark\Runtime\DemoInstall::isDemo();
-    $hasSystemNav = $showArkademyNav || $canManageSettings;
     $commsChannelTabs = app(CommsChannelStripResolver::class)->tabsFor(auth()->user(), $previousLastSeenAt);
     $showTopbarCommsStrip = $commsChannelTabs !== [] && ! request()->routeIs('operations.communications.*');
     $workstationPresence = WorkstationPresence::resolve(request());
+    $accountMenu = auth()->user() ? StaffNavigation::accountMenu(auth()->user(), $workstationPresence) : [];
     // Tabler views still load app.css for the shell components that have not migrated. See docs/engineering/TABLER.md.
     $usesTabler = $ui === 'tabler';
 @endphp
@@ -193,212 +174,39 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                 </a>
 
                 <nav aria-label="Primary operations" class="ops-rail-nav">
-                    @if ($canUseProductionShell || $canViewScoreboard)
+                    @foreach ($navSections as $section)
                         <div class="ops-rail-section">
-                            <a href="{{ route('operations.dashboard') }}" class="ops-rail-link {{ $dashboardNavActive ? 'ops-rail-link--active' : '' }}">
-                                <span class="ops-rail-icon">
-                                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                        <path d="M4 4.5h12v11H4v-11z" stroke="currentColor" stroke-width="1.4" />
-                                        <path d="M7 8h6M7 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                    </svg>
-                                </span>
-                                <span>Dashboard</span>
-                            </a>
-                            @if ($canUseTimeClock)
-                                <a href="{{ route('operations.time-clock.index') }}" class="ops-rail-link {{ request()->routeIs('operations.time-clock.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M10 6.5V10l2.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Time clock</span>
-                                </a>
+                            @if ($section['label'] !== null)
+                                <p class="ops-rail-section__label">{{ $section['label'] }}</p>
                             @endif
-                        </div>
-                    @endif
-
-                    @if ($hasOperationsNav)
-                        <div class="ops-rail-section">
-                            <p class="ops-rail-section__label">Operations</p>
-                            @can('operations.access')
-                                <a href="{{ route('operations.index') }}" class="ops-rail-link {{ request()->routeIs('operations.index', 'operations.workboard') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M3 4h6v5H3V4zM11 4h6v5h-6V4zM3 11h6v5H3v-5zM11 11h6v5h-6v-5z" stroke="currentColor" stroke-width="1.4" />
-                                        </svg>
-                                    </span>
-                                    <span>Job Board</span>
-                                </a>
-                            @endcan
-                            @if ($canUseProductionShell && ! auth()->user()?->can('operations.access'))
-                                <a href="{{ route('operations.workboard') }}" class="ops-rail-link {{ request()->routeIs('operations.workboard') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M3 4h6v5H3V4zM11 4h6v5h-6V4zM3 11h6v5H3v-5zM11 11h6v5h-6v-5z" stroke="currentColor" stroke-width="1.4" />
-                                        </svg>
-                                    </span>
-                                    <span>Workboard</span>
-                                </a>
-                            @endif
-                            @can('operations.access')
-                                @if (\App\Ark\Operations\Settings\ShopSettings::current()->appointmentsEnabled())
-                                    <a href="{{ route('operations.appointments.index') }}" class="ops-rail-link {{ request()->routeIs('operations.appointments.*') ? 'ops-rail-link--active' : '' }}">
+                            @foreach ($section['items'] as $item)
+                                @if ($item['live_count'])
+                                    <a
+                                        href="{{ $item['url'] }}"
+                                        data-ops-comms-nav-link
+                                        data-initial-count="{{ $commsNavCount }}"
+                                        class="ops-rail-link {{ $item['active'] ? 'ops-rail-link--active' : '' }} {{ $commsNavPressureClass }}"
+                                    >
                                         <span class="ops-rail-icon">
-                                            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                                <rect x="3.5" y="4.5" width="13" height="12" rx="0.5" stroke="currentColor" stroke-width="1.4" />
-                                                <path d="M7 3v3M13 3v3M3.5 9h13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                            </svg>
+                                            <x-operations.rail-icon :name="$item['key']" />
                                         </span>
-                                        <span>Schedule</span>
+                                        <span class="ops-rail-link__label">{{ $item['label'] }}</span>
+                                        @if ($commsNavCount > 0)
+                                            <span class="ops-rail-link__count" data-ops-comms-nav-count aria-label="{{ $commsNavCount }} need attention">({{ $commsNavCount }})</span>
+                                        @endif
+                                    </a>
+                                @else
+                                    <a href="{{ $item['url'] }}" class="ops-rail-link {{ $item['active'] ? 'ops-rail-link--active' : '' }}">
+                                        <span class="ops-rail-icon">
+                                            <x-operations.rail-icon :name="$item['key']" />
+                                        </span>
+                                        <span>{{ $item['label'] }}</span>
                                     </a>
                                 @endif
-                            @endcan
-                            @can('operations.access')
-                                <a
-                                    href="{{ \App\Ark\Operations\Communications\CommunicationsNeedsYou::url() }}"
-                                    data-ops-comms-nav-link
-                                    data-initial-count="{{ $commsNavCount }}"
-                                    class="ops-rail-link {{ request()->routeIs('operations.communications.*') ? 'ops-rail-link--active' : '' }} {{ $commsNavPressureClass }}"
-                                >
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M3.5 4.5h13v9h-13v-9z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M7.5 8.5h5M7.5 11h3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span class="ops-rail-link__label">Communications</span>
-                                    @if ($commsNavCount > 0)
-                                        <span class="ops-rail-link__count" data-ops-comms-nav-count aria-label="{{ $commsNavCount }} need attention">({{ $commsNavCount }})</span>
-                                    @endif
-                                </a>
-                            @endcan
+                            @endforeach
                         </div>
-                    @endif
-
-                    @if ($hasRecordsNav)
-                        <div class="ops-rail-section">
-                            <p class="ops-rail-section__label">Records</p>
-                            @can('repair_orders.view')
-                                <a href="{{ route('operations.repair-orders.index') }}" class="ops-rail-link {{ request()->routeIs('operations.repair-orders.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M5 2.5h7l3 3V17a.5.5 0 01-.5.5h-9A.5.5 0 015 17V2.5z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M12 2.5V6h3M7.5 9h5M7.5 12h5M7.5 15h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Repair Orders</span>
-                                </a>
-                            @endcan
-                            @can('customers.manage')
-                                <a href="{{ route('operations.vehicles.search') }}" class="ops-rail-link {{ request()->routeIs('operations.vehicles.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M3.5 5.5h13v9.5h-13V5.5z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M3.5 8.5h13M6 11.5h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                            <circle cx="6.25" cy="13.75" r="1.25" fill="currentColor" />
-                                            <circle cx="13.75" cy="13.75" r="1.25" fill="currentColor" />
-                                        </svg>
-                                    </span>
-                                    <span>Vehicles</span>
-                                </a>
-                                <a href="{{ route('operations.customers.search') }}" class="ops-rail-link {{ request()->routeIs('operations.customers.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M7.5 9a3 3 0 116 0 3 3 0 01-6 0z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M3.5 17c.85-2.7 3.1-4.25 6.5-4.25S15.65 14.3 16.5 17" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Customers</span>
-                                </a>
-                            @endcan
-                        </div>
-                    @endif
-
-                    @if ($hasBusinessNav)
-                        <div class="ops-rail-section">
-                            <p class="ops-rail-section__label">Business</p>
-                            @if ($canAccessBusinessWorkspace)
-                                <a href="{{ route('operations.business') }}" class="ops-rail-link {{ request()->routeIs('operations.business') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-4 w-4">
-                                            <path d="M3 4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Zm8 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V4ZM3 12a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Zm8-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-4Z" />
-                                        </svg>
-                                    </span>
-                                    <span>Cockpit</span>
-                                </a>
-                            @endif
-                            @can('financial.view')
-                                <a href="{{ route('operations.reports.index') }}" class="ops-rail-link {{ request()->routeIs('operations.reports.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M4 15.5h12M5.5 13V8M10 13V4.5M14.5 13v-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Reports</span>
-                                </a>
-                            @endcan
-                            @if ($canAccessOwnerWorkspace)
-                                <a href="{{ route('operations.owner.day-review') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.day-review', 'operations.owner.bookend') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M4 15.5h12M5.5 13V8M10 13V4.5M14.5 13v-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                            <path d="M3.5 3.5l13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.35" />
-                                        </svg>
-                                    </span>
-                                    <span>Day Review</span>
-                                </a>
-                                <a href="{{ route('operations.owner.technician-production.index') }}" class="ops-rail-link {{ request()->routeIs('operations.owner.technician-production.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M4 14.5h12M6 14.5V8.5M10 14.5V5.5M14 14.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Tech production</span>
-                                </a>
-                            @endif
-                        </div>
-                    @endif
-
-                    @if ($hasSystemNav)
-                        <div class="ops-rail-section">
-                            <p class="ops-rail-section__label">System</p>
-                            @if ($showArkademyNav)
-                                <a href="{{ \App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl() }}" class="ops-rail-link {{ request()->routeIs('operations.learn.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M3.5 4.5h13v11h-13v-11z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M6.5 8.5h7M6.5 11h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                            <path d="M10 2.5v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>{{ \App\Support\Branding\Branding::learnName() }}</span>
-                                </a>
-                            @endif
-                            @if ($canManageSettings)
-                                <a href="{{ route('operations.shop.communications') }}" class="ops-rail-link {{ request()->routeIs('operations.shop.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M4 4.5h12v11H4v-11z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M7 8h6M7 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Stations &amp; Phones</span>
-                                </a>
-                                <a href="{{ route('operations.settings.shop.edit') }}" class="ops-rail-link {{ request()->routeIs('operations.settings.*') ? 'ops-rail-link--active' : '' }}">
-                                    <span class="ops-rail-icon">
-                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
-                                            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="1.4" />
-                                            <path d="M10 2.5v2M10 15.5v2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M2.5 10h2M15.5 10h2M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                                        </svg>
-                                    </span>
-                                    <span>Settings</span>
-                                </a>
-                            @endif
-                        </div>
-                    @endif
+                    @endforeach
                 </nav>
-
                 @auth
                     <form method="POST" action="{{ route('logout') }}" class="ops-rail-drawer-signout">
                         @csrf
@@ -461,11 +269,10 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
                             @endphp
                             <x-operations.workstation-presence :presence="$workstationPresence" />
                             <x-operations.user-menu
-                                :dev-role-pretend-visible="$devRolePretendVisible"
+                                :entries="$accountMenu"
                                 :dev-role-pretend-active="$devRolePretendActive"
                                 :avatar-initials="$topbarAvatarUser?->presenceAvatarInitials()"
                                 :avatar-color="$topbarAvatarUser?->presenceAvatarColor()"
-                                :show-workstation-switch="$workstationPresence->workstation !== null"
                             />
                         </div>
                     </header>
