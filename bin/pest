@@ -321,9 +321,10 @@ function testingConfiguration(string $rootPath): string
         1,
     );
     $configured = $configured === null ? $source : $configured;
-    $configured = str_replace(
-        'bootstrap="vendor/autoload.php"',
-        'bootstrap="'.$rootPath.'/vendor/autoload.php"',
+    // The copy lives in the temp directory, so relative paths in its attributes must point back at the checkout.
+    $configured = preg_replace_callback(
+        '/\b(bootstrap|xsi:noNamespaceSchemaLocation)="(?!\/)([^"]+)"/',
+        static fn (array $matches): string => $matches[1].'="'.$rootPath.'/'.$matches[2].'"',
         $configured,
     );
     $configured = preg_replace_callback(

@@ -6,23 +6,13 @@ use App\Ark\Install\InstallationState;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Settings\ShopSettingsSchema;
+use App\Ark\Runtime\Database\SchemaPresence;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Schema;
 use Tests\Support\AssertDisposableTestDatabase;
-use Tests\Support\TestEnvironment;
-
 abstract class TestCase extends BaseTestCase
 {
-    public function createApplication()
-    {
-        TestEnvironment::initialize();
-        $app = require dirname(__DIR__).'/bootstrap/app.php';
-        TestEnvironment::configureApplication($app);
-        $this->traitsUsedByTest = class_uses_recursive(static::class);
-        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-
-        return $app;
-    }
+    use CreatesApplication;
 
     protected function setUp(): void
     {
@@ -36,6 +26,8 @@ abstract class TestCase extends BaseTestCase
             \Tests\Support\TestingFakePdfRenderer::class,
         );
         \App\Ark\Operations\Inspections\DefaultInspectionTemplateCatalog::forgetSeededCache();
+        // Every test gets a fresh database, so a table cached as present by an earlier test (Dragon's) may not exist.
+        SchemaPresence::flush();
 
         // Existing suites assume a running shop - not the first-run wizard.
         InstallationState::markInstalled();
