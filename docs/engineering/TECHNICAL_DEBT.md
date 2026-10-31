@@ -134,16 +134,22 @@
 
 **Location:** `tests/`, `tests/Support/HostedDragon.php`, `app/Ark/Runtime/Database/SchemaPresence.php`, `bin/pest`, `.github/workflows/tests.yml`
 
-**Problem:** Four separate issues, each verified in [PR #48](https://github.com/EdwardSoaresJr/ark-core/pull/48) and its [pre-merge comment](https://github.com/EdwardSoaresJr/ark-core/pull/48#issuecomment-6537280134):
+**Problem:** The suite has real failing tests. The harness problems that hid or multiplied them were fixed in the CI stabilization pull request; what remains is test debt.
 
-- **Baseline failures.** `php bin/pest --configuration phpunit.xml --parallel` on `main` `06aa91e`: 3961 tests, 172 failed, 30 errors.
-- **Dragon test isolation.** When a sibling `../ark-saas` checkout exists, `bootHostedDragon()` registers an `Ark\Saas` autoloader and `migrateHostedDragon()` creates the Dragon tables. `SchemaPresence` caches `dragon_service_advisor_applications` as present in a static that is not flushed between tests. A later test in the same process that renders `repair-order-concern-narrative-card.blade.php` fails with `no such table: dragon_service_advisor_applications`. Reproduced without parallelism on `main` `06aa91e` by running `RepairOrderBuilderWorkspaceModalTest` before `WorksheetContinuityAuthorizationTest` and `VisitReasonConcernProposeTest`. Under `--parallel`, which tests fail depends on worker assignment.
-- **GitHub Actions `pest`.** The `pest` job in `tests.yml` fails on `main` (`06aa91e`, `c8c1824`). Most tests report `file_get_contents(/tmp/ark-core-tests-<run>/environment/.env): Failed to open stream: No such file or directory`; 63 pass. The cause has not been investigated. The job is not a required check.
-- **`bin/pest` configuration.** `bin/pest` writes a temporary configuration that rewrites `bootstrap="vendor/autoload.php"`, but `phpunit.xml` bootstraps `tests/bootstrap.php`. Without `--configuration phpunit.xml`, `php bin/pest` stops with `Cannot open bootstrap script`.
+- **Baseline failures.** `vendor/bin/pest` (serial, as CI runs it) on `main` `c55a949` with no sibling `../ark-saas`: 3990 tests, 174 failures, 34 errors. GitHub Actions reports the same set (209 failed on `c55a949`; one extra, `it re-resolves chrome when cached path is stale`, depends on the runner's binaries). These are assertion and behavior failures across about 100 files, not environment errors.
+- **A sibling `../ark-saas` checkout changes results.** With it present, `bootHostedDragon()` loads ARK SaaS, so the Dragon-hosted tests run: 16 tests that fail without it pass, and before the fix 87 more failed through the schema cache below (283 failed in total).
+- **The `pest` job.** It fails because of the baseline failures, not the environment. Its log also showed 3718 warnings, `file_get_contents(.../environment/.env): Failed to open stream`, on tests that passed; those are fixed (below) and never failed a test.
 
-A local `.env` in the checkout also changes results: with one present, 13 more provisioning tests failed under `--parallel` in PR #48. Compare runs without a local `.env`.
+Fixed in the CI stabilization pull request, each with a regression test:
 
-**Replacement:** Fix each issue in its own pull request. Then make `pest` a required check on `main`, as `RELEASE_PROTOCOL.md` recommends.
+- **Missing `.env` warning.** `TestEnvironment` points the app at an empty `environment/` directory. Dotenv reads the missing `.env` with `@file_get_contents`, and PHPUnit 12 still reports suppressed warnings, so every test that booted the app warned. The isolated directory now holds an empty `.env`.
+- **Dragon schema cache.** `SchemaPresence` keeps positive answers in a static. A Dragon test that creates `dragon_service_advisor_applications` left it cached for later tests in the same process, which then failed with `no such table`. `TestCase::setUp` now flushes it.
+- **A local `.env` under `--parallel`.** Laravel's parallel runner boots an app in the parent process; without a `Tests\CreatesApplication` trait it requires `bootstrap/app.php` directly, loads the checkout's `.env` with `putenv`, and the workers inherit those values. `TestCase` now creates its app through `Tests\CreatesApplication`, so the parent uses the isolated environment too.
+- **`bin/pest` without `--configuration`.** Its temporary configuration kept the relative `bootstrap="tests/bootstrap.php"`, which resolved inside the temp directory. Relative `bootstrap` and schema paths are now made absolute.
+
+**Not verified after the fixes:** a full serial run with the fixes stopped producing output at the start of `RepairOrderEstimateWorkspaceTest`, after `RepairOrderEstimateVersionCoverageTest`, while using a full CPU core. The same point passed on `main`. Whether a fix causes it, or the run was disturbed, has not been determined. Confirm before relying on the fixed numbers.
+
+**Replacement:** Confirm the full suite completes with the fixes, then fix the baseline failures by area in their own pull requests. Then make `pest` a required check on `main`, as `RELEASE_PROTOCOL.md` recommends.
 
 **Remove when:** `php bin/pest --parallel` passes on `main` with no extra arguments, and the `pest` job in `tests.yml` passes.
 

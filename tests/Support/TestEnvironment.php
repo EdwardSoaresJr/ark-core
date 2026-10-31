@@ -34,6 +34,10 @@ final class TestEnvironment
                     throw new RuntimeException('Could not create the isolated test filesystem.');
                 }
             }
+            // Dotenv reads a missing .env with a suppressed warning, which PHPUnit 12 still reports on every test.
+            if (file_put_contents(self::$root.'/environment/.env', '') === false) {
+                throw new RuntimeException('Could not create the isolated test environment file.');
+            }
         }
 
         $values = [
