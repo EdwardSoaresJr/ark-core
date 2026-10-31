@@ -62,13 +62,14 @@
 >
     <button
         type="button"
-        class="inline-flex min-h-10 w-full items-center justify-center rounded-sm bg-sky-700 px-3 text-xs font-bold text-white hover:bg-sky-800"
+        class="btn btn-primary w-100"
         data-payment-workspace-open
         @click="openWorkspace()"
     >
         Take payment
     </button>
 
+    {{-- ark-payment-capture.js shows and hides this overlay and raises the rail above the page while it is open. --}}
     <div
         x-cloak
         class="ops-workspace-modal"
@@ -87,17 +88,15 @@
             aria-label="Close"
             @click="requestClose($event)"
         ></button>
-        <div class="ops-workspace-modal__dialog ops-payment-workspace__dialog" @click.stop>
-            <header class="ops-workspace-modal__header">
-                <h2 id="payment-workspace-title-{{ $repairOrder->getKey() }}" class="ops-workspace-modal__title">Take payment</h2>
-                <button type="button" class="ops-workspace-modal__close" x-show="!transactionBound()" @click="requestClose($event)">
-                    Close
-                </button>
-            </header>
+        <div class="card shadow-lg position-relative w-100" style="max-width: 44rem; max-height: calc(100dvh - 1rem)" @click.stop>
+            <div class="card-header">
+                <h2 id="payment-workspace-title-{{ $repairOrder->getKey() }}" class="card-title">Take payment</h2>
+                <button type="button" class="btn-close ms-auto" aria-label="Close" x-show="!transactionBound()" @click="requestClose($event)"></button>
+            </div>
 
-            <div class="ops-payment-workspace__body">
+            {{-- Bootstrap display utilities are !important and would defeat x-show, so shown/hidden blocks wrap their flex layout. --}}
+            <div class="card-body d-flex flex-column gap-3 overflow-auto" style="min-height: 0">
                 <div
-                    class="ops-payment-workspace__terminal"
                     data-terminal-payment
                     data-terminal-payment-phase="{{ $terminal['phase'] ?? '' }}"
                     role="status"
@@ -106,14 +105,15 @@
                     x-cloak
                     :data-terminal-payment-phase="terminalPhase"
                 >
-                    <p class="ops-terminal-payment__headline" data-terminal-payment-headline x-text="terminalHeadline">{{ $terminal['headline'] ?? '' }}</p>
-                    <p class="ops-payment-workspace__terminal-amount" data-terminal-payment-amount x-text="terminalAmount || amount">{{ $terminal['amount'] ?? '' }}</p>
-                    <div class="ops-payment-workspace__spinner" data-terminal-payment-spinner x-show="terminalSpinning" @unless($terminal['spinning'] ?? false) x-cloak @endunless></div>
-                    <p class="text-sm font-semibold text-slate-700" x-show="terminalNote" x-text="terminalNote">{{ $terminal['note'] ?? '' }}</p>
-                    <p class="text-sm text-slate-600" x-show="terminalDetail" x-text="terminalDetail">{{ $terminal['detail'] ?? '' }}</p>
+                    <div class="d-flex flex-column align-items-center gap-3 py-4 text-center">
+                    <p class="h3 mb-0" data-terminal-payment-headline x-text="terminalHeadline">{{ $terminal['headline'] ?? '' }}</p>
+                    <p class="display-5 fw-bold ark-money mb-0" data-terminal-payment-amount x-text="terminalAmount || amount">{{ $terminal['amount'] ?? '' }}</p>
+                    <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem" role="presentation" data-terminal-payment-spinner x-show="terminalSpinning" @unless($terminal['spinning'] ?? false) x-cloak @endunless></div>
+                    <p class="fw-medium mb-0" x-show="terminalNote" x-text="terminalNote">{{ $terminal['note'] ?? '' }}</p>
+                    <p class="text-secondary mb-0" x-show="terminalDetail" x-text="terminalDetail">{{ $terminal['detail'] ?? '' }}</p>
                     <button
                         type="button"
-                        class="inline-flex min-h-10 items-center rounded-sm border border-slate-400 bg-white px-3 text-xs font-bold text-slate-800 disabled:opacity-50"
+                        class="btn btn-outline-secondary"
                         data-payment-workspace-cancel
                         @if (filled($terminal['cancel_url'] ?? null)) data-payment-cancel-url="{{ $terminal['cancel_url'] }}" @endif
                         @unless (filled($terminal['cancel_url'] ?? null)) hidden @endunless
@@ -122,31 +122,34 @@
                     >
                         Cancel terminal
                     </button>
+                    </div>
                 </div>
 
                 <div x-show="!terminalPhase" @if ($terminal) x-cloak @endif>
-                    <p class="text-xs font-semibold text-red-700" x-show="cardError" x-cloak x-text="cardError"></p>
+                <div class="d-flex flex-column gap-3">
+                    <p class="small fw-medium text-danger mb-0" x-show="cardError" x-cloak x-text="cardError"></p>
                 @unless ($terminal)
                     @if (! $captureReady && ($financial['canTakePaymentCapture'] ?? false))
-                        <p class="text-xs font-semibold text-amber-900">
+                        <div class="alert alert-warning mb-0">
                             {{ $readiness['message'] ?? 'Card capture is not ready. Connect payments in Platform or use cash.' }}
-                        </p>
+                        </div>
                     @endif
 
                     @if ($ledgerKind === 'deposit')
                         @if (filled($financial['remainingSuggestedDeposit'] ?? null))
-                            <p class="text-xs font-semibold text-slate-600">Up to {{ $financial['remainingSuggestedDeposit'] }} remaining on suggested deposit.</p>
+                            <p class="small text-secondary mb-0">Up to {{ $financial['remainingSuggestedDeposit'] }} remaining on suggested deposit.</p>
                         @elseif (filled($financial['remainingCollectableDeposit'] ?? null))
-                            <p class="text-xs font-semibold text-slate-600">Up to {{ $financial['remainingCollectableDeposit'] }} remaining on this repair.</p>
+                            <p class="small text-secondary mb-0">Up to {{ $financial['remainingCollectableDeposit'] }} remaining on this repair.</p>
                         @endif
                     @endif
 
                     <div>
-                        <p class="text-center text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Amount</p>
-                        <div class="ops-payment-workspace__amount-row">
-                            <span class="ops-payment-workspace__currency">$</span>
+                        <label class="subheader d-block text-center" for="payment-workspace-amount-{{ $repairOrder->getKey() }}">Amount</label>
+                        <div class="d-flex align-items-baseline justify-content-center gap-1">
+                            <span class="fs-1 fw-bold">$</span>
                             <input
-                                class="ops-payment-workspace__amount"
+                                id="payment-workspace-amount-{{ $repairOrder->getKey() }}"
+                                class="form-control-plaintext display-5 fw-bold ark-money text-center p-0"
                                 data-payment-workspace-amount
                                 inputmode="decimal"
                                 autocomplete="off"
@@ -156,61 +159,64 @@
                         </div>
                     </div>
 
-                    <div class="ops-payment-workspace__keypad" data-payment-workspace-keypad>
+                    <div class="d-grid gap-2" style="grid-template-columns: repeat(3, minmax(0, 1fr))" data-payment-workspace-keypad>
                         @foreach (['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'backspace'] as $key)
-                            <button type="button" class="ops-payment-workspace__key" @click="pressAmount(@js($key))">
+                            <button type="button" class="btn btn-outline-secondary btn-lg fs-3 fw-bold ark-money" @click="pressAmount(@js($key))">
                                 {{ $key === 'backspace' ? 'Delete' : $key }}
                             </button>
                         @endforeach
                     </div>
 
-                    <div class="ops-payment-workspace__methods">
+                    <div class="d-flex flex-wrap gap-2" role="group" aria-label="Payment method">
                         @if ($supportsTerminal)
-                            <button type="button" class="ops-payment-workspace__method" :class="method === 'terminal' && 'ops-payment-workspace__method--selected'" @click="method = 'terminal'">Reader</button>
+                            <button type="button" class="btn flex-fill" :class="method === 'terminal' ? 'btn-primary' : 'btn-outline-secondary'" :aria-pressed="method === 'terminal'" @click="method = 'terminal'">Reader</button>
                         @endif
                         @if ($supportsKeyed)
-                            <button type="button" class="ops-payment-workspace__method" :class="method === 'keyed' && 'ops-payment-workspace__method--selected'" @click="openKeyed()">Keyed card</button>
+                            <button type="button" class="btn flex-fill" :class="method === 'keyed' ? 'btn-primary' : 'btn-outline-secondary'" :aria-pressed="method === 'keyed'" @click="openKeyed()">Keyed card</button>
                         @endif
                         @if ($canLedger)
-                            <button type="button" class="ops-payment-workspace__method" :class="method === 'cash' && 'ops-payment-workspace__method--selected'" @click="method = 'cash'">Cash</button>
+                            <button type="button" class="btn flex-fill" :class="method === 'cash' ? 'btn-primary' : 'btn-outline-secondary'" :aria-pressed="method === 'cash'" @click="method = 'cash'">Cash</button>
                         @endif
                     </div>
 
                     @if ($canLedger && $manualMethods !== [])
-                        <div class="ops-payment-workspace__methods">
+                        <div class="d-flex flex-wrap gap-2" role="group" aria-label="Other payment methods">
                             @foreach ($manualMethods as $manualMethod)
-                                <button type="button" class="ops-payment-workspace__method" :class="method === @js($manualMethod['key']) && 'ops-payment-workspace__method--selected'" @click="method = @js($manualMethod['key'])">{{ $manualMethod['label'] }}</button>
+                                <button type="button" class="btn flex-fill" :class="method === @js($manualMethod['key']) ? 'btn-primary' : 'btn-outline-secondary'" :aria-pressed="method === @js($manualMethod['key'])" @click="method = @js($manualMethod['key'])">{{ $manualMethod['label'] }}</button>
                             @endforeach
                         </div>
                     @endif
 
-                    <div class="ops-payment-workspace__date" @click.outside="closePaidDate()">
-                        <button type="button" class="ops-payment-workspace__date-label" data-payment-paid-date @click="togglePaidDate()" :disabled="transactionBound()">
-                            Paid <span x-text="paidDateLabel()">{{ $paidDateTodayLabel }}</span>
+                    <div class="d-flex flex-column align-items-center" data-payment-paid-date-picker @click.outside="closePaidDate()">
+                        <button type="button" class="btn btn-link btn-sm" data-payment-paid-date @click="togglePaidDate()" :disabled="transactionBound()" :aria-expanded="paidDateOpen">
+                            Paid <span class="ms-1" x-text="paidDateLabel()">{{ $paidDateTodayLabel }}</span>
                         </button>
-                        <div
-                            class="ops-payment-workspace__calendar"
-                            :class="paidDateOpen && 'ops-payment-workspace__calendar--open'"
-                        >
-                            <div class="ops-payment-workspace__calendar-nav">
-                                <button type="button" aria-label="Previous month" @click="shiftCalendar(-1)">&lsaquo;</button>
-                                <span x-text="calendarTitle()"></span>
-                                <button type="button" aria-label="Next month" @click="shiftCalendar(1)" :disabled="!canShiftCalendar(1)">&rsaquo;</button>
-                            </div>
-                            <div class="ops-payment-workspace__calendar-week" aria-hidden="true">
-                                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-                            </div>
-                            <div class="ops-payment-workspace__calendar-grid">
-                                <template x-for="(cell, index) in calendarCells()" :key="index">
-                                    <button
-                                        type="button"
-                                        class="ops-payment-workspace__calendar-day"
-                                        :class="cell.selected && 'ops-payment-workspace__calendar-day--selected'"
-                                        :disabled="!cell.inMonth || cell.disabled"
-                                        x-text="cell.label"
-                                        @click="choosePaidDate(cell.iso)"
-                                    ></button>
-                                </template>
+                        <div class="card card-sm mt-1" style="width: 16rem" x-show="paidDateOpen" x-cloak>
+                            <div class="card-body p-2">
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                    <button type="button" class="btn btn-sm btn-icon btn-ghost-secondary" aria-label="Previous month" @click="shiftCalendar(-1)">
+                                        <x-tabler.icon name="arrow-left" />
+                                    </button>
+                                    <span class="small fw-bold" x-text="calendarTitle()"></span>
+                                    <button type="button" class="btn btn-sm btn-icon btn-ghost-secondary" aria-label="Next month" @click="shiftCalendar(1)" :disabled="!canShiftCalendar(1)">
+                                        <x-tabler.icon name="arrow-right" />
+                                    </button>
+                                </div>
+                                <div class="d-grid text-center subheader" style="grid-template-columns: repeat(7, minmax(0, 1fr))" aria-hidden="true">
+                                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                                </div>
+                                <div class="d-grid gap-1" style="grid-template-columns: repeat(7, minmax(0, 1fr))">
+                                    <template x-for="(cell, index) in calendarCells()" :key="index">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm px-0"
+                                            :class="cell.selected ? 'btn-primary' : 'btn-ghost-secondary'"
+                                            :disabled="!cell.inMonth || cell.disabled"
+                                            x-text="cell.label"
+                                            @click="choosePaidDate(cell.iso)"
+                                        ></button>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -236,17 +242,15 @@
                             @endif
 
                             <template x-if="method === 'terminal'">
-                                <label class="block">
-                                    <span class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Reader</span>
-                                    <span class="relative mt-1 block rounded-sm border border-slate-300 bg-white focus-within:border-sky-600 focus-within:ring-2 focus-within:ring-sky-600/30" data-payment-reader-control>
-                                        <span class="pointer-events-none flex min-h-11 items-center justify-between gap-2 px-2 py-1.5" aria-hidden="true" data-payment-reader-display>
-                                            <span class="min-w-0">
-                                                <span class="block truncate text-sm font-semibold text-slate-900" x-text="readerDisplay().primary">Choose a reader</span>
-                                                <span class="block truncate font-mono text-[11px] leading-4 text-slate-400" x-show="readerDisplay().secondary" x-text="readerDisplay().secondary"></span>
-                                            </span>
-                                            <svg class="h-4 w-4 shrink-0 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.06l3.71-3.83a.75.75 0 1 1 1.08 1.04l-4.25 4.39a.75.75 0 0 1-1.08 0L5.21 8.27a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd"/></svg>
+                                <label class="d-block">
+                                    <span class="form-label">Reader</span>
+                                    {{-- The transparent select over the display keeps native keyboard and touch selection; the display adds the device id line. --}}
+                                    <span class="form-select position-relative d-block" data-payment-reader-control>
+                                        <span class="d-block" aria-hidden="true" data-payment-reader-display>
+                                            <span class="d-block text-truncate fw-medium" x-text="readerDisplay().primary">Choose a reader</span>
+                                            <span class="d-block text-truncate small text-secondary font-monospace" x-text="readerDisplay().secondary"></span>
                                         </span>
-                                        <select class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0" x-model="deviceRef" @change="rememberReader()" data-payment-reader-select>
+                                        <select class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer" x-model="deviceRef" @change="rememberReader()" data-payment-reader-select>
                                         <option value="" :selected="deviceRef === ''">Choose a reader</option>
                                         @foreach ($readers as $reader)
                                             @if ($reader['available'])
@@ -257,20 +261,20 @@
                                         @endforeach
                                         </select>
                                     </span>
-                                    <span class="mt-1 block text-[11px] text-amber-800" x-show="readerNotice()" x-text="readerNotice()"></span>
+                                    <span class="d-block small text-warning" x-text="readerNotice()"></span>
                                 </label>
                             </template>
 
                             <template x-if="method === 'keyed' && publicConfig">
-                                <div class="mt-2">
-                                    <div :id="cardContainerId" class="min-h-[48px] rounded-sm border border-slate-300 bg-white p-2"></div>
-                                    <p class="mt-1 text-[11px] text-slate-500" x-show="cardError" x-text="cardError"></p>
+                                <div>
+                                    <div :id="cardContainerId" class="form-control" style="min-height: 48px"></div>
+                                    <p class="small text-secondary mt-1 mb-0" x-show="cardError" x-text="cardError"></p>
                                 </div>
                             </template>
 
                             <button
                                 type="submit"
-                                class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-sky-700 px-3 text-sm font-bold text-white hover:bg-sky-800 disabled:opacity-50"
+                                class="btn btn-primary btn-lg w-100 mt-3"
                                 :disabled="busy || !amountCanSubmit() || (method === 'terminal' && !selectedReader())"
                             >
                                 <span x-show="method === 'terminal'" x-text="presentToReaderLabel(amount)" data-payment-reader-button>Present to reader</span>
@@ -287,7 +291,6 @@
                             data-refresh-scope="rail"
                             x-show="isLedgerMethod()"
                             @submit.prevent="submitWorkspace($event)"
-                            class="grid gap-2"
                         >
                             @csrf
                             @method('PATCH')
@@ -300,10 +303,10 @@
                             <input type="hidden" name="payment_method" value="cash">
                             <input type="hidden" name="paid_at" value="">
 
-                            <label class="sr-only" for="payment-reference-{{ $repairOrder->getKey() }}">Reference</label>
-                            <input id="payment-reference-{{ $repairOrder->getKey() }}" name="reference" type="text" value="{{ old('reference') }}" placeholder="Reference / note (optional)" class="h-10 w-full rounded-sm border border-slate-300 text-sm">
+                            <label class="visually-hidden" for="payment-reference-{{ $repairOrder->getKey() }}">Reference</label>
+                            <input id="payment-reference-{{ $repairOrder->getKey() }}" name="reference" type="text" value="{{ old('reference') }}" placeholder="Reference / note (optional)" class="form-control mb-2">
 
-                            <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-slate-950 px-3 text-sm font-bold text-white disabled:opacity-50" :disabled="busy || !amountCanSubmit()">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="busy || !amountCanSubmit()">
                                 @if ($financial['canRecordPayment'] ?? false)
                                     <span x-text="'Record $' + amount">Record Payment</span>
                                 @else
@@ -314,15 +317,16 @@
                     @endif
                 @endunless
                 </div>
+                </div>
 
                 @error('capture')
-                    <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+                    <p class="small fw-medium text-danger mb-0">{{ $message }}</p>
                 @enderror
                 @error('amount')
-                    <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+                    <p class="small fw-medium text-danger mb-0">{{ $message }}</p>
                 @enderror
                 @error('deposit_confirmed')
-                    <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+                    <p class="small fw-medium text-danger mb-0">{{ $message }}</p>
                 @enderror
             </div>
         </div>

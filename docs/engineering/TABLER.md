@@ -308,7 +308,7 @@ The estimate instruments are an `authorized-money` region (`#estimate-instrument
 
 ### Repair order worksheet: financial rail (`operations.repair-orders.show`)
 
-The rail's Estimate Total tab: the approval forecast, the totals, the lines needing authorization, the suggested deposit and balance, and the payment strip (Owe today, settlement balance, final invoice, deposit on file, waive balance, recent payments). The deposit breakdown template and the payment capture workspace stay islands: `ark-payment-capture.js` drives the payment markup. The Closeout tab is its own slice, below.
+The rail's Estimate Total tab: the approval forecast, the totals, the lines needing authorization, the suggested deposit and balance, and the payment strip (Owe today, settlement balance, final invoice, deposit on file, waive balance, recent payments). The Closeout tab, the payment capture workspace, and the deposit breakdown are their own slices, below.
 
 Kept for the rail scripts:
 
@@ -329,3 +329,19 @@ Kept for the rail scripts:
 - `#waive-balance` stays the anchor for the payment strip's Waive balance link, which now dispatches `ops-show-closeout` before scrolling, because the form is in the hidden tab.
 
 The partial no longer takes an `embedded` variable; it only renders inside the tab.
+
+### Repair order worksheet: payment workspace and deposit breakdown (`operations.repair-orders.show`)
+
+The Take payment workspace (`partials.financial-payment-workspace`) and the deposit line breakdown (`partials.financial-suggested-deposit-template`) are Tabler cards. Neither is wrapped in an island any more.
+
+Payment behavior is unchanged. `ark-payment-capture.js` is untouched, and the markup keeps everything it reads:
+- the `data-payment-workspace*`, `data-terminal-payment*`, and `data-payment-reader-*` hooks;
+- the Alpine bindings;
+- the form fields, routes, and concurrency and intent fields.
+
+Constraints:
+
+- Both dialogs sit in their existing overlays. Those are `.ops-workspace-modal` with its backdrop, which the script shows and layers over the page by raising the rail, and the overlay that `ark-deposit-breakdown.js` appends to `body`. The dialog inside is a `card`, not `.modal-content`, because Bootstrap defines the modal colors on `.modal`, which these overlays do not use.
+- Bootstrap's `d-*` display utilities are `!important` and override Alpine's `x-show`. An element with `x-show` must not carry one. Put the flex layout on a wrapper inside it.
+- The reader picker keeps a transparent native `select` over a display that adds the device id line.
+- `ark-deposit-breakdown.js` finds the dialog by `data-deposit-breakdown-dialog` and focuses `data-ops-deposit-breakdown-close`. It marks an excluded line with `opacity-50`.

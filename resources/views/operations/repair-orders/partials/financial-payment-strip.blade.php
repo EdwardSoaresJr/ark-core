@@ -127,14 +127,11 @@
         @endif
 
         @if (($financial['canRecordManualDeposit'] ?? false) || ($financial['canRecordPayment'] ?? false) || ($financial['canTakePaymentCapture'] ?? false))
-            {{-- ark-payment-capture.js drives this legacy markup. --}}
-            <x-operations.worksheet-island>
-                @include('operations.repair-orders.partials.financial-payment-workspace', [
-                    'repairOrder' => $repairOrder,
-                    'financial' => $financial,
-                    'estimateVersion' => $estimateVersion,
-                ])
-            </x-operations.worksheet-island>
+            @include('operations.repair-orders.partials.financial-payment-workspace', [
+                'repairOrder' => $repairOrder,
+                'financial' => $financial,
+                'estimateVersion' => $estimateVersion,
+            ])
         @endif
 
         @if ($financial['canWaiveBalance'] ?? false)

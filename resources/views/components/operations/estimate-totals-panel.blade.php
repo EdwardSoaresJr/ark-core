@@ -252,12 +252,10 @@
     @endif
 
     @if ($showSuggestedDeposit && $depositBreakdownTemplateId)
-        <x-operations.worksheet-island>
-            @include('operations.repair-orders.partials.financial-suggested-deposit-template', [
-                'financial' => $financial,
-                'depositBreakdownTemplateId' => $depositBreakdownTemplateId,
-                'repairOrder' => $repairOrder,
-            ])
-        </x-operations.worksheet-island>
+        @include('operations.repair-orders.partials.financial-suggested-deposit-template', [
+            'financial' => $financial,
+            'depositBreakdownTemplateId' => $depositBreakdownTemplateId,
+            'repairOrder' => $repairOrder,
+        ])
     @endif
 </div>
