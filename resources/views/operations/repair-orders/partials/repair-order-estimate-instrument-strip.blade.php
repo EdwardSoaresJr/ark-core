@@ -13,6 +13,8 @@
     ];
 @endphp
 
+{{-- authorized-money is refreshed by both line and authorization saves, so the instruments match the rail after either. --}}
+<div id="estimate-instruments" data-continuity-region="authorized-money">
 @if (count($estimateInstruments['instruments'] ?? []) > 0)
     <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-2" aria-label="Estimate instruments" data-estimate-instruments>
         @foreach ($estimateInstruments['instruments'] as $instrument)
@@ -50,3 +52,4 @@
         @endforeach
     </div>
 @endif
+</div>

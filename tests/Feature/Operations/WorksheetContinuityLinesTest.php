@@ -86,6 +86,61 @@ test('a labor line save declares the lines scope and renders non-nested continui
         ->assertSee('id="financial-position"', false);
 });
 
+test('a line save refreshes the estimate instruments with the same customer total as the totals panel', function (): void {
+    $advisor = actingAsLearnCurrentStaff(ArkRole::Advisor);
+    $repairOrder = repairOrderForEstimateWorkspace();
+
+    $this->actingAs($advisor)
+        ->post(route('operations.repair-orders.concerns.store', $repairOrder), [
+            'scope_entry_kind' => ScopeEntryKind::CustomerRequested->value,
+            'summary' => 'Front brakes grinding',
+            'observed_summary' => 'Front brakes grinding',
+        ])
+        ->assertRedirect();
+
+    $concern = RepairOrderConcern::query()->where('repair_order_id', $repairOrder->id)->latest('id')->firstOrFail();
+
+    $this->actingAs($advisor)
+        ->post(route('operations.repair-orders.lines.store', $repairOrder), [
+            'repair_order_concern_id' => $concern->id,
+            'type' => RepairOrderLineType::Labor->value,
+            'description' => 'Machine rotors',
+            'quantity' => '1.00',
+            'labor_entered_hours' => '1.00',
+            'unit_price' => '165.00',
+        ])
+        ->assertRedirect();
+
+    $line = RepairOrderLine::query()->where('repair_order_id', $repairOrder->id)->firstOrFail();
+
+    $html = $this->actingAs($advisor)
+        ->followingRedirects()
+        ->patch(route('operations.repair-orders.lines.update', [$repairOrder, $line]), [
+            'repair_order_concern_id' => $concern->id,
+            'type' => RepairOrderLineType::Labor->value,
+            'description' => 'Machine rotors',
+            'quantity' => '2.00',
+            'labor_entered_hours' => '2.00',
+            'unit_price' => '165.00',
+        ])
+        ->assertOk()
+        ->assertSee('data-continuity-scope="'.WorksheetContinuity::LINES.'"', false)
+        ->getContent();
+
+    $xpath = continuityXPath($html);
+    $instruments = $xpath->query('//*[@id="estimate-instruments"]')->item(0);
+    $customerTotal = $xpath->query('.//*[@data-instrument="total"]//*[contains(@class, "h3")]', $instruments)->item(0);
+    $panelTotal = $xpath->query('//*[@id="estimate-totals-region"]//*[contains(@class, "ops-total-row--final")]/dd')->item(0);
+
+    expect($instruments)->toBeInstanceOf(DOMElement::class)
+        ->and($instruments->getAttribute('data-continuity-region'))->toBe('authorized-money')
+        ->and($customerTotal)->toBeInstanceOf(DOMElement::class)
+        ->and($panelTotal)->toBeInstanceOf(DOMElement::class)
+        ->and(trim($customerTotal->textContent))->toBe(trim($panelTotal->textContent));
+
+    assertContinuityRegionsDoNotNest($html);
+});
+
 test('adding editing and removing part sublet and fee lines declare the lines scope', function (): void {
     $advisor = actingAsLearnCurrentStaff(ArkRole::Advisor);
     $repairOrder = repairOrderForEstimateWorkspace();
