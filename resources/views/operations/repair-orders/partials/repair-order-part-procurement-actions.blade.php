@@ -20,6 +20,8 @@
         ->all();
     $canManage = auth()->user()?->can(ArkCapability::RepairOrdersManage->value) ?? false;
     $isInteractive = $canManage && count($selectOptions) > 1;
+    $ui = $ui ?? 'legacy';
+    $statusColor = RepairOrderLineItemPresentation::procurementTablerColor($statusChipTone);
 @endphp
 
 @if ($isInteractive)
@@ -30,7 +32,7 @@
         data-line-card-ignore
         data-refresh-scope="worksheet"
         data-continuity-focus="#line-{{ $line->id }}"
-        class="ops-chip-form inline-flex"
+        @class(['ops-chip-form inline-flex' => $ui !== 'tabler', 'd-inline-flex' => $ui === 'tabler'])
     >
         @csrf
         @method('PATCH')
@@ -46,7 +48,12 @@
             name="procurement_state"
             data-procurement-select
             data-current-state="{{ $currentState->value }}"
-            class="ops-chip ops-chip--status ops-chip--select ops-chip--{{ $statusChipTone }}"
+            @if ($ui === 'tabler')
+                class="form-select form-select-sm border-{{ $statusColor }} text-{{ $statusColor }}"
+                style="width: auto"
+            @else
+                class="ops-chip ops-chip--status ops-chip--select ops-chip--{{ $statusChipTone }}"
+            @endif
         >
             @foreach ($selectOptions as $state)
                 <option value="{{ $state->value }}" @selected($state === $currentState)>
@@ -55,6 +62,8 @@
             @endforeach
         </select>
     </form>
+@elseif ($ui === 'tabler')
+    <span class="badge bg-{{ $statusColor }}-lt">{{ $line->procurementStateLabel() }}</span>
 @else
     <x-operations.line-item.status-chip
         :label="$line->procurementStateLabel()"

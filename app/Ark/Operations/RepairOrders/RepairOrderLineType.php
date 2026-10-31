@@ -36,6 +36,18 @@ enum RepairOrderLineType: string
         };
     }
 
+    /** Tabler color name for the worksheet line type label, matching the ops-line-type--* colors. */
+    public function tablerColor(): string
+    {
+        return match ($this) {
+            self::Labor => 'green',
+            self::Part => 'azure',
+            self::Note => 'pink',
+            self::Sublet => 'purple',
+            self::Fee, self::Package => 'secondary',
+        };
+    }
+
     public function documentLabel(): string
     {
         return match ($this) {
