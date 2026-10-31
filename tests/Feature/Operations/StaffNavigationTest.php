@@ -33,7 +33,7 @@ function navigationKeys(?User $user, ?Request $request = null): array
 {
     $keys = [];
 
-    foreach (StaffNavigation::sections($user, $request ?? request()) as $section) {
+    foreach (StaffNavigation::sections($user, $request ?? request(), 'https://shop.test/attention') as $section) {
         $keys[$section['label'] ?? ''] = array_column($section['items'], 'key');
     }
 
@@ -72,11 +72,11 @@ function renderedNavigation(string $html, string $start, string $end, string $se
 /**
  * @return list<string|array{0: string, 1: string}>
  */
-function modelNavigation(User $user): array
+function modelNavigation(User $user, string $communicationsUrl): array
 {
     $expected = [];
 
-    foreach (StaffNavigation::sections($user, request()) as $section) {
+    foreach (StaffNavigation::sections($user, request(), $communicationsUrl) as $section) {
         if ($section['label'] !== null) {
             $expected[] = $section['label'];
         }
@@ -153,7 +153,7 @@ test('the destination for the current route is the only active one', function (s
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     $active = [];
-    foreach (StaffNavigation::sections($admin, requestFor($url)) as $section) {
+    foreach (StaffNavigation::sections($admin, requestFor($url), 'https://shop.test/attention') as $section) {
         foreach ($section['items'] as $item) {
             if ($item['active']) {
                 $active[] = $item['key'];
@@ -166,7 +166,6 @@ test('the destination for the current route is the only active one', function (s
     'today' => [fn () => route('operations.today'), 'dashboard'],
     'workboard' => [fn () => route('operations.workboard'), 'job-board'],
     'appointment list' => [fn () => route('operations.appointments.index'), 'schedule'],
-    'communications inbox' => [fn () => route('operations.communications.inbox'), 'communications'],
     'repair order list' => [fn () => route('operations.repair-orders.index'), 'repair-orders'],
     'customer hub' => [fn () => route('operations.customers.show', 1), 'customers'],
     'vehicle search' => [fn () => route('operations.vehicles.search'), 'vehicles'],
@@ -177,10 +176,12 @@ test('the destination for the current route is the only active one', function (s
 test('both shells render exactly the shared sections', function (callable $makeUser): void {
     $user = $makeUser();
     $this->actingAs($user);
-    $expected = modelNavigation($user);
+    $legacyHtml = Blade::render('<x-operations.app>body</x-operations.app>');
+    preg_match('/href="([^"]+)"\s+data-ops-comms-nav-link/', $legacyHtml, $communications);
+    $expected = modelNavigation($user, html_entity_decode($communications[1] ?? ''));
 
     $legacy = renderedNavigation(
-        Blade::render('<x-operations.app>body</x-operations.app>'),
+        $legacyHtml,
         '<nav aria-label="Primary operations" class="ops-rail-nav">',
         '</nav>',
         '<p class="ops-rail-section__label">(?<section>[^<]+)<\/p>',

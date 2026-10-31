@@ -12,7 +12,6 @@ use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\DevRolePretend;
 
     $accentHtml = auth()->user()?->accentHtmlAttributes() ?? ['data-accent' => 'ark2'];
-    $navSections = StaffNavigation::sections(auth()->user(), request());
     $commsPressureSettings = CommsPressureSettings::fromShopSettings();
     $commsAccountabilityEnabled = $commsPressureSettings->attentionGateEnabled();
     // One attention cache key for rail badge + channel strip + Needs You list.
@@ -27,6 +26,7 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         ? app(CommunicationsNavPressure::class)->resolve(auth()->user(), $previousLastSeenAt)
         : ['nav_pressure_count' => 0, 'summary' => [], 'workboard_counts' => []];
     $commsNavCount = (int) ($commsNavPressure['nav_pressure_count'] ?? 0);
+    $navSections = StaffNavigation::sections(auth()->user(), request(), $commsPressure['attention_url']);
     $commsNavSummary = is_array($commsNavPressure['summary'] ?? null) ? $commsNavPressure['summary'] : [];
     $commsNavPressureClass = $commsNavCount > 0
         ? match (true) {

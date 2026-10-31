@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\Staff;
 
 use App\Ark\Operations\Business\BusinessWorkspaceAccess;
-use App\Ark\Operations\Communications\CommunicationsNeedsYou;
 use App\Ark\Operations\Labor\TechnicianTimeClockProjection;
 use App\Ark\Operations\Learn\ArkademyUrls;
 use App\Ark\Operations\Scoreboard\ShopOperatingScoreboardAccess;
@@ -24,11 +23,12 @@ final class StaffNavigation
 {
     /**
      * Sections in display order. Each holds only the items the user may see, and a section with no visible item is
-     * left out. `key` names the destination for icons and tests; `icon` is its Tabler icon.
+     * left out. `key` names the destination for icons and tests; `icon` is its Tabler icon. The shell supplies the
+     * communications destination, which depends on the user's attention queue.
      *
      * @return list<array{label: ?string, items: list<array{key: string, label: string, url: string, icon: string, active: bool, live_count: bool}>}>
      */
-    public static function sections(?User $user, Request $request): array
+    public static function sections(?User $user, Request $request, string $communicationsUrl): array
     {
         $can = fn (ArkCapability $capability): bool => $user?->can($capability->value) ?? false;
         $operates = $can(ArkCapability::OperationsAccess);
@@ -56,7 +56,7 @@ final class StaffNavigation
                     self::item('job-board', 'Job Board', 'layout-grid', route('operations.index'), ['operations.index', 'operations.workboard'], $operates),
                     self::item('workboard', 'Workboard', 'layout-grid', route('operations.workboard'), ['operations.workboard'], $produces && ! $operates),
                     self::item('schedule', 'Schedule', 'calendar', route('operations.appointments.index'), ['operations.appointments.*'], $operates && ShopSettings::current()->appointmentsEnabled()),
-                    self::item('communications', 'Communications', 'message', CommunicationsNeedsYou::url(), ['operations.communications.*'], $operates, liveCount: true),
+                    self::item('communications', 'Communications', 'message', $communicationsUrl, ['operations.communications.*'], $operates, liveCount: true),
                 ],
             ],
             [
