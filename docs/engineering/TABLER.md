@@ -23,11 +23,11 @@ Tabler cannot load globally. 159 class names exist in both `app.css` and Tabler 
 
 ## Navigation
 
-Required end state: one navigation definition. Sections, items, permission checks, active routes, and live counts are declared once and rendered by whichever shell a view uses. The account menu follows the same rule.
+`App\Ark\Operations\Staff\StaffNavigation` is the only navigation definition. `sections()` declares the sections, destinations, labels, URLs, permission checks, active routes, and the live communications count, and returns only what the user may see. `accountMenu()` does the same for the account menu. Add, remove, re-permission, or rename a destination there.
 
-Today there are two: the legacy rail markup in `components/operations/app.blade.php` and the `$navSections` array in `components/operations/shell/tabler.blade.php`. They read the same permission flags, and `TablerShellTest` compares their destinations for three roles. Until they are merged, any change to a destination changes both files in the same commit.
+Each shell renders those arrays in its own markup: the legacy rail in `components/operations/app.blade.php` with its icons in `components/operations/rail-icon.blade.php`, and the Tabler sidebar in `components/operations/shell/tabler.blade.php` with the item's Tabler `icon`. A new destination needs a rail icon under its `key`; the rail throws for an unknown key.
 
-Merging them means rendering the legacy rail from the shared definition too, which changes legacy markup that other tests assert on. That is its own reviewed change. The trigger is in [TECHNICAL_DEBT.md](TECHNICAL_DEBT.md#two-staff-navigation-definitions).
+`StaffNavigationTest` covers what each role sees, active routes, and that both shells render exactly the shared sections and account entries.
 
 ## Legacy components on a Tabler page
 
