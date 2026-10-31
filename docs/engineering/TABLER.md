@@ -144,7 +144,7 @@ Design the phone layout first, not as a squeezed desktop.
 1. Record its current behavior and the legacy classes it uses (below).
 2. Migrate the Blade view only.
 3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior. `TablerShellTest` compares the Tabler sidebar with the legacy rail on the Job Board (`operations.index`); when that view migrates, point those tests at another legacy page.
-4. Check 390, 820, 1440, 1920, and 2560 wide, light and dark, for horizontal overflow and stretched content: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search.
+4. Check 390, 820, 1440, 1920, and 2560 wide, light and dark, for horizontal overflow and stretched content: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search. Capture the pull request's Visual Review screenshots during this check ([RELEASE_PROTOCOL.md](RELEASE_PROTOCOL.md#1-implement-and-pr-this)).
 5. List what still depends on `app.css`.
 6. Stop for review before the next view.
 
