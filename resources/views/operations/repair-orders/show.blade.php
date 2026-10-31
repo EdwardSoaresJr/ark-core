@@ -1807,12 +1807,15 @@
                                 'estimateVersion' => $estimateVersion,
                             ])
                         @endif
+                    </div>
+                    </x-operations.worksheet-island>
 
                         @php
                             // Priority order (Must Do → Should Do → Could Do → Information Only), then advisor position.
                             $worksheetConcerns = App\Ark\Operations\RepairOrders\RecommendationPresentation::sortedModels($repairOrder->concerns);
                         @endphp
-                        <div id="worksheet-concerns">
+                        {{-- Worksheet continuity places new concern sections by this parent's id, so they stay its direct children. --}}
+                        <div id="worksheet-concerns" class="d-flex flex-column gap-3">
                         @forelse ($worksheetConcerns as $concern)
                             @php
                                 $concernPartsMatrixKey = $concern->billing_posture
@@ -1824,15 +1827,22 @@
                                 $concernDefaultLaborRate = $concernLaborDefaults['rate'];
                                 $concernDefaultLaborCategoryKey = $concernLaborDefaults['category_key'];
                             @endphp
-                            <section id="concern-{{ $concern->id }}" class="ops-worksheet-concern {{ $concern->presentation()->worksheetScopeClass() }} ops-worksheet-concern--{{ $concern->disposition->value }} scroll-mt-24">
+                            <section
+                                id="concern-{{ $concern->id }}"
+                                class="card scroll-mt-24"
+                                data-concern-priority="{{ $concern->presentation()->key() }}"
+                                data-concern-disposition="{{ $concern->disposition->value }}"
+                            >
+                                <div class="card-status-start bg-{{ $concern->presentation()->tablerColor() }}"></div>
                                 <x-operations.scope-header
+                                    ui="tabler"
                                     :continuity-region="'concern-money-'.$concern->id"
                                     :title="$concern->summary"
                                     :total="$totals->format($totals->concernSubtotalCents($concern->id))"
                                     :eyebrow="($isTerminal || ! $concern->shouldSurfaceRecommendationStatus())
                                         ? $concern->presentation()->staffLabel()
                                         : null"
-                                    :eyebrow-class="$concern->presentation()->labelClass()"
+                                    :eyebrow-class="'text-'.$concern->presentation()->tablerColor()"
                                 >
                                     <x-slot:subline>
                                         @include('operations.repair-orders.partials.repair-order-concern-meaning-subline', [
@@ -1842,6 +1852,7 @@
                                     <x-slot:status>
                                         @include('operations.repair-orders.partials.repair-order-concern-disposition-decision', [
                                             'concern' => $concern,
+                                            'ui' => 'tabler',
                                         ])
                                     </x-slot:status>
                                     @unless ($isTerminal)
@@ -1882,6 +1893,7 @@
                                     'estimateVersion' => $estimateVersion,
                                 ])
 
+                                <x-operations.worksheet-island>
                                 @include('operations.repair-orders.partials.repair-order-concern-work-section', [
                                     'repairOrder' => $repairOrder,
                                     'concern' => $concern,
@@ -1908,16 +1920,14 @@
                                     'estimateVersion' => $estimateVersion,
                                     'totals' => $totals,
                                 ])
+                                </x-operations.worksheet-island>
                             </section>
                         @empty
                             @if ($isTerminal)
-                                <div class="rounded-sm border border-dashed border-slate-300 bg-white px-4 py-4 text-sm text-slate-600">No scopes on this estimate.</div>
+                                <div class="card card-body text-secondary">No scopes on this estimate.</div>
                             @endif
                         @endforelse
                         </div>
-
-                    </div>
-                    </x-operations.worksheet-island>
                 </div>
                 </x-operations.repair-order-workspace-tabs>
             </div>

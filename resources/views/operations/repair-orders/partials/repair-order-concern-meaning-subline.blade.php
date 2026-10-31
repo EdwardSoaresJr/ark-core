@@ -3,9 +3,9 @@
 @endphp
 
 @if ($meaning->showsMeaningStrip())
-    <div class="ops-scope-meaning-subline">
+    <div class="text-secondary small mt-1">
         @if ($meaning->showsCustomerWording())
-            <span class="ops-scope-meaning-subline__customer">{{ $meaning->customerWording() }}</span>
+            <span>{{ $meaning->customerWording() }}</span>
         @endif
     </div>
 @endif

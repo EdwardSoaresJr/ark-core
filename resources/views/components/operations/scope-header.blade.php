@@ -4,8 +4,40 @@
     'eyebrow' => null,
     'eyebrowClass' => null,
     'continuityRegion' => null,
+    'ui' => 'legacy',
 ])
 
+@if ($ui === 'tabler')
+    <div {{ $attributes->class('card-header align-items-start flex-wrap gap-2') }}>
+        <div class="flex-fill" style="min-width: 0">
+            @if (filled($eyebrow))
+                <div @class(['subheader mb-1', $eyebrowClass])>{{ $eyebrow }}</div>
+            @endif
+            <h3 class="card-title">{{ $title }}</h3>
+            @isset($subline)
+                {{ $subline }}
+            @endisset
+        </div>
+        @if (filled($total) || isset($status))
+            <div class="d-flex flex-column align-items-end gap-1 ms-auto">
+                @if (filled($total))
+                    <div
+                        class="h3 mb-0"
+                        @if ($continuityRegion) id="{{ $continuityRegion }}" data-continuity-region="concern-money" @endif
+                    >{{ $total }}</div>
+                @endif
+                @isset($status)
+                    {{ $status }}
+                @endisset
+            </div>
+        @endif
+    </div>
+    @isset($toolbar)
+        <div class="card-body border-bottom py-2 d-flex flex-wrap align-items-center gap-2">
+            {{ $toolbar }}
+        </div>
+    @endisset
+@else
 <div {{ $attributes->class('ops-worksheet-concern-header') }}>
     <div class="ops-scope-header-grid">
         <div class="ops-scope-header-identity">
@@ -41,3 +73,4 @@
         </div>
     @endisset
 </div>
+@endif

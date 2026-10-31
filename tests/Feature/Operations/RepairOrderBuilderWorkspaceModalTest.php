@@ -294,7 +294,7 @@ test('builder presents remaining editors as presentation cards into workspace mo
     $html = $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-builder-present-card', false)
+        ->assertSee('data-concern-narrative', false)
         ->assertSee("task: 'visit-reason'", false)
         ->assertSee("task: 'concern-narrative'", false)
         ->assertSee("task: 'concern-disposition'", false)

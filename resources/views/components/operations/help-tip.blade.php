@@ -9,7 +9,7 @@
     $hasItems = is_array($items) && count($items) > 0;
 @endphp
 
-<span {{ $attributes->class(['ops-help-tip', 'ops-help-tip--rich' => $hasItems]) }} tabindex="0" role="button" aria-label="{{ $label }}">
+<span {{ $attributes->class(['ark-legacy ops-help-tip', 'ops-help-tip--rich' => $hasItems]) }} tabindex="0" role="button" aria-label="{{ $label }}">
     @if (isset($trigger) && $trigger->isNotEmpty())
         {{ $trigger }}
     @else

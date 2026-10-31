@@ -1,15 +1,13 @@
 @php
     $concernDispositions = App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::cases();
-    $dispositionToneStyle = $concern->disposition->worksheetToneStyle();
+    $dispositionColor = $concern->disposition->tablerColor();
     $authorViaModal = (bool) ($authorViaModal ?? false);
 @endphp
 
 <div id="concern-disposition-{{ $concern->id }}" data-continuity-region="concern-authorization">
 @if ($isTerminal ?? false)
-    <div class="flex items-center gap-0.5">
-        @include('operations.repair-orders.partials.repair-order-concern-disposition-badge', [
-            'concern' => $concern,
-        ])
+    <div class="d-flex align-items-center gap-1">
+        <span class="badge bg-{{ $dispositionColor }}-lt">{{ $concern->disposition->label() }}</span>
         <x-operations.help-tip
             :text="$concern->disposition->helpText()"
             label="Customer decision help for {{ $concern->summary }}"
@@ -18,15 +16,15 @@
 @elseif ($authorViaModal)
     <button
         type="button"
-        class="ops-builder-present-chip"
-        style="{{ $dispositionToneStyle }}"
+        class="btn btn-sm bg-{{ $dispositionColor }}-lt"
+        data-disposition-tone="{{ $concern->disposition->value }}"
         title="Customer decision"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-disposition', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
     >
         {{ $concern->disposition->label() }}
     </button>
 @else
-    <div class="flex items-center gap-0.5">
+    <div class="d-flex align-items-center gap-1">
         <form
             method="POST"
             action="{{ route('operations.repair-orders.concerns.disposition', [$repairOrder, $concern]) }}"
@@ -38,12 +36,13 @@
             @csrf
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="sr-only" for="concern-disposition-{{ $concern->id }}">Customer decision for {{ $concern->summary }}</label>
+            <label class="visually-hidden" for="concern-disposition-{{ $concern->id }}">Customer decision for {{ $concern->summary }}</label>
             <select
                 id="concern-disposition-{{ $concern->id }}"
                 name="disposition"
-                class="ops-disposition-select"
-                style="{{ $dispositionToneStyle }}"
+                class="form-select form-select-sm border-{{ $dispositionColor }} text-{{ $dispositionColor }}"
+                data-disposition-tone="{{ $concern->disposition->value }}"
+                style="width: auto"
                 onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
             >
                 @foreach ($concernDispositions as $disposition)

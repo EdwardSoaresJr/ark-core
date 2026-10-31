@@ -9,12 +9,12 @@
 @endphp
 
 @if ($isTerminal ?? false)
-    <div class="flex items-center gap-1">
+    <div class="d-flex align-items-center gap-1">
         @if ($posture !== App\Ark\Operations\RepairOrders\ConcernBillingPosture::Default)
-            <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $posture->shortLabel() }}</span>
+            <span class="subheader">{{ $posture->shortLabel() }}</span>
         @endif
         @if ($laborRate)
-            <span class="ops-concern-billing-rate">${{ $laborRate }}/hr</span>
+            <span class="small text-secondary">${{ $laborRate }}/hr</span>
         @endif
         <x-operations.help-tip
             :text="$posture->helpText()"
@@ -24,14 +24,14 @@
 @elseif ($authorViaModal)
     <button
         type="button"
-        class="ops-builder-present-chip ops-builder-present-chip--quiet"
+        class="btn btn-sm btn-ghost-secondary"
         title="Billing for this scope"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-billing', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
     >
         {{ $billingLabel }}
     </button>
 @else
-    <div class="flex items-center gap-1">
+    <div class="d-flex align-items-center gap-1">
         <form
             method="POST"
             action="{{ route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]) }}"
@@ -42,11 +42,12 @@
             @csrf
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="sr-only" for="concern-billing-{{ $concern->id }}">Billing for {{ $concern->summary }}</label>
+            <label class="visually-hidden" for="concern-billing-{{ $concern->id }}">Billing for {{ $concern->summary }}</label>
             <select
                 id="concern-billing-{{ $concern->id }}"
                 name="billing_posture"
-                class="ops-disposition-select ops-billing-posture-select"
+                class="form-select form-select-sm"
+                style="width: auto"
                 onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
             >
                 @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $option)

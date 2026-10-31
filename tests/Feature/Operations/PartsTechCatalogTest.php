@@ -274,7 +274,7 @@ test('repair order worksheet exposes per-scope partstech open for each concern',
 
     expect($html)
         ->toContain('partstechPreferredConcernId')
-        ->toContain('ops-scope-settings__partstech')
+        ->toContain('data-scope-parts-catalog')
         ->toContain('openPartsCatalog(')
         ->toContain('selectPartsCatalog(')
         ->toContain('data-parts-catalog="partstech"')
