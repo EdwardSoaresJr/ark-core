@@ -1,4 +1,4 @@
-<x-operations.app title="Schedule">
+<x-operations.app title="Schedule" ui="tabler">
     @php
         $w = $workspace;
         $pxPerMinute = 1.35;
@@ -10,65 +10,63 @@
             'lens' => ($w['lens'] ?? 'agenda') !== 'agenda' ? ($w['lens'] ?? null) : null,
             'allocate' => ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day') ? ($w['allocate'] ?? null) : null,
         ], fn ($v) => $v !== null && $v !== '');
+        $countLabel = $w['total_count'].' appointment'.($w['total_count'] === 1 ? '' : 's')
+            .((($w['lens'] ?? 'agenda') !== 'agenda' && ($w['agenda_count'] ?? 0) !== ($w['total_count'] ?? 0)) ? ' · '.$w['agenda_count'].' on this day' : '');
     @endphp
 
-    <section class="ops-index space-y-3">
-        @if (session('status'))
-            <div class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950">{{ session('status') }}</div>
-        @endif
-        @if (session('schedule_warnings'))
-            <div class="border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950 space-y-1">
-                @foreach ((array) session('schedule_warnings') as $warning)
-                    <p>{{ $warning }}</p>
+    <x-tabler.page layout="fluid" :title="$w['focus_label']" pretitle="Schedule" :subtitle="$countLabel" actions-label="Schedule navigation">
+        <x-slot:actions>
+            <form method="POST" action="{{ route('operations.appointments.board-view') }}" class="btn-group" role="group" aria-label="Schedule view" data-schedule-view-switch>
+                @csrf
+                <input type="hidden" name="day" value="{{ $w['focus_date'] }}">
+                @if (($w['lens'] ?? 'agenda') !== 'agenda')
+                    <input type="hidden" name="lens" value="{{ $w['lens'] }}">
+                @endif
+                @if ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day')
+                    <input type="hidden" name="allocate" value="{{ $w['allocate'] }}">
+                @endif
+                @foreach ($w['view_options'] ?? [] as $option)
+                    <button
+                        type="submit"
+                        name="view"
+                        value="{{ $option['key'] }}"
+                        @class(['btn', 'btn-primary' => ! empty($option['selected'])])
+                        @if (! empty($option['selected'])) aria-current="true" @endif
+                    >{{ $option['label'] }}</button>
                 @endforeach
+            </form>
+            <div class="btn-group" role="group" aria-label="Move through the schedule">
+                <a href="{{ route('operations.appointments.index', array_merge($queryBase, ['day' => $w['nav_prev_date']])) }}" class="btn btn-icon" aria-label="Previous" title="Previous">
+                    <x-tabler.icon name="arrow-left" />
+                </a>
+                <a href="{{ route('operations.appointments.index', array_merge($queryBase, ['day' => $w['today_date']])) }}" class="btn">Today</a>
+                <a href="{{ route('operations.appointments.index', array_merge($queryBase, ['day' => $w['nav_next_date']])) }}" class="btn btn-icon" aria-label="Next" title="Next">
+                    <x-tabler.icon name="arrow-right" />
+                </a>
             </div>
-        @endif
-        @if ($errors->any())
-            <div class="border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-950">
-                {{ $errors->first() }}
-            </div>
-        @endif
+            <a href="{{ route('operations.schedule') }}" class="btn btn-primary">
+                <x-tabler.icon name="plus" />
+                Schedule
+            </a>
+        </x-slot:actions>
 
-        <div class="ops-board-shell">
-            <div class="ops-page-toolbar flex-wrap gap-2">
-                <div class="min-w-0">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Schedule</p>
-                    <h2 class="text-base font-black text-slate-950">{{ $w['focus_label'] }}</h2>
-                    <p class="mt-0.5 text-xs text-slate-500">
-                        {{ $w['total_count'] }} appointment{{ $w['total_count'] === 1 ? '' : 's' }}
-                        @if (($w['lens'] ?? 'agenda') !== 'agenda' && ($w['agenda_count'] ?? 0) !== ($w['total_count'] ?? 0))
-                            <span class="text-slate-400">· {{ $w['agenda_count'] }} on this day</span>
-                        @endif
-                    </p>
+        <div>
+            @if (session('status'))
+                <div class="alert alert-success" role="status">{{ session('status') }}</div>
+            @endif
+            @if (session('schedule_warnings'))
+                <div class="alert alert-warning" role="status">
+                    @foreach ((array) session('schedule_warnings') as $warning)
+                        <div>{{ $warning }}</div>
+                    @endforeach
                 </div>
-                <div class="ops-page-toolbar-actions">
-                    <form method="POST" action="{{ route('operations.appointments.board-view') }}" class="ops-cal-view-switch" role="group" aria-label="Schedule view">
-                        @csrf
-                        <input type="hidden" name="day" value="{{ $w['focus_date'] }}">
-                        @if (($w['lens'] ?? 'agenda') !== 'agenda')
-                            <input type="hidden" name="lens" value="{{ $w['lens'] }}">
-                        @endif
-                        @if ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day')
-                            <input type="hidden" name="allocate" value="{{ $w['allocate'] }}">
-                        @endif
-                        @foreach ($w['view_options'] ?? [] as $option)
-                            <button
-                                type="submit"
-                                name="view"
-                                value="{{ $option['key'] }}"
-                                class="ops-page-link {{ ! empty($option['selected']) ? 'ops-page-link--primary' : '' }}"
-                                @if (! empty($option['selected'])) aria-current="true" @endif
-                            >{{ $option['label'] }}</button>
-                        @endforeach
-                    </form>
-                    <a href="{{ route('operations.appointments.index', array_merge($queryBase, ['day' => $w['nav_prev_date']])) }}" class="ops-page-link">Prev</a>
-                    <a href="{{ route('operations.appointments.index', array_merge($queryBase, ['day' => $w['today_date']])) }}" class="ops-page-link">Today</a>
-                    <a href="{{ route('operations.appointments.index', array_merge($queryBase, ['day' => $w['nav_next_date']])) }}" class="ops-page-link">Next</a>
-                    <a href="{{ route('operations.schedule') }}" class="ops-page-link ops-page-link--primary">Schedule</a>
-                </div>
-            </div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>
+            @endif
+
             @if ($boardView === 'week')
-                <div class="ops-day-lens" role="navigation" aria-label="Week allocation">
+                <nav class="nav nav-pills mb-2" aria-label="Week allocation">
                     @foreach ($w['allocate_options'] ?? [] as $option)
                         <a
                             href="{{ route('operations.appointments.index', array_filter([
@@ -77,16 +75,14 @@
                                 'allocate' => $option['key'] !== 'day' ? $option['key'] : null,
                                 'lens' => ($w['lens'] ?? 'agenda') !== 'agenda' ? ($w['lens'] ?? null) : null,
                             ])) }}"
-                            class="ops-day-lens__chip {{ ! empty($option['selected']) ? 'ops-day-lens__chip--selected' : '' }}"
+                            @class(['nav-link', 'active' => ! empty($option['selected'])])
                             @if (! empty($option['selected'])) aria-current="true" @endif
-                        >
-                            <span class="ops-day-lens__label">{{ $option['label'] }}</span>
-                        </a>
+                        >{{ $option['label'] }}</a>
                     @endforeach
-                </div>
+                </nav>
             @endif
             @if (! empty($w['chips']) && count($w['chips']) > 1)
-                <div class="ops-day-lens" role="navigation" aria-label="Day schedule perspectives">
+                <nav class="nav nav-pills mb-2" aria-label="Day schedule perspectives" data-schedule-lenses>
                     @foreach ($w['chips'] as $chip)
                         <a
                             href="{{ route('operations.appointments.index', array_filter([
@@ -95,34 +91,39 @@
                                 'lens' => $chip['key'] !== 'agenda' ? $chip['key'] : null,
                                 'allocate' => ($boardView === 'week' && ($w['allocate'] ?? 'day') !== 'day') ? ($w['allocate'] ?? null) : null,
                             ])) }}"
-                            class="ops-day-lens__chip {{ ! empty($chip['selected']) ? 'ops-day-lens__chip--selected' : '' }}"
+                            @class(['nav-link', 'active' => ! empty($chip['selected'])])
                             @if (! empty($chip['selected'])) aria-current="true" @endif
                         >
-                            <span class="ops-day-lens__label">{{ $chip['label'] }}</span>
-                            <span class="ops-day-lens__count">{{ $chip['count'] }}</span>
+                            {{ $chip['label'] }}
+                            <span class="badge ms-2 {{ ! empty($chip['selected']) ? 'bg-white text-primary' : 'bg-secondary-lt' }}">{{ $chip['count'] }}</span>
                         </a>
                     @endforeach
-                </div>
+                </nav>
             @endif
         </div>
 
-        @include('operations.appointments.partials.request-availability-day', [
-            'w' => $w,
-            'requestDayStatus' => $requestDayStatus ?? ['requestable' => false, 'weekly_enabled' => false, 'exception' => null],
-        ])
+        {{-- The board, capacity rail, request controls, and appointment popovers stay legacy until a calendar engine is chosen. See TABLER.md. --}}
+        <div class="ark-legacy bg-white text-dark">
+            <section class="ops-index space-y-3">
+                @include('operations.appointments.partials.request-availability-day', [
+                    'w' => $w,
+                    'requestDayStatus' => $requestDayStatus ?? ['requestable' => false, 'weekly_enabled' => false, 'exception' => null],
+                ])
 
-        <div class="ops-cal-layout">
-            @include('operations.appointments.partials.capacity-rail', ['rail' => $w['capacity_rail']])
+                <div class="ops-cal-layout">
+                    @include('operations.appointments.partials.capacity-rail', ['rail' => $w['capacity_rail']])
 
-            <div class="ops-cal-board">
-                @if ($boardView === 'month')
-                    @include('operations.appointments.partials.board-month', ['w' => $w, 'queryBase' => $queryBase])
-                @elseif ($boardView === 'day')
-                    @include('operations.appointments.partials.board-day', ['w' => $w, 'pxPerMinute' => $pxPerMinute, 'gridHeight' => $gridHeight])
-                @else
-                    @include('operations.appointments.partials.board-week', ['w' => $w, 'queryBase' => $queryBase])
-                @endif
-            </div>
+                    <div class="ops-cal-board">
+                        @if ($boardView === 'month')
+                            @include('operations.appointments.partials.board-month', ['w' => $w, 'queryBase' => $queryBase])
+                        @elseif ($boardView === 'day')
+                            @include('operations.appointments.partials.board-day', ['w' => $w, 'pxPerMinute' => $pxPerMinute, 'gridHeight' => $gridHeight])
+                        @else
+                            @include('operations.appointments.partials.board-week', ['w' => $w, 'queryBase' => $queryBase])
+                        @endif
+                    </div>
+                </div>
+            </section>
         </div>
-    </section>
+    </x-tabler.page>
 </x-operations.app>

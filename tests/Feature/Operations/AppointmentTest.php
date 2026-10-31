@@ -316,7 +316,7 @@ test('appointments index shows scheduling workspace day lanes', function () {
         ->get(route('operations.appointments.index', ['day' => '2026-06-10']))
         ->assertOk()
         ->assertSee('Schedule', false)
-        ->assertSee('ops-cal-view-switch', false)
+        ->assertSee('data-schedule-view-switch', false)
         ->assertSee('ops-cal-day', false)
         ->assertSee('ops-cal-card', false)
         ->assertSee('Week View', false);
