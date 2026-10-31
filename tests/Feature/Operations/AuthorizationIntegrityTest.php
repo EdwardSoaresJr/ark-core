@@ -131,6 +131,38 @@ test('a part added after approval installs without reauthorization and stays out
         ->assertDontSee('Needs authorization');
 });
 
+test('known issue #66: raising an approved line above the customer approval still counts it as approved', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+
+    $approval = app(RecordCustomerAuthorizationAction::class)->execute(
+        repairOrder: $repairOrder,
+        approvalType: ApprovalType::Repair,
+        source: ApprovalSource::Portal,
+        approvedBy: 'Paul Howell',
+        approvedAmountCents: null,
+        notes: null,
+        concernDispositions: [$concern->id => RepairOrderConcernDisposition::Approved->value],
+        actor: $advisor,
+    );
+
+    $calculator = app(EstimateTotalsCalculator::class);
+    $approvedAtApproval = $calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents();
+    expect($approval->approved_amount_cents)->toBe($approvedAtApproval);
+
+    $part->update(['quantity' => '2.00']);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+
+    $coverage = app(WorkCompletionAuthorization::class);
+
+    // Current behavior. Fixing #66 flips these: the increase must stop counting as customer-approved.
+    expect($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBeGreaterThan($approval->fresh()->approved_amount_cents)
+        ->and($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())->toBeGreaterThan($approval->fresh()->approved_amount_cents)
+        ->and($approval->fresh()->approved_amount_cents)->toBe($approvedAtApproval)
+        ->and($coverage->customerApprovalCovers($part->fresh(['concern'])))->toBeTrue()
+        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->not->toContain($part->id);
+});
+
 test('labor added after approval does not block completion or a finished status and stays unresolved', function () {
     $advisor = integrityAdvisor();
     allowEstimateToQualityCheck();
