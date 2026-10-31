@@ -59,7 +59,7 @@ The scoreboard lists work that needs a person. Labels stay inside what ARK can p
 
 The scoreboard measures. It does not coach, and it does not add new blocks.
 
-ARK already stops a paid close while a balance is due, and it already stops completion of work outside the approved scope. Later, a shop can connect a weak measure to an explanation, a suggested next step, and a gate only where the process has to hold. That sequence is:
+ARK already stops a paid close while a balance is due, and it already stops completion of work on a concern the customer has not approved ([approved scope coverage](../operations/approved-scope-coverage.md)). Later, a shop can connect a weak measure to an explanation, a suggested next step, and a gate only where the process has to hold. That sequence is:
 
 Playbook, shop configuration, workflow, measurement, detection, explanation, suggested action, facilitated action, gates where integrity requires them.
 

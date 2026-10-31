@@ -70,7 +70,7 @@ test('recommended parts can be ordered and received and cannot be installed', fu
         ->and($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended);
 });
 
-test('an approved concern installs only the lines in that approval and keeps approved dollars on the calculator', function () {
+test('a part added after approval installs without reauthorization and stays out of approved dollars', function () {
     $advisor = integrityAdvisor();
     [$repairOrder, $concern, $part] = integrityRepairOrder();
     $this->actingAs($advisor);
@@ -101,13 +101,25 @@ test('an approved concern installs only the lines in that approval and keeps app
         ->assertSee('Needs authorization', false)
         ->assertSee('On the estimate. Not in approved sales until the customer approves these lines.', false);
 
+    $scopesBefore = ApprovedWorkScope::query()->count();
+
     $this->from(route('operations.repair-orders.show', $repairOrder))
         ->patch(route('operations.repair-orders.lines.procurement.update', [$repairOrder, $added]), [
             'procurement_state' => PartProcurementState::Installed->value,
         ])
-        ->assertSessionHas('error');
+        ->assertRedirect()
+        ->assertSessionMissing('error');
 
-    expect($added->fresh()->procurement_state)->not->toBe(PartProcurementState::Installed);
+    expect($added->fresh()->procurement_state)->toBe(PartProcurementState::Installed)
+        ->and($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and(ApprovedWorkScope::query()->count())->toBe($scopesBefore)
+        ->and(app(WorkCompletionAuthorization::class)->customerApprovalCovers($added->fresh(['concern'])))->toBeFalse()
+        ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($approvedBefore);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Caliper', false)
+        ->assertSee('Needs authorization', false);
 
     approveConcern($repairOrder, $concern->fresh(), $advisor);
 
@@ -117,14 +129,74 @@ test('an approved concern installs only the lines in that approval and keeps app
         ->assertOk()
         ->assertSee('Caliper', false)
         ->assertDontSee('Needs authorization');
+});
 
-    $added->update(['procurement_state' => PartProcurementState::Received]);
+test('known issue #66: raising an approved line above the customer approval still counts it as approved', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
 
-    $this->patch(route('operations.repair-orders.lines.procurement.update', [$repairOrder, $added]), [
-        'procurement_state' => PartProcurementState::Installed->value,
-    ])->assertRedirect();
+    $approval = app(RecordCustomerAuthorizationAction::class)->execute(
+        repairOrder: $repairOrder,
+        approvalType: ApprovalType::Repair,
+        source: ApprovalSource::Portal,
+        approvedBy: 'Paul Howell',
+        approvedAmountCents: null,
+        notes: null,
+        concernDispositions: [$concern->id => RepairOrderConcernDisposition::Approved->value],
+        actor: $advisor,
+    );
 
-    expect($added->fresh()->procurement_state)->toBe(PartProcurementState::Installed);
+    $calculator = app(EstimateTotalsCalculator::class);
+    $approvedAtApproval = $calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents();
+    expect($approval->approved_amount_cents)->toBe($approvedAtApproval);
+
+    $part->update(['quantity' => '2.00']);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+
+    $coverage = app(WorkCompletionAuthorization::class);
+
+    // Current behavior. Fixing #66 flips these: the increase must stop counting as customer-approved.
+    expect($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBeGreaterThan($approval->fresh()->approved_amount_cents)
+        ->and($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())->toBeGreaterThan($approval->fresh()->approved_amount_cents)
+        ->and($approval->fresh()->approved_amount_cents)->toBe($approvedAtApproval)
+        ->and($coverage->customerApprovalCovers($part->fresh(['concern'])))->toBeTrue()
+        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->not->toContain($part->id);
+});
+
+test('labor added after approval does not block completion or a finished status and stays unresolved', function () {
+    $advisor = integrityAdvisor();
+    allowEstimateToQualityCheck();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $this->actingAs($advisor);
+
+    approveConcern($repairOrder, $concern, $advisor);
+    $approvedBefore = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents();
+    $scopesBefore = ApprovedWorkScope::query()->count();
+    $added = addLabor($repairOrder, $concern);
+
+    $this->from(route('operations.repair-orders.show', $repairOrder))
+        ->patch(route('operations.repair-orders.concerns.production-status', [$repairOrder, $concern]), [
+            'production_status' => ScopeProductionStatus::Completed->value,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($concern->fresh()->productionStatus())->toBe(ScopeProductionStatus::Completed);
+
+    $this->from(route('operations.repair-orders.show', $repairOrder))
+        ->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+            'status' => RepairOrderStatus::QualityCheck->value,
+        ])
+        ->assertSessionHasNoErrors();
+
+    $coverage = app(WorkCompletionAuthorization::class);
+
+    expect($repairOrder->fresh()->status->value)->toBe(RepairOrderStatus::QualityCheck->value)
+        ->and($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
+        ->and(ApprovedWorkScope::query()->count())->toBe($scopesBefore)
+        ->and($coverage->lineCovered($added->fresh(['concern'])))->toBeFalse()
+        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->toContain($added->id)
+        ->and(collect(app(UnresolvedAuthorizationReport::class)->rows())->pluck('line_id')->all())->toContain($added->id)
+        ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($approvedBefore);
 });
 
 test('a diagnostic exception covers only the selected lines and does not approve the concern', function () {
@@ -292,6 +364,7 @@ test('customer portal approval covers the lines present and not a line added aft
 
     expect($part->fresh()->procurement_state)->toBe(PartProcurementState::Installed);
 
+    $approvedCents = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents();
     $added = addPart($repairOrder, $concern, 'Caliper added after approval');
     $added->update(['procurement_state' => PartProcurementState::Received]);
 
@@ -300,10 +373,11 @@ test('customer portal approval covers the lines present and not a line added aft
         ->patch(route('operations.repair-orders.lines.procurement.update', [$repairOrder, $added]), [
             'procurement_state' => PartProcurementState::Installed->value,
         ])
-        ->assertSessionHas('error');
+        ->assertSessionMissing('error');
 
-    expect($added->fresh()->procurement_state)->toBe(PartProcurementState::Received)
-        ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBeGreaterThan(0);
+    expect($added->fresh()->procurement_state)->toBe(PartProcurementState::Installed)
+        ->and(app(WorkCompletionAuthorization::class)->customerApprovalCovers($added->fresh(['concern'])))->toBeFalse()
+        ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($approvedCents);
 });
 
 test('warranty billing posture does not authorize installation', function () {
@@ -404,7 +478,7 @@ test('a stored recommended concern with installed parts is reported and not rewr
         ->expectsOutputToContain('Nothing on these repair orders was changed.');
 });
 
-test('partial approval installs the approved concern and leaves the other concern recommended', function () {
+test('partial approval installs the approved concern and added work, and leaves the other concern recommended', function () {
     $advisor = integrityAdvisor();
     [$repairOrder, $approvedConcern, $approvedPart] = integrityRepairOrder();
     $openConcern = addConcern($repairOrder, 'Rear brakes');
@@ -452,7 +526,7 @@ test('partial approval installs the approved concern and leaves the other concer
         ->patch(route('operations.repair-orders.lines.procurement.update', [$repairOrder, $added]), [
             'procurement_state' => PartProcurementState::Installed->value,
         ])
-        ->assertSessionHas('error');
+        ->assertSessionMissing('error');
 
     $repairOrder->update(['status' => RepairOrderStatus::InProgress]);
 
@@ -463,7 +537,7 @@ test('partial approval installs the approved concern and leaves the other concer
 
     expect($approvedPart->fresh()->procurement_state)->toBe(PartProcurementState::Installed)
         ->and($openPart->fresh()->procurement_state)->toBe(PartProcurementState::Received)
-        ->and($added->fresh()->procurement_state)->toBe(PartProcurementState::Received)
+        ->and($added->fresh()->procurement_state)->toBe(PartProcurementState::Installed)
         ->and($approvedConcern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
         ->and($openConcern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
         ->and($repairOrder->fresh()->status->value)->toBe(RepairOrderStatus::QualityCheck->value)
