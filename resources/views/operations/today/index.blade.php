@@ -110,9 +110,14 @@
     $headlineDate = $dashboard === null
         ? ''
         : \Illuminate\Support\Carbon::parse($dashboard->asOfDate)->format('l, F j');
-    $statusColor = fn (string $key): string => \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
-        \App\Ark\Operations\RepairOrders\RepairOrderStatus::tryFrom($key)?->indexTone() ?? 'move',
-    );
+    // Tabler's dark matches the dark theme's card, so a status in the closed tone would vanish from the bar and legend.
+    $statusColor = function (string $key): string {
+        $color = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
+            \App\Ark\Operations\RepairOrders\RepairOrderStatus::tryFrom($key)?->indexTone() ?? 'move',
+        );
+
+        return $color === 'dark' ? 'secondary' : $color;
+    };
     $cardColors = [
         'estimate' => $statusColor($estimateKey),
         'decision' => $statusColor($decisionKey),
