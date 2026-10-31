@@ -282,7 +282,7 @@ test('the customer portal shows changed approved work as waiting for approval', 
         ->assertDontSee('data-approved-work-awaiting-approval', false);
 });
 
-test('approvals recorded before line amounts were kept do not flag a price change', function () {
+test('a raise on an approval recorded before line amounts were kept waits for authorization', function () {
     [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
 
     ApprovedWorkScope::query()->toBase()->update(['approved_lines' => null]);
@@ -291,8 +291,9 @@ test('approvals recorded before line amounts were kept do not flag a price chang
 
     $repairOrder = $repairOrder->fresh(['concerns', 'lines.concern']);
 
-    expect(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder))->toHaveCount(0)
-        ->and(app(WorkCompletionAuthorization::class)->approvedLinesRemoved($repairOrder))->toBe([]);
+    expect(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder)->pluck('id')->all())->toBe([$labor->id])
+        ->and(app(WorkCompletionAuthorization::class)->approvedLinesRemoved($repairOrder))->toBe([])
+        ->and(ApprovedWorkScope::query()->whereNotNull('approved_lines')->exists())->toBeFalse();
 });
 
 test('recording approval for added work keeps a repair order in progress', function () {

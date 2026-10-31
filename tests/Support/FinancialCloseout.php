@@ -5,6 +5,7 @@ use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\GenerateInvoiceSnapshotAction;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\RepairOrders\RecordApprovedWorkScopeAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
@@ -161,4 +162,12 @@ function zeroBalanceCourtesyRepairOrder(
     app(EstimateTotalsCalculator::class)->recalculateRepairOrder($repairOrder->fresh());
 
     return $repairOrder->fresh();
+}
+
+/** Records approval of the current amounts on the repair order's approved concerns, as an approval does. */
+function approveCurrentAmounts(RepairOrder $repairOrder): void
+{
+    $repairOrder->fresh(['concerns'])->concerns
+        ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved)
+        ->each(fn (RepairOrderConcern $concern) => app(RecordApprovedWorkScopeAction::class)->execute($concern));
 }

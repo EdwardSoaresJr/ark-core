@@ -109,7 +109,13 @@ class RepairOrderLine extends Model
             'standing_discount_cents' => 'integer',
             'total_cents' => 'integer',
             'is_overridden' => 'boolean',
+            'legacy_approved_amounts' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(fn (self $line) => LegacyApprovalCeiling::captureBeforeIncrease($line));
     }
 
     protected function description(): Attribute

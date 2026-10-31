@@ -169,7 +169,7 @@ class EstimateTotalsCalculator
         $repairOrder->loadMissing(['lines.concern']);
         $authorization = app(WorkCompletionAuthorization::class);
         $coveredLaborAndParts = $authorization->customerApprovedLaborAndPartIdSet($repairOrder);
-        $approvedSubtotals = $authorization->approvedSubtotalsBeforeIncrease($repairOrder);
+        $approvedBeforeIncrease = $authorization->approvedLinesBeforeIncrease($repairOrder);
         $settings = ShopSettings::current();
 
         return $repairOrder->lines
@@ -184,10 +184,32 @@ class EstimateTotalsCalculator
 
                 return true;
             })
-            ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($approvedSubtotals[(int) $line->id])
-                ? $this->approvedPortionOfLine($line, $approvedSubtotals[(int) $line->id], $settings)
+            ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($approvedBeforeIncrease[(int) $line->id])
+                ? $this->approvedCopyOfLine($line, $approvedBeforeIncrease[(int) $line->id], $settings)
                 : $line)
             ->values();
+    }
+
+    /**
+     * An unsaved copy of a raised approved line at what the customer approved. When the approval
+     * kept every priced amount, the copy carries exactly those; otherwise it is the prorated portion.
+     *
+     * @param  array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}  $approved
+     */
+    public function approvedCopyOfLine(RepairOrderLine $line, array $approved, ?ShopSettings $settings = null): RepairOrderLine
+    {
+        if ($approved['amounts'] === null) {
+            return $this->approvedPortionOfLine($line, $approved['subtotal_cents'], $settings);
+        }
+
+        if ((int) $line->total_cents <= $approved['amounts']['total_cents']) {
+            return $line;
+        }
+
+        $copy = clone $line;
+        $copy->setRawAttributes([...$line->getAttributes(), ...$approved['amounts']]);
+
+        return $copy;
     }
 
     /**

@@ -166,6 +166,21 @@ final class WorkCompletionAuthorization
      */
     public function approvedSubtotalsBeforeIncrease(RepairOrder $repairOrder): array
     {
+        return array_map(
+            fn (array $approved): int => $approved['subtotal_cents'],
+            $this->changesSinceApproval($repairOrder)['increased'],
+        );
+    }
+
+    /**
+     * The approved record of each raised line: its approved subtotal and, when the approval
+     * kept them, every priced amount. A line on an approval that kept no amounts is held to
+     * its amounts from just before its first raise (LegacyApprovalCeiling).
+     *
+     * @return array<int, array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}>
+     */
+    public function approvedLinesBeforeIncrease(RepairOrder $repairOrder): array
+    {
         return $this->changesSinceApproval($repairOrder)['increased'];
     }
 
@@ -195,13 +210,13 @@ final class WorkCompletionAuthorization
      */
     public function pendingApprovalCents(RepairOrder $repairOrder, RepairOrderLine $line): int
     {
-        $approvedSubtotal = $this->approvedSubtotalsBeforeIncrease($repairOrder)[(int) $line->id] ?? null;
+        $approved = $this->approvedLinesBeforeIncrease($repairOrder)[(int) $line->id] ?? null;
 
-        if ($approvedSubtotal === null) {
+        if ($approved === null) {
             return (int) $line->total_cents;
         }
 
-        $approvedPortion = app(EstimateTotalsCalculator::class)->approvedPortionOfLine($line, $approvedSubtotal);
+        $approvedPortion = app(EstimateTotalsCalculator::class)->approvedCopyOfLine($line, $approved);
 
         return max(0, (int) $line->total_cents - (int) $approvedPortion->total_cents);
     }
@@ -215,13 +230,28 @@ final class WorkCompletionAuthorization
             ->sum(fn (RepairOrderLine $line): int => $this->pendingApprovalCents($repairOrder, $line));
     }
 
+    /**
+     * With every amount on file, any rise in what the line bills is a raise: price and quantity,
+     * and also tax, shop fee, or discount. An entry with only a subtotal compares the subtotal.
+     *
+     * @param  array{subtotal_cents: int, amounts: array{total_cents: int}|null}  $approved
+     */
+    private function raisedAboveApproval(RepairOrderLine $line, array $approved): bool
+    {
+        if ($approved['amounts'] !== null) {
+            return (int) $line->total_cents > $approved['amounts']['total_cents'];
+        }
+
+        return $this->approvalSubtotalCents($line) > $approved['subtotal_cents'];
+    }
+
     public function approvalSubtotalCents(RepairOrderLine $line): int
     {
         return app(EstimateTotalsCalculator::class)->lineTotalCents($line->quantity ?? 0, (int) $line->unit_price_cents);
     }
 
     /**
-     * @return array{increased: array<int, int>, removed: list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>, concern_ids: list<int>}
+     * @return array{increased: array<int, array{subtotal_cents: int, amounts: array<string, int|string>|null}>, removed: list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>, concern_ids: list<int>}
      */
     private function changesSinceApproval(RepairOrder $repairOrder): array
     {
@@ -268,10 +298,16 @@ final class WorkCompletionAuthorization
                         continue;
                     }
 
-                    $approved = $scopes->get($concernId)?->approvedLines()[(int) $line->id] ?? null;
+                    $scope = $scopes->get($concernId);
+                    $approved = $scope?->approvedLines()[(int) $line->id] ?? null;
 
-                    if ($approved !== null && $this->approvalSubtotalCents($line) > $approved['subtotal_cents']) {
-                        $increased[(int) $line->id] = $approved['subtotal_cents'];
+                    if ($approved === null && $scope?->approved_lines === null && is_array($line->legacy_approved_amounts)) {
+                        $ceiling = ApprovedWorkScope::recordedAmounts($line->legacy_approved_amounts);
+                        $approved = $ceiling === null ? null : ['subtotal_cents' => $ceiling['subtotal_cents'], 'amounts' => $ceiling];
+                    }
+
+                    if ($approved !== null && $this->raisedAboveApproval($line, $approved)) {
+                        $increased[(int) $line->id] = ['subtotal_cents' => $approved['subtotal_cents'], 'amounts' => $approved['amounts']];
                         $changed[$concernId] = true;
                     }
                 }

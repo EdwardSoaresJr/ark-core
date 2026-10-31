@@ -57,8 +57,9 @@ class ApprovedWorkScope extends Model
 
     /**
      * What the customer approved on each line. Empty for scopes recorded before amounts were kept.
+     * `amounts` holds every priced amount the line carried at approval; null for entries that kept only the subtotal.
      *
-     * @return array<int, array{id: int, description: string, customer_description: string, subtotal_cents: int}>
+     * @return array<int, array{id: int, description: string, customer_description: string, subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}>
      */
     public function approvedLines(): array
     {
@@ -74,9 +75,31 @@ class ApprovedWorkScope extends Model
                 'description' => (string) ($line['description'] ?? ''),
                 'customer_description' => (string) ($line['customer_description'] ?? ''),
                 'subtotal_cents' => (int) $line['subtotal_cents'],
+                'amounts' => self::recordedAmounts($line),
             ];
         }
 
         return $lines;
+    }
+
+    /**
+     * @param  array<string, mixed>  $line
+     * @return array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null
+     */
+    public static function recordedAmounts(array $line): ?array
+    {
+        if (! isset($line['total_cents'], $line['quantity'], $line['unit_price_cents'])) {
+            return null;
+        }
+
+        return [
+            'quantity' => (string) $line['quantity'],
+            'unit_price_cents' => (int) $line['unit_price_cents'],
+            'subtotal_cents' => (int) $line['subtotal_cents'],
+            'standing_discount_cents' => (int) ($line['standing_discount_cents'] ?? 0),
+            'shop_fee_cents' => (int) ($line['shop_fee_cents'] ?? 0),
+            'tax_cents' => (int) ($line['tax_cents'] ?? 0),
+            'total_cents' => (int) $line['total_cents'],
+        ];
     }
 }
