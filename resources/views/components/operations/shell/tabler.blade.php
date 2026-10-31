@@ -124,7 +124,7 @@
 
     <div class="page-wrapper">
         <header class="navbar navbar-expand d-print-none">
-            <div class="container-xl gap-2">
+            <div class="container-fluid gap-2">
                 @if ($showTopbarCommsStrip)
                     <div class="navbar-nav d-lg-none">
                         <div class="nav-item dropdown">
@@ -190,7 +190,7 @@
         </div>
 
         @if ($learnTrainingSnooze || session('learn_snoozed'))
-            <div class="container-xl pt-3">
+            <div class="container-fluid pt-3">
                 <div class="alert alert-info mb-0" role="status">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <div class="flex-fill">

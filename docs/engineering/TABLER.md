@@ -41,15 +41,57 @@ Known differences inside `.ark-legacy`:
 - Toasts are appended to `<body>` by `ark-ops-toast.js`, outside the wrapper.
 - The demo-install bar is not wrapped.
 
+## Workspace layouts
+
+Every migrated view picks one layout. `layout` is required, and an unknown value throws:
+
+```blade
+<x-tabler.page layout="fluid" title="Customers" pretitle="Records" subtitle="…">
+    <x-slot:actions>…</x-slot:actions>
+    …
+</x-tabler.page>
+```
+
+`<x-tabler.page>` renders the page header and body with the same container, so they always align. The shell header and banners are `container-fluid` on every Tabler page.
+
+| Layout | Container | Use for |
+| --- | --- | --- |
+| `fluid` | `container-fluid` | Lists and indexes: customers, vehicles, repair orders, reports. |
+| `focused` | `container-narrow` (61.875rem) | Account forms, settings, onboarding: one column of reading or input. |
+| `split` | `container-fluid`; the body fills the remaining height (`d-flex flex-column flex-fill`) | Multi-panel workspaces: communications, customer hub. The slot is one `.row` of panels; each panel is a `.card` that scrolls on its own. |
+| `canvas` | `container-fluid px-0`; the body fills the remaining height with no bottom margin | Boards and grids that manage their own spacing: schedule, job board, inspections. |
+
+All four use Tabler's page padding (`--tblr-page-padding`: 1rem from `lg`, 0.5rem below).
+
+`split` and `canvas` are defined but have no migrated view yet. The first view of each kind confirms the height behavior and updates this table.
+
+Sign-in, password reset, and first-run setup are not in the staff shell. When they migrate they use Tabler's `page-center` with `container-tight` (32rem) in the guest layout.
+
+### Record card grid
+
+Fluid lists of record cards use `.ark-card-grid` instead of `.row.row-cards` with `col-*` classes. It adds columns as the workspace widens. With two or more columns each card is between 17rem and about 26rem wide; with one column, on phones, the card fills the width:
+
+| Viewport | Columns | Card width |
+| --- | --- | --- |
+| 390 | 1 | 374px |
+| 820 | 2 | 398px |
+| 1440 | 4 | 276px |
+| 1920 | 5 | 314px |
+| 2560 | 7 | 311px |
+
+Bootstrap's breakpoints end at 1400px, so `col-*` classes give the same column count at 1440 and 2560. `.ark-card-grid` uses `auto-fill`, not the `auto-fit` of Tabler's `.datagrid`, so a single result stays one column wide. Set `--ark-card-min-width` on the grid if a card needs a different minimum. It is the only layout rule in `tabler.css`.
+
+Filter rows on fluid pages switch fields to their natural width from `xxl` (`col-xxl-auto`) so they do not stretch across an ultrawide screen. The search input takes the remaining width.
+
 ## Conventions for a migrated view
 
-- Markup is Tabler's. No `ops-*` classes, no Tailwind utilities, and no new CSS. `tabler.css` holds theme tokens and coexistence rules only.
-- Page: `<x-tabler.page-header>` with an `actions` slot, then `.page-body > .container-xl`.
+- Markup is Tabler's. No `ops-*` classes, no Tailwind utilities, and no new CSS. `tabler.css` holds theme tokens, coexistence rules, and `.ark-card-grid`.
+- Page: `<x-tabler.page layout="…">` with an `actions` slot. See "Workspace layouts".
 - Forms: `.form-label`, `.form-control`, `.form-select`, `.input-icon`. Native `type="date"`. Keep field `name`s and `id`s.
 - Buttons: `.btn`, `.btn-primary` for the one main action, `.btn-ghost-secondary` for Clear, grouped in `.btn-list`.
 - Icons: `<x-tabler.icon name="…">`. Add an icon by copying its paths from the `@tabler/icons` outline set into that component.
 - Repair-order status: `<x-tabler.status-badge :tone="$status->indexTone()">` and `RepairOrderStatusColor::tablerColorForChipTone()` for `card-status-start`. Colors follow the shop's configured status colors.
-- Lists: `.row.row-cards` of `.card.card-sm`, or a `.card` with `.table-responsive`. Empty results use `.empty`.
+- Lists: `.ark-card-grid` of `.card.card-sm`, or a `.card` with `.table-responsive`. Empty results use `.empty`.
 - Pagination: `$paginator->links('pagination::bootstrap-5')`.
 - Tooltips, dropdowns, collapse, and modals use Tabler's `data-bs-*` attributes. Do not add Alpine or Preline for those.
 - Business logic, routes, permissions, and query parameters do not change. The controller is not touched.
@@ -61,7 +103,7 @@ Design the phone layout first, not as a squeezed desktop.
 - The primary task is on screen without scrolling. On a search page that is the search box, its button, and the first result.
 - Secondary filters sit in a `.collapse.d-md-block` panel behind a "Filters" toggle that is `d-md-none`. The panel opens on load when a filter is active, and the toggle shows the active count.
 - Labels that repeat a placeholder are `d-none d-md-block`. The input then carries an `aria-label`.
-- Page subtitles are hidden below `md` by `<x-tabler.page-header>`.
+- Page subtitles are hidden below `md` by `<x-tabler.page>`.
 - Secondary header actions are icon-only below `sm`: a labelled `.btn.d-none.d-sm-inline-flex` plus a `.btn.btn-icon.d-sm-none` with `aria-label`. The primary action keeps its label.
 - Card bodies and search cards use `p-2 p-md-3`. Touch targets stay at Tabler's default button size.
 
@@ -70,7 +112,7 @@ Design the phone layout first, not as a squeezed desktop.
 1. Record its current behavior and the legacy classes it uses (below).
 2. Migrate the Blade view only.
 3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior.
-4. Check 1440, 820, and 390 wide, light and dark: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search.
+4. Check 390, 820, 1440, 1920, and 2560 wide, light and dark, for horizontal overflow and stretched content: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search.
 5. List what still depends on `app.css`.
 6. Stop for review before the next view.
 
@@ -82,6 +124,6 @@ Chosen first: read-only, no money, used daily, and it covers a filter form, a da
 
 Before: `ops-index`, `ops-board-shell`, `ops-page-toolbar`, `ops-page-link`, `ops-index-filters`, `ops-index-field`, `ops-index-btn`, `ops-date-field`, `ops-ro-retrieval-grid`, `ops-job-card*`, `ops-ro-card--{tone}`, `ops-status-chip--{tone}`, `ops-index-empty`, and the Tailwind pagination view.
 
-After: Tabler only. On a 390px phone the first result starts about 350px down instead of about 790px: Type, From, and To collapse behind "Filters", the subtitle is hidden, and Vehicles and Workboard are icon buttons. Unchanged: query parameters (`q`, `type`, `created_from`, `created_to`, `intake`), intake links, the Check In permission, 24 per page, and every card link.
+After: Tabler only, `fluid` layout with `.ark-card-grid`. On a 390px phone the first result starts about 350px down instead of about 790px: Type, From, and To collapse behind "Filters", the subtitle is hidden, and Vehicles and Workboard are icon buttons. Unchanged: query parameters (`q`, `type`, `created_from`, `created_to`, `intake`), intake links, the Check In permission, 24 per page, and every card link.
 
 Still on `app.css`: the shell components listed under "Legacy components on a Tabler page". The vehicle search view still uses `x-operations.date-field` and `operations.partials.index-card-actions`; the Tabler counterparts are native date inputs and `operations.partials.tabler-index-card-actions`.
