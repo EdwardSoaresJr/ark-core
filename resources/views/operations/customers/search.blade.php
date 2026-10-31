@@ -9,14 +9,14 @@
                 <x-tabler.icon name="car" />
                 Vehicles
             </a>
-            <a href="{{ route('operations.vehicles.search') }}" class="btn btn-icon d-sm-none" title="Vehicles" aria-label="Vehicles">
+            <a href="{{ route('operations.vehicles.search') }}" class="btn btn-icon d-sm-none" title="Vehicles" aria-label="Vehicles" data-bs-toggle="tooltip">
                 <x-tabler.icon name="car" />
             </a>
             <a href="{{ route('operations.workboard') }}" class="btn d-none d-sm-inline-flex">
                 <x-tabler.icon name="layout-grid" />
                 Workboard
             </a>
-            <a href="{{ route('operations.workboard') }}" class="btn btn-icon d-sm-none" title="Workboard" aria-label="Workboard">
+            <a href="{{ route('operations.workboard') }}" class="btn btn-icon d-sm-none" title="Workboard" aria-label="Workboard" data-bs-toggle="tooltip">
                 <x-tabler.icon name="layout-grid" />
             </a>
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)

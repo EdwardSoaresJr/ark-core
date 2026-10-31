@@ -117,6 +117,14 @@ test('customer filters stay collapsed on phones until one is active', function (
         ->assertSee('aria-expanded="true"', false);
 });
 
+test('icon-only header actions keep an accessible name and a tooltip', function (): void {
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.customers.search'))
+        ->assertOk()
+        ->assertSee('class="btn btn-icon d-sm-none" title="Vehicles" aria-label="Vehicles" data-bs-toggle="tooltip"', false)
+        ->assertSee('class="btn btn-icon d-sm-none" title="Workboard" aria-label="Workboard" data-bs-toggle="tooltip"', false);
+});
+
 test('the Tabler account menu keeps profile, theme, and sign out', function (): void {
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.customers.search'))
