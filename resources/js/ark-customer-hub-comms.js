@@ -36,12 +36,6 @@ export function arkCustomerHubComms(config = {}) {
             return this.filter === name;
         },
 
-        filterClass(name) {
-            return this.isActive(name)
-                ? 'ops-state-pill border-slate-800 bg-slate-900 text-white'
-                : 'ops-state-pill border-slate-300 bg-white text-slate-700 hover:border-slate-400';
-        },
-
         matches(rowFilter) {
             return this.filter === 'all' || this.filter === rowFilter;
         },

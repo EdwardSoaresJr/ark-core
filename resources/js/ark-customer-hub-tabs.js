@@ -100,11 +100,5 @@ export function arkCustomerHubTabs(initialTab = 'vehicles') {
         selectTab(name) {
             this.tab = name;
         },
-
-        tabClass(name) {
-            return this.tab === name
-                ? 'ops-report-tab ops-report-tab--active'
-                : 'ops-report-tab';
-        },
     };
 }

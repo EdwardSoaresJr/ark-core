@@ -26,40 +26,12 @@
 }
 
 /*
- * Unmigrated components on a Tabler page sit inside .ark-legacy. They were built on Tailwind preflight, not Bootstrap reboot.
- * Element-level specificity matches both resets, so the components' own classes still win.
+ * Unmigrated components on a Tabler page sit inside .ark-legacy. postcss-exclude-legacy-islands.js keeps every
+ * Tabler rule out of them, so app.css styles them alone. They were built on a 16px body, not Tabler's 14px.
  */
-:where(.ark-legacy) {
+.ark-legacy {
     font-size: 1rem;
     line-height: 1.5;
-}
-
-:where(.ark-legacy) :is(h1, h2, h3, h4, h5, h6) {
-    margin: 0;
-    font-size: inherit;
-    font-weight: inherit;
-    line-height: inherit;
-}
-
-:where(.ark-legacy) :is(p, blockquote, dl, dd, figure, pre, hr) {
-    margin: 0;
-}
-
-:where(.ark-legacy) :is(ol, ul, menu) {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-:where(.ark-legacy) a,
-:where(.ark-legacy) a:hover {
-    color: inherit;
-    text-decoration: inherit;
-}
-
-:where(.ark-legacy) label {
-    display: inline;
-    margin: 0;
 }
 
 /*

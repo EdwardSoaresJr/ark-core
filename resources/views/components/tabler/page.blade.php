@@ -1,4 +1,4 @@
-@props(['layout', 'title' => null, 'pretitle' => null, 'subtitle' => null])
+@props(['layout', 'title' => null, 'pretitle' => null, 'subtitle' => null, 'actionsLabel' => null, 'stackActions' => false])
 
 @php
     // Workspace layouts are defined in docs/engineering/TABLER.md#workspace-layouts.
@@ -14,7 +14,7 @@
     <div class="page-header d-print-none">
         <div class="{{ $container }}">
             <div class="row g-2 align-items-center">
-                <div class="col">
+                <div @class(['col', 'col-12 col-md' => $stackActions])>
                     @if (filled($pretitle))
                         <div class="page-pretitle">{{ $pretitle }}</div>
                     @endif
@@ -24,8 +24,8 @@
                     @endif
                 </div>
                 @isset($actions)
-                    <div class="col-auto ms-auto d-print-none">
-                        <div class="btn-list">
+                    <div @class(['col-auto ms-auto d-print-none' => ! $stackActions, 'col-12 col-md-auto ms-md-auto d-print-none' => $stackActions])>
+                        <div class="btn-list" @if (filled($actionsLabel)) role="group" aria-label="{{ $actionsLabel }}" @endif>
                             {{ $actions }}
                         </div>
                     </div>

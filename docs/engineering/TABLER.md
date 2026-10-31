@@ -33,13 +33,20 @@ Merging them means rendering the legacy rail from the shared definition too, whi
 
 These are not migrated yet and render inside `.ark-legacy`: channel strip (`lg` and up), workstation presence and station lock, workspace tabs, comms pressure bar, comms interrupt panel, global search, image lightbox, guide modal, call queue, print helpers, and the repair-order orientation dock.
 
-`.ark-legacy` restores the Tailwind preflight element defaults those components were built on. When a component migrates, remove its wrapper. When none remain, stop loading `app.css` on Tabler pages and delete the coexistence rules in `tabler.css`.
+Tabler's CSS never applies inside `.ark-legacy`. The build (`resources/css/postcss-exclude-legacy-islands.js`) appends `:not(.ark-legacy *)` to the subject of every rule in `tabler.css`, before any pseudo-element, so `app.css` styles an island alone. This matters because the two stylesheets share class names with different meanings: Tabler's `.grid` is a 12-column grid that overrode Tailwind's `md:grid-cols-2` in the hub's edit forms. `tabler.css` only sets the island's 16px base font size, which the legacy components were built on. When a component migrates, remove its wrapper. When none remain, stop loading `app.css` on Tabler pages, delete the plugin and the coexistence rules in `tabler.css`.
+
+Legacy components assume a white workspace surface. An island inside a Tabler card adds `bg-white text-dark` (`app.css` utilities), so it stays readable when the card is dark.
 
 Known differences inside `.ark-legacy`:
 
-- Tabler's `a:hover` outranks a single-class legacy link color on hover.
 - Toasts are appended to `<body>` by `ark-ops-toast.js`, outside the wrapper.
 - The demo-install bar is not wrapped.
+
+## Building and checking assets
+
+Check migrated views against `npm run build` output, not only the Vite dev server. Herd starts the dev server and writes `public/hot`, which serves unminified CSS; delete `public/hot` to load `public/build`.
+
+`vite.config.js` excludes the `light-dark()` feature from the CSS minifier. Its polyfill resolves `light-dark()` once at `:root`, so Tabler's dark sidebar (`data-bs-theme="dark"` inside a light page) rendered white text on a white background in built assets. Do not remove the exclusion.
 
 ## Workspace layouts
 
@@ -56,9 +63,9 @@ Every migrated view picks one layout. `layout` is required, and an unknown value
 
 | Layout | Container | Use for |
 | --- | --- | --- |
-| `fluid` | `container-fluid` | Lists and indexes: customers, vehicles, repair orders, reports. |
+| `fluid` | `container-fluid` | Lists, indexes, and record pages that scroll as one document: customers, vehicles, the customer hub, repair orders, reports. |
 | `focused` | `container-narrow` (61.875rem) | Account forms, settings, onboarding: one column of reading or input. |
-| `split` | `container-fluid`; the body fills the remaining height (`d-flex flex-column flex-fill`) | Multi-panel workspaces: communications, customer hub. The slot is one `.row` of panels; each panel is a `.card` that scrolls on its own. |
+| `split` | `container-fluid`; the body fills the remaining height (`d-flex flex-column flex-fill`) | Multi-panel workspaces where panels scroll independently: communications. The slot is one `.row` of panels; each panel is a `.card` that scrolls on its own. |
 | `canvas` | `container-fluid px-0`; the body fills the remaining height with no bottom margin | Boards and grids that manage their own spacing: schedule, job board, inspections. |
 
 All four use Tabler's page padding (`--tblr-page-padding`: 1rem from `lg`, 0.5rem below).
@@ -99,8 +106,8 @@ Build record pages from these. Do not copy their markup into a view.
 
 | Component | Renders |
 | --- | --- |
-| `<x-tabler.page layout="…">` | Page header and body in the layout's container. |
-| `<x-tabler.page-action :href icon label [primary]>` | A header button. Secondary actions add an icon-only twin with a tooltip below `sm`. |
+| `<x-tabler.page layout="…" [actions-label] [stack-actions]>` | Page header and body in the layout's container. `actions-label` names the action group for assistive technology. `stack-actions` moves the actions below the title on phones, for record pages whose title is a long name. |
+| `<x-tabler.page-action [href] icon label [primary]>` | A header button. Without `href` it is a `<button>`; pass its behavior as attributes, for example `x-on:click`. Secondary actions add an icon-only twin with a tooltip below `sm`. |
 | `<x-tabler.search-filters id action query placeholder label clear-url has-filters active-filter-count>` | The search card: search box and button, the phone Filters toggle and count, and the collapsible filter row. The slot holds the filter columns; an optional `hidden` slot holds hidden inputs. Field ids are `{id}-search` and `{id}-filters`. |
 | `<x-tabler.record-card :tone :actions>` | A `.card-sm` with the status color bar, the slot as its body, and the open-in icon row from `operations.partials.tabler-index-card-actions`. |
 | `<x-tabler.empty-state icon clear-url>` | The empty result, with "Clear search" when `clear-url` is set. |
@@ -152,3 +159,27 @@ Before: the same `ops-*` index classes as Customers, plus `ops-index-card-chips`
 After: Tabler only, `fluid` layout with `.ark-card-grid`. Unchanged: query parameters (`q`, `work`, `created_from`, `created_to`), the controller, 24 per page, the Check In permission, the vehicle/documents/customer/RO links, and the "VIN missing" chip and its hint.
 
 Still on `app.css`: the shell components. `x-operations.date-field`, `operations.partials.index-card-actions`, and the vehicle identity chip partial are still used by unmigrated views.
+
+### Customer hub (`operations.customers.show`)
+
+Chosen third: the first record page, with tabs, deep links, inline forms, a modal, and permission-gated commands.
+
+Layout: `fluid`, not `split`. The hub is one record read top to bottom, and its tabs hold long lists and forms; panels that scroll on their own would hide the page's length and trap scrolling on phones. From `xl` the profile is a column beside the tab card (`col-xl-4 col-xxl-3`); below `xl` it sits above, with the contact and open-RO cards side by side from `md`. The header uses `stack-actions`, so on a 390px phone the name keeps one line and Call, Text, Schedule, and Edit are 40px icon buttons beside the labelled Create RO.
+
+Before: `ops-hub-layout`, `ops-hub-profile`, `ops-report-tab`, `ops-hub-tab-*`, `ops-workspace`, `ops-section-label`, `ops-hub-vehicle-*`, `ops-ro-card`, `ops-status-chip--{tone}`, `ops-index-btn`, and Tailwind layout utilities.
+
+Migrated to Tabler:
+
+- Page header and commands: Call, Text, Schedule, Edit Customer, Create RO (`x-tabler.page-action`, `CustomersManage`).
+- Status message: `alert alert-success`.
+- Profile card: type, referral, vehicle and visit counts, phone, email, Messenger, contact preference and active-RO badges, notes with Show more.
+- Open repair orders card: up to three open ROs and "View all".
+- Tab navigation: Work, Vehicles, Comms, History, Documents with counts (`nav-tabs card-header-tabs`).
+- Vehicles tab: the fleet `.ark-card-grid`, each card's posture, recommendation, identity, active RO or last visit, notes, future work, RO links, the Start RO form, and Schedule, Start RO, Edit Vehicle, and Remove Vehicle with its confirmation.
+- History tab: the operational timeline per vehicle (collapsible) and the service history list with `x-tabler.status-badge`.
+- Documents tab: Add Document, the search and type filter, and an empty state.
+- Comms tab: header and the All, Text, Email, Messenger, Portal, Logged filters (`aria-pressed`).
+
+Unchanged: the controller, routes, permissions, tab and deep-link parameters (`tab`, `vehicle`, `compose`, `doc_q`, `doc_type`, the `#customer-*` and `#vehicle-*` anchors), form field names, and the Alpine state in `ark-customer-hub-tabs.js` and `ark-customer-hub-comms.js`.
+
+Still on `app.css`, in `.ark-legacy`: the workspace modal and its customer, vehicle, and document forms (`hub-workspace-modal`), the conversation context and advisor work panels on the Work tab, the reply composer and message rows on the Comms tab, the document list, the operational journey card, and the VIN display. All are shared with unmigrated views. The VIN display's muted prefix has low contrast in dark mode.

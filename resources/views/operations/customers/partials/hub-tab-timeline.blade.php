@@ -3,44 +3,42 @@
 @endphp
 
 @if ($hasTimelineEntries)
-    <div class="divide-y divide-slate-100">
-        @foreach ($customer->vehicles as $vehicle)
-            @php
-                $vehicleTimeline = $vehicleTimelineEntries->get($vehicle->id, collect());
-            @endphp
+    @foreach ($customer->vehicles as $vehicle)
+        @php
+            $vehicleTimeline = $vehicleTimelineEntries->get($vehicle->id, collect());
+        @endphp
 
-            @if ($vehicleTimeline->isNotEmpty())
-                <section id="vehicle-timeline-{{ $vehicle->id }}" class="px-3 py-2.5">
-                    <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-2">
-                        <a
-                            href="{{ route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]) }}"
-                            class="text-sm font-black text-slate-950 hover:text-slate-700"
-                        >{{ $vehicle->operational_identity }}</a>
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">{{ $vehicleTimeline->count() }} {{ Str::plural('event', $vehicleTimeline->count()) }}</p>
-                    </div>
+        @if ($vehicleTimeline->isNotEmpty())
+            <section id="vehicle-timeline-{{ $vehicle->id }}" class="border-top">
+                <div class="card-body d-flex flex-wrap align-items-baseline justify-content-between gap-2 py-2">
+                    <a
+                        href="{{ route('operations.customers.show', ['customer' => $customer, 'vehicle' => $vehicle->id]) }}"
+                        class="fw-bold text-reset"
+                    >{{ $vehicle->operational_identity }}</a>
+                    <span class="subheader">{{ $vehicleTimeline->count() }} {{ Str::plural('event', $vehicleTimeline->count()) }}</span>
+                </div>
 
-                    <div class="divide-y divide-slate-100">
-                        @foreach ($vehicleTimeline as $entry)
-                            <div class="py-2 text-xs">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <p class="font-bold text-slate-950">{{ $entry['title'] }}</p>
-                                        <p class="mt-0.5 text-slate-500">{{ $entry['detail'] }}</p>
-                                        @if ($entry['actor'] ?? null)
-                                            <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">{{ $entry['actor'] }}</p>
-                                        @endif
-                                    </div>
-                                    <p class="shrink-0 font-semibold tabular-nums text-slate-400">
-                                        {{ $entry['occurred_at']?->timezone(config('app.display_timezone'))->format('M j, g:i A') }}
-                                    </p>
+                <div class="list-group list-group-flush">
+                    @foreach ($vehicleTimeline as $entry)
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-start justify-content-between gap-3 small">
+                                <div>
+                                    <div class="fw-bold">{{ $entry['title'] }}</div>
+                                    <div class="text-secondary">{{ $entry['detail'] }}</div>
+                                    @if ($entry['actor'] ?? null)
+                                        <div class="subheader mt-1">{{ $entry['actor'] }}</div>
+                                    @endif
                                 </div>
+                                <span class="flex-shrink-0 text-secondary">
+                                    {{ $entry['occurred_at']?->timezone(config('app.display_timezone'))->format('M j, g:i A') }}
+                                </span>
                             </div>
-                        @endforeach
-                    </div>
-                </section>
-            @endif
-        @endforeach
-    </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+    @endforeach
 @else
-    <p class="px-3 py-8 text-sm text-slate-600">No operational timeline events yet.</p>
+    <div class="card-body text-secondary">No operational timeline events yet.</div>
 @endif
