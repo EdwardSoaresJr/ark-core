@@ -35,7 +35,7 @@ final class WorkCompletionAuthorization
             return null;
         }
 
-        return $this->lineCovered($line) ? null : self::INSTALL_BLOCKED;
+        return $this->blocksWork($line) ? self::INSTALL_BLOCKED : null;
     }
 
     public function completionBlockedReason(RepairOrderConcern $concern): ?string
@@ -47,7 +47,7 @@ final class WorkCompletionAuthorization
                 continue;
             }
 
-            if (! $this->lineCovered($line)) {
+            if ($this->blocksWork($line)) {
                 return self::COMPLETION_BLOCKED;
             }
         }
@@ -66,7 +66,7 @@ final class WorkCompletionAuthorization
         foreach ($repairOrder->lines as $line) {
             if ($line->isPart()
                 && $line->procurementState() === PartProcurementState::Installed
-                && ! $this->lineCovered($line)
+                && $this->blocksWork($line)
             ) {
                 return self::LIFECYCLE_BLOCKED;
             }
@@ -78,7 +78,7 @@ final class WorkCompletionAuthorization
             }
 
             foreach ($concern->lines as $line) {
-                if ($this->requiresCoverage($line) && ! $this->lineCovered($line)) {
+                if ($this->requiresCoverage($line) && $this->blocksWork($line)) {
                     return self::LIFECYCLE_BLOCKED;
                 }
             }
@@ -232,6 +232,21 @@ final class WorkCompletionAuthorization
                 ->exists();
 
         return $hasHistory ? self::CONCERN_DELETE_BLOCKED : null;
+    }
+
+    /**
+     * Temporary policy (docs/operations/approved-scope-coverage.md): labor or a part added to an Approved concern
+     * after the customer's approval does not block install, completion, or a finished status. It stays out of
+     * approved sales and in linesRequiringAuthorization() until the customer approves it or an exception covers it.
+     * Work on a concern the customer has not approved still needs an approval or an exception.
+     */
+    private function blocksWork(RepairOrderLine $line): bool
+    {
+        if ($this->lineCovered($line)) {
+            return false;
+        }
+
+        return $line->concern?->disposition !== RepairOrderConcernDisposition::Approved;
     }
 
     private function requiresCoverage(RepairOrderLine $line): bool
