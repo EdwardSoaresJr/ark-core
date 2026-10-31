@@ -138,7 +138,7 @@
         @endif
 
         @if ($financial['canWaiveBalance'] ?? false)
-            <a href="#waive-balance" class="btn btn-outline-warning w-100">
+            <a href="#waive-balance" class="btn btn-outline-warning w-100" @click.prevent="$dispatch('ops-show-closeout'); $nextTick(() => document.getElementById('waive-balance')?.scrollIntoView({ block: 'start' }))">
                 Waive balance
             </a>
         @endif
