@@ -1,5 +1,4 @@
 @php
-    $exceptionSurface = $exceptionSurface ?? 'dialog';
     $exceptionLines = $concern->linesEligibleForAuthorizationException();
     $canRecordException = ! ($isTerminal ?? false)
         && $exceptionLines->isNotEmpty()
@@ -16,32 +15,7 @@
     $reopenException = $restoreException && $errors->any();
 @endphp
 
-@if ($exceptionSurface === 'menu' && $canRecordException)
-    <div class="dropdown" data-scope-more>
-        <button type="button" class="btn btn-sm btn-ghost-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">More</button>
-        <div class="dropdown-menu dropdown-menu-end">
-            <button
-                type="button"
-                class="dropdown-item"
-                data-authorization-exception-action="record"
-                aria-haspopup="dialog"
-                @click="
-                    window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', {
-                        detail: {
-                            concernId: {{ $concern->id }},
-                            mode: 'record',
-                            invokeEl: $el.closest('.dropdown')?.querySelector('[data-bs-toggle]') ?? $el,
-                        },
-                    }));
-                "
-            >
-                Record exception
-            </button>
-        </div>
-    </div>
-@endif
-
-@if ($exceptionSurface === 'dialog' && ($canRecordException || $recordedExceptions->isNotEmpty()))
+@if ($canRecordException || $recordedExceptions->isNotEmpty())
     <div
         x-data="arkAuthorizationExceptionDialog(@js([
             'concernId' => $concern->id,

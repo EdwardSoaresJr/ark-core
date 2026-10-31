@@ -1900,7 +1900,6 @@
 
                                 <x-operations.worksheet-island>
                                 @include('operations.repair-orders.partials.repair-order-concern-authorization-exception', [
-                                    'exceptionSurface' => 'dialog',
                                     'repairOrder' => $repairOrder,
                                     'concern' => $concern,
                                     'isTerminal' => $isTerminal,
