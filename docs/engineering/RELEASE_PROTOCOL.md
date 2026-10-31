@@ -54,7 +54,15 @@ Never deploy. Never publish an image. Never change a live host, DNS, or tenant d
    - Landlord: the test files that cover the change. Do not point a test at a live shop.
 4. Review the diff. Leave unrelated edits unstaged.
 5. Commit and push the feature branch. Open one pull request for one change.
-6. Report the pull request URL, the check status, and whether the pull request is still open. Say which required checks are absent. Do not merge it. End with `Release: PR OPEN`. If the pull request was not opened, end with `Release: IMPLEMENTED`.
+6. If the change visibly alters a screen, add a `## Visual Review` section to the pull request description:
+   - Screenshots of the running application, taken during the browser check you already do. Do not run another test cycle for them.
+   - Desktop and phone; light and dark where the screen has both; plus the important open states, such as a menu, modal, or active filter.
+   - A label on each: page, viewport, theme, and state.
+   - Before and after only when the layout changes significantly.
+   - Seeded or synthetic data only. No real customer information, credentials, tokens, or private business figures. The Core repository is public.
+   - Images hosted on GitHub, never in the source tree or `public/`. Attach them in the pull request editor, or commit them to `review-artifacts/pr-<number>/` on the `review-artifacts` branch and embed `raw.githubusercontent.com` URLs pinned to that commit. The branch comes from `main`, because the commit hooks require the public lineage, and is never merged.
+   - If an image could not be uploaded or a view was not captured, say which in the section instead of describing it.
+7. Report the pull request URL, the check status, and whether the pull request is still open. Say which required checks are absent. Do not merge it. End with `Release: PR OPEN`. If the pull request was not opened, end with `Release: IMPLEMENTED`.
 
 ## 2. Prepare this for release.
 
