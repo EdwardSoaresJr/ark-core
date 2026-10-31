@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Foundation\Vite;
 use Illuminate\Support\HtmlString;
+use Illuminate\View\ViewException;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -107,15 +108,49 @@ test('customer filters stay collapsed on phones until one is active', function (
     $this->actingAs($advisor)
         ->get(route('operations.customers.search', ['q' => 'Rosa']))
         ->assertOk()
-        ->assertSee('class="col-12 col-lg-6 collapse d-md-block" id="customer-filters"', false)
+        ->assertSee('class="col-12 col-lg-6 col-xxl-auto collapse d-md-block" id="customer-filters"', false)
         ->assertDontSee('aria-expanded="true"', false);
 
     $this->actingAs($advisor)
         ->get(route('operations.customers.search', ['created_from' => '2026-01-01']))
         ->assertOk()
-        ->assertSee('class="col-12 col-lg-6 collapse d-md-block show" id="customer-filters"', false)
+        ->assertSee('class="col-12 col-lg-6 col-xxl-auto collapse d-md-block show" id="customer-filters"', false)
         ->assertSee('aria-expanded="true"', false);
 });
+
+test('customer search uses the fluid workspace and the record card grid', function (): void {
+    Customer::query()->create(['first_name' => 'Grid', 'last_name' => 'Card', 'phone' => '555-0199']);
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.customers.search'))
+        ->assertOk()
+        ->assertSee('<div class="ark-card-grid">', false)
+        ->assertSee('Grid Card')
+        ->assertDontSee('container-xl', false)
+        ->assertDontSee('row-cards', false);
+});
+
+test('each workspace layout renders its Tabler container', function (string $layout, array $expected): void {
+    $html = (string) $this->blade(
+        '<x-tabler.page :layout="$layout" title="Workspace">Body</x-tabler.page>',
+        ['layout' => $layout],
+    );
+
+    expect($html)->toContain('class="page-title">Workspace</h2>')->toContain('Body');
+
+    foreach ($expected as $fragment) {
+        expect($html)->toContain($fragment);
+    }
+})->with([
+    'fluid' => ['fluid', ['<div class="page-body">', '<div class="container-fluid">']],
+    'focused' => ['focused', ['<div class="page-body">', '<div class="container-narrow">']],
+    'split' => ['split', ['<div class="page-body">', '<div class="container-fluid d-flex flex-column flex-fill">']],
+    'canvas' => ['canvas', ['<div class="page-body mb-0">', '<div class="container-fluid d-flex flex-column flex-fill px-0">']],
+]);
+
+test('a page must name a known workspace layout', function (): void {
+    $this->blade('<x-tabler.page layout="wide">Body</x-tabler.page>');
+})->throws(ViewException::class, 'Unknown Tabler page layout [wide].');
 
 test('icon-only header actions keep an accessible name and a tooltip', function (): void {
     $this->actingAs(actingAsLearnCurrentAdvisor())

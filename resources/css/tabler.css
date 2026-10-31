@@ -2,12 +2,22 @@
 
 /*
  * Loaded only by views that opt in with <x-operations.app ui="tabler">, after app.css.
- * Keep this file to theme tokens and legacy coexistence rules. Page styling uses Tabler classes.
+ * Keep this file to theme tokens, legacy coexistence rules, and layout primitives Tabler lacks. Page styling uses Tabler classes.
  */
 
 [data-accent] {
     --tblr-primary: var(--ops-accent-500, #0099cc);
     --tblr-font-sans-serif: Figtree, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/*
+ * Record card grid for fluid pages. Bootstrap's breakpoints stop at 1400px, so they cannot add columns on wider
+ * screens. auto-fill (unlike Tabler's auto-fit .datagrid) keeps empty tracks, so one result stays one column wide.
+ */
+.ark-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--ark-card-min-width, 17rem)), 1fr));
+    gap: var(--tblr-page-padding);
 }
 
 /* app.css still loads here, and its Tailwind `.collapse` utility (visibility: collapse) would hide every Bootstrap collapse. No legacy markup uses it. */
