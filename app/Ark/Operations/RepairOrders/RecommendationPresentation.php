@@ -233,8 +233,8 @@ final class RecommendationPresentation
     {
         return match ($this->key()) {
             RecommendationPriority::MustDo->value => 'red',
-            RecommendationPriority::ShouldDo->value => 'indigo',
-            RecommendationPriority::CouldDo->value => 'orange',
+            RecommendationPriority::ShouldDo->value => 'yellow',
+            RecommendationPriority::CouldDo->value => 'green',
             self::INFORMATION_ONLY => 'azure',
             default => 'secondary',
         };

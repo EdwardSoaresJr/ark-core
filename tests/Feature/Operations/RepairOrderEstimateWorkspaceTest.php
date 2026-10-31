@@ -1116,16 +1116,19 @@ test('concerns carry a lightweight customer disposition in the estimate workspac
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('id="concern-'.$concern->id.'"', false)
+        ->assertSee('data-concern-decision-choices', false)
         ->assertSee('data-disposition-tone="draft"', false)
-        ->assertSee('bg-secondary-lt', false)
-        ->assertSee("task: 'concern-disposition'", false)
-        ->assertSee('data-workspace-modal-form="concern-disposition"', false)
+        ->assertSee('name="disposition" value="draft"', false)
+        ->assertSee(route('operations.repair-orders.concerns.disposition', [$repairOrder, $concern]), false)
         ->assertSee('data-refresh-scope="worksheet"', false)
         ->assertSee('submitWorksheetForm', false)
-        ->assertSee('Draft')
-        ->assertSee('Recommended')
-        ->assertSee('Approved')
-        ->assertSee('Deferred');
+        ->assertDontSee("task: 'concern-disposition'", false)
+        ->assertSee('data-disposition-option="draft"', false)
+        ->assertSee('data-disposition-option="recommended"', false)
+        ->assertSee('data-disposition-option="approved"', false)
+        ->assertSee('data-disposition-option="deferred"', false)
+        ->assertSee('data-disposition-option="declined"', false)
+        ->assertSee('Pending Approval');
 
     $this->patch(route('operations.repair-orders.concerns.disposition', [$repairOrder, $concern]), [
         'disposition' => RepairOrderConcernDisposition::Approved->value,

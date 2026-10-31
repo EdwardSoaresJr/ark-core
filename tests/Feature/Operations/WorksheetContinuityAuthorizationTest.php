@@ -57,9 +57,11 @@ test('approving one concern declares authorization and workflow without authoriz
 
     expect($pads->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Approved)
         ->and($rotors->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
-        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$pads->id))->toContain('Approved')
-        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$rotors->id))->toContain('Pending')
-        ->and(authorizationRegionText($response->getContent(), 'concern-disposition-'.$rotors->id))->toContain('Recommended');
+        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$pads->id))->toBe('')
+        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$rotors->id))->toBe('')
+        ->and(authorizationCurrentDecision($response->getContent(), $pads->id))->toBe('approved')
+        ->and(authorizationCurrentDecision($response->getContent(), $rotors->id))->toBe('recommended')
+        ->and(authorizationRegionText($response->getContent(), 'concern-disposition-'.$rotors->id))->toContain('Pending Approval');
 
     $scope = ApprovedWorkScope::query()->where('repair_order_concern_id', $pads->id)->sole();
 
@@ -113,8 +115,8 @@ test('deferring approved work drops it from authorized dollars and can retreat s
         ->and($rotors->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended)
         ->and($repairOrder->status->is(RepairOrderStatus::WaitingApproval))->toBeTrue()
         ->and($approved->totalCents())->toBe(0)
-        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$pads->id))->toContain('Deferred')
-        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$rotors->id))->toContain('Pending')
+        ->and(authorizationCurrentDecision($response->getContent(), $pads->id))->toBe('deferred')
+        ->and(authorizationCurrentDecision($response->getContent(), $rotors->id))->toBe('recommended')
         ->and(authorizationRegionText($response->getContent(), 'authorized-money'))->toContain($approved->format(0))
         ->and($position->customerOwesTodayCents)->toBe(0)
         ->and(authorizationRegionText($response->getContent(), 'financial-position'))->not->toContain('Owe today')
@@ -152,7 +154,7 @@ test('recording authorization leaves later recommended work unauthorized', funct
         ->and(ApprovedWorkScope::query()->where('repair_order_concern_id', $rotors->id)->exists())->toBeFalse()
         ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->lines->pluck('id')->all())
         ->not->toContain($rotorLine->id)
-        ->and(authorizationRegionText($response->getContent(), 'concern-authorization-'.$rotors->id))->toContain('Pending');
+        ->and(authorizationCurrentDecision($response->getContent(), $rotors->id))->toBe('recommended');
 });
 
 function continuityConcern($repairOrder, string $summary, int $position): RepairOrderConcern
@@ -184,6 +186,17 @@ function authorizationRegionText(string $html, string $id): string
     expect($region)->toBeInstanceOf(DOMElement::class);
 
     return trim(preg_replace('/\s+/', ' ', $region->textContent) ?? '');
+}
+
+function authorizationCurrentDecision(string $html, int $concernId): string
+{
+    $toggle = authorizationContinuityXPath($html)
+        ->query('//*[@id="concern-disposition-'.$concernId.'"]//*[@data-concern-decision-choices]//button[@data-disposition-tone]')
+        ->item(0);
+
+    expect($toggle)->toBeInstanceOf(DOMElement::class);
+
+    return $toggle->getAttribute('data-disposition-tone');
 }
 
 function authorizationSelectedStatus(string $html): string
