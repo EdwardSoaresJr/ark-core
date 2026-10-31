@@ -126,18 +126,6 @@ export function arkRoWorkspaceTabs(config = {}) {
             }
         },
 
-        tabClass(name) {
-            return this.tab === name
-                ? 'ops-ro-workspace-tab ops-ro-workspace-tab--active'
-                : 'ops-ro-workspace-tab';
-        },
-
-        panelShellClass(name) {
-            return this.tabLoading[name]
-                ? 'ops-ro-workspace-tab-panel-shell ops-ro-workspace-tab-panel-shell--loading'
-                : 'ops-ro-workspace-tab-panel-shell';
-        },
-
         async refreshTab(name) {
             if (! this.lazyTabs.includes(name) || ! this.tabUrl) {
                 return;

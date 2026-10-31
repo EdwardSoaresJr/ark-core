@@ -33,14 +33,35 @@
     ));
     $workspaceDefaultTab = 'builder';
     $showTabNav = count($workspaceTabs) > 1;
-    $builderLabel = $workspaceMode === 'builder' ? 'Builder' : 'Estimate';
+    $tabLabels = [
+        'builder' => $workspaceMode === 'builder' ? 'Builder' : 'Estimate',
+        'inspect' => 'Inspection',
+        'recommendations' => 'Recommendations',
+        'comms' => 'Communications',
+        'history' => 'History',
+    ];
+    $tabCounts = [
+        'inspect' => $recordedFindingCount > 0
+            ? ['count' => $recordedFindingCount, 'meta' => 'findings', 'tone' => 'bg-azure-lt']
+            : null,
+        'recommendations' => $recommendationOpenCount > 0
+            ? [
+                'count' => $recommendationOpenCount,
+                'meta' => $recommendationSafetyCount > 0 ? 'safety' : 'open',
+                'tone' => $recommendationSafetyCount > 0 ? 'bg-red-lt' : 'bg-secondary-lt',
+            ]
+            : null,
+        'history' => $priorVehicleFutureWorkCount > 0
+            ? ['count' => $priorVehicleFutureWorkCount, 'meta' => 'future-work', 'tone' => 'bg-secondary-lt']
+            : null,
+    ];
     $workspaceTabUrl = url('/app/repair-orders/'.$repairOrder->repair_order_id.'/workspace-tabs');
 @endphp
 
 <div
     id="repair-order-workspace-tabs"
     {{ $attributes->class([
-        'ops-ro-workspace-tabs ops-review-panel min-w-0 scroll-mt-6',
+        'card ops-ro-workspace-tabs min-w-0 scroll-mt-6',
         'ops-ro-workspace-tabs--builder-only' => ! $showTabNav,
     ]) }}
     x-data="arkRoWorkspaceTabs({
@@ -53,90 +74,46 @@
     })"
 >
     @if ($showTabNav)
-    <nav class="ops-ro-workspace-tabs__nav" aria-label="Repair order workspace" role="tablist">
-        <button
-            type="button"
-            role="tab"
-            class="ops-ro-workspace-tab"
-            :class="tabClass('builder')"
-            x-on:click="selectTab('builder')"
-            :aria-selected="tab === 'builder'"
-        >
-            {{ $builderLabel }}
-        </button>
-        @if (in_array('inspect', $workspaceTabs, true))
-            <button
-                type="button"
-                role="tab"
-                class="ops-ro-workspace-tab"
-                :class="tabClass('inspect')"
-                x-on:click="selectTab('inspect')"
-                :aria-selected="tab === 'inspect'"
-            >
-                Inspection
-                @if ($recordedFindingCount > 0)
-                    <span class="ops-ro-workspace-tab__meta ops-ro-workspace-tab__meta--findings">{{ $recordedFindingCount }}</span>
-                @endif
-            </button>
-        @endif
-        @if (in_array('recommendations', $workspaceTabs, true))
-            <button
-                type="button"
-                role="tab"
-                class="ops-ro-workspace-tab"
-                :class="tabClass('recommendations')"
-                x-on:click="selectTab('recommendations')"
-                :aria-selected="tab === 'recommendations'"
-            >
-                Recommendations
-                @if ($recommendationOpenCount > 0)
-                    <span @class([
-                        'ops-ro-workspace-tab__meta',
-                        'ops-ro-workspace-tab__meta--safety' => $recommendationSafetyCount > 0,
-                    ])>{{ $recommendationOpenCount }}</span>
-                @endif
-            </button>
-        @endif
-        @if (in_array('comms', $workspaceTabs, true))
-            <button
-                type="button"
-                role="tab"
-                class="ops-ro-workspace-tab"
-                :class="tabClass('comms')"
-                x-on:click="selectTab('comms')"
-                :aria-selected="tab === 'comms'"
-            >
-                Communications
-            </button>
-        @endif
-        @if (in_array('history', $workspaceTabs, true))
-            <button
-                type="button"
-                role="tab"
-                class="ops-ro-workspace-tab"
-                :class="tabClass('history')"
-                x-on:click="selectTab('history')"
-                :aria-selected="tab === 'history'"
-            >
-                History
-                @if ($priorVehicleFutureWorkCount > 0)
-                    <span class="ops-ro-workspace-tab__meta">{{ $priorVehicleFutureWorkCount }}</span>
-                @endif
-            </button>
-        @endif
-    </nav>
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Repair order workspace">
+                @foreach ($workspaceTabs as $workspaceTab)
+                    <li class="nav-item" role="presentation">
+                        <button
+                            type="button"
+                            role="tab"
+                            class="nav-link"
+                            data-workspace-tab="{{ $workspaceTab }}"
+                            :class="{ active: tab === @js($workspaceTab) }"
+                            x-on:click="selectTab(@js($workspaceTab))"
+                            :aria-selected="tab === @js($workspaceTab)"
+                        >
+                            {{ $tabLabels[$workspaceTab] }}
+                            @if ($tabCounts[$workspaceTab] ?? null)
+                                <span class="badge {{ $tabCounts[$workspaceTab]['tone'] }} ms-2" data-workspace-tab-count="{{ $tabCounts[$workspaceTab]['meta'] }}">{{ $tabCounts[$workspaceTab]['count'] }}</span>
+                            @endif
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    <div class="ops-ro-workspace-tabs__panels">
+    <div class="card-body">
         <div x-show="tab === 'builder'" role="tabpanel">
-            {{ $slot }}
+            <x-operations.worksheet-island>
+                {{ $slot }}
+            </x-operations.worksheet-island>
         </div>
 
         @foreach ($lazyTabs as $lazyTab)
-            <div x-show="tab === '{{ $lazyTab }}'" :class="panelShellClass('{{ $lazyTab }}')" role="tabpanel">
-                <p x-show="tabErrors['{{ $lazyTab }}']" x-cloak class="px-3 py-3 text-xs font-semibold text-rose-700">Could not load this tab. Try selecting it again.</p>
-                <p x-show="tabLoading['{{ $lazyTab }}']" x-cloak class="px-3 py-3 text-xs font-semibold text-slate-500">Loading…</p>
-                <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
+            <div x-show="tab === '{{ $lazyTab }}'" x-cloak role="tabpanel">
+                <div x-show="tabErrors['{{ $lazyTab }}']" x-cloak class="alert alert-danger">Could not load this tab. Try selecting it again.</div>
+                <p x-show="tabLoading['{{ $lazyTab }}']" x-cloak class="text-secondary">
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading…
+                </p>
+                <x-operations.worksheet-island>
+                    <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
+                </x-operations.worksheet-island>
             </div>
         @endforeach
     </div>

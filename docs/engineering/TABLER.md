@@ -242,3 +242,15 @@ The first slice of the repair order workspace. The page uses the Tabler shell; t
 Migrated: the page header (RO number, customer and vehicle) and the toolbar as its actions: Review Estimate Notes, Paperwork / Add Document, the Print menu (a Tabler dropdown with the same items, links, and `arkPrintDocument` calls), the technician select, the lifecycle select with its lost-reason panel, the review-request follow-up, and the PartsTech busy notice. The toolbar keeps `id="review-toolbar"`, so worksheet refreshes still replace it from the server, and every form, hidden field, data attribute, Alpine handler, and permission check is unchanged.
 
 Still legacy, in `.ark-legacy.ops-main > .ops-estimate-workspace` (the wrapper legacy dark-mode and layout rules expect): the flash messages, collaboration banners, intake band, identity band, workspace tabs, the estimate worksheet, the totals and financial rail, the labor guide panel, and the footer dock. The appointment and inspection chips in the toolbar stay legacy because the customer documents share them. `tabler.css` sets `--ops-left-rail-width` inside islands to the Tabler sidebar width, so the fixed footer dock starts at the sidebar edge.
+
+### Repair order workspace: tabs and rail container (`operations.repair-orders.show`)
+
+The second slice. The workspace tabs (Estimate, Inspection, Recommendations, Communications, History) and the rail's Estimate Total / Closeout switch are Tabler cards with `nav-tabs`. The tab state, `localStorage` key, URL hashes, lazy loading from `workspace-tabs/{tab}`, `#financial-rail`, and `ops-show-closeout` are unchanged. Tab counts are Tabler badges with `data-workspace-tab-count`.
+
+The single island is now several. `x-operations.worksheet-island` wraps each piece of legacy content in `.ark-legacy.ops-main > .ops-estimate-workspace`, because the legacy rules select on both ancestors (dark-mode fields need the pair), and drops their page padding. Islands: the flash messages through the identity band, each tab panel's content, the totals rows, the closeout panel, and the rail's journey and follow-up panels. The labor guide panel, footer dock, and rail script keep the full legacy wrapper, whose bottom padding clears the fixed dock. These islands sit in Tabler cards without `bg-white`: the worksheet has its own dark-mode rules.
+
+The `ops-estimate-layout` grid and the rail's `ops-review-rail ops-review-rail--pinned` classes stay. They are layout only. Payment capture selects on `.ops-review-rail`, and the grid's 1024px breakpoint matches the rail script's.
+
+The rail had stopped sticking on the Tabler shell after the first slice: its `top` read `--ops-sticky-stack-offset`, which only the legacy shell defines. `tabler.css` now sets it on `.page`.
+
+Dark mode, unchanged from the legacy page: the approval forecast, the reason-for-visit band, and the customer notes band keep light backgrounds with light text.

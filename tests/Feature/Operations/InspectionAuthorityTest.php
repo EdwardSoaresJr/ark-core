@@ -277,7 +277,7 @@ test('estimate review findings tab shows recorded count badge', function () {
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Inspection', false)
-        ->assertSee('ops-ro-workspace-tab__meta--findings', false)
+        ->assertSee('data-workspace-tab-count="findings"', false)
         ->assertSee('>1<', false);
 });
 
