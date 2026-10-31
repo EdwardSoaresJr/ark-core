@@ -20,7 +20,7 @@
     "dependencies": {
         "@tabler/core": "^1.7.3",
         "alpinejs": "^3.15.12",
-        "laravel-echo": "^2.3.7",
+        "laravel-echo": "^2.6.1",
         "preline": "^4.2.0",
         "puppeteer": "^25.1.0",
         "pusher-js": "^8.5.0"
