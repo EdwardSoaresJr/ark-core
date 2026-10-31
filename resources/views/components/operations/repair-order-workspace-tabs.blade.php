@@ -100,9 +100,7 @@
 
     <div class="card-body">
         <div x-show="tab === 'builder'" role="tabpanel">
-            <x-operations.worksheet-island>
-                {{ $slot }}
-            </x-operations.worksheet-island>
+            {{ $slot }}
         </div>
 
         @foreach ($lazyTabs as $lazyTab)

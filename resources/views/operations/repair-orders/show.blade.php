@@ -1701,12 +1701,10 @@
                 ])
 
                 <div id="estimate-lines" class="scroll-mt-6" :class="worksheetBusyPending ? 'ops-worksheet-saving' : ''">
-                    <div class="ops-estimate-instruments-shell">
-                        @include('operations.repair-orders.partials.repair-order-estimate-workspace-header', [
-                            'repairOrder' => $repairOrder,
-                            'totals' => $totals,
-                        ])
-                    </div>
+                    @include('operations.repair-orders.partials.repair-order-estimate-workspace-header', [
+                        'repairOrder' => $repairOrder,
+                        'totals' => $totals,
+                    ])
 
                     @include('operations.repair-orders.partials.repair-order-estimate-context-strip', [
                         'repairOrder' => $repairOrder,
@@ -1718,6 +1716,7 @@
                         'partsReadinessCounts' => $partsReadinessCounts ?? [],
                     ])
 
+                    <x-operations.worksheet-island>
                     @if (($engineOilServices ?? collect())->isNotEmpty())
                         @include('operations.maintenance.partials.engine-oil-panel', [
                             'repairOrder' => $repairOrder,
@@ -1736,15 +1735,16 @@
                             'presentationOnly' => true,
                         ])
                     @endif
+                    </x-operations.worksheet-island>
 
                     @php
                         $evidenceItemsCount = ($evidenceGallery['items'] ?? collect())->count();
                     @endphp
                     @if ($evidenceItemsCount > 0)
-                        <div class="ops-builder-evidence-entry mb-4 flex flex-wrap gap-2">
+                        <div class="mb-3">
                             <button
                                 type="button"
-                                class="ops-builder-evidence-entry__btn"
+                                class="btn btn-sm"
                                 data-workspace-modal-trigger="evidence"
                                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'evidence', invokeEl: $event.currentTarget } }))"
                             >
@@ -1757,6 +1757,7 @@
                         {{-- Add Work lives on the contextual footer - one primary CTA per viewport. --}}
                     @endunless
 
+                    <x-operations.worksheet-island>
                     @include('operations.repair-orders.partials.workspace-modal.host', [
                         'repairOrder' => $repairOrder,
                         'isTerminal' => $isTerminal,
@@ -1916,6 +1917,7 @@
                         </div>
 
                     </div>
+                    </x-operations.worksheet-island>
                 </div>
                 </x-operations.repair-order-workspace-tabs>
             </div>
