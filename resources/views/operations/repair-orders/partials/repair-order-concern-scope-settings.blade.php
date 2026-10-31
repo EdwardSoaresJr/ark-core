@@ -1,5 +1,4 @@
 @php
-    $authorViaModal = (bool) ($authorViaModal ?? false);
     $scopePositionLoop = $loop;
 @endphp
 <div class="d-flex flex-wrap flex-fill align-items-center justify-content-between gap-2" data-scope-settings>
@@ -33,7 +32,6 @@
             'isTerminal' => $isTerminal,
             'estimateVersion' => $estimateVersion,
             'laborRate' => $concernDefaultLaborRate ?? $laborRate ?? null,
-            'authorViaModal' => $authorViaModal,
         ])
     </div>
     <div class="d-flex flex-wrap align-items-center gap-1">
