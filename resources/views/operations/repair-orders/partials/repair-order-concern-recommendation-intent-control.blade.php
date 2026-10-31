@@ -9,6 +9,10 @@
     $posture = $concern->isInformationOnly()
         ? RecommendationPresentation::INFORMATION_ONLY
         : $concern->recommendationPriority()?->value;
+    $priorityOptions = collect(RecommendationPriority::cases())
+        ->map(fn (RecommendationPriority $priority): RecommendationPresentation => RecommendationPresentation::priority($priority))
+        ->push(RecommendationPresentation::informationOnly());
+    $currentPriority = $priorityOptions->first(fn (RecommendationPresentation $option): bool => $option->key() === $posture);
 @endphp
 
 @if ($isTerminal ?? false)
@@ -34,35 +38,38 @@
             @csrf
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <fieldset data-concern-priority-choices>
-                <legend class="visually-hidden">Priority for {{ $concern->summary }}</legend>
-                <div class="d-flex flex-wrap gap-1">
-                    @foreach (RecommendationPriority::cases() as $priority)
-                        @php $option = RecommendationPresentation::priority($priority); @endphp
-                        <input
-                            type="radio"
-                            class="btn-check"
-                            id="scope-priority-{{ $concern->id }}-{{ $priority->value }}"
-                            name="recommendation_posture"
-                            value="{{ $priority->value }}"
-                            @checked($posture === $priority->value)
-                            onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
+            <input type="hidden" name="recommendation_posture" value="{{ $posture }}">
+            <div class="dropdown" data-concern-priority-choices>
+                <button
+                    type="button"
+                    class="btn btn-sm dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Priority for {{ $concern->summary }}: {{ $currentPriority?->staffLabel() ?? 'not set' }}"
+                    data-priority-current="{{ $posture ?? '' }}"
+                >
+                    @if ($currentPriority)
+                        <span class="status-dot status-{{ $currentPriority->tablerColor() }} me-2"></span>
+                        <span class="text-{{ $currentPriority->tablerColor() }} fw-medium">{{ $currentPriority->staffLabel() }}</span>
+                    @else
+                        <span class="text-secondary">Set priority</span>
+                    @endif
+                </button>
+                <div class="dropdown-menu">
+                    @foreach ($priorityOptions as $option)
+                        <button
+                            type="button"
+                            @class(['dropdown-item', 'active' => $posture === $option->key()])
+                            title="{{ $option->helpText() }}"
+                            data-priority-option="{{ $option->key() }}"
+                            @click="preserveRepairOrderConcernScroll({{ $concern->id }}); $el.form.elements.recommendation_posture.value = @js($option->key()); $el.form.requestSubmit()"
                         >
-                        <label class="btn btn-sm btn-outline-{{ $option->tablerColor() }}" for="scope-priority-{{ $concern->id }}-{{ $priority->value }}" title="{{ $priority->helpText() }}">{{ $priority->staffLabel() }}</label>
+                            <span class="status-dot status-{{ $option->tablerColor() }} me-2"></span>
+                            <span class="text-{{ $option->tablerColor() }}">{{ $option->staffLabel() }}</span>
+                        </button>
                     @endforeach
-                    @php $info = RecommendationPresentation::informationOnly(); @endphp
-                    <input
-                        type="radio"
-                        class="btn-check"
-                        id="scope-priority-{{ $concern->id }}-information_only"
-                        name="recommendation_posture"
-                        value="information_only"
-                        @checked($posture === 'information_only')
-                        onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
-                    >
-                    <label class="btn btn-sm btn-outline-{{ $info->tablerColor() }}" for="scope-priority-{{ $concern->id }}-information_only" title="{{ $info->helpText() }}">Information Only</label>
                 </div>
-            </fieldset>
+            </div>
         </form>
         @if ($semantic)
             <span class="subheader">{{ $semantic->staffLabel() }}</span>

@@ -275,11 +275,11 @@ Kept for the worksheet scripts:
 
 - Each concern stays `<section id="concern-{id}">`, a direct child of `#worksheet-concerns`. Continuity mounts a new concern by finding its parent's id, and workspace memory reads the id.
 - The `concern-money-*`, `concern-authorization-*`, and `concern-disposition-*` regions keep their ids, and every form keeps its `data-continuity-focus` selector, hidden fields, and `submitWorksheetForm` or `requestSubmit` call.
-- New ids avoid the `concern-` prefix: workspace memory treats any focused element inside `[id^="concern-"]` as a concern. The priority radios use `scope-priority-{id}-{value}`.
+- New ids avoid the `concern-` prefix: workspace memory treats any focused element inside `[id^="concern-"]` as a concern.
 
 Colors come from the presentation types, so each palette stays in one place: `RecommendationPresentation::tablerColor()` (priority: must do red, should do indigo, could do orange, information only azure), `RepairOrderConcernDisposition::tablerColor()`, and `ScopeProductionStatus::tablerColor()`, beside the legacy `worksheetToneStyle()` they match.
 
-- Priority is a row of Tabler `btn-check` buttons that wrap on phones. Disposition, production, billing, and work type are `form-select-sm` or `bg-*-lt` buttons.
+- Priority is one compact Tabler dropdown (`data-concern-priority-choices`) labelled with the current priority in its color. Choosing an option sets the form's hidden `recommendation_posture` and calls `requestSubmit()`, the same submission the earlier radios made. Disposition, production, billing, and work type are `form-select-sm` or `bg-*-lt` buttons.
 - The More menu is a Tabler dropdown. Record exception still sends `ark-authorization-exception-open`, now with the dropdown toggle as `invokeEl`, so focus returns to More.
 - `x-operations.scope-header` takes `ui="tabler"`; the estimate document page keeps the legacy header. `repair-order-concern-disposition-decision` and `finding-from-verified-findings-nudge` take a `ui` variable for the same reason.
 - `x-operations.help-tip` is now an inline island itself, so its legacy tooltip renders inside Tabler markup.
