@@ -198,3 +198,13 @@ Known visual limitations, both from the legacy components:
 
 - In the dark theme the Work and Comms tab panels and the workspace modal stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
 - The VIN display's muted prefix (all but the highlighted last eight characters) uses slate-700, which has low contrast on a dark card. It is the same on legacy pages in dark mode (slate-700 on slate-800).
+
+### Repair orders index (`operations.repair-orders.index`)
+
+The same record-search shape as Customers and Vehicles, built from the shared components with no new markup.
+
+Before: `ops-index`, `ops-board-shell`, `ops-page-toolbar`, `ops-board-filters`, `ops-index-filters--ro`, `ops-ro-retrieval-grid`, `ops-job-card*`, `ops-ro-index-card`, `ops-ro-card--{tone}`, `ops-status-chip--{tone}`, `ops-ro-concern`, `ops-index-empty`, `x-operations.date-field`, and the Tailwind pagination view.
+
+After: Tabler only, `fluid` layout with `.ark-card-grid`. The page subtitle carries the queue note (search, workboard overflow, or Shop Dashboard drill-down), and the results heading shows the queue label. Status, From, and To collapse behind "Filters" on phones. Unchanged: the controller, query parameters (`q`, `status`, `created_from`, `created_to`), the queue drill-downs and their hidden inputs (`pickup`, `unassigned`, `lane`, `attention`, `disposition`, `open`), the "Workboard triage" return link, 24 per page with the query string kept, the `RepairOrdersView` permission, and every card link.
+
+Still on `app.css`: the shell components listed under "Legacy components on a Tabler page".
