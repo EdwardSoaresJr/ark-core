@@ -33,9 +33,17 @@ Merging them means rendering the legacy rail from the shared definition too, whi
 
 These are not migrated yet and render inside `.ark-legacy`: channel strip (`lg` and up), workstation presence and station lock, workspace tabs, comms pressure bar, comms interrupt panel, global search, image lightbox, guide modal, call queue, print helpers, and the repair-order orientation dock.
 
-Tabler's CSS never applies inside `.ark-legacy`. The build (`resources/css/postcss-exclude-legacy-islands.js`) appends `:not(.ark-legacy *)` to the subject of every rule in `tabler.css`, before any pseudo-element, so `app.css` styles an island alone. This matters because the two stylesheets share class names with different meanings: Tabler's `.grid` is a 12-column grid that overrode Tailwind's `md:grid-cols-2` in the hub's edit forms. `tabler.css` only sets the island's 16px base font size, which the legacy components were built on. When a component migrates, remove its wrapper. When none remain, stop loading `app.css` on Tabler pages, delete the plugin and the coexistence rules in `tabler.css`.
+Tabler's CSS never applies inside `.ark-legacy`. The build (`resources/css/postcss-exclude-legacy-islands.js`) appends `:not(.ark-legacy *)` to the subject of every rule in `tabler.css`, before any pseudo-element, so `app.css` styles an island alone. This matters because the two stylesheets share class names with different meanings: Tabler's `.grid` is a 12-column grid that overrode Tailwind's `md:grid-cols-2` in the hub's edit forms. When a component migrates, remove its wrapper. When none remain, stop loading `app.css` on Tabler pages, delete the plugin and the coexistence rules in `tabler.css`.
 
-Legacy components assume a white workspace surface. An island inside a Tabler card adds `bg-white text-dark` (`app.css` utilities), so it stays readable when the card is dark.
+Rules for islands:
+
+- Inherited values still flow in from Tabler's `html` and `body`. `.ark-legacy` resets the ones that differ from a legacy page: the 16px Tailwind font and line height, font features, text rendering, and `color-scheme`. Without the last one, native controls in an island (select menus, date pickers, scrollbars) turned dark in the dark theme while legacy pages keep them light. Text color is not reset; an island sets its own or follows its container.
+- An inline island (`<span class="ark-legacy">`) inherits its line's font size, so a legacy chip in a line of small Tabler text stays small.
+- Tabler markup inside an island is unstyled. Wrap the legacy component only, never a slot that holds migrated markup.
+- The two stylesheets share no custom property names, so Tabler's `--tblr-*` variables are inert inside an island.
+- Legacy components assume a white workspace surface. An island inside a Tabler card adds `bg-white text-dark` (`app.css` utilities), so it stays readable when the card is dark.
+
+Every Tabler selector gains one class of specificity, equally, so Tabler's own cascade is unchanged. The ancestor check costs under 1ms per full restyle of the customer hub (about 1,000 elements).
 
 Known differences inside `.ark-legacy`:
 
@@ -46,7 +54,9 @@ Known differences inside `.ark-legacy`:
 
 Check migrated views against `npm run build` output, not only the Vite dev server. Herd starts the dev server and writes `public/hot`, which serves unminified CSS; delete `public/hot` to load `public/build`.
 
-`vite.config.js` excludes the `light-dark()` feature from the CSS minifier. Its polyfill resolves `light-dark()` once at `:root`, so Tabler's dark sidebar (`data-bs-theme="dark"` inside a light page) rendered white text on a white background in built assets. Do not remove the exclusion.
+`vite.config.js` excludes the `light-dark()` feature from the CSS minifier. Its polyfill resolves `light-dark()` once at `:root`, so Tabler's dark sidebar (`data-bs-theme="dark"` inside a light page) rendered white text on a white background in built assets. Do not remove the exclusion. Tabler pages therefore need native `light-dark()`: Chrome and Edge 123, Safari 17.5, Firefox 120, or later. Tabler's published CSS has the same requirement. Legacy pages do not use `light-dark()`.
+
+`resources/css/postcss-exclude-legacy-islands.test.js` covers the selector rewrite. Run it with `node --test resources/css/postcss-exclude-legacy-islands.test.js` after changing the plugin or upgrading Tabler.
 
 ## Workspace layouts
 
@@ -182,4 +192,9 @@ Migrated to Tabler:
 
 Unchanged: the controller, routes, permissions, tab and deep-link parameters (`tab`, `vehicle`, `compose`, `doc_q`, `doc_type`, the `#customer-*` and `#vehicle-*` anchors), form field names, and the Alpine state in `ark-customer-hub-tabs.js` and `ark-customer-hub-comms.js`.
 
-Still on `app.css`, in `.ark-legacy`: the workspace modal and its customer, vehicle, and document forms (`hub-workspace-modal`), the conversation context and advisor work panels on the Work tab, the reply composer and message rows on the Comms tab, the document list, the operational journey card, and the VIN display. All are shared with unmigrated views. The VIN display's muted prefix has low contrast in dark mode.
+Still on `app.css`, in `.ark-legacy`: the workspace modal and its customer, vehicle, and document forms (`hub-workspace-modal`), the conversation context and advisor work panels on the Work tab, the reply composer and message rows on the Comms tab, the document list, the operational journey card, and the VIN display. All are shared with unmigrated views.
+
+Known visual limitations, both from the legacy components:
+
+- In the dark theme the Work and Comms tab panels and the workspace modal stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
+- The VIN display's muted prefix (all but the highlighted last eight characters) uses slate-700, which has low contrast on a dark card. It is the same on legacy pages in dark mode (slate-700 on slate-800).

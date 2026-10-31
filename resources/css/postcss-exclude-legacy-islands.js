@@ -26,6 +26,11 @@ function outsideLegacyIslands() {
 
 const scopeSelector = selectorParser((selectors) => {
     selectors.each((selector) => {
+        // Whitespace inside a selector is a descendant combinator, so the list's whitespace stays outside the scope.
+        const leading = selector.first.spaces.before;
+        const trailing = selector.last.spaces.after;
+        selector.first.spaces.before = '';
+        selector.last.spaces.after = '';
         let pseudoElement = null;
 
         for (let index = selector.nodes.length - 1; index >= 0; index--) {
@@ -45,6 +50,9 @@ const scopeSelector = selectorParser((selectors) => {
         } else {
             selector.append(outsideLegacyIslands());
         }
+
+        selector.first.spaces.before = leading;
+        selector.last.spaces.after = trailing;
     });
 });
 
@@ -52,7 +60,7 @@ export default function excludeLegacyIslands({ entry }) {
     return {
         postcssPlugin: 'ark-exclude-legacy-islands',
         Once(root) {
-            const file = root.source?.input?.file ?? '';
+            const file = (root.source?.input?.file ?? '').replaceAll('\\', '/');
 
             if (! file.endsWith(entry)) {
                 return;

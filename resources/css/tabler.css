@@ -27,11 +27,23 @@
 
 /*
  * Unmigrated components on a Tabler page sit inside .ark-legacy. postcss-exclude-legacy-islands.js keeps every
- * Tabler rule out of them, so app.css styles them alone. They were built on a 16px body, not Tabler's 14px.
+ * Tabler rule out of them, so app.css styles them alone. Inherited text and color-scheme values still flow in from
+ * Tabler's html and body, so the island restores what a legacy page gives them: a 16px Tailwind body and, even in dark
+ * mode, light native controls.
  */
 .ark-legacy {
+    color-scheme: normal;
+    font-family: theme('fontFamily.sans');
+    font-feature-settings: normal;
     font-size: 1rem;
     line-height: 1.5;
+    text-rendering: auto;
+}
+
+/* An inline island, such as a legacy chip in a line of Tabler text, takes the line's size like it does on a legacy page. */
+span.ark-legacy {
+    font-size: inherit;
+    line-height: inherit;
 }
 
 /*
