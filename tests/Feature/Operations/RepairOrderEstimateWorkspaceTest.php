@@ -1116,7 +1116,8 @@ test('concerns carry a lightweight customer disposition in the estimate workspac
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('id="concern-'.$concern->id.'"', false)
-        ->assertSee('background-color:#f1f5f9', false)
+        ->assertSee('data-disposition-tone="draft"', false)
+        ->assertSee('bg-secondary-lt', false)
         ->assertSee("task: 'concern-disposition'", false)
         ->assertSee('data-workspace-modal-form="concern-disposition"', false)
         ->assertSee('data-refresh-scope="worksheet"', false)
@@ -1160,7 +1161,7 @@ test('concern disposition ajax refresh returns html worksheet and updated estima
     $response->assertOk()
         ->assertSee('id="estimate-lines"', false)
         ->assertSee('id="estimate-total-panel"', false)
-        ->assertSee('ops-worksheet-concern--deferred', false);
+        ->assertSee('data-concern-disposition="deferred"', false);
 
     expect($concern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Deferred);
 });

@@ -228,6 +228,18 @@ final class RecommendationPresentation
         return 'ops-review-concern--priority-'.$this->key();
     }
 
+    /** Tabler color name for the priority palette - sync with the ops-worksheet-concern--priority-* accents. */
+    public function tablerColor(): string
+    {
+        return match ($this->key()) {
+            RecommendationPriority::MustDo->value => 'red',
+            RecommendationPriority::ShouldDo->value => 'indigo',
+            RecommendationPriority::CouldDo->value => 'orange',
+            self::INFORMATION_ONLY => 'azure',
+            default => 'secondary',
+        };
+    }
+
     public function labelClass(): string
     {
         return 'ops-priority-label--'.$this->key();

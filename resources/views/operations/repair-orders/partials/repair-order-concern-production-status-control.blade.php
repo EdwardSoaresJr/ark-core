@@ -1,30 +1,29 @@
 @php
     $productionStatuses = App\Ark\Operations\RepairOrders\ScopeProductionStatus::cases();
-    $productionToneStyle = $concern->productionStatus()->worksheetToneStyle();
+    $productionColor = $concern->productionStatus()->tablerColor();
     $returnMode = $returnMode ?? null;
     $authorViaModal = (bool) ($authorViaModal ?? false);
 @endphp
 
 @if (! $concern->tracksProduction())
     @if ($isTerminal ?? false)
-        <span class="ops-state-pill ops-state-pill--neutral">Not in production</span>
+        <span class="badge bg-secondary-lt">Not in production</span>
     @endif
 @elseif ($isTerminal ?? false)
-    <span class="ops-state-pill ops-state-pill--{{ $concern->productionStatus()->value === 'completed' ? 'approved' : 'neutral' }}">
+    <span class="badge bg-{{ $concern->productionStatus()->value === 'completed' ? 'green' : 'secondary' }}-lt">
         {{ $concern->productionStatus()->label() }}
     </span>
 @elseif ($authorViaModal)
     <button
         type="button"
-        class="ops-builder-present-chip"
-        style="{{ $productionToneStyle }}"
+        class="btn btn-sm bg-{{ $productionColor }}-lt"
         title="Production status"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-production', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
     >
         {{ $concern->productionStatus()->label() }}
     </button>
 @else
-    <div class="flex items-center gap-0.5">
+    <div class="d-flex align-items-center gap-1">
         <form
             method="POST"
             action="{{ route('operations.repair-orders.concerns.production-status', [$repairOrder, $concern]) }}"
@@ -38,12 +37,12 @@
             @if ($returnMode)
                 <input type="hidden" name="return_mode" value="{{ $returnMode }}">
             @endif
-            <label class="sr-only" for="concern-production-status-{{ $concern->id }}">Production status for {{ $concern->summary }}</label>
+            <label class="visually-hidden" for="concern-production-status-{{ $concern->id }}">Production status for {{ $concern->summary }}</label>
             <select
                 id="concern-production-status-{{ $concern->id }}"
                 name="production_status"
-                class="ops-production-status-select"
-                style="{{ $productionToneStyle }}"
+                class="form-select form-select-sm border-{{ $productionColor }} text-{{ $productionColor }}"
+                style="width: auto"
                 onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
             >
                 @foreach ($productionStatuses as $status)

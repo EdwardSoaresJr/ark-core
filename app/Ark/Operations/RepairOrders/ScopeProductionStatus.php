@@ -34,6 +34,17 @@ enum ScopeProductionStatus: string
         return $this === self::Completed;
     }
 
+    /** Tabler color name for badges and controls, matching worksheetToneStyle(). */
+    public function tablerColor(): string
+    {
+        return match ($this) {
+            self::Pending => 'secondary',
+            self::InProgress => 'azure',
+            self::WaitingParts => 'yellow',
+            self::Completed => 'green',
+        };
+    }
+
     public function worksheetToneStyle(): string
     {
         return match ($this) {

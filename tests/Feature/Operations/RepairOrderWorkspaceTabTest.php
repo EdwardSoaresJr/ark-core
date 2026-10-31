@@ -35,7 +35,7 @@ test('estimate review renders declined concern scopes without error', function (
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
         ->get(route('operations.repair-orders.show', $repairOrder->fresh()))
         ->assertOk()
-        ->assertSee('ops-worksheet-concern--declined', false);
+        ->assertSee('data-concern-disposition="declined"', false);
 });
 
 test('workspace tab endpoint returns comms panel html on demand', function () {

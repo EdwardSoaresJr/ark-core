@@ -12,18 +12,18 @@
 @endphp
 
 @if ($isTerminal ?? false)
-    <div class="flex items-center gap-1">
+    <div class="d-flex align-items-center gap-1">
         @if ($presentation->staffLabel())
-            <span class="ops-intent-label {{ $presentation->labelClass() }}">{{ $presentation->staffLabel() }}</span>
+            <span class="badge bg-{{ $presentation->tablerColor() }}-lt">{{ $presentation->staffLabel() }}</span>
         @else
-            <span class="ops-intent-label ops-priority-label--unset">No priority</span>
+            <span class="badge bg-secondary-lt">No priority</span>
         @endif
         @if ($semantic)
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ $semantic->staffLabel() }}</span>
+            <span class="subheader">{{ $semantic->staffLabel() }}</span>
         @endif
     </div>
 @else
-    <div class="flex flex-wrap items-center gap-1">
+    <div class="d-flex flex-wrap align-items-center gap-2">
         <form
             method="POST"
             action="{{ route('operations.repair-orders.concerns.recommendation-intent', [$repairOrder, $concern]) }}"
@@ -34,41 +34,43 @@
             @csrf
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <fieldset class="ops-priority-choices">
-                <legend class="sr-only">Priority for {{ $concern->summary }}</legend>
-                @foreach (RecommendationPriority::cases() as $priority)
-                    @php $option = RecommendationPresentation::priority($priority); @endphp
-                    <label class="ops-priority-choice {{ $posture === $priority->value ? $option->labelClass() : '' }}" title="{{ $priority->helpText() }}">
+            <fieldset data-concern-priority-choices>
+                <legend class="visually-hidden">Priority for {{ $concern->summary }}</legend>
+                <div class="d-flex flex-wrap gap-1">
+                    @foreach (RecommendationPriority::cases() as $priority)
+                        @php $option = RecommendationPresentation::priority($priority); @endphp
                         <input
                             type="radio"
+                            class="btn-check"
+                            id="scope-priority-{{ $concern->id }}-{{ $priority->value }}"
                             name="recommendation_posture"
                             value="{{ $priority->value }}"
                             @checked($posture === $priority->value)
                             onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
                         >
-                        <span>{{ $priority->staffLabel() }}</span>
-                    </label>
-                @endforeach
-                @php $info = RecommendationPresentation::informationOnly(); @endphp
-                <label class="ops-priority-choice {{ $posture === $info->key() ? $info->labelClass() : '' }}" title="{{ $info->helpText() }}">
+                        <label class="btn btn-sm btn-outline-{{ $option->tablerColor() }}" for="scope-priority-{{ $concern->id }}-{{ $priority->value }}" title="{{ $priority->helpText() }}">{{ $priority->staffLabel() }}</label>
+                    @endforeach
+                    @php $info = RecommendationPresentation::informationOnly(); @endphp
                     <input
                         type="radio"
+                        class="btn-check"
+                        id="scope-priority-{{ $concern->id }}-information_only"
                         name="recommendation_posture"
                         value="information_only"
                         @checked($posture === 'information_only')
                         onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
                     >
-                    <span>Information Only</span>
-                </label>
+                    <label class="btn btn-sm btn-outline-{{ $info->tablerColor() }}" for="scope-priority-{{ $concern->id }}-information_only" title="{{ $info->helpText() }}">Information Only</label>
+                </div>
             </fieldset>
         </form>
         @if ($semantic)
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ $semantic->staffLabel() }}</span>
+            <span class="subheader">{{ $semantic->staffLabel() }}</span>
         @endif
         @if ($authorViaModal)
             <button
                 type="button"
-                class="ops-priority-work-type"
+                class="btn btn-sm btn-ghost-secondary"
                 title="Work type"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-intent', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
             >
@@ -85,11 +87,12 @@
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                <label class="sr-only" for="concern-work-type-{{ $concern->id }}">Work type for {{ $concern->summary }}</label>
+                <label class="visually-hidden" for="concern-work-type-{{ $concern->id }}">Work type for {{ $concern->summary }}</label>
                 <select
                     id="concern-work-type-{{ $concern->id }}"
                     name="recommendation_intent"
-                    class="ops-disposition-select max-w-[9rem] text-[11px]"
+                    class="form-select form-select-sm"
+                    style="width: auto; max-width: 9rem"
                     onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
                 >
                     <option value="" @selected($semantic === null)>Work type</option>

@@ -17,38 +17,28 @@
 @endphp
 
 @if ($exceptionSurface === 'menu' && $canRecordException)
-    <details
-        class="ops-scope-more"
-        x-data
-        @click.outside="$el.open = false"
-        @keydown.escape.prevent="$el.open = false"
-    >
-        <summary class="ops-scope-more__trigger" aria-label="More actions" aria-haspopup="menu">More</summary>
-        <div class="ops-scope-more__panel" role="menu">
+    <div class="dropdown" data-scope-more>
+        <button type="button" class="btn btn-sm btn-ghost-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More actions">More</button>
+        <div class="dropdown-menu dropdown-menu-end">
             <button
                 type="button"
-                class="ops-scope-more__item"
-                role="menuitem"
+                class="dropdown-item"
                 data-authorization-exception-action="record"
                 aria-haspopup="dialog"
                 @click="
-                    const menu = $el.closest('details');
                     window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', {
                         detail: {
                             concernId: {{ $concern->id }},
                             mode: 'record',
-                            invokeEl: menu?.querySelector('summary') ?? $el,
+                            invokeEl: $el.closest('.dropdown')?.querySelector('[data-bs-toggle]') ?? $el,
                         },
                     }));
-                    if (menu) {
-                        menu.open = false;
-                    }
                 "
             >
                 Record exception
             </button>
         </div>
-    </details>
+    </div>
 @endif
 
 @if ($exceptionSurface === 'dialog' && ($canRecordException || $recordedExceptions->isNotEmpty()))

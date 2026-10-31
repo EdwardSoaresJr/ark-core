@@ -107,6 +107,18 @@ enum RepairOrderConcernDisposition: string
         return 'ops-scope-header-decision--'.$this->value;
     }
 
+    /** Tabler color name for badges and controls, matching worksheetToneStyle(). */
+    public function tablerColor(): string
+    {
+        return match ($this) {
+            self::Draft => 'secondary',
+            self::Recommended => 'blue',
+            self::Approved => 'green',
+            self::Deferred => 'yellow',
+            self::Declined => 'red',
+        };
+    }
+
     /** Inline worksheet tone so disposition color survives form-plugin and build purging. */
     public function worksheetToneStyle(): string
     {

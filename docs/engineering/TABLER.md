@@ -266,3 +266,21 @@ The first worksheet slice: everything above the concern cards on the Estimate ta
 - Photos is a Tabler button.
 
 The Estimate tab no longer wraps its whole slot in one island; `show.blade.php` wraps the remaining legacy pieces: the engine oil and testing panels, and the workspace modal host with the concern cards.
+
+### Repair order worksheet: concern cards (`operations.repair-orders.show`)
+
+Each concern is a Tabler card with a status strip in its priority color. The header, status controls, scope toolbar, and narrative are Tabler; the line rows and the authorization exception dialog stay in an island inside the card until the line-row slice.
+
+Kept for the worksheet scripts:
+
+- Each concern stays `<section id="concern-{id}">`, a direct child of `#worksheet-concerns`. Continuity mounts a new concern by finding its parent's id, and workspace memory reads the id.
+- The `concern-money-*`, `concern-authorization-*`, and `concern-disposition-*` regions keep their ids, and every form keeps its `data-continuity-focus` selector, hidden fields, and `submitWorksheetForm` or `requestSubmit` call.
+- New ids avoid the `concern-` prefix: workspace memory treats any focused element inside `[id^="concern-"]` as a concern. The priority radios use `scope-priority-{id}-{value}`.
+
+Colors come from the presentation types, so each palette stays in one place: `RecommendationPresentation::tablerColor()` (priority: must do red, should do indigo, could do orange, information only azure), `RepairOrderConcernDisposition::tablerColor()`, and `ScopeProductionStatus::tablerColor()`, beside the legacy `worksheetToneStyle()` they match.
+
+- Priority is a row of Tabler `btn-check` buttons that wrap on phones. Disposition, production, billing, and work type are `form-select-sm` or `bg-*-lt` buttons.
+- The More menu is a Tabler dropdown. Record exception still sends `ark-authorization-exception-open`, now with the dropdown toggle as `invokeEl`, so focus returns to More.
+- `x-operations.scope-header` takes `ui="tabler"`; the estimate document page keeps the legacy header. `repair-order-concern-disposition-decision` and `finding-from-verified-findings-nudge` take a `ui` variable for the same reason.
+- `x-operations.help-tip` is now an inline island itself, so its legacy tooltip renders inside Tabler markup.
+- Tests that checked `ops-worksheet-concern--{disposition}` and similar classes check `data-concern-disposition`, `data-concern-narrative`, `data-scope-parts-catalog`, and `data-disposition-tone`.
