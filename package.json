@@ -22,7 +22,7 @@
         "alpinejs": "^3.15.12",
         "laravel-echo": "^2.3.7",
         "preline": "^4.2.0",
-        "puppeteer": "^25.1.0",
+        "puppeteer": "^25.14.0",
         "pusher-js": "^8.5.0"
     }
 }
