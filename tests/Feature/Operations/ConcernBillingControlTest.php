@@ -7,7 +7,9 @@ use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Ark\Runtime\Authorization\ArkRole;
+use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Database\Seeders\ShopSettingsSeeder;
@@ -120,6 +122,36 @@ test('choosing a billing option saves through the billing route with the form co
         ->assertStatus(409);
 
     expect($concern->fresh()->billing_posture)->toBe(ConcernBillingPosture::WarrantyOther);
+});
+
+test('staff who cannot manage repair orders see billing as read-only text', function (): void {
+    $viewer = User::factory()->create()->givePermissionTo([
+        ArkCapability::OperationsAccess->value,
+        ArkCapability::RepairOrdersView->value,
+    ]);
+    $repairOrder = repairOrderForEstimateWorkspace();
+    $concern = billingControlConcern($repairOrder, ConcernBillingPosture::Fleet);
+    $presentation = ShopSettings::current()->billingPostureOptionPresentation(ConcernBillingPosture::Fleet);
+
+    expect($viewer->can(ArkCapability::RepairOrdersManage->value))->toBeFalse();
+
+    $html = $this->actingAs($viewer)->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $readOnly = billingControlXPath($html)->query('//*[@id="concern-'.$concern->id.'"]//*[@data-billing-readonly]')->item(0);
+
+    expect($readOnly)->toBeInstanceOf(DOMElement::class)
+        ->and($readOnly->getAttribute('data-billing-readonly'))->toBe('fleet')
+        ->and($readOnly->getAttribute('title'))->toBe($presentation['title'])
+        ->and($readOnly->textContent)->toContain('Fleet')
+        ->and($html)->not->toContain('data-concern-billing-choices')
+        ->and($html)->not->toContain('data-billing-option')
+        ->and($html)->not->toContain(route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]));
+
+    $this->patch(route('operations.repair-orders.concerns.billing-posture', [$repairOrder, $concern]), [
+        'billing_posture' => ConcernBillingPosture::Internal->value,
+        RepairOrderConcurrency::FIELD => (int) $repairOrder->fresh()->estimate_version,
+    ])->assertForbidden();
+
+    expect($concern->fresh()->billing_posture)->toBe(ConcernBillingPosture::Fleet);
 });
 
 test('a closed repair order shows billing without the dropdown', function (): void {

@@ -8,6 +8,7 @@
         return '$'.$presentation['rate'].'/hr · '.$presentation['matrix_name'].' · '.$presentation['shop_fee_summary'];
     };
     $currentBilling = $shopSettings->billingPostureOptionPresentation($posture);
+    $canChangeBilling = auth()->user()?->can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value) ?? false;
 @endphp
 
 @if ($isTerminal ?? false)
@@ -23,6 +24,12 @@
             label="Billing help for {{ $concern->summary }}"
         />
     </div>
+@elseif (! $canChangeBilling)
+    <span class="d-inline-flex align-items-center gap-1 small" title="{{ $currentBilling['title'] }}" data-billing-readonly="{{ $posture->value }}">
+        <x-tabler.icon name="receipt" class="text-secondary" />
+        <span class="fw-medium">{{ $posture->label() }}</span>
+        <span class="visually-hidden">: {{ $billingDetail($currentBilling) }}</span>
+    </span>
 @else
     <form
         method="POST"
