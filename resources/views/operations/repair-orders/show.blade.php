@@ -1985,7 +1985,6 @@
         <script>
             (() => {
                 const rail = document.getElementById('estimate-builder-rail');
-                const footer = document.querySelector('.ops-ro-orientation-header--dock');
                 if (!rail) {
                     return;
                 }
@@ -2006,6 +2005,8 @@
                         stack = parseFloat(getComputedStyle(rail).top) || 0;
                     }
 
+                    // The dock is pushed to a layout stack below this script, and continuity can replace it.
+                    const footer = document.querySelector('.ops-ro-orientation-header--dock');
                     const footerHeight = footer ? footer.offsetHeight : 0;
                     const available = window.innerHeight - stack - footerHeight - gap;
                     const height = rail.offsetHeight;
@@ -2035,6 +2036,7 @@
                 };
 
                 fit();
+                document.addEventListener('DOMContentLoaded', fit, { once: true });
                 window.addEventListener('resize', fit);
                 if (typeof ResizeObserver !== 'undefined') {
                     new ResizeObserver(fit).observe(rail);
