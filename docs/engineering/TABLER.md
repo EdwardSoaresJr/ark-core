@@ -80,7 +80,7 @@ Every migrated view picks one layout. `layout` is required, and an unknown value
 
 All four use Tabler's page padding (`--tblr-page-padding`: 1rem from `lg`, 0.5rem below).
 
-`split` and `canvas` are defined but have no migrated view yet. The first view of each kind confirms the height behavior and updates this table.
+`split` and `canvas` are defined but have no migrated view yet. The first view of each kind confirms the height behavior and updates this table. `canvas` was tried on the Schedule with its legacy board: the board does not manage its own outer spacing, so it sat flush against the sidebar while the header stayed inset, and its height is set by its content. The Schedule uses `fluid` until its board is replaced.
 
 Sign-in, password reset, and first-run setup are not in the staff shell. When they migrate they use Tabler's `page-center` with `container-tight` (32rem) in the guest layout.
 
@@ -224,3 +224,11 @@ Settings is one page with an Alpine section switcher and about 30 section partia
 Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
 
 Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active: Appointments & Setup, Staff, Financial Rules (labor, policies, tax, fees, deposits, parts matrix, billing classes), Shop Overhead, Owner Targets, Workflow Defaults, Label Printing, Square Payments, Parts catalogs, Communications, ARK Platform, and Runtime health. Migrate them section by section; each moves out of the island when it does.
+
+### Schedule (`operations.appointments.index`)
+
+Migrated: the page header (the focus date or week as title, the appointment count as subtitle), the Day / Week / Month switch (the same `board-view` POST form, now a `btn-group`), Previous / Today / Next, the primary Schedule action, the status, warning, and error alerts, and the week allocation and lens chips as `nav-pills` with counts. Query parameters, the stored board preference, and every link are unchanged.
+
+Still legacy, in one `.ark-legacy bg-white text-dark` island: the appointment request controls, the capacity rail, the day, week, and month boards, and the appointment popover (`ark-schedule-appointment-popover.js`).
+
+FullCalendar: Tabler 1.7.3 ships the FullCalendar 6.1.22 Standard bundle as a global script (`@tabler/core/dist/libs/fullcalendar/index.global.min.js`) and no `.fc` styles. ARK's boards are server-rendered, not a JavaScript calendar. The day board has a lane per bay and the week board allocates by technician or bay; those are resource views, which FullCalendar provides only in its separately licensed Scheduler, not the Standard bundle. Moving the boards to FullCalendar would also need a JSON event feed and a rewrite of the lenses, capacity rail, request controls, and popovers. That is a separate decision, not a presentation change.

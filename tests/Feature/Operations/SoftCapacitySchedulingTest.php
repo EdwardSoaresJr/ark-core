@@ -600,7 +600,7 @@ test('DayLens chips are projection-owned and filter the same appointments', func
             'lens' => 'technician:'.$technician->id,
         ]))
         ->assertOk()
-        ->assertSee('ops-day-lens', false)
+        ->assertSee('data-schedule-lenses', false)
         ->assertSee('Edward Chen', false)
         ->assertSee('Edward brakes', false)
         ->assertDontSee('Unassigned oil', false)
