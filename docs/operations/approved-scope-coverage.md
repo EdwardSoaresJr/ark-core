@@ -2,15 +2,16 @@
 
 How ARK decides whether labor and parts on a repair order are covered by the customer's approval, what that blocks, and where it is going.
 
-> **Known limitation ([#66](https://github.com/EdwardSoaresJr/ark-core/issues/66), high priority).** Coverage is by line id and records no amounts. If staff raise the quantity or price of a line the customer approved, ARK counts the whole new amount as customer-approved: approved dollars and the final invoice basis rise above the customer's recorded approval, and the line gets no "Needs authorization" mark. Until #66 is fixed, add increased work as a new line instead of raising an approved one, so it stays identified as not approved.
+> **Approvals recorded before amounts were kept ([#66](https://github.com/EdwardSoaresJr/ark-core/issues/66)).** A scope recorded before per-line amounts were stored has `line_amounts` null. For those concerns, ARK still counts a raised line's whole current amount as approved, as it always did: no amount is inferred and the old scope is not rewritten. A new approval of the concern records amounts and ends this.
 
 ## What coverage is
 
-When a concern is approved (by staff or the customer portal), `RecordApprovedWorkScopeAction` stores an `ApprovedWorkScope`: the labor and part line ids on that concern at that moment. A line is covered when its concern is Approved and it is in the concern's latest scope, or when an `AuthorizationException` names it. `WorkCompletionAuthorization` owns this check.
+When a concern is approved (by staff or the customer portal), `RecordApprovedWorkScopeAction` reprices the repair order and stores an `ApprovedWorkScope`: the labor and part line ids on that concern at that moment (`line_ids`), and every non-note line's quantity, unit price, subtotal, standing discount, shop fee, tax, and total (`line_amounts`). A line is covered when its concern is Approved and it is in the concern's latest scope, or when an `AuthorizationException` names it. `WorkCompletionAuthorization` owns this check.
 
 Coverage drives:
 
-- **Approved dollars.** `EstimateTotalsCalculator` counts only covered labor and parts as approved sales and invoice basis.
+- **Approved dollars.** `EstimateTotalsCalculator` counts only covered labor and parts as approved sales and invoice basis. Each approved line counts at the lesser of its current amounts and the amounts its concern's latest scope recorded: a decrease or deletion counts as it is, and an increase stays at the approved amounts, tax and fees included. The invoice lists such a line at its approved quantity, price, and amounts.
+- **Pending increases.** `pendingAuthorizationIncreases()` lists approved lines whose current total is above the recorded total, with the difference. The worksheet marks each "+$X needs authorization", and the totals panel adds the difference to "Needs authorization". Editing, installing, completing, and finishing are not blocked by it.
 - **Identification.** `linesRequiringAuthorization()` lists labor and parts on Approved concerns that the approval does not cover. The worksheet marks them "Needs authorization", and the totals panel lists them as "On the estimate. Not in approved sales until the customer approves these lines." `UnresolvedAuthorizationReport` lists installed parts and completed labor without coverage.
 - **Gates.** `installBlockedReason()`, `completionBlockedReason()`, and `lifecycleBlockedReason()` can refuse installing a part, completing a concern, and moving to quality check, completed, invoiced, or ready for pickup.
 
@@ -28,13 +29,17 @@ Unchanged:
 - A concern with an approval or exception on file still cannot be deleted.
 - Staff permissions and estimate-version concurrency checks are unchanged.
 
-Editing an existing line keeps its id, so it stays covered by the approval that included it, even when its price or quantity rises. See the known limitation above. The repair-order-level amount on a customer approval event (`approval_events.approved_amount_cents`) is preserved, but staff approvals record no amount, and nothing records approved amounts per line.
+Editing an existing line keeps its id, so it stays covered by the approval that included it. If its price or quantity rises, only the approved amounts count; the difference is pending until a new approval of the concern records the new amounts. The repair-order-level amount on a customer approval event (`approval_events.approved_amount_cents`) is preserved.
 
-## Intended reauthorization design (not built)
+When the shop fee has a cap, raising one line moves part of the capped fee off the other lines. The raised line still counts at its recorded fee and the others at their lower current fee, so approved dollars can come out slightly below the original approval, never above it. The moved fee is part of the pending increase.
+
+Sublet, fee, and package lines on an Approved concern are not part of coverage. They count as approved at no more than their recorded amounts; one added after the approval has no recorded amounts and counts at its current amount, as before.
+
+## Intended reauthorization design (step 1 built)
 
 The goal is to make changed and added work visible and easy to get approved, without stopping the shop.
 
-1. **Record what was approved, per line.** An approval stores each covered line's quantity, price, and total, not only its id. Coverage then compares the current line to that record, and approved dollars count the lesser of the current and approved amounts. This is the first fix for #66.
+1. **Record what was approved, per line.** Built for #66: an approval stores each line's amounts, and approved dollars count the lesser of the current and approved amounts.
 2. **Classify the difference.** Each labor and part line on an Approved concern is Approved (unchanged), Changed (amount or quantity differs from the approved record), or Added (not in the approval). Changed and Added lines are the pending reauthorization, with the dollar difference.
 3. **Ask for the difference only.** A supplemental approval (portal, phone, in person) covers exactly the pending lines and amounts. It appends a new approval record and scope; it never rewrites the earlier one. No Draft-then-Approved round trip.
 4. **Gate where the shop chooses.** A shop setting decides which steps require the pending difference to be approved: none, final invoice, or closeout. Install and completion do not block by default.

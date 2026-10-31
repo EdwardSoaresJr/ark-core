@@ -186,12 +186,7 @@ final class WorkCompletionAuthorization
             return [];
         }
 
-        $scopes = ApprovedWorkScope::query()
-            ->whereIn('repair_order_concern_id', $concerns->pluck('id')->all())
-            ->orderBy('id')
-            ->get()
-            ->groupBy('repair_order_concern_id')
-            ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
+        $scopes = $this->latestScopes($concerns);
 
         $events = $this->legacyApprovalEvents((int) $repairOrder->id);
         $covered = [];
@@ -220,6 +215,57 @@ final class WorkCompletionAuthorization
         }
 
         return $covered;
+    }
+
+    /**
+     * Amounts recorded by each approved concern's latest approval, keyed by line id.
+     * Concerns whose latest approval kept no amounts are absent: nothing is inferred for them.
+     *
+     * @return array<int, array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}>
+     */
+    public function authorizedLineAmounts(RepairOrder $repairOrder): array
+    {
+        return app(RepairOrderReadCache::class)->remember(
+            'approved-line-amounts:'.$repairOrder->getKey(),
+            function () use ($repairOrder): array {
+                $repairOrder->loadMissing(['lines.concern']);
+
+                $concerns = $repairOrder->lines
+                    ->map(fn (RepairOrderLine $line): ?RepairOrderConcern => $line->concern)
+                    ->filter(fn (?RepairOrderConcern $concern): bool => $concern instanceof RepairOrderConcern
+                        && $concern->disposition === RepairOrderConcernDisposition::Approved)
+                    ->unique('id')
+                    ->values();
+
+                $amounts = [];
+
+                foreach ($this->latestScopes($concerns) as $scope) {
+                    foreach ($scope->lineAmounts() ?? [] as $lineId => $lineAmounts) {
+                        $amounts[$lineId] = $lineAmounts;
+                    }
+                }
+
+                return $amounts;
+            },
+        );
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderConcern>  $concerns
+     * @return Collection<int, ApprovedWorkScope>
+     */
+    private function latestScopes(Collection $concerns): Collection
+    {
+        if ($concerns->isEmpty()) {
+            return collect();
+        }
+
+        return ApprovedWorkScope::query()
+            ->whereIn('repair_order_concern_id', $concerns->pluck('id')->all())
+            ->orderBy('id')
+            ->get()
+            ->groupBy('repair_order_concern_id')
+            ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
     }
 
     public function concernDeletionBlockedReason(RepairOrderConcern $concern): ?string

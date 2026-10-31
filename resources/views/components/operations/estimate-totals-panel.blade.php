@@ -5,6 +5,7 @@
     'repairOrder' => null,
     'approvalForecast' => null,
     'linesNeedingAuthorization' => null,
+    'pendingAuthorizationIncreases' => null,
 ])
 
 @php
@@ -27,9 +28,10 @@
         && ($financial['suggestedDepositDiagnostics'] ?? null);
     $showDepositDiagnosticsRow = $showDepositPartsRow;
     $linesNeedingAuthorization = collect($linesNeedingAuthorization ?? []);
+    $pendingAuthorizationIncreases = collect($pendingAuthorizationIncreases ?? []);
     $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum(
         fn ($line): int => (int) ($line->total_cents ?? 0),
-    );
+    ) + (int) $pendingAuthorizationIncreases->sum('pending_cents');
     $hasCloseout = isset($closeout) && trim($closeout) !== '';
 @endphp
 
@@ -119,7 +121,7 @@
     </div>
 
     <div id="authorized-lines" data-continuity-region="authorized-money">
-        @if ($linesNeedingAuthorization->isNotEmpty())
+        @if ($linesNeedingAuthorization->isNotEmpty() || $pendingAuthorizationIncreases->isNotEmpty())
             <div class="card-body border-top bg-yellow-lt">
                 <div class="d-flex justify-content-between align-items-baseline gap-3">
                     <span class="fw-semibold">Needs authorization</span>
@@ -132,8 +134,17 @@
                             <span class="ark-money">{{ $totals->format((int) $unauthorizedLine->total_cents) }}</span>
                         </li>
                     @endforeach
+                    @foreach ($pendingAuthorizationIncreases as $increase)
+                        <li class="d-flex justify-content-between align-items-baseline gap-3" data-pending-increase="{{ $increase['line']->id }}">
+                            <span style="min-width: 0">
+                                {{ $increase['line']->description }}
+                                <span class="text-secondary">· increased from {{ $totals->format($increase['authorized_cents']) }}</span>
+                            </span>
+                            <span class="ark-money">+{{ $totals->format($increase['pending_cents']) }}</span>
+                        </li>
+                    @endforeach
                 </ul>
-                <p class="small mt-1 mb-0">On the estimate. Not in approved sales until the customer approves these lines.</p>
+                <p class="small mt-1 mb-0">On the estimate. Not in approved sales or the final invoice until the customer approves these amounts.</p>
             </div>
         @endif
     </div>

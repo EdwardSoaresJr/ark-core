@@ -167,7 +167,9 @@ class EstimateTotalsCalculator
     private function approvedInvoiceableLines(RepairOrder $repairOrder): Collection
     {
         $repairOrder->loadMissing(['lines.concern']);
-        $coveredLaborAndParts = app(WorkCompletionAuthorization::class)->customerApprovedLaborAndPartIdSet($repairOrder);
+        $authorization = app(WorkCompletionAuthorization::class);
+        $coveredLaborAndParts = $authorization->customerApprovedLaborAndPartIdSet($repairOrder);
+        $authorizedAmounts = $authorization->authorizedLineAmounts($repairOrder);
 
         return $repairOrder->lines
             ->filter(function (RepairOrderLine $line) use ($coveredLaborAndParts): bool {
@@ -181,7 +183,52 @@ class EstimateTotalsCalculator
 
                 return true;
             })
+            ->map(fn (RepairOrderLine $line): RepairOrderLine => $this->withinAuthorizedAmount(
+                $line,
+                $authorizedAmounts[(int) $line->id] ?? null,
+            ))
             ->values();
+    }
+
+    /**
+     * Approved lines whose current total is above the amount recorded when they were
+     * approved. The difference is on the estimate but not in approved sales or the invoice.
+     *
+     * @return Collection<int, array{line: RepairOrderLine, authorized_cents: int, current_cents: int, pending_cents: int}>
+     */
+    public function pendingAuthorizationIncreases(RepairOrder $repairOrder): Collection
+    {
+        $repairOrder->loadMissing(['lines.concern']);
+        $authorizedAmounts = app(WorkCompletionAuthorization::class)->authorizedLineAmounts($repairOrder);
+
+        return $repairOrder->lines
+            ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved
+                && isset($authorizedAmounts[(int) $line->id])
+                && (int) $line->total_cents > $authorizedAmounts[(int) $line->id]['total_cents'])
+            ->map(fn (RepairOrderLine $line): array => [
+                'line' => $line,
+                'authorized_cents' => $authorizedAmounts[(int) $line->id]['total_cents'],
+                'current_cents' => (int) $line->total_cents,
+                'pending_cents' => (int) $line->total_cents - $authorizedAmounts[(int) $line->id]['total_cents'],
+            ])
+            ->values();
+    }
+
+    /**
+     * A line priced above its approval counts at the approved amounts. The copy is never saved.
+     *
+     * @param  array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null  $authorized
+     */
+    private function withinAuthorizedAmount(RepairOrderLine $line, ?array $authorized): RepairOrderLine
+    {
+        if ($authorized === null || (int) $line->total_cents <= $authorized['total_cents']) {
+            return $line;
+        }
+
+        $approved = clone $line;
+        $approved->forceFill($authorized);
+
+        return $approved;
     }
 
     /**

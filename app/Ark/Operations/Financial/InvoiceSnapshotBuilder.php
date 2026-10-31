@@ -120,7 +120,10 @@ final class InvoiceSnapshotBuilder
             'subtotal' => $this->formatCents($totals->concernSubtotalCents($concern->id)),
             'lines' => $concern->lines
                 ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved && $line->isVisibleToCustomer())
-                ->map(fn (RepairOrderLine $line): array => $this->lineSnapshot($line))
+                // A line priced above its approval is billed at the approved amounts the totals use.
+                ->map(fn (RepairOrderLine $line): array => $this->lineSnapshot(
+                    $totals->lines->first(fn (RepairOrderLine $approved): bool => (int) $approved->id === (int) $line->id) ?? $line,
+                ))
                 ->values()
                 ->all(),
         ];
