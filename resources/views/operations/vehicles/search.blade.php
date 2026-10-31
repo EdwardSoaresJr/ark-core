@@ -1,63 +1,68 @@
-<x-operations.app title="Vehicles">
-    <section class="ops-index space-y-2">
-        <div class="ops-board-shell">
-            <div class="ops-page-toolbar">
-                <p class="ops-page-toolbar-note">Browse vehicles or search by plate, VIN, YMM, nickname, or customer - then open the hub.</p>
-                <div class="ops-page-toolbar-actions">
-                    <a href="{{ route('operations.customers.search') }}" class="ops-page-link">Customers</a>
-                    <a href="{{ route('operations.repair-orders.index') }}" class="ops-page-link">Repair Orders</a>
-                    @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
-                        <a href="{{ route('operations.intake.create') }}" class="ops-page-link ops-page-link--primary">+ Check In</a>
-                    @endcan
-                </div>
+<x-operations.app title="Vehicles" ui="tabler">
+    <x-tabler.page
+        layout="fluid"
+        title="Vehicles"
+        pretitle="Records"
+        subtitle="Browse vehicles or search by plate, VIN, YMM, nickname, or customer - then open the hub."
+    >
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.customers.search')" icon="users" label="Customers" />
+            <x-tabler.page-action :href="route('operations.repair-orders.index')" icon="file-text" label="Repair Orders" />
+            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
+                <x-tabler.page-action :href="route('operations.intake.create')" icon="plus" label="Check In" primary />
+            @endcan
+        </x-slot:actions>
+
+        @php
+            $clearUrl = route('operations.vehicles.search');
+            $activeFilterCount = collect([$selectedWork ?? '', $createdFrom ?? '', $createdTo ?? ''])->filter(fn ($value) => filled($value))->count();
+        @endphp
+        <x-tabler.search-filters
+            id="vehicle"
+            :action="route('operations.vehicles.search')"
+            :query="$query"
+            placeholder="Plate, VIN, year, make, model, nickname, or customer"
+            label="Search vehicles"
+            :clear-url="$clearUrl"
+            :has-filters="$hasFilters ?? false"
+            :active-filter-count="$activeFilterCount"
+        >
+            <div class="col-12 col-md-4 col-xxl-auto">
+                <label for="vehicle-work" class="form-label">Work</label>
+                <select id="vehicle-work" name="work" class="form-select">
+                    <option value="">Any work</option>
+                    <option value="open" @selected(($selectedWork ?? '') === 'open')>Open RO</option>
+                    <option value="idle" @selected(($selectedWork ?? '') === 'idle')>No open RO</option>
+                </select>
             </div>
 
-            <form method="GET" action="{{ route('operations.vehicles.search') }}" class="ops-board-filters">
-                <div class="ops-index-filters ops-index-filters--vehicle">
-                    <div>
-                        <label for="vehicle-search" class="ops-index-field-label">Search</label>
-                        <input
-                            id="vehicle-search"
-                            name="q"
-                            value="{{ $query }}"
-                            type="search"
-                            autofocus
-                            autocomplete="off"
-                            placeholder="Plate, VIN, year, make, model, nickname, or customer"
-                            class="ops-index-field"
-                        >
-                    </div>
+            <div class="col-6 col-md-4 col-xxl-auto">
+                <label for="vehicle-created-from" class="form-label">From</label>
+                <input id="vehicle-created-from" name="created_from" type="date" value="{{ $createdFrom ?? '' }}" class="form-control">
+            </div>
 
-                    <div>
-                        <label for="vehicle-work" class="ops-index-field-label">Work</label>
-                        <select id="vehicle-work" name="work" class="ops-index-field">
-                            <option value="">Any work</option>
-                            <option value="open" @selected(($selectedWork ?? '') === 'open')>Open RO</option>
-                            <option value="idle" @selected(($selectedWork ?? '') === 'idle')>No open RO</option>
-                        </select>
-                    </div>
+            <div class="col-6 col-md-4 col-xxl-auto">
+                <label for="vehicle-created-to" class="form-label">To</label>
+                <input id="vehicle-created-to" name="created_to" type="date" value="{{ $createdTo ?? '' }}" class="form-control">
+            </div>
+        </x-tabler.search-filters>
 
-                    <x-operations.date-field id="vehicle-created-from" name="created_from" label="From" :value="$createdFrom ?? ''" />
-
-                    <x-operations.date-field id="vehicle-created-to" name="created_to" label="To" :value="$createdTo ?? ''" />
-
-                    <button type="submit" class="ops-index-btn ops-index-btn--primary lg:self-end">Search</button>
-
-                    @if ($hasFilters ?? false)
-                        <a href="{{ route('operations.vehicles.search') }}" class="ops-index-btn ops-index-btn--ghost lg:self-end">Clear</a>
-                    @endif
-                </div>
-            </form>
+        <div class="d-flex align-items-center mb-2 mb-md-3">
+            <h3 class="mb-0">Vehicles</h3>
+            <span class="ms-auto text-secondary">{{ $vehicles->total() }} total</span>
         </div>
 
-        <div class="ops-board-shell">
-            <div class="ops-index-results-head">
-                <span>Vehicles</span>
-                <span class="tabular-nums">{{ $vehicles->total() }} total</span>
-            </div>
-
-            <div class="ops-ro-retrieval-grid">
-                @forelse ($vehicles as $vehicle)
+        @if ($vehicles->isEmpty())
+            <x-tabler.empty-state icon="car" :clear-url="($hasFilters ?? false) ? $clearUrl : null">
+                @if ($query === '')
+                    No vehicles yet.
+                @else
+                    No vehicles match &ldquo;{{ $query }}&rdquo;.
+                @endif
+            </x-tabler.empty-state>
+        @else
+            <div class="ark-card-grid">
+                @foreach ($vehicles as $vehicle)
                     @php
                         $displayTz = config('app.display_timezone');
                         $activeRepairOrder = $vehicle->repairOrders->first();
@@ -117,61 +122,32 @@
                             ],
                         ];
                     @endphp
-                    <div class="ops-job-card-wrap">
-                        <article class="ops-job-card ops-ro-index-card ops-ro-card--{{ $cardTone }}">
-                            <div class="ops-job-card__scan">
-                                <div class="ops-job-card__head">
-                                    @if ($hubUrl !== null)
-                                        <a href="{{ $hubUrl }}" class="ops-job-card__ro truncate" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</a>
-                                    @else
-                                        <span class="ops-job-card__ro truncate" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</span>
-                                    @endif
-                                    <span class="ops-index-card-chips">
-                                        @include('operations.repair-orders.partials.repair-order-vehicle-identity-pressure-chip', ['vehicle' => $vehicle])
-                                        <span class="ops-status-chip ops-status-chip--{{ $cardTone }}">{{ $chipLabel }}</span>
-                                    </span>
-                                </div>
-                                @if ($customerUrl !== null)
-                                    <p class="ops-job-card__customer">
-                                        <a href="{{ $customerUrl }}" class="ops-job-card__customer-link">
-                                            {{ $customer?->name ?? 'Unknown customer' }}
-                                        </a>
-                                    </p>
-                                @else
-                                    <p class="ops-job-card__customer">
-                                        <span class="ops-job-card__customer-link ops-job-card__customer-link--static">
-                                            {{ $customer?->name ?? 'Unknown customer' }}
-                                        </span>
-                                    </p>
-                                @endif
-                                <p class="ops-ro-concern truncate">
-                                    {{ $identityBits !== '' ? $identityBits : 'No plate or VIN on file' }}
-                                </p>
-                            </div>
-
-                            <div class="ops-job-card__status-row">
-                                <span class="ops-job-card__clock tabular-nums">{{ $clockLabel }}</span>
-                            </div>
-
-                            @include('operations.partials.index-card-actions', ['indexActions' => $indexActions])
-                        </article>
-                    </div>
-                @empty
-                    <div class="ops-index-empty ops-ro-retrieval-empty">
-                        @if ($query === '')
-                            No vehicles yet.
+                    <x-tabler.record-card :tone="$cardTone" :actions="$indexActions">
+                        @if ($hubUrl !== null)
+                            <a href="{{ $hubUrl }}" class="d-block fw-bold text-reset text-truncate" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</a>
                         @else
-                            No vehicles match &ldquo;{{ $query }}&rdquo;.
+                            <div class="fw-bold text-truncate" title="{{ $vehicle->display_name }}">{{ $vehicle->operational_identity }}</div>
                         @endif
-                    </div>
-                @endforelse
-            </div>
-        </div>
-
-        @if ($vehicles->hasPages())
-            <div class="ops-board-shell px-2 py-2">
-                {{ $vehicles->links() }}
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            <x-tabler.status-badge :tone="$cardTone">{{ $chipLabel }}</x-tabler.status-badge>
+                            <x-tabler.vehicle-identity-chip :vehicle="$vehicle" />
+                        </div>
+                        @if ($customerUrl !== null)
+                            <a href="{{ $customerUrl }}" class="d-block text-truncate mt-1">{{ $customer?->name ?? 'Unknown customer' }}</a>
+                        @else
+                            <div class="text-truncate text-secondary mt-1">{{ $customer?->name ?? 'Unknown customer' }}</div>
+                        @endif
+                        <div class="text-secondary text-truncate">{{ $identityBits !== '' ? $identityBits : 'No plate or VIN on file' }}</div>
+                        <div class="text-secondary small mt-1 mt-md-2">{{ $clockLabel }}</div>
+                    </x-tabler.record-card>
+                @endforeach
             </div>
         @endif
-    </section>
+
+        @if ($vehicles->hasPages())
+            <div class="mt-3">
+                {{ $vehicles->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
+    </x-tabler.page>
 </x-operations.app>

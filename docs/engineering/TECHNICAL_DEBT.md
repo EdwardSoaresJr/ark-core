@@ -128,6 +128,27 @@
 
 ---
 
+## Tests
+
+### The Core test suite is not green on `main`
+
+**Location:** `tests/`, `tests/Support/HostedDragon.php`, `app/Ark/Runtime/Database/SchemaPresence.php`, `bin/pest`, `.github/workflows/tests.yml`
+
+**Problem:** Four separate issues, each verified in [PR #48](https://github.com/EdwardSoaresJr/ark-core/pull/48) and its [pre-merge comment](https://github.com/EdwardSoaresJr/ark-core/pull/48#issuecomment-6537280134):
+
+- **Baseline failures.** `php bin/pest --configuration phpunit.xml --parallel` on `main` `06aa91e`: 3961 tests, 172 failed, 30 errors.
+- **Dragon test isolation.** When a sibling `../ark-saas` checkout exists, `bootHostedDragon()` registers an `Ark\Saas` autoloader and `migrateHostedDragon()` creates the Dragon tables. `SchemaPresence` caches `dragon_service_advisor_applications` as present in a static that is not flushed between tests. A later test in the same process that renders `repair-order-concern-narrative-card.blade.php` fails with `no such table: dragon_service_advisor_applications`. Reproduced without parallelism on `main` `06aa91e` by running `RepairOrderBuilderWorkspaceModalTest` before `WorksheetContinuityAuthorizationTest` and `VisitReasonConcernProposeTest`. Under `--parallel`, which tests fail depends on worker assignment.
+- **GitHub Actions `pest`.** The `pest` job in `tests.yml` fails on `main` (`06aa91e`, `c8c1824`). Most tests report `file_get_contents(/tmp/ark-core-tests-<run>/environment/.env): Failed to open stream: No such file or directory`; 63 pass. The cause has not been investigated. The job is not a required check.
+- **`bin/pest` configuration.** `bin/pest` writes a temporary configuration that rewrites `bootstrap="vendor/autoload.php"`, but `phpunit.xml` bootstraps `tests/bootstrap.php`. Without `--configuration phpunit.xml`, `php bin/pest` stops with `Cannot open bootstrap script`.
+
+A local `.env` in the checkout also changes results: with one present, 13 more provisioning tests failed under `--parallel` in PR #48. Compare runs without a local `.env`.
+
+**Replacement:** Fix each issue in its own pull request. Then make `pest` a required check on `main`, as `RELEASE_PROTOCOL.md` recommends.
+
+**Remove when:** `php bin/pest --parallel` passes on `main` with no extra arguments, and the `pest` job in `tests.yml` passes.
+
+---
+
 ## How to add entries
 
 1. Name the **authority violation** or **parallel path**, not the symptom.

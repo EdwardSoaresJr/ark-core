@@ -192,10 +192,10 @@ test('vehicle search card shows active repair order footnote', function () {
         ->assertSee($repairOrder->status->label())
         ->assertSee(route('operations.customers.show', ['customer' => $customer, 'tab' => 'documents']), false)
         ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
-        ->assertSee('ops-job-card__activity', false)
-        ->assertSee('ops-ro-index-action', false)
-        ->assertSee('ops-status-chip', false)
-        ->assertSee('class="ops-job-card__customer-link"', false);
+        ->assertSee('role="group" aria-label="Open"', false)
+        ->assertSee('class="btn btn-icon btn-ghost-secondary"', false)
+        ->assertSee('class="badge bg-', false)
+        ->assertSee('href="'.route('operations.customers.show', $customer).'" class="d-block text-truncate mt-1"', false);
 });
 
 test('vehicle search cards link vehicle customer documents and ro separately', function () {
@@ -263,4 +263,68 @@ test('customer search cards link vehicle customer documents and ro separately', 
         ->assertSee('2016 Subaru Outback')
         ->assertDontSee('ops-ro-card-body-link', false)
         ->assertDontSee('ops-job-card__chip--quiet', false);
+});
+
+test('vehicle search renders in the Tabler shell with the fluid record grid', function () {
+    $customer = Customer::query()->create(['first_name' => 'Grid', 'last_name' => 'Owner', 'phone' => '555-0170']);
+    Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2020,
+        'make' => 'Mazda',
+        'model' => 'CX-5',
+        'plate' => 'GRID1',
+        'vin' => 'JM3KFBDM0L0123456',
+    ]);
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.vehicles.search'))
+        ->assertOk()
+        ->assertSee('navbar navbar-vertical', false)
+        ->assertSee('class="page-title">Vehicles</h2>', false)
+        ->assertSee('<div class="ark-card-grid">', false)
+        ->assertSee('GRID1 · VIN L0123456')
+        ->assertSee('No open RO')
+        ->assertSee('class="col-12 col-lg-6 col-xxl-auto collapse d-md-block" id="vehicle-filters"', false)
+        ->assertDontSee('ops-job-card', false)
+        ->assertDontSee('container-xl', false);
+});
+
+test('a vehicle without a VIN shows the missing-VIN chip with its hint', function () {
+    $customer = Customer::query()->create(['first_name' => 'No', 'last_name' => 'Vin', 'phone' => '555-0171']);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2009,
+        'make' => 'Honda',
+        'model' => 'Fit',
+        'plate' => 'NOVIN1',
+    ]);
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.vehicles.search', ['q' => 'NOVIN1']))
+        ->assertOk()
+        ->assertSee('class="badge bg-yellow-lt"', false)
+        ->assertSee('VIN missing')
+        ->assertSee('title="'.e($vehicle->identityPressureHint()).'"', false);
+});
+
+test('the work filter keeps the vehicle filters open and counted on phones', function () {
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.vehicles.search', ['work' => 'open']))
+        ->assertOk()
+        ->assertSee('class="col-12 col-lg-6 col-xxl-auto collapse d-md-block show" id="vehicle-filters"', false)
+        ->assertSee('<option value="open" selected>Open RO</option>', false)
+        ->assertSee('aria-expanded="true"', false)
+        ->assertSee(route('operations.vehicles.search'), false);
+});
+
+test('vehicle search keeps its page actions and an empty state', function () {
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.vehicles.search', ['q' => 'Nothing Here']))
+        ->assertOk()
+        ->assertSee('href="'.route('operations.customers.search').'"', false)
+        ->assertSee('href="'.route('operations.repair-orders.index').'"', false)
+        ->assertSee('href="'.route('operations.intake.create').'"', false)
+        ->assertSee('title="Repair Orders" aria-label="Repair Orders" data-bs-toggle="tooltip"', false)
+        ->assertSee('No vehicles match &ldquo;Nothing Here&rdquo;.', false)
+        ->assertSee('Clear search');
 });

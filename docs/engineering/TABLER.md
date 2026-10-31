@@ -91,7 +91,22 @@ Filter rows on fluid pages switch fields to their natural width from `xxl` (`col
 - Buttons: `.btn`, `.btn-primary` for the one main action, `.btn-ghost-secondary` for Clear, grouped in `.btn-list`.
 - Icons: `<x-tabler.icon name="…">`. Add an icon by copying its paths from the `@tabler/icons` outline set into that component.
 - Repair-order status: `<x-tabler.status-badge :tone="$status->indexTone()">` and `RepairOrderStatusColor::tablerColorForChipTone()` for `card-status-start`. Colors follow the shop's configured status colors.
-- Lists: `.ark-card-grid` of `.card.card-sm`, or a `.card` with `.table-responsive`. Empty results use `.empty`.
+- Lists: `.ark-card-grid` of `<x-tabler.record-card>`, or a `.card` with `.table-responsive`.
+
+### Shared components
+
+Build record pages from these. Do not copy their markup into a view.
+
+| Component | Renders |
+| --- | --- |
+| `<x-tabler.page layout="…">` | Page header and body in the layout's container. |
+| `<x-tabler.page-action :href icon label [primary]>` | A header button. Secondary actions add an icon-only twin with a tooltip below `sm`. |
+| `<x-tabler.search-filters id action query placeholder label clear-url has-filters active-filter-count>` | The search card: search box and button, the phone Filters toggle and count, and the collapsible filter row. The slot holds the filter columns; an optional `hidden` slot holds hidden inputs. Field ids are `{id}-search` and `{id}-filters`. |
+| `<x-tabler.record-card :tone :actions>` | A `.card-sm` with the status color bar, the slot as its body, and the open-in icon row from `operations.partials.tabler-index-card-actions`. |
+| `<x-tabler.empty-state icon clear-url>` | The empty result, with "Clear search" when `clear-url` is set. |
+| `<x-tabler.status-badge :tone>` | A repair-order status badge. |
+| `<x-tabler.vehicle-identity-chip :vehicle>` | "VIN missing" with its hint as a tooltip. The legacy chip partial stays for unmigrated repair-order screens. |
+| `<x-tabler.icon name>` | A Tabler Icons outline icon. |
 - Pagination: `$paginator->links('pagination::bootstrap-5')`.
 - Tooltips, dropdowns, collapse, and modals use Tabler's `data-bs-*` attributes. Do not add Alpine or Preline for those.
 - Business logic, routes, permissions, and query parameters do not change. The controller is not touched.
@@ -111,7 +126,7 @@ Design the phone layout first, not as a squeezed desktop.
 
 1. Record its current behavior and the legacy classes it uses (below).
 2. Migrate the Blade view only.
-3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior.
+3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior. `TablerShellTest` compares the Tabler sidebar with the legacy rail on the Job Board (`operations.index`); when that view migrates, point those tests at another legacy page.
 4. Check 390, 820, 1440, 1920, and 2560 wide, light and dark, for horizontal overflow and stretched content: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search.
 5. List what still depends on `app.css`.
 6. Stop for review before the next view.
@@ -126,4 +141,14 @@ Before: `ops-index`, `ops-board-shell`, `ops-page-toolbar`, `ops-page-link`, `op
 
 After: Tabler only, `fluid` layout with `.ark-card-grid`. On a 390px phone the first result starts about 350px down instead of about 790px: Type, From, and To collapse behind "Filters", the subtitle is hidden, and Vehicles and Workboard are icon buttons. Unchanged: query parameters (`q`, `type`, `created_from`, `created_to`, `intake`), intake links, the Check In permission, 24 per page, and every card link.
 
-Still on `app.css`: the shell components listed under "Legacy components on a Tabler page". The vehicle search view still uses `x-operations.date-field` and `operations.partials.index-card-actions`; the Tabler counterparts are native date inputs and `operations.partials.tabler-index-card-actions`.
+Still on `app.css`: the shell components listed under "Legacy components on a Tabler page".
+
+### Vehicles (`operations.vehicles.search`)
+
+Chosen second to prove reuse: the same record-search shape as Customers with a different filter (Work: open RO or not) and the missing-VIN chip. Built entirely from the shared components; Customers moved onto the same components in the same change, with unchanged output.
+
+Before: the same `ops-*` index classes as Customers, plus `ops-index-card-chips`, `ops-ro-concern`, `ops-job-card__customer-link`, and the `ops-vehicle-identity-pressure-chip` partial.
+
+After: Tabler only, `fluid` layout with `.ark-card-grid`. Unchanged: query parameters (`q`, `work`, `created_from`, `created_to`), the controller, 24 per page, the Check In permission, the vehicle/documents/customer/RO links, and the "VIN missing" chip and its hint.
+
+Still on `app.css`: the shell components. `x-operations.date-field`, `operations.partials.index-card-actions`, and the vehicle identity chip partial are still used by unmigrated views.
