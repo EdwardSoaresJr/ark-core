@@ -61,6 +61,36 @@ test('an issued invoice keeps cash on the ledger payment path', function () {
         ->assertDontSee(route('operations.repair-orders.deposit.update', $repairOrder), false);
 });
 
+test('a rejected amount reopens the workspace with the error inside it', function () {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+    $repairOrder = financialCloseoutRepairOrder();
+    $show = route('operations.repair-orders.show', $repairOrder);
+
+    $html = $this->followingRedirects()->from($show)->patch(route('operations.repair-orders.deposit.update', $repairOrder), [
+        'amount' => '0',
+        'payment_method' => PaymentMethod::Cash->value,
+        'reference' => 'Synthetic check 42',
+        'deposit_confirmed' => '1',
+        \App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD => $repairOrder->estimate_version,
+        FinancialSubmissionIntentGate::FIELD => (string) Str::uuid(),
+    ])->assertOk()->getContent();
+    $message = 'The amount field must be at least 0.01.';
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $workspace = $xpath->query('//*[@data-payment-workspace]')->item(0);
+    $modal = $xpath->query('.//*[@data-payment-workspace-modal]', $workspace)->item(0);
+
+    expect($workspace->getAttribute('x-data'))->toContain('open: true')
+        ->and($modal->getAttribute('data-payment-workspace-dismiss'))->toBe('free')
+        ->and($modal->textContent)->toContain($message)
+        ->and($xpath->query('.//input[@name="reference"]', $modal)->item(0)->getAttribute('value'))->toBe('Synthetic check 42')
+        ->and(RepairOrderLedgerEntry::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(0);
+});
+
 test('a live reader wait stays in the workspace and cannot be dismissed casually', function () {
     $repairOrder = financialCloseoutRepairOrder();
     issueFinalInvoiceFor($repairOrder);
