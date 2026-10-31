@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyContinuityScope, applyContinuityScopes, applyEditorPresentation, CONTINUITY_REFRESH_FAILED_MESSAGE, replaceSubmittedRegion } from './ark-worksheet-continuity-scope.js';
+import { applyContinuityScope, applyContinuityScopes, applyEditorPresentation, CONTINUITY_REFRESH_FAILED_MESSAGE, continuityRegionKinds, replaceSubmittedRegion } from './ark-worksheet-continuity-scope.js';
 
 class El {
     constructor(tag, attrs = {}) {
@@ -713,4 +713,9 @@ test('replacing the submitted composer leaves the other composer', () => {
     assert.equal(current.getElementById('composer-field').value, 'DIRTY DURING EDIT');
     assert.equal(current.getElementById('workspace-line-create-9').textContent, 'empty');
     assert.equal(current.getElementById('part-description'), null);
+});
+
+test('line and authorization saves both refresh the estimate instruments region kind', () => {
+    assert.ok(continuityRegionKinds('lines').includes('authorized-money'));
+    assert.ok(continuityRegionKinds('authorization').includes('authorized-money'));
 });
