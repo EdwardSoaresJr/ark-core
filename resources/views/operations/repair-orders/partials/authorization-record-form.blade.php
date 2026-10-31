@@ -10,10 +10,15 @@
         fn ($concern) => $concern->disposition === RepairOrderConcernDisposition::Recommended,
     );
     $includesRecommendedWork = ! $hasApprovedScope && $hasRecommendedScope;
+    $workAuthorization = app(App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class);
+    $includesChangedWork = $hasApprovedScope
+        && $workAuthorization->approvedConcernIdsChangedSinceApproval($repairOrder) !== [];
     $defaultTotals = $includesRecommendedWork
         ? app(EstimateTotalsCalculator::class)->recommendedTotalsForRead($repairOrder)
         : ($approvedTotals ?? $totals);
-    $defaultApprovedAmount = number_format($defaultTotals->totalCents() / 100, 2, '.', '');
+    $defaultApprovedCents = $defaultTotals->totalCents()
+        + ($includesChangedWork ? $workAuthorization->workOutsideApprovedSalesCents($repairOrder) : 0);
+    $defaultApprovedAmount = number_format($defaultApprovedCents / 100, 2, '.', '');
 @endphp
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
@@ -23,6 +28,8 @@
             <p class="mt-0.5 text-[11px] leading-4 text-slate-500">
                 @if ($includesRecommendedWork)
                     Records the customer's approval of the recommended work on this estimate. Deferred and declined work is not included. Work added after this stays unauthorized.
+                @elseif ($includesChangedWork)
+                    Records the customer's approval of the work that needs authorization on approved scopes. Earlier approvals stay on file. Recommended, deferred, and declined work is not added.
                 @elseif ($hasApprovedScope)
                     Records the scopes already marked approved. This does not add recommended, deferred, or declined work.
                 @else

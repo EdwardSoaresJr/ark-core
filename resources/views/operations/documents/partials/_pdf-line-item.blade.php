@@ -34,6 +34,9 @@
                 'workGroupTitle' => $workGroupTitle ?? '',
                 'variant' => 'pdf',
             ])
+            @if (($line['not_approved_cents'] ?? 0) > 0)
+                <div class="line-col--muted">Billed at the approved amount. {{ $line['not_approved'] }} more is not approved and not billed.</div>
+            @endif
         </div>
         <div class="line-col">{{ $line['quantity'] }}</div>
         <div class="line-col">{{ $line['unit_price'] }}</div>

@@ -20,6 +20,7 @@ class RepairOrderAuthorizationStoreController
         EstimateTotalsCalculator $totalsCalculator,
         ResolveStaffAuthorizationType $resolveAuthorizationType,
         RepairOrderConcurrency $concurrency,
+        WorkCompletionAuthorization $workAuthorization,
     ): RedirectResponse {
         $repairOrder->ensureOpenForEditing();
         $concurrency->guard($request, $repairOrder);
@@ -34,8 +35,14 @@ class RepairOrderAuthorizationStoreController
         ]);
 
         $concernDispositions = $this->presentedRecommendedDispositions($repairOrder);
+        $changedApprovedScopes = array_fill_keys(
+            $workAuthorization->approvedConcernIdsChangedSinceApproval($repairOrder),
+            RepairOrderConcernDisposition::Approved->value,
+        );
 
-        if ($concernDispositions === [] && ! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
+        if ($concernDispositions === []
+            && $changedApprovedScopes === []
+            && ! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
             return back()
                 ->withErrors(['authorization' => 'There is no approved work on this estimate to record.'])
                 ->withInput();
@@ -50,9 +57,11 @@ class RepairOrderAuthorizationStoreController
             approvalType: $approvalType,
             source: ApprovalSource::from($data['source']),
             approvedBy: $data['approved_by'],
-            approvedAmountCents: $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
+            approvedAmountCents: $changedApprovedScopes !== [] && $this->leftAtChangedScopeDefault($data, $repairOrder, $totalsCalculator, $workAuthorization)
+                ? null
+                : $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
             notes: $data['notes'] ?? null,
-            concernDispositions: $concernDispositions,
+            concernDispositions: $concernDispositions + $changedApprovedScopes,
             actor: $request->user(),
         );
 
@@ -97,6 +106,31 @@ class RepairOrderAuthorizationStoreController
         }
 
         return $dispositions;
+    }
+
+    /**
+     * The presented default for approving changed work is the approved total plus that work.
+     * Left as presented, the recorded amount is the approved total after this approval.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function leftAtChangedScopeDefault(
+        array $data,
+        RepairOrder $repairOrder,
+        EstimateTotalsCalculator $totalsCalculator,
+        WorkCompletionAuthorization $workAuthorization,
+    ): bool {
+        if (! isset($data['approved_amount'])) {
+            return true;
+        }
+
+        $posted = (int) round(((float) $data['approved_amount']) * 100);
+        $approvedNow = $totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
+
+        return in_array($posted, [
+            $approvedNow,
+            $approvedNow + $workAuthorization->workOutsideApprovedSalesCents($repairOrder),
+        ], true);
     }
 
     /**

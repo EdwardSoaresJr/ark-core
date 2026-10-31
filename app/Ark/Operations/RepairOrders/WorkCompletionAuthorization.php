@@ -4,6 +4,7 @@ namespace App\Ark\Operations\RepairOrders;
 
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
+use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -130,7 +131,8 @@ final class WorkCompletionAuthorization
     }
 
     /**
-     * Labor and part lines on an Approved concern that the customer approval does not cover.
+     * Labor and part lines on an Approved concern that the customer approval does not cover,
+     * and approved lines whose price rose after that approval.
      * An exception does not remove a line from this list.
      *
      * @return Collection<int, RepairOrderLine>
@@ -139,9 +141,10 @@ final class WorkCompletionAuthorization
     {
         $repairOrder->loadMissing(['lines.concern']);
         $covered = $this->customerApprovedLaborAndPartIdSet($repairOrder);
+        $increased = $this->approvedSubtotalsBeforeIncrease($repairOrder);
 
         return $repairOrder->lines
-            ->filter(function (RepairOrderLine $line) use ($covered): bool {
+            ->filter(function (RepairOrderLine $line) use ($covered, $increased): bool {
                 if (! $this->requiresCoverage($line)) {
                     return false;
                 }
@@ -150,9 +153,147 @@ final class WorkCompletionAuthorization
                     return false;
                 }
 
-                return ! isset($covered[(int) $line->id]);
+                return ! isset($covered[(int) $line->id]) || isset($increased[(int) $line->id]);
             })
             ->values();
+    }
+
+    /**
+     * The approved subtotal of each approved line now priced above what the customer approved.
+     * The line keeps its approval for the work; only the increase waits for the customer.
+     *
+     * @return array<int, int> line id => approved subtotal cents
+     */
+    public function approvedSubtotalsBeforeIncrease(RepairOrder $repairOrder): array
+    {
+        return $this->changesSinceApproval($repairOrder)['increased'];
+    }
+
+    /**
+     * Lines the customer approved that are no longer on their approved concern.
+     *
+     * @return list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>
+     */
+    public function approvedLinesRemoved(RepairOrder $repairOrder): array
+    {
+        return $this->changesSinceApproval($repairOrder)['removed'];
+    }
+
+    /**
+     * Approved concerns whose labor and part lines were added, raised, or removed since
+     * the latest customer approval. Recording a new approval re-scopes these.
+     *
+     * @return list<int>
+     */
+    public function approvedConcernIdsChangedSinceApproval(RepairOrder $repairOrder): array
+    {
+        return $this->changesSinceApproval($repairOrder)['concern_ids'];
+    }
+
+    /**
+     * What still waits for the customer: added lines at their total, raised lines at the increase.
+     */
+    public function pendingApprovalCents(RepairOrder $repairOrder, RepairOrderLine $line): int
+    {
+        $approvedSubtotal = $this->approvedSubtotalsBeforeIncrease($repairOrder)[(int) $line->id] ?? null;
+
+        if ($approvedSubtotal === null) {
+            return (int) $line->total_cents;
+        }
+
+        $approvedPortion = app(EstimateTotalsCalculator::class)->approvedPortionOfLine($line, $approvedSubtotal);
+
+        return max(0, (int) $line->total_cents - (int) $approvedPortion->total_cents);
+    }
+
+    /**
+     * Money on approved concerns outside approved sales: added lines and the increase on raised lines.
+     */
+    public function workOutsideApprovedSalesCents(RepairOrder $repairOrder): int
+    {
+        return (int) $this->linesRequiringAuthorization($repairOrder)
+            ->sum(fn (RepairOrderLine $line): int => $this->pendingApprovalCents($repairOrder, $line));
+    }
+
+    public function approvalSubtotalCents(RepairOrderLine $line): int
+    {
+        return app(EstimateTotalsCalculator::class)->lineTotalCents($line->quantity ?? 0, (int) $line->unit_price_cents);
+    }
+
+    /**
+     * @return array{increased: array<int, int>, removed: list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>, concern_ids: list<int>}
+     */
+    private function changesSinceApproval(RepairOrder $repairOrder): array
+    {
+        return app(RepairOrderReadCache::class)->remember(
+            'approval-changes:'.$repairOrder->getKey(),
+            function () use ($repairOrder): array {
+                $repairOrder->loadMissing(['concerns', 'lines.concern']);
+
+                $approvedConcernIds = $repairOrder->concerns
+                    ->filter(fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved)
+                    ->pluck('id')
+                    ->map(fn (mixed $id): int => (int) $id)
+                    ->all();
+
+                if ($approvedConcernIds === []) {
+                    return ['increased' => [], 'removed' => [], 'concern_ids' => []];
+                }
+
+                $scopes = ApprovedWorkScope::query()
+                    ->whereIn('repair_order_concern_id', $approvedConcernIds)
+                    ->orderBy('id')
+                    ->get()
+                    ->groupBy('repair_order_concern_id')
+                    ->map(fn (Collection $rows): ApprovedWorkScope => $rows->last());
+
+                $covered = $this->customerApprovedLaborAndPartIdSet($repairOrder);
+                $increased = [];
+                $removed = [];
+                $changed = [];
+                $currentLineIds = [];
+
+                foreach ($repairOrder->lines as $line) {
+                    $concernId = (int) $line->repair_order_concern_id;
+
+                    if (! $this->requiresCoverage($line) || ! in_array($concernId, $approvedConcernIds, true)) {
+                        continue;
+                    }
+
+                    $currentLineIds[$concernId][(int) $line->id] = true;
+
+                    if (! isset($covered[(int) $line->id])) {
+                        $changed[$concernId] = true;
+
+                        continue;
+                    }
+
+                    $approved = $scopes->get($concernId)?->approvedLines()[(int) $line->id] ?? null;
+
+                    if ($approved !== null && $this->approvalSubtotalCents($line) > $approved['subtotal_cents']) {
+                        $increased[(int) $line->id] = $approved['subtotal_cents'];
+                        $changed[$concernId] = true;
+                    }
+                }
+
+                foreach ($scopes as $concernId => $scope) {
+                    foreach ($scope->approvedLines() as $lineId => $approved) {
+                        if (isset($currentLineIds[(int) $concernId][$lineId])) {
+                            continue;
+                        }
+
+                        $removed[] = ['concern_id' => (int) $concernId, ...$approved];
+                        $changed[(int) $concernId] = true;
+                    }
+                }
+
+                return [
+                    'increased' => $increased,
+                    'removed' => $removed,
+                    'concern_ids' => array_map('intval', array_keys($changed)),
+                ];
+            },
+        );
     }
 
     /**

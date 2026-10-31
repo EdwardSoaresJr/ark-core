@@ -7,6 +7,7 @@ use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\InvoiceSnapshotBuilder;
 use App\Ark\Operations\Labor\TechnicianFlagRecognition;
 use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
 use App\Ark\Operations\RepairOrders\AuthorizationException;
@@ -131,7 +132,7 @@ test('a part added after approval installs without reauthorization and stays out
         ->assertDontSee('Needs authorization');
 });
 
-test('known issue #66: raising an approved line above the customer approval still counts it as approved', function () {
+test('#66: raising an approved line counts only the approved amount in approved dollars and the invoice', function () {
     $advisor = integrityAdvisor();
     [$repairOrder, $concern, $part] = integrityRepairOrder();
 
@@ -154,13 +155,66 @@ test('known issue #66: raising an approved line above the customer approval stil
     $calculator->recalculateRepairOrder($repairOrder->fresh());
 
     $coverage = app(WorkCompletionAuthorization::class);
+    $currentTotal = $calculator->totalsFor($repairOrder->fresh())->totalCents();
 
-    // Current behavior. Fixing #66 flips these: the increase must stop counting as customer-approved.
-    expect($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBeGreaterThan($approval->fresh()->approved_amount_cents)
-        ->and($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())->toBeGreaterThan($approval->fresh()->approved_amount_cents)
+    expect($currentTotal)->toBeGreaterThan($approvedAtApproval)
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())->toBe($approvedAtApproval)
+        ->and($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())->toBe($approvedAtApproval)
         ->and($approval->fresh()->approved_amount_cents)->toBe($approvedAtApproval)
         ->and($coverage->customerApprovalCovers($part->fresh(['concern'])))->toBeTrue()
-        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->not->toContain($part->id);
+        ->and($coverage->linesRequiringAuthorization($repairOrder->fresh())->pluck('id')->all())->toContain($part->id)
+        ->and($coverage->workOutsideApprovedSalesCents($repairOrder->fresh()))->toBe($currentTotal - $approvedAtApproval)
+        ->and($part->fresh()->quantity)->toEqual('2.00');
+
+    $invoice = app(InvoiceSnapshotBuilder::class)->build($repairOrder->fresh(), $advisor);
+    $invoiceLine = collect($invoice['concerns'][0]['lines'])->firstWhere('id', $part->id);
+
+    expect($invoice['totals']['total_cents'])->toBe($approvedAtApproval)
+        ->and($invoiceLine['total_cents'])->toBe($approvedAtApproval)
+        ->and($invoiceLine['not_approved_cents'])->toBe($currentTotal - $approvedAtApproval);
+
+    app(RecordCustomerAuthorizationAction::class)->execute(
+        repairOrder: $repairOrder->fresh(),
+        approvalType: ApprovalType::Repair,
+        source: ApprovalSource::Phone,
+        approvedBy: 'Paul Howell',
+        approvedAmountCents: null,
+        notes: null,
+        concernDispositions: [$concern->id => RepairOrderConcernDisposition::Approved->value],
+        actor: $advisor,
+    );
+
+    expect($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())->toBe($currentTotal)
+        ->and($approval->fresh()->approved_amount_cents)->toBe($approvedAtApproval);
+});
+
+test('#66: a lowered approved line stays approved at the lower amount', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    approveConcern($repairOrder, $concern, $advisor);
+
+    $part->update(['unit_price_cents' => intdiv((int) $part->unit_price_cents, 2)]);
+    $calculator = app(EstimateTotalsCalculator::class);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+
+    expect($calculator->approvedTotalsForRead($repairOrder->fresh())->totalCents())
+        ->toBe($calculator->totalsFor($repairOrder->fresh())->totalCents())
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh()))->toBeEmpty();
+});
+
+test('#66: a scope recorded before approved amounts were kept still counts the current amount', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    approveConcern($repairOrder, $concern, $advisor);
+    ApprovedWorkScope::query()->where('repair_order_concern_id', $concern->id)->update(['approved_lines' => null]);
+
+    $part->update(['quantity' => '2.00']);
+    $calculator = app(EstimateTotalsCalculator::class);
+    $calculator->recalculateRepairOrder($repairOrder->fresh());
+
+    expect($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())
+        ->toBe($calculator->totalsFor($repairOrder->fresh())->totalCents())
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh()))->toBeEmpty();
 });
 
 test('labor added after approval does not block completion or a finished status and stays unresolved', function () {
