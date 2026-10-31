@@ -284,3 +284,21 @@ Colors come from the presentation types, so each palette stays in one place: `Re
 - `x-operations.scope-header` takes `ui="tabler"`; the estimate document page keeps the legacy header. `repair-order-concern-disposition-decision` and `finding-from-verified-findings-nudge` take a `ui` variable for the same reason.
 - `x-operations.help-tip` is now an inline island itself, so its legacy tooltip renders inside Tabler markup.
 - Tests that checked `ops-worksheet-concern--{disposition}` and similar classes check `data-concern-disposition`, `data-concern-narrative`, `data-scope-parts-catalog`, and `data-disposition-tone`.
+
+### Repair order worksheet: line rows (`operations.repair-orders.show`)
+
+The work section inside each concern card: repair action groups, line rows, the ledger head, suggested repairs, and the compose buttons. The concern card's only remaining island is the authorization exception dialog.
+
+Line rows are presentation only. Editing quantity, price, and the rest happens in the workspace modal's edit-line form (`editLine()` through the row's `data-line-edit-trigger` link), which is unchanged.
+
+Kept for the worksheet scripts:
+
+- Each row stays `id="line-{id}"` with `data-continuity-region="line"`, a direct child of `repair-action-lines-{group}` or `concern-lines-{concern}`. Continuity replaces a saved row by id and mounts a new one by its parent's id.
+- The row's click and Enter/Space handlers, `data-line-card-ignore` on its controls, and the edit link's `data-continuity-focus` are unchanged.
+- The part status select keeps `data-procurement-select`, `data-current-state`, and its `data-procurement-form`, which `initPartProcurementSelect()` submits.
+
+Layout: `.ark-line-grid` in `tabler.css` keeps the legacy column widths (a flexible description and six money columns from md). On phones `.ark-line-ledger` is a labelled quantity, price, and total strip under the description; from md the ledger head labels the columns.
+
+Colors: `RepairOrderLineType::tablerColor()` for the type label and compose icons, and `RepairOrderLineItemPresentation` for procurement status, the row accent (backordered, partial, installed), part flags, and margin, each beside the legacy tone it matches. `repair-order-part-procurement-actions` and `repair-order-note-visibility-badge` take a `ui` variable, so the rail's parts panel and the estimate document keep their legacy output.
+
+The Customer Total instrument is not a continuity region, so a line save updates the row, concern subtotal, and rail totals in place and the instrument on the next load. That is unchanged from the legacy worksheet.

@@ -7,7 +7,6 @@
     $showProcurement = $showProcurement ?? true;
     $lineGrid = $lineGrid ?? 'worksheet';
     $isTerminal = $isTerminal ?? true;
-    $lineGridClass = 'md:grid-cols-[minmax(0,1fr)_4.25rem_78px_64px_64px_64px_88px]';
     $lineMoneyDash = '-';
     $partStateOptions = $partStateOptions ?? [];
     $estimateVersion = $estimateVersion ?? null;
@@ -18,15 +17,17 @@
     $linePresentationMode = $linePresentationMode ?? (
         ($showActions && ! $isTerminal && $lineGrid !== 'review') ? 'edit' : 'view'
     );
+    $lineAccentColor = RepairOrderLineItemPresentation::procurementRowAccentTablerColor($procurementTone);
 @endphp
 
 <div
     id="line-{{ $line->id }}"
     data-continuity-region="line"
+    data-line-type="{{ $line->type->value }}"
+    @if ($procurementTone) data-procurement-tone="{{ $procurementTone }}" @endif
     @class([
-        'ops-line-card ops-line-row group scroll-mt-24 bg-white',
-        'ops-line-card--interactive' => $showActions && ! $isTerminal && $lineGrid !== 'review',
-        $procurementTone ? 'ops-line-card--procurement-'.$procurementTone : null,
+        'list-group-item scroll-mt-24',
+        'list-group-item-action' => $showActions && ! $isTerminal && $lineGrid !== 'review',
     ])
     @if ($showActions && ! $isTerminal && $lineGrid !== 'review')
         @click="
@@ -54,6 +55,9 @@
         "
     @endif
 >
+    @if ($lineAccentColor)
+        <div class="card-status-start bg-{{ $lineAccentColor }}"></div>
+    @endif
     @include('operations.repair-orders.partials.repair-order-line-card', [
         'line' => $line,
         'lineTitle' => $lineTitle,
@@ -63,7 +67,6 @@
         'showActions' => $showActions,
         'showProcurement' => $showProcurement,
         'lineGrid' => $lineGrid,
-        'lineGridClass' => $lineGridClass,
         'isTerminal' => $isTerminal,
         'lineMoneyDash' => $lineMoneyDash,
         'partStateOptions' => $partStateOptions,

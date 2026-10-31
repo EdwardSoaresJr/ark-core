@@ -27,7 +27,6 @@
     $factPriceValue = $isPartLine || $line->type->value === 'sublet'
         ? ($line->part_cost_cents !== null ? $totals->format($line->part_cost_cents) : $totals->format($line->unit_price_cents))
         : $totals->format($line->unit_price_cents);
-    $lineGridClass = $lineGridClass ?? 'md:grid-cols-[minmax(0,1fr)_4.25rem_78px_64px_64px_64px_88px]';
     $contextLines = $isViewMode
         ? RepairOrderLineItemPresentation::viewContextLines($line)
         : RepairOrderLineItemPresentation::editContextLines($line);
@@ -38,27 +37,25 @@
             fn ($exception): bool => in_array((int) $line->id, $exception->lineIds(), true),
         )
         : collect();
+    $canEditLine = $showActions && ! ($isTerminal ?? true) && $lineGrid !== 'review';
 @endphp
 
-<div @class([
-    'ops-line-card__main',
-    'ops-line-card__main--note' => $isNoteLine,
-    'grid gap-2 md:items-start '.$lineGridClass => ! $isNoteLine,
-])>
-    @if ($isNoteLine)
-        <div class="ops-line-card__content ops-line-card__content--note min-w-0 w-full">
-            <div class="ops-line-card__note-toolbar justify-between">
-                <div class="flex min-w-0 flex-wrap items-center gap-1.5">
-                    <span class="ops-line-type ops-line-type--note">{{ $noteTypeLabel }}</span>
-                    @include('operations.repair-orders.partials.repair-order-note-visibility-badge', [
-                        'audience' => [
-                            'advisor' => $noteAudience->advisor,
-                            'technician' => $noteAudience->technician,
-                            'customer' => $noteAudience->customer,
-                        ],
-                    ])
-                </div>
-                @unless ($isTerminal ?? true)
+@if ($isNoteLine)
+    <div style="min-width: 0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center gap-1">
+                <span class="subheader text-{{ $line->type->tablerColor() }} me-1">{{ $noteTypeLabel }}</span>
+                @include('operations.repair-orders.partials.repair-order-note-visibility-badge', [
+                    'audience' => [
+                        'advisor' => $noteAudience->advisor,
+                        'technician' => $noteAudience->technician,
+                        'customer' => $noteAudience->customer,
+                    ],
+                    'ui' => 'tabler',
+                ])
+            </div>
+            @unless ($isTerminal ?? true)
+                <div class="btn-list">
                     @if ($showActions && $lineGrid !== 'review')
                         <a
                             href="{{ $lineEditUrl }}"
@@ -67,59 +64,63 @@
                             data-refresh-scope="worksheet"
                             data-continuity-focus="#line-update-{{ $line->id }} [name='description']"
                             @click.stop="typeof editLine === 'function' ? editLine($event) : null"
-                            class="ops-line-card__edit"
+                            class="btn btn-sm btn-ghost-secondary"
                             aria-label="Edit {{ $line->description }}"
                         >Edit</a>
                     @endif
                     @if (filled(trim((string) ($lineTitle ?? $line->description ?? ''))))
                         <button
                             type="button"
-                            class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-800"
+                            class="btn btn-sm btn-ghost-secondary"
                             data-line-card-ignore
                             @click.stop="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'dragon-service-advisor-line-note', context: { lineId: {{ $line->id }} }, invokeEl: $event.currentTarget } }))"
                         >
                             Rewrite
                         </button>
                     @endif
-                @endunless
-            </div>
-            <x-operations.note-body :text="$lineTitle" class="ops-note-body--worksheet" />
-            <p class="ops-line-card__note-meta">
-                @if ($noteAudience->customer && $noteAudience->technician)
-                    On tech sheet and customer estimate
-                @elseif ($noteAudience->customer)
-                    On customer estimate
-                @elseif ($noteAudience->technician)
-                    On tech sheet · hidden from customer
-                @else
-                    Advisor only · hidden from tech sheet and customer
-                @endif
-            </p>
-        </div>
-    @else
-        <div class="ops-line-card__content min-w-0">
-            <div class="ops-line-card__head">
-                <div class="min-w-0 flex-1">
-                    <span class="ops-line-type ops-line-type--{{ $line->type->value }}">{{ $line->type->staffLabel() }}</span>
-                    @if ($needsAuthorization)
-                        <span class="text-[11px] font-semibold text-amber-950">Needs authorization</span>
-                    @endif
-                    @if ($lineExceptions->isNotEmpty())
-                        <button
-                            type="button"
-                            class="ops-line-exception"
-                            data-line-card-ignore
-                            data-authorization-exception-line="{{ $line->id }}"
-                            aria-haspopup="dialog"
-                            aria-label="{{ $lineExceptions->count() === 1 ? 'View work exception' : 'View work exceptions' }}"
-                            @click.stop="window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', { detail: { concernId: {{ $concern->id }}, mode: 'inspect', lineId: {{ $line->id }}, invokeEl: $event.currentTarget } }))"
-                        >
-                            Exception
-                        </button>
-                    @endif
-                    <p class="ops-line-card__title truncate">{{ $lineTitle }}</p>
                 </div>
-                @if ($showActions && ! $isTerminal && $lineGrid !== 'review')
+            @endunless
+        </div>
+        <x-operations.note-body :text="$lineTitle" class="mt-1" />
+        <p class="small text-secondary mt-1 mb-0">
+            @if ($noteAudience->customer && $noteAudience->technician)
+                On tech sheet and customer estimate
+            @elseif ($noteAudience->customer)
+                On customer estimate
+            @elseif ($noteAudience->technician)
+                On tech sheet · hidden from customer
+            @else
+                Advisor only · hidden from tech sheet and customer
+            @endif
+        </p>
+    </div>
+@else
+    <div class="ark-line-grid">
+        <div style="min-width: 0">
+            <div class="d-flex align-items-start gap-2">
+                <div class="flex-fill" style="min-width: 0">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="subheader text-{{ $line->type->tablerColor() }}">{{ $line->type->staffLabel() }}</span>
+                        @if ($needsAuthorization)
+                            <span class="badge bg-yellow-lt">Needs authorization</span>
+                        @endif
+                        @if ($lineExceptions->isNotEmpty())
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-ghost-warning py-0"
+                                data-line-card-ignore
+                                data-authorization-exception-line="{{ $line->id }}"
+                                aria-haspopup="dialog"
+                                aria-label="{{ $lineExceptions->count() === 1 ? 'View work exception' : 'View work exceptions' }}"
+                                @click.stop="window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', { detail: { concernId: {{ $concern->id }}, mode: 'inspect', lineId: {{ $line->id }}, invokeEl: $event.currentTarget } }))"
+                            >
+                                Exception
+                            </button>
+                        @endif
+                    </div>
+                    <div class="fw-medium text-truncate">{{ $lineTitle }}</div>
+                </div>
+                @if ($canEditLine)
                     <a
                         href="{{ $lineEditUrl }}"
                         data-line-edit-trigger
@@ -127,22 +128,21 @@
                         data-refresh-scope="worksheet"
                         data-continuity-focus="#line-update-{{ $line->id }} [name='description']"
                         @click.stop="typeof editLine === 'function' ? editLine($event) : null"
-                        class="ops-line-card__edit"
+                        class="btn btn-sm btn-ghost-secondary"
                         aria-label="Edit {{ $line->description }}"
                     >Edit</a>
                 @endif
-                <p class="ops-line-card__total shrink-0 tabular-nums md:hidden">{{ $totals->format($line->total_cents) }}</p>
+                <div class="fw-bold text-nowrap d-md-none">{{ $totals->format($line->total_cents) }}</div>
             </div>
 
             @if ($isPartLine)
-                <div class="ops-line-card__chips flex min-w-0 flex-wrap items-center gap-1">
+                <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
                     @if ($supplierLabel)
                         <x-operations.inspect-popover
                             :title="$supplierInspect['title'] ?? null"
                             :items="$supplierInspect['items'] ?? []"
-                            class="ops-line-card__inspect-chip"
                         >
-                            <x-operations.line-item.supplier-chip :label="$supplierLabel" />
+                            <span class="badge bg-azure-lt">{{ $supplierLabel }}</span>
                         </x-operations.inspect-popover>
                     @endif
 
@@ -150,7 +150,6 @@
                         <x-operations.inspect-popover
                             :title="$procurementInspect['title'] ?? null"
                             :items="$procurementInspect['items'] ?? []"
-                            class="ops-line-card__inspect-chip"
                         >
                             @include('operations.repair-orders.partials.repair-order-part-procurement-actions', [
                                 'line' => $line,
@@ -159,18 +158,15 @@
                                 'partStateOptions' => $partStateOptions,
                                 'statusChipTone' => $statusTone,
                                 'returnMode' => $lineGrid === 'review' ? 'review' : null,
+                                'ui' => 'tabler',
                             ])
                         </x-operations.inspect-popover>
                     @else
                         <x-operations.inspect-popover
                             :title="$procurementInspect['title'] ?? null"
                             :items="$procurementInspect['items'] ?? []"
-                            class="ops-line-card__inspect-chip"
                         >
-                            <x-operations.line-item.status-chip
-                                :label="$line->procurementStateLabel()"
-                                :tone="$statusTone"
-                            />
+                            <span class="badge bg-{{ RepairOrderLineItemPresentation::procurementTablerColor($statusTone) }}-lt">{{ $line->procurementStateLabel() }}</span>
                         </x-operations.inspect-popover>
                     @endif
 
@@ -180,34 +176,30 @@
                     @endphp
                     <button
                         type="button"
-                        class="text-[11px] font-semibold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+                        class="btn btn-sm btn-link"
                         data-line-card-ignore
                         @click.stop="window.arkPrintPartsLabelsBatch(@js($partsLabelUrls), $event.currentTarget)"
                     >
                         {{ $partsLabelCount > 1 ? 'Print labels' : 'Print label' }}
                         @if ($partsLabelCount > 1)
-                            <span class="tabular-nums text-slate-500">({{ $partsLabelCount }})</span>
+                            <span class="text-secondary ms-1">({{ $partsLabelCount }})</span>
                         @endif
                     </button>
 
                     @if ($line->has_core)
-                        <x-operations.line-item.part-flag-chip label="Core" variant="core" />
+                        <span class="badge bg-{{ RepairOrderLineItemPresentation::partFlagTablerColor('core') }}-lt">Core</span>
                     @endif
 
                     @if ($line->save_old_part)
-                        <x-operations.line-item.part-flag-chip label="Save" variant="save" />
+                        <span class="badge bg-{{ RepairOrderLineItemPresentation::partFlagTablerColor('save') }}-lt">Save</span>
                     @endif
 
                     @if ($matrixPricingChip)
                         <x-operations.inspect-popover
                             :title="$matrixInspect['title'] ?? null"
                             :items="$matrixInspect['items'] ?? []"
-                            class="ops-line-card__inspect-chip"
                         >
-                            <x-operations.line-item.part-flag-chip
-                                :label="$matrixPricingChip['label']"
-                                :variant="$matrixPricingChip['variant']"
-                            />
+                            <span class="badge bg-{{ RepairOrderLineItemPresentation::partFlagTablerColor($matrixPricingChip['variant']) }}-lt">{{ $matrixPricingChip['label'] }}</span>
                         </x-operations.inspect-popover>
                     @endif
 
@@ -220,7 +212,7 @@
                         @if ($dealerQuoteForSource)
                             <a
                                 href="{{ route('operations.repair-orders.dealer-quotes.show', [$repairOrder, $dealerQuoteForSource]) }}"
-                                class="ops-line-card__source-link text-[10px] font-bold uppercase tracking-[0.08em] text-sky-700 hover:text-sky-900"
+                                class="btn btn-sm btn-link"
                                 data-line-card-ignore
                             >
                                 Source
@@ -230,98 +222,65 @@
                 </div>
             @endif
 
-            <div class="ops-line-card__facts">
-                <div class="ops-line-card__facts-line">
-                    <span>Qty {{ $line->quantity }}</span>
-                    <span class="ops-line-card__facts-sep" aria-hidden="true">•</span>
-                    <span>{{ $factPriceLabel }} {{ $factPriceValue }}</span>
-                    @if ($isPartLine && $profitability)
-                        <span class="ops-line-card__facts-sep" aria-hidden="true">•</span>
-                        <x-operations.inspect-popover
-                            :title="$profitabilityInspect['title'] ?? null"
-                            :items="$profitabilityInspect['items'] ?? []"
-                            :footer="$profitabilityInspect['footer'] ?? null"
-                            class="ops-line-card__inspect-margin"
-                        >
-                            <span @class([
-                                'ops-line-card__margin-label',
-                                'ops-line-card__margin-label--'.$profitability['tone'],
-                            ])>{{ $profitability['label'] }} {{ $profitability['percent'] }}%</span>
-                        </x-operations.inspect-popover>
-                    @endif
-                </div>
+            <div class="small text-secondary mt-1">
+                <span>Qty {{ $line->quantity }}</span>
+                <span class="mx-1" aria-hidden="true">•</span>
+                <span>{{ $factPriceLabel }} {{ $factPriceValue }}</span>
+                @if ($isPartLine && $profitability)
+                    <span class="mx-1" aria-hidden="true">•</span>
+                    <x-operations.inspect-popover
+                        :title="$profitabilityInspect['title'] ?? null"
+                        :items="$profitabilityInspect['items'] ?? []"
+                        :footer="$profitabilityInspect['footer'] ?? null"
+                    >
+                        <span class="fw-medium text-{{ RepairOrderLineItemPresentation::profitabilityTablerColor($profitability['tone']) }}">{{ $profitability['label'] }} {{ $profitability['percent'] }}%</span>
+                    </x-operations.inspect-popover>
+                @endif
             </div>
 
             @foreach ($contextLines as $contextLine)
-                <p class="ops-line-card__context">{{ $contextLine }}</p>
+                <p class="small text-secondary mt-1 mb-0">{{ $contextLine }}</p>
             @endforeach
         </div>
 
-        <div @class([
-            'ops-line-ledger grid grid-cols-3 gap-2 text-right md:contents',
-            'max-md:mt-1 max-md:border-t max-md:border-slate-100 max-md:pt-1.5' => $lineGrid === 'review',
-            'max-md:mt-1 max-md:border-t max-md:border-slate-100 max-md:pt-1' => $lineGrid !== 'review',
-        ])>
-            <div class="md:block">
-                @if ($lineGrid === 'review')
-                    <p class="ops-line-column-label max-md:block md:hidden">Qty/Hrs</p>
-                @else
-                    <p class="ops-line-column-label">Qty/Hrs</p>
-                @endif
-                <p class="ops-line-ledger__value tabular-nums">{{ $line->quantity }}</p>
+        <div class="ark-line-ledger" data-line-ledger>
+            <div>
+                <div class="subheader d-md-none">Qty/Hrs</div>
+                <div>{{ $line->quantity }}</div>
             </div>
 
-            <div class="md:block">
-                @if ($lineGrid === 'review')
-                    <p class="ops-line-column-label max-md:block md:hidden">Price</p>
-                @else
-                    <p class="ops-line-column-label">Price</p>
-                @endif
-                <p class="ops-line-ledger__value tabular-nums">{{ $totals->format($line->unit_price_cents) }}</p>
+            <div>
+                <div class="subheader d-md-none">Price</div>
+                <div>{{ $totals->format($line->unit_price_cents) }}</div>
             </div>
 
-            <div class="max-md:hidden md:block">
-                @if ($lineGrid !== 'review')
-                    <p class="ops-line-column-label">Subtotal</p>
-                @endif
-                <p class="ops-line-ledger__value tabular-nums">{{ $totals->format($line->subtotal_cents) }}</p>
+            <div class="d-none d-md-block">
+                <div>{{ $totals->format($line->subtotal_cents) }}</div>
             </div>
 
-            <div class="max-md:hidden md:block">
-                @if ($lineGrid !== 'review')
-                    <p class="ops-line-column-label">Fees</p>
-                @endif
-                <p class="ops-line-ledger__value ops-line-ledger__value--muted tabular-nums">{{ $line->shop_fee_cents > 0 ? $totals->format($line->shop_fee_cents) : $lineMoneyDash }}</p>
+            <div class="d-none d-md-block">
+                <div class="text-secondary">{{ $line->shop_fee_cents > 0 ? $totals->format($line->shop_fee_cents) : $lineMoneyDash }}</div>
             </div>
 
-            <div class="max-md:hidden md:block">
-                @if ($lineGrid !== 'review')
-                    <p class="ops-line-column-label">Tax</p>
-                @endif
-                <p class="ops-line-ledger__value ops-line-ledger__value--muted tabular-nums">{{ $line->tax_cents > 0 ? $totals->format($line->tax_cents) : $lineMoneyDash }}</p>
+            <div class="d-none d-md-block">
+                <div class="text-secondary">{{ $line->tax_cents > 0 ? $totals->format($line->tax_cents) : $lineMoneyDash }}</div>
             </div>
 
-            <div class="md:text-right">
-                @if ($lineGrid === 'review')
-                    <p class="ops-line-column-label max-md:block md:hidden">Total</p>
-                @else
-                    <p class="ops-line-column-label">Total</p>
-                @endif
+            <div>
+                <div class="subheader d-md-none">Total</div>
                 @if ($isPartLine && $profitabilityInspect)
                     <x-operations.inspect-popover
                         :title="$profitabilityInspect['title'] ?? null"
                         :items="$profitabilityInspect['items'] ?? []"
                         :footer="$profitabilityInspect['footer'] ?? null"
                         align="end"
-                        class="ops-line-card__inspect-total"
                     >
-                        <p class="ops-line-ledger__value ops-line-ledger__value--total tabular-nums">{{ $totals->format($line->total_cents) }}</p>
+                        <span class="fw-bold">{{ $totals->format($line->total_cents) }}</span>
                     </x-operations.inspect-popover>
                 @else
-                    <p class="ops-line-ledger__value ops-line-ledger__value--total tabular-nums">{{ $totals->format($line->total_cents) }}</p>
+                    <div class="fw-bold">{{ $totals->format($line->total_cents) }}</div>
                 @endif
             </div>
         </div>
-    @endif
-
-</div>
+    </div>
+@endif

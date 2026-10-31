@@ -64,6 +64,39 @@
     overflow-x: visible;
 }
 
+/*
+ * Repair order line rows: a flexible description column and fixed money columns from md, shared with the ledger head.
+ * On phones the money cells form a labelled three-column strip (quantity, price, total) under the description; from md
+ * the ledger head labels the columns.
+ */
+.ark-line-grid {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.ark-line-ledger {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--tblr-border-color);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+@media (min-width: 768px) {
+    .ark-line-grid {
+        align-items: start;
+        grid-template-columns: minmax(0, 1fr) 4.25rem 78px 64px 64px 64px 88px;
+    }
+
+    .ark-line-ledger {
+        display: contents;
+    }
+}
+
 /* An inline island, such as a legacy chip in a line of Tabler text, takes the line's size like it does on a legacy page. */
 span.ark-legacy {
     font-size: inherit;

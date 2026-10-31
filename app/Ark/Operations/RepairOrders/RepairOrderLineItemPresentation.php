@@ -187,6 +187,47 @@ final class RepairOrderLineItemPresentation
         };
     }
 
+    /** Tabler color for a procurementChipTone(), matching the ops-chip--status palette. */
+    public static function procurementTablerColor(string $tone): string
+    {
+        return match ($tone) {
+            'needs-ordered' => 'yellow',
+            'ordered' => 'orange',
+            'received' => 'green',
+            'installed' => 'blue',
+            'backordered' => 'red',
+            default => 'secondary',
+        };
+    }
+
+    /** Tabler color for the worksheet row's left accent; only these procurement tones mark the row. */
+    public static function procurementRowAccentTablerColor(?string $tone): ?string
+    {
+        return match ($tone) {
+            'backordered' => 'red',
+            'partial' => 'orange',
+            'installed' => 'green',
+            default => null,
+        };
+    }
+
+    /** Tabler color for a part flag chip variant, matching the ops-chip--flag-* palette. */
+    public static function partFlagTablerColor(string $variant): string
+    {
+        return match ($variant) {
+            'core' => 'purple',
+            'matrix-accepted' => 'teal',
+            'matrix-overridden' => 'yellow',
+            default => 'secondary',
+        };
+    }
+
+    /** Tabler text color for a profitabilityMeter() tone, matching the margin label palette. */
+    public static function profitabilityTablerColor(string $tone): string
+    {
+        return $tone === 'excellent' ? 'teal' : 'secondary';
+    }
+
     /**
      * @return array{
      *     percent: int,

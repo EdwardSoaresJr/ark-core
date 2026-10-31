@@ -55,22 +55,23 @@
         $canManageRepairAction = auth()->user()?->can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value);
     @endphp
 
-    <section id="repair-action-{{ $workGroup->id }}" class="ops-repair-action scroll-mt-24">
-        <div class="ops-repair-action__header">
-            <div class="min-w-0 flex-1">
-                <p class="ops-repair-action__title">{{ $workGroup->title }}</p>
+    <section id="repair-action-{{ $workGroup->id }}" class="border-bottom scroll-mt-24" data-repair-action>
+        <div class="card-body py-2 d-flex align-items-start gap-2">
+            <div class="flex-fill" style="min-width: 0">
+                <div class="fw-medium">{{ $workGroup->title }}</div>
 
                 @if ($canManageRepairAction && ! $isTerminal)
                     <button
                         type="button"
-                        class="ops-repair-action__meta"
+                        class="btn btn-link btn-sm p-0 text-secondary"
+                        data-repair-action-meta
                         title="Owner, status, and update"
                         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'repair-action-meta', context: { workGroupId: {{ $workGroup->id }}, concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
                     >
                         {{ $actionStatus->label() }} · {{ $ownerLabel }}
                     </button>
                 @else
-                    <p class="ops-repair-action__meta ops-repair-action__meta--static">
+                    <p class="small text-secondary mb-0" data-repair-action-meta>
                         {{ $actionStatus->label() }} · {{ $ownerLabel }}
                         @if ($workGroup->updated_at)
                             · Updated {{ $workGroup->updated_at->timezone(config('app.timezone'))->format('g:i A') }}
@@ -79,7 +80,7 @@
                 @endif
 
                 @if (filled($workGroup->latest_update))
-                    <p class="ops-repair-action__update">{{ $workGroup->latest_update }}</p>
+                    <p class="small mt-1 mb-0">{{ $workGroup->latest_update }}</p>
                 @endif
             </div>
             @unless ($isTerminal)
@@ -95,14 +96,15 @@
                             @csrf
                             @method('DELETE')
                             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                            <button type="submit" class="text-[11px] font-semibold text-rose-600 hover:text-rose-800">Remove</button>
+                            <button type="submit" class="btn btn-sm btn-ghost-danger">Remove</button>
                         </form>
                     @endif
                 @endcan
             @endunless
         </div>
 
-        <div id="repair-action-lines-{{ $workGroup->id }}" class="ops-repair-action__lines">
+        {{-- Worksheet continuity mounts new line regions by this container's id, so rows stay its direct children. --}}
+        <div id="repair-action-lines-{{ $workGroup->id }}" class="list-group list-group-flush">
             @if ($workGroupLines->isNotEmpty())
                 @include('operations.repair-orders.partials.repair-order-line-ledger-head')
             @endif
@@ -135,48 +137,48 @@
                         App\Ark\Operations\RepairOrders\RepairOrderLineType::Fee => 'Fee',
                         default => $type->staffLabel(),
                     };
-                    // Full class strings - Tailwind purges @layer component selectors not seen in content.
-                    [$icon, $btnClass] = match ($type) {
-                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => ['labor', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--labor'],
-                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Part => ['part', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--part'],
-                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Note => ['note', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--note'],
-                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet => ['sublet', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--sublet'],
-                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Fee => ['fee', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--fee'],
-                        default => ['labor', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--labor'],
+                    $icon = match ($type) {
+                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => 'labor',
+                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Part => 'part',
+                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Note => 'note',
+                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet => 'sublet',
+                        App\Ark\Operations\RepairOrders\RepairOrderLineType::Fee => 'fee',
+                        default => 'labor',
                     };
+                    $color = $type->tablerColor();
 
-                    return compact('value', 'label', 'ariaLabel', 'icon', 'btnClass');
+                    return compact('value', 'label', 'ariaLabel', 'icon', 'color');
                 });
             @endphp
-            <div class="ops-repair-action__compose-actions">
+            <div class="card-body py-2 btn-list" data-repair-action-compose>
                 @foreach ($composeButtons as $composeButton)
                     <button
                         type="button"
-                        class="{{ $composeButton['btnClass'] }}"
+                        class="btn btn-sm"
                         aria-label="{{ $composeButton['ariaLabel'] }}"
                         title="{{ $composeButton['ariaLabel'] }}"
                         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $composeButton['value'] }}', context: { lineType: '{{ $composeButton['value'] }}', workGroupId: {{ $workGroup->id }}, concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
                     >
-                        @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])
-                        <span class="ops-repair-action__compose-label">{{ $composeButton['label'] }}</span>
+                        <span class="text-{{ $composeButton['color'] }} d-inline-flex">@include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])</span>
+                        <span class="ms-1" data-compose-label>{{ $composeButton['label'] }}</span>
                     </button>
                 @endforeach
                 <button
                     type="button"
-                    class="ops-repair-action__compose-btn ops-repair-action__compose-btn--evidence"
+                    class="btn btn-sm"
                     aria-label="Add Photo"
                     title="Add Photo"
                     @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'evidence', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
                 >
                     @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'evidence'])
-                    <span class="ops-repair-action__compose-label">Photo</span>
+                    <span class="ms-1" data-compose-label>Photo</span>
                 </button>
             </div>
         @endunless
     </section>
 @endforeach
 
-<div id="concern-lines-{{ $concern->id }}" class="ops-worksheet-lines">
+<div id="concern-lines-{{ $concern->id }}" class="list-group list-group-flush">
     @if ($displayLines->isNotEmpty())
         @include('operations.repair-orders.partials.repair-order-line-ledger-head', [
             'ledgerHeadLabel' => $concernUsesRepairActions ? 'Standalone scope lines' : 'Scope lines',
@@ -192,10 +194,10 @@
 
 @unless ($isTerminal)
     @if ($concernUsesRepairActions)
-        <div class="ops-repair-action__add-row ops-repair-action__add-row--footer">
+        <div class="card-body py-2 btn-list">
             <button
                 type="button"
-                class="ops-repair-action__add-btn"
+                class="btn btn-sm"
                 aria-label="Add Common Job"
                 title="Add Common Job to this concern"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'saved-work', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
@@ -209,10 +211,10 @@
 @unless ($isTerminal)
     @if ($concernUsesRepairActions && $concernWorkGroups->isEmpty())
         {{-- No Repair Action yet - deepest context is the concern. --}}
-        <div class="ops-repair-action__add-row ops-repair-action__add-row--footer ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
+        <div class="card-body py-2 btn-list" data-scope-compose="{{ $concern->id }}">
             <button
                 type="button"
-                class="ops-repair-action__add-btn"
+                class="btn btn-sm"
                 aria-label="Add Common Job"
                 title="Add Common Job to this concern"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'saved-work', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
@@ -221,7 +223,7 @@
             </button>
             <button
                 type="button"
-                class="ops-repair-action__add-btn"
+                class="btn btn-sm"
                 aria-label="Add Note"
                 title="Add Note"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'note', context: { lineType: 'note', concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
@@ -254,49 +256,50 @@
                     App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet => 'Sublet',
                     default => $type->staffLabel(),
                 };
-                [$icon, $btnClass] = match ($type) {
-                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => ['labor', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--labor'],
-                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Part => ['part', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--part'],
-                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Note => ['note', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--note'],
-                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet => ['sublet', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--sublet'],
-                    default => ['labor', 'ops-repair-action__compose-btn ops-repair-action__compose-btn--labor'],
+                $icon = match ($type) {
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Labor => 'labor',
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Part => 'part',
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Note => 'note',
+                    App\Ark\Operations\RepairOrders\RepairOrderLineType::Sublet => 'sublet',
+                    default => 'labor',
                 };
+                $color = $type->tablerColor();
 
-                return compact('value', 'label', 'ariaLabel', 'icon', 'btnClass');
+                return compact('value', 'label', 'ariaLabel', 'icon', 'color');
             });
         @endphp
-        <div class="ops-repair-action__compose-actions ops-scope-compose-actions" data-scope-compose="{{ $concern->id }}">
+        <div class="card-body py-2 btn-list" data-scope-compose="{{ $concern->id }}">
             <button
                 type="button"
-                class="ops-repair-action__compose-btn ops-repair-action__compose-btn--saved-work"
+                class="btn btn-sm"
                 aria-label="Add Common Job"
                 title="Add Common Job to this concern"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'saved-work', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
             >
                 @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'saved-work'])
-                <span class="ops-repair-action__compose-label">Common Job</span>
+                <span class="ms-1" data-compose-label>Common Job</span>
             </button>
             @foreach ($scopeComposeButtons as $composeButton)
                 <button
                     type="button"
-                    class="{{ $composeButton['btnClass'] }}"
+                    class="btn btn-sm"
                     aria-label="{{ $composeButton['ariaLabel'] }}"
                     title="{{ $composeButton['ariaLabel'] }}"
                     @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $composeButton['value'] }}', context: { lineType: '{{ $composeButton['value'] }}', concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
                 >
-                    @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])
-                    <span class="ops-repair-action__compose-label">{{ $composeButton['label'] }}</span>
+                    <span class="text-{{ $composeButton['color'] }} d-inline-flex">@include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => $composeButton['icon']])</span>
+                    <span class="ms-1" data-compose-label>{{ $composeButton['label'] }}</span>
                 </button>
             @endforeach
             <button
                 type="button"
-                class="ops-repair-action__compose-btn ops-repair-action__compose-btn--evidence"
+                class="btn btn-sm"
                 aria-label="Add Photo"
                 title="Add Photo"
                 @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'evidence', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
             >
                 @include('operations.repair-orders.partials.workspace-modal.compose-icon', ['icon' => 'evidence'])
-                <span class="ops-repair-action__compose-label">Photo</span>
+                <span class="ms-1" data-compose-label>Photo</span>
             </button>
         </div>
     @endif
