@@ -1943,7 +1943,7 @@
 
                     @if ($financial['showFinancialRail'])
                         <x-slot:closeout>
-                            @include('operations.repair-orders.partials.financial-rail', ['embedded' => true])
+                            @include('operations.repair-orders.partials.financial-rail')
                         </x-slot:closeout>
                     @endif
                 </x-operations.estimate-totals-panel>
