@@ -244,7 +244,7 @@ test('ro show renders arrival posture and schedule follow-up when absent', funct
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-review-toolbar-section--visit-signals', false)
+        ->assertSee('data-ro-visit-signals', false)
         ->assertSee('Appt', false)
         ->assertSee('Scheduled', false)
         ->assertSee('Tomorrow · 9:00 AM', false)

@@ -24,14 +24,15 @@
 
 @if (! $repairOrder->isTerminal())
         @if ($errors->has('lifecycle'))
-            <p class="mb-1 max-w-xs text-[11px] font-semibold leading-4 text-rose-800">{{ $errors->first('lifecycle') }}</p>
+            <div class="small text-danger mb-1">{{ $errors->first('lifecycle') }}</div>
         @endif
 
         <form
             id="{{ $formId }}"
             method="POST"
             action="{{ route('operations.repair-orders.lifecycle.update', $repairOrder) }}"
-            class="ops-review-toolbar-control"
+            class="m-0"
+            style="width: 16rem; max-width: 100%"
             data-lifecycle-form
             data-continuity-region="workflow"
             data-refresh-scope="toolbar"
@@ -44,7 +45,7 @@
                 id="status-move-{{ $repairOrder->repair_order_id }}"
                 name="status"
                 required
-                class="h-9 min-w-[10rem] rounded-sm border-slate-300 bg-white py-1 pl-2 pr-8 text-xs font-semibold text-slate-700"
+                class="form-select"
                 data-lifecycle-select
                 data-current-status="{{ $repairOrder->status->value }}"
             >
@@ -71,16 +72,16 @@
             </select>
 
             <div
-                class="mt-2 hidden max-w-md space-y-2 rounded-sm border border-amber-200 bg-amber-50 p-2"
+                class="hidden card card-sm mt-2 border-warning" style="max-width: 20rem"
                 data-lost-reason-panel
                 hidden
             >
-                <p class="text-[11px] font-semibold leading-4 text-amber-950">Why is this repair order closing lost?</p>
+                <div class="card-body p-2"><div class="fw-bold small mb-2">Why is this repair order closing lost?</div>
                 <label for="lost-reason-key-{{ $repairOrder->repair_order_id }}" class="sr-only">Lost reason</label>
                 <select
                     id="lost-reason-key-{{ $repairOrder->repair_order_id }}"
                     name="lost_reason_key"
-                    class="h-9 w-full rounded-sm border-amber-200 bg-white px-2 text-xs font-semibold text-slate-800"
+                    class="form-select mb-2"
                 >
                     <option value="">Choose lost reason…</option>
                     @foreach (RepairOrderLostReason::options() as $option)
@@ -97,15 +98,16 @@
                     value="{{ old('lost_reason_note') }}"
                     maxlength="500"
                     placeholder="Required when reason is Other"
-                    class="h-9 w-full rounded-sm border-amber-200 bg-white px-2 text-xs text-slate-800"
+                    class="form-control mb-2"
                 >
-                <div class="flex items-center gap-2">
-                    <button type="submit" class="rounded-sm bg-amber-900 px-2 py-1 text-xs font-bold text-white">
+                <div class="btn-list">
+                    <button type="submit" class="btn btn-warning btn-sm">
                         Confirm close lost
                     </button>
-                    <button type="button" class="text-xs font-semibold text-amber-900" data-lost-reason-cancel>
+                    <button type="button" class="btn btn-link btn-sm" data-lost-reason-cancel>
                         Cancel
                     </button>
+                </div>
                 </div>
             </div>
         </form>

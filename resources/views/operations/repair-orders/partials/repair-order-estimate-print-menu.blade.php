@@ -9,141 +9,112 @@
     $inspectionPdfUrl = route('operations.repair-orders.inspection.pdf', $repairOrder);
 @endphp
 
-<div
-    class="ops-review-print-menu ops-comms-menu"
-    x-data="arkReviewPrintMenu()"
-    x-ref="printMenuRoot"
-    @keydown.escape.window="closeMenu()"
->
-    <button
-        type="button"
-        x-ref="printMenuTrigger"
-        class="ops-review-action shrink-0 ops-review-print-menu__trigger"
-        @click.stop="toggleMenu()"
-        :aria-expanded="menuOpen"
-        aria-haspopup="menu"
-    >
-        <span>PRINT</span>
-        <span class="ops-ro-mode-control__caret" aria-hidden="true">▼</span>
+<div class="dropdown" data-ro-print-menu>
+    <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        Print
     </button>
-
-    <template x-teleport="body">
-        <div
-            x-show="menuOpen"
-            x-cloak
-            x-ref="printMenuPanel"
-            :style="menuStyle"
-            class="ops-comms-menu__panel ops-comms-menu__panel--floating"
-            role="menu"
-            @click.stop
-        >
-            @if ($showShopPrintActions)
-                @if (filled($keyTagBlocked))
-                    <button
-                        type="button"
-                        role="menuitem"
-                        class="ops-comms-menu__item"
-                        @click.stop="closeMenu(); window.alert(@js($keyTagBlocked))"
-                    >
-                        Print Key Tag
-                        <span class="mt-0.5 block text-[11px] font-normal leading-4 text-slate-500">{{ $keyTagBlocked }}</span>
-                    </button>
-                @else
-                    <button
-                        type="button"
-                        role="menuitem"
-                        class="ops-comms-menu__item"
-                        @click.stop="closeMenu(); window.arkPrintDocument(window.ARK_PRINTERS.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
-                    >
-                        Print Key Tag
-                    </button>
-                @endif
-
+    <div class="dropdown-menu dropdown-menu-end" role="menu">
+        @if ($showShopPrintActions)
+            @if (filled($keyTagBlocked))
                 <button
                     type="button"
                     role="menuitem"
-                    class="ops-comms-menu__item"
-                    @click.stop="closeMenu(); window.arkPrintDocument(window.ARK_PRINTERS.oilSticker, @js($oilStickerUrl), $event.currentTarget, { document: 'oil_change_sticker', resolvePrinter: true })"
+                    class="dropdown-item"
+                    @click="window.alert(@js($keyTagBlocked))"
                 >
-                    Print Oil Sticker
+                    Print Key Tag
+                    <span class="d-block small text-secondary">{{ $keyTagBlocked }}</span>
+                </button>
+            @else
+                <button
+                    type="button"
+                    role="menuitem"
+                    class="dropdown-item"
+                    @click="window.arkPrintDocument(window.ARK_PRINTERS.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
+                >
+                    Print Key Tag
                 </button>
             @endif
 
+            <button
+                type="button"
+                role="menuitem"
+                class="dropdown-item"
+                @click="window.arkPrintDocument(window.ARK_PRINTERS.oilSticker, @js($oilStickerUrl), $event.currentTarget, { document: 'oil_change_sticker', resolvePrinter: true })"
+            >
+                Print Oil Sticker
+            </button>
+        @endif
+
+        <a
+            href="{{ route('operations.repair-orders.sheets.intake.pdf', $repairOrder) }}"
+            target="_blank"
+            rel="noopener"
+            role="menuitem"
+            class="dropdown-item"
+        >
+            Check In sheet
+        </a>
+
+        @php
+            $techSheetOwners = app(\App\Ark\Operations\Documents\OperationalSheetPresenter::class)
+                ->techSheetOwners($repairOrder);
+        @endphp
+        @forelse ($techSheetOwners as $techOwner)
             <a
-                href="{{ route('operations.repair-orders.sheets.intake.pdf', $repairOrder) }}"
+                href="{{ route('operations.repair-orders.sheets.tech.pdf', [$repairOrder, 'owner' => $techOwner->id]) }}"
                 target="_blank"
                 rel="noopener"
                 role="menuitem"
-                class="ops-comms-menu__item"
-                @click.stop="closeMenu()"
+                class="dropdown-item"
             >
-                Check In sheet
+                Tech sheet · {{ $techOwner->name }}
             </a>
-
-            @php
-                $techSheetOwners = app(\App\Ark\Operations\Documents\OperationalSheetPresenter::class)
-                    ->techSheetOwners($repairOrder);
-            @endphp
-            @forelse ($techSheetOwners as $techOwner)
-                <a
-                    href="{{ route('operations.repair-orders.sheets.tech.pdf', [$repairOrder, 'owner' => $techOwner->id]) }}"
-                    target="_blank"
-                    rel="noopener"
-                    role="menuitem"
-                    class="ops-comms-menu__item"
-                    @click.stop="closeMenu()"
-                >
-                    Tech sheet · {{ $techOwner->name }}
-                </a>
-            @empty
-                <a
-                    href="{{ route('operations.repair-orders.sheets.tech.pdf', $repairOrder) }}"
-                    target="_blank"
-                    rel="noopener"
-                    role="menuitem"
-                    class="ops-comms-menu__item"
-                    @click.stop="closeMenu()"
-                >
-                    Tech sheet
-                </a>
-            @endforelse
-
+        @empty
             <a
-                href="{{ $estimatePdfUrl }}"
+                href="{{ route('operations.repair-orders.sheets.tech.pdf', $repairOrder) }}"
                 target="_blank"
                 rel="noopener"
                 role="menuitem"
-                class="ops-comms-menu__item"
-                @click.stop="closeMenu(); $event.currentTarget.href = @js($estimatePdfUrl) + '?t=' + Date.now()"
+                class="dropdown-item"
             >
-                Estimate PDF
+                Tech sheet
             </a>
+        @endforelse
 
-            @if ($hasInspectionFindings)
-                <a
-                    href="{{ $inspectionPdfUrl }}"
-                    target="_blank"
-                    rel="noopener"
-                    role="menuitem"
-                    class="ops-comms-menu__item"
-                    @click.stop="closeMenu()"
-                >
-                    Inspection PDF
-                </a>
-            @endif
+        <a
+            href="{{ $estimatePdfUrl }}"
+            target="_blank"
+            rel="noopener"
+            role="menuitem"
+            class="dropdown-item"
+            @click="$event.currentTarget.href = @js($estimatePdfUrl) + '?t=' + Date.now()"
+        >
+            Estimate PDF
+        </a>
 
-            @if ($issuedInvoice instanceof App\Ark\Operations\Documents\EstimateDocument)
-                <a
-                    href="{{ route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $issuedInvoice]) }}"
-                    target="_blank"
-                    rel="noopener"
-                    role="menuitem"
-                    class="ops-comms-menu__item"
-                    @click.stop="closeMenu()"
-                >
-                    Final Invoice
-                </a>
-            @endif
-        </div>
-    </template>
+        @if ($hasInspectionFindings)
+            <a
+                href="{{ $inspectionPdfUrl }}"
+                target="_blank"
+                rel="noopener"
+                role="menuitem"
+                class="dropdown-item"
+            >
+                Inspection PDF
+            </a>
+        @endif
+
+        @if ($issuedInvoice instanceof App\Ark\Operations\Documents\EstimateDocument)
+            <a
+                href="{{ route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $issuedInvoice]) }}"
+                target="_blank"
+                rel="noopener"
+                role="menuitem"
+                class="dropdown-item"
+            >
+                Final Invoice
+            </a>
+        @endif
+    </div>
 </div>

@@ -5,7 +5,7 @@
 @endphp
 
 {{-- Primary tech remains for In Progress when no Repair Action owner exists yet (common on PPI / inspection visits). --}}
-<div class="ops-review-toolbar-section ops-review-toolbar-section--workflow">
+<div class="d-flex flex-wrap align-items-start gap-2" style="max-width: 100%">
     @unless ($isTerminal)
         @include('operations.repair-orders.partials.repair-order-technician-select', [
             'repairOrder' => $repairOrder,
@@ -35,30 +35,28 @@
             App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value,
             App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersLifecycle->value,
         ])
-            <div class="mt-2 max-w-md space-y-1.5" data-review-request-follow-up>
+            <div class="small" style="max-width: 16rem" data-review-request-follow-up>
                 @if ($reviewRequest['already_sent'] && ($reviewRequest['history_entries'] !== [] || filled($reviewRequest['status_label'])))
-                    <div class="space-y-1" data-review-request-status>
-                        <p class="text-[11px] font-semibold leading-4 text-slate-900">Review Requested</p>
+                    <div data-review-request-status>
+                        <div class="fw-bold">Review Requested</div>
                         @foreach ($reviewRequest['history_entries'] as $entry)
-                            <p class="text-[11px] leading-4 text-slate-700">
-                                {{ $entry['channel_label'] }} · {{ $entry['when_label'] }}
-                            </p>
+                            <div class="text-secondary">{{ $entry['channel_label'] }} · {{ $entry['when_label'] }}</div>
                         @endforeach
                         @if (filled($reviewRequest['sent_by_label']))
-                            <p class="text-[11px] leading-4 text-slate-600">by {{ $reviewRequest['sent_by_label'] }}</p>
+                            <div class="text-secondary">by {{ $reviewRequest['sent_by_label'] }}</div>
                         @endif
                     </div>
                 @elseif ($reviewRequest['can_send'])
                     <button
                         type="button"
-                        class="text-[11px] font-semibold leading-4 text-slate-800 underline-offset-2 hover:underline"
+                        class="btn btn-link btn-sm px-0"
                         data-review-request-open
                         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'review-request', context: { closePaid: false }, invokeEl: $event.currentTarget } }))"
                     >
                         Request a Review
                     </button>
                 @elseif (filled($reviewRequest['no_contact_message']))
-                    <p class="text-[11px] leading-4 text-slate-600">{{ $reviewRequest['no_contact_message'] }}</p>
+                    <div class="text-secondary">{{ $reviewRequest['no_contact_message'] }}</div>
                 @endif
             </div>
         @endcanany

@@ -40,6 +40,17 @@
     text-rendering: auto;
 }
 
+/* Legacy fixed bars (the repair order footer dock) offset themselves by the legacy rail; on Tabler pages the vertical navbar sets that edge from lg. */
+.ark-legacy {
+    --ops-left-rail-width: 0px;
+}
+
+@media (min-width: 992px) {
+    .ark-legacy {
+        --ops-left-rail-width: var(--tblr-sidebar-width);
+    }
+}
+
 /* An inline island, such as a legacy chip in a line of Tabler text, takes the line's size like it does on a legacy page. */
 span.ark-legacy {
     font-size: inherit;
