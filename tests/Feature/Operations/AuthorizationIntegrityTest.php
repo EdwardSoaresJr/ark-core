@@ -979,7 +979,7 @@ test('authorization exceptions are append-only and the repair order says they ar
         ->assertDontSee('Edit exception', false);
 });
 
-test('exception recording stays in a concern action instead of the worksheet', function () {
+test('exception recording is offered in the work status menu instead of the worksheet', function () {
     $advisor = integrityAdvisor();
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
     $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
@@ -995,10 +995,11 @@ test('exception recording stays in a concern action instead of the worksheet', f
         'is_private' => true,
     ]);
 
-    $this->actingAs($advisor)
+    $html = $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('aria-label="More actions"', false)
+        ->assertDontSee('aria-label="More actions"', false)
+        ->assertDontSee('data-scope-more', false)
         ->assertSee('data-authorization-exception-action="record"', false)
         ->assertSee('Record work exception', false)
         ->assertSee('Select a basis', false)
@@ -1008,7 +1009,10 @@ test('exception recording stays in a concern action instead of the worksheet', f
         ->assertSee('Diagnose front-end wobble', false)
         ->assertDontSee('name="line_ids[]" value="'.$note->id.'"', false)
         ->assertDontSee('ops-scope-settings__exception', false)
-        ->assertDontSee('<summary>Record exception</summary>', false);
+        ->assertDontSee('<summary>Record exception</summary>', false)
+        ->getContent();
+
+    expect(integrityExceptionActionsInWorkStatusMenu($html, $concern))->toBe(1);
 
     $this->actingAs($admin)
         ->get(route('operations.repair-orders.show', $repairOrder))
@@ -1024,6 +1028,69 @@ test('exception recording stays in a concern action instead of the worksheet', f
     expect(RecordAuthorizationExceptionAction::actorMayRecord($advisor))->toBeTrue()
         ->and(RecordAuthorizationExceptionAction::actorMayRecord($admin))->toBeTrue()
         ->and(RecordAuthorizationExceptionAction::actorMayRecord($technician))->toBeFalse();
+});
+
+test('lines blocked without an exception match what install and completion refuse', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $labor = addLabor($repairOrder, $concern);
+    $authorization = app(WorkCompletionAuthorization::class);
+    $blockedIds = fn (): array => $authorization->linesBlockedWithoutException($concern->fresh())->pluck('id')->all();
+
+    expect($blockedIds())->toEqualCanonicalizing([$part->id, $labor->id])
+        ->and($authorization->installBlockedReason($part->fresh()))->toBe(WorkCompletionAuthorization::INSTALL_BLOCKED)
+        ->and($authorization->completionBlockedReason($concern->fresh()))->toBe(WorkCompletionAuthorization::COMPLETION_BLOCKED);
+
+    app(RecordAuthorizationExceptionAction::class)->execute($repairOrder, $concern, [$part->id], AuthorizationExceptionReason::Diagnostic, DIAGNOSTIC_EXCEPTION_NOTE, $advisor);
+
+    expect($blockedIds())->toBe([$labor->id])
+        ->and($authorization->installBlockedReason($part->fresh()))->toBeNull()
+        ->and($authorization->completionBlockedReason($concern->fresh()))->toBe(WorkCompletionAuthorization::COMPLETION_BLOCKED);
+
+    app(RecordAuthorizationExceptionAction::class)->execute($repairOrder, $concern, [$labor->id], AuthorizationExceptionReason::Diagnostic, DIAGNOSTIC_EXCEPTION_NOTE, $advisor);
+
+    expect($blockedIds())->toBe([])
+        ->and($authorization->completionBlockedReason($concern->fresh()))->toBeNull();
+
+    $concern->update(['disposition' => RepairOrderConcernDisposition::Approved]);
+    addPart($repairOrder, $concern, 'Added after approval');
+
+    expect($blockedIds())->toBe([])
+        ->and($authorization->completionBlockedReason($concern->fresh()))->toBeNull();
+});
+
+test('the work status menu stops offering an exception once the blocked work is covered and keeps the record viewable', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern, $part] = integrityRepairOrder();
+    $this->actingAs($advisor);
+
+    app(RecordAuthorizationExceptionAction::class)->execute($repairOrder, $concern, [$part->id], AuthorizationExceptionReason::Warranty, DIAGNOSTIC_EXCEPTION_NOTE, $advisor);
+
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('data-authorization-exception-line="'.$part->id.'"', false)
+        ->assertSee('ops-exception-record__basis">Warranty', false)
+        ->assertSee(DIAGNOSTIC_EXCEPTION_NOTE, false)
+        ->getContent();
+
+    expect(integrityExceptionActionsInWorkStatusMenu($html, $concern))->toBe(0)
+        ->and(AuthorizationException::query()->count())->toBe(1);
+});
+
+test('an approved concern does not offer an exception', function () {
+    $advisor = integrityAdvisor();
+    [$repairOrder, $concern] = integrityRepairOrder();
+    addLabor($repairOrder, $concern);
+    $concern->update(['disposition' => RepairOrderConcernDisposition::Approved]);
+
+    $html = $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertDontSee('data-authorization-exception-action="record"', false)
+        ->assertDontSee('aria-label="More actions"', false)
+        ->getContent();
+
+    expect(integrityExceptionActionsInWorkStatusMenu($html, $concern))->toBe(0);
 });
 
 test('an incomplete exception explanation reopens the dialog with the error', function () {
@@ -1046,6 +1113,18 @@ test('an incomplete exception explanation reopens the dialog with the error', fu
 
     expect(AuthorizationException::query()->count())->toBe(0);
 });
+
+function integrityExceptionActionsInWorkStatusMenu(string $html, RepairOrderConcern $concern): int
+{
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+
+    return (new DOMXPath($document))
+        ->query('//*[@id="concern-'.$concern->id.'"]//*[@data-concern-work-status-choices]//*[@data-authorization-exception-action="record"]')
+        ->length;
+}
 
 function integrityAdvisor(): User
 {
