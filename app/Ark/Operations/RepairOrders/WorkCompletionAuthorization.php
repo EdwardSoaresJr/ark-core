@@ -88,6 +88,31 @@ final class WorkCompletionAuthorization
         return null;
     }
 
+    /**
+     * Labor and part lines on this concern that install and completion would refuse: the customer
+     * has not approved the concern and no exception covers them. Same rule as blocksWork(), read from
+     * the concern's exceptions so the worksheet can ask once per concern.
+     *
+     * @return Collection<int, RepairOrderLine>
+     */
+    public function linesBlockedWithoutException(RepairOrderConcern $concern): Collection
+    {
+        if ($concern->disposition === RepairOrderConcernDisposition::Approved) {
+            return collect();
+        }
+
+        $concern->loadMissing(['lines', 'authorizationExceptions']);
+
+        $covered = $concern->authorizationExceptions
+            ->flatMap(fn (AuthorizationException $exception): array => $exception->lineIds())
+            ->all();
+
+        return $concern->lines
+            ->filter(fn (RepairOrderLine $line): bool => $this->requiresCoverage($line)
+                && ! in_array((int) $line->id, $covered, true))
+            ->values();
+    }
+
     public function lineCovered(RepairOrderLine $line): bool
     {
         if (! $this->requiresCoverage($line)) {

@@ -1,6 +1,10 @@
 @php
     $currentProduction = $concern->productionStatus();
     $returnMode = $returnMode ?? null;
+    $offersException = ! ($isTerminal ?? false)
+        && $concern->tracksProduction()
+        && App\Ark\Operations\RepairOrders\RecordAuthorizationExceptionAction::actorMayRecord(auth()->user())
+        && app(App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class)->linesBlockedWithoutException($concern)->isNotEmpty();
 @endphp
 
 @if (! $concern->tracksProduction())
@@ -60,6 +64,23 @@
                         @endif
                     </button>
                 @endforeach
+                @if ($offersException)
+                    {{-- Completing labor or installing parts on this concern is refused until the customer approves it or an exception covers the work. --}}
+                    <div class="dropdown-divider"></div>
+                    <button
+                        type="button"
+                        class="dropdown-item"
+                        data-authorization-exception-action="record"
+                        aria-haspopup="dialog"
+                        @click="window.dispatchEvent(new CustomEvent('ark-authorization-exception-open', { detail: { concernId: {{ $concern->id }}, mode: 'record', invokeEl: $el.closest('.dropdown')?.querySelector('[data-bs-toggle]') ?? $el } }))"
+                    >
+                        <x-tabler.icon name="file-description" class="text-yellow me-2" />
+                        <span class="d-flex flex-column me-3">
+                            <span>Record exception</span>
+                            <span class="small text-secondary">Not customer-approved</span>
+                        </span>
+                    </button>
+                @endif
             </div>
         </div>
     </form>
