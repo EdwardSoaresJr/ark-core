@@ -1,65 +1,61 @@
 @php
-    $concernDispositions = App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::cases();
-    $dispositionColor = $concern->disposition->tablerColor();
-    $authorViaModal = (bool) ($authorViaModal ?? false);
+    $currentDisposition = $concern->disposition;
 @endphp
 
-<div id="concern-disposition-{{ $concern->id }}" data-continuity-region="concern-authorization">
 @if ($isTerminal ?? false)
-    <div class="d-flex align-items-center gap-1">
-        <span class="badge bg-{{ $dispositionColor }}-lt">{{ $concern->disposition->label() }}</span>
-        <x-operations.help-tip
-            :text="$concern->disposition->helpText()"
-            label="Customer decision help for {{ $concern->summary }}"
-        />
-    </div>
-@elseif ($authorViaModal)
-    <button
-        type="button"
-        class="btn btn-sm bg-{{ $dispositionColor }}-lt"
-        data-disposition-tone="{{ $concern->disposition->value }}"
-        title="Customer decision"
-        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'concern-disposition', context: { concernId: {{ $concern->id }} }, invokeEl: $event.currentTarget } }))"
-    >
-        {{ $concern->disposition->label() }}
-    </button>
+    <span class="badge bg-{{ $currentDisposition->tablerColor() }}-lt" data-disposition-tone="{{ $currentDisposition->value }}" title="{{ $currentDisposition->helpText() }}">
+        <x-tabler.icon :name="$currentDisposition->tablerIcon()" class="me-1" />
+        {{ $currentDisposition->decisionLabel() }}
+    </span>
 @else
-    <div class="d-flex align-items-center gap-1">
-        <form
-            method="POST"
-            action="{{ route('operations.repair-orders.concerns.disposition', [$repairOrder, $concern]) }}"
-            data-refresh-scope="worksheet"
-            data-worksheet-continuity
-            data-continuity-focus="#concern-{{ $concern->id }} select[name='disposition']"
-            @submit.prevent="submitWorksheetForm($event)"
-        >
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label class="visually-hidden" for="concern-disposition-{{ $concern->id }}">Customer decision for {{ $concern->summary }}</label>
-            <select
-                id="concern-disposition-{{ $concern->id }}"
-                name="disposition"
-                class="form-select form-select-sm border-{{ $dispositionColor }} text-{{ $dispositionColor }}"
-                data-disposition-tone="{{ $concern->disposition->value }}"
-                style="width: auto"
-                onchange="preserveRepairOrderConcernScroll({{ $concern->id }}); this.form.requestSubmit()"
+    <form
+        method="POST"
+        action="{{ route('operations.repair-orders.concerns.disposition', [$repairOrder, $concern]) }}"
+        data-refresh-scope="worksheet"
+        data-worksheet-continuity
+        data-continuity-focus="#concern-{{ $concern->id }} [data-concern-decision-choices] .dropdown-toggle"
+        @submit.prevent="submitWorksheetForm($event)"
+    >
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+        <input type="hidden" name="disposition" value="{{ $currentDisposition->value }}">
+        <div class="dropdown" data-concern-decision-choices>
+            <button
+                type="button"
+                class="btn btn-sm dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                aria-label="Customer decision for {{ $concern->summary }}: {{ $currentDisposition->decisionLabel() }}"
+                data-disposition-tone="{{ $currentDisposition->value }}"
             >
-                @foreach ($concernDispositions as $disposition)
-                    <option
-                        value="{{ $disposition->value }}"
+                <x-tabler.icon :name="$currentDisposition->tablerIcon()" class="text-{{ $currentDisposition->tablerColor() }} me-1" />
+                <span class="fw-medium">{{ $currentDisposition->decisionLabel() }}</span>
+            </button>
+            <div class="dropdown-menu">
+                <h6 class="dropdown-header">Customer decision</h6>
+                @foreach (App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::cases() as $disposition)
+                    @php $isCurrent = $disposition === $currentDisposition; @endphp
+                    {{-- Re-saving the current decision would re-record the approved scope, so it only closes the menu. --}}
+                    <button
+                        type="button"
+                        class="dropdown-item"
                         title="{{ $disposition->helpText() }}"
-                        @selected($concern->disposition === $disposition)
-                    >{{ $disposition->label() }}</option>
+                        data-disposition-option="{{ $disposition->value }}"
+                        @if ($isCurrent)
+                            aria-current="true"
+                        @else
+                            @click="preserveRepairOrderConcernScroll({{ $concern->id }}); $el.form.elements.disposition.value = @js($disposition->value); $el.form.requestSubmit()"
+                        @endif
+                    >
+                        <x-tabler.icon :name="$disposition->tablerIcon()" class="text-{{ $disposition->tablerColor() }} me-2" />
+                        <span class="me-3">{{ $disposition->decisionLabel() }}</span>
+                        @if ($isCurrent)
+                            <x-tabler.icon name="check" class="ms-auto text-primary" />
+                        @endif
+                    </button>
                 @endforeach
-            </select>
-        </form>
-        <x-operations.help-tip
-            :items="App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition::advisorHelpOverviewItems()"
-            title="Scope disposition"
-            label="Scope disposition help"
-            class="ops-help-tip--above"
-        />
-    </div>
+            </div>
+        </div>
+    </form>
 @endif
-</div>

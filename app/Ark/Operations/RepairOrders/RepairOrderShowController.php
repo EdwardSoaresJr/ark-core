@@ -106,7 +106,6 @@ class RepairOrderShowController
             ...RepairOrderPosture::for($repairOrder),
             'totals' => $totals,
             'linesNeedingAuthorization' => $authorization->linesRequiringAuthorization($repairOrder),
-            'pendingAuthorizationIncreases' => $calculator->pendingAuthorizationIncreases($repairOrder),
             'approvalForecast' => $approvalForecast->for($repairOrder),
             'balanceProjection' => $balanceProjection,
             'financial' => $financialPresenter->for($repairOrder, $totals, $balanceProjection),

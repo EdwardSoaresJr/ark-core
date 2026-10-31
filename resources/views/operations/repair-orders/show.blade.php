@@ -1853,24 +1853,11 @@
                                         @include('operations.repair-orders.partials.repair-order-concern-disposition-decision', [
                                             'concern' => $concern,
                                             'ui' => 'tabler',
+                                            'showDecision' => $isTerminal,
                                         ])
                                     </x-slot:status>
                                     @unless ($isTerminal)
                                         <x-slot:toolbar>
-                                            @include('operations.repair-orders.partials.repair-order-concern-disposition-control', [
-                                                'repairOrder' => $repairOrder,
-                                                'concern' => $concern,
-                                                'isTerminal' => $isTerminal,
-                                                'estimateVersion' => $estimateVersion,
-                                                'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
-                                            ])
-                                            @include('operations.repair-orders.partials.repair-order-concern-production-status-control', [
-                                                'repairOrder' => $repairOrder,
-                                                'concern' => $concern,
-                                                'isTerminal' => $isTerminal,
-                                                'estimateVersion' => $estimateVersion,
-                                                'authorViaModal' => (bool) ($canAuthorRepairOrder ?? false),
-                                            ])
                                             @include('operations.repair-orders.partials.repair-order-concern-scope-settings', [
                                                 'repairOrder' => $repairOrder,
                                                 'concern' => $concern,
@@ -1941,7 +1928,6 @@
                     :repair-order="$repairOrder"
                     :approval-forecast="$approvalForecast ?? null"
                     :lines-needing-authorization="$linesNeedingAuthorization ?? collect()"
-                    :pending-authorization-increases="$pendingAuthorizationIncreases ?? collect()"
                 >
                     @if ($financial['showFinancialRail'])
                         @include('operations.repair-orders.partials.financial-payment-strip', [

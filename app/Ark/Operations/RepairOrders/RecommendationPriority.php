@@ -58,8 +58,8 @@ enum RecommendationPriority: string
     {
         return match ($this) {
             self::MustDo => '#9f1239',
-            self::ShouldDo => '#4338ca',
-            self::CouldDo => '#b45309',
+            self::ShouldDo => '#a16207',
+            self::CouldDo => '#15803d',
         };
     }
 
@@ -67,8 +67,8 @@ enum RecommendationPriority: string
     {
         return match ($this) {
             self::MustDo => '#fff1f2',
-            self::ShouldDo => '#eef2ff',
-            self::CouldDo => '#fffbeb',
+            self::ShouldDo => '#fefce8',
+            self::CouldDo => '#f0fdf4',
         };
     }
 

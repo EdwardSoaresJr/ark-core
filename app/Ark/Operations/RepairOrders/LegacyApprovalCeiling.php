@@ -16,7 +16,7 @@ final class LegacyApprovalCeiling
     {
         if (! $line->exists
             || $line->legacy_approved_amounts !== null
-            || $line->type->isNote()
+            || ! ($line->isPart() || $line->type->isLabor())
             || ! $line->isDirty(['quantity', 'unit_price_cents'])) {
             return;
         }
@@ -40,7 +40,7 @@ final class LegacyApprovalCeiling
             ->latest('id')
             ->first();
 
-        if ($latestScope?->lineAmounts() !== null) {
+        if ($latestScope !== null && $latestScope->approved_lines !== null) {
             return;
         }
 

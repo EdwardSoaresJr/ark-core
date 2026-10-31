@@ -169,7 +169,8 @@ class EstimateTotalsCalculator
         $repairOrder->loadMissing(['lines.concern']);
         $authorization = app(WorkCompletionAuthorization::class);
         $coveredLaborAndParts = $authorization->customerApprovedLaborAndPartIdSet($repairOrder);
-        $authorizedAmounts = $authorization->authorizedLineAmounts($repairOrder);
+        $approvedBeforeIncrease = $authorization->approvedLinesBeforeIncrease($repairOrder);
+        $settings = ShopSettings::current();
 
         return $repairOrder->lines
             ->filter(function (RepairOrderLine $line) use ($coveredLaborAndParts): bool {
@@ -183,83 +184,69 @@ class EstimateTotalsCalculator
 
                 return true;
             })
-            ->map(fn (RepairOrderLine $line): RepairOrderLine => $this->withinAuthorizedAmount(
-                $line,
-                $authorizedAmounts[(int) $line->id] ?? null,
-            ))
+            ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($approvedBeforeIncrease[(int) $line->id])
+                ? $this->approvedCopyOfLine($line, $approvedBeforeIncrease[(int) $line->id], $settings)
+                : $line)
             ->values();
     }
 
     /**
-     * Approved lines whose current total is above the amount recorded when they were
-     * approved. The difference is on the estimate but not in approved sales or the invoice.
+     * An unsaved copy of a raised approved line at what the customer approved. When the approval
+     * kept every priced amount, the copy carries exactly those; otherwise it is the prorated portion.
      *
-     * @return Collection<int, array{line: RepairOrderLine, authorized_cents: int, current_cents: int, pending_cents: int}>
+     * @param  array{subtotal_cents: int, amounts: array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null}  $approved
      */
-    public function pendingAuthorizationIncreases(RepairOrder $repairOrder): Collection
+    public function approvedCopyOfLine(RepairOrderLine $line, array $approved, ?ShopSettings $settings = null): RepairOrderLine
     {
-        $repairOrder->loadMissing(['lines.concern']);
-        $authorizedAmounts = app(WorkCompletionAuthorization::class)->authorizedLineAmounts($repairOrder);
+        if ($approved['amounts'] === null) {
+            return $this->approvedPortionOfLine($line, $approved['subtotal_cents'], $settings);
+        }
 
-        return $repairOrder->lines
-            ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved
-                && isset($authorizedAmounts[(int) $line->id])
-                && (int) $line->total_cents > $authorizedAmounts[(int) $line->id]['total_cents'])
-            ->map(fn (RepairOrderLine $line): array => [
-                'line' => $line,
-                'authorized_cents' => $authorizedAmounts[(int) $line->id]['total_cents'],
-                'current_cents' => (int) $line->total_cents,
-                'pending_cents' => (int) $line->total_cents - $authorizedAmounts[(int) $line->id]['total_cents'],
-            ])
-            ->values();
-    }
-
-    /**
-     * Money on approved concerns that waits for the customer: lines the approval does
-     * not cover at their total, and raised lines at the increase.
-     */
-    public function pendingAuthorizationCents(RepairOrder $repairOrder): int
-    {
-        $repairOrder->loadMissing(['lines.concern']);
-
-        return (int) app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder)->sum('total_cents')
-            + (int) $this->pendingAuthorizationIncreases($repairOrder)->sum('pending_cents');
-    }
-
-    /**
-     * Approved concerns with uncovered lines or raised lines. Recording an approval re-scopes these.
-     *
-     * @return list<int>
-     */
-    public function approvedConcernIdsAwaitingAuthorization(RepairOrder $repairOrder): array
-    {
-        $repairOrder->loadMissing(['lines.concern']);
-
-        return app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder)
-            ->toBase()
-            ->map(fn (RepairOrderLine $line): int => (int) $line->repair_order_concern_id)
-            ->merge($this->pendingAuthorizationIncreases($repairOrder)
-                ->map(fn (array $increase): int => (int) $increase['line']->repair_order_concern_id))
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    /**
-     * A line priced above its approval counts at the approved amounts. The copy is never saved.
-     *
-     * @param  array{quantity: string, unit_price_cents: int, subtotal_cents: int, standing_discount_cents: int, shop_fee_cents: int, tax_cents: int, total_cents: int}|null  $authorized
-     */
-    private function withinAuthorizedAmount(RepairOrderLine $line, ?array $authorized): RepairOrderLine
-    {
-        if ($authorized === null || (int) $line->total_cents <= $authorized['total_cents']) {
+        if ((int) $line->total_cents <= $approved['amounts']['total_cents']) {
             return $line;
         }
 
-        $approved = clone $line;
-        $approved->forceFill($authorized);
+        $copy = clone $line;
+        $copy->setRawAttributes([...$line->getAttributes(), ...$approved['amounts']]);
 
-        return $approved;
+        return $copy;
+    }
+
+    /**
+     * An unsaved copy of a raised approved line, priced at the subtotal the customer approved.
+     * Discount and shop fee shrink in proportion and tax is charged on the capped base.
+     * The increase stays on the persisted line, outside approved sales and the invoice.
+     */
+    public function approvedPortionOfLine(RepairOrderLine $line, int $approvedSubtotalCents, ?ShopSettings $settings = null): RepairOrderLine
+    {
+        $currentSubtotalCents = (int) $line->subtotal_cents;
+
+        if ($currentSubtotalCents <= $approvedSubtotalCents) {
+            return $line;
+        }
+
+        $settings ??= ShopSettings::current();
+        $scale = fn (int $cents): int => BigDecimal::of($cents)
+            ->multipliedBy(max(0, $approvedSubtotalCents))
+            ->dividedBy($currentSubtotalCents, 0, RoundingMode::HALF_UP)
+            ->toInt();
+
+        $standingDiscountCents = $scale((int) $line->standing_discount_cents);
+        $shopFeeCents = $scale((int) $line->shop_fee_cents);
+        $netSubtotalCents = max(0, $approvedSubtotalCents - $standingDiscountCents);
+        $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $settings);
+
+        $portion = clone $line;
+        $portion->setRawAttributes([
+            ...$line->getAttributes(),
+            'subtotal_cents' => $approvedSubtotalCents,
+            'standing_discount_cents' => $standingDiscountCents,
+            'shop_fee_cents' => $shopFeeCents,
+            'tax_cents' => $taxCents,
+            'total_cents' => $netSubtotalCents + $taxCents + $shopFeeCents,
+        ]);
+
+        return $portion;
     }
 
     /**

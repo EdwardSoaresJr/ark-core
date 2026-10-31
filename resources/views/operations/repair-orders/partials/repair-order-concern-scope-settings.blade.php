@@ -3,12 +3,34 @@
     $scopePositionLoop = $loop;
 @endphp
 <div class="d-flex flex-wrap flex-fill align-items-center justify-content-between gap-2" data-scope-settings>
-    <div class="d-flex flex-wrap align-items-center gap-2">
+    <div class="d-flex flex-wrap align-items-center gap-2" data-concern-status-controls>
         @if ($concern->shouldSurfaceRecommendationStatus())
             @include('operations.repair-orders.partials.repair-order-concern-recommendation-intent-control', [
                 'repairOrder' => $repairOrder,
                 'concern' => $concern,
                 'isTerminal' => $isTerminal,
+                'estimateVersion' => $estimateVersion,
+            ])
+        @endif
+        {{-- A decision save refreshes this region; Deferred and Declined take the scope out of production. --}}
+        <div id="concern-disposition-{{ $concern->id }}" class="d-flex flex-wrap align-items-center gap-2" data-continuity-region="concern-authorization">
+            @include('operations.repair-orders.partials.repair-order-concern-disposition-control', [
+                'repairOrder' => $repairOrder,
+                'concern' => $concern,
+                'isTerminal' => $isTerminal,
+                'estimateVersion' => $estimateVersion,
+            ])
+            @include('operations.repair-orders.partials.repair-order-concern-production-status-control', [
+                'repairOrder' => $repairOrder,
+                'concern' => $concern,
+                'isTerminal' => $isTerminal,
+                'estimateVersion' => $estimateVersion,
+            ])
+        </div>
+        @if ($concern->shouldSurfaceRecommendationStatus())
+            @include('operations.repair-orders.partials.repair-order-concern-work-type-control', [
+                'repairOrder' => $repairOrder,
+                'concern' => $concern,
                 'estimateVersion' => $estimateVersion,
                 'authorViaModal' => $authorViaModal,
             ])

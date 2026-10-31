@@ -32,8 +32,6 @@
         : RepairOrderLineItemPresentation::editContextLines($line);
     $needsAuthorization = isset($linesNeedingAuthorization)
         && collect($linesNeedingAuthorization)->contains(fn ($unauthorizedLine): bool => (int) $unauthorizedLine->id === (int) $line->id);
-    $pendingIncrease = collect($pendingAuthorizationIncreases ?? [])
-        ->first(fn (array $increase): bool => (int) $increase['line']->id === (int) $line->id);
     $lineExceptions = isset($concern) && $concern->relationLoaded('authorizationExceptions')
         ? $concern->authorizationExceptions->filter(
             fn ($exception): bool => in_array((int) $line->id, $exception->lineIds(), true),
@@ -105,13 +103,6 @@
                         <span class="subheader text-{{ $line->type->tablerColor() }}">{{ $line->type->staffLabel() }}</span>
                         @if ($needsAuthorization)
                             <span class="badge bg-yellow-lt">Needs authorization</span>
-                        @elseif ($pendingIncrease)
-                            <span
-                                class="badge bg-yellow-lt"
-                                data-pending-increase-badge
-                                title="Approved at {{ $totals->format($pendingIncrease['authorized_cents']) }}. The increase needs customer authorization."
-                                aria-label="+{{ $totals->format($pendingIncrease['pending_cents']) }} over the approved {{ $totals->format($pendingIncrease['authorized_cents']) }}, needs customer authorization"
-                            >+{{ $totals->format($pendingIncrease['pending_cents']) }} pending</span>
                         @endif
                         @if ($lineExceptions->isNotEmpty())
                             <button

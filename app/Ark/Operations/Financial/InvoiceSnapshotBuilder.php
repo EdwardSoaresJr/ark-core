@@ -122,10 +122,8 @@ final class InvoiceSnapshotBuilder
             'subtotal' => $this->formatCents($totals->concernSubtotalCents($concern->id)),
             'lines' => $concern->lines
                 ->filter(fn (RepairOrderLine $line): bool => $line->concern?->disposition === RepairOrderConcernDisposition::Approved && $line->isVisibleToCustomer())
-                // Labor and parts the approval does not cover are not billed, so they are not listed.
                 ->reject(fn (RepairOrderLine $line): bool => ($line->isPart() || $line->type->isLabor()) && ! $approvedLines->has($line->id))
-                // A line priced above its approval is billed at the approved amounts the totals use.
-                ->map(fn (RepairOrderLine $line): array => $this->lineSnapshot($approvedLines->get($line->id, $line)))
+                ->map(fn (RepairOrderLine $line): array => $this->lineSnapshot($approvedLines->get($line->id, $line), $line))
                 ->values()
                 ->all(),
         ];
@@ -134,8 +132,10 @@ final class InvoiceSnapshotBuilder
     /**
      * @return array<string, mixed>
      */
-    private function lineSnapshot(RepairOrderLine $line): array
+    private function lineSnapshot(RepairOrderLine $line, ?RepairOrderLine $current = null): array
     {
+        $notApprovedCents = $current ? max(0, (int) $current->total_cents - (int) $line->total_cents) : 0;
+
         return [
             'id' => $line->id,
             'repair_order_concern_id' => $line->repair_order_concern_id,
@@ -161,6 +161,8 @@ final class InvoiceSnapshotBuilder
             'shop_fee' => $this->formatCents($line->shop_fee_cents),
             'standing_discount' => $this->formatCents($line->standing_discount_cents),
             'total' => $this->formatCents($line->total_cents),
+            'not_approved_cents' => $notApprovedCents,
+            'not_approved' => $this->formatCents($notApprovedCents),
         ];
     }
 

@@ -21,6 +21,15 @@ enum RepairOrderConcernDisposition: string
         };
     }
 
+    /** Staff customer-decision control. Recommended is the estimate state awaiting the customer. */
+    public function decisionLabel(): string
+    {
+        return match ($this) {
+            self::Recommended => 'Pending Approval',
+            default => $this->label(),
+        };
+    }
+
     public function helpText(): string
     {
         return match ($this) {
@@ -116,6 +125,18 @@ enum RepairOrderConcernDisposition: string
             self::Approved => 'green',
             self::Deferred => 'yellow',
             self::Declined => 'red',
+        };
+    }
+
+    /** Decision controls use icons so they read apart from the priority status dots. */
+    public function tablerIcon(): string
+    {
+        return match ($this) {
+            self::Draft => 'pencil',
+            self::Recommended => 'clock',
+            self::Approved => 'circle-check',
+            self::Deferred => 'calendar-time',
+            self::Declined => 'circle-x',
         };
     }
 

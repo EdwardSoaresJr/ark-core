@@ -5,7 +5,6 @@
     'repairOrder' => null,
     'approvalForecast' => null,
     'linesNeedingAuthorization' => null,
-    'pendingAuthorizationIncreases' => null,
 ])
 
 @php
@@ -28,10 +27,14 @@
         && ($financial['suggestedDepositDiagnostics'] ?? null);
     $showDepositDiagnosticsRow = $showDepositPartsRow;
     $linesNeedingAuthorization = collect($linesNeedingAuthorization ?? []);
-    $pendingAuthorizationIncreases = collect($pendingAuthorizationIncreases ?? []);
-    $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum(
-        fn ($line): int => (int) ($line->total_cents ?? 0),
-    ) + (int) $pendingAuthorizationIncreases->sum('pending_cents');
+    $workAuthorization = $repairOrder ? app(\App\Ark\Operations\RepairOrders\WorkCompletionAuthorization::class) : null;
+    $approvedBeforeIncrease = $workAuthorization?->approvedSubtotalsBeforeIncrease($repairOrder) ?? [];
+    $removedSinceApproval = $workAuthorization?->approvedLinesRemoved($repairOrder) ?? [];
+    $pendingCentsFor = fn ($line): int => $workAuthorization
+        ? $workAuthorization->pendingApprovalCents($repairOrder, $line)
+        : (int) ($line->total_cents ?? 0);
+    $needsAuthorizationCents = (int) $linesNeedingAuthorization->sum($pendingCentsFor);
+    $hasAddedLines = $linesNeedingAuthorization->contains(fn ($line): bool => ! isset($approvedBeforeIncrease[(int) $line->id]));
     $hasCloseout = isset($closeout) && trim($closeout) !== '';
 @endphp
 
@@ -121,7 +124,7 @@
     </div>
 
     <div id="authorized-lines" data-continuity-region="authorized-money">
-        @if ($linesNeedingAuthorization->isNotEmpty() || $pendingAuthorizationIncreases->isNotEmpty())
+        @if ($linesNeedingAuthorization->isNotEmpty())
             <div class="card-body border-top bg-yellow-lt">
                 <div class="d-flex justify-content-between align-items-baseline gap-3">
                     <span class="fw-semibold">Needs authorization</span>
@@ -129,22 +132,38 @@
                 </div>
                 <ul class="list-unstyled small mt-1 mb-0">
                     @foreach ($linesNeedingAuthorization as $unauthorizedLine)
-                        <li class="d-flex justify-content-between align-items-baseline gap-3">
-                            <span style="min-width: 0">{{ $unauthorizedLine->description }}</span>
-                            <span class="ark-money">{{ $totals->format((int) $unauthorizedLine->total_cents) }}</span>
-                        </li>
-                    @endforeach
-                    @foreach ($pendingAuthorizationIncreases as $increase)
-                        <li class="d-flex justify-content-between align-items-baseline gap-3" data-pending-increase="{{ $increase['line']->id }}">
+                        @php($approvedSubtotal = $approvedBeforeIncrease[(int) $unauthorizedLine->id] ?? null)
+                        <li class="d-flex justify-content-between align-items-baseline gap-3" @if ($approvedSubtotal !== null) data-approved-line-increase="{{ $unauthorizedLine->id }}" @endif>
                             <span style="min-width: 0">
-                                {{ $increase['line']->description }}
-                                <span class="text-secondary">· increased from {{ $totals->format($increase['authorized_cents']) }}</span>
+                                {{ $unauthorizedLine->description }}
+                                @if ($approvedSubtotal !== null)
+                                    <span class="d-block text-secondary">Increase · approved at {{ $totals->format($approvedSubtotal) }}</span>
+                                @endif
                             </span>
-                            <span class="ark-money">+{{ $totals->format($increase['pending_cents']) }}</span>
+                            <span class="ark-money">{{ $approvedSubtotal !== null ? '+' : '' }}{{ $totals->format($pendingCentsFor($unauthorizedLine)) }}</span>
                         </li>
                     @endforeach
                 </ul>
-                <p class="small mt-1 mb-0">On the estimate. Not in approved sales or the final invoice until the customer approves these amounts.</p>
+                @if ($hasAddedLines)
+                    <p class="small mt-1 mb-0">On the estimate. Not in approved sales until the customer approves these lines.</p>
+                @endif
+                @if ($approvedBeforeIncrease !== [])
+                    <p class="small mt-1 mb-0">Approved lines priced above the customer's approval. Approved sales and the invoice count the approved amount until the customer approves the increase.</p>
+                @endif
+            </div>
+        @endif
+        @if ($removedSinceApproval !== [])
+            <div class="card-body border-top" data-approved-lines-removed>
+                <span class="fw-semibold">Removed after approval</span>
+                <ul class="list-unstyled small mt-1 mb-0">
+                    @foreach ($removedSinceApproval as $removedLine)
+                        <li class="d-flex justify-content-between align-items-baseline gap-3">
+                            <span class="text-decoration-line-through" style="min-width: 0">{{ $removedLine['description'] }}</span>
+                            <span class="ark-money">{{ $totals->format($removedLine['subtotal_cents']) }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                <p class="small text-secondary mt-1 mb-0">Approved earlier and no longer on the estimate. The approval stays on file.</p>
             </div>
         @endif
     </div>
