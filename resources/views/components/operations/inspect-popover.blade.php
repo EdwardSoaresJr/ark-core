@@ -27,8 +27,8 @@
     {{ $slot }}
 
     @if ($hasItems)
-        <span class="ops-inspect-popover__backdrop" @click="close()"></span>
-        <span class="ops-inspect-popover__panel" role="tooltip">
+        <span class="ark-legacy ops-inspect-popover__backdrop" @click="close()"></span>
+        <span class="ark-legacy ops-inspect-popover__panel" role="tooltip">
             <button type="button" class="ops-inspect-popover__close" @click.stop="close()">Close</button>
             @if (filled($title))
                 <p class="ops-inspect-popover__title">{{ $title }}</p>

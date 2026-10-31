@@ -14,19 +14,19 @@
         : null;
 @endphp
 
-<div class="ops-estimate-context-rail" id="estimate-context-rail">
-    <div class="ops-estimate-context-rail__items" role="toolbar" aria-label="Estimate context">
+<div class="mb-3" id="estimate-context-rail" data-estimate-context>
+    <div class="nav nav-pills gap-1" role="toolbar" aria-label="Estimate context">
         <button
             type="button"
             id="authorization-rail"
             data-continuity-region="authorization-rail"
-            class="ops-estimate-context-rail__item"
-            :class="estimateContext === 'auth' ? 'is-active' : ''"
+            class="nav-link"
+            :class="estimateContext === 'auth' ? 'active' : ''"
             :aria-expanded="estimateContext === 'auth'"
             @click="toggleEstimateContext('auth')"
         >
             @if ($lastApproval)
-                <span class="ops-estimate-context-rail__mark" aria-hidden="true">✓</span>
+                <span class="text-green me-1" aria-hidden="true">✓</span>
                 <span>Authorization {{ $authorizedAmount }}</span>
             @else
                 Authorization
@@ -36,8 +36,8 @@
         <button
             type="button"
             id="customer-view"
-            class="ops-estimate-context-rail__item"
-            :class="estimateContext === 'portal' ? 'is-active' : ''"
+            class="nav-link"
+            :class="estimateContext === 'portal' ? 'active' : ''"
             :aria-expanded="estimateContext === 'portal'"
             @click="toggleEstimateContext('portal')"
         >
@@ -48,8 +48,8 @@
             <button
                 type="button"
                 id="parts-procurement"
-                class="ops-estimate-context-rail__item"
-                :class="estimateContext === 'parts' ? 'is-active' : ''"
+                class="nav-link"
+                :class="estimateContext === 'parts' ? 'active' : ''"
                 :aria-expanded="estimateContext === 'parts'"
                 @click="toggleEstimateContext('parts')"
             >
@@ -65,8 +65,9 @@
             <button
                 type="button"
                 @class([
-                    'ops-estimate-context-rail__item ops-estimate-context-rail__item--recs',
-                    'is-strong' => $awareness['strong'],
+                    'nav-link',
+                    'text-orange' => ! $awareness['strong'],
+                    'text-red fw-bold' => $awareness['strong'],
                 ])
                 @click="window.arkSelectRepairOrderWorkspaceTab && window.arkSelectRepairOrderWorkspaceTab('recommendations')"
             >
@@ -75,30 +76,36 @@
         @endif
     </div>
 
-    <div class="ops-estimate-context-rail__panel" x-show="estimateContext === 'auth'" x-cloak>
-        @include('operations.repair-orders.partials.repair-order-rail-tab-auth', [
-            'repairOrder' => $repairOrder,
-            'totals' => $totals,
-            'isTerminal' => $isTerminal ?? false,
-            'estimateVersion' => $estimateVersion,
-        ])
+    <div class="card card-sm mt-2" x-show="estimateContext === 'auth'" x-cloak>
+        <x-operations.worksheet-island>
+            @include('operations.repair-orders.partials.repair-order-rail-tab-auth', [
+                'repairOrder' => $repairOrder,
+                'totals' => $totals,
+                'isTerminal' => $isTerminal ?? false,
+                'estimateVersion' => $estimateVersion,
+            ])
+        </x-operations.worksheet-island>
     </div>
 
-    <div class="ops-estimate-context-rail__panel" x-show="estimateContext === 'portal'" x-cloak>
-        @include('operations.repair-orders.partials.repair-order-rail-tab-portal', [
-            'repairOrder' => $repairOrder,
-            'isTerminal' => $isTerminal ?? false,
-        ])
+    <div class="card card-sm mt-2" x-show="estimateContext === 'portal'" x-cloak>
+        <x-operations.worksheet-island>
+            @include('operations.repair-orders.partials.repair-order-rail-tab-portal', [
+                'repairOrder' => $repairOrder,
+                'isTerminal' => $isTerminal ?? false,
+            ])
+        </x-operations.worksheet-island>
     </div>
 
     @if ($showParts)
-        <div class="ops-estimate-context-rail__panel" x-show="estimateContext === 'parts'" x-cloak>
-            @include('operations.repair-orders.partials.repair-order-rail-tab-parts', [
-                'repairOrder' => $repairOrder,
-                'partsBlockingCount' => $partsBlockingCount,
-                'partsReadinessCounts' => $partsReadinessCounts ?? [],
-                'isTerminal' => $isTerminal ?? false,
-            ])
+        <div class="card card-sm mt-2" x-show="estimateContext === 'parts'" x-cloak>
+            <x-operations.worksheet-island>
+                @include('operations.repair-orders.partials.repair-order-rail-tab-parts', [
+                    'repairOrder' => $repairOrder,
+                    'partsBlockingCount' => $partsBlockingCount,
+                    'partsReadinessCounts' => $partsReadinessCounts ?? [],
+                    'isTerminal' => $isTerminal ?? false,
+                ])
+            </x-operations.worksheet-island>
         </div>
     @endif
 </div>

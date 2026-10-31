@@ -46,34 +46,41 @@
 @endphp
 
 @if ($showConcernStore || $showProcurement || $showLaborGuide)
-    <div class="ops-estimate-build-toolbar" aria-label="Estimate tools">
-        <div class="ops-estimate-build-toolbar__build">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" role="toolbar" aria-label="Estimate tools" data-estimate-tools>
+        <div class="d-flex flex-wrap align-items-start gap-2">
             @if ($showConcernStore)
                 <button
                     type="button"
-                    class="ops-review-action ops-review-action--primary"
+                    class="btn btn-primary"
                     @click="focusCreateScope()"
                 >
                     + Add Work
                 </button>
             @endif
 
-            @if ($showLaborGuide)
-                @include('operations.repair-orders.partials.repair-order-labor-guide-intent-button', [
-                    'laborGuides' => $laborGuides,
-                    'laborGuideDefault' => $laborGuideDefault,
-                ])
+            {{-- Provider buttons keep their legacy colors: a shop picks each parts catalog's color in settings. --}}
+            @if ($showLaborGuide && $laborGuides !== [])
+                <x-operations.worksheet-island class="d-inline-block w-auto">
+                    @include('operations.repair-orders.partials.repair-order-labor-guide-intent-button', [
+                        'laborGuides' => $laborGuides,
+                        'laborGuideDefault' => $laborGuideDefault,
+                    ])
+                </x-operations.worksheet-island>
             @endif
 
             @if ($showProcurement)
-                @include('operations.repair-orders.partials.repair-order-partstech-toolbar-group', [
-                    'partsCatalogs' => $partsCatalogs,
-                    'partsCatalogDefault' => $partsCatalogDefault,
-                ])
+                @if ($partsCatalogs !== [])
+                    <x-operations.worksheet-island class="d-inline-block w-auto">
+                        @include('operations.repair-orders.partials.repair-order-partstech-toolbar-group', [
+                            'partsCatalogs' => $partsCatalogs,
+                            'partsCatalogDefault' => $partsCatalogDefault,
+                        ])
+                    </x-operations.worksheet-island>
+                @endif
                 @if ($showCaptureDealerQuote)
                     <button
                         type="button"
-                        class="ops-review-action ops-review-action--procurement"
+                        class="btn"
                         @click="$dispatch('ark:dealer-quote-capture-open')"
                         title="Import a dealer quote PDF or pasted text onto this estimate"
                     >
@@ -83,15 +90,14 @@
             @endif
         </div>
 
-        <div class="ops-estimate-build-toolbar__customer">
-            <button
-                type="button"
-                class="ops-estimate-build-toolbar__quiet"
-                :class="estimateContext === 'portal' ? 'is-active' : ''"
-                @click="toggleEstimateContext('portal')"
-            >
-                Customer View
-            </button>
-        </div>
+        <button
+            type="button"
+            class="btn btn-ghost-secondary"
+            :class="estimateContext === 'portal' ? 'active' : ''"
+            :aria-pressed="estimateContext === 'portal'"
+            @click="toggleEstimateContext('portal')"
+        >
+            Customer View
+        </button>
     </div>
 @endif

@@ -254,3 +254,15 @@ The `ops-estimate-layout` grid and the rail's `ops-review-rail ops-review-rail--
 The rail had stopped sticking on the Tabler shell after the first slice: its `top` read `--ops-sticky-stack-offset`, which only the legacy shell defines. `tabler.css` now sets it on `.page`.
 
 Dark mode, unchanged from the legacy page: the approval forecast, the reason-for-visit band, and the customer notes band keep light backgrounds with light text.
+
+### Repair order worksheet: header (`operations.repair-orders.show`)
+
+The first worksheet slice: everything above the concern cards on the Estimate tab. Each control keeps its Alpine handler, form, hidden fields, ids, and continuity regions.
+
+- Estimate tools: Add Work, Import, and Customer View are Tabler buttons (`data-estimate-tools`). The labor guide and parts catalog groups stay inline islands, because their colors come from legacy classes and a shop picks each parts catalog's color in settings (`PartsCatalogButtonColor`). Moving them needs Tabler equivalents for those colors.
+- Reason for Visit and its suggested concerns are a Tabler card. This fixes its dark mode.
+- Recommended Work: the instruments are Tabler cards with badges and progress bars. Tones map to Tabler colors (excellent and good green, healthy teal, thin yellow, warn orange, low red). Each card is still the trigger of `x-operations.inspect-popover`, whose panel is now an island so its legacy styling holds on a Tabler page.
+- The Authorization, Customer View, and Parts switches are `nav-pills`. Their panels are Tabler cards with the legacy panel content inside islands.
+- Photos is a Tabler button.
+
+The Estimate tab no longer wraps its whole slot in one island; `show.blade.php` wraps the remaining legacy pieces: the engine oil and testing panels, and the workspace modal host with the concern cards.

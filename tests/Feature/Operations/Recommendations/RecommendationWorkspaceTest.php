@@ -36,8 +36,8 @@ test('repair order workspace exposes primary advisor workspaces', function () {
         ->assertSee('Customer View')
         ->assertDontSee('>Home</button>', false)
         ->assertSee('Labor Guide', false)
-        ->assertSee('ops-estimate-context-rail', false)
-        ->assertSee('ops-estimate-build-toolbar', false)
+        ->assertSee('data-estimate-context', false)
+        ->assertSee('data-estimate-tools', false)
         ->assertSee('data-toolbar-group="labor-guide"', false)
         ->assertSee('+ Add Work');
 });
