@@ -42,10 +42,33 @@
     }
 @endphp
 
-@if ($showForecast)
+@if ($showForecast && $variant === 'staff')
+    <div class="card-body border-bottom" id="approval-forecast" data-approval-forecast>
+        <h4 class="subheader mb-2">{{ $title }}</h4>
+        <dl class="mb-0">
+            <div class="d-flex justify-content-between align-items-baseline gap-3">
+                <dt class="fw-normal text-secondary">{{ $approvedLabel }}</dt>
+                <dd class="mb-0 fw-semibold ark-money">{{ $forecast['approved_label'] }}</dd>
+            </div>
+            <div class="d-flex justify-content-between align-items-baseline gap-3 mt-1">
+                <dt class="fw-normal text-secondary">
+                    {{ $pendingLabel }}
+                    @if ($pendingCount > 0)
+                        <span class="d-block small">{{ $pendingCountLabel }}</span>
+                    @endif
+                </dt>
+                <dd class="mb-0 fw-semibold text-orange ark-money">{{ $pendingPrefix }}{{ $forecast['pending_label'] }}</dd>
+            </div>
+            <div class="d-flex justify-content-between align-items-baseline gap-3 border-top pt-2 mt-2">
+                <dt>{{ $projectedLabel }}</dt>
+                <dd class="mb-0 fw-bold ark-money">{{ $forecast['projected_label'] }}</dd>
+            </div>
+        </dl>
+        <p class="small text-secondary mt-2 mb-0">{{ $footnote }}</p>
+    </div>
+@elseif ($showForecast)
     <div
         @class([
-            'border-b border-slate-200 bg-slate-50/90 px-3 py-2.5' => $variant === 'staff',
             'portal-approval-forecast mt-3 mb-1' => $variant === 'customer',
             'approval-forecast-pdf' => $variant === 'pdf',
         ])

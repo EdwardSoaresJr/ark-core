@@ -6,95 +6,97 @@
     $oweTodayCents = (int) ($financial['oweTodayCents'] ?? $financial['customerOwesTodayCents'] ?? 0);
     $oweTodayDiffers = (bool) ($financial['oweTodayDiffersFromSettlement'] ?? false);
     $tone = match (true) {
-        $hasSettlementDue => 'ops-financial-payment-strip--due',
-        $hasIssuedInvoice && $isPaid => 'ops-financial-payment-strip--paid',
-        ($financial['unappliedDepositsCents'] ?? 0) > 0 => 'ops-financial-payment-strip--deposit',
-        default => '',
+        $hasSettlementDue => 'yellow',
+        $hasIssuedInvoice && $isPaid => 'green',
+        default => null,
     };
     $recentLedger = ($financial['ledgerEntries'] ?? collect())->reject(fn (array $entry): bool => $entry['isVoided'] ?? false)->take(3);
 @endphp
 
-<div id="financial-payment-panel" class="ops-financial-payment-strip {{ $tone }}">
+<div id="financial-payment-panel" class="d-flex flex-column gap-2">
     <div id="financial-position" data-continuity-region="financial-position">
     @if ($hasIssuedInvoice)
-        <div class="ops-financial-payment-strip__balance">
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+        <div @class(['d-flex justify-content-between align-items-start gap-3 position-relative', 'ps-3' => $tone])>
+            @if ($tone)
+                <span class="card-status-start bg-{{ $tone }}"></span>
+            @endif
+            <div style="min-width: 0">
+                <div class="subheader">
                     @if (($financial['waivedCents'] ?? 0) > 0)
                         Would have cost
                     @else
                         Settlement balance
                     @endif
-                </p>
-                <p class="mt-0.5 text-2xl font-black tabular-nums text-slate-950">
+                </div>
+                <div class="h2 mb-0 ark-money">
                     @if (($financial['waivedCents'] ?? 0) > 0)
                         {{ $financial['wouldHaveCost'] }}
                     @else
                         {{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}
                     @endif
-                </p>
+                </div>
                 @if ($oweTodayDiffers)
-                    <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Owe today</p>
-                    <p class="text-sm font-bold tabular-nums text-slate-700">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</p>
+                    <div class="subheader mt-1">Owe today</div>
+                    <div class="fw-bold ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</div>
                 @endif
             </div>
-            <div class="shrink-0 text-right text-xs font-semibold leading-4 text-slate-600">
+            <div class="text-end small">
                 @if (($financial['waivedCents'] ?? 0) > 0)
-                    <p>Collected {{ $financial['collected'] }}</p>
-                    <p class="text-amber-900">Waived {{ $financial['waived'] }} · {{ $financial['collectionDispositionLabel'] }}</p>
+                    <div>Collected {{ $financial['collected'] }}</div>
+                    <div class="text-orange">Waived {{ $financial['waived'] }} · {{ $financial['collectionDispositionLabel'] }}</div>
                     @if ($settlementBalanceDueCents > 0)
-                        <p class="font-bold text-slate-950">Settlement due {{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}</p>
+                        <div class="fw-bold">Settlement due {{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}</div>
                     @endif
                 @else
-                    <p>Invoice {{ $financial['invoiceTotal'] }}</p>
+                    <div>Invoice {{ $financial['invoiceTotal'] }}</div>
                     @if (($financial['paymentsApplied'] ?? '$0.00') !== '$0.00')
-                        <p class="text-emerald-800">Paid {{ $financial['paymentsApplied'] }}</p>
+                        <div class="text-green">Paid {{ $financial['paymentsApplied'] }}</div>
                     @endif
                 @endif
             </div>
         </div>
     @elseif (($financial['unappliedDepositsCents'] ?? 0) > 0)
-        <div class="ops-financial-payment-strip__balance">
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Owe today</p>
-                <p class="mt-0.5 text-2xl font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</p>
+        <div @class(['d-flex justify-content-between align-items-start gap-3 position-relative', 'ps-3' => $tone])>
+            @if ($tone)
+                <span class="card-status-start bg-{{ $tone }}"></span>
+            @endif
+            <div style="min-width: 0">
+                <div class="subheader">Owe today</div>
+                <div class="h2 mb-0 ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</div>
             </div>
-            <div class="shrink-0 text-right text-xs font-semibold leading-4 text-slate-600">
-                <p>Deposits {{ $financial['unappliedDeposits'] }}</p>
-                <p>Invoice not issued</p>
+            <div class="text-end small">
+                <div>Deposits {{ $financial['unappliedDeposits'] }}</div>
+                <div>Invoice not issued</div>
             </div>
         </div>
-        <div class="ops-financial-payment-strip__hint">
-            <p class="text-xs font-semibold leading-4 text-slate-700">
-                Issue the final invoice at pickup to lock settlement. The customer can still pay more toward the remaining balance now.
-            </p>
-        </div>
+        <p class="small mt-2 mb-0">
+            Issue the final invoice at pickup to lock settlement. The customer can still pay more toward the remaining balance now.
+        </p>
     @elseif ($oweTodayCents > 0)
-        <div class="ops-financial-payment-strip__balance">
-            <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Owe today</p>
-                <p class="mt-0.5 text-2xl font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</p>
+        <div @class(['d-flex justify-content-between align-items-start gap-3 position-relative', 'ps-3' => $tone])>
+            @if ($tone)
+                <span class="card-status-start bg-{{ $tone }}"></span>
+            @endif
+            <div style="min-width: 0">
+                <div class="subheader">Owe today</div>
+                <div class="h2 mb-0 ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</div>
             </div>
-            <div class="shrink-0 text-right text-xs font-semibold leading-4 text-slate-600">
-                <p>Invoice not issued</p>
+            <div class="text-end small">
+                <div>Invoice not issued</div>
             </div>
         </div>
-        <div class="ops-financial-payment-strip__hint">
-            <p class="text-xs font-semibold leading-4 text-slate-700">{{ $financial['workflowHint'] }}</p>
-        </div>
+        <p class="small mt-2 mb-0">{{ $financial['workflowHint'] }}</p>
     @else
-        <div class="ops-financial-payment-strip__hint">
-            <p class="text-xs font-semibold leading-4 text-slate-700">{{ $financial['workflowHint'] }}</p>
-        </div>
+        <p class="small mb-0">{{ $financial['workflowHint'] }}</p>
     @endif
     </div>
 
     @error('invoice')
-        <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+        <p class="small text-red mb-0">{{ $message }}</p>
     @enderror
 
     @if ($financial['invoiceBlockingReason'] ?? null)
-        <p class="text-xs font-semibold leading-4 text-amber-900">{{ $financial['invoiceBlockingReason'] }}</p>
+        <p class="small text-orange mb-0">{{ $financial['invoiceBlockingReason'] }}</p>
     @endif
 
     @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
@@ -108,7 +110,7 @@
                 >
                     @csrf
                     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                    <button type="submit" class="inline-flex min-h-10 w-full items-center justify-center rounded-sm bg-slate-950 px-3 text-xs font-bold text-white hover:bg-slate-800">
+                    <button type="submit" class="btn btn-primary w-100">
                         Generate Final Invoice
                     </button>
                 </form>
@@ -117,54 +119,54 @@
 
         @if (($financial['canRecordDeposit'] ?? false) && ! ($financial['canRecordManualDeposit'] ?? false) && ($financial['suggestedDepositSatisfied'] ?? false))
             <div id="settlement-deposit" data-continuity-region="settlement">
-                <div class="border border-emerald-200 bg-emerald-50/70 p-3 text-xs leading-5 text-emerald-950">
-                    <p class="font-bold">Deposit on file</p>
-                    <p class="mt-1">Remaining balance is already covered. Void a payment history entry if one was recorded in error.</p>
+                <div class="alert alert-success mb-0">
+                    <div class="fw-bold">Deposit on file</div>
+                    <div>Remaining balance is already covered. Void a payment history entry if one was recorded in error.</div>
                 </div>
             </div>
         @endif
 
         @if (($financial['canRecordManualDeposit'] ?? false) || ($financial['canRecordPayment'] ?? false) || ($financial['canTakePaymentCapture'] ?? false))
-            @include('operations.repair-orders.partials.financial-payment-workspace', [
-                'repairOrder' => $repairOrder,
-                'financial' => $financial,
-                'estimateVersion' => $estimateVersion,
-            ])
+            {{-- ark-payment-capture.js drives this legacy markup. --}}
+            <x-operations.worksheet-island>
+                @include('operations.repair-orders.partials.financial-payment-workspace', [
+                    'repairOrder' => $repairOrder,
+                    'financial' => $financial,
+                    'estimateVersion' => $estimateVersion,
+                ])
+            </x-operations.worksheet-island>
         @endif
 
         @if ($financial['canWaiveBalance'] ?? false)
-            <a
-                href="#waive-balance"
-                class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-amber-300 bg-amber-50 px-3 text-xs font-bold text-amber-950 hover:border-amber-400"
-            >
+            <a href="#waive-balance" class="btn btn-outline-warning w-100">
                 Waive balance
             </a>
         @endif
     @endcan
 
-    <div id="settlement-history" data-continuity-region="settlement" @class(['ops-financial-payment-strip__history' => $recentLedger->isNotEmpty()])>
+    <div id="settlement-history" data-continuity-region="settlement">
         @if ($recentLedger->isNotEmpty())
-            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Recent payments</p>
-            <div class="mt-1 divide-y divide-slate-100">
+            <div class="subheader">Recent payments</div>
+            <div class="list-group list-group-flush">
                 @foreach ($recentLedger as $entry)
-                    <div class="flex items-start justify-between gap-3 py-1.5 text-xs">
-                        <div class="min-w-0">
-                            <p class="font-bold text-slate-900">
+                    <div class="list-group-item px-0 py-1 d-flex justify-content-between align-items-start gap-3 small">
+                        <div style="min-width: 0">
+                            <div class="fw-bold">
                                 {{ $entry['typeLabel'] }}
                                 @if ($entry['method'])
                                     · {{ $entry['method'] }}
                                 @endif
-                            </p>
-                            <p class="text-slate-500">{{ $entry['recordedAt'] ?? 'Pending' }}</p>
+                            </div>
+                            <div class="text-secondary">{{ $entry['recordedAt'] ?? 'Pending' }}</div>
                         </div>
-                        <p class="shrink-0 font-black tabular-nums text-slate-950">{{ $entry['amount'] }}</p>
+                        <div class="fw-bold ark-money">{{ $entry['amount'] }}</div>
                     </div>
                 @endforeach
             </div>
         @endif
     </div>
 
-    <a href="#financial-rail" class="ops-financial-payment-strip__more" @click="$dispatch('ops-show-closeout')">
+    <a href="#financial-rail" class="btn btn-ghost-secondary w-100" @click="$dispatch('ops-show-closeout')">
         Full ledger &amp; closeout
     </a>
 </div>

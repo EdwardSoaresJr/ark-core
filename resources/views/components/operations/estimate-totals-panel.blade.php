@@ -73,7 +73,6 @@
     </div>
 
     <div @if ($hasCloseout) x-show="totalsTab === 'estimate'" @endif>
-    <x-operations.worksheet-island>
     <div id="authorized-money" data-continuity-region="authorized-money">
         @include('operations.repair-orders.partials.repair-order-approval-forecast', [
             'approvalForecast' => $approvalForecast,
@@ -81,21 +80,20 @@
     </div>
 
     <div id="estimate-totals-region" data-continuity-region="totals">
-    <dl class="divide-y divide-slate-100 px-3 py-1 text-sm">
-        <div class="ops-total-row py-1.5">
-            <dt class="text-slate-500">Labor</dt>
-            <dd class="font-semibold tabular-nums text-slate-950">{{ $totals->format($totals->laborCents()) }}</dd>
-        </div>
-        <div class="ops-total-row py-1.5">
-            <dt class="text-slate-500">Parts</dt>
-            <dd class="font-semibold tabular-nums text-slate-950">{{ $totals->format($totals->partsCents()) }}</dd>
-        </div>
-        <div class="ops-total-row py-1.5">
-            <dt class="text-slate-500">Fees</dt>
-            <dd class="font-semibold tabular-nums text-slate-950">{{ $totals->format($totals->feesCents()) }}</dd>
-        </div>
-        @if ($totals->standingDiscountCents() > 0)
-            <div class="ops-total-row py-1.5">
+        <dl class="card-body mb-0">
+            <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                <dt class="fw-normal text-secondary">Labor</dt>
+                <dd class="mb-0 fw-semibold ark-money">{{ $totals->format($totals->laborCents()) }}</dd>
+            </div>
+            <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                <dt class="fw-normal text-secondary">Parts</dt>
+                <dd class="mb-0 fw-semibold ark-money">{{ $totals->format($totals->partsCents()) }}</dd>
+            </div>
+            <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                <dt class="fw-normal text-secondary">Fees</dt>
+                <dd class="mb-0 fw-semibold ark-money">{{ $totals->format($totals->feesCents()) }}</dd>
+            </div>
+            @if ($totals->standingDiscountCents() > 0)
                 @php
                     $standingDiscountLabel = $repairOrder
                         ? \App\Ark\Operations\Financial\StandingDiscountPresentation::label(
@@ -104,114 +102,117 @@
                         ) ?? 'Discount'
                         : 'Discount';
                 @endphp
-                <dt class="text-slate-500">{{ $standingDiscountLabel }}</dt>
-                <dd class="font-semibold tabular-nums text-emerald-700">−{{ $totals->format($totals->standingDiscountCents()) }}</dd>
+                <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                    <dt class="fw-normal text-secondary">{{ $standingDiscountLabel }}</dt>
+                    <dd class="mb-0 fw-semibold text-green ark-money">−{{ $totals->format($totals->standingDiscountCents()) }}</dd>
+                </div>
+            @endif
+            <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                <dt class="fw-normal text-secondary">{{ $taxLabel ?? 'Tax' }}</dt>
+                <dd class="mb-0 fw-semibold ark-money">{{ $totals->format($totals->taxCents()) }}</dd>
             </div>
-        @endif
-        <div class="ops-total-row py-1.5">
-            <dt class="text-slate-500">{{ $taxLabel ?? 'Tax' }}</dt>
-            <dd class="font-semibold tabular-nums text-slate-950">{{ $totals->format($totals->taxCents()) }}</dd>
-        </div>
-        <div class="ops-total-row ops-total-row--final py-2">
-            <dt>Total</dt>
-            <dd class="font-bold tabular-nums text-slate-950">{{ $totals->format($totals->totalCents()) }}</dd>
-        </div>
-    </dl>
+            <div class="d-flex justify-content-between align-items-baseline gap-3 border-top pt-2 mt-1" data-total-row="final">
+                <dt class="h3 mb-0">Total</dt>
+                <dd class="h3 mb-0 ark-money">{{ $totals->format($totals->totalCents()) }}</dd>
+            </div>
+        </dl>
     </div>
+
     <div id="authorized-lines" data-continuity-region="authorized-money">
         @if ($linesNeedingAuthorization->isNotEmpty())
-            <div class="px-3 py-2 text-sm">
-                <div class="ops-total-row">
-                    <dt class="text-amber-950">Needs authorization</dt>
-                    <dd class="font-semibold tabular-nums text-amber-950">{{ $totals->format($needsAuthorizationCents) }}</dd>
+            <div class="card-body border-top bg-yellow-lt">
+                <div class="d-flex justify-content-between align-items-baseline gap-3">
+                    <span class="fw-semibold">Needs authorization</span>
+                    <span class="fw-semibold ark-money">{{ $totals->format($needsAuthorizationCents) }}</span>
                 </div>
-                <ul class="mt-1 space-y-0.5 text-xs leading-4 text-amber-950">
+                <ul class="list-unstyled small mt-1 mb-0">
                     @foreach ($linesNeedingAuthorization as $unauthorizedLine)
-                        <li class="flex items-baseline justify-between gap-3">
-                            <span class="min-w-0">{{ $unauthorizedLine->description }}</span>
-                            <span class="shrink-0 tabular-nums">{{ $totals->format((int) $unauthorizedLine->total_cents) }}</span>
+                        <li class="d-flex justify-content-between align-items-baseline gap-3">
+                            <span style="min-width: 0">{{ $unauthorizedLine->description }}</span>
+                            <span class="ark-money">{{ $totals->format((int) $unauthorizedLine->total_cents) }}</span>
                         </li>
                     @endforeach
                 </ul>
-                <p class="mt-1 text-[11px] leading-4 text-slate-500">On the estimate. Not in approved sales until the customer approves these lines.</p>
+                <p class="small mt-1 mb-0">On the estimate. Not in approved sales until the customer approves these lines.</p>
             </div>
         @endif
     </div>
+
     <div id="estimate-balance-region" data-continuity-region="totals">
-    @if ($showSuggestedDeposit || $showPreInvoiceSettlement || $showPostInvoiceSettlement)
-    <dl class="divide-y divide-slate-100 px-3 py-1 text-sm">
-        @if ($showSuggestedDeposit)
-            @if ($showDepositPartsRow)
-                <div class="ops-total-row py-1.5">
-                    <dt class="text-slate-500">Deposit · parts</dt>
-                    <dd class="font-semibold tabular-nums text-slate-950">{{ $financial['suggestedDepositParts'] }}</dd>
-                </div>
-            @endif
-            @if ($showDepositDiagnosticsRow)
-                <div class="ops-total-row py-1.5">
-                    <dt class="text-slate-500">Deposit · diagnostics</dt>
-                    <dd class="font-semibold tabular-nums text-slate-950">{{ $financial['suggestedDepositDiagnostics'] }}</dd>
-                </div>
-            @endif
-            <div class="ops-total-row py-1.5">
-                <dt class="text-slate-500">
-                    Suggested deposit
-                    <span class="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">Shop policy quote - not collected</span>
-                </dt>
-                <dd class="flex items-center justify-end gap-2 font-semibold tabular-nums text-slate-950">
-                    <button
-                        type="button"
-                        class="shrink-0 border-0 bg-transparent p-0 text-[11px] font-semibold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
-                        data-ops-deposit-breakdown-open="{{ $depositBreakdownTemplateId }}"
-                    >
-                        Breakdown
-                    </button>
-                    <span data-suggested-deposit-amount="{{ $repairOrder->repair_order_id }}">{{ $financial['suggestedDeposit'] }}</span>
-                </dd>
-            </div>
+        @if ($showSuggestedDeposit || $showPreInvoiceSettlement || $showPostInvoiceSettlement)
+            <dl class="card-body border-top mb-0">
+                @if ($showSuggestedDeposit)
+                    @if ($showDepositPartsRow)
+                        <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                            <dt class="fw-normal text-secondary">Deposit · parts</dt>
+                            <dd class="mb-0 fw-semibold ark-money">{{ $financial['suggestedDepositParts'] }}</dd>
+                        </div>
+                    @endif
+                    @if ($showDepositDiagnosticsRow)
+                        <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                            <dt class="fw-normal text-secondary">Deposit · diagnostics</dt>
+                            <dd class="mb-0 fw-semibold ark-money">{{ $financial['suggestedDepositDiagnostics'] }}</dd>
+                        </div>
+                    @endif
+                    <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                        <dt class="fw-normal text-secondary">
+                            Suggested deposit
+                            <span class="d-block small">Shop policy quote - not collected</span>
+                        </dt>
+                        <dd class="mb-0 d-flex align-items-center gap-2 fw-semibold ark-money">
+                            <button
+                                type="button"
+                                class="btn btn-link btn-sm p-0"
+                                data-ops-deposit-breakdown-open="{{ $depositBreakdownTemplateId }}"
+                            >
+                                Breakdown
+                            </button>
+                            <span data-suggested-deposit-amount="{{ $repairOrder->repair_order_id }}">{{ $financial['suggestedDeposit'] }}</span>
+                        </dd>
+                    </div>
+                @endif
+                @if ($showPreInvoiceSettlement)
+                    <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                        <dt class="fw-normal text-secondary">Deposit on file</dt>
+                        <dd class="mb-0 fw-semibold ark-money">−{{ $financial['unappliedDeposits'] }}</dd>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-baseline gap-3 border-top pt-2 mt-1">
+                        <dt>Balance Due</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['projectedBalance'] ?? $financial['estimatedDueAtPickup'] }}</dd>
+                    </div>
+                @elseif ($showPostInvoiceSettlement)
+                    @if ($depositsAppliedCents > 0)
+                        <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                            <dt class="fw-normal text-secondary">Deposits</dt>
+                            <dd class="mb-0 fw-semibold ark-money">−{{ $financial['depositsApplied'] }}</dd>
+                        </div>
+                    @endif
+                    @if ($paymentsAppliedCents > 0)
+                        <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                            <dt class="fw-normal text-secondary">Payments</dt>
+                            <dd class="mb-0 fw-semibold text-green ark-money">−{{ $financial['paymentsApplied'] }}</dd>
+                        </div>
+                    @endif
+                    @if ($creditsAppliedCents > 0)
+                        <div class="d-flex justify-content-between align-items-baseline gap-3 py-1">
+                            <dt class="fw-normal text-secondary">Store credit</dt>
+                            <dd class="mb-0 fw-semibold ark-money">−{{ $financial['creditsApplied'] }}</dd>
+                        </div>
+                    @endif
+                    <div class="d-flex justify-content-between align-items-baseline gap-3 border-top pt-2 mt-1">
+                        <dt>Balance Due</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['projectedBalance'] ?? $financial['balanceDue'] }}</dd>
+                    </div>
+                @endif
+            </dl>
         @endif
-        @if ($showPreInvoiceSettlement)
-            <div class="ops-total-row py-1.5">
-                <dt class="text-slate-500">Deposit on file</dt>
-                <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['unappliedDeposits'] }}</dd>
-            </div>
-            <div class="ops-total-row ops-total-row--due py-2">
-                <dt>Balance Due</dt>
-                <dd class="font-bold tabular-nums text-slate-950">{{ $financial['projectedBalance'] ?? $financial['estimatedDueAtPickup'] }}</dd>
-            </div>
-        @elseif ($showPostInvoiceSettlement)
-            @if ($depositsAppliedCents > 0)
-                <div class="ops-total-row py-1.5">
-                    <dt class="text-slate-500">Deposits</dt>
-                    <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['depositsApplied'] }}</dd>
-                </div>
-            @endif
-            @if ($paymentsAppliedCents > 0)
-                <div class="ops-total-row py-1.5">
-                    <dt class="text-slate-500">Payments</dt>
-                    <dd class="font-semibold tabular-nums text-emerald-800">−{{ $financial['paymentsApplied'] }}</dd>
-                </div>
-            @endif
-            @if ($creditsAppliedCents > 0)
-                <div class="ops-total-row py-1.5">
-                    <dt class="text-slate-500">Store credit</dt>
-                    <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['creditsApplied'] }}</dd>
-                </div>
-            @endif
-            <div class="ops-total-row ops-total-row--due py-2">
-                <dt>Balance Due</dt>
-                <dd class="font-bold tabular-nums text-slate-950">{{ $financial['projectedBalance'] ?? $financial['balanceDue'] }}</dd>
-            </div>
-        @endif
-    </dl>
-    @endif
     </div>
+
     @if (trim($slot ?? '') !== '')
-        <div class="space-y-2 border-t border-slate-100 px-3 py-2">
+        <div class="card-body border-top">
             {{ $slot }}
         </div>
     @endif
-    </x-operations.worksheet-island>
     </div>
 
     @if ($hasCloseout)

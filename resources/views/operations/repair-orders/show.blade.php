@@ -1949,7 +1949,7 @@
                             'estimateVersion' => $estimateVersion,
                         ])
                     @else
-                        <p class="text-xs leading-5 text-slate-600">
+                        <p class="small text-secondary mb-0">
                             {{ session('status') ? session('status').' Totals refreshed.' : ($repairOrder->lines->isNotEmpty() ? 'Review concerns and line totals before approval.' : 'Add at least one estimate line before approval review.') }}
                         </p>
                     @endif

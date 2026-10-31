@@ -130,7 +130,7 @@ test('a line save refreshes the estimate instruments with the same customer tota
     $xpath = continuityXPath($html);
     $instruments = $xpath->query('//*[@id="estimate-instruments"]')->item(0);
     $customerTotal = $xpath->query('.//*[@data-instrument="total"]//*[contains(@class, "h3")]', $instruments)->item(0);
-    $panelTotal = $xpath->query('//*[@id="estimate-totals-region"]//*[contains(@class, "ops-total-row--final")]/dd')->item(0);
+    $panelTotal = $xpath->query('//*[@id="estimate-totals-region"]//*[@data-total-row="final"]/dd')->item(0);
 
     expect($instruments)->toBeInstanceOf(DOMElement::class)
         ->and($instruments->getAttribute('data-continuity-region'))->toBe('authorized-money')
