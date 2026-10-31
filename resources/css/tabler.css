@@ -97,6 +97,11 @@
     }
 }
 
+/* Money columns align by digit. Tabler has no tabular-figures utility. */
+.ark-money {
+    font-variant-numeric: tabular-nums;
+}
+
 /* An inline island, such as a legacy chip in a line of Tabler text, takes the line's size like it does on a legacy page. */
 span.ark-legacy {
     font-size: inherit;

@@ -301,4 +301,16 @@ Layout: `.ark-line-grid` in `tabler.css` keeps the legacy column widths (a flexi
 
 Colors: `RepairOrderLineType::tablerColor()` for the type label and compose icons, and `RepairOrderLineItemPresentation` for procurement status, the row accent (backordered, partial, installed), part flags, and margin, each beside the legacy tone it matches. `repair-order-part-procurement-actions` and `repair-order-note-visibility-badge` take a `ui` variable, so the rail's parts panel and the estimate document keep their legacy output.
 
-The Customer Total instrument is not a continuity region, so a line save updates the row, concern subtotal, and rail totals in place and the instrument on the next load. That is unchanged from the legacy worksheet.
+The estimate instruments are an `authorized-money` region (`#estimate-instruments`), so a line or authorization save refreshes the Customer Total with the rail.
+
+### Repair order worksheet: financial rail (`operations.repair-orders.show`)
+
+The rail's Estimate Total tab: the approval forecast, the totals, the lines needing authorization, the suggested deposit and balance, and the payment strip (Owe today, settlement balance, final invoice, deposit on file, waive balance, recent payments). The Closeout tab, the deposit breakdown template, and the payment capture workspace stay islands: the closeout is its own slice, and `ark-payment-capture.js` drives the payment markup.
+
+Kept for the rail scripts:
+
+- Every region keeps its id and kind: `approval-forecast` and `authorized-lines` (`authorized-money`), `estimate-totals-region` and `estimate-balance-region` (`totals`), `financial-position`, `invoice-eligibility`, `settlement-deposit`, and `settlement-history`. None nest.
+- The Breakdown link keeps `data-ops-deposit-breakdown-open`, and Full ledger & closeout still dispatches `ops-show-closeout`.
+- The final total row is `data-total-row="final"`.
+
+`repair-order-approval-forecast` renders Tabler for the staff variant only; the customer portal and document footer keep the legacy variants. Money columns use `.ark-money` (tabular figures). A balance due or paid state marks its block with a `card-status-start` strip rather than a tinted background, which kept the amount readable in dark mode.
