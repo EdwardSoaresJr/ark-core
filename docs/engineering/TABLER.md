@@ -208,3 +208,11 @@ Before: `ops-index`, `ops-board-shell`, `ops-page-toolbar`, `ops-board-filters`,
 After: Tabler only, `fluid` layout with `.ark-card-grid`. The page subtitle carries the queue note (search, workboard overflow, or Shop Dashboard drill-down), and the results heading shows the queue label. Status, From, and To collapse behind "Filters" on phones. Unchanged: the controller, query parameters (`q`, `status`, `created_from`, `created_to`), the queue drill-downs and their hidden inputs (`pickup`, `unassigned`, `lane`, `attention`, `disposition`, `open`), the "Workboard triage" return link, 24 per page with the query string kept, the `RepairOrdersView` permission, and every card link.
 
 Still on `app.css`: the shell components listed under "Legacy components on a Tabler page".
+
+### Shop settings (`operations.settings.shop.edit`)
+
+Settings is one page with an Alpine section switcher and about 30 section partials. This pass migrates the page and two sections; the rest are unchanged legacy markup in one island.
+
+Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
+
+Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active: Appointments & Setup, Staff, Financial Rules (labor, policies, tax, fees, deposits, parts matrix, billing classes), Shop Overhead, Owner Targets, Workflow Defaults, Label Printing, Square Payments, Parts catalogs, Communications, ARK Platform, and Runtime health. Migrate them section by section; each moves out of the island when it does.

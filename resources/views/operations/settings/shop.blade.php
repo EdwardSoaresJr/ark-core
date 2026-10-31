@@ -1,4 +1,5 @@
-<x-operations.app title="Shop Settings">
+<x-operations.app title="Shop Settings" ui="tabler">
+    <x-tabler.page layout="fluid" title="Shop Settings" pretitle="System" subtitle="How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.">
     <section
         x-data="{
             active: (() => {
@@ -183,174 +184,298 @@
                 };
             },
         }"
-        class="ops-shop-settings space-y-3"
     >
-        <div class="border border-slate-300 bg-white px-3 py-2">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div class="min-w-0">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Shop settings</p>
-                    <p class="mt-0.5 truncate text-xs font-medium text-slate-500">How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.</p>
-                </div>
-                @if (session('status'))
-                    <p class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900">{{ session('status') }}</p>
-                @endif
+        @if (session('status'))
+            <div class="alert alert-success" role="status">{{ session('status') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <div class="fw-bold">Could not save. Check the fields below.</div>
+                <ul class="mb-0 mt-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-            @if ($errors->any())
-                <div class="mt-2 border border-rose-200 bg-rose-50 px-3 py-2">
-                    <p class="text-sm font-medium text-rose-900">Could not save. Check the fields below.</p>
-                    <ul class="mt-1 list-disc pl-5 text-xs text-rose-800">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-            <p class="mt-2 text-[11px] leading-4 text-slate-500">Parts matrix changes save as you edit. Every other section has its own Save button.</p>
-        </div>
+        @endif
+        <p class="text-secondary small">Parts matrix changes save as you edit. Every other section has its own Save button.</p>
 
-        <div class="grid min-w-0 items-start gap-3 lg:grid-cols-[11rem_minmax(0,1fr)] xl:grid-cols-[12.5rem_minmax(0,1fr)]">
-            <aside class="min-w-0 border border-slate-300 bg-white p-2 lg:sticky lg:top-6">
-                <nav class="grid gap-3 text-sm" aria-label="Shop settings sections">
-                    <div class="grid gap-1">
-                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Your shop</p>
-                        <button type="button" @click="setActive('general')" :class="active === 'general' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Identity</button>
-                        <button type="button" @click="setActive('operations')" :class="active === 'operations' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Appointments &amp; Setup</button>
-                        @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
-                            <button type="button" @click="setActive('staff')" :class="active === 'staff' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Staff</button>
-                        @endcan
-                    </div>
-                    <div class="grid gap-1">
-                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Money</p>
-                        <button type="button" @click="setActive('financial')" :class="active === 'financial' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Financial Rules</button>
-                        <button type="button" @click="setActive('overhead')" :class="active === 'overhead' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Shop Overhead</button>
-                        <button type="button" @click="setActive('excellence')" :class="active === 'excellence' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium leading-snug">Owner Targets &amp; Reporting</button>
-                    </div>
-                    <div class="grid gap-1">
-                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Documents &amp; workflow</p>
-                        <button type="button" @click="setActive('estimates')" :class="active === 'estimates' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Documents / Disclaimers</button>
-                        <button type="button" @click="setActive('workflow')" :class="active === 'workflow' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Workflow Defaults</button>
-                        <button type="button" @click="setActive('printing')" :class="active === 'printing' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Label Printing</button>
-                    </div>
-                    <div class="grid gap-1">
-                        <p class="px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Connected services</p>
-                        <button type="button" @click="setActive('payments')" :class="active === 'payments' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Square Payments</button>
-                        <button type="button" @click="setActive('partstech')" :class="active === 'partstech' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Parts catalogs</button>
-                        <button type="button" @click="setActive('communications')" :class="active === 'communications' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">Communications</button>
-                        <a href="{{ route('operations.shop.communications') }}" class="block px-3 py-2 text-left font-medium text-slate-600 no-underline hover:bg-slate-50 hover:text-slate-950">Stations &amp; Phones</a>
-                        @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                            <button type="button" @click="setActive('ark-cloud')" :class="active === 'ark-cloud' ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-medium">ARK Platform</button>
-                        @endunless
-                    </div>
+        @php
+            $settingsNav = [
+                'Your shop' => [
+                    ['key' => 'general', 'label' => 'Shop Identity'],
+                    ['key' => 'operations', 'label' => 'Appointments & Setup'],
+                    ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
+                ],
+                'Money' => [
+                    ['key' => 'financial', 'label' => 'Financial Rules'],
+                    ['key' => 'overhead', 'label' => 'Shop Overhead'],
+                    ['key' => 'excellence', 'label' => 'Owner Targets & Reporting'],
+                ],
+                'Documents & workflow' => [
+                    ['key' => 'estimates', 'label' => 'Documents / Disclaimers'],
+                    ['key' => 'workflow', 'label' => 'Workflow Defaults'],
+                    ['key' => 'printing', 'label' => 'Label Printing'],
+                ],
+                'Connected services' => [
+                    ['key' => 'payments', 'label' => 'Square Payments'],
+                    ['key' => 'partstech', 'label' => 'Parts catalogs'],
+                    ['key' => 'communications', 'label' => 'Communications'],
+                    ['key' => 'stations', 'label' => 'Stations & Phones', 'href' => route('operations.shop.communications')],
+                    ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
+                ],
+            ];
+            $tablerSections = ['general', 'estimates'];
+        @endphp
+
+        <div class="row g-3">
+            <div class="col-12 d-lg-none">
+                <label for="settings-section" class="form-label">Section</label>
+                <select id="settings-section" class="form-select" :value="active" @change="setActive($event.target.value)">
+                    @foreach ($settingsNav as $group => $items)
+                        <optgroup label="{{ $group }}">
+                            @foreach ($items as $item)
+                                @continue(isset($item['href']) || ($item['hidden'] ?? false) || (isset($item['can']) && ! auth()->user()?->can($item['can'])))
+                                <option value="{{ $item['key'] }}">{{ $item['label'] }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 col-lg-3 col-xxl-2 d-none d-lg-block">
+                <nav class="card sticky-lg-top" style="top: 1rem" aria-label="Shop settings sections">
+                    @foreach ($settingsNav as $group => $items)
+                        <div class="card-header py-2"><div class="subheader">{{ $group }}</div></div>
+                        <div class="list-group list-group-flush">
+                            @foreach ($items as $item)
+                                @continue(($item['hidden'] ?? false) || (isset($item['can']) && ! auth()->user()?->can($item['can'])))
+                                @if (isset($item['href']))
+                                    <a href="{{ $item['href'] }}" class="list-group-item list-group-item-action">{{ $item['label'] }}</a>
+                                @else
+                                    <button
+                                        type="button"
+                                        class="list-group-item list-group-item-action"
+                                        :class="{ 'active': active === @js($item['key']) }"
+                                        :aria-current="active === @js($item['key']) ? 'page' : null"
+                                        @click="setActive(@js($item['key']))"
+                                    >{{ $item['label'] }}</button>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endforeach
                 </nav>
-            </aside>
+            </div>
 
-            <div class="min-w-0 w-full border border-slate-300 bg-white p-4">
-                <div class="min-w-0 w-full">
-                <section x-show="active === 'general'">
-                    <div class="border-b border-slate-200 pb-2">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Shop Identity</p>
-                        <h2 class="text-base font-black text-slate-950">Shop name, logo, and contact details</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Shown on estimates, invoices, and other customer documents.</p>
+            <div class="col-12 col-lg-9 col-xxl-10">
+                <section class="card" x-show="active === 'general'">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Shop Identity</div>
+                            <h2 class="card-title">Shop name, logo, and contact details</h2>
+                            <div class="card-subtitle">Shown on estimates, invoices, and other customer documents.</div>
+                        </div>
                     </div>
-                    <form method="POST" action="{{ route('operations.settings.shop.general.update') }}" enctype="multipart/form-data" class="mt-4">
+                    <form method="POST" action="{{ route('operations.settings.shop.general.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PATCH')
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="md:col-span-2 grid gap-4 rounded-md border border-slate-200 bg-slate-50/60 p-4 md:grid-cols-[180px_minmax(0,1fr)]">
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimate logo</p>
-                                <p class="mt-1 text-xs leading-5 text-slate-500">Used on estimate documents. PNG, JPG, or WebP up to 2 MB.</p>
-                            </div>
-                            <div class="grid gap-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:items-start">
-                                <div class="flex min-h-20 items-center justify-center rounded-md border border-slate-300 bg-white p-3">
-                                    @if ($settings->logo_path)
-                                        <img src="{{ Storage::disk('public')->url($settings->logo_path) }}" alt="{{ ($settings->shop_name ?: config('app.name')).' logo' }}" class="max-h-16 max-w-full object-contain">
-                                    @else
-                                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">No logo</span>
-                                    @endif
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="row g-3 align-items-center border rounded p-2 mx-0">
+                                        <div class="col-12 col-md-3">
+                                            <div class="fw-medium">Estimate logo</div>
+                                            <div class="text-secondary small">Used on estimate documents. PNG, JPG, or WebP up to 2 MB.</div>
+                                        </div>
+                                        <div class="col-12 col-sm-4 col-md-3">
+                                            <div class="d-flex align-items-center justify-content-center border rounded bg-white p-2" style="min-height: 5rem">
+                                                @if ($settings->logo_path)
+                                                    <img src="{{ Storage::disk('public')->url($settings->logo_path) }}" alt="{{ ($settings->shop_name ?: config('app.name')).' logo' }}" class="img-fluid" style="max-height: 4rem">
+                                                @else
+                                                    <span class="subheader">No logo</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-sm">
+                                            <label for="settings-logo" class="form-label">Upload logo</label>
+                                            <input id="settings-logo" type="file" name="logo" accept="image/png,image/jpeg,image/webp" class="form-control">
+                                            @if ($settings->logo_path)
+                                                <label class="form-check mt-2 mb-0">
+                                                    <input type="checkbox" name="remove_logo" value="1" class="form-check-input">
+                                                    <span class="form-check-label">Remove current logo</span>
+                                                </label>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500">
-                                        Upload logo
-                                        <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" class="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-950 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800">
-                                    </label>
-                                    @if ($settings->logo_path)
-                                        <label class="mt-3 inline-flex items-center gap-2 text-xs font-medium text-slate-600">
-                                            <input type="checkbox" name="remove_logo" value="1" class="rounded border-slate-300">
-                                            Remove current logo
-                                        </label>
-                                    @endif
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-shop-name" class="form-label">Shop name</label>
+                                    <input id="settings-shop-name" name="shop_name" value="{{ old('shop_name', $settings->shop_name) }}" class="form-control">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    @php
+                                        $timezoneOptions = timezone_identifiers_list();
+                                        $timezoneValue = (string) old('shop_timezone', $settings->shop_timezone ?: \App\Ark\Operations\Settings\ShopSettings::INSTALL_DEFAULT_TIMEZONE);
+                                    @endphp
+                                    <label for="settings-shop-timezone" class="form-label">Shop timezone</label>
+                                    <select id="settings-shop-timezone" name="shop_timezone" required @class(['form-select', 'is-invalid' => $errors->has('shop_timezone')])>
+                                        @if ($timezoneValue !== '' && ! in_array($timezoneValue, $timezoneOptions, true))
+                                            <option value="{{ $timezoneValue }}" selected>{{ $timezoneValue }} - choose a listed timezone</option>
+                                        @endif
+                                        @foreach ($timezoneOptions as $tz)
+                                            <option value="{{ $tz }}" @selected($timezoneValue === $tz)>{{ $tz }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('shop_timezone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-hint">All operational timestamps are stored in UTC and displayed in this timezone.</div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-phone" class="form-label">Phone</label>
+                                    <input id="settings-phone" name="phone" value="{{ old('phone', $settings->phone) }}" class="form-control">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-email" class="form-label">Email</label>
+                                    <input id="settings-email" name="email" value="{{ old('email', $settings->email) }}" class="form-control">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-website" class="form-label">Website</label>
+                                    <input id="settings-website" name="website" value="{{ old('website', $settings->website) }}" placeholder="https://example.com" @class(['form-control', 'is-invalid' => $errors->has('website')])>
+                                    @error('website')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12">
+                                    <label for="settings-address-1" class="form-label">Address line 1</label>
+                                    <input id="settings-address-1" name="address_line_1" value="{{ old('address_line_1', $settings->address_line_1) }}" class="form-control">
+                                </div>
+                                <div class="col-12">
+                                    <label for="settings-address-2" class="form-label">Address line 2</label>
+                                    <input id="settings-address-2" name="address_line_2" value="{{ old('address_line_2', $settings->address_line_2) }}" class="form-control">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-city" class="form-label">City</label>
+                                    <input id="settings-city" name="city" value="{{ old('city', $settings->city) }}" class="form-control">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="settings-state" class="form-label">State</label>
+                                    <input id="settings-state" name="state" value="{{ old('state', $settings->state) }}" class="form-control">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="settings-postal-code" class="form-label">Postal code</label>
+                                    <input id="settings-postal-code" name="postal_code" value="{{ old('postal_code', $settings->postal_code) }}" class="form-control">
                                 </div>
                             </div>
                         </div>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Shop name
-                            <input name="shop_name" value="{{ old('shop_name', $settings->shop_name) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Shop timezone
-                            @php
-                                $timezoneOptions = timezone_identifiers_list();
-                                $timezoneValue = (string) old('shop_timezone', $settings->shop_timezone ?: \App\Ark\Operations\Settings\ShopSettings::INSTALL_DEFAULT_TIMEZONE);
-                            @endphp
-                            <select name="shop_timezone" required class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                @if ($timezoneValue !== '' && ! in_array($timezoneValue, $timezoneOptions, true))
-                                    <option value="{{ $timezoneValue }}" selected>{{ $timezoneValue }} - choose a listed timezone</option>
-                                @endif
-                                @foreach ($timezoneOptions as $tz)
-                                    <option value="{{ $tz }}" @selected($timezoneValue === $tz)>{{ $tz }}</option>
-                                @endforeach
-                            </select>
-                            @error('shop_timezone')
-                                <span class="mt-1 block text-xs text-rose-700">{{ $message }}</span>
-                            @enderror
-                            <span class="mt-1 block text-[11px] leading-4 text-slate-500">All operational timestamps are stored in UTC and displayed in this timezone.</span>
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Phone
-                            <input name="phone" value="{{ old('phone', $settings->phone) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Email
-                            <input name="email" value="{{ old('email', $settings->email) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Website
-                            <input name="website" value="{{ old('website', $settings->website) }}" placeholder="https://example.com" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            @error('website')
-                                <span class="mt-1 block text-xs text-rose-700">{{ $message }}</span>
-                            @enderror
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500 md:col-span-2">
-                            Address line 1
-                            <input name="address_line_1" value="{{ old('address_line_1', $settings->address_line_1) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500 md:col-span-2">
-                            Address line 2
-                            <input name="address_line_2" value="{{ old('address_line_2', $settings->address_line_2) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            City
-                            <input name="city" value="{{ old('city', $settings->city) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <label class="block text-xs font-medium text-slate-500">
-                                State
-                                <input name="state" value="{{ old('state', $settings->state) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Postal code
-                                <input name="postal_code" value="{{ old('postal_code', $settings->postal_code) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary">Save Shop Identity</button>
                         </div>
-                    </div>
-                    <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
-                        <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                            Save Shop Identity
-                        </button>
-                    </div>
                     </form>
                 </section>
+                <section class="card" x-show="active === 'estimates'" x-cloak>
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Documents / Disclaimers</div>
+                            <h2 class="card-title">Customer-facing document language</h2>
+                            <div class="card-subtitle">Global and customer-tag disclaimers copy into snapshots at generation. Invoices keep the language issued at that time.</div>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('operations.settings.shop.estimates.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-md-6">
+                                    <div class="subheader">Global disclaimers</div>
+                                    <div class="text-secondary small">Always applied after totals on every estimate and invoice.</div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="subheader">Billing class disclaimers</div>
+                                    <div class="text-secondary small">Applied automatically from the customer&apos;s classification.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="settings-estimate-disclaimer" class="form-label">Global estimate disclaimer</label>
+                                <textarea id="settings-estimate-disclaimer" name="estimate_disclaimer" rows="5" class="form-control">{{ old('estimate_disclaimer', $settings->estimate_disclaimer) }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="settings-invoice-disclaimer" class="form-label">Global invoice disclaimer</label>
+                                <textarea id="settings-invoice-disclaimer" name="invoice_disclaimer" rows="5" class="form-control">{{ old('invoice_disclaimer', $settings->invoice_disclaimer) }}</textarea>
+                            </div>
+
+                            <div class="hr-text">Billing class disclaimers</div>
+                            <p class="text-secondary small">One disclaimer per configured billing class. Advisors do not pick these manually.</p>
+                            @foreach ($settings->customerTypeRows() as $customerType)
+                                @php
+                                    $typeKey = mb_strtolower($customerType['name']);
+                                    $typeDisclaimer = old("customer_type_disclaimers.$typeKey", $settings->customerTypeDisclaimerMap()[$typeKey] ?? '');
+                                @endphp
+                                <div class="mb-3">
+                                    <label for="settings-type-disclaimer-{{ $loop->index }}" class="form-label">{{ $customerType['name'] }}</label>
+                                    <textarea id="settings-type-disclaimer-{{ $loop->index }}" name="customer_type_disclaimers[{{ $typeKey }}]" rows="3" class="form-control">{{ $typeDisclaimer }}</textarea>
+                                </div>
+                            @endforeach
+
+                            <div class="hr-text">Authorization</div>
+                            <div class="mb-3">
+                                <label for="settings-authorization-language" class="form-label">Authorization language</label>
+                                <textarea id="settings-authorization-language" name="authorization_language" rows="3" class="form-control">{{ old('authorization_language', $settings->authorization_language) }}</textarea>
+                            </div>
+                            <label class="form-check">
+                                <input type="checkbox" name="portal_signature_required" value="1" @checked(old('portal_signature_required', $settings->portal_signature_required)) class="form-check-input">
+                                <span class="form-check-label">Require customer signature on portal authorization</span>
+                                <span class="form-check-description">When enabled, customers must sign and acknowledge authorization language before submitting portal approval.</span>
+                            </label>
+
+                            <div class="hr-text">Customer Part Presentation</div>
+                            <p class="text-secondary small">Controls how part names appear on estimates, invoices, portal, and print. Full catalog details stay internal for ordering.</p>
+                            <div class="mb-2" style="max-width: 28rem">
+                                <label for="settings-part-description-mode" class="form-label">Description mode</label>
+                                <select id="settings-part-description-mode" name="customer_part_description_mode" class="form-select">
+                                    @foreach (\App\Ark\Operations\Parts\CustomerPartDescriptionMode::options() as $mode)
+                                        <option value="{{ $mode->value }}" @selected(old('customer_part_description_mode', $settings->customerPartDescriptionMode()->value) === $mode->value)>{{ $mode->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <ul class="text-secondary small mb-3">
+                                @foreach (\App\Ark\Operations\Parts\CustomerPartDescriptionMode::options() as $mode)
+                                    <li><span class="fw-medium">{{ $mode->label() }}:</span> {{ $mode->helpText() }}</li>
+                                @endforeach
+                            </ul>
+                            @foreach ([
+                                'customer_part_show_manufacturer_number' => ['Show manufacturer part number', $settings->customerPartShowManufacturerNumber()],
+                                'customer_part_show_supplier' => ['Show supplier name', $settings->customerPartShowSupplier()],
+                                'customer_part_show_supplier_sku' => ['Show supplier SKU', $settings->customerPartShowSupplierSku()],
+                                'customer_part_allow_description_override' => ['Allow advisor override on individual lines', $settings->customerPartAllowDescriptionOverride()],
+                            ] as $field => [$label, $current])
+                                <label class="form-check">
+                                    <input type="hidden" name="{{ $field }}" value="0">
+                                    <input type="checkbox" name="{{ $field }}" value="1" @checked(old($field, $current)) class="form-check-input">
+                                    <span class="form-check-label">{{ $label }}</span>
+                                </label>
+                            @endforeach
+                            <p class="text-secondary small">Billing-class document profiles (Warranty / RepairPal) can still add part number or supplier for audit when those programs need them.</p>
+
+                            <div class="hr-text">Recommendations and validity</div>
+                            <div class="mb-3">
+                                <label for="settings-recommendation-disclaimer" class="form-label">
+                                    Recommendation disclaimer
+                                    <span class="text-secondary fw-normal">(concern narrative context, not mixed with authorization)</span>
+                                </label>
+                                <textarea id="settings-recommendation-disclaimer" name="recommendation_disclaimer" rows="3" class="form-control">{{ old('recommendation_disclaimer', $settings->recommendation_disclaimer) }}</textarea>
+                            </div>
+                            <div style="max-width: 12rem">
+                                <label for="settings-estimate-validity" class="form-label">Estimate validity days</label>
+                                <input id="settings-estimate-validity" name="estimate_validity_days" value="{{ old('estimate_validity_days', $settings->estimate_validity_days) }}" required inputmode="numeric" class="form-control">
+                            </div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary">Save Document Settings</button>
+                        </div>
+                    </form>
+                </section>
+                <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
                 <section x-show="active === 'financial'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
@@ -1133,134 +1258,6 @@
 
                 @include('operations.settings.partials.shop-excellence-targets')
 
-                <section x-show="active === 'estimates'" x-cloak>
-                    <div class="border-b border-slate-200 pb-2">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Documents / Disclaimers</p>
-                        <h2 class="text-base font-black text-slate-950">Customer-facing document language</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Global and customer-tag disclaimers copy into snapshots at generation. Invoices keep the language issued at that time.</p>
-                    </div>
-                    <form method="POST" action="{{ route('operations.settings.shop.estimates.update') }}" class="mt-4">
-                        @csrf
-                        @method('PATCH')
-                    <div class="grid gap-5">
-                        <div class="grid gap-px border border-slate-300 bg-slate-300 md:grid-cols-2">
-                            <div class="bg-white px-3 py-2">
-                                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Global disclaimers</p>
-                                <p class="mt-0.5 text-xs text-slate-600">Always applied after totals on every estimate and invoice.</p>
-                            </div>
-                            <div class="bg-white px-3 py-2">
-                                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Billing class disclaimers</p>
-                                <p class="mt-0.5 text-xs text-slate-600">Applied automatically from the customer&apos;s classification.</p>
-                            </div>
-                        </div>
-
-                        <label class="block text-xs font-medium text-slate-500">
-                            Global estimate disclaimer
-                            <textarea name="estimate_disclaimer" rows="5" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">{{ old('estimate_disclaimer', $settings->estimate_disclaimer) }}</textarea>
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">
-                            Global invoice disclaimer
-                            <textarea name="invoice_disclaimer" rows="5" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">{{ old('invoice_disclaimer', $settings->invoice_disclaimer) }}</textarea>
-                        </label>
-
-                        <div class="border-t border-slate-200 pt-4">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Billing class disclaimers</p>
-                            <p class="mt-1 text-xs text-slate-500">One disclaimer per configured billing class. Advisors do not pick these manually.</p>
-                            <div class="mt-3 grid gap-3">
-                                @foreach ($settings->customerTypeRows() as $customerType)
-                                    @php
-                                        $typeKey = mb_strtolower($customerType['name']);
-                                        $typeDisclaimer = old("customer_type_disclaimers.$typeKey", $settings->customerTypeDisclaimerMap()[$typeKey] ?? '');
-                                    @endphp
-                                    <label class="block text-xs font-medium text-slate-500">
-                                        {{ $customerType['name'] }}
-                                        <textarea name="customer_type_disclaimers[{{ $typeKey }}]" rows="3" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">{{ $typeDisclaimer }}</textarea>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <label class="block text-xs font-medium text-slate-500">
-                            Authorization language
-                            <textarea name="authorization_language" rows="3" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">{{ old('authorization_language', $settings->authorization_language) }}</textarea>
-                        </label>
-
-                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                            <input
-                                type="checkbox"
-                                name="portal_signature_required"
-                                value="1"
-                                @checked(old('portal_signature_required', $settings->portal_signature_required))
-                                class="rounded border-slate-300 text-slate-950 focus:ring-slate-400"
-                            >
-                            <span>Require customer signature on portal authorization</span>
-                        </label>
-                        <p class="text-xs text-slate-500">When enabled, customers must sign and acknowledge authorization language before submitting portal approval.</p>
-
-                        <div class="border-t border-slate-200 pt-4">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Customer Part Presentation</p>
-                            <p class="mt-1 text-xs text-slate-500">Controls how part names appear on estimates, invoices, portal, and print. Full catalog details stay internal for ordering.</p>
-
-                            <label class="mt-3 block max-w-md text-xs font-medium text-slate-500">
-                                Description mode
-                                <select name="customer_part_description_mode" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    @foreach (\App\Ark\Operations\Parts\CustomerPartDescriptionMode::options() as $mode)
-                                        <option
-                                            value="{{ $mode->value }}"
-                                            @selected(old('customer_part_description_mode', $settings->customerPartDescriptionMode()->value) === $mode->value)
-                                        >{{ $mode->label() }}</option>
-                                    @endforeach
-                                </select>
-                            </label>
-                            <ul class="mt-2 space-y-1 text-xs text-slate-500">
-                                @foreach (\App\Ark\Operations\Parts\CustomerPartDescriptionMode::options() as $mode)
-                                    <li><span class="font-medium text-slate-700">{{ $mode->label() }}:</span> {{ $mode->helpText() }}</li>
-                                @endforeach
-                            </ul>
-
-                            <div class="mt-3 grid gap-2">
-                                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                    <input type="hidden" name="customer_part_show_manufacturer_number" value="0">
-                                    <input type="checkbox" name="customer_part_show_manufacturer_number" value="1" @checked(old('customer_part_show_manufacturer_number', $settings->customerPartShowManufacturerNumber())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                    <span>Show manufacturer part number</span>
-                                </label>
-                                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                    <input type="hidden" name="customer_part_show_supplier" value="0">
-                                    <input type="checkbox" name="customer_part_show_supplier" value="1" @checked(old('customer_part_show_supplier', $settings->customerPartShowSupplier())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                    <span>Show supplier name</span>
-                                </label>
-                                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                    <input type="hidden" name="customer_part_show_supplier_sku" value="0">
-                                    <input type="checkbox" name="customer_part_show_supplier_sku" value="1" @checked(old('customer_part_show_supplier_sku', $settings->customerPartShowSupplierSku())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                    <span>Show supplier SKU</span>
-                                </label>
-                                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                    <input type="hidden" name="customer_part_allow_description_override" value="0">
-                                    <input type="checkbox" name="customer_part_allow_description_override" value="1" @checked(old('customer_part_allow_description_override', $settings->customerPartAllowDescriptionOverride())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                    <span>Allow advisor override on individual lines</span>
-                                </label>
-                            </div>
-                            <p class="mt-2 text-xs text-slate-500">Billing-class document profiles (Warranty / RepairPal) can still add part number or supplier for audit when those programs need them.</p>
-                        </div>
-
-                        <label class="block text-xs font-medium text-slate-500">
-                            Recommendation disclaimer
-                            <span class="font-normal text-slate-400">(concern narrative context, not mixed with authorization)</span>
-                            <textarea name="recommendation_disclaimer" rows="3" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">{{ old('recommendation_disclaimer', $settings->recommendation_disclaimer) }}</textarea>
-                        </label>
-
-                        <label class="block max-w-xs text-xs font-medium text-slate-500">
-                            Estimate validity days
-                            <input name="estimate_validity_days" value="{{ old('estimate_validity_days', $settings->estimate_validity_days) }}" required inputmode="numeric" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                        </label>
-                    </div>
-                    <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
-                        <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                            Save Document Settings
-                        </button>
-                    </div>
-                    </form>
-                </section>
 
                 <section x-show="active === 'workflow'" x-cloak>
                     <div class="border-b border-slate-200 pb-2">
@@ -1479,12 +1476,13 @@
             </div>
         </div>
 
-        <p class="text-right text-[10px] text-slate-400">
+        <p class="text-end small mt-3 mb-0">
             <a
                 href="{{ route('operations.settings.shop.edit', ['section' => 'runtime-health']) }}"
-                class="hover:text-slate-600"
+                class="text-secondary"
                 @click.prevent="setActive('runtime-health')"
             >Runtime health</a>
         </p>
     </section>
+    </x-tabler.page>
 </x-operations.app>
