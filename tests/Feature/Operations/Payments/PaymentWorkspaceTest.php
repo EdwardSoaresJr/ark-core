@@ -54,7 +54,7 @@ test('an issued invoice keeps cash on the ledger payment path', function () {
         ->assertSee('data-payment-workspace-suggested="'.$presenter['settlementBalanceDueDecimal'].'"', false)
         ->assertSee('Record Payment', false)
         ->assertSee('name="paid_at"', false)
-        ->assertSee('ops-payment-workspace__date', false)
+        ->assertSee('data-payment-paid-date-picker', false)
         ->assertSee('data-payment-paid-date', false)
         ->assertSee(now()->timezone(config('app.display_timezone'))->format('M j, Y'), false)
         ->assertSee(route('operations.repair-orders.payment.update', $repairOrder), false)

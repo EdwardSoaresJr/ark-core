@@ -160,7 +160,7 @@ test('financial rail prefills suggested deposit amount', function () {
 
     $repairOrder = defaultDepositRepairOrder(status: RepairOrderStatus::InProgress);
 
-    $this->get(route('operations.repair-orders.show', $repairOrder))
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('Suggested deposit', false)
         ->assertSee('Breakdown', false)
@@ -170,7 +170,25 @@ test('financial rail prefills suggested deposit amount', function () {
         ->assertSee('Deposit line breakdown', false)
         ->assertSee('data-deposit-line-checkbox', false)
         ->assertSee('Cooling system diagnostic', false)
-        ->assertSee('Thermostat', false);
+        ->assertSee('Thermostat', false)
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $insideLegacy = 'ancestor::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]';
+    $workspace = $xpath->query('//*[@data-payment-workspace]')->item(0);
+    $breakdown = $xpath->query('//*[@data-deposit-breakdown-dialog]')->item(0);
+
+    expect($workspace)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query($insideLegacy, $workspace)->length)->toBe(0)
+        ->and($breakdown)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query($insideLegacy, $breakdown)->length)->toBe(0)
+        ->and($breakdown->getAttribute('data-repair-order-id'))->toBe((string) $repairOrder->repair_order_id)
+        ->and($xpath->query('.//*[@data-ops-deposit-breakdown-close]', $breakdown)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-deposit-breakdown-total]', $breakdown)->length)->toBe(1);
 });
 
 test('admin can save deposit settings', function () {

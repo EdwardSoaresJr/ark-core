@@ -14,7 +14,7 @@ function syncDepositAmountFields(repairOrderId, cents) {
 }
 
 function initDepositBreakdownDialog(mount) {
-    const dialog = mount.querySelector('.ops-deposit-breakdown-modal__dialog');
+    const dialog = mount.querySelector('[data-deposit-breakdown-dialog]');
 
     if (! dialog) {
         return;
@@ -29,12 +29,12 @@ function initDepositBreakdownDialog(mount) {
 
         checkboxes.forEach((checkbox) => {
             if (! checkbox.checked) {
-                checkbox.closest('tr')?.classList.add('ops-deposit-breakdown-modal__line--excluded');
+                checkbox.closest('tr')?.classList.add('opacity-50');
 
                 return;
             }
 
-            checkbox.closest('tr')?.classList.remove('ops-deposit-breakdown-modal__line--excluded');
+            checkbox.closest('tr')?.classList.remove('opacity-50');
             totalCents += Number.parseInt(checkbox.dataset.amountCents || '0', 10);
         });
 
@@ -107,7 +107,7 @@ function openDepositBreakdown(templateId) {
     document.body.classList.add('ops-deposit-modal-open');
     activeOverlay = overlay;
 
-    mount.querySelector('.ops-deposit-breakdown-modal__close')?.focus();
+    mount.querySelector('[data-ops-deposit-breakdown-close]')?.focus();
 }
 
 export function initDepositBreakdowns() {

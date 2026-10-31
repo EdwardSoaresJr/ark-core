@@ -69,7 +69,7 @@ test('invoiced repair order keeps shop methods, date, and reference', function (
         ->assertSee('Check', false)
         ->assertSee('External Card', false)
         ->assertSee('EFT', false)
-        ->assertSee('ops-payment-workspace__date', false)
+        ->assertSee('data-payment-paid-date-picker', false)
         ->assertSee('name="amount"', false)
         ->assertSee('name="payment_method"', false)
         ->assertSee('name="paid_at"', false)
