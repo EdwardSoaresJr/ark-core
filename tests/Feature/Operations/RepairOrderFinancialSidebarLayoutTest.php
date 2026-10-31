@@ -50,7 +50,7 @@ test('uninvoiced estimate keeps financial summary and payment actions in the rig
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('id="estimate-builder-rail"', false)
-        ->assertSee('class="ops-review-rail ops-review-rail--pinned"', false)
+        ->assertSee('class="ops-review-rail ops-review-rail--pinned gap-3"', false)
         ->assertSee('id="estimate-total-panel"', false)
         ->assertSee('id="financial-payment-panel"', false)
         ->assertSee('Generate Final Invoice');

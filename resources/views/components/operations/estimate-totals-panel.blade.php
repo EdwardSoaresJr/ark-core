@@ -34,39 +34,46 @@
 @endphp
 
 <div
-    {{ $attributes->class(['ops-review-panel']) }}
+    {{ $attributes->class(['card']) }}
     @if ($hasCloseout)
         x-data="{ totalsTab: window.location.hash === '#financial-rail' ? 'closeout' : 'estimate' }"
         @ops-show-closeout.window="totalsTab = 'closeout'"
         @hashchange.window="if (window.location.hash === '#financial-rail') totalsTab = 'closeout'"
     @endif
 >
-    @if ($hasCloseout)
-        <div class="ops-ro-workspace-tabs__nav ops-totals-tabs" role="tablist" aria-label="Estimate money">
-            <button
-                type="button"
-                class="ops-ro-workspace-tab"
-                role="tab"
-                :class="{ 'ops-ro-workspace-tab--active': totalsTab === 'estimate' }"
-                :aria-selected="totalsTab === 'estimate'"
-                @click="totalsTab = 'estimate'; if (window.location.hash === '#financial-rail') history.replaceState(null, '', window.location.pathname + window.location.search)"
-            >Estimate Total</button>
-            <button
-                type="button"
-                class="ops-ro-workspace-tab"
-                role="tab"
-                :class="{ 'ops-ro-workspace-tab--active': totalsTab === 'closeout' }"
-                :aria-selected="totalsTab === 'closeout'"
-                @click="totalsTab = 'closeout'; history.replaceState(null, '', '#financial-rail')"
-            >Closeout</button>
-        </div>
-    @else
-        <div class="ops-review-panel-header">
-            <p class="ops-eyebrow">Estimate Total</p>
-        </div>
-    @endif
+    <div class="card-header">
+        @if ($hasCloseout)
+            <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Estimate money">
+                <li class="nav-item" role="presentation">
+                    <button
+                        type="button"
+                        class="nav-link"
+                        role="tab"
+                        data-totals-tab="estimate"
+                        :class="{ active: totalsTab === 'estimate' }"
+                        :aria-selected="totalsTab === 'estimate'"
+                        @click="totalsTab = 'estimate'; if (window.location.hash === '#financial-rail') history.replaceState(null, '', window.location.pathname + window.location.search)"
+                    >Estimate Total</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button
+                        type="button"
+                        class="nav-link"
+                        role="tab"
+                        data-totals-tab="closeout"
+                        :class="{ active: totalsTab === 'closeout' }"
+                        :aria-selected="totalsTab === 'closeout'"
+                        @click="totalsTab = 'closeout'; history.replaceState(null, '', '#financial-rail')"
+                    >Closeout</button>
+                </li>
+            </ul>
+        @else
+            <h3 class="card-title">Estimate Total</h3>
+        @endif
+    </div>
 
     <div @if ($hasCloseout) x-show="totalsTab === 'estimate'" @endif>
+    <x-operations.worksheet-island>
     <div id="authorized-money" data-continuity-region="authorized-money">
         @include('operations.repair-orders.partials.repair-order-approval-forecast', [
             'approvalForecast' => $approvalForecast,
@@ -204,19 +211,24 @@
             {{ $slot }}
         </div>
     @endif
+    </x-operations.worksheet-island>
     </div>
 
     @if ($hasCloseout)
         <div x-show="totalsTab === 'closeout'" x-cloak>
-            {{ $closeout }}
+            <x-operations.worksheet-island>
+                {{ $closeout }}
+            </x-operations.worksheet-island>
         </div>
     @endif
 
     @if ($showSuggestedDeposit && $depositBreakdownTemplateId)
-        @include('operations.repair-orders.partials.financial-suggested-deposit-template', [
-            'financial' => $financial,
-            'depositBreakdownTemplateId' => $depositBreakdownTemplateId,
-            'repairOrder' => $repairOrder,
-        ])
+        <x-operations.worksheet-island>
+            @include('operations.repair-orders.partials.financial-suggested-deposit-template', [
+                'financial' => $financial,
+                'depositBreakdownTemplateId' => $depositBreakdownTemplateId,
+                'repairOrder' => $repairOrder,
+            ])
+        </x-operations.worksheet-island>
     @endif
 </div>

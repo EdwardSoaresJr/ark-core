@@ -1580,9 +1580,8 @@
                 </div>
             </div>
 
-            {{-- The worksheet, rail, and footer dock keep their legacy markup and scripts until their own slices. --}}
-            <div class="ark-legacy ops-main">
-            <div class="ops-estimate-workspace ops-estimate-workspace--builder">
+            {{-- Worksheet content, rail content, and the footer dock keep their legacy markup and scripts until their own slices. --}}
+            <x-operations.worksheet-island stack>
         @include('operations.repair-orders.partials.worksheet-busy-overlay')
 
         <div id="worksheet-status-flash">
@@ -1663,8 +1662,9 @@
             ])
 
         </div>
+            </x-operations.worksheet-island>
 
-        <div class="ops-estimate-layout">
+        <div class="ops-estimate-layout gap-3 mt-3">
             <div class="ops-estimate-main min-w-0">
                 <x-operations.repair-order-workspace-tabs
                     workspaceMode="review"
@@ -1920,10 +1920,9 @@
                 </x-operations.repair-order-workspace-tabs>
             </div>
 
-            <aside id="estimate-builder-rail" class="ops-review-rail ops-review-rail--pinned">
+            <aside id="estimate-builder-rail" class="ops-review-rail ops-review-rail--pinned gap-3">
                 <x-operations.estimate-totals-panel
                     id="estimate-total-panel"
-                    class="ops-review-rail-totals-pinned"
                     :totals="$totals"
                     :tax-label="$taxLabel"
                     :financial="$financial['showFinancialRail'] ? $financial : null"
@@ -1950,7 +1949,7 @@
                     @endif
                 </x-operations.estimate-totals-panel>
 
-                <div class="ops-review-rail__scroll">
+                <x-operations.worksheet-island stack>
                     @include('operations.repair-orders.partials.operational-journey-card', [
                         'operationalJourney' => $operationalJourney ?? null,
                         'journeyComparison' => $journeyComparison ?? null,
@@ -1960,10 +1959,13 @@
                         'followUps' => $openFollowUps ?? [],
                         'tasks' => $openTasks ?? [],
                     ])
-                </div>
+                </x-operations.worksheet-island>
             </aside>
         </div>
 
+            {{-- The full legacy wrapper keeps its bottom padding, which clears the fixed footer dock. --}}
+            <div class="ark-legacy ops-main">
+            <div class="ops-estimate-workspace ops-estimate-workspace--builder">
         @include('operations.repair-orders.partials.repair-order-rte-labor-panel', [
             'rteLaborGuide' => $rteLaborGuide,
             'rteLaborConcerns' => $rteLaborConcerns,

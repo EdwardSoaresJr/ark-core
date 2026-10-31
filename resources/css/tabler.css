@@ -51,6 +51,19 @@
     }
 }
 
+/* Legacy sticky panels (the repair order rail) sit below the legacy top bar. Tabler's page has no sticky header from lg. */
+.page {
+    --ops-sticky-stack-offset: 1rem;
+}
+
+/* .ops-main pads and centres a legacy page. A worksheet island fills its Tabler card or column instead. */
+.ark-worksheet-island {
+    max-width: none;
+    margin-inline: 0;
+    padding: 0;
+    overflow-x: visible;
+}
+
 /* An inline island, such as a legacy chip in a line of Tabler text, takes the line's size like it does on a legacy page. */
 span.ark-legacy {
     font-size: inherit;
