@@ -65,6 +65,8 @@ test('raising the price of an approved line leaves the increase pending until on
     $firstScope = ApprovedWorkScope::query()->sole();
     $firstEvent = ApprovalEvent::query()->sole();
     $firstEventAttributes = $firstEvent->getAttributes();
+    $calculator = app(EstimateTotalsCalculator::class);
+    $approvedBefore = $calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents();
 
     reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
 
@@ -72,6 +74,8 @@ test('raising the price of an approved line leaves the increase pending until on
     $raisedSubtotal = $authorization->approvalSubtotalCents($labor->fresh());
 
     expect($raisedSubtotal)->toBeGreaterThan($approvedSubtotal)
+        ->and($calculator->approvedTotalsForRead($repairOrder)->totalCents())->toBe($approvedBefore)
+        ->and($calculator->totalsForApprovedWork($repairOrder->fresh())->totalCents())->toBe($approvedBefore)
         ->and($authorization->linesRequiringAuthorization($repairOrder)->pluck('id')->all())->toBe([$labor->id])
         ->and($authorization->approvedSubtotalsBeforeIncrease($repairOrder))->toBe([$labor->id => $approvedSubtotal])
         ->and($authorization->pendingApprovalCents($repairOrder, $labor->fresh()))->toBe($raisedSubtotal - $approvedSubtotal)
@@ -83,7 +87,7 @@ test('raising the price of an approved line leaves the increase pending until on
         ->assertOk()
         ->assertSee('Needs authorization', false)
         ->assertSee('data-approved-line-increase="'.$labor->id.'"', false)
-        ->assertSee('The increase needs the customer\'s approval.', false);
+        ->assertSee('Approved sales and the invoice count the approved amount until the customer approves the increase.', false);
 
     reauthRecordApproval($repairOrder);
 
@@ -220,10 +224,24 @@ test('removing an approved line keeps the approval history and shows the line as
         ->assertSee('Front brake pads', false)
         ->assertDontSee('Needs authorization', false);
 
+    EstimateAccessToken::createForPlainToken($repairOrder, reauthPortalToken());
+    auth()->logout();
+
+    $this->get(route('portal.estimates.show', ['token' => reauthPortalToken()]))
+        ->assertOk()
+        ->assertSee('data-approved-work-removed', false)
+        ->assertSee('Removed after your approval', false);
+
+    $this->actingAs($this->advisor);
     reauthRecordApproval($repairOrder);
 
     $repairOrder = $repairOrder->fresh(['concerns', 'lines.concern']);
     $scopes = ApprovedWorkScope::query()->orderBy('id')->get();
+
+    auth()->logout();
+    $this->get(route('portal.estimates.show', ['token' => reauthPortalToken()]))
+        ->assertOk()
+        ->assertDontSee('data-approved-work-removed', false);
 
     expect($authorization->approvedLinesRemoved($repairOrder))->toBe([])
         ->and($scopes)->toHaveCount(2)

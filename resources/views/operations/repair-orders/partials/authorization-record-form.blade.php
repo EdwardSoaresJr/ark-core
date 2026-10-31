@@ -17,7 +17,7 @@
         ? app(EstimateTotalsCalculator::class)->recommendedTotalsForRead($repairOrder)
         : ($approvedTotals ?? $totals);
     $defaultApprovedCents = $defaultTotals->totalCents()
-        + ($includesChangedWork ? $workAuthorization->addedWorkOutsideApprovedSalesCents($repairOrder) : 0);
+        + ($includesChangedWork ? $workAuthorization->workOutsideApprovedSalesCents($repairOrder) : 0);
     $defaultApprovedAmount = number_format($defaultApprovedCents / 100, 2, '.', '');
 @endphp
 

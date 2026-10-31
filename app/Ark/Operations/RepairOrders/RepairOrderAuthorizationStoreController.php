@@ -129,7 +129,7 @@ class RepairOrderAuthorizationStoreController
 
         return in_array($posted, [
             $approvedNow,
-            $approvedNow + $workAuthorization->addedWorkOutsideApprovedSalesCents($repairOrder),
+            $approvedNow + $workAuthorization->workOutsideApprovedSalesCents($repairOrder),
         ], true);
     }
 

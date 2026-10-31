@@ -29,6 +29,7 @@ final class RecordApprovedWorkScopeAction
             'approved_lines' => $lines->map(fn (RepairOrderLine $line): array => [
                 'id' => (int) $line->id,
                 'description' => (string) $line->description,
+                'customer_description' => (string) ($line->customer_description ?? ''),
                 'subtotal_cents' => $this->authorization->approvalSubtotalCents($line),
             ])->all(),
             'recorded_by_user_id' => $actor?->id,

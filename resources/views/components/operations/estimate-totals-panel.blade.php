@@ -148,7 +148,7 @@
                     <p class="small mt-1 mb-0">On the estimate. Not in approved sales until the customer approves these lines.</p>
                 @endif
                 @if ($approvedBeforeIncrease !== [])
-                    <p class="small mt-1 mb-0">Approved lines priced above the customer's approval. The increase needs the customer's approval.</p>
+                    <p class="small mt-1 mb-0">Approved lines priced above the customer's approval. Approved sales and the invoice count the approved amount until the customer approves the increase.</p>
                 @endif
             </div>
         @endif

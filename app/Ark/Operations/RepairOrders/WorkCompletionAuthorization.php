@@ -172,7 +172,7 @@ final class WorkCompletionAuthorization
     /**
      * Lines the customer approved that are no longer on their approved concern.
      *
-     * @return list<array{id: int, concern_id: int, description: string, subtotal_cents: int}>
+     * @return list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>
      */
     public function approvedLinesRemoved(RepairOrder $repairOrder): array
     {
@@ -201,19 +201,18 @@ final class WorkCompletionAuthorization
             return (int) $line->total_cents;
         }
 
-        return max(0, $this->approvalSubtotalCents($line) - $approvedSubtotal);
+        $approvedPortion = app(EstimateTotalsCalculator::class)->approvedPortionOfLine($line, $approvedSubtotal);
+
+        return max(0, (int) $line->total_cents - (int) $approvedPortion->total_cents);
     }
 
     /**
-     * Added lines on approved concerns are not in approved sales yet. Raised lines already are.
+     * Money on approved concerns outside approved sales: added lines and the increase on raised lines.
      */
-    public function addedWorkOutsideApprovedSalesCents(RepairOrder $repairOrder): int
+    public function workOutsideApprovedSalesCents(RepairOrder $repairOrder): int
     {
-        $raised = $this->approvedSubtotalsBeforeIncrease($repairOrder);
-
         return (int) $this->linesRequiringAuthorization($repairOrder)
-            ->reject(fn (RepairOrderLine $line): bool => isset($raised[(int) $line->id]))
-            ->sum(fn (RepairOrderLine $line): int => (int) $line->total_cents);
+            ->sum(fn (RepairOrderLine $line): int => $this->pendingApprovalCents($repairOrder, $line));
     }
 
     public function approvalSubtotalCents(RepairOrderLine $line): int
@@ -222,7 +221,7 @@ final class WorkCompletionAuthorization
     }
 
     /**
-     * @return array{increased: array<int, int>, removed: list<array{id: int, concern_id: int, description: string, subtotal_cents: int}>, concern_ids: list<int>}
+     * @return array{increased: array<int, int>, removed: list<array{id: int, concern_id: int, description: string, customer_description: string, subtotal_cents: int}>, concern_ids: list<int>}
      */
     private function changesSinceApproval(RepairOrder $repairOrder): array
     {

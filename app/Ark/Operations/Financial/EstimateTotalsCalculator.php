@@ -167,7 +167,10 @@ class EstimateTotalsCalculator
     private function approvedInvoiceableLines(RepairOrder $repairOrder): Collection
     {
         $repairOrder->loadMissing(['lines.concern']);
-        $coveredLaborAndParts = app(WorkCompletionAuthorization::class)->customerApprovedLaborAndPartIdSet($repairOrder);
+        $authorization = app(WorkCompletionAuthorization::class);
+        $coveredLaborAndParts = $authorization->customerApprovedLaborAndPartIdSet($repairOrder);
+        $approvedSubtotals = $authorization->approvedSubtotalsBeforeIncrease($repairOrder);
+        $settings = ShopSettings::current();
 
         return $repairOrder->lines
             ->filter(function (RepairOrderLine $line) use ($coveredLaborAndParts): bool {
@@ -181,7 +184,47 @@ class EstimateTotalsCalculator
 
                 return true;
             })
+            ->map(fn (RepairOrderLine $line): RepairOrderLine => isset($approvedSubtotals[(int) $line->id])
+                ? $this->approvedPortionOfLine($line, $approvedSubtotals[(int) $line->id], $settings)
+                : $line)
             ->values();
+    }
+
+    /**
+     * An unsaved copy of a raised approved line, priced at the subtotal the customer approved.
+     * Discount and shop fee shrink in proportion and tax is charged on the capped base.
+     * The increase stays on the persisted line, outside approved sales and the invoice.
+     */
+    public function approvedPortionOfLine(RepairOrderLine $line, int $approvedSubtotalCents, ?ShopSettings $settings = null): RepairOrderLine
+    {
+        $currentSubtotalCents = (int) $line->subtotal_cents;
+
+        if ($currentSubtotalCents <= $approvedSubtotalCents) {
+            return $line;
+        }
+
+        $settings ??= ShopSettings::current();
+        $scale = fn (int $cents): int => BigDecimal::of($cents)
+            ->multipliedBy(max(0, $approvedSubtotalCents))
+            ->dividedBy($currentSubtotalCents, 0, RoundingMode::HALF_UP)
+            ->toInt();
+
+        $standingDiscountCents = $scale((int) $line->standing_discount_cents);
+        $shopFeeCents = $scale((int) $line->shop_fee_cents);
+        $netSubtotalCents = max(0, $approvedSubtotalCents - $standingDiscountCents);
+        $taxCents = $this->taxCents($line, $netSubtotalCents, $shopFeeCents, $settings);
+
+        $portion = clone $line;
+        $portion->setRawAttributes([
+            ...$line->getAttributes(),
+            'subtotal_cents' => $approvedSubtotalCents,
+            'standing_discount_cents' => $standingDiscountCents,
+            'shop_fee_cents' => $shopFeeCents,
+            'tax_cents' => $taxCents,
+            'total_cents' => $netSubtotalCents + $taxCents + $shopFeeCents,
+        ]);
+
+        return $portion;
     }
 
     /**

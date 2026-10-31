@@ -103,6 +103,19 @@ final class PortalEstimateAuthorization
     }
 
     /**
+     * Lines the customer approved that the shop has since taken off the estimate.
+     *
+     * @return list<array{description: string, amount: string}>
+     */
+    public function approvedWorkRemovedSinceApproval(RepairOrder $repairOrder): array
+    {
+        return array_map(fn (array $line): array => [
+            'description' => $line['customer_description'] !== '' ? $line['customer_description'] : $line['description'],
+            'amount' => Money::ofMinor($line['subtotal_cents'], 'USD')->formatTo('en_US'),
+        ], $this->workAuthorization->approvedLinesRemoved($repairOrder));
+    }
+
+    /**
      * @return Collection<int, RepairOrderConcern>
      */
     public function presentedConcerns(RepairOrder $repairOrder): Collection

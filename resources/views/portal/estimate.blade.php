@@ -180,6 +180,21 @@
                 </div>
             @endif
 
+            @if (($approvedWorkRemovedSinceApproval ?? []) !== [])
+                <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700" data-approved-work-removed>
+                    <p class="font-semibold">Removed after your approval</p>
+                    <p class="mt-1">You approved these, and they are no longer on this estimate. You will not be charged for them. Your earlier approval stays on file.</p>
+                    <ul class="mt-2 space-y-1">
+                        @foreach ($approvedWorkRemovedSinceApproval as $removedLine)
+                            <li class="flex items-baseline justify-between gap-3">
+                                <span class="min-w-0 line-through">{{ $removedLine['description'] }}</span>
+                                <span class="shrink-0 tabular-nums">{{ $removedLine['amount'] }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @php
                 $notice = is_array($paymentNotice ?? null) ? $paymentNotice : null;
                 $noticeKind = $notice['kind'] ?? null;

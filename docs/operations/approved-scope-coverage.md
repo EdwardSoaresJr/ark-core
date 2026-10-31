@@ -2,7 +2,7 @@
 
 How ARK decides whether labor and parts on a repair order are covered by the customer's approval, what that blocks, and where it is going.
 
-> **Known limitation ([#66](https://github.com/EdwardSoaresJr/ark-core/issues/66), high priority).** Coverage is by line id and records no amounts. If staff raise the quantity or price of a line the customer approved, ARK counts the whole new amount as customer-approved: approved dollars and the final invoice basis rise above the customer's recorded approval, and the line gets no "Needs authorization" mark. Until #66 is fixed, add increased work as a new line instead of raising an approved one, so it stays identified as not approved.
+> **Known limitation ([#66](https://github.com/EdwardSoaresJr/ark-core/issues/66)): scopes recorded before per-line amounts.** A scope stores each line's approved subtotal (`approved_work_scopes.approved_lines`). Scopes recorded before that column have no amounts. ARK does not invent them, so a raised line on such a scope still counts at its new amount and gets no "Needs authorization" mark. Recording a new approval on that concern stores amounts from then on.
 
 ## What coverage is
 
@@ -28,9 +28,11 @@ Unchanged:
 - A concern with an approval or exception on file still cannot be deleted.
 - Staff permissions and estimate-version concurrency checks are unchanged.
 
-Editing an existing line keeps its id, so it stays covered by the approval that included it, even when its price or quantity rises. See the known limitation above. The repair-order-level amount on a customer approval event (`approval_events.approved_amount_cents`) is preserved, but staff approvals record no amount, and nothing records approved amounts per line.
+Editing an existing line keeps its id, so the work stays covered and does not block. When its price or quantity rises above the scope's approved subtotal, approved dollars and the invoice count the approved subtotal only (discount and shop fee in proportion, tax on that base). The increase is listed as "Needs authorization" and on the invoice line as not approved and not billed. A lower amount stays approved. One "Record approval" stores a new scope at the new amounts. `approval_events.approved_amount_cents` stays the cumulative approved total. A line removed after approval is listed as removed for staff and in the customer portal until the next approval re-scopes the concern.
 
-## Intended reauthorization design (not built)
+## Intended reauthorization design
+
+Steps 1 and 2 are built, and step 3 is built for staff-recorded approval only. The customer portal cannot yet approve a change to an already-approved concern. Steps 4 and 5 are not built.
 
 The goal is to make changed and added work visible and easy to get approved, without stopping the shop.
 

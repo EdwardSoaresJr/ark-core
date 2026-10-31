@@ -58,7 +58,7 @@ class ApprovedWorkScope extends Model
     /**
      * What the customer approved on each line. Empty for scopes recorded before amounts were kept.
      *
-     * @return array<int, array{id: int, description: string, subtotal_cents: int}>
+     * @return array<int, array{id: int, description: string, customer_description: string, subtotal_cents: int}>
      */
     public function approvedLines(): array
     {
@@ -72,6 +72,7 @@ class ApprovedWorkScope extends Model
             $lines[(int) $line['id']] = [
                 'id' => (int) $line['id'],
                 'description' => (string) ($line['description'] ?? ''),
+                'customer_description' => (string) ($line['customer_description'] ?? ''),
                 'subtotal_cents' => (int) $line['subtotal_cents'],
             ];
         }

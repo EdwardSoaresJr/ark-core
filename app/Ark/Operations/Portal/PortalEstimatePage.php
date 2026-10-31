@@ -140,6 +140,7 @@ final class PortalEstimatePage
             'latestRecordedApproval' => $this->authorization->latestRecordedApproval($repairOrder),
             'presentedWorkIsFullyApproved' => $this->authorization->presentedWorkIsFullyApproved($repairOrder),
             'approvedWorkAwaitingApproval' => $this->authorization->approvedWorkAwaitingApproval($repairOrder),
+            'approvedWorkRemovedSinceApproval' => $this->authorization->approvedWorkRemovedSinceApproval($repairOrder),
             'portalAuthorization' => $portalAuthorization,
             'authorizationFromSession' => $authorizationFromSession,
             'depositEnabled' => $this->capture->portalPayEnabled(),
