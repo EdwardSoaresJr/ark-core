@@ -247,9 +247,7 @@
 
     @if ($hasCloseout)
         <div x-show="totalsTab === 'closeout'" x-cloak>
-            <x-operations.worksheet-island>
-                {{ $closeout }}
-            </x-operations.worksheet-island>
+            {{ $closeout }}
         </div>
     @endif
 

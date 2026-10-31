@@ -308,7 +308,7 @@ The estimate instruments are an `authorized-money` region (`#estimate-instrument
 
 ### Repair order worksheet: financial rail (`operations.repair-orders.show`)
 
-The rail's Estimate Total tab: the approval forecast, the totals, the lines needing authorization, the suggested deposit and balance, and the payment strip (Owe today, settlement balance, final invoice, deposit on file, waive balance, recent payments). The Closeout tab, the deposit breakdown template, and the payment capture workspace stay islands: the closeout is its own slice, and `ark-payment-capture.js` drives the payment markup.
+The rail's Estimate Total tab: the approval forecast, the totals, the lines needing authorization, the suggested deposit and balance, and the payment strip (Owe today, settlement balance, final invoice, deposit on file, waive balance, recent payments). The deposit breakdown template and the payment capture workspace stay islands: `ark-payment-capture.js` drives the payment markup. The Closeout tab is its own slice, below.
 
 Kept for the rail scripts:
 
@@ -317,3 +317,15 @@ Kept for the rail scripts:
 - The final total row is `data-total-row="final"`.
 
 `repair-order-approval-forecast` renders Tabler for the staff variant only; the customer portal and document footer keep the legacy variants. Money columns use `.ark-money` (tabular figures). A balance due or paid state marks its block with a `card-status-start` strip rather than a tinted background, which kept the amount readable in dark mode.
+
+### Repair order worksheet: closeout tab (`operations.repair-orders.show`)
+
+The rail's Closeout tab (`partials.financial-rail`): payment status, the stale invoice notice, Post to sales, the ledger and documents list, the invoice email form, waive balance, record refund, the final invoice PDF, and payment history with Void entry. The slot in `x-operations.estimate-totals-panel` is no longer an island.
+
+Kept for the rail scripts:
+
+- Every region keeps its id and kind: `payment-posture`, `closeout-eligibility`, `settlement-invoice`, `settlement-balance`, and `settlement-history-closeout` (`settlement`), `invoice-posture`, and `financial-position-closeout` (`financial-position`). None nest.
+- Forms keep their routes, permissions, concurrency fields, `data-refresh-scope="financial"`, and confirm prompts. The invoice email form still submits through `arkWorksheetFormSubmit`.
+- `#waive-balance` stays the anchor for the payment strip's Waive balance link, which now dispatches `ops-show-closeout` before scrolling, because the form is in the hidden tab.
+
+The partial no longer takes an `embedded` variable; it only renders inside the tab.

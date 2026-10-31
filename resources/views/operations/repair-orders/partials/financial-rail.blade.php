@@ -1,52 +1,31 @@
-@php
-    $embedded = (bool) ($embedded ?? false);
-    $tone = match ($financial['workflowPosture']) {
-        'paid_ready_to_close', 'closed' => 'border-emerald-300',
-        'partially_paid', 'invoice_issued' => 'border-amber-300',
-        default => 'border-slate-300',
-    };
-@endphp
-
-<div
-    id="financial-rail"
-    @class([
-        'scroll-mt-6',
-        'ops-review-panel border-x-0 border-b-0 '.$tone => ! $embedded,
-    ])
->
-    @unless ($embedded)
-        <div class="ops-review-panel-header">
-            <p class="ops-eyebrow">Closeout</p>
-        </div>
-    @endunless
-
-    <div class="ops-financial-rail-primary grid gap-2 p-3 text-sm">
-        <div id="payment-posture" data-continuity-region="settlement" class="min-w-0">
-            <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Payment status</p>
-            <p class="mt-0.5 font-black text-slate-950">{{ $financial['workflowLabel'] }}</p>
-            <p class="mt-1 text-xs font-semibold leading-4 text-slate-600">{{ $financial['workflowHint'] }}</p>
+<div id="financial-rail" class="scroll-mt-6">
+    <div class="card-body d-flex flex-column gap-3">
+        <div id="payment-posture" data-continuity-region="settlement" style="min-width: 0">
+            <div class="subheader">Payment status</div>
+            <div class="fw-bold">{{ $financial['workflowLabel'] }}</div>
+            <div class="small text-secondary">{{ $financial['workflowHint'] }}</div>
         </div>
 
         <div id="invoice-posture" data-continuity-region="invoice-posture">
         @if (($financial['invoiceNeedsRefresh'] ?? false) && ($financial['hasIssuedInvoice'] ?? false))
-            <div class="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-4 text-amber-950" role="status">
-                <p class="font-bold">
+            <div class="alert alert-warning mb-0 small" role="status">
+                <div class="fw-bold">
                     @if ($financial['invoiceCustomerPresented'] ?? false)
                         Approved work changed. The customer invoice is now out of date.
                     @else
                         Approved work changed. Invoice total no longer matches approved work.
                     @endif
-                </p>
-                <p class="mt-1 font-semibold text-amber-900/80">
+                </div>
+                <div class="ark-money">
                     Invoice {{ $financial['invoiceTotal'] }}
                     · Approved {{ $financial['approvedWorkTotal'] }}
                     @if ($financial['invoiceDrift'] ?? null)
                         · Difference {{ ($financial['invoiceDriftCents'] ?? 0) > 0 ? '+' : '−' }}{{ $financial['invoiceDrift'] }}
                     @endif
-                </p>
+                </div>
                 <details class="mt-2">
-                    <summary class="cursor-pointer font-bold text-amber-950 underline decoration-amber-400 underline-offset-2">View changes</summary>
-                    <ul class="mt-1.5 list-disc space-y-0.5 pl-4 font-semibold text-amber-900/80">
+                    <summary class="fw-bold">View changes</summary>
+                    <ul class="mt-1 mb-0 ps-3">
                         <li>Invoice snapshot stays what was billed until you refresh.</li>
                         <li>Deposits and payments already collected stay applied to the new balance.</li>
                         @if (($financial['invoiceRevisionCount'] ?? 0) > 0)
@@ -65,14 +44,12 @@
                         >
                             @csrf
                             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                            <button type="submit" class="inline-flex min-h-9 w-full items-center justify-center rounded-sm bg-amber-700 px-3 text-xs font-bold text-white hover:bg-amber-800">
-                                Refresh Invoice
-                            </button>
+                            <button type="submit" class="btn btn-warning w-100">Refresh Invoice</button>
                         </form>
                     @elseif ($financial['invoiceRefreshBlockedBySettlement'] ?? false)
-                        <p class="mt-2 font-semibold text-amber-900/80">
+                        <div class="mt-2">
                             Write-off, refund, or store credit is on file - invoice cannot auto-update. Use credit memo, adjustment, or refund workflows.
-                        </p>
+                        </div>
                     @endif
                 @endcan
             </div>
@@ -90,130 +67,126 @@
                     >
                         @csrf
                         <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                        <button type="submit" class="inline-flex min-h-10 w-full items-center justify-center rounded-sm bg-emerald-700 px-3 text-xs font-bold text-white hover:bg-emerald-800">
-                            Post to sales
-                        </button>
+                        <button type="submit" class="btn btn-success w-100">Post to sales</button>
                     </form>
                 @endif
             </div>
         @endcan
     </div>
 
-    <details class="ops-financial-rail-closeout border-t border-slate-200" open>
-        <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-slate-600 hover:bg-slate-50">
-            Ledger &amp; documents
-        </summary>
-        <div class="grid gap-2 border-t border-slate-100 p-3 text-sm">
-            <dl class="divide-y divide-slate-100 rounded-sm border border-slate-200 bg-white text-sm">
-                <div class="flex items-center justify-between gap-3 px-3 py-2">
-                    <dt class="text-slate-500">Estimate total</dt>
-                    <dd class="font-semibold tabular-nums text-slate-950">{{ $financial['estimateTotal'] }}</dd>
+    <details class="border-top" open>
+        <summary class="card-body py-2 subheader">Ledger &amp; documents</summary>
+        <div class="card-body pt-0 d-flex flex-column gap-3">
+            <dl class="mb-0 border rounded small">
+                <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                    <dt class="fw-normal text-secondary">Estimate total</dt>
+                    <dd class="mb-0 fw-medium ark-money">{{ $financial['estimateTotal'] }}</dd>
                 </div>
-                <div id="settlement-invoice" data-continuity-region="settlement" class="flex items-center justify-between gap-3 px-3 py-2">
-                    <dt class="text-slate-500">Invoice</dt>
-                    <dd class="font-semibold text-slate-950">{{ $financial['invoiceStatusLabel'] }}</dd>
+                <div id="settlement-invoice" data-continuity-region="settlement" class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                    <dt class="fw-normal text-secondary">Invoice</dt>
+                    <dd class="mb-0 fw-medium">{{ $financial['invoiceStatusLabel'] }}</dd>
                 </div>
                 @if ($financial['hasIssuedInvoice'])
                     @if (($financial['waivedCents'] ?? 0) > 0 || ($financial['excludesFromPostedSales'] ?? false))
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Would have cost</dt>
-                            <dd class="font-black tabular-nums text-slate-950">{{ $financial['wouldHaveCost'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Would have cost</dt>
+                            <dd class="mb-0 fw-bold ark-money">{{ $financial['wouldHaveCost'] }}</dd>
                         </div>
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Collected</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['collected'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Collected</dt>
+                            <dd class="mb-0 ark-money">{{ $financial['collected'] }}</dd>
                         </div>
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Waived · {{ $financial['collectionDispositionLabel'] }}</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['waived'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Waived · {{ $financial['collectionDispositionLabel'] }}</dt>
+                            <dd class="mb-0 ark-money">{{ $financial['waived'] }}</dd>
                         </div>
                         @if ($financial['collectionDispositionReason'] ?? null)
-                            <div class="px-3 py-2 text-xs font-semibold leading-4 text-slate-600">
+                            <div class="px-3 py-2 border-bottom text-secondary">
                                 {{ $financial['collectionDispositionReason'] }}
                             </div>
                         @endif
                     @else
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Invoice total</dt>
-                            <dd class="font-black tabular-nums text-slate-950">{{ $financial['invoiceTotal'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Invoice total</dt>
+                            <dd class="mb-0 fw-bold ark-money">{{ $financial['invoiceTotal'] }}</dd>
                         </div>
                     @endif
                     <div id="settlement-balance" data-continuity-region="settlement">
                     @if ($financial['depositsApplied'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Deposits</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['depositsApplied'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Deposits</dt>
+                            <dd class="mb-0 ark-money">−{{ $financial['depositsApplied'] }}</dd>
                         </div>
                     @endif
                     @if ($financial['paymentsApplied'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Payments</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['paymentsApplied'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Payments</dt>
+                            <dd class="mb-0 ark-money">−{{ $financial['paymentsApplied'] }}</dd>
                         </div>
                     @endif
                     @if (($financial['refundsApplied'] ?? '$0.00') !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Refunds</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">+{{ $financial['refundsApplied'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Refunds</dt>
+                            <dd class="mb-0 ark-money">+{{ $financial['refundsApplied'] }}</dd>
                         </div>
                     @endif
                     @if ($financial['creditsApplied'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Store credit applied</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['creditsApplied'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Store credit applied</dt>
+                            <dd class="mb-0 ark-money">−{{ $financial['creditsApplied'] }}</dd>
                         </div>
                     @endif
                     @if (($financial['writeOffs'] ?? '$0.00') !== '$0.00' && ! (($financial['waivedCents'] ?? 0) > 0 || ($financial['excludesFromPostedSales'] ?? false)))
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Write-offs</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">−{{ $financial['writeOffs'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Write-offs</dt>
+                            <dd class="mb-0 ark-money">−{{ $financial['writeOffs'] }}</dd>
                         </div>
                     @endif
                     @if ($financial['adjustments'] !== '$0.00')
-                        <div class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Adjustments</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['adjustments'] }}</dd>
+                        <div class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                            <dt class="fw-normal text-secondary">Adjustments</dt>
+                            <dd class="mb-0 ark-money">{{ $financial['adjustments'] }}</dd>
                         </div>
                     @endif
-                    <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Settlement balance</dt>
-                        <dd class="font-black tabular-nums text-slate-950">{{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}</dd>
+                    <div class="d-flex justify-content-between gap-3 px-3 py-2 bg-secondary-lt">
+                        <dt class="fw-bold">Settlement balance</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}</dd>
                     </div>
                     </div>
                     @if ($financial['oweTodayDiffersFromSettlement'] ?? false)
-                        <div id="financial-position-closeout" data-continuity-region="financial-position" class="flex items-center justify-between gap-3 px-3 py-2">
-                            <dt class="text-slate-500">Owe today</dt>
-                            <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
+                        <div id="financial-position-closeout" data-continuity-region="financial-position" class="d-flex justify-content-between gap-3 px-3 py-2 border-top">
+                            <dt class="fw-normal text-secondary">Owe today</dt>
+                            <dd class="mb-0 ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
                         </div>
                     @endif
                 @elseif ($financial['unappliedDeposits'] !== '$0.00')
-                    <div id="settlement-balance" data-continuity-region="settlement" class="flex items-center justify-between gap-3 px-3 py-2">
-                        <dt class="text-slate-500">Deposits on file</dt>
-                        <dd class="font-semibold tabular-nums text-slate-800">{{ $financial['unappliedDeposits'] }}</dd>
+                    <div id="settlement-balance" data-continuity-region="settlement" class="d-flex justify-content-between gap-3 px-3 py-2 border-bottom">
+                        <dt class="fw-normal text-secondary">Deposits on file</dt>
+                        <dd class="mb-0 ark-money">{{ $financial['unappliedDeposits'] }}</dd>
                     </div>
-                    <div id="financial-position-closeout" data-continuity-region="financial-position" class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Owe today</dt>
-                        <dd class="font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
+                    <div id="financial-position-closeout" data-continuity-region="financial-position" class="d-flex justify-content-between gap-3 px-3 py-2 bg-secondary-lt">
+                        <dt class="fw-bold">Owe today</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
                     </div>
                 @else
                     <div id="settlement-balance" data-continuity-region="settlement"></div>
-                    <div id="financial-position-closeout" data-continuity-region="financial-position" class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2">
-                        <dt class="font-bold text-slate-700">Owe today</dt>
-                        <dd class="font-black tabular-nums text-slate-950">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
+                    <div id="financial-position-closeout" data-continuity-region="financial-position" class="d-flex justify-content-between gap-3 px-3 py-2 bg-secondary-lt">
+                        <dt class="fw-bold">Owe today</dt>
+                        <dd class="mb-0 fw-bold ark-money">{{ $financial['oweToday'] ?? $financial['projectedBalance'] }}</dd>
                     </div>
                 @endif
             </dl>
 
             @if ($financial['storeCreditBalanceCents'] > 0)
-                <p class="text-xs font-semibold leading-4 text-slate-600">
+                <div class="small text-secondary">
                     Customer store credit on file: {{ $financial['storeCreditBalance'] }}.
-                </p>
+                </div>
             @endif
 
             @if ($financial['hasStoreCreditIssuance'])
-                <p class="text-xs font-semibold leading-4 text-emerald-800">
+                <div class="small text-green">
                     Overpayment was issued to customer store credit. Invoice balance remains at zero.
-                </p>
+                </div>
             @endif
 
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
@@ -232,19 +205,21 @@
                             data-refresh-scope="financial"
                             data-continuity-focus="#waive-reason-{{ $repairOrder->repair_order_id }}"
                             @submit.prevent="submitWorksheetForm($event)"
-                            class="grid gap-2 border border-amber-200 bg-amber-50/50 p-3 scroll-mt-6"
+                            class="border border-warning rounded p-3 d-flex flex-column gap-2 scroll-mt-6"
                         >
                             @csrf
-                            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-amber-900">Waive balance</p>
-                            <p class="text-[11px] font-semibold leading-4 text-slate-600">
-                                Keeps the invoice total so the shop can see what this would have cost. Does not count as a payment.
-                            </p>
-                            <label class="sr-only" for="waive-disposition-{{ $repairOrder->repair_order_id }}">Disposition</label>
+                            <div>
+                                <div class="subheader text-warning">Waive balance</div>
+                                <div class="small text-secondary">
+                                    Keeps the invoice total so the shop can see what this would have cost. Does not count as a payment.
+                                </div>
+                            </div>
+                            <label class="visually-hidden" for="waive-disposition-{{ $repairOrder->repair_order_id }}">Disposition</label>
                             <select
                                 id="waive-disposition-{{ $repairOrder->repair_order_id }}"
                                 name="disposition"
                                 required
-                                class="h-9 rounded-sm border-slate-300 text-sm font-semibold text-slate-950"
+                                @class(['form-select', 'is-invalid' => $errors->has('disposition')])
                             >
                                 <option value="">Choose…</option>
                                 @foreach ($financial['waiveDispositionOptions'] ?? [] as $option)
@@ -253,7 +228,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <label class="sr-only" for="waive-reason-{{ $repairOrder->repair_order_id }}">Reason</label>
+                            <label class="visually-hidden" for="waive-reason-{{ $repairOrder->repair_order_id }}">Reason</label>
                             <textarea
                                 id="waive-reason-{{ $repairOrder->repair_order_id }}"
                                 name="reason"
@@ -261,20 +236,18 @@
                                 rows="2"
                                 maxlength="500"
                                 placeholder="Why is this balance waived?"
-                                class="rounded-sm border-slate-300 text-sm text-slate-700"
+                                @class(['form-control', 'is-invalid' => $errors->has('reason')])
                             >{{ old('reason') }}</textarea>
-                            <p class="text-[11px] font-semibold leading-4 text-slate-500">
+                            <div class="small text-secondary">
                                 Confirms waiving remaining settlement {{ $financial['settlementBalanceDue'] ?? $financial['balanceDue'] }}.
-                            </p>
+                            </div>
                             @error('disposition')
-                                <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+                                <div class="small text-danger">{{ $message }}</div>
                             @enderror
                             @error('reason')
-                                <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
+                                <div class="small text-danger">{{ $message }}</div>
                             @enderror
-                            <button type="submit" class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-amber-400 bg-white px-3 text-xs font-bold text-amber-950 hover:border-amber-500">
-                                Waive remaining balance
-                            </button>
+                            <button type="submit" class="btn btn-outline-warning w-100">Waive remaining balance</button>
                         </form>
                     @endif
 
@@ -285,35 +258,33 @@
                             data-refresh-scope="financial"
                             data-continuity-focus="#refund-amount-{{ $repairOrder->repair_order_id }}"
                             @submit.prevent="submitWorksheetForm($event)"
-                            class="grid gap-2 border border-slate-200 bg-white p-3"
+                            class="border rounded p-3 d-flex flex-column gap-2"
                         >
                             @csrf
-                            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Record Refund</p>
-                            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
-                                <label class="sr-only" for="refund-amount-{{ $repairOrder->repair_order_id }}">Refund amount</label>
+                            <div class="subheader">Record Refund</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="visually-hidden" for="refund-amount-{{ $repairOrder->repair_order_id }}">Refund amount</label>
                                 <input
                                     id="refund-amount-{{ $repairOrder->repair_order_id }}"
                                     name="amount"
                                     type="text"
                                     inputmode="decimal"
                                     required
-                                    class="h-9 rounded-sm border-slate-300 text-sm font-semibold tabular-nums text-slate-950"
+                                    class="form-control ark-money"
                                     placeholder="0.00"
                                 >
-                                <p class="self-center text-[11px] font-semibold leading-4 text-slate-500">Increases balance due</p>
+                                <span class="small text-secondary text-nowrap">Increases balance due</span>
                             </div>
-                            <label class="sr-only" for="refund-reference-{{ $repairOrder->repair_order_id }}">Reference</label>
+                            <label class="visually-hidden" for="refund-reference-{{ $repairOrder->repair_order_id }}">Reference</label>
                             <input
                                 id="refund-reference-{{ $repairOrder->repair_order_id }}"
                                 name="reference"
                                 type="text"
                                 value="{{ old('reference') }}"
                                 placeholder="Reference / note (optional)"
-                                class="h-9 rounded-sm border-slate-300 text-sm text-slate-700"
+                                class="form-control"
                             >
-                            <button type="submit" class="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:border-slate-400">
-                                Record Refund
-                            </button>
+                            <button type="submit" class="btn btn-outline-secondary w-100">Record Refund</button>
                         </form>
                     @endif
                 @endunless
@@ -324,91 +295,87 @@
                     href="{{ route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $financial['invoice']]) }}"
                     target="_blank"
                     rel="noopener"
-                    class="inline-flex min-h-9 w-full items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
+                    class="btn btn-outline-secondary w-100"
                 >
                     Final Invoice PDF
                 </a>
             @endif
 
             @if ($financial['closeoutBlockingReason'] && $repairOrder->status === App\Ark\Operations\RepairOrders\RepairOrderStatus::ReadyPickup)
-                <p class="text-xs font-semibold leading-4 text-amber-900">{{ $financial['closeoutBlockingReason'] }}</p>
+                <div class="small text-warning">{{ $financial['closeoutBlockingReason'] }}</div>
             @elseif ($financial['canClose'])
-                <p class="text-xs font-semibold leading-4 text-emerald-800">Eligible to close after customer handoff.</p>
+                <div class="small text-green">Eligible to close after customer handoff.</div>
             @endif
 
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
                 @if ($financial['canPost'])
-                    <p class="text-[11px] font-semibold leading-4 text-slate-500">
+                    <div class="small text-secondary">
                         @if ($financial['excludesFromPostedSales'] ?? false)
                             Closing posts the job for history. The invoice stays in posted invoice sales. The write-off is reported separately.
                         @else
                             Posts this job into sales reporting. Closing as Paid posts automatically - use this when the job is sold but not closed yet.
                         @endif
-                    </p>
+                    </div>
                 @elseif ($financial['isPosted'])
-                    <p class="text-xs font-semibold leading-4 {{ ($financial['excludesFromPostedSales'] ?? false) ? 'text-slate-700' : 'text-emerald-800' }}">
+                    <div @class(['small', 'text-secondary' => $financial['excludesFromPostedSales'] ?? false, 'text-green' => ! ($financial['excludesFromPostedSales'] ?? false)])>
                         Posted {{ $financial['postedAtLabel'] }}
                         @if ($financial['excludesFromPostedSales'] ?? false)
                             · {{ $financial['collectionDispositionLabel'] }} - invoice stays in posted invoice sales. Write-off is separate.
                         @else
                             · included in posted invoice sales.
                         @endif
-                    </p>
+                    </div>
                 @elseif (($financial['postBlockingReason'] ?? null) && $financial['hasIssuedInvoice'] && ($financial['isPaid'] ?? (($financial['settlementBalanceDueCents'] ?? 1) === 0)))
-                    <p class="text-xs font-semibold leading-4 text-slate-500">{{ $financial['postBlockingReason'] }}</p>
+                    <div class="small text-secondary">{{ $financial['postBlockingReason'] }}</div>
                 @endif
             @endcan
 
-            <div id="settlement-history-closeout" data-continuity-region="settlement" @class(['border-t border-slate-200 pt-2' => $financial['ledgerEntries']->isNotEmpty()])>
+            <div id="settlement-history-closeout" data-continuity-region="settlement" @class(['border-top pt-2' => $financial['ledgerEntries']->isNotEmpty()])>
             @if ($financial['ledgerEntries']->isNotEmpty())
-                <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Payment History</p>
-                    <div class="mt-2 divide-y divide-slate-100">
-                        @foreach ($financial['ledgerEntries'] as $entry)
-                            <div class="py-2 text-xs leading-4 {{ $entry['isVoided'] ? 'opacity-50' : '' }}">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <p class="font-bold text-slate-950">
-                                            {{ $entry['typeLabel'] }}
-                                            @if ($entry['method'])
-                                                · {{ $entry['method'] }}
-                                            @endif
-                                        </p>
-                                        <p class="mt-0.5 text-slate-500">
-                                            {{ $entry['recordedAt'] ?? 'Pending' }}
-                                            @if ($entry['recordedBy'])
-                                                · {{ $entry['recordedBy'] }}
-                                            @endif
-                                        </p>
-                                        @if ($entry['reference'])
-                                            <p class="mt-0.5 text-slate-600">{{ $entry['reference'] }}</p>
-                                        @endif
-                                        @if ($entry['isVoided'])
-                                            <p class="mt-0.5 font-semibold text-red-700">Voided</p>
+                <div class="subheader">Payment History</div>
+                <div class="list-group list-group-flush">
+                    @foreach ($financial['ledgerEntries'] as $entry)
+                        <div @class(['list-group-item px-0 py-2 small', 'opacity-50' => $entry['isVoided']])>
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div style="min-width: 0">
+                                    <div class="fw-bold">
+                                        {{ $entry['typeLabel'] }}
+                                        @if ($entry['method'])
+                                            · {{ $entry['method'] }}
                                         @endif
                                     </div>
-                                    <p class="shrink-0 font-black tabular-nums text-slate-950">{{ $entry['amount'] }}</p>
-                                </div>
-                                @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
-                                    @if (($financial['canManageLedgerEntries'] ?? false) && ! $entry['isVoided'] && in_array($entry['type'], ['deposit', 'payment', 'refund', 'store_credit'], true))
-                                        <form
-                                            method="POST"
-                                            action="{{ route('operations.repair-orders.ledger-entries.destroy', [$repairOrder, $entry['id']]) }}"
-                                            data-refresh-scope="financial"
-                                            class="mt-2"
-                                            @submit.prevent="if (confirm('Void this ledger entry? Balance due will be recalculated.')) { submitWorksheetForm($event); }"
-                                        >
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex min-h-8 items-center justify-center rounded-sm border border-red-200 bg-white px-2.5 text-[11px] font-semibold text-red-800 hover:border-red-300">
-                                                Void entry
-                                            </button>
-                                        </form>
+                                    <div class="text-secondary">
+                                        {{ $entry['recordedAt'] ?? 'Pending' }}
+                                        @if ($entry['recordedBy'])
+                                            · {{ $entry['recordedBy'] }}
+                                        @endif
+                                    </div>
+                                    @if ($entry['reference'])
+                                        <div class="text-secondary">{{ $entry['reference'] }}</div>
                                     @endif
-                                @endcan
+                                    @if ($entry['isVoided'])
+                                        <div class="fw-bold text-danger">Voided</div>
+                                    @endif
+                                </div>
+                                <div class="fw-bold ark-money text-nowrap">{{ $entry['amount'] }}</div>
                             </div>
-                        @endforeach
-                    </div>
+                            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
+                                @if (($financial['canManageLedgerEntries'] ?? false) && ! $entry['isVoided'] && in_array($entry['type'], ['deposit', 'payment', 'refund', 'store_credit'], true))
+                                    <form
+                                        method="POST"
+                                        action="{{ route('operations.repair-orders.ledger-entries.destroy', [$repairOrder, $entry['id']]) }}"
+                                        data-refresh-scope="financial"
+                                        class="mt-2"
+                                        @submit.prevent="if (confirm('Void this ledger entry? Balance due will be recalculated.')) { submitWorksheetForm($event); }"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Void entry</button>
+                                    </form>
+                                @endif
+                            @endcan
+                        </div>
+                    @endforeach
                 </div>
             @endif
             </div>
