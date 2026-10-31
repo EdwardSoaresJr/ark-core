@@ -6,10 +6,17 @@ use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
+use Brick\Money\Money;
 use Illuminate\Support\Collection;
 
 final class PortalEstimateAuthorization
 {
+    public function __construct(
+        private readonly WorkCompletionAuthorization $workAuthorization,
+    ) {}
+
     /**
      * @return Collection<int, RepairOrderConcern>
      */
@@ -61,7 +68,38 @@ final class PortalEstimateAuthorization
 
         return $presented->every(
             fn (RepairOrderConcern $concern): bool => $concern->disposition === RepairOrderConcernDisposition::Approved,
-        );
+        ) && $this->approvedWorkAwaitingApproval($repairOrder) === [];
+    }
+
+    /**
+     * Work on approved repairs that changed after the customer approved it:
+     * added lines at their total, raised lines at the increase.
+     *
+     * @return list<array{description: string, is_increase: bool, amount_cents: int, amount: string}>
+     */
+    public function approvedWorkAwaitingApproval(RepairOrder $repairOrder): array
+    {
+        if ($repairOrder->isTerminal()) {
+            return [];
+        }
+
+        $raised = $this->workAuthorization->approvedSubtotalsBeforeIncrease($repairOrder);
+
+        return $this->workAuthorization->linesRequiringAuthorization($repairOrder)
+            ->map(function (RepairOrderLine $line) use ($repairOrder, $raised): array {
+                $amountCents = $this->workAuthorization->pendingApprovalCents($repairOrder, $line);
+
+                return [
+                    'description' => filled($line->customer_description)
+                        ? (string) $line->customer_description
+                        : (string) $line->description,
+                    'is_increase' => isset($raised[(int) $line->id]),
+                    'amount_cents' => $amountCents,
+                    'amount' => Money::ofMinor($amountCents, 'USD')->formatTo('en_US'),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     /**
@@ -80,5 +118,4 @@ final class PortalEstimateAuthorization
             ->sortBy('position')
             ->values();
     }
-
 }

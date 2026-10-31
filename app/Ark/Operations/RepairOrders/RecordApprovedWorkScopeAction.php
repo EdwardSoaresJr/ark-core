@@ -6,6 +6,10 @@ use App\Models\User;
 
 final class RecordApprovedWorkScopeAction
 {
+    public function __construct(
+        private readonly WorkCompletionAuthorization $authorization,
+    ) {}
+
     public function execute(RepairOrderConcern $concern, ?User $actor = null): ?ApprovedWorkScope
     {
         if ($concern->disposition !== RepairOrderConcernDisposition::Approved) {
@@ -14,16 +18,19 @@ final class RecordApprovedWorkScopeAction
 
         $concern->load('lines');
 
-        $lineIds = $concern->lines
+        $lines = $concern->lines
             ->filter(fn (RepairOrderLine $line): bool => $line->isPart() || $line->type->isLabor())
-            ->map(fn (RepairOrderLine $line): int => (int) $line->id)
-            ->values()
-            ->all();
+            ->values();
 
         return ApprovedWorkScope::query()->create([
             'repair_order_id' => $concern->repair_order_id,
             'repair_order_concern_id' => $concern->id,
-            'line_ids' => $lineIds,
+            'line_ids' => $lines->map(fn (RepairOrderLine $line): int => (int) $line->id)->all(),
+            'approved_lines' => $lines->map(fn (RepairOrderLine $line): array => [
+                'id' => (int) $line->id,
+                'description' => (string) $line->description,
+                'subtotal_cents' => $this->authorization->approvalSubtotalCents($line),
+            ])->all(),
             'recorded_by_user_id' => $actor?->id,
         ]);
     }
