@@ -208,3 +208,11 @@ Before: `ops-index`, `ops-board-shell`, `ops-page-toolbar`, `ops-board-filters`,
 After: Tabler only, `fluid` layout with `.ark-card-grid`. The page subtitle carries the queue note (search, workboard overflow, or Shop Dashboard drill-down), and the results heading shows the queue label. Status, From, and To collapse behind "Filters" on phones. Unchanged: the controller, query parameters (`q`, `status`, `created_from`, `created_to`), the queue drill-downs and their hidden inputs (`pickup`, `unassigned`, `lane`, `attention`, `disposition`, `open`), the "Workboard triage" return link, 24 per page with the query string kept, the `RepairOrdersView` permission, and every card link.
 
 Still on `app.css`: the shell components listed under "Legacy components on a Tabler page".
+
+### Shop dashboard (`operations.dashboard`, `operations.today`)
+
+Before: `ops-today`, `ops-shop-dash-*` (toolbar, command cards, workflow bar, KPIs, sales table), and the `ops-ro-workspace-tab*` dashboard tabs.
+
+After: Tabler `fluid` page. The date is the pretitle; the open-queue count, Job Board, Comms, and Business are page actions with their existing permission checks. Today and Scoreboard are `nav-pills` from the shared `operations.dashboard.tabs` partial (`'ui' => 'tabler'`); the Scoreboard page keeps the legacy tabs. The four command cards, the status bar and legend, and status dots use the shop's status colors through `RepairOrderStatusColor::tablerColorForChipTone()`. The sales table is a `card-table` that scrolls inside its card on phones. Unchanged: `TodayController`, the projection, every count, amount, link, and hint.
+
+Still legacy: the technician lanes (`operations.today.partials.technician-lanes`) render in an `.ark-legacy` island for staff without a shop dashboard. Their panel stays light in the dark theme.
