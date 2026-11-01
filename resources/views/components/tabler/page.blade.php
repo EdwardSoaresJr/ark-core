@@ -1,4 +1,4 @@
-@props(['layout', 'title' => null, 'pretitle' => null, 'subtitle' => null, 'actionsLabel' => null, 'stackActions' => false])
+@props(['layout', 'title' => null, 'titleId' => null, 'titleCount' => null, 'pretitle' => null, 'subtitle' => null, 'actionsLabel' => null, 'stackActions' => false])
 
 @php
     // Workspace layouts are defined in docs/engineering/TABLER.md#workspace-layouts.
@@ -18,7 +18,7 @@
                     @if (filled($pretitle))
                         <div class="page-pretitle">{{ $pretitle }}</div>
                     @endif
-                    <h2 class="page-title">{{ $title }}</h2>
+                    <h2 class="page-title"@if (filled($titleId)) id="{{ $titleId }}"@endif>{{ $title }}@if ((int) $titleCount > 0) <span class="badge bg-red-lt ms-1" data-page-title-count>{{ (int) $titleCount }}</span>@endif</h2>
                     @if (filled($subtitle))
                         <div class="text-secondary mt-1 d-none d-md-block">{{ $subtitle }}</div>
                     @endif
