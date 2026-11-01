@@ -20,6 +20,7 @@ export function initOpsGlobalSearch() {
         root.querySelector('[data-ops-global-search-commands]')?.textContent ?? '[]',
     );
     const groupOrder = ['Navigate', 'Create', 'Search', 'Operations', 'Results'];
+    const ui = root.dataset.opsGlobalSearchUi === 'tabler' ? TABLER_CLASSES : LEGACY_CLASSES;
     let timer = null;
     let activeIndex = -1;
     let preferCompose = false;
@@ -72,17 +73,17 @@ export function initOpsGlobalSearch() {
                     continue;
                 }
 
-                chunks.push(`<div class="ops-global-search__group">${escapeHtml(group)}</div>`);
+                chunks.push(`<div class="${ui.group}">${escapeHtml(group)}</div>`);
 
                 for (const row of entityRows) {
                     const composeAttr = row.compose_customer_id
                         ? ` data-compose-customer-id="${row.compose_customer_id}"`
                         : '';
-                    chunks.push(`<button type="button" class="ops-global-search__row" data-index="${index}" data-url="${escapeAttr(row.url)}"${composeAttr}>
-                <span class="ops-global-search__row-type">${escapeHtml(row.type)}</span>
-                <span class="ops-global-search__row-label">${escapeHtml(row.label)}</span>
-                <span class="ops-global-search__row-detail">${escapeHtml(row.detail || '')}</span>
-                ${row.compose_customer_id ? '<span class="ops-global-search__row-compose">Compose</span>' : ''}
+                    chunks.push(`<button type="button" class="${ui.row}" data-ops-global-search-row data-index="${index}" data-url="${escapeAttr(row.url)}"${composeAttr}>
+                <span class="${ui.rowType}">${escapeHtml(row.type)}</span>
+                <span class="${ui.rowLabel}">${escapeHtml(row.label)}</span>
+                <span class="${ui.rowDetail}">${escapeHtml(row.detail || '')}</span>
+                ${row.compose_customer_id ? `<span class="${ui.rowCompose}" data-ops-global-search-compose>Compose</span>` : ''}
             </button>`);
                     index += 1;
                 }
@@ -96,29 +97,29 @@ export function initOpsGlobalSearch() {
                 continue;
             }
 
-            chunks.push(`<div class="ops-global-search__group">${escapeHtml(group)}</div>`);
+            chunks.push(`<div class="${ui.group}">${escapeHtml(group)}</div>`);
 
             for (const command of inGroup) {
                 const disabled = !command.url;
                 const reason = command.disabled_reason || '';
 
                 if (disabled) {
-                    chunks.push(`<div class="ops-global-search__row ops-global-search__row--command ops-global-search__row--disabled" aria-disabled="true">
-                <span class="ops-global-search__row-label">${escapeHtml(command.title)}</span>
-                <span class="ops-global-search__row-detail">${escapeHtml(reason)}</span>
+                    chunks.push(`<div class="${ui.commandDisabled}" aria-disabled="true">
+                <span class="${ui.rowLabel}">${escapeHtml(command.title)}</span>
+                <span class="${ui.rowDetail}">${escapeHtml(reason)}</span>
             </div>`);
                     continue;
                 }
 
-                chunks.push(`<button type="button" class="ops-global-search__row ops-global-search__row--command" data-index="${index}" data-url="${escapeAttr(command.url)}">
-                <span class="ops-global-search__row-label">${escapeHtml(command.title)}</span>
+                chunks.push(`<button type="button" class="${ui.command}" data-ops-global-search-row data-index="${index}" data-url="${escapeAttr(command.url)}">
+                <span class="${ui.rowLabel}">${escapeHtml(command.title)}</span>
             </button>`);
                 index += 1;
             }
         }
 
         if (chunks.length === 0) {
-            results.innerHTML = '<p class="ops-global-search__hint">No matches.</p>';
+            results.innerHTML = `<${ui.hintTag} class="${ui.hint}">No matches.</${ui.hintTag}>`;
             activeIndex = -1;
             return;
         }
@@ -129,8 +130,8 @@ export function initOpsGlobalSearch() {
     };
 
     const highlight = () => {
-        results.querySelectorAll('.ops-global-search__row[data-index]').forEach((row) => {
-            row.classList.toggle('ops-global-search__row--active', Number(row.dataset.index) === activeIndex);
+        results.querySelectorAll('[data-ops-global-search-row][data-index]').forEach((row) => {
+            row.classList.toggle(ui.rowActive, Number(row.dataset.index) === activeIndex);
         });
     };
 
@@ -141,7 +142,7 @@ export function initOpsGlobalSearch() {
 
         const composeId = row.dataset.composeCustomerId;
 
-        if (composeId && (row.querySelector('.ops-global-search__row-compose')?.matches(':hover') || preferCompose)) {
+        if (composeId && (row.querySelector('[data-ops-global-search-compose]')?.matches(':hover') || preferCompose)) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = composeUrl;
@@ -212,7 +213,7 @@ export function initOpsGlobalSearch() {
             return;
         }
 
-        const rows = [...results.querySelectorAll('.ops-global-search__row[data-index]')];
+        const rows = [...results.querySelectorAll('[data-ops-global-search-row][data-index]')];
 
         if (event.key === 'ArrowDown' && rows.length > 0) {
             event.preventDefault();
@@ -263,15 +264,43 @@ export function initOpsGlobalSearch() {
     });
 
     results.addEventListener('click', (event) => {
-        const row = event.target.closest('.ops-global-search__row[data-index]');
+        const row = event.target.closest('[data-ops-global-search-row][data-index]');
         if (!row) {
             return;
         }
-        preferCompose = event.target.closest('.ops-global-search__row-compose') !== null || event.shiftKey;
+        preferCompose = event.target.closest('[data-ops-global-search-compose]') !== null || event.shiftKey;
         activate(row);
         preferCompose = false;
     });
 }
+
+const LEGACY_CLASSES = {
+    group: 'ops-global-search__group',
+    row: 'ops-global-search__row',
+    command: 'ops-global-search__row ops-global-search__row--command',
+    commandDisabled: 'ops-global-search__row ops-global-search__row--command ops-global-search__row--disabled',
+    rowActive: 'ops-global-search__row--active',
+    rowType: 'ops-global-search__row-type',
+    rowLabel: 'ops-global-search__row-label',
+    rowDetail: 'ops-global-search__row-detail',
+    rowCompose: 'ops-global-search__row-compose',
+    hintTag: 'p',
+    hint: 'ops-global-search__hint',
+};
+
+const TABLER_CLASSES = {
+    group: 'list-group-header',
+    row: 'list-group-item list-group-item-action d-flex align-items-center gap-2',
+    command: 'list-group-item list-group-item-action',
+    commandDisabled: 'list-group-item disabled d-flex flex-wrap align-items-center gap-2',
+    rowActive: 'active',
+    rowType: 'badge bg-secondary-lt text-nowrap',
+    rowLabel: 'fw-medium text-truncate',
+    rowDetail: 'small text-secondary text-truncate',
+    rowCompose: 'badge bg-primary-lt ms-auto',
+    hintTag: 'div',
+    hint: 'list-group-item small text-secondary',
+};
 
 function parseCommands(raw) {
     if (!raw) {

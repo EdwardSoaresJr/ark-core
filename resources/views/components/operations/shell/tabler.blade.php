@@ -167,3 +167,12 @@
     </div>
 </div>
 
+{{--
+    Each overlay is one .modal (z-index 1055, above the sidebar) with its backdrop inside, so later overlays cover earlier
+    ones: this order keeps the legacy stacking. app.blade.php also renders these components after the shell; the flag
+    makes those calls render nothing.
+--}}
+@php(request()->attributes->set('operations.tabler_shell_overlays', true))
+@can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+    <x-operations.global-search ui="tabler" />
+@endcan
