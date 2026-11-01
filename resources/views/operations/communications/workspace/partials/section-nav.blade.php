@@ -33,41 +33,51 @@
     ];
 @endphp
 
-<nav class="ops-comms-workspace__nav" aria-label="Communications sections">
-    <ul class="ops-comms-workspace__nav-list">
+<nav class="flex-shrink-0 mb-2 overflow-auto" aria-label="Communications sections" data-comms-section-nav>
+    <ul class="nav nav-pills flex-nowrap">
         @if ($section === 'inbox')
             @foreach ($lanes as $lane)
-                <li>
+                <li class="nav-item">
                     <a
                         href="{{ route('operations.communications.inbox', array_merge($selection, ['filter' => $lane['key']])) }}"
                         title="{{ $lane['title'] }}"
-                        @class([
-                            'ops-comms-workspace__nav-link',
-                            'ops-comms-workspace__nav-link--active' => $listFilter === $lane['key'],
-                        ])
+                        @class(['nav-link text-nowrap', 'active' => $listFilter === $lane['key']])
+                        @if ($listFilter === $lane['key']) aria-current="page" @endif
                     >
                         <span>{{ $lane['label'] }}</span>
                         @if (($lane['count'] ?? null) !== null)
-                            <span class="ops-comms-workspace__nav-count">{{ $lane['count'] }}</span>
+                            <span @class([
+                                'badge ms-2',
+                                'bg-red-lt' => $lane['key'] === 'needs' && (int) $lane['count'] > 0,
+                                'bg-secondary-lt' => $lane['key'] !== 'needs' || (int) $lane['count'] === 0,
+                            ])>{{ $lane['count'] }}</span>
                         @endif
                     </a>
                 </li>
             @endforeach
         @else
             @can(ArkCapability::OperationsAccess->value)
-                <li>
-                    <a href="{{ route('operations.communications.inbox', ['filter' => 'needs']) }}" class="ops-comms-workspace__nav-link">
-                        <span>Needs attention</span>
+                <li class="nav-item">
+                    <a href="{{ route('operations.communications.inbox', ['filter' => 'needs']) }}" class="nav-link text-nowrap">
+                        Needs attention
                     </a>
                 </li>
             @endcan
         @endif
         @can(ArkCapability::OperationsAccess->value)
-            <li>
-                <a href="{{ route('operations.communications.calls') }}" @class(['ops-comms-workspace__nav-link', 'ops-comms-workspace__nav-link--active' => $section === 'calls'])>Calls & VM</a>
+            <li class="nav-item">
+                <a
+                    href="{{ route('operations.communications.calls') }}"
+                    @class(['nav-link text-nowrap', 'active' => $section === 'calls'])
+                    @if ($section === 'calls') aria-current="page" @endif
+                >Calls & VM</a>
             </li>
-            <li>
-                <a href="{{ route('operations.communications.history') }}" @class(['ops-comms-workspace__nav-link', 'ops-comms-workspace__nav-link--active' => $section === 'history'])>History</a>
+            <li class="nav-item">
+                <a
+                    href="{{ route('operations.communications.history') }}"
+                    @class(['nav-link text-nowrap', 'active' => $section === 'history'])
+                    @if ($section === 'history') aria-current="page" @endif
+                >History</a>
             </li>
         @endcan
     </ul>

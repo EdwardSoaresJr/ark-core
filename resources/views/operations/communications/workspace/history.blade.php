@@ -4,7 +4,7 @@
     $listDescription = 'Past calls and conversations - last 30 days shown, search reaches everything';
 @endphp
 
-<x-operations.app title="Communications">
+<x-operations.app title="Communications" ui="tabler">
     <x-operations.communications-workspace
         :section="$workspace['section']"
         :list-items="$workspace['list_items']"

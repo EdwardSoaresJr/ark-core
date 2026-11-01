@@ -4,7 +4,7 @@
     $kind = $composer['kind'] ?? null;
 @endphp
 
-<footer class="ops-comms-workspace__composer">
+<footer class="card-footer p-0" data-comms-composer>
     @if ($kind === 'platform_conversation')
         @php
             $canSend = \App\Ark\Platform\Communications\ManagedCommunicationsGate::platformSend();
@@ -46,8 +46,8 @@
                 show-quick-replies
                 actions-menu
                 platform-backed
+                ui="tabler"
                 id="comms-thread-composer"
-                class="border-0 bg-transparent"
             />
         @elseif ($canSend)
             <div
@@ -66,57 +66,68 @@
                     'platformBacked' => true,
                 ]))"
             >
-                <div class="ops-comms-workspace__composer-compact">
+                <div class="px-3 py-2">
+                    <label class="visually-hidden" for="comms-thread-composer-body">Message</label>
                     <textarea
+                        id="comms-thread-composer-body"
                         x-ref="replyBody"
                         x-model="body"
                         rows="2"
                         :placeholder="composerPlaceholder()"
-                        class="ops-comms-workspace__composer-compact-input"
+                        class="form-control"
                         @keydown.meta.enter.prevent="send()"
                         @keydown.ctrl.enter.prevent="send()"
                     ></textarea>
-                    @include('operations.communications.workspace.partials.quick-replies')
-                    <div class="ops-comms-workspace__composer-compact-row">
-                        <details
-                            class="ops-comms-actions"
-                            x-ref="actionsMenu"
-                            @toggle="onActionsMenuToggle($event)"
-                            @click.outside="closeActionsMenu()"
-                        >
-                            <summary class="ops-comms-actions__summary">Actions</summary>
-                            <div class="ops-comms-actions__panel">
-                                @if (filled($callHref))
-                                    <a href="{{ $callHref }}" class="ops-comms-actions__item">Call</a>
-                                @endif
-                                @if (filled($scheduleHref))
-                                    <a href="{{ $scheduleHref }}" class="ops-comms-actions__item">Schedule</a>
-                                @endif
-                                <label class="ops-comms-actions__item">
-                                    Attach file
-                                    <input
-                                        x-ref="attachmentInput"
-                                        type="file"
-                                        multiple
-                                        class="hidden"
-                                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
-                                        @change="pickAttachment($event)"
-                                    >
-                                </label>
-                            </div>
-                        </details>
-                        <button
-                            type="button"
-                            @click="send()"
-                            :disabled="sending"
-                            class="h-8 shrink-0 rounded-sm border border-slate-800 bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-                        >
-                            <span x-show="! sending">Send</span>
-                            <span x-show="sending" x-cloak>Sending…</span>
-                        </button>
+                    <div class="mt-2">
+                        @include('operations.communications.workspace.partials.quick-replies')
                     </div>
-                    <p class="truncate text-[11px] font-medium text-slate-500" x-show="attachmentLabel" x-text="attachmentLabel" x-cloak></p>
-                    <p class="text-xs font-semibold text-rose-700" x-show="error !== ''" x-text="error" x-cloak></p>
+                    <div class="small text-secondary text-truncate mt-1" x-show="attachmentLabel" x-text="attachmentLabel" x-cloak></div>
+                    <div class="small text-danger fw-medium mt-1" x-show="error !== ''" x-text="error" x-cloak></div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between gap-2 px-3 py-2 border-top" role="group" aria-label="Conversation commands">
+                    <details
+                        class="position-relative"
+                        x-ref="actionsMenu"
+                        @toggle="onActionsMenuToggle($event)"
+                        @click.outside="closeActionsMenu()"
+                    >
+                        <summary class="btn btn-sm">Actions</summary>
+                        <div class="dropdown-menu show position-absolute bottom-100 mb-1" data-comms-actions-panel>
+                            @if (filled($callHref))
+                                <a href="{{ $callHref }}" class="dropdown-item">
+                                    <x-tabler.icon name="phone" class="dropdown-item-icon" />
+                                    Call
+                                </a>
+                            @endif
+                            @if (filled($scheduleHref))
+                                <a href="{{ $scheduleHref }}" class="dropdown-item">
+                                    <x-tabler.icon name="calendar" class="dropdown-item-icon" />
+                                    Schedule
+                                </a>
+                            @endif
+                            <label class="dropdown-item">
+                                <x-tabler.icon name="paperclip" class="dropdown-item-icon" />
+                                Attach file
+                                <input
+                                    x-ref="attachmentInput"
+                                    type="file"
+                                    multiple
+                                    class="d-none"
+                                    accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                    @change="pickAttachment($event)"
+                                >
+                            </label>
+                        </div>
+                    </details>
+                    <button
+                        type="button"
+                        @click="send()"
+                        :disabled="sending"
+                        class="btn btn-primary btn-sm"
+                    >
+                        <span x-show="! sending">Send</span>
+                        <span x-show="sending" x-cloak>Sending…</span>
+                    </button>
                 </div>
             </div>
         @endif
@@ -126,32 +137,45 @@
             $hasHistory = ($thread['events'] ?? []) !== [];
         @endphp
 
-        <div
-            class="ops-comms-workspace__composer-tabs"
-            x-data="{ tab: 'reply' }"
-        >
-            <div class="ops-comms-workspace__composer-tablist" role="tablist">
-                <button
-                    type="button"
-                    role="tab"
-                    class="ops-comms-workspace__composer-tab"
-                    :class="{ 'ops-comms-workspace__composer-tab--active': tab === 'reply' }"
-                    @click="tab = 'reply'"
-                >
-                    SMS
-                </button>
-                <button
-                    type="button"
-                    role="tab"
-                    class="ops-comms-workspace__composer-tab"
-                    :class="{ 'ops-comms-workspace__composer-tab--active': tab === 'internal' }"
-                    @click="tab = 'internal'"
-                >
-                    Internal note
-                </button>
-            </div>
+        <div x-data="{ tab: 'reply' }" data-comms-composer-tabs>
+            <ul class="nav nav-tabs px-2 pt-1" role="tablist" aria-label="Reply or note">
+                <li class="nav-item" role="presentation">
+                    <button
+                        type="button"
+                        role="tab"
+                        id="comms-composer-tab-reply"
+                        aria-controls="comms-composer-panel-reply"
+                        class="nav-link"
+                        :class="{ active: tab === 'reply' }"
+                        :aria-selected="(tab === 'reply').toString()"
+                        @click="tab = 'reply'"
+                    >
+                        SMS
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button
+                        type="button"
+                        role="tab"
+                        id="comms-composer-tab-internal"
+                        aria-controls="comms-composer-panel-internal"
+                        class="nav-link"
+                        :class="{ active: tab === 'internal' }"
+                        :aria-selected="(tab === 'internal').toString()"
+                        @click="tab = 'internal'"
+                    >
+                        Internal note
+                    </button>
+                </li>
+            </ul>
 
-            <div x-show="tab === 'reply'" x-cloak>
+            <div
+                id="comms-composer-panel-reply"
+                role="tabpanel"
+                aria-labelledby="comms-composer-tab-reply"
+                x-show="tab === 'reply'"
+                x-cloak
+            >
                 @php
                     $composerCustomer = $composer['customer'] ?? $composer['repair_order']?->customer;
                     $primaryRepairOrder = $composer['repair_order'] ?? null;
@@ -177,8 +201,8 @@
                         keep-open-after-send
                         show-quick-replies
                         actions-menu
+                        ui="tabler"
                         id="comms-thread-composer"
-                        class="border-0 bg-transparent"
                     />
                 @else
                     <x-operations.conversation-contact-quick-reply
@@ -196,24 +220,30 @@
             </div>
 
             <form
+                id="comms-composer-panel-internal"
+                role="tabpanel"
+                aria-labelledby="comms-composer-tab-internal"
                 x-show="tab === 'internal'"
                 x-cloak
                 method="POST"
                 action="{{ route('operations.communications.conversations.internal-note', $conversation) }}"
-                class="ops-comms-workspace__composer-form"
             >
                 @csrf
                 <input type="hidden" name="section" value="{{ $section }}">
-                <textarea
-                    name="body"
-                    rows="2"
-                    required
-                    maxlength="2000"
-                    placeholder="Internal note - never sent to customer"
-                    class="ops-comms-workspace__composer-input"
-                ></textarea>
-                <div class="ops-comms-workspace__composer-actions">
-                    <button type="submit" class="ops-comms-workspace__composer-submit">Add internal note</button>
+                <div class="px-3 py-2">
+                    <label class="visually-hidden" for="comms-internal-note-body">Internal note</label>
+                    <textarea
+                        id="comms-internal-note-body"
+                        name="body"
+                        rows="2"
+                        required
+                        maxlength="2000"
+                        placeholder="Internal note - never sent to customer"
+                        class="form-control"
+                    ></textarea>
+                </div>
+                <div class="d-flex justify-content-end px-3 py-2 border-top">
+                    <button type="submit" class="btn btn-sm">Add internal note</button>
                 </div>
             </form>
         </div>
@@ -222,23 +252,25 @@
             id="comms-call-note-composer"
             method="POST"
             action="{{ route('operations.communications.calls.note', $composer['call_session_id']) }}"
-            class="ops-comms-workspace__composer-form"
         >
             @csrf
             <input type="hidden" name="section" value="{{ $section }}">
             <input type="hidden" name="entity_key" value="{{ $composer['entity_key'] ?? ('call:'.($composer['call_session_id'] ?? '')) }}">
             <input type="hidden" name="nudge_key" value="{{ $composer['nudge_key'] ?? 'call.log_note' }}">
-            <p class="ops-comms-workspace__composer-label">Call note</p>
-            <textarea
-                name="body"
-                rows="2"
-                required
-                maxlength="2000"
-                placeholder="Log what happened on this call"
-                class="ops-comms-workspace__composer-input"
-            >{{ $composer['draft_reply'] ?? '' }}</textarea>
-            <div class="ops-comms-workspace__composer-actions">
-                <button type="submit" class="ops-comms-workspace__composer-submit">Log call note</button>
+            <div class="px-3 py-2">
+                <label class="form-label" for="comms-call-note-body">Call note</label>
+                <textarea
+                    id="comms-call-note-body"
+                    name="body"
+                    rows="2"
+                    required
+                    maxlength="2000"
+                    placeholder="Log what happened on this call"
+                    class="form-control"
+                >{{ $composer['draft_reply'] ?? '' }}</textarea>
+            </div>
+            <div class="d-flex justify-content-end px-3 py-2 border-top">
+                <button type="submit" class="btn btn-primary btn-sm">Log call note</button>
             </div>
         </form>
     @endif

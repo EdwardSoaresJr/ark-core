@@ -39,39 +39,37 @@
         </div>
     </div>
 
-    {{-- The composer and timeline rows are shared with the communications and repair-order screens. --}}
-    <div class="ark-legacy bg-white text-dark">
-        <x-operations.conversation-quick-reply
-            :customer="$customer"
-            :messages-list-ids="['conversation-messages-relationship']"
-            :open-repair-orders="$callContext->openRepairOrders"
-            :has-conversation-history="$hubCommsCounts['text'] > 0"
-            always-open
-            keep-open-after-send
-            class="border-b border-slate-200 bg-white"
-        />
+    <x-operations.conversation-quick-reply
+        :customer="$customer"
+        :messages-list-ids="['conversation-messages-relationship']"
+        :open-repair-orders="$callContext->openRepairOrders"
+        :has-conversation-history="$hubCommsCounts['text'] > 0"
+        always-open
+        keep-open-after-send
+        ui="tabler"
+        class="border-bottom"
+    />
 
-        <div id="conversation-messages-relationship" class="divide-y divide-slate-100">
-            @forelse ($hubCommsTimeline as $event)
-                <div
-                    data-conversation-row
-                    data-filter="{{ $event->hubFilter() }}"
-                    @if (filled($event->metadata['platform_message_public_id'] ?? null))
-                        data-platform-message-id="{{ $event->metadata['platform_message_public_id'] }}"
-                    @endif
-                    data-occurred-at="{{ $event->occurredAt->utc()->toIso8601String() }}"
-                >
-                    @include('operations.timeline.partials.hub-event-row', ['event' => $event])
-                </div>
-            @empty
-                <div data-conversation-empty class="px-3 py-2 text-xs leading-4 text-slate-500">
-                    No communications recorded for this customer yet.
-                </div>
-            @endforelse
+    <div id="conversation-messages-relationship">
+        @forelse ($hubCommsTimeline as $event)
+            <div
+                data-conversation-row
+                data-filter="{{ $event->hubFilter() }}"
+                @if (filled($event->metadata['platform_message_public_id'] ?? null))
+                    data-platform-message-id="{{ $event->metadata['platform_message_public_id'] }}"
+                @endif
+                data-occurred-at="{{ $event->occurredAt->utc()->toIso8601String() }}"
+            >
+                @include('operations.timeline.partials.hub-event-row', ['event' => $event])
+            </div>
+        @empty
+            <div data-conversation-empty class="px-3 py-2 text-secondary small">
+                No communications recorded for this customer yet.
+            </div>
+        @endforelse
 
-            @if ($hubCommsTimeline->isNotEmpty())
-                <div x-show="isFilterEmpty()" x-cloak class="px-3 py-6 text-xs leading-4 text-slate-500" x-text="emptyLabel()"></div>
-            @endif
-        </div>
+        @if ($hubCommsTimeline->isNotEmpty())
+            <div x-show="isFilterEmpty()" x-cloak class="px-3 py-4 text-secondary small" x-text="emptyLabel()"></div>
+        @endif
     </div>
 </div>

@@ -4,29 +4,29 @@
 
 @include('operations.shop.communications.partials.voice-setup-steps', ['shop' => $shop])
 
-<section class="mt-4 space-y-3">
-    <div class="rounded-sm border border-emerald-200 bg-emerald-50/80 px-4 py-3">
-        <p class="text-sm font-black text-emerald-950">Software path complete</p>
-        <p class="mt-1 text-xs leading-5 text-emerald-900">Plug in the phone and run First Contact certification on the device workspace.</p>
-    </div>
+<div class="alert alert-success mb-0" role="status">
+    <div class="fw-bold">Software path complete</div>
+    <div>Plug in the phone and run First Contact certification on the device workspace.</div>
+</div>
 
-    <ul class="divide-y divide-slate-100 rounded-sm border border-slate-200 bg-white">
+<div class="card">
+    <div class="list-group list-group-flush">
         @foreach ($shop['devices'] as $device)
-            <li>
-                <a
-                    href="{{ route('operations.shop.devices.show', $device->deviceId) }}"
-                    class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50"
-                >
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-black text-slate-950">{{ $device->name }}</p>
-                        <p class="truncate text-xs text-slate-600">
+            <a
+                href="{{ route('operations.shop.devices.show', $device->deviceId) }}"
+                class="list-group-item list-group-item-action"
+            >
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-fill overflow-hidden">
+                        <div class="fw-bold text-truncate">{{ $device->name }}</div>
+                        <div class="small text-secondary text-truncate">
                             {{ $device->workstationName ?? 'Unassigned' }}
                             · {{ $device->statusLabel }}
-                        </p>
+                        </div>
                     </div>
-                    <span class="shrink-0 text-xs font-bold uppercase tracking-wide text-sky-700">Begin First Contact →</span>
-                </a>
-            </li>
+                    <span class="flex-shrink-0 small fw-medium text-primary">Begin First Contact →</span>
+                </div>
+            </a>
         @endforeach
-    </ul>
-</section>
+    </div>
+</div>

@@ -104,13 +104,13 @@ test('detail fragments include the centered switch overlay', function () {
         ->assertOk()
         ->json('thread');
 
-    expect($empty)->toContain('ops-comms-workspace__switch-bubble')
+    expect($empty)->toContain('data-comms-switch')
         ->and($empty)->toContain('Back to list')
         ->and($empty)->toContain('filter=waiting')
         ->and($open)->toContain('Dana Wait')
         ->and($open)->toContain('Customer')
         ->and($open)->toContain('filter=waiting')
-        ->and($open)->not->toContain('ops-comms-history-filters')
-        ->and($open)->toContain('ops-comms-workspace__switch-bubble')
-        ->and(strpos($open, 'Dana Wait'))->toBeLessThan(strpos($open, 'ops-comms-workspace__switch'));
+        ->and($open)->not->toContain('data-comms-history-filters')
+        ->and($open)->toContain('data-comms-switch')
+        ->and(strpos($open, 'Dana Wait'))->toBeLessThan(strpos($open, 'data-comms-switch'));
 });

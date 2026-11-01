@@ -57,7 +57,7 @@ test('the inbox row shows the platform unread flag without changing the lane', f
         ->assertSee('Needs attention')
         ->assertDontSee('Unread Waiting');
 
-    expect(substr_count($needsPage->getContent(), 'ops-comms-inbox__unread'))->toBe(1)
+    expect(substr_count($needsPage->getContent(), 'data-comms-unread'))->toBe(1)
         ->and($needs->fresh()->status)->toBe(ConversationStatus::Open)
         ->and($needs->fresh()->waiting_on)->toBe(ConversationWaitingOn::Shop);
 
@@ -71,14 +71,14 @@ test('the inbox row shows the platform unread flag without changing the lane', f
         ->assertOk()
         ->assertSee('Unread Waiting')
         ->assertSee('Waiting')
-        ->assertSee('ops-comms-inbox__unread', false);
+        ->assertSee('data-comms-unread', false);
 
     expect(inboxPosture($waiting->fresh()))->toBe($before)
         ->and($waiting->fresh()->status)->toBe(ConversationStatus::Open)
         ->and($waiting->fresh()->waiting_on)->toBe(ConversationWaitingOn::Customer)
         ->and($waiting->fresh()->owned_by_user_id)->toBe($advisor->id)
         ->and($waiting->fresh()->resolved_at)->toBeNull()
-        ->and(substr_count($waitingPage->getContent(), 'ops-comms-inbox__unread'))->toBe(1);
+        ->and(substr_count($waitingPage->getContent(), 'data-comms-unread'))->toBe(1);
 });
 
 test('a missed call appears once in the thread ahead of a later text', function () {

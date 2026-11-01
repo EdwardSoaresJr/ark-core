@@ -51,7 +51,7 @@ test('a calls page asks platform once for thirty recording sids', function (): v
     $this->actingAs($advisor)
         ->get(route('operations.communications.calls'))
         ->assertOk()
-        ->assertSee('<audio preload="none" class="ops-call-library__audio"', false)
+        ->assertSee('<audio preload="none" data-call-audio', false)
         ->assertSee('Recording unavailable')
         ->assertSee('No recording')
         ->assertDontSee('api.twilio.com', false)
@@ -144,7 +144,7 @@ test('a platform outage still renders the calls page', function (): void {
         ->assertOk()
         ->assertSee('Recording unavailable')
         ->assertDontSee('platform-down', false)
-        ->assertDontSee('<audio preload="none" class="ops-call-library__audio"', false);
+        ->assertDontSee('<audio preload="none" data-call-audio', false);
 
     Http::fake(function (): void {
         throw new ConnectionException('timed out');

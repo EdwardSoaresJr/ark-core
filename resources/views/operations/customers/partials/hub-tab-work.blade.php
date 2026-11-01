@@ -1,15 +1,13 @@
-{{-- The conversation context panel is shared with the communications screens and stays legacy until they migrate. --}}
-<div class="ark-legacy bg-white text-dark">
-    <x-operations.conversation-context-panel
-        :context="$callContext"
-        :show-customer-header="false"
-        :show-section-header="false"
-        :show-active-vehicles="false"
-        :show-conversation="false"
-        open-repair-orders-label="Active Work"
-        :open-repair-orders-meta="'Open repair orders across all vehicles - status, workflow posture, and next action.'"
-    />
-</div>
+<x-operations.conversation-context-panel
+    :context="$callContext"
+    :show-customer-header="false"
+    :show-section-header="false"
+    :show-active-vehicles="false"
+    :show-conversation="false"
+    open-repair-orders-label="Active Work"
+    :open-repair-orders-meta="'Open repair orders across all vehicles - status, workflow posture, and next action.'"
+    ui="tabler"
+/>
 
 @if (($openFollowUps ?? []) !== [] || ($openTasks ?? []) !== [])
     <div class="border-top">

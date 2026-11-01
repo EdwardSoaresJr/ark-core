@@ -30,94 +30,106 @@
         || request()->filled('platform_conversation');
 @endphp
 
-<section
-    @class(['ops-comms-workspace', 'ops-comms-workspace--inbox' => $isInbox])
+<div
+    class="d-flex flex-column flex-fill ark-split"
+    data-comms-workspace
     x-data="{ threadOpen: {{ $threadOpen ? 'true' : 'false' }}, contextOpen: false }"
-    :class="{ 'is-thread-open': threadOpen, 'is-context-open': contextOpen }"
 >
-    @unless ($isInbox)
-        <x-operations.queue-page-header
-            id="ops-comms-workspace"
-            title="Communications"
-            :description="$listDescription"
-            :count="$listCount > 0 ? $listCount : null"
-            :show-back="false"
-        />
-    @endunless
-
-    @if ($isInbox)
-        <div class="ops-comms-inbox__chrome">
-    @endif
-    @include('operations.communications.workspace.partials.section-nav', [
-        'section' => $section,
-        'listFilter' => $listFilter,
-        'filterCounts' => $filterCounts,
-        'ownerFilter' => $ownerFilter,
-        'turnFilter' => $turnFilter,
-        'turnCounts' => $turnCounts,
-    ])
-    @if ($isInbox)
-            <div class="ops-comms-inbox__chrome-tools">
-                <button type="button" class="ops-comms-inbox__search-button" data-ops-global-search-open>Search conversations</button>
-                <button type="button" class="ops-comms-inbox__compose" data-ops-global-search-open>Compose</button>
-            </div>
-        </div>
-    @endif
-
-    <div
-        id="ops-comms-workspace-live"
-        @class([
-            'ops-comms-workspace__grid',
-            'ops-comms-workspace__grid--inbox' => $isInbox,
-        ])
-        data-fragment-url="{{ route('operations.communications.workspace.fragment', array_merge(request()->query(), ['section' => $section])) }}"
-        data-poll-signature="{{ $pollSignature ?? '' }}"
-        data-section="{{ $section }}"
+    <x-tabler.page
+        layout="split"
+        title="Communications"
+        :title-id="$isInbox ? null : 'ops-comms-workspace'"
+        :title-count="$isInbox ? null : $listCount"
+        :subtitle="$isInbox ? null : $listDescription"
+        actions-label="Communications commands"
     >
-        <aside id="ops-comms-workspace-list" class="ops-comms-workspace__list" aria-label="{{ $listTitle }}">
-            @if (is_array($filters))
-                @include('operations.communications.workspace.partials.history-filters', ['filters' => $filters])
-            @endif
-            <div id="ops-comms-workspace-list-body" class="ops-comms-workspace__list-body">
-            @include('operations.communications.workspace.partials.list-panel', [
-                'title' => $listTitle,
-                'count' => $listCount,
-                'items' => $listItems,
-                'selected' => $selected,
-                'listFilter' => $listFilter,
-                'filterCounts' => $filterCounts,
-                'ownerFilter' => $ownerFilter,
-                'ownerCounts' => $ownerCounts,
-                'listShown' => $listShown,
-                'listTotal' => $listTotal,
-                'listTruncated' => $listTruncated,
-                'section' => $section,
-                'platformBacked' => $platformBacked,
-            ])
-            </div>
-            @if ($paginator !== null)
-                <div class="ops-comms-workspace__pagination">
-                    {{ $paginator->withQueryString()->links() }}
+        @if ($isInbox)
+            <x-slot:actions>
+                <x-tabler.page-action icon="search" label="Search conversations" data-ops-global-search-open />
+                <x-tabler.page-action icon="message" label="Compose" data-ops-global-search-open />
+            </x-slot:actions>
+        @endif
+
+        {{ $slot }}
+
+        @include('operations.communications.workspace.partials.section-nav', [
+            'section' => $section,
+            'listFilter' => $listFilter,
+            'filterCounts' => $filterCounts,
+            'ownerFilter' => $ownerFilter,
+            'turnFilter' => $turnFilter,
+            'turnCounts' => $turnCounts,
+        ])
+
+        <div
+            id="ops-comms-workspace-live"
+            class="row g-2 g-lg-3"
+            data-fragment-url="{{ route('operations.communications.workspace.fragment', array_merge(request()->query(), ['section' => $section])) }}"
+            data-poll-signature="{{ $pollSignature ?? '' }}"
+            data-section="{{ $section }}"
+        >
+            <aside
+                id="ops-comms-workspace-list"
+                class="col-12 col-lg-4 col-xl-3 flex-column"
+                :class="threadOpen ? 'd-none d-lg-flex' : 'd-flex'"
+                aria-label="{{ $listTitle }}"
+            >
+                <div class="card flex-fill overflow-hidden">
+                    @if (is_array($filters))
+                        @include('operations.communications.workspace.partials.history-filters', ['filters' => $filters])
+                    @endif
+                    <div id="ops-comms-workspace-list-body" class="d-flex flex-column flex-fill overflow-hidden">
+                        @include('operations.communications.workspace.partials.list-panel', [
+                            'title' => $listTitle,
+                            'count' => $listCount,
+                            'items' => $listItems,
+                            'selected' => $selected,
+                            'listFilter' => $listFilter,
+                            'filterCounts' => $filterCounts,
+                            'ownerFilter' => $ownerFilter,
+                            'ownerCounts' => $ownerCounts,
+                            'listShown' => $listShown,
+                            'listTotal' => $listTotal,
+                            'listTruncated' => $listTruncated,
+                            'section' => $section,
+                            'platformBacked' => $platformBacked,
+                        ])
+                    </div>
+                    @if ($paginator !== null && $paginator->hasPages())
+                        <div class="card-footer py-2 d-flex justify-content-center">
+                            {{ $paginator->withQueryString()->links('pagination::simple-bootstrap-5') }}
+                        </div>
+                    @endif
                 </div>
-            @endif
-        </aside>
+            </aside>
 
-        <main id="ops-comms-workspace-thread" class="ops-comms-workspace__thread" aria-label="Conversation">
-            @include('operations.communications.workspace.partials.thread-panel', [
-                'thread' => $thread,
-                'selected' => $selected,
-                'section' => $section,
-                'listFilter' => $listFilter,
-                'ownerFilter' => $ownerFilter,
-            ])
-        </main>
+            <section
+                id="ops-comms-workspace-thread"
+                class="col-12 col-lg flex-column"
+                :class="! threadOpen ? 'd-none d-lg-flex' : (contextOpen ? 'd-none d-xl-flex' : 'd-flex')"
+                aria-label="Conversation"
+            >
+                @include('operations.communications.workspace.partials.thread-panel', [
+                    'thread' => $thread,
+                    'selected' => $selected,
+                    'section' => $section,
+                    'listFilter' => $listFilter,
+                    'ownerFilter' => $ownerFilter,
+                ])
+            </section>
 
-        <aside id="ops-comms-workspace-context" class="ops-comms-workspace__context" aria-label="Customer and work">
-            @include('operations.communications.workspace.partials.context-panel', [
-                'context' => $context,
-                'selected' => $selected,
-                'section' => $section,
-            ])
-        </aside>
-    </div>
-</section>
+            <aside
+                id="ops-comms-workspace-context"
+                class="col-12 col-xl-3 flex-column"
+                :class="contextOpen ? 'd-flex' : 'd-none d-xl-flex'"
+                aria-label="Customer and work"
+            >
+                @include('operations.communications.workspace.partials.context-panel', [
+                    'context' => $context,
+                    'selected' => $selected,
+                    'section' => $section,
+                ])
+            </aside>
+        </div>
+    </x-tabler.page>
+</div>

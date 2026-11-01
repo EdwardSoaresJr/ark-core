@@ -7,91 +7,102 @@
     $match = collect($actions)->first(fn ($action): bool => in_array($action['label'] ?? '', ['Find customer', 'Create contact', 'Create customer'], true));
 @endphp
 
-<div class="ops-comms-workspace__panel ops-comms-workspace__panel--context">
+<div class="card flex-fill overflow-hidden" data-comms-context-card>
+    <div class="card-header py-2 d-xl-none">
+        <button type="button" class="btn btn-sm btn-ghost-secondary ps-0" @click="contextOpen = false">
+            <x-tabler.icon name="arrow-left" />
+            Back to conversation
+        </button>
+    </div>
     @if ($context === null)
-        <p class="ops-comms-workspace__empty">Select a conversation</p>
+        <div class="card-body text-secondary">Select a conversation</div>
     @else
-        <div class="ops-comms-inbox__rail">
-            <div class="ops-comms-inbox__rail-card">
-                <p class="ops-comms-inbox__rail-title">Customer</p>
-                <p class="ops-comms-inbox__rail-name">{{ $customer['name'] ?? data_get($context, 'headline') ?? 'Unknown' }}</p>
-                <p>{{ $customer['status'] ?? data_get($context, 'link_status') }}</p>
+        <div class="card-body overflow-auto flex-fill p-0" data-comms-context-rail>
+            <section class="p-3 border-bottom" aria-labelledby="comms-context-customer">
+                <div class="subheader mb-1" id="comms-context-customer">Customer</div>
+                <div class="fw-bold">{{ $customer['name'] ?? data_get($context, 'headline') ?? 'Unknown' }}</div>
+                <div class="text-secondary small">{{ $customer['status'] ?? data_get($context, 'link_status') }}</div>
                 @if (filled($customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone')))
-                    <p>{{ $customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone') }}</p>
+                    <div class="small">{{ $customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone') }}</div>
                 @endif
                 @if (filled($customer['email'] ?? null))
-                    <p>{{ $customer['email'] }}</p>
+                    <div class="small text-truncate">{{ $customer['email'] }}</div>
                 @endif
                 @if (filled($context['customer_url'] ?? null))
-                    <a href="{{ $context['customer_url'] }}" class="ops-comms-inbox__rail-link">View full profile</a>
+                    <a href="{{ $context['customer_url'] }}" class="btn btn-sm mt-2">
+                        <x-tabler.icon name="user" />
+                        View full profile
+                    </a>
                 @elseif (is_array($match) && filled($match['url'] ?? null))
-                    <a href="{{ $match['url'] }}" class="ops-comms-inbox__rail-link">{{ $match['label'] }}</a>
+                    <a href="{{ $match['url'] }}" class="btn btn-sm mt-2">{{ $match['label'] }}</a>
                 @endif
-            </div>
+            </section>
 
-            <div class="ops-comms-inbox__rail-card">
-                <p class="ops-comms-inbox__rail-title">Vehicle &amp; repair order</p>
+            <section class="p-3 border-bottom" aria-labelledby="comms-context-vehicle">
+                <div class="subheader mb-1" id="comms-context-vehicle">Vehicle &amp; repair order</div>
                 @if (is_array($context['open_repair_orders'] ?? null))
                     @forelse ($context['open_repair_orders'] as $order)
-                        <div class="ops-comms-inbox__open-ro" data-open-ro="{{ $order['number'] ?? '' }}">
+                        <div @class(['small', 'mt-2' => ! $loop->first]) data-open-ro="{{ $order['number'] ?? '' }}">
                             @if (filled($order['vehicle'] ?? null))
-                                <p class="ops-comms-inbox__rail-name">{{ $order['vehicle'] }}</p>
+                                <div class="fw-bold">{{ $order['vehicle'] }}</div>
                             @endif
                             @if (filled($order['number'] ?? null))
-                                <p>{{ $order['number'] }}</p>
+                                <div>{{ $order['number'] }}</div>
                             @endif
                             @if (filled($order['status'] ?? null))
-                                <p>{{ $order['status'] }}</p>
+                                <div class="text-secondary">{{ $order['status'] }}</div>
                             @endif
                             @if (filled($order['url'] ?? null))
-                                <a href="{{ $order['url'] }}" class="ops-comms-inbox__rail-link">View repair order</a>
+                                <a href="{{ $order['url'] }}">View repair order</a>
                             @endif
                         </div>
                     @empty
-                        <p>No current visit</p>
+                        <div class="text-secondary small">No current visit</div>
                     @endforelse
                 @elseif (filled($vehicle['label'] ?? null) || filled($vehicle['ro_number'] ?? null))
-                    @if (filled($vehicle['label'] ?? null))
-                        <p class="ops-comms-inbox__rail-name">{{ $vehicle['label'] }}</p>
-                    @endif
-                    @if (filled($vehicle['ro_number'] ?? null))
-                        <p>{{ $vehicle['ro_number'] }}</p>
-                    @endif
-                    @if (filled($vehicle['status'] ?? null))
-                        <p>{{ $vehicle['status'] }}</p>
-                    @endif
-                    @if (filled($vehicle['url'] ?? null))
-                        <a href="{{ $vehicle['url'] }}" class="ops-comms-inbox__rail-link">View repair order</a>
-                    @endif
+                    <div class="small">
+                        @if (filled($vehicle['label'] ?? null))
+                            <div class="fw-bold">{{ $vehicle['label'] }}</div>
+                        @endif
+                        @if (filled($vehicle['ro_number'] ?? null))
+                            <div>{{ $vehicle['ro_number'] }}</div>
+                        @endif
+                        @if (filled($vehicle['status'] ?? null))
+                            <div class="text-secondary">{{ $vehicle['status'] }}</div>
+                        @endif
+                        @if (filled($vehicle['url'] ?? null))
+                            <a href="{{ $vehicle['url'] }}">View repair order</a>
+                        @endif
+                    </div>
                 @else
-                    <p>No current visit</p>
+                    <div class="text-secondary small">No current visit</div>
                 @endif
-            </div>
+            </section>
 
             @if (is_array($work) && filled($work['url'] ?? null))
                 @include('operations.communications.workspace.partials.work-panel', ['work' => $work])
             @endif
 
-            <div class="ops-comms-inbox__rail-card">
-                <p class="ops-comms-inbox__rail-title">Recent visits</p>
+            <section class="p-3 border-bottom" aria-labelledby="comms-context-visits">
+                <div class="subheader mb-1" id="comms-context-visits">Recent visits</div>
                 @forelse ($visits as $visit)
-                    <a href="{{ $visit['url'] }}" class="ops-comms-inbox__visit">
-                        <span>{{ $visit['number'] }}</span>
-                        <span>{{ $visit['date'] }}</span>
-                        <span>{{ $visit['status'] }}</span>
+                    <a href="{{ $visit['url'] }}" class="d-flex gap-2 small text-reset py-1">
+                        <span class="fw-medium">{{ $visit['number'] }}</span>
+                        <span class="text-secondary">{{ $visit['date'] }}</span>
+                        <span class="ms-auto text-secondary">{{ $visit['status'] }}</span>
                     </a>
                 @empty
-                    <p>No visits yet</p>
+                    <div class="text-secondary small">No visits yet</div>
                 @endforelse
-            </div>
+            </section>
 
             @if (filled($context['internal_note_url'] ?? null))
-                <form method="POST" action="{{ $context['internal_note_url'] }}" class="ops-comms-inbox__rail-card">
+                <form method="POST" action="{{ $context['internal_note_url'] }}" class="p-3">
                     @csrf
                     <input type="hidden" name="section" value="inbox">
-                    <p class="ops-comms-inbox__rail-title">Internal notes</p>
-                    <textarea name="body" rows="3" required maxlength="2000" class="ops-comms-inbox__note" placeholder="Add an internal note…"></textarea>
-                    <button type="submit" class="ops-comms-inbox__decision-btn">Save</button>
+                    <label class="subheader mb-1 d-block" for="comms-context-internal-note">Internal notes</label>
+                    <textarea id="comms-context-internal-note" name="body" rows="3" required maxlength="2000" class="form-control" placeholder="Add an internal note…"></textarea>
+                    <button type="submit" class="btn btn-sm mt-2">Save</button>
                 </form>
             @endif
         </div>
