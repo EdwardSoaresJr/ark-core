@@ -120,20 +120,21 @@
             </div>
         </header>
 
+        {{-- ark-workspace-tabs.js builds this strip's tabs, overflow menu, and drag states with ops-workspace-tab* classes styled by app.css. --}}
         <div class="ark-legacy">
             @include('components.operations.workspace-tabs')
-
-            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-                @if ($commsAccountabilityEnabled && $commsNavCount > 0 && ! request()->routeIs('operations.index', 'operations.communications.attention', 'operations.communications.inbox', 'operations.communications.history', 'operations.communications.calls', 'operations.communications.internal', 'operations.communications.internal.channel'))
-                    <x-operations.comms-pressure-bar :pressure="[
-                        'count' => $commsNavCount,
-                        'summary' => $commsNavSummary,
-                        'attention_url' => $commsPressure['attention_url'],
-                        'has_live_calls' => (bool) ($commsNavSummary['has_live_calls'] ?? false),
-                    ]" />
-                @endif
-            @endcan
         </div>
+
+        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+            @if ($commsAccountabilityEnabled && $commsNavCount > 0 && ! request()->routeIs('operations.index', 'operations.communications.attention', 'operations.communications.inbox', 'operations.communications.history', 'operations.communications.calls', 'operations.communications.internal', 'operations.communications.internal.channel'))
+                <x-operations.comms-pressure-bar ui="tabler" :pressure="[
+                    'count' => $commsNavCount,
+                    'summary' => $commsNavSummary,
+                    'attention_url' => $commsPressure['attention_url'],
+                    'has_live_calls' => (bool) ($commsNavSummary['has_live_calls'] ?? false),
+                ]" />
+            @endif
+        @endcan
 
         @if ($learnTrainingSnooze || session('learn_snoozed'))
             <div class="container-fluid pt-3">
@@ -165,3 +166,4 @@
         </main>
     </div>
 </div>
+
