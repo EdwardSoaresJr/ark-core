@@ -11,10 +11,10 @@
 @elseif ($event->subject instanceof ConversationMessage)
     <x-operations.conversation-message :message="$event->subject" />
 @else
-    <div class="px-3 py-2 text-xs leading-4 text-slate-700">
-        <p class="font-bold text-slate-950">{{ $event->headline }}</p>
+    <div class="px-3 py-2 border-bottom">
+        <div class="fw-bold">{{ $event->headline }}</div>
         @if (filled($event->body))
-            <p class="mt-0.5 whitespace-pre-wrap text-slate-600">{{ $event->body }}</p>
+            <p class="mt-1 mb-0 text-secondary" style="white-space: pre-wrap">{{ $event->body }}</p>
         @endif
     </div>
 @endif
