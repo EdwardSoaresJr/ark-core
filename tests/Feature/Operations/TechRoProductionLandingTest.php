@@ -39,7 +39,8 @@ test('technician show lands on production work order not estimate review', funct
         ->assertSee(route('operations.repair-orders.inspection.show', $repairOrder), false)
         ->assertDontSee('ops-estimate-workspace--review', false)
         ->assertDontSee('Approval Forecast', false)
-        ->assertDontSee('ops-inspection-walk', false);
+        ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false);
 });
 
 test('technician continue and open inspection labels follow coverage', function () {

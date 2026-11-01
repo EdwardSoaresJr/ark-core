@@ -1,127 +1,128 @@
-<x-operations.app title="Create Contact">
-    <section class="ops-index space-y-3">
-        <div class="ops-board-shell">
-            <div class="ops-page-toolbar">
+<x-operations.app title="Create Contact" ui="tabler">
+    <x-tabler.page layout="focused" title="Create contact">
+        <x-slot:actions>
+            <x-tabler.page-action :href="$cancelUrl" icon="x" label="Cancel" />
+        </x-slot:actions>
+
+        <form method="POST" action="{{ $formAction }}" class="card" data-create-contact-form>
+            @csrf
+
+            @if ($conversationId ?? null)
+                <input type="hidden" name="conversation_id" value="{{ $conversationId }}">
+            @endif
+
+            @if ($callSessionId ?? null)
+                <input type="hidden" name="call_session_id" value="{{ $callSessionId }}">
+            @endif
+
+            <input type="hidden" name="return_url" value="{{ $cancelUrl }}">
+
+            <div class="card-header">
                 <div>
-                    <h1 class="ops-page-title">Create contact</h1>
-                    <p class="ops-page-toolbar-note">{{ $contextTitle }} · {{ $contextDetail }}</p>
-                </div>
-                <div class="ops-page-toolbar-actions">
-                    <a href="{{ $cancelUrl }}" class="ops-page-link">Cancel</a>
+                    <h2 class="card-title">{{ $contextTitle }}</h2>
+                    <div class="card-subtitle">{{ $contextDetail }}</div>
                 </div>
             </div>
-        </div>
 
-        <div class="ops-board-shell px-4 py-4">
-            <form method="POST" action="{{ $formAction }}" class="mx-auto max-w-xl space-y-4">
-                @csrf
-
-                @if ($conversationId ?? null)
-                    <input type="hidden" name="conversation_id" value="{{ $conversationId }}">
-                @endif
-
-                @if ($callSessionId ?? null)
-                    <input type="hidden" name="call_session_id" value="{{ $callSessionId }}">
-                @endif
-
-                <input type="hidden" name="return_url" value="{{ $cancelUrl }}">
-
-                <div class="grid gap-3 sm:grid-cols-2">
-                    <div>
-                        <label for="ingress-contact-first-name" class="ops-index-field-label">First name</label>
+            <div class="card-body p-2 p-md-3">
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="ingress-contact-first-name" class="form-label">First name</label>
                         <input
                             id="ingress-contact-first-name"
                             name="first_name"
                             value="{{ old('first_name', $firstName) }}"
                             required
                             autofocus
-                            class="ops-intake-control mt-1 w-full"
+                            @class(['form-control', 'is-invalid' => $errors->has('first_name')])
                         >
-                        @error('first_name')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
+                        @error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div>
-                        <label for="ingress-contact-last-name" class="ops-index-field-label">Last name</label>
+                    <div class="col-12 col-sm-6">
+                        <label for="ingress-contact-last-name" class="form-label">Last name</label>
                         <input
                             id="ingress-contact-last-name"
                             name="last_name"
                             value="{{ old('last_name', $lastName) }}"
                             @unless ($lastNameOptional ?? false) required @endunless
-                            class="ops-intake-control mt-1 w-full"
+                            @class(['form-control', 'is-invalid' => $errors->has('last_name')])
                             placeholder="{{ ($lastNameOptional ?? false) ? 'Optional' : '' }}"
                         >
                         @if ($lastNameOptional ?? false)
-                            <p class="mt-1 text-xs text-slate-600">Optional when the lead only gave a first name.</p>
+                            <div class="form-hint">Optional when the lead only gave a first name.</div>
                         @endif
-                        @error('last_name')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
+                        @error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label for="ingress-contact-phone" class="form-label">Phone</label>
+                        <input
+                            id="ingress-contact-phone"
+                            name="phone"
+                            type="tel"
+                            value="{{ old('phone', $displayPhone) }}"
+                            required
+                            @class(['form-control', 'is-invalid' => $errors->has('phone')])
+                        >
+                        @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label for="ingress-contact-email" class="form-label">Email</label>
+                        <input
+                            id="ingress-contact-email"
+                            name="email"
+                            type="email"
+                            value="{{ old('email', $email) }}"
+                            @class(['form-control', 'is-invalid' => $errors->has('email')])
+                        >
+                        @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="col-12">
+                        @include('operations.customers.partials.contact-preference-select', [
+                            'inputId' => 'ingress-contact-preference',
+                            'labelClass' => 'form-label mb-0',
+                            'selectClass' => 'form-select mt-2'.($errors->has('contact_preference') ? ' is-invalid' : ''),
+                            'selected' => old('contact_preference', $contactPreference?->value),
+                        ])
+                        @error('contact_preference')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <label for="ingress-contact-referral" class="form-label">Referral source</label>
+                        <select id="ingress-contact-referral" name="referral_source" @class(['form-select', 'is-invalid' => $errors->has('referral_source')])>
+                            @foreach (\App\Ark\Operations\Encounters\EncounterSource::cases() as $source)
+                                <option
+                                    value="{{ $source->value }}"
+                                    @selected(old('referral_source', $referralSource?->value) === $source->value)
+                                >{{ $source->label() }}</option>
+                            @endforeach
+                        </select>
+                        @error('referral_source')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <label for="ingress-contact-type" class="form-label">Customer type</label>
+                        <select id="ingress-contact-type" name="customer_type" @class(['form-select', 'is-invalid' => $errors->has('customer_type')])>
+                            @foreach ($customerTypes as $customerType)
+                                <option
+                                    value="{{ $customerType }}"
+                                    @selected(old('customer_type', $defaultCustomerType) === $customerType)
+                                >{{ $customerType }}</option>
+                            @endforeach
+                        </select>
+                        @error('customer_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
+            </div>
 
-                <div>
-                    <label for="ingress-contact-phone" class="ops-index-field-label">Phone</label>
-                    <input
-                        id="ingress-contact-phone"
-                        name="phone"
-                        type="tel"
-                        value="{{ old('phone', $displayPhone) }}"
-                        required
-                        class="ops-intake-control mt-1 w-full"
-                    >
-                    @error('phone')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
+            <div class="card-footer">
+                <div class="btn-list justify-content-end">
+                    <a href="{{ $cancelUrl }}" class="btn btn-ghost-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save contact</button>
                 </div>
-
-                <div>
-                    <label for="ingress-contact-email" class="ops-index-field-label">Email</label>
-                    <input
-                        id="ingress-contact-email"
-                        name="email"
-                        type="email"
-                        value="{{ old('email', $email) }}"
-                        class="ops-intake-control mt-1 w-full"
-                    >
-                    @error('email')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    @include('operations.customers.partials.contact-preference-select', [
-                        'inputId' => 'ingress-contact-preference',
-                        'labelClass' => 'ops-index-field-label',
-                        'selectClass' => 'ops-intake-control mt-1 w-full',
-                        'selected' => old('contact_preference', $contactPreference?->value),
-                    ])
-                    @error('contact_preference')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    <label for="ingress-contact-referral" class="ops-index-field-label">Referral source</label>
-                    <select id="ingress-contact-referral" name="referral_source" class="ops-intake-control mt-1 w-full">
-                        @foreach (\App\Ark\Operations\Encounters\EncounterSource::cases() as $source)
-                            <option
-                                value="{{ $source->value }}"
-                                @selected(old('referral_source', $referralSource?->value) === $source->value)
-                            >{{ $source->label() }}</option>
-                        @endforeach
-                    </select>
-                    @error('referral_source')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    <label for="ingress-contact-type" class="ops-index-field-label">Customer type</label>
-                    <select id="ingress-contact-type" name="customer_type" class="ops-intake-control mt-1 w-full">
-                        @foreach ($customerTypes as $customerType)
-                            <option
-                                value="{{ $customerType }}"
-                                @selected(old('customer_type', $defaultCustomerType) === $customerType)
-                            >{{ $customerType }}</option>
-                        @endforeach
-                    </select>
-                    @error('customer_type')<p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                </div>
-
-                <div class="flex flex-wrap gap-2 pt-2">
-                    <button type="submit" class="ops-page-link ops-page-link--primary">Save contact</button>
-                    <a href="{{ $cancelUrl }}" class="ops-page-link">Cancel</a>
-                </div>
-            </form>
-        </div>
-    </section>
+            </div>
+        </form>
+    </x-tabler.page>
 </x-operations.app>

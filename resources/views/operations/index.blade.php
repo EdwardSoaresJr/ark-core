@@ -3,7 +3,7 @@
     $isAdvisorTriage = ! $isTechnicianBoard && isset($workboardWorkspace);
 @endphp
 
-<x-operations.app title="Job Board">
+<x-operations.app title="Job Board" :ui="$isAdvisorTriage ? 'legacy' : 'tabler'">
     @if ($isAdvisorTriage)
         @include('operations.workboard.triage')
     @else

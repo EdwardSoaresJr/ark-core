@@ -185,7 +185,7 @@ test('workstation lock screen retired - operational shell stays visible', functi
         ->assertOk()
         ->assertSee('name="ark-workstation-privacy-active" content="0"', false)
         ->assertDontSee('Find advisor', false)
-        ->assertSee('ops-left-rail', false);
+        ->assertSee('id="ark-sidebar-menu"', false);
 
     $this->actingAs($admin)
         ->withSession([WorkstationPresence::SESSION_LOCKED => true])

@@ -190,11 +190,11 @@ test('section workspace is primary and deep point remains available', function (
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.inspection.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-inspection-sections', false)
+        ->assertSee('data-inspection-sections', false)
         ->assertSee('left_front', false)
         ->assertSee('corner_inspection', false)
         ->assertSee('on_the_ground', false)
-        ->assertDontSee('ops-inspection-walk__title', false);
+        ->assertDontSee('data-inspection-walk-title', false);
 
     $item = $repairOrder->inspection->items()->where('label', 'Wipers / washer')->firstOrFail();
 
@@ -204,7 +204,7 @@ test('section workspace is primary and deep point remains available', function (
             'point' => $item->id,
         ]))
         ->assertOk()
-        ->assertSee('ops-inspection-walk', false)
+        ->assertSee('id="inspection-walk"', false)
         ->assertSee('Back to sections', false)
         ->assertSee('Wipers / washer', false);
 });
