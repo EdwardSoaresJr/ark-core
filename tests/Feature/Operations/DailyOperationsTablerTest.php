@@ -370,3 +370,50 @@ test('operational observations render in the Tabler shell for admins only', func
         ->get(route('operations.observations.index'))
         ->assertForbidden();
 });
+
+test('profile renders in the Tabler shell with every tab form for every role', function (ArkRole $role): void {
+    $user = User::factory()->create()->assignRole($role->value);
+
+    $main = dailyOpsTablerMain($this->actingAs($user)->get(route('profile.edit')));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('x-on:change="setTab($event.target.value)"')
+        ->toContain('role="tablist"')
+        ->toContain('aria-controls="profile-panel-workstation-pin"')
+        ->toContain('role="tabpanel"')
+        ->toContain('action="'.route('profile.update').'"')
+        ->toContain('action="'.route('verification.send').'"')
+        ->toContain('action="'.route('profile.appearance.update').'"')
+        ->toContain('action="'.route('password.update').'"')
+        ->toContain('action="'.route('profile.partstech.update').'"')
+        ->toContain('action="'.route('profile.catalogs.update').'"')
+        ->toContain('name="accent_theme"')
+        ->toContain('name="accent_color"')
+        ->toContain('name="display_theme"')
+        ->toContain('name="current_password"')
+        ->toContain('name="password_confirmation"')
+        ->toContain('name="partstech_username"')
+        ->toContain('name="default_parts_catalog"')
+        ->toContain('name="repairlink_color"')
+        ->toContain('name="create[color]"');
+
+    foreach (['profile', 'appearance', 'password', 'workstation-pin', 'partstech', 'catalogs'] as $tab) {
+        expect($main)->toContain('x-show="tab === \''.$tab.'\'"');
+    }
+})->with([
+    'advisor' => [ArkRole::Advisor],
+    'technician' => [ArkRole::Technician],
+    'admin' => [ArkRole::Admin],
+]);
+
+test('the station PIN form keeps its digit filter hook', function (): void {
+    $user = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $user->setOperatorPin('1234');
+    $user->save();
+
+    $html = $this->actingAs($user)->get(route('profile.edit', ['tab' => 'workstation-pin']))->assertOk()->getContent();
+
+    expect($html)->toContain('action="'.route('profile.workstation-pin.update').'"')
+        ->toContain('data-profile-workstation-pin-form')
+        ->toContain("document.querySelectorAll('[data-profile-workstation-pin-form] input[name=\"pin\"]");
+});

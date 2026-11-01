@@ -1,12 +1,15 @@
 @php
+    use App\Ark\Operations\Parts\PartsCatalogButtonColor;
+    use App\Ark\Operations\Parts\PartsCatalogLinks;
+
     $partsCatalogs = $partsCatalogs ?? [];
     $partsCatalogLinks = $partsCatalogLinks ?? [];
     $shopRepairLinkUrl = $shopRepairLinkUrl ?? null;
     $shopNexpartUrl = $shopNexpartUrl ?? null;
     $userRepairLinkUrl = $userRepairLinkUrl ?? null;
     $userNexpartUrl = $userNexpartUrl ?? null;
-    $userRepairLinkColor = $userRepairLinkColor ?? \App\Ark\Operations\Parts\PartsCatalogButtonColor::BLUE;
-    $userNexpartColor = $userNexpartColor ?? \App\Ark\Operations\Parts\PartsCatalogButtonColor::NAVY;
+    $userRepairLinkColor = $userRepairLinkColor ?? PartsCatalogButtonColor::BLUE;
+    $userNexpartColor = $userNexpartColor ?? PartsCatalogButtonColor::NAVY;
     $defaultChoices = collect($partsCatalogs)
         ->filter(fn (array $catalog): bool => ($catalog['mode'] ?? 'catalog') === 'catalog' && ($catalog['can_open'] ?? false))
         ->values();
@@ -19,26 +22,28 @@
         'default_parts_catalog',
         $user->default_parts_catalog ?: ($defaultChoices[0]['key'] ?? ''),
     );
+    $colorLabels = PartsCatalogButtonColor::labels();
 @endphp
 
 <section>
-    <div class="border-b border-slate-200 pb-2">
-        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Estimate toolbar</p>
-        <h2 class="text-base font-black text-slate-950">Parts catalogs</h2>
-        <p class="mt-0.5 text-xs text-slate-500">
+    <div class="mb-3">
+        <div class="subheader">Estimate toolbar</div>
+        <h2 class="h3 mb-1">Parts catalogs</h2>
+        <p class="text-secondary mb-0">
             Default catalog for new repair orders, plus extra catalog buttons and new-tab links. PartsTech is managed by ARK Platform and cannot be edited here.
         </p>
     </div>
 
-    <form method="post" action="{{ route('profile.catalogs.update') }}" class="mt-4 max-w-2xl space-y-5">
+    <form method="post" action="{{ route('profile.catalogs.update') }}" class="d-flex flex-column gap-3" data-profile-catalogs-form>
         @csrf
         @method('patch')
 
-        <label class="block">
-            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Default catalog</span>
+        <div>
+            <label for="profile-default-parts-catalog" class="form-label">Default catalog</label>
             <select
+                id="profile-default-parts-catalog"
                 name="default_parts_catalog"
-                class="mt-1 block h-10 w-full border-slate-300 text-sm text-slate-950 focus:border-slate-500 focus:ring-slate-500"
+                class="form-select"
             >
                 @foreach ($defaultChoices as $catalog)
                     <option value="{{ $catalog['key'] }}" @selected($currentDefault === $catalog['key'])>
@@ -46,152 +51,208 @@
                     </option>
                 @endforeach
             </select>
-        </label>
-
-        <div class="space-y-3 border border-slate-200 p-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">PartsTech</p>
-            <p class="text-sm text-slate-700">ARK Platform catalog. Open and Pull Cart stay on the estimate toolbar. The launch URL cannot be edited.</p>
         </div>
 
-        <div class="space-y-3 border border-slate-200 p-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">RepairLink</p>
-            <p class="text-xs leading-5 text-slate-500">Opens in a new tab. It does not replace PartsTech on the main catalog button.</p>
-            <label class="block">
-                <span class="text-xs font-medium text-slate-500">Launch URL</span>
-                <input
-                    type="text"
-                    name="repairlink_url"
-                    value="{{ old('repairlink_url', $userRepairLinkUrl ?? '') }}"
-                    class="mt-1 h-9 w-full border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="{{ $shopRepairLinkUrl ?: 'https://repairlinkshop.com' }}"
-                    autocomplete="off"
-                >
-            </label>
-            <div class="max-w-xs">
-                @include('operations.parts.partials.catalog-color-select', [
-                    'name' => 'repairlink_color',
-                    'value' => old('repairlink_color', $userRepairLinkColor),
-                ])
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader">PartsTech</div>
+                <p class="mb-0">ARK Platform catalog. Open and Pull Cart stay on the estimate toolbar. The launch URL cannot be edited.</p>
             </div>
-            <p class="text-xs leading-5 text-slate-500">
-                Leave blank to use the shop RepairLink address{{ $shopRepairLinkUrl ? ' ('.$shopRepairLinkUrl.')' : '' }}.
-            </p>
-            @error('repairlink_url')
-                <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
-            @enderror
         </div>
 
-        <div class="space-y-3 border border-slate-200 p-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nexpart</p>
-            <p class="text-xs leading-5 text-slate-500">Catalog on the estimate button only when ARK Platform parts catalog is paid. Otherwise it opens in a new tab.</p>
-            <label class="block">
-                <span class="text-xs font-medium text-slate-500">Launch URL</span>
-                <input
-                    type="text"
-                    name="nexpart_url"
-                    value="{{ old('nexpart_url', $userNexpartUrl ?? '') }}"
-                    class="mt-1 h-9 w-full border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="{{ $shopNexpartUrl ?: 'https://' }}"
-                    autocomplete="off"
-                >
-            </label>
-            <div class="max-w-xs">
-                @include('operations.parts.partials.catalog-color-select', [
-                    'name' => 'nexpart_color',
-                    'value' => old('nexpart_color', $userNexpartColor),
-                ])
-            </div>
-            <p class="text-xs leading-5 text-slate-500">
-                Leave blank to use the shop Nexpart address{{ $shopNexpartUrl ? ' ('.$shopNexpartUrl.')' : '' }}.
-            </p>
-            @error('nexpart_url')
-                <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="space-y-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">My catalog links</p>
-            <p class="text-xs leading-5 text-slate-500">O’Reilly Pro, First Call, AutoZone Pro, or any other https:// catalog. Catalog sits on the estimate button. Link opens in a new tab. These are only on your estimate toolbar.</p>
-
-            @error('catalog_links')
-                <p class="text-xs font-semibold text-red-700">{{ $message }}</p>
-            @enderror
-
-            @foreach ($partsCatalogLinks as $index => $link)
-                <div class="grid gap-2 border border-slate-200 p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1.4fr_8rem_8rem_auto] sm:items-end">
-                    <input type="hidden" name="links[{{ $index }}][key]" value="{{ $link['key'] }}">
-                    <label class="block">
-                        <span class="text-xs font-medium text-slate-500">Name</span>
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader">RepairLink</div>
+                <p class="small text-secondary">Opens in a new tab. It does not replace PartsTech on the main catalog button.</p>
+                <div class="row g-2">
+                    <div class="col-12 col-md">
+                        <label for="profile-repairlink-url" class="form-label">Launch URL</label>
                         <input
                             type="text"
-                            name="links[{{ $index }}][label]"
-                            value="{{ old('links.'.$index.'.label', $link['label']) }}"
-                            maxlength="64"
-                            class="mt-1 h-9 w-full border-slate-300 text-sm text-slate-800"
-                        >
-                    </label>
-                    <label class="block">
-                        <span class="text-xs font-medium text-slate-500">URL</span>
-                        <input
-                            type="text"
-                            name="links[{{ $index }}][url]"
-                            value="{{ old('links.'.$index.'.url', $link['url']) }}"
-                            class="mt-1 h-9 w-full border-slate-300 font-mono text-sm text-slate-800"
+                            id="profile-repairlink-url"
+                            name="repairlink_url"
+                            value="{{ old('repairlink_url', $userRepairLinkUrl ?? '') }}"
+                            @class(['form-control font-monospace', 'is-invalid' => $errors->has('repairlink_url')])
+                            placeholder="{{ $shopRepairLinkUrl ?: 'https://repairlinkshop.com' }}"
                             autocomplete="off"
                         >
-                    </label>
-                    @include('operations.parts.partials.catalog-mode-select', [
-                        'name' => 'links['.$index.'][mode]',
-                        'value' => old('links.'.$index.'.mode', $link['mode'] ?? 'link'),
-                    ])
-                    @include('operations.parts.partials.catalog-color-select', [
-                        'name' => 'links['.$index.'][color]',
-                        'value' => old('links.'.$index.'.color', $link['color'] ?? 'slate'),
-                    ])
-                    <label class="inline-flex min-h-9 items-center gap-2 text-xs font-medium text-slate-600">
-                        <input type="checkbox" name="links[{{ $index }}][delete]" value="1">
-                        Remove
-                    </label>
+                        @error('repairlink_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="profile-repairlink-color" class="form-label">Button color</label>
+                        <select id="profile-repairlink-color" name="repairlink_color" class="form-select">
+                            @foreach ($colorLabels as $colorKey => $colorLabel)
+                                <option value="{{ $colorKey }}" @selected(old('repairlink_color', $userRepairLinkColor) === $colorKey)>{{ $colorLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-            @endforeach
-
-            <div class="grid gap-2 border border-dashed border-slate-300 p-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label class="block">
-                    <span class="text-xs font-medium text-slate-500">Add name</span>
-                    <input
-                        type="text"
-                        name="create[label]"
-                        value="{{ old('create.label') }}"
-                        maxlength="64"
-                        placeholder="O’Reilly Pro"
-                        class="mt-1 h-9 w-full border-slate-300 text-sm text-slate-800"
-                    >
-                </label>
-                <label class="block">
-                    <span class="text-xs font-medium text-slate-500">Add URL</span>
-                    <input
-                        type="text"
-                        name="create[url]"
-                        value="{{ old('create.url') }}"
-                        placeholder="https://"
-                        class="mt-1 h-9 w-full border-slate-300 font-mono text-sm text-slate-800"
-                        autocomplete="off"
-                    >
-                </label>
-                @include('operations.parts.partials.catalog-mode-select', [
-                    'name' => 'create[mode]',
-                    'value' => old('create.mode', 'link'),
-                ])
-                @include('operations.parts.partials.catalog-color-select', [
-                    'name' => 'create[color]',
-                    'value' => old('create.color', ''),
-                    'allowAutomatic' => true,
-                ])
+                <div class="form-hint mt-2">
+                    Leave blank to use the shop RepairLink address{{ $shopRepairLinkUrl ? ' ('.$shopRepairLinkUrl.')' : '' }}.
+                </div>
             </div>
         </div>
 
-        <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-            Save catalogs
-        </button>
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader">Nexpart</div>
+                <p class="small text-secondary">Catalog on the estimate button only when ARK Platform parts catalog is paid. Otherwise it opens in a new tab.</p>
+                <div class="row g-2">
+                    <div class="col-12 col-md">
+                        <label for="profile-nexpart-url" class="form-label">Launch URL</label>
+                        <input
+                            type="text"
+                            id="profile-nexpart-url"
+                            name="nexpart_url"
+                            value="{{ old('nexpart_url', $userNexpartUrl ?? '') }}"
+                            @class(['form-control font-monospace', 'is-invalid' => $errors->has('nexpart_url')])
+                            placeholder="{{ $shopNexpartUrl ?: 'https://' }}"
+                            autocomplete="off"
+                        >
+                        @error('nexpart_url')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="profile-nexpart-color" class="form-label">Button color</label>
+                        <select id="profile-nexpart-color" name="nexpart_color" class="form-select">
+                            @foreach ($colorLabels as $colorKey => $colorLabel)
+                                <option value="{{ $colorKey }}" @selected(old('nexpart_color', $userNexpartColor) === $colorKey)>{{ $colorLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="form-hint mt-2">
+                    Leave blank to use the shop Nexpart address{{ $shopNexpartUrl ? ' ('.$shopNexpartUrl.')' : '' }}.
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="subheader">My catalog links</div>
+            <p class="small text-secondary">O’Reilly Pro, First Call, AutoZone Pro, or any other https:// catalog. Catalog sits on the estimate button. Link opens in a new tab. These are only on your estimate toolbar.</p>
+
+            @error('catalog_links')
+                <div class="alert alert-danger">{{ $message }}</div>
+            @enderror
+
+            <div class="d-flex flex-column gap-2">
+                @foreach ($partsCatalogLinks as $index => $link)
+                    @php
+                        $linkMode = old('links.'.$index.'.mode', $link['mode'] ?? 'link');
+                        $linkColor = old('links.'.$index.'.color', $link['color'] ?? 'slate');
+                    @endphp
+                    <div class="card card-sm" data-profile-catalog-link>
+                        <div class="card-body">
+                            <input type="hidden" name="links[{{ $index }}][key]" value="{{ $link['key'] }}">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    <label for="profile-link-{{ $index }}-label" class="form-label">Name</label>
+                                    <input
+                                        type="text"
+                                        id="profile-link-{{ $index }}-label"
+                                        name="links[{{ $index }}][label]"
+                                        value="{{ old('links.'.$index.'.label', $link['label']) }}"
+                                        maxlength="64"
+                                        class="form-control"
+                                    >
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <label for="profile-link-{{ $index }}-url" class="form-label">URL</label>
+                                    <input
+                                        type="text"
+                                        id="profile-link-{{ $index }}-url"
+                                        name="links[{{ $index }}][url]"
+                                        value="{{ old('links.'.$index.'.url', $link['url']) }}"
+                                        class="form-control font-monospace"
+                                        autocomplete="off"
+                                    >
+                                </div>
+                                <div class="col-6 col-lg-2">
+                                    <label for="profile-link-{{ $index }}-mode" class="form-label">Type</label>
+                                    <select id="profile-link-{{ $index }}-mode" name="links[{{ $index }}][mode]" class="form-select">
+                                        <option value="{{ PartsCatalogLinks::MODE_LINK }}" @selected($linkMode === PartsCatalogLinks::MODE_LINK)>Link (new tab)</option>
+                                        <option value="{{ PartsCatalogLinks::MODE_CATALOG }}" @selected($linkMode === PartsCatalogLinks::MODE_CATALOG)>Catalog</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-lg-2">
+                                    <label for="profile-link-{{ $index }}-color" class="form-label">Button color</label>
+                                    <select id="profile-link-{{ $index }}-color" name="links[{{ $index }}][color]" class="form-select">
+                                        @foreach ($colorLabels as $colorKey => $colorLabel)
+                                            <option value="{{ $colorKey }}" @selected($linkColor === $colorKey)>{{ $colorLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12 col-lg-1">
+                                    <label class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" name="links[{{ $index }}][delete]" value="1">
+                                        <span class="form-check-label">Remove</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
+                @php
+                    $createMode = old('create.mode', 'link');
+                    $createColor = old('create.color', '');
+                @endphp
+                <div class="card card-sm" data-profile-catalog-link-create>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="profile-create-label" class="form-label">Add name</label>
+                                <input
+                                    type="text"
+                                    id="profile-create-label"
+                                    name="create[label]"
+                                    value="{{ old('create.label') }}"
+                                    maxlength="64"
+                                    placeholder="O’Reilly Pro"
+                                    class="form-control"
+                                >
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-4">
+                                <label for="profile-create-url" class="form-label">Add URL</label>
+                                <input
+                                    type="text"
+                                    id="profile-create-url"
+                                    name="create[url]"
+                                    value="{{ old('create.url') }}"
+                                    placeholder="https://"
+                                    class="form-control font-monospace"
+                                    autocomplete="off"
+                                >
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <label for="profile-create-mode" class="form-label">Type</label>
+                                <select id="profile-create-mode" name="create[mode]" class="form-select">
+                                    <option value="{{ PartsCatalogLinks::MODE_LINK }}" @selected($createMode === PartsCatalogLinks::MODE_LINK)>Link (new tab)</option>
+                                    <option value="{{ PartsCatalogLinks::MODE_CATALOG }}" @selected($createMode === PartsCatalogLinks::MODE_CATALOG)>Catalog</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-lg-3">
+                                <label for="profile-create-color" class="form-label">Button color</label>
+                                <select id="profile-create-color" name="create[color]" class="form-select">
+                                    <option value="" @selected($createColor === '' || $createColor === null)>Automatic</option>
+                                    @foreach ($colorLabels as $colorKey => $colorLabel)
+                                        <option value="{{ $colorKey }}" @selected($createColor === $colorKey)>{{ $colorLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-primary">
+                Save catalogs
+            </button>
+        </div>
     </form>
 </section>

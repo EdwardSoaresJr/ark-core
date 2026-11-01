@@ -501,7 +501,7 @@ test('communications sidebar shows pressure count instead of topbar attention bu
     ingestInboundSms('7195554399', 'Need a callback', 'SMsidebar001');
 
     $this->actingAs($advisor)
-        ->get(route('profile.edit'))
+        ->followingRedirects()->get(route('operations.learn.index'))
         ->assertOk()
         ->assertSee('ops-rail-link__count', false)
         ->assertSee('need attention"', false)
