@@ -89,13 +89,13 @@
                                 @endif
                             </div>
                         </div>
-                        {{-- x-operations.lifecycle-status-menu is shared with unmigrated job board and intake screens. --}}
-                        <div class="ark-legacy flex-shrink-0">
+                        <div class="flex-shrink-0">
                             <x-operations.lifecycle-status-menu
                                 :repair-order="$hubRo"
                                 :label="$hubRo->statusDisplayLabel()"
                                 :tone="\App\Ark\Operations\RepairOrders\RepairOrderLifecycleSelectProjection::statusTone($hubRo)"
                                 :status-moves="$hubStatusMoves"
+                                ui="tabler"
                             />
                         </div>
                     </div>
@@ -116,10 +116,10 @@
                         <span class="fw-bold">Workflow:</span> {{ $openRepairOrder->workflowPostureLabel }}
                     </div>
                     @if (is_array($openRepairOrder->orientation ?? null))
-                        {{-- The orientation snippet is shared with unmigrated queue rows. --}}
-                        <div class="ark-legacy bg-white text-dark rounded mt-2">
+                        <div class="mt-2">
                             @include('operations.orientation.partials.snippet', [
                                 'orientation' => array_merge($openRepairOrder->orientation, ['density' => 'standard']),
+                                'ui' => 'tabler',
                             ])
                         </div>
                     @endif

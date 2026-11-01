@@ -90,13 +90,13 @@ test('the worksheet renders on Tabler with no legacy island of its own', functio
     $xpath = worksheetTablerXpath($html);
     $root = $xpath->query('//*[@data-worksheet-root]')->item(0);
 
-    // Left in place: the lazily loaded workspace tab panels, which another slice moves with the rail tabs.
-    $islands = $xpath->query('.//*['.worksheetTablerHasClass('ark-legacy').'][not(.//*[@data-workspace-tab-panel])]', $root);
+    $islands = $xpath->query('.//*['.worksheetTablerHasClass('ark-legacy').']', $root);
 
     expect($root)->toBeInstanceOf(DOMElement::class)
         ->and($islands->length)->toBe(0)
-        ->and($xpath->query('.//*['.worksheetTablerHasClass('ark-worksheet-island').']//*[@data-workspace-tab-panel]', $root)->length)->toBeGreaterThan(0)
-        ->and(substr_count($html, 'ops-estimate-workspace--builder'))->toBe($xpath->query('.//*[@data-workspace-tab-panel]', $root)->length)
+        ->and($xpath->query('.//*['.worksheetTablerHasClass('ark-legacy').']//*[@data-workspace-tab-panel]', $root)->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-workspace-tab-panel]', $root)->length)->toBeGreaterThan(0)
+        ->and($html)->not->toContain('ops-estimate-workspace--builder')
         ->and($html)->not->toContain('ops-worksheet-busy-overlay')
         ->and($html)->not->toContain('ops-service-lane-band')
         ->and($html)->not->toContain('ops-ro-orientation-header')

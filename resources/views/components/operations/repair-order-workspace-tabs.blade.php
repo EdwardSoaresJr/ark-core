@@ -119,9 +119,7 @@
                 <p x-show="tabLoading['{{ $lazyTab }}']" x-cloak class="text-secondary">
                     <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading…
                 </p>
-                <x-operations.worksheet-island>
-                    <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
-                </x-operations.worksheet-island>
+                <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
             </div>
         @endforeach
     </div>

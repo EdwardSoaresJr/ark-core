@@ -323,13 +323,12 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @endif
 
         @if ($usesTabler)
-            <div class="ark-legacy">
-                @stack('ops-ro-orientation-dock')
-
-                @if ($printing)
+            @if ($printing)
+                {{-- Print helpers are scripts and hidden print layouts; they inject their visible prompts into Tabler hosts on the page. --}}
+                <div class="ark-legacy">
                     @include('components.operations.print-helpers')
-                @endif
-            </div>
+                </div>
+            @endif
         @else
             @stack('ops-ro-orientation-dock')
 

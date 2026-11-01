@@ -440,11 +440,9 @@
                     <textarea id="workspace-concern-recommendation-{{ $concern->id }}" name="recommendation" rows="2" class="form-control" placeholder="Recommended repair…">{{ old('recommendation', $concern->recommendation) }}</textarea>
                 </div>
                 <div class="col-12">
-                    <x-operations.worksheet-island>
-                        @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
-                            'visitInsert' => 'insertChip',
-                        ])
-                    </x-operations.worksheet-island>
+                    @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
+                        'visitInsert' => 'insertChip',
+                    ])
                 </div>
             </div>
         </form>

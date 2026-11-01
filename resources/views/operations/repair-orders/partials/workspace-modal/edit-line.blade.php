@@ -22,37 +22,33 @@
 @endphp
 
 @if ($line->type->isNote())
-    <x-operations.worksheet-island>
-        @include('operations.repair-orders.partials.repair-order-note-line-edit', [
-            'line' => $line,
-            'repairOrder' => $repairOrder,
-            'estimateVersion' => $estimateVersion,
-            'cancelUrl' => $cancelUrl,
-            'privacyInputId' => 'workspace-note-private-edit-'.$line->id,
-            'workspaceModalForm' => 'edit-line',
-            'hideInlineChrome' => true,
-        ])
-    </x-operations.worksheet-island>
+    @include('operations.repair-orders.partials.repair-order-note-line-edit', [
+        'line' => $line,
+        'repairOrder' => $repairOrder,
+        'estimateVersion' => $estimateVersion,
+        'cancelUrl' => $cancelUrl,
+        'privacyInputId' => 'workspace-note-private-edit-'.$line->id,
+        'workspaceModalForm' => 'edit-line',
+        'hideInlineChrome' => true,
+    ])
 @elseif ($line->type->isLabor())
-    <x-operations.worksheet-island>
-        @include('operations.repair-orders.partials.repair-order-labor-line-edit', [
-            'line' => $line,
-            'repairOrder' => $repairOrder,
-            'concern' => $concern,
-            'estimateVersion' => $estimateVersion,
-            'cancelUrl' => $cancelUrl,
-            'totals' => $totals,
-            'defaultLaborRate' => $concernDefaultLaborRate,
-            'laborCategories' => $laborCategories,
-            'defaultLaborCategoryKey' => $concernDefaultLaborCategoryKey,
-            'partsMatrices' => $partsMatrices,
-            'defaultPartsMatrixKey' => $concernPartsMatrixKey,
-            'suppressLaborDescription' => $suppressLaborDescription,
-            'workGroupTitle' => $workGroup?->title,
-            'workspaceModalForm' => 'edit-line',
-            'hideInlineChrome' => true,
-        ])
-    </x-operations.worksheet-island>
+    @include('operations.repair-orders.partials.repair-order-labor-line-edit', [
+        'line' => $line,
+        'repairOrder' => $repairOrder,
+        'concern' => $concern,
+        'estimateVersion' => $estimateVersion,
+        'cancelUrl' => $cancelUrl,
+        'totals' => $totals,
+        'defaultLaborRate' => $concernDefaultLaborRate,
+        'laborCategories' => $laborCategories,
+        'defaultLaborCategoryKey' => $concernDefaultLaborCategoryKey,
+        'partsMatrices' => $partsMatrices,
+        'defaultPartsMatrixKey' => $concernPartsMatrixKey,
+        'suppressLaborDescription' => $suppressLaborDescription,
+        'workGroupTitle' => $workGroup?->title,
+        'workspaceModalForm' => 'edit-line',
+        'hideInlineChrome' => true,
+    ])
 @else
     {{-- Part / sublet / fee - reuse the existing inline editor body inside the modal --}}
     <div id="line-editor-{{ $line->id }}">

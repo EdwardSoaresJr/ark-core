@@ -11,8 +11,7 @@
     </div>
 
     @if ($repairOrder->customer)
-        {{-- The reply composer is shared with the communications views and moves with them. --}}
-        <div class="ark-legacy bg-white text-dark border rounded overflow-hidden" data-comms-composer>
+        <div class="border rounded overflow-hidden" data-comms-composer>
             <x-operations.conversation-quick-reply
                 :customer="$repairOrder->customer"
                 :repair-order="$repairOrder"
@@ -25,7 +24,7 @@
                 :has-conversation-history="$hasConversationHistory"
                 :messages-list-ids="['conversation-messages-ro']"
                 :messenger-always-open="filled($repairOrder->customer->messenger_psid)"
-                class="bg-white"
+                ui="tabler"
             />
         </div>
     @endif

@@ -208,9 +208,10 @@ test('the repair order workspace modal is a Tabler modal with every authoring pa
 
     $lineEntry = panelsTablerOne($xpath, './/*[@data-line-entry-panel="simple"]', $lineCreate);
 
-    expect($lineEntry->getAttribute('class'))->toContain('ark-legacy')
-        ->and($lineEntry->getAttribute('class'))->toContain('[&_.ops-line-entry-actions]:hidden')
-        ->and($xpath->query('.//*[@data-workspace-modal-panel][@x-show="task === \'document\'"]//*[contains(@class, "ark-legacy")]', $host)->length)->toBeGreaterThan(0);
+    expect($lineEntry->getAttribute('class'))->not->toContain('ark-legacy')
+        ->and($xpath->query('.//*[@data-line-add]', $lineEntry)->length)->toBe(0)
+        ->and($xpath->query('.//*[contains(@class, "ark-legacy")]', $host)->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-workspace-modal-panel][@x-show="task === \'document\'"]//*[@data-add-document-panel]', $host)->length)->toBe(1);
 });
 
 test('the estimate context panels render Tabler authorization, portal, and parts markup', function (): void {
@@ -409,7 +410,8 @@ test('the lazy workspace tabs render Tabler markup and keep their forms and hook
     expect(panelsTablerLegacyClasses($commsRoot))->toBe([])
         ->and($thread->getAttribute('class'))->toContain('ark-legacy')
         ->and($thread->getAttribute('data-timeline-refresh'))->toBe('comms-tab')
-        ->and($comms->query('//*[@data-comms-composer][contains(@class, "ark-legacy")]')->length)->toBe(1)
+        ->and($comms->query('//*[@data-comms-composer]')->length)->toBe(1)
+        ->and($comms->query('//*[@data-comms-composer][contains(@class, "ark-legacy")]')->length)->toBe(0)
         ->and($workflow->getAttribute('action'))->toBe(route('operations.repair-orders.communications.store', $repairOrder))
         ->and($workflow->getAttribute('data-refresh-scope'))->toBe('comms')
         ->and($comms->query('.//select[@name="communication_type"][contains(@class, "form-select")]', $workflow)->length)->toBe(1)

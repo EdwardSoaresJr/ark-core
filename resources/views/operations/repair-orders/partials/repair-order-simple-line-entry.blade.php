@@ -244,12 +244,14 @@
 
     <p x-show="simpleLineGuidance()" class="form-hint mb-0" x-text="simpleLineGuidance()"></p>
 
-    <div class="d-flex justify-content-end">
-        <button
-            type="submit"
-            class="btn btn-primary"
-            data-line-add
-            x-text="addLineButtonLabel()"
-        ></button>
-    </div>
+    @if ($showSubmit ?? true)
+        <div class="d-flex justify-content-end">
+            <button
+                type="submit"
+                class="btn btn-primary"
+                data-line-add
+                x-text="addLineButtonLabel()"
+            ></button>
+        </div>
+    @endif
 </div>

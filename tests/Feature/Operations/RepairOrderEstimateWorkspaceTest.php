@@ -1547,7 +1547,7 @@ test('opening a repair order lands on the presentation workspace', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-estimate-workspace--builder', false)
+        ->assertSee('data-worksheet-root', false)
         ->assertDontSee('ops-estimate-workspace--review', false)
         ->assertDontSee('data-ro-mode-control', false)
         ->assertDontSee('>Editing<', false)
@@ -1587,7 +1587,7 @@ test('presentation workspace exposes estimate authoring without a separate build
         ->assertSee(route('operations.repair-orders.show', $repairOrder))
         ->assertSee('Building Estimate')
         ->assertSee('Fleet')
-        ->assertSee('ops-estimate-workspace--builder', false)
+        ->assertSee('data-worksheet-root', false)
         ->assertSee('+ Add Work', false)
         ->assertSee('id="workspace-modal-host"', false)
         ->assertSee('submitWorksheetForm', false)

@@ -328,15 +328,15 @@ test('the customer hub document list and add-document panel are Tabler with the 
         ->and(docsTablerStrayIslands($html, '//*[@data-add-document-panel]'))->toBe(0);
 });
 
-test('the repair order workspace keeps the legacy add-document panel', function (): void {
+test('the repair order workspace uses the Tabler add-document panel', function (): void {
     $advisor = actingAsLearnCurrentAdvisor();
     [, $repairOrder] = docsTablerCustomer();
 
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('data-workspace-modal-form="document-upload" class="space-y-3"', false)
-        ->assertDontSee('data-add-document-panel', false);
+        ->assertDontSee('data-workspace-modal-form="document-upload" class="space-y-3"', false)
+        ->assertSee('data-add-document-panel', false);
 });
 
 test('the estimate document page has a Tabler header around the unchanged document body', function (): void {

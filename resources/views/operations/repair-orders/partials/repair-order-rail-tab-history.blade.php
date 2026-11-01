@@ -17,13 +17,10 @@
 @endphp
 
 <div id="history-rail" class="d-flex flex-column gap-3" data-history-panel>
-    {{-- The status history panel is shared with the worksheet and moves with it. --}}
-    <x-operations.worksheet-island>
-        @include('operations.repair-orders.partials.repair-order-lifecycle-panel', [
-            'lifecyclePlacement' => 'history',
-            'repairOrder' => $repairOrder,
-        ])
-    </x-operations.worksheet-island>
+    @include('operations.repair-orders.partials.repair-order-lifecycle-panel', [
+        'lifecyclePlacement' => 'history',
+        'repairOrder' => $repairOrder,
+    ])
 
     <div>
         <h3 class="card-title mb-1">Vehicle History</h3>

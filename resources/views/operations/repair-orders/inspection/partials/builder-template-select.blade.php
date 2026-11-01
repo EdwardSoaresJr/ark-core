@@ -19,7 +19,7 @@
 
 @if ($standard && $ppi)
     <div
-        class="min-w-0"
+        style="min-width: 0"
         data-inspection-template-select
         x-data="{
             currentId: {{ (int) $currentTemplateId }},
@@ -51,7 +51,6 @@
         <form
             method="post"
             action="{{ route('operations.repair-orders.inspection.template.assign', $repairOrder) }}"
-            class="ops-inspection-entry__template-form"
             x-ref="assignForm"
         >
             @csrf
@@ -59,56 +58,47 @@
             <input type="hidden" name="confirm_template_change" :value="confirmOpen ? '1' : '0'">
             <input type="hidden" name="template_correction_reason" :value="reason">
 
-            <label class="ops-inspection-entry__radio" title="Included every vehicle">
-                <input
-                    type="radio"
-                    name="inspection_template_choice"
-                    value="{{ $standard->id }}"
-                    class="ops-inspection-entry__radio-input"
-                    @checked(! $isPpi)
-                    @change="select({{ (int) $standard->id }})"
-                >
-                <span>Standard</span>
-            </label>
-            <label class="ops-inspection-entry__radio" title="Sold / requested this visit - replaces Standard">
-                <input
-                    type="radio"
-                    name="inspection_template_choice"
-                    value="{{ $ppi->id }}"
-                    class="ops-inspection-entry__radio-input"
-                    @checked($isPpi)
-                    @change="select({{ (int) $ppi->id }})"
-                >
-                <span>Pre-Purchase</span>
-            </label>
-
-            <div
-                x-show="confirmOpen"
-                x-cloak
-                class="basis-full mt-1 max-w-xl rounded-sm border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950"
-                data-inspection-template-confirm
-            >
-                <p class="font-semibold">
-                    Change inspection from {{ $currentTemplateName }}?
-                </p>
-                <p class="mt-1 font-medium text-amber-900/90">
-                    Recorded points stay on this repair order as history. The new checklist starts fresh.
-                </p>
-                <label class="mt-2 block font-semibold text-amber-950">
-                    Reason
-                    <select x-model="reason" class="mt-1 block w-full max-w-sm rounded-sm border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-slate-900">
-                        <option value="{{ AssignRepairOrderInspectionTemplateAction::REASON_WRONG_TEMPLATE }}">Wrong inspection chosen</option>
-                    </select>
+            <div class="d-flex flex-wrap gap-3">
+                <label class="form-check form-check-inline mb-0" title="Included every vehicle">
+                    <input
+                        type="radio"
+                        name="inspection_template_choice"
+                        value="{{ $standard->id }}"
+                        class="form-check-input"
+                        @checked(! $isPpi)
+                        @change="select({{ (int) $standard->id }})"
+                    >
+                    <span class="form-check-label">Standard</span>
                 </label>
-                <div class="mt-2 flex flex-wrap gap-2">
+                <label class="form-check form-check-inline mb-0" title="Sold / requested this visit - replaces Standard">
+                    <input
+                        type="radio"
+                        name="inspection_template_choice"
+                        value="{{ $ppi->id }}"
+                        class="form-check-input"
+                        @checked($isPpi)
+                        @change="select({{ (int) $ppi->id }})"
+                    >
+                    <span class="form-check-label">Pre-Purchase</span>
+                </label>
+            </div>
+
+            <div x-show="confirmOpen" x-cloak class="alert alert-warning mt-2 mb-0" role="alert" data-inspection-template-confirm>
+                <h4 class="alert-title">Change inspection from {{ $currentTemplateName }}?</h4>
+                <div class="text-secondary">Recorded points stay on this repair order as history. The new checklist starts fresh.</div>
+                <label class="form-label mt-2" for="inspection-template-reason-{{ $repairOrder->id }}">Reason</label>
+                <select id="inspection-template-reason-{{ $repairOrder->id }}" x-model="reason" class="form-select form-select-sm" style="max-width: 24rem">
+                    <option value="{{ AssignRepairOrderInspectionTemplateAction::REASON_WRONG_TEMPLATE }}">Wrong inspection chosen</option>
+                </select>
+                <div class="btn-list mt-2">
                     <button
                         type="submit"
-                        class="rounded-sm bg-slate-950 px-2.5 py-1 text-xs font-bold text-white hover:bg-slate-800"
+                        class="btn btn-sm btn-primary"
                         @click=" $refs.quickTemplateId.value = pendingId "
                     >Change template</button>
                     <button
                         type="button"
-                        class="rounded-sm border border-slate-300 bg-white px-2.5 py-1 text-xs font-bold text-slate-800 hover:bg-slate-50"
+                        class="btn btn-sm"
                         @click="cancel()"
                     >Keep {{ $currentTemplateName }}</button>
                 </div>
@@ -116,7 +106,7 @@
         </form>
 
         @if ($retainedCount > 0)
-            <p class="mt-1 text-[11px] font-medium text-slate-600" data-inspection-retained-history>
+            <p class="small text-secondary mt-1 mb-0" data-inspection-retained-history>
                 {{ $retainedCount }} {{ $retainedCount === 1 ? 'point' : 'points' }} kept as history
                 @if ($previousTemplateName)
                     from {{ $previousTemplateName }}
@@ -125,7 +115,7 @@
         @endif
 
         @error('inspection_template_id')
-            <p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>
+            <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
     </div>
 @endif

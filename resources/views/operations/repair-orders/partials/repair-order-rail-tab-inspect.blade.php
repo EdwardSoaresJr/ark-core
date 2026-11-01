@@ -41,13 +41,10 @@
             </div>
 
             @if ($canRecord && ! ($repairOrder->isTerminal() ?? false))
-                {{-- The template selector is shared with the inspection views and moves with them. --}}
-                <x-operations.worksheet-island>
-                    @include('operations.repair-orders.inspection.partials.builder-template-select', [
-                        'repairOrder' => $repairOrder,
-                        'inspectionCoverage' => $coverage,
-                    ])
-                </x-operations.worksheet-island>
+                @include('operations.repair-orders.inspection.partials.builder-template-select', [
+                    'repairOrder' => $repairOrder,
+                    'inspectionCoverage' => $coverage,
+                ])
             @endif
 
             <div class="btn-list">

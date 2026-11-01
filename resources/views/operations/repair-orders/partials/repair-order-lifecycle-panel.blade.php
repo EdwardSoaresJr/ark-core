@@ -17,42 +17,46 @@
         $productionMetrics = app(\App\Ark\Operations\RepairOrders\RepairOrderWorkDurationProjection::class)->for($repairOrder);
         $displayTimezone = config('app.display_timezone');
     @endphp
-    <section class="px-3 py-2.5" aria-label="Repair order status history">
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Status history</p>
-        <dl class="mt-2 divide-y divide-slate-100 border border-slate-200 bg-white">
-            @foreach ($lifecycleMilestones as $milestone)
-                <div class="flex items-baseline justify-between gap-3 px-3 py-1.5">
-                    <dt class="min-w-0 text-xs font-medium text-slate-600">{{ $milestone['label'] }}</dt>
-                    <dd class="shrink-0 text-right">
+    <section class="d-flex flex-column gap-3" aria-label="Repair order status history" data-lifecycle-history>
+        <div class="card card-sm">
+            <div class="card-header">
+                <h3 class="card-title">Status history</h3>
+            </div>
+            <div class="list-group list-group-flush">
+                @foreach ($lifecycleMilestones as $milestone)
+                    <div class="list-group-item d-flex align-items-baseline justify-content-between gap-3 py-2">
+                        <span class="small text-secondary">{{ $milestone['label'] }}</span>
                         @if ($milestone['occurred_at'] instanceof \Illuminate\Support\Carbon)
                             <time
                                 datetime="{{ $milestone['occurred_at']->toIso8601String() }}"
-                                class="text-xs font-semibold tabular-nums text-slate-900"
+                                class="small fw-medium ark-money text-nowrap"
                                 title="{{ $milestone['source'] }}"
                             >
                                 {{ $milestone['occurred_at']->timezone($displayTimezone)->format('M j, g:i A') }}
                             </time>
                         @else
-                            <span class="text-xs font-semibold tabular-nums text-slate-300" title="{{ $milestone['note'] ?? $milestone['source'] }}">-</span>
+                            <span class="small text-secondary" title="{{ $milestone['note'] ?? $milestone['source'] }}">-</span>
                         @endif
-                    </dd>
-                </div>
-            @endforeach
-        </dl>
-        @if (collect($productionMetrics)->contains(fn (array $metric): bool => $metric['duration_label'] !== null))
-            <p class="mt-3 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Production metrics</p>
-            <dl class="mt-2 divide-y divide-slate-100 border border-slate-200 bg-white">
-                @foreach ($productionMetrics as $metric)
-                    @if ($metric['duration_label'] !== null)
-                        <div class="flex items-baseline justify-between gap-3 px-3 py-1.5">
-                            <dt class="min-w-0 text-xs font-medium text-slate-600">{{ $metric['label'] }}</dt>
-                            <dd class="shrink-0 text-right">
-                                <span class="text-xs font-semibold tabular-nums text-slate-900">{{ $metric['duration_label'] }}</span>
-                            </dd>
-                        </div>
-                    @endif
+                    </div>
                 @endforeach
-            </dl>
+            </div>
+        </div>
+        @if (collect($productionMetrics)->contains(fn (array $metric): bool => $metric['duration_label'] !== null))
+            <div class="card card-sm">
+                <div class="card-header">
+                    <h3 class="card-title">Production metrics</h3>
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach ($productionMetrics as $metric)
+                        @if ($metric['duration_label'] !== null)
+                            <div class="list-group-item d-flex align-items-baseline justify-content-between gap-3 py-2">
+                                <span class="small text-secondary">{{ $metric['label'] }}</span>
+                                <span class="small fw-medium ark-money text-nowrap">{{ $metric['duration_label'] }}</span>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
         @endif
     </section>
 @elseif ($showRailPressure)

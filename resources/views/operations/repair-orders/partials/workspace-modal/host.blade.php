@@ -119,16 +119,14 @@
         {{-- Concern --}}
         <div data-workspace-modal-panel x-show="task === 'concern'" x-cloak>
             <div id="concern-store">
-                <x-operations.worksheet-island>
-                    @include('operations.repair-orders.partials.repair-order-estimate-new-scope-form', [
-                        'repairOrder' => $repairOrder,
-                        'estimateVersion' => $estimateVersion,
-                        'intakeConfig' => $intakeConfig,
-                        'popupMode' => true,
-                        'hideSubmitActions' => true,
-                        'workspaceModalForm' => 'concern',
-                    ])
-                </x-operations.worksheet-island>
+                @include('operations.repair-orders.partials.repair-order-estimate-new-scope-form', [
+                    'repairOrder' => $repairOrder,
+                    'estimateVersion' => $estimateVersion,
+                    'intakeConfig' => $intakeConfig,
+                    'popupMode' => true,
+                    'hideSubmitActions' => true,
+                    'workspaceModalForm' => 'concern',
+                ])
             </div>
         </div>
 
@@ -193,9 +191,8 @@
                             </div>
                         @endif
 
-                        {{-- The legacy line entry renders its own submit button; the modal footer submits instead. --}}
-                        <template x-if="hasLineType() && type !== 'part'">
-                            <x-operations.worksheet-island class="mb-2 [&_.ops-line-entry-actions]:hidden" data-line-entry-panel="simple">
+                                                <template x-if="hasLineType() && type !== 'part'">
+                            <div class="mb-2" data-line-entry-panel="simple">
                                 @include('operations.repair-orders.partials.repair-order-simple-line-entry', [
                                     'description' => $defaultLineDescription,
                                     'quantity' => $oldBelongs ? old('quantity', '1.00') : '1.00',
@@ -205,11 +202,12 @@
                                     'repairTitle' => $workGroup->title,
                                     'laborMemoryUrl' => route('operations.repair-orders.labor-memory-suggest', $repairOrder),
                                     'repairOrder' => $repairOrder,
+                                    'showSubmit' => false,
                                 ])
-                            </x-operations.worksheet-island>
+                            </div>
                         </template>
                         <template x-if="hasLineType() && type === 'part'">
-                            <x-operations.worksheet-island class="mb-2 [&_.ops-line-entry-actions]:hidden" data-line-entry-panel="part">
+                            <div class="mb-2" data-line-entry-panel="part">
                                 @include('operations.repair-orders.partials.repair-order-part-line-entry', [
                                     'partsMatrices' => $partsMatrices,
                                     'description' => $defaultLineDescription,
@@ -222,8 +220,9 @@
                                     'partWarrantyImpact' => $oldBelongs ? old('part_warranty_impact') : null,
                                     'hasCore' => $oldBelongs && old('has_core'),
                                     'saveOldPart' => $oldBelongs && old('save_old_part'),
+                                    'showSubmit' => false,
                                 ])
-                            </x-operations.worksheet-island>
+                            </div>
                         </template>
                     </form>
                 </div>
@@ -275,9 +274,8 @@
                         </div>
                     @endif
 
-                    {{-- The legacy line entry renders its own submit button; the modal footer submits instead. --}}
-                    <template x-if="hasLineType() && type !== 'part'">
-                        <x-operations.worksheet-island class="mb-2 [&_.ops-line-entry-actions]:hidden" data-line-entry-panel="simple">
+                                        <template x-if="hasLineType() && type !== 'part'">
+                        <div class="mb-2" data-line-entry-panel="simple">
                             @include('operations.repair-orders.partials.repair-order-simple-line-entry', [
                                 'description' => $scopeDefaultLineDescription,
                                 'quantity' => $scopeOldBelongs ? old('quantity', '1.00') : '1.00',
@@ -287,11 +285,12 @@
                                 'repairTitle' => $concern->summary,
                                 'laborMemoryUrl' => route('operations.repair-orders.labor-memory-suggest', $repairOrder),
                                 'repairOrder' => $repairOrder,
+                                'showSubmit' => false,
                             ])
-                        </x-operations.worksheet-island>
+                        </div>
                     </template>
                     <template x-if="hasLineType() && type === 'part'">
-                        <x-operations.worksheet-island class="mb-2 [&_.ops-line-entry-actions]:hidden" data-line-entry-panel="part">
+                        <div class="mb-2" data-line-entry-panel="part">
                             @include('operations.repair-orders.partials.repair-order-part-line-entry', [
                                 'partsMatrices' => $partsMatrices,
                                 'description' => $scopeDefaultLineDescription,
@@ -304,8 +303,9 @@
                                 'partWarrantyImpact' => $scopeOldBelongs ? old('part_warranty_impact') : null,
                                 'hasCore' => $scopeOldBelongs && old('has_core'),
                                 'saveOldPart' => $scopeOldBelongs && old('save_old_part'),
+                                'showSubmit' => false,
                             ])
-                        </x-operations.worksheet-island>
+                        </div>
                     </template>
                 </form>
             </div>
@@ -681,17 +681,14 @@
             @endphp
 
             @unless ($isTerminal)
-                {{-- The add-document panel is shared with the document views and moves with them. --}}
-                <div class="ark-legacy bg-white text-dark">
-                    @include('operations.documents.partials.add-document-panel', [
-                        'customer' => $repairOrder->customer,
-                        'repairOrder' => $repairOrder,
-                        'storeUrl' => route('operations.repair-orders.documents.store', $repairOrder),
-                        'scanUrl' => route('operations.repair-orders.documents.scan', $repairOrder),
-                        'attachUrl' => route('operations.repair-orders.documents.attach', $repairOrder),
-                        'attachableDocuments' => $attachableDocuments ?? collect(),
-                    ])
-                </div>
+                @include('operations.documents.partials.add-document-panel-tabler', [
+                    'customer' => $repairOrder->customer,
+                    'repairOrder' => $repairOrder,
+                    'storeUrl' => route('operations.repair-orders.documents.store', $repairOrder),
+                    'scanUrl' => route('operations.repair-orders.documents.scan', $repairOrder),
+                    'attachUrl' => route('operations.repair-orders.documents.attach', $repairOrder),
+                    'attachableDocuments' => $attachableDocuments ?? collect(),
+                ])
             @endunless
 
             @if ($roDocuments->isNotEmpty())
@@ -733,12 +730,12 @@
                                     @endcanany
                                 </div>
                             </div>
-                            {{-- The document email form is shared with the document views and moves with them. --}}
-                            <div class="ark-legacy bg-white text-dark mt-2" x-show="emailOpen" x-cloak>
+                            <div class="mt-2" x-show="emailOpen" x-cloak>
                                 @include('operations.documents.partials.document-email-form', [
                                     'customer' => $repairOrder->customer,
                                     'doc' => $doc,
                                     'compact' => true,
+                                    'ui' => 'tabler',
                                 ])
                             </div>
                         </div>
