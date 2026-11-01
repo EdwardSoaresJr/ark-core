@@ -211,9 +211,9 @@ test('each shell marks the current destination', function (): void {
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     $this->actingAs($admin)
-        ->get(route('operations.reports.index'))
+        ->get(route('operations.shop.communications'))
         ->assertOk()
-        ->assertSee('href="'.route('operations.reports.index').'" class="ops-rail-link ops-rail-link--active"', false);
+        ->assertSee('href="'.route('operations.shop.communications').'" class="ops-rail-link ops-rail-link--active"', false);
 
     $this->actingAs($admin)
         ->get(route('operations.customers.search'))
