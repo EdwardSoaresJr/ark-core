@@ -97,27 +97,27 @@
             : null);
 @endphp
 
-<div class="space-y-3" data-appointment-slot-minutes="{{ $slotMinutes }}">
+<div class="d-flex flex-column gap-3" data-appointment-slot-minutes="{{ $slotMinutes }}">
     @if ($preferredPeriod)
         <input type="hidden" name="preferred_period" value="{{ $preferredPeriod }}">
         @if ($preferredDate)
             <input type="hidden" name="preferred_date" value="{{ $preferredDate }}">
         @endif
-        <div class="rounded-sm border border-sky-200 bg-sky-50 px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-sky-700">Requested</p>
-            <p class="mt-0.5 text-sm font-semibold text-slate-950">{{ $requestPreferenceDetail }}</p>
-            <p class="mt-1 text-[11px] text-slate-600">Choose an exact appointment time. Preference guides the options - it is not the confirmed appointment.</p>
+        <div class="alert alert-info mb-0" data-appointment-requested>
+            <div class="subheader mb-1">Requested</div>
+            <div class="fw-medium">{{ $requestPreferenceDetail }}</div>
+            <div class="small text-secondary mt-1">Choose an exact appointment time. Preference guides the options - it is not the confirmed appointment.</div>
         </div>
     @endif
 
-    <div class="grid gap-3 sm:grid-cols-[1.2fr_1fr_1fr]">
-        <label class="block">
-            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Day</span>
-            <input type="date" name="starts_date" value="{{ old('starts_date', $start['date']) }}" required class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
-        </label>
-        <label class="block">
-            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Time</span>
-            <select name="starts_time" required class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm @error('starts_time') border-rose-400 @enderror">
+    <div class="row g-3">
+        <div class="col-sm-4">
+            <label class="form-label" for="appointment-starts-date">Day</label>
+            <input type="date" id="appointment-starts-date" name="starts_date" value="{{ old('starts_date', $start['date']) }}" required class="form-control">
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label" for="appointment-starts-time">Time</label>
+            <select id="appointment-starts-time" name="starts_time" required @class(['form-select', 'is-invalid' => $errors->has('starts_time')])>
                 @if ($preferredPeriod)
                     <option value="" @selected($selectedTime === '' || $selectedTime === null)>Select a time…</option>
                     @if ($timeOptionsPreferred !== [])
@@ -140,19 +140,19 @@
                 @endif
             </select>
             @if ($outsidePreference && $requestPreferenceDetail)
-                <span class="mt-0.5 block text-[11px] font-semibold text-amber-800">
+                <div class="small fw-medium text-warning mt-1">
                     Outside customer request - {{ $requestPreferenceDetail }}.
-                </span>
+                </div>
             @endif
-        </label>
-        <label class="block">
-            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Appointment length</span>
-            <select name="duration_minutes" required class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label" for="appointment-duration">Appointment length</label>
+            <select id="appointment-duration" name="duration_minutes" required class="form-select">
                 @foreach ($durationOptions as $value => $label)
                     <option value="{{ $value }}" @selected((int) old('duration_minutes', $resolvedDuration) === (int) $value)>{{ $label }}</option>
                 @endforeach
             </select>
-        </label>
+        </div>
     </div>
 
     <x-operations.appointment-reserved-labor

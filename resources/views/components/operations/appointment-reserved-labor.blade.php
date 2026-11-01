@@ -15,7 +15,8 @@
 @endphp
 
 <div
-    {{ $attributes->class('rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2') }}
+    {{ $attributes->class('form-fieldset mb-0') }}
+    data-appointment-reserved-labor
     x-data="{
         manual: @js($isManual),
         overrideHours: @js($isManual ? (string) $overrideRaw : ''),
@@ -63,52 +64,41 @@
         },
     }"
 >
-    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Reserved labor</p>
+    <div class="subheader mb-2">Reserved labor</div>
 
-    <div x-show="! manual" class="mt-1 space-y-1.5">
-        <p class="text-sm font-semibold text-slate-950">
+    <div x-show="! manual">
+        <div class="fw-medium">
             <span x-text="formatHours(inferredHours)">{{ $inferredLabel }} hr</span>
-            <span class="font-normal text-slate-500"> · Auto</span>
-        </p>
-        <p class="text-[11px] text-slate-600">Automatically matches appointment length unless you override it.</p>
-        <button
-            type="button"
-            class="h-8 border border-slate-300 bg-white px-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-800 hover:bg-slate-50"
-            @click="enableOverride()"
-        >
-            Override
-        </button>
+            <span class="fw-normal text-secondary"> · Auto</span>
+        </div>
+        <div class="small text-secondary mt-1 mb-2">Automatically matches appointment length unless you override it.</div>
+        <button type="button" class="btn" @click="enableOverride()">Override</button>
     </div>
 
-    <div x-show="manual" @unless ($isManual) x-cloak @endunless class="mt-1 space-y-1.5">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <label class="block w-28">
+    <div x-show="manual" @unless ($isManual) x-cloak @endunless>
+        <div class="row g-2 align-items-center">
+            <div class="col-5 col-sm-3">
                 <input
                     type="text"
                     inputmode="decimal"
                     name="estimated_labor_hours"
+                    aria-label="Reserved labor hours"
                     x-ref="laborInput"
                     x-model="overrideHours"
                     data-numeric-only
                     value="{{ $isManual ? $overrideRaw : '' }}"
                     @unless ($isManual) disabled @endunless
                     x-bind:disabled="! manual"
-                    class="h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm @error('estimated_labor_hours') border-rose-400 @enderror"
+                    @class(['form-control', 'is-invalid' => $errors->has('estimated_labor_hours')])
                 >
-            </label>
-            <p class="text-sm text-slate-600">
+            </div>
+            <div class="col-auto text-secondary">
                 <span x-text="formatHours(overrideHours)">{{ $isManual ? $inferredLabel : '' }}</span>
                 <span> · Manual</span>
-            </p>
+            </div>
         </div>
-        <p class="text-[11px] text-slate-600">Use this when the job will consume more or less shop capacity than the appointment block.</p>
-        <button
-            type="button"
-            class="h-8 border border-slate-300 bg-white px-2.5 text-[11px] font-bold uppercase tracking-wide text-slate-800 hover:bg-slate-50"
-            @click="resetToAuto()"
-        >
-            Reset to appointment length
-        </button>
+        <div class="small text-secondary mt-1 mb-2">Use this when the job will consume more or less shop capacity than the appointment block.</div>
+        <button type="button" class="btn" @click="resetToAuto()">Reset to appointment length</button>
     </div>
 
     {{-- Auto mode submits blank; disabled when Manual so only the override input posts. --}}
@@ -121,6 +111,6 @@
     >
 
     @error('estimated_labor_hours')
-        <p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>
+        <div class="small fw-medium text-danger mt-1">{{ $message }}</div>
     @enderror
 </div>

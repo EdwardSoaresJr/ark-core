@@ -240,7 +240,7 @@
                             </div>
                         </fieldset>
 
-                        <div class="ark-legacy bg-white text-dark border rounded p-3 mb-3" data-appointment-time-fields>
+                        <div class="mb-3" data-appointment-time-fields>
                             <x-operations.appointment-datetime-fields
                                 :starts-at="old('starts_at', \App\Ark\Operations\Settings\ShopDisplayTimezone::present($appointment->starts_at)->format('Y-m-d\TH:i'))"
                                 :ends-at="old('ends_at', \App\Ark\Operations\Settings\ShopDisplayTimezone::present($appointment->ends_at)->format('Y-m-d\TH:i'))"

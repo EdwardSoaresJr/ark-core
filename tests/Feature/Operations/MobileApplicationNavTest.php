@@ -14,7 +14,7 @@ test('phone navigation reuses the operations rail', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
     $html = $this->actingAs($advisor)
-        ->get(route('operations.schedule'))
+        ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('data-ops-mobile-nav-open', false)
         ->assertSee('aria-controls="ops-mobile-nav"', false)
