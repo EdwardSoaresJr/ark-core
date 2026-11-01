@@ -106,8 +106,8 @@ final class InitiatePaymentCaptureAction
             $attempt->save();
 
             $detail = ($response['reason_code'] ?? null) === 'cloud_unavailable'
-                ? 'Payment capture is unavailable - Platform is not connected. Use Record Payment for external card payments.'
-                : 'Payment capture is unavailable - Platform did not respond. Use Record Payment if the card was taken outside ARK.';
+                ? 'Card processing is unavailable. If the card was taken on another terminal, record the payment instead.'
+                : 'Card processing did not respond. If the card was taken on another terminal, record the payment instead.';
 
             throw ValidationException::withMessages([
                 'capture' => $detail,

@@ -13,6 +13,8 @@ use App\Ark\Operations\Payments\Capture\PaymentCaptureReadinessProjection;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
@@ -59,6 +61,60 @@ test('an issued invoice keeps cash on the ledger payment path', function () {
         ->assertSee(now()->timezone(config('app.display_timezone'))->format('M j, Y'), false)
         ->assertSee(route('operations.repair-orders.payment.update', $repairOrder), false)
         ->assertDontSee(route('operations.repair-orders.deposit.update', $repairOrder), false);
+});
+
+function paymentWorkspaceText(string $html): string
+{
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+
+    $workspace = (new DOMXPath($document))->query('//*[@data-payment-workspace]')->item(0);
+
+    expect($workspace)->toBeInstanceOf(DOMElement::class);
+
+    return preg_replace('/\s+/', ' ', $workspace->textContent);
+}
+
+test('take payment without integrated card processing shows recorded methods and no processor notice', function () {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+    $repairOrder = financialCloseoutRepairOrder();
+    issueFinalInvoiceFor($repairOrder);
+
+    $response = $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
+        ->assertOk()
+        ->assertDontSee('data-card-processing-notice', false)
+        ->assertSee('>Cash</button>', false)
+        ->assertSee('>Check</button>', false)
+        ->assertSee('>External Card</button>', false)
+        ->assertSee('>EFT</button>', false);
+    $readiness = app(PaymentCaptureReadinessProjection::class)->current();
+
+    expect(paymentWorkspaceText($response->getContent()))->not->toContain('Platform')
+        ->and($readiness['ready'])->toBeFalse()
+        ->and($readiness['status'])->toBe('cloud_disconnected')
+        ->and($readiness['message'])->toBeNull();
+});
+
+test('take payment notes an unreachable card processor without calling it a payment failure', function () {
+    enableHostedPlatformPayments();
+    Http::fake(['https://cloud.test/*' => fn () => throw new ConnectionException('down')]);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+    $repairOrder = financialCloseoutRepairOrder();
+    issueFinalInvoiceFor($repairOrder);
+
+    $response = $this->get(route('operations.repair-orders.show', $repairOrder->fresh()))
+        ->assertOk()
+        ->assertSee('data-card-processing-notice', false)
+        ->assertSee('>Cash</button>', false)
+        ->assertSee('>External Card</button>', false);
+    $text = paymentWorkspaceText($response->getContent());
+
+    expect($text)->toContain('Card processing is temporarily unavailable. Recorded payment methods still work.')
+        ->and($text)->not->toContain('Platform')
+        ->and($response->getContent())->not->toMatch('/<div class="alert alert-warning[^"]*">\s*Card processing/')
+        ->and(app(PaymentCaptureReadinessProjection::class)->current()['status'])->toBe('cloud_disconnected');
 });
 
 test('a rejected amount reopens the workspace with the error inside it', function () {

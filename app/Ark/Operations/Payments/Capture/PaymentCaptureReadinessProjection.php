@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Payments\Capture;
 
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Platform\PlatformConnection;
 
 /**
  * Disposable readiness projection for Take Payment (devices + public SDK config).
@@ -34,6 +35,10 @@ final class PaymentCaptureReadinessProjection
 
         $response = app(ArkPaymentsClient::class)->readiness();
         if (($response['reason_code'] ?? null) === 'cloud_unavailable') {
+            // A shop without integrated card processing gets no message: recorded payment methods are its normal path.
+            $connection = PlatformConnection::current();
+            $configured = $connection->isConnected() && filled($connection->credential());
+
             return self::$memo = [
                 'ready' => false,
                 'status' => 'cloud_disconnected',
@@ -42,7 +47,7 @@ final class PaymentCaptureReadinessProjection
                 'supports_portal' => false,
                 'devices' => [],
                 'public_config' => null,
-                'message' => 'Platform is not connected.',
+                'message' => $configured ? 'Card processing is temporarily unavailable.' : null,
                 'provider' => null,
             ];
         }
@@ -56,7 +61,7 @@ final class PaymentCaptureReadinessProjection
                 'supports_portal' => false,
                 'devices' => [],
                 'public_config' => null,
-                'message' => 'Payment capture readiness unavailable.',
+                'message' => 'Card processing is temporarily unavailable.',
                 'provider' => null,
             ];
         }
