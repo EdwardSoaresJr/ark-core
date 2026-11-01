@@ -125,6 +125,9 @@ Build record pages from these. Do not copy their markup into a view.
 | `<x-tabler.empty-state icon clear-url>` | The empty result, with "Clear search" when `clear-url` is set. |
 | `<x-tabler.status-badge :tone>` | A repair-order status badge. |
 | `<x-tabler.vehicle-identity-chip :vehicle>` | "VIN missing" with its hint as a tooltip. The legacy chip partial stays for unmigrated repair-order screens. |
+| `<x-tabler.vin-display :vin>` | The VIN with the last eight characters bold, copy on click with a Copied badge, and the phonetic readback on hover or focus (`arkVinDisplay`). The readback panel is still the legacy partial. `x-operations.vin-display` stays for the repair order workspace. |
+| `<x-tabler.help-tip :text [label]>` | A Tabler `form-help` mark with the text in a popover on hover or focus. `x-operations.help-tip` stays for settings and the repair order workspace. |
+| `<x-tabler.workspace-modal [initial-task] [initial-context]>` | `arkWorkspaceModal` in a Tabler modal: same host id, refs, keyboard handling, validation message, and footer buttons as `x-operations.workspace-modal`, full screen on phones. Panels are `<div data-workspace-modal-panel x-show="…">`. The repair order workspace keeps the legacy component. |
 | `<x-tabler.icon name>` | A Tabler Icons outline icon. |
 - Pagination: `$paginator->links('pagination::bootstrap-5')`.
 - Tooltips, dropdowns, collapse, and modals use Tabler's `data-bs-*` attributes. Do not add Alpine or Preline for those.
@@ -152,9 +155,11 @@ Design the phone layout first, not as a squeezed desktop.
 
 ## Migration inventory
 
-The target is the 58 staff pages, the views that render `<x-operations.app>`. Update this list in the pull request that migrates a view. Names in code are route names.
+The target is the 58 staff pages, the views that render `<x-operations.app>`. Update this list in the pull request that migrates a view. Names in code are route names. Reachability was checked by requesting every staff GET route as an admin, an advisor, and a technician, and following the views, includes, links, and script consumers each one renders.
 
-**Complete (7):** on Tabler with no legacy islands and no open corrections.
+A page counts as complete only when nothing reachable on it is still legacy. Code that never renders does not hold a page back, but it is listed under Unreachable.
+
+**Complete (8):** on Tabler with no reachable legacy markup and no open corrections.
 
 - Customers (`operations.customers.search`)
 - Vehicles (`operations.vehicles.search`)
@@ -163,8 +168,16 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 - Appointment detail (`operations.appointments.show`)
 - Schedule appointment (`operations.schedule`). The sidebar does not highlight Schedule on this page, because `StaffNavigation` matches only `operations.appointments.*`. That belongs to a shared navigation change, not a view slice.
 - Time clock (`operations.time-clock.index`)
+- Check In (`operations.intake.create`)
 
-**Partially migrated (7):** on Tabler, with legacy islands or corrections left.
+**Partial, actionable (4):** on Tabler, with legacy sections that can migrate now.
+
+- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
+- **Dashboard (`operations.today`):** technician lanes.
+- **Schedule (`operations.appointments.index`):** the calendar board.
+- **Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions):** the Customer Decisions lanes (`customer-decision-pressure-section` and its rows, which carry the quick-add and schedule panels driven by `ark-work-quick-add.js`).
+
+**Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
 
 - **Repair order workspace (`operations.repair-orders.show`):**
   - **High priority before staff Tabler is complete:** the refinement pass on the header and command bar. Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
@@ -173,29 +186,34 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
     - the engine oil panel;
     - the workspace modal host;
     - the authorization exception form;
-    - the journey card, which renders only when the feature is enabled;
     - the RTE labor panel;
     - the rail's Authorization, Portal, and Parts tabs;
     - the labor guide and parts catalog toolbar buttons;
     - the visit signals.
-- **Customer hub (`operations.customers.show`):** the conversation context panel (Work tab), quick reply (Comms tab), document list (Documents tab), VIN display (Vehicles tab), the journey card, and the hub workspace modal.
-- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
-- **Dashboard (`operations.today`):** technician lanes.
-- **Schedule (`operations.appointments.index`):** the calendar board.
-- **Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions):** the Customer Decisions lanes (`customer-decision-pressure-section` and its rows, which carry the quick-add and schedule panels driven by `ark-work-quick-add.js`). The Comms queue route redirects to the communications inbox.
-- **Check In (`operations.intake.create`):** the previous-visit suggestions under Reason for visit (`repair-order-mention-suggest`, shared with the repair order workspace modal) and the billing class help tip (`x-operations.help-tip`, which wraps itself in an island).
+  - Blocked on the header pass and on the financial and authorization workstream.
+- **Customer hub (`operations.customers.show`):** the conversation context panel (Work tab), the reply composer and message rows (Comms tab), and the document list (Documents tab), all in `.ark-legacy`. They are shared with the communications and document views and move with them. Everything else on the hub, including the customer and vehicle edit modal and the VIN display, is Tabler. The add-document panel inside the modal stays legacy for the same reason.
 
-**Not started (42):**
+**Not started (30):** live pages to migrate. "Navigation" pages are linked from the sidebar, a tab, or a page header; "internal" pages open only from another page or a direct link.
 
-- **Daily operations (7):** Workboard (`operations.workboard`), briefing, new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`). The staff history page corrects and deletes compensable hours, so it migrates on its own.
-- **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation. These wait for the decision on the technician phone workflow.
-- **Communications (10):** calls, the inbox, attention, history, and internal workspace views, conversation reply, and shop communications (index, device, person, and setup required).
-- **Owner and reports (9):** business, day review, staff coaching, call intelligence (index and detail), technician production (index and detail), reports index, and operational report.
-- **Learning (3):** ARKademy, print selection, and team progress.
-- **Account and system (4):** profile, ARK Cloud connecting, Platform clusters, and the 409 error page.
-- **Financial and authorization (6):** the estimate document, the document viewer, record testing outcome, the dealer parts quote, parts matrix tuning, and the end-of-day report. These wait for the release-blocker workstream.
+- **Communications (8):** inbox, history, internal, and calls (navigation); shop communications index, device, and person (navigation); shop communications setup required (internal).
+- **Owner and reports (10):** business (Cockpit), reports index, operational report, day review, technician production index and detail, and the Scoreboard tab (navigation); call intelligence index and detail, and staff coaching (internal).
+- **Learning (3):** ARKademy, print selection, and team progress (navigation).
+- **Daily operations (4):** Workboard (`operations.workboard`), which is the technician home because technicians get 403 on `/app` (navigation); new contact (`operations.leads.create-contact`), caller lookup, and observations (internal).
+- **Account and system (5):** profile and the staff time clock history (`operations.time-clock.staff`) (navigation); ARK Cloud connecting, Platform clusters, and the 409 error page (internal). The staff history page corrects and deletes compensable hours, so it migrates on its own.
 
-**Unreachable views (2):** their routes redirect, so no one sees them; remove them rather than migrate. `operations/intake/index` (`operations.intake.index` redirects to the Job Board) and `operations/communications/workboard` (`operations.communications.workboard` redirects to the inbox). The Comms work queue and `operations/partials/work-tab-queues` are unreachable the same way.
+**Deferred (9):** live pages waiting for a decision or another workstream.
+
+- **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation, all internal. They wait for the decision on the technician phone workflow.
+- **Financial and authorization (6):** the end-of-day report (navigation); the estimate document, the document viewer, record testing outcome, the dealer parts quote, and parts matrix tuning (internal). They wait for the release-blocker workstream.
+
+**Unreachable (5 views, plus partials):** no request renders them. Remove them rather than migrate; nothing here is deleted yet.
+
+- `operations/intake/index`: `operations.intake.index` redirects to the Job Board.
+- `operations/communications/workboard`: `operations.communications.workboard` redirects to the inbox.
+- The briefing view: its route redirects, and its controller is not routed.
+- The conversation reply view: its route goes to a redirect controller, and the reply controller is not routed.
+- The communications attention workspace view: nothing renders it.
+- Partials: the Comms work queue, `operations/partials/work-tab-queues`, `week-schedule-list`, the advisor triage branch of the workboard, and `operations.repair-orders.partials.operational-journey-card` on the customer hub and the repair order workspace. Both controllers always pass `operationalJourney` as `null`, so the card never renders. It stays legacy and in place.
 
 **Known issues across migrated pages:**
 
@@ -258,12 +276,11 @@ Migrated to Tabler:
 
 Unchanged: the controller, routes, permissions, tab and deep-link parameters (`tab`, `vehicle`, `compose`, `doc_q`, `doc_type`, the `#customer-*` and `#vehicle-*` anchors), form field names, and the Alpine state in `ark-customer-hub-tabs.js` and `ark-customer-hub-comms.js`.
 
-Still on `app.css`, in `.ark-legacy`: the workspace modal and its customer, vehicle, and document forms (`hub-workspace-modal`), the conversation context panel on the Work tab, the reply composer and message rows on the Comms tab, the document list, the operational journey card, and the VIN display. All are shared with unmigrated views.
+The edit modal (`hub-workspace-modal`) is `<x-tabler.workspace-modal>`. Edit Customer, Edit Vehicle, and Add Vehicle keep their routes (`operations.customers.update`, `operations.customers.vehicles.update`, `operations.customers.vehicles.store`), methods, field names and order, `CustomersManage` gating, and `arkVehicleDecode` VIN and plate decoding. Server errors mark the field `is-invalid` with its message and reopen the same panel; the required-field check shows the modal's alert. The vehicle fields are `workspace-vehicle-fields-tabler`; the repair order workspace keeps `workspace-vehicle-fields`. `ark-workspace-modal.js` finds panels by `[data-workspace-modal-panel]` as well as the legacy class. The Vehicles tab shows the VIN with `<x-tabler.vin-display>`, or the identity chip when it is missing.
 
-Known visual limitations, both from the legacy components:
+Still on `app.css`, in `.ark-legacy`: the conversation context panel on the Work tab, the reply composer and message rows on the Comms tab, the document list, and the add-document panel inside the modal. All are shared with the communications and document views. The operational journey card is also legacy, but never renders (see Unreachable).
 
-- In the dark theme the Work tab's conversation context panel, the Comms tab panels, and the workspace modal stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
-- The VIN display's muted prefix (all but the highlighted last eight characters) uses slate-700, which has low contrast on a dark card. It is the same on legacy pages in dark mode (slate-700 on slate-800).
+Known visual limitation: in the dark theme the Work tab's conversation context panel, the Comms tab panels, and the add-document panel stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
 
 ### Repair orders index (`operations.repair-orders.index`)
 
@@ -481,5 +498,7 @@ The check-in workspace: recognize the customer, choose or add the vehicle, and o
 - **Open step:** Reason for visit and Visit & defaults cards. Visit and billing class are `form-selectgroup` pills, so each choice is a full-size touch target. Open Repair Order is full width on phones.
 
 The page still shows only check-in markup. `customer-contact-lines` renders the result's contact lines in Tabler markup; `customer-search-card-badges` and `customer-search-card-footnote` had no other user and are removed.
+
+The billing class help is `<x-tabler.help-tip>`, a popover on hover or focus. The previous-visit suggestions under Reason for visit are a Tabler `dropdown-menu` listbox (`repair-order-mention-suggest-tabler`), driven by the same `arkRoMention` component; the repair order workspace keeps `repair-order-mention-suggest`. Check In has no legacy markup left.
 
 Unchanged: the intake controllers, routes, query parameters, form fields, and the `arkIntake*`, `arkVehicleDecode`, and `arkRoMention` components. Three script lines moved off legacy classes: `ark-intake-workspace-memory.js` finds the workspace by `[data-intake-find-workspace]` and `[data-intake-open-stack]`, and `ark-intake-find-customer.js` marks the selected result with `border-primary`.

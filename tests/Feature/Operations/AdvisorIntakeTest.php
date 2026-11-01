@@ -44,7 +44,9 @@ test('advisor intake workspace renders traditional flow sections', function () {
         ->assertSee('New customer')
         ->assertSee('How they heard about us')
         ->assertSee('Billing class')
-        ->assertSee('ops-help-tip', false)
+        ->assertSee('aria-label="Billing class help"', false)
+        ->assertSee('data-bs-toggle="popover"', false)
+        ->assertDontSee('ops-help-tip', false)
         ->assertSee('Sets default billing for new concerns on this customer.')
         ->assertDontSee('More details (optional)')
         ->assertSee('Address')
@@ -144,7 +146,8 @@ test('check in renders on tabler across the customer, vehicle, and open steps', 
         ->and($open->query('.//textarea[@name="visit_reason"]['.$hasClass('form-control').']', $form)->length)->toBe(1)
         ->and($open->query('.//input[@name="visit_mode"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBe(4)
         ->and($open->query('.//input[@name="billing_class"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBeGreaterThanOrEqual(1)
-        ->and($open->query('.//*['.$hasClass('ark-legacy').']//*['.$hasClass('ark-ro-mention__menu').']', $form)->length)->toBe(1)
+        ->and($open->query('.//*[@data-ro-mention-menu]['.$hasClass('dropdown-menu').'][@role="listbox"]', $form)->length)->toBe(1)
+        ->and($open->query('.//*['.$hasClass('ark-legacy').']', $form)->length)->toBe(0)
         ->and($open->query('.//button[@type="submit"]['.$hasClass('btn-primary').'][normalize-space()="Open Repair Order"]', $form)->length)->toBe(1);
 });
 

@@ -220,12 +220,10 @@
         </x-tabler.page>
     </div>
 
-    <div class="ark-legacy">
-        @include('operations.customers.partials.hub-workspace-modal', [
-            'customer' => $customer,
-            'customerTypes' => $customerTypes,
-            'initialTask' => $hubInitialTask,
-            'initialContext' => $hubInitialContext,
-        ])
-    </div>
+    @include('operations.customers.partials.hub-workspace-modal', [
+        'customer' => $customer,
+        'customerTypes' => $customerTypes,
+        'initialTask' => $hubInitialTask,
+        'initialContext' => $hubInitialContext,
+    ])
 </x-operations.app>

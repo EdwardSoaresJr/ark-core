@@ -72,7 +72,9 @@
                             Plate {{ $vehicle->plate ?: 'n/a' }}@if ($vehicle->plate_state) / {{ $vehicle->plate_state }}@endif
                             ·
                             @if ($vehicle->normalized_vin || $vehicle->vin)
-                                <span class="ark-legacy"><x-operations.vin-display :vin="$vehicle->normalized_vin ?: $vehicle->vin" /></span>
+                                <x-tabler.vin-display :vin="$vehicle->normalized_vin ?: $vehicle->vin" />
+                            @elseif ($vehicle->identityPressure()->showsChip())
+                                <x-tabler.vehicle-identity-chip :vehicle="$vehicle" />
                             @else
                                 VIN n/a
                             @endif
