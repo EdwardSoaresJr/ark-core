@@ -225,7 +225,6 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations', 'staff', 'excellence', 'payments', 'partstech'];
         @endphp
 
         <div class="row g-3">
@@ -1535,29 +1534,54 @@
                     @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
                 </section>
 
-                <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
-
-                @include('operations.settings.partials.telephony-settings', [
-                    'settings' => $settings,
-                    'telephonyHealth' => $telephonyHealth,
-                    'telephonyEndpoints' => $telephonyEndpoints,
-                    'telephonyEndpointTypes' => $telephonyEndpointTypes,
-                    'telephonyExtensions' => $telephonyExtensions,
-                    'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
-                    'staff' => $staff,
-                    'platformMailSend' => $platformMailSend ?? false,
-                    'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
-                ])
+                {{-- telephony-settings has its own heading and tabs and is migrated separately, so this card has no header. --}}
+                <section class="card" x-show="active === 'communications'" x-cloak data-settings-section="communications">
+                    <div class="card-body p-2 p-md-3">
+                        <div class="ark-legacy bg-white text-dark border rounded p-3" data-settings-telephony-island>
+                            @include('operations.settings.partials.telephony-settings', [
+                                'settings' => $settings,
+                                'telephonyHealth' => $telephonyHealth,
+                                'telephonyEndpoints' => $telephonyEndpoints,
+                                'telephonyEndpointTypes' => $telephonyEndpointTypes,
+                                'telephonyExtensions' => $telephonyExtensions,
+                                'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
+                                'staff' => $staff,
+                                'platformMailSend' => $platformMailSend ?? false,
+                                'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
+                            ])
+                        </div>
+                    </div>
+                </section>
 
                 @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                    @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
+                    <section class="card" x-show="active === 'ark-cloud'" x-cloak data-settings-section="ark-cloud">
+                        <div class="card-header">
+                            <div>
+                                <div class="subheader">ARK Platform</div>
+                                <h2 class="card-title">Managed ARK services</h2>
+                                <div class="card-subtitle">Connect this Box to ARK Platform for Email, Texting, Voice, and other managed services. Shop work stays in ARK. Service accounts are managed in ARK Platform.</div>
+                            </div>
+                        </div>
+                        @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
+                    </section>
                 @endunless
 
-                @include('operations.settings.partials.runtime-health', [
-                    'telephonyHealth' => $telephonyHealth,
-                    'settings' => $settings,
-                ])
-                </div>
+                <section class="card" x-show="active === 'runtime-health'" x-cloak data-settings-section="runtime-health">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Troubleshooting</div>
+                            <h2 class="card-title">Runtime health</h2>
+                            <div class="card-subtitle">
+                                Infrastructure may observe local time. ARK records facts in UTC and projects them into the shop timezone at display time.
+                                Use this page after deploys or VPS timezone changes - not for daily operations.
+                            </div>
+                        </div>
+                    </div>
+                    @include('operations.settings.partials.runtime-health', [
+                        'telephonyHealth' => $telephonyHealth,
+                        'settings' => $settings,
+                    ])
+                </section>
             </div>
         </div>
 
