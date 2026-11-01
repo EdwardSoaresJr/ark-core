@@ -179,7 +179,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 
 **Partial, actionable (1):** on Tabler, with legacy sections that can migrate now.
 
-- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
+- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity, Documents / Disclaimers, Workflow Defaults, and Label Printing. See the log entry for which remaining sections wait on a hosted-service decision.
 
 **Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
 
@@ -309,7 +309,24 @@ Settings is one page with an Alpine section switcher and about 30 section partia
 
 Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
 
-Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active: Appointments & Setup, Staff, Financial Rules (labor, policies, tax, fees, deposits, parts matrix, billing classes), Shop Overhead, Owner Targets, Workflow Defaults, Label Printing, Square Payments, Parts catalogs, Communications, ARK Platform, and Runtime health. Migrate them section by section; each moves out of the island when it does.
+Workflow Defaults and Label Printing are also Tabler cards. Their tabs are `nav-tabs card-header-tabs` buttons that call the existing `setWorkflowTab()` and `setPrintingTab()`.
+
+- **Check In defaults:** the visit type, priority, and work type selects pass `form-select` to the shared selects. The worksheet-notes chooser is the shared `repair-order-note-privacy-field` with `'ui' => 'tabler'`, a `form-selectgroup` with the same hidden inputs and the same rule that one view stays on. Without `ui`, the repair order workspace keeps the legacy chooser.
+- **Job Board lanes, RO statuses, inspection checklists, Common Jobs:** `card-sm` blocks and `list-group` rows. The color picker (`ro-status-color-picker`, used only here) is a Tabler `dropdown-menu` listbox with the same hidden input. The "Who can move this" table is a `card-table` inside the status card's `details` footer.
+- **Label Printing:** the printers form and the QZ certificate runbook, with `invalid-feedback` on the text and number fields.
+
+Every field name, value, default, `old()` key, route, method, and Save label is unchanged. Each form submits the same fields in the same order per field as before. Hooks: `data-settings-section`, `data-settings-job-board-lanes`, `data-settings-status-catalog`, `data-settings-inspection-templates`, and `data-settings-work-templates`.
+
+Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active:
+
+- **Core sections not yet migrated:** Appointments & Setup, Staff, Financial Rules (labor, policies, tax, fees, deposits, parts matrix, billing classes), and Shop Overhead.
+- **Sections that also hold hosted-service settings:**
+  - Owner Targets & Reporting, because its owner digest is sent by mail;
+  - Square Payments, which also holds the payment ledger's Check, External Card, and EFT buttons;
+  - Parts catalogs, Communications, and ARK Platform;
+  - Runtime health, which shows telephony health.
+
+Appointments & Setup reads business hours from the telephony call-flow settings, so it waits with the business-hours decision. Migrate the rest section by section; each moves out of the island when it does.
 
 ### Schedule (`operations.appointments.index`)
 

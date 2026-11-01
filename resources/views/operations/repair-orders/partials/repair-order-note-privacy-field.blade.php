@@ -9,6 +9,7 @@
     $advisorField = $fields['advisor'] ?? 'visible_to_advisor';
     $technicianField = $fields['technician'] ?? 'visible_to_technician';
     $customerField = $fields['customer'] ?? 'visible_to_customer';
+    $tabler = ($ui ?? null) === 'tabler';
 @endphp
 
 <div
@@ -30,12 +31,37 @@
             this._hintTimer = setTimeout(() => { this.audienceHint = ''; }, 4000);
         }
     }"
-    class="ops-note-privacy-field space-y-1.5"
+    @class(['ops-note-privacy-field', 'space-y-1.5' => ! $tabler])
 >
     <input type="hidden" name="{{ $advisorField }}" :value="advisor ? '1' : '0'">
     <input type="hidden" name="{{ $technicianField }}" :value="technician ? '1' : '0'">
     <input type="hidden" name="{{ $customerField }}" :value="customer ? '1' : '0'">
 
+    @if ($tabler)
+    <div class="form-label">Visible to</div>
+    <div class="form-selectgroup">
+        @foreach ([
+            'advisor' => ['Advisor', 'Repair Order', 'green'],
+            'technician' => ['Technician', 'Tech Sheet', 'azure'],
+            'customer' => ['Customer', 'Estimate / Portal', 'red'],
+        ] as $view => [$viewLabel, $viewWhere, $viewColor])
+            <label class="form-selectgroup-item" for="{{ $inputId }}-{{ $view }}">
+                <input
+                    id="{{ $inputId }}-{{ $view }}"
+                    type="checkbox"
+                    x-model="{{ $view }}"
+                    x-on:change="guardAudience('{{ $view }}')"
+                    class="form-selectgroup-input"
+                >
+                <span class="form-selectgroup-label">
+                    <span class="badge bg-{{ $viewColor }}-lt">{{ $viewLabel }}</span>
+                    <span class="d-block small text-secondary mt-1">{{ $viewWhere }}</span>
+                </span>
+            </label>
+        @endforeach
+    </div>
+    <div x-show="audienceHint" x-cloak x-text="audienceHint" class="small text-warning mt-1" role="status"></div>
+    @else
     <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">Visible to</p>
 
     <div class="grid grid-cols-3 gap-2">
@@ -98,4 +124,5 @@
         class="text-center text-[11px] font-medium leading-4 text-amber-800"
         role="status"
     ></p>
+    @endif
 </div>

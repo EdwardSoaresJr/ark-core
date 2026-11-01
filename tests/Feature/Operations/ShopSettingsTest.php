@@ -43,7 +43,7 @@ test('admin can view operational shop settings defaults', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
-    $this->get(route('operations.settings.shop.edit'))
+    $response = $this->get(route('operations.settings.shop.edit'))
         ->assertOk()
         ->assertSee('How this shop runs: shop details, pricing, documents, workflow, staff, and connected services.')
         ->assertDontSee('Operational Settings')
@@ -112,13 +112,17 @@ test('admin can view operational shop settings defaults', function () {
         ->assertSee('name="customer_types[0][shop_fees_enabled]"', false)
         ->assertSee('name="customer_types[2][shop_fees_enabled]"', false)
         ->assertDontSee('Default estimate state')
-        ->assertDontSee('>Order<', false)
         ->assertDontSee('name="parts_matrices[1][rows][0][margin_percentage]"', false)
         ->assertSee(ShopSettings::DEFAULT_ESTIMATE_DISCLAIMER)
         ->assertSee(ShopSettings::DEFAULT_RECOMMENDATION_DISCLAIMER)
         ->assertDontSee('name="default_estimate_state"', false)
         ->assertSee('150.00')
         ->assertSee('180.00');
+
+    $financialRules = str($response->getContent())->between("x-show=\"active === 'financial'\"", "x-show=\"active === 'payments'\"")->toString();
+
+    expect($financialRules)->not->toBe('')
+        ->and($financialRules)->not->toContain('>Order<');
 });
 
 test('settings pages use plain labels instead of posture, authority, truth, surface, and band wording', function () {

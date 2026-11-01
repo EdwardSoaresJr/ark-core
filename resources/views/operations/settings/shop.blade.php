@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing'];
         @endphp
 
         <div class="row g-3">
@@ -474,6 +474,191 @@
                             <button type="submit" class="btn btn-primary">Save Document Settings</button>
                         </div>
                     </form>
+                </section>
+                <section class="card" x-show="active === 'workflow'" x-cloak data-settings-section="workflow">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Workflow Defaults</div>
+                            <h2 class="card-title">Check In defaults and Job Board</h2>
+                            <div class="card-subtitle">Shop-wide Check In defaults, Job Board lanes, and the repair order statuses that fill those lanes.</div>
+                        </div>
+                    </div>
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Workflow Defaults">
+                            @foreach ([
+                                'defaults' => 'Check In defaults',
+                                'statuses' => 'Job Board',
+                                'inspections' => 'Inspection checklists',
+                                'saved-work' => 'Common Jobs',
+                            ] as $workflowTabKey => $workflowTabLabel)
+                                <li class="nav-item" role="presentation">
+                                    <button
+                                        type="button"
+                                        class="nav-link"
+                                        role="tab"
+                                        id="workflow-tab-{{ $workflowTabKey }}"
+                                        aria-controls="workflow-panel-{{ $workflowTabKey }}"
+                                        :class="{ 'active': workflowTab === @js($workflowTabKey) }"
+                                        :aria-selected="(workflowTab === @js($workflowTabKey)).toString()"
+                                        @click="setWorkflowTab(@js($workflowTabKey))"
+                                    >{{ $workflowTabLabel }}</button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <div class="card-body" id="workflow-panel-defaults" role="tabpanel" aria-labelledby="workflow-tab-defaults" x-show="workflowTab === 'defaults'" x-cloak>
+                        <h3 class="mb-1">Check In defaults</h3>
+                        <p class="text-secondary small">Pre-select the visit type, priority, work type, and note visibility for new work.</p>
+                        @include('operations.settings.partials.workflow-intake-defaults')
+                    </div>
+
+                    <div class="card-body" id="workflow-panel-statuses" role="tabpanel" aria-labelledby="workflow-tab-statuses" x-show="workflowTab === 'statuses'" x-cloak>
+                        <h3 class="mb-1">Job Board</h3>
+                        <p class="text-secondary small">Set up the shop queues and the statuses that live in each one. Attention stays derived - it is not a lane or a status color.</p>
+                        @include('operations.settings.partials.job-board-lanes')
+                        <h3 class="mt-5 mb-1">RO statuses</h3>
+                        <p class="text-secondary small">Configured operational state for each vehicle. Status color is independent of lane color and of ARK attention.</p>
+                        @include('operations.settings.partials.ro-status-catalog')
+                    </div>
+
+                    <div class="card-body" id="workflow-panel-inspections" role="tabpanel" aria-labelledby="workflow-tab-inspections" x-show="workflowTab === 'inspections'" x-cloak>
+                        <h3 class="mb-1">Inspection checklists</h3>
+                        <p class="text-secondary small">Mobile technician checklists - item labels, photo requirements, and measurements. Templates add the checklist rows to each RO. Technicians record findings on each checklist item.</p>
+                        @include('operations.settings.partials.inspection-template-settings', ['inspectionTemplates' => $inspectionTemplates])
+                    </div>
+
+                    <div class="card-body" id="workflow-panel-saved-work" role="tabpanel" aria-labelledby="workflow-tab-saved-work" x-show="workflowTab === 'saved-work'" x-cloak>
+                        <h3 class="mb-1">Common Jobs</h3>
+                        <p class="text-secondary small">Repeat jobs that author a Repair Action plus labor, parts, and fees. After Add Work, the template owns nothing - edit the RO normally.</p>
+                        @include('operations.settings.partials.work-template-settings', ['workTemplates' => $workTemplates])
+                    </div>
+                </section>
+
+                <section class="card" x-show="active === 'printing'" x-cloak data-settings-section="printing">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">QZ Tray / Brother QL</div>
+                            <h2 class="card-title">Key tags and oil change stickers</h2>
+                            <div class="card-subtitle">Printer names must match the OS queue exactly. Defaults: Brother QL-800, 62 × 38.1 mm.</div>
+                        </div>
+                    </div>
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Label Printing">
+                            @foreach (['printers' => 'Printers & labels', 'certificates' => 'Certificates & setup'] as $printingTabKey => $printingTabLabel)
+                                <li class="nav-item" role="presentation">
+                                    <button
+                                        type="button"
+                                        class="nav-link"
+                                        role="tab"
+                                        id="printing-tab-{{ $printingTabKey }}"
+                                        aria-controls="printing-panel-{{ $printingTabKey }}"
+                                        :class="{ 'active': printingTab === @js($printingTabKey) }"
+                                        :aria-selected="(printingTab === @js($printingTabKey)).toString()"
+                                        @click="setPrintingTab(@js($printingTabKey))"
+                                    >{{ $printingTabLabel }}</button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <form id="printing-panel-printers" role="tabpanel" aria-labelledby="printing-tab-printers" x-show="printingTab === 'printers'" method="POST" action="{{ route('operations.settings.shop.printing.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        @php
+                            $labelOrientation = old('qz_key_tag_orientation', $settings->qz_key_tag_orientation ?? config('printing.key_tag_qz_orientation', 'portrait'));
+                            $labelMedia = old('qz_key_tag_media_type', $settings->qz_key_tag_media_type ?? 'mono');
+                            $keyTagVinDisplay = old('qz_key_tag_vin_display', $settings->qz_key_tag_vin_display);
+                            $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
+                            $rasterDpi = old('qz_raster_dpi', $settings->qz_raster_dpi);
+                        @endphp
+                        <div class="card-body">
+                            <label class="form-check form-switch mb-3">
+                                <input type="hidden" name="qz_printing_enabled" value="0">
+                                <input type="checkbox" name="qz_printing_enabled" value="1" @checked(old('qz_printing_enabled', $settings->qz_printing_enabled)) class="form-check-input">
+                                <span class="form-check-label">Enable QZ label printing on repair orders</span>
+                            </label>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-qz-key-tag-printer" class="form-label">Key tag printer</label>
+                                    <input id="settings-qz-key-tag-printer" type="text" name="qz_printing_key_tag_printer" value="{{ old('qz_printing_key_tag_printer', $settings->qz_printing_key_tag_printer) }}" placeholder="Brother QL-800" @class(['form-control', 'is-invalid' => $errors->has('qz_printing_key_tag_printer')])>
+                                    @error('qz_printing_key_tag_printer')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-qz-oil-sticker-printer" class="form-label">Oil sticker printer</label>
+                                    <input id="settings-qz-oil-sticker-printer" type="text" name="qz_printing_oil_sticker_printer" value="{{ old('qz_printing_oil_sticker_printer', $settings->qz_printing_oil_sticker_printer) }}" placeholder="Same as key tag when empty" @class(['form-control', 'is-invalid' => $errors->has('qz_printing_oil_sticker_printer')])>
+                                    @error('qz_printing_oil_sticker_printer')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="settings-qz-label-width" class="form-label">Label width (mm)</label>
+                                    <input id="settings-qz-label-width" type="number" step="0.1" min="10" max="200" name="qz_key_tag_label_width_mm" value="{{ old('qz_key_tag_label_width_mm', $settings->qz_key_tag_label_width_mm) }}" placeholder="62" @class(['form-control', 'is-invalid' => $errors->has('qz_key_tag_label_width_mm')])>
+                                    @error('qz_key_tag_label_width_mm')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="settings-qz-label-height" class="form-label">Label height (mm)</label>
+                                    <input id="settings-qz-label-height" type="number" step="0.1" min="10" max="200" name="qz_key_tag_label_height_mm" value="{{ old('qz_key_tag_label_height_mm', $settings->qz_key_tag_label_height_mm) }}" placeholder="38.1" @class(['form-control', 'is-invalid' => $errors->has('qz_key_tag_label_height_mm')])>
+                                    @error('qz_key_tag_label_height_mm')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-qz-orientation" class="form-label">Label orientation</label>
+                                    <select id="settings-qz-orientation" name="qz_key_tag_orientation" class="form-select">
+                                        <option value="portrait" @selected($labelOrientation === 'portrait')>Portrait (QL-800 default)</option>
+                                        <option value="landscape" @selected($labelOrientation === 'landscape')>Landscape</option>
+                                        <option value="auto" @selected($labelOrientation === 'auto')>Auto (wide label → portrait)</option>
+                                    </select>
+                                    <div class="form-hint">Use Portrait for Brother QL-800 62×38.1 mm key tags and oil stickers.</div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-qz-media" class="form-label">Label media</label>
+                                    <select id="settings-qz-media" name="qz_key_tag_media_type" class="form-select">
+                                        <option value="mono" @selected($labelMedia === 'mono')>Monochrome</option>
+                                        <option value="red_black" @selected($labelMedia === 'red_black')>Red / black (DK)</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-qz-vin-display" class="form-label">Key tag VIN display</label>
+                                    <select id="settings-qz-vin-display" name="qz_key_tag_vin_display" class="form-select">
+                                        <option value="last6" @selected($keyTagVinDisplay === 'last6')>Last 6</option>
+                                        <option value="last8" @selected($keyTagVinDisplay === 'last8')>Last 8</option>
+                                        <option value="full" @selected($keyTagVinDisplay === 'full')>Full VIN</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-key-tag-mileage" class="form-label">Key tag mileage required</label>
+                                    <select id="settings-key-tag-mileage" name="key_tag_mileage_requirement" class="form-select">
+                                        <option value="none" @selected($keyTagMileage === 'none')>None - print without mileage in</option>
+                                        <option value="in" @selected($keyTagMileage === 'in')>Mileage in - don't print until it is entered</option>
+                                    </select>
+                                    <div class="form-hint">A blocked print says mileage in is missing. It does not print a blank tag.</div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-qz-raster-dpi" class="form-label">Raster DPI override</label>
+                                    <select id="settings-qz-raster-dpi" name="qz_raster_dpi" class="form-select">
+                                        <option value="" @selected($rasterDpi === null)>Auto</option>
+                                        <option value="203" @selected((int) $rasterDpi === 203)>203</option>
+                                        <option value="300" @selected((int) $rasterDpi === 300)>300</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="settings-oil-interval" class="form-label">Oil change interval (miles)</label>
+                                    <input id="settings-oil-interval" type="number" min="1000" max="50000" name="oil_change_interval_miles" value="{{ old('oil_change_interval_miles', $settings->oil_change_interval_miles ?? 5000) }}" @class(['form-control', 'is-invalid' => $errors->has('oil_change_interval_miles')])>
+                                    @error('oil_change_interval_miles')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="settings-oil-due-months" class="form-label">Oil due months</label>
+                                    <input id="settings-oil-due-months" type="number" min="1" max="24" name="oil_change_sticker_next_due_months" value="{{ old('oil_change_sticker_next_due_months', $settings->oil_change_sticker_next_due_months ?? 6) }}" @class(['form-control', 'is-invalid' => $errors->has('oil_change_sticker_next_due_months')])>
+                                    @error('oil_change_sticker_next_due_months')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary">Save Printing</button>
+                        </div>
+                    </form>
+
+                    <div class="card-body" id="printing-panel-certificates" role="tabpanel" aria-labelledby="printing-tab-certificates" x-show="printingTab === 'certificates'" x-cloak>
+                        @include('operations.settings.partials.printing-qz-certificates', ['qzPrintingReference' => $qzPrintingReference ?? []])
+                    </div>
                 </section>
                 <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
@@ -1259,78 +1444,6 @@
                 @include('operations.settings.partials.shop-excellence-targets')
 
 
-                <section x-show="active === 'workflow'" x-cloak>
-                    <div class="border-b border-slate-200 pb-2">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Workflow Defaults</p>
-                        <h2 class="text-base font-black text-slate-950">Check In defaults and Job Board</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide Check In defaults, Job Board lanes, and the repair order statuses that fill those lanes.</p>
-                    </div>
-
-                    <div class="mt-4 grid gap-px border border-slate-300 bg-slate-300 text-sm sm:grid-cols-4">
-                        <button
-                            type="button"
-                            @click="setWorkflowTab('defaults')"
-                            :class="workflowTab === 'defaults' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
-                            class="px-3 py-2 text-left font-semibold"
-                        >Check In defaults</button>
-                        <button
-                            type="button"
-                            @click="setWorkflowTab('statuses')"
-                            :class="workflowTab === 'statuses' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
-                            class="px-3 py-2 text-left font-semibold"
-                        >Job Board</button>
-                        <button
-                            type="button"
-                            @click="setWorkflowTab('inspections')"
-                            :class="workflowTab === 'inspections' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
-                            class="px-3 py-2 text-left font-semibold"
-                        >Inspection checklists</button>
-                        <button
-                            type="button"
-                            @click="setWorkflowTab('saved-work')"
-                            :class="workflowTab === 'saved-work' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
-                            class="px-3 py-2 text-left font-semibold"
-                        >Common Jobs</button>
-                    </div>
-
-                    <div x-show="workflowTab === 'defaults'" x-cloak>
-                        <div class="mt-4 border-b border-slate-100 pb-2">
-                            <h3 class="text-sm font-black text-slate-950">Check In defaults</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Pre-select the visit type, priority, work type, and note visibility for new work.</p>
-                        </div>
-                        @include('operations.settings.partials.workflow-intake-defaults')
-                    </div>
-
-                    <div x-show="workflowTab === 'statuses'" x-cloak>
-                        <div class="mt-4 border-b border-slate-100 pb-2">
-                            <h3 class="text-sm font-black text-slate-950">Job Board</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Set up the shop queues and the statuses that live in each one. Attention stays derived - it is not a lane or a status color.</p>
-                        </div>
-                        @include('operations.settings.partials.job-board-lanes')
-                        <div class="mt-8 border-b border-slate-100 pb-2">
-                            <h3 class="text-sm font-black text-slate-950">RO statuses</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Configured operational state for each vehicle. Status color is independent of lane color and of ARK attention.</p>
-                        </div>
-                        @include('operations.settings.partials.ro-status-catalog')
-                    </div>
-
-                    <div x-show="workflowTab === 'inspections'" x-cloak>
-                        <div class="mt-4 border-b border-slate-100 pb-2">
-                            <h3 class="text-sm font-black text-slate-950">Inspection checklists</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Mobile technician checklists - item labels, photo requirements, and measurements. Templates add the checklist rows to each RO. Technicians record findings on each checklist item.</p>
-                        </div>
-                        @include('operations.settings.partials.inspection-template-settings', ['inspectionTemplates' => $inspectionTemplates])
-                    </div>
-
-                    <div x-show="workflowTab === 'saved-work'" x-cloak>
-                        <div class="mt-4 border-b border-slate-100 pb-2">
-                            <h3 class="text-sm font-black text-slate-950">Common Jobs</h3>
-                            <p class="mt-0.5 text-xs text-slate-500">Repeat jobs that author a Repair Action plus labor, parts, and fees. After Add Work, the template owns nothing - edit the RO normally.</p>
-                        </div>
-                        @include('operations.settings.partials.work-template-settings', ['workTemplates' => $workTemplates])
-                    </div>
-                </section>
-
                 <section x-show="active === 'operations'" x-cloak>
                     <div class="border-b border-slate-200 px-3 py-3">
                         <h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>
@@ -1355,112 +1468,6 @@
 
                     <div class="p-3">
                         @include('operations.settings.partials.shop-csv-import')
-                    </div>
-                </section>
-
-                <section x-show="active === 'printing'" x-cloak>
-                    <div class="border-b border-slate-200 pb-2">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">QZ Tray / Brother QL</p>
-                        <h2 class="text-base font-black text-slate-950">Key tags and oil change stickers</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">Printer names must match the OS queue exactly. Defaults: Brother QL-800, 62 × 38.1 mm.</p>
-                    </div>
-
-                    <div class="mt-3 grid gap-px border border-slate-300 bg-slate-300 text-sm sm:grid-cols-2">
-                        <button type="button" @click="setPrintingTab('printers')" :class="printingTab === 'printers' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Printers &amp; labels</button>
-                        <button type="button" @click="setPrintingTab('certificates')" :class="printingTab === 'certificates' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Certificates &amp; setup</button>
-                    </div>
-
-                    <div x-show="printingTab === 'printers'" class="mt-4">
-                    <form method="POST" action="{{ route('operations.settings.shop.printing.update') }}">
-                        @csrf
-                        @method('PATCH')
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <label class="flex items-start gap-2 text-xs font-medium text-slate-500 md:col-span-2">
-                                <input type="hidden" name="qz_printing_enabled" value="0">
-                                <input type="checkbox" name="qz_printing_enabled" value="1" @checked(old('qz_printing_enabled', $settings->qz_printing_enabled)) class="mt-0.5 rounded border-slate-300 text-slate-800">
-                                <span>Enable QZ label printing on repair orders</span>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Key tag printer
-                                <input type="text" name="qz_printing_key_tag_printer" value="{{ old('qz_printing_key_tag_printer', $settings->qz_printing_key_tag_printer) }}" placeholder="Brother QL-800" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Oil sticker printer
-                                <input type="text" name="qz_printing_oil_sticker_printer" value="{{ old('qz_printing_oil_sticker_printer', $settings->qz_printing_oil_sticker_printer) }}" placeholder="Same as key tag when empty" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Label width (mm)
-                                <input type="number" step="0.1" min="10" max="200" name="qz_key_tag_label_width_mm" value="{{ old('qz_key_tag_label_width_mm', $settings->qz_key_tag_label_width_mm) }}" placeholder="62" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Label height (mm)
-                                <input type="number" step="0.1" min="10" max="200" name="qz_key_tag_label_height_mm" value="{{ old('qz_key_tag_label_height_mm', $settings->qz_key_tag_label_height_mm) }}" placeholder="38.1" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Label orientation
-                                <select name="qz_key_tag_orientation" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    @php
-                                        $labelOrientation = old('qz_key_tag_orientation', $settings->qz_key_tag_orientation ?? config('printing.key_tag_qz_orientation', 'portrait'));
-                                    @endphp
-                                    <option value="portrait" @selected($labelOrientation === 'portrait')>Portrait (QL-800 default)</option>
-                                    <option value="landscape" @selected($labelOrientation === 'landscape')>Landscape</option>
-                                    <option value="auto" @selected($labelOrientation === 'auto')>Auto (wide label → portrait)</option>
-                                </select>
-                                <span class="mt-1 block font-normal text-slate-400">Use Portrait for Brother QL-800 62×38.1 mm key tags and oil stickers.</span>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Label media
-                                <select name="qz_key_tag_media_type" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="mono" @selected(old('qz_key_tag_media_type', $settings->qz_key_tag_media_type ?? 'mono') === 'mono')>Monochrome</option>
-                                    <option value="red_black" @selected(old('qz_key_tag_media_type', $settings->qz_key_tag_media_type ?? 'mono') === 'red_black')>Red / black (DK)</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Key tag VIN display
-                                <select name="qz_key_tag_vin_display" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="last6" @selected(old('qz_key_tag_vin_display', $settings->qz_key_tag_vin_display) === 'last6')>Last 6</option>
-                                    <option value="last8" @selected(old('qz_key_tag_vin_display', $settings->qz_key_tag_vin_display) === 'last8')>Last 8</option>
-                                    <option value="full" @selected(old('qz_key_tag_vin_display', $settings->qz_key_tag_vin_display) === 'full')>Full VIN</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Key tag mileage required
-                                @php
-                                    $keyTagMileage = old('key_tag_mileage_requirement', $settings->key_tag_mileage_requirement ?? 'none');
-                                @endphp
-                                <select name="key_tag_mileage_requirement" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="none" @selected($keyTagMileage === 'none')>None - print without mileage in</option>
-                                    <option value="in" @selected($keyTagMileage === 'in')>Mileage in - don't print until it is entered</option>
-                                </select>
-                                <span class="mt-1 block font-normal text-slate-400">A blocked print says mileage in is missing. It does not print a blank tag.</span>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Raster DPI override
-                                <select name="qz_raster_dpi" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                    <option value="" @selected(old('qz_raster_dpi', $settings->qz_raster_dpi) === null)>Auto</option>
-                                    <option value="203" @selected((int) old('qz_raster_dpi', $settings->qz_raster_dpi) === 203)>203</option>
-                                    <option value="300" @selected((int) old('qz_raster_dpi', $settings->qz_raster_dpi) === 300)>300</option>
-                                </select>
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Oil change interval (miles)
-                                <input type="number" min="1000" max="50000" name="oil_change_interval_miles" value="{{ old('oil_change_interval_miles', $settings->oil_change_interval_miles ?? 5000) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Oil due months
-                                <input type="number" min="1" max="24" name="oil_change_sticker_next_due_months" value="{{ old('oil_change_sticker_next_due_months', $settings->oil_change_sticker_next_due_months ?? 6) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                            </label>
-                        </div>
-                        <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
-                            <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                                Save Printing
-                            </button>
-                        </div>
-                    </form>
-                    </div>
-
-                    <div x-show="printingTab === 'certificates'" x-cloak class="mt-4">
-                        @include('operations.settings.partials.printing-qz-certificates', ['qzPrintingReference' => $qzPrintingReference ?? []])
                     </div>
                 </section>
 
