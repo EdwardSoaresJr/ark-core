@@ -33,10 +33,26 @@
         $exceptionLabel,
         ...array_column($exceptionExtras, 'label'),
     ])->filter()->join(' '));
+    $attentionColor = match ($attention) {
+        'watch', 'attention' => 'yellow',
+        'critical' => 'red',
+        default => null,
+    };
+    $toneText = fn (?string $tone): ?string => match ($tone) {
+        'attention' => 'text-warning',
+        'critical', 'missed' => 'text-danger',
+        default => null,
+    };
+    $markClasses = fn (string $state): string => match ($state) {
+        'ready' => 'bg-secondary-lt',
+        'sent' => 'bg-azure-lt',
+        'engaged' => 'bg-azure text-white',
+        'attention' => 'bg-orange text-white',
+        default => 'bg-transparent text-secondary',
+    };
 @endphp
 
 <div
-    class="ops-ro-card-wrap ops-job-card-wrap"
     id="ops-card-ro-{{ $repairOrder->repair_order_id }}"
     data-home-search="{{ $homeSearch }}"
     data-home-tech-id="{{ $repairOrder->concerns->flatMap->workGroups->first(fn ($g) => $g->hasOwner())?->owner_user_id ?? '' }}"
@@ -44,123 +60,93 @@
     x-cloak
 >
     <article
-        @class([
-            'ops-job-card',
-            'ops-ro-card--home',
-            'ops-job-card--recommended' => $isRecommended,
-            'ops-job-card--'.$attention => $attention !== 'normal',
-        ])
+        @class(['card card-sm', 'border-primary' => $isRecommended])
+        data-job-card
         data-workboard-attention="{{ $attention }}"
+        @if ($isRecommended) data-workboard-recommended @endif
         @if ($surface?->waitingOnCustomerDecision) data-workboard-decision="1" @endif
     >
-        <div class="ops-job-card__scan">
-            <div class="ops-job-card__head">
-                <a href="{{ $builderUrl }}" class="ops-job-card__ro">RO #{{ $repairOrder->repair_order_id }}</a>
-                <span @class([
-                    'ops-job-card__total',
-                    'ops-job-card__total--due' => $isBalanceDue,
-                ])>
+        @if ($attentionColor)
+            <div class="card-status-start bg-{{ $attentionColor }}"></div>
+        @endif
+        <div class="card-body p-2" data-job-card-scan>
+            <div class="d-flex align-items-baseline gap-2">
+                <a href="{{ $builderUrl }}" class="fw-bold text-reset" data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</a>
+                <span @class(['ms-auto fw-bold ark-money text-nowrap', 'text-danger' => $isBalanceDue]) data-job-card-total>
                     {{ $moneyLabel }}
                     @if ($isBalanceDue)
-                        <span class="ops-job-card__money-caption">due</span>
+                        <span class="small fw-normal">due</span>
                     @elseif (filled($moneyCaption))
-                        <span class="ops-job-card__money-caption">{{ $moneyCaption }}</span>
+                        <span class="small fw-normal text-secondary">{{ $moneyCaption }}</span>
                     @endif
                 </span>
             </div>
-            <p
-                @class([
-                    'ops-job-card__exception',
-                    'ops-job-card__exception--'.$exceptionTone => $exceptionTone !== 'none',
-                    'ops-job-card__exception--empty' => ! filled($exceptionLabel),
-                ])
-                @if (! filled($exceptionLabel)) aria-hidden="true" @endif
+            {{-- The row renders even when empty, as on the legacy card, so lanes keep an even rhythm. --}}
+            <div
+                @class(['small fw-medium d-flex align-items-center gap-1', $toneText($exceptionTone)])
+                data-job-card-exception="{{ filled($exceptionLabel) ? $exceptionTone : 'empty' }}"
+                @unless (filled($exceptionLabel)) aria-hidden="true" @endunless
             >
                 @if (filled($exceptionLabel))
-                    <span class="ops-job-card__exception-label">{{ $exceptionLabel }}</span>
+                    <span class="text-truncate">{{ $exceptionLabel }}</span>
                     @if ($exceptionExtraCount > 0)
-                        <span
-                            class="ops-job-card__exception-more"
-                            x-data="{ open: false }"
-                            @click.outside="open = false"
-                        >
+                        <span class="dropdown">
                             <button
                                 type="button"
-                                class="ops-job-card__exception-more-btn"
-                                :aria-expanded="open.toString()"
-                                aria-haspopup="true"
+                                class="btn btn-sm btn-ghost-secondary px-1 py-0"
+                                data-bs-toggle="dropdown"
+                                data-bs-popper-config='{"strategy":"fixed"}'
+                                aria-expanded="false"
                                 title="{{ $exceptionMoreHint }}"
                                 aria-label="{{ $exceptionMoreHint }}"
-                                @click.stop="open = !open"
                             >+{{ $exceptionExtraCount }}</button>
-                            <span
-                                class="ops-job-card__exception-list"
-                                x-show="open"
-                                x-cloak
-                                role="list"
-                            >
+                            <span class="dropdown-menu" role="list" data-job-card-exception-list>
                                 @foreach ($exceptionItems as $item)
-                                    <span
-                                        @class([
-                                            'ops-job-card__exception-list-item',
-                                            'ops-job-card__exception-list-item--'.$item['tone'] => ($item['tone'] ?? 'none') !== 'none',
-                                        ])
-                                        role="listitem"
-                                    >{{ $item['label'] }}</span>
+                                    <span @class(['dropdown-item-text small', $toneText($item['tone'] ?? null)]) role="listitem" data-job-card-exception-item>{{ $item['label'] }}</span>
                                 @endforeach
                             </span>
                         </span>
                     @endif
                 @endif
-            </p>
-            <a href="{{ $builderUrl }}" class="ops-job-card__vehicle">
-                {{ $card->vehicleLabel }}
-            </a>
-            <p class="ops-job-card__customer">
+            </div>
+            <a href="{{ $builderUrl }}" class="d-block fw-bold text-reset text-truncate mt-1" data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
+            <div class="small text-truncate">
                 @if ($surface?->customerHubUrl)
-                    <a href="{{ $surface->customerHubUrl }}" class="ops-job-card__customer-link">
-                        {{ $customerName !== '' ? $customerName : 'Unknown customer' }}
-                    </a>
+                    <a href="{{ $surface->customerHubUrl }}" class="text-secondary" data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
                 @else
-                    <span class="ops-job-card__customer-link ops-job-card__customer-link--static">
-                        {{ $customerName !== '' ? $customerName : 'Unknown customer' }}
-                    </span>
+                    <span class="text-secondary" data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
                 @endif
-            </p>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <a href="{{ $builderUrl }}" class="text-decoration-none" data-job-card-status data-job-card-status-tone="{{ $chip?->tone ?? 'none' }}">
+                    <x-tabler.status-badge :tone="filled($chip?->statusColor) ? \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($chip->statusColor) : ($chip?->tone ?? 'move')" data-job-card-status-label="label">{{ $statusLabel }}</x-tabler.status-badge>
+                </a>
+                <span @class(['ms-auto small', 'text-secondary' => ! in_array($attention, ['attention', 'critical'], true), 'text-warning' => $attention === 'attention', 'text-danger' => $attention === 'critical']) data-job-card-clock>{{ $clockDisplay }}</span>
+            </div>
         </div>
-
-        <div class="ops-job-card__status-row">
-            <a
-                href="{{ $builderUrl }}"
-                @class([
-                    'ops-job-card__status',
-                    'ops-job-card__chip',
-                    'ops-job-card__chip--quiet',
-                    'ops-job-card__chip--status-'.($chip?->statusColor) => filled($chip?->statusColor),
-                ])
-            >
-                <span class="ops-job-card__chip-label">{{ $statusLabel }}</span>
-            </a>
-            <span class="ops-job-card__clock">{{ $clockDisplay }}</span>
-        </div>
-
-        <div class="ops-job-card__activity" role="group" aria-label="Activity">
-            @foreach ($activityMarks as $mark)
-                <span
-                    @class([
-                        'ops-job-card__mark',
-                        'ops-job-card__mark--'.$mark->state->value,
-                    ])
-                    aria-label="{{ $mark->tooltip }}"
-                >
-                    @include('operations.workboard.partials.activity-mark-icon', [
-                        'key' => $mark->key,
-                        'filled' => $mark->active,
-                        'badge' => $mark->badge,
-                    ])
-                    <span class="ops-job-card__tip" role="tooltip">{{ $mark->tooltip }}</span>
-                </span>
-            @endforeach
+        <div @class(['card-footer p-1', 'bg-yellow-lt' => $attention === 'attention', 'bg-red-lt' => $attention === 'critical']) data-job-card-activity>
+            <div class="d-flex justify-content-between" role="group" aria-label="Activity">
+                @foreach ($activityMarks as $mark)
+                    {{-- tabindex -1: a tap focuses the mark, which shows its tooltip, without adding six tab stops per card. --}}
+                    <span
+                        class="avatar avatar-xs rounded {{ $markClasses($mark->state->value) }}"
+                        data-job-card-mark="{{ $mark->key }}"
+                        data-job-card-mark-state="{{ $mark->state->value }}"
+                        role="img"
+                        tabindex="-1"
+                        title="{{ $mark->tooltip }}"
+                        aria-label="{{ $mark->tooltip }}"
+                        data-bs-toggle="tooltip"
+                        data-bs-trigger="hover focus"
+                    >
+                        @include('operations.workboard.partials.activity-mark-icon', [
+                            'key' => $mark->key,
+                            'filled' => $mark->active,
+                            'badge' => $mark->badge,
+                        ])
+                    </span>
+                @endforeach
+            </div>
         </div>
     </article>
 </div>

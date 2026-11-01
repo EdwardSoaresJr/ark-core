@@ -1,57 +1,46 @@
 @php
     /** @var \App\Ark\Operations\Workboard\WorkboardTriageLaneProjection $column */
     /** @var \App\Ark\Operations\Today\AdvisorHomeCockpitProjection $cockpit */
-    $columnStat = $cockpit->columnsByKey[$column->key] ?? null;
     $isConstraintColumn = $cockpit->constraintColumnKey === $column->key;
     $inventoryUrl = $column->inventoryUrl && $column->totalCount > 0 ? $column->inventoryUrl : null;
+    $laneColor = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
+        \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($column->color),
+    );
 @endphp
 
 <section
     id="ops-home-col-{{ $column->key }}"
+    class="d-flex flex-column gap-2"
     data-lane-key="{{ $column->key }}"
     data-lane-color="{{ $column->color }}"
-    @class([
-        'ops-job-board-column',
-        'ops-advisor-home-board__column',
-        'ops-advisor-home-board__column--constraint' => $isConstraintColumn,
-    ])
+    @if ($isConstraintColumn) data-lane-constraint @endif
+    aria-labelledby="ops-home-col-{{ $column->key }}-title"
 >
-    <header class="ops-job-board-column__header">
-        <div class="ops-job-board-column__title-wrap">
-            @if ($inventoryUrl)
-                <a href="{{ $inventoryUrl }}" class="ops-job-board-column__title ops-job-board-column__title--link">
+    <div class="card card-sm">
+        <div class="card-status-top bg-{{ $laneColor }}"></div>
+        <div class="card-body py-2">
+            <h2 class="card-title mb-0" id="ops-home-col-{{ $column->key }}-title">
+                @if ($inventoryUrl)
+                    <a href="{{ $inventoryUrl }}" class="text-reset">{{ $column->label }}</a>
+                @else
                     {{ $column->label }}
-                    <span class="ops-job-board-column__count" x-text="'(' + columnVisibleCount('{{ $column->key }}') + ')'">
-                        ({{ $column->totalCount }})
-                    </span>
-                </a>
-            @else
-                <h2 class="ops-job-board-column__title">
-                    {{ $column->label }}
-                    <span class="ops-job-board-column__count" x-text="'(' + columnVisibleCount('{{ $column->key }}') + ')'">
-                        ({{ $column->totalCount }})
-                    </span>
-                </h2>
-            @endif
+                @endif
+                <span class="text-secondary fw-normal" x-text="'(' + columnVisibleCount('{{ $column->key }}') + ')'">({{ $column->totalCount }})</span>
+            </h2>
         </div>
-    </header>
-
-    <div class="ops-radar-cards ops-advisor-home-board__cards ops-job-board-column__cards">
-        @forelse ($column->visibleCards as $card)
-            @include('operations.workboard.partials.home-card', [
-                'card' => $card,
-                'columnTone' => $column->tone,
-                'repairOrderTotals' => $repairOrderTotals,
-                'homeCardSurfaces' => $homeCardSurfaces,
-                'recommendedRepairOrderId' => $cockpit->recommendedRepairOrderId,
-            ])
-        @empty
-        @endforelse
-
-        @if ($column->hiddenCount > 0 && $column->viewAllUrl)
-            <a href="{{ $column->viewAllUrl }}" class="ops-workboard-lane__more">
-                +{{ $column->hiddenCount }} more
-            </a>
-        @endif
     </div>
+
+    @foreach ($column->visibleCards as $card)
+        @include('operations.workboard.partials.home-card', [
+            'card' => $card,
+            'columnTone' => $column->tone,
+            'repairOrderTotals' => $repairOrderTotals,
+            'homeCardSurfaces' => $homeCardSurfaces,
+            'recommendedRepairOrderId' => $cockpit->recommendedRepairOrderId,
+        ])
+    @endforeach
+
+    @if ($column->hiddenCount > 0 && $column->viewAllUrl)
+        <a href="{{ $column->viewAllUrl }}" class="btn btn-ghost-secondary w-100">+{{ $column->hiddenCount }} more</a>
+    @endif
 </section>

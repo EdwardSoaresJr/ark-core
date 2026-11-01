@@ -18,7 +18,7 @@ test('core rail keeps arkademy and stations without a platform heading', functio
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     $this->actingAs($admin)
-        ->get(route('operations.index'))
+        ->get(route('profile.edit'))
         ->assertOk()
         ->assertDontSee('ops-rail-section__label">Platform</p>', false)
         ->assertSee('ops-rail-section__label">System</p>', false)

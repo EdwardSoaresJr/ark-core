@@ -23,6 +23,39 @@ beforeEach(function () {
     $this->seed(RepairOrderStatusCatalogSeeder::class);
 });
 
+test('job board renders on tabler with filterable lanes of repair order cards', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Tabler Lane');
+
+    $html = $this->actingAs($advisor)->get(route('operations.index'))->assertOk()->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $hasClass = fn (string $class): string => 'contains(concat(" ", normalize-space(@class), " "), " '.$class.' ")';
+
+    $board = $xpath->query('//*[@data-job-board]')->item(0);
+    $card = $xpath->query('//*[@id="ops-card-ro-'.$repairOrder->repair_order_id.'"]')->item(0);
+
+    expect($html)->toContain('id="ark-sidebar-menu"')
+        ->and($html)->not->toContain('class="ops-left-rail"')
+        ->and($board)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('ancestor-or-self::*['.$hasClass('ark-legacy').']', $board)->length)->toBe(0)
+        ->and($xpath->query('.//*[@data-job-board-filters]//input[@x-model="query"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-filters]//select[@x-model="techId"]', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-job-board-filters]//a[@href="'.route('operations.intake.create').'"]['.$hasClass('btn-primary').']', $board)->length)->toBe(1)
+        ->and($xpath->query('.//*['.$hasClass('ark-board').']/section[@data-lane-key]', $board)->length)->toBeGreaterThanOrEqual(5)
+        ->and($card)->toBeInstanceOf(DOMElement::class)
+        ->and($card->getAttribute('x-show'))->toBe('cardMatches($el)')
+        ->and($card->getAttribute('data-home-search'))->toContain('tabler lane')
+        ->and($xpath->query('ancestor::section[@data-lane-key]', $card)->item(0)->getAttribute('id'))->toStartWith('ops-home-col-')
+        ->and($xpath->query('.//article['.$hasClass('card').']//a[normalize-space()="RO #'.$repairOrder->repair_order_id.'"]', $card)->length)->toBe(1)
+        ->and($xpath->query('.//*['.$hasClass('badge').']', $card)->length)->toBeGreaterThanOrEqual(1)
+        ->and($xpath->query('.//*[@data-job-card-mark]', $card)->length)->toBeGreaterThanOrEqual(1)
+        ->and($xpath->query('.//*[@data-job-card-mark][not(@role="img") or not(@tabindex="-1") or not(@data-bs-toggle="tooltip") or not(contains(@data-bs-trigger, "focus")) or @aria-label=""]', $card)->length)->toBe(0);
+});
+
 test('advisor home board renders kanban columns with dense cards', function () {
     $advisor = actingAsLearnCurrentAdvisor();
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingApproval, 'Lane Seed');
@@ -38,7 +71,7 @@ test('advisor home board renders kanban columns with dense cards', function () {
         ->assertSee('Waiting Parts', false)
         ->assertSee('Work in Progress', false)
         ->assertSee('Completed', false)
-        ->assertSee('ops-advisor-home-board', false)
+        ->assertSee('data-job-board-lanes', false)
         ->assertSee('RO #'.$repairOrder->repair_order_id, false)
         ->assertSee('Lane Seed', false)
         ->assertDontSee('ops-ops-workspace', false)

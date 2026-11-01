@@ -492,8 +492,7 @@ test('sidebar does not show retired intake queue nav', function () {
         ->assertOk()
         ->assertDontSee('aria-label="1 in intake queue"', false)
         ->assertDontSee('>Intake</span>', false)
-        ->assertSee('+ Check In', false)
-        ->assertSee(route('operations.intake.create'), false);
+        ->assertSee('href="'.route('operations.intake.create').'" class="btn btn-primary"', false);
 });
 
 test('communications sidebar shows pressure count instead of topbar attention button', function () {
@@ -502,7 +501,7 @@ test('communications sidebar shows pressure count instead of topbar attention bu
     ingestInboundSms('7195554399', 'Need a callback', 'SMsidebar001');
 
     $this->actingAs($advisor)
-        ->get(route('operations.index'))
+        ->get(route('profile.edit'))
         ->assertOk()
         ->assertSee('ops-rail-link__count', false)
         ->assertSee('need attention"', false)
