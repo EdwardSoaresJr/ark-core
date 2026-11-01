@@ -563,6 +563,18 @@
     }
 }
 
+/* The repair order's Customer | Vehicle | Visit panel: stacked sections divide by a top border on phones, side-by-side columns by a start border from md. Bootstrap has no responsive border utilities. */
+.ark-identity-panel > * + * {
+    border-top: var(--tblr-border-width) solid var(--tblr-border-color);
+}
+
+@media (min-width: 768px) {
+    .ark-identity-panel > * + * {
+        border-top: 0;
+        border-inline-start: var(--tblr-border-width) solid var(--tblr-border-color);
+    }
+}
+
 /* Money columns align by digit. Tabler has no tabular-figures utility. */
 .ark-money {
     font-variant-numeric: tabular-nums;

@@ -2,20 +2,22 @@
     'note' => null,
 ])
 
-<div class="ops-workspace-context-band">
-    <div class="min-w-0 flex-1">
-        @if (filled($note))
-            <p class="ops-workspace-context-band__note">{{ $note }}</p>
-        @endif
+<div {{ $attributes->class(['card card-sm mb-3']) }} data-workspace-context-band>
+    <div class="card-body d-flex flex-wrap align-items-center gap-2">
+        <div class="flex-fill min-w-0">
+            @if (filled($note))
+                <div class="subheader">{{ $note }}</div>
+            @endif
 
-        @if (filled($title ?? null))
-            <p class="ops-workspace-context-band__title">{{ $title }}</p>
-        @endif
-    </div>
-
-    @isset($actions)
-        <div class="ops-workspace-context-band__actions">
-            {{ $actions }}
+            @if (filled($title ?? null))
+                <div class="fw-bold">{{ $title }}</div>
+            @endif
         </div>
-    @endisset
+
+        @isset($actions)
+            <div class="btn-list">
+                {{ $actions }}
+            </div>
+        @endisset
+    </div>
 </div>

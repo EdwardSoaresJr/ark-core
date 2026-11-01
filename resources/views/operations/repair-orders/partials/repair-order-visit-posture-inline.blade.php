@@ -2,7 +2,32 @@
     $serviceLaneLayout = $serviceLaneLayout ?? false;
     $canEdit = $canEdit ?? false;
     $visitLabel = $visitMode?->label() ?? 'Not set';
+    $ui = $ui ?? null;
 @endphp
+
+@if ($ui === 'tabler')
+    <div class="d-flex flex-wrap align-items-baseline gap-2" data-identity-present="visit-posture">
+        @if ($canEdit)
+            <button
+                type="button"
+                class="btn btn-link p-0 fw-bold text-reset"
+                title="Open to edit visit type"
+                @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-posture', invokeEl: $event.currentTarget } }))"
+            >
+                {{ 'RO #'.$repairOrder->repair_order_id }}
+            </button>
+            <button
+                type="button"
+                class="btn btn-link btn-sm p-0 text-secondary"
+                title="Open to edit visit type"
+                @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'visit-posture', invokeEl: $event.currentTarget } }))"
+            >{{ $visitLabel }}</button>
+        @else
+            <span class="fw-bold">{{ 'RO #'.$repairOrder->repair_order_id }}</span>
+            <span class="small text-secondary">{{ $visitLabel }}</span>
+        @endif
+    </div>
+@else
 
 <div class="ops-visit-posture-inline ops-identity-present" data-identity-present="visit-posture">
     <div @class([
@@ -52,3 +77,4 @@
         @endif
     </div>
 </div>
+@endif

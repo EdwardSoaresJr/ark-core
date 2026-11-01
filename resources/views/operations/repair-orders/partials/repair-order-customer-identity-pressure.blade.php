@@ -10,10 +10,23 @@
     $missingFields = $customer instanceof Customer ? $customer->missingIdentityFieldLabels() : [];
     $hint = $customer instanceof Customer ? $customer->identityPressureHint() : null;
     $variant = $variant ?? 'compact';
+    $ui = $ui ?? null;
 @endphp
 
 @if ($pressure->showsChip() && $missingFields !== [])
-    @if ($variant === 'intake')
+    @if ($ui === 'tabler')
+        <div class="d-flex flex-wrap align-items-center gap-2" data-customer-identity-pressure="{{ $pressure->chipTone() }}">
+            <span
+                class="badge bg-{{ $pressure->chipTone() === 'critical' ? 'red' : ($pressure->chipTone() === 'incomplete' ? 'yellow' : 'secondary') }}-lt"
+                @if ($hint)
+                    title="{{ $hint }}"
+                @endif
+            >{{ $pressure->label() }}</span>
+            @if (($showMissingFields ?? true) && $hint)
+                <span class="small text-secondary">{{ $hint }}</span>
+            @endif
+        </div>
+    @elseif ($variant === 'intake')
         <div class="ops-customer-identity-pressure ops-customer-identity-pressure--intake">
             <p class="ops-customer-identity-pressure-intake-label">Customer information needed</p>
             <ul class="ops-customer-identity-pressure-missing-list">

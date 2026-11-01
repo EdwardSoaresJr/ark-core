@@ -13,7 +13,8 @@
 
 @if ($canChangeVehicle)
     <div
-        class="ops-vehicle-change mt-1"
+        class="mt-1"
+        data-vehicle-change
         x-data="arkRepairOrderVehicleChange({
             url: @js(route('operations.repair-orders.vehicle.update', $repairOrder)),
             csrf: @js(csrf_token()),
@@ -23,45 +24,49 @@
     >
         <button
             type="button"
-            class="text-[11px] font-semibold text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950"
+            class="btn btn-link btn-sm p-0"
             @click="open = ! open"
+            :aria-expanded="open"
+            aria-controls="ro-vehicle-change-panel"
             x-text="open ? 'Cancel vehicle change' : 'Wrong vehicle?'"
-        ></button>
+        >Wrong vehicle?</button>
 
-        <div x-show="open" x-cloak class="mt-1.5 rounded-sm border border-slate-200 bg-white p-2">
-            <p class="text-[11px] font-semibold leading-4 text-slate-600">
-                Choose the vehicle for this RO before adding scopes or line items.
-            </p>
+        <div id="ro-vehicle-change-panel" x-show="open" x-cloak class="card card-sm mt-2">
+            <div class="card-body">
+                <p class="small text-secondary mb-2">
+                    Choose the vehicle for this RO before adding scopes or line items.
+                </p>
 
-            @if ($alternateVehicles->isNotEmpty())
-                <div class="mt-2 space-y-1">
-                    @foreach ($alternateVehicles as $alternateVehicle)
-                        <button
-                            type="button"
-                            class="flex w-full items-center justify-between gap-2 rounded-sm border border-slate-200 px-2 py-1.5 text-left text-xs font-semibold text-slate-800 hover:border-slate-300 hover:bg-slate-50"
-                            :disabled="saving"
-                            @click="changeVehicle({{ $alternateVehicle->id }})"
-                        >
-                            <span>{{ $alternateVehicle->display_name }}</span>
-                            <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-sky-700">Use</span>
-                        </button>
-                    @endforeach
-                </div>
-            @else
-                <p class="mt-2 text-xs leading-4 text-slate-500">No other vehicles on file for this customer.</p>
-            @endif
+                @if ($alternateVehicles->isNotEmpty())
+                    <div class="list-group">
+                        @foreach ($alternateVehicles as $alternateVehicle)
+                            <button
+                                type="button"
+                                class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-2 small fw-medium"
+                                :disabled="saving"
+                                @click="changeVehicle({{ $alternateVehicle->id }})"
+                            >
+                                <span>{{ $alternateVehicle->display_name }}</span>
+                                <span class="badge bg-azure-lt flex-shrink-0">Use</span>
+                            </button>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="small text-secondary mb-0">No other vehicles on file for this customer.</p>
+                @endif
 
-            @can(ArkCapability::VehiclesManage->value)
-                <a
-                    href="{{ route('operations.customers.show', $repairOrder->customer) }}#vehicles"
-                    class="mt-2 inline-flex text-[11px] font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-950"
-                >
-                    Add another vehicle
-                </a>
-            @endcan
+                @can(ArkCapability::VehiclesManage->value)
+                    <a
+                        href="{{ route('operations.customers.show', $repairOrder->customer) }}#vehicles"
+                        class="d-inline-block small mt-2"
+                    >
+                        Add another vehicle
+                    </a>
+                @endcan
 
-            <p x-show="error" x-cloak x-text="error" class="mt-2 text-[11px] font-semibold text-rose-700"></p>
-            <p x-show="saving" x-cloak class="mt-2 text-[11px] font-semibold text-slate-400">Updating vehicle…</p>
+                <p x-show="error" x-cloak x-text="error" class="small text-danger mt-2 mb-0" role="alert"></p>
+                <p x-show="saving" x-cloak class="small text-secondary mt-2 mb-0">Updating vehicle…</p>
+            </div>
         </div>
     </div>
 @endif

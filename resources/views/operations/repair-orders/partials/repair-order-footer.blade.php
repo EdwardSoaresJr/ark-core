@@ -8,26 +8,23 @@
     $docked = (bool) ($docked ?? false);
 @endphp
 
-{{--
-  Docked footer lives outside the worksheet Alpine tree (orientation stack).
-  Own x-data so @click / PRINT menu bind - otherwise Add Work is a dead button.
---}}
+{{-- Own x-data so @click and the PRINT menu bind wherever the dock renders. --}}
 <footer
     @class([
-        'ops-ro-footer',
-        'ops-ro-footer--docked' => $docked,
+        'border-top mt-2 pt-2' => $docked,
     ])
     data-ro-footer
+    @if ($docked) data-ro-footer-docked @endif
     aria-label="Repair Order actions"
     x-data
 >
-    <div class="ops-ro-footer__row">
-        <div class="ops-ro-footer__workflow">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
             @if ($workflow->key !== 'none')
                 @if ($workflow->opensModal)
                     <button
                         type="button"
-                        class="ops-ro-footer__primary"
+                        class="btn btn-primary btn-sm"
                         @if ($workflow->title) title="{{ $workflow->title }}" @endif
                         data-workspace-modal-trigger="add-work"
                         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $workflow->modalTask }}', invokeEl: $event.currentTarget } }))"
@@ -39,7 +36,7 @@
                         href="{{ $workflow->href }}"
                         target="_blank"
                         rel="noopener"
-                        class="ops-ro-footer__primary"
+                        class="btn btn-primary btn-sm"
                         @if ($workflow->title) title="{{ $workflow->title }}" @endif
                     >
                         {{ $workflow->label }}
@@ -47,7 +44,7 @@
                 @else
                     <a
                         href="{{ $workflow->href }}"
-                        class="ops-ro-footer__primary"
+                        class="btn btn-primary btn-sm"
                         @if ($workflow->title) title="{{ $workflow->title }}" @endif
                     >
                         {{ $workflow->label }}
@@ -56,12 +53,12 @@
             @endif
         </div>
 
-        <div class="ops-ro-footer__present">
+        <div class="d-flex flex-wrap align-items-center gap-1 flex-fill">
             @foreach ($footer->present as $action)
                 @if ($action->opensModal)
                     <button
                         type="button"
-                        class="ops-ro-footer__quiet"
+                        class="btn btn-ghost-secondary btn-sm"
                         @if ($action->title) title="{{ $action->title }}" @endif
                         data-workspace-modal-trigger="{{ $action->modalTask }}"
                         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: '{{ $action->modalTask }}', invokeEl: $event.currentTarget } }))"
@@ -72,7 +69,7 @@
                     <a
                         href="{{ $action->href }}"
                         @if ($action->opensInNewTab) target="_blank" rel="noopener" @endif
-                        class="ops-ro-footer__quiet"
+                        class="btn btn-ghost-secondary btn-sm"
                         @if ($action->title) title="{{ $action->title }}" @endif
                     >
                         {{ $action->label }}
@@ -82,23 +79,24 @@
         </div>
 
         <div
-            class="ops-ro-footer__utilities"
+            class="position-relative ms-auto"
             x-data="{ open: false }"
             @keydown.escape.window="open = false"
+            data-ro-footer-print
         >
             <button
                 type="button"
-                class="ops-ro-footer__overflow"
+                class="btn btn-ghost-secondary btn-sm"
                 @click="open = ! open"
                 :aria-expanded="open"
                 aria-haspopup="menu"
             >
+                <x-tabler.icon name="printer" />
                 PRINT
             </button>
             <div
-                x-show="open"
-                x-cloak
-                class="ops-ro-footer__menu"
+                class="dropdown-menu dropdown-menu-end bottom-100 end-0 mb-1"
+                :class="{ show: open }"
                 role="menu"
                 @click.outside="open = false"
             >
@@ -108,17 +106,17 @@
                             <button
                                 type="button"
                                 role="menuitem"
-                                class="ops-ro-footer__menu-item"
+                                class="dropdown-item flex-column align-items-start"
                                 @click="open = false; window.alert(@js($action->blockedReason))"
                             >
                                 {{ $action->label }}
-                                <span class="mt-0.5 block text-[11px] font-normal leading-4 text-slate-500">{{ $action->blockedReason }}</span>
+                                <span class="small text-secondary text-wrap">{{ $action->blockedReason }}</span>
                             </button>
                         @else
                             <button
                                 type="button"
                                 role="menuitem"
-                                class="ops-ro-footer__menu-item"
+                                class="dropdown-item"
                                 @click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.keyTag, @js($keyTagUrl), $event.currentTarget, { document: 'key_tag', resolvePrinter: true })"
                             >
                                 {{ $action->label }}
@@ -128,7 +126,7 @@
                         <button
                             type="button"
                             role="menuitem"
-                            class="ops-ro-footer__menu-item"
+                            class="dropdown-item"
                             @click="open = false; window.arkPrintDocument?.(window.ARK_PRINTERS?.oilSticker, @js($oilStickerUrl), $event.currentTarget, { document: 'oil_change_sticker', resolvePrinter: true })"
                         >
                             {{ $action->label }}
@@ -138,7 +136,7 @@
                             href="{{ $action->href }}"
                             @if ($action->opensInNewTab) target="_blank" rel="noopener" @endif
                             role="menuitem"
-                            class="ops-ro-footer__menu-item"
+                            class="dropdown-item"
                             @click="open = false"
                         >
                             {{ $action->label }}
@@ -150,17 +148,17 @@
 
         <button
             type="button"
-            class="ops-ro-footer__top"
+            class="btn btn-icon btn-sm"
             title="Back to top"
             aria-label="Back to top"
+            data-ro-footer-top
             @click="
-                const target = document.querySelector('.ops-estimate-workspace')
-                    || document.getElementById('review-toolbar')
-                    || document.querySelector('[data-worksheet-root]');
+                const target = document.querySelector('[data-worksheet-root]')
+                    || document.getElementById('review-toolbar');
                 (target || document.documentElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
             "
         >
-            <span aria-hidden="true">↑</span>
+            <x-tabler.icon name="arrow-up" />
         </button>
     </div>
 </footer>

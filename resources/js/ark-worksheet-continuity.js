@@ -527,10 +527,11 @@ export const arkWorksheetContinuity = (config = {}) => {
             }
 
             notice.className = tone === 'success'
-                ? 'border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950'
+                ? 'alert alert-success'
                 : tone === 'error'
-                    ? 'border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-950'
-                    : 'border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950';
+                    ? 'alert alert-danger'
+                    : 'alert alert-warning';
+            notice.setAttribute('role', tone === 'error' ? 'alert' : 'status');
             notice.textContent = message;
             flash.hidden = false;
             flash.classList.remove('ops-worksheet-status-flash--pulse');
@@ -959,13 +960,13 @@ export const arkWorksheetContinuity = (config = {}) => {
             // empty (x-show="errorMessage"); a color query always "fails" a successful save.
             const selectors = [
                 '#workspace-modal-host .ops-field-error',
-                '#workspace-modal-host [data-concern-error]',
                 '#workspace-modal-host [data-field-error]',
+                '#workspace-modal-host [data-concern-error]',
                 '#workspace-modal-host [data-review-request-error]',
                 '#workspace-modal-host [data-workspace-modal-validation]',
                 '#concern-store .ops-field-error',
-                '#concern-store [data-concern-error]',
                 '#concern-store [data-field-error]',
+                '#concern-store [data-concern-error]',
             ];
 
             return selectors.some((selector) => {
