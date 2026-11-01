@@ -1595,7 +1595,7 @@ test('presentation workspace exposes estimate authoring without a separate build
         ->assertDontSee('>Editing<', false)
         ->assertDontSee('Edit Estimate')
         ->assertDontSee(route('operations.repair-orders.estimate.email', $repairOrder))
-        ->assertDontSee('ops-estimate-email-form');
+        ->assertDontSee('data-estimate-email-form', false);
 });
 
 test('builder pricing guidance is server fed without client-side matrix math', function () {

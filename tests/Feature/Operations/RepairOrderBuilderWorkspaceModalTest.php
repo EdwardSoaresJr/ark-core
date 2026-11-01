@@ -336,8 +336,7 @@ test('builder workspace modal keeps dormant rose text in Dragon slots without tr
 
     expect($html)
         ->toContain('id="workspace-modal-host"')
-        ->toContain('text-rose-700')
-        ->toContain('x-show="errorMessage"')
+        ->toContain('text-danger small mt-2" x-show="errorMessage"')
         ->not->toContain('data-workspace-modal-validation');
 });
 

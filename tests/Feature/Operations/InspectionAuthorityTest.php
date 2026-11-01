@@ -187,7 +187,7 @@ test('ro inspection tab is control center without walk', function () {
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'inspect']))
         ->assertOk()
-        ->assertSee('ops-inspection--control', false)
+        ->assertSee('data-inspection-control', false)
         ->assertSee('Open Inspection', false)
         ->assertSee('Send walk link', false)
         ->assertSee('data-inspection-handoff-sms', false)

@@ -22,7 +22,8 @@
 @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
     @if ($canShare)
         <div
-            class="border-b border-slate-100 px-3 py-2.5"
+            class="card-body"
+            data-portal-link="inspection"
             x-data="{
                 copying: false,
                 copied: false,
@@ -103,15 +104,15 @@
                 },
             }"
         >
-            <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Inspection portal link</p>
-            <p class="mt-0.5 text-xs leading-4 text-slate-500">
+            <div class="subheader">Inspection portal link</div>
+            <p class="small text-secondary mb-2">
                 Share {{ $findingCount }} recorded {{ str('finding')->plural($findingCount) }} so the customer can review photos and notes.
             </p>
-            <div class="mt-2 flex flex-wrap items-center gap-2">
+            <div class="btn-list">
                 @if ($canSendPortal)
                     <button
                         type="button"
-                        class="h-8 rounded-sm border border-slate-800 bg-slate-900 px-2.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                        class="btn btn-sm btn-primary"
                         :disabled="sending"
                         @click="sendPortalLink()"
                     >
@@ -119,14 +120,14 @@
                         <span x-show="sending" x-cloak>Sending…</span>
                     </button>
                 @elseif (filled($portalSendBlockedReason))
-                    <div class="rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-950">
-                        <p class="font-semibold">Send inspection unavailable</p>
-                        <p class="mt-0.5 leading-4">{{ $portalSendBlockedReason }}</p>
+                    <div class="alert alert-warning mb-0 w-100">
+                        <div class="fw-bold">Send inspection unavailable</div>
+                        <div class="small">{{ $portalSendBlockedReason }}</div>
                     </div>
                 @endif
                 <button
                     type="button"
-                    class="h-8 rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950 disabled:opacity-60"
+                    class="btn btn-sm"
                     :disabled="copying"
                     @click="copyPortalLink()"
                 >
@@ -138,7 +139,7 @@
                     href="{{ $previewUrl }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
+                    class="btn btn-sm"
                 >
                     Preview customer inspection
                 </a>
@@ -146,18 +147,18 @@
                     href="{{ route('operations.repair-orders.inspection.pdf', $repairOrder) }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
+                    class="btn btn-sm"
                 >
                     Inspection PDF
                 </a>
             </div>
-            <p x-show="sendSuccess" x-text="sendSuccess" x-cloak class="mt-2 text-xs font-semibold text-emerald-700"></p>
-            <div x-show="error" x-cloak class="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs text-rose-950" role="alert">
-                <p class="font-semibold">Inspection portal action failed</p>
-                <p class="mt-0.5 leading-4" x-text="error"></p>
+            <div x-show="sendSuccess" x-text="sendSuccess" x-cloak class="small fw-bold text-success mt-2"></div>
+            <div x-show="error" x-cloak class="alert alert-danger mt-2 mb-0" role="alert">
+                <div class="fw-bold">Inspection portal action failed</div>
+                <div class="small" x-text="error"></div>
             </div>
         </div>
     @elseif (! $isTerminal)
-        <p class="border-b border-slate-100 px-3 py-2 text-xs leading-4 text-slate-500">Record inspection findings before sharing a portal link.</p>
+        <div class="card-body small text-secondary" data-portal-link="inspection">Record inspection findings before sharing a portal link.</div>
     @endif
 @endcan
