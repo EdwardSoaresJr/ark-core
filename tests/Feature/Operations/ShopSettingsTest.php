@@ -600,8 +600,8 @@ test('deposit switches are checkboxes that post 0 when off and 1 when on, and re
         ->assertSee('Square deposit capture');
 
     expect($response->getContent())
-        ->toMatch('/<div x-show="depositEnabled"\s+class="grid gap-4 md:col-span-2">/')
-        ->toMatch('/<div x-show="depositIncludeDiagnostics"\s+x-cloak\s+class="border border-slate-200 bg-white px-3 py-3">/');
+        ->toMatch('/<div x-show="depositEnabled"\s*>/')
+        ->toMatch('/<fieldset x-show="depositIncludeDiagnostics"\s+x-cloak\s+class="border rounded p-3">/');
 });
 
 test('saving deposits with each box on or off persists exactly the posted values', function (string $enabled, string $parts, string $diagnostics) {
