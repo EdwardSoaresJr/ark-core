@@ -29,7 +29,8 @@
 @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
     @if ($canShare)
         <div
-            class="border-b border-slate-100 px-3 py-2.5"
+            class="card-body"
+            data-portal-link="estimate"
             x-data="{
                 copying: false,
                 copied: false,
@@ -76,9 +77,9 @@
                 },
             }"
         >
-            <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Customer portal link</p>
-            <p class="mt-0.5 text-xs leading-4 text-slate-500">Share this link so the customer can approve recommended work on this estimate.</p>
-            <div class="mt-2 flex flex-wrap items-center gap-2">
+            <div class="subheader">Customer portal link</div>
+            <p class="small text-secondary mb-2">Share this link so the customer can approve recommended work on this estimate.</p>
+            <div class="btn-list">
                 @if ($canSendPortal)
                     <div
                         x-data="arkPortalSendMenu(@js([
@@ -93,33 +94,33 @@
                             'vinBlockMessage' => $estimateSend['vin_block_message'],
                             'addVinUrl' => route('operations.repair-orders.show', $repairOrder).'#ro-identity-band',
                         ]))"
+                        data-portal-send-menu
                     >
-                        <div class="ops-comms-menu" x-ref="portalMenu">
+                        <div x-ref="portalMenu">
                             <button
                                 type="button"
                                 x-ref="portalMenuTrigger"
                                 @click.stop="toggleMenu()"
                                 :disabled="sending"
-                                class="ops-comms-menu__trigger h-8 rounded-sm border border-slate-800 bg-slate-900 px-2.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                                class="btn btn-sm btn-primary dropdown-toggle"
                                 :aria-expanded="menuOpen"
                                 aria-haspopup="menu"
                             >
-                                <span>Send Portal</span>
-                                <span class="ops-comms-menu__caret" aria-hidden="true">▾</span>
+                                Send Portal
                             </button>
                             <template x-teleport="body">
                                 <div
                                     x-show="menuOpen"
                                     x-ref="portalMenuPanel"
                                     :style="menuStyle"
-                                    class="ops-comms-menu__panel ops-comms-menu__panel--floating"
+                                    class="dropdown-menu show position-fixed"
                                     role="menu"
                                     @click.stop
                                 >
                                     <button
                                         type="button"
                                         role="menuitem"
-                                        class="ops-comms-menu__item"
+                                        class="dropdown-item"
                                         :class="{ 'opacity-50': ! canSms && ! sending }"
                                         :disabled="sending"
                                         @click.stop="sendPortal('sms')"
@@ -127,7 +128,7 @@
                                     <button
                                         type="button"
                                         role="menuitem"
-                                        class="ops-comms-menu__item"
+                                        class="dropdown-item"
                                         :class="{ 'opacity-50': ! canEmail && ! sending }"
                                         :disabled="sending"
                                         @click.stop="sendPortal('email')"
@@ -135,7 +136,7 @@
                                     <button
                                         type="button"
                                         role="menuitem"
-                                        class="ops-comms-menu__item"
+                                        class="dropdown-item"
                                         :class="{ 'opacity-50': (! canSms || ! canEmail) && ! sending }"
                                         :disabled="sending"
                                         @click.stop="sendPortal('both')"
@@ -143,34 +144,34 @@
                                 </div>
                             </template>
                         </div>
-                        <div x-show="vinWarningOpen" x-cloak class="ops-estimate-vin-warning mt-2">
-                            <p class="ops-estimate-vin-warning-title">VIN missing</p>
-                            <p class="ops-estimate-vin-warning-copy">
+                        <div x-show="vinWarningOpen" x-cloak class="alert alert-warning mt-2 mb-0" data-estimate-vin-warning>
+                            <div class="fw-bold">VIN missing</div>
+                            <div class="small">
                                 Parts lookup, labor guides, service history accuracy, and OEM information may be affected.
-                            </p>
-                            <div class="ops-estimate-vin-warning-actions">
-                                <a :href="addVinUrl" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add VIN</a>
-                                <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutVin()">Continue anyway</button>
+                            </div>
+                            <div class="btn-list mt-2">
+                                <a :href="addVinUrl" class="btn btn-sm" @click="cancelVinWarning()">Add VIN</a>
+                                <button type="button" class="btn btn-sm btn-warning" @click="continueWithoutVin()">Continue anyway</button>
                             </div>
                         </div>
-                        <div x-show="error" x-cloak class="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs text-rose-950" role="alert">
-                            <p class="font-semibold">Could not send portal link</p>
-                            <p class="mt-0.5 leading-4" x-text="error"></p>
+                        <div x-show="error" x-cloak class="alert alert-danger mt-2 mb-0" role="alert">
+                            <div class="fw-bold">Could not send portal link</div>
+                            <div class="small" x-text="error"></div>
                         </div>
-                        <p x-show="success" x-text="success" x-cloak class="mt-2 text-xs font-semibold text-emerald-700"></p>
+                        <div x-show="success" x-text="success" x-cloak class="small fw-bold text-success mt-2"></div>
                     </div>
                 @elseif (filled($portalSendBlockedReason))
-                    <div class="rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-950">
-                        <p class="font-semibold">Send Portal unavailable</p>
-                        <p class="mt-0.5 leading-4">{{ $portalSendBlockedReason }}</p>
+                    <div class="alert alert-warning mb-0 w-100">
+                        <div class="fw-bold">Send Portal unavailable</div>
+                        <div class="small">{{ $portalSendBlockedReason }}</div>
                         @if ($portalSendBlockedReason === \App\Ark\Operations\RepairOrders\RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE)
-                            <a href="{{ $repairOrder->estimateConcernReviewUrl() }}" class="mt-1 inline-block font-semibold underline">Review concerns</a>
+                            <a href="{{ $repairOrder->estimateConcernReviewUrl() }}" class="d-inline-block mt-1 fw-bold">Review concerns</a>
                         @endif
                     </div>
                 @endif
                 <button
                     type="button"
-                    class="h-8 rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950 disabled:opacity-60"
+                    class="btn btn-sm"
                     :disabled="copying"
                     @click="copyPortalLink()"
                 >
@@ -182,7 +183,7 @@
                     href="{{ route('operations.repair-orders.portal-preview', $repairOrder) }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
+                    class="btn btn-sm"
                 >
                     Preview customer estimate
                 </a>
@@ -190,17 +191,17 @@
                     href="{{ $vehicleHistoryUrl }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
+                    class="btn btn-sm"
                 >
                     View vehicle history
                 </a>
             </div>
-            <div x-show="error" x-cloak class="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs text-rose-950" role="alert">
-                <p class="font-semibold">Portal link action failed</p>
-                <p class="mt-0.5 leading-4" x-text="error"></p>
+            <div x-show="error" x-cloak class="alert alert-danger mt-2 mb-0" role="alert">
+                <div class="fw-bold">Portal link action failed</div>
+                <div class="small" x-text="error"></div>
             </div>
         </div>
     @elseif (! $isTerminal)
-        <p class="border-b border-slate-100 px-3 py-2 text-xs leading-4 text-slate-500">Add estimate lines before sharing a portal link.</p>
+        <div class="card-body small text-secondary" data-portal-link="estimate">Add estimate lines before sharing a portal link.</div>
     @endif
 @endcan

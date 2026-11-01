@@ -5,8 +5,8 @@
         $approvedTotals = app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder);
     @endphp
 
-    <div class="card-body pb-0">
-        <h3 class="card-title mb-0">Customer Authorization</h3>
+    <div class="card-header">
+        <h3 class="card-title">Customer Authorization</h3>
     </div>
 
     @include('operations.repair-orders.partials.authorization-record-form', [
