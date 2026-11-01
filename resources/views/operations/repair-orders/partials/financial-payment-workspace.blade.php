@@ -129,10 +129,13 @@
                 <div class="d-flex flex-column gap-3">
                     <p class="small fw-medium text-danger mb-0" x-show="cardError" x-cloak x-text="cardError"></p>
                 @unless ($terminal)
-                    @if (! $captureReady && ($financial['canTakePaymentCapture'] ?? false))
-                        <div class="alert alert-warning mb-0">
-                            {{ $readiness['message'] ?? 'Card capture is not ready. Connect payments in Platform or use cash.' }}
-                        </div>
+                    @if (! $captureReady && ($financial['canTakePaymentCapture'] ?? false) && filled($readiness['message'] ?? null))
+                        <p class="small text-secondary mb-0" data-card-processing-notice>
+                            {{ $readiness['message'] }}
+                            @if ($canLedger)
+                                Recorded payment methods still work.
+                            @endif
+                        </p>
                     @endif
 
                     @if ($ledgerKind === 'deposit')
