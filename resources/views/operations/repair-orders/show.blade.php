@@ -1762,7 +1762,6 @@
                         {{-- Add Work lives on the contextual footer - one primary CTA per viewport. --}}
                     @endunless
 
-                    <x-operations.worksheet-island>
                     @include('operations.repair-orders.partials.workspace-modal.host', [
                         'repairOrder' => $repairOrder,
                         'isTerminal' => $isTerminal,
@@ -1782,7 +1781,7 @@
                         'technicians' => $technicians ?? collect(),
                     ])
 
-                    <div class="ops-worksheet-concerns">
+                    <div data-worksheet-procurement>
                         @if (app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->available())
                             @include('operations.repair-orders.partials.repair-order-linked-quote', [
                                 'repairOrder' => $repairOrder,
@@ -1797,12 +1796,12 @@
                                 'canImportQuote' => true,
                             ])
                         @elseif ($partsTechLauncher->usesPlatform() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
+                            <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
                                 {{ $partsTechLauncher->blockedReason($repairOrder) }}
                             </p>
                         @elseif ($partsTechLauncher->configured() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
-                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}" class="font-semibold underline decoration-slate-400 hover:text-slate-900">Settings → PartsTech</a>.
+                            <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
                             </p>
                         @endif
 
@@ -1813,7 +1812,6 @@
                             ])
                         @endif
                     </div>
-                    </x-operations.worksheet-island>
 
                         @php
                             // Priority order (Must Do → Should Do → Could Do → Information Only), then advisor position.

@@ -682,7 +682,7 @@ export const arkWorksheetContinuity = (config = {}) => {
 
         reopenConcernStoreIfNeeded(doc) {
             const hasConcernErrors = Boolean(
-                doc.querySelector('#concern-store .ops-field-error, #concern-store [data-concern-error], [data-workspace-modal-form="concern"] .ops-field-error'),
+                doc.querySelector('#concern-store .ops-field-error, #concern-store [data-field-error], #concern-store [data-concern-error], [data-workspace-modal-form="concern"] .ops-field-error, [data-workspace-modal-form="concern"] [data-field-error]'),
             );
 
             if (hasConcernErrors) {
@@ -960,10 +960,12 @@ export const arkWorksheetContinuity = (config = {}) => {
             const selectors = [
                 '#workspace-modal-host .ops-field-error',
                 '#workspace-modal-host [data-concern-error]',
+                '#workspace-modal-host [data-field-error]',
                 '#workspace-modal-host [data-review-request-error]',
                 '#workspace-modal-host [data-workspace-modal-validation]',
                 '#concern-store .ops-field-error',
                 '#concern-store [data-concern-error]',
+                '#concern-store [data-field-error]',
             ];
 
             return selectors.some((selector) => {

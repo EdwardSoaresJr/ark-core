@@ -210,5 +210,5 @@ test('repair order concern authoring suggests only this vehicle previous visits'
     $panelStart = strpos($html, 'data-workspace-modal-form="concern-narrative"');
     expect($panelStart)->not->toBeFalse();
     $panel = substr($html, $panelStart, 16000);
-    expect(strpos($panel, 'Recommendation intent'))->toBeLessThan(strpos($panel, 'ark-vehicle-memory'));
+    expect(strpos($panel, 'Recommendation intent'))->toBeLessThan(strpos($panel, 'data-vehicle-memory'));
 });

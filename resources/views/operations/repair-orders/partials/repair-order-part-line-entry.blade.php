@@ -4,37 +4,37 @@
 <input type="hidden" name="pricing_matrix_explicit" :value="explicitMatrix ? '1' : '0'">
 <input type="hidden" name="unit_price_override" :value="sellEdited ? '1' : '0'">
 
-<div class="ops-line-entry-panel ops-line-entry-panel--part space-y-3">
-    <label class="ops-field">
-        <span class="ops-field-label">Part description</span>
+<div class="d-flex flex-column gap-3" data-line-entry-part>
+    <label class="d-block">
+        <span class="form-label">Part description</span>
         <input
             name="description"
             value="{{ $description ?? '' }}"
             required
             :placeholder="descriptionPlaceholder()"
-            class="ops-field-input"
+            class="form-control"
         >
-        <span class="mt-1 block text-[11px] text-slate-500">Internal / ordering identity (brand, catalog name, part #).</span>
+        <span class="form-hint">Internal / ordering identity (brand, catalog name, part #).</span>
     </label>
 
     @if (\App\Ark\Operations\Settings\ShopSettings::current()->customerPartAllowDescriptionOverride())
-        <label class="ops-field">
-            <span class="ops-field-label">Customer description</span>
+        <label class="d-block">
+            <span class="form-label">Customer description</span>
             <input
                 name="customer_description"
                 value="{{ $customerDescription ?? '' }}"
                 placeholder="Optional - clean label for estimate / PDF"
-                class="ops-field-input"
+                class="form-control"
             >
-            <span class="mt-1 block text-[11px] text-slate-500">Shown on customer documents. Leave blank to use the shop presentation mode.</span>
+            <span class="form-hint">Shown on customer documents. Leave blank to use the shop presentation mode.</span>
         </label>
     @endif
 
-    <div class="ops-part-line-pricing">
-        <p class="ops-part-line-pricing-heading">Pricing</p>
-        <div class="ops-part-line-pricing-grid">
-            <label class="ops-field">
-                <span class="ops-field-label">Your cost</span>
+    <fieldset class="form-fieldset mb-0">
+        <legend class="subheader mb-2">Pricing</legend>
+        <div class="row g-2">
+            <label class="col-6 col-md-3">
+                <span class="form-label">Your cost</span>
                 <input
                     name="part_cost"
                     x-model="cost"
@@ -42,16 +42,16 @@
                     @blur="onCostBlur()"
                     inputmode="decimal"
                     placeholder="0.00"
-                    class="ops-field-input ops-field-input--numeric"
+                    class="form-control text-end ark-money"
                 >
             </label>
-            <label class="ops-field">
-                <span class="ops-field-label">Parts matrix</span>
+            <label class="col-6 col-md-3">
+                <span class="form-label">Parts matrix</span>
                 <select
                     x-model="pricingSelection"
                     @change="onPricingSelectionChange($event)"
                     @input="onPricingSelectionChange($event)"
-                    class="ops-field-input"
+                    class="form-select"
                 >
                     @foreach ($partsMatrices as $matrix)
                         <option value="{{ $matrix['key'] }}">{{ $matrix['name'] }}</option>
@@ -59,8 +59,8 @@
                     <option value="manual">Manual price</option>
                 </select>
             </label>
-            <label class="ops-field">
-                <span class="ops-field-label" x-text="pricingMode === 'matrix' && ! sellEdited ? 'Sell (from matrix)' : 'Sell price'"></span>
+            <label class="col-6 col-md-3">
+                <span class="form-label" x-text="pricingMode === 'matrix' && ! sellEdited ? 'Sell (from matrix)' : 'Sell price'"></span>
                 <input
                     name="unit_price"
                     x-model="sell"
@@ -68,61 +68,62 @@
                     :required="pricingMode === 'manual'"
                     inputmode="decimal"
                     placeholder="0.00"
-                    :class="pricingMode === 'matrix' && ! sellEdited && sell ? 'ops-field-input ops-field-input--numeric ops-field-input--derived' : 'ops-field-input ops-field-input--numeric'"
+                    class="form-control text-end ark-money"
+                    :class="pricingMode === 'matrix' && ! sellEdited && sell ? 'bg-secondary-lt' : ''"
                 >
             </label>
-            <label class="ops-field">
-                <span class="ops-field-label">Quantity</span>
+            <label class="col-6 col-md-3">
+                <span class="form-label">Quantity</span>
                 <input
                     name="quantity"
                     value="{{ $quantity ?? '1.00' }}"
                     required
                     inputmode="decimal"
                     placeholder="1"
-                    class="ops-field-input ops-field-input--numeric"
+                    class="form-control text-end ark-money"
                 >
             </label>
         </div>
-    </div>
+    </fieldset>
 
-    <div class="ops-part-line-sourcing">
-        <p class="ops-part-line-pricing-heading">Sourcing</p>
-        <div class="grid gap-2 sm:grid-cols-2">
-            <label class="ops-field">
-                <span class="ops-field-label">Vendor</span>
-                <input name="vendor_name" value="{{ $vendorName ?? '' }}" placeholder="Worldpac, NAPA, dealer…" class="ops-field-input">
+    <fieldset class="form-fieldset mb-0">
+        <legend class="subheader mb-2">Sourcing</legend>
+        <div class="row g-2">
+            <label class="col-sm-6">
+                <span class="form-label">Vendor</span>
+                <input name="vendor_name" value="{{ $vendorName ?? '' }}" placeholder="Worldpac, NAPA, dealer…" class="form-control">
             </label>
-            <label class="ops-field">
-                <span class="ops-field-label">Part number</span>
-                <input name="part_number" value="{{ $partNumber ?? '' }}" placeholder="Manufacturer or catalog #" class="ops-field-input">
+            <label class="col-sm-6">
+                <span class="form-label">Part number</span>
+                <input name="part_number" value="{{ $partNumber ?? '' }}" placeholder="Manufacturer or catalog #" class="form-control">
             </label>
-            <label class="ops-field sm:col-span-2">
-                <span class="ops-field-label">Order note</span>
-                <input name="sourcing_notes" value="{{ $sourcingNotes ?? '' }}" placeholder="ETA, source, backorder, will-call…" class="ops-field-input">
+            <label class="col-12">
+                <span class="form-label">Order note</span>
+                <input name="sourcing_notes" value="{{ $sourcingNotes ?? '' }}" placeholder="ETA, source, backorder, will-call…" class="form-control">
             </label>
-            <div class="sm:col-span-2">
+            <div class="col-12">
                 @include('operations.repair-orders.partials.repair-order-part-line-metadata-fields', [
                     'partSource' => $partSource ?? null,
                     'partClassification' => $partClassification ?? null,
                     'partWarrantyImpact' => $partWarrantyImpact ?? null,
                 ])
             </div>
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:col-span-2">
-                <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                <label class="form-check mb-0">
                     <input type="hidden" name="has_core" value="0">
-                    <input type="checkbox" name="has_core" value="1" @checked((bool) ($hasCore ?? false)) @change="onCoreChargeToggle()" class="rounded-sm border-slate-300 text-slate-900">
-                    Core charge
+                    <input type="checkbox" name="has_core" value="1" @checked((bool) ($hasCore ?? false)) @change="onCoreChargeToggle()" class="form-check-input">
+                    <span class="form-check-label">Core charge</span>
                 </label>
-                <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <label class="form-check mb-0">
                     <input type="hidden" name="save_old_part" value="0">
-                    <input type="checkbox" name="save_old_part" value="1" @checked((bool) (($saveOldPart ?? false) || ($hasCore ?? false))) @change="onSaveOldPartToggle($event)" class="rounded-sm border-slate-300 text-slate-900">
-                    Save old part
+                    <input type="checkbox" name="save_old_part" value="1" @checked((bool) (($saveOldPart ?? false) || ($hasCore ?? false))) @change="onSaveOldPartToggle($event)" class="form-check-input">
+                    <span class="form-check-label">Save old part</span>
                 </label>
             </div>
         </div>
-    </div>
+    </fieldset>
 
-    <p class="ops-part-line-guidance">
+    <p class="form-hint mb-0">
         <span x-text="suggestionText() || 'Enter your cost to load matrix sell guidance from the server.'"></span>
         <template x-if="marginPercentage">
             <span> · Margin <span x-text="marginPercentage"></span>%</span>
@@ -139,8 +140,8 @@
     </p>
 
     @if ($showSubmit ?? true)
-        <div class="ops-line-entry-actions">
-            <button type="submit" class="ops-line-add-btn ops-line-add-btn--part">
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary" data-line-add>
                 {{ $submitLabel ?? 'Add Part' }}
             </button>
         </div>

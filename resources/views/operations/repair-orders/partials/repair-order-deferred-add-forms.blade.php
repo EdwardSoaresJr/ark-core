@@ -9,7 +9,7 @@
                 id="deferred-add-{{ $item['key'] }}"
                 method="POST"
                 action="{{ $item['add_url'] }}"
-                class="hidden"
+                class="d-none"
                 data-refresh-scope="worksheet"
                 @submit.prevent="submitWorksheetForm($event)"
             >
