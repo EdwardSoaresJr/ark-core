@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations', 'staff'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations', 'staff', 'excellence'];
         @endphp
 
         <div class="row g-3">
@@ -1506,6 +1506,17 @@
                     </section>
                 @endcan
 
+                <section class="card" x-show="active === 'excellence'" x-cloak data-settings-section="excellence">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Owner Targets &amp; Reporting</div>
+                            <h2 class="card-title">Shop performance targets</h2>
+                            <div class="card-subtitle">Targets for posted sales, margins, and the owner digest. They set the green and amber hints on the Operational Report and Margin Health.</div>
+                        </div>
+                    </div>
+                    @include('operations.settings.partials.shop-excellence-targets')
+                </section>
+
                 <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
                 @include('operations.settings.partials.square-payments-settings', [
@@ -1530,8 +1541,6 @@
                 @unless (\App\Ark\Runtime\DemoInstall::isDemo())
                     @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
                 @endunless
-
-                @include('operations.settings.partials.shop-excellence-targets')
 
                 @include('operations.settings.partials.runtime-health', [
                     'telephonyHealth' => $telephonyHealth,
