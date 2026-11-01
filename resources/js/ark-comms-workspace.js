@@ -2,6 +2,8 @@ import { arkEchoEnabled, getArkEcho } from './ark-echo';
 import { arkRealtimeSync } from './ark-realtime-sync';
 
 const POLL_MS = 4000;
+const LIST_ROW = '[data-comms-list-row], .ops-comms-workspace__list-row';
+const ACTIVE_LIST_ROW = '[data-comms-list-row].active, .ops-comms-workspace__list-row--active';
 
 function fragmentUrl(signature = '') {
     const base = document.getElementById('ops-comms-workspace-live')?.dataset.fragmentUrl ?? '';
@@ -23,20 +25,22 @@ function syncListCount(count) {
         return;
     }
 
+    const tabler = title.classList.contains('page-title');
     let countEl = title.querySelector('[data-comms-workspace-count]')
+        || title.querySelector('[data-page-title-count]')
         || title.querySelector('.ops-pressure-count');
     const value = Number(count ?? 0);
 
     if (value > 0) {
         if (! countEl) {
             countEl = document.createElement('span');
-            countEl.className = 'ops-pressure-count ops-pressure-count--inline';
+            countEl.className = tabler ? 'badge bg-red-lt ms-1' : 'ops-pressure-count ops-pressure-count--inline';
             countEl.dataset.commsWorkspaceCount = '';
             title.appendChild(countEl);
         }
 
         countEl.dataset.commsWorkspaceCount = '';
-        countEl.textContent = `(${value})`;
+        countEl.textContent = tabler ? String(value) : `(${value})`;
         countEl.hidden = false;
     } else if (countEl) {
         countEl.textContent = '';
@@ -63,7 +67,7 @@ function replaceSection(sectionId, html) {
 }
 
 function listItemsEl() {
-    return document.querySelector('#ops-comms-workspace-list .ops-comms-workspace__list-items');
+    return document.querySelector('#ops-comms-workspace-list [data-comms-list-items], #ops-comms-workspace-list .ops-comms-workspace__list-items');
 }
 
 function captureListScroll() {
@@ -111,12 +115,27 @@ function markSelectedRow(href) {
 
     const selected = hrefKey(href);
 
-    document.querySelectorAll('.ops-comms-workspace__list-row').forEach((row) => {
-        row.classList.toggle(
-            'ops-comms-workspace__list-row--active',
-            hrefKey(row.getAttribute('href')) === selected,
-        );
+    document.querySelectorAll(LIST_ROW).forEach((row) => {
+        const active = hrefKey(row.getAttribute('href')) === selected;
+
+        if (row.hasAttribute('data-comms-list-row')) {
+            row.classList.toggle('active', active);
+
+            if (active) {
+                row.setAttribute('aria-current', 'true');
+            } else {
+                row.removeAttribute('aria-current');
+            }
+
+            return;
+        }
+
+        row.classList.toggle('ops-comms-workspace__list-row--active', active);
     });
+}
+
+function activeListRowHref() {
+    return document.querySelector(ACTIVE_LIST_ROW)?.getAttribute('href') ?? null;
 }
 
 let selectionSwitching = false;
@@ -132,6 +151,7 @@ function paintActionBubble() {
     const active = selectionSwitching || actionBusyDepth > 0;
 
     thread.classList.toggle('is-switching', active);
+    thread.querySelector('[data-comms-switch]')?.classList.toggle('d-none', ! active);
 
     if (active) {
         thread.setAttribute('aria-busy', 'true');
@@ -188,7 +208,7 @@ function selectionHref(url) {
 }
 
 function setThreadOpen(open) {
-    const workspace = document.querySelector('.ops-comms-workspace');
+    const workspace = document.querySelector('[data-comms-workspace], .ops-comms-workspace');
     const state = window.Alpine?.$data?.(workspace) ?? workspace?._x_dataStack?.[0];
 
     if (! state || ! ('threadOpen' in state)) {
@@ -363,8 +383,7 @@ export function initCommsWorkspace() {
         const composerState = captureComposerState();
         const listScroll = captureListScroll();
         const selectedKey = selectedHref
-            ?? document.querySelector('.ops-comms-workspace__list-row--active')?.getAttribute('href')
-            ?? null;
+            ?? activeListRowHref();
 
         if (replaceList && typeof payload.list === 'string' && payload.list !== '') {
             replaceSection('ops-comms-workspace-list-body', payload.list);
@@ -427,7 +446,7 @@ export function initCommsWorkspace() {
         fragment.searchParams.delete('signature');
 
         const selectedHref = `${nextUrl.pathname}${nextUrl.search}`;
-        const currentHref = document.querySelector('.ops-comms-workspace__list-row--active')?.getAttribute('href') ?? '';
+        const currentHref = activeListRowHref() ?? '';
         const changing = hrefKey(currentHref) !== hrefKey(selectedHref);
 
         markSelectedRow(selectedHref);
@@ -597,7 +616,7 @@ export function initCommsWorkspace() {
 
     root.addEventListener('click', async (event) => {
         const row = event.target instanceof Element
-            ? event.target.closest('.ops-comms-workspace__list-row')
+            ? event.target.closest(LIST_ROW)
             : null;
 
         if (

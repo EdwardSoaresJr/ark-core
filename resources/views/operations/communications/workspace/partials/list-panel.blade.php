@@ -12,44 +12,45 @@
     ]);
 @endphp
 
-<div class="ops-comms-workspace__panel">
+<div class="d-flex flex-column flex-fill overflow-hidden" data-comms-list-panel>
     @if ($section === 'inbox')
-        <nav class="ops-comms-inbox__owners" aria-label="Advisor filter">
-            @foreach ([
-                ['key' => 'everyone', 'label' => 'Everyone'],
-                ['key' => 'mine', 'label' => 'Mine'],
-                ['key' => 'unassigned', 'label' => 'Unassigned'],
-            ] as $ownerLink)
-                <a
-                    href="{{ route('operations.communications.inbox', array_merge($selection, ['owner' => $ownerLink['key']])) }}"
-                    @class(['ops-comms-inbox__owner', 'ops-comms-inbox__owner--active' => $ownerFilter === $ownerLink['key']])
-                >
-                    {{ $ownerLink['label'] }}
-                    <span class="ops-comms-inbox__owner-count">({{ $ownerCounts[$ownerLink['key']] ?? 0 }})</span>
-                </a>
-            @endforeach
+        <nav class="p-2 border-bottom" aria-label="Advisor filter">
+            <div class="btn-group w-100">
+                @foreach ([
+                    ['key' => 'everyone', 'label' => 'Everyone'],
+                    ['key' => 'mine', 'label' => 'Mine'],
+                    ['key' => 'unassigned', 'label' => 'Unassigned'],
+                ] as $ownerLink)
+                    <a
+                        href="{{ route('operations.communications.inbox', array_merge($selection, ['owner' => $ownerLink['key']])) }}"
+                        @class(['btn btn-sm', 'active' => $ownerFilter === $ownerLink['key']])
+                        @if ($ownerFilter === $ownerLink['key']) aria-current="page" @endif
+                    >
+                        {{ $ownerLink['label'] }}
+                        <span class="text-secondary ms-1">{{ $ownerCounts[$ownerLink['key']] ?? 0 }}</span>
+                    </a>
+                @endforeach
+            </div>
         </nav>
     @else
-        <div class="ops-comms-workspace__panel-header">
-            <h3 class="ops-comms-workspace__panel-title">{{ $title }}</h3>
+        <div class="card-header py-2">
+            <h3 class="card-title">{{ $title }}</h3>
             @if ($count > 0)
-                <x-operations.pressure-count :count="$count" inline />
+                <span class="badge bg-red-lt ms-2">{{ $count }}</span>
             @endif
         </div>
     @endif
 
     @if ($items === [])
-        <p class="ops-comms-workspace__empty ops-comms-workspace__empty-fill">Nothing here yet.</p>
+        <div class="card-body text-secondary">Nothing here yet.</div>
     @else
-        <ul class="ops-comms-workspace__list-items">
+        <div class="list-group list-group-flush overflow-auto flex-fill" data-comms-list-items>
             @foreach ($items as $item)
-                <li>
-                    @include('operations.communications.workspace.partials.list-row', [
-                        'item' => $item,
-                        'isSelected' => filled($selected['key'] ?? null) && ($selected['key'] ?? null) === ($item['key'] ?? null),
-                    ])
-                </li>
+                @include('operations.communications.workspace.partials.list-row', [
+                    'item' => $item,
+                    'isSelected' => filled($selected['key'] ?? null) && ($selected['key'] ?? null) === ($item['key'] ?? null),
+                ])
             @endforeach
-        </ul>
+        </div>
     @endif
 </div>

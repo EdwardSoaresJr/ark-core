@@ -14,53 +14,56 @@
         $item['ro_label'] ?? null,
         $item['vehicle_label'] ?? null,
     ])));
+    $badgeClass = match ($badgeTone) {
+        'waiting' => 'bg-yellow-lt',
+        'follow' => 'bg-azure-lt',
+        'resolved' => 'bg-green-lt',
+        default => 'bg-red-lt',
+    };
 @endphp
 
 <a
     href="{{ $itemUrl }}"
+    data-comms-list-row
     data-comms-row-key="{{ $item['key'] ?? '' }}"
-    @class([
-        'ops-comms-inbox__card',
-        'ops-comms-workspace__list-row',
-        'ops-comms-inbox__card--active' => $isSelected,
-        'ops-comms-workspace__list-row--active' => $isSelected,
-    ])
+    @class(['list-group-item list-group-item-action px-3 py-2', 'active' => $isSelected])
+    @if ($isSelected) aria-current="true" @endif
 >
-    <span class="ops-comms-inbox__avatar" aria-hidden="true">{{ $initials !== '' ? $initials : '•' }}</span>
-    <span class="ops-comms-inbox__card-body">
-        <span class="ops-comms-inbox__card-top">
-            <span class="ops-comms-inbox__name-row">
+    <div class="d-flex gap-2">
+        <span class="avatar avatar-sm flex-shrink-0" aria-hidden="true">{{ $initials !== '' ? $initials : '•' }}</span>
+        <div class="flex-fill overflow-hidden">
+            <div class="d-flex align-items-center gap-1">
                 @if (! empty($item['unread']))
-                    <span class="ops-comms-inbox__unread" aria-label="Unread"></span>
+                    <span class="badge badge-dot bg-primary flex-shrink-0" role="img" aria-label="Unread" data-comms-unread></span>
                 @endif
-                <span class="ops-comms-inbox__name">{{ $headline }}</span>
-            </span>
-            @if ($ageLabel !== '')
-                <span class="ops-comms-inbox__age">{{ $ageLabel }}</span>
+                <span class="fw-bold text-truncate">{{ $headline }}</span>
+                @if ($ageLabel !== '')
+                    <span class="ms-auto ps-1 small text-secondary text-nowrap">{{ $ageLabel }}</span>
+                @endif
+            </div>
+            @if ($phone !== '' && $phone !== $headline)
+                <div class="small text-secondary text-truncate">{{ $phone }}</div>
             @endif
-        </span>
-        @if ($phone !== '' && $phone !== $headline)
-            <span class="ops-comms-inbox__phone">{{ $phone }}</span>
-        @endif
-        @if ($preview !== '')
-            <span class="ops-comms-inbox__preview">{{ $preview }}</span>
-        @endif
-        <span class="ops-comms-inbox__card-meta">
-            @if ($sourceLabel !== '')
-                <span class="ops-comms-inbox__badge">{{ $sourceLabel }}</span>
+            @if ($preview !== '')
+                <div class="small text-secondary text-truncate">{{ $preview }}</div>
             @endif
-            @if ($badge !== '')
-                <span @class(['ops-comms-inbox__badge', 'ops-comms-inbox__badge--'.$badgeTone])>{{ $badge }}</span>
-            @endif
-            @if ($sourceLabel !== '' && $assignedLabel !== '')
-                <span class="ops-comms-inbox__ro">{{ $assignedLabel }}</span>
-            @endif
-            @if ($roHint !== '')
-                <span class="ops-comms-inbox__ro">{{ $roHint }}</span>
-            @endif
-            @if ($ownerInitials !== '')
-                <span class="ops-comms-inbox__owner-mark">{{ $ownerInitials }}</span>
-            @endif
-        </span>
-    </span>
+            <div class="d-flex flex-wrap align-items-center gap-1 mt-1 small">
+                @if ($sourceLabel !== '')
+                    <span class="badge bg-secondary-lt">{{ $sourceLabel }}</span>
+                @endif
+                @if ($badge !== '')
+                    <span class="badge {{ $badgeClass }}">{{ $badge }}</span>
+                @endif
+                @if ($sourceLabel !== '' && $assignedLabel !== '')
+                    <span class="text-secondary">{{ $assignedLabel }}</span>
+                @endif
+                @if ($roHint !== '')
+                    <span class="text-secondary text-truncate">{{ $roHint }}</span>
+                @endif
+                @if ($ownerInitials !== '')
+                    <span class="ms-auto fw-bold text-secondary" title="Owner">{{ $ownerInitials }}</span>
+                @endif
+            </div>
+        </div>
+    </div>
 </a>

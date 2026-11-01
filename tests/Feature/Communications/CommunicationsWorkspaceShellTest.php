@@ -29,7 +29,7 @@ test('advisor can open attention and internal workspace shells', function (): vo
     $html = $this->actingAs($advisor)
         ->get(CommunicationsNeedsYou::url())
         ->assertOk()
-        ->assertSee('ops-comms-workspace', false)
+        ->assertSee('data-comms-workspace', false)
         ->assertSee('Needs attention', false)
         ->assertSee('Waiting', false)
         ->assertSee('Resolved', false)

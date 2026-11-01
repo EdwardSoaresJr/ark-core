@@ -22,12 +22,12 @@ test('advisor can open communications history workspace', function (): void {
         ->get(route('operations.communications.history'))
         ->assertOk()
         ->assertSee('History', false)
-        ->assertSee('ops-comms-history-filters', false)
+        ->assertSee('data-comms-history-filters', false)
         ->assertSee('Phone or customer name', false)
         ->assertSee('threadOpen: false', false)
         ->getContent();
 
-    $filtersAt = strpos($html, 'ops-comms-history-filters');
+    $filtersAt = strpos($html, 'data-comms-history-filters');
     $refreshTargetAt = strpos($html, 'id="ops-comms-workspace-list-body"');
 
     expect($filtersAt)->toBeInt()
@@ -43,7 +43,7 @@ test('working queue does not render history search controls', function (): void 
     $this->actingAs($advisor)
         ->get(route('operations.communications.inbox', ['filter' => 'needs']))
         ->assertOk()
-        ->assertDontSee('ops-comms-history-filters', false)
+        ->assertDontSee('data-comms-history-filters', false)
         ->assertDontSee('Phone or customer name', false)
         ->assertSee('threadOpen: false', false);
 });
@@ -197,12 +197,12 @@ test('history back to list keeps the search and page without the open call', fun
         ]))
         ->assertOk()
         ->assertSee('Back to list', false)
-        ->assertSee('ops-comms-inbox__context-toggle', false)
+        ->assertSee('data-comms-context-toggle', false)
         ->assertSee('threadOpen: true', false)
-        ->assertSee('ops-comms-history-filters', false)
+        ->assertSee('data-comms-history-filters', false)
         ->getContent();
 
-    $filtersAt = strpos($html, 'ops-comms-history-filters');
+    $filtersAt = strpos($html, 'data-comms-history-filters');
     $refreshTargetAt = strpos($html, 'id="ops-comms-workspace-list-body"');
 
     expect($html)->toContain('href="'.e($back).'"')

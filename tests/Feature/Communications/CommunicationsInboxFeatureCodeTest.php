@@ -268,7 +268,7 @@ test('communications inbox call thread renders recording player when available',
     expect($html)->toContain('Incoming call')
         ->and($html)->toContain('Recording')
         ->and(
-            str_contains($html, 'ops-comms-workspace__call-audio')
+            str_contains($html, 'data-comms-call-audio')
             || str_contains($html, 'Recording on file')
         )->toBeTrue();
 });

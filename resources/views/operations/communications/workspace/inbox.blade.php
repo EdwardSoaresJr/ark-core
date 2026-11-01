@@ -15,17 +15,7 @@
     };
 @endphp
 
-<x-operations.app title="Communications">
-    @if (filled($workspace['error'] ?? null) || session('error'))
-        <p class="mb-3 border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950">
-            {{ $workspace['error'] ?? session('error') }}
-        </p>
-    @endif
-    @if (session('status'))
-        <p class="mb-3 border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
-            {{ session('status') }}
-        </p>
-    @endif
+<x-operations.app title="Communications" ui="tabler">
     <x-operations.communications-workspace
         :section="$workspace['section']"
         :list-items="$workspace['list_items']"
@@ -46,5 +36,16 @@
         :platform-backed="(bool) ($workspace['platform_backed'] ?? false)"
         :owner-filter="$workspace['owner_filter'] ?? 'everyone'"
         :owner-counts="$workspace['owner_counts'] ?? null"
-    />
+    >
+        @if (filled($workspace['error'] ?? null) || session('error'))
+            <div class="alert alert-warning flex-shrink-0 mb-2" role="alert">
+                {{ $workspace['error'] ?? session('error') }}
+            </div>
+        @endif
+        @if (session('status'))
+            <div class="alert alert-success flex-shrink-0 mb-2" role="status">
+                {{ session('status') }}
+            </div>
+        @endif
+    </x-operations.communications-workspace>
 </x-operations.app>

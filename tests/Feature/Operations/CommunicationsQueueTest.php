@@ -80,7 +80,7 @@ test('work home shows communications metric without queue sections', function ()
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(CommunicationsNeedsYou::url())
         ->assertOk()
-        ->assertSee('ops-comms-workspace', false)
+        ->assertSee('data-comms-workspace', false)
         ->assertSee('Needs attention', false)
         ->assertDontSee('id="ops-work-recent-activity"', false);
 });
