@@ -13,6 +13,9 @@ use Illuminate\Validation\Rule;
 
 class RepairOrderAuthorizationStoreController
 {
+    /** The pending changes the form presented; an approval of changed work covers only those. */
+    public const PRESENTED_CHANGES_FIELD = 'presented_changes';
+
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
@@ -48,6 +51,26 @@ class RepairOrderAuthorizationStoreController
                 ->withInput();
         }
 
+        if ($changedApprovedScopes !== [] && ! hash_equals(
+            $workAuthorization->pendingChangesFingerprint($repairOrder),
+            (string) $request->input(self::PRESENTED_CHANGES_FIELD, ''),
+        )) {
+            return back()
+                ->withErrors(['authorization' => 'The changes awaiting approval are not the ones this form showed. Reload the repair order and confirm the current changes with the customer before recording.'])
+                ->withInput();
+        }
+
+        if ($changedApprovedScopes !== [] && ! $this->leftAtChangedScopeDefault($data, $repairOrder, $totalsCalculator, $workAuthorization)) {
+            $approvedTotals = $totalsCalculator->approvedTotalsForRead($repairOrder);
+
+            return back()
+                ->withErrors(['authorization' => sprintf(
+                    'This approval covers the changes awaiting authorization, so the approved total becomes %s. Record that amount, or change the work before recording.',
+                    $approvedTotals->format($approvedTotals->totalCents() + $workAuthorization->workOutsideApprovedSalesCents($repairOrder)),
+                )])
+                ->withInput();
+        }
+
         $approvalType = $concernDispositions === []
             ? $resolveAuthorizationType->fromRepairOrder($repairOrder)
             : $resolveAuthorizationType->assumingDispositions($repairOrder, $concernDispositions);
@@ -57,7 +80,8 @@ class RepairOrderAuthorizationStoreController
             approvalType: $approvalType,
             source: ApprovalSource::from($data['source']),
             approvedBy: $data['approved_by'],
-            approvedAmountCents: $changedApprovedScopes !== [] && $this->leftAtChangedScopeDefault($data, $repairOrder, $totalsCalculator, $workAuthorization)
+            // Approving changes records the approved total after them, never a typed or stale amount.
+            approvedAmountCents: $changedApprovedScopes !== []
                 ? null
                 : $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
             notes: $data['notes'] ?? null,
@@ -109,8 +133,9 @@ class RepairOrderAuthorizationStoreController
     }
 
     /**
-     * The presented default for approving changed work is the approved total plus that work.
-     * Left as presented, the recorded amount is the approved total after this approval.
+     * The presented default for approving changed work is the approved total plus that work, and it
+     * records the approved total after this approval. Any other amount, including the approved
+     * total before the change, contradicts the work being approved.
      *
      * @param  array<string, mixed>  $data
      */
@@ -127,10 +152,7 @@ class RepairOrderAuthorizationStoreController
         $posted = (int) round(((float) $data['approved_amount']) * 100);
         $approvedNow = $totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
 
-        return in_array($posted, [
-            $approvedNow,
-            $approvedNow + $workAuthorization->workOutsideApprovedSalesCents($repairOrder),
-        ], true);
+        return $posted === $approvedNow + $workAuthorization->workOutsideApprovedSalesCents($repairOrder);
     }
 
     /**

@@ -16,6 +16,7 @@ use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RecordAuthorizationExceptionAction;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
@@ -365,6 +366,7 @@ test('#66: recording approval brings a raised legacy line in and keeps the old a
         ->post(route('operations.repair-orders.authorization.store', $repairOrder), [
             'source' => ApprovalSource::Phone->value,
             'approved_by' => 'Paul Howell',
+            RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD => app(WorkCompletionAuthorization::class)->pendingChangesFingerprint($repairOrder->fresh()),
         ])
         ->assertRedirect();
 

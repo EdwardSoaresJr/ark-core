@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Documents;
 
+use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Models\User;
@@ -143,6 +145,39 @@ class EstimateDocumentService
                 'status' => 'failed',
                 'needs_pdf_refresh' => true,
             ])->save();
+        }
+    }
+
+    /**
+     * Closing freezes the final invoice PDF as the record the customer keeps. One whose stored PDF
+     * predates a payment, refund, or other ledger change recorded before the close is rendered once
+     * more now, from its stored snapshot and the closing ledger; the snapshot is never rewritten. A
+     * rendering failure leaves it flagged and never undoes the close.
+     */
+    public function refreshFinalInvoicePdfAtClose(RepairOrder $repairOrder): void
+    {
+        $invoices = EstimateDocument::query()
+            ->where('repair_order_id', $repairOrder->id)
+            ->where('document_type', FinancialDocumentType::Invoice->value)
+            ->where('status', '!=', InvoiceStatus::Voided->value)
+            ->where('needs_pdf_refresh', true)
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            try {
+                $this->generatePdf($invoice);
+            } catch (Throwable $exception) {
+                if (! $this->isPdfRenderingFailure($exception)) {
+                    throw $exception;
+                }
+
+                Log::warning('Final invoice PDF could not be refreshed when the repair order closed.', [
+                    'document_id' => $invoice->id,
+                    'repair_order_id' => $invoice->repair_order_id,
+                    'exception' => $exception::class,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
         }
     }
 

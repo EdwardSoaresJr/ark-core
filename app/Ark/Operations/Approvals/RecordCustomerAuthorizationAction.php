@@ -68,7 +68,6 @@ final class RecordCustomerAuthorizationAction
 
             $resolvedAmountCents = $this->resolveApprovedAmountCents(
                 $repairOrder,
-                $approvalType,
                 $approvedAmountCents,
             );
 
@@ -148,16 +147,16 @@ final class RecordCustomerAuthorizationAction
         }
     }
 
+    /**
+     * No amount given: the approved total after this recording, from the approved scopes it just
+     * recorded, whatever the approval type (a diagnostic approval is still an approval of an amount).
+     */
     private function resolveApprovedAmountCents(
         RepairOrder $repairOrder,
-        ApprovalType $approvalType,
         ?int $approvedAmountCents,
     ): int {
-        return match ($approvalType) {
-            ApprovalType::Repair, ApprovalType::Partial => $approvedAmountCents
-                ?? $this->totalsCalculator->totalsForApprovedWork($repairOrder)->totalCents(),
-            ApprovalType::Diagnostic => $approvedAmountCents ?? 0,
-        };
+        return $approvedAmountCents
+            ?? $this->totalsCalculator->totalsForApprovedWork($repairOrder)->totalCents();
     }
 
     private function estimateSnapshotReference(RepairOrder $repairOrder): ?string

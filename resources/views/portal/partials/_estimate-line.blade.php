@@ -16,6 +16,7 @@
             'variant' => 'portal',
         ])
         <p class="text-xs text-slate-500">{{ $line['quantity'] ?? '1' }}</p>
-        <p class="text-right font-semibold tabular-nums text-slate-800">{{ $line['total'] ?? $line['line_total'] ?? $line['sell'] ?? '' }}</p>
+        {{-- Before tax and fees, like the concern total above it; tax and fees are in the summary. --}}
+        <p class="text-right font-semibold tabular-nums text-slate-800">{{ $line['subtotal'] ?? $line['total'] ?? $line['line_total'] ?? $line['sell'] ?? '' }}</p>
     </div>
 @endif
