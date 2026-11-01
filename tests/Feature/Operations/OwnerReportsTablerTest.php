@@ -183,3 +183,149 @@ test('the scoreboard wall and its refresh fragment keep the legacy board', funct
         ->assertDontSee('data-scoreboard-board', false)
         ->assertDontSee('nav-pills', false);
 });
+
+function ownerReportsTexts(DOMXPath $xpath, string $query): array
+{
+    $texts = [];
+    foreach ($xpath->query($query) as $node) {
+        $texts[] = preg_replace('/\s+/u', ' ', trim($node->textContent));
+    }
+
+    return $texts;
+}
+
+test('reports catalog renders on tabler with every report card link', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    completeRequiredLearnFor($advisor);
+
+    $response = $this->actingAs($advisor)->get(route('operations.reports.index'))->assertOk();
+    $xpath = ownerReportsAssertTablerPage($response->getContent(), 'Pick a report');
+
+    $cards = collect($response->viewData('sections'))->flatMap(fn (array $section): array => $section['cards']);
+    expect($cards)->not->toBeEmpty();
+
+    foreach ($cards as $card) {
+        expect($xpath->query('//a[@data-reports-card]['.ownerReportsClass('card-link').'][@href="'.$card['url'].'"]')->length)->toBe(1);
+    }
+
+    expect($xpath->query('//*[@data-reports-section]')->length)->toBe(count($response->viewData('sections')));
+});
+
+test('operational report renders on tabler with its range form, figures, and section links', function (string $tab): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    completeRequiredLearnFor($advisor);
+
+    $response = $this->actingAs($advisor)
+        ->get(route('operations.reports.operational', ['tab' => $tab, 'from' => '2026-09-01', 'to' => '2026-09-20']))
+        ->assertOk();
+    $xpath = ownerReportsAssertTablerPage($response->getContent(), 'Executive Pulse');
+
+    $form = $xpath->query('//form[@method="GET"][@action="'.route('operations.reports.operational').'"]')->item(0);
+    expect($form)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//input[@type="hidden"][@name="tab"][@value="'.$tab.'"]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="date"][@name="from"][@id="from"][@value="2026-09-01"][@min]['.ownerReportsClass('form-control').']', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="date"][@name="to"][@id="to"][@value="2026-09-20"]['.ownerReportsClass('form-control').']', $form)->length)->toBe(1)
+        ->and($xpath->query('.//label[@for="from"]', $form)->length)->toBe(1);
+
+    $tiles = ownerReportsTexts($xpath, '//*[@data-report-kpi]');
+    expect($tiles)->toHaveCount(count($response->viewData('kpis')));
+    foreach ($response->viewData('kpis') as $index => $kpi) {
+        expect($tiles[$index])->toContain($kpi['label'])->toContain($kpi['value']);
+    }
+
+    $nav = $xpath->query('//nav[@data-report-tabs]['.ownerReportsClass('nav-pills').']')->item(0);
+    expect($nav)->toBeInstanceOf(DOMElement::class);
+    foreach (\App\Ark\Operations\Reports\OperationalReportTab::casesInDisplayOrder() as $case) {
+        $link = $xpath->query('.//a[@href="'.route('operations.reports.operational', ['from' => '2026-09-01', 'to' => '2026-09-20', 'tab' => $case->value]).'"]', $nav)->item(0);
+        expect($link)->toBeInstanceOf(DOMElement::class)
+            ->and($link->getAttribute('aria-current'))->toBe($case->value === $tab ? 'page' : '');
+    }
+
+    expect($xpath->query('//*[@data-report-tab="'.$tab.'"]//table['.ownerReportsClass('card-table').']/ancestor::*['.ownerReportsClass('table-responsive').']/ancestor::*['.ownerReportsClass('card').']')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//a[@href="'.route('operations.reports.index').'"]')->length)->toBeGreaterThan(0);
+})->with(fn (): array => array_map(
+    fn (\App\Ark\Operations\Reports\OperationalReportTab $tab): string => $tab->value,
+    \App\Ark\Operations\Reports\OperationalReportTab::casesInDisplayOrder(),
+));
+
+test('operational report links one shop day to its end of day card', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    completeRequiredLearnFor($advisor);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.reports.operational', ['from' => '2026-09-20', 'to' => '2026-09-20']))
+        ->assertOk()
+        ->assertSee('href="'.route('operations.reports.end-of-day', ['date' => '2026-09-20']).'"', false);
+
+    $this->actingAs(ownerReportsAdmin())
+        ->get(route('operations.reports.operational', ['from' => '2026-09-20', 'to' => '2026-09-20']))
+        ->assertOk()
+        ->assertSee('href="'.route('operations.owner.day-review', ['date' => '2026-09-20']).'"', false);
+});
+
+test('end of day report renders on tabler with its figures and shop day filter', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    completeRequiredLearnFor($advisor);
+
+    $response = $this->actingAs($advisor)->get(route('operations.reports.end-of-day'))->assertOk();
+    $xpath = ownerReportsAssertTablerPage($response->getContent(), 'End of Day');
+    $eod = $response->viewData('eod');
+
+    expect($xpath->query('//form[@method="GET"][@action="'.$response->viewData('dateFormAction').'"]//input[@type="date"][@name="date"][@id="bookend-date"][@value="'.$eod->fromDate.'"]['.ownerReportsClass('form-control').']')->length)->toBe(1)
+        ->and($xpath->query('//label[@for="bookend-date"]')->length)->toBe(1)
+        ->and($xpath->query('//a[@href="'.route('operations.reports.index').'"]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-eod-reconcile]//a[@href="'.$eod->financialUrl.'"]')->length)->toBe(1)
+        ->and(ownerReportsTexts($xpath, '//h2[@id="eod-title"]'))->toBe([$eod->rangeLabel]);
+
+    $metrics = ownerReportsTexts($xpath, '//*[@data-eod-metric]');
+    $expected = [...$eod->salesEffectiveness, ...$eod->shopMetrics];
+    expect($metrics)->toHaveCount(count($expected));
+    foreach ($expected as $index => $metric) {
+        expect($metrics[$index])->toContain($metric['label'])->toContain($metric['value']);
+    }
+
+    $summaryRows = ownerReportsTexts($xpath, '//*[@data-eod-section="ro-summary"]//table['.ownerReportsClass('card-table').']//tr');
+    foreach ($eod->roSummary as $index => $row) {
+        expect($summaryRows[$index])->toContain($row['label'])->toContain($row['value']);
+    }
+
+    $reconcile = ownerReportsTexts($xpath, '//*[@data-eod-reconcile]')[0];
+    expect($reconcile)->toContain($eod->reconciliation['sales_posted'])
+        ->toContain($eod->reconciliation['write_offs'])
+        ->toContain($eod->reconciliation['cash_collected']);
+});
+
+test('reports stay forbidden to technicians', function (string $route): void {
+    $this->actingAs(actingAsLearnCurrentStaff(ArkRole::Technician))
+        ->get(route($route))
+        ->assertForbidden();
+})->with([
+    'catalog' => 'operations.reports.index',
+    'operational' => 'operations.reports.operational',
+    'end of day' => 'operations.reports.end-of-day',
+]);
+
+test('day review renders on tabler with the end of day card, queue pressure, and its links', function (): void {
+    $response = $this->actingAs(ownerReportsAdmin())
+        ->get(route('operations.owner.day-review', ['date' => '2026-09-20']))
+        ->assertOk();
+    $xpath = ownerReportsAssertTablerPage($response->getContent(), 'Day Review');
+    $eod = $response->viewData('eod');
+
+    expect($xpath->query('//*[@data-eod-report]//form[@action="'.route('operations.owner.day-review').'"]//input[@name="date"][@value="2026-09-20"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-day-review-queue]['.ownerReportsClass('card').']//*['.ownerReportsClass('list-group-item').']')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-day-review-links]//a[@href="'.route('operations.reports.index').'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-day-review-links]//a[@href="'.$eod->reportUrl.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-day-review-links]//a[@href="'.route('operations.workboard').'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-day-review-links]//a[@href="'.route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']).'"]')->length)->toBe(1);
+
+    foreach ($response->viewData('priorities') as $priority) {
+        expect($response->getContent())->toContain(e($priority['label']));
+    }
+});
+
+test('day review stays forbidden to advisors', function (): void {
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
+        ->get(route('operations.owner.day-review'))
+        ->assertForbidden();
+});

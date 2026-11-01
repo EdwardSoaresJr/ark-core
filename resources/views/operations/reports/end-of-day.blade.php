@@ -1,12 +1,12 @@
-<x-operations.app title="End of Day Report">
-    <section class="ops-reports-eod space-y-3">
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-            <a href="{{ route('operations.reports.index') }}" class="font-bold text-sky-800 underline decoration-sky-200 hover:text-sky-950">← All reports</a>
-        </div>
+<x-operations.app title="End of Day Report" ui="tabler">
+    <x-tabler.page layout="fluid" title="End of Day" pretitle="Reports" actions-label="Report shortcuts">
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.reports.index')" icon="arrow-left" label="All reports" />
+        </x-slot:actions>
 
         @include('operations.reports.partials.end-of-day-report', [
             'eod' => $eod,
             'dateFormAction' => $dateFormAction,
         ])
-    </section>
+    </x-tabler.page>
 </x-operations.app>
