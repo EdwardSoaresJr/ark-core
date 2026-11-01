@@ -16,91 +16,112 @@
         ->values();
 @endphp
 
-<div id="history-rail" class="ops-review-rail-tab-panel divide-y divide-slate-100 text-sm">
-    @include('operations.repair-orders.partials.repair-order-lifecycle-panel', [
-        'lifecyclePlacement' => 'history',
-        'repairOrder' => $repairOrder,
-    ])
+<div id="history-rail" class="d-flex flex-column gap-3" data-history-panel>
+    {{-- The status history panel is shared with the worksheet and moves with it. --}}
+    <x-operations.worksheet-island>
+        @include('operations.repair-orders.partials.repair-order-lifecycle-panel', [
+            'lifecyclePlacement' => 'history',
+            'repairOrder' => $repairOrder,
+        ])
+    </x-operations.worksheet-island>
 
-    <div class="ops-review-panel-header">
-        <p class="ops-eyebrow">Vehicle History</p>
-        <p class="ops-meta mt-0.5">Prior visits and deferred work for this vehicle - advisory context only. Calls and texts live on Comms.</p>
+    <div>
+        <h3 class="card-title mb-1">Vehicle History</h3>
+        <p class="small text-secondary mb-0">Prior visits and deferred work for this vehicle - advisory context only. Calls and texts live on Comms.</p>
     </div>
 
-    <section class="px-3 py-2.5">
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Deferred work to revisit</p>
-        @if ($hasDeferredFromPrior || $hasDeferredOnCurrent)
-            <div class="mt-2 grid grid-cols-2 gap-px bg-slate-200">
-                <div class="bg-white px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">From prior visits</p>
-                    <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">{{ $priorVehicleFutureWorkCount }}</p>
-                </div>
-                <div class="bg-white px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Retained value</p>
-                    <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">${{ number_format($priorVehicleFutureWorkCents / 100, 2) }}</p>
-                </div>
-            </div>
-            @if ($hasDeferredOnCurrent)
-                <p class="mt-2 border-l-4 border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold leading-5 text-slate-700">
-                    This RO: {{ $repairOrder->futureWorkSummary() }} · {{ $repairOrder->futureWorkNextAction() }}
-                </p>
-            @endif
-            @foreach ($priorDeferredOrders->take(3) as $futureWorkOrder)
-                <a href="{{ route('operations.repair-orders.show', $futureWorkOrder) }}" class="mt-2 block border border-slate-200 bg-white px-3 py-2 hover:border-slate-300">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="truncate text-sm font-bold text-slate-950">RO #{{ $futureWorkOrder->repair_order_id }} · {{ $futureWorkOrder->futureWorkSummary() }}</p>
-                            <p class="mt-0.5 text-xs leading-4 text-slate-500">{{ $futureWorkOrder->futureWorkNextAction() }}</p>
-                        </div>
-                        <p class="shrink-0 font-black tabular-nums text-slate-950">${{ number_format($futureWorkOrder->futureWorkSubtotalCents() / 100, 2) }}</p>
+    <section class="card card-sm" data-history-deferred>
+        <div class="card-body">
+            <div class="subheader mb-2">Deferred work to revisit</div>
+            @if ($hasDeferredFromPrior || $hasDeferredOnCurrent)
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="small text-secondary">From prior visits</div>
+                        <div class="h3 mb-0 ark-money">{{ $priorVehicleFutureWorkCount }}</div>
                     </div>
-                </a>
-            @endforeach
-        @else
-            <p class="mt-1.5 text-xs leading-4 text-slate-500">No deferred recommendations retained from earlier visits on this vehicle.</p>
+                    <div class="col-6">
+                        <div class="small text-secondary">Retained value</div>
+                        <div class="h3 mb-0 ark-money">${{ number_format($priorVehicleFutureWorkCents / 100, 2) }}</div>
+                    </div>
+                </div>
+                @if ($hasDeferredOnCurrent)
+                    <div class="alert alert-secondary mt-3 mb-0 fw-medium">
+                        This RO: {{ $repairOrder->futureWorkSummary() }} · {{ $repairOrder->futureWorkNextAction() }}
+                    </div>
+                @endif
+            @else
+                <p class="small text-secondary mb-0">No deferred recommendations retained from earlier visits on this vehicle.</p>
+            @endif
+        </div>
+        @if ($hasDeferredFromPrior || $hasDeferredOnCurrent)
+            @if ($priorDeferredOrders->isNotEmpty())
+                <div class="list-group list-group-flush">
+                    @foreach ($priorDeferredOrders->take(3) as $futureWorkOrder)
+                        <a href="{{ route('operations.repair-orders.show', $futureWorkOrder) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex align-items-start justify-content-between gap-3">
+                                <div style="min-width: 0">
+                                    <div class="fw-bold text-truncate">RO #{{ $futureWorkOrder->repair_order_id }} · {{ $futureWorkOrder->futureWorkSummary() }}</div>
+                                    <div class="small text-secondary">{{ $futureWorkOrder->futureWorkNextAction() }}</div>
+                                </div>
+                                <div class="flex-shrink-0 fw-bold ark-money">${{ number_format($futureWorkOrder->futureWorkSubtotalCents() / 100, 2) }}</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         @endif
     </section>
 
-    <section class="px-3 py-2.5">
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Prior visits on this vehicle</p>
-        @forelse ($priorVisits as $priorVisit)
-            @php
-                $visitStamp = $priorVisit->displayClosedAt() ?? $priorVisit->displayOpenedAt();
-                $visitLabel = $priorVisit->displayClosedAt() ? 'Closed' : $priorVisit->status->label();
-            @endphp
-            <a href="{{ route('operations.repair-orders.show', $priorVisit) }}" class="mt-2 block border border-slate-200 bg-white px-3 py-2 hover:border-slate-300">
-                <div class="flex flex-wrap items-baseline justify-between gap-2">
-                    <p class="text-sm font-bold text-slate-950">
-                        RO #{{ $priorVisit->repair_order_id }}
-                        <span class="font-semibold text-slate-500">· {{ $visitLabel }}</span>
-                    </p>
-                    <p class="text-[11px] font-semibold text-slate-400">{{ $visitStamp->timezone($displayTz)->format('M j, Y') }}</p>
-                </div>
-                <p class="mt-1 line-clamp-2 text-xs leading-4 text-slate-600">{{ $priorVisit->concern_summary }}</p>
-                @if ($priorVisit->futureWorkCount() > 0)
-                    <p class="mt-1 text-[11px] font-semibold text-amber-800">
-                        {{ $priorVisit->futureWorkSummary() }} · {{ $priorVisit->futureWorkNextAction() }}
-                    </p>
-                @endif
-            </a>
-        @empty
-            <p class="mt-1.5 text-xs leading-4 text-slate-500">First repair order recorded for this vehicle in ARK.</p>
-        @endforelse
+    <section class="card card-sm" data-history-prior-visits>
+        <div class="card-header">
+            <h3 class="card-title">Prior visits on this vehicle</h3>
+        </div>
+        <div class="list-group list-group-flush">
+            @forelse ($priorVisits as $priorVisit)
+                @php
+                    $visitStamp = $priorVisit->displayClosedAt() ?? $priorVisit->displayOpenedAt();
+                    $visitLabel = $priorVisit->displayClosedAt() ? 'Closed' : $priorVisit->status->label();
+                @endphp
+                <a href="{{ route('operations.repair-orders.show', $priorVisit) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2">
+                        <span class="fw-bold">
+                            RO #{{ $priorVisit->repair_order_id }}
+                            <span class="fw-normal text-secondary">· {{ $visitLabel }}</span>
+                        </span>
+                        <span class="small text-secondary">{{ $visitStamp->timezone($displayTz)->format('M j, Y') }}</span>
+                    </div>
+                    <div class="small text-secondary text-truncate">{{ $priorVisit->concern_summary }}</div>
+                    @if ($priorVisit->futureWorkCount() > 0)
+                        <div class="small fw-medium text-orange">
+                            {{ $priorVisit->futureWorkSummary() }} · {{ $priorVisit->futureWorkNextAction() }}
+                        </div>
+                    @endif
+                </a>
+            @empty
+                <div class="list-group-item small text-secondary">First repair order recorded for this vehicle in ARK.</div>
+            @endforelse
+        </div>
     </section>
 
     @if ($otherOpenRepairOrders->isNotEmpty())
-        <section class="px-3 py-2.5">
-            <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Other open work for customer</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Different vehicle - open only when the customer asks about another car.</p>
-            @foreach ($otherOpenRepairOrders as $otherOpenRepairOrder)
-                <div class="mt-2 flex flex-wrap items-center justify-between gap-2 border border-slate-200 bg-slate-50/80 px-3 py-2">
-                    <p class="min-w-0 text-xs font-semibold text-slate-700">
-                        {{ $otherOpenRepairOrder->vehicle->display_name }}
-                        <span class="text-slate-500">· RO #{{ $otherOpenRepairOrder->repairOrder->repair_order_id }} · {{ $otherOpenRepairOrder->repairOrder->status->label() }}</span>
-                    </p>
-                    <a href="{{ route('operations.repair-orders.show', $otherOpenRepairOrder->repairOrder) }}" class="ops-page-link shrink-0">Open RO</a>
+        <section class="card card-sm" data-history-other-open>
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Other open work for customer</h3>
+                    <p class="card-subtitle">Different vehicle - open only when the customer asks about another car.</p>
                 </div>
-            @endforeach
+            </div>
+            <div class="list-group list-group-flush">
+                @foreach ($otherOpenRepairOrders as $otherOpenRepairOrder)
+                    <div class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="small fw-medium" style="min-width: 0">
+                            {{ $otherOpenRepairOrder->vehicle->display_name }}
+                            <span class="text-secondary">· RO #{{ $otherOpenRepairOrder->repairOrder->repair_order_id }} · {{ $otherOpenRepairOrder->repairOrder->status->label() }}</span>
+                        </span>
+                        <a href="{{ route('operations.repair-orders.show', $otherOpenRepairOrder->repairOrder) }}" class="btn btn-sm flex-shrink-0">Open RO</a>
+                    </div>
+                @endforeach
+            </div>
         </section>
     @endif
 </div>

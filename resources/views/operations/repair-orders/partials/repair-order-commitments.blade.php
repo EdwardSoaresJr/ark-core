@@ -13,77 +13,83 @@
         ->values();
 @endphp
 
-<section class="border-t border-slate-200 px-3 py-2.5">
-    <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Commitments</p>
-    <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Record what we promised the customer - owner and due date stay visible on Today.</p>
+<section class="card card-sm" data-repair-order-commitments>
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Commitments</h3>
+            <p class="card-subtitle">Record what we promised the customer - owner and due date stay visible on Today.</p>
+        </div>
+    </div>
 
     @if ($openCommitments->isNotEmpty())
-        <ul class="mt-2 divide-y divide-slate-100 border border-slate-200 bg-white">
+        <div class="list-group list-group-flush">
             @foreach ($openCommitments as $commitment)
-                <li class="flex items-start justify-between gap-3 px-3 py-2">
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-950">{{ $commitment->type->label() }}</p>
-                        <p class="mt-0.5 text-xs leading-4 text-slate-600">{{ $commitment->reason }}</p>
-                        <p class="mt-0.5 text-[11px] font-medium text-slate-400">
+                <div class="list-group-item d-flex align-items-start justify-content-between gap-3">
+                    <div style="min-width: 0">
+                        <div class="fw-medium">{{ $commitment->type->label() }}</div>
+                        <div class="small text-secondary">{{ $commitment->reason }}</div>
+                        <div class="small text-secondary">
                             Due {{ ShopDisplayTimezone::format($commitment->due_at, 'M j, g:i A') }}
                             · {{ $commitment->owner?->name ?? 'Unassigned' }}
-                        </p>
+                        </div>
                     </div>
-                    <form method="POST" action="{{ route('operations.commitments.fulfill', $commitment) }}">
+                    <form method="POST" action="{{ route('operations.commitments.fulfill', $commitment) }}" class="flex-shrink-0">
                         @csrf
-                        <button type="submit" class="ops-btn ops-btn--secondary ops-btn--sm">Done</button>
+                        <button type="submit" class="btn btn-sm">Done</button>
                     </form>
-                </li>
+                </div>
             @endforeach
-        </ul>
+        </div>
     @endif
 
     @if (! ($isTerminal ?? false))
         <form
             method="POST"
             action="{{ route('operations.repair-orders.commitments.store', $repairOrder) }}"
-            class="mt-2 space-y-2 border border-slate-200 bg-slate-50 p-3"
+            class="card-body border-top"
         >
             @csrf
             <input type="hidden" name="type" value="{{ CommitmentType::CustomerUpdate->value }}">
 
-            <label class="block">
-                <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">What we promised</span>
+            <div class="mb-3">
+                <label class="form-label" for="commitment-reason-{{ $repairOrder->repair_order_id }}">What we promised</label>
                 <textarea
+                    id="commitment-reason-{{ $repairOrder->repair_order_id }}"
                     name="reason"
                     rows="2"
                     required
                     maxlength="500"
                     placeholder="Warranty callback promised"
-                    class="mt-1 w-full rounded border-slate-300 text-sm"
+                    class="form-control"
                 >{{ old('reason') }}</textarea>
-            </label>
+            </div>
 
-            <div class="grid gap-2 sm:grid-cols-2">
-                <label class="block">
-                    <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">Due</span>
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-6">
+                    <label class="form-label" for="commitment-due-{{ $repairOrder->repair_order_id }}">Due</label>
                     <input
+                        id="commitment-due-{{ $repairOrder->repair_order_id }}"
                         type="datetime-local"
                         name="due_at"
                         required
                         value="{{ old('due_at', $defaultDueAt) }}"
-                        class="mt-1 w-full rounded border-slate-300 text-sm"
+                        class="form-control"
                     >
-                </label>
+                </div>
 
-                <label class="block">
-                    <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">Owner</span>
-                    <select name="owner_user_id" required class="mt-1 w-full rounded border-slate-300 text-sm">
+                <div class="col-12 col-sm-6">
+                    <label class="form-label" for="commitment-owner-{{ $repairOrder->repair_order_id }}">Owner</label>
+                    <select id="commitment-owner-{{ $repairOrder->repair_order_id }}" name="owner_user_id" required class="form-select">
                         @foreach ($assignableOwners as $owner)
                             <option value="{{ $owner->id }}" @selected((int) old('owner_user_id', $defaultOwnerId) === $owner->id)>
                                 {{ $owner->name }}
                             </option>
                         @endforeach
                     </select>
-                </label>
+                </div>
             </div>
 
-            <button type="submit" class="ops-btn ops-btn--primary ops-btn--sm">Record commitment</button>
+            <button type="submit" class="btn btn-primary">Record commitment</button>
         </form>
     @endif
 </section>
