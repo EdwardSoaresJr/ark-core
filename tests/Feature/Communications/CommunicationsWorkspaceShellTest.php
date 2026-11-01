@@ -526,7 +526,7 @@ test('the customer hub work and comms tabs render the shared communication compo
         ->and(commsTablerClassesOutsideIslands($comms))->not->toMatch('/(^|\s)ops-/m');
 });
 
-test('legacy consumers of the shared components keep their legacy markup', function (): void {
+test('caller lookup uses the Tabler context panel and the repair order rail keeps its own markup', function (): void {
     commsTablerFakeHttp();
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
@@ -538,10 +538,9 @@ test('legacy consumers of the shared components keep their legacy markup', funct
 
     $this->get(route('operations.caller-lookup', ['phone' => '719-555-3403']))
         ->assertOk()
-        ->assertSee('ops-index-results-head', false)
-        ->assertSee('ops-state-pill', false)
+        ->assertSee('data-conversation-context', false)
         ->assertSee('Can you look at my brakes?')
-        ->assertDontSee('data-conversation-context', false);
+        ->assertDontSee('ops-index-results-head', false);
 
     $repairOrder = repairOrderForCommunication(RepairOrderStatus::InProgress, 'Legacy Rail Customer');
 
