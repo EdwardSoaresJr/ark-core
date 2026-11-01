@@ -44,15 +44,12 @@
             </div>
         </form>
 
-        {{-- Shared with repair-order documents; stays legacy until that screen migrates. --}}
-        <div class="ark-legacy bg-white text-dark">
-            @include('operations.documents.partials.document-list', [
-                'documents' => $customerDocuments,
-                'customer' => $customer,
-                'showAttachRo' => true,
-                'activeRepairOrders' => $activeRepairOrders ?? collect(),
-            ])
-        </div>
+        @include('operations.documents.partials.document-list', [
+            'documents' => $customerDocuments,
+            'customer' => $customer,
+            'showAttachRo' => true,
+            'activeRepairOrders' => $activeRepairOrders ?? collect(),
+        ])
     @else
         <div class="card-body text-secondary">No documents for this customer yet.</div>
     @endif
