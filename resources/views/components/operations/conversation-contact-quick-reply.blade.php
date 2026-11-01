@@ -25,6 +25,7 @@
         : null;
     $callHref = PhoneNumber::telUri($displayPhone)
         ?? PhoneNumber::telUri((string) ($conversation->contact_address ?? ''));
+    $bodyId = $attributes->get('id', 'ark-contact-composer-'.$conversation->id).'-body';
 @endphp
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
@@ -48,102 +49,116 @@
                 'entityKey' => $entityKey,
                 'initialBody' => $initialBody,
             ]))"
-            {{ $attributes->class(['border-t border-slate-200 bg-slate-50/40'])->except('id') }}
+            {{ $attributes->except('id') }}
         >
-            @if ($actionsMenu)
-                <div class="flex flex-wrap items-center gap-2 px-3 py-2" aria-label="Conversation commands">
-                    <details
-                        class="ops-comms-actions"
-                        x-ref="actionsMenu"
-                        @toggle="onActionsMenuToggle($event)"
-                        @click.outside="closeActionsMenu()"
-                    >
-                        <summary class="ops-comms-actions__summary">Actions</summary>
-                        <div class="ops-comms-actions__panel">
-                            @if (filled($callHref))
-                                <a href="{{ $callHref }}" class="ops-comms-actions__item">Call</a>
-                            @endif
-                            @if ($scheduleHref)
-                                <a href="{{ $scheduleHref }}" class="ops-comms-actions__item">Schedule</a>
-                            @endif
-                            @if ($canSend)
-                                <label class="ops-comms-actions__item">
-                                    Attach file
-                                    <input
-                                        x-ref="attachmentInput"
-                                        type="file"
-                                        multiple
-                                        class="hidden"
-                                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
-                                        @change="pickAttachment($event)"
-                                    >
-                                </label>
-                            @endif
+            @if ($canSend)
+                <div x-show="open">
+                    <div class="px-3 py-2">
+                        <label class="visually-hidden" for="{{ $bodyId }}">Message</label>
+                        <textarea
+                            id="{{ $bodyId }}"
+                            x-ref="replyBody"
+                            x-model="body"
+                            rows="2"
+                            @if ($autoOpen) autofocus @endif
+                            :placeholder="composerPlaceholder()"
+                            class="form-control"
+                            @keydown.meta.enter.prevent="send()"
+                            @keydown.ctrl.enter.prevent="send()"
+                        ></textarea>
+                        <div class="mt-2">
+                            @include('operations.communications.workspace.partials.quick-replies')
                         </div>
-                    </details>
-                </div>
-            @elseif ($scheduleHref || filled($callHref))
-                <div class="flex flex-wrap items-center gap-2 px-3 py-2" aria-label="Conversation commands">
-                    @if (filled($callHref))
-                        <a
-                            href="{{ $callHref }}"
-                            class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
-                        >Call</a>
-                    @endif
-                    @if ($scheduleHref)
-                        <a
-                            href="{{ $scheduleHref }}"
-                            class="inline-flex h-8 items-center rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
-                        >Schedule</a>
-                        <span class="text-[11px] text-slate-500">Book the visit - customer can be linked at arrival.</span>
-                    @endif
+                        <div x-show="attachmentLabel" x-cloak class="mt-1 small text-secondary text-truncate" x-text="attachmentLabel"></div>
+                        <div x-show="error" x-cloak class="mt-1 small text-danger fw-medium" x-text="error"></div>
+                    </div>
                 </div>
             @endif
-            @if ($canSend)
-                <div x-show="open" class="grid gap-1.5 border-t border-slate-200 px-3 py-2">
-                    <textarea
-                        x-ref="replyBody"
-                        x-model="body"
-                        rows="2"
-                        @if ($autoOpen) autofocus @endif
-                        :placeholder="composerPlaceholder()"
-                        class="w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
-                        @keydown.meta.enter.prevent="send()"
-                        @keydown.ctrl.enter.prevent="send()"
-                    ></textarea>
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        @unless ($actionsMenu)
-                            <label class="h-8 cursor-pointer rounded-sm border border-slate-300 bg-white px-2.5 text-xs font-semibold leading-8 text-slate-700 hover:border-slate-400 hover:text-slate-950">
+            @if ($actionsMenu || $scheduleHref || filled($callHref) || $canSend)
+                <div class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-top" role="group" aria-label="Conversation commands">
+                    @if ($actionsMenu)
+                        <details
+                            class="position-relative"
+                            x-ref="actionsMenu"
+                            @toggle="onActionsMenuToggle($event)"
+                            @click.outside="closeActionsMenu()"
+                        >
+                            <summary class="btn btn-sm">Actions</summary>
+                            <div class="dropdown-menu show position-absolute bottom-100 mb-1" data-comms-actions-panel>
+                                @if (filled($callHref))
+                                    <a href="{{ $callHref }}" class="dropdown-item">
+                                        <x-tabler.icon name="phone" class="dropdown-item-icon" />
+                                        Call
+                                    </a>
+                                @endif
+                                @if ($scheduleHref)
+                                    <a href="{{ $scheduleHref }}" class="dropdown-item">
+                                        <x-tabler.icon name="calendar" class="dropdown-item-icon" />
+                                        Schedule
+                                    </a>
+                                @endif
+                                @if ($canSend)
+                                    <label class="dropdown-item">
+                                        <x-tabler.icon name="paperclip" class="dropdown-item-icon" />
+                                        Attach file
+                                        <input
+                                            x-ref="attachmentInput"
+                                            type="file"
+                                            multiple
+                                            class="d-none"
+                                            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                            @change="pickAttachment($event)"
+                                        >
+                                    </label>
+                                @endif
+                            </div>
+                        </details>
+                    @else
+                        @if (filled($callHref))
+                            <a href="{{ $callHref }}" class="btn btn-sm">
+                                <x-tabler.icon name="phone" />
+                                Call
+                            </a>
+                        @endif
+                        @if ($scheduleHref)
+                            <a href="{{ $scheduleHref }}" class="btn btn-sm">
+                                <x-tabler.icon name="calendar" />
+                                Schedule
+                            </a>
+                            <span class="text-secondary small">Book the visit - customer can be linked at arrival.</span>
+                        @endif
+                        @if ($canSend)
+                            <label class="btn btn-sm">
+                                <x-tabler.icon name="paperclip" />
                                 Attach file
                                 <input
                                     x-ref="attachmentInput"
                                     type="file"
                                     multiple
-                                    class="hidden"
+                                    class="d-none"
                                     accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
                                     @change="pickAttachment($event)"
                                 >
                             </label>
-                        @endunless
+                        @endif
+                    @endif
+                    @if ($canSend)
                         <button
                             type="button"
                             @click="send()"
                             :disabled="sending"
-                            class="h-8 shrink-0 rounded-sm border border-slate-800 bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                            class="btn btn-primary btn-sm ms-auto"
                         >
                             <span x-show="! sending">Send</span>
                             <span x-show="sending" x-cloak>Sending…</span>
                         </button>
-                    </div>
-                    <p x-show="attachmentLabel" x-cloak class="truncate text-[11px] font-medium text-slate-500" x-text="attachmentLabel"></p>
-                    <p x-show="error" x-cloak class="text-xs font-semibold text-rose-700" x-text="error"></p>
-                    @include('operations.communications.workspace.partials.quick-replies')
+                    @endif
                 </div>
             @endif
         </div>
     @else
-        <div {{ $attributes->class(['border-t border-slate-200 px-3 py-2 text-xs text-slate-500']) }}>
-            Shop messaging is disabled.
+        <div {{ $attributes }}>
+            <div class="px-3 py-2 text-secondary small">Shop messaging is disabled.</div>
         </div>
     @endif
 @endcan

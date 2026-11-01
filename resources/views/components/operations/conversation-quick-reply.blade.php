@@ -21,6 +21,7 @@
     'actionsMenu' => false,
     'sendUrl' => null,
     'platformBacked' => false,
+    'ui' => 'legacy',
 ])
 
 @php
@@ -212,6 +213,713 @@
 @endphp
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+    @if ($ui === 'tabler')
+        @php
+            $messageActionDot = static fn (?string $color): ?string => match (\App\Ark\Operations\Communications\CommunicationsAccentColor::normalize($color)) {
+                \App\Ark\Operations\Communications\CommunicationsAccentColor::SLATE => 'bg-secondary',
+                \App\Ark\Operations\Communications\CommunicationsAccentColor::BLUE => 'bg-azure',
+                \App\Ark\Operations\Communications\CommunicationsAccentColor::AMBER => 'bg-yellow',
+                \App\Ark\Operations\Communications\CommunicationsAccentColor::ORANGE => 'bg-orange',
+                \App\Ark\Operations\Communications\CommunicationsAccentColor::GREEN => 'bg-green',
+                default => null,
+            };
+        @endphp
+
+        @if ($showCommsToolbar)
+            <div
+                @if ($attributes->has('id'))
+                    id="{{ $attributes->get('id') }}"
+                @endif
+                data-ark-workspace-dirty="off"
+                data-ark-conversation-composer
+                @if ($platformBacked)
+                    data-platform-backed="1"
+                @endif
+                x-data="arkConversationQuickReply(@js([
+                    'sendUrl' => filled($sendUrl)
+                        ? $sendUrl
+                        : route('operations.customers.conversation-messages.store', $customer),
+                    'repairOrderId' => $repairOrderId,
+                    'sendEstimateUrl' => $sendEstimateUrl,
+                    'cancelScheduledEstimateUrl' => $cancelScheduledEstimateUrl,
+                    'cancelScheduledSmsUrl' => $cancelScheduledSmsUrl,
+                    'sendPaymentUrl' => $sendPaymentUrl,
+                    'sendDepositUrl' => $sendDepositUrl,
+                    'sendInspectionUrl' => $sendInspectionUrl,
+                    'messageActions' => $messageActions,
+                    'contextEstimateSend' => $contextProjection ? $contextProjection['estimate'] : null,
+                    'contextPaymentSend' => $contextProjection ? $contextProjection['payment'] : null,
+                    'contextDepositSend' => $contextProjection ? $contextProjection['deposit'] : null,
+                    'contextInspectionSend' => $contextProjection ? $contextProjection['inspection'] : null,
+                    'estimateSchedule' => $estimateSchedule,
+                    'smsSchedule' => $smsSchedule,
+                    'openRepairOrders' => $repairOrderOptions,
+                    'customerId' => $customer->id,
+                    'messagesListIds' => $messagesListIds,
+                    'hasConversationHistory' => $hasConversationHistory,
+                    'autoOpenComposer' => request()->query('compose') === 'text' || $alwaysOpen,
+                    'alwaysOpen' => $alwaysOpen,
+                    'keepOpenAfterSend' => $keepOpenAfterSend,
+                    'customerPhoneDisplay' => $customer->display_phone,
+                    'customerEmail' => $customerEmail,
+                    'estimateDelivery' => $defaultEstimateDelivery,
+                    'paymentDelivery' => $defaultPaymentDelivery,
+                    'depositDelivery' => $defaultDepositDelivery,
+                    'depositAmount' => $depositSuggestedAmount,
+                    'canSmsEstimate' => $canSmsEstimate,
+                    'canEmailEstimate' => $canEmailEstimate,
+                    'canSmsPayment' => $canSmsPayment,
+                    'canEmailPayment' => $canEmailPayment,
+                    'canSmsDeposit' => $canSmsDeposit,
+                    'canEmailDeposit' => $canEmailDeposit,
+                    'canSmsInspection' => $canSmsInspection,
+                    'showSmsComposer' => $showSmsComposer,
+                    'sendEstimateAddVinUrl' => $repairOrder instanceof \App\Ark\Operations\RepairOrders\RepairOrder
+                        ? route('operations.repair-orders.show', $repairOrder).'#ro-identity-band'
+                        : null,
+                    'nudgeKey' => $nudgeKey,
+                    'entityKey' => $entityKey,
+                    'initialBody' => $initialBody,
+                    'platformBacked' => (bool) $platformBacked,
+                ]))"
+                {{ $attributes->except('id') }}
+            >
+                @if ($contextProjection !== null && filled($contextProjection['estimate']['send_block_reason'] ?? null))
+                    <div class="alert alert-warning m-2 mb-0 py-2" role="status">
+                        <div>{{ $contextProjection['estimate']['send_block_reason'] }}</div>
+                        @if ($repairOrder instanceof \App\Ark\Operations\RepairOrders\RepairOrder && $contextProjection['estimate']['send_block_reason'] === \App\Ark\Operations\RepairOrders\RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE)
+                            <a href="{{ $repairOrder->estimateConcernReviewUrl() }}" class="alert-link">Review concerns</a>
+                        @endif
+                    </div>
+                @elseif ($contextProjection !== null && filled($contextProjection['payment']['send_block_reason'] ?? null))
+                    <div class="alert alert-warning m-2 mb-0 py-2" role="status">
+                        {{ $contextProjection['payment']['send_block_reason'] }}
+                    </div>
+                @elseif ($showSmsUnavailableNotice)
+                    <div class="alert alert-warning m-2 mb-0 py-2" role="status">
+                        {{ $smsBlockedReason }}
+                    </div>
+                @elseif (filled($smsDeliveryWarning))
+                    <div class="alert alert-warning m-2 mb-0 py-2" role="status">
+                        {{ $smsDeliveryWarning }}
+                    </div>
+                @endif
+                <div x-show="estimateSchedule?.pending" x-cloak class="alert alert-info m-2 mb-0 py-2">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            Scheduled estimate · <span x-text="estimateSchedule?.pending?.scheduled_for_label ?? estimateSchedule?.next_open_morning_label ?? smsSchedule?.next_open_morning_label ?? 'Next open morning'"></span>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-sm"
+                            :disabled="sending"
+                            @click="cancelScheduledEstimate()"
+                        >Cancel</button>
+                    </div>
+                </div>
+                <div x-show="smsSchedule?.pending" x-cloak class="alert alert-info m-2 mb-0 py-2">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            Scheduled reply · <span x-text="smsSchedule?.pending?.scheduled_for_label ?? smsSchedule?.next_open_morning_label ?? 'Next open morning'"></span>
+                            <span
+                                x-show="smsSchedule?.pending?.preview"
+                                class="d-block text-secondary"
+                                x-text="smsSchedule?.pending?.preview"
+                            ></span>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-sm"
+                            :disabled="sending"
+                            @click="cancelScheduledSms()"
+                        >Cancel</button>
+                    </div>
+                </div>
+                <div x-show="afterHoursPromptOpen" x-cloak class="alert alert-warning m-2 mb-0 py-2" role="alert">
+                    <div class="fw-bold">It's after business hours.</div>
+                    <div>
+                        Send now, or schedule for
+                        <span x-text="smsSchedule?.next_open_morning_label ?? 'next open morning'"></span>?
+                    </div>
+                    <div class="btn-list mt-2">
+                        <button
+                            type="button"
+                            class="btn btn-sm"
+                            :disabled="sending"
+                            @click="confirmAfterHoursTiming('now')"
+                        >Send Now</button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-warning"
+                            :disabled="sending"
+                            @click="confirmAfterHoursNextOpenMorning()"
+                        >Schedule</button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-ghost-secondary"
+                            :disabled="sending"
+                            @click="dismissAfterHoursPrompt()"
+                        >Cancel</button>
+                    </div>
+                </div>
+                <div @class(['d-flex flex-column' => $actionsMenu]) data-comms-composer-stack>
+                    <div
+                        @class(['d-flex flex-wrap align-items-center gap-2 px-3 py-2', 'justify-content-between order-last border-top' => $actionsMenu])
+                        role="group"
+                        aria-label="Conversation commands"
+                    >
+                        @if ($actionsMenu)
+                            <details
+                                class="position-relative"
+                                x-ref="actionsMenu"
+                                @toggle="onActionsMenuToggle($event)"
+                                @click.outside="closeActionsMenu()"
+                            >
+                                <summary class="btn btn-sm">Actions</summary>
+                                <div class="dropdown-menu show position-absolute bottom-100 mb-1" data-comms-actions-panel>
+                                    @if ($callHref)
+                                        <a href="{{ $callHref }}" class="dropdown-item">
+                                            <x-tabler.icon name="phone" class="dropdown-item-icon" />
+                                            Call
+                                        </a>
+                                    @endif
+                                    @if ($canSendEstimate)
+                                        <button type="button" class="dropdown-item" :disabled="sending" @click.stop="sendEstimate('sms')">Send Estimate</button>
+                                    @endif
+                                    @if ($canSendInspection)
+                                        <button type="button" class="dropdown-item" :disabled="sending" @click.stop="sendInspectionLink()">Send Inspection</button>
+                                    @endif
+                                    @if ($scheduleHref)
+                                        <a href="{{ $scheduleHref }}" class="dropdown-item">
+                                            <x-tabler.icon name="calendar" class="dropdown-item-icon" />
+                                            Schedule
+                                        </a>
+                                    @endif
+                                    @if ($canSendPayment)
+                                        <button type="button" class="dropdown-item" :disabled="sending" @click.stop="sendPaymentLink('sms')">Send Pay Link</button>
+                                    @endif
+                                    @if ($showSmsComposer)
+                                        <label class="dropdown-item">
+                                            <x-tabler.icon name="paperclip" class="dropdown-item-icon" />
+                                            Attach file
+                                            <input
+                                                x-ref="attachmentInput"
+                                                type="file"
+                                                multiple
+                                                class="d-none"
+                                                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                                @change="pickAttachment($event)"
+                                            >
+                                        </label>
+                                    @endif
+                                    @foreach ($messageActions as $messageAction)
+                                        <button
+                                            type="button"
+                                            class="dropdown-item"
+                                            data-message-action-color="{{ $messageAction['color'] ?? 'neutral' }}"
+                                            :disabled="sending"
+                                            @click.stop="sendMessageAction(@js($messageAction['key']))"
+                                        >
+                                            @if ($messageActionDot($messageAction['color'] ?? null))
+                                                <span class="badge badge-dot {{ $messageActionDot($messageAction['color'] ?? null) }} me-2" aria-hidden="true"></span>
+                                            @endif
+                                            {{ $messageAction['label'] }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </details>
+                        @endif
+                        @if (! $actionsMenu && $callHref)
+                            <a href="{{ $callHref }}" class="btn btn-sm">
+                                <x-tabler.icon name="phone" />
+                                Call
+                            </a>
+                        @endif
+                        @if ($showSmsComposer)
+                            @unless ($alwaysOpen)
+                                <button
+                                    type="button"
+                                    @click="toggleReply()"
+                                    class="btn btn-sm"
+                                    data-composer-mode="{{ $hasConversationHistory ? 'reply' : 'text-customer' }}"
+                                    :data-composer-mode="hasConversationHistory ? 'reply' : 'text-customer'"
+                                >
+                                    <span x-show="! open" x-text="composerActionLabel()">{{ $hasConversationHistory ? 'Reply' : 'Text Customer' }}</span>
+                                    <span x-show="open" x-cloak>Cancel</span>
+                                </button>
+                            @endunless
+                            <div x-ref="smsSendMenu" x-show="channel === 'sms'" x-cloak>
+                                <button
+                                    type="button"
+                                    x-ref="smsSendMenuTrigger"
+                                    @click.stop="toggleSmsSendMenu()"
+                                    :disabled="sending"
+                                    class="btn btn-sm btn-primary dropdown-toggle"
+                                    :aria-expanded="smsSendMenuOpen"
+                                    aria-haspopup="menu"
+                                >
+                                    <span x-text="sending ? 'Sending…' : 'Send'">Send</span>
+                                </button>
+                                <template x-teleport="body">
+                                    <div
+                                        x-show="smsSendMenuOpen"
+                                        x-ref="smsSendMenuPanel"
+                                        :style="smsSendMenuStyle"
+                                        class="dropdown-menu show position-fixed"
+                                        role="menu"
+                                        @click.stop
+                                    >
+                                        <button
+                                            type="button"
+                                            role="menuitem"
+                                            class="dropdown-item"
+                                            :disabled="sending"
+                                            @click.stop="chooseSmsSendTiming('now')"
+                                        >Now</button>
+                                        <div class="dropdown-divider" role="separator"></div>
+                                        <template x-for="slot in (smsSchedule?.upcoming ?? [])" :key="slot.day_key">
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': !! attachment && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="chooseSmsSendMorning(slot.scheduled_for)"
+                                                x-text="slot.label"
+                                            ></button>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        @endif
+                        @if (! $actionsMenu)
+                            @if (($canSendEstimate || $canSendPayment || $canSendDeposit) && $sendEstimateUrl === null && $sendPaymentUrl === null && $sendDepositUrl === null && count($repairOrderOptions) > 1)
+                                <select
+                                    x-model="selectedRepairOrderId"
+                                    class="form-select form-select-sm w-auto"
+                                    aria-label="Repair order"
+                                    data-comms-ro-select
+                                >
+                                    @foreach ($repairOrderOptions as $option)
+                                        <option value="{{ $option['repair_order_id'] }}">{{ $option['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+                            @if ($canSendEstimate)
+                                <div x-ref="estimateMenu">
+                                    <button
+                                        type="button"
+                                        x-ref="estimateMenuTrigger"
+                                        @click.stop="toggleEstimateMenu()"
+                                        :disabled="sending"
+                                        class="btn btn-sm dropdown-toggle"
+                                        :aria-expanded="estimateMenuOpen"
+                                        aria-haspopup="menu"
+                                    >Send Estimate</button>
+                                    <template x-teleport="body">
+                                        <div
+                                            x-show="estimateMenuOpen"
+                                            x-ref="estimateMenuPanel"
+                                            :style="estimateMenuStyle"
+                                            class="dropdown-menu show position-fixed"
+                                            role="menu"
+                                            @click.stop
+                                        >
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': ! canSmsEstimate && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendEstimate('sms')"
+                                            >SMS</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': ! canEmailEstimate && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendEstimate('email')"
+                                            >Email</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': (! canSmsEstimate || ! canEmailEstimate) && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendEstimate('both')"
+                                            >Both</button>
+                                            <div class="dropdown-divider" role="separator"></div>
+                                            <template x-for="slot in (smsSchedule?.upcoming ?? [])" :key="'est-' + slot.day_key">
+                                                <button
+                                                    type="button"
+                                                    role="menuitem"
+                                                    class="dropdown-item"
+                                                    :disabled="sending"
+                                                    @click.stop="scheduleEstimateForMorning(slot.scheduled_for)"
+                                                    x-text="slot.label"
+                                                ></button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            @endif
+                            @if ($canSendPayment)
+                                <div x-ref="paymentMenu">
+                                    <button
+                                        type="button"
+                                        x-ref="paymentMenuTrigger"
+                                        @click.stop="togglePaymentMenu()"
+                                        :disabled="sending"
+                                        class="btn btn-sm dropdown-toggle"
+                                        :aria-expanded="paymentMenuOpen"
+                                        aria-haspopup="menu"
+                                    >Send Pay Link</button>
+                                    <template x-teleport="body">
+                                        <div
+                                            x-show="paymentMenuOpen"
+                                            x-ref="paymentMenuPanel"
+                                            :style="paymentMenuStyle"
+                                            class="dropdown-menu show position-fixed"
+                                            role="menu"
+                                            @click.stop
+                                        >
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': ! canSmsPayment && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendPaymentLink('sms')"
+                                            >SMS</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': ! canEmailPayment && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendPaymentLink('email')"
+                                            >Email</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': (! canSmsPayment || ! canEmailPayment) && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendPaymentLink('both')"
+                                            >Both</button>
+                                        </div>
+                                    </template>
+                                </div>
+                            @endif
+                            @if ($canSendDeposit)
+                                <div x-ref="depositMenu">
+                                    <div class="input-group input-group-sm flex-nowrap">
+                                        <label class="visually-hidden" for="ark-deposit-amount-{{ $customer->id }}">Deposit amount</label>
+                                        <span class="input-group-text" aria-hidden="true">$</span>
+                                        <input
+                                            id="ark-deposit-amount-{{ $customer->id }}"
+                                            type="number"
+                                            min="0.01"
+                                            step="0.01"
+                                            inputmode="decimal"
+                                            x-model="depositAmount"
+                                            @click.stop
+                                            class="form-control ark-money"
+                                            style="width: 6rem"
+                                            placeholder="0.00"
+                                        />
+                                        <button
+                                            type="button"
+                                            x-ref="depositMenuTrigger"
+                                            @click.stop="toggleDepositMenu()"
+                                            :disabled="sending"
+                                            class="btn dropdown-toggle"
+                                            :aria-expanded="depositMenuOpen"
+                                            aria-haspopup="menu"
+                                        >Send Deposit</button>
+                                    </div>
+                                    <template x-teleport="body">
+                                        <div
+                                            x-show="depositMenuOpen"
+                                            x-ref="depositMenuPanel"
+                                            :style="depositMenuStyle"
+                                            class="dropdown-menu show position-fixed"
+                                            role="menu"
+                                            @click.stop
+                                        >
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': ! canSmsDeposit && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendDepositRequest('sms')"
+                                            >SMS</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': ! canEmailDeposit && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendDepositRequest('email')"
+                                            >Email</button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="dropdown-item"
+                                                :class="{ 'opacity-50': (! canSmsDeposit || ! canEmailDeposit) && ! sending }"
+                                                :disabled="sending"
+                                                @click.stop="sendDepositRequest('both')"
+                                            >Both</button>
+                                        </div>
+                                    </template>
+                                </div>
+                            @endif
+                            @if ($canSendInspection)
+                                <button
+                                    type="button"
+                                    class="btn btn-sm"
+                                    :class="{ 'opacity-50': ! canSmsInspection && ! sending }"
+                                    :disabled="sending"
+                                    @click.stop="sendInspectionLink()"
+                                >Send Inspection</button>
+                            @endif
+                            @if ($scheduleHref)
+                                <a href="{{ $scheduleHref }}" class="btn btn-sm">
+                                    <x-tabler.icon name="calendar" />
+                                    Schedule
+                                </a>
+                            @endif
+                            @if ($messageActions !== [] || $callback['show_callback_action'])
+                                <div x-ref="moreMenu">
+                                    <button
+                                        type="button"
+                                        x-ref="moreMenuTrigger"
+                                        @click.stop="toggleMoreMenu()"
+                                        :disabled="sending"
+                                        class="btn btn-sm dropdown-toggle"
+                                        :aria-expanded="moreMenuOpen"
+                                        aria-haspopup="menu"
+                                    >More</button>
+                                    <template x-teleport="body">
+                                        <div
+                                            x-show="moreMenuOpen"
+                                            x-ref="moreMenuPanel"
+                                            :style="moreMenuStyle"
+                                            class="dropdown-menu show position-fixed"
+                                            role="menu"
+                                            @click.stop
+                                        >
+                                            @foreach ($messageActions as $messageAction)
+                                                <button
+                                                    type="button"
+                                                    role="menuitem"
+                                                    class="dropdown-item"
+                                                    data-message-action-color="{{ $messageAction['color'] ?? 'neutral' }}"
+                                                    :disabled="sending"
+                                                    @click.stop="moreMenuOpen = false; sendMessageAction(@js($messageAction['key']))"
+                                                >
+                                                    @if ($messageActionDot($messageAction['color'] ?? null))
+                                                        <span class="badge badge-dot {{ $messageActionDot($messageAction['color'] ?? null) }} me-2" aria-hidden="true"></span>
+                                                    @endif
+                                                    {{ $messageAction['label'] }}
+                                                </button>
+                                            @endforeach
+                                            @if ($callback['show_callback_action'])
+                                                <button
+                                                    type="button"
+                                                    role="menuitem"
+                                                    class="dropdown-item"
+                                                    @click.stop="moreMenuOpen = false"
+                                                    onclick="window.arkInitiateTelephonyCallback?.({
+                                                        customerId: {{ $customer->id }},
+                                                        repairOrderId: {{ filled($repairOrderId) ? (int) $repairOrderId : 'null' }},
+                                                        button: this,
+                                                    })"
+                                                >Callback</button>
+                                            @endif
+                                        </div>
+                                    </template>
+                                </div>
+                            @endif
+                            @if ($showSmsComposer)
+                                <label class="btn btn-sm">
+                                    <x-tabler.icon name="paperclip" />
+                                    Attach Picture?
+                                    <input
+                                        x-ref="attachmentInput"
+                                        type="file"
+                                        multiple
+                                        class="d-none"
+                                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                        @change="pickAttachment($event)"
+                                    >
+                                </label>
+                                <span x-show="attachmentLabel" x-cloak class="text-secondary small text-truncate" style="max-width: 12rem" x-text="attachmentLabel"></span>
+                                <button
+                                    type="button"
+                                    x-show="attachmentLabel"
+                                    x-cloak
+                                    @click="clearAttachment()"
+                                    class="btn btn-sm btn-ghost-secondary"
+                                >
+                                    Remove
+                                </button>
+                            @endif
+                        @endif
+                    </div>
+
+                    <div x-show="vinWarningOpen" x-cloak class="alert alert-warning mx-3 mb-2" role="alert" data-estimate-vin-warning>
+                        <div class="fw-bold">VIN missing</div>
+                        <div>
+                            Parts lookup, labor guides, service history accuracy, and OEM information may be affected.
+                        </div>
+                        <div class="btn-list mt-2">
+                            <a :href="addVinUrl()" class="btn btn-sm" @click="cancelVinWarning()">Add VIN</a>
+                            <button type="button" class="btn btn-sm btn-primary" @click="continueWithoutVin()">Continue anyway</button>
+                        </div>
+                    </div>
+
+                    <div x-show="showSmsComposer && open" x-cloak>
+                        <div @class(['px-3 py-2', 'border-top' => ! $actionsMenu])>
+                            <label class="visually-hidden" for="{{ $attributes->get('id', 'ark-composer-'.$customer->id) }}-body">Message</label>
+                            <textarea
+                                id="{{ $attributes->get('id', 'ark-composer-'.$customer->id) }}-body"
+                                x-ref="replyBody"
+                                x-model="body"
+                                rows="2"
+                                @if (request()->query('compose') === 'text') autofocus @endif
+                                placeholder="{{ $hasConversationHistory ? 'Message or MMS to '.$customer->display_phone : 'First text or MMS to '.$customer->display_phone }}"
+                                :placeholder="composerPlaceholder()"
+                                class="form-control"
+                                @keydown.meta.enter.prevent="send()"
+                                @keydown.ctrl.enter.prevent="send()"
+                            ></textarea>
+                            @if ($showQuickReplies)
+                                <div class="mt-2">
+                                    @include('operations.communications.workspace.partials.quick-replies')
+                                </div>
+                            @endif
+                            @if ($actionsMenu && $showSmsComposer)
+                                <div x-show="attachmentLabel" x-cloak class="mt-1 small text-secondary">
+                                    <span x-text="attachmentLabel"></span>
+                                    <button type="button" class="btn btn-sm btn-ghost-secondary" @click="clearAttachment()">Remove</button>
+                                </div>
+                            @endif
+                            <div x-show="error" x-cloak class="mt-1 small text-danger fw-medium" x-text="error"></div>
+                        </div>
+                    </div>
+                </div>
+                <div x-show="error && ! open" x-cloak class="alert alert-danger mx-3 mb-2" role="alert">
+                    <div class="fw-bold">Could not send</div>
+                    <div x-text="error"></div>
+                </div>
+            </div>
+        @elseif (! filled($customer->phone) && ! filled($customer->email))
+            <div {{ $attributes }}>
+                <div class="px-3 py-2 text-secondary small">Add a phone number or email to reach this customer.</div>
+            </div>
+        @endif
+
+        @if ($canSendMessenger)
+            <div
+                data-ark-workspace-dirty="off"
+                data-ark-conversation-composer
+                x-data="arkConversationQuickReply(@js([
+                    'sendUrl' => route('operations.customers.conversation-messages.store', $customer),
+                    'channel' => 'messenger',
+                    'repairOrderId' => $repairOrderId,
+                    'customerId' => $customer->id,
+                    'messagesListIds' => $messagesListIds,
+                    'hasConversationHistory' => $hasConversationHistory,
+                    'autoOpenComposer' => $composeMessenger || $alwaysOpen || $messengerAlwaysOpen,
+                    'alwaysOpen' => $alwaysOpen || $messengerAlwaysOpen,
+                    'keepOpenAfterSend' => $keepOpenAfterSend,
+                    'messengerDisplay' => $customer->name,
+                    'messengerMessageTags' => $messengerMessageTags,
+                    'defaultMessengerMessageTag' => $messengerConfig->outsideWindowTag()?->value,
+                ]))"
+                {{ $attributes->except('id') }}
+            >
+                <div class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-top">
+                    @unless ($alwaysOpen || $messengerAlwaysOpen)
+                        <button
+                            type="button"
+                            @click="toggleReply()"
+                            class="btn btn-sm"
+                        >
+                            <span x-show="! open" x-cloak>Reply on Messenger</span>
+                            <span x-show="open" x-cloak>Cancel</span>
+                        </button>
+                    @endunless
+                    <label class="btn btn-sm">
+                        <x-tabler.icon name="paperclip" />
+                        Attach file
+                        <input
+                            x-ref="attachmentInput"
+                            type="file"
+                            multiple
+                            class="d-none"
+                            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                            @change="pickAttachment($event)"
+                        >
+                    </label>
+                    <span x-show="attachmentLabel" x-cloak class="text-secondary small text-truncate" style="max-width: 12rem" x-text="attachmentLabel"></span>
+                    <button
+                        type="button"
+                        x-show="attachmentLabel"
+                        x-cloak
+                        @click="clearAttachment()"
+                        class="btn btn-sm btn-ghost-secondary"
+                    >
+                        Remove
+                    </button>
+                </div>
+
+                <div x-show="open" x-cloak>
+                    <div class="px-3 py-2 border-top">
+                        <label class="form-label" for="ark-messenger-tag-{{ $customer->id }}">Outside 24h tag</label>
+                        <select
+                            id="ark-messenger-tag-{{ $customer->id }}"
+                            x-model="messengerMessageTag"
+                            class="form-select form-select-sm mb-2"
+                        >
+                            <option value="">Use shop default / standard reply</option>
+                            <template x-for="tag in messengerMessageTags" :key="tag.value">
+                                <option :value="tag.value" x-text="tag.label"></option>
+                            </template>
+                        </select>
+                        <label class="visually-hidden" for="ark-messenger-body-{{ $customer->id }}">Messenger message</label>
+                        <textarea
+                            id="ark-messenger-body-{{ $customer->id }}"
+                            x-ref="replyBody"
+                            x-model="body"
+                            rows="{{ ($alwaysOpen || $messengerAlwaysOpen) ? 3 : 2 }}"
+                            placeholder="Reply on Messenger to {{ $customer->name }}"
+                            class="form-control"
+                            @keydown.meta.enter.prevent="send()"
+                            @keydown.ctrl.enter.prevent="send()"
+                        ></textarea>
+                        <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+                            <div class="form-hint mt-0" x-text="composerHelper()"></div>
+                            <button
+                                type="button"
+                                @click="send()"
+                                :disabled="sending"
+                                class="btn btn-primary btn-sm flex-shrink-0"
+                            >
+                                <span x-show="! sending" x-text="sendButtonLabel()">Send Messenger</span>
+                                <span x-show="sending" x-cloak>Sending…</span>
+                            </button>
+                        </div>
+                        <div x-show="error" x-cloak class="mt-1 small text-danger fw-medium" x-text="error"></div>
+                    </div>
+                </div>
+                <div x-show="error && ! open" x-cloak class="px-3 pb-2 small text-danger fw-medium" x-text="error"></div>
+            </div>
+        @endif
+    @else
     @if ($showCommsToolbar)
         <div
             @if ($attributes->has('id'))
@@ -896,5 +1604,6 @@
             </div>
             <p x-show="error && ! open" x-cloak class="px-3 pb-2 text-xs font-semibold text-rose-700" x-text="error"></p>
         </div>
+    @endif
     @endif
 @endcan

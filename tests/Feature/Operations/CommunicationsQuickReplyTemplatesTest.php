@@ -75,7 +75,7 @@ test('communications settings can add and delete canned responses', function () 
     $html = view('operations.communications.workspace.partials.quick-replies')->render();
 
     expect($html)->toContain('Loaner')
-        ->and($html)->toContain('background:#f0f9ff')
+        ->and($html)->toContain('btn-outline-azure')
         ->and($html)->not->toContain('Estimate received');
 });
 
