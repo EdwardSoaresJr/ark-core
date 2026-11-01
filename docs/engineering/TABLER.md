@@ -367,3 +367,15 @@ The punch screen staff open from the sidebar. It's a Tabler `focused` page, with
 Unchanged: `TechnicianTimeClockController`, the routes, `TechnicianTimeClockProjection`, the `canManage` and `canPunchForStaff` checks, and the form fields, including the `lunch` input.
 
 Still legacy: the staff history page (`operations.time-clock.staff`), with auto clock, punch corrections, and deletions.
+
+### Appointment detail (`operations.appointments.show`)
+
+The page a Schedule card opens. It's a Tabler `focused` page with `stack-actions`: the appointment date and time as the pretitle, the contact name as the title, and Schedule as the back link.
+
+- **Summary card:** the contact line, "Not linked to a customer yet", and the status, length, and reserved labor line sit in the first card body, because the page subtitle is hidden on phones. Concern and notes follow, then Vehicle and Advisor in a `datagrid`, then the actions in the footer. Check In / Create RO is the one `btn-primary`; Open RO replaces it once a repair order exists.
+- **Customer text and Reschedule or edit:** still `<details>` cards, so `?comms=1` and `?edit=1` open them as before. The summary is a `card-body`, which keeps the browser's disclosure marker.
+- **Status:** a `btn-list` of status forms at full button size.
+
+Unchanged: `AppointmentShowController`, the routes, and every form's action and fields.
+
+Still legacy: `x-operations.appointment-datetime-fields` and the `x-operations.appointment-reserved-labor` field inside it sit in a `.ark-legacy bg-white text-dark` island in the Reschedule form, because the legacy Schedule create page (`operations.appointments.create`) uses them too. They migrate with that page.
