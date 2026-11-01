@@ -1,4 +1,4 @@
-<x-operations.app title="RO #{{ $snapshot['repair_order']['repair_order_id'] }} Estimate">
+<x-operations.app title="RO #{{ $snapshot['repair_order']['repair_order_id'] }} Estimate" ui="tabler">
     @php
         $shopName = $snapshot['shop']['name'] ?: config('app.name');
         $shopInitial = mb_strtoupper(mb_substr($shopName, 0, 1));
@@ -40,38 +40,41 @@
         };
     @endphp
 
-    <section class="space-y-4">
-        <div class="flex flex-wrap gap-2 print:hidden">
-            <a href="{{ route('operations.repair-orders.show', $repairOrder) }}" class="inline-flex min-h-9 items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950">
-                Back to RO Review
-            </a>
+    <x-tabler.page
+        layout="focused"
+        :title="'RO #'.$snapshot['repair_order']['repair_order_id'].' Estimate'"
+        pretitle="Estimate document"
+        actions-label="Estimate document commands"
+        stack-actions
+    >
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.repair-orders.show', $repairOrder)" icon="arrow-left" label="Back to RO Review" />
 
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
                 @unless ($isTerminal)
-                    <a href="{{ route('operations.repair-orders.show', $repairOrder) }}" class="inline-flex min-h-9 items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950">
-                        Edit Estimate
-                    </a>
+                    <x-tabler.page-action :href="route('operations.repair-orders.show', $repairOrder)" icon="pencil" label="Edit Estimate" />
                 @endunless
             @endcan
 
-            <a
-                href="{{ route('operations.repair-orders.estimate.pdf', $repairOrder) }}"
+            <x-tabler.page-action
+                :href="route('operations.repair-orders.estimate.pdf', $repairOrder)"
+                icon="file-text"
+                label="View PDF"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex min-h-9 items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
-                @click="($event.currentTarget.href = '{{ route('operations.repair-orders.estimate.pdf', $repairOrder) }}?t=' + Date.now())"
-            >
-                View PDF
-            </a>
-            <a
-                href="{{ route('operations.repair-orders.estimate.pdf.download', $repairOrder) }}"
-                class="inline-flex min-h-9 items-center justify-center rounded-sm border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
-                @click="($event.currentTarget.href = '{{ route('operations.repair-orders.estimate.pdf.download', $repairOrder) }}?t=' + Date.now())"
-            >
-                Download PDF
-            </a>
-        </div>
+                x-on:click="($event.currentTarget.href = '{{ route('operations.repair-orders.estimate.pdf', $repairOrder) }}?t=' + Date.now())"
+                primary
+            />
+            <x-tabler.page-action
+                :href="route('operations.repair-orders.estimate.pdf.download', $repairOrder)"
+                icon="arrow-down"
+                label="Download PDF"
+                x-on:click="($event.currentTarget.href = '{{ route('operations.repair-orders.estimate.pdf.download', $repairOrder) }}?t=' + Date.now())"
+            />
+        </x-slot:actions>
 
+        {{-- The printable estimate document body, not staff chrome: it keeps its own markup and print rules. --}}
+        <div class="ark-legacy bg-white text-dark" data-estimate-document-body>
         <article class="bg-white px-4 pb-4 pt-2 ring-1 ring-slate-300 print:p-0 print:ring-0">
             <header class="border-b border-slate-300 px-3 pb-2 pt-1">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -368,5 +371,6 @@
                 'variant' => 'browser',
             ])
         </article>
-    </section>
+        </div>
+    </x-tabler.page>
 </x-operations.app>
