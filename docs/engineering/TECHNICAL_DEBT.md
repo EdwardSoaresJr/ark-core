@@ -140,6 +140,60 @@
 
 ---
 
+### Adding a staff member can fail after the user is created
+
+**Location:**
+- `StaffMemberController::store()` in `app/Ark/Operations/Staff/StaffMemberController.php`, lines 44–65.
+- `StaffInvitationIssuer::send()` in `app/Ark/Operations/Staff/StaffInvitationIssuer.php`, lines 27–28.
+
+**Problem:** `store()` creates the user, syncs roles, and records compensation history before it sends the invitation. `send()` throws `RuntimeException("Email isn't configured yet.")` unless `ManagedMailGate::platformSend()` is true, which needs an ARK Platform connection. Nothing wraps the create and the send in a transaction or catches the exception, and `bootstrap/app.php` does not render it. A standalone shop with no Platform connection therefore gets a server error, and is left with an active user who has roles and a placeholder password but no setup link. `StaffInvitationTest` covers only the connected path. Recorded in [PR #107](https://github.com/EdwardSoaresJr/ark-core/pull/107).
+
+**Expected:** Adding a staff member on a standalone shop either completes with a way for that person to get a password (for example, the command-line recovery `PRODUCT_BOUNDARY.md` requires), or fails with a validation message and creates nothing.
+
+**Remove when:** A test adds a staff member with no Platform connection. The response is not a server error, and the shop is left either with no new user or with a user it can finish setting up without ARK Platform.
+
+---
+
+### Inspection checklist checkboxes cannot be turned off
+
+**Location:**
+- The form, `resources/views/operations/settings/partials/inspection-template-settings.blade.php`: template Enabled at line 21, item Enabled at line 51, Photo required at line 55.
+- `InspectionTemplateSettingsUpdater` in `app/Ark/Operations/Inspections/InspectionTemplateSettingsUpdater.php`, lines 19 and 51–56.
+
+**Problem:** The checkboxes send no hidden `0`, so an unchecked box sends nothing. The updater changes `enabled` and `requires_photo` only when the key is present, and otherwise keeps the stored value. Checking a box saves `true`; unchecking it leaves it `true`. Seen in the browser on [PR #107](https://github.com/EdwardSoaresJr/ark-core/pull/107), where unchecking Photo required and saving brought it back checked. The field names and behavior are the same as before that PR.
+
+**Expected:** Unchecking a template's Enabled, an item's Enabled, or an item's Photo required and saving stores `false`.
+
+**Remove when:** A test saves the inspection checklist form with each of those three boxes unchecked, and the stored template and item show `enabled = false` and `requires_photo = false`.
+
+---
+
+### A new custom status cannot start on the technician board
+
+**Location:**
+- `resources/views/operations/settings/partials/ro-status-catalog.blade.php`, line 198 (Add custom status, Technician board).
+- `RepairOrderStatusCatalogUpdater` in `app/Ark/Operations/RepairOrders/Status/RepairOrderStatusCatalogUpdater.php`, line 113.
+
+**Problem:** The checkbox submits `value="0"`, the same value as the hidden input before it. The updater stores `filter_var('0', FILTER_VALIDATE_BOOLEAN)`, which is `false`, so a new status always saves with `show_on_technician_board = false`, whether the box is checked or not. The status can be moved onto the technician board afterward, using the existing status's own checkbox. Recorded in [PR #107](https://github.com/EdwardSoaresJr/ark-core/pull/107).
+
+**Expected:** Checking Technician board when adding a custom status creates it with `show_on_technician_board = true`.
+
+**Remove when:** A test adds a custom status with Technician board checked and finds `show_on_technician_board = true` on the new row, and another test with it unchecked finds `false`.
+
+---
+
+### Shop Overhead links to Staff do nothing
+
+**Location:** `resources/views/operations/settings/partials/shop-overhead-calculator.blade.php`, lines 79 and 268 (the two "Settings → Staff" buttons).
+
+**Problem:** Both buttons call `$parent.setActive('staff')`. Alpine 3 (`alpinejs` `^3.15.12` in `package.json`) has no `$parent` magic, and `resources/js` registers none, so the click does not reach the Settings page's `setActive()` and the Staff section does not open. Recorded in [PR #107](https://github.com/EdwardSoaresJr/ark-core/pull/107).
+
+**Expected:** Clicking either link opens the Staff section, as the section navigation does: `active = 'staff'` and `?section=staff` in the URL.
+
+**Remove when:** In the browser, clicking each "Settings → Staff" link on Shop Overhead shows the Staff section, and the markup no longer uses `$parent`.
+
+---
+
 ## Tests
 
 ### The Core test suite is not green on `main`
