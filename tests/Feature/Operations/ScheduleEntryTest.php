@@ -211,3 +211,57 @@ test('legacy appointments create still works alongside schedule entry', function
         ->assertOk()
         ->assertSee('Find an existing customer', false);
 });
+
+test('schedule create renders on tabler in its search, new caller, and customer states', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $customer = Customer::query()->create([
+        'first_name' => 'Tabler',
+        'last_name' => 'Booker',
+        'phone' => '555-0207',
+    ]);
+    $legacyAncestor = 'ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]';
+    $xpathFor = function (string $url) use ($advisor): DOMXPath {
+        $document = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $document->loadHTML($this->actingAs($advisor)->get($url)->assertOk()->getContent());
+        libxml_clear_errors();
+
+        return new DOMXPath($document);
+    };
+
+    $search = $xpathFor(route('operations.schedule', ['q' => 'Booker']));
+    $searchCard = $search->query('//*[@data-schedule-customer-search]')->item(0);
+
+    expect(trim($search->query('//*[contains(@class, "page-title")]')->item(0)->textContent))->toBe('Schedule appointment')
+        ->and($searchCard)->toBeInstanceOf(DOMElement::class)
+        ->and($search->query($legacyAncestor, $searchCard)->length)->toBe(0)
+        ->and($search->query('.//form[@method="GET"][@action="'.route('operations.schedule').'"]//input[@name="q"][@value="Booker"]', $searchCard)->length)->toBe(1)
+        ->and($search->query('.//*[@data-schedule-matches]//a[contains(@href, "customer='.$customer->id.'")]', $searchCard)->length)->toBe(1);
+
+    $noMatch = $xpathFor(route('operations.schedule', ['q' => 'Nobody Here']));
+
+    expect($noMatch->query('//*[@data-schedule-no-match]//a[contains(@href, "mode=new")]')->length)->toBe(1)
+        ->and($noMatch->query('//form[@action="'.route('operations.customers.store').'"]//input[@name="return_to"][@value="schedule"]')->length)->toBe(1);
+
+    $newCaller = $xpathFor(route('operations.schedule', ['mode' => 'new']));
+    $callerForm = $newCaller->query('//form[@data-schedule-form]')->item(0);
+
+    expect($callerForm->getAttribute('action'))->toBe(route('operations.appointments.store'))
+        ->and($newCaller->query('.//*[@data-schedule-caller]//input[@name="contact_name"][contains(@class, "form-control")]', $callerForm)->length)->toBe(1)
+        ->and($newCaller->query('.//input[@name="customer_id"]', $callerForm)->length)->toBe(0);
+
+    $booking = $xpathFor(ScheduleUrl::to(['customer' => $customer->id]));
+    $form = $booking->query('//form[@data-schedule-form]')->item(0);
+
+    expect($booking->query($legacyAncestor, $form)->length)->toBe(0)
+        ->and($booking->query('.//*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]', $form)->length)->toBe(0)
+        ->and($booking->query('.//input[@name="customer_id"][@value="'.$customer->id.'"]', $form)->length)->toBe(1)
+        ->and($booking->query('.//*[@data-schedule-customer]', $form)->item(0)->textContent)->toContain('Tabler Booker')
+        ->and($booking->query('.//input[@name="starts_date"][@type="date"][contains(@class, "form-control")]', $form)->length)->toBe(1)
+        ->and($booking->query('.//select[@name="starts_time"][contains(@class, "form-select")]', $form)->length)->toBe(1)
+        ->and($booking->query('.//select[@name="duration_minutes"][contains(@class, "form-select")]', $form)->length)->toBe(1)
+        ->and($booking->query('.//*[@data-appointment-reserved-labor]//button[normalize-space()="Override"]', $form)->length)->toBe(1)
+        ->and($booking->query('.//select[@name="vehicle_id"][contains(@class, "form-select")]', $form)->length)->toBe(1)
+        ->and($booking->query('.//select[@name="advisor_user_id"][contains(@class, "form-select")]', $form)->length)->toBe(1)
+        ->and($booking->query('.//button[@type="submit"][contains(@class, "btn-primary")][normalize-space()="Schedule"]', $form)->length)->toBe(1);
+});

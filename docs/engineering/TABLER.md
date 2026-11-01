@@ -150,6 +150,55 @@ Design the phone layout first, not as a squeezed desktop.
 5. List what still depends on `app.css`.
 6. Stop for review before the next view.
 
+## Migration inventory
+
+Update this list in the pull request that migrates a view. Staff pages are the views that render `<x-operations.app>`. Names in code are route names.
+
+**Migrated (11 of 58 staff pages):**
+
+- Customers (`operations.customers.search`)
+- Vehicles (`operations.vehicles.search`)
+- Customer hub (`operations.customers.show`)
+- Repair orders (`operations.repair-orders.index`)
+- Repair order workspace (`operations.repair-orders.show`)
+- Dashboard (`operations.today`)
+- Shop settings (`operations.settings.shop.edit`)
+- Schedule (`operations.appointments.index`)
+- Appointment detail (`operations.appointments.show`)
+- Schedule appointment (`operations.schedule`)
+- Time clock (`operations.time-clock.index`)
+
+**Legacy islands left on migrated pages:**
+
+- **Repair order workspace:**
+  - the worksheet body and busy overlay;
+  - the engine oil panel;
+  - the workspace modal host;
+  - the authorization exception form;
+  - the journey card, which renders only when the feature is enabled;
+  - the RTE labor panel;
+  - the rail's Authorization, Portal, and Parts tabs;
+  - the labor guide and parts catalog toolbar buttons;
+  - the visit signals.
+
+  The header and command bar also need a refinement pass before the migration is complete.
+- **Customer hub:** the conversation context panel (Work tab), quick reply (Comms tab), document list (Documents tab), VIN display (Vehicles tab), the journey card, and the hub workspace modal.
+- **Shop settings:** every section except Shop Identity and Documents / Disclaimers.
+- **Dashboard:** technician lanes.
+- **Schedule:** the calendar board.
+
+**Remaining staff pages (47):**
+
+- **Daily operations (11):** Job Board (`operations.index`), the operations home, briefing, intake queue (`operations.intake.index`), check-in (`operations.intake.create`), work queue (`operations.work.queue`), new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`).
+- **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation. These wait for the decision on the technician phone workflow.
+- **Communications (11):** the communications workboard, calls, the inbox, attention, history, and internal workspace views, conversation reply, and shop communications (index, device, person, and setup required).
+- **Owner and reports (9):** business, day review, staff coaching, call intelligence (index and detail), technician production (index and detail), reports index, and operational report.
+- **Learning (3):** ARKademy, print selection, and team progress.
+- **Account and system (4):** profile, ARK Cloud connecting, Platform clusters, and the 409 error page.
+- **Financial and authorization (6):** the estimate document, the document viewer, record testing outcome, the dealer parts quote, parts matrix tuning, and the end-of-day report. These wait for the release-blocker workstream.
+
+**Outside the staff shell, not scheduled:** sign-in and account pages (`<x-guest-layout>`, 8), the installer (8), the ARKademy print page, wall displays (shop display, customer display, scoreboard wall), the customer portal (9), the public website (10), and ARK Cloud pages (13). "Workspace layouts" describes the guest layout's target. The rest need a decision from the project owner before they join this migration.
+
 ## Migration log
 
 ### Customers (`operations.customers.search`)
@@ -378,4 +427,16 @@ The page a Schedule card opens. It's a Tabler `focused` page with `stack-actions
 
 Unchanged: `AppointmentShowController`, the routes, and every form's action and fields.
 
-Still legacy: `x-operations.appointment-datetime-fields` and the `x-operations.appointment-reserved-labor` field inside it sit in a `.ark-legacy bg-white text-dark` island in the Reschedule form, because the legacy Schedule create page (`operations.appointments.create`) uses them too. They migrate with that page.
+The date, time, length, and reserved labor fields are the shared components described under "Schedule appointment" below.
+
+### Schedule appointment (`operations.schedule`, `operations.appointments.create`)
+
+The booking page opened from Schedule, a customer, a vehicle, a repair order, or a conversation. It's a Tabler `focused` page titled "Schedule appointment", with the booking hint as the subtitle and "Back to schedule" as a `<x-tabler.page-action>`, which is icon-only on phones.
+
+- **Customer search:** one card with the search box and Search in an `input-group`, and New caller as the primary button. Matches are a `list-group-flush` in the same card. With no match, the card adds "Schedule with name & phone" and the add-customer form, which posts to `operations.customers.store` with the same `schedule_*` fields.
+- **Booking form:** one card. The first body holds the linked customer line (name, phone, Customer hub, and the repair order link), or the Caller `form-fieldset` for a booking without a customer. Then the date and time fields, Vehicle (with a customer), Concern, Notes, and Advisor. Schedule is the footer's primary button.
+- **Shared components:** `x-operations.appointment-datetime-fields` and `x-operations.appointment-reserved-labor` render Tabler markup. Both appointment pages use them, so the detail page's Reschedule form no longer needs an island. The requested-time preference from a lead is an `alert-info`. Reserved labor is a `form-fieldset`. Its Auto and Manual panels toggle with Alpine `x-show` and carry no `d-*` classes, and only one `estimated_labor_hours` input is enabled at a time, as before.
+
+Unchanged: `PresentAppointmentCreateForm`, `AppointmentStoreController`, the routes, the query parameters, and every field name.
+
+The sidebar's Schedule item matches `operations.appointments.*`, so it is not highlighted on `operations.schedule`. That comes from `StaffNavigation`, on legacy and Tabler pages alike.

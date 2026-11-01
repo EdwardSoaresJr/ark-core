@@ -439,9 +439,10 @@ test('appointment detail renders on tabler with its forms on their routes', func
         ->and($editor->hasAttribute('open'))->toBeTrue()
         ->and($xpath->query('.//form[@action="'.route('operations.appointments.update', $appointment).'"]//input[@name="contact_name"][contains(@class, "form-control")]', $editor)->length)->toBe(1)
         ->and($xpath->query($legacyAncestor, $xpath->query('.//select[@name="vehicle_id"]', $editor)->item(0))->length)->toBe(0)
-        ->and($timeFields->getAttribute('class'))->toContain('ark-legacy')
-        ->and($xpath->query('.//select[@name="starts_time"]', $timeFields)->length)->toBe(1)
-        ->and($xpath->query('.//select[@name="duration_minutes"]', $timeFields)->length)->toBe(1);
+        ->and($xpath->query('descendant-or-self::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]', $timeFields)->length)->toBe(0)
+        ->and($xpath->query('.//select[@name="starts_time"][contains(@class, "form-select")]', $timeFields)->length)->toBe(1)
+        ->and($xpath->query('.//select[@name="duration_minutes"][contains(@class, "form-select")]', $timeFields)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-appointment-reserved-labor]//input[@type="hidden"][@name="estimated_labor_hours"]', $timeFields)->length)->toBe(1);
 });
 
 test('schedule day cards offer Call and Text when customer has a phone', function () {
