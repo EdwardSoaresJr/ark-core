@@ -299,7 +299,7 @@
             </div>
         </div>
     </div>
-@elseif (! request()->attributes->get('operations.tabler_shell_overlays'))
+@else
     <div x-data="arkCommsInterrupt()">
         <div
             x-show="(activeCall !== null || activeMessage !== null) && attentionGateEnabled()"

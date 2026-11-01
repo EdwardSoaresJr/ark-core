@@ -51,7 +51,7 @@
             </div>
         </div>
     </div>
-@elseif (! request()->attributes->get('operations.tabler_shell_overlays'))
+@else
     @php
         $opsCommandPalette = app(\App\Ark\Operations\Commands\OperationsCommandRegistry::class)
             ->forUserAsArrays(auth()->user());

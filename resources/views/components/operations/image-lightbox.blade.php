@@ -85,7 +85,7 @@
         </div>
     </div>
 </div>
-@elseif (! request()->attributes->get('operations.tabler_shell_overlays'))
+@else
 <div
     x-data="arkImageLightbox()"
     x-cloak

@@ -324,29 +324,31 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
 
         @if ($usesTabler)
             <div class="ark-legacy">
-        @endif
+                @stack('ops-ro-orientation-dock')
 
-        @stack('ops-ro-orientation-dock')
-
-        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-            <x-operations.comms-interrupt-panel />
-            <x-operations.global-search />
-        @endcan
-        <x-operations.image-lightbox />
-        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-            <x-operations.learn.guide-modal />
-        @endcan
-
-        @if ($printing)
-            @include('components.operations.print-helpers')
-        @endif
-
-        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-            <x-operations.call-queue :poller-only="true" />
-        @endcan
-
-        @if ($usesTabler)
+                @if ($printing)
+                    @include('components.operations.print-helpers')
+                @endif
             </div>
+        @else
+            @stack('ops-ro-orientation-dock')
+
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                <x-operations.comms-interrupt-panel />
+                <x-operations.global-search />
+            @endcan
+            <x-operations.image-lightbox />
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                <x-operations.learn.guide-modal />
+            @endcan
+
+            @if ($printing)
+                @include('components.operations.print-helpers')
+            @endif
+
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                <x-operations.call-queue :poller-only="true" />
+            @endcan
         @endif
     </body>
 </html>
