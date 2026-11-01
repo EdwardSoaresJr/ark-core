@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations'];
         @endphp
 
         <div class="row g-3">
@@ -1465,6 +1465,34 @@
                     ])
                 </section>
 
+                <section class="card" x-show="active === 'operations'" x-cloak data-settings-section="operations">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Appointments &amp; Setup</div>
+                            <h2 class="card-title">Appointments, bays, and shop setup</h2>
+                            <div class="card-subtitle">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <h3 class="mb-1">Appointments</h3>
+                        <p class="text-secondary small">Booking rules, scheduling hours, customer request windows, and bays. Also controls Today&apos;s Appointments on Work.</p>
+
+                        @include('operations.settings.partials.appointments-settings', [
+                            'settings' => $settings,
+                            'scheduleBays' => $scheduleBays ?? collect(),
+                        ])
+                    </div>
+
+                    <div class="card-body">
+                        @include('operations.settings.partials.operational-profile', ['settings' => $settings])
+                    </div>
+
+                    <div class="card-body">
+                        @include('operations.settings.partials.shop-csv-import')
+                    </div>
+                </section>
+
                 <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
                 @include('operations.settings.partials.square-payments-settings', [
@@ -1491,34 +1519,6 @@
                 @endunless
 
                 @include('operations.settings.partials.shop-excellence-targets')
-
-
-                <section x-show="active === 'operations'" x-cloak>
-                    <div class="border-b border-slate-200 px-3 py-3">
-                        <h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>
-                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</p>
-                    </div>
-
-                    <div class="p-3">
-                        <div class="border-b border-slate-200 pb-3">
-                            <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Appointments</h4>
-                            <p class="mt-0.5 text-xs text-slate-500">Booking rules, scheduling hours, customer request windows, and bays. Also controls Today&apos;s Appointments on Work.</p>
-                        </div>
-
-                        @include('operations.settings.partials.appointments-settings', [
-                            'settings' => $settings,
-                            'scheduleBays' => $scheduleBays ?? collect(),
-                        ])
-                    </div>
-
-                    <div class="p-3">
-                        @include('operations.settings.partials.operational-profile', ['settings' => $settings])
-                    </div>
-
-                    <div class="p-3">
-                        @include('operations.settings.partials.shop-csv-import')
-                    </div>
-                </section>
 
                 @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
                     @include('operations.settings.partials.staff')

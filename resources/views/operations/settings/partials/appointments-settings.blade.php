@@ -1,102 +1,97 @@
-<form method="POST" action="{{ route('operations.settings.shop.appointments.update') }}" class="mt-4 max-w-2xl space-y-4">
+<form method="POST" action="{{ route('operations.settings.shop.appointments.update') }}" style="max-width: 48rem" data-settings-appointments>
     @csrf
     @method('PATCH')
 
-    <div class="rounded-md border border-slate-200 bg-white p-4">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-black text-slate-950">Enable Appointments</p>
-                <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Turn scheduling on when staff are trained and appointments have a clear path into Check In or repair orders.
-                    Disabled by default - Work stays the advisor front door until you are ready.
-                </p>
-            </div>
-            <label class="flex shrink-0 items-center gap-2 text-sm font-semibold text-slate-800">
-                <input type="hidden" name="appointments_enabled" value="0">
-                <input
-                    type="checkbox"
-                    name="appointments_enabled"
-                    value="1"
-                    class="rounded border-slate-300"
-                    @checked(old('appointments_enabled', $settings->appointments_enabled))
-                >
-                <span>{{ $settings->appointments_enabled ? 'Enabled' : 'Disabled' }}</span>
-            </label>
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <h4 class="mb-1">Enable Appointments</h4>
+            <p class="text-secondary small mb-0">
+                Turn scheduling on when staff are trained and appointments have a clear path into Check In or repair orders.
+                Disabled by default - Work stays the advisor front door until you are ready.
+            </p>
         </div>
+        <label class="form-check form-switch mb-0 flex-shrink-0">
+            <input type="hidden" name="appointments_enabled" value="0">
+            <input
+                type="checkbox"
+                name="appointments_enabled"
+                value="1"
+                class="form-check-input"
+                @checked(old('appointments_enabled', $settings->appointments_enabled))
+            >
+            <span class="form-check-label">{{ $settings->appointments_enabled ? 'Enabled' : 'Disabled' }}</span>
+        </label>
     </div>
 
-    <div class="rounded-md border border-slate-200 bg-white p-4">
-        <p class="text-sm font-black text-slate-950">Appointment time steps</p>
-        <p class="mt-1 text-xs leading-5 text-slate-500">
+    <div class="border-top pt-3 mt-3">
+        <h4 class="mb-1">Appointment time steps</h4>
+        <p class="text-secondary small">
             Schedule grid and book/edit time pickers use this increment - no scrolling minute-by-minute.
         </p>
-        <label class="mt-3 block max-w-xs">
-            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Increment</span>
-            <select name="appointment_slot_minutes" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
+        <div style="max-width: 20rem">
+            <label for="settings-appointment-slot-minutes" class="form-label">Increment</label>
+            <select id="settings-appointment-slot-minutes" name="appointment_slot_minutes" class="form-select">
                 @foreach (\App\Ark\Operations\Appointments\AppointmentSlotMinutes::settingOptions() as $minutes => $label)
                     <option value="{{ $minutes }}" @selected((int) old('appointment_slot_minutes', $settings->appointment_slot_minutes ?? 30) === $minutes)>
                         {{ $label }}
                     </option>
                 @endforeach
             </select>
-        </label>
+        </div>
     </div>
 
-    <div class="rounded-md border border-slate-200 bg-white p-4 space-y-4">
-        <div>
-            <p class="text-sm font-black text-slate-950">Scheduling capacity</p>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
-                Appointments reserve soft shop capacity. Bay and technician assignments are optional planning - not required to book.
-            </p>
-        </div>
+    <div class="border-top pt-3 mt-3">
+        <h4 class="mb-1">Scheduling capacity</h4>
+        <p class="text-secondary small">
+            Appointments reserve soft shop capacity. Bay and technician assignments are optional planning - not required to book.
+        </p>
 
-        <fieldset class="space-y-2">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Capacity basis</legend>
+        <fieldset class="mb-3">
+            <legend class="form-label">Capacity basis</legend>
             @foreach (\App\Ark\Operations\Appointments\AppointmentCapacityBasis::cases() as $basis)
-                <label class="flex items-center gap-2 text-sm text-slate-800">
+                <label class="form-check">
                     <input
                         type="radio"
                         name="appointment_capacity_basis"
                         value="{{ $basis->value }}"
-                        class="border-slate-300"
+                        class="form-check-input"
                         @checked(old('appointment_capacity_basis', $settings->appointment_capacity_basis ?? 'limiting_resource') === $basis->value)
                     >
-                    <span>{{ $basis->label() }}</span>
+                    <span class="form-check-label">{{ $basis->label() }}</span>
                 </label>
             @endforeach
         </fieldset>
 
-        <label class="block max-w-xs">
-            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Scheduling target</span>
-            <div class="mt-0.5 flex items-center gap-2">
+        <div class="mb-3" style="max-width: 20rem">
+            <label for="settings-appointment-scheduling-target" class="form-label">Scheduling target</label>
+            <div @class(['input-group', 'has-validation' => $errors->has('appointment_scheduling_target_percent')])>
                 <input
+                    id="settings-appointment-scheduling-target"
                     type="number"
                     name="appointment_scheduling_target_percent"
                     min="25"
                     max="300"
                     value="{{ old('appointment_scheduling_target_percent', $settings->appointment_scheduling_target_percent ?? 100) }}"
-                    class="h-9 w-24 rounded-sm border border-slate-300 bg-white px-2 text-sm @error('appointment_scheduling_target_percent') border-rose-400 @enderror"
+                    @class(['form-control', 'is-invalid' => $errors->has('appointment_scheduling_target_percent')])
                 >
-                <span class="text-sm font-semibold text-slate-600">%</span>
+                <span class="input-group-text">%</span>
+                @error('appointment_scheduling_target_percent')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <p class="mt-1 text-[11px] text-slate-500">100% matches base capacity. Above 100% intentionally overpacks the day.</p>
-            @error('appointment_scheduling_target_percent')
-                <p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>
-            @enderror
-        </label>
+            <div class="form-hint">100% matches base capacity. Above 100% intentionally overpacks the day.</div>
+        </div>
 
-        <fieldset class="space-y-2">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">When target is exceeded</legend>
+        <fieldset>
+            <legend class="form-label">When target is exceeded</legend>
             @foreach (\App\Ark\Operations\Appointments\AppointmentCapacityEnforcement::cases() as $enforcement)
-                <label class="flex items-center gap-2 text-sm text-slate-800">
+                <label class="form-check">
                     <input
                         type="radio"
                         name="appointment_capacity_enforcement"
                         value="{{ $enforcement->value }}"
-                        class="border-slate-300"
+                        class="form-check-input"
                         @checked(old('appointment_capacity_enforcement', $settings->appointment_capacity_enforcement ?? 'warn') === $enforcement->value)
                     >
-                    <span>{{ $enforcement->label() }}</span>
+                    <span class="form-check-label">{{ $enforcement->label() }}</span>
                 </label>
             @endforeach
         </fieldset>
@@ -129,74 +124,81 @@
     @endphp
 
     <div
-        class="rounded-md border border-slate-200 bg-white p-4 space-y-4"
+        class="border-top pt-3 mt-3"
         x-data="{ followShop: {{ $followShopHours ? 'true' : 'false' }} }"
     >
-        <div>
-            <p class="text-sm font-black text-slate-950">Scheduling hours</p>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
-                Staff appointment booking follows shop Business Hours by default.
-                Customize only when scheduling should blacklist a day or use narrower windows than the phones.
-            </p>
-        </div>
+        <h4 class="mb-1">Scheduling hours</h4>
+        <p class="text-secondary small">
+            Staff appointment booking follows shop Business Hours by default.
+            Customize only when scheduling should blacklist a day or use narrower windows than the phones.
+        </p>
 
-        <label class="flex items-start gap-2 text-sm text-slate-800">
+        <label class="form-check">
             <input type="hidden" name="scheduling_hours_follow_shop" value="0">
             <input
                 type="checkbox"
                 name="scheduling_hours_follow_shop"
                 value="1"
-                class="mt-0.5 rounded border-slate-300"
+                class="form-check-input"
                 x-model="followShop"
             >
-            <span>
-                <span class="font-semibold">Follow Business Hours</span>
-                <span class="mt-0.5 block text-xs leading-5 text-slate-500">
-                    {{ $businessHoursSummary }}
-                    ·
-                    <a
-                        href="{{ route('operations.settings.shop.edit', ['section' => 'general']) }}"
-                        class="font-semibold text-slate-700 underline decoration-slate-300 hover:text-slate-950"
-                    >Edit Business Hours</a>
-                </span>
+            <span class="form-check-label">Follow Business Hours</span>
+            <span class="form-check-description">
+                {{ $businessHoursSummary }}
+                ·
+                <a
+                    href="{{ route('operations.settings.shop.edit', ['section' => 'general']) }}"
+                >Edit Business Hours</a>
             </span>
         </label>
 
-        <div x-show="!followShop" x-cloak class="space-y-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Custom scheduling windows</p>
-            <p class="text-xs leading-5 text-slate-500">Uncheck a day to blacklist it for appointments. Open/close may be narrower than Business Hours.</p>
-            @foreach ($weekdayLabels as $dayKey => $dayLabel)
-                @php
-                    $dayHours = $customSchedulingHours[$dayKey] ?? ['enabled' => false, 'open' => '08:00', 'close' => '17:00'];
-                @endphp
-                <div class="grid gap-2 rounded-sm border border-slate-200 bg-slate-50/60 px-2 py-2 sm:grid-cols-[7rem_1fr_1fr] sm:items-center">
-                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                        <input type="hidden" name="scheduling_hours[{{ $dayKey }}][enabled]" value="0">
-                        <input
-                            type="checkbox"
-                            name="scheduling_hours[{{ $dayKey }}][enabled]"
-                            value="1"
-                            class="rounded border-slate-300"
-                            @checked(old("scheduling_hours.{$dayKey}.enabled", $dayHours['enabled'] ?? false))
-                        >
-                        {{ $dayLabel }}
-                    </label>
-                    <input
-                        type="time"
-                        name="scheduling_hours[{{ $dayKey }}][open]"
-                        value="{{ old("scheduling_hours.{$dayKey}.open", $dayHours['open'] ?? '08:00') }}"
-                        class="h-9 w-full rounded-sm border-slate-300 bg-white text-sm text-slate-800"
-                    >
-                    <input
-                        type="time"
-                        name="scheduling_hours[{{ $dayKey }}][close]"
-                        value="{{ old("scheduling_hours.{$dayKey}.close", $dayHours['close'] ?? '17:00') }}"
-                        class="h-9 w-full rounded-sm border-slate-300 bg-white text-sm text-slate-800"
-                    >
-                </div>
-            @endforeach
+        <div x-show="!followShop" x-cloak class="mt-3">
+            <div class="subheader mb-1">Custom scheduling windows</div>
+            <p class="text-secondary small">Uncheck a day to blacklist it for appointments. Open/close may be narrower than Business Hours.</p>
+            <div class="list-group">
+                @foreach ($weekdayLabels as $dayKey => $dayLabel)
+                    @php
+                        $dayHours = $customSchedulingHours[$dayKey] ?? ['enabled' => false, 'open' => '08:00', 'close' => '17:00'];
+                    @endphp
+                    <div class="list-group-item" data-scheduling-day="{{ $dayKey }}">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12 col-sm-3">
+                                <label class="form-check mb-0">
+                                    <input type="hidden" name="scheduling_hours[{{ $dayKey }}][enabled]" value="0">
+                                    <input
+                                        type="checkbox"
+                                        name="scheduling_hours[{{ $dayKey }}][enabled]"
+                                        value="1"
+                                        class="form-check-input"
+                                        @checked(old("scheduling_hours.{$dayKey}.enabled", $dayHours['enabled'] ?? false))
+                                    >
+                                    <span class="form-check-label fw-medium">{{ $dayLabel }}</span>
+                                </label>
+                            </div>
+                            <div class="col-6 col-sm">
+                                <input
+                                    type="time"
+                                    name="scheduling_hours[{{ $dayKey }}][open]"
+                                    value="{{ old("scheduling_hours.{$dayKey}.open", $dayHours['open'] ?? '08:00') }}"
+                                    aria-label="{{ $dayLabel }} opens"
+                                    class="form-control"
+                                >
+                            </div>
+                            <div class="col-6 col-sm">
+                                <input
+                                    type="time"
+                                    name="scheduling_hours[{{ $dayKey }}][close]"
+                                    value="{{ old("scheduling_hours.{$dayKey}.close", $dayHours['close'] ?? '17:00') }}"
+                                    aria-label="{{ $dayLabel }} closes"
+                                    class="form-control"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
             @error('scheduling_hours')
-                <p class="text-xs font-semibold text-rose-700">{{ $message }}</p>
+                <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
         </div>
     </div>
@@ -205,30 +207,30 @@
         $requestAvailability = \App\Ark\Operations\Appointments\AppointmentRequestAvailability::forShop($settings);
     @endphp
 
-    <div class="rounded-md border border-slate-200 bg-white p-4 space-y-4">
-        <div>
-            <p class="text-sm font-black text-slate-950">Appointment Request Availability</p>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
-                Controls which days appointment requests may offer. Public booking presentation belongs to ARK Website.
-                Independent of Business Hours and staff Scheduling hours above.
-            </p>
-        </div>
+    <div class="border-top pt-3 mt-3">
+        <h4 class="mb-1">Appointment Request Availability</h4>
+        <p class="text-secondary small">
+            Controls which days appointment requests may offer. Public booking presentation belongs to ARK Website.
+            Independent of Business Hours and staff Scheduling hours above.
+        </p>
 
-        <fieldset class="space-y-2">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Accept requests</legend>
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <fieldset class="mb-3">
+            <legend class="form-label">Accept requests</legend>
+            <div class="row g-2">
                 @foreach ($weekdayLabels as $dayKey => $dayLabel)
-                    <label class="flex items-center gap-2 text-sm text-slate-800">
-                        <input type="hidden" name="appointment_request_availability[weekly][{{ $dayKey }}][enabled]" value="0">
-                        <input
-                            type="checkbox"
-                            name="appointment_request_availability[weekly][{{ $dayKey }}][enabled]"
-                            value="1"
-                            class="rounded border-slate-300"
-                            @checked(old("appointment_request_availability.weekly.{$dayKey}.enabled", $requestAvailability['weekly'][$dayKey]['enabled'] ?? false))
-                        >
-                        <span>{{ $dayLabel }}</span>
-                    </label>
+                    <div class="col-6 col-sm-3">
+                        <label class="form-check mb-0">
+                            <input type="hidden" name="appointment_request_availability[weekly][{{ $dayKey }}][enabled]" value="0">
+                            <input
+                                type="checkbox"
+                                name="appointment_request_availability[weekly][{{ $dayKey }}][enabled]"
+                                value="1"
+                                class="form-check-input"
+                                @checked(old("appointment_request_availability.weekly.{$dayKey}.enabled", $requestAvailability['weekly'][$dayKey]['enabled'] ?? false))
+                            >
+                            <span class="form-check-label">{{ $dayLabel }}</span>
+                        </label>
+                    </div>
                 @endforeach
             </div>
         </fieldset>
@@ -237,57 +239,61 @@
             $horizonDays = (int) old('appointment_request_availability.horizon_days', $requestAvailability['horizon_days']);
             $horizonIsCustom = ! in_array($horizonDays, [7, 14, 30], true);
         @endphp
-        <fieldset class="space-y-2">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">How far ahead can customers request?</legend>
+        <fieldset class="mb-3">
+            <legend class="form-label">How far ahead can customers request?</legend>
             <input type="hidden" name="appointment_request_availability[horizon_is_custom]" value="0">
             @foreach ([7 => '7 days', 14 => '14 days', 30 => '30 days'] as $days => $label)
-                <label class="flex items-center gap-2 text-sm text-slate-800">
+                <label class="form-check">
                     <input
                         type="radio"
                         name="appointment_request_availability[horizon_days]"
                         value="{{ $days }}"
-                        class="border-slate-300"
+                        class="form-check-input"
                         @checked(! $horizonIsCustom && $horizonDays === $days)
                         onclick="this.form.elements['appointment_request_availability[horizon_is_custom]'].value='0'"
                     >
-                    <span>{{ $label }}</span>
+                    <span class="form-check-label">{{ $label }}</span>
                 </label>
             @endforeach
-            <label class="flex flex-wrap items-center gap-2 text-sm text-slate-800">
+            <label class="form-check mb-0">
                 <input
                     type="radio"
                     name="appointment_request_availability[horizon_days]"
                     value="custom"
-                    class="border-slate-300"
+                    class="form-check-input"
                     @checked($horizonIsCustom)
                     onclick="this.form.elements['appointment_request_availability[horizon_is_custom]'].value='1'"
                 >
-                <span>Custom:</span>
-                <input
-                    type="number"
-                    min="1"
-                    max="90"
-                    name="appointment_request_availability[horizon_custom_days]"
-                    value="{{ old('appointment_request_availability.horizon_custom_days', $horizonIsCustom ? $horizonDays : 21) }}"
-                    class="h-8 w-20 rounded-sm border border-slate-300 px-2 text-sm"
-                    onfocus="this.form.querySelector('input[name=\'appointment_request_availability[horizon_days]\'][value=custom]').checked=true; this.form.elements['appointment_request_availability[horizon_is_custom]'].value='1'"
-                >
-                <span class="text-slate-500">days</span>
+                <span class="form-check-label d-inline-flex flex-wrap align-items-center gap-2">
+                    Custom:
+                    <input
+                        type="number"
+                        min="1"
+                        max="90"
+                        name="appointment_request_availability[horizon_custom_days]"
+                        value="{{ old('appointment_request_availability.horizon_custom_days', $horizonIsCustom ? $horizonDays : 21) }}"
+                        aria-label="Custom request horizon in days"
+                        class="form-control form-control-sm"
+                        style="width: 5rem"
+                        onfocus="this.form.querySelector('input[name=\'appointment_request_availability[horizon_days]\'][value=custom]').checked=true; this.form.elements['appointment_request_availability[horizon_is_custom]'].value='1'"
+                    >
+                    <span class="text-secondary">days</span>
+                </span>
             </label>
         </fieldset>
 
-        <fieldset class="space-y-2">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Minimum notice</legend>
+        <fieldset class="mb-3">
+            <legend class="form-label">Minimum notice</legend>
             @foreach ([0 => 'Same day allowed', 1 => '1 day', 2 => '2 days'] as $days => $label)
-                <label class="flex items-center gap-2 text-sm text-slate-800">
+                <label class="form-check">
                     <input
                         type="radio"
                         name="appointment_request_availability[minimum_notice_days]"
                         value="{{ $days }}"
-                        class="border-slate-300"
+                        class="form-check-input"
                         @checked((int) old('appointment_request_availability.minimum_notice_days', $requestAvailability['minimum_notice_days']) === $days)
                     >
-                    <span>{{ $label }}</span>
+                    <span class="form-check-label">{{ $label }}</span>
                 </label>
             @endforeach
         </fieldset>
@@ -296,101 +302,86 @@
             $requestWindows = $requestAvailability['request_windows']
                 ?? \App\Ark\Operations\Appointments\ScheduleRequestWindows::forShop($settings);
         @endphp
-        <fieldset class="space-y-3">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Appointment request preferences</legend>
-            <p class="text-xs leading-5 text-slate-500">
+        <fieldset class="mb-3">
+            <legend class="form-label">Appointment request preferences</legend>
+            <p class="text-secondary small">
                 These settings control the times customers can <strong>request</strong>. Staff still confirms an exact appointment time.
             </p>
 
-            <div class="space-y-3">
-                <div class="rounded-sm border border-slate-200 bg-slate-50/60 p-3 space-y-2">
-                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <input type="hidden" name="appointment_request_availability[request_windows][morning][enabled]" value="0">
-                        <input type="checkbox" name="appointment_request_availability[request_windows][morning][enabled]" value="1" class="rounded border-slate-300" @checked(old('appointment_request_availability.request_windows.morning.enabled', $requestWindows['morning']['enabled']))>
-                        <span>Accept morning requests</span>
-                    </label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="block">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">From</span>
-                            <input type="time" name="appointment_request_availability[request_windows][morning][open]" value="{{ old('appointment_request_availability.request_windows.morning.open', $requestWindows['morning']['open']) }}" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
+            <div class="list-group mb-3">
+                @foreach (['morning' => 'Accept morning requests', 'afternoon' => 'Accept afternoon requests'] as $windowKey => $windowLabel)
+                    <div class="list-group-item" data-request-window="{{ $windowKey }}">
+                        <label class="form-check mb-2">
+                            <input type="hidden" name="appointment_request_availability[request_windows][{{ $windowKey }}][enabled]" value="0">
+                            <input type="checkbox" name="appointment_request_availability[request_windows][{{ $windowKey }}][enabled]" value="1" class="form-check-input" @checked(old('appointment_request_availability.request_windows.'.$windowKey.'.enabled', $requestWindows[$windowKey]['enabled']))>
+                            <span class="form-check-label fw-medium">{{ $windowLabel }}</span>
                         </label>
-                        <label class="block">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">To</span>
-                            <input type="time" name="appointment_request_availability[request_windows][morning][close]" value="{{ old('appointment_request_availability.request_windows.morning.close', $requestWindows['morning']['close']) }}" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
-                        </label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="settings-request-window-{{ $windowKey }}-open" class="form-label">From</label>
+                                <input id="settings-request-window-{{ $windowKey }}-open" type="time" name="appointment_request_availability[request_windows][{{ $windowKey }}][open]" value="{{ old('appointment_request_availability.request_windows.'.$windowKey.'.open', $requestWindows[$windowKey]['open']) }}" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <label for="settings-request-window-{{ $windowKey }}-close" class="form-label">To</label>
+                                <input id="settings-request-window-{{ $windowKey }}-close" type="time" name="appointment_request_availability[request_windows][{{ $windowKey }}][close]" value="{{ old('appointment_request_availability.request_windows.'.$windowKey.'.close', $requestWindows[$windowKey]['close']) }}" class="form-control">
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="rounded-sm border border-slate-200 bg-slate-50/60 p-3 space-y-2">
-                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        <input type="hidden" name="appointment_request_availability[request_windows][afternoon][enabled]" value="0">
-                        <input type="checkbox" name="appointment_request_availability[request_windows][afternoon][enabled]" value="1" class="rounded border-slate-300" @checked(old('appointment_request_availability.request_windows.afternoon.enabled', $requestWindows['afternoon']['enabled']))>
-                        <span>Accept afternoon requests</span>
-                    </label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="block">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">From</span>
-                            <input type="time" name="appointment_request_availability[request_windows][afternoon][open]" value="{{ old('appointment_request_availability.request_windows.afternoon.open', $requestWindows['afternoon']['open']) }}" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
-                        </label>
-                        <label class="block">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">To</span>
-                            <input type="time" name="appointment_request_availability[request_windows][afternoon][close]" value="{{ old('appointment_request_availability.request_windows.afternoon.close', $requestWindows['afternoon']['close']) }}" class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm">
-                        </label>
-                    </div>
-                </div>
-
-                <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                    <input type="hidden" name="appointment_request_availability[request_windows][flexible_enabled]" value="0">
-                    <input type="checkbox" name="appointment_request_availability[request_windows][flexible_enabled]" value="1" class="rounded border-slate-300" @checked(old('appointment_request_availability.request_windows.flexible_enabled', $requestWindows['flexible_enabled']))>
-                    <span>Accept flexible / any-time requests</span>
-                </label>
+                @endforeach
             </div>
+
+            <label class="form-check mb-0">
+                <input type="hidden" name="appointment_request_availability[request_windows][flexible_enabled]" value="0">
+                <input type="checkbox" name="appointment_request_availability[request_windows][flexible_enabled]" value="1" class="form-check-input" @checked(old('appointment_request_availability.request_windows.flexible_enabled', $requestWindows['flexible_enabled']))>
+                <span class="form-check-label">Accept flexible / any-time requests</span>
+            </label>
         </fieldset>
 
-        <fieldset class="space-y-2">
-            <legend class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Optional latest arrival</legend>
-            <p class="text-xs leading-5 text-slate-500">
+        <fieldset>
+            <legend class="form-label">Optional latest arrival</legend>
+            <p class="text-secondary small">
                 Request windows (Morning / Afternoon above) only describe customer preference.
                 Confirmed appointments may still use any valid time within shop scheduling hours unless you enable a cutoff here.
             </p>
-            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <label class="form-check">
                 <input type="hidden" name="appointment_request_availability[request_windows][latest_appointment_arrival_enabled]" value="0">
                 <input
                     type="checkbox"
                     name="appointment_request_availability[request_windows][latest_appointment_arrival_enabled]"
                     value="1"
-                    class="rounded border-slate-300"
+                    class="form-check-input"
                     @checked(old('appointment_request_availability.request_windows.latest_appointment_arrival_enabled', filled($requestWindows['latest_appointment_arrival'] ?? null)))
                 >
-                <span>Limit how late staff can schedule appointment starts</span>
+                <span class="form-check-label">Limit how late staff can schedule appointment starts</span>
             </label>
-            <label class="block max-w-xs">
-                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Latest appointment arrival</span>
+            <div style="max-width: 20rem">
+                <label for="settings-latest-appointment-arrival" class="form-label">Latest appointment arrival</label>
                 <input
+                    id="settings-latest-appointment-arrival"
                     type="time"
                     name="appointment_request_availability[request_windows][latest_appointment_arrival]"
                     value="{{ old('appointment_request_availability.request_windows.latest_appointment_arrival', $requestWindows['latest_appointment_arrival'] ?? \App\Ark\Operations\Appointments\ScheduleRequestWindows::SUGGESTED_LATEST_ARRIVAL) }}"
-                    class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm"
+                    class="form-control"
                 >
-                <span class="mt-0.5 block text-[11px] text-slate-500">Optional. Leave unchecked to allow starts through normal scheduling hours (e.g. close at 6:00 PM).</span>
-            </label>
+                <div class="form-hint">Optional. Leave unchecked to allow starts through normal scheduling hours (e.g. close at 6:00 PM).</div>
+            </div>
             @error('appointment_request_availability.request_windows')
-                <p class="text-xs font-semibold text-rose-700">{{ $message }}</p>
+                <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
         </fieldset>
     </div>
 
     @include('operations.settings.partials.workstation-presence-settings', ['settings' => $settings])
 
-    <div class="flex items-center gap-3">
-        <button type="submit" class="h-9 rounded-sm border border-slate-800 bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-            Save appointment settings
-        </button>
+    <div class="d-flex flex-wrap align-items-center justify-content-end gap-3 border-top pt-3 mt-3">
         @if ($settings->appointments_enabled)
-            <a href="{{ route('operations.appointments.index') }}" class="text-xs font-semibold text-slate-600 underline decoration-slate-300 hover:text-slate-950">
+            <a href="{{ route('operations.appointments.index') }}">
                 Open appointment schedule
             </a>
         @endif
+        <button type="submit" class="btn btn-primary">
+            Save appointment settings
+        </button>
     </div>
 </form>
 
@@ -399,94 +390,109 @@
     $scheduleBays = $scheduleBays ?? collect();
 @endphp
 
-<div class="mt-6 max-w-2xl space-y-4">
-    <div class="rounded-md border border-slate-200 bg-white p-4">
-        <p class="text-sm font-black text-slate-950">Bays</p>
-        <p class="mt-1 text-xs leading-5 text-slate-500">
-            Operational work locations. They may contribute to schedule-capacity planning. Appointments do not require a bay assignment. Front Counter and phone places stay under Communications → Stations.
-        </p>
+<div class="border-top pt-4 mt-4" style="max-width: 48rem" data-settings-bays>
+    <h4 class="mb-1">Bays</h4>
+    <p class="text-secondary small">
+        Operational work locations. They may contribute to schedule-capacity planning. Appointments do not require a bay assignment. Front Counter and phone places stay under Communications → Stations.
+    </p>
 
-        <ul class="mt-3 divide-y divide-slate-100">
-            @forelse ($scheduleBays as $bay)
-                <li class="py-3">
-                    <details class="group" @if ((int) old('edit_bay_id') === (int) $bay->id) open @endif>
-                        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-                            <span class="text-sm font-semibold text-slate-950">{{ $bay->displayLocation() }}</span>
-                            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open:hidden">Edit</span>
-                        </summary>
-                        <div class="mt-3 space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
-                            <form method="POST" action="{{ route('operations.settings.shop.appointments.bays.update', $bay) }}" class="space-y-2">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="edit_bay_id" value="{{ $bay->id }}">
-                                <label class="block">
-                                    <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Name</span>
+    <div class="list-group mb-3">
+        @forelse ($scheduleBays as $bay)
+            <div class="list-group-item" data-settings-bay="{{ $bay->id }}">
+                <details @if ((int) old('edit_bay_id') === (int) $bay->id) open @endif>
+                    <summary class="d-flex align-items-center justify-content-between gap-3" style="cursor: pointer; list-style: none">
+                        <span class="fw-medium">{{ $bay->displayLocation() }}</span>
+                        <span class="btn btn-sm">Edit</span>
+                    </summary>
+                    <div class="border-top pt-3 mt-3">
+                        <form method="POST" action="{{ route('operations.settings.shop.appointments.bays.update', $bay) }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="edit_bay_id" value="{{ $bay->id }}">
+                            <div class="row g-2">
+                                <div class="col-12 col-sm-6">
+                                    <label for="settings-bay-{{ $bay->id }}-name" class="form-label required">Name</label>
                                     <input
+                                        id="settings-bay-{{ $bay->id }}-name"
                                         type="text"
                                         name="name"
                                         value="{{ old('edit_bay_id') == $bay->id ? old('name', $bay->name) : $bay->name }}"
                                         required
-                                        class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm"
+                                        class="form-control"
                                     >
-                                </label>
-                                <label class="block">
-                                    <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Location <span class="font-normal text-slate-500">(optional)</span></span>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label for="settings-bay-{{ $bay->id }}-location" class="form-label">Location <span class="text-secondary fw-normal">(optional)</span></label>
                                     <input
+                                        id="settings-bay-{{ $bay->id }}-location"
                                         type="text"
                                         name="location_label"
                                         value="{{ old('edit_bay_id') == $bay->id ? old('location_label', $bay->location_label) : ($bay->location_label ?? '') }}"
-                                        class="mt-0.5 h-9 w-full rounded-sm border border-slate-300 bg-white px-2 text-sm"
+                                        class="form-control"
                                     >
-                                </label>
-                                <button type="submit" class="h-8 rounded-sm bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     Save bay
                                 </button>
-                            </form>
-                            <form
-                                method="POST"
-                                action="{{ route('operations.settings.shop.appointments.bays.destroy', $bay) }}"
-                                onsubmit="return confirm('Remove {{ $bay->name }} from capacity planning? Open appointments on this bay move to Unassigned. The station row stays for phones if attached.')"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-xs font-semibold text-rose-700 hover:underline">
-                                    Remove from schedule
-                                </button>
-                            </form>
-                        </div>
-                    </details>
-                </li>
-            @empty
-                <li class="py-2 text-xs text-slate-500">No bays yet. Add Bay 1 when you want bay capacity or optional bay planning on appointments.</li>
-            @endforelse
-        </ul>
-
-        <form method="POST" action="{{ route('operations.settings.shop.appointments.bays.store') }}" class="mt-4 space-y-2 border-t border-slate-100 pt-4">
-            @csrf
-            <p class="text-xs font-semibold text-slate-700">Add a bay</p>
-            <div class="grid gap-2 sm:grid-cols-2">
-                <input
-                    type="text"
-                    name="name"
-                    value="{{ old('edit_bay_id') ? '' : old('name') }}"
-                    required
-                    placeholder="Bay 1"
-                    class="h-9 rounded-sm border border-slate-300 bg-white px-2 text-sm @error('name') border-rose-400 @enderror"
-                >
-                <input
-                    type="text"
-                    name="location_label"
-                    value="{{ old('edit_bay_id') ? '' : old('location_label') }}"
-                    placeholder="Location (optional)"
-                    class="h-9 rounded-sm border border-slate-300 bg-white px-2 text-sm"
-                >
+                            </div>
+                        </form>
+                        <form
+                            method="POST"
+                            action="{{ route('operations.settings.shop.appointments.bays.destroy', $bay) }}"
+                            onsubmit="return confirm('Remove {{ $bay->name }} from capacity planning? Open appointments on this bay move to Unassigned. The station row stays for phones if attached.')"
+                            class="mt-2"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-ghost-danger">
+                                Remove from schedule
+                            </button>
+                        </form>
+                    </div>
+                </details>
             </div>
-            @error('name')
-                <p class="text-xs font-semibold text-rose-700">{{ $message }}</p>
-            @enderror
-            <button type="submit" class="h-8 rounded-sm border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                Add bay
-            </button>
-        </form>
+        @empty
+            <div class="list-group-item text-secondary small">No bays yet. Add Bay 1 when you want bay capacity or optional bay planning on appointments.</div>
+        @endforelse
     </div>
+
+    <form method="POST" action="{{ route('operations.settings.shop.appointments.bays.store') }}" class="card card-sm">
+        @csrf
+        <div class="card-body">
+            <div class="subheader mb-2">Add a bay</div>
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <input
+                        type="text"
+                        name="name"
+                        value="{{ old('edit_bay_id') ? '' : old('name') }}"
+                        required
+                        placeholder="Bay 1"
+                        aria-label="Bay name"
+                        @class(['form-control', 'is-invalid' => $errors->has('name')])
+                    >
+                    @error('name')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-12 col-sm-6">
+                    <input
+                        type="text"
+                        name="location_label"
+                        value="{{ old('edit_bay_id') ? '' : old('location_label') }}"
+                        placeholder="Location (optional)"
+                        aria-label="Bay location"
+                        class="form-control"
+                    >
+                </div>
+            </div>
+            <div class="mt-2">
+                <button type="submit" class="btn btn-sm">
+                    Add bay
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
