@@ -103,10 +103,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="ark-legacy flex-fill overflow-auto d-none d-lg-block">
+                    <div class="flex-fill overflow-x-auto d-none d-lg-block">
                         @include('operations.communications.partials.channel-strip', [
                             'comms_channel_tabs' => $commsChannelTabs,
-                            'variant' => 'topbar',
+                            'variant' => 'tabler',
                         ])
                     </div>
                 @endif

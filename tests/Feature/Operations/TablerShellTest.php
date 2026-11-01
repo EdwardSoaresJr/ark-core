@@ -91,12 +91,13 @@ test('below desktop width the channel strip becomes one menu with the same desti
     $html = $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->get(route('operations.customers.search'))
         ->assertOk()
-        ->assertSee('class="ark-legacy flex-fill overflow-auto d-none d-lg-block"', false)
+        ->assertSee('class="flex-fill overflow-x-auto d-none d-lg-block"', false)
         ->assertSee('aria-label="Communications, 0 need attention"', false)
+        ->assertDontSee('ops-comms-channel-strip', false)
         ->getContent();
 
     $menuHrefs = primaryNavHrefs($html, '<span class="dropdown-header">Communications</span>', '</div>');
-    $stripHrefs = primaryNavHrefs($html, 'class="ops-comms-channel-strip-metrics"', '</section>');
+    $stripHrefs = primaryNavHrefs($html, 'data-ark-channel-strip', '</nav>');
 
     expect($menuHrefs)->not->toBeEmpty()
         ->and($menuHrefs)->toBe($stripHrefs);
