@@ -581,3 +581,32 @@ span.ark-legacy {
 .page > .navbar-vertical {
     z-index: 40;
 }
+
+/*
+ * Split layout: each panel scrolls on its own, so the page is locked to the viewport like the legacy inbox. The shell's
+ * <main> is not a flex container and Tabler's .page sets only a minimum height, so the layout's flex-fill cannot reach
+ * the viewport by itself. A split page wraps <x-tabler.page layout="split"> in .ark-split; every flex level down to its
+ * row of panels may then shrink below its content, and the row takes the remaining height.
+ */
+.page:has(.ark-split) {
+    height: 100dvh;
+}
+
+.page:has(.ark-split) > .page-wrapper,
+.page:has(.ark-split) > .page-wrapper > main {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.ark-split,
+.ark-split > .page-body,
+.ark-split > .page-body > .container-fluid {
+    min-height: 0;
+}
+
+.ark-split > .page-body > .container-fluid > .row {
+    flex: 1 1 0;
+    min-height: 0;
+}
