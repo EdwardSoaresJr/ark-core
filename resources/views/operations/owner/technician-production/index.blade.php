@@ -21,7 +21,7 @@
         </div>
 
         <div class="card" data-technician-production-table>
-            <div class="table-responsive">
+            <div class="table-responsive position-relative">
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>

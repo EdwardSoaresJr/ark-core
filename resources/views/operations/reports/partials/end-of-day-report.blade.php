@@ -70,7 +70,7 @@
                 <div class="card-header">
                     <h3 id="eod-ro-summary" class="card-title">RO Summary</h3>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive position-relative">
                     <table class="table table-vcenter card-table">
                         <tbody>
                             @foreach ($eod->roSummary as $row)
@@ -91,7 +91,7 @@
                 <div class="card-header">
                     <h3 id="eod-sales-breakdown" class="card-title">Sales after Discounts</h3>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive position-relative">
                     <table class="table table-vcenter card-table">
                         <thead>
                             <tr>

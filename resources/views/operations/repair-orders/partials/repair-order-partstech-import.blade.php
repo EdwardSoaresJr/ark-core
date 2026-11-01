@@ -125,7 +125,7 @@
                     </div>
                 </template>
 
-                <div class="table-responsive">
+                <div class="table-responsive position-relative">
                     <table class="table table-sm table-vcenter card-table mb-0">
                         <thead>
                             <tr>
