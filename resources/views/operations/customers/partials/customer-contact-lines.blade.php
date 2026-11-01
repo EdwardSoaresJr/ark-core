@@ -6,17 +6,17 @@
 @endphp
 
 @if ($customerRecord->email)
-    <p class="ops-ro-subline truncate">{{ $customerRecord->email }}</p>
+    <div class="small text-secondary text-truncate">{{ $customerRecord->email }}</div>
 @endif
 
 @if ($customerRecord->contact_preference)
-    <p class="ops-ro-subline truncate font-semibold text-sky-800">{{ $customerRecord->contact_preference->outreachLabel() }}</p>
+    <div class="small fw-medium text-azure text-truncate">{{ $customerRecord->contact_preference->outreachLabel() }}</div>
 @endif
 
 @if ($smsCapability !== null && ! $smsCapability->sms_capable)
-    <p class="ops-ro-subline truncate text-amber-800">{{ $smsCapability->blockReason() }}</p>
+    <div class="small text-warning text-truncate">{{ $smsCapability->blockReason() }}</div>
 @endif
 
-<p class="ops-ro-subline truncate {{ $customerRecord->display_address ? '' : 'text-slate-400' }}">
+<div @class(['small text-truncate', 'text-secondary' => (bool) $customerRecord->display_address, 'text-muted' => ! $customerRecord->display_address])>
     {{ $customerRecord->display_address ?: 'No address on file' }}
-</p>
+</div>

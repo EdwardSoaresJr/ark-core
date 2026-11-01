@@ -405,7 +405,7 @@ export function arkIntakeFindCustomer(config = {}) {
         highlightSelectedCard(customerId) {
             this.$refs.results?.querySelectorAll('[data-intake-customer-id]').forEach((card) => {
                 card.classList.toggle(
-                    'ops-ro-card--selected',
+                    'border-primary',
                     customerId !== null && Number(card.dataset.intakeCustomerId) === customerId,
                 );
             });

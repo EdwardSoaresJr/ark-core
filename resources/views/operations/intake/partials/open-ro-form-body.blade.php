@@ -12,101 +12,102 @@
         ?? $selectedBillingClass;
 @endphp
 
-<section class="ops-intake-open-stack">
-    <div class="ops-intake-open-columns">
-        <div class="ops-intake-open-panel ops-intake-open-panel--hero">
-            <div class="ops-intake-open-panel-head">
-                <div class="min-w-0">
-                    <h2 class="ops-intake-open-panel-title">Reason for visit</h2>
-                    <p class="ops-intake-open-panel-lead">What the customer said - not the estimate. Optional now; you can edit it on the RO.</p>
+<div class="row g-3">
+    <div class="col-12 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Reason for visit</h2>
+                    <div class="card-subtitle">What the customer said - not the estimate. Optional now; you can edit it on the RO.</div>
                 </div>
             </div>
-
-            <div
-                class="ops-intake-open-field ark-ro-mention"
-                x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))"
-            >
-                <label class="sr-only" for="visit_reason">Reason for visit</label>
-                <textarea
-                    id="visit_reason"
-                    name="visit_reason"
-                    x-ref="field"
-                    rows="4"
-                    placeholder="e.g. Brakes make noise on hard stops. Comeback from @RO1677."
-                    class="ops-intake-control ops-intake-why-here-states"
-                    @input="onInput()"
-                    @keydown="onKeydown($event)"
-                >{{ old('visit_reason', $initialVisitReason ?? '') }}</textarea>
-                @include('operations.repair-orders.partials.repair-order-mention-suggest')
-                @error('visit_reason')
-                    <p class="text-sm font-semibold text-rose-700">{{ $message }}</p>
-                @enderror
+            <div class="card-body p-2 p-md-3">
+                <div class="ark-ro-mention" x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))">
+                    <label class="visually-hidden" for="visit_reason">Reason for visit</label>
+                    <textarea
+                        id="visit_reason"
+                        name="visit_reason"
+                        x-ref="field"
+                        rows="4"
+                        placeholder="e.g. Brakes make noise on hard stops. Comeback from @RO1677."
+                        @class(['form-control', 'is-invalid' => $errors->has('visit_reason')])
+                        @input="onInput()"
+                        @keydown="onKeydown($event)"
+                    >{{ old('visit_reason', $initialVisitReason ?? '') }}</textarea>
+                    <div class="ark-legacy">
+                        @include('operations.repair-orders.partials.repair-order-mention-suggest')
+                    </div>
+                    @error('visit_reason')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
         </div>
+    </div>
 
-        <section class="ops-intake-open-panel">
-            <div class="ops-intake-open-panel-head">
-                <div class="min-w-0">
-                    <h2 class="ops-intake-open-panel-title">Visit &amp; defaults</h2>
-                    <p class="ops-intake-open-panel-lead">Visit posture, account class, and internal advisor context.</p>
+    <div class="col-12 col-lg-5">
+        <section class="card h-100">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Visit &amp; defaults</h2>
+                    <div class="card-subtitle">Visit posture, account class, and internal advisor context.</div>
                 </div>
-                <span class="ops-intake-open-panel-meta">{{ $defaultsVisitSummary }} · {{ $defaultsAccountSummary }}</span>
+                <div class="card-actions small text-secondary text-nowrap">{{ $defaultsVisitSummary }} · {{ $defaultsAccountSummary }}</div>
             </div>
-
-            <div class="ops-intake-open-panel-body">
-                <div class="ops-intake-open-field">
-                    <span class="ops-intake-open-field-label">Visit <span class="text-rose-600">*</span></span>
-                    <div class="ops-intake-flags-row" role="radiogroup" aria-label="Visit posture" aria-required="true">
+            <div class="card-body p-2 p-md-3">
+                <div class="mb-3">
+                    <div class="form-label required">Visit</div>
+                    <div class="form-selectgroup" role="radiogroup" aria-label="Visit posture" aria-required="true">
                         @foreach ([
                             'waiting_here' => 'Waiting',
                             'drop_off' => 'Drop Off',
                             'needs_shuttle' => 'Shuttle',
                             'tow_incoming' => 'Tow-In',
                         ] as $value => $label)
-                            <label class="ops-intake-flag ops-intake-flag--compact ops-intake-flag--radio">
+                            <label class="form-selectgroup-item">
                                 <input
                                     name="visit_mode"
                                     value="{{ $value }}"
                                     type="radio"
+                                    class="form-selectgroup-input"
                                     @checked($selectedVisitMode === $value)
                                     @if ($loop->first && $selectedVisitMode === '') required @endif
                                 >
-                                {{ $label }}
+                                <span class="form-selectgroup-label">{{ $label }}</span>
                             </label>
                         @endforeach
                     </div>
                     @error('visit_mode')
-                        <p class="text-xs font-semibold text-rose-700">{{ $message }}</p>
+                        <div class="small text-danger mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <div class="ops-intake-open-field">
-                    <span class="ops-intake-open-field-label">Billing class</span>
-                    <div class="ops-intake-flags-row" role="radiogroup" aria-label="Billing class for this visit">
+                <div>
+                    <div class="form-label">Billing class</div>
+                    <div class="form-selectgroup" role="radiogroup" aria-label="Billing class for this visit">
                         @foreach ($primaryBillingClasses as $billingClassRow)
-                            <label class="ops-intake-flag ops-intake-flag--compact ops-intake-flag--radio">
+                            <label class="form-selectgroup-item">
                                 <input
                                     name="billing_class"
                                     value="{{ $billingClassRow['name'] }}"
                                     type="radio"
+                                    class="form-selectgroup-input"
                                     @checked(strcasecmp($selectedBillingClass, $billingClassRow['name']) === 0)
                                     required
                                 >
-                                {{ $billingClassRow['name'] }}
+                                <span class="form-selectgroup-label">{{ $billingClassRow['name'] }}</span>
                             </label>
                         @endforeach
                     </div>
                     @error('billing_class')
-                        <p class="text-sm font-semibold text-rose-700">{{ $message }}</p>
+                        <div class="small text-danger mt-1">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
         </section>
     </div>
 
-    <div class="ops-intake-submit">
-        <button type="submit" class="ops-index-btn ops-index-btn--primary ops-intake-submit-btn">
-            Open Repair Order
-        </button>
+    <div class="col-12 d-grid d-sm-flex justify-content-sm-end">
+        <button type="submit" class="btn btn-primary btn-lg">Open Repair Order</button>
     </div>
-</section>
+</div>

@@ -6,73 +6,68 @@
     $referralLabel = filled($customer->referral_source)
         ? (EncounterSource::tryFrom($customer->referral_source)?->label() ?? $customer->referral_source)
         : null;
+    $missingIdentityFields = $customer->identityPressure()->showsChip() ? $customer->missingIdentityFieldLabels() : [];
 @endphp
 
-<div class="ops-intake-context">
-    <div class="ops-intake-recognition min-w-0">
-        <div class="ops-intake-recognition-block ops-intake-recognition-block--customer">
-            <p class="ops-intake-context-customer">{{ $customer->name }}</p>
-            <p class="ops-intake-context-meta ops-intake-recognition-meta">
-                @if ($customer->display_phone)
-                    <span>{{ $customer->display_phone }}</span>
-                @endif
-                @if ($customer->display_phone)
-                    <span class="ops-intake-context-sep">·</span>
-                @endif
-                <span>Billing class {{ $billingClass }}</span>
-                @if ($referralLabel)
-                    <span class="ops-intake-context-sep">·</span>
-                    <span>Referral {{ $referralLabel }}</span>
-                @endif
-            </p>
-            @if ($customer->identityPressure()->showsChip())
-                <div class="mt-1">
-                    @include('operations.repair-orders.partials.repair-order-customer-identity-pressure', [
-                        'customer' => $customer,
-                        'variant' => 'intake',
-                    ])
+<div class="card" data-intake-context>
+    <div class="card-body p-2 p-md-3">
+        <div class="row g-3 align-items-start">
+            <div class="col-12 col-md">
+                <div class="fw-bold fs-3">{{ $customer->name }}</div>
+                <div class="small text-secondary">
+                    @if ($customer->display_phone)
+                        {{ $customer->display_phone }} ·
+                    @endif
+                    Billing class {{ $billingClass }}
+                    @if ($referralLabel)
+                        · Referral {{ $referralLabel }}
+                    @endif
                 </div>
-            @endif
-        </div>
-
-        @if ($intakeStep === 'open' && $selectedVehicle)
-            <div class="ops-intake-recognition-block ops-intake-recognition-block--vehicle">
-                <p class="ops-intake-context-vehicle">{{ $selectedVehicle->display_name }}</p>
-                @if (! $selectedVehicle->hasVin())
-                    <div class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                        @include('operations.repair-orders.partials.repair-order-vehicle-identity-pressure-chip', ['vehicle' => $selectedVehicle])
+                @if ($missingIdentityFields !== [])
+                    <div class="alert alert-warning mt-2 mb-0 py-2" data-intake-identity-needed>
+                        <div class="fw-medium">Customer information needed</div>
+                        <ul class="mb-0 ps-3">
+                            @foreach ($missingIdentityFields as $field)
+                                <li>Missing {{ $field }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
-                @if ($selectedVehicle->plate || $selectedVehicle->vin)
-                    <p class="ops-intake-context-meta ops-intake-recognition-meta">
-                        @if ($selectedVehicle->plate)
-                            Plate {{ $selectedVehicle->plate }}@if ($selectedVehicle->plate_state) / {{ $selectedVehicle->plate_state }} @endif
-                        @endif
-                        @if ($selectedVehicle->plate && $selectedVehicle->vin)
-                            <span class="ops-intake-context-sep">·</span>
-                        @endif
-                        @if ($selectedVehicle->vin)
-                            VIN {{ $selectedVehicle->vin }}
-                        @endif
-                    </p>
-                @endif
             </div>
-        @elseif ($intakeStep === 'vehicle')
-            <div class="ops-intake-recognition-block ops-intake-recognition-block--vehicle">
-                <p class="ops-intake-context-meta ops-intake-recognition-prompt">Choose the vehicle for this visit.</p>
-            </div>
-        @endif
-    </div>
 
-    <div class="ops-intake-context-actions">
-        @if ($intakeStep === 'open')
-            <a
-                href="{{ route('operations.intake.create', array_merge($intakeWorkspaceParams, ['customer_id' => $customer->id, 'select_vehicle' => 1])) }}"
-                class="ops-index-btn ops-index-btn--ghost"
-            >Change vehicle</a>
-        @endif
-        <a href="{{ route('operations.intake.create', array_merge($intakeWorkspaceParams, ['q' => $searchQuery])) }}" class="ops-index-btn ops-index-btn--ghost">Change customer</a>
+            @if ($intakeStep === 'open' && $selectedVehicle)
+                <div class="col-12 col-md">
+                    <div class="fw-bold">{{ $selectedVehicle->display_name }}</div>
+                    @if (! $selectedVehicle->hasVin())
+                        <x-tabler.vehicle-identity-chip :vehicle="$selectedVehicle" />
+                    @endif
+                    @if ($selectedVehicle->plate || $selectedVehicle->vin)
+                        <div class="small text-secondary text-break">
+                            @if ($selectedVehicle->plate)
+                                Plate {{ $selectedVehicle->plate }}@if ($selectedVehicle->plate_state) / {{ $selectedVehicle->plate_state }} @endif
+                            @endif
+                            @if ($selectedVehicle->plate && $selectedVehicle->vin) · @endif
+                            @if ($selectedVehicle->vin)
+                                VIN {{ $selectedVehicle->vin }}
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @elseif ($intakeStep === 'vehicle')
+                <div class="col-12 col-md small text-secondary">Choose the vehicle for this visit.</div>
+            @endif
+
+            <div class="col-12 col-md-auto">
+                <div class="btn-list">
+                    @if ($intakeStep === 'open')
+                        <a href="{{ route('operations.intake.create', array_merge($intakeWorkspaceParams, ['customer_id' => $customer->id, 'select_vehicle' => 1])) }}" class="btn">Change vehicle</a>
+                    @endif
+                    <a href="{{ route('operations.intake.create', array_merge($intakeWorkspaceParams, ['q' => $searchQuery])) }}" class="btn">Change customer</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer p-2 p-md-3">
+        @include('operations.intake.partials.intake-step-rail', ['intakeStep' => $intakeStep])
     </div>
 </div>
-
-@include('operations.intake.partials.intake-step-rail', ['intakeStep' => $intakeStep])

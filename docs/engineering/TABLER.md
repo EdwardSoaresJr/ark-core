@@ -164,7 +164,7 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 - Schedule appointment (`operations.schedule`). The sidebar does not highlight Schedule on this page, because `StaffNavigation` matches only `operations.appointments.*`. That belongs to a shared navigation change, not a view slice.
 - Time clock (`operations.time-clock.index`)
 
-**Partially migrated (5):** on Tabler, with legacy islands or corrections left.
+**Partially migrated (6):** on Tabler, with legacy islands or corrections left.
 
 - **Repair order workspace (`operations.repair-orders.show`):**
   - **High priority before staff Tabler is complete:** the refinement pass on the header and command bar. Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
@@ -182,16 +182,22 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 - **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
 - **Dashboard (`operations.today`):** technician lanes.
 - **Schedule (`operations.appointments.index`):** the calendar board.
+- **Check In (`operations.intake.create`):** the previous-visit suggestions under Reason for visit (`repair-order-mention-suggest`, shared with the repair order workspace modal) and the billing class help tip (`x-operations.help-tip`, which wraps itself in an island).
 
-**Not started (46):**
+**Not started (45):**
 
-- **Daily operations (10):** Workboard (`operations.workboard`), briefing, intake queue (`operations.intake.index`), check-in (`operations.intake.create`), work queue (`operations.work.queue`), new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`). The staff history page corrects and deletes compensable hours, so it migrates on its own.
+- **Daily operations (9):** Workboard (`operations.workboard`), briefing, intake queue (`operations.intake.index`), work queue (`operations.work.queue`), new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`). The staff history page corrects and deletes compensable hours, so it migrates on its own. The intake queue, work queue, and communications workboard share `x-operations.queue-page-header`, `queue-band-header`, and `lifecycle-status-menu`, so they migrate together.
 - **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation. These wait for the decision on the technician phone workflow.
 - **Communications (11):** the communications workboard, calls, the inbox, attention, history, and internal workspace views, conversation reply, and shop communications (index, device, person, and setup required).
 - **Owner and reports (9):** business, day review, staff coaching, call intelligence (index and detail), technician production (index and detail), reports index, and operational report.
 - **Learning (3):** ARKademy, print selection, and team progress.
 - **Account and system (4):** profile, ARK Cloud connecting, Platform clusters, and the 409 error page.
 - **Financial and authorization (6):** the estimate document, the document viewer, record testing outcome, the dealer parts quote, parts matrix tuning, and the end-of-day report. These wait for the release-blocker workstream.
+
+**Known issues across migrated pages:**
+
+- **Sidebar highlight:** the Schedule item is not highlighted on `operations.schedule`; see Complete above.
+- **Slate status bars:** a `card-status-start bg-dark` bar, for the slate status tone, is nearly invisible against a dark-theme card. This appears on record cards and the Check In customer results.
 
 **Excluded from the staff count, kept for a later design review:** these surfaces are not part of this migration and are not canceled.
 
@@ -459,3 +465,18 @@ The advisor landing page at `/app` (view `operations.home`). It's a Tabler `flui
 Unchanged: `OperationsHomeController`, the projections, the routes, the `#ops-card-ro-{number}` anchors that triage links target, and the `data-home-search` and `data-home-tech-id` filter attributes.
 
 `x-tabler.status-badge` now renders the slate tone as an outline badge. `bg-dark-lt` forces near-black text, which made slate statuses such as Draft unreadable in the dark theme on every page that uses the badge.
+
+### Check In (`operations.intake.create`)
+
+The check-in workspace: recognize the customer, choose or add the vehicle, and open the repair order. It's a Tabler `fluid` page titled "Check In", with the workspace note as the subtitle. Operations and Customer Search are `<x-tabler.page-action>`s, icon-only on phones.
+
+- **Customer step:** two columns from `lg`.
+  - **Left card, "Recognize customer":** Quick check-in (VIN or plate in an `input-group`), Search existing, and the live results. Results are `card-sm` cards with the status color bar; the selected one gains `border-primary`.
+  - **Right card:** the new or update customer form. Similar customers appear in an `alert-warning` list.
+- **Context band:** a card with the customer, the chosen vehicle, Change vehicle and Change customer, and Tabler `steps` for Customer, Vehicle, and Open RO. "Customer information needed" is an `alert-warning`. "VIN missing" uses `<x-tabler.vehicle-identity-chip>`.
+- **Vehicle step:** a header card with the last-vehicle shortcut and the filter for four or more vehicles, then an `.ark-card-grid` of vehicle cards with "Use this vehicle", then the add-vehicle form.
+- **Open step:** Reason for visit and Visit & defaults cards. Visit and billing class are `form-selectgroup` pills, so each choice is a full-size touch target. Open Repair Order is full width on phones.
+
+The page still shows only check-in markup. `customer-contact-lines` renders the result's contact lines in Tabler markup; `customer-search-card-badges` and `customer-search-card-footnote` had no other user and are removed.
+
+Unchanged: the intake controllers, routes, query parameters, form fields, and the `arkIntake*`, `arkVehicleDecode`, and `arkRoMention` components. Three script lines moved off legacy classes: `ark-intake-workspace-memory.js` finds the workspace by `[data-intake-find-workspace]` and `[data-intake-open-stack]`, and `ark-intake-find-customer.js` marks the selected result with `border-primary`.
