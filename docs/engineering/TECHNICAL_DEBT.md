@@ -182,18 +182,6 @@
 
 ---
 
-### Shop Overhead links to Staff do nothing
-
-**Location:** `resources/views/operations/settings/partials/shop-overhead-calculator.blade.php`, lines 79 and 268 (the two "Settings → Staff" buttons).
-
-**Problem:** Both buttons call `$parent.setActive('staff')`. Alpine 3 (`alpinejs` `^3.15.12` in `package.json`) has no `$parent` magic, and `resources/js` registers none, so the click does not reach the Settings page's `setActive()` and the Staff section does not open. Recorded in [PR #107](https://github.com/EdwardSoaresJr/ark-core/pull/107).
-
-**Expected:** Clicking either link opens the Staff section, as the section navigation does: `active = 'staff'` and `?section=staff` in the URL.
-
-**Remove when:** In the browser, clicking each "Settings → Staff" link on Shop Overhead shows the Staff section, and the markup no longer uses `$parent`.
-
----
-
 ## Tests
 
 ### The Core test suite is not green on `main`

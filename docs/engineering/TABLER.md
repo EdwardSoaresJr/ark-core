@@ -179,7 +179,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 
 **Partial, actionable (1):** on Tabler, with legacy sections that can migrate now.
 
-- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity, Documents / Disclaimers, Workflow Defaults, Label Printing, and Financial Rules. See the log entry for which remaining sections wait on a hosted-service decision.
+- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity, Documents / Disclaimers, Workflow Defaults, Label Printing, Financial Rules, and Shop Overhead. See the log entry for which remaining sections wait on a hosted-service decision.
 
 **Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
 
@@ -305,7 +305,7 @@ Staff without a shop dashboard (technicians) get a Tabler `fluid` page titled "T
 
 ### Shop settings (`operations.settings.shop.edit`)
 
-Settings is one page with an Alpine section switcher and about 30 section partials. The page and five sections are Tabler; the rest are unchanged legacy markup in one island.
+Settings is one page with an Alpine section switcher and about 30 section partials. The page and six sections are Tabler; the rest are unchanged legacy markup in one island.
 
 Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
 
@@ -327,9 +327,13 @@ Financial Rules is a Tabler card with seven `nav-tabs card-header-tabs` buttons 
 
 No calculation, default, validation rule, permission, or stored value changed, and each form submits the same fields in the same order as before. Hooks: `data-settings-labor`, `data-settings-labor-policies`, `data-settings-tax`, `data-settings-fees`, `data-settings-deposits`, `data-parts-matrix`, and `data-settings-billing-classes`.
 
+Shop Overhead is a Tabler card. The worksheet (`partials.shop-overhead-calculator`) keeps `shopOverheadCalculator()` in `resources/js/ark-shop-overhead-calculator.js` unchanged: the same bindings, calculated outputs, JSON save to `operations.settings.shop.overhead.update`, and saved state. The setup walkthrough is a collapsible block with a warning alert, the overhead rate shows beside the pool description, and Fixed Costs, Payment Processing, and Billing Capacity are `nav-tabs card-header-tabs` buttons that call the existing `setOverheadTab()`. Fixed-cost lines are `list-group` rows that stack on phones; the other fields are `input-group` or `form-control` fields with `form-hint` text. Tailwind's base styles remove list markers, so the walkthrough lists set `list-style` inline.
+
+The two "Settings → Staff" links are now links to `?section=staff` that call `setActive('staff')`; they used `$parent`, which Alpine 3 does not have, and did nothing. Hooks: `data-settings-overhead`, `data-overhead-walkthrough`, `data-overhead-rate`, `data-overhead-fixed-costs`, `data-overhead-fixed-cost`, `data-overhead-breakdown`, `data-overhead-status`, and `data-overhead-staff-link`.
+
 Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active:
 
-- **Core sections not yet migrated:** Appointments & Setup, Staff, and Shop Overhead.
+- **Core sections not yet migrated:** Appointments & Setup and Staff.
 - **Sections that also hold hosted-service settings:**
   - Owner Targets & Reporting, because its owner digest is sent by mail;
   - Square Payments, which also holds the payment ledger's Check, External Card, and EFT buttons;
