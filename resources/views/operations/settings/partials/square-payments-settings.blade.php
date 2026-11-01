@@ -12,138 +12,168 @@
     }
 @endphp
 
-<section x-show="active === 'payments'" x-cloak class="space-y-3">
-    <div class="border border-slate-300 bg-white p-4">
-        <div>
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Square Payments</p>
-            <h2 class="mt-1 text-lg font-black text-slate-950">Card capture inside ARK</h2>
-            @if ($platformPaymentsCapture)
-                <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Card capture is connected for this shop. Choose where a card payment may be offered.
-                    Take Payment and Record Payment stay on the repair order.
-                </p>
-            @else
-                <p class="mt-1 text-xs leading-5 text-slate-500">
-                    Card capture inside ARK is not connected. Record a card, cash, or check taken at the counter.
-                    A card button appears only when a processor can settle the charge.
-                </p>
-            @endif
-        </div>
-
+<div class="card-header">
+    <div>
+        <div class="subheader">Square Payments</div>
+        <h2 class="card-title">Card capture inside ARK</h2>
         @if ($platformPaymentsCapture)
-            <div class="mt-3 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
-                Card capture is connected for this shop.
+            <div class="card-subtitle">
+                Card capture is connected for this shop. Choose where a card payment may be offered.
+                Take Payment and Record Payment stay on the repair order.
             </div>
         @else
-            <div class="mt-3 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
-                Card capture is not connected. Record Payment still works on the repair order.
+            <div class="card-subtitle">
+                Card capture inside ARK is not connected. Record a card, cash, or check taken at the counter.
+                A card button appears only when a processor can settle the charge.
             </div>
         @endif
     </div>
+</div>
 
-    <form method="POST" action="{{ route('operations.settings.shop.payments.update') }}" class="space-y-3 border border-slate-300 bg-white p-4">
+<div class="card-body">
+    @if ($platformPaymentsCapture)
+        <div class="alert alert-success" role="status" data-card-capture-status="connected">
+            Card capture is connected for this shop.
+        </div>
+    @else
+        <div class="alert alert-warning" role="status" data-card-capture-status="not-connected">
+            Card capture is not connected. Record Payment still works on the repair order.
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('operations.settings.shop.payments.update') }}" style="max-width: 48rem" data-settings-card-payments>
         @csrf
         @method('PATCH')
 
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Where card payments are offered</p>
-        <p class="text-[11px] leading-4 text-slate-500">
+        <h3 class="mb-1">Where card payments are offered</h3>
+        <p class="text-secondary small">
             These are shop rules for where a card payment may be offered. They do not store a processor account.
         </p>
 
-        <label class="block">
-            <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Preferred terminal</span>
+        <div class="mb-3">
+            <label for="settings-square-terminal-device" class="form-label">Preferred terminal</label>
             <input
+                id="settings-square-terminal-device"
                 type="text"
                 name="square_terminal_device_id"
                 value="{{ old('square_terminal_device_id', $settings->square_terminal_device_id) }}"
-                class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
+                @class(['form-control font-monospace', 'is-invalid' => $errors->has('square_terminal_device_id')])
                 placeholder="Default counter reader"
                 autocomplete="off"
             >
-            <span class="mt-1 block text-[11px] leading-4 text-slate-500">Used for counter Take Payment when this shop has a reader. Leave blank if none is assigned yet.</span>
-        </label>
+            @error('square_terminal_device_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div class="form-hint">Used for counter Take Payment when this shop has a reader. Leave blank if none is assigned yet.</div>
+        </div>
 
         @if ($readers !== [])
-            <div class="space-y-2" data-payment-reader-names>
-                <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Card readers</p>
-                <p class="text-[11px] leading-4 text-slate-500">Name each reader the way staff know it, such as Front Counter or Bay 1. Everyone in the shop sees these names. Leave a name blank to show the device ID.</p>
-                @foreach ($readers as $deviceRef => $reader)
-                    <label class="block">
-                        <input
-                            type="text"
-                            name="payment_reader_names[{{ $deviceRef }}]"
-                            value="{{ old('payment_reader_names.'.$deviceRef, $readerNames[$deviceRef] ?? '') }}"
-                            maxlength="60"
-                            class="h-9 w-full rounded-sm border-slate-300 text-sm text-slate-800"
-                            placeholder="Front Counter"
-                            autocomplete="off"
-                        >
-                        <span class="mt-1 block font-mono text-[11px] leading-4 text-slate-500">
-                            {{ $deviceRef }}@unless ($reader['available']) <span class="font-sans">· not currently available</span>@endunless
-                        </span>
-                    </label>
-                @endforeach
+            <div class="mb-3" data-payment-reader-names>
+                <div class="form-label mb-1">Card readers</div>
+                <p class="text-secondary small">Name each reader the way staff know it, such as Front Counter or Bay 1. Everyone in the shop sees these names. Leave a name blank to show the device ID.</p>
+                <div class="list-group">
+                    @foreach ($readers as $deviceRef => $reader)
+                        <div class="list-group-item">
+                            <label for="settings-payment-reader-{{ $loop->index }}" class="form-label small mb-1">
+                                <span class="font-monospace">{{ $deviceRef }}</span>
+                                @unless ($reader['available'])
+                                    <span class="badge bg-secondary-lt ms-1">not currently available</span>
+                                @endunless
+                            </label>
+                            <input
+                                id="settings-payment-reader-{{ $loop->index }}"
+                                type="text"
+                                name="payment_reader_names[{{ $deviceRef }}]"
+                                value="{{ old('payment_reader_names.'.$deviceRef, $readerNames[$deviceRef] ?? '') }}"
+                                maxlength="60"
+                                class="form-control"
+                                placeholder="Front Counter"
+                                autocomplete="off"
+                            >
+                        </div>
+                    @endforeach
+                </div>
             </div>
         @endif
 
-        <div class="grid gap-2 sm:grid-cols-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <input type="hidden" name="square_terminal_enabled" value="0">
-                <input type="checkbox" name="square_terminal_enabled" value="1" @checked(old('square_terminal_enabled', $settings->square_terminal_enabled))>
-                Counter terminal
-            </label>
-            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <input type="hidden" name="square_keyed_enabled" value="0">
-                <input type="checkbox" name="square_keyed_enabled" value="1" @checked(old('square_keyed_enabled', $settings->square_keyed_enabled))>
-                Counter keyed entry
-            </label>
-            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <input type="hidden" name="square_portal_pay_enabled" value="0">
-                <input type="checkbox" name="square_portal_pay_enabled" value="1" @checked(old('square_portal_pay_enabled', $settings->square_portal_pay_enabled))>
-                Customer portal pay
-            </label>
-            <label class="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <input type="hidden" name="square_email_pay_enabled" value="0">
-                <input type="checkbox" name="square_email_pay_enabled" value="1" @checked(old('square_email_pay_enabled', $settings->square_email_pay_enabled))>
-                Emailed invoice pay link
-            </label>
+        <fieldset>
+            <legend class="form-label">Offer card payment at</legend>
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <label class="form-check form-switch mb-0">
+                        <input type="hidden" name="square_terminal_enabled" value="0">
+                        <input type="checkbox" name="square_terminal_enabled" value="1" @checked(old('square_terminal_enabled', $settings->square_terminal_enabled)) class="form-check-input">
+                        <span class="form-check-label">Counter terminal</span>
+                    </label>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label class="form-check form-switch mb-0">
+                        <input type="hidden" name="square_keyed_enabled" value="0">
+                        <input type="checkbox" name="square_keyed_enabled" value="1" @checked(old('square_keyed_enabled', $settings->square_keyed_enabled)) class="form-check-input">
+                        <span class="form-check-label">Counter keyed entry</span>
+                    </label>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label class="form-check form-switch mb-0">
+                        <input type="hidden" name="square_portal_pay_enabled" value="0">
+                        <input type="checkbox" name="square_portal_pay_enabled" value="1" @checked(old('square_portal_pay_enabled', $settings->square_portal_pay_enabled)) class="form-check-input">
+                        <span class="form-check-label">Customer portal pay</span>
+                    </label>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label class="form-check form-switch mb-0">
+                        <input type="hidden" name="square_email_pay_enabled" value="0">
+                        <input type="checkbox" name="square_email_pay_enabled" value="1" @checked(old('square_email_pay_enabled', $settings->square_email_pay_enabled)) class="form-check-input">
+                        <span class="form-check-label">Emailed invoice pay link</span>
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="d-flex justify-content-end border-top pt-3 mt-3">
+            <button type="submit" class="btn btn-primary">
+                Save card payment options
+            </button>
         </div>
-
-        <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-            Save card payment options
-        </button>
     </form>
+</div>
 
-    @php
-        $manualPaymentMethods = \App\Ark\Operations\Financial\ManualPaymentMethods::current();
-    @endphp
+@php
+    $manualPaymentMethods = \App\Ark\Operations\Financial\ManualPaymentMethods::current();
+@endphp
 
+<div class="card-body">
     <form
         method="POST"
         action="{{ route('operations.settings.shop.manual-payment-methods.update') }}"
-        class="border border-slate-300 bg-white p-4"
         x-data="{ methods: @js($manualPaymentMethods) }"
+        style="max-width: 48rem"
+        data-settings-manual-payment-methods
     >
         @csrf
         @method('PATCH')
-        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Take payment</p>
-        <h2 class="mt-1 text-lg font-black text-slate-950">Other ways to pay</h2>
-        <p class="mt-1 text-xs leading-5 text-slate-500">These buttons sit under Cash. Check, External Card, and EFT start on every shop. Rename one, add one, or remove one.</p>
+        <div class="subheader">Take payment</div>
+        <h3 class="mb-1">Other ways to pay</h3>
+        <p class="text-secondary small">These buttons sit under Cash. Check, External Card, and EFT start on every shop. Rename one, add one, or remove one.</p>
 
-        <div class="mt-3 grid gap-2">
+        @error('methods')
+            <div class="alert alert-danger" role="alert">{{ $message }}</div>
+        @enderror
+
+        <div class="list-group">
             <template x-for="(method, index) in methods" :key="index">
-                <div class="flex items-center gap-2">
-                    <input type="hidden" :name="'methods[' + index + '][key]'" x-model="method.key">
-                    <label class="sr-only" :for="'manual-payment-method-' + index">Name</label>
-                    <input :id="'manual-payment-method-' + index" class="h-10 min-w-0 flex-1 rounded-sm border border-slate-300 px-2 text-sm font-semibold" :name="'methods[' + index + '][label]'" x-model="method.label" maxlength="24" required>
-                    <button type="button" class="inline-flex min-h-10 items-center px-2 text-xs font-semibold text-slate-600 hover:text-slate-950" @click="methods.splice(index, 1)">Delete</button>
+                <div class="list-group-item">
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="hidden" :name="'methods[' + index + '][key]'" x-model="method.key">
+                        <label class="visually-hidden" :for="'manual-payment-method-' + index">Name</label>
+                        <input :id="'manual-payment-method-' + index" class="form-control fw-medium" :name="'methods[' + index + '][label]'" x-model="method.label" maxlength="24" required>
+                        <button type="button" class="btn btn-ghost-danger" @click="methods.splice(index, 1)">Delete</button>
+                    </div>
                 </div>
             </template>
         </div>
 
-        <div class="mt-3 flex items-center gap-3">
-            <button type="button" class="inline-flex min-h-10 items-center text-xs font-semibold text-slate-700 hover:text-slate-950 disabled:opacity-40" :disabled="methods.length >= 8" @click="methods.push({ key: '', label: '' })">Add</button>
-            <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">Save</button>
+        <div class="btn-list justify-content-end border-top pt-3 mt-3">
+            <button type="button" class="btn" :disabled="methods.length >= 8" @click="methods.push({ key: '', label: '' })">Add</button>
+            <button type="submit" class="btn btn-primary">Save</button>
         </div>
     </form>
-</section>
+</div>

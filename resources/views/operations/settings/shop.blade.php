@@ -225,7 +225,6 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead'];
         @endphp
 
         <div class="row g-3">
@@ -267,7 +266,7 @@
             </div>
 
             <div class="col-12 col-lg-9 col-xxl-10">
-                <section class="card" x-show="active === 'general'">
+                <section class="card" x-show="active === 'general'" data-settings-section="general">
                     <div class="card-header">
                         <div>
                             <div class="subheader">Shop Identity</div>
@@ -372,7 +371,7 @@
                         </div>
                     </form>
                 </section>
-                <section class="card" x-show="active === 'estimates'" x-cloak>
+                <section class="card" x-show="active === 'estimates'" x-cloak data-settings-section="estimates">
                     <div class="card-header">
                         <div>
                             <div class="subheader">Documents / Disclaimers</div>
@@ -1465,45 +1464,18 @@
                     ])
                 </section>
 
-                <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
-
-                @include('operations.settings.partials.square-payments-settings', [
-                    'settings' => $settings,
-                    'platformPaymentsCapture' => $platformPaymentsCapture ?? false,
-                ])
-
-                @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
-
-                @include('operations.settings.partials.telephony-settings', [
-                    'settings' => $settings,
-                    'telephonyHealth' => $telephonyHealth,
-                    'telephonyEndpoints' => $telephonyEndpoints,
-                    'telephonyEndpointTypes' => $telephonyEndpointTypes,
-                    'telephonyExtensions' => $telephonyExtensions,
-                    'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
-                    'staff' => $staff,
-                    'platformMailSend' => $platformMailSend ?? false,
-                    'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
-                ])
-
-                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
-                    @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
-                @endunless
-
-                @include('operations.settings.partials.shop-excellence-targets')
-
-
-                <section x-show="active === 'operations'" x-cloak>
-                    <div class="border-b border-slate-200 px-3 py-3">
-                        <h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>
-                        <p class="mt-0.5 text-xs text-slate-500">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</p>
+                <section class="card" x-show="active === 'operations'" x-cloak data-settings-section="operations">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Appointments &amp; Setup</div>
+                            <h2 class="card-title">Appointments, bays, and shop setup</h2>
+                            <div class="card-subtitle">Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.</div>
+                        </div>
                     </div>
 
-                    <div class="p-3">
-                        <div class="border-b border-slate-200 pb-3">
-                            <h4 class="text-xs font-black uppercase tracking-[0.08em] text-slate-700">Appointments</h4>
-                            <p class="mt-0.5 text-xs text-slate-500">Booking rules, scheduling hours, customer request windows, and bays. Also controls Today&apos;s Appointments on Work.</p>
-                        </div>
+                    <div class="card-body">
+                        <h3 class="mb-1">Appointments</h3>
+                        <p class="text-secondary small">Booking rules, scheduling hours, customer request windows, and bays. Also controls Today&apos;s Appointments on Work.</p>
 
                         @include('operations.settings.partials.appointments-settings', [
                             'settings' => $settings,
@@ -1511,24 +1483,105 @@
                         ])
                     </div>
 
-                    <div class="p-3">
+                    <div class="card-body">
                         @include('operations.settings.partials.operational-profile', ['settings' => $settings])
                     </div>
 
-                    <div class="p-3">
+                    <div class="card-body">
                         @include('operations.settings.partials.shop-csv-import')
                     </div>
                 </section>
 
                 @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
-                    @include('operations.settings.partials.staff')
+                    <section class="card" x-show="active === 'staff'" x-cloak data-settings-section="staff">
+                        <div class="card-header">
+                            <div>
+                                <div class="subheader">Staff Access</div>
+                                <h2 class="card-title">Team logins and roles</h2>
+                                <div class="card-subtitle">Add name, email, and roles - ARK emails a secure setup link so they choose their own password. Select every hat someone wears: admin, advisor, and/or technician.</div>
+                            </div>
+                        </div>
+                        @include('operations.settings.partials.staff')
+                    </section>
                 @endcan
 
-                @include('operations.settings.partials.runtime-health', [
-                    'telephonyHealth' => $telephonyHealth,
-                    'settings' => $settings,
-                ])
-                </div>
+                <section class="card" x-show="active === 'excellence'" x-cloak data-settings-section="excellence">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Owner Targets &amp; Reporting</div>
+                            <h2 class="card-title">Shop performance targets</h2>
+                            <div class="card-subtitle">Targets for posted sales, margins, and the owner digest. They set the green and amber hints on the Operational Report and Margin Health.</div>
+                        </div>
+                    </div>
+                    @include('operations.settings.partials.shop-excellence-targets')
+                </section>
+
+                <section class="card" x-show="active === 'payments'" x-cloak data-settings-section="payments">
+                    @include('operations.settings.partials.square-payments-settings', [
+                        'settings' => $settings,
+                        'platformPaymentsCapture' => $platformPaymentsCapture ?? false,
+                    ])
+                </section>
+
+                <section class="card" x-show="active === 'partstech'" x-cloak data-settings-section="partstech">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Parts catalogs</div>
+                            <h2 class="card-title">Catalog buttons on the estimate</h2>
+                            <div class="card-subtitle">PartsTech, RepairLink, Nexpart, and any other catalog the estimate toolbar opens.</div>
+                        </div>
+                    </div>
+                    @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
+                </section>
+
+                {{-- telephony-settings has its own heading and tabs and is migrated separately, so this card has no header. --}}
+                <section class="card" x-show="active === 'communications'" x-cloak data-settings-section="communications">
+                    <div class="card-body p-2 p-md-3">
+                        <div class="ark-legacy bg-white text-dark border rounded p-3" data-settings-telephony-island>
+                            @include('operations.settings.partials.telephony-settings', [
+                                'settings' => $settings,
+                                'telephonyHealth' => $telephonyHealth,
+                                'telephonyEndpoints' => $telephonyEndpoints,
+                                'telephonyEndpointTypes' => $telephonyEndpointTypes,
+                                'telephonyExtensions' => $telephonyExtensions,
+                                'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
+                                'staff' => $staff,
+                                'platformMailSend' => $platformMailSend ?? false,
+                                'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
+                            ])
+                        </div>
+                    </div>
+                </section>
+
+                @unless (\App\Ark\Runtime\DemoInstall::isDemo())
+                    <section class="card" x-show="active === 'ark-cloud'" x-cloak data-settings-section="ark-cloud">
+                        <div class="card-header">
+                            <div>
+                                <div class="subheader">ARK Platform</div>
+                                <h2 class="card-title">Managed ARK services</h2>
+                                <div class="card-subtitle">Connect this Box to ARK Platform for Email, Texting, Voice, and other managed services. Shop work stays in ARK. Service accounts are managed in ARK Platform.</div>
+                            </div>
+                        </div>
+                        @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
+                    </section>
+                @endunless
+
+                <section class="card" x-show="active === 'runtime-health'" x-cloak data-settings-section="runtime-health">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Troubleshooting</div>
+                            <h2 class="card-title">Runtime health</h2>
+                            <div class="card-subtitle">
+                                Infrastructure may observe local time. ARK records facts in UTC and projects them into the shop timezone at display time.
+                                Use this page after deploys or VPS timezone changes - not for daily operations.
+                            </div>
+                        </div>
+                    </div>
+                    @include('operations.settings.partials.runtime-health', [
+                        'telephonyHealth' => $telephonyHealth,
+                        'settings' => $settings,
+                    ])
+                </section>
             </div>
         </div>
 
