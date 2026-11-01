@@ -18,19 +18,19 @@
             ])->filter()->implode(' · ');
         @endphp
         <div
-            class="ops-visit-signal ops-visit-signal--inspection ops-visit-signal--passive"
+            class="ark-ro-signal"
             data-inspection-posture="{{ $inspectionPosture->key }}"
             title="{{ $inspectionTitle }}"
         >
-            <span class="ops-visit-signal__label">Inspection</span>
-            <span class="ops-visit-signal__value">{{ $inspectionPosture->headline }}</span>
+            <span class="subheader">Inspection</span>
+            <span class="fw-medium">{{ $inspectionPosture->headline }}</span>
             @if (filled($inspectionPosture->detail))
-                <span class="ops-visit-signal__meta">{{ $inspectionPosture->detail }}</span>
+                <span class="text-secondary">{{ $inspectionPosture->detail }}</span>
             @elseif ($inspectionPosture->key === \App\Ark\Operations\Inspections\InspectionPosture::IN_PROGRESS && $inspectionPosture->percentComplete !== null)
-                <span class="ops-visit-signal__meta">{{ $inspectionPosture->percentComplete }}%</span>
+                <span class="text-secondary">{{ $inspectionPosture->percentComplete }}%</span>
             @endif
             @if (filled($inspectionPosture->templateName))
-                <span class="ops-visit-signal__note">{{ $inspectionPosture->templateName }}</span>
+                <span class="text-secondary d-none d-xl-inline">{{ $inspectionPosture->templateName }}</span>
             @endif
         </div>
     @else

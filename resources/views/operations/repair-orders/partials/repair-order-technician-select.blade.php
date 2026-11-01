@@ -19,18 +19,16 @@
 
 @can(ArkCapability::RepairOrdersManage->value)
     @if (! $repairOrder->isTerminal() && $technicians->isNotEmpty())
-        @if ($errors->has('assigned_technician_id'))
-            <div class="small text-danger mb-1">{{ $errors->first('assigned_technician_id') }}</div>
-        @endif
-
-        <div style="max-width: 100%">
+        <div class="ark-ro-command-bar__tech">
+            @if ($errors->has('assigned_technician_id'))
+                <div class="small text-danger mb-1">{{ $errors->first('assigned_technician_id') }}</div>
+            @endif
             <form
                 method="POST"
                 action="{{ route('operations.repair-orders.technician-assignment.update', $repairOrder) }}"
                 data-refresh-scope="toolbar"
                 @submit.prevent="submitWorksheetForm($event)"
                 class="m-0"
-                style="width: 12rem; max-width: 100%"
             >
                 @csrf
                 @method('PATCH')

@@ -11,8 +11,7 @@
 @endphp
 
 @if ($showArrival || $showInspection)
-    {{-- The posture chips are shared with the customer documents, so they stay legacy here. --}}
-    <div class="ark-legacy ops-visit-signals d-flex align-items-center" data-ro-visit-signals role="group" aria-label="Appointment and inspection">
+    <div class="d-flex flex-wrap align-items-center gap-2" data-ro-visit-signals role="group" aria-label="Appointment and inspection">
         @if ($showArrival)
             @include('operations.repair-orders.partials.repair-order-arrival-posture-inline', [
                 'arrivalPosture' => $arrivalPosture,
