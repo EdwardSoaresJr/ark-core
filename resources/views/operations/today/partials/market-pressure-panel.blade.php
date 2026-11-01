@@ -1,62 +1,61 @@
 @php
     /** @var array<string, mixed> $panel */
     $barSegments = 8;
+    $posture = $panel['posture'] ?? '';
 @endphp
 
-<div class="border-b border-slate-200 px-3 py-3">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0 flex-1">
-            <p @class([
-                'text-sm font-black text-slate-950',
-                'text-amber-950' => ($panel['posture'] ?? '') === 'pressure',
-            ])>{{ $panel['headline'] }}</p>
+<div class="card-body p-2 p-md-3 border-bottom" data-market-pressure-panel>
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div class="flex-fill" style="min-width: 0">
+            <div @class(['fw-bold', 'text-warning' => $posture === 'pressure'])>{{ $panel['headline'] }}</div>
             @if ($panel['eligible_closes'] > 0)
-                <dl class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                <dl class="d-flex flex-wrap gap-3 small mt-2 mb-0">
                     <div>
-                        <dt class="inline font-bold text-slate-500">Target:</dt>
-                        <dd class="inline tabular-nums font-semibold text-slate-900">{{ $panel['target'] }}</dd>
+                        <dt class="d-inline text-secondary">Target:</dt>
+                        <dd class="d-inline fw-medium mb-0">{{ $panel['target'] }}</dd>
                     </div>
                     @if ($panel['missed_count'] > 0)
                         <div>
-                            <dt class="inline font-bold text-amber-800">Missed:</dt>
-                            <dd class="inline tabular-nums font-semibold text-amber-900">{{ $panel['missed_count'] }} opportunities</dd>
+                            <dt class="d-inline text-warning">Missed:</dt>
+                            <dd class="d-inline fw-medium text-warning mb-0">{{ $panel['missed_count'] }} opportunities</dd>
                         </div>
                     @endif
                 </dl>
             @endif
             @if (filled($panel['why_care'] ?? null))
-                <p class="mt-2 text-xs leading-relaxed text-slate-700">{{ $panel['why_care'] }}</p>
+                <p class="small text-secondary mt-2 mb-0">{{ $panel['why_care'] }}</p>
             @endif
         </div>
         <span @class([
-            'shrink-0 rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-            'bg-amber-100 text-amber-900' => ($panel['posture'] ?? '') === 'pressure',
-            'bg-emerald-100 text-emerald-900' => ($panel['posture'] ?? '') === 'healthy',
+            'badge text-uppercase',
+            'bg-yellow-lt' => $posture === 'pressure',
+            'bg-green-lt' => $posture === 'healthy',
+            'bg-secondary-lt' => ! in_array($posture, ['pressure', 'healthy'], true),
         ])>{{ $panel['posture'] ?? 'observe' }}</span>
     </div>
 
     @if (! empty($panel['advisor_breakdown']))
-        <div class="mt-4 border-t border-slate-100 pt-3">
-            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Advisor breakdown</p>
-            <ul class="mt-2 space-y-2">
+        <div class="border-top mt-3 pt-3">
+            <div class="subheader">Advisor breakdown</div>
+            <ul class="list-unstyled mt-2 mb-0">
                 @foreach ($panel['advisor_breakdown'] as $advisor)
                     @php
                         $filled = $advisor['paid_closes'] > 0
                             ? (int) round(($advisor['review_requests'] / $advisor['paid_closes']) * $barSegments)
                             : 0;
                     @endphp
-                    <li class="text-xs">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="font-semibold text-slate-900">{{ $advisor['name'] }}</span>
-                            <span class="tabular-nums font-bold text-slate-700">{{ $advisor['review_requests'] }}/{{ $advisor['paid_closes'] }}</span>
+                    <li class="small mb-2">
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <span class="fw-medium">{{ $advisor['name'] }}</span>
+                            <span class="fw-bold">{{ $advisor['review_requests'] }}/{{ $advisor['paid_closes'] }}</span>
                         </div>
-                        <div class="mt-1 flex gap-0.5" aria-hidden="true">
+                        <div class="d-flex gap-1 mt-1" aria-hidden="true">
                             @foreach (range(1, $barSegments) as $segment)
                                 <span @class([
-                                    'h-2 flex-1 rounded-sm',
-                                    'bg-[#0099cc]' => $segment <= $filled,
-                                    'bg-slate-200' => $segment > $filled,
-                                ])></span>
+                                    'flex-fill rounded',
+                                    'bg-primary' => $segment <= $filled,
+                                    'bg-secondary-lt' => $segment > $filled,
+                                ]) style="height: 0.5rem"></span>
                             @endforeach
                         </div>
                     </li>
@@ -65,7 +64,7 @@
         </div>
     @endif
 
-    <p class="mt-3 text-[11px]">
-        <a href="{{ $panel['detail_url'] }}" class="font-bold text-[#0099cc] no-underline hover:text-[#0088b8]">Full market pressure →</a>
+    <p class="small mt-3 mb-0">
+        <a href="{{ $panel['detail_url'] }}">Full market pressure →</a>
     </p>
 </div>

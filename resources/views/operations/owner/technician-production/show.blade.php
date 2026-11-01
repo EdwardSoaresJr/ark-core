@@ -3,32 +3,47 @@
     $money = fn (?int $cents): string => $cents === null ? '-' : '$'.number_format($cents / 100, 2);
 @endphp
 
-<x-operations.app :title="'Production · '.$technician->name">
-    <section class="mx-auto max-w-5xl space-y-4 px-3 py-4 sm:px-4">
-        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3">
-            <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">Technician production</p>
-                <h1 class="text-xl font-black text-slate-950">{{ $technician->name }}</h1>
-                <p class="mt-1 text-xs text-slate-500">{{ $from }} → {{ $to }}</p>
-                <a href="{{ route('operations.owner.technician-production.index', ['from' => $from, 'to' => $to]) }}" class="mt-2 inline-block text-xs font-bold text-slate-700 underline">← All technicians</a>
-                <a href="{{ route('operations.time-clock.staff', $technician) }}" class="mt-2 ml-3 inline-block text-xs font-bold text-slate-700 underline">Time clock</a>
+<x-operations.app :title="'Production · '.$technician->name" ui="tabler">
+    <x-tabler.page
+        layout="fluid"
+        :title="$technician->name"
+        pretitle="Technician production"
+        :subtitle="$from.' → '.$to"
+        actions-label="Technician shortcuts"
+        stack-actions
+    >
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.owner.technician-production.index', ['from' => $from, 'to' => $to])" icon="arrow-left" label="All technicians" />
+            <x-tabler.page-action :href="route('operations.time-clock.staff', $technician)" icon="clock" label="Time clock" />
+        </x-slot:actions>
+
+        <div class="card mb-3">
+            <div class="card-body p-2 p-md-3">
+                <form method="GET" action="{{ route('operations.owner.technician-production.show', $technician) }}" class="row g-2 align-items-end" data-technician-production-range>
+                    <div class="col-6 col-sm-auto">
+                        <label class="form-label" for="from">From</label>
+                        <input id="from" name="from" type="date" value="{{ $from }}" class="form-control">
+                    </div>
+                    <div class="col-6 col-sm-auto">
+                        <label class="form-label" for="to">To</label>
+                        <input id="to" name="to" type="date" value="{{ $to }}" class="form-control">
+                    </div>
+                    <div class="col-12 col-sm-auto">
+                        <button type="submit" class="btn w-100">Update</button>
+                    </div>
+                </form>
             </div>
-            <form method="GET" action="{{ route('operations.owner.technician-production.show', $technician) }}" class="flex flex-wrap items-end gap-2">
-                <label class="block text-xs font-semibold text-slate-700">From <x-operations.date-field name="from" :value="$from" class="mt-1" /></label>
-                <label class="block text-xs font-semibold text-slate-700">To <x-operations.date-field name="to" :value="$to" class="mt-1" /></label>
-                <button type="submit" class="ops-index-btn ops-index-btn--ghost">Update</button>
-            </form>
         </div>
 
         @if (session('status'))
-            <p class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">{{ session('status') }}</p>
+            <div class="alert alert-success mb-3">{{ session('status') }}</div>
         @endif
 
         @if ($a['overtime_review_required'])
-            <div class="border-2 border-amber-500 bg-amber-50 px-3 py-3 text-amber-950">
-                <p class="text-sm font-black uppercase tracking-[0.06em]">Overtime review required</p>
-                <p class="mt-1 text-sm font-semibold">{{ $a['overtime_warning']['message'] }}</p>
-                <ul class="mt-2 list-disc pl-5 text-xs">
+            <div class="alert alert-warning mb-3" data-technician-overtime-review>
+                <h4 class="alert-title">Overtime review required</h4>
+                <div>{{ $a['overtime_warning']['message'] }}</div>
+                <ul class="small mt-2 mb-0" style="list-style: disc">
                     @foreach ($a['overtime_warning']['reasons'] as $reason)
                         <li>{{ $reason }}</li>
                     @endforeach
@@ -37,141 +52,158 @@
         @endif
 
         @if ($a['history_unavailable'])
-            <div class="border border-slate-300 bg-slate-50 px-3 py-3 text-sm text-slate-800">
-                <p class="font-black">Production history unavailable for this period</p>
-                <p class="mt-1 text-xs text-slate-600">{{ $a['history_unavailable_reason'] }}</p>
-                <p class="mt-2 text-xs text-slate-500">Zero and unknown are different. ARK will not pretend recognized flag was 0.0 before recognition authority existed.</p>
+            <div class="alert alert-info mb-3" data-technician-history-unavailable>
+                <h4 class="alert-title">Production history unavailable for this period</h4>
+                <div class="small">{{ $a['history_unavailable_reason'] }}</div>
+                <div class="small text-secondary mt-2">Zero and unknown are different. ARK will not pretend recognized flag was 0.0 before recognition authority existed.</div>
             </div>
         @else
             @if ($a['history_partial'] ?? false)
-                <p class="border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">{{ $a['history_partial_note'] }}</p>
+                <div class="alert alert-info small mb-3">{{ $a['history_partial_note'] }}</div>
             @endif
 
-            {{-- Production picture first --}}
-            <div class="border border-slate-300 bg-white">
-                <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Production picture</p>
-                    <p class="text-xs text-slate-500">Why is recognized flag low - pending still sitting, or not much production?</p>
+            <section class="mb-3" aria-labelledby="technician-production-picture" data-technician-production-picture>
+                <h3 class="mb-0" id="technician-production-picture">Production picture</h3>
+                <p class="small text-secondary mb-2">Why is recognized flag low - pending still sitting, or not much production?</p>
+                <div class="row row-cards">
+                    <div class="col-12 col-sm-4">
+                        <div class="card card-sm h-100">
+                            <div class="card-body">
+                                <div class="subheader">Clock hours</div>
+                                <div class="h1 mb-0 mt-1 ark-money">{{ number_format((float) $a['clock_hours'], 1) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <div class="card card-sm h-100">
+                            <div class="card-body">
+                                <div class="subheader">Recognized flag</div>
+                                <div class="h1 mb-0 mt-1 ark-money">{{ number_format((float) $a['recognized_flag_hours'], 1) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <div class="card card-sm h-100">
+                            <div class="card-body">
+                                <div class="subheader">Pending flag</div>
+                                <div class="h1 mb-0 mt-1 ark-money">{{ number_format((float) $a['pending_flag_hours'], 1) }}</div>
+                                <div class="small text-secondary mt-1">Not earned · not owed</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="card card-sm h-100">
+                            <div class="card-body">
+                                <div class="subheader">Recognized / clock</div>
+                                <div class="h3 mb-0 mt-1 ark-money">{{ $a['recognized_efficiency_percent'] === null ? '-' : number_format((float) $a['recognized_efficiency_percent'], 1).'%' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="card card-sm h-100">
+                            <div class="card-body">
+                                <div class="subheader">{{ $a['production_in_view_label'] }}</div>
+                                <div class="h3 mb-0 mt-1 ark-money">{{ $a['production_in_view_percent'] === null ? '-' : number_format((float) $a['production_in_view_percent'], 1).'%' }}</div>
+                                <div class="small text-secondary mt-1">Includes pending - not earned production</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="grid gap-px bg-slate-200 sm:grid-cols-3">
-                    <div class="bg-white px-3 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Clock hours</p>
-                        <p class="mt-1 text-2xl font-black tabular-nums text-slate-950">{{ number_format((float) $a['clock_hours'], 1) }}</p>
-                    </div>
-                    <div class="bg-white px-3 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Recognized flag</p>
-                        <p class="mt-1 text-2xl font-black tabular-nums text-slate-950">{{ number_format((float) $a['recognized_flag_hours'], 1) }}</p>
-                    </div>
-                    <div class="bg-white px-3 py-3">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Pending flag</p>
-                        <p class="mt-1 text-2xl font-black tabular-nums text-slate-950">{{ number_format((float) $a['pending_flag_hours'], 1) }}</p>
-                        <p class="mt-0.5 text-[11px] text-slate-500">Not earned · not owed</p>
-                    </div>
-                </div>
-                <div class="grid gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-2">
-                    <div class="bg-white px-3 py-2.5">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Recognized / clock</p>
-                        <p class="text-lg font-black tabular-nums">{{ $a['recognized_efficiency_percent'] === null ? '-' : number_format((float) $a['recognized_efficiency_percent'], 1).'%' }}</p>
-                    </div>
-                    <div class="bg-white px-3 py-2.5">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $a['production_in_view_label'] }}</p>
-                        <p class="text-lg font-black tabular-nums">{{ $a['production_in_view_percent'] === null ? '-' : number_format((float) $a['production_in_view_percent'], 1).'%' }}</p>
-                        <p class="text-[11px] text-slate-500">Includes pending - not earned production</p>
-                    </div>
-                </div>
-            </div>
+            </section>
 
             @if ($a['wip_impact'] ?? null)
-                <p class="border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800">{{ $a['wip_impact']['message'] }}</p>
+                <div class="alert alert-info mb-3">{{ $a['wip_impact']['message'] }}</div>
             @endif
 
-            {{-- Dollars secondary --}}
-            <div class="border border-slate-300 bg-white">
-                <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Base compensation assist</p>
-                    <p class="text-xs text-slate-500">Management estimate only - not Gross Pay, Paycheck, or Payroll Due.</p>
+            <section class="card mb-3" data-technician-compensation-assist>
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Base compensation assist</h3>
+                        <div class="card-subtitle">Management estimate only - not Gross Pay, Paycheck, or Payroll Due.</div>
+                    </div>
                 </div>
-                <dl class="divide-y divide-slate-100 text-sm">
-                    <div class="flex justify-between gap-3 px-3 py-2">
-                        <dt class="text-slate-600">Recognized flag earnings</dt>
-                        <dd class="font-semibold tabular-nums">{{ $money($a['recognized_earnings_cents']) }}</dd>
+                <dl class="list-group list-group-flush mb-0">
+                    <div class="list-group-item d-flex justify-content-between gap-3">
+                        <dt class="fw-normal text-secondary">Recognized flag earnings</dt>
+                        <dd class="fw-medium ark-money mb-0">{{ $money($a['recognized_earnings_cents']) }}</dd>
                     </div>
-                    <div class="flex justify-between gap-3 px-3 py-2">
-                        <dt class="text-slate-600">Floor requirement</dt>
-                        <dd class="font-semibold tabular-nums">{{ $money($a['floor_requirement_cents']) }}</dd>
+                    <div class="list-group-item d-flex justify-content-between gap-3">
+                        <dt class="fw-normal text-secondary">Floor requirement</dt>
+                        <dd class="fw-medium ark-money mb-0">{{ $money($a['floor_requirement_cents']) }}</dd>
                     </div>
-                    <div class="flex justify-between gap-3 px-3 py-2">
-                        <dt class="text-slate-600">Floor exposure</dt>
-                        <dd class="font-semibold tabular-nums">{{ $money($a['floor_exposure_cents']) }}</dd>
+                    <div class="list-group-item d-flex justify-content-between gap-3">
+                        <dt class="fw-normal text-secondary">Floor exposure</dt>
+                        <dd class="fw-medium ark-money mb-0">{{ $money($a['floor_exposure_cents']) }}</dd>
                     </div>
-                    <div class="flex justify-between gap-3 px-3 py-2.5">
-                        <dt class="font-bold text-slate-900">Base compensation assist</dt>
-                        <dd class="text-lg font-black tabular-nums text-slate-950">{{ $money($a['base_compensation_assist_cents']) }}</dd>
+                    <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+                        <dt class="fw-bold">Base compensation assist</dt>
+                        <dd class="h3 ark-money mb-0">{{ $money($a['base_compensation_assist_cents']) }}</dd>
                     </div>
                 </dl>
                 @if ($a['pending_flag_hours'] > 0)
-                    <div class="border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-                        <p><span class="font-semibold">{{ number_format((float) $a['pending_flag_hours'], 1) }} pending flag hr</span>
+                    <div class="card-footer small">
+                        <p class="mb-0"><span class="fw-medium">{{ number_format((float) $a['pending_flag_hours'], 1) }} pending flag hr</span>
                             @if ($a['pending_value_cents'] !== null)
                                 · about {{ $money($a['pending_value_cents']) }} of potential flag production sitting unfinished at the current flag rate.
                             @endif
                         </p>
-                        <p class="mt-1 text-slate-500">Not wages owed. Not unpaid compensation. Not guaranteed future pay. Pending does not reduce floor exposure.</p>
+                        <p class="text-secondary mt-1 mb-0">Not wages owed. Not unpaid compensation. Not guaranteed future pay. Pending does not reduce floor exposure.</p>
                     </div>
                 @endif
-            </div>
+            </section>
         @endif
 
-        {{-- Compensable time entry --}}
-        <div class="border border-slate-300 bg-white">
-            <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Compensable hours</p>
-                <p class="text-xs text-slate-500">Manual override · locks punch-derived hours for that day · leave blank to clear override and restore punch hours</p>
+        <section class="card mb-3" data-technician-compensable-hours>
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Compensable hours</h3>
+                    <div class="card-subtitle">Manual override · locks punch-derived hours for that day · leave blank to clear override and restore punch hours</div>
+                </div>
             </div>
-            <form method="POST" action="{{ route('operations.owner.technician-production.time', $technician) }}" class="px-3 py-3">
+            <form method="POST" action="{{ route('operations.owner.technician-production.time', $technician) }}">
                 @csrf
                 <input type="hidden" name="from" value="{{ $from }}">
                 <input type="hidden" name="to" value="{{ $to }}">
-                <div class="grid gap-2 sm:grid-cols-4 md:grid-cols-7">
-                    @foreach ($weekDates as $date)
-                        @php
-                            $label = \Illuminate\Support\Carbon::parse($date)->format('D n/j');
-                            $val = $timeByDate[$date] ?? null;
-                        @endphp
-                        <label class="block text-[11px] font-semibold text-slate-700">
-                            {{ $label }}
-                            <input
-                                type="number"
-                                name="hours[{{ $date }}]"
-                                value="{{ $val !== null ? number_format((float) $val, 2, '.', '') : '' }}"
-                                min="0"
-                                max="24"
-                                step="0.25"
-                                class="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm tabular-nums"
-                                placeholder="0"
-                            >
-                        </label>
-                    @endforeach
+                <div class="card-body p-2 p-md-3">
+                    <div class="row g-2">
+                        @foreach ($weekDates as $date)
+                            @php
+                                $label = \Illuminate\Support\Carbon::parse($date)->format('D n/j');
+                                $val = $timeByDate[$date] ?? null;
+                            @endphp
+                            <div class="col-6 col-sm-3 col-md">
+                                <label class="form-label" for="hours-{{ $date }}">{{ $label }}</label>
+                                <input
+                                    id="hours-{{ $date }}"
+                                    type="number"
+                                    name="hours[{{ $date }}]"
+                                    value="{{ $val !== null ? number_format((float) $val, 2, '.', '') : '' }}"
+                                    min="0"
+                                    max="24"
+                                    step="0.25"
+                                    class="form-control ark-money"
+                                    placeholder="0"
+                                >
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-                <div class="mt-3 flex justify-end">
-                    <button type="submit" class="ops-index-btn ops-index-btn--primary">Save hours</button>
+                <div class="card-footer text-end">
+                    <button type="submit" class="btn btn-primary">Save hours</button>
                 </div>
             </form>
-        </div>
+        </section>
 
-        {{-- Show me --}}
-        <details class="border border-slate-300 bg-white" open>
-            <summary class="cursor-pointer list-none px-3 py-2 text-sm font-bold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
-                Show me · audit trail
-            </summary>
-            <div class="space-y-4 border-t border-slate-200 px-3 py-3 text-sm">
-                <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Time</p>
-                    <ul class="mt-1 divide-y divide-slate-100 border border-slate-100">
+        <details class="card" open data-technician-audit-trail>
+            <summary class="card-body py-2 fw-bold">Show me · audit trail</summary>
+            <div class="card-body border-top p-2 p-md-3">
+                <div class="mb-3">
+                    <div class="subheader">Time</div>
+                    <ul class="list-group mt-1">
                         @foreach ($a['daily_time'] as $day)
-                            <li class="flex flex-wrap justify-between gap-2 px-2 py-1.5 text-xs">
+                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2 py-2 small">
                                 <span>{{ $day['weekday'] }} {{ $day['date'] }}</span>
-                                <span class="tabular-nums">{{ $day['compensable_hours'] === null ? '-' : number_format((float) $day['compensable_hours'], 2).' hr' }}
+                                <span class="ark-money">{{ $day['compensable_hours'] === null ? '-' : number_format((float) $day['compensable_hours'], 2).' hr' }}
                                     @if ($day['floor_rate_dollars'] !== null)
                                         · floor ${{ number_format((float) $day['floor_rate_dollars'], 2) }}
                                     @endif
@@ -182,39 +214,46 @@
                 </div>
 
                 @unless ($a['history_unavailable'])
-                    <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Recognized flag</p>
+                    <div class="mb-3">
+                        <div class="subheader">Recognized flag</div>
                         @forelse ($a['recognized_lines'] as $line)
-                            <div class="mt-1 border border-slate-100 px-2 py-1.5 text-xs">
-                                <p class="font-semibold text-slate-900">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</p>
-                                <p class="text-slate-600">{{ $line['concern'] }} · {{ $line['labor_description'] }}</p>
-                                <p class="tabular-nums text-slate-500">{{ $line['recognized_date'] }} · rate {{ $line['flag_rate_dollars'] === null ? '-' : '$'.number_format((float) $line['flag_rate_dollars'], 2) }} · {{ $money($line['earnings_cents']) }}</p>
+                            <div class="card card-sm mt-1">
+                                <div class="card-body py-2 small">
+                                    <div class="fw-medium">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</div>
+                                    <div class="text-secondary">{{ $line['concern'] }} · {{ $line['labor_description'] }}</div>
+                                    <div class="text-secondary ark-money">{{ $line['recognized_date'] }} · rate {{ $line['flag_rate_dollars'] === null ? '-' : '$'.number_format((float) $line['flag_rate_dollars'], 2) }} · {{ $money($line['earnings_cents']) }}</div>
+                                </div>
                             </div>
                         @empty
-                            <p class="mt-1 text-xs text-slate-500">No recognized flag in this period.</p>
+                            <p class="small text-secondary mt-1 mb-0">No recognized flag in this period.</p>
                         @endforelse
                     </div>
 
-                    <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Pending flag</p>
+                    <div class="mb-3">
+                        <div class="subheader">Pending flag</div>
                         @forelse ($a['pending_lines'] as $line)
-                            <div class="mt-1 border border-slate-100 px-2 py-1.5 text-xs">
-                                <p class="font-semibold text-slate-900">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</p>
-                                <p class="text-slate-600">{{ $line['concern'] }} · {{ $line['labor_description'] }}</p>
-                                <p class="text-slate-500">{{ $line['production_status_label'] ?? '-' }} · {{ $line['attribution_source'] }}</p>
+                            <div class="card card-sm mt-1">
+                                <div class="card-body py-2 small">
+                                    <div class="fw-medium">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</div>
+                                    <div class="text-secondary">{{ $line['concern'] }} · {{ $line['labor_description'] }}</div>
+                                    <div class="text-secondary">{{ $line['production_status_label'] ?? '-' }} · {{ $line['attribution_source'] }}</div>
+                                </div>
                             </div>
                         @empty
-                            <p class="mt-1 text-xs text-slate-500">No pending flag attributed to this technician.</p>
+                            <p class="small text-secondary mt-1 mb-0">No pending flag attributed to this technician.</p>
                         @endforelse
                     </div>
 
                     @if (count($a['unassigned_pending_lines'] ?? []) > 0)
-                        <div>
-                            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-amber-800">Unassigned pending (not counted to a technician)</p>
+                        <div class="mb-3">
+                            <div class="subheader text-warning">Unassigned pending (not counted to a technician)</div>
                             @foreach ($a['unassigned_pending_lines'] as $line)
-                                <div class="mt-1 border border-amber-100 bg-amber-50/40 px-2 py-1.5 text-xs">
-                                    <p class="font-semibold">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</p>
-                                    <p class="text-slate-600">{{ $line['labor_description'] }}</p>
+                                <div class="card card-sm mt-1">
+                                    <div class="card-status-start bg-yellow"></div>
+                                    <div class="card-body py-2 small">
+                                        <div class="fw-medium">RO {{ $line['repair_order_id'] }} · {{ $line['vehicle'] }} · {{ number_format((float) $line['flag_hours'], 2) }} hr</div>
+                                        <div class="text-secondary">{{ $line['labor_description'] }}</div>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -222,12 +261,12 @@
                 @endunless
 
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Policy</p>
-                    <p class="mt-1 text-xs text-slate-700">{{ $a['policy']['recognition_policy_label'] }}</p>
-                    <p class="mt-1 text-xs text-slate-600">{{ $a['policy']['explanation'] }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $a['attribution_note'] ?? '' }}</p>
+                    <div class="subheader">Policy</div>
+                    <p class="small mt-1 mb-0">{{ $a['policy']['recognition_policy_label'] }}</p>
+                    <p class="small text-secondary mt-1 mb-0">{{ $a['policy']['explanation'] }}</p>
+                    <p class="small text-secondary mt-1 mb-0">{{ $a['attribution_note'] ?? '' }}</p>
                 </div>
             </div>
         </details>
-    </section>
+    </x-tabler.page>
 </x-operations.app>

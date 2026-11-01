@@ -1,98 +1,106 @@
-<div class="ops-report-layout">
-    <div class="space-y-3">
-        <div class="overflow-hidden border border-slate-300 bg-white">
-            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
+<div class="row row-cards">
+    <div class="col-12 col-xl-7">
+        <section class="card" data-report-section="operational-pressure">
+            <div class="card-header">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Operational Pressure</p>
-                    <p class="text-xs text-slate-400">What needs owner/operator attention now</p>
+                    <h3 class="card-title">Operational Pressure</h3>
+                    <div class="card-subtitle">What needs owner/operator attention now</div>
                 </div>
-                <a href="{{ route('operations.index') }}" class="text-xs font-bold text-slate-600 hover:text-slate-950">Open Queue</a>
+                <div class="card-actions">
+                    <a href="{{ route('operations.index') }}" class="btn btn-sm">Open Queue</a>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-100 text-sm">
-                    <thead class="bg-white text-left text-[10px] uppercase tracking-[0.08em] text-slate-400">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
                         <tr>
-                            <th class="px-3 py-2 font-bold">Pressure</th>
-                            <th class="px-3 py-2 text-right font-bold">Count</th>
-                            <th class="px-3 py-2 font-bold">Value / Detail</th>
-                            <th class="px-3 py-2 font-bold">Next Move</th>
+                            <th scope="col">Pressure</th>
+                            <th scope="col" class="text-end">Count</th>
+                            <th scope="col">Value / Detail</th>
+                            <th scope="col">Next Move</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody>
                         @foreach ($pressureRows as $row)
                             <tr>
-                                <td class="px-3 py-2 font-bold text-slate-950">{{ $row['pressure'] }}</td>
-                                <td class="px-3 py-2 text-right font-black tabular-nums text-slate-950">{{ $row['count'] }}</td>
-                                <td class="max-w-xs truncate px-3 py-2 text-xs font-semibold text-slate-600">{{ $row['value'] }}</td>
-                                <td class="px-3 py-2 text-xs text-slate-500">{{ $row['action'] }}</td>
+                                <td class="fw-bold">{{ $row['pressure'] }}</td>
+                                <td class="text-end fw-bold ark-money">{{ $row['count'] }}</td>
+                                <td class="small fw-medium text-secondary text-truncate" style="max-width: 20rem">{{ $row['value'] }}</td>
+                                <td class="small text-secondary">{{ $row['action'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     </div>
 
-    <div class="space-y-3">
-        <div class="overflow-hidden border border-slate-300 bg-white">
-            <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Advisor Throughput</p>
-                <p class="text-xs text-slate-400">Shop-level until advisor ownership is explicit</p>
+    <div class="col-12 col-xl-5">
+        <section class="card mb-3" data-report-section="advisor-throughput">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Advisor Throughput</h3>
+                    <div class="card-subtitle">Shop-level until advisor ownership is explicit</div>
+                </div>
             </div>
-            <div class="divide-y divide-slate-100">
+            <div class="list-group list-group-flush">
                 @foreach ($advisorRows as $row)
-                    <div class="grid grid-cols-2 gap-px bg-slate-100 text-sm">
-                        <div class="bg-white px-3 py-2">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Owner</p>
-                            <p class="font-black text-slate-950">{{ $row['advisor'] }}</p>
-                        </div>
-                        <div class="bg-white px-3 py-2 text-right">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">ROs</p>
-                            <p class="font-black tabular-nums text-slate-950">{{ $row['ro_count'] }}</p>
-                        </div>
-                        <div class="bg-white px-3 py-2">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Value</p>
-                            <p class="font-bold tabular-nums text-slate-800">{{ $row['value'] }}</p>
-                        </div>
-                        <div class="bg-white px-3 py-2 text-right">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Approvals</p>
-                            <p class="font-bold tabular-nums text-slate-800">{{ $row['approvals'] }}</p>
-                        </div>
-                        <div class="bg-white px-3 py-2">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Deferred</p>
-                            <p class="font-bold tabular-nums text-slate-800">{{ $row['deferred'] }}</p>
-                        </div>
-                        <div class="bg-white px-3 py-2 text-right">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Unpaid</p>
-                            <p class="font-bold tabular-nums text-slate-800">{{ $row['unpaid'] }}</p>
-                        </div>
+                    <div class="list-group-item">
+                        <dl class="row g-2 mb-0">
+                            <div class="col-6">
+                                <dt class="subheader">Owner</dt>
+                                <dd class="fw-bold mb-0">{{ $row['advisor'] }}</dd>
+                            </div>
+                            <div class="col-6 text-end">
+                                <dt class="subheader">ROs</dt>
+                                <dd class="fw-bold ark-money mb-0">{{ $row['ro_count'] }}</dd>
+                            </div>
+                            <div class="col-6">
+                                <dt class="subheader">Value</dt>
+                                <dd class="ark-money mb-0">{{ $row['value'] }}</dd>
+                            </div>
+                            <div class="col-6 text-end">
+                                <dt class="subheader">Approvals</dt>
+                                <dd class="ark-money mb-0">{{ $row['approvals'] }}</dd>
+                            </div>
+                            <div class="col-6">
+                                <dt class="subheader">Deferred</dt>
+                                <dd class="ark-money mb-0">{{ $row['deferred'] }}</dd>
+                            </div>
+                            <div class="col-6 text-end">
+                                <dt class="subheader">Unpaid</dt>
+                                <dd class="ark-money mb-0">{{ $row['unpaid'] }}</dd>
+                            </div>
+                        </dl>
                     </div>
                 @endforeach
             </div>
-        </div>
+        </section>
 
-        <div class="overflow-hidden border border-slate-300 bg-white">
-            <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Technician Production</p>
-                <p class="text-xs text-slate-400">Labor productivity is billed hours ÷ available hours. Labor efficiency is billed hours ÷ actual hours and is not shown here.</p>
+        <section class="card" data-report-section="technician-production">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Technician Production</h3>
+                    <div class="card-subtitle">Labor productivity is billed hours ÷ available hours. Labor efficiency is billed hours ÷ actual hours and is not shown here.</div>
+                </div>
             </div>
-            <div class="divide-y divide-slate-100">
+            <div class="list-group list-group-flush">
                 @foreach ($technicianRows as $row)
-                    <div class="px-3 py-2 text-sm">
-                        <div class="flex items-start justify-between gap-3">
+                    <div class="list-group-item">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
                             <div>
-                                <p class="font-black text-slate-950">{{ $row['technician'] }}</p>
-                                <p class="mt-0.5 text-xs text-slate-500">{{ $row['assigned'] }} assigned · {{ $row['active'] }} active · {{ $row['blockers'] }} blockers · {{ $row['hours'] }} hrs on board</p>
-                                <p class="mt-0.5 text-xs font-semibold text-slate-600">{{ $row['efficiency'] }} labor productivity · billed hours ÷ available hours · {{ $row['efficiency_hint'] }}</p>
+                                <div class="fw-bold">{{ $row['technician'] }}</div>
+                                <div class="small text-secondary mt-1">{{ $row['assigned'] }} assigned · {{ $row['active'] }} active · {{ $row['blockers'] }} blockers · {{ $row['hours'] }} hrs on board</div>
+                                <div class="small fw-medium mt-1">{{ $row['efficiency'] }} labor productivity · billed hours ÷ available hours · {{ $row['efficiency_hint'] }}</div>
                             </div>
-                            <div class="text-right">
-                                <p class="font-black tabular-nums text-slate-950">{{ $row['labor'] }}</p>
-                                <p class="text-xs font-semibold tabular-nums text-slate-500">{{ $row['closed_hours'] }} hrs closed</p>
+                            <div class="text-end">
+                                <div class="fw-bold ark-money">{{ $row['labor'] }}</div>
+                                <div class="small text-secondary ark-money">{{ $row['closed_hours'] }} hrs closed</div>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-        </div>
+        </section>
     </div>
 </div>

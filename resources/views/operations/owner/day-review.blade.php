@@ -1,69 +1,71 @@
-<x-operations.app title="Day Review">
-    <section class="ops-day-review space-y-3">
+<x-operations.app title="Day Review" ui="tabler">
+    <x-tabler.page layout="fluid" title="Day Review" pretitle="Owner">
         @if ($targetReviewStale)
-            <div class="border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+            <div class="alert alert-warning mb-3" data-day-review-target-stale>
                 @if ($lastTargetReview)
                     Last target review: {{ $lastTargetReview }} - overdue for quarterly refresh.
                 @else
                     Shop excellence targets have not been reviewed yet.
                 @endif
-                <a href="{{ route('operations.settings.shop.edit', ['section' => 'excellence']) }}" class="ml-1 font-bold underline">Update owner targets</a>
+                <a href="{{ route('operations.settings.shop.edit', ['section' => 'excellence']) }}" class="alert-link ms-1">Update owner targets</a>
             </div>
         @endif
 
         @include('operations.reports.partials.end-of-day-report', ['eod' => $eod])
 
-        <div class="ops-day-review-queue border border-slate-300 bg-white">
-            <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Tomorrow's queue pressure</p>
-                <p class="text-xs text-slate-500">name the first move before you leave. Numbers above; unfinished work below.</p>
+        <section class="card mb-3" data-day-review-queue>
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Tomorrow's queue pressure</h3>
+                    <div class="card-subtitle">name the first move before you leave. Numbers above; unfinished work below.</div>
+                </div>
             </div>
-            <ul class="divide-y divide-slate-100">
+            <ul class="list-group list-group-flush">
                 @forelse ($priorities as $priority)
-                    <li class="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
+                    <li class="list-group-item d-flex flex-wrap align-items-baseline justify-content-between gap-2">
                         <div>
-                            <p class="text-sm font-bold text-slate-950">{{ $priority['label'] }}</p>
-                            <p class="mt-0.5 text-xs text-slate-500">{{ $priority['hint'] }}</p>
+                            <div class="fw-bold">{{ $priority['label'] }}</div>
+                            <div class="small text-secondary mt-1">{{ $priority['hint'] }}</div>
                         </div>
                         <span @class([
-                            'shrink-0 rounded-sm px-2 py-0.5 text-xs font-black tabular-nums',
-                            'bg-amber-100 text-amber-900' => $priority['tone'] !== 'calm',
-                            'bg-slate-100 text-slate-600' => $priority['tone'] === 'calm',
+                            'badge ark-money',
+                            'bg-yellow-lt' => $priority['tone'] !== 'calm',
+                            'bg-secondary-lt' => $priority['tone'] === 'calm',
                         ])>{{ $priority['count'] }}</span>
                     </li>
                 @empty
-                    <li class="px-3 py-4 text-sm text-slate-500">No queue pressure flagged - shop flow is clear.</li>
+                    <li class="list-group-item text-secondary">No queue pressure flagged - shop flow is clear.</li>
                 @endforelse
             </ul>
-        </div>
+        </section>
 
         @if (($nudgeInsight['acted'] ?? 0) + ($nudgeInsight['dismissed'] ?? 0) > 0)
-            <details class="border border-slate-300 bg-white">
-                <summary class="cursor-pointer list-none px-3 py-2 text-xs font-bold text-slate-700 marker:content-none [&::-webkit-details-marker]:hidden">
-                    Comms nudge measurement · 7 days
-                </summary>
-                <div class="grid grid-cols-3 gap-px border-t border-slate-200 bg-slate-200">
-                    <div class="bg-white px-3 py-2">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Acted</p>
-                        <p class="mt-1 text-lg font-black tabular-nums text-emerald-800">{{ $nudgeInsight['acted'] }}</p>
-                    </div>
-                    <div class="bg-white px-3 py-2">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Dismissed</p>
-                        <p class="mt-1 text-lg font-black tabular-nums text-slate-700">{{ $nudgeInsight['dismissed'] }}</p>
-                    </div>
-                    <div class="bg-white px-3 py-2">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Action rate</p>
-                        <p class="mt-1 text-lg font-black tabular-nums text-slate-950">{{ $nudgeInsight['action_rate'] !== null ? $nudgeInsight['action_rate'].'%' : '-' }}</p>
-                    </div>
+            <details class="card mb-3" data-day-review-nudges>
+                <summary class="card-body py-2 fw-bold">Comms nudge measurement · 7 days</summary>
+                <div class="card-body border-top p-2 p-md-3">
+                    <dl class="row g-3 mb-0">
+                        <div class="col-4">
+                            <dt class="subheader">Acted</dt>
+                            <dd class="h3 mb-0 text-green ark-money">{{ $nudgeInsight['acted'] }}</dd>
+                        </div>
+                        <div class="col-4">
+                            <dt class="subheader">Dismissed</dt>
+                            <dd class="h3 mb-0 ark-money">{{ $nudgeInsight['dismissed'] }}</dd>
+                        </div>
+                        <div class="col-4">
+                            <dt class="subheader">Action rate</dt>
+                            <dd class="h3 mb-0 ark-money">{{ $nudgeInsight['action_rate'] !== null ? $nudgeInsight['action_rate'].'%' : '-' }}</dd>
+                        </div>
+                    </dl>
                 </div>
             </details>
         @endif
 
-        <div class="flex flex-wrap gap-2 text-xs">
-            <a href="{{ route('operations.reports.index') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">All reports</a>
-            <a href="{{ $eod->reportUrl }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Operational Report</a>
-            <a href="{{ route('operations.workboard') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Job Board</a>
-            <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Day Review guide</a>
+        <div class="btn-list" data-day-review-links>
+            <a href="{{ route('operations.reports.index') }}" class="btn">All reports</a>
+            <a href="{{ $eod->reportUrl }}" class="btn">Operational Report</a>
+            <a href="{{ route('operations.workboard') }}" class="btn">Job Board</a>
+            <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}" class="btn">Day Review guide</a>
         </div>
-    </section>
+    </x-tabler.page>
 </x-operations.app>

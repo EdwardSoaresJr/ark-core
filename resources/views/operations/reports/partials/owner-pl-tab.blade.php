@@ -1,135 +1,139 @@
 @php
     $summary = $ownerPlSummary;
+    $toneText = fn (?string $tone, string $fallback = 'text-secondary'): string => match ($tone) {
+        'good' => 'text-green',
+        'warn' => 'text-warning',
+        default => $fallback,
+    };
 @endphp
 
-<div class="space-y-3">
-    <div class="overflow-hidden border border-slate-300 bg-white">
-        <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Owner P&amp;L</p>
-            <p class="text-xs text-slate-400">
+<section class="card mb-3" data-report-section="owner-pl">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Owner P&amp;L</h3>
+            <div class="card-subtitle">
                 {{ $summary['posted_count'] }} posted RO{{ $summary['posted_count'] === 1 ? '' : 's' }} · {{ $summary['range_days'] }} days in range.
                 {{ $summary['disclaimer'] }}
                 Edit assumptions in
-                <a href="{{ route('operations.settings.shop.edit', ['section' => 'excellence']) }}" class="font-semibold text-slate-700 underline decoration-slate-300 hover:text-slate-950">Owner Targets &amp; Reporting</a>
+                <a href="{{ route('operations.settings.shop.edit', ['section' => 'excellence']) }}">Owner Targets &amp; Reporting</a>
                 and
-                <a href="{{ route('operations.settings.shop.edit', ['section' => 'overhead']) }}" class="font-semibold text-slate-700 underline decoration-slate-300 hover:text-slate-950">Shop Overhead</a>.
-            </p>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-100 text-sm">
-                <thead class="bg-white text-left text-[10px] uppercase tracking-[0.08em] text-slate-400">
-                    <tr>
-                        <th class="px-3 py-2 font-bold">Line</th>
-                        <th class="px-3 py-2 text-right font-bold">Amount</th>
-                        <th class="px-3 py-2 text-right font-bold">% rev</th>
-                        <th class="px-3 py-2 font-bold">Note</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach ($summary['pl_lines'] as $row)
-                        <tr @class([
-                            'bg-slate-50/80' => ($row['emphasis'] ?? 'normal') === 'subtotal',
-                            'bg-slate-100/80' => ($row['emphasis'] ?? 'normal') === 'total',
-                            'bg-emerald-50/40' => ($row['tone'] ?? null) === 'good',
-                            'bg-amber-50/50' => ($row['tone'] ?? null) === 'warn',
-                        ])>
-                            <td @class([
-                                'px-3 py-2 font-bold text-slate-950',
-                                'pl-6 font-medium text-slate-700' => $row['indent'],
-                                'text-base' => ($row['emphasis'] ?? 'normal') === 'total',
-                            ])>{{ $row['label'] }}</td>
-                            <td @class([
-                                'px-3 py-2 text-right tabular-nums text-slate-950',
-                                'font-black' => in_array($row['emphasis'] ?? 'normal', ['subtotal', 'total'], true),
-                                'text-emerald-800' => ($row['tone'] ?? null) === 'good',
-                                'text-amber-800' => ($row['tone'] ?? null) === 'warn',
-                            ])>{{ $row['amount'] }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums text-slate-500">{{ $row['percent'] ?? '-' }}</td>
-                            <td class="px-3 py-2 text-xs leading-4 text-slate-500">{{ $row['note'] ?? '' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    @if ($summary['benchmark'] !== null)
-        <div class="overflow-hidden border border-slate-300 bg-white">
-            <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Net profit benchmark</p>
-                <p class="text-xs text-slate-400">
-                    {{ $summary['benchmark']['net_target_percent'] }}% net on service revenue - after prorated fixed costs and estimated tax reserves.
-                </p>
-            </div>
-            <div class="grid grid-cols-2 gap-px bg-slate-200 sm:grid-cols-4">
-                <div class="bg-white px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">{{ $summary['benchmark']['net_target_percent'] }}% target</p>
-                    <p class="mt-1 text-lg font-black tabular-nums text-slate-950">{{ $summary['benchmark']['net_target_label'] }}</p>
-                </div>
-                <div class="bg-white px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Est. net after reserves</p>
-                    <p class="mt-1 text-lg font-black tabular-nums text-slate-950">{{ $summary['benchmark']['estimated_net_label'] ?? 'Configure fixed costs' }}</p>
-                </div>
-                <div class="bg-white px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Gap to target</p>
-                    <p @class([
-                        'mt-1 text-lg font-black tabular-nums',
-                        'text-emerald-800' => ($summary['benchmark']['tone'] ?? null) === 'good',
-                        'text-amber-800' => ($summary['benchmark']['tone'] ?? null) === 'warn',
-                        'text-slate-950' => ! in_array($summary['benchmark']['tone'] ?? null, ['good', 'warn'], true),
-                    ])>{{ $summary['benchmark']['gap_label'] ?? '-' }}</p>
-                </div>
-                <div class="bg-white px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Posture</p>
-                    <p @class([
-                        'mt-1 text-xs font-semibold leading-4',
-                        'text-emerald-800' => ($summary['benchmark']['tone'] ?? null) === 'good',
-                        'text-amber-800' => ($summary['benchmark']['tone'] ?? null) === 'warn',
-                        'text-slate-600' => ! in_array($summary['benchmark']['tone'] ?? null, ['good', 'warn'], true),
-                    ])>{{ $summary['benchmark']['posture'] }}</p>
-                </div>
+                <a href="{{ route('operations.settings.shop.edit', ['section' => 'overhead']) }}">Shop Overhead</a>.
             </div>
         </div>
-    @endif
-
-    <div class="overflow-hidden border border-slate-300 bg-white">
-        <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Tax &amp; remittance posture</p>
-            <p class="text-xs text-slate-400">Sales tax is from posted RO lines. Payroll and income lines are planning reserves - not filing amounts.</p>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-100 text-sm">
-                <thead class="bg-white text-left text-[10px] uppercase tracking-[0.08em] text-slate-400">
-                    <tr>
-                        <th class="px-3 py-2 font-bold">Item</th>
-                        <th class="px-3 py-2 text-right font-bold">Amount</th>
-                        <th class="px-3 py-2 font-bold">Source</th>
-                        <th class="px-3 py-2 font-bold">Note</th>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th scope="col">Line</th>
+                    <th scope="col" class="text-end">Amount</th>
+                    <th scope="col" class="text-end">% rev</th>
+                    <th scope="col">Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($summary['pl_lines'] as $row)
+                    @php $emphasis = $row['emphasis'] ?? 'normal'; @endphp
+                    <tr @class(['table-active' => in_array($emphasis, ['subtotal', 'total'], true)]) data-report-emphasis="{{ $emphasis }}">
+                        <td @class([
+                            'fw-bold' => ! $row['indent'],
+                            'ps-4 text-secondary' => $row['indent'],
+                            'fs-3' => $emphasis === 'total',
+                        ])>{{ $row['label'] }}</td>
+                        <td @class([
+                            'text-end ark-money',
+                            'fw-bold' => in_array($emphasis, ['subtotal', 'total'], true),
+                            $toneText($row['tone'] ?? null, '') => true,
+                        ])>{{ $row['amount'] }}</td>
+                        <td class="text-end text-secondary ark-money">{{ $row['percent'] ?? '-' }}</td>
+                        <td class="small text-secondary">{{ $row['note'] ?? '' }}</td>
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach ($summary['tax_lines'] as $row)
-                        <tr @class([
-                            'bg-slate-50/80' => str_starts_with($row['label'], 'Total tax'),
-                        ])>
-                            <td class="px-3 py-2 font-bold text-slate-950">{{ $row['label'] }}</td>
-                            <td class="px-3 py-2 text-right font-black tabular-nums text-slate-950">{{ $row['amount'] }}</td>
-                            <td class="px-3 py-2 text-xs text-slate-600">{{ $row['source'] }}</td>
-                            <td class="px-3 py-2 text-xs leading-4 text-slate-500">{{ $row['note'] }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if ($summary['benchmark'] !== null)
+    <section class="mb-3" aria-labelledby="report-net-benchmark" data-report-section="net-benchmark">
+        <h3 class="mb-0" id="report-net-benchmark">Net profit benchmark</h3>
+        <p class="text-secondary small mb-2">
+            {{ $summary['benchmark']['net_target_percent'] }}% net on service revenue - after prorated fixed costs and estimated tax reserves.
+        </p>
+        <div class="row row-cards">
+            <div class="col-6 col-sm-3">
+                <div class="card card-sm h-100">
+                    <div class="card-body">
+                        <div class="subheader">{{ $summary['benchmark']['net_target_percent'] }}% target</div>
+                        <div class="h3 mb-0 mt-1 ark-money">{{ $summary['benchmark']['net_target_label'] }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-3">
+                <div class="card card-sm h-100">
+                    <div class="card-body">
+                        <div class="subheader">Est. net after reserves</div>
+                        <div class="h3 mb-0 mt-1 ark-money">{{ $summary['benchmark']['estimated_net_label'] ?? 'Configure fixed costs' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-3">
+                <div class="card card-sm h-100">
+                    <div class="card-body">
+                        <div class="subheader">Gap to target</div>
+                        <div class="h3 mb-0 mt-1 ark-money {{ $toneText($summary['benchmark']['tone'] ?? null, '') }}">{{ $summary['benchmark']['gap_label'] ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-3">
+                <div class="card card-sm h-100">
+                    <div class="card-body">
+                        <div class="subheader">Posture</div>
+                        <div class="small fw-medium mt-1 {{ $toneText($summary['benchmark']['tone'] ?? null) }}">{{ $summary['benchmark']['posture'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+@endif
+
+<section class="card mb-3" data-report-section="tax-remittance">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Tax &amp; remittance posture</h3>
+            <div class="card-subtitle">Sales tax is from posted RO lines. Payroll and income lines are planning reserves - not filing amounts.</div>
         </div>
     </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col" class="text-end">Amount</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($summary['tax_lines'] as $row)
+                    <tr @class(['table-active' => str_starts_with($row['label'], 'Total tax')])>
+                        <td class="fw-bold">{{ $row['label'] }}</td>
+                        <td class="text-end fw-bold ark-money">{{ $row['amount'] }}</td>
+                        <td class="small">{{ $row['source'] }}</td>
+                        <td class="small text-secondary">{{ $row['note'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</section>
 
-    @if ($breakEvenSummary !== null)
-        <div class="rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            <span class="font-semibold text-slate-800">Break-even cross-check:</span>
-            posted GP {{ $breakEvenSummary['gross_profit_label'] }} vs prorated fixed {{ $breakEvenSummary['prorated_fixed_label'] }}
-            ({{ $breakEvenSummary['surplus_label'] }}).
-            <a href="{{ route('operations.reports.operational', ['from' => \App\Ark\Operations\Reports\OperationalReportDateScope::shopDateString($from), 'to' => \App\Ark\Operations\Reports\OperationalReportDateScope::shopDateString($to), 'tab' => 'margin-health']) }}" class="font-semibold text-slate-700 underline decoration-slate-300 hover:text-slate-950">Margin Health</a>
-            has the full margin rows.
-        </div>
-    @endif
-</div>
+@if ($breakEvenSummary !== null)
+    <div class="alert alert-info mb-0" data-report-section="break-even-cross-check">
+        <strong>Break-even cross-check:</strong>
+        posted GP {{ $breakEvenSummary['gross_profit_label'] }} vs prorated fixed {{ $breakEvenSummary['prorated_fixed_label'] }}
+        ({{ $breakEvenSummary['surplus_label'] }}).
+        <a href="{{ route('operations.reports.operational', ['from' => \App\Ark\Operations\Reports\OperationalReportDateScope::shopDateString($from), 'to' => \App\Ark\Operations\Reports\OperationalReportDateScope::shopDateString($to), 'tab' => 'margin-health']) }}">Margin Health</a>
+        has the full margin rows.
+    </div>
+@endif

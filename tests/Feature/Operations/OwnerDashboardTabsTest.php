@@ -67,7 +67,7 @@ test('scoreboard tab renders the existing scoreboard and the old url stays compa
         ->assertSee('Not authorized')
         ->assertSeeInOrder([
             '>Today</a>',
-            'ops-ro-workspace-tab--active',
+            'class="nav-link active"',
             '>Scoreboard</a>',
         ], false);
 
@@ -111,7 +111,7 @@ test('dashboard tabs follow existing scoreboard permissions', function () {
         ->assertDontSee('Dollar close')
         ->assertSeeInOrder([
             '>Today</a>',
-            'ops-ro-workspace-tab--active',
+            'class="nav-link active"',
             '>Scoreboard</a>',
         ], false);
 });

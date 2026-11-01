@@ -1,72 +1,66 @@
 @if (count($coachingRows) > 0)
-    <div class="border-b border-amber-200 bg-amber-50/50 px-3 py-3">
-        <div class="flex flex-wrap items-baseline justify-between gap-2">
+    <section class="card mb-3" data-call-intelligence-coaching-queue>
+        <div class="card-status-top bg-yellow"></div>
+        <div class="card-header">
             <div>
-                <h2 class="text-[11px] font-bold uppercase tracking-[0.08em] text-amber-900">Most needed coaching</h2>
-                <p class="mt-0.5 text-xs text-amber-950/80">Pinned follow-ups stay at top. Remaining slots ranked by coaching priority, empathy gaps, and missed upsells.</p>
+                <h3 class="card-title">Most needed coaching</h3>
+                <div class="card-subtitle">Pinned follow-ups stay at top. Remaining slots ranked by coaching priority, empathy gaps, and missed upsells.</div>
             </div>
-            <a
-                href="{{ route('operations.owner.call-intelligence', array_merge($filters, ['analysis' => 'coaching'])) }}"
-                class="text-[11px] font-bold text-amber-950 underline decoration-amber-300 hover:text-amber-900"
-            >View all coaching</a>
+            <div class="card-actions">
+                <a href="{{ route('operations.owner.call-intelligence', array_merge($filters, ['analysis' => 'coaching'])) }}">View all coaching</a>
+            </div>
         </div>
 
-        <ol class="mt-3 space-y-2">
+        <ol class="list-group list-group-flush">
             @foreach ($coachingRows as $index => $row)
-                <li class="rounded-sm border border-amber-200/80 bg-white px-3 py-2.5">
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="text-[11px] font-black tabular-nums text-amber-800">{{ $index + 1 }}.</span>
-                                <p class="text-sm font-black text-slate-950">
+                <li class="list-group-item">
+                    <div class="row g-2 align-items-start">
+                        <div class="col-12 col-md">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="fw-bold text-warning ark-money">{{ $index + 1 }}.</span>
+                                <span class="fw-bold">
                                     @if (($row['kind'] ?? 'call') === 'sms')
-                                        <span class="mr-1 rounded-sm bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-900">SMS</span>
+                                        <span class="badge bg-azure-lt me-1">SMS</span>
                                     @endif
                                     {{ $row['display_phone'] }}
                                     @if ($row['customer_name'])
-                                        <span class="font-semibold text-slate-600">· {{ $row['customer_name'] }}</span>
+                                        <span class="fw-normal text-secondary">· {{ $row['customer_name'] }}</span>
                                     @endif
-                                </p>
+                                </span>
                                 @if ($row['coaching_follow_up_pinned'])
-                                    <span class="rounded-sm bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-900">Pinned</span>
+                                    <span class="badge bg-indigo-lt">Pinned</span>
                                 @endif
                             </div>
-                            <p class="mt-1 text-[11px] text-slate-500">
+                            <div class="small text-secondary mt-1">
                                 {{ $row['started_at_label'] }}
                                 @if ($row['staff_name'])
                                     · {{ $row['staff_name'] }}
                                 @endif
                                 · {{ $row['direction_label'] }}
-                            </p>
+                            </div>
                             @include('operations.owner.partials.call-intelligence-signal-groups', [
                                 'row' => $row,
                                 'compact' => true,
                                 'showMeta' => false,
                             ])
                             @if ($row['coaching_headline'])
-                                <p class="mt-1.5 text-sm leading-5 text-slate-800">{{ $row['coaching_headline'] }}</p>
+                                <p class="mt-2 mb-0">{{ $row['coaching_headline'] }}</p>
                             @elseif ($row['summary'])
-                                <p class="mt-1.5 text-sm leading-5 text-slate-700">{{ $row['summary'] }}</p>
+                                <p class="text-secondary mt-2 mb-0">{{ $row['summary'] }}</p>
                             @endif
                         </div>
-                        <div class="flex shrink-0 flex-wrap items-center gap-2">
-                            @include('operations.owner.partials.call-intelligence-follow-up-pin', ['row' => $row])
-                            @if ($row['coaching_pdf_url'])
-                                <a
-                                    href="{{ $row['coaching_pdf_url'] }}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="shrink-0 rounded-sm border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:border-slate-400"
-                                >Handout</a>
-                            @endif
-                            <a
-                                href="{{ $row['show_url'] }}?{{ http_build_query($filters) }}"
-                                class="shrink-0 rounded-sm border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-slate-800"
-                            >{{ $row['open_label'] ?? 'Open call' }}</a>
+                        <div class="col-12 col-md-auto">
+                            <div class="btn-list">
+                                @include('operations.owner.partials.call-intelligence-follow-up-pin', ['row' => $row])
+                                @if ($row['coaching_pdf_url'])
+                                    <a href="{{ $row['coaching_pdf_url'] }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm">Handout</a>
+                                @endif
+                                <a href="{{ $row['show_url'] }}?{{ http_build_query($filters) }}" class="btn btn-sm btn-primary">{{ $row['open_label'] ?? 'Open call' }}</a>
+                            </div>
                         </div>
                     </div>
                 </li>
             @endforeach
         </ol>
-    </div>
+    </section>
 @endif

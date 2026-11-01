@@ -1,3 +1,6 @@
+@if (($ui ?? 'legacy') === 'tabler')
+    @include('operations.scoreboard.partials.board-tabler')
+@else
 @php
     $visibleKpi = function (array $kpi) use ($access): bool {
         return $kpi['financial'] ? $access['financial'] : $access['operational'];
@@ -247,3 +250,4 @@
         </section>
     @endif
 </div>
+@endif

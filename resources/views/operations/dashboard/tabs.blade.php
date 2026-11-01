@@ -13,18 +13,10 @@
     }
 @endphp
 
-@if (count($dashboardTabs) > 1 && ($ui ?? 'legacy') === 'tabler')
+@if (count($dashboardTabs) > 1)
     <nav class="nav nav-pills mb-3" role="tablist" aria-label="Dashboard">
         @foreach ($dashboardTabs as $tab)
             <a href="{{ $tab['url'] }}" role="tab" @class(['nav-link', 'active' => $dashboardTab === $tab['key']]) aria-selected="{{ $dashboardTab === $tab['key'] ? 'true' : 'false' }}"@if ($dashboardTab === $tab['key']) aria-current="page"@endif>{{ $tab['label'] }}</a>
         @endforeach
     </nav>
-@elseif (count($dashboardTabs) > 1)
-    <div class="ops-ro-workspace-tabs min-w-0 max-w-full">
-        <nav class="ops-ro-workspace-tabs__nav" role="tablist" aria-label="Dashboard">
-            @foreach ($dashboardTabs as $tab)
-                <a href="{{ $tab['url'] }}" role="tab" class="ops-ro-workspace-tab{{ $dashboardTab === $tab['key'] ? ' ops-ro-workspace-tab--active' : '' }}" aria-selected="{{ $dashboardTab === $tab['key'] ? 'true' : 'false' }}"@if ($dashboardTab === $tab['key']) aria-current="page"@endif>{{ $tab['label'] }}</a>
-            @endforeach
-        </nav>
-    </div>
 @endif
