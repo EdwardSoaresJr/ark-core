@@ -113,16 +113,13 @@
         </form>
     </div>
 
-    {{-- The document panel is the shared legacy add-document-panel, unchanged; documents stay with their workstream. --}}
     <div data-workspace-modal-panel x-show="task === 'hub-document'" x-cloak>
-        <div class="ark-legacy bg-white text-dark">
-            @include('operations.documents.partials.add-document-panel', [
-                'customer' => $customer,
-                'storeUrl' => route('operations.customers.documents.store', $customer),
-                'scanUrl' => route('operations.customers.documents.scan', $customer),
-                'customerRepairOrders' => $customer->repairOrders ?? collect(),
-                'repairOrder' => null,
-            ])
-        </div>
+        @include('operations.documents.partials.add-document-panel-tabler', [
+            'customer' => $customer,
+            'storeUrl' => route('operations.customers.documents.store', $customer),
+            'scanUrl' => route('operations.customers.documents.scan', $customer),
+            'customerRepairOrders' => $customer->repairOrders ?? collect(),
+            'repairOrder' => null,
+        ])
     </div>
 </x-tabler.workspace-modal>
