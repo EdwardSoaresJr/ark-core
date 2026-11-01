@@ -194,11 +194,11 @@ Migrated to Tabler:
 
 Unchanged: the controller, routes, permissions, tab and deep-link parameters (`tab`, `vehicle`, `compose`, `doc_q`, `doc_type`, the `#customer-*` and `#vehicle-*` anchors), form field names, and the Alpine state in `ark-customer-hub-tabs.js` and `ark-customer-hub-comms.js`.
 
-Still on `app.css`, in `.ark-legacy`: the workspace modal and its customer, vehicle, and document forms (`hub-workspace-modal`), the conversation context and advisor work panels on the Work tab, the reply composer and message rows on the Comms tab, the document list, the operational journey card, and the VIN display. All are shared with unmigrated views.
+Still on `app.css`, in `.ark-legacy`: the workspace modal and its customer, vehicle, and document forms (`hub-workspace-modal`), the conversation context panel on the Work tab, the reply composer and message rows on the Comms tab, the document list, the operational journey card, and the VIN display. All are shared with unmigrated views.
 
 Known visual limitations, both from the legacy components:
 
-- In the dark theme the Work and Comms tab panels and the workspace modal stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
+- In the dark theme the Work tab's conversation context panel, the Comms tab panels, and the workspace modal stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
 - The VIN display's muted prefix (all but the highlighted last eight characters) uses slate-700, which has low contrast on a dark card. It is the same on legacy pages in dark mode (slate-700 on slate-800).
 
 ### Repair orders index (`operations.repair-orders.index`)
@@ -345,3 +345,13 @@ Constraints:
 - Bootstrap's `d-*` display utilities are `!important` and override Alpine's `x-show`. An element with `x-show` must not carry one. Put the flex layout on a wrapper inside it.
 - The reader picker keeps a transparent native `select` over a display that adds the device id line.
 - `ark-deposit-breakdown.js` finds the dialog by `data-deposit-breakdown-dialog` and focuses `data-ops-deposit-breakdown-close`. It marks an excluded line with `opacity-50`.
+
+### Advisor follow-ups and tasks (`operations.repair-orders.show`, `operations.customers.show`)
+
+`operations.work.partials.advisor-work-context-panel` lists the open follow-ups and shop tasks for a repair order (bottom of the rail) and for a customer (hub Work tab). It is Tabler on both pages and no longer sits in an island.
+
+- The partial renders flush sections, a `subheader` and a `list-group-flush` for each list, with no frame of its own. The repair order wraps it in a `card` in the rail. The hub puts it under a `border-top` inside the tab card.
+- Each row keeps its Done form: `PATCH` to `operations.work.follow-ups.complete` or `operations.work.tasks.complete` with the `redirect` back to the page.
+- Follow-ups use `text-purple` and tasks use `text-green`, matching the violet and emerald of the work surface. The legacy left accent is not reproduced, because the legacy preflight turns a single-side Tabler border into a full box.
+
+The operational journey card above it stays legacy. Both controllers pass `operationalJourney => null` and no class supplies a journey, so it never renders. The rail includes its island only when a journey is present.

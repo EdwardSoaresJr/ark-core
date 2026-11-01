@@ -332,6 +332,50 @@ test('advisor can complete follow up from repair order workspace', function () {
     expect($followUp->fresh()->completed_at)->not->toBeNull();
 });
 
+test('repair order and customer hub show open follow ups and tasks in a tabler panel with their done forms', function () {
+    $ben = actingAsLearnCurrentAdvisor();
+    $repairOrder = decisionPressureRepairOrder(
+        firstName: 'Maricruz',
+        lastName: 'Lopez',
+        status: \App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval,
+        lineCents: 900_600,
+    );
+    $followUp = AdvisorFollowUp::query()->create([
+        'created_by_user_id' => $ben->id,
+        'repair_order_id' => $repairOrder->id,
+        'customer_id' => $repairOrder->customer_id,
+        'notes' => 'Call Maricruz Friday',
+        'due_at' => now()->addDay(),
+    ]);
+    $task = AdvisorTask::query()->create([
+        'created_by_user_id' => $ben->id,
+        'repair_order_id' => $repairOrder->id,
+        'customer_id' => $repairOrder->customer_id,
+        'notes' => 'Order loaner paperwork',
+        'due_at' => now()->addDay(),
+    ]);
+
+    foreach ([
+        route('operations.repair-orders.show', $repairOrder),
+        route('operations.customers.show', $repairOrder->customer_id).'?tab=work',
+    ] as $url) {
+        $document = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $document->loadHTML($this->actingAs($ben)->get($url)->assertOk()->getContent());
+        libxml_clear_errors();
+        $xpath = new DOMXPath($document);
+        $panel = $xpath->query('//*[@data-advisor-work-context]')->item(0);
+
+        expect($panel)->toBeInstanceOf(DOMElement::class)
+            ->and($xpath->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]', $panel)->length)->toBe(0)
+            ->and($panel->textContent)->toContain('Call Maricruz Friday')
+            ->and($panel->textContent)->toContain('Order loaner paperwork')
+            ->and($panel->textContent)->toContain('Assigned to '.$ben->name)
+            ->and($xpath->query('.//form[@action="'.route('operations.work.follow-ups.complete', $followUp).'"]//input[@name="redirect"]', $panel)->length)->toBe(1)
+            ->and($xpath->query('.//form[@action="'.route('operations.work.tasks.complete', $task).'"]//button[normalize-space()="Done"]', $panel)->length)->toBe(1);
+    }
+});
+
 test('appointment routes stay hidden until appointments surface is enabled', function () {
     ShopSettings::current()->update(['appointments_enabled' => false]);
 
