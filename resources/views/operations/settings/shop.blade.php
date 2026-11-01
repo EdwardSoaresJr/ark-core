@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations', 'staff'];
         @endphp
 
         <div class="row g-3">
@@ -1493,6 +1493,19 @@
                     </div>
                 </section>
 
+                @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
+                    <section class="card" x-show="active === 'staff'" x-cloak data-settings-section="staff">
+                        <div class="card-header">
+                            <div>
+                                <div class="subheader">Staff Access</div>
+                                <h2 class="card-title">Team logins and roles</h2>
+                                <div class="card-subtitle">Add name, email, and roles - ARK emails a secure setup link so they choose their own password. Select every hat someone wears: admin, advisor, and/or technician.</div>
+                            </div>
+                        </div>
+                        @include('operations.settings.partials.staff')
+                    </section>
+                @endcan
+
                 <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
                 @include('operations.settings.partials.square-payments-settings', [
@@ -1519,10 +1532,6 @@
                 @endunless
 
                 @include('operations.settings.partials.shop-excellence-targets')
-
-                @can(App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value)
-                    @include('operations.settings.partials.staff')
-                @endcan
 
                 @include('operations.settings.partials.runtime-health', [
                     'telephonyHealth' => $telephonyHealth,

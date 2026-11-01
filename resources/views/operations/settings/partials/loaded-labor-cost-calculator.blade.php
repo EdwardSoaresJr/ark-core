@@ -17,6 +17,7 @@
     if ($resolvedFloorRate === null || $resolvedFloorRate === '') {
         $resolvedFloorRate = $seedFloorSuggestion ? TechnicianFloorWageSuggestion::formattedDollars() : '';
     }
+    $calculatorField = 'loaded-labor-'.($targetInputId ?? 'calculator');
 @endphp
 
 <div
@@ -31,141 +32,168 @@
         burdenPercent: {{ \App\Ark\Operations\Labor\LoadedLaborCostCalculator::DEFAULT_BURDEN_PERCENT }},
         billableUtilization: {{ \App\Ark\Operations\Labor\LoadedLaborCostCalculator::DEFAULT_BILLABLE_UTILIZATION_PERCENT }},
     })"
-    class="mt-2 border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-700"
+    class="card card-sm mt-3"
+    data-loaded-labor-calculator
 >
-    <div class="flex items-start justify-between gap-3">
-        <div>
-            <p class="font-bold uppercase tracking-[0.08em] text-slate-500">Estimated labor cost</p>
-            <p class="mt-0.5 text-[11px] leading-4 text-slate-500">
-                Margin planning only - not a paycheck.
-                Output is cost per <strong class="font-semibold text-slate-700">billed</strong> hour for labor GP and efficiency.
-                <span x-show="isHourlyPay()">Hourly: spread clock wage across billable utilization, then add shop overhead.</span>
-                <span x-show="isFlagPay()" x-cloak>Flag: take the higher of flag rate and floor ÷ utilization, then burden and overhead.</span>
-            </p>
-        </div>
-        <p class="shrink-0 text-right">
-            <span class="block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400">Est. cost / billed hr</span>
-            <span class="text-lg font-black tabular-nums text-slate-950" x-text="formattedResult()"></span>
-        </p>
-    </div>
-
-    <div class="mt-3 grid gap-3 sm:grid-cols-2">
-        <label class="block sm:col-span-2">
-            <span class="font-semibold text-slate-700">Pay type</span>
-            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">How this technician is paid. Estimated labor cost is for margin - not payroll settlement.</span>
-            {{-- Hidden field owns form submit; Alpine radios often fail to post with x-model alone. --}}
-            <input type="hidden" name="labor_pay_basis" :value="payBasis">
-            <div class="mt-1.5 flex flex-wrap gap-4">
-                @foreach (\App\Ark\Operations\Labor\TechnicianLaborPayBasis::cases() as $basis)
-                    <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <input
-                            type="radio"
-                            value="{{ $basis->value }}"
-                            x-model="payBasis"
-                            class="rounded-full border-slate-300 text-slate-950 focus:ring-slate-400"
-                        >
-                        {{ $basis->label() }}
-                    </label>
-                @endforeach
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+            <div style="max-width: 36rem">
+                <div class="subheader">Estimated labor cost</div>
+                <p class="small text-secondary mb-0">
+                    Margin planning only - not a paycheck.
+                    Output is cost per <strong>billed</strong> hour for labor GP and efficiency.
+                    <span x-show="isHourlyPay()">Hourly: spread clock wage across billable utilization, then add shop overhead.</span>
+                    <span x-show="isFlagPay()" x-cloak>Flag: take the higher of flag rate and floor ÷ utilization, then burden and overhead.</span>
+                </p>
             </div>
-        </label>
+            <div class="text-end">
+                <div class="subheader">Est. cost / billed hr</div>
+                <div class="h2 mb-0 font-monospace" x-text="formattedResult()" data-loaded-labor-result></div>
+            </div>
+        </div>
 
-        <template x-if="isFlagPay()">
-            <div class="sm:col-span-2 grid gap-3 sm:grid-cols-2">
-                <label class="block">
-                    <span class="font-semibold text-slate-700">Flag rate</span>
-                    <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">What the technician earns for completed flagged production.</span>
-                    <input name="flag_rate" x-model="flagRate" type="number" min="0" step="0.01" placeholder="30.00" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
-                </label>
-                <label class="block">
-                    <span class="font-semibold text-slate-700">Hourly floor</span>
-                    <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">The hourly amount the technician is guaranteed for time worked when flag pay does not cover it.</span>
-                    <input name="floor_rate" x-model="floorRate" type="number" min="0" step="0.01" placeholder="{{ TechnicianFloorWageSuggestion::formattedDollars() }}" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
-                </label>
-                <div x-show="floorNeedsReview()" x-cloak class="sm:col-span-2 border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-950">
-                    <p class="font-bold uppercase tracking-[0.06em] text-amber-800">Hourly floor may need review</p>
-                    <p class="mt-1 tabular-nums">
-                        Stored: $<span x-text="Number(floorRate).toFixed(2)"></span>
-                        · Current shop suggestion: $<span x-text="Number(floorSuggestion).toFixed(2)"></span>
-                    </p>
-                    <p class="mt-1 text-amber-800/90" x-text="floorSuggestionLabel"></p>
+        <div class="row g-3 mt-1">
+            <fieldset class="col-12">
+                <legend class="form-label mb-1">Pay type</legend>
+                <div class="small text-secondary mb-2">How this technician is paid. Estimated labor cost is for margin - not payroll settlement.</div>
+                {{-- Hidden field owns form submit; Alpine radios often fail to post with x-model alone. --}}
+                <input type="hidden" name="labor_pay_basis" :value="payBasis">
+                <div>
+                    @foreach (\App\Ark\Operations\Labor\TechnicianLaborPayBasis::cases() as $basis)
+                        <label class="form-check form-check-inline">
+                            <input
+                                type="radio"
+                                value="{{ $basis->value }}"
+                                x-model="payBasis"
+                                class="form-check-input"
+                            >
+                            <span class="form-check-label">{{ $basis->label() }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </fieldset>
+
+            <template x-if="isFlagPay()">
+                <div class="col-12">
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label for="{{ $calculatorField }}-flag-rate" class="form-label">Flag rate</label>
+                            <input id="{{ $calculatorField }}-flag-rate" name="flag_rate" x-model="flagRate" type="number" min="0" step="0.01" placeholder="30.00" class="form-control">
+                            <div class="form-hint">What the technician earns for completed flagged production.</div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label for="{{ $calculatorField }}-floor-rate" class="form-label">Hourly floor</label>
+                            <input id="{{ $calculatorField }}-floor-rate" name="floor_rate" x-model="floorRate" type="number" min="0" step="0.01" placeholder="{{ TechnicianFloorWageSuggestion::formattedDollars() }}" class="form-control">
+                            <div class="form-hint">The hourly amount the technician is guaranteed for time worked when flag pay does not cover it.</div>
+                        </div>
+                        <div x-show="floorNeedsReview()" x-cloak class="col-12">
+                            <div class="alert alert-warning small mb-0" role="status">
+                                <div class="fw-bold">Hourly floor may need review</div>
+                                <div class="font-monospace">
+                                    Stored: $<span x-text="Number(floorRate).toFixed(2)"></span>
+                                    · Current shop suggestion: $<span x-text="Number(floorSuggestion).toFixed(2)"></span>
+                                </div>
+                                <div x-text="floorSuggestionLabel"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <div class="col-12 col-sm-6" x-show="isHourlyPay()">
+                <label for="{{ $calculatorField }}-base-wage" class="form-label" x-text="basePayLabel()"></label>
+                <input id="{{ $calculatorField }}-base-wage" x-model="baseWage" type="number" min="0" step="0.01" placeholder="30.00" class="form-control">
+                <div class="form-hint" x-text="basePayHint()"></div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <div class="d-flex align-items-center gap-1 mb-2">
+                    <label for="{{ $calculatorField }}-burden" class="form-label mb-0">Burden %</label>
+                    <x-tabler.help-tip
+                        text="Employer cost on top of wage: payroll tax, benefits, workers comp, retirement match. Most shops land around 25–35%; default is 28%."
+                        label="Burden help"
+                    />
+                </div>
+                <input id="{{ $calculatorField }}-burden" x-model="burdenPercent" type="number" min="0" step="0.1" class="form-control">
+            </div>
+            <div class="col-12 col-sm-6">
+                <div class="d-flex align-items-center gap-1 mb-2">
+                    <label for="{{ $calculatorField }}-overhead" class="form-label mb-0">Overhead / billed hr</label>
+                    <x-tabler.help-tip
+                        text="Shop cost per billed hour from Settings → Shop Overhead. Prefills automatically when set."
+                        label="Overhead per billed hour help"
+                    />
+                </div>
+                <input id="{{ $calculatorField }}-overhead" x-model="overheadPerHour" type="number" min="0" step="0.01" placeholder="5.00" class="form-control">
+            </div>
+            <div class="col-12 col-sm-6" x-show="isHourlyPay() || isFlagPay()">
+                <label for="{{ $calculatorField }}-utilization" class="form-label">Billable utilization %</label>
+                <input id="{{ $calculatorField }}-utilization" x-model="billableUtilization" type="number" min="1" max="100" step="1" class="form-control">
+                <div class="form-hint">
+                    <span x-show="isHourlyPay()">How much paid clock time becomes billable hours. Non-billable time includes cleanup, comebacks, training, and shop tasks. 85% on an {{ number_format((float) $workdayHours, 1) }}-hr day ≈ {{ number_format((float) $workdayHours * 0.85, 1) }} billable hrs.</span>
+                    <span x-show="isFlagPay()" x-cloak>Assumed flagged/billed hours ÷ compensable hours. Used only to estimate what the hourly floor costs per produced hour - not a pay rate.</span>
                 </div>
             </div>
-        </template>
+        </div>
 
-        <label class="block" x-show="isHourlyPay()">
-            <span class="font-semibold text-slate-700" x-text="basePayLabel()"></span>
-            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500" x-text="basePayHint()"></span>
-            <input x-model="baseWage" type="number" min="0" step="0.01" placeholder="30.00" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
-        </label>
-        <label class="block">
-            <span class="font-semibold text-slate-700">Burden %</span>
-            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">Employer cost on top of wage: payroll tax, benefits, workers comp, retirement match. Most shops land around 25–35%; default is 28%.</span>
-            <input x-model="burdenPercent" type="number" min="0" step="0.1" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
-        </label>
-        <label class="block">
-            <span class="font-semibold text-slate-700">Overhead / billed hr</span>
-            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">Shop cost per billed hour from <strong class="font-semibold text-slate-700">Settings → Shop Overhead</strong>. Prefills automatically when set.</span>
-            <input x-model="overheadPerHour" type="number" min="0" step="0.01" placeholder="5.00" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
-        </label>
-        <label class="block" x-show="isHourlyPay() || isFlagPay()">
-            <span class="font-semibold text-slate-700">Billable utilization %</span>
-            <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">
-                <span x-show="isHourlyPay()">How much paid clock time becomes billable hours. Non-billable time includes cleanup, comebacks, training, and shop tasks. 85% on an {{ number_format((float) $workdayHours, 1) }}-hr day ≈ {{ number_format((float) $workdayHours * 0.85, 1) }} billable hrs.</span>
-                <span x-show="isFlagPay()" x-cloak>Assumed flagged/billed hours ÷ compensable hours. Used only to estimate what the hourly floor costs per produced hour - not a pay rate.</span>
-            </span>
-            <input x-model="billableUtilization" type="number" min="1" max="100" step="1" class="mt-1.5 w-full rounded-sm border border-slate-300 px-2 py-1.5 text-sm text-slate-950">
-        </label>
-    </div>
-
-    <div x-show="calculationBreakdown()" x-cloak class="mt-3 space-y-1 border-t border-slate-200 pt-3 text-[11px] leading-4 text-slate-600">
-        <p class="font-bold uppercase tracking-[0.08em] text-slate-400">How this adds up</p>
-        <template x-if="calculationBreakdown()">
-            <div class="space-y-0.5 tabular-nums">
-                <p x-show="calculationBreakdown().showsFloorEquivalent">
-                    <span class="text-slate-500">Floor-equivalent production cost</span>
-                    <span class="float-right font-semibold text-slate-800" x-text="`${money(calculationBreakdown().floorEquivalent)}/billed hr`"></span>
-                    <span class="block text-slate-400" x-text="`floor ÷ ${calculationBreakdown().utilization}% utilization - planning only`"></span>
-                </p>
-                <p x-show="isFlagPay()">
-                    <span class="text-slate-500">Effective wage cost</span>
-                    <span class="float-right font-semibold text-slate-800" x-text="`${money(calculationBreakdown().effectiveWage)}/billed hr`"></span>
-                    <span class="block text-slate-400">max(flag rate, floor-equivalent) - not a stored pay rate</span>
-                </p>
-                <p>
-                    <span class="text-slate-500">After burden</span>
-                    <span class="float-right font-semibold text-slate-800" x-text="`${money(calculationBreakdown().payrollLoaded)}/hr`"></span>
-                    <span class="block text-slate-400">effective × (1 + burden)</span>
-                </p>
-                <p x-show="calculationBreakdown().usesUtilization">
-                    <span class="text-slate-500">÷ utilization</span>
-                    <span class="float-right font-semibold text-slate-800" x-text="`${money(calculationBreakdown().afterUtilization)}/hr`"></span>
-                    <span class="block text-slate-400" x-text="`spread across ${calculationBreakdown().utilization}% billable time`"></span>
-                </p>
-                <p x-show="calculationBreakdown().overhead > 0">
-                    <span class="text-slate-500">+ overhead</span>
-                    <span class="float-right font-semibold text-slate-800" x-text="money(calculationBreakdown().overhead)"></span>
-                </p>
-                <p class="border-t border-slate-200 pt-1">
-                    <span class="font-semibold text-slate-700">Estimated labor cost / billed hr</span>
-                    <span class="float-right font-black text-slate-950" x-text="`${money(calculationBreakdown().total)}/hr`"></span>
-                </p>
-            </div>
-        </template>
+        <div x-show="calculationBreakdown()" x-cloak class="border-top pt-3 mt-3 small" data-loaded-labor-breakdown>
+            <div class="subheader mb-2">How this adds up</div>
+            <template x-if="calculationBreakdown()">
+                <div class="font-monospace">
+                    <div class="mb-1" x-show="calculationBreakdown().showsFloorEquivalent">
+                        <div class="d-flex justify-content-between gap-2">
+                            <span class="text-secondary">Floor-equivalent production cost</span>
+                            <span class="fw-medium" x-text="`${money(calculationBreakdown().floorEquivalent)}/billed hr`"></span>
+                        </div>
+                        <div class="text-secondary" x-text="`floor ÷ ${calculationBreakdown().utilization}% utilization - planning only`"></div>
+                    </div>
+                    <div class="mb-1" x-show="isFlagPay()">
+                        <div class="d-flex justify-content-between gap-2">
+                            <span class="text-secondary">Effective wage cost</span>
+                            <span class="fw-medium" x-text="`${money(calculationBreakdown().effectiveWage)}/billed hr`"></span>
+                        </div>
+                        <div class="text-secondary">max(flag rate, floor-equivalent) - not a stored pay rate</div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="d-flex justify-content-between gap-2">
+                            <span class="text-secondary">After burden</span>
+                            <span class="fw-medium" x-text="`${money(calculationBreakdown().payrollLoaded)}/hr`"></span>
+                        </div>
+                        <div class="text-secondary">effective × (1 + burden)</div>
+                    </div>
+                    <div class="mb-1" x-show="calculationBreakdown().usesUtilization">
+                        <div class="d-flex justify-content-between gap-2">
+                            <span class="text-secondary">÷ utilization</span>
+                            <span class="fw-medium" x-text="`${money(calculationBreakdown().afterUtilization)}/hr`"></span>
+                        </div>
+                        <div class="text-secondary" x-text="`spread across ${calculationBreakdown().utilization}% billable time`"></div>
+                    </div>
+                    <div class="mb-1 d-flex justify-content-between gap-2" x-show="calculationBreakdown().overhead > 0">
+                        <span class="text-secondary">+ overhead</span>
+                        <span class="fw-medium" x-text="money(calculationBreakdown().overhead)"></span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-2 border-top pt-1">
+                        <span class="fw-medium">Estimated labor cost / billed hr</span>
+                        <span class="fw-bold" x-text="`${money(calculationBreakdown().total)}/hr`"></span>
+                    </div>
+                </div>
+            </template>
+        </div>
     </div>
 
     @if ($showApply && $targetInputId)
-        <div class="mt-3 flex items-center justify-end gap-3">
-            <p x-show="applied" x-cloak class="text-[11px] font-semibold text-emerald-700">Applied to estimated labor cost.</p>
-            <button
-                type="button"
-                class="ops-index-btn ops-index-btn--ghost disabled:cursor-not-allowed disabled:opacity-50"
-                @click.prevent="applyLoadedCost()"
-                :disabled="! canApply()"
-            >
-                Use estimated labor cost
-            </button>
+        <div class="card-footer">
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-3">
+                <span x-show="applied" x-cloak class="small text-success fw-medium" role="status">Applied to estimated labor cost.</span>
+                <button
+                    type="button"
+                    class="btn btn-sm"
+                    @click.prevent="applyLoadedCost()"
+                    :disabled="! canApply()"
+                >
+                    Use estimated labor cost
+                </button>
+            </div>
+            <div class="small text-secondary mt-2">Or just <strong>Save changes</strong> - if the calculator has a rate, ARK applies the estimated labor cost automatically.</div>
         </div>
-        <p class="mt-2 text-[11px] leading-4 text-slate-500">Or just <strong class="font-semibold text-slate-700">Save changes</strong> - if the calculator has a rate, ARK applies the estimated labor cost automatically.</p>
     @endif
 </div>
