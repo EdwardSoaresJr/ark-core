@@ -3,7 +3,7 @@
     $isAdvisorTriage = ! $isTechnicianBoard && isset($workboardWorkspace);
 @endphp
 
-<x-operations.app :title="$isTechnicianBoard ? 'Tech Operations' : 'Operations'">
+<x-operations.app title="Job Board">
     @if ($isAdvisorTriage)
         @include('operations.workboard.triage')
     @else

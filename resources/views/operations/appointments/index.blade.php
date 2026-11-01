@@ -102,28 +102,21 @@
             @endif
         </div>
 
-        {{-- The board, capacity rail, request controls, and appointment popovers stay legacy until a calendar engine is chosen. See TABLER.md. --}}
-        <div class="ark-legacy bg-white text-dark">
-            <section class="ops-index space-y-3">
-                @include('operations.appointments.partials.request-availability-day', [
-                    'w' => $w,
-                    'requestDayStatus' => $requestDayStatus ?? ['requestable' => false, 'weekly_enabled' => false, 'exception' => null],
-                ])
+        <div class="d-flex flex-column gap-3">
+            @include('operations.appointments.partials.request-availability-day', [
+                'w' => $w,
+                'requestDayStatus' => $requestDayStatus ?? ['requestable' => false, 'weekly_enabled' => false, 'exception' => null],
+            ])
 
-                <div class="ops-cal-layout">
-                    @include('operations.appointments.partials.capacity-rail', ['rail' => $w['capacity_rail']])
+            @include('operations.appointments.partials.capacity-rail', ['rail' => $w['capacity_rail']])
 
-                    <div class="ops-cal-board">
-                        @if ($boardView === 'month')
-                            @include('operations.appointments.partials.board-month', ['w' => $w, 'queryBase' => $queryBase])
-                        @elseif ($boardView === 'day')
-                            @include('operations.appointments.partials.board-day', ['w' => $w, 'pxPerMinute' => $pxPerMinute, 'gridHeight' => $gridHeight])
-                        @else
-                            @include('operations.appointments.partials.board-week', ['w' => $w, 'queryBase' => $queryBase])
-                        @endif
-                    </div>
-                </div>
-            </section>
+            @if ($boardView === 'month')
+                @include('operations.appointments.partials.board-month', ['w' => $w, 'queryBase' => $queryBase])
+            @elseif ($boardView === 'day')
+                @include('operations.appointments.partials.board-day', ['w' => $w, 'pxPerMinute' => $pxPerMinute, 'gridHeight' => $gridHeight])
+            @else
+                @include('operations.appointments.partials.board-week', ['w' => $w, 'queryBase' => $queryBase])
+            @endif
         </div>
     </x-tabler.page>
 </x-operations.app>

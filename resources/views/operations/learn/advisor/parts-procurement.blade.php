@@ -8,7 +8,7 @@
         role="advisor"
         article="parts-procurement"
         file="waiting-parts-lane.png"
-        alt="Workboard waiting parts lane with aging indicators"
+        alt="Job Board waiting parts lane with aging indicators"
         caption="Oldest waiting-parts jobs deserve first call - customer silence breeds bad reviews."
     />
 
@@ -34,6 +34,6 @@
 
     <h3>Related guides</h3>
     <p>Quoting: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'partstech-workflow']) }}">PartsTech catalog and quotes</a>.</p>
-    <p>Lane scan: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Workboard lanes</a>.</p>
+    <p>Lane scan: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Job Board lanes</a>.</p>
     <p>Line procurement fields update from the worksheet editor on each part line - status must match what is on the shelf or on order.</p>
 </div>

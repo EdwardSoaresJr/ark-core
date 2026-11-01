@@ -3,7 +3,7 @@
 @endphp
 
 <nav class="ops-ops-workspace__nav" aria-label="Operations queues">
-    <p class="ops-ops-workspace__nav-title">Workboard</p>
+    <p class="ops-ops-workspace__nav-title">Job Board</p>
 
     <p class="ops-ops-workspace__nav-section">Needs Attention</p>
     <ul class="ops-ops-workspace__nav-list">

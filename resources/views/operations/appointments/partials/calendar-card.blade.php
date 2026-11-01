@@ -15,42 +15,45 @@
 @endphp
 
 <article
-    class="ops-cal-card {{ $hasComms ? 'ops-cal-card--comms' : '' }}"
-    style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ number_format($leftPct, 4, '.', '') }}% + 0.15rem); width: calc({{ number_format($widthPct, 4, '.', '') }}% - 0.3rem); right: auto;"
-    :class="{ 'ops-cal-appt-event--open': openAppointmentId === {{ $appointmentId }} }"
+    class="ark-cal-card"
+    style="top: {{ $top }}px; height: {{ $height }}px; left: calc({{ number_format($leftPct, 4, '.', '') }}% + 0.15rem); width: calc({{ number_format($widthPct, 4, '.', '') }}% - 0.3rem);"
+    :class="{ 'is-open': openAppointmentId === {{ $appointmentId }} }"
+    data-schedule-card
 >
     <button
         type="button"
-        class="ops-cal-card__body"
+        class="ark-cal-card__body"
         @click.stop="toggle({{ $appointmentId }}, $event.currentTarget)"
         :aria-expanded="(openAppointmentId === {{ $appointmentId }}).toString()"
     >
-        @if (filled($card['repair_order_number'] ?? null))
-            <span class="ops-cal-card__ro">#{{ $card['repair_order_number'] }}</span>
-        @endif
-        <span class="ops-cal-card__customer">{{ $card['customer_name'] }}</span>
+        <span class="d-block text-truncate">
+            @if (filled($card['repair_order_number'] ?? null))
+                <span class="text-secondary">#{{ $card['repair_order_number'] }}</span>
+            @endif
+            <span class="fw-bold">{{ $card['customer_name'] }}</span>
+        </span>
         @if ($card['vehicle_label'])
-            <p class="ops-cal-card__vehicle">{{ $card['vehicle_label'] }}</p>
+            <span class="d-block text-truncate">{{ $card['vehicle_label'] }}</span>
         @endif
-        <p class="ops-cal-card__concern">{{ \Illuminate\Support\Str::limit($card['concern'], 48) }}</p>
-        <p class="ops-cal-card__meta">
-            <span>{{ $card['time_label'] }}–{{ $card['ends_label'] }}</span>
+        <span class="d-block text-truncate text-secondary">{{ \Illuminate\Support\Str::limit($card['concern'], 48) }}</span>
+        <span class="d-block text-truncate text-secondary">
+            {{ $card['time_label'] }}–{{ $card['ends_label'] }}
             @if ($card['estimated_labor_label'])
-                <span>· {{ $card['estimated_labor_label'] }} scheduled</span>
+                · {{ $card['estimated_labor_label'] }} scheduled
             @endif
             @if ($card['arrival_type_label'])
-                <span>· {{ $card['arrival_type_label'] }}</span>
+                · {{ $card['arrival_type_label'] }}
             @endif
-            <span>· {{ $card['status_label'] }}</span>
-        </p>
+            · {{ $card['status_label'] }}
+        </span>
     </button>
     @if ($hasComms)
-        <div class="ops-cal-card__comms" @click.stop>
+        <div class="ark-cal-card__comms btn-list" @click.stop data-schedule-card-comms>
             @if (! empty($card['call_url']))
-                <a href="{{ $card['call_url'] }}" class="ops-cal-card__comms-link">Call</a>
+                <a href="{{ $card['call_url'] }}" class="btn btn-sm px-2 py-0">Call</a>
             @endif
             @if (! empty($card['text_url']))
-                <a href="{{ $card['text_url'] }}" class="ops-cal-card__comms-link">Text</a>
+                <a href="{{ $card['text_url'] }}" class="btn btn-sm px-2 py-0">Text</a>
             @endif
         </div>
     @endif

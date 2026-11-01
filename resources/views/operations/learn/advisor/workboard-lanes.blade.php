@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>What the workboard is for</h3>
-    <p>The <a href="{{ route('operations.workboard') }}">Workboard</a> is the shop’s live pressure map - not a report, not a to-do list you manually maintain. Each lane groups repair orders by workflow posture so you can scan the floor in seconds.</p>
+    <p>The <a href="{{ route('operations.workboard') }}">Job Board</a> is the shop’s live pressure map - not a report, not a to-do list you manually maintain. Each lane groups repair orders by workflow posture so you can scan the floor in seconds.</p>
     <p><a href="{{ route('operations.index') }}">Work</a> shows customer decisions, follow-ups, and shop pressure counts; open the workboard when you need the full lane board. Return after every counter interruption for aging approvals, parts blockers, and unclaimed dispatch.</p>
     <p>If a job feels lost, search from <a href="{{ route('operations.repair-orders.index') }}">Repair Orders</a> - the workboard only shows active posture bands, not every historical RO.</p>
 
@@ -8,7 +8,7 @@
         role="advisor"
         article="workboard-lanes"
         file="workboard-lanes-overview.png"
-        alt="Workboard lanes with intake, approval, and in-progress columns"
+        alt="Job Board lanes with intake, approval, and in-progress columns"
         caption="Lanes read left-to-right as shop rhythm - estimate pressure on the left, execution on the right."
     />
 
@@ -29,7 +29,7 @@
         article="workboard-lanes"
         file="walkthrough.mp4"
         video-key="main"
-        title="Workboard scan - morning triage in under two minutes"
+        title="Job Board scan - morning triage in under two minutes"
         poster-file="poster.jpg"
     />
 

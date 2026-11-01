@@ -29,6 +29,10 @@ Each shell renders those arrays in its own markup: the legacy rail in `component
 
 `StaffNavigationTest` covers what each role sees, active routes, and that both shells render exactly the shared sections and account entries.
 
+The repair order board is "Job Board" for every role. Staff with operations access open the advisor board (`operations.index`); technicians and production-only staff open their lanes (`operations.workboard`, key `workboard`). The routes, keys, views, and permissions stay separate; only the label, page titles, and links read "Job Board".
+
+"Work Queues" (`work-queues`, staff with operations access) opens Tasks (`operations.work.queue`). Each queue page links to the other three (Tasks, Follow-Ups, Scheduled, Customer Decisions) with their counts. The `/app/work/queues/{queue}` URLs are unchanged, and `/app/work/queues/comms` still redirects to the inbox.
+
 ## Legacy components on a Tabler page
 
 These are not migrated yet and render inside `.ark-legacy`: channel strip (`lg` and up), workstation presence and station lock, workspace tabs, comms pressure bar, comms interrupt panel, global search, image lightbox, guide modal, call queue, print helpers, and the repair-order orientation dock.
@@ -159,7 +163,7 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 
 A page counts as complete only when nothing reachable on it is still legacy. Code that never renders does not hold a page back, but it is listed under Unreachable.
 
-**Complete (8):** on Tabler with no reachable legacy markup and no open corrections.
+**Complete (9):** on Tabler with no reachable legacy markup and no open corrections.
 
 - Customers (`operations.customers.search`)
 - Vehicles (`operations.vehicles.search`)
@@ -169,12 +173,12 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 - Schedule appointment (`operations.schedule`). The sidebar does not highlight Schedule on this page, because `StaffNavigation` matches only `operations.appointments.*`. That belongs to a shared navigation change, not a view slice.
 - Time clock (`operations.time-clock.index`)
 - Check In (`operations.intake.create`)
+- Schedule (`operations.appointments.index`)
 
-**Partial, actionable (4):** on Tabler, with legacy sections that can migrate now.
+**Partial, actionable (3):** on Tabler, with legacy sections that can migrate now.
 
 - **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
 - **Dashboard (`operations.today`):** technician lanes.
-- **Schedule (`operations.appointments.index`):** the calendar board.
 - **Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions):** the Customer Decisions lanes (`customer-decision-pressure-section` and its rows, which carry the quick-add and schedule panels driven by `ark-work-quick-add.js`).
 
 **Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
@@ -198,7 +202,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 - **Communications (8):** inbox, history, internal, and calls (navigation); shop communications index, device, and person (navigation); shop communications setup required (internal).
 - **Owner and reports (10):** business (Cockpit), reports index, operational report, day review, technician production index and detail, and the Scoreboard tab (navigation); call intelligence index and detail, and staff coaching (internal).
 - **Learning (3):** ARKademy, print selection, and team progress (navigation).
-- **Daily operations (4):** Workboard (`operations.workboard`), which is the technician home because technicians get 403 on `/app` (navigation); new contact (`operations.leads.create-contact`), caller lookup, and observations (internal).
+- **Daily operations (4):** the technicians' Job Board (`operations.workboard`), their home because technicians get 403 on `/app` (navigation); new contact (`operations.leads.create-contact`), caller lookup, and observations (internal).
 - **Account and system (5):** profile and the staff time clock history (`operations.time-clock.staff`) (navigation); ARK Cloud connecting, Platform clusters, and the 409 error page (internal). The staff history page corrects and deletes compensable hours, so it migrates on its own.
 
 **Deferred (9):** live pages waiting for a decision or another workstream.
@@ -213,7 +217,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 - The briefing view: its route redirects, and its controller is not routed.
 - The conversation reply view: its route goes to a redirect controller, and the reply controller is not routed.
 - The communications attention workspace view: nothing renders it.
-- Partials: the Comms work queue, `operations/partials/work-tab-queues`, `week-schedule-list`, the advisor triage branch of the workboard, and `operations.repair-orders.partials.operational-journey-card` on the customer hub and the repair order workspace. Both controllers always pass `operationalJourney` as `null`, so the card never renders. It stays legacy and in place.
+- Partials: `appointments/partials/capacity-bar` (no view includes it), the Comms work queue, `operations/partials/work-tab-queues`, `week-schedule-list`, the advisor triage branch of the workboard, and `operations.repair-orders.partials.operational-journey-card` on the customer hub and the repair order workspace. Both controllers always pass `operationalJourney` as `null`, so the card never renders. It stays legacy and in place.
 
 **Known issues across migrated pages:**
 
@@ -312,7 +316,16 @@ Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another 
 
 Migrated: the page header (the focus date or week as title, the appointment count as subtitle), the Day / Week / Month switch (the same `board-view` POST form, now a `btn-group`), Previous / Today / Next, the primary Schedule action, the status, warning, and error alerts, and the week allocation and lens chips as `nav-pills` with counts. Query parameters, the stored board preference, and every link are unchanged.
 
-Still legacy, in one `.ark-legacy bg-white text-dark` island: the appointment request controls, the capacity rail, the day, week, and month boards, and the appointment popover (`ark-schedule-appointment-popover.js`).
+The rest of the page followed in a second change, so no legacy markup remains:
+
+- **Appointment requests:** a `card-sm` with the day's status and the same three forms (disable with a reason, accept, clear override).
+- **Capacity:** a `card-sm` with scheduled, base, and target hours, the status line, warnings as an `alert`, and a Tabler `progress` bar per day, seven across from `lg`.
+- **Day board:** a time column and a lane per resource in a card. Each lane is at least 8rem per overlapping appointment column, so on phones the lanes scroll sideways with the times pinned instead of squeezing the cards. Empty slots still link to Schedule at that time; cards show Call and Text on hover or focus.
+- **Week board:** seven day columns from `lg`, a list of days below it, each with its count, appointments, and Schedule link. The technician and bay allocation is a resource grid that scrolls sideways, with the resource column pinned.
+- **Month board:** a seven-day grid; on phones a list of the month's days with their weekday. Load pressure tints the day, and "+N more" opens the day view.
+- **Popover:** a Tabler `card` with the same content, actions, and assignment form (`operations.appointments.assign` with its hidden context). `ark-schedule-appointment-popover.js` is unchanged apart from finding the panel by `[data-schedule-popover]`; it still opens one at a time, closes on outside click or Escape, and flips above near the bottom of the screen.
+
+The grids are layout primitives in `tabler.css` (`.ark-cal-*`) using Tabler variables, so they follow the theme. There is no drag and drop on the board, before or after. Unchanged: `AppointmentIndexController` and its workspace data, the routes, query parameters, stored board view, lenses, and every link and form.
 
 FullCalendar: Tabler 1.7.3 ships the FullCalendar 6.1.22 Standard bundle as a global script (`@tabler/core/dist/libs/fullcalendar/index.global.min.js`) and no `.fc` styles. ARK's boards are server-rendered, not a JavaScript calendar. The day board has a lane per bay and the week board allocates by technician or bay; those are resource views, which FullCalendar provides only in its separately licensed Scheduler, not the Standard bundle. Moving the boards to FullCalendar would also need a JSON event feed and a rewrite of the lenses, capacity rail, request controls, and popovers. That is a separate decision, not a presentation change.
 

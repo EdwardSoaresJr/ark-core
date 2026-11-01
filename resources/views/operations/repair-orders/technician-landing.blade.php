@@ -12,7 +12,7 @@
 
     <section class="mx-auto max-w-xl px-3 py-3 sm:px-4" data-technician-production-landing>
         <header class="mb-3">
-            <a href="{{ $landing['back_url'] }}" class="ops-page-link text-sm">← Workboard</a>
+            <a href="{{ $landing['back_url'] }}" class="ops-page-link text-sm">← Job Board</a>
             <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Work order</p>
             <h1 class="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">{{ $landing['vehicle_label'] }}</h1>
             <p class="mt-1 text-sm text-slate-600">

@@ -1,6 +1,6 @@
 <div class="ops-learn-prose">
     <h3>Lifecycle matches the bay</h3>
-    <p>Repair order lifecycle transitions tell the shop where the car is in real work - not where you wish it were. Workboard lanes read from this posture; wrong transition equals wrong customer promise.</p>
+    <p>Repair order lifecycle transitions tell the shop where the car is in real work - not where you wish it were. Job Board lanes read from this posture; wrong transition equals wrong customer promise.</p>
     <p>Change lifecycle from the RO workspace when facts change - approval received, parts arrived, vehicle on lift, ready for pickup. Batch “lane housekeeping” without bay truth creates chaos by noon.</p>
     <p>Route authority lives on <code>operations.repair-orders.lifecycle.update</code> - server validates allowed moves; UI reflects current state only.</p>
 
@@ -38,7 +38,7 @@
     />
 
     <h3>Related guides</h3>
-    <p>Workboard: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Workboard lanes</a>.</p>
+    <p>Job Board: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Job Board lanes</a>.</p>
     <p>Closeout: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'deposits-and-invoicing']) }}">Deposits, invoice, and closeout</a>.</p>
     <p>Authorization: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'customer-authorization']) }}">Customer authorization</a>.</p>
     <p>Owner end-of-day: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'bookend-walkthrough']) }}">Day Review walkthrough</a>.</p>

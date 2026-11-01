@@ -1,5 +1,5 @@
 <div class="ops-learn-prose">
-    <h3>Workboard lanes</h3>
+    <h3>Job Board lanes</h3>
     <p>Statuses roll up into lanes on the workboard. Your shop moves jobs forward as work is approved, parts arrive, and bays open.</p>
 
     <table class="ops-learn-table">

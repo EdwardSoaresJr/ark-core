@@ -66,7 +66,7 @@ test('month week and day share the canonical appointment popover surface', funct
 
     $session = [WorkstationPresence::SESSION_BIND_DISMISSED => true];
     $canonical = [
-        'ops-cal-month__popover',
+        'data-schedule-popover',
         'RO #1888',
         'Canonical Appt',
         '2020 Toyota Camry',
@@ -74,7 +74,7 @@ test('month week and day share the canonical appointment popover surface', funct
         'Open RO',
         'Edit appointment',
         'arkScheduleAppointmentPopover',
-        'ops-cal-appt-event--open',
+        "'is-open': openAppointmentId",
     ];
 
     $month = $this->actingAs($advisor)->withSession($session)
@@ -83,7 +83,7 @@ test('month week and day share the canonical appointment popover surface', funct
     foreach ($canonical as $needle) {
         $month->assertSee($needle, false);
     }
-    $month->assertDontSee('ops-cal-appt-assign', false);
+    $month->assertDontSee('data-schedule-assign', false);
 
     $weekDay = $this->actingAs($advisor)->withSession($session)
         ->get(route('operations.appointments.index', ['day' => '2026-09-15', 'view' => 'week']))
@@ -103,7 +103,7 @@ test('month week and day share the canonical appointment popover surface', funct
     foreach ($canonical as $needle) {
         $weekTech->assertSee($needle, false);
     }
-    $weekTech->assertSee('ops-cal-appt-assign', false)
+    $weekTech->assertSee('data-schedule-assign', false)
         ->assertSee('Save assignment', false)
         ->assertSee('Assignment', false);
 
@@ -138,3 +138,28 @@ test('week allocation still assigns through the canonical popover', function ():
 
     Carbon::setTestNow();
 });
+
+test('every schedule board view is Tabler markup with no legacy calendar classes', function (array $query, string $board): void {
+    Carbon::setTestNow(Carbon::parse('2026-09-15 08:00:00', 'America/Denver'));
+    $advisor = actingAsLearnCurrentAdvisor();
+    seedCanonicalAppointment($advisor);
+
+    $this->actingAs($advisor)
+        ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
+        ->get(route('operations.appointments.index', ['day' => '2026-09-15', ...$query]))
+        ->assertOk()
+        ->assertSee('data-schedule-board="'.$board.'"', false)
+        ->assertSee('data-schedule-capacity', false)
+        ->assertSee('data-schedule-request-availability', false)
+        ->assertSee('data-schedule-popover', false)
+        ->assertDontSee('ops-cal-', false)
+        ->assertDontSee('ops-board-shell', false)
+        ->assertDontSee('<div class="ark-legacy bg-white text-dark">', false);
+
+    Carbon::setTestNow();
+})->with([
+    'day' => [['view' => 'day'], 'day'],
+    'week' => [['view' => 'week'], 'week'],
+    'week by technician' => [['view' => 'week', 'allocate' => 'technician'], 'week-allocation'],
+    'month' => [['view' => 'month'], 'month'],
+]);

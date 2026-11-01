@@ -676,21 +676,21 @@ test('schedule board defaults to day and month shows the following week', functi
     $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-08-21']))
         ->assertOk()
-        ->assertSee('ops-cal-day', false)
+        ->assertSee('data-schedule-board="day"', false)
         ->assertSee('Hunter Owens', false)
         ->assertDontSee('Alexis Aldana', false);
 
     $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-08-21', 'view' => 'week']))
         ->assertOk()
-        ->assertSee('ops-cal-week--board', false)
+        ->assertSee('data-schedule-board="week"', false)
         ->assertSee('Hunter Owens', false)
         ->assertDontSee('Alexis Aldana', false);
 
     $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-08-21', 'view' => 'month']))
         ->assertOk()
-        ->assertSee('ops-cal-month', false)
+        ->assertSee('data-schedule-board="month"', false)
         ->assertSee('Alexis Aldana', false);
 
     $this->actingAs($advisor)
@@ -708,7 +708,7 @@ test('schedule board defaults to day and month shows the following week', functi
     $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-08-21']))
         ->assertOk()
-        ->assertSee('ops-cal-month', false)
+        ->assertSee('data-schedule-board="month"', false)
         ->assertSee('Alexis Aldana', false);
 
     Carbon::setTestNow();

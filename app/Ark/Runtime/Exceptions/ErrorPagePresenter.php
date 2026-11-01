@@ -85,7 +85,7 @@ class ErrorPagePresenter
 
         return match ($surface) {
             'operations' => [
-                'primary_label' => 'Return To Workboard',
+                'primary_label' => 'Return To Job Board',
                 'primary_url' => StaffFrontDoor::landingUrl($request->user()),
                 'secondary_label' => 'Go Back',
                 'secondary_url' => $fallbackSecondary,

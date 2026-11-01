@@ -19,6 +19,11 @@
             <path d="M3 4h6v5H3V4zM11 4h6v5h-6V4zM3 11h6v5H3v-5zM11 11h6v5h-6v-5z" stroke="currentColor" stroke-width="1.4" />
         </svg>
         @break
+    @case('work-queues')
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+            <path d="M3.5 5l1.25 1.25L7 4M3.5 10l1.25 1.25L7 9M3.5 15l1.25 1.25L7 14M9.5 5.5h7M9.5 10.5h7M9.5 15.5h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        @break
     @case('schedule')
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
             <rect x="3.5" y="4.5" width="13" height="12" rx="0.5" stroke="currentColor" stroke-width="1.4" />

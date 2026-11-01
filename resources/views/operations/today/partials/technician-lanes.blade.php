@@ -15,7 +15,7 @@
                     <p class="ops-today-cockpit__greeting">{{ $today->greeting }}</p>
                 </div>
                 <div class="ops-today-cockpit__tools">
-                    <a href="{{ route('operations.workboard') }}" class="ops-today-tool">Workboard</a>
+                    <a href="{{ route('operations.workboard') }}" class="ops-today-tool">Job Board</a>
                 </div>
             </div>
         </header>

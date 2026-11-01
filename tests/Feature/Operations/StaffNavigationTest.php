@@ -94,14 +94,14 @@ test('each role sees its destinations in order', function (callable $makeUser, a
 })->with([
     'admin' => [fn () => User::factory()->create()->assignRole(ArkRole::Admin->value), [
         '' => ['dashboard', 'time-clock'],
-        'Operations' => ['job-board', 'schedule', 'communications'],
+        'Operations' => ['job-board', 'work-queues', 'schedule', 'communications'],
         'Records' => ['repair-orders', 'vehicles', 'customers'],
         'Business' => ['cockpit', 'reports', 'day-review', 'tech-production'],
         'System' => ['learn', 'stations', 'settings'],
     ]],
     'advisor' => [fn () => User::factory()->create()->assignRole(ArkRole::Advisor->value), [
         '' => ['dashboard', 'time-clock'],
-        'Operations' => ['job-board', 'schedule', 'communications'],
+        'Operations' => ['job-board', 'work-queues', 'schedule', 'communications'],
         'Records' => ['repair-orders', 'vehicles', 'customers'],
         'Business' => ['cockpit', 'reports'],
         'System' => ['learn'],
@@ -146,7 +146,7 @@ test('schedule follows the appointments setting', function (): void {
     ShopSettings::current()->update(['appointments_enabled' => false]);
     ShopSettings::forgetCurrent();
 
-    expect(navigationKeys($advisor)['Operations'])->toBe(['job-board', 'communications']);
+    expect(navigationKeys($advisor)['Operations'])->toBe(['job-board', 'work-queues', 'communications']);
 });
 
 test('the destination for the current route is the only active one', function (string $url, string $activeKey): void {
@@ -166,6 +166,7 @@ test('the destination for the current route is the only active one', function (s
     'today' => [fn () => route('operations.today'), 'dashboard'],
     'workboard' => [fn () => route('operations.workboard'), 'job-board'],
     'appointment list' => [fn () => route('operations.appointments.index'), 'schedule'],
+    'work queue' => [fn () => route('operations.work.queue', 'decisions'), 'work-queues'],
     'repair order list' => [fn () => route('operations.repair-orders.index'), 'repair-orders'],
     'customer hub' => [fn () => route('operations.customers.show', 1), 'customers'],
     'vehicle search' => [fn () => route('operations.vehicles.search'), 'vehicles'],
@@ -225,7 +226,7 @@ test('every destination has a legacy rail icon', function (): void {
         ->flatMap(fn (ArkRole $role): array => array_merge(...array_values(navigationKeys(User::factory()->create()->assignRole($role->value)))))
         ->unique();
 
-    expect($keys)->toHaveCount(16);
+    expect($keys)->toHaveCount(17);
 
     foreach ($keys as $key) {
         expect(Blade::render('<x-operations.rail-icon :name="$name" />', ['name' => $key]))->toContain('<svg');
@@ -255,4 +256,25 @@ test('both account menus render the shared entries', function (): void {
             ->toContain('action="'.route('logout').'"')
             ->not->toContain('data-ark-workstation-switch');
     }
+});
+
+test('advisors and technicians see the repair order board under one name', function (): void {
+    $labels = function (User $user): array {
+        $found = [];
+        foreach (StaffNavigation::sections($user, request(), 'https://shop.test/attention') as $section) {
+            foreach ($section['items'] as $item) {
+                $found[$item['key']] = $item['label'];
+            }
+        }
+
+        return $found;
+    };
+
+    $advisor = $labels(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+    $technician = $labels(User::factory()->create()->assignRole(ArkRole::Technician->value));
+
+    expect($advisor['job-board'])->toBe('Job Board')
+        ->and($technician['workboard'])->toBe('Job Board')
+        ->and($technician)->not->toHaveKey('work-queues')
+        ->and($advisor['work-queues'])->toBe('Work Queues');
 });

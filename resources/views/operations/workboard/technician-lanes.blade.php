@@ -5,7 +5,7 @@
 @endphp
 
 <x-operations.queue-page-header
-    :title="$isTechnicianBoard ? 'Tech Operations' : 'Operations'"
+    title="Job Board"
     description="Repair order lifecycle pressure in the building."
     :count="$boardQueueCount"
     :show-back="false"

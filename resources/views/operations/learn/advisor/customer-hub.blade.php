@@ -34,6 +34,6 @@
 
     <h3>When to use hub vs RO</h3>
     <p>Hub for relationship questions - history, texting, second vehicle, “what’s the status on my other car?” RO workspace for building and selling the active estimate.</p>
-    <p>Morning triage starts at <a href="{{ route('operations.index') }}">Work</a>; open the <a href="{{ route('operations.workboard') }}">Workboard</a> when you need lane detail. Hub is where you go once you know the customer name.</p>
+    <p>Morning triage starts at <a href="{{ route('operations.index') }}">Work</a>; open the <a href="{{ route('operations.workboard') }}">Job Board</a> when you need lane detail. Hub is where you go once you know the customer name.</p>
     <p>Related: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'customer-search']) }}">Customer search</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'texting-customers']) }}">Texting customers</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'comms-queue']) }}">Comms Queue triage</a>.</p>
 </div>

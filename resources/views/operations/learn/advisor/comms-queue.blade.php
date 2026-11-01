@@ -3,7 +3,7 @@
     <p><a href="{{ route('operations.index') }}">Work</a> answers: <strong>what requires action today?</strong> Customer decisions and follow-ups first, communications recovery second, shop pressure last - not a message archive and not the live interrupt surface.</p>
     <p>Live interrupt handles right-now events - ringing calls and fresh inbound texts pop centered on screen with <strong>Reply</strong>, <strong>Mark Read</strong>, or call actions. Topbar <strong>Comms</strong> and the sticky pressure bar count what still needs a human; Work is where you clear the backlog.</p>
     <p>When <strong>Advisor comms accountability</strong> is enabled (Settings → Communications), ARK redirects you to Work until unread interrupts are handled - Reply, Mark Read, or Mark Handled counts as cleared. Reply destinations (hub compose or RO text rail) stay reachable while you respond.</p>
-    <p>Open Work first thing, then the <a href="{{ route('operations.workboard') }}">Workboard</a> when you need lane detail. Same customer may appear in both; Work tells you <em>respond or convert</em>, workboard tells you <em>move the job</em>.</p>
+    <p>Open Work first thing, then the <a href="{{ route('operations.workboard') }}">Job Board</a> when you need lane detail. Same customer may appear in both; Work tells you <em>respond or convert</em>, the Job Board tells you <em>move the job</em>.</p>
 
     <x-operations.learn.figure
         role="advisor"
@@ -40,5 +40,5 @@
     <p>Add follow-ups on Work when a customer asks you to call back Thursday - the system surfaces pressure, but you own the reminder.</p>
     <p>End of shift: glance at what will land in tomorrow’s Since Last Shift - open approvals and unanswered texts you deliberately deferred.</p>
     <p><strong>ARK Mobile:</strong> advisors on the lot can scan the same pressure in the app <strong>Attention</strong> tab - Customer Decision, Since Last Shift, Calls Waiting - without opening desktop Work. See <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ark-mobile-attention']) }}">ARK Mobile Attention</a>.</p>
-    <p>Related: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'texting-customers']) }}">Texting customers</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'incoming-calls-floor']) }}">Answering calls in ARK</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Workboard lanes</a>.</p>
+    <p>Related: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'texting-customers']) }}">Texting customers</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'incoming-calls-floor']) }}">Answering calls in ARK</a>, <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Job Board lanes</a>.</p>
 </div>

@@ -15,12 +15,12 @@ final class LearnArkAdvisorArticles
             [
                 'slug' => 'getting-started',
                 'title' => 'Advisor basics',
-                'summary' => 'Workboard rhythm, intake entry, and the RO lifecycle at a glance.',
+                'summary' => 'Job Board rhythm, intake entry, and the RO lifecycle at a glance.',
                 'view' => 'operations.learn.advisor.getting-started',
             ],
             [
                 'slug' => 'workboard-lanes',
-                'title' => 'Workboard lanes and triage',
+                'title' => 'Job Board lanes and triage',
                 'summary' => 'Read pressure bands, move jobs, and pace the counter.',
                 'view' => 'operations.learn.advisor.workboard-lanes',
             ],

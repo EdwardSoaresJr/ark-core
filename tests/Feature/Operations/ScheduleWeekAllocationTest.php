@@ -95,7 +95,7 @@ test('week technician allocation keeps unassigned visible and groups by technici
             'allocate' => 'technician',
         ]))
         ->assertOk()
-        ->assertSee('ops-cal-week-alloc', false)
+        ->assertSee('data-schedule-board="week-allocation"', false)
         ->assertSee('Unassigned', false)
         ->assertSee('Una Signed', false)
         ->assertSee($technician->name, false);
@@ -235,5 +235,5 @@ test('month day cells expose soft-capacity load cue while keeping three-card cap
         ->get(route('operations.appointments.index', ['day' => '2026-09-15', 'view' => 'month']))
         ->assertOk()
         ->assertSee('3 shown · +2 more', false)
-        ->assertSee('ops-cal-month__count', false);
+        ->assertSee('data-schedule-month-count', false);
 });
