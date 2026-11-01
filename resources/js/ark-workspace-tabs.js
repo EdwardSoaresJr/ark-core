@@ -19,6 +19,15 @@ import {
     pickAdjacentNeighborKey,
     pickOldestInactiveEvictionCandidate,
 } from './ark-workspace-tab-eviction';
+import {
+    classNames,
+    classTokens,
+    workspaceTabClassName,
+    workspaceTabIconClassName,
+    workspaceTabLabelClassName,
+    workspaceTabsUi,
+    workspaceTabTitleClassName,
+} from './ark-workspace-tabs-ui';
 
 const cfg = typeof window !== 'undefined' ? window.__ARK_WORKSPACE__ : null;
 
@@ -71,7 +80,7 @@ function workspaceKeepLockSvg(locked = false) {
         ? '<path d="M6.5 9.25V6.75a3.5 3.5 0 117 0v2.5" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/>'
         : '<path d="M6.5 9.25V6.75a3.5 3.5 0 017 0" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/>';
 
-    return `<svg class="ops-workspace-lock" viewBox="0 0 20 20" fill="none" aria-hidden="true">${shackle}${body}</svg>`;
+    return `<svg class="${ui.lockIcon}" viewBox="0 0 20 20" fill="none" aria-hidden="true">${shackle}${body}</svg>`;
 }
 
 /** @type {{ activeKey: string|null, tabs: object[] }} */
@@ -80,6 +89,7 @@ const state = {
     tabs: [],
 };
 
+let ui = workspaceTabsUi('legacy');
 let barEl = null;
 let draggingTabKey = null;
 let activityTimer = null;
@@ -87,6 +97,26 @@ let activityPollTimer = null;
 
 function contextStorageKey(key) {
     return CONTEXT_PREFIX + key;
+}
+
+function addClasses(el, classes) {
+    const tokens = classTokens(classes);
+    if (el && tokens.length) {
+        el.classList.add(...tokens);
+    }
+}
+
+function removeClasses(el, classes) {
+    const tokens = classTokens(classes);
+    if (el && tokens.length) {
+        el.classList.remove(...tokens);
+    }
+}
+
+function hasClasses(el, classes) {
+    const tokens = classTokens(classes);
+
+    return !!el && tokens.length > 0 && tokens.every((token) => el.classList.contains(token));
 }
 
 function isEnabled() {
@@ -389,7 +419,7 @@ function activitySignalMarkup(tab) {
 
     const dots = unread >= 2 ? '••' : '•';
 
-    return `<span class="ops-workspace-tab__signal" title="Something changed">${dots}</span>`;
+    return `<span class="${ui.signal}" title="Something changed">${dots}</span>`;
 }
 
 function normalizeRoute(route) {
@@ -1209,8 +1239,8 @@ function closeOverflowMenus() {
         return;
     }
 
-    barEl.querySelectorAll('.ops-workspace-tabs__overflow-menu.is-open').forEach((menu) => menu.classList.remove('is-open'));
-    barEl.querySelectorAll('.ops-workspace-tabs__overflow.is-open').forEach((btn) => btn.classList.remove('is-open'));
+    barEl.querySelectorAll('[data-workspace-tabs-overflow-menu]').forEach((menu) => removeClasses(menu, ui.overflowMenuOpen));
+    barEl.querySelectorAll('[data-workspace-tabs-overflow]').forEach((btn) => removeClasses(btn, ui.overflowOpen));
 }
 
 function toggleTabPin(key) {
@@ -1260,15 +1290,16 @@ function attachTabDragHandle(handle, tabKey) {
 
     handle.addEventListener('dragstart', (event) => {
         draggingTabKey = tabKey;
-        handle.closest('.ops-workspace-tab')?.classList.add('ops-workspace-tab--dragging');
+        addClasses(handle.closest('[data-workspace-tab]'), ui.tabDragging);
         event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/plain', tabKey);
     });
 
     handle.addEventListener('dragend', () => {
         draggingTabKey = null;
-        barEl?.querySelectorAll('.ops-workspace-tab--dragging, .ops-workspace-tab--drop-target').forEach((el) => {
-            el.classList.remove('ops-workspace-tab--dragging', 'ops-workspace-tab--drop-target');
+        barEl?.querySelectorAll('[data-workspace-tab]').forEach((el) => {
+            removeClasses(el, ui.tabDragging);
+            removeClasses(el, ui.tabDropTarget);
         });
     });
 }
@@ -1281,16 +1312,16 @@ function attachTabDropTarget(tabEl, tabKey) {
 
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
-        tabEl.classList.add('ops-workspace-tab--drop-target');
+        addClasses(tabEl, ui.tabDropTarget);
     });
 
     tabEl.addEventListener('dragleave', () => {
-        tabEl.classList.remove('ops-workspace-tab--drop-target');
+        removeClasses(tabEl, ui.tabDropTarget);
     });
 
     tabEl.addEventListener('drop', (event) => {
         event.preventDefault();
-        tabEl.classList.remove('ops-workspace-tab--drop-target');
+        removeClasses(tabEl, ui.tabDropTarget);
         const dragKey = event.dataTransfer.getData('text/plain') || draggingTabKey;
         reorderTabs(dragKey, tabKey);
     });
@@ -1303,17 +1334,19 @@ function createTabElement(tab) {
     const isDock = isDockedTabKey(tab.key);
     const isRepairOrder = isRepairOrderKey(tab.key);
     const tabEl = document.createElement('div');
-    tabEl.className = [
-        'ops-workspace-tab',
-        isActive ? 'ops-workspace-tab--active' : '',
-        isDock ? 'ops-workspace-tab--dock' : '',
-        isLeftDockKey(tab.key) ? 'ops-workspace-tab--dock-left' : '',
-        isRightDockKey(tab.key) ? 'ops-workspace-tab--dock-right' : '',
-        isIntakeKey(tab.key) ? 'ops-workspace-tab--intake' : '',
-        isRepairOrder ? 'ops-workspace-tab--repair-order' : '',
-        act.urgency ? `ops-workspace-tab--urgency-${act.urgency}` : '',
-        act.stale ? 'ops-workspace-tab--stale' : '',
-    ].filter(Boolean).join(' ');
+    tabEl.className = workspaceTabClassName(ui, {
+        active: isActive,
+        dockLeft: isLeftDockKey(tab.key),
+        dockRight: isRightDockKey(tab.key),
+        intake: isIntakeKey(tab.key),
+        repairOrder: isRepairOrder,
+        urgency: act.urgency,
+        stale: act.stale,
+    });
+    if (ui.tabWidth && !isDock) {
+        tabEl.style.width = ui.tabWidth;
+    }
+    tabEl.setAttribute('data-workspace-tab', '');
     tabEl.setAttribute('role', 'tab');
     tabEl.setAttribute('tabindex', isActive ? '0' : '-1');
     tabEl.setAttribute('data-workspace-key', tab.key);
@@ -1323,39 +1356,43 @@ function createTabElement(tab) {
 
     const customerName = String(tab.customerName || '').trim();
     const subtitle = String(tab.subtitle || '').trim();
-    let titleHtml = `<span class="ops-workspace-tab__title">${escapeHtml(tab.title)}</span>`;
+    const titleClass = workspaceTabTitleClassName(ui, { dock: isDock, stale: !!act.stale, active: isActive });
+    let titleHtml = `<span class="${titleClass}">${escapeHtml(tab.title)}</span>`;
     let subtitleHtml = '';
 
     if (!isDock && isRepairOrder) {
         const primary = customerName
             ? `${escapeHtml(tab.entityId)} · ${escapeHtml(customerName)}`
             : escapeHtml(String(tab.title || '').replace(/^RO\s*#/i, '').trim() || tab.entityId);
-        titleHtml = `<span class="ops-workspace-tab__title">${primary}</span>`;
+        titleHtml = `<span class="${titleClass}">${primary}</span>`;
         if (subtitle) {
-            subtitleHtml = `<span class="ops-workspace-tab__subtitle">${escapeHtml(subtitle)}</span>`;
+            subtitleHtml = `<span class="${ui.subtitle}">${escapeHtml(subtitle)}</span>`;
         }
     } else if (!isDock && subtitle) {
-        subtitleHtml = `<span class="ops-workspace-tab__subtitle">${escapeHtml(subtitle)}</span>`;
+        subtitleHtml = `<span class="${ui.subtitle}">${escapeHtml(subtitle)}</span>`;
     }
 
+    const entityType = tab.entityType || tab.type;
+    const labelClass = workspaceTabLabelClassName(ui, !isDock && (isRepairOrder || !!subtitleHtml));
+
     tabEl.innerHTML = `
-        ${isDock ? '' : `<span class="ops-workspace-tab__icon" data-entity-type="${escapeHtml(tab.entityType || tab.type)}" aria-hidden="true"></span>`}
-        <span class="ops-workspace-tab__label${!isDock && (isRepairOrder || subtitleHtml) ? ' ops-workspace-tab__label--stack' : ''}">
+        ${isDock ? '' : `<span class="${workspaceTabIconClassName(ui, entityType, isActive)}" data-entity-type="${escapeHtml(entityType)}" aria-hidden="true"></span>`}
+        <span class="${labelClass}">
             ${titleHtml}
             ${subtitleHtml}
         </span>
-        ${dirty ? '<span class="ops-workspace-tab__dirty" title="Unsaved changes">●</span>' : ''}
-        ${isDock ? '' : '<button type="button" class="ops-workspace-tab__close" aria-label="Close workspace">&times;</button>'}
+        ${dirty ? `<span class="${ui.dirty}" title="Unsaved changes">●</span>` : ''}
+        ${isDock ? '' : `<button type="button" class="${ui.close}" data-workspace-tab-close aria-label="Close workspace">${ui.closeText}</button>`}
     `;
 
     tabEl.addEventListener('click', (event) => {
-        if (event.target.closest('.ops-workspace-tab__close')) {
+        if (event.target.closest('[data-workspace-tab-close]')) {
             return;
         }
         focusWorkspace(tab.key);
     });
 
-    const closeBtn = tabEl.querySelector('.ops-workspace-tab__close');
+    const closeBtn = tabEl.querySelector('[data-workspace-tab-close]');
     if (closeBtn) {
         closeBtn.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -1368,16 +1405,18 @@ function createTabElement(tab) {
 
 function createOverflowControl(overflowTabs) {
     const wrap = document.createElement('div');
-    wrap.className = 'ops-workspace-tabs__overflow-wrap';
+    wrap.className = ui.overflowWrap;
 
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'ops-workspace-tabs__overflow';
+    btn.className = ui.overflow;
+    btn.setAttribute('data-workspace-tabs-overflow', '');
     btn.setAttribute('aria-haspopup', 'true');
     btn.textContent = `+${overflowTabs.length}`;
 
     const menu = document.createElement('ul');
-    menu.className = 'ops-workspace-tabs__overflow-menu';
+    menu.className = ui.overflowMenu;
+    menu.setAttribute('data-workspace-tabs-overflow-menu', '');
     menu.setAttribute('role', 'menu');
 
     overflowTabs.forEach((tab) => {
@@ -1386,13 +1425,13 @@ function createOverflowControl(overflowTabs) {
 
         const menuBtn = document.createElement('button');
         menuBtn.type = 'button';
-        menuBtn.className = 'ops-workspace-tabs__overflow-item' + (tab.key === state.activeKey ? ' is-active' : '');
+        menuBtn.className = classNames(ui.overflowItem, tab.key === state.activeKey ? ui.overflowItemActive : '');
         menuBtn.setAttribute('role', 'menuitem');
         menuBtn.setAttribute('title', tabTooltip(tab));
         menuBtn.innerHTML = `
-            ${tab.pinned ? `<span class="ops-workspace-tabs__overflow-item-lock">${workspaceKeepLockSvg(true)}</span>` : ''}
-            <span class="ops-workspace-tabs__overflow-item-label">${escapeHtml(tab.title)}</span>
-            ${(tab.dirty || isDirtyKey(tab.key)) ? '<span class="ops-workspace-tab__dirty">●</span>' : ''}
+            ${tab.pinned ? `<span class="${ui.overflowItemLock}">${workspaceKeepLockSvg(true)}</span>` : ''}
+            <span class="${ui.overflowItemLabel}">${escapeHtml(tab.title)}</span>
+            ${(tab.dirty || isDirtyKey(tab.key)) ? `<span class="${ui.dirty}">●</span>` : ''}
         `;
         menuBtn.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -1406,11 +1445,11 @@ function createOverflowControl(overflowTabs) {
 
     btn.addEventListener('click', (event) => {
         event.stopPropagation();
-        const willOpen = !menu.classList.contains('is-open');
+        const willOpen = !hasClasses(menu, ui.overflowMenuOpen);
         closeOverflowMenus();
         if (willOpen) {
-            menu.classList.add('is-open');
-            btn.classList.add('is-open');
+            addClasses(menu, ui.overflowMenuOpen);
+            addClasses(btn, ui.overflowOpen);
         }
     });
 
@@ -1420,11 +1459,18 @@ function createOverflowControl(overflowTabs) {
     return wrap;
 }
 
+function mountBar() {
+    barEl = document.getElementById('ops-workspace-tabs');
+    ui = workspaceTabsUi(barEl?.dataset.workspaceTabsUi);
+
+    return barEl;
+}
+
 function syncWorkspaceChromeOffset() {
     const root = document.documentElement;
-    const bar = document.getElementById('ops-workspace-tabs');
+    const bar = mountBar();
 
-    if (!bar || !bar.classList.contains('is-visible')) {
+    if (!bar || !hasClasses(bar, ui.rootVisible)) {
         root.style.removeProperty('--ops-workspace-tabs-height');
 
         return;
@@ -1435,17 +1481,17 @@ function syncWorkspaceChromeOffset() {
 }
 
 function renderBar() {
-    barEl = document.getElementById('ops-workspace-tabs');
-    if (!barEl) {
+    if (!mountBar()) {
         return;
     }
 
-    const previousScrollLeft = barEl.querySelector('.ops-workspace-tabs__scroll')?.scrollLeft ?? 0;
+    const previousScrollLeft = barEl.querySelector('[data-workspace-tabs-scroll]')?.scrollLeft ?? 0;
 
     if (!isDesktop() || state.tabs.length === 0) {
         barEl.setAttribute('aria-hidden', 'true');
-        barEl.classList.remove('is-visible');
-        document.body.classList.remove('ops-workspace-tabs-active');
+        removeClasses(barEl, ui.rootVisible);
+        addClasses(barEl, ui.rootHidden);
+        removeClasses(document.body, ui.bodyActive);
         barEl.innerHTML = '';
         syncWorkspaceChromeOffset();
 
@@ -1453,31 +1499,35 @@ function renderBar() {
     }
 
     barEl.setAttribute('aria-hidden', 'false');
-    barEl.classList.add('is-visible');
-    document.body.classList.add('ops-workspace-tabs-active');
+    removeClasses(barEl, ui.rootHidden);
+    addClasses(barEl, ui.rootVisible);
+    addClasses(document.body, ui.bodyActive);
 
     const parts = partitionTabsForDisplay();
     const scroll = document.createElement('div');
-    scroll.className = 'ops-workspace-tabs__scroll';
+    scroll.className = ui.scroll;
+    scroll.setAttribute('data-workspace-tabs-scroll', '');
     scroll.setAttribute('role', 'tablist');
 
     if (parts.pinned.length > 0) {
         const pinnedZone = document.createElement('div');
-        pinnedZone.className = 'ops-workspace-tabs__pinned-zone';
+        pinnedZone.className = ui.pinnedZone;
+        pinnedZone.setAttribute('data-workspace-tabs-zone', 'pinned');
         parts.pinned.forEach((tab) => pinnedZone.appendChild(createTabElement(tab)));
         scroll.appendChild(pinnedZone);
     }
 
     if (parts.pinned.length > 0 && (parts.visible.length > 0 || parts.overflow.length > 0)) {
         const divider = document.createElement('div');
-        divider.className = 'ops-workspace-tabs__divider';
+        divider.className = ui.divider;
         divider.setAttribute('aria-hidden', 'true');
         scroll.appendChild(divider);
     }
 
     if (parts.visible.length > 0) {
         const contextualZone = document.createElement('div');
-        contextualZone.className = 'ops-workspace-tabs__contextual-zone';
+        contextualZone.className = ui.contextualZone;
+        contextualZone.setAttribute('data-workspace-tabs-zone', 'contextual');
         parts.visible.forEach((tab) => contextualZone.appendChild(createTabElement(tab)));
         scroll.appendChild(contextualZone);
     }
@@ -1491,31 +1541,32 @@ function renderBar() {
 
     if (parts.rightDock.length > 0) {
         const rightRail = document.createElement('div');
-        rightRail.className = 'ops-workspace-tabs__right-rail';
+        rightRail.className = ui.rightRail;
 
         const hasLeftTabs = parts.pinned.length > 0 || parts.visible.length > 0 || parts.overflow.length > 0;
 
         if (hasLeftTabs) {
             const divider = document.createElement('div');
-            divider.className = 'ops-workspace-tabs__divider ops-workspace-tabs__divider--rail';
+            divider.className = ui.railDivider;
             divider.setAttribute('aria-hidden', 'true');
             rightRail.appendChild(divider);
         }
 
         const rightZone = document.createElement('div');
-        rightZone.className = 'ops-workspace-tabs__right-zone';
+        rightZone.className = ui.rightZone;
+        rightZone.setAttribute('data-workspace-tabs-zone', 'right');
         rightZone.setAttribute('role', 'presentation');
         parts.rightDock.forEach((tab) => rightZone.appendChild(createTabElement(tab)));
         rightRail.appendChild(rightZone);
         barEl.appendChild(rightRail);
     }
 
-    const scrollEl = barEl.querySelector('.ops-workspace-tabs__scroll');
+    const scrollEl = barEl.querySelector('[data-workspace-tabs-scroll]');
     if (scrollEl) {
         ensureScrollWheel(scrollEl);
         scrollEl.scrollLeft = previousScrollLeft;
         const activeTabEl = state.activeKey
-            ? scrollEl.querySelector(`.ops-workspace-tab[data-workspace-key="${CSS.escape(state.activeKey)}"]`)
+            ? scrollEl.querySelector(`[data-workspace-tab][data-workspace-key="${CSS.escape(state.activeKey)}"]`)
             : null;
         if (activeTabEl && typeof activeTabEl.scrollIntoView === 'function') {
             activeTabEl.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'instant' });
