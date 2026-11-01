@@ -106,8 +106,61 @@ test('shared legacy panels on the hub sit in legacy islands', function (): void 
         ->get(route('operations.customers.show', $customer))
         ->assertOk()
         ->assertSee('<div class="ark-legacy bg-white text-dark">', false)
-        ->assertSee('data-workspace-modal-form="hub-customer"', false)
         ->assertSee('id="conversation-messages-relationship"', false);
+});
+
+test('the customer and vehicle edit modal is Tabler markup on the same forms and routes', function (): void {
+    [$customer, $servicedVehicle] = hubCustomerWithFleet();
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.customers.show', $customer))
+        ->assertOk()
+        ->assertSee('id="workspace-modal-host"', false)
+        ->assertSee('class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down"', false)
+        ->assertSee('action="'.route('operations.customers.update', $customer).'"', false)
+        ->assertSee('data-workspace-modal-form="hub-customer"', false)
+        ->assertSee('action="'.route('operations.customers.vehicles.update', [$customer, $servicedVehicle]).'"', false)
+        ->assertSee('data-workspace-modal-form="hub-vehicle"', false)
+        ->assertSee('action="'.route('operations.customers.vehicles.store', $customer).'"', false)
+        ->assertSee('data-workspace-modal-form="hub-vehicle-create"', false)
+        ->assertSee('name="customer_type"', false)
+        ->assertSee('name="private_notes"', false)
+        ->assertDontSee('ops-workspace-modal__dialog', false)
+        ->assertDontSee('ops-workspace-modal__panel', false);
+});
+
+test('a rejected customer edit reopens the modal with the field error', function (): void {
+    [$customer] = hubCustomerWithFleet();
+    $hub = route('operations.customers.show', $customer);
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->from($hub)
+        ->followingRedirects()
+        ->patch(route('operations.customers.update', $customer), [
+            'first_name' => 'Hub',
+            'last_name' => 'Tabler',
+            'phone' => '7195550480',
+            'email' => 'not-an-email',
+        ])
+        ->assertOk()
+        ->assertSee("initialTask: 'hub-customer'", false)
+        ->assertSee('class="form-control is-invalid"', false)
+        ->assertSee('The email field must be a valid email address.');
+
+    expect($customer->fresh()->email)->toBe('hub.tabler@example.test');
+});
+
+test('a vehicle with a VIN shows the Tabler VIN display', function (): void {
+    [$customer, $servicedVehicle] = hubCustomerWithFleet();
+    $servicedVehicle->update(['vin' => '1HGCM82633A004352']);
+
+    $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.customers.show', $customer))
+        ->assertOk()
+        ->assertSee('data-vin-display', false)
+        ->assertSee('x-data="arkVinDisplay(', false)
+        ->assertSee('<span class="fw-bold">3A004352</span>', false)
+        ->assertDontSee('ops-vin-trigger', false);
 });
 
 test('the documents tab offers adding a document when there are none', function (): void {

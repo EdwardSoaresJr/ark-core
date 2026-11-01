@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div class="card-body p-2 p-md-3">
-                <div class="ark-ro-mention" x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))">
+                <div class="position-relative" x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))">
                     <label class="visually-hidden" for="visit_reason">Reason for visit</label>
                     <textarea
                         id="visit_reason"
@@ -34,9 +34,7 @@
                         @input="onInput()"
                         @keydown="onKeydown($event)"
                     >{{ old('visit_reason', $initialVisitReason ?? '') }}</textarea>
-                    <div class="ark-legacy">
-                        @include('operations.repair-orders.partials.repair-order-mention-suggest')
-                    </div>
+                    @include('operations.repair-orders.partials.repair-order-mention-suggest-tabler')
                     @error('visit_reason')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror

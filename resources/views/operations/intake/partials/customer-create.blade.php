@@ -112,7 +112,7 @@
                 <div class="col-sm-6">
                     <div class="d-flex align-items-center gap-1 mb-2">
                         <label for="intake-customer-type" class="form-label mb-0">Billing class</label>
-                        <x-operations.help-tip label="Billing class help" :text="$billingClassHelp" />
+                        <x-tabler.help-tip label="Billing class help" :text="$billingClassHelp" />
                     </div>
                     <select id="intake-customer-type" name="customer_type" x-model="customerType" class="form-select">
                         @foreach ($customerTypes as $type)

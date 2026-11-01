@@ -45,7 +45,7 @@ test('the shop can move from customer search to vehicle to repair order draft', 
         ->assertSee('aria-controls="vehicle-ro-create-'.$vehicle->id.'"', false)
         ->assertSee('x-show="activeRoVehicleId === '.$vehicle->id.'"', false)
         ->assertSee('Create Estimate / RO')
-        ->assertSee('ops-vin-display', false)
+        ->assertSee('data-vin-display', false)
         ->assertSee('3A004352')
         ->assertDontSee('Customer concern for this', false)
         ->assertDontSee('Create RO Draft');
