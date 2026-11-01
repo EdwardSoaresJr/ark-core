@@ -5,7 +5,7 @@
     <h3>Daily rhythm</h3>
     <ol>
         <li><strong>Work</strong> - customer decisions, comms recovery, and shop pressure before you dive into ROs (rose bar when customers need you).</li>
-        <li><strong>Workboard</strong> - live lane detail when you need dispatch and bay posture.</li>
+        <li><strong>Job Board</strong> - live lane detail when you need dispatch and bay posture.</li>
         <li><strong>+ Check In</strong> - open a repair order when the customer is on the phone or at the counter.</li>
         <li><strong>Customers</strong> - hub for history, Comms timeline, vehicles, and contact info.</li>
         <li><strong>Workspace tabs</strong> - keep multiple ROs open; yellow bars and dots tell you what needs attention. See <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workspace-tabs']) }}">Workspace tabs</a>.</li>

@@ -13,7 +13,7 @@
     />
 
     <h3>Operational use</h3>
-    <p>Workboard and bay planning assume dropped-off cars are on lot - wrong posture starves dispatch priority.</p>
+    <p>Job Board and bay planning assume dropped-off cars are on lot - wrong posture starves dispatch priority.</p>
     <p>Customer waiting while you quote stays a different posture than overnight drop - communicate pickup expectations accordingly.</p>
     <p>Visit mode at intake (waiter vs drop-off) seeds defaults; posture updates refine as the visit evolves.</p>
 
@@ -23,5 +23,5 @@
     <p>Lifecycle handoff when car arrives for authorized work: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'lifecycle-transitions']) }}">Lifecycle transitions</a>.</p>
 
     <h3>Related guides</h3>
-    <p>Workboard scan: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Workboard lanes</a>.</p>
+    <p>Job Board scan: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'workboard-lanes']) }}">Job Board lanes</a>.</p>
 </div>

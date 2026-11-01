@@ -28,7 +28,7 @@
                 <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">{{ $frontDoorLanding['attention'] }}</p>
             </div>
             <div class="bg-white px-3 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Workboard first</p>
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Job Board first</p>
                 <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">{{ $frontDoorLanding['workboard'] }}</p>
             </div>
             <div class="bg-white px-3 py-2">

@@ -67,6 +67,29 @@
         </x-slot:actions>
 
         <div class="d-flex flex-column gap-3" data-work-queue="{{ $work_queue->value }}">
+            @php
+                $queueSwitcher = [
+                    [\App\Ark\Operations\Work\WorkQueue::Tasks, $taskBandCount],
+                    [\App\Ark\Operations\Work\WorkQueue::FollowUps, $followUpCount],
+                    [\App\Ark\Operations\Work\WorkQueue::Scheduled, $scheduledDecisionCount],
+                    [\App\Ark\Operations\Work\WorkQueue::Decisions, $decisionPressureCount],
+                ];
+            @endphp
+            <nav class="nav nav-segmented flex-nowrap overflow-auto align-self-start mw-100" aria-label="Work queues" data-work-queue-nav>
+                @foreach ($queueSwitcher as [$switchQueue, $switchCount])
+                    <a
+                        href="{{ route('operations.work.queue', $switchQueue) }}"
+                        @class(['nav-link flex-shrink-0 text-nowrap', 'active' => $switchQueue === $work_queue])
+                        @if ($switchQueue === $work_queue) aria-current="page" @endif
+                    >
+                        {{ $switchQueue->label() }}
+                        @if ($switchCount > 0)
+                            <span class="badge bg-secondary-lt ms-1">{{ $switchCount }}</span>
+                        @endif
+                    </a>
+                @endforeach
+            </nav>
+
             @if (session('comms_gate'))
                 <div class="alert alert-danger mb-0" role="alert">
                     {{ (int) (session('comms_gate.count') ?? 0) }} customer {{ ((int) (session('comms_gate.count') ?? 0)) === 1 ? 'contact' : 'contacts' }} still need action. Clear the communications queue before opening other ARK pages.

@@ -4,7 +4,7 @@
 
     <h3>Where to start</h3>
     <ol>
-        <li><strong>Workboard</strong> - live lanes show shop pressure. Find jobs in <em>Ready To Dispatch</em>, <em>Active work</em>, or <em>Waiting Parts</em>.</li>
+        <li><strong>Job Board</strong> - live lanes show shop pressure. Find jobs in <em>Ready To Dispatch</em>, <em>Active work</em>, or <em>Waiting Parts</em>.</li>
         <li><strong>Repair Orders</strong> - search by RO number, customer, vehicle, VIN, or plate.</li>
         <li><strong>Open the RO</strong> - customer, vehicle, scopes, and approved work are on the worksheet.</li>
     </ol>

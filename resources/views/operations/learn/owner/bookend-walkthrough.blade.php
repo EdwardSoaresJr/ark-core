@@ -22,7 +22,7 @@
     <p>Active admins can receive a daily digest with Sales Posted, Cash Collected, reconciliation status, queue pressure, and links to Financial tab and Day Review. Schedule and enable in <strong>Settings → Owner Targets &amp; Reporting</strong>. The email is a backup nudge - Day Review in ARK is still the authoritative close.</p>
 
     <h3>Connect to advisor floor</h3>
-    <p>Morning advisor counterpart: <a href="{{ route('operations.index') }}">Home</a>, then the <a href="{{ route('operations.workboard') }}">Workboard</a> for lane detail.</p>
+    <p>Morning advisor counterpart: <a href="{{ route('operations.index') }}">Home</a>, then the <a href="{{ route('operations.workboard') }}">Job Board</a> for lane detail.</p>
     <p>Advisor lifecycle guide: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'lifecycle-transitions']) }}">Lifecycle transitions</a>.</p>
     <p>Daily rhythm owner doc: <a href="{{ route('operations.learn.show', ['role' => 'owner', 'article' => 'daily-rhythm']) }}">Daily rhythm</a>.</p>
 

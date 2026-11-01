@@ -14,7 +14,7 @@
             </tr>
             <tr>
                 <td>Technician</td>
-                <td>Workboard and repair order <strong>view</strong> - read sold work, no estimate editing.</td>
+                <td>Job Board and repair order <strong>view</strong> - read sold work, no estimate editing.</td>
             </tr>
             <tr>
                 <td>Admin</td>

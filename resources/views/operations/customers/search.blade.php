@@ -7,7 +7,7 @@
     >
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.vehicles.search')" icon="car" label="Vehicles" />
-            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Workboard" />
+            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
             @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
                 <x-tabler.page-action :href="route('operations.intake.create')" icon="plus" label="Check In" primary />
             @endcan

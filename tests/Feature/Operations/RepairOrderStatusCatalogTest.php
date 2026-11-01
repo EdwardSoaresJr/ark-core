@@ -493,7 +493,8 @@ test('technicians see a filtered workboard for assigned bay work', function () {
 
     $this->get(route('operations.workboard'))
         ->assertOk()
-        ->assertSee('Tech Operations')
+        ->assertSee('Job Board')
+        ->assertDontSee('Tech Operations')
         ->assertSee('TECH-ASSIGNED-BAY-WORK')
         ->assertDontSee('TECH-FOREIGN-BAY-WORK')
         ->assertDontSee('TECH-HIDDEN-DRAFT-WORK');

@@ -142,7 +142,7 @@
 
         <div class="flex flex-wrap gap-2 text-xs">
             <a href="{{ route('operations.index') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Attention</a>
-            <a href="{{ route('operations.workboard') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Workboard</a>
+            <a href="{{ route('operations.workboard') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Job Board</a>
             <a href="{{ route('operations.reports.index') }}" class="rounded-sm border border-slate-300 bg-white px-3 py-2 font-bold text-slate-800 hover:border-slate-400">Reports</a>
         </div>
     </section>

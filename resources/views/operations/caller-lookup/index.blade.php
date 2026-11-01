@@ -4,7 +4,7 @@
             <div class="ops-page-toolbar">
                 <p class="ops-page-toolbar-note">Who is calling and what is going on? Paste a phone number to resolve customer, vehicles, open ROs, and recent conversation.</p>
                 <div class="ops-page-toolbar-actions">
-                    <a href="{{ route('operations.workboard') }}" class="ops-page-link">Workboard</a>
+                    <a href="{{ route('operations.workboard') }}" class="ops-page-link">Job Board</a>
                     @if ($context?->customer)
                         <a href="{{ route('operations.customers.show', $context->customer) }}" class="ops-page-link">Customer Hub</a>
                     @endif

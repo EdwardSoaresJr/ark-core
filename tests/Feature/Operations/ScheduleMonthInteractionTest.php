@@ -120,9 +120,9 @@ test('month board keeps appointments in place with RO hierarchy and open actions
             'view' => 'month',
         ]))
         ->assertOk()
-        ->assertSee('ops-cal-month', false)
-        ->assertSee('ops-cal-month__event-btn', false)
-        ->assertSee('ops-cal-month__popover', false)
+        ->assertSee('data-schedule-board="month"', false)
+        ->assertSee('data-schedule-event', false)
+        ->assertSee('data-schedule-popover', false)
         ->assertSee('#1742 · John Smith', false)
         ->assertSee('2018 Ford F-150', false)
         ->assertSee('RO #1742', false)
@@ -135,11 +135,11 @@ test('month board keeps appointments in place with RO hierarchy and open actions
         ->assertSee('/app/appointments?day=2026-09-15&amp;view=day', false);
 
     $html = $response->getContent();
-    expect($html)->not->toMatch('/<a[^>]*class="[^"]*ops-cal-month__day[^"]*"/')
-        ->and($html)->toContain('ops-cal-month__day')
+    expect($html)->not->toMatch('/<a[^>]*data-schedule-month-day/')
+        ->and($html)->toContain('data-schedule-month-day')
         ->and($html)->toContain('openAppointmentId')
         ->and($html)->toContain('arkScheduleAppointmentPopover')
-        ->and($html)->toContain('ops-cal-month__popover--above')
+        ->and($html)->toContain("'--ark-cal-pop-top'")
         ->and($html)->not->toContain('x-data="{ open: false }"')
         ->and(substr_count($html, 'toggle('))->toBeGreaterThanOrEqual(2);
 

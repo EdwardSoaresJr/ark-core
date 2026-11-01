@@ -33,7 +33,7 @@ export default function arkScheduleAppointmentPopover() {
                 return;
             }
 
-            const pop = this.anchor.parentElement?.querySelector('.ops-cal-month__popover');
+            const pop = this.anchor.parentElement?.querySelector('[data-schedule-popover]');
             if (! pop || (pop.offsetHeight === 0 && tries < 8)) {
                 requestAnimationFrame(() => this.placeWhenReady(tries + 1));
 
@@ -48,7 +48,7 @@ export default function arkScheduleAppointmentPopover() {
                 return;
             }
 
-            const pop = this.anchor.parentElement?.querySelector('.ops-cal-month__popover');
+            const pop = this.anchor.parentElement?.querySelector('[data-schedule-popover]');
             if (! pop) {
                 return;
             }

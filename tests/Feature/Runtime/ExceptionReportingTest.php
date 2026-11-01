@@ -28,7 +28,7 @@ test('operations routes render workboard recovery actions on errors', function (
 
     $this->get('/app/does-not-exist-'.uniqid())
         ->assertNotFound()
-        ->assertSee('Return To Workboard');
+        ->assertSee('Return To Job Board');
 });
 
 test('server errors render a calm customer page when debug is off', function () {

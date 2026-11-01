@@ -48,3 +48,22 @@ test('work queues render on tabler with their count, add form, and lists', funct
     'scheduled' => WorkQueue::Scheduled,
     'decisions' => WorkQueue::Decisions,
 ]);
+
+test('each work queue links to the other queues and marks its own', function (WorkQueue $queue): void {
+    $advisor = actingAsLearnCurrentAdvisor();
+
+    $html = $this->actingAs($advisor)->get(route('operations.work.queue', $queue))->assertOk()->getContent();
+    $xpath = tablerQueueXpath($html);
+    $nav = $xpath->query('//nav[@data-work-queue-nav][@aria-label="Work queues"]')->item(0);
+
+    expect($nav)->toBeInstanceOf(DOMElement::class);
+
+    foreach ([WorkQueue::Tasks, WorkQueue::FollowUps, WorkQueue::Scheduled, WorkQueue::Decisions] as $target) {
+        $link = $xpath->query('.//a[@href="'.route('operations.work.queue', $target).'"]', $nav)->item(0);
+
+        expect($link)->toBeInstanceOf(DOMElement::class)
+            ->and($link->getAttribute('aria-current'))->toBe($target === $queue ? 'page' : '');
+    }
+
+    expect($xpath->query('.//a[@href="'.url('/app/work/queues/comms').'"]', $nav)->length)->toBe(0);
+})->with([WorkQueue::Tasks, WorkQueue::FollowUps, WorkQueue::Scheduled, WorkQueue::Decisions]);

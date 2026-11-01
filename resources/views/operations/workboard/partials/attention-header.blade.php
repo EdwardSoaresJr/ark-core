@@ -2,7 +2,7 @@
     /** @var \App\Ark\Operations\Workboard\WorkboardTriageAttentionHeader $header */
 @endphp
 
-<div id="ops-workboard-attention-strip" class="ops-workboard-attention-strip" aria-label="Workboard attention counts">
+<div id="ops-workboard-attention-strip" class="ops-workboard-attention-strip" aria-label="Job Board attention counts">
     @include('operations.workboard.partials.attention-metric', [
         'label' => 'Needs Attention',
         'count' => $header->needsAttention,

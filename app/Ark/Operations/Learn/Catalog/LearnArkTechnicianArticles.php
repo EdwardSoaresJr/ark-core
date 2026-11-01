@@ -15,7 +15,7 @@ final class LearnArkTechnicianArticles
             [
                 'slug' => 'getting-started',
                 'title' => 'Technician basics',
-                'summary' => 'Workboard, assigned jobs, and reading the RO.',
+                'summary' => 'Job Board, assigned jobs, and reading the RO.',
                 'view' => 'operations.learn.technician.getting-started',
             ],
             [

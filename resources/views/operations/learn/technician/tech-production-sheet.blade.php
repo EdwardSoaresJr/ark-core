@@ -19,7 +19,7 @@
     <p>Work Notes carry advisor notes and internal production notes - not customer estimate copy.</p>
 
     <h3>Assignment and workboard</h3>
-    <p>Workboard in-progress lane means cars the shop expects on lifts - your status updates keep advisor promises honest.</p>
+    <p>Job Board in-progress lane means cars the shop expects on lifts - your status updates keep advisor promises honest.</p>
     <p>Advisor printing guide: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ro-printing']) }}">RO printing</a>.</p>
     <p>Lifecycle when done: advisor moves to ready/pickup - you flag complete in shop rhythm.</p>
 

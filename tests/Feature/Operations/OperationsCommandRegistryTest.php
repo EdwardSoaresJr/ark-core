@@ -70,7 +70,7 @@ test('core commands register navigate create search and operations groups', func
         ->and($groups)->toContain('Create')
         ->and($groups)->toContain('Search')
         ->and($groups)->toContain('Operations')
-        ->and($titles)->toContain("Today's Workboard")
+        ->and($titles)->toContain('Job Board')
         ->and($titles)->toContain('New Repair Order')
         ->and($titles)->toContain('Print Key Tag')
         ->and($titles)->toContain('Search by VIN');

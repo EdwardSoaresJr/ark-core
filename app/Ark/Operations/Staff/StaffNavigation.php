@@ -7,6 +7,7 @@ use App\Ark\Operations\Labor\TechnicianTimeClockProjection;
 use App\Ark\Operations\Learn\ArkademyUrls;
 use App\Ark\Operations\Scoreboard\ShopOperatingScoreboardAccess;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Work\WorkQueue;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Ark\Runtime\Authorization\DevRolePretend;
@@ -54,7 +55,8 @@ final class StaffNavigation
                 'visible' => $operates || $produces,
                 'items' => [
                     self::item('job-board', 'Job Board', 'layout-grid', route('operations.index'), ['operations.index', 'operations.workboard'], $operates),
-                    self::item('workboard', 'Workboard', 'layout-grid', route('operations.workboard'), ['operations.workboard'], $produces && ! $operates),
+                    self::item('workboard', 'Job Board', 'layout-grid', route('operations.workboard'), ['operations.workboard'], $produces && ! $operates),
+                    self::item('work-queues', 'Work Queues', 'list-check', route('operations.work.queue', WorkQueue::Tasks), ['operations.work.queue'], $operates),
                     self::item('schedule', 'Schedule', 'calendar', route('operations.appointments.index'), ['operations.appointments.*'], $operates && ShopSettings::current()->appointmentsEnabled()),
                     self::item('communications', 'Communications', 'message', $communicationsUrl, ['operations.communications.*'], $operates, liveCount: true),
                 ],

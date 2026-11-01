@@ -317,22 +317,22 @@ test('appointments index shows scheduling workspace day lanes', function () {
         ->assertOk()
         ->assertSee('Schedule', false)
         ->assertSee('data-schedule-view-switch', false)
-        ->assertSee('ops-cal-day', false)
-        ->assertSee('ops-cal-card', false)
+        ->assertSee('data-schedule-board="day"', false)
+        ->assertSee('data-schedule-card', false)
         ->assertSee('Week View', false);
 
     $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-06-10', 'view' => 'week']))
         ->assertOk()
-        ->assertSee('ops-cal-week--board', false)
+        ->assertSee('data-schedule-board="week"', false)
         ->assertSee('Week View', false)
         ->assertSee('?edit=1', false);
 
     $this->actingAs($advisor)
         ->get(route('operations.appointments.index', ['day' => '2026-06-10', 'view' => 'day']))
         ->assertOk()
-        ->assertSee('ops-cal-day', false)
-        ->assertSee('ops-cal-card', false)
+        ->assertSee('data-schedule-board="day"', false)
+        ->assertSee('data-schedule-card', false)
         ->assertDontSee('data-ops-cal-drag', false)
         ->assertDontSee('Resize appointment', false);
 
@@ -471,7 +471,7 @@ test('schedule day cards offer Call and Text when customer has a phone', functio
         ->get(route('operations.appointments.index', ['day' => '2026-06-10', 'view' => 'day']))
         ->assertOk()
         ->assertSee('Row Comms', false)
-        ->assertSee('ops-cal-card__comms', false)
+        ->assertSee('data-schedule-card-comms', false)
         ->assertSee('tel:5550188', false)
         ->assertSee($hubTextUrl, false)
         ->assertDontSee('SendOutboundMessage', false);
@@ -503,7 +503,7 @@ test('schedule day cards omit Call and Text when customer has no phone', functio
         ->get(route('operations.appointments.index', ['day' => '2026-06-10', 'view' => 'day']))
         ->assertOk()
         ->assertSee('Silent Guest', false)
-        ->assertDontSee('ops-cal-card__comms', false)
+        ->assertDontSee('data-schedule-card-comms', false)
         ->assertDontSee('compose=text#customer-communication', false);
 
     Carbon::setTestNow();

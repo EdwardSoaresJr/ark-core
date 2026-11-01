@@ -7,7 +7,7 @@
 @endphp
 
 <x-operations.queue-page-header
-    title="Workboard"
+    title="Job Board"
     description="What should I work on next?"
     :count="$workboardWorkspace->queueCount > 0 ? $workboardWorkspace->queueCount : null"
     :show-back="false"
