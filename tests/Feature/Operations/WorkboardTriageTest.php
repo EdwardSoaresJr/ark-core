@@ -396,7 +396,7 @@ test('repair order index supports needs attention inventory filter', function ()
         ->get(route('operations.repair-orders.index', ['attention' => 'needs_attention']))
         ->assertOk()
         ->assertSee('Needs attention queue')
-        ->assertSee('Workboard triage')
+        ->assertSee('Job Board triage')
         ->assertSee(route('operations.index', ['queue' => 'needs_attention']), false);
 
     expect($response->getContent())->toContain('NEEDS-ATTENTION-RO-AAA')
@@ -411,7 +411,7 @@ test('repair order index links back to workboard triage for lane queues', functi
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.index', ['lane' => 'shop_floor']))
         ->assertOk()
-        ->assertSee('Workboard triage')
+        ->assertSee('Job Board triage')
         ->assertSee(route('operations.index', ['queue' => 'shop_floor']), false);
 });
 
