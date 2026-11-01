@@ -98,13 +98,13 @@ Fluid lists of record cards use `.ark-card-grid` instead of `.row.row-cards` wit
 | 1920 | 5 | 314px |
 | 2560 | 7 | 311px |
 
-Bootstrap's breakpoints end at 1400px, so `col-*` classes give the same column count at 1440 and 2560. `.ark-card-grid` uses `auto-fill`, not the `auto-fit` of Tabler's `.datagrid`, so a single result stays one column wide. Set `--ark-card-min-width` on the grid if a card needs a different minimum. It is the only layout rule in `tabler.css`.
+Bootstrap's breakpoints end at 1400px, so `col-*` classes give the same column count at 1440 and 2560. `.ark-card-grid` uses `auto-fill`, not the `auto-fit` of Tabler's `.datagrid`, so a single result stays one column wide. Set `--ark-card-min-width` on the grid if a card needs a different minimum.
 
 Filter rows on fluid pages switch fields to their natural width from `xxl` (`col-xxl-auto`) so they do not stretch across an ultrawide screen. The search input takes the remaining width.
 
 ## Conventions for a migrated view
 
-- Markup is Tabler's. No `ops-*` classes, no Tailwind utilities, and no new CSS. `tabler.css` holds theme tokens, coexistence rules, and `.ark-card-grid`.
+- Markup is Tabler's. No `ops-*` classes, no Tailwind utilities, and no new CSS. `tabler.css` holds theme tokens, coexistence rules, and the layout rules Tabler has no utility for: `.ark-card-grid`, the repair order line grid, and the Job Board's `.ark-board`.
 - Page: `<x-tabler.page layout="…">` with an `actions` slot. See "Workspace layouts".
 - Forms: `.form-label`, `.form-control`, `.form-select`, `.input-icon`. Native `type="date"`. Keep field `name`s and `id`s.
 - Buttons: `.btn`, `.btn-primary` for the one main action, `.btn-ghost-secondary` for Clear, grouped in `.btn-list`.
@@ -145,51 +145,47 @@ Design the phone layout first, not as a squeezed desktop.
 
 1. Record its current behavior and the legacy classes it uses (below).
 2. Migrate the Blade view only.
-3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior. `TablerShellTest` compares the Tabler sidebar with the legacy rail on the Job Board (`operations.index`); when that view migrates, point those tests at another legacy page.
+3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior. `TablerShellTest`, `MobileApplicationNavTest`, and `CoreBoundaryCleanupPhase1Test` check the legacy rail on the profile page (`profile.edit`), which every role can open; when it migrates, point them at another legacy page.
 4. Check 390, 820, 1440, 1920, and 2560 wide, light and dark, for horizontal overflow and stretched content: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search. Capture the pull request's Visual Review screenshots during this check ([RELEASE_PROTOCOL.md](RELEASE_PROTOCOL.md#1-implement-and-pr-this)).
 5. List what still depends on `app.css`.
 6. Stop for review before the next view.
 
 ## Migration inventory
 
-Update this list in the pull request that migrates a view. Staff pages are the views that render `<x-operations.app>`. Names in code are route names.
+The target is the 58 staff pages, the views that render `<x-operations.app>`. Update this list in the pull request that migrates a view. Names in code are route names.
 
-**Migrated (11 of 58 staff pages):**
+**Complete (7):** on Tabler with no legacy islands and no open corrections.
 
 - Customers (`operations.customers.search`)
 - Vehicles (`operations.vehicles.search`)
-- Customer hub (`operations.customers.show`)
 - Repair orders (`operations.repair-orders.index`)
-- Repair order workspace (`operations.repair-orders.show`)
-- Dashboard (`operations.today`)
-- Shop settings (`operations.settings.shop.edit`)
-- Schedule (`operations.appointments.index`)
+- Job Board (`operations.index`)
 - Appointment detail (`operations.appointments.show`)
-- Schedule appointment (`operations.schedule`)
+- Schedule appointment (`operations.schedule`). The sidebar does not highlight Schedule on this page, because `StaffNavigation` matches only `operations.appointments.*`. That belongs to a shared navigation change, not a view slice.
 - Time clock (`operations.time-clock.index`)
 
-**Legacy islands left on migrated pages:**
+**Partially migrated (5):** on Tabler, with legacy islands or corrections left.
 
-- **Repair order workspace:**
-  - the worksheet body and busy overlay;
-  - the engine oil panel;
-  - the workspace modal host;
-  - the authorization exception form;
-  - the journey card, which renders only when the feature is enabled;
-  - the RTE labor panel;
-  - the rail's Authorization, Portal, and Parts tabs;
-  - the labor guide and parts catalog toolbar buttons;
-  - the visit signals.
+- **Repair order workspace (`operations.repair-orders.show`):**
+  - **High priority before staff Tabler is complete:** the refinement pass on the header and command bar. Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
+  - **Legacy islands:**
+    - the worksheet body and busy overlay;
+    - the engine oil panel;
+    - the workspace modal host;
+    - the authorization exception form;
+    - the journey card, which renders only when the feature is enabled;
+    - the RTE labor panel;
+    - the rail's Authorization, Portal, and Parts tabs;
+    - the labor guide and parts catalog toolbar buttons;
+    - the visit signals.
+- **Customer hub (`operations.customers.show`):** the conversation context panel (Work tab), quick reply (Comms tab), document list (Documents tab), VIN display (Vehicles tab), the journey card, and the hub workspace modal.
+- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
+- **Dashboard (`operations.today`):** technician lanes.
+- **Schedule (`operations.appointments.index`):** the calendar board.
 
-  The header and command bar also need a refinement pass before the migration is complete.
-- **Customer hub:** the conversation context panel (Work tab), quick reply (Comms tab), document list (Documents tab), VIN display (Vehicles tab), the journey card, and the hub workspace modal.
-- **Shop settings:** every section except Shop Identity and Documents / Disclaimers.
-- **Dashboard:** technician lanes.
-- **Schedule:** the calendar board.
+**Not started (46):**
 
-**Remaining staff pages (47):**
-
-- **Daily operations (11):** Job Board (`operations.index`), the operations home, briefing, intake queue (`operations.intake.index`), check-in (`operations.intake.create`), work queue (`operations.work.queue`), new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`).
+- **Daily operations (10):** Workboard (`operations.workboard`), briefing, intake queue (`operations.intake.index`), check-in (`operations.intake.create`), work queue (`operations.work.queue`), new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`). The staff history page corrects and deletes compensable hours, so it migrates on its own.
 - **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation. These wait for the decision on the technician phone workflow.
 - **Communications (11):** the communications workboard, calls, the inbox, attention, history, and internal workspace views, conversation reply, and shop communications (index, device, person, and setup required).
 - **Owner and reports (9):** business, day review, staff coaching, call intelligence (index and detail), technician production (index and detail), reports index, and operational report.
@@ -197,7 +193,17 @@ Update this list in the pull request that migrates a view. Staff pages are the v
 - **Account and system (4):** profile, ARK Cloud connecting, Platform clusters, and the 409 error page.
 - **Financial and authorization (6):** the estimate document, the document viewer, record testing outcome, the dealer parts quote, parts matrix tuning, and the end-of-day report. These wait for the release-blocker workstream.
 
-**Outside the staff shell, not scheduled:** sign-in and account pages (`<x-guest-layout>`, 8), the installer (8), the ARKademy print page, wall displays (shop display, customer display, scoreboard wall), the customer portal (9), the public website (10), and ARK Cloud pages (13). "Workspace layouts" describes the guest layout's target. The rest need a decision from the project owner before they join this migration.
+**Excluded from the staff count, kept for a later design review:** these surfaces are not part of this migration and are not canceled.
+
+- sign-in and account pages (`<x-guest-layout>`, 8);
+- the installer (8);
+- the ARKademy print page;
+- wall displays (shop display, customer display, and scoreboard wall);
+- the customer portal (9);
+- the public website (10);
+- ARK Cloud pages (13).
+
+"Workspace layouts" describes the guest layout's target.
 
 ## Migration log
 
@@ -440,3 +446,16 @@ The booking page opened from Schedule, a customer, a vehicle, a repair order, or
 Unchanged: `PresentAppointmentCreateForm`, `AppointmentStoreController`, the routes, the query parameters, and every field name.
 
 The sidebar's Schedule item matches `operations.appointments.*`, so it is not highlighted on `operations.schedule`. That comes from `StaffNavigation`, on legacy and Tabler pages alike.
+
+### Job Board (`operations.index`)
+
+The advisor landing page at `/app` (view `operations.home`). It's a Tabler `fluid` page with no page header. Like the legacy board, it opens on the filter row.
+
+- **Filters:** search, the employee select, and Check In (primary, for staff who manage repair orders). The row sticks to the top while the lanes scroll, as the legacy toolbar did. Alpine still filters the cards and the lane counts on the client.
+- **Lanes:** `.ark-board` in `tabler.css`. From `md` the five lanes share the width, which fits beside the sidebar from 1280. On phones a lane is 85% of the screen and the board swipes sideways, one lane at a time, with the next lane's edge in view; the page no longer stacks every lane into one tall column. Each lane header is a `card-sm` with `card-status-top` in the lane's color, from `RepairOrderStatusColor`.
+- **Cards:** `card card-sm`. They show the RO number and total (`ark-money`; balance due in `text-danger`), the exception line with its "+N" list as a Bootstrap dropdown (fixed strategy, so the lane's overflow does not clip it), the vehicle, the customer, the status badge in the shop's configured status color, and the age. Attention uses `card-status-start`: yellow for watch and attention, red for critical, with the activity footer tinted for attention and critical. The recommended card has `border-primary`.
+- **Activity marks:** ARK's own icons, sized to 16px, in `avatar avatar-xs` squares colored by state, with a Bootstrap tooltip for each. Viewed, replied, check, and alert badges are Tabler avatar status dots.
+
+Unchanged: `OperationsHomeController`, the projections, the routes, the `#ops-card-ro-{number}` anchors that triage links target, and the `data-home-search` and `data-home-tech-id` filter attributes.
+
+`x-tabler.status-badge` now renders the slate tone as an outline badge. `bg-dark-lt` forces near-black text, which made slate statuses such as Draft unreadable in the dark theme on every page that uses the badge.

@@ -53,7 +53,7 @@ test('customer search renders in the Tabler shell after the legacy stylesheet', 
 
 test('unmigrated views keep the legacy shell and never load Tabler', function (): void {
     $this->actingAs(actingAsLearnCurrentAdvisor())
-        ->get(route('operations.index'))
+        ->get(route('profile.edit'))
         ->assertOk()
         ->assertSee('<!-- vite: resources/css/app.css,resources/js/app.js -->', false)
         ->assertSee('data-ops-mobile-nav', false)
@@ -63,7 +63,7 @@ test('unmigrated views keep the legacy shell and never load Tabler', function ()
 });
 
 test('the Tabler sidebar lists the same destinations as the legacy rail', function (User $user): void {
-    $legacy = $this->actingAs($user)->get(route('operations.index'))->assertOk()->getContent();
+    $legacy = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
     $tabler = $this->actingAs($user)->get(route('operations.customers.search'))->assertOk()->getContent();
 
     $legacyHrefs = primaryNavHrefs($legacy, '<nav aria-label="Primary operations" class="ops-rail-nav">', '</nav>');

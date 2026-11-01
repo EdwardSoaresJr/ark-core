@@ -20,6 +20,32 @@
     gap: var(--tblr-page-padding);
 }
 
+/*
+ * Job Board lanes. From md every lane is a column that shares the width; five lanes fit beside the sidebar from 1280,
+ * and a narrower window scrolls sideways. On phones a lane is most of the screen wide and the board swipes one lane at a time, with the next
+ * lane's edge in view.
+ */
+.ark-board {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(12rem, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+}
+
+.ark-board > * {
+    scroll-snap-align: start;
+}
+
+@media (max-width: 767.98px) {
+    .ark-board {
+        grid-auto-columns: 85%;
+    }
+}
+
 /* app.css still loads here, and its Tailwind `.collapse` utility (visibility: collapse) would hide every Bootstrap collapse. No legacy markup uses it. */
 .collapse {
     visibility: visible;

@@ -317,5 +317,5 @@ test('advisor home renders customer first attention cockpit', function () {
         ->assertSee('Scheduled - None', false)
         ->assertDontSee('ops-job-card__exception-mark', false)
         ->assertSee('Search job board', false)
-        ->assertSee('ops-advisor-home__sticky-head', false);
+        ->assertSee('data-job-board-filters', false);
 });
