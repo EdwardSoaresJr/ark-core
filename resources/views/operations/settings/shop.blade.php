@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead'];
         @endphp
 
         <div class="row g-3">
@@ -1439,6 +1439,32 @@
                     </div>
                 </section>
 
+                <section class="card" x-show="active === 'overhead'" x-cloak data-settings-section="overhead">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Shop Overhead</div>
+                            <h2 class="card-title">Shop overhead worksheet</h2>
+                            <div class="card-subtitle">Build the shop’s monthly fixed-cost pool and spread it across expected <strong>billed labor hours</strong>. That produces <strong>shop overhead / billed hr</strong>, which feeds each technician’s loaded cost under Staff. Technician wages are entered per tech - not here.</div>
+                            <div class="small text-secondary mt-1">
+                                Full walkthrough:
+                                <x-operations.learn.guide-link role="admin" article="shop-overhead-setup" :label="\App\Ark\Runtime\DemoInstall::isDemo() ? 'Shop overhead and loaded labor cost' : \App\Support\Branding\Branding::learnName().' → Shop overhead and loaded labor cost'" class="btn btn-link p-0 align-baseline small" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @php
+                        $activeTechnicianCount = max(1, $staff->filter(
+                            fn ($member): bool => $member->isActive() && $member->worksAsTechnician(),
+                        )->count());
+                    @endphp
+
+                    @include('operations.settings.partials.shop-overhead-calculator', [
+                        'technicianCount' => $activeTechnicianCount,
+                        'initialState' => $settings->shopOverheadStateArray() ?: null,
+                        'saveUrl' => route('operations.settings.shop.overhead.update'),
+                    ])
+                </section>
+
                 <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
                 @include('operations.settings.partials.square-payments-settings', [
@@ -1463,32 +1489,6 @@
                 @unless (\App\Ark\Runtime\DemoInstall::isDemo())
                     @include('operations.settings.partials.ark-platform-settings', ['settings' => $settings])
                 @endunless
-
-                <section x-show="active === 'overhead'" x-cloak>
-                    <div class="border-b border-slate-200 pb-2">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Shop Overhead</p>
-                        <h2 class="text-base font-black text-slate-950">Shop overhead worksheet</h2>
-                        <p class="mt-0.5 text-xs leading-5 text-slate-500">Build the shop’s monthly fixed-cost pool and spread it across expected <strong class="font-semibold text-slate-700">billed labor hours</strong>. That produces <strong class="font-semibold text-slate-700">shop overhead / billed hr</strong>, which feeds each technician’s loaded cost under Staff. Technician wages are entered per tech - not here.</p>
-                        <p class="mt-1 text-xs leading-5 text-slate-500">
-                            Full walkthrough:
-                            <x-operations.learn.guide-link role="admin" article="shop-overhead-setup" :label="\App\Ark\Runtime\DemoInstall::isDemo() ? 'Shop overhead and loaded labor cost' : \App\Support\Branding\Branding::learnName().' → Shop overhead and loaded labor cost'" class="font-semibold text-slate-700 decoration-slate-300 hover:text-slate-950" />
-                        </p>
-                    </div>
-
-                    @php
-                        $activeTechnicianCount = max(1, $staff->filter(
-                            fn ($member): bool => $member->isActive() && $member->worksAsTechnician(),
-                        )->count());
-                    @endphp
-
-                    <div class="mt-4 w-full">
-                        @include('operations.settings.partials.shop-overhead-calculator', [
-                            'technicianCount' => $activeTechnicianCount,
-                            'initialState' => $settings->shopOverheadStateArray() ?: null,
-                            'saveUrl' => route('operations.settings.shop.overhead.update'),
-                        ])
-                    </div>
-                </section>
 
                 @include('operations.settings.partials.shop-excellence-targets')
 
