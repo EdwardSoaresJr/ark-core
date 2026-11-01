@@ -38,9 +38,11 @@
         : null;
     $showApprovalForecast = (bool) ($approvalForecast['visible'] ?? false);
 
+    $forecastBreakdownLabel = (string) ($approvalForecast['breakdown_label'] ?? 'Approved');
+
     if ($isPdf && $showApprovalForecast && is_array($customerTotalsBreakdown)) {
-        // Forecast owns the destination total; breakdown quietly explains approved work.
-        $customerTotalsBreakdown['total_label'] = 'Approved';
+        // Forecast owns the destination total; breakdown quietly explains the work it sums.
+        $customerTotalsBreakdown['total_label'] = $forecastBreakdownLabel;
         $customerTotalsBreakdown['final_emphasis'] = false;
     }
 @endphp
@@ -93,7 +95,7 @@
                         ])
 
                         @if ($showApprovalForecast)
-                            <p class="totals-breakdown-heading">Approved Work Breakdown</p>
+                            <p class="totals-breakdown-heading">{{ $forecastBreakdownLabel === 'Approved' ? 'Approved Work Breakdown' : 'Estimate Breakdown' }}</p>
                         @endif
 
                         <x-operations.estimate-totals-breakdown :breakdown="$customerTotalsBreakdown" variant="pdf" />

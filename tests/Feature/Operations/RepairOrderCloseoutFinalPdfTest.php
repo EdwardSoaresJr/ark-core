@@ -182,6 +182,53 @@ test('closing a paid repair order with a working renderer is unchanged', functio
         ->and(Storage::disk('local')->exists($document->pdf_path))->toBeTrue();
 });
 
+test('closing a paid repair order renders its invoice pdf once more with the payment, keeping its issued snapshot', function () {
+    Storage::fake('local');
+    CountingCloseoutPdfRenderer::$renders = 0;
+    $this->app->bind(PdfRenderer::class, CountingCloseoutPdfRenderer::class);
+    $repairOrder = paidRepairOrderReadyToClose();
+    $invoice = EstimateDocument::query()->where('repair_order_id', $repairOrder->id)->where('document_type', 'invoice')->sole();
+    $snapshot = EstimateDocument::query()->toBase()->where('id', $invoice->id)->value('snapshot_json');
+
+    expect($invoice->needs_pdf_refresh)->toBeTrue();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => 'closed:paid',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    $invoice = $invoice->fresh();
+    $closedPdf = Storage::disk('local')->get($invoice->pdf_path);
+    $rendersAfterClose = CountingCloseoutPdfRenderer::$renders;
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::Closed))->toBeTrue()
+        ->and($invoice->needs_pdf_refresh)->toBeFalse()
+        ->and($invoice->status)->toBe('paid')
+        ->and(EstimateDocument::query()->toBase()->where('id', $invoice->id)->value('snapshot_json'))->toBe($snapshot);
+
+    $served = $this->get(route('operations.repair-orders.estimate-documents.pdf.show', [$repairOrder, $invoice]))->assertOk();
+
+    expect($served->getContent())->toBe($closedPdf)
+        ->and(CountingCloseoutPdfRenderer::$renders)->toBe($rendersAfterClose);
+});
+
+test('closing a paid repair order commits when its invoice pdf fails to render at close', function () {
+    Storage::fake('local');
+    $repairOrder = paidRepairOrderReadyToClose();
+
+    $this->app->bind(PdfRenderer::class, ProcessFailingCloseoutPdfRenderer::class);
+    Log::spy();
+
+    $this->patch(route('operations.repair-orders.lifecycle.update', $repairOrder), [
+        'status' => 'closed:paid',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($repairOrder->fresh()->status->is(RepairOrderStatus::Closed))->toBeTrue();
+
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message): bool => $message === 'Final invoice PDF could not be refreshed when the repair order closed.')
+        ->once();
+});
+
 test('a non rendering error from the final pdf still fails the close and rolls it back', function () {
     Storage::fake('local');
     $repairOrder = paidRepairOrderReadyToClose();

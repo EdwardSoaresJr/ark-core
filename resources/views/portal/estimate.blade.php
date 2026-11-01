@@ -13,7 +13,7 @@
             ? $snapshot['approval_forecast']
             : null;
         if (($approvalForecast['visible'] ?? false) === true) {
-            $totalsBreakdown['total_label'] = 'Approved';
+            $totalsBreakdown['total_label'] = $approvalForecast['breakdown_label'] ?? 'Approved';
             $totalsBreakdown['final_emphasis'] = false;
         }
         $payingRemaining = (bool) ($payingRemaining ?? false);

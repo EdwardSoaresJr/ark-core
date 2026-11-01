@@ -25,6 +25,7 @@
             @php
                 $revocation = $approvalEvent->revocation;
                 $approvalHeadline = App\Ark\Operations\Approvals\ApprovalEventStaffPresentation::headline($approvalEvent);
+                $recordedAmountCents = App\Ark\Operations\Approvals\ApprovalEventStaffPresentation::recordedAmountCents($approvalEvent);
             @endphp
             <div class="px-3 py-2">
                 <div class="flex items-start justify-between gap-3">
@@ -40,10 +41,10 @@
                         </p>
                     </div>
                     <p class="shrink-0 text-right text-xs font-bold text-slate-700">
-                        @if ($approvedTotals->totalCents() > 0)
-                            <span class="block font-black tabular-nums text-slate-950">{{ $approvedTotals->format($approvedTotals->totalCents()) }}</span>
+                        @if ($recordedAmountCents > 0)
+                            <span class="block font-black tabular-nums text-slate-950">{{ $approvedTotals->format($recordedAmountCents) }}</span>
                         @else
-                            <span class="block uppercase tracking-[0.08em] text-slate-500">No approved work</span>
+                            <span class="block uppercase tracking-[0.08em] text-slate-500">{{ App\Ark\Operations\Approvals\ApprovalEventStaffPresentation::amountLabel($approvalEvent) }}</span>
                         @endif
                     </p>
                 </div>

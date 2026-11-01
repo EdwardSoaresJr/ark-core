@@ -231,6 +231,34 @@ final class WorkCompletionAuthorization
     }
 
     /**
+     * Identifies exactly which changes await authorization and what each bills, so an approval
+     * form can show that it presented these changes and no others.
+     */
+    public function pendingChangesFingerprint(RepairOrder $repairOrder): string
+    {
+        $lines = $this->linesRequiringAuthorization($repairOrder)
+            ->sortBy('id')
+            ->map(fn (RepairOrderLine $line): array => [
+                (int) $line->id,
+                (int) $line->repair_order_concern_id,
+                $line->type?->value,
+                (string) $line->description,
+                (string) $line->quantity,
+                (int) $line->unit_price_cents,
+                (int) $line->total_cents,
+            ])
+            ->values()
+            ->all();
+        $removed = collect($this->approvedLinesRemoved($repairOrder))
+            ->map(fn (array $line): int => (int) $line['id'])
+            ->sort()
+            ->values()
+            ->all();
+
+        return hash('sha256', json_encode([$lines, $removed], JSON_THROW_ON_ERROR));
+    }
+
+    /**
      * What still waits for the customer: added lines at their total, raised lines at the increase.
      */
     public function pendingApprovalCents(RepairOrder $repairOrder, RepairOrderLine $line): int

@@ -196,3 +196,36 @@ test('document footer defers to concern disposition over stale approval event am
     expect($footer['approval']['status_label'])->toBe('Deferred')
         ->and($footer['approval']['status'])->toBe('deferred');
 });
+
+test('footer total label reads estimate total while an approved-work change awaits authorization', function () {
+    expect(app(DocumentFooterPresenter::class)->footerTotalLabel([
+        'document_type' => 'estimate',
+        'concerns' => [['disposition' => 'approved']],
+        'approval_forecast' => ['needs_authorization_cents' => 8250],
+    ]))->toBe('Estimate Total');
+});
+
+test('invoice footer status follows the live payment status, not the status at issue', function (string $status, string $label) {
+    $footer = app(DocumentFooterPresenter::class)->present([
+        'document_type' => 'invoice',
+        'documents' => [],
+        'settings' => [],
+        'staff' => ['approval_events' => [[
+            'approved_by' => 'Morgan Brown',
+            'approved_at_display' => 'May 28, 2026 2:15 PM',
+            'source_label' => 'Phone',
+            'approval_type_label' => 'Repair authorization',
+            'approved_amount_cents' => 15593,
+            'approved_at' => '2026-05-28T14:15:00.000000Z',
+        ]]],
+        'repair_order' => ['status' => 'closed'],
+        'concerns' => [['disposition' => 'approved']],
+        'financial' => ['invoice_status' => $status],
+    ]);
+
+    expect($footer['approval']['status_label'])->toBe($label)
+        ->and($footer['approval']['show_signature_lines'])->toBeFalse();
+})->with([
+    'paid' => ['paid', 'Paid in Full'],
+    'partially paid' => ['partially_paid', 'Partially Paid'],
+]);

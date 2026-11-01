@@ -12,6 +12,13 @@
     $projectedStaffLabel = $pendingCount === 1
         ? 'If Approved'
         : 'If All Approved';
+    // Added or raised work on approved scopes is not approved until the customer authorizes it.
+    $needsAuthorizationCents = (int) ($forecast['needs_authorization_cents'] ?? 0);
+    $hasRecommendations = (int) ($forecast['pending_cents'] ?? 0) > 0 || $pendingCount > 0;
+    if (! $hasRecommendations) {
+        $projectedAllLabel = 'If These Changes Are Approved';
+        $projectedStaffLabel = 'If Approved';
+    }
 
     // Shared projection; presentation differs by audience (Projection Rule #1).
     if ($variant === 'pdf') {
@@ -23,6 +30,7 @@
         $projectedLabel = $projectedAllLabel;
         $footnote = null;
         $pendingPrefix = '';
+        $needsAuthorizationLabel = 'Changes Awaiting Your Approval';
     } elseif ($variant === 'customer') {
         $title = null;
         $approvedLabel = 'Approved Work';
@@ -30,8 +38,11 @@
             ? 'Additional Recommendations · '.$pendingCountLabel
             : 'Additional Recommendations';
         $projectedLabel = $projectedAllLabel;
-        $footnote = 'Only work you approve will be performed. Additional recommendations are not authorized yet.';
+        $footnote = $hasRecommendations
+            ? 'Only work you approve will be performed. Additional recommendations are not authorized yet.'
+            : 'Only work you approve will be performed. The changes are not authorized yet.';
         $pendingPrefix = '';
+        $needsAuthorizationLabel = 'Changes Awaiting Your Approval';
     } else {
         $title = 'Approval Forecast';
         $approvedLabel = 'Approved';
@@ -39,6 +50,7 @@
         $projectedLabel = $projectedStaffLabel;
         $footnote = 'Conversation prep - not invoice authority.';
         $pendingPrefix = '+';
+        $needsAuthorizationLabel = 'Needs Authorization';
     }
 @endphp
 
@@ -50,6 +62,13 @@
                 <dt class="fw-normal text-secondary">{{ $approvedLabel }}</dt>
                 <dd class="mb-0 fw-semibold ark-money">{{ $forecast['approved_label'] }}</dd>
             </div>
+            @if ($needsAuthorizationCents > 0)
+                <div class="d-flex justify-content-between align-items-baseline gap-3 mt-1" data-forecast-needs-authorization>
+                    <dt class="fw-normal text-secondary">{{ $needsAuthorizationLabel }}</dt>
+                    <dd class="mb-0 fw-semibold text-orange ark-money">{{ $pendingPrefix }}{{ $forecast['needs_authorization_label'] }}</dd>
+                </div>
+            @endif
+            @if ($hasRecommendations)
             <div class="d-flex justify-content-between align-items-baseline gap-3 mt-1">
                 <dt class="fw-normal text-secondary">
                     {{ $pendingLabel }}
@@ -59,6 +78,7 @@
                 </dt>
                 <dd class="mb-0 fw-semibold text-orange ark-money">{{ $pendingPrefix }}{{ $forecast['pending_label'] }}</dd>
             </div>
+            @endif
             <div class="d-flex justify-content-between align-items-baseline gap-3 border-top pt-2 mt-2">
                 <dt>{{ $projectedLabel }}</dt>
                 <dd class="mb-0 fw-bold ark-money">{{ $forecast['projected_label'] }}</dd>
@@ -101,6 +121,23 @@
                     'approval-forecast-pdf__value' => $variant === 'pdf',
                 ])>{{ $forecast['approved_label'] }}</dd>
             </div>
+            @if ($needsAuthorizationCents > 0)
+                <div @class([
+                    'ops-total-row py-0.5' => $variant === 'staff',
+                    'flex items-baseline justify-between gap-3' => $variant === 'customer',
+                    'approval-forecast-pdf__row' => $variant === 'pdf',
+                ]) data-forecast-needs-authorization>
+                    <dt @class([
+                        'text-slate-500' => $variant !== 'pdf',
+                        'approval-forecast-pdf__label' => $variant === 'pdf',
+                    ])>{{ $needsAuthorizationLabel }}</dt>
+                    <dd @class([
+                        'font-semibold tabular-nums text-amber-800' => $variant !== 'pdf',
+                        'approval-forecast-pdf__value approval-forecast-pdf__value--pending' => $variant === 'pdf',
+                    ])>{{ $pendingPrefix }}{{ $forecast['needs_authorization_label'] }}</dd>
+                </div>
+            @endif
+            @if ($hasRecommendations)
             <div @class([
                 'ops-total-row py-0.5' => $variant === 'staff',
                 'flex items-baseline justify-between gap-3' => $variant === 'customer',
@@ -122,6 +159,7 @@
                     'approval-forecast-pdf__value approval-forecast-pdf__value--pending' => $variant === 'pdf',
                 ])>{{ $pendingPrefix }}{{ $forecast['pending_label'] }}</dd>
             </div>
+            @endif
             <div @class([
                 'ops-total-row ops-total-row--final border-t border-slate-200/80 pt-1.5 mt-1' => $variant === 'staff',
                 'flex items-baseline justify-between gap-3 border-t border-slate-200/80 pt-2 mt-1' => $variant === 'customer',

@@ -13,7 +13,7 @@
     ])
 
     @if (is_array($approvalForecast) && ($approvalForecast['visible'] ?? false))
-        <p class="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Approved work breakdown</p>
+        <p class="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{{ ($approvalForecast['breakdown_label'] ?? 'Approved') === 'Approved' ? 'Approved work breakdown' : 'Estimate breakdown' }}</p>
     @endif
 
     <dl @class([

@@ -3,6 +3,9 @@
 use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Approvals\ApprovalSource;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Documents\EstimateDocumentPdfSnapshot;
+use App\Ark\Operations\Documents\EstimateDocumentService;
+use App\Ark\Operations\Documents\HeadlessChromiumPdfRenderer;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -10,8 +13,10 @@ use App\Ark\Operations\Portal\EstimateAccessToken;
 use App\Ark\Operations\Portal\PortalEstimateAuthorization;
 use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -142,7 +147,8 @@ test('a line added to an approved concern needs approval and one recorded approv
         ->assertOk()
         ->assertSee('Needs authorization', false)
         ->assertSee('Records the customer\'s approval of the work that needs authorization on approved scopes.', false)
-        ->assertSee('value="'.$presentedDefault.'"', false);
+        ->assertSee('value="'.$presentedDefault.'"', false)
+        ->assertSee('name="'.RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD.'" value="'.reauthOpenedForm($repairOrder)['changes'].'"', false);
 
     reauthRecordApproval($repairOrder, $presentedDefault);
 
@@ -307,6 +313,148 @@ test('recording approval for added work keeps a repair order in progress', funct
         ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->toHaveCount(0);
 });
 
+test('a stale approval form cannot authorize changes made after it was opened', function (string $laterChange) {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $calculator = app(EstimateTotalsCalculator::class);
+    $authorization = app(WorkCompletionAuthorization::class);
+    $approvedBefore = $calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents();
+
+    $added = reauthStoreLabor($repairOrder, $concern, 'Replace caliper slide pins', '1.00', '120.00');
+    $opened = reauthOpenedForm($repairOrder);
+    $shownTotal = $approvedBefore + $authorization->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+    $shownAmount = number_format($shownTotal / 100, 2, '.', '');
+
+    // After the form was opened: more work, or the same amount of different work.
+    if ($laterChange === 'more work') {
+        reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    } else {
+        test()->delete(route('operations.repair-orders.lines.destroy', [$repairOrder, $added]))->assertRedirect();
+        reauthStoreLabor($repairOrder, $concern, 'Replace brake hardware kit', '1.00', '120.00');
+    }
+
+    $current = $approvedBefore + $authorization->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+    $eventBefore = ApprovalEvent::query()->sole()->getAttributes();
+    $post = fn (array $form) => test()->post(route('operations.repair-orders.authorization.store', $repairOrder), $form);
+
+    // Untouched, the form submits the live version with what it showed; edited, its opened version.
+    $post(reauthApprovalForm($repairOrder, $shownAmount, ['version' => (int) $repairOrder->fresh()->estimate_version, 'changes' => $opened['changes']]))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+    $post(reauthApprovalForm($repairOrder, number_format($current / 100, 2, '.', ''), ['version' => (int) $repairOrder->fresh()->estimate_version, 'changes' => $opened['changes']]))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+    $post(reauthApprovalForm($repairOrder, $shownAmount, $opened))->assertStatus(409);
+    $post(collect(reauthApprovalForm($repairOrder))->except(RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD)->all())
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+    $post(reauthApprovalForm($repairOrder, number_format($approvedBefore / 100, 2, '.', '')))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+
+    expect(ApprovalEvent::query()->sole()->getAttributes())->toBe($eventBefore)
+        ->and(ApprovedWorkScope::query()->count())->toBe(1)
+        ->and($authorization->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->not->toBeEmpty();
+
+    // Reopened, the form presents the current changes and records exactly that total.
+    reauthRecordApproval($repairOrder, number_format($current / 100, 2, '.', ''));
+
+    expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first()->approved_amount_cents)->toBe($current)
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents())->toBe($current)
+        ->and($authorization->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->toHaveCount(0);
+})->with(['more work', 'same amount of different work']);
+
+test('a supplemental approval amount that contradicts the changed work is refused', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $eventBefore = ApprovalEvent::query()->sole()->getAttributes();
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+
+    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), reauthApprovalForm($repairOrder, '1.00'))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+
+    expect(ApprovalEvent::query()->sole()->getAttributes())->toBe($eventBefore)
+        ->and(ApprovedWorkScope::query()->count())->toBe(1)
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern']))->pluck('id')->all())
+        ->toBe([$labor->id]);
+});
+
+test('a supplemental approval of diagnostic-intent work records the approved total, never zero', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $concern->update(['recommendation_intent' => 'diagnostic']);
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    reauthRecordApproval($repairOrder);
+
+    $latest = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first();
+
+    expect($latest->approved_amount_cents)
+        ->toBe(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents())
+        ->and($latest->approved_amount_cents)->toBeGreaterThan(0);
+});
+
+test('authorization history shows each event with its own recorded amount', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $first = ApprovalEvent::query()->sole();
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    reauthRecordApproval($repairOrder);
+
+    $supplemental = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first();
+    $money = fn (int $cents): string => '$'.number_format($cents / 100, 2);
+
+    expect($supplemental->approved_amount_cents)->toBeGreaterThan($first->approved_amount_cents);
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [$repairOrder, 'auth']))
+        ->assertOk()
+        ->assertSeeInOrder([$money($supplemental->approved_amount_cents), $money($first->approved_amount_cents)], false)
+        ->assertDontSee('Customer deferred recommended work', false);
+});
+
+test('the estimate pdf separates the approved amount from changes awaiting approval', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $calculator = app(EstimateTotalsCalculator::class);
+    $approved = $calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    $increase = app(WorkCompletionAuthorization::class)->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+
+    $estimate = app(EstimateDocumentService::class)->createOrRefresh($repairOrder->fresh());
+    $html = view(HeadlessChromiumPdfRenderer::VIEW, [
+        'document' => $estimate,
+        'snapshot' => app(EstimateDocumentPdfSnapshot::class)->resolve($estimate),
+    ])->render();
+    $text = trim((string) preg_replace('/\s+/', ' ', html_entity_decode((string) preg_replace('/<[^>]+>/', ' ', $html))));
+
+    expect($text)->toContain('Estimate Total')
+        ->and($text)->not->toContain('Approved Total')
+        ->and($text)->toContain('Approved Work '.$approved->format($approved->totalCents()))
+        ->and($text)->toContain('Changes Awaiting Your Approval '.$approved->format($increase));
+});
+
+test('portal line amounts reconcile with the concern total before tax and fees', function () {
+    ShopSettings::current()->update([
+        'tax_enabled' => true,
+        'default_tax_rate' => '8.000',
+        'taxable_labor' => true,
+        'taxable_parts' => true,
+        'shop_fee_enabled' => false,
+    ]);
+    [$repairOrder, $concern, $labor, $part] = reauthApprovedRepairOrder();
+    $labor = $labor->fresh();
+    $money = fn (int $cents): string => '$'.number_format($cents / 100, 2);
+
+    expect($labor->total_cents)->toBeGreaterThan($labor->subtotal_cents);
+
+    EstimateAccessToken::createForPlainToken($repairOrder, reauthPortalToken());
+    auth()->logout();
+
+    $this->get(route('portal.estimates.show', ['token' => reauthPortalToken()]))
+        ->assertOk()
+        ->assertSeeInOrder([
+            'Front brakes',
+            $money((int) $labor->subtotal_cents + (int) $part->fresh()->subtotal_cents),
+            $money((int) $labor->subtotal_cents),
+            $money((int) $part->fresh()->subtotal_cents),
+        ], false)
+        ->assertDontSee($money((int) $labor->total_cents), false);
+});
+
 /**
  * @return array{0: RepairOrder, 1: RepairOrderConcern, 2: RepairOrderLine, 3: RepairOrderLine}
  */
@@ -400,11 +548,40 @@ function reauthPatchLabor(
 
 function reauthRecordApproval(RepairOrder $repairOrder, ?string $amount = null): void
 {
-    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), array_filter([
+    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), reauthApprovalForm($repairOrder, $amount))
+        ->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#authorization-rail');
+}
+
+/**
+ * The record form as staff submit it, as rendered when it was opened (now, unless given).
+ *
+ * @param  array{version: int, changes: string}|null  $opened
+ * @return array<string, mixed>
+ */
+function reauthApprovalForm(RepairOrder $repairOrder, ?string $amount = null, ?array $opened = null): array
+{
+    $opened ??= reauthOpenedForm($repairOrder);
+
+    return array_filter([
         'source' => ApprovalSource::Phone->value,
         'approved_by' => 'Morgan Brown',
         'approved_amount' => $amount,
-    ], fn ($value): bool => $value !== null))->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#authorization-rail');
+        RepairOrderConcurrency::FIELD => $opened['version'],
+        RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD => $opened['changes'],
+    ], fn ($value): bool => $value !== null);
+}
+
+/**
+ * @return array{version: int, changes: string}
+ */
+function reauthOpenedForm(RepairOrder $repairOrder): array
+{
+    $repairOrder = $repairOrder->fresh(['concerns', 'lines.concern']);
+
+    return [
+        'version' => (int) $repairOrder->estimate_version,
+        'changes' => app(WorkCompletionAuthorization::class)->pendingChangesFingerprint($repairOrder),
+    ];
 }
 
 function reauthDispositionChangesAwayFromApproved(RepairOrder $repairOrder): int
