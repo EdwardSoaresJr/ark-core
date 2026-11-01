@@ -111,9 +111,7 @@
                     </div>
                 @endif
                 <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
-                    <div class="ark-legacy">
-                        <x-operations.workstation-presence :presence="$workstationPresence" />
-                    </div>
+                    <x-operations.workstation-presence :presence="$workstationPresence" ui="tabler" />
                     @include('components.operations.shell.tabler-user-menu', [
                         'menuUser' => $user,
                         'avatarUser' => $topbarAvatarUser,
