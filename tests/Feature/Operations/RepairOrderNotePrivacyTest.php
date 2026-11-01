@@ -257,7 +257,7 @@ NOTE;
         ->getContent();
 
     expect($worksheetHtml)
-        ->toContain('ops-note-body')
+        ->toContain('style="white-space: pre-line">Tire Tread Depths')
         ->toContain('Tire Tread Depths')
         ->toContain('Front Driver: 2/32&quot;')
         ->toContain('Brake Pad Measurements');

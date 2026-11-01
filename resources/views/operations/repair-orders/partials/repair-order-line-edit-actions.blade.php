@@ -7,9 +7,10 @@
 
 <div
     @class([
-        'ops-line-edit-actions',
-        'lg:col-span-7 lg:col-start-1' => $gridPlacement,
+        'd-flex flex-wrap align-items-center justify-content-between gap-2',
+        'col-12' => $gridPlacement,
     ])
+    data-line-edit-actions
     x-data="{
         confirmDelete: false,
         confirmTimer: null,
@@ -55,18 +56,16 @@
     <button
         type="submit"
         form="line-update-{{ $line->id }}"
-        class="ops-line-edit-actions__save"
+        class="btn btn-primary btn-sm"
         aria-label="Save line"
         title="Save line"
     >
-        <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="none">
-            <path d="M5 10.5l3.25 3.25L15 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <span class="ops-line-edit-actions__label">Save</span>
+        <x-tabler.icon name="check" />
+        <span>Save</span>
     </button>
 
     @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersDestructive->value)
-        <div class="ops-line-edit-actions__danger">
+        <div>
             <form
                 method="POST"
                 action="{{ route('operations.repair-orders.lines.destroy', [$repairOrder, $line]) }}"
@@ -79,26 +78,24 @@
                 @method('DELETE')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
 
-                <div class="ops-line-edit-actions__danger-buttons">
+                <div class="btn-list">
                     <button
                         type="button"
                         x-show="! confirmDelete"
-                        class="ops-line-edit-actions__delete"
+                        class="btn btn-ghost-danger btn-sm"
                         aria-label="Delete line"
                         title="Remove this line (requires confirmation)"
                         @click="armDelete()"
                     >
-                        <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="none">
-                            <path d="M7.25 5.5V4.75A1.75 1.75 0 019 3h2a1.75 1.75 0 011.75 1.75v.75M4.75 5.5h10.5M8 8.25v5M12 8.25v5M6.25 5.5l.5 10A1.75 1.75 0 008.5 17h3a1.75 1.75 0 001.75-1.5l.5-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        <span class="ops-line-edit-actions__label">Delete</span>
+                        <x-tabler.icon name="trash" />
+                        <span>Delete</span>
                     </button>
 
                     <button
                         type="submit"
                         x-show="confirmDelete"
                         x-cloak
-                        class="ops-line-edit-actions__confirm-delete"
+                        class="btn btn-danger btn-sm"
                     >
                         Confirm delete
                     </button>
@@ -107,7 +104,7 @@
                         type="button"
                         x-show="confirmDelete"
                         x-cloak
-                        class="ops-line-edit-actions__cancel-delete"
+                        class="btn btn-sm"
                         @click="cancelDelete()"
                     >
                         Cancel
