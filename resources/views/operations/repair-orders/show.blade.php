@@ -1721,9 +1721,8 @@
                         'partsReadinessCounts' => $partsReadinessCounts ?? [],
                     ])
 
-                    <x-operations.worksheet-island>
                     @if (($engineOilServices ?? collect())->isNotEmpty())
-                        @include('operations.maintenance.partials.engine-oil-panel', [
+                        @include('operations.repair-orders.partials.repair-order-engine-oil-panel', [
                             'repairOrder' => $repairOrder,
                             'engineOilServices' => $engineOilServices ?? collect(),
                             'estimateVersion' => $estimateVersion,
@@ -1732,7 +1731,7 @@
                     @endif
 
                     @if (($testingAuthorizations ?? collect())->isNotEmpty())
-                        @include('operations.work-authorization.partials.testing-package-panel', [
+                        @include('operations.repair-orders.partials.repair-order-testing-package-panel', [
                             'repairOrder' => $repairOrder,
                             'testingAuthorizations' => $testingAuthorizations ?? collect(),
                             'estimateVersion' => $estimateVersion,
@@ -1740,7 +1739,6 @@
                             'presentationOnly' => true,
                         ])
                     @endif
-                    </x-operations.worksheet-island>
 
                     @php
                         $evidenceItemsCount = ($evidenceGallery['items'] ?? collect())->count();
