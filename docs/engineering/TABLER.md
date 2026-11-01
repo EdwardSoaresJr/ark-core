@@ -122,7 +122,7 @@ Build record pages from these. Do not copy their markup into a view.
 
 | Component | Renders |
 | --- | --- |
-| `<x-tabler.page layout="…" [actions-label] [stack-actions]>` | Page header and body in the layout's container. `actions-label` names the action group for assistive technology. `stack-actions` moves the actions below the title on phones, for record pages whose title is a long name. |
+| `<x-tabler.page layout="…" [actions-label] [stack-actions] [actions-below]>` | Page header and body in the layout's container. `actions-label` names the action group for assistive technology. `stack-actions` moves the actions below the title on phones, for record pages whose title is a long name. `actions-below` puts the actions on a full-width row under the title at every width, for a command bar too wide for the title row (the repair order). |
 | `<x-tabler.page-action [href] icon label [primary]>` | A header button. Without `href` it is a `<button>`; pass its behavior as attributes, for example `x-on:click`. Secondary actions add an icon-only twin with a tooltip below `sm`. |
 | `<x-tabler.search-filters id action query placeholder label clear-url has-filters active-filter-count>` | The search card: search box and button, the phone Filters toggle and count, and the collapsible filter row. The slot holds the filter columns; an optional `hidden` slot holds hidden inputs. Field ids are `{id}-search` and `{id}-filters`. |
 | `<x-tabler.record-card :tone :actions>` | A `.card-sm` with the status color bar, the slot as its body, and the open-in icon row from `operations.partials.tabler-index-card-actions`. |
@@ -184,7 +184,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 **Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
 
 - **Repair order workspace (`operations.repair-orders.show`):**
-  - **High priority before staff Tabler is complete:** the refinement pass on the header and command bar. Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
+  - The header and command bar are Tabler (see "Repair order workspace: header and command bar"). Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
   - **Legacy islands:**
     - the worksheet body and busy overlay;
     - the engine oil panel;
@@ -192,9 +192,8 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
     - the authorization exception form;
     - the RTE labor panel;
     - the rail's Authorization, Portal, and Parts tabs;
-    - the labor guide and parts catalog toolbar buttons;
-    - the visit signals.
-  - Blocked on the header pass and on the financial and authorization workstream.
+    - the labor guide and parts catalog toolbar buttons.
+  - Blocked on the financial and authorization workstream.
 - **Customer hub (`operations.customers.show`):** the conversation context panel (Work tab), the reply composer and message rows (Comms tab), and the document list (Documents tab), all in `.ark-legacy`. They are shared with the communications and document views and move with them. Everything else on the hub, including the customer and vehicle edit modal and the VIN display, is Tabler. The add-document panel inside the modal stays legacy for the same reason.
 
 **Not started (30):** live pages to migrate. "Navigation" pages are linked from the sidebar, a tab, or a page header; "internal" pages open only from another page or a direct link.
@@ -335,7 +334,19 @@ The first slice of the repair order workspace. The page uses the Tabler shell; t
 
 Migrated: the page header (RO number, customer and vehicle) and the toolbar as its actions: Review Estimate Notes, Paperwork / Add Document, the Print menu (a Tabler dropdown with the same items, links, and `arkPrintDocument` calls), the technician select, the lifecycle select with its lost-reason panel, the review-request follow-up, and the PartsTech busy notice. The toolbar keeps `id="review-toolbar"`, so worksheet refreshes still replace it from the server, and every form, hidden field, data attribute, Alpine handler, and permission check is unchanged.
 
-Still legacy, in `.ark-legacy.ops-main > .ops-estimate-workspace` (the wrapper legacy dark-mode and layout rules expect): the flash messages, collaboration banners, intake band, identity band, workspace tabs, the estimate worksheet, the totals and financial rail, the labor guide panel, and the footer dock. The appointment and inspection chips in the toolbar stay legacy because the customer documents share them. `tabler.css` sets `--ops-left-rail-width` inside islands to the Tabler sidebar width, so the fixed footer dock starts at the sidebar edge.
+Still legacy, in `.ark-legacy.ops-main > .ops-estimate-workspace` (the wrapper legacy dark-mode and layout rules expect): the flash messages, collaboration banners, intake band, identity band, workspace tabs, the estimate worksheet, the totals and financial rail, the labor guide panel, and the footer dock. `tabler.css` sets `--ops-left-rail-width` inside islands to the Tabler sidebar width, so the fixed footer dock starts at the sidebar edge.
+
+### Repair order workspace: header and command bar (`operations.repair-orders.show`)
+
+The refinement pass on the first slice's header and toolbar.
+
+- **Header:** "Repair order" and "RO #…". The customer and vehicle subtitle is gone: the Customer | Vehicle | Visit panel directly below shows both, and the footer dock repeats them.
+- **Command bar:** `#review-toolbar` moved from the header's actions column to a full-width row under the title (`<x-tabler.page actions-below>`). It holds, in order:
+  - the appointment and inspection signals, now Tabler (`.ark-ro-signal`), with the same text, links, `data-arrival-posture` / `data-inspection-posture`, and full detail in `title`;
+  - the technician and status selects (`.ark-ro-command-bar__tech`, `__status`) and the review-request follow-up;
+  - Review Estimate Notes, Paperwork / Add Document, and Print, each with a Tabler icon.
+- **Layout:** at 1920 the bar is one line. Narrower, the controls wrap under the signals and span the row, selects first and actions last. Below `sm` the two selects share a row, the actions show only their icons (named by `aria-label` and `title`), and an open lost-reason panel takes the full row.
+- **Unchanged:** `id="review-toolbar"` and its server replacement after worksheet saves; every form, action URL, hidden field, `data-*` hook, Alpine handler, permission check, and lifecycle rule; the Print menu's items and `arkPrintDocument` calls; the Customer | Vehicle | Visit panel; and the sticky footer. The band variants of the posture partials, used by the customer documents, are untouched.
 
 ### Repair order workspace: tabs and rail container (`operations.repair-orders.show`)
 

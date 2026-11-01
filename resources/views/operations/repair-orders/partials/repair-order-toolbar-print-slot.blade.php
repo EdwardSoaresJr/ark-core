@@ -13,10 +13,12 @@
         type="button"
         class="btn"
         title="Scan, upload, or attach paperwork for this visit"
+        aria-label="{{ $paperworkLabel }}"
         data-workspace-modal-trigger="document"
         @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'document', invokeEl: $event.currentTarget } }))"
     >
-        {{ $paperworkLabel }}
+        <x-tabler.icon name="paperclip" />
+        <span class="d-none d-sm-inline">{{ $paperworkLabel }}</span>
     </button>
 @endif
 

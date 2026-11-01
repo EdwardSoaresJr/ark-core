@@ -14,21 +14,21 @@
             ])->filter()->implode(' · ');
         @endphp
         <div
-            class="ops-visit-signal ops-visit-signal--appointment"
+            class="ark-ro-signal"
             data-arrival-posture="{{ $arrivalPosture->posture }}"
             title="{{ $arrivalTitle }}"
         >
-            <span class="ops-visit-signal__label">Appt</span>
-            <span class="ops-visit-signal__value">
-                <span class="ops-visit-signal__mark" aria-hidden="true">✓</span>
+            <span class="subheader">Appt</span>
+            <span class="fw-medium">
+                <x-tabler.icon name="check" class="text-green" />
                 @if ($arrivalPosture->appointmentUrl)
-                    <a href="{{ $arrivalPosture->appointmentUrl }}" class="ops-visit-signal__link">{{ $arrivalPosture->headline }}</a>
+                    <a href="{{ $arrivalPosture->appointmentUrl }}">{{ $arrivalPosture->headline }}</a>
                 @else
                     {{ $arrivalPosture->headline }}
                 @endif
             </span>
             @if (filled($arrivalPosture->whenLabel))
-                <span class="ops-visit-signal__meta">{{ $arrivalPosture->whenLabel }}</span>
+                <span class="text-secondary">{{ $arrivalPosture->whenLabel }}</span>
             @endif
         </div>
     @else

@@ -23,6 +23,7 @@
 @endphp
 
 @if (! $repairOrder->isTerminal())
+    <div class="ark-ro-command-bar__status">
         @if ($errors->has('lifecycle'))
             <div class="small text-danger mb-1">{{ $errors->first('lifecycle') }}</div>
         @endif
@@ -32,7 +33,6 @@
             method="POST"
             action="{{ route('operations.repair-orders.lifecycle.update', $repairOrder) }}"
             class="m-0"
-            style="width: 16rem; max-width: 100%"
             data-lifecycle-form
             data-continuity-region="workflow"
             data-refresh-scope="toolbar"
@@ -111,5 +111,5 @@
                 </div>
             </div>
         </form>
-
+    </div>
 @endif

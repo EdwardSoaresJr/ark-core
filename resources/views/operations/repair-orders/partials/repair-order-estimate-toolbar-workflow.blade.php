@@ -5,7 +5,7 @@
 @endphp
 
 {{-- Primary tech remains for In Progress when no Repair Action owner exists yet (common on PPI / inspection visits). --}}
-<div class="d-flex flex-wrap align-items-start gap-2" style="max-width: 100%">
+<div class="ark-ro-command-bar__workflow" data-ro-command-workflow>
     @unless ($isTerminal)
         @include('operations.repair-orders.partials.repair-order-technician-select', [
             'repairOrder' => $repairOrder,
@@ -35,7 +35,7 @@
             App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value,
             App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersLifecycle->value,
         ])
-            <div class="small" style="max-width: 16rem" data-review-request-follow-up>
+            <div class="ark-ro-command-bar__review small" data-review-request-follow-up>
                 @if ($reviewRequest['already_sent'] && ($reviewRequest['history_entries'] !== [] || filled($reviewRequest['status_label'])))
                     <div data-review-request-status>
                         <div class="fw-bold">Review Requested</div>
