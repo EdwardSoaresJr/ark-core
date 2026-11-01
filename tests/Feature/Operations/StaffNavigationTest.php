@@ -97,26 +97,23 @@ test('each role sees its destinations in order', function (callable $makeUser, a
         'Operations' => ['job-board', 'work-queues', 'schedule', 'communications'],
         'Records' => ['repair-orders', 'vehicles', 'customers'],
         'Business' => ['cockpit', 'reports', 'day-review', 'tech-production'],
-        'System' => ['learn', 'stations', 'settings'],
+        'System' => ['stations', 'settings'],
     ]],
     'advisor' => [fn () => User::factory()->create()->assignRole(ArkRole::Advisor->value), [
         '' => ['dashboard', 'time-clock'],
         'Operations' => ['job-board', 'work-queues', 'schedule', 'communications'],
         'Records' => ['repair-orders', 'vehicles', 'customers'],
         'Business' => ['cockpit', 'reports'],
-        'System' => ['learn'],
     ]],
     'technician' => [fn () => User::factory()->create()->assignRole(ArkRole::Technician->value), [
         '' => ['dashboard', 'time-clock'],
         'Operations' => ['workboard'],
         'Records' => ['repair-orders'],
-        'System' => ['learn'],
     ]],
     'customer' => [fn () => User::factory()->create()->assignRole(ArkRole::Customer->value), []],
     'production access only' => [fn () => User::factory()->create()->givePermissionTo('production.access'), [
         '' => ['dashboard'],
         'Operations' => ['workboard'],
-        'System' => ['learn'],
     ]],
     'scoreboard only' => [fn () => User::factory()->create()->givePermissionTo('scoreboard.operational.view'), [
         '' => ['dashboard'],
@@ -126,6 +123,21 @@ test('each role sees its destinations in order', function (callable $makeUser, a
     ]],
     'signed out' => [fn () => null, []],
 ]);
+
+test('ARKademy is listed for staff only when navigation is configured to show it', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+
+    expect(navigationKeys($advisor))->not->toHaveKey('System')
+        ->and(navigationKeys($technician))->not->toHaveKey('System');
+
+    config(['ark.arkademy_in_navigation' => true]);
+
+    expect(navigationKeys($advisor)['System'])->toBe(['learn'])
+        ->and(navigationKeys($technician)['System'])->toBe(['learn']);
+
+    $this->actingAs($advisor)->followingRedirects()->get(route('operations.learn.index'))->assertOk();
+});
 
 test('a section with no destination for the user is left out of both shells', function (): void {
     $user = User::factory()->create()->givePermissionTo('settings.manage');
@@ -222,6 +234,8 @@ test('each shell marks the current destination', function (): void {
 });
 
 test('every destination has a legacy rail icon', function (): void {
+    config(['ark.arkademy_in_navigation' => true]);
+
     $keys = collect([ArkRole::Admin, ArkRole::Technician])
         ->flatMap(fn (ArkRole $role): array => array_merge(...array_values(navigationKeys(User::factory()->create()->assignRole($role->value)))))
         ->unique();
