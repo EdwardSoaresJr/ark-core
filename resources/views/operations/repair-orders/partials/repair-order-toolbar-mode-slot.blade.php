@@ -1,2 +1,2 @@
-{{-- Mode shortcuts retired - one canonical Repair Order surface. --}}
-<div class="ops-review-toolbar-section ops-review-toolbar-section--mode ops-ro-mode-toolbar-slot d-none" data-ro-mode-toolbar-slot></div>
+{{-- Mode shortcuts retired - one canonical Repair Order surface. ark-workspace-strip.js still looks for this slot. --}}
+<div class="d-none" data-ro-mode-toolbar-slot></div>

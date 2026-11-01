@@ -58,24 +58,19 @@
                 </button>
             @endif
 
-            {{-- Provider buttons keep their legacy colors: a shop picks each parts catalog's color in settings. --}}
             @if ($showLaborGuide && $laborGuides !== [])
-                <x-operations.worksheet-island class="d-inline-block w-auto">
-                    @include('operations.repair-orders.partials.repair-order-labor-guide-intent-button', [
-                        'laborGuides' => $laborGuides,
-                        'laborGuideDefault' => $laborGuideDefault,
-                    ])
-                </x-operations.worksheet-island>
+                @include('operations.repair-orders.partials.repair-order-labor-guide-intent-button', [
+                    'laborGuides' => $laborGuides,
+                    'laborGuideDefault' => $laborGuideDefault,
+                ])
             @endif
 
             @if ($showProcurement)
                 @if ($partsCatalogs !== [])
-                    <x-operations.worksheet-island class="d-inline-block w-auto">
-                        @include('operations.repair-orders.partials.repair-order-partstech-toolbar-group', [
-                            'partsCatalogs' => $partsCatalogs,
-                            'partsCatalogDefault' => $partsCatalogDefault,
-                        ])
-                    </x-operations.worksheet-island>
+                    @include('operations.repair-orders.partials.repair-order-partstech-toolbar-group', [
+                        'partsCatalogs' => $partsCatalogs,
+                        'partsCatalogDefault' => $partsCatalogDefault,
+                    ])
                 @endif
                 @if ($showCaptureDealerQuote)
                     <button
