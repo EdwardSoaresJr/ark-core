@@ -1,17 +1,22 @@
-<x-operations.app title="Repair Order Changed">
-    <section class="mx-auto max-w-2xl border border-amber-300 bg-amber-50 p-4 text-amber-950">
-        <p class="text-xs font-bold uppercase tracking-[0.08em] text-amber-700">Shared Shop State</p>
-        <h1 class="mt-1 text-xl font-black tracking-tight">Estimate changed while you were working.</h1>
-        <p class="mt-2 text-sm font-semibold leading-6 text-amber-900">
-            {{ $message ?? 'Refresh the worksheet and review the latest estimate state before saving.' }}
-        </p>
-        <div class="mt-4 flex flex-wrap gap-2">
-            <a href="{{ url()->previous() }}" class="inline-flex min-h-10 items-center justify-center rounded-sm bg-amber-950 px-3 text-sm font-bold text-white hover:bg-amber-900">
-                Review Latest State
-            </a>
-            <a href="{{ route('operations.index') }}" class="inline-flex min-h-10 items-center justify-center rounded-sm border border-amber-300 bg-white px-3 text-sm font-bold text-amber-950 hover:border-amber-400">
-                Return To Queue
-            </a>
+<x-operations.app title="Repair Order Changed" ui="tabler">
+    <x-tabler.page layout="focused" pretitle="Shared Shop State" title="Estimate changed while you were working.">
+        <div class="card" data-estimate-conflict>
+            <div class="card-status-start bg-warning"></div>
+            <div class="card-body p-3">
+                <p class="mb-0">
+                    {{ $message ?? 'Refresh the worksheet and review the latest estimate state before saving.' }}
+                </p>
+            </div>
+            <div class="card-footer">
+                <div class="btn-list">
+                    <a href="{{ url()->previous() }}" class="btn btn-primary">
+                        Review Latest State
+                    </a>
+                    <a href="{{ route('operations.index') }}" class="btn">
+                        Return To Queue
+                    </a>
+                </div>
+            </div>
         </div>
-    </section>
+    </x-tabler.page>
 </x-operations.app>
