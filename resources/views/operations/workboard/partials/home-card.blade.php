@@ -121,13 +121,17 @@
         <div @class(['card-footer p-1', 'bg-yellow-lt' => $attention === 'attention', 'bg-red-lt' => $attention === 'critical'])>
             <div class="d-flex justify-content-between" role="group" aria-label="Activity">
                 @foreach ($activityMarks as $mark)
+                    {{-- tabindex -1: a tap focuses the mark, which shows its tooltip, without adding six tab stops per card. --}}
                     <span
                         class="avatar avatar-xs rounded {{ $markClasses($mark->state->value) }}"
                         data-job-card-mark="{{ $mark->key }}"
                         data-job-card-mark-state="{{ $mark->state->value }}"
+                        role="img"
+                        tabindex="-1"
                         title="{{ $mark->tooltip }}"
                         aria-label="{{ $mark->tooltip }}"
                         data-bs-toggle="tooltip"
+                        data-bs-trigger="hover focus"
                     >
                         @include('operations.workboard.partials.activity-mark-icon', [
                             'key' => $mark->key,

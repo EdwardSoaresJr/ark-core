@@ -52,7 +52,8 @@ test('job board renders on tabler with filterable lanes of repair order cards', 
         ->and($xpath->query('ancestor::section[@data-lane-key]', $card)->item(0)->getAttribute('id'))->toStartWith('ops-home-col-')
         ->and($xpath->query('.//article['.$hasClass('card').']//a[normalize-space()="RO #'.$repairOrder->repair_order_id.'"]', $card)->length)->toBe(1)
         ->and($xpath->query('.//*['.$hasClass('badge').']', $card)->length)->toBeGreaterThanOrEqual(1)
-        ->and($xpath->query('.//*[@data-job-card-mark][@data-bs-toggle="tooltip"][@aria-label!=""]', $card)->length)->toBeGreaterThanOrEqual(1);
+        ->and($xpath->query('.//*[@data-job-card-mark]', $card)->length)->toBeGreaterThanOrEqual(1)
+        ->and($xpath->query('.//*[@data-job-card-mark][not(@role="img") or not(@tabindex="-1") or not(@data-bs-toggle="tooltip") or not(contains(@data-bs-trigger, "focus")) or @aria-label=""]', $card)->length)->toBe(0);
 });
 
 test('advisor home board renders kanban columns with dense cards', function () {
