@@ -251,17 +251,137 @@ test('the inspection point walk renders in the Tabler shell with its evidence an
         ->toContain('Back to sections');
 });
 
-test('the inspection tablet surface keeps its own bay layout', function (): void {
+/**
+ * The tablet bay layout: Tabler assets, no staff sidebar, and no legacy class or island anywhere in the body.
+ */
+function inspectionTabletBody(TestResponse $response): string
+{
+    $html = $response->assertOk()
+        ->assertSee('<!-- vite: resources/css/app.css,resources/css/tabler.css,resources/js/app.js,resources/js/tabler.js -->', false)
+        ->assertSee('data-inspection-tablet-shell', false)
+        ->assertSee("document.documentElement.setAttribute('data-bs-theme', theme)", false)
+        ->assertDontSee('navbar navbar-vertical', false)
+        ->getContent();
+
+    $start = strpos($html, '<body');
+    $end = strrpos($html, '</body>');
+
+    expect($start)->not->toBeFalse()
+        ->and($end)->not->toBeFalse();
+
+    $body = substr($html, $start, $end - $start);
+
+    expectNoLegacyMarkup($body);
+    expect($body)->toContain('<main>')
+        ->toContain('x-data="arkImageLightbox()"');
+
+    return $body;
+}
+
+test('the inspection tablet surface renders the section walk in a Tabler bay layout', function (?User $viewer, bool $canRecord): void {
     $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
     $repairOrder = dailyOpsRepairOrder($technician);
     app(EnsureInspectionAction::class)->execute($repairOrder, $technician);
 
-    $this->actingAs($technician)
-        ->get(route('operations.repair-orders.inspection.show', ['repairOrder' => $repairOrder, 'surface' => 'tablet']))
-        ->assertOk()
-        ->assertSee('ops-inspection-tablet-shell', false)
-        ->assertSee('ops-inspection-sections--tablet', false)
-        ->assertDontSee('tabler.css', false);
+    $viewer ??= $technician;
+
+    $body = inspectionTabletBody($this->actingAs($viewer)->get(route('operations.repair-orders.inspection.show', [
+        'repairOrder' => $repairOrder,
+        'surface' => 'tablet',
+    ])));
+
+    expect($body)->toContain('data-inspection-surface="tablet"')
+        ->toContain('data-inspection-tablet-header')
+        ->toContain('RO #'.$repairOrder->repair_order_id)
+        ->toContain('data-inspection-coverage')
+        ->toContain('id="inspection-sections"')
+        ->toContain('data-surface="tablet"')
+        ->toContain('x-data="arkInspectionSectionWalk(')
+        ->toContain('surface=tablet')
+        ->toContain('x-on:click="toggleSection(section.key)"')
+        ->toContain('x-on:click="retry(point)"')
+        ->toContain('data-inspection-other-findings')
+        ->toContain('data-bs-target="#inspection-other-findings"')
+        ->toContain('Other Findings')
+        ->toContain('action="'.route('operations.repair-orders.inspection.findings.store', $repairOrder).'"')
+        ->toContain('name="label"')
+        ->toContain('name="measurement_value"')
+        ->toContain('name="measurement_unit"')
+        ->toContain('name="photo"')
+        ->toContain('name="notes"')
+        ->toContain('name="intent"')
+        ->toContain('x-on:ark-open-finding-capture.window="openCapture()"')
+        ->not->toContain('data-inspection-sections-back');
+
+    if ($canRecord) {
+        expect($body)->toContain('data-inspection-finding-btn')
+            ->toContain('data-inspection-finding-fab')
+            ->toContain('x-on:click="setCondition(point, option.value)"')
+            ->toContain('x-on:click="toggleObservation(point, option.key)"')
+            ->toContain('x-on:input="scheduleNote(point)"')
+            ->toContain('name="purpose"')
+            ->not->toContain('Recording is limited');
+    } else {
+        expect($body)->not->toContain('data-inspection-finding-btn')
+            ->toContain('Recording is limited to the assigned technician or an advisor.');
+    }
+})->with([
+    'assigned technician' => [fn () => null, true],
+    'advisor' => [fn () => User::factory()->create()->assignRole(ArkRole::Advisor->value), true],
+    'admin' => [fn () => User::factory()->create()->assignRole(ArkRole::Admin->value), true],
+    'other technician' => [fn () => User::factory()->create()->assignRole(ArkRole::Technician->value), false],
+]);
+
+test('the inspection tablet point walk keeps its camera form, tablet photo URLs, and walk navigation', function (): void {
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $repairOrder = dailyOpsRepairOrder($technician);
+    $inspection = app(EnsureInspectionAction::class)->execute($repairOrder, $technician);
+    DefaultInspectionTemplateCatalog::seedIfMissing();
+    app(ApplyInspectionTemplateAction::class)->execute($repairOrder, $inspection, actor: $technician);
+    $item = $inspection->items()->where('label', 'LF Tire')->firstOrFail();
+    $item->photos()->create([
+        'storage_path' => 'inspection-tests/daily-ops-tablet.jpg',
+        'content_type' => 'image/jpeg',
+        'purpose' => 'internal',
+        'original_name' => 'daily-ops-tablet.jpg',
+        'byte_size' => 1200,
+    ]);
+
+    $body = inspectionTabletBody($this->actingAs($technician)->get(route('operations.repair-orders.inspection.show', [
+        'repairOrder' => $repairOrder,
+        'point' => $item->id,
+        'surface' => 'tablet',
+    ])));
+
+    $photoStoreUrl = route('operations.repair-orders.inspection.photos.store', [$repairOrder, $item->id]).'?surface=tablet';
+
+    expect($body)->toContain('data-inspection-surface="tablet"')
+        ->toContain('id="inspection-walk"')
+        ->toContain('data-surface="tablet"')
+        ->toContain('x-data="arkInspectionWalk(')
+        ->toContain('x-on:click="setCondition(')
+        ->toContain('data-inspection-walk-meter')
+        ->not->toContain('aria-label="Inspection walk order"')
+        ->toContain('data-inspection-walk-camera')
+        ->toContain('action="'.$photoStoreUrl.'"')
+        ->toContain('<input type="hidden" name="surface" value="tablet">')
+        ->toContain('name="purpose" value="')
+        ->toContain('capture="environment"')
+        ->toContain('onchange="this.form.submit()"')
+        ->toContain('Take photo')
+        ->toContain('data-ops-lightbox=')
+        ->toContain('onsubmit="return confirm(\'Remove this photo?\');"')
+        ->toContain('name="_method" value="delete"')
+        ->toContain('data-inspection-walk-more')
+        ->toContain('Previous visit &amp; notes')
+        ->toContain('x-on:change.debounce.500ms="saveNote()"')
+        ->toContain('aria-label="Walk navigation"')
+        ->toContain('data-inspection-walk-next')
+        ->toContain('data-inspection-sections-back')
+        ->toContain('Back to sections')
+        ->not->toContain('Create recommendation');
+
+    expect(substr_count($body, 'name="surface" value="tablet"'))->toBeGreaterThanOrEqual(2);
 });
 
 test('engine oil confirmation renders in the Tabler shell with the same form', function (): void {
