@@ -329,3 +329,95 @@ test('day review stays forbidden to advisors', function (): void {
         ->get(route('operations.owner.day-review'))
         ->assertForbidden();
 });
+
+function ownerReportsFlagTechnician(): User
+{
+    $technician = User::factory()->create([
+        'name' => 'Landon Carter',
+        'labor_pay_basis' => \App\Ark\Operations\Labor\TechnicianLaborPayBasis::Flag->value,
+        'flag_rate_cents' => 2500,
+        'floor_rate_cents' => 1516,
+        'labor_cost_cents' => 8760,
+    ])->assignRole(ArkRole::Technician->value);
+
+    \App\Ark\Operations\Labor\TechnicianCompensationAgreement::query()->create([
+        'user_id' => $technician->id,
+        'labor_pay_basis' => \App\Ark\Operations\Labor\TechnicianLaborPayBasis::Flag->value,
+        'flag_rate_cents' => 2500,
+        'floor_rate_cents' => 1516,
+        'effective_from' => Carbon::parse('2026-07-01')->startOfDay(),
+        'effective_to' => null,
+    ]);
+
+    return $technician;
+}
+
+test('technician production index renders on tabler with the week filter, figures, and open link', function (): void {
+    config(['technician_compensation.recognition_authority_starts_at' => '2026-07-27']);
+    $admin = ownerReportsAdmin();
+    $technician = ownerReportsFlagTechnician();
+    app(\App\Ark\Operations\Labor\UpsertTechnicianCompensableWeekAction::class)->handle($technician, [
+        '2026-07-27' => 8.0,
+        '2026-07-28' => 7.5,
+    ], $admin);
+
+    $response = $this->actingAs($admin)
+        ->get(route('operations.owner.technician-production.index', ['from' => '2026-07-27', 'to' => '2026-08-02']))
+        ->assertOk();
+    $xpath = ownerReportsAssertTablerPage($response->getContent(), 'Technician production');
+    $from = $response->viewData('from');
+    $to = $response->viewData('to');
+
+    $form = $xpath->query('//form[@data-technician-production-range][@method="GET"][@action="'.route('operations.owner.technician-production.index').'"]')->item(0);
+    expect($form)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//input[@type="date"][@name="from"][@value="'.$from.'"]['.ownerReportsClass('form-control').']', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="date"][@name="to"][@value="'.$to.'"]['.ownerReportsClass('form-control').']', $form)->length)->toBe(1);
+
+    $row = $xpath->query('//*[@data-technician-production-table]['.ownerReportsClass('card').']//table['.ownerReportsClass('card-table').']//tr[@data-technician-production-row="'.$technician->id.'"]')->item(0);
+    expect($row)->toBeInstanceOf(DOMElement::class)
+        ->and($row->textContent)->toContain('Landon Carter')->toContain('15.5')
+        ->and($xpath->query('.//a[@href="'.route('operations.owner.technician-production.show', ['user' => $technician->id, 'from' => $from, 'to' => $to]).'"]', $row)->length)->toBe(1);
+});
+
+test('technician production detail renders on tabler with its figures, hours form, and audit trail', function (): void {
+    config(['technician_compensation.recognition_authority_starts_at' => '2026-07-27']);
+    $admin = ownerReportsAdmin();
+    $technician = ownerReportsFlagTechnician();
+    app(\App\Ark\Operations\Labor\UpsertTechnicianCompensableWeekAction::class)->handle($technician, [
+        '2026-07-27' => 8.0,
+    ], $admin);
+
+    $response = $this->actingAs($admin)
+        ->get(route('operations.owner.technician-production.show', ['user' => $technician, 'from' => '2026-07-27', 'to' => '2026-08-02']))
+        ->assertOk();
+    $html = $response->getContent();
+    $xpath = ownerReportsAssertTablerPage($html, 'Landon Carter');
+    $from = $response->viewData('from');
+    $to = $response->viewData('to');
+
+    expect($xpath->query('//a[@href="'.route('operations.owner.technician-production.index', ['from' => $from, 'to' => $to]).'"]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//a[@href="'.route('operations.time-clock.staff', $technician).'"]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//form[@data-technician-production-range][@action="'.route('operations.owner.technician-production.show', $technician).'"]//input[@name="from"][@value="'.$from.'"]')->length)->toBe(1);
+
+    $form = $xpath->query('//*[@data-technician-compensable-hours]//form[@method="POST"][@action="'.route('operations.owner.technician-production.time', $technician).'"]')->item(0);
+    expect($form)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//input[@name="_token"]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="hidden"][@name="from"][@value="'.$from.'"]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="hidden"][@name="to"][@value="'.$to.'"]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="number"][@name="hours[2026-07-27]"][@value="8.00"][@step="0.25"]['.ownerReportsClass('form-control').']', $form)->length)->toBe(1)
+        ->and($xpath->query('.//label[@for="hours-2026-07-27"]', $form)->length)->toBe(1);
+
+    $assist = $response->viewData('assist');
+    $picture = ownerReportsTexts($xpath, '//*[@data-technician-production-picture]')[0] ?? '';
+    expect($picture)->toContain(number_format((float) $assist['clock_hours'], 1))
+        ->and(ownerReportsTexts($xpath, '//*[@data-technician-compensation-assist]')[0] ?? '')->toContain('Base compensation assist')
+        ->and($xpath->query('//details[@data-technician-audit-trail][@open]['.ownerReportsClass('card').']')->length)->toBe(1);
+});
+
+test('technician production stays forbidden to advisors', function (): void {
+    $technician = ownerReportsFlagTechnician();
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    $this->actingAs($advisor)->get(route('operations.owner.technician-production.index'))->assertForbidden();
+    $this->actingAs($advisor)->get(route('operations.owner.technician-production.show', $technician))->assertForbidden();
+});
