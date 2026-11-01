@@ -38,75 +38,82 @@
         : $work_queue->description();
 @endphp
 
-<x-operations.app :title="$work_queue->label()">
-    <section class="ops-work-queue-page">
-        @if (session('comms_gate') || session('status'))
-            <div class="ops-board-shell mb-3">
-                @if (session('comms_gate'))
-                    <div class="border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-950" role="alert">
-                        {{ (int) (session('comms_gate.count') ?? 0) }} customer {{ ((int) (session('comms_gate.count') ?? 0)) === 1 ? 'contact' : 'contacts' }} still need action. Clear the communications queue before opening other ARK pages.
-                    </div>
-                @endif
+@php
+    $queueToneColor = match ($queuePageTone) {
+        'tasks' => 'green',
+        'follow-ups' => 'purple',
+        'scheduled' => 'yellow',
+        'decision' => 'orange',
+        default => 'azure',
+    };
+@endphp
 
-                @if (session('status'))
-                    <div class="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950" role="status">
-                        {{ session('status') }}
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        <x-operations.queue-page-header
-            :id="'ops-work-queue-'.$work_queue->value"
-            :title="$work_queue->label()"
-            :description="$queueDescription"
-            :count="$queueCount"
-            :tone="$queuePageTone"
-        >
+<x-operations.app :title="$work_queue->label()" ui="tabler">
+    <x-tabler.page
+        layout="fluid"
+        :title="$work_queue->label()"
+        :title-id="'ops-work-queue-'.$work_queue->value"
+        :title-count="$queueCount"
+        :subtitle="$queueDescription"
+        actions-label="Queue actions"
+    >
+        <x-slot:actions>
             @if (filled($addLabel) && filled($addStoreRoute))
-                <x-slot:actions>
-                    @include('operations.work.partials.advisor-work-item-add', [
-                        'label' => $addLabel,
-                        'storeRoute' => $addStoreRoute,
-                    ])
-                </x-slot:actions>
+                @include('operations.work.partials.advisor-work-item-add', [
+                    'label' => $addLabel,
+                    'storeRoute' => $addStoreRoute,
+                ])
             @endif
-        </x-operations.queue-page-header>
+        </x-slot:actions>
 
-        <section class="ops-home-band {{ $work_queue->bandClass() }} ops-home-band--queue-page">
-            <div class="ops-home-band-body p-0">
-                @switch($work_queue)
-                    @case(\App\Ark\Operations\Work\WorkQueue::Tasks)
+        <div class="d-flex flex-column gap-3" data-work-queue="{{ $work_queue->value }}">
+            @if (session('comms_gate'))
+                <div class="alert alert-danger mb-0" role="alert">
+                    {{ (int) (session('comms_gate.count') ?? 0) }} customer {{ ((int) (session('comms_gate.count') ?? 0)) === 1 ? 'contact' : 'contacts' }} still need action. Clear the communications queue before opening other ARK pages.
+                </div>
+            @endif
+            @if (session('status'))
+                <div class="alert alert-success mb-0" role="status">{{ session('status') }}</div>
+            @endif
+
+            @switch($work_queue)
+                @case(\App\Ark\Operations\Work\WorkQueue::Tasks)
+                    <div class="card">
+                        <div class="card-status-top bg-{{ $queueToneColor }}"></div>
                         @include('operations.work.partials.queue-tasks-body')
-                        @break
+                    </div>
+                    @break
 
-                    @case(\App\Ark\Operations\Work\WorkQueue::FollowUps)
+                @case(\App\Ark\Operations\Work\WorkQueue::FollowUps)
+                    <div class="card">
+                        <div class="card-status-top bg-{{ $queueToneColor }}"></div>
                         @if ($followUpOverdueCount > 0)
-                            <p class="border-b border-slate-200 px-3 py-2 text-xs font-bold text-rose-800">
+                            <div class="card-body py-2 small fw-bold text-danger border-bottom">
                                 {{ $followUpOverdueCount }} overdue follow-up{{ $followUpOverdueCount === 1 ? '' : 's' }}
                                 @if (filled($followUpOverdueOpportunity))
-                                    <span class="text-rose-950">· {{ $followUpOverdueOpportunity }} opportunity</span>
+                                    · {{ $followUpOverdueOpportunity }} opportunity
                                 @endif
-                            </p>
+                            </div>
                         @endif
                         @include('operations.work.partials.queue-follow-ups-body')
-                        @break
+                    </div>
+                    @break
 
-                    @case(\App\Ark\Operations\Work\WorkQueue::Scheduled)
+                @case(\App\Ark\Operations\Work\WorkQueue::Scheduled)
+                    <div class="card">
+                        <div class="card-status-top bg-{{ $queueToneColor }}"></div>
                         @include('operations.work.partials.queue-scheduled-body')
-                        @break
+                    </div>
+                    @break
 
-                    @case(\App\Ark\Operations\Work\WorkQueue::Comms)
-                        <div class="space-y-3">
-                            @include('operations.work.partials.queue-comms-body', ['full' => true])
-                        </div>
-                        @break
+                @case(\App\Ark\Operations\Work\WorkQueue::Comms)
+                    @include('operations.work.partials.queue-comms-body', ['full' => true])
+                    @break
 
-                    @case(\App\Ark\Operations\Work\WorkQueue::Decisions)
-                        @include('operations.work.partials.queue-decisions-body', ['full' => true])
-                        @break
-                @endswitch
-            </div>
-        </section>
-    </section>
+                @case(\App\Ark\Operations\Work\WorkQueue::Decisions)
+                    @include('operations.work.partials.queue-decisions-body', ['full' => true])
+                    @break
+            @endswitch
+        </div>
+    </x-tabler.page>
 </x-operations.app>

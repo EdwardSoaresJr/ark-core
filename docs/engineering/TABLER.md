@@ -164,7 +164,7 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 - Schedule appointment (`operations.schedule`). The sidebar does not highlight Schedule on this page, because `StaffNavigation` matches only `operations.appointments.*`. That belongs to a shared navigation change, not a view slice.
 - Time clock (`operations.time-clock.index`)
 
-**Partially migrated (6):** on Tabler, with legacy islands or corrections left.
+**Partially migrated (7):** on Tabler, with legacy islands or corrections left.
 
 - **Repair order workspace (`operations.repair-orders.show`):**
   - **High priority before staff Tabler is complete:** the refinement pass on the header and command bar. Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
@@ -182,17 +182,20 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 - **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
 - **Dashboard (`operations.today`):** technician lanes.
 - **Schedule (`operations.appointments.index`):** the calendar board.
+- **Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions):** the Customer Decisions lanes (`customer-decision-pressure-section` and its rows, which carry the quick-add and schedule panels driven by `ark-work-quick-add.js`). The Comms queue route redirects to the communications inbox.
 - **Check In (`operations.intake.create`):** the previous-visit suggestions under Reason for visit (`repair-order-mention-suggest`, shared with the repair order workspace modal) and the billing class help tip (`x-operations.help-tip`, which wraps itself in an island).
 
-**Not started (45):**
+**Not started (42):**
 
-- **Daily operations (9):** Workboard (`operations.workboard`), briefing, intake queue (`operations.intake.index`), work queue (`operations.work.queue`), new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`). The staff history page corrects and deletes compensable hours, so it migrates on its own. The intake queue, work queue, and communications workboard share `x-operations.queue-page-header`, `queue-band-header`, and `lifecycle-status-menu`, so they migrate together.
+- **Daily operations (7):** Workboard (`operations.workboard`), briefing, new contact (`operations.leads.create-contact`), caller lookup, observations, the shop scoreboard, and the staff time clock history (`operations.time-clock.staff`). The staff history page corrects and deletes compensable hours, so it migrates on its own.
 - **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation. These wait for the decision on the technician phone workflow.
-- **Communications (11):** the communications workboard, calls, the inbox, attention, history, and internal workspace views, conversation reply, and shop communications (index, device, person, and setup required).
+- **Communications (10):** calls, the inbox, attention, history, and internal workspace views, conversation reply, and shop communications (index, device, person, and setup required).
 - **Owner and reports (9):** business, day review, staff coaching, call intelligence (index and detail), technician production (index and detail), reports index, and operational report.
 - **Learning (3):** ARKademy, print selection, and team progress.
 - **Account and system (4):** profile, ARK Cloud connecting, Platform clusters, and the 409 error page.
 - **Financial and authorization (6):** the estimate document, the document viewer, record testing outcome, the dealer parts quote, parts matrix tuning, and the end-of-day report. These wait for the release-blocker workstream.
+
+**Unreachable views (2):** their routes redirect, so no one sees them; remove them rather than migrate. `operations/intake/index` (`operations.intake.index` redirects to the Job Board) and `operations/communications/workboard` (`operations.communications.workboard` redirects to the inbox). The Comms work queue and `operations/partials/work-tab-queues` are unreachable the same way.
 
 **Known issues across migrated pages:**
 
