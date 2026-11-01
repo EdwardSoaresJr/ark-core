@@ -296,3 +296,77 @@ test('engine oil confirmation renders in the Tabler shell with the same form', f
     $this->actingAs($admin)->get($url)->assertOk();
     $this->actingAs($technician)->get($url)->assertForbidden();
 });
+
+test('new contact renders in the Tabler shell with the same form', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $url = route('operations.ingress.create-contact', ['phone' => '7195550177']);
+
+    $main = dailyOpsTablerMain($this->actingAs($advisor)->get($url));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('action="'.route('operations.ingress.create-contact.store').'"')
+        ->toContain('name="return_url"')
+        ->toContain('id="ingress-contact-first-name"')
+        ->toContain('id="ingress-contact-last-name"')
+        ->toContain('id="ingress-contact-phone"')
+        ->toContain('id="ingress-contact-email"')
+        ->toContain('id="ingress-contact-preference"')
+        ->toContain('id="ingress-contact-referral"')
+        ->toContain('id="ingress-contact-type"')
+        ->toContain('Save contact');
+
+    expect(strpos($main, 'name="first_name"'))->toBeLessThan(strpos($main, 'name="last_name"'))
+        ->and(strpos($main, 'name="phone"'))->toBeLessThan(strpos($main, 'name="email"'))
+        ->and(strpos($main, 'name="contact_preference"'))->toBeLessThan(strpos($main, 'name="referral_source"'))
+        ->and(strpos($main, 'name="referral_source"'))->toBeLessThan(strpos($main, 'name="customer_type"'));
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))->get($url)->assertOk();
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Technician->value))->get($url)->assertForbidden();
+});
+
+test('caller lookup renders in the Tabler shell and keeps the context panel in an island', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    dailyOpsRepairOrder();
+
+    $main = dailyOpsTablerMain($this->actingAs($advisor)->get(route('operations.caller-lookup')));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('action="'.route('operations.caller-lookup').'"')
+        ->toContain('id="caller-phone"')
+        ->toContain('name="phone"')
+        ->toContain('Lookup Caller');
+
+    $matched = dailyOpsTablerMain($this->actingAs($advisor)->get(route('operations.caller-lookup', ['phone' => '719-555-0142'])));
+
+    expect($matched)->toContain('data-caller-lookup-match')
+        ->and(substr_count($matched, 'class="ark-legacy bg-white text-dark"'))->toBe(1);
+
+    $unmatched = dailyOpsTablerMain($this->actingAs($advisor)->get(route('operations.caller-lookup', ['phone' => '719-555-0999'])));
+
+    expectNoLegacyMarkup($unmatched);
+    expect($unmatched)->toContain('No customer matched')
+        ->toContain('No conversation history on this number yet.');
+
+    foreach ([ArkRole::Admin, ArkRole::Technician] as $role) {
+        $this->actingAs(User::factory()->create()->assignRole($role->value))
+            ->get(route('operations.caller-lookup'))
+            ->assertOk();
+    }
+});
+
+test('operational observations render in the Tabler shell for admins only', function (): void {
+    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+
+    $main = dailyOpsTablerMain($this->actingAs($admin)->get(route('operations.observations.index')));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('data-operational-observations')
+        ->toContain('Operational observations');
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value))
+        ->get(route('operations.observations.index'))
+        ->assertForbidden();
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Technician->value))
+        ->get(route('operations.observations.index'))
+        ->assertForbidden();
+});

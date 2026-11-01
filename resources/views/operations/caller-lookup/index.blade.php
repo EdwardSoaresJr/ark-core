@@ -1,68 +1,77 @@
-<x-operations.app title="Lookup Caller">
-    <section class="ops-index space-y-2">
-        <div class="ops-board-shell">
-            <div class="ops-page-toolbar">
-                <p class="ops-page-toolbar-note">Who is calling and what is going on? Paste a phone number to resolve customer, vehicles, open ROs, and recent conversation.</p>
-                <div class="ops-page-toolbar-actions">
-                    <a href="{{ route('operations.workboard') }}" class="ops-page-link">Job Board</a>
-                    @if ($context?->customer)
-                        <a href="{{ route('operations.customers.show', $context->customer) }}" class="ops-page-link">Customer Hub</a>
-                    @endif
+<x-operations.app title="Lookup Caller" ui="tabler">
+    <x-tabler.page
+        layout="focused"
+        title="Lookup caller"
+        subtitle="Who is calling and what is going on? Paste a phone number to resolve customer, vehicles, open ROs, and recent conversation."
+    >
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
+            @if ($context?->customer)
+                <x-tabler.page-action :href="route('operations.customers.show', $context->customer)" icon="user" label="Customer Hub" />
+            @endif
+        </x-slot:actions>
+
+        <div class="d-flex flex-column gap-3" data-caller-lookup>
+            <div class="card">
+                <div class="card-body p-2 p-md-3">
+                    <form method="GET" action="{{ route('operations.caller-lookup') }}" role="search" aria-label="Lookup caller">
+                        <label for="caller-phone" class="form-label d-none d-md-block">Phone Number</label>
+                        <div class="input-group">
+                            <input
+                                id="caller-phone"
+                                name="phone"
+                                value="{{ $phone }}"
+                                type="tel"
+                                autofocus
+                                autocomplete="off"
+                                inputmode="tel"
+                                placeholder="719-555-1234"
+                                aria-label="Phone Number"
+                                class="form-control"
+                            >
+                            <button type="submit" class="btn btn-primary">Lookup Caller</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('operations.caller-lookup') }}" class="ops-board-filters">
-                <div class="ops-index-filters ops-index-filters--customer">
-                    <div class="min-w-0 flex-1">
-                        <label for="caller-phone" class="ops-index-field-label">Phone Number</label>
-                        <input
-                            id="caller-phone"
-                            name="phone"
-                            value="{{ $phone }}"
-                            type="tel"
-                            autofocus
-                            autocomplete="off"
-                            inputmode="tel"
-                            placeholder="719-555-1234"
-                            class="ops-index-field min-h-11 sm:min-h-8"
-                        >
+            @if ($phone !== '' && $context === null)
+                <div class="alert alert-danger mb-0" role="alert">
+                    Enter a valid phone number with at least 7 digits.
+                </div>
+            @endif
+
+            {{-- The conversation context panel is shared with the communications screens and stays legacy until they migrate. --}}
+            @if ($context && ! $context->hasMatch())
+                <div class="card" data-caller-lookup-unmatched>
+                    <div class="card-body p-2 p-md-3">
+                        <h2 class="card-title mb-1">No customer matched {{ $context->displayPhone }}</h2>
+                        @if ($context->recentConversationMessages->isEmpty())
+                            <p class="text-secondary mb-0">No conversation history on this number yet.</p>
+                        @endif
                     </div>
-                    <button type="submit" class="ops-index-btn ops-index-btn--primary min-h-11 sm:min-h-8 lg:self-end">Lookup Caller</button>
-                </div>
-            </form>
-        </div>
-
-        @if ($phone !== '' && $context === null)
-            <div class="ops-board-shell px-3 py-2 text-sm font-semibold text-rose-900">
-                Enter a valid phone number with at least 7 digits.
-            </div>
-        @endif
-
-        @if ($context && ! $context->hasMatch())
-            <div class="ops-board-shell">
-                <div class="px-3 py-3 text-sm text-slate-700">
-                    <p class="font-bold text-slate-950">No customer matched {{ $context->displayPhone }}</p>
-                    @if ($context->recentConversationMessages->isEmpty())
-                        <p class="mt-1 text-xs leading-4 text-slate-500">No conversation history on this number yet.</p>
+                    @if ($context->recentConversationMessages->isNotEmpty())
+                        <div class="ark-legacy bg-white text-dark border-top">
+                            <x-operations.conversation-context-panel
+                                :context="$context"
+                                :show-customer-header="false"
+                                :show-active-vehicles="false"
+                                :show-open-repair-orders="false"
+                                conversation-label="Recent Conversation"
+                                conversation-meta="Unmatched number"
+                            />
+                        </div>
                     @endif
                 </div>
-                @if ($context->recentConversationMessages->isNotEmpty())
-                    <x-operations.conversation-context-panel
-                        :context="$context"
-                        :show-customer-header="false"
-                        :show-active-vehicles="false"
-                        :show-open-repair-orders="false"
-                        conversation-label="Recent Conversation"
-                        conversation-meta="Unmatched number"
-                    />
-                @endif
-            </div>
-        @endif
+            @endif
 
-        @if ($context?->hasMatch())
-            <div class="ops-board-shell">
-                <x-operations.conversation-context-panel :context="$context" />
-            </div>
-        @endif
-    </section>
+            @if ($context?->hasMatch())
+                <div class="card overflow-hidden" data-caller-lookup-match>
+                    <div class="ark-legacy bg-white text-dark">
+                        <x-operations.conversation-context-panel :context="$context" />
+                    </div>
+                </div>
+            @endif
+        </div>
+    </x-tabler.page>
 </x-operations.app>
