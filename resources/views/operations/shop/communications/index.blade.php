@@ -1,12 +1,5 @@
 @php
     /** @var array<string, mixed> $shop */
-    $toneDot = static fn (string $tone): string => match ($tone) {
-        'success' => 'bg-emerald-500',
-        'warning' => 'bg-amber-500',
-        'danger' => 'bg-rose-500',
-        default => 'bg-slate-300',
-    };
-
     $postureLabel = match ($shop['voice_posture']) {
         'setup' => 'Setup in progress',
         'certify' => 'Ready to connect',
@@ -18,62 +11,60 @@
         'certify' => 'success',
         default => $shop['readiness_tone'],
     };
+
+    $postureStatus = match ($postureTone) {
+        'success' => 'status-green',
+        'warning' => 'status-yellow',
+        'danger' => 'status-red',
+        default => 'status-secondary',
+    };
+
+    $subtitle = match ($shop['voice_posture']) {
+        'setup' => 'Name the places where work happens - then plug in phones.',
+        'certify' => 'Station setup is ready. Connect the device on the bench.',
+        default => $shop['operator_question'],
+    };
 @endphp
 
-<x-operations.app title="Stations &amp; Phones">
-    <div class="mx-auto max-w-2xl space-y-4 px-4 py-4">
-        <header class="space-y-3 border-b border-slate-200 pb-4">
-            <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <h1 class="text-xl font-black text-slate-950">Stations &amp; Phones</h1>
-                    <p class="mt-1 text-xs leading-5 text-slate-600">
-                        @if ($shop['voice_posture'] === 'setup')
-                            Name the places where work happens - then plug in phones.
-                        @elseif ($shop['voice_posture'] === 'certify')
-                            Station setup is ready. Connect the device on the bench.
-                        @else
-                            {{ $shop['operator_question'] }}
-                        @endif
-                    </p>
-                </div>
-                <div class="flex shrink-0 items-center gap-2 pt-0.5">
-                    <span @class(['h-2.5 w-2.5 rounded-full', $toneDot($postureTone)]) aria-hidden="true"></span>
-                    <span @class([
-                        'text-sm font-black',
-                        'text-emerald-700' => $postureTone === 'success',
-                        'text-amber-700' => $postureTone === 'warning',
-                        'text-slate-600' => $postureTone === 'muted',
-                    ])>{{ $postureLabel }}</span>
-                </div>
-            </div>
+<x-operations.app title="Stations &amp; Phones" ui="tabler">
+    <x-tabler.page layout="focused" title="Stations & Phones" :subtitle="$subtitle">
+        <x-slot:actions>
+            <span class="status {{ $postureStatus }}" data-shop-comms-posture="{{ $shop['voice_posture'] }}">
+                <span class="status-dot" aria-hidden="true"></span>
+                {{ $postureLabel }}
+            </span>
+        </x-slot:actions>
 
-            @if (session('status'))
-                <p class="rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">{{ session('status') }}</p>
-            @endif
+        <p class="text-secondary d-md-none">{{ $subtitle }}</p>
 
-            @if ($errors->has('device') || $errors->has('mac_address') || $errors->has('name') || $errors->has('model'))
-                <div class="rounded-sm border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                    @foreach (['device', 'mac_address', 'name', 'model', 'workstation_id'] as $field)
-                        @error($field)
-                            <p class="font-semibold">{{ $message }}</p>
-                        @enderror
-                    @endforeach
-                </div>
-            @endif
-
-            @if (filled($shop['business_number_display']))
-                <p class="text-xs text-slate-500">
-                    Customer line <span class="font-semibold text-slate-800">{{ $shop['business_number_display'] }}</span>
-                </p>
-            @endif
-        </header>
-
-        @if ($shop['voice_posture'] === 'setup')
-            @include('operations.shop.communications.partials.voice-setup-workspace', ['shop' => $shop])
-        @elseif ($shop['voice_posture'] === 'certify')
-            @include('operations.shop.communications.partials.voice-certify-workspace', ['shop' => $shop])
-        @else
-            @include('operations.shop.communications.partials.voice-operate-workspace', ['shop' => $shop])
+        @if (session('status'))
+            <div class="alert alert-success" role="status">{{ session('status') }}</div>
         @endif
-    </div>
+
+        @if ($errors->has('device') || $errors->has('mac_address') || $errors->has('name') || $errors->has('model'))
+            <div class="alert alert-danger" role="alert">
+                @foreach (['device', 'mac_address', 'name', 'model', 'workstation_id'] as $field)
+                    @error($field)
+                        <div>{{ $message }}</div>
+                    @enderror
+                @endforeach
+            </div>
+        @endif
+
+        @if (filled($shop['business_number_display']))
+            <p class="text-secondary mb-3">
+                Customer line <span class="fw-bold text-body">{{ $shop['business_number_display'] }}</span>
+            </p>
+        @endif
+
+        <div class="d-flex flex-column gap-3">
+            @if ($shop['voice_posture'] === 'setup')
+                @include('operations.shop.communications.partials.voice-setup-workspace', ['shop' => $shop])
+            @elseif ($shop['voice_posture'] === 'certify')
+                @include('operations.shop.communications.partials.voice-certify-workspace', ['shop' => $shop])
+            @else
+                @include('operations.shop.communications.partials.voice-operate-workspace', ['shop' => $shop])
+            @endif
+        </div>
+    </x-tabler.page>
 </x-operations.app>
