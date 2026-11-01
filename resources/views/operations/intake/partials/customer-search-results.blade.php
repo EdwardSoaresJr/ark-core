@@ -12,9 +12,6 @@
                         $activeRepairOrder ? $activeRepairOrder->status->indexTone() : 'move',
                     );
                     $customerTag = trim((string) ($result->customer_type ?: 'Retail'));
-                    $smsCapability = filled($result->phone ?? null)
-                        ? \App\Ark\Operations\Messaging\PhoneSmsCapability::findByNormalizedPhone((string) $result->phone)
-                        : null;
                     $vehicleCount = $result->vehicles->count();
                 @endphp
                 <div
@@ -34,18 +31,7 @@
                                 <span class="badge bg-secondary-lt">{{ $customerTag }}</span>
                             @endif
                         </div>
-                        @if ($result->email)
-                            <div class="small text-secondary text-truncate">{{ $result->email }}</div>
-                        @endif
-                        @if ($result->contact_preference)
-                            <div class="small fw-medium text-azure text-truncate">{{ $result->contact_preference->outreachLabel() }}</div>
-                        @endif
-                        @if ($smsCapability !== null && ! $smsCapability->sms_capable)
-                            <div class="small text-warning text-truncate">{{ $smsCapability->blockReason() }}</div>
-                        @endif
-                        <div @class(['small text-truncate', 'text-secondary' => (bool) $result->display_address, 'text-muted' => ! $result->display_address])>
-                            {{ $result->display_address ?: 'No address on file' }}
-                        </div>
+                        @include('operations.customers.partials.customer-contact-lines', ['result' => $result])
                         <div class="small text-secondary border-top mt-2 pt-1" data-intake-customer-footnote>
                             @if ($activeRepairOrder)
                                 <a href="{{ route('operations.repair-orders.show', $activeRepairOrder) }}" aria-label="Open RO #{{ $activeRepairOrder->repair_order_id }}" class="ark-money">RO #{{ $activeRepairOrder->repair_order_id }}</a>
