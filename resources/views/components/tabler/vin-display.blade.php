@@ -30,7 +30,7 @@
             x-show="tooltipOpen"
             x-cloak
             :style="tooltipStyle"
-            class="card card-sm shadow position-fixed d-block p-2"
+            class="card card-sm shadow position-fixed p-2"
             style="z-index: 1080; width: max-content; max-width: min(22rem, calc(100vw - 1rem))"
             role="tooltip"
             data-vin-phonetic-readback

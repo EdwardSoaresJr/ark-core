@@ -322,7 +322,7 @@
                         <div>
                             Scheduled reply · <span x-text="smsSchedule?.pending?.scheduled_for_label ?? smsSchedule?.next_open_morning_label ?? 'Next open morning'"></span>
                             <span
-                                x-show="smsSchedule?.pending?.preview"
+                                x-show.important="smsSchedule?.pending?.preview"
                                 class="d-block text-secondary"
                                 x-text="smsSchedule?.pending?.preview"
                             ></span>

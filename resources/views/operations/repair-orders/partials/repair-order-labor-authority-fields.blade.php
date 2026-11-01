@@ -126,7 +126,7 @@
         ></span>
     </div>
 
-    <label class="d-block" x-show="laborHoursOverridden && laborCategoryAllowsModifiers()" x-cloak>
+    <label class="d-block" x-show.important="laborHoursOverridden && laborCategoryAllowsModifiers()" x-cloak>
         <span class="form-label">Hours override reason</span>
         <input
             name="labor_override_reason"

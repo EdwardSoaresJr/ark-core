@@ -167,7 +167,7 @@
                         </div>
                         <div class="text-secondary" x-text="`spread across ${calculationBreakdown().utilization}% billable time`"></div>
                     </div>
-                    <div class="mb-1 d-flex justify-content-between gap-2" x-show="calculationBreakdown().overhead > 0">
+                    <div class="mb-1 d-flex justify-content-between gap-2" x-show.important="calculationBreakdown().overhead > 0">
                         <span class="text-secondary">+ overhead</span>
                         <span class="fw-medium" x-text="money(calculationBreakdown().overhead)"></span>
                     </div>
