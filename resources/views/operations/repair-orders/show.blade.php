@@ -1902,7 +1902,6 @@
                                     'technicians' => $technicians ?? collect(),
                                 ])
 
-                                <x-operations.worksheet-island>
                                 @include('operations.repair-orders.partials.repair-order-concern-authorization-exception', [
                                     'repairOrder' => $repairOrder,
                                     'concern' => $concern,
@@ -1910,7 +1909,6 @@
                                     'estimateVersion' => $estimateVersion,
                                     'totals' => $totals,
                                 ])
-                                </x-operations.worksheet-island>
                             </section>
                         @empty
                             @if ($isTerminal)
