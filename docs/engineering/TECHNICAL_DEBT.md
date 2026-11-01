@@ -114,6 +114,32 @@
 
 ---
 
+## Operations
+
+### Two rules for who owns in-progress work
+
+**Location:** `WorkboardLens::filterRepairOrders()` and `technicianOwnsWorkOn()` in `app/Ark/Operations/Workboard/WorkboardLens.php`; `TodayOperationalComposer::forTechnician()` and `technicianActions()` in `app/Ark/Operations/Today/Surface/TodayOperationalComposer.php`
+
+**Problem:** Two parallel ownership checks disagree. The workboard filter keeps an In Progress repair order for a technician only when the technician owns one of its concern work groups. The Today composer runs that filter first, then treats `repair_orders.assigned_technician_id` as the owner. A repair order that is In Progress and assigned to the technician through `assigned_technician_id`, with no work group they own, is dropped before the composer sees it. So the technician's "Assigned work" lane on Today stays empty for it. `TodaySurfaceTest` › "technician lens still surfaces assigned work lanes" fails on `main` (`5342586`) for this reason. Recorded in [PR #105](https://github.com/EdwardSoaresJr/ark-core/pull/105).
+
+**Replacement:** One ownership rule for technician work, used by the workboard filter and the Today composer alike.
+
+**Remove when:** An In Progress repair order a technician owns appears in their "Assigned work" lane, and that test passes.
+
+---
+
+### Customer decision schedule redirects to the Job Board
+
+**Location:** `app/Ark/Operations/Work/CustomerDecisionScheduleStoreController.php` and `CustomerDecisionScheduleClearController.php`
+
+**Problem:** Both controllers redirect to `operations.index` (the Job Board at `/app`) with their flash, whatever page submitted the form. Schedule and Clear live on the Customer Decisions work queue (`operations.work.queue`, decisions), so saving or clearing a schedule takes the advisor off that queue. Recorded in [PR #105](https://github.com/EdwardSoaresJr/ark-core/pull/105).
+
+**Replacement:** Return to the page that submitted the form, falling back to the Customer Decisions queue.
+
+**Remove when:** Saving or clearing a schedule from the Customer Decisions queue lands back on that queue with the flash shown.
+
+---
+
 ## Tests
 
 ### The Core test suite is not green on `main`
