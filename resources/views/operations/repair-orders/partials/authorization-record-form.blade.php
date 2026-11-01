@@ -49,6 +49,9 @@
             >
                 @csrf
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+                @if ($includesChangedWork)
+                    <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD }}" value="{{ $workAuthorization->pendingChangesFingerprint($repairOrder) }}">
+                @endif
 
                 <div class="grid gap-2">
                     <label class="block text-[11px] font-medium text-slate-500">

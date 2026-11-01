@@ -13,8 +13,10 @@ use App\Ark\Operations\Portal\EstimateAccessToken;
 use App\Ark\Operations\Portal\PortalEstimateAuthorization;
 use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
@@ -145,7 +147,8 @@ test('a line added to an approved concern needs approval and one recorded approv
         ->assertOk()
         ->assertSee('Needs authorization', false)
         ->assertSee('Records the customer\'s approval of the work that needs authorization on approved scopes.', false)
-        ->assertSee('value="'.$presentedDefault.'"', false);
+        ->assertSee('value="'.$presentedDefault.'"', false)
+        ->assertSee('name="'.RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD.'" value="'.reauthOpenedForm($repairOrder)['changes'].'"', false);
 
     reauthRecordApproval($repairOrder, $presentedDefault);
 
@@ -310,21 +313,51 @@ test('recording approval for added work keeps a repair order in progress', funct
         ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->toHaveCount(0);
 });
 
-test('a supplemental approval left at the stale approved total records the approved total after the change', function () {
+test('a stale approval form cannot authorize changes made after it was opened', function (string $laterChange) {
     [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
     $calculator = app(EstimateTotalsCalculator::class);
+    $authorization = app(WorkCompletionAuthorization::class);
     $approvedBefore = $calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents();
 
-    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
-    $increase = app(WorkCompletionAuthorization::class)->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+    $added = reauthStoreLabor($repairOrder, $concern, 'Replace caliper slide pins', '1.00', '120.00');
+    $opened = reauthOpenedForm($repairOrder);
+    $shownTotal = $approvedBefore + $authorization->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+    $shownAmount = number_format($shownTotal / 100, 2, '.', '');
 
-    reauthRecordApproval($repairOrder, number_format($approvedBefore / 100, 2, '.', ''));
+    // After the form was opened: more work, or the same amount of different work.
+    if ($laterChange === 'more work') {
+        reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    } else {
+        test()->delete(route('operations.repair-orders.lines.destroy', [$repairOrder, $added]))->assertRedirect();
+        reauthStoreLabor($repairOrder, $concern, 'Replace brake hardware kit', '1.00', '120.00');
+    }
 
-    expect($increase)->toBeGreaterThan(0)
-        ->and(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->orderBy('id')->pluck('approved_amount_cents')->all())
-        ->toBe([$approvedBefore, $approvedBefore + $increase])
-        ->and($calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents())->toBe($approvedBefore + $increase);
-});
+    $current = $approvedBefore + $authorization->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+    $eventBefore = ApprovalEvent::query()->sole()->getAttributes();
+    $post = fn (array $form) => test()->post(route('operations.repair-orders.authorization.store', $repairOrder), $form);
+
+    // Untouched, the form submits the live version with what it showed; edited, its opened version.
+    $post(reauthApprovalForm($repairOrder, $shownAmount, ['version' => (int) $repairOrder->fresh()->estimate_version, 'changes' => $opened['changes']]))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+    $post(reauthApprovalForm($repairOrder, number_format($current / 100, 2, '.', ''), ['version' => (int) $repairOrder->fresh()->estimate_version, 'changes' => $opened['changes']]))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+    $post(reauthApprovalForm($repairOrder, $shownAmount, $opened))->assertStatus(409);
+    $post(collect(reauthApprovalForm($repairOrder))->except(RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD)->all())
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+    $post(reauthApprovalForm($repairOrder, number_format($approvedBefore / 100, 2, '.', '')))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
+
+    expect(ApprovalEvent::query()->sole()->getAttributes())->toBe($eventBefore)
+        ->and(ApprovedWorkScope::query()->count())->toBe(1)
+        ->and($authorization->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->not->toBeEmpty();
+
+    // Reopened, the form presents the current changes and records exactly that total.
+    reauthRecordApproval($repairOrder, number_format($current / 100, 2, '.', ''));
+
+    expect(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first()->approved_amount_cents)->toBe($current)
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents())->toBe($current)
+        ->and($authorization->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->toHaveCount(0);
+})->with(['more work', 'same amount of different work']);
 
 test('a supplemental approval amount that contradicts the changed work is refused', function () {
     [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
@@ -332,11 +365,8 @@ test('a supplemental approval amount that contradicts the changed work is refuse
 
     reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
 
-    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), [
-        'source' => ApprovalSource::Phone->value,
-        'approved_by' => 'Morgan Brown',
-        'approved_amount' => '1.00',
-    ])->assertRedirect()->assertSessionHasErrors('authorization');
+    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), reauthApprovalForm($repairOrder, '1.00'))
+        ->assertRedirect()->assertSessionHasErrors('authorization');
 
     expect(ApprovalEvent::query()->sole()->getAttributes())->toBe($eventBefore)
         ->and(ApprovedWorkScope::query()->count())->toBe(1)
@@ -518,11 +548,40 @@ function reauthPatchLabor(
 
 function reauthRecordApproval(RepairOrder $repairOrder, ?string $amount = null): void
 {
-    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), array_filter([
+    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), reauthApprovalForm($repairOrder, $amount))
+        ->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#authorization-rail');
+}
+
+/**
+ * The record form as staff submit it, as rendered when it was opened (now, unless given).
+ *
+ * @param  array{version: int, changes: string}|null  $opened
+ * @return array<string, mixed>
+ */
+function reauthApprovalForm(RepairOrder $repairOrder, ?string $amount = null, ?array $opened = null): array
+{
+    $opened ??= reauthOpenedForm($repairOrder);
+
+    return array_filter([
         'source' => ApprovalSource::Phone->value,
         'approved_by' => 'Morgan Brown',
         'approved_amount' => $amount,
-    ], fn ($value): bool => $value !== null))->assertRedirect(route('operations.repair-orders.show', $repairOrder).'#authorization-rail');
+        RepairOrderConcurrency::FIELD => $opened['version'],
+        RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD => $opened['changes'],
+    ], fn ($value): bool => $value !== null);
+}
+
+/**
+ * @return array{version: int, changes: string}
+ */
+function reauthOpenedForm(RepairOrder $repairOrder): array
+{
+    $repairOrder = $repairOrder->fresh(['concerns', 'lines.concern']);
+
+    return [
+        'version' => (int) $repairOrder->estimate_version,
+        'changes' => app(WorkCompletionAuthorization::class)->pendingChangesFingerprint($repairOrder),
+    ];
 }
 
 function reauthDispositionChangesAwayFromApproved(RepairOrder $repairOrder): int

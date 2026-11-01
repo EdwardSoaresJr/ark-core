@@ -25,9 +25,11 @@ test('approval, increase, supplemental approval, deposit, payment and close keep
         'estimate_pdf_shows_approved' => true,
     ]);
 
-    // An amount that contradicts the approved work is refused; a stale form default records the true total.
+    // An amount that contradicts the approved work is refused, and so is a form opened before the increase;
+    // the current form records the true total.
     expect($result['contradicting']['errors'][0] ?? '')->toContain('the approved total becomes '.$result['contradicting']['expected_message_total'])
         ->and($result['contradicting']['events_after'])->toBe(1)
+        ->and($result['stale_form'])->toBe(['status' => 409, 'events_after' => 1])
         ->and($result['supplemental_errors'])->toBe([])
         ->and($result['events'])->toBe([
             ['type' => 'diagnostic', 'amount_cents' => $approvedFirst],

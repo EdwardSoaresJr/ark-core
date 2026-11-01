@@ -13,6 +13,9 @@ use Illuminate\Validation\Rule;
 
 class RepairOrderAuthorizationStoreController
 {
+    /** The pending changes the form presented; an approval of changed work covers only those. */
+    public const PRESENTED_CHANGES_FIELD = 'presented_changes';
+
     public function __invoke(
         Request $request,
         RepairOrder $repairOrder,
@@ -45,6 +48,15 @@ class RepairOrderAuthorizationStoreController
             && ! $totalsCalculator->hasApprovedInvoiceableWork($repairOrder)) {
             return back()
                 ->withErrors(['authorization' => 'There is no approved work on this estimate to record.'])
+                ->withInput();
+        }
+
+        if ($changedApprovedScopes !== [] && ! hash_equals(
+            $workAuthorization->pendingChangesFingerprint($repairOrder),
+            (string) $request->input(self::PRESENTED_CHANGES_FIELD, ''),
+        )) {
+            return back()
+                ->withErrors(['authorization' => 'The changes awaiting approval are not the ones this form showed. Reload the repair order and confirm the current changes with the customer before recording.'])
                 ->withInput();
         }
 
@@ -121,9 +133,9 @@ class RepairOrderAuthorizationStoreController
     }
 
     /**
-     * The presented default for approving changed work is the approved total plus that work. A form
-     * opened before the change can still show the approved total alone; both record the approved
-     * total after this approval. Any other amount contradicts the work being approved.
+     * The presented default for approving changed work is the approved total plus that work, and it
+     * records the approved total after this approval. Any other amount, including the approved
+     * total before the change, contradicts the work being approved.
      *
      * @param  array<string, mixed>  $data
      */
@@ -140,10 +152,7 @@ class RepairOrderAuthorizationStoreController
         $posted = (int) round(((float) $data['approved_amount']) * 100);
         $approvedNow = $totalsCalculator->approvedTotalsForRead($repairOrder)->totalCents();
 
-        return in_array($posted, [
-            $approvedNow,
-            $approvedNow + $workAuthorization->workOutsideApprovedSalesCents($repairOrder),
-        ], true);
+        return $posted === $approvedNow + $workAuthorization->workOutsideApprovedSalesCents($repairOrder);
     }
 
     /**

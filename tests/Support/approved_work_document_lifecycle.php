@@ -16,11 +16,14 @@ use App\Ark\Operations\Financial\RepairOrderLedgerEntry;
 use App\Ark\Operations\RepairOrders\ApprovalForecastProjection;
 use App\Ark\Operations\RepairOrders\ApprovedWorkScope;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderAuthorizationStoreController;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
+use App\Ark\Operations\RepairOrders\RepairOrderConcurrency;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
@@ -144,12 +147,22 @@ foreach ([
 }
 $labor = RepairOrderLine::query()->where('repair_order_id', $repairOrder->id)->where('type', RepairOrderLineType::Labor)->sole();
 
-$approve = static fn (?string $amount = null): array => $send('POST', route('operations.repair-orders.authorization.store', $repairOrder), array_filter([
+// The record form as staff submit it, as rendered when it was opened (now, unless given).
+$openForm = static fn (): array => [
+    'version' => (int) $repairOrder->fresh()->estimate_version,
+    'changes' => app(WorkCompletionAuthorization::class)->pendingChangesFingerprint($repairOrder->fresh(['concerns', 'lines.concern'])),
+];
+$approve = static fn (?string $amount = null, ?array $opened = null): array => $send('POST', route('operations.repair-orders.authorization.store', $repairOrder), array_filter([
     'source' => ApprovalSource::InPerson->value, 'approved_by' => 'Ceiling Customer', 'approved_amount' => $amount,
+    RepairOrderConcurrency::FIELD => ($opened ?? $openForm())['version'],
+    RepairOrderAuthorizationStoreController::PRESENTED_CHANGES_FIELD => ($opened ?? $openForm())['changes'],
 ], fn ($value): bool => $value !== null));
 
 $first = $approve();
 $approvedFirst = (int) ApprovalEvent::query()->where('visit_id', $repairOrder->id)->value('approved_amount_cents');
+
+// A form opened before the increase, showing the earlier approved total.
+$staleForm = $openForm();
 
 // Price increase on the approved labor: half an hour more.
 $labor = $labor->fresh();
@@ -166,8 +179,9 @@ $afterIncrease = $pendingForecast['approved_cents'] + $pendingForecast['needs_au
 
 $contradicting = $approve(number_format(($afterIncrease - 2500) / 100, 2, '.', ''));
 $eventsAfterContradicting = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count();
-// A form opened before the increase still shows the earlier approved total.
-$supplemental = $approve(number_format($approvedFirst / 100, 2, '.', ''));
+$staleForm = $approve(number_format($approvedFirst / 100, 2, '.', ''), $staleForm);
+$eventsAfterStaleForm = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->count();
+$supplemental = $approve(number_format($afterIncrease / 100, 2, '.', ''));
 
 $history = $text($send('GET', route('operations.repair-orders.workspace-tabs.show', [$repairOrder, 'auth']))['body']);
 
@@ -218,6 +232,7 @@ echo json_encode([
     ],
     'after_increase_cents' => $afterIncrease,
     'contradicting' => ['errors' => $contradicting['errors'], 'expected_message_total' => $money($afterIncrease), 'events_after' => $eventsAfterContradicting],
+    'stale_form' => ['status' => $staleForm['status'], 'events_after' => $eventsAfterStaleForm],
     'supplemental_errors' => $supplemental['errors'],
     'events' => $events->map(fn (ApprovalEvent $event): array => [
         'type' => $event->approval_type->value, 'amount_cents' => $event->approved_amount_cents,
