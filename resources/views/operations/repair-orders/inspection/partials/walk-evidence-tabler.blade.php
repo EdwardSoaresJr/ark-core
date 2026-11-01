@@ -3,7 +3,7 @@
         $canEditEvidence = (bool) ($canEdit ?? false);
         $evidenceSurface = $surface ?? null;
     @endphp
-    <div class="row g-2 mb-3" data-inspection-walk-evidence>
+    <div @class(['row g-2', 'mb-3' => $evidenceSurface !== 'tablet']) data-inspection-walk-evidence>
         @foreach ($photos as $photo)
             <div class="col-4 col-sm-3">
                 <div class="ratio ratio-1x1 rounded border overflow-hidden">
@@ -56,7 +56,7 @@
                         @endif
                         <button
                             type="submit"
-                            class="btn btn-sm btn-ghost-danger w-100"
+                            @class(['btn btn-ghost-danger w-100', 'btn-sm' => $evidenceSurface !== 'tablet'])
                             aria-label="Remove photo"
                             title="Remove photo"
                         >
