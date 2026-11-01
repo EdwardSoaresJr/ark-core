@@ -389,7 +389,59 @@ test('appointment show omits Call and Text when customer has no phone', function
         ->get(route('operations.appointments.show', $appointment))
         ->assertOk()
         ->assertDontSee('>Call<', false)
+        ->assertDontSee('href="tel:', false)
         ->assertDontSee('compose=text#customer-communication', false);
+});
+
+test('appointment detail renders on tabler with its forms on their routes', function () {
+    $advisor = actingAsLearnCurrentAdvisor();
+    $customer = Customer::query()->create([
+        'first_name' => 'Tabler',
+        'last_name' => 'Detail',
+        'phone' => '555-0199',
+    ]);
+
+    $appointment = Appointment::query()->create([
+        'customer_id' => $customer->id,
+        'advisor_user_id' => $advisor->id,
+        'created_by_user_id' => $advisor->id,
+        'starts_at' => now()->addDay(),
+        'ends_at' => now()->addDay()->addHour(),
+        'concern' => 'Brake squeal at low speed',
+        'status' => AppointmentStatus::Scheduled,
+    ]);
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($this->actingAs($advisor)
+        ->get(route('operations.appointments.show', ['appointment' => $appointment, 'edit' => 1]))
+        ->assertOk()
+        ->getContent());
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $legacyAncestor = 'ancestor::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]';
+
+    $summary = $xpath->query('//*[@data-appointment-summary]')->item(0);
+    $statusActions = $xpath->query('//*[@data-appointment-status-actions]')->item(0);
+    $editor = $xpath->query('//details[@data-appointment-editor]')->item(0);
+    $timeFields = $xpath->query('.//*[@data-appointment-time-fields]', $editor)->item(0);
+
+    expect(trim($xpath->query('//*[contains(@class, "page-title")]')->item(0)->textContent))->toBe($appointment->displayName())
+        ->and($summary)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query($legacyAncestor, $summary)->length)->toBe(0)
+        ->and($summary->textContent)->toContain('Brake squeal at low speed')
+        ->and($summary->textContent)->toContain($advisor->name)
+        ->and($xpath->query('.//a[@data-appointment-check-in][contains(@class, "btn-primary")][contains(@href, "appointment_id='.$appointment->id.'")]', $summary)->length)->toBe(1)
+        ->and($xpath->query('.//a[@href="tel:5550199"]', $summary)->length)->toBe(1)
+        ->and($xpath->query('.//form[@action="'.route('operations.appointments.status', $appointment).'"]//input[@name="status"][@value="'.AppointmentStatus::Confirmed->value.'"]', $statusActions)->length)->toBe(1)
+        ->and($xpath->query('.//input[@name="status"][@value="'.AppointmentStatus::Scheduled->value.'"]', $statusActions)->length)->toBe(0)
+        ->and($xpath->query($legacyAncestor, $statusActions)->length)->toBe(0)
+        ->and($editor->hasAttribute('open'))->toBeTrue()
+        ->and($xpath->query('.//form[@action="'.route('operations.appointments.update', $appointment).'"]//input[@name="contact_name"][contains(@class, "form-control")]', $editor)->length)->toBe(1)
+        ->and($xpath->query($legacyAncestor, $xpath->query('.//select[@name="vehicle_id"]', $editor)->item(0))->length)->toBe(0)
+        ->and($timeFields->getAttribute('class'))->toContain('ark-legacy')
+        ->and($xpath->query('.//select[@name="starts_time"]', $timeFields)->length)->toBe(1)
+        ->and($xpath->query('.//select[@name="duration_minutes"]', $timeFields)->length)->toBe(1);
 });
 
 test('schedule day cards offer Call and Text when customer has a phone', function () {
