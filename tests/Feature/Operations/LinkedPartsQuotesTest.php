@@ -66,7 +66,8 @@ test('the repair order can show a provider neutral linked quote without importin
 
     expect($html)->toContain('data-linked-parts-quote')
         ->and($html)->toContain('>Manage</button>')
-        ->and($html)->toContain('ops-workspace-modal')
+        ->and($html)->toContain('data-linked-parts-quote-dialog')
+        ->and($html)->toContain('modal-dialog')
         ->and($html)->toContain('Refresh quote')
         ->and($html)->toContain('Change linked cart')
         ->and($html)->toContain('Quote history')

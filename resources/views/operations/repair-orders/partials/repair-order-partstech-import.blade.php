@@ -44,57 +44,58 @@
 @if ($canImportQuote)
     <div
         id="partstech-quote-import"
-        class="ops-worksheet-procurement-panel"
+        class="card mb-3"
+        data-partstech-quote-import
         x-data="arkPartsTechQuoteImport(@js($partstechImportConfig))"
         @ark:partstech-pull-quote.window="loadQuote(false, $event.detail?.concernId)"
         x-show="loaded || error || loading"
         x-cloak
     >
-        <div
-            x-show="loading"
-            x-cloak
-            class="flex items-center gap-3 px-4 py-5"
-            role="status"
-            aria-live="polite"
-        >
-            <div class="ops-partstech-loader shrink-0" aria-hidden="true"></div>
-            <div>
-                <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-700" x-text="loadingStatus"></p>
-                <p class="mt-0.5 text-[11px] text-slate-500">ARK is syncing the PartsTech cart and pricing parts. This may take a few seconds.</p>
+        <div x-show="loading" x-cloak class="card-body" role="status" aria-live="polite">
+            <div class="d-flex align-items-center gap-3">
+                <span class="spinner-border text-secondary flex-shrink-0" aria-hidden="true"></span>
+                <div>
+                    <div class="fw-bold" x-text="loadingStatus"></div>
+                    <div class="small text-secondary">ARK is syncing the PartsTech cart and pricing parts. This may take a few seconds.</div>
+                </div>
             </div>
         </div>
 
-        <div x-show="loaded && ! loading" class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50/90 px-3 py-2">
-            <p class="text-xs font-medium text-slate-600">
-                <span x-text="rows.length + ' part' + (rows.length === 1 ? '' : 's') + ' ready to import'"></span>
-                <span x-show="hasSingleScope"> · default scope <strong x-text="singleScopeLabel()"></strong> (change per line if needed)</span>
-                <span x-show="! hasSingleScope"> · assign scope and repair per line</span>
-                <span> · matrix shows the sell matrix that will be used (change per part if needed)</span>
-            </p>
-            <button
-                type="button"
-                class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500 hover:text-slate-800"
-                :disabled="loading"
-                @click="loadQuote()"
-            >
-                <span x-text="loading ? 'Pulling…' : 'Pull again'"></span>
-            </button>
+        <div x-show="loaded && ! loading" class="card-header">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 w-100">
+                <div class="small text-secondary">
+                    <span x-text="rows.length + ' part' + (rows.length === 1 ? '' : 's') + ' ready to import'"></span>
+                    <span x-show="hasSingleScope"> · default scope <strong x-text="singleScopeLabel()"></strong> (change per line if needed)</span>
+                    <span x-show="! hasSingleScope"> · assign scope and repair per line</span>
+                    <span> · matrix shows the sell matrix that will be used (change per part if needed)</span>
+                </div>
+                <button
+                    type="button"
+                    class="btn btn-sm"
+                    :disabled="loading"
+                    @click="loadQuote()"
+                >
+                    <span x-text="loading ? 'Pulling…' : 'Pull again'"></span>
+                </button>
+            </div>
         </div>
 
-        <div x-show="error && ! loading" x-cloak class="border-t border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900">
-            <p x-text="error"></p>
-            <button
-                x-show="cartLocked"
-                x-cloak
-                type="button"
-                class="mt-2 rounded-sm bg-rose-900 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-rose-50 hover:bg-rose-950"
-                @click="loadQuote(true)"
-            >
-                Switch PartsTech to this RO and pull
-            </button>
+        <div x-show="error && ! loading" x-cloak class="card-body">
+            <div class="alert alert-danger mb-0" role="alert">
+                <div x-text="error"></div>
+                <button
+                    x-show="cartLocked"
+                    x-cloak
+                    type="button"
+                    class="btn btn-sm btn-danger mt-2"
+                    @click="loadQuote(true)"
+                >
+                    Switch PartsTech to this RO and pull
+                </button>
+            </div>
         </div>
 
-        <div x-show="loaded && ! loading" x-cloak class="border-t border-slate-200">
+        <div x-show="loaded && ! loading" x-cloak>
             <form method="POST" :action="importUrl" @submit="beforeSubmit($event)">
                 @csrf
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
@@ -124,57 +125,61 @@
                     </div>
                 </template>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-left text-xs">
-                        <thead class="bg-slate-100 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                <div class="table-responsive">
+                    <table class="table table-sm table-vcenter card-table mb-0">
+                        <thead>
                             <tr>
-                                <th class="w-8 px-2 py-1.5"></th>
-                                <th class="min-w-[12rem] px-2 py-1.5">Part</th>
-                                <th class="px-2 py-1.5">Position</th>
-                                <th class="px-2 py-1.5 text-right">Qty</th>
-                                <th class="px-2 py-1.5 text-right">Cost</th>
-                                <th class="min-w-[9rem] px-2 py-1.5">Matrix</th>
-                                <th class="px-2 py-1.5 text-right">Sell</th>
-                                <th class="px-2 py-1.5">Vendor</th>
-                                <th class="min-w-[10rem] px-2 py-1.5">Scope</th>
-                                <th class="min-w-[10rem] px-2 py-1.5">Repair action</th>
+                                <th class="w-1"><span class="visually-hidden">Import</span></th>
+                                <th style="min-width: 12rem">Part</th>
+                                <th>Position</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Cost</th>
+                                <th style="min-width: 9rem">Matrix</th>
+                                <th class="text-end">Sell</th>
+                                <th>Vendor</th>
+                                <th style="min-width: 10rem">Scope</th>
+                                <th style="min-width: 10rem">Repair action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 bg-white">
+                        <tbody>
                             <template x-for="row in rows" :key="row.source_key">
-                                <tr class="align-top hover:bg-slate-50/80">
-                                    <td class="px-2 py-1.5">
-                                        <input type="checkbox" class="rounded border-slate-300" x-model="row.selected">
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input" x-model="row.selected" :aria-label="'Import ' + (row.description || 'part')">
                                     </td>
-                                    <td class="px-2 py-1.5">
-                                        <p class="font-semibold text-slate-950" x-text="row.description"></p>
-                                        <p class="text-[11px] text-slate-500" x-show="row.part_number" x-text="row.part_number"></p>
-                                        <p class="text-[10px] text-slate-400" x-show="row.guidance" x-text="row.guidance"></p>
+                                    <td>
+                                        <div class="fw-medium" x-text="row.description"></div>
+                                        <div class="small text-secondary" x-show="row.part_number" x-text="row.part_number"></div>
+                                        <div class="small text-secondary" x-show="row.guidance" x-text="row.guidance"></div>
                                     </td>
-                                    <td class="px-2 py-1.5">
+                                    <td>
                                         <span
                                             x-show="row.position_label"
-                                            class="ops-partstech-position-chip"
+                                            class="badge bg-azure-lt"
                                             x-text="row.position_label"
                                         ></span>
-                                        <span x-show="! row.position_label" class="text-[11px] text-slate-400">-</span>
+                                        <span x-show="! row.position_label" class="small text-secondary">-</span>
                                     </td>
-                                    <td class="px-2 py-1.5 text-right tabular-nums text-slate-800" x-text="row.quantity"></td>
-                                    <td class="px-2 py-1.5">
+                                    <td class="text-end ark-money" x-text="row.quantity"></td>
+                                    <td>
                                         <input
                                             type="text"
                                             x-model="row.part_cost"
                                             @input="onRowCostInput(row)"
                                             inputmode="decimal"
-                                            class="w-20 rounded-sm border border-slate-300 bg-white px-2 py-1 text-right text-xs font-semibold tabular-nums text-slate-800"
+                                            aria-label="Cost"
+                                            class="form-control form-control-sm text-end ark-money"
+                                            style="width: 5rem"
                                             :disabled="! row.selected"
                                         >
                                     </td>
-                                    <td class="px-2 py-1.5">
+                                    <td>
                                         <select
                                             x-model="row.pricing_matrix_key"
                                             @change="onRowMatrixChange(row)"
-                                            class="w-full max-w-[9rem] rounded-sm border border-slate-300 bg-white px-1.5 py-1 text-xs font-semibold text-slate-800"
+                                            aria-label="Matrix"
+                                            class="form-select form-select-sm"
+                                            style="max-width: 9rem"
                                             :disabled="! row.selected || ! row.concern_id"
                                         >
                                             <template x-for="matrix in partsMatrices" :key="row.source_key + '-m-' + matrix.key">
@@ -186,22 +191,23 @@
                                             </template>
                                         </select>
                                     </td>
-                                    <td class="px-2 py-1.5 text-right">
+                                    <td class="text-end">
                                         <span
-                                            class="text-xs font-semibold tabular-nums text-slate-800"
+                                            class="fw-medium ark-money"
                                             x-text="row.sell || (row.previewing ? '…' : '-')"
                                         ></span>
-                                        <p class="mt-0.5 text-[10px] tabular-nums text-slate-400" x-show="row.margin_percentage">
+                                        <div class="small text-secondary ark-money" x-show="row.margin_percentage">
                                             <span x-text="row.margin_percentage"></span>% margin
                                             <span x-show="row.previewing"> · pricing…</span>
-                                        </p>
+                                        </div>
                                     </td>
-                                    <td class="px-2 py-1.5 text-slate-600" x-text="row.vendor_name || '-'"></td>
-                                    <td class="px-2 py-1.5">
+                                    <td class="text-secondary" x-text="row.vendor_name || '-'"></td>
+                                    <td>
                                         <select
                                             x-model="row.concern_id"
                                             @change="onRowConcernChange(row)"
-                                            class="w-full rounded-sm border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800"
+                                            aria-label="Scope"
+                                            class="form-select form-select-sm"
                                             :disabled="! row.selected"
                                         >
                                             <option value="">Choose scope…</option>
@@ -210,11 +216,12 @@
                                             </template>
                                         </select>
                                     </td>
-                                    <td class="px-2 py-1.5">
+                                    <td>
                                         <select
                                             x-model="row.work_group_id"
                                             @change="onRowWorkGroupChange(row)"
-                                            class="w-full rounded-sm border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800"
+                                            aria-label="Repair action"
+                                            class="form-select form-select-sm"
                                             :disabled="! row.selected || workGroupsForConcern(row.concern_id).length === 0"
                                         >
                                             <option value="">Ungrouped in scope</option>
@@ -222,12 +229,12 @@
                                                 <option :value="String(workGroup.id)" x-text="workGroup.title"></option>
                                             </template>
                                         </select>
-                                        <p
-                                            class="mt-0.5 text-[10px] text-slate-400"
+                                        <div
+                                            class="small text-secondary mt-1"
                                             x-show="row.selected && row.concern_id && workGroupsForConcern(row.concern_id).length === 0"
                                         >
                                             Add a repair with labor on this scope first.
-                                        </p>
+                                        </div>
                                     </td>
                                 </tr>
                             </template>
@@ -235,11 +242,11 @@
                     </table>
                 </div>
 
-                <div class="flex justify-end border-t border-slate-100 bg-slate-50/80 px-3 py-2">
+                <div class="card-footer d-flex justify-content-end">
                     <button
                         id="partstech-import-submit-btn"
                         type="submit"
-                        class="rounded-sm border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-white hover:bg-slate-800"
+                        class="btn btn-primary"
                         :disabled="importing || selectedCount() === 0"
                     >
                         <span x-text="importing ? 'Importing…' : 'Import selected parts'"></span>
