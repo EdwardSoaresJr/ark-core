@@ -194,6 +194,39 @@
 
 ---
 
+### Most Settings saves do not say which section to reopen
+
+**Location:**
+- `redirectWithStatus()` in `app/Ark/Operations/Settings/Concerns/InteractsWithShopSettingsPersistence.php`, which redirects to `operations.settings.shop.edit` with no `section`. It is used by `ShopGeneralSettingsController`, `ShopOperationsSettingsController`, and `ShopFinancialSettingsController`.
+- The section choice in `resources/views/operations/settings/shop.blade.php`, line 6: `$initialSection`, then `?section=`, then `localStorage` key `ark:shop-settings:section`, then `general`.
+
+**Problem:** Saving Shop Identity, Documents, Check In defaults, Labor, Tax, Shop Fees, Deposits, or Billing Classes lands on Settings without `?section=`. The page then opens the section last stored in the browser. That is the saved section when the user reached it through the section navigation. It can be a different section when the user opened the saved one from a link with `?section=`, because that path does not update the stored value. The flash and any errors still show, under another section. Seen in the browser on [PR #109](https://github.com/EdwardSoaresJr/ark-core/pull/109), where a Tax validation failure reopened Workflow Defaults. Labor Policies, Communications, Payments, and some other saves already pass `section`.
+
+**Expected:** Every Settings save, successful or rejected, reopens the section that submitted it, and the tab within it where there is one.
+
+**Remove when:** A test saves each of those forms, successfully and with a validation error, and the redirect carries that form's `section` (and `financial-tab` where it applies), whatever the browser stored.
+
+---
+
+### Saving billing classes or labor categories rewrites stored rows the user did not change
+
+**Location:**
+- `ShopSettings::normalizeCustomerTypeRow()` in `app/Ark/Operations/Settings/ShopSettings.php`, line 1610 (`pill_color` through `BillingClassPillColor::resolve()`).
+- `ShopSettings::normalizeLaborCategories()`, same file, line 1001 (sorted by lower-case name before saving).
+
+**Problem:** Two save-side normalizations change stored JSON without a user edit:
+
+- A billing class with no stored `pill_color` is shown with its default color, and saving Billing Classes writes that default into `customer_types`. The displayed color does not change. A color the shop already chose is kept: `resolve()` returns the stored value. Saving Retail as blue on [PR #109](https://github.com/EdwardSoaresJr/ark-core/pull/109) kept blue.
+- Saving Labor stores `labor_categories` sorted by lower-case name, not in their earlier stored order. With the default categories, name order and key order are the same. `laborCategories()` already sorts by name when reading, so no screen or calculation changes.
+
+`ShopSettingsFinancialTablerTest` › "submitting each rendered financial form unchanged keeps every stored value" allows for both. It passes against the markup on `main` before and after PR #109.
+
+**Expected:** Saving a form unchanged leaves the stored JSON unchanged, or the defaults are written once by a migration or seeder rather than on the first save.
+
+**Remove when:** Posting the rendered Billing Classes and Labor forms back unchanged leaves `customer_types` and `labor_categories` byte-for-byte unchanged, and that test drops its allowance for them.
+
+---
+
 ## Tests
 
 ### The Core test suite is not green on `main`
