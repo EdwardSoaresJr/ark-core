@@ -355,3 +355,15 @@ Constraints:
 - Follow-ups use `text-purple` and tasks use `text-green`, matching the violet and emerald of the work surface. The legacy left accent is not reproduced, because the legacy preflight turns a single-side Tabler border into a full box.
 
 The operational journey card above it stays legacy. Both controllers pass `operationalJourney => null` and no class supplies a journey, so it never renders. The rail includes its island only when a journey is present.
+
+### Time clock (`operations.time-clock.index`)
+
+The punch screen staff open from the sidebar. It's a Tabler `focused` page, with the staff member's name as the title and "Time clock" as the pretitle.
+
+- **Own punches:** a card with today's elapsed time and compensable hours, the current status, and Clock In, Out for Lunch, and Clock Out. Clock In is `btn-success`, Clock Out `btn-primary`, and Out for Lunch `btn-warning`. Today's punches are a `list-group-flush` card.
+- **Staff punches:** for staff who manage or punch for others, a card listing each person's status with the same punch buttons (`btn-sm`) and a History link.
+- **Alerts:** status and errors use `alert-success` and `alert-danger`. Punches open past shop midnight use `alert-warning` with links to each person's history.
+
+Unchanged: `TechnicianTimeClockController`, the routes, `TechnicianTimeClockProjection`, the `canManage` and `canPunchForStaff` checks, and the form fields, including the `lunch` input.
+
+Still legacy: the staff history page (`operations.time-clock.staff`), with auto clock, punch corrections, and deletions.

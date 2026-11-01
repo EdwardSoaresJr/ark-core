@@ -497,3 +497,45 @@ function seedTimeClockFlagAgreement(User $technician): void
         'effective_to' => null,
     ]);
 }
+
+test('time clock renders on tabler with self and staff punch forms on their routes', function () {
+    Carbon::setTestNow(ShopDisplayTimezone::parseLocal('2026-07-28 08:00')->utc());
+
+    $technician = timeClockTechnician('tabler-clock@ark.test');
+    completeRequiredLearnFor($technician);
+    $advisor = actingAsLearnCurrentStaff(ArkRole::Advisor);
+
+    $this->actingAs($technician)->post(route('operations.time-clock.in'));
+    Carbon::setTestNow(ShopDisplayTimezone::parseLocal('2026-07-28 09:30')->utc());
+
+    $xpathFor = function (string $html): DOMXPath {
+        $document = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $document->loadHTML($html);
+        libxml_clear_errors();
+
+        return new DOMXPath($document);
+    };
+    $legacy = 'ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " ark-legacy ")]';
+
+    $self = $xpathFor($this->actingAs($technician)->get(route('operations.time-clock.index'))->assertOk()->getContent());
+    $selfCard = $self->query('//*[@data-time-clock-self]')->item(0);
+
+    expect($self->query('//*[contains(@class, "page-title")][normalize-space()="'.$technician->name.'"]')->length)->toBe(1)
+        ->and($selfCard)->toBeInstanceOf(DOMElement::class)
+        ->and($self->query($legacy, $selfCard)->length)->toBe(0)
+        ->and($selfCard->textContent)->toContain('1:30')
+        ->and($self->query('.//form[@action="'.route('operations.time-clock.out').'"][.//input[@name="lunch"][@value="1"]]//button[normalize-space()="Out for Lunch"]', $selfCard)->length)->toBe(1)
+        ->and($self->query('.//form[@action="'.route('operations.time-clock.out').'"][not(.//input[@name="lunch"])]//button[normalize-space()="Clock Out"]', $selfCard)->length)->toBe(1)
+        ->and($self->query('//*[@data-time-clock-today]//*[contains(@class, "list-group-item")]')->length)->toBe(1)
+        ->and($self->query('//*[@data-time-clock-staff]')->length)->toBe(0);
+
+    $staff = $xpathFor($this->actingAs($advisor)->get(route('operations.time-clock.index'))->assertOk()->getContent());
+    $staffCard = $staff->query('//*[@data-time-clock-staff]')->item(0);
+
+    expect($staffCard)->toBeInstanceOf(DOMElement::class)
+        ->and($staff->query($legacy, $staffCard)->length)->toBe(0)
+        ->and($staffCard->textContent)->toContain($technician->name)
+        ->and($staff->query('.//form[@action="'.route('operations.time-clock.staff.out', $technician).'"]//button[normalize-space()="Clock Out"]', $staffCard)->length)->toBe(1)
+        ->and($staff->query('.//a[@href="'.route('operations.time-clock.staff', $technician).'"][normalize-space()="History"]', $staffCard)->length)->toBe(1);
+});
