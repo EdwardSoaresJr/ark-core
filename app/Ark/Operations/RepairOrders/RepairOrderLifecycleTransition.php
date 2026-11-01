@@ -227,6 +227,10 @@ class RepairOrderLifecycleTransition
             $this->documents->generateFinalPdf($finalDocument);
         }
 
+        if ($this->statusCatalog->isTerminalSlug($toStatusSlug)) {
+            $this->documents->refreshFinalInvoicePdfAtClose($repairOrder->fresh());
+        }
+
         return $repairOrder->refresh();
     }
 

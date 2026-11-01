@@ -3,6 +3,9 @@
 use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Approvals\ApprovalSource;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Documents\EstimateDocumentPdfSnapshot;
+use App\Ark\Operations\Documents\EstimateDocumentService;
+use App\Ark\Operations\Documents\HeadlessChromiumPdfRenderer;
 use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
@@ -305,6 +308,121 @@ test('recording approval for added work keeps a repair order in progress', funct
 
     expect($repairOrder->fresh()->status->value)->toBe(RepairOrderStatus::InProgress->value)
         ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern'])))->toHaveCount(0);
+});
+
+test('a supplemental approval left at the stale approved total records the approved total after the change', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $calculator = app(EstimateTotalsCalculator::class);
+    $approvedBefore = $calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents();
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    $increase = app(WorkCompletionAuthorization::class)->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+
+    reauthRecordApproval($repairOrder, number_format($approvedBefore / 100, 2, '.', ''));
+
+    expect($increase)->toBeGreaterThan(0)
+        ->and(ApprovalEvent::query()->where('visit_id', $repairOrder->id)->orderBy('id')->pluck('approved_amount_cents')->all())
+        ->toBe([$approvedBefore, $approvedBefore + $increase])
+        ->and($calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents())->toBe($approvedBefore + $increase);
+});
+
+test('a supplemental approval amount that contradicts the changed work is refused', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $eventBefore = ApprovalEvent::query()->sole()->getAttributes();
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+
+    test()->post(route('operations.repair-orders.authorization.store', $repairOrder), [
+        'source' => ApprovalSource::Phone->value,
+        'approved_by' => 'Morgan Brown',
+        'approved_amount' => '1.00',
+    ])->assertRedirect()->assertSessionHasErrors('authorization');
+
+    expect(ApprovalEvent::query()->sole()->getAttributes())->toBe($eventBefore)
+        ->and(ApprovedWorkScope::query()->count())->toBe(1)
+        ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder->fresh(['concerns', 'lines.concern']))->pluck('id')->all())
+        ->toBe([$labor->id]);
+});
+
+test('a supplemental approval of diagnostic-intent work records the approved total, never zero', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $concern->update(['recommendation_intent' => 'diagnostic']);
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    reauthRecordApproval($repairOrder);
+
+    $latest = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first();
+
+    expect($latest->approved_amount_cents)
+        ->toBe(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder->fresh(['lines.concern']))->totalCents())
+        ->and($latest->approved_amount_cents)->toBeGreaterThan(0);
+});
+
+test('authorization history shows each event with its own recorded amount', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $first = ApprovalEvent::query()->sole();
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    reauthRecordApproval($repairOrder);
+
+    $supplemental = ApprovalEvent::query()->where('visit_id', $repairOrder->id)->latest('id')->first();
+    $money = fn (int $cents): string => '$'.number_format($cents / 100, 2);
+
+    expect($supplemental->approved_amount_cents)->toBeGreaterThan($first->approved_amount_cents);
+
+    $this->get(route('operations.repair-orders.workspace-tabs.show', [$repairOrder, 'auth']))
+        ->assertOk()
+        ->assertSeeInOrder([$money($supplemental->approved_amount_cents), $money($first->approved_amount_cents)], false)
+        ->assertDontSee('Customer deferred recommended work', false);
+});
+
+test('the estimate pdf separates the approved amount from changes awaiting approval', function () {
+    [$repairOrder, $concern, $labor] = reauthApprovedRepairOrder();
+    $calculator = app(EstimateTotalsCalculator::class);
+    $approved = $calculator->approvedTotalsForRead($repairOrder->fresh(['lines.concern']));
+
+    reauthPatchLabor($repairOrder, $concern, $labor, quantity: '1.50');
+    $increase = app(WorkCompletionAuthorization::class)->workOutsideApprovedSalesCents($repairOrder->fresh(['concerns', 'lines.concern']));
+
+    $estimate = app(EstimateDocumentService::class)->createOrRefresh($repairOrder->fresh());
+    $html = view(HeadlessChromiumPdfRenderer::VIEW, [
+        'document' => $estimate,
+        'snapshot' => app(EstimateDocumentPdfSnapshot::class)->resolve($estimate),
+    ])->render();
+    $text = trim((string) preg_replace('/\s+/', ' ', html_entity_decode((string) preg_replace('/<[^>]+>/', ' ', $html))));
+
+    expect($text)->toContain('Estimate Total')
+        ->and($text)->not->toContain('Approved Total')
+        ->and($text)->toContain('Approved Work '.$approved->format($approved->totalCents()))
+        ->and($text)->toContain('Changes Awaiting Your Approval '.$approved->format($increase));
+});
+
+test('portal line amounts reconcile with the concern total before tax and fees', function () {
+    ShopSettings::current()->update([
+        'tax_enabled' => true,
+        'default_tax_rate' => '8.000',
+        'taxable_labor' => true,
+        'taxable_parts' => true,
+        'shop_fee_enabled' => false,
+    ]);
+    [$repairOrder, $concern, $labor, $part] = reauthApprovedRepairOrder();
+    $labor = $labor->fresh();
+    $money = fn (int $cents): string => '$'.number_format($cents / 100, 2);
+
+    expect($labor->total_cents)->toBeGreaterThan($labor->subtotal_cents);
+
+    EstimateAccessToken::createForPlainToken($repairOrder, reauthPortalToken());
+    auth()->logout();
+
+    $this->get(route('portal.estimates.show', ['token' => reauthPortalToken()]))
+        ->assertOk()
+        ->assertSeeInOrder([
+            'Front brakes',
+            $money((int) $labor->subtotal_cents + (int) $part->fresh()->subtotal_cents),
+            $money((int) $labor->subtotal_cents),
+            $money((int) $part->fresh()->subtotal_cents),
+        ], false)
+        ->assertDontSee($money((int) $labor->total_cents), false);
 });
 
 /**

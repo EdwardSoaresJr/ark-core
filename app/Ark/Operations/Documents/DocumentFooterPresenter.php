@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Documents;
 
 use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Financial\InvoiceStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderConcernDisposition;
 
 final class DocumentFooterPresenter
@@ -138,7 +139,14 @@ final class DocumentFooterPresenter
             ->filter(fn (mixed $concern): bool => is_array($concern))
             ->contains(fn (array $concern): bool => ($concern['disposition'] ?? '') === 'approved');
 
-        return $hasApprovedWork ? 'Approved Total' : 'Total';
+        if (! $hasApprovedWork) {
+            return 'Total';
+        }
+
+        // The total includes added or raised work the customer has not authorized yet.
+        return (int) data_get($snapshot, 'approval_forecast.needs_authorization_cents', 0) > 0
+            ? 'Estimate Total'
+            : 'Approved Total';
     }
 
     /**
@@ -255,6 +263,25 @@ final class DocumentFooterPresenter
     {
         $documentType = FinancialDocumentType::tryFrom((string) data_get($snapshot, 'document_type', 'estimate'))
             ?? FinancialDocumentType::Estimate;
+
+        // An issued invoice's status is its payment status now (the live ledger overlay), never the
+        // status frozen into its snapshot when it was issued.
+        $invoiceStatus = $documentType === FinancialDocumentType::Invoice
+            ? InvoiceStatus::tryFrom((string) data_get($snapshot, 'financial.invoice_status', ''))
+            : null;
+
+        if ($invoiceStatus === InvoiceStatus::Paid || $invoiceStatus === InvoiceStatus::PartiallyPaid) {
+            return [
+                'status' => $invoiceStatus->value,
+                'status_label' => $invoiceStatus === InvoiceStatus::Paid ? 'Paid in Full' : 'Partially Paid',
+                'approved_by' => null,
+                'approved_at_display' => null,
+                'source_label' => null,
+                'approval_type_label' => null,
+                'detail' => null,
+                'show_signature_lines' => false,
+            ];
+        }
 
         $events = collect(data_get($snapshot, 'staff.approval_events', []))
             ->filter(fn (mixed $event): bool => is_array($event))

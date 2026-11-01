@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Timeline\Mappers;
 
 use App\Ark\Operations\Approvals\ApprovalEvent;
+use App\Ark\Operations\Approvals\ApprovalEventStaffPresentation;
 use App\Ark\Operations\Approvals\ApprovalRevocationEvent;
 use App\Ark\Operations\Timeline\OperationalEventEntry;
 use App\Ark\Operations\Timeline\OperationalEventKind;
@@ -23,10 +24,12 @@ final class ApprovalEventEntryMapper
                 source: OperationalEventSource::Approval,
                 kind: OperationalEventKind::Approval,
                 occurredAt: $approval->approved_at ?? now(),
-                headline: ($approval->approved_amount_cents ?? 0) > 0
-                    ? 'Customer authorized '.$approval->approval_type->label()
-                    : 'Customer deferred recommended work',
-                body: $approval->source->label().' approval · '.$this->money((int) $approval->approved_amount_cents),
+                headline: ApprovalEventStaffPresentation::isDeferredResponse($approval)
+                    ? 'Customer deferred recommended work'
+                    : 'Customer authorized '.$approval->approval_type->label(),
+                body: $approval->source->label().' approval · '.(ApprovalEventStaffPresentation::recordedAmountCents($approval) > 0
+                    ? $this->money(ApprovalEventStaffPresentation::recordedAmountCents($approval))
+                    : mb_strtolower(ApprovalEventStaffPresentation::amountLabel($approval))),
                 actor: $approval->approved_by ?: 'Customer',
                 tone: OperationalEventTone::Success,
                 links: [],

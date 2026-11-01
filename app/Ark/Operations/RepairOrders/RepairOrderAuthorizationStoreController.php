@@ -48,6 +48,17 @@ class RepairOrderAuthorizationStoreController
                 ->withInput();
         }
 
+        if ($changedApprovedScopes !== [] && ! $this->leftAtChangedScopeDefault($data, $repairOrder, $totalsCalculator, $workAuthorization)) {
+            $approvedTotals = $totalsCalculator->approvedTotalsForRead($repairOrder);
+
+            return back()
+                ->withErrors(['authorization' => sprintf(
+                    'This approval covers the changes awaiting authorization, so the approved total becomes %s. Record that amount, or change the work before recording.',
+                    $approvedTotals->format($approvedTotals->totalCents() + $workAuthorization->workOutsideApprovedSalesCents($repairOrder)),
+                )])
+                ->withInput();
+        }
+
         $approvalType = $concernDispositions === []
             ? $resolveAuthorizationType->fromRepairOrder($repairOrder)
             : $resolveAuthorizationType->assumingDispositions($repairOrder, $concernDispositions);
@@ -57,7 +68,8 @@ class RepairOrderAuthorizationStoreController
             approvalType: $approvalType,
             source: ApprovalSource::from($data['source']),
             approvedBy: $data['approved_by'],
-            approvedAmountCents: $changedApprovedScopes !== [] && $this->leftAtChangedScopeDefault($data, $repairOrder, $totalsCalculator, $workAuthorization)
+            // Approving changes records the approved total after them, never a typed or stale amount.
+            approvedAmountCents: $changedApprovedScopes !== []
                 ? null
                 : $this->approvedAmountCents($data, $repairOrder, $concernDispositions, $approvalType, $totalsCalculator),
             notes: $data['notes'] ?? null,
@@ -109,8 +121,9 @@ class RepairOrderAuthorizationStoreController
     }
 
     /**
-     * The presented default for approving changed work is the approved total plus that work.
-     * Left as presented, the recorded amount is the approved total after this approval.
+     * The presented default for approving changed work is the approved total plus that work. A form
+     * opened before the change can still show the approved total alone; both record the approved
+     * total after this approval. Any other amount contradicts the work being approved.
      *
      * @param  array<string, mixed>  $data
      */
