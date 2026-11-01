@@ -50,6 +50,10 @@ test('settings runtime health section renders operational clock strip', function
         ->get(route('operations.settings.shop.edit', ['section' => 'runtime-health']))
         ->assertOk()
         ->assertSee('Runtime health', false)
-        ->assertSee('ops-runtime-health-clock', false)
+        ->assertSee('data-runtime-operational-clock', false)
+        ->assertSee('x-data="arkOperationalClock(', false)
+        ->assertSee('x-text="serverUtc"', false)
+        ->assertSee('x-text="dbUtc"', false)
+        ->assertSee('x-text="shopLocal"', false)
         ->assertSee('Denver', false);
 });

@@ -1,12 +1,47 @@
 @php
     /** @var \App\Ark\Operations\Diagnostics\OperationalClockProjection $operationalClock */
     use App\Ark\Runtime\Broadcast\ReverbDeployment;
+
+    $operationalClockTitle = collect([
+        'Server (PHP): '.($operationalClock->phpIsUtc ? 'UTC' : $operationalClock->phpDefaultTimezone),
+        $operationalClock->dbUtc !== null
+            ? 'MySQL NOW(): '.($operationalClock->dbMatchesUtc ? 'UTC (matches UTC_TIMESTAMP)' : 'differs from UTC_TIMESTAMP')
+            : 'MySQL clock unavailable',
+        'Shop display: '.$operationalClock->shopTimezone,
+    ])->join(' · ');
 @endphp
 
 <div class="card-body" data-runtime-live-clocks>
     <div class="subheader mb-2">Live clocks</div>
-    <div class="ark-legacy bg-white text-dark border rounded p-3">
-        <x-operations.operational-clock :clock="$operationalClock" variant="panel" />
+    <div
+        class="row g-2"
+        title="{{ $operationalClockTitle }}"
+        x-data="arkOperationalClock(@js($operationalClock->toArray()))"
+        x-init="init()"
+        aria-label="Operational clocks"
+        data-runtime-operational-clock
+    >
+        <div class="col-12 col-sm-4">
+            <div class="border rounded px-3 py-2" :class="{ 'border-warning bg-warning-lt': !phpIsUtc }" data-runtime-clock-segment="utc">
+                <div class="subheader">UTC</div>
+                <div class="font-monospace fw-bold" x-text="serverUtc"></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="border rounded px-3 py-2" :class="{ 'border-warning bg-warning-lt': dbAvailable && !dbMatchesUtc }" data-runtime-clock-segment="db">
+                <div class="subheader">DB</div>
+                <div class="font-monospace fw-bold" x-text="dbUtc"></div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="border rounded px-3 py-2" data-runtime-clock-segment="shop">
+                <div class="subheader">{{ $operationalClock->shopShortLabel }}</div>
+                <div class="font-monospace fw-bold">
+                    <span x-text="shopLocal"></span>
+                    <span class="text-secondary fw-normal" x-text="shopAbbr"></span>
+                </div>
+            </div>
+        </div>
     </div>
     <p class="small text-secondary mt-2 mb-0">
         UTC and DB should match. Shop time should track Settings → Shop timezone.
