@@ -68,7 +68,7 @@ test('production inspection show hosts section walk without distribution chrome'
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.inspection.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-inspection-sections', false)
+        ->assertSee('data-inspection-sections', false)
         ->assertSee('LF Tire', false)
         ->assertSee('Standard Vehicle Inspection', false)
         ->assertSee('Other Findings', false)
@@ -145,6 +145,7 @@ test('ro inspection tab offers device actions without walk', function () {
         ->assertSee('data-inspection-handoff', false)
         ->assertDontSee('Send to Technician', false)
         ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false)
         ->assertDontSee('Next →', false);
 });
 
@@ -271,7 +272,8 @@ test('advisor inspection review tab still works on estimate review', function ()
         ]))
         ->assertOk()
         ->assertSee('Open Inspection', false)
-        ->assertDontSee('ops-inspection-walk', false);
+        ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false);
 });
 
 test('advisor inspection tab hosts capture entry and template choice', function () {
@@ -411,7 +413,8 @@ test('customer portal inspection delivery remains unchanged', function () {
         ->assertOk()
         ->assertSee('Vehicle Inspection', false)
         ->assertDontSee('Start Inspection', false)
-        ->assertDontSee('ops-inspection-walk', false);
+        ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false);
 });
 
 function productionDisciplineRepairOrder(?User $assignedTechnician = null): RepairOrder

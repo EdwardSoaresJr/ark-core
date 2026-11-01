@@ -77,60 +77,63 @@
         </div>
     </x-layouts.inspection-tablet>
 @else
-    <x-operations.app title="Vehicle Inspection - RO #{{ $repairOrder->repair_order_id }}">
-        <section class="ops-inspection-production ops-inspection-production--walk mx-auto max-w-3xl px-3 py-3 sm:px-4" data-inspection-surface="standard">
-            <header class="mb-3">
-                <h1 class="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">{{ $vehicleTitle }}</h1>
-                <p class="mt-1 text-sm font-semibold text-slate-600">
-                    RO #{{ $repairOrder->repair_order_id }}
-                    · <span data-inspection-coverage>{{ $postureLabel }}</span>
-                </p>
-            </header>
-
-            @unless ($canEdit)
-                <p class="mb-3 border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-                    You can review this inspection, but recording is limited to the assigned technician or an advisor.
-                </p>
-            @endunless
-
-            @if ($walk_enabled && $walkMode === 'sections' && $section_walk)
-                @include('operations.repair-orders.inspection.partials.section-workspace', [
-                    'repairOrder' => $repairOrder,
-                    'section_walk' => $section_walk,
-                    'photo_purposes' => $photo_purposes ?? [],
-                    'canEdit' => $canEdit,
-                    'tabletMode' => false,
-                    'template_name' => $template_name ?? null,
-                ])
-            @elseif ($walk_enabled && $walkMode === 'point' && $living_record)
-                <p class="ops-inspection-sections__back mb-3">
-                    <a href="{{ $sectionsUrl }}" class="text-sm font-semibold text-[#0099cc] no-underline hover:underline">← Back to sections</a>
-                </p>
-                @include('operations.repair-orders.inspection.partials.walk-workspace', [
-                    'repairOrder' => $repairOrder,
-                    'living_record' => $living_record,
-                    'walk_points' => $walk_points,
-                    'condition_options' => $condition_options,
-                    'progress' => $progress,
-                    'photo_purposes' => $photo_purposes,
-                    'canEdit' => $canEdit,
-                    'tabletMode' => false,
-                    'template_name' => $template_name ?? null,
-                    'sections_url' => $sectionsUrl,
-                ])
-            @else
-                <div class="ops-inspection-walk-empty">
-                    <p class="ops-inspection-walk-empty__copy">No inspection points are configured for this repair order yet.</p>
-                </div>
+    @php
+        $isPointWalk = $walk_enabled && $walkMode === 'point' && $living_record;
+    @endphp
+    <x-operations.app title="Vehicle Inspection - RO #{{ $repairOrder->repair_order_id }}" ui="tabler">
+        <x-tabler.page layout="focused" pretitle="Vehicle inspection" :title="$vehicleTitle" stack-actions>
+            @if ($isPointWalk)
+                <x-slot:actions>
+                    <x-tabler.page-action :href="$sectionsUrl" icon="arrow-left" label="Back to sections" data-inspection-sections-back />
+                </x-slot:actions>
             @endif
 
-            <section class="ops-inspection-other-findings mt-6 border-t border-slate-200 pt-4">
-                <h2 class="text-sm font-bold text-slate-950">Other Findings</h2>
-                <p class="mt-1 text-xs text-slate-600">See something that wasn't covered above? Add it here.</p>
-                <div class="mt-3">
-                    @include('operations.repair-orders.inspection.partials.finding-capture')
+            <div class="d-flex flex-column gap-3" data-inspection-surface="standard">
+                <div class="text-secondary fw-medium">
+                    RO #{{ $repairOrder->repair_order_id }}
+                    · <span data-inspection-coverage>{{ $postureLabel }}</span>
                 </div>
-            </section>
-        </section>
+
+                @unless ($canEdit)
+                    <div class="alert alert-warning mb-0" role="status">
+                        You can review this inspection, but recording is limited to the assigned technician or an advisor.
+                    </div>
+                @endunless
+
+                @if ($walk_enabled && $walkMode === 'sections' && $section_walk)
+                    @include('operations.repair-orders.inspection.partials.section-workspace-tabler', [
+                        'repairOrder' => $repairOrder,
+                        'section_walk' => $section_walk,
+                        'photo_purposes' => $photo_purposes ?? [],
+                        'canEdit' => $canEdit,
+                        'template_name' => $template_name ?? null,
+                    ])
+                @elseif ($isPointWalk)
+                    @include('operations.repair-orders.inspection.partials.walk-workspace-tabler', [
+                        'repairOrder' => $repairOrder,
+                        'living_record' => $living_record,
+                        'walk_points' => $walk_points,
+                        'condition_options' => $condition_options,
+                        'progress' => $progress,
+                        'photo_purposes' => $photo_purposes,
+                        'canEdit' => $canEdit,
+                        'template_name' => $template_name ?? null,
+                        'sections_url' => $sectionsUrl,
+                    ])
+                @else
+                    <div class="card" data-inspection-walk-empty>
+                        <div class="card-body text-secondary">No inspection points are configured for this repair order yet.</div>
+                    </div>
+                @endif
+
+                <section class="card" aria-labelledby="inspection-other-findings-title" data-inspection-other-findings>
+                    <div class="card-body p-3">
+                        <h2 class="card-title mb-1" id="inspection-other-findings-title">Other Findings</h2>
+                        <p class="text-secondary mb-3">See something that wasn't covered above? Add it here.</p>
+                        @include('operations.repair-orders.inspection.partials.finding-capture-tabler')
+                    </div>
+                </section>
+            </div>
+        </x-tabler.page>
     </x-operations.app>
 @endif
