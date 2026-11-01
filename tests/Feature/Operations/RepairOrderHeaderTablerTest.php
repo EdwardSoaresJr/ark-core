@@ -63,7 +63,7 @@ test('the command bar keeps the workflow selects, document actions, and print me
         ->and($xpath->query('.//*['.repairOrderHeaderHasClass('ark-ro-command-bar__status').']//*[@data-lost-reason-panel][@hidden]', $bar)->length)->toBe(1)
         ->and($actions)->toBeInstanceOf(DOMElement::class)
         ->and($xpath->query('.//button[@aria-label="Review Estimate Notes"]', $actions)->length)->toBe(1)
-        ->and($actions->ownerDocument->saveHTML($actions))->toContain("task: 'review-estimate-notes'")
+        ->and(preg_match('/aria-label="Review Estimate Notes"\s+@click="[^"]*task: \'review-estimate-notes\'/', $html))->toBe(1)
         ->and($xpath->query('.//button[@data-workspace-modal-trigger="document"][@aria-label="+ Add Document"]', $actions)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-ro-print-menu]//button[@data-bs-toggle="dropdown"][@aria-label="Print"]', $actions)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-ro-print-menu]//*[normalize-space()="Estimate PDF"]', $actions)->length)->toBe(1)
