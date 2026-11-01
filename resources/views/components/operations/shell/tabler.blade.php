@@ -120,10 +120,7 @@
             </div>
         </header>
 
-        {{-- ark-workspace-tabs.js builds this strip's tabs, overflow menu, and drag states with ops-workspace-tab* classes styled by app.css. --}}
-        <div class="ark-legacy">
-            @include('components.operations.workspace-tabs')
-        </div>
+        @include('components.operations.workspace-tabs', ['ui' => 'tabler'])
 
         @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
             @if ($commsAccountabilityEnabled && $commsNavCount > 0 && ! request()->routeIs('operations.index', 'operations.communications.attention', 'operations.communications.inbox', 'operations.communications.history', 'operations.communications.calls', 'operations.communications.internal', 'operations.communications.internal.channel'))
