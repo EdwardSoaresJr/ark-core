@@ -20,7 +20,11 @@ test('canonical repair order exposes full presentation workspace tabs', function
         ->assertSee("selectTab('comms')", false)
         ->assertSee("selectTab('inspect')", false)
         ->assertSee("selectTab('recommendations')", false)
-        ->assertSee("selectTab('history')", false);
+        ->assertSee("selectTab('history')", false)
+        ->assertSee('id="repair-order-workspace-tab-comms"', false)
+        ->assertSee('aria-controls="repair-order-workspace-panel-comms"', false)
+        ->assertSee('id="repair-order-workspace-panel-comms"', false)
+        ->assertSee('aria-labelledby="repair-order-workspace-tab-comms"', false);
 });
 
 test('waiting-approval repair order still exposes full workspace tab rail', function (): void {

@@ -580,6 +580,6 @@ test('bound station shows station label without lock overlay', function (): void
 
     workstationGet($this, '/app', $admin, $binding)
         ->assertOk()
-        ->assertSee('ws-presence-topbar__station', false)
+        ->assertSee('data-ws-station-label', false)
         ->assertDontSee('Find advisor', false);
 });

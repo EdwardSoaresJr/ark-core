@@ -103,17 +103,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="ark-legacy flex-fill overflow-auto d-none d-lg-block">
+                    <div class="flex-fill overflow-x-auto d-none d-lg-block">
                         @include('operations.communications.partials.channel-strip', [
                             'comms_channel_tabs' => $commsChannelTabs,
-                            'variant' => 'topbar',
+                            'variant' => 'tabler',
                         ])
                     </div>
                 @endif
                 <div class="navbar-nav flex-row align-items-center gap-2 ms-auto">
-                    <div class="ark-legacy">
-                        <x-operations.workstation-presence :presence="$workstationPresence" />
-                    </div>
+                    <x-operations.workstation-presence :presence="$workstationPresence" ui="tabler" />
                     @include('components.operations.shell.tabler-user-menu', [
                         'menuUser' => $user,
                         'avatarUser' => $topbarAvatarUser,
@@ -122,20 +120,21 @@
             </div>
         </header>
 
+        {{-- ark-workspace-tabs.js builds this strip's tabs, overflow menu, and drag states with ops-workspace-tab* classes styled by app.css. --}}
         <div class="ark-legacy">
             @include('components.operations.workspace-tabs')
-
-            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-                @if ($commsAccountabilityEnabled && $commsNavCount > 0 && ! request()->routeIs('operations.index', 'operations.communications.attention', 'operations.communications.inbox', 'operations.communications.history', 'operations.communications.calls', 'operations.communications.internal', 'operations.communications.internal.channel'))
-                    <x-operations.comms-pressure-bar :pressure="[
-                        'count' => $commsNavCount,
-                        'summary' => $commsNavSummary,
-                        'attention_url' => $commsPressure['attention_url'],
-                        'has_live_calls' => (bool) ($commsNavSummary['has_live_calls'] ?? false),
-                    ]" />
-                @endif
-            @endcan
         </div>
+
+        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+            @if ($commsAccountabilityEnabled && $commsNavCount > 0 && ! request()->routeIs('operations.index', 'operations.communications.attention', 'operations.communications.inbox', 'operations.communications.history', 'operations.communications.calls', 'operations.communications.internal', 'operations.communications.internal.channel'))
+                <x-operations.comms-pressure-bar ui="tabler" :pressure="[
+                    'count' => $commsNavCount,
+                    'summary' => $commsNavSummary,
+                    'attention_url' => $commsPressure['attention_url'],
+                    'has_live_calls' => (bool) ($commsNavSummary['has_live_calls'] ?? false),
+                ]" />
+            @endif
+        @endcan
 
         @if ($learnTrainingSnooze || session('learn_snoozed'))
             <div class="container-fluid pt-3">
@@ -167,3 +166,17 @@
         </main>
     </div>
 </div>
+
+{{--
+    Each overlay is one .modal (z-index 1055, above the sidebar) with its backdrop inside, so later overlays cover earlier
+    ones: this order keeps the legacy stacking. app.blade.php also renders these components after the shell; the flag
+    makes those calls render nothing.
+--}}
+@php(request()->attributes->set('operations.tabler_shell_overlays', true))
+@can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+    <x-operations.global-search ui="tabler" />
+    <x-operations.learn.guide-modal ui="tabler" />
+    <x-operations.comms-interrupt-panel ui="tabler" />
+    <x-operations.call-queue :poller-only="true" ui="tabler" />
+@endcan
+<x-operations.image-lightbox ui="tabler" />

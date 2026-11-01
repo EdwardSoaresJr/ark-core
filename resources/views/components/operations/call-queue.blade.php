@@ -1,6 +1,7 @@
-@props(['pollerOnly' => false])
+@props(['pollerOnly' => false, 'ui' => 'legacy'])
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+@if ($ui === 'tabler' || ! request()->attributes->get('operations.tabler_shell_overlays'))
     @php
         $markWorkedUrl = str_replace('0', '__CALL_SESSION__', route('operations.telephony.call-queue.worked', ['callSession' => 0]));
         $claimUrl = str_replace('0', '__CALL_SESSION__', route('operations.telephony.calls.claim', ['callSession' => 0]));
@@ -45,6 +46,15 @@
         ];
     @endphp
     <script type="application/json" id="ark-call-queue-bootstrap">@json($callQueueBootstrap)</script>
+    @if ($ui === 'tabler' && $pollerOnly)
+    <div
+        data-call-queue-root
+        x-data="arkCallQueue()"
+        @click.outside="open = false"
+        class="d-none"
+        aria-hidden="true"
+    ></div>
+    @else
     <div
         data-call-queue-root
         x-data="arkCallQueue()"
@@ -160,4 +170,6 @@
         </div>
         @endunless
     </div>
+    @endif
+@endif
 @endcan
