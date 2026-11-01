@@ -266,7 +266,7 @@
             </div>
 
             <div class="col-12 col-lg-9 col-xxl-10">
-                <section class="card" x-show="active === 'general'">
+                <section class="card" x-show="active === 'general'" data-settings-section="general">
                     <div class="card-header">
                         <div>
                             <div class="subheader">Shop Identity</div>
@@ -371,7 +371,7 @@
                         </div>
                     </form>
                 </section>
-                <section class="card" x-show="active === 'estimates'" x-cloak>
+                <section class="card" x-show="active === 'estimates'" x-cloak data-settings-section="estimates">
                     <div class="card-header">
                         <div>
                             <div class="subheader">Documents / Disclaimers</div>
