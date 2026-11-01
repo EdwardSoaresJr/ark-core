@@ -324,7 +324,7 @@ test('new contact renders in the Tabler shell with the same form', function (): 
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Technician->value))->get($url)->assertForbidden();
 });
 
-test('caller lookup renders in the Tabler shell and keeps the context panel in an island', function (): void {
+test('caller lookup renders in the Tabler shell with a Tabler context panel', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     dailyOpsRepairOrder();
 
@@ -339,7 +339,7 @@ test('caller lookup renders in the Tabler shell and keeps the context panel in a
     $matched = dailyOpsTablerMain($this->actingAs($advisor)->get(route('operations.caller-lookup', ['phone' => '719-555-0142'])));
 
     expect($matched)->toContain('data-caller-lookup-match')
-        ->and(substr_count($matched, 'class="ark-legacy bg-white text-dark"'))->toBe(1);
+        ->and(str($matched)->betweenFirst('data-caller-lookup-match', 'data-conversation-context')->toString())->not->toContain('ark-legacy');
 
     $unmatched = dailyOpsTablerMain($this->actingAs($advisor)->get(route('operations.caller-lookup', ['phone' => '719-555-0999'])));
 

@@ -51,7 +51,7 @@
                         @endif
                     </div>
                     @if ($context->recentConversationMessages->isNotEmpty())
-                        <div class="ark-legacy bg-white text-dark border-top">
+                        <div class="border-top">
                             <x-operations.conversation-context-panel
                                 :context="$context"
                                 :show-customer-header="false"
@@ -59,6 +59,7 @@
                                 :show-open-repair-orders="false"
                                 conversation-label="Recent Conversation"
                                 conversation-meta="Unmatched number"
+                                ui="tabler"
                             />
                         </div>
                     @endif
@@ -67,9 +68,7 @@
 
             @if ($context?->hasMatch())
                 <div class="card overflow-hidden" data-caller-lookup-match>
-                    <div class="ark-legacy bg-white text-dark">
-                        <x-operations.conversation-context-panel :context="$context" />
-                    </div>
+                    <x-operations.conversation-context-panel :context="$context" ui="tabler" />
                 </div>
             @endif
         </div>

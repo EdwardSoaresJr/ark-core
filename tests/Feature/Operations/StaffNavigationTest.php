@@ -220,12 +220,14 @@ test('both shells render exactly the shared sections', function (callable $makeU
 ]);
 
 test('each shell marks the current destination', function (): void {
+    config(['ark.arkademy_in_navigation' => true]);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 
     $this->actingAs($admin)
-        ->get(route('operations.shop.communications'))
+        ->followingRedirects()
+        ->get(route('operations.learn.index'))
         ->assertOk()
-        ->assertSee('href="'.route('operations.shop.communications').'" class="ops-rail-link ops-rail-link--active"', false);
+        ->assertSee('href="'.\App\Ark\Operations\Learn\ArkademyUrls::staffNavUrl().'" class="ops-rail-link ops-rail-link--active"', false);
 
     $this->actingAs($admin)
         ->get(route('operations.customers.search'))

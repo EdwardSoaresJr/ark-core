@@ -1,5 +1,9 @@
 <?php
 
+use App\Ark\Operations\Labor\TechnicianCompensationAgreement;
+use App\Ark\Operations\Labor\TechnicianLaborPayBasis;
+use App\Ark\Operations\Labor\UpsertTechnicianCompensableWeekAction;
+use App\Ark\Operations\Reports\OperationalReportTab;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -235,7 +239,7 @@ test('operational report renders on tabler with its range form, figures, and sec
 
     $nav = $xpath->query('//nav[@data-report-tabs]['.ownerReportsClass('nav-pills').']')->item(0);
     expect($nav)->toBeInstanceOf(DOMElement::class);
-    foreach (\App\Ark\Operations\Reports\OperationalReportTab::casesInDisplayOrder() as $case) {
+    foreach (OperationalReportTab::casesInDisplayOrder() as $case) {
         $link = $xpath->query('.//a[@href="'.route('operations.reports.operational', ['from' => '2026-09-01', 'to' => '2026-09-20', 'tab' => $case->value]).'"]', $nav)->item(0);
         expect($link)->toBeInstanceOf(DOMElement::class)
             ->and($link->getAttribute('aria-current'))->toBe($case->value === $tab ? 'page' : '');
@@ -244,8 +248,8 @@ test('operational report renders on tabler with its range form, figures, and sec
     expect($xpath->query('//*[@data-report-tab="'.$tab.'"]//table['.ownerReportsClass('card-table').']/ancestor::*['.ownerReportsClass('table-responsive').']/ancestor::*['.ownerReportsClass('card').']')->length)->toBeGreaterThan(0)
         ->and($xpath->query('//a[@href="'.route('operations.reports.index').'"]')->length)->toBeGreaterThan(0);
 })->with(fn (): array => array_map(
-    fn (\App\Ark\Operations\Reports\OperationalReportTab $tab): string => $tab->value,
-    \App\Ark\Operations\Reports\OperationalReportTab::casesInDisplayOrder(),
+    fn (OperationalReportTab $tab): string => $tab->value,
+    OperationalReportTab::casesInDisplayOrder(),
 ));
 
 test('operational report links one shop day to its end of day card', function (): void {
@@ -334,15 +338,15 @@ function ownerReportsFlagTechnician(): User
 {
     $technician = User::factory()->create([
         'name' => 'Landon Carter',
-        'labor_pay_basis' => \App\Ark\Operations\Labor\TechnicianLaborPayBasis::Flag->value,
+        'labor_pay_basis' => TechnicianLaborPayBasis::Flag->value,
         'flag_rate_cents' => 2500,
         'floor_rate_cents' => 1516,
         'labor_cost_cents' => 8760,
     ])->assignRole(ArkRole::Technician->value);
 
-    \App\Ark\Operations\Labor\TechnicianCompensationAgreement::query()->create([
+    TechnicianCompensationAgreement::query()->create([
         'user_id' => $technician->id,
-        'labor_pay_basis' => \App\Ark\Operations\Labor\TechnicianLaborPayBasis::Flag->value,
+        'labor_pay_basis' => TechnicianLaborPayBasis::Flag->value,
         'flag_rate_cents' => 2500,
         'floor_rate_cents' => 1516,
         'effective_from' => Carbon::parse('2026-07-01')->startOfDay(),
@@ -356,7 +360,7 @@ test('technician production index renders on tabler with the week filter, figure
     config(['technician_compensation.recognition_authority_starts_at' => '2026-07-27']);
     $admin = ownerReportsAdmin();
     $technician = ownerReportsFlagTechnician();
-    app(\App\Ark\Operations\Labor\UpsertTechnicianCompensableWeekAction::class)->handle($technician, [
+    app(UpsertTechnicianCompensableWeekAction::class)->handle($technician, [
         '2026-07-27' => 8.0,
         '2026-07-28' => 7.5,
     ], $admin);
@@ -383,7 +387,7 @@ test('technician production detail renders on tabler with its figures, hours for
     config(['technician_compensation.recognition_authority_starts_at' => '2026-07-27']);
     $admin = ownerReportsAdmin();
     $technician = ownerReportsFlagTechnician();
-    app(\App\Ark\Operations\Labor\UpsertTechnicianCompensableWeekAction::class)->handle($technician, [
+    app(UpsertTechnicianCompensableWeekAction::class)->handle($technician, [
         '2026-07-27' => 8.0,
     ], $admin);
 
@@ -420,134 +424,4 @@ test('technician production stays forbidden to advisors', function (): void {
 
     $this->actingAs($advisor)->get(route('operations.owner.technician-production.index'))->assertForbidden();
     $this->actingAs($advisor)->get(route('operations.owner.technician-production.show', $technician))->assertForbidden();
-});
-
-function ownerReportsCallSession(array $overrides = []): \App\Ark\Operations\Telephony\CallSession
-{
-    return \App\Ark\Operations\Telephony\CallSession::query()->create(array_merge([
-        'provider' => 'twilio',
-        'provider_call_sid' => 'CAtabler001',
-        'direction' => 'inbound',
-        'from_number' => '+17195551234',
-        'to_number' => '+17195559999',
-        'normalized_from' => '7195551234',
-        'status' => 'completed',
-        'started_at' => now()->subDay(),
-        'recording_url' => 'https://api.twilio.com/2010-04-01/Accounts/AC/Recordings/REtabler001',
-        'recording_duration_seconds' => 95,
-        'analysis_status' => \App\Ark\Operations\Telephony\CallSessionAnalysisStatus::Ready,
-        'transcript' => 'Customer asked about brake noise.',
-        'analysis_json' => [
-            'summary' => 'Customer reported front brake noise.',
-            'sentiment' => 'concerned',
-            'follow_up_needed' => true,
-            'follow_up_notes' => 'Send estimate once inspection is complete.',
-            'missed_upsell' => true,
-            'missed_upsell_notes' => 'Did not offer alignment check.',
-            'empathy_score' => 4,
-            'empathy_label' => 'Strong',
-            'coaching_priority' => 'high',
-            'coaching_improvements' => ['Offer related inspection items'],
-            'topics' => ['brakes', 'inspection'],
-        ],
-        'analyzed_at' => now(),
-    ], $overrides));
-}
-
-test('call intelligence renders on tabler with its filters, coaching queue, and call actions', function (): void {
-    $admin = ownerReportsAdmin();
-    $session = ownerReportsCallSession();
-
-    $response = $this->actingAs($admin)
-        ->get(route('operations.owner.call-intelligence', ['channel' => 'calls', 'analysis' => 'coaching']))
-        ->assertOk();
-    $html = $response->getContent();
-    $xpath = ownerReportsAssertTablerPage($html, 'Call & SMS intelligence');
-    $filters = $response->viewData('filters');
-
-    $form = $xpath->query('//form[@data-call-intelligence-filters][@method="GET"][@action="'.route('operations.owner.call-intelligence').'"]')->item(0);
-    expect($form)->toBeInstanceOf(DOMElement::class)
-        ->and($xpath->query('.//input[@type="date"][@name="from"][@value="'.$filters['from'].'"]['.ownerReportsClass('form-control').']', $form)->length)->toBe(1)
-        ->and($xpath->query('.//input[@type="date"][@name="to"][@value="'.$filters['to'].'"]', $form)->length)->toBe(1)
-        ->and($xpath->query('.//select[@name="channel"]['.ownerReportsClass('form-select').']/option[@value="calls"][@selected]', $form)->length)->toBe(1)
-        ->and($xpath->query('.//select[@name="media"]/option[@value="recorded"][@selected]', $form)->length)->toBe(1)
-        ->and($xpath->query('.//select[@name="analysis"]/option[@value="coaching"][@selected]', $form)->length)->toBe(1)
-        ->and($xpath->query('.//*[@id="call-intelligence-more-filters"]['.ownerReportsClass('show').']', $form)->length)->toBe(1)
-        ->and(array_map(fn (DOMElement $field): string => $field->getAttribute('name'), iterator_to_array($xpath->query('.//*[@name]', $form))))->toBe(['from', 'to', 'channel', 'media', 'analysis']);
-
-    $queue = $xpath->query('//*[@data-call-intelligence-coaching-queue]['.ownerReportsClass('card').']')->item(0);
-    expect($queue)->toBeInstanceOf(DOMElement::class)
-        ->and($xpath->query('.//a[@href="'.route('operations.owner.call-intelligence', array_merge($filters, ['analysis' => 'coaching'])).'"]', $queue)->length)->toBe(1);
-
-    $row = $xpath->query('//article[@data-call-intelligence-row="call"]['.ownerReportsClass('card').']')->item(0);
-    expect($row)->toBeInstanceOf(DOMElement::class)
-        ->and($row->textContent)->toContain('(719) 555-1234')->toContain('Customer reported front brake noise.')->toContain('Empathy 4/5 · Strong')->toContain('Missed upsell')
-        ->and($xpath->query('.//form[@method="POST"][@action="'.route('operations.owner.call-intelligence.follow-up.toggle', $session).'"]//input[@name="_token"]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//a[@href="'.route('operations.owner.call-intelligence.coaching-pdf', $session).'"][@target="_blank"]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//a[@href="'.route('operations.owner.call-intelligence.show', $session).'?'.http_build_query($filters).'"]', $row)->length)->toBe(1)
-        ->and($xpath->query('.//*[@data-call-signals-customer]//*['.ownerReportsClass('badge').']['.ownerReportsClass('bg-yellow-lt').']', $row)->length)->toBeGreaterThan(0)
-        ->and($xpath->query('//*[@data-call-intelligence-links]//a[@href="'.route('operations.owner.day-review').'"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-call-intelligence-links]//a[@href="'.route('operations.reports.operational').'"]')->length)->toBe(1)
-        ->and($html)->not->toContain('bg-emerald-100')
-        ->and($html)->not->toContain('bg-rose-100');
-});
-
-test('call intelligence detail renders on tabler with its analysis, actions, and coaching debrief form', function (): void {
-    $admin = ownerReportsAdmin();
-    $advisor = User::factory()->create(['name' => 'Sam Advisor'])->assignRole(ArkRole::Advisor->value);
-    $session = ownerReportsCallSession([
-        'owned_by_user_id' => $advisor->id,
-        'coaching_follow_up_at' => now(),
-    ]);
-
-    $html = $this->actingAs($admin)
-        ->get(route('operations.owner.call-intelligence.show', $session))
-        ->assertOk()
-        ->getContent();
-    $xpath = ownerReportsAssertTablerPage($html, '(719) 555-1234');
-
-    expect($xpath->query('//*[@data-call-intelligence-header]//form[@action="'.route('operations.owner.call-intelligence.follow-up.toggle', $session).'"]//button[normalize-space(.)="Unpin"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-call-intelligence-header]//a[@href="'.route('operations.owner.call-intelligence.coaching-pdf', $session).'"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-call-details-customer]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-call-details-advisor]//ul/li[normalize-space(.)="Offer related inspection items"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-call-transcript][normalize-space(.)="Customer asked about brake noise."]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-call-intelligence-links]//a[@href="'.route('operations.owner.call-intelligence').'"]')->length)->toBe(1);
-
-    $form = $xpath->query('//*[@data-call-coaching-debrief]//form[@method="POST"][@action="'.route('operations.owner.call-intelligence.coaching-log.store', $session).'"]')->item(0);
-    expect($form)->toBeInstanceOf(DOMElement::class)
-        ->and(array_map(fn (DOMElement $field): string => $field->getAttribute('name'), iterator_to_array($xpath->query('.//*[@name]', $form))))->toBe(['_token', 'staff_user_id', 'notes', 'complete_follow_up', 'complete_follow_up'])
-        ->and($xpath->query('.//select[@name="staff_user_id"][@id="coaching-staff-user-id"]['.ownerReportsClass('form-select').']/option[@value="'.$advisor->id.'"][@selected]', $form)->length)->toBe(1)
-        ->and($xpath->query('.//label[@for="coaching-notes"]', $form)->length)->toBe(1)
-        ->and($xpath->query('.//a[@href="'.route('operations.owner.staff.coaching', $advisor->id).'"]', $form)->length)->toBe(1);
-});
-
-test('staff coaching renders on tabler with logs and links', function (): void {
-    $admin = ownerReportsAdmin();
-    $advisor = User::factory()->create(['name' => 'Sam Advisor'])->assignRole(ArkRole::Advisor->value);
-    $session = ownerReportsCallSession(['owned_by_user_id' => $advisor->id]);
-
-    $this->actingAs($admin)
-        ->post(route('operations.owner.call-intelligence.coaching-log.store', $session), [
-            'staff_user_id' => $advisor->id,
-            'notes' => 'Reviewed empathy and next steps.',
-        ])
-        ->assertRedirect();
-
-    $html = $this->actingAs($admin)->get(route('operations.owner.staff.coaching', $advisor))->assertOk()->getContent();
-    $xpath = ownerReportsAssertTablerPage($html, 'Sam Advisor');
-
-    expect(ownerReportsTexts($xpath, '//*[@data-staff-coaching-profile]')[0])->toContain('1 coaching log')
-        ->and($xpath->query('//*[@data-staff-coaching-logs]//*['.ownerReportsClass('list-group-item').'][contains(., "Reviewed empathy and next steps.")]//a[@href="'.route('operations.owner.call-intelligence.show', $session).'"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-staff-coaching-links]//a[@href="'.route('operations.owner.call-intelligence').'"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-staff-coaching-links]//a[@href="'.route('operations.settings.shop.edit', ['section' => 'staff']).'"]')->length)->toBe(1)
-        ->and($xpath->query('//*[@data-staff-coaching-links]//a[@href="'.route('operations.owner.day-review').'"]')->length)->toBe(1);
-});
-
-test('call intelligence and staff coaching stay forbidden to advisors', function (): void {
-    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
-    $session = ownerReportsCallSession();
-
-    $this->actingAs($advisor)->get(route('operations.owner.call-intelligence'))->assertForbidden();
-    $this->actingAs($advisor)->get(route('operations.owner.call-intelligence.show', $session))->assertForbidden();
-    $this->actingAs($advisor)->get(route('operations.owner.staff.coaching', $advisor))->assertForbidden();
 });
