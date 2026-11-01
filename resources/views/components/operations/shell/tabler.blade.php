@@ -175,6 +175,8 @@
 @php(request()->attributes->set('operations.tabler_shell_overlays', true))
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
     <x-operations.global-search ui="tabler" />
+    <x-operations.learn.guide-modal ui="tabler" />
     <x-operations.comms-interrupt-panel ui="tabler" />
     <x-operations.call-queue :poller-only="true" ui="tabler" />
 @endcan
+<x-operations.image-lightbox ui="tabler" />

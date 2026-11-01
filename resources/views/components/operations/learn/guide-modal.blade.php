@@ -1,3 +1,5 @@
+@props(['ui' => 'legacy'])
+
 @php
     use App\Ark\Runtime\DemoInstall;
     use App\Support\Branding\Branding;
@@ -5,6 +7,69 @@
     $guideProductName = DemoInstall::isDemo() ? 'Guide' : Branding::learnName();
 @endphp
 
+@if ($ui === 'tabler')
+<div
+    x-data="arkLearnGuideModal()"
+    x-cloak
+    x-show="open"
+    x-transition.opacity.duration.150ms
+    @keydown.escape.window="close()"
+    data-ark-learn-guide-modal
+>
+    <div class="modal d-block" role="dialog" aria-modal="true" :aria-label="title || '{{ $guideProductName }} guide'" tabindex="-1">
+        <button
+            type="button"
+            class="modal-backdrop show z-0 border-0 p-0"
+            @click="close()"
+            aria-label="Close guide preview"
+        ></button>
+
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header align-items-start">
+                    <div class="overflow-hidden">
+                        <div class="subheader" x-show="sectionLabel" x-text="sectionLabel"></div>
+                        <h2 class="modal-title" x-text="title || '{{ $guideProductName }}'"></h2>
+                        <div class="small text-secondary" x-show="summary" x-text="summary"></div>
+                    </div>
+                    <button type="button" class="btn-close" @click="close()" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="text-secondary" x-show="loading">
+                        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading guide…
+                    </div>
+                    <div class="alert alert-danger mb-0" role="alert" x-show="error" x-text="error"></div>
+                    {{-- Guide previews are ARKademy article markup, which stays on app.css. --}}
+                    <div
+                        class="ark-legacy bg-white text-dark rounded p-3 ops-learn-prose ops-learn-guide-modal__prose"
+                        x-show="! loading && ! error && html"
+                        x-html="html"
+                    ></div>
+                </div>
+
+                <div class="modal-footer">
+                    @unless (DemoInstall::isDemo())
+                        <div class="small text-secondary me-auto">Preview from ARK - open {{ Branding::learnName() }} for search, print, and full navigation.</div>
+                    @endunless
+                    <button type="button" class="btn" @click="close()">Close</button>
+                    @unless (DemoInstall::isDemo())
+                        <a
+                            :href="arkademyUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="btn btn-primary"
+                            x-show="arkademyUrl"
+                        >
+                            Open in {{ Branding::learnName() }}
+                        </a>
+                    @endunless
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@elseif (! request()->attributes->get('operations.tabler_shell_overlays'))
 <div
     x-data="arkLearnGuideModal()"
     x-cloak
@@ -64,3 +129,4 @@
         </footer>
     </div>
 </div>
+@endif

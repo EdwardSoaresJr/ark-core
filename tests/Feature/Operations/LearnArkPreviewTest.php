@@ -53,5 +53,6 @@ test('settings surfaces render arkademy guide modal triggers', function () {
     $this->actingAs(actingAsLearnCurrentStaff(ArkRole::Admin))
         ->get(route('operations.settings.shop.edit', ['section' => 'general']))
         ->assertOk()
-        ->assertSee('ops-learn-guide-modal', false);
+        ->assertSee('data-ark-learn-guide-modal', false)
+        ->assertSee('x-data="arkLearnGuideModal()"', false);
 });
