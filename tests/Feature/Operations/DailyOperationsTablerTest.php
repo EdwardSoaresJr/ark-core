@@ -417,3 +417,91 @@ test('the station PIN form keeps its digit filter hook', function (): void {
         ->toContain('data-profile-workstation-pin-form')
         ->toContain("document.querySelectorAll('[data-profile-workstation-pin-form] input[name=\"pin\"]");
 });
+
+test('the staff time clock history renders in the Tabler shell and keeps every form and permission', function (): void {
+    $technician = User::factory()->create(['name' => 'Daily Clock'])->assignRole(ArkRole::Technician->value);
+    completeRequiredLearnFor($technician);
+    $admin = actingAsLearnCurrentStaff(ArkRole::Admin);
+
+    $this->actingAs($admin)
+        ->post(route('operations.time-clock.staff.in', $technician))
+        ->assertRedirect(route('operations.time-clock.staff', $technician));
+
+    $session = \App\Ark\Operations\Labor\TechnicianTimeSession::query()->where('user_id', $technician->id)->firstOrFail();
+    $url = route('operations.time-clock.staff', $technician);
+
+    $main = dailyOpsTablerMain($this->actingAs($admin)->get($url));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('Punch history')
+        ->toContain('Tech production')
+        ->toContain('action="'.route('operations.time-clock.staff.out', $technician).'"')
+        ->toContain('name="lunch" value="1"')
+        ->toContain('action="'.route('operations.time-clock.staff.auto-clock', $technician).'"')
+        ->toContain('name="auto_clock_enabled"')
+        ->toContain('name="auto_lunch_minutes"')
+        ->toContain('action="'.route('operations.time-clock.correct', $session).'"')
+        ->toContain('name="clocked_in_at"')
+        ->toContain('name="clocked_out_at"')
+        ->toContain('action="'.route('operations.time-clock.delete', $session).'"')
+        ->toContain("onsubmit=\"return confirm('Delete this punch? It will no longer count toward compensable hours.')\"")
+        ->toContain('x-show="panelId === '.$session->id.' && panelMode === \'correct\'"')
+        ->toContain('x-show="panelId === '.$session->id.' && panelMode === \'delete\'"');
+
+    $advisor = actingAsLearnCurrentStaff(ArkRole::Advisor);
+    $advisorMain = dailyOpsTablerMain($this->actingAs($advisor)->get($url));
+
+    expectNoLegacyMarkup($advisorMain);
+    expect($advisorMain)->toContain('action="'.route('operations.time-clock.staff.out', $technician).'"')
+        ->not->toContain('Tech production')
+        ->not->toContain('action="'.route('operations.time-clock.correct', $session).'"')
+        ->not->toContain('action="'.route('operations.time-clock.delete', $session).'"')
+        ->not->toContain('name="auto_clock_enabled"');
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Technician->value))->get($url)->assertForbidden();
+});
+
+test('ARK Cloud connecting renders in the Tabler shell and keeps its poller', function (): void {
+    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+
+    $main = dailyOpsTablerMain($this->actingAs($admin)->get(route('operations.cloud.connecting')));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('id="cloud-connect-status"')
+        ->toContain("document.getElementById('cloud-connect-status')")
+        ->toContain(json_encode(route('operations.cloud.poll')))
+        ->toContain('action="'.route('operations.settings.shop.ark-cloud.claim').'"')
+        ->toContain('Check now');
+});
+
+test('Platform clusters render in the Tabler shell for master admins only', function (): void {
+    $master = User::factory()->create(['is_master_admin' => true])->assignRole(ArkRole::Admin->value);
+
+    $main = dailyOpsTablerMain($this->actingAs($master)->get(route('platform.clusters.index')));
+
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('data-platform-clusters')
+        ->toContain('table-responsive');
+
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
+        ->get(route('platform.clusters.index'))
+        ->assertForbidden();
+});
+
+test('the 409 page renders in the Tabler shell', function (): void {
+    \Illuminate\Support\Facades\Route::middleware('web')->get('/_tests/estimate-conflict', fn () => response()->view('errors.409', [
+        'message' => 'DAILY-OPS-CONFLICT',
+    ], 409));
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+
+    $response = $this->actingAs($advisor)->get('/_tests/estimate-conflict')->assertStatus(409);
+    $html = $response->getContent();
+    $main = substr($html, strpos($html, '<main>'), strrpos($html, '</main>') - strpos($html, '<main>'));
+
+    expect($html)->toContain('navbar navbar-vertical');
+    expectNoLegacyMarkup($main);
+    expect($main)->toContain('DAILY-OPS-CONFLICT')
+        ->toContain('Review Latest State')
+        ->toContain('href="'.route('operations.index').'"');
+});
