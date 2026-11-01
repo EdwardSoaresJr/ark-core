@@ -550,7 +550,7 @@ export function arkWorkspaceModal(config = {}) {
             }
 
             return forms.find((form) => {
-                const panel = form.closest('.ops-workspace-modal__panel, [data-workspace-modal-panel]');
+                const panel = form.closest('[data-workspace-modal-panel]');
 
                 if (! panel) {
                     return false;
@@ -574,7 +574,7 @@ export function arkWorkspaceModal(config = {}) {
 
         formsInVisiblePanel(selector) {
             return [...(this.$refs.dialog?.querySelectorAll(selector) ?? [])]
-                .filter((form) => this.panelIsVisible(form.closest('.ops-workspace-modal__panel, [data-workspace-modal-panel]')));
+                .filter((form) => this.panelIsVisible(form.closest('[data-workspace-modal-panel]')));
         },
 
         repairActionFormForContext(key) {
@@ -1190,7 +1190,7 @@ export function arkWorkspaceModal(config = {}) {
                 return;
             }
 
-            const panels = dialog.querySelectorAll('.ops-workspace-modal__panel, [data-workspace-modal-panel]');
+            const panels = dialog.querySelectorAll('[data-workspace-modal-panel]');
 
             for (const panel of panels) {
                 if (panel.style.display === 'none') {

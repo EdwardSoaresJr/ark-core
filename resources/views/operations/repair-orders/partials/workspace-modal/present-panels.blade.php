@@ -10,7 +10,7 @@
         : [];
 @endphp
 
-<div class="ops-workspace-modal__panel" x-show="task === 'visit-reason'" x-cloak>
+<div data-workspace-modal-panel x-show="task === 'visit-reason'" x-cloak>
     <form
         method="POST"
         action="{{ route('operations.repair-orders.visit-reason.update', $repairOrder) }}"
@@ -22,34 +22,32 @@
         @csrf
         @method('PATCH')
         <input type="hidden" name="opened_estimate_version" value="{{ $estimateVersion }}">
-        <label class="block text-[11px] font-medium text-slate-500" for="workspace-visit-reason">
-            Reason for visit
-            <div
-                class="ark-ro-mention mt-1"
-                x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))"
-            >
-                <textarea
-                    id="workspace-visit-reason"
-                    name="visit_reason"
-                    x-ref="field"
-                    rows="4"
-                    placeholder="What the customer said when they brought the vehicle in. Type @RO to mention a previous visit."
-                    class="w-full resize-y rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm leading-5 text-slate-950 placeholder:text-slate-400"
-                    @input="onInput()"
-                    @keydown="onKeydown($event)"
-                >{{ old('visit_reason', $repairOrder->visit_reason ?? '') }}</textarea>
-                @include('operations.repair-orders.partials.repair-order-mention-suggest')
-            </div>
-        </label>
+        <label class="form-label" for="workspace-visit-reason">Reason for visit</label>
+        <div
+            class="position-relative"
+            x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))"
+        >
+            <textarea
+                id="workspace-visit-reason"
+                name="visit_reason"
+                x-ref="field"
+                rows="4"
+                placeholder="What the customer said when they brought the vehicle in. Type @RO to mention a previous visit."
+                @class(['form-control', 'is-invalid' => $errors->has('visit_reason')])
+                @input="onInput()"
+                @keydown="onKeydown($event)"
+            >{{ old('visit_reason', $repairOrder->visit_reason ?? '') }}</textarea>
+            @include('operations.repair-orders.partials.repair-order-mention-suggest-tabler')
+        </div>
         @error('visit_reason')
-            <p class="ops-field-error mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p>
+            <div class="invalid-feedback d-block" data-workspace-modal-validation>{{ $message }}</div>
         @enderror
     </form>
 </div>
 
 @if ($dragonReady)
 <div
-    class="ops-workspace-modal__panel"
+    data-workspace-modal-panel
     x-show="task === 'dragon-service-advisor-visit-reason'"
     x-cloak
     x-data="arkDragonServiceAdvisor({
@@ -66,58 +64,56 @@
         hideFieldPicker: true,
     })"
 >
-    <div class="space-y-3 text-sm text-slate-800">
-        <p class="text-[11px] text-slate-500" x-text="provenance"></p>
-        <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
-            <div class="space-y-3">
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Mode
-                    <select x-model="mode" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950">
-                        <template x-for="opt in modes" :key="opt.value">
-                            <option :value="opt.value" x-text="opt.label"></option>
-                        </template>
-                    </select>
-                </label>
-                <button
-                    type="button"
-                    class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                    @click="generate()"
-                    :disabled="! canGenerate"
-                    x-text="phase === 'generating' ? 'Dragon drafting…' : 'Generate'"
-                ></button>
-                <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
-            </div>
-        </template>
-        <template x-if="phase === 'preview' || phase === 'applying'">
-            <div class="space-y-3">
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Original</p>
-                    <p class="mt-1 whitespace-pre-wrap rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" x-text="originalText"></p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Dragon proposal</p>
-                    <template x-if="!editing">
-                        <p class="mt-1 whitespace-pre-wrap rounded-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" x-text="assist?.proposal"></p>
+    <p class="small text-secondary mb-3" x-text="provenance"></p>
+    <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
+        <div>
+            <div class="mb-3">
+                <label class="form-label" for="workspace-dragon-visit-reason-mode">Mode</label>
+                <select id="workspace-dragon-visit-reason-mode" x-model="mode" class="form-select">
+                    <template x-for="opt in modes" :key="opt.value">
+                        <option :value="opt.value" x-text="opt.label"></option>
                     </template>
-                    <template x-if="editing">
-                        <textarea x-model="editedProposal" rows="6" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"></textarea>
-                    </template>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" @click="apply()" :disabled="phase === 'applying'" x-text="phase === 'applying' ? 'Applying…' : 'Apply'"></button>
-                    <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="editing ? cancelEdit() : startEdit()" x-text="editing ? 'Cancel edit' : 'Edit Proposal'"></button>
-                    <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="reset()">Cancel</button>
-                </div>
-                <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+                </select>
             </div>
-        </template>
-    </div>
+            <button
+                type="button"
+                class="btn btn-primary"
+                @click="generate()"
+                :disabled="! canGenerate"
+                x-text="phase === 'generating' ? 'Dragon drafting…' : 'Generate'"
+            ></button>
+            <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+        </div>
+    </template>
+    <template x-if="phase === 'preview' || phase === 'applying'">
+        <div>
+            <div class="mb-3">
+                <div class="subheader mb-1">Original</div>
+                <div class="border rounded px-3 py-2 text-secondary" style="white-space: pre-wrap" x-text="originalText"></div>
+            </div>
+            <div class="mb-3">
+                <div class="subheader mb-1">Dragon proposal</div>
+                <template x-if="!editing">
+                    <div class="border rounded px-3 py-2" style="white-space: pre-wrap" x-text="assist?.proposal"></div>
+                </template>
+                <template x-if="editing">
+                    <textarea x-model="editedProposal" rows="6" class="form-control" aria-label="Edited proposal"></textarea>
+                </template>
+            </div>
+            <div class="btn-list">
+                <button type="button" class="btn btn-primary" @click="apply()" :disabled="phase === 'applying'" x-text="phase === 'applying' ? 'Applying…' : 'Apply'"></button>
+                <button type="button" class="btn" @click="editing ? cancelEdit() : startEdit()" x-text="editing ? 'Cancel edit' : 'Edit Proposal'"></button>
+                <button type="button" class="btn" @click="reset()">Cancel</button>
+            </div>
+            <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+        </div>
+    </template>
 </div>
 @endif
 
 @if ($dragonReady)
 <div
-    class="ops-workspace-modal__panel"
+    data-workspace-modal-panel
     x-show="task === 'dragon-service-advisor-line-note'"
     x-cloak
     x-data="arkDragonServiceAdvisor({
@@ -135,58 +131,56 @@
     })"
     x-init="syncFieldFromContext($el)"
 >
-    <div class="space-y-3 text-sm text-slate-800">
-        <p class="text-[11px] text-slate-500" x-text="provenance"></p>
-        <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
-            <div class="space-y-3">
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Mode
-                    <select x-model="mode" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950">
-                        <template x-for="opt in modes" :key="opt.value">
-                            <option :value="opt.value" x-text="opt.label"></option>
-                        </template>
-                    </select>
-                </label>
-                <button
-                    type="button"
-                    class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                    @click="generate()"
-                    :disabled="! canGenerate"
-                    x-text="phase === 'generating' ? 'Dragon drafting…' : 'Generate'"
-                ></button>
-                <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
-            </div>
-        </template>
-        <template x-if="phase === 'preview' || phase === 'applying'">
-            <div class="space-y-3">
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Original</p>
-                    <p class="mt-1 whitespace-pre-wrap rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" x-text="originalText"></p>
-                </div>
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Dragon proposal</p>
-                    <template x-if="!editing">
-                        <p class="mt-1 whitespace-pre-wrap rounded-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" x-text="assist?.proposal"></p>
+    <p class="small text-secondary mb-3" x-text="provenance"></p>
+    <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
+        <div>
+            <div class="mb-3">
+                <label class="form-label" for="workspace-dragon-line-note-mode">Mode</label>
+                <select id="workspace-dragon-line-note-mode" x-model="mode" class="form-select">
+                    <template x-for="opt in modes" :key="opt.value">
+                        <option :value="opt.value" x-text="opt.label"></option>
                     </template>
-                    <template x-if="editing">
-                        <textarea x-model="editedProposal" rows="6" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"></textarea>
-                    </template>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" @click="apply()" :disabled="phase === 'applying'" x-text="phase === 'applying' ? 'Applying…' : 'Apply'"></button>
-                    <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="editing ? cancelEdit() : startEdit()" x-text="editing ? 'Cancel edit' : 'Edit Proposal'"></button>
-                    <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="reset()">Cancel</button>
-                </div>
-                <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+                </select>
             </div>
-        </template>
-    </div>
+            <button
+                type="button"
+                class="btn btn-primary"
+                @click="generate()"
+                :disabled="! canGenerate"
+                x-text="phase === 'generating' ? 'Dragon drafting…' : 'Generate'"
+            ></button>
+            <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+        </div>
+    </template>
+    <template x-if="phase === 'preview' || phase === 'applying'">
+        <div>
+            <div class="mb-3">
+                <div class="subheader mb-1">Original</div>
+                <div class="border rounded px-3 py-2 text-secondary" style="white-space: pre-wrap" x-text="originalText"></div>
+            </div>
+            <div class="mb-3">
+                <div class="subheader mb-1">Dragon proposal</div>
+                <template x-if="!editing">
+                    <div class="border rounded px-3 py-2" style="white-space: pre-wrap" x-text="assist?.proposal"></div>
+                </template>
+                <template x-if="editing">
+                    <textarea x-model="editedProposal" rows="6" class="form-control" aria-label="Edited proposal"></textarea>
+                </template>
+            </div>
+            <div class="btn-list">
+                <button type="button" class="btn btn-primary" @click="apply()" :disabled="phase === 'applying'" x-text="phase === 'applying' ? 'Applying…' : 'Apply'"></button>
+                <button type="button" class="btn" @click="editing ? cancelEdit() : startEdit()" x-text="editing ? 'Cancel edit' : 'Edit Proposal'"></button>
+                <button type="button" class="btn" @click="reset()">Cancel</button>
+            </div>
+            <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+        </div>
+    </template>
 </div>
 @endif
 
 @if ($dragonReady)
 <div
-    class="ops-workspace-modal__panel"
+    data-workspace-modal-panel
     x-show="task === 'review-estimate-notes'"
     x-cloak
     x-data="arkReviewEstimateNotes({
@@ -198,180 +192,180 @@
     })"
     x-init="syncScopeFromContext($root)"
 >
-    <div class="space-y-3 text-sm text-slate-800">
-        <p class="text-[11px] text-slate-500" x-text="provenance"></p>
+    <p class="small text-secondary mb-3" x-text="provenance"></p>
 
-        <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
-            <div class="space-y-3">
-                <p class="text-sm text-slate-600" x-text="concernId
-                    ? 'Dragon reviews this concern’s narrative and note lines, then proposes rewrites. Nothing changes until you Apply a proposal.'
-                    : 'Dragon reads visit reason, concern narratives, and note lines, then lists gaps and optional rewrite proposals. Nothing changes until you Apply a proposal.'"></p>
-                <button
-                    type="button"
-                    class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                    @click="generate()"
-                    :disabled="phase === 'generating'"
-                    x-text="phase === 'generating' ? 'Dragon reviewing…' : (concernId ? 'Review this concern' : 'Review notes')"
-                ></button>
-                <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+    <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
+        <div>
+            <p class="text-secondary" x-text="concernId
+                ? 'Dragon reviews this concern’s narrative and note lines, then proposes rewrites. Nothing changes until you Apply a proposal.'
+                : 'Dragon reads visit reason, concern narratives, and note lines, then lists gaps and optional rewrite proposals. Nothing changes until you Apply a proposal.'"></p>
+            <button
+                type="button"
+                class="btn btn-primary"
+                @click="generate()"
+                :disabled="phase === 'generating'"
+                x-text="phase === 'generating' ? 'Dragon reviewing…' : (concernId ? 'Review this concern' : 'Review notes')"
+            ></button>
+            <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+        </div>
+    </template>
+
+    <template x-if="phase === 'review'">
+        <div>
+            <div class="mb-3">
+                <div class="subheader mb-1">Summary</div>
+                <div style="white-space: pre-wrap" x-text="assist?.summary"></div>
             </div>
-        </template>
-
-        <template x-if="phase === 'review'">
-            <div class="space-y-3">
-                <div>
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Summary</p>
-                    <p class="mt-1 whitespace-pre-wrap text-sm text-slate-900" x-text="assist?.summary"></p>
+            <template x-if="(assist?.strengths || []).length">
+                <div class="mb-3">
+                    <div class="subheader mb-1">Strengths</div>
+                    <ul class="mb-0 ps-3" style="list-style: disc">
+                        <template x-for="item in assist.strengths" :key="item">
+                            <li x-text="item"></li>
+                        </template>
+                    </ul>
                 </div>
-                <template x-if="(assist?.strengths || []).length">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Strengths</p>
-                        <ul class="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-700">
-                            <template x-for="item in assist.strengths" :key="item">
-                                <li x-text="item"></li>
-                            </template>
-                        </ul>
-                    </div>
-                </template>
-                <template x-if="(assist?.gaps || []).length">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Gaps</p>
-                        <ul class="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-800">
-                            <template x-for="item in assist.gaps" :key="item">
-                                <li x-text="item"></li>
-                            </template>
-                        </ul>
-                    </div>
-                </template>
-                <template x-if="(assist?.inconsistencies || []).length">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-700">Inconsistencies</p>
-                        <ul class="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-800">
-                            <template x-for="item in assist.inconsistencies" :key="item">
-                                <li x-text="item"></li>
-                            </template>
-                        </ul>
-                    </div>
-                </template>
-                <template x-if="assist?.customer_readiness">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Customer readiness</p>
-                        <p class="mt-1 whitespace-pre-wrap text-sm text-slate-800" x-text="assist.customer_readiness"></p>
-                    </div>
-                </template>
-                <template x-if="(assist?.suggested_actions || []).length">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Suggested actions</p>
-                        <ul class="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-700">
-                            <template x-for="item in assist.suggested_actions" :key="item">
-                                <li x-text="item"></li>
-                            </template>
-                        </ul>
-                    </div>
-                </template>
-                <template x-if="(assist?.warnings || []).length">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Warnings</p>
-                        <ul class="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-600">
-                            <template x-for="item in assist.warnings" :key="item">
-                                <li x-text="item"></li>
-                            </template>
-                        </ul>
-                    </div>
-                </template>
+            </template>
+            <template x-if="(assist?.gaps || []).length">
+                <div class="mb-3">
+                    <div class="subheader text-orange mb-1">Gaps</div>
+                    <ul class="mb-0 ps-3" style="list-style: disc">
+                        <template x-for="item in assist.gaps" :key="item">
+                            <li x-text="item"></li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+            <template x-if="(assist?.inconsistencies || []).length">
+                <div class="mb-3">
+                    <div class="subheader text-danger mb-1">Inconsistencies</div>
+                    <ul class="mb-0 ps-3" style="list-style: disc">
+                        <template x-for="item in assist.inconsistencies" :key="item">
+                            <li x-text="item"></li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+            <template x-if="assist?.customer_readiness">
+                <div class="mb-3">
+                    <div class="subheader mb-1">Customer readiness</div>
+                    <div style="white-space: pre-wrap" x-text="assist.customer_readiness"></div>
+                </div>
+            </template>
+            <template x-if="(assist?.suggested_actions || []).length">
+                <div class="mb-3">
+                    <div class="subheader mb-1">Suggested actions</div>
+                    <ul class="mb-0 ps-3" style="list-style: disc">
+                        <template x-for="item in assist.suggested_actions" :key="item">
+                            <li x-text="item"></li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+            <template x-if="(assist?.warnings || []).length">
+                <div class="mb-3">
+                    <div class="subheader mb-1">Warnings</div>
+                    <ul class="mb-0 ps-3 text-secondary" style="list-style: disc">
+                        <template x-for="item in assist.warnings" :key="item">
+                            <li x-text="item"></li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
 
-                <template x-if="(assist?.proposals || []).length">
-                    <div class="space-y-3 border-t border-slate-200 pt-3">
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Proposed rewrites</p>
-                        <template x-for="p in assist.proposals" :key="proposalKey(p)">
-                            <div
-                                class="rounded-sm border border-slate-200 bg-white px-3 py-2"
-                                x-show="! proposalState(p).skipped"
-                            >
-                                <p class="text-[11px] font-semibold text-slate-700">
+            <template x-if="(assist?.proposals || []).length">
+                <div class="border-top pt-3 mb-3">
+                    <div class="subheader mb-2">Proposed rewrites</div>
+                    <template x-for="p in assist.proposals" :key="proposalKey(p)">
+                        <div class="card card-sm mb-2" x-show="! proposalState(p).skipped">
+                            <div class="card-body">
+                                <div class="small fw-bold">
                                     <span x-text="fieldLabel(p.field)"></span>
                                     <template x-if="p.field === 'visit_reason'">
-                                        <span class="font-normal text-slate-500"> · repair order</span>
+                                        <span class="fw-normal text-secondary"> · repair order</span>
                                     </template>
                                     <template x-if="p.field === 'line_note'">
-                                        <span class="font-normal text-slate-500">
+                                        <span class="fw-normal text-secondary">
                                             · line <span x-text="p.line_id"></span>
                                         </span>
                                     </template>
                                     <template x-if="p.field !== 'visit_reason' && p.field !== 'line_note'">
-                                        <span class="font-normal text-slate-500">
+                                        <span class="fw-normal text-secondary">
                                             · concern <span x-text="p.concern_id"></span>
                                         </span>
                                     </template>
-                                </p>
+                                </div>
                                 <template x-if="p.reason">
-                                    <p class="mt-1 text-xs text-slate-600" x-text="p.reason"></p>
+                                    <div class="small text-secondary mt-1" x-text="p.reason"></div>
                                 </template>
                                 <template x-if="proposalState(p).applied">
-                                    <p class="mt-2 text-xs font-semibold text-emerald-700">Applied.</p>
+                                    <div class="small fw-bold text-success mt-2">Applied.</div>
                                 </template>
                                 <template x-if="! proposalState(p).applied">
-                                    <div class="mt-2 space-y-2">
-                                        <div>
-                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Original</p>
-                                            <p class="mt-0.5 whitespace-pre-wrap text-xs text-slate-600" x-text="p.original_text"></p>
+                                    <div class="mt-2 small">
+                                        <div class="mb-2">
+                                            <div class="subheader">Original</div>
+                                            <div class="text-secondary" style="white-space: pre-wrap" x-text="p.original_text"></div>
                                         </div>
-                                        <div>
-                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Proposal</p>
+                                        <div class="mb-2">
+                                            <div class="subheader">Proposal</div>
                                             <template x-if="! proposalState(p).editing">
-                                                <p class="mt-0.5 whitespace-pre-wrap text-xs text-slate-900" x-text="p.proposed_text"></p>
+                                                <div style="white-space: pre-wrap" x-text="p.proposed_text"></div>
                                             </template>
                                             <template x-if="proposalState(p).editing">
                                                 <textarea
                                                     x-model="proposalState(p).editedText"
                                                     rows="4"
-                                                    class="mt-0.5 w-full rounded-sm border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-900"
+                                                    class="form-control form-control-sm"
+                                                    aria-label="Edited proposal"
                                                 ></textarea>
                                             </template>
                                         </div>
                                         <template x-if="! p.applyable">
-                                            <p class="text-xs text-amber-800" x-text="p.rejected_reason || 'Not applyable - critique only.'"></p>
+                                            <div class="text-orange" x-text="p.rejected_reason || 'Not applyable - critique only.'"></div>
                                         </template>
-                                        <div class="flex flex-wrap gap-2" x-show="p.applyable">
-                                            <button
-                                                type="button"
-                                                class="rounded-sm bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
-                                                @click="applyProposal(p)"
-                                                :disabled="proposalState(p).applying"
-                                                x-text="proposalState(p).applying ? 'Applying…' : 'Apply'"
-                                            ></button>
-                                            <button
-                                                type="button"
-                                                class="rounded-sm border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800"
-                                                @click="proposalState(p).editing ? cancelEdit(p) : startEdit(p)"
-                                                x-text="proposalState(p).editing ? 'Cancel edit' : 'Edit then Apply'"
-                                            ></button>
-                                            <button
-                                                type="button"
-                                                class="rounded-sm border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800"
-                                                @click="skipProposal(p)"
-                                            >Skip</button>
+                                        <div x-show="p.applyable">
+                                            <div class="btn-list">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-primary"
+                                                    @click="applyProposal(p)"
+                                                    :disabled="proposalState(p).applying"
+                                                    x-text="proposalState(p).applying ? 'Applying…' : 'Apply'"
+                                                ></button>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm"
+                                                    @click="proposalState(p).editing ? cancelEdit(p) : startEdit(p)"
+                                                    x-text="proposalState(p).editing ? 'Cancel edit' : 'Edit then Apply'"
+                                                ></button>
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm"
+                                                    @click="skipProposal(p)"
+                                                >Skip</button>
+                                            </div>
                                         </div>
-                                        <p class="text-xs text-rose-700" x-show="proposalState(p).error" x-text="proposalState(p).error"></p>
+                                        <div class="text-danger mt-1" x-show="proposalState(p).error" x-text="proposalState(p).error"></div>
                                     </div>
                                 </template>
                             </div>
-                        </template>
-                    </div>
-                </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
 
-                <p class="text-[11px] text-slate-500">Nothing changes until you Apply a proposal.</p>
-                <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="reset()">Review again</button>
-            </div>
-        </template>
-    </div>
+            <p class="small text-secondary">Nothing changes until you Apply a proposal.</p>
+            <button type="button" class="btn" @click="reset()">Review again</button>
+        </div>
+    </template>
 </div>
 @endif
 
 @foreach ($repairOrder->concerns as $concern)
 
     <div
-        class="ops-workspace-modal__panel"
+        data-workspace-modal-panel
         x-show="task === 'concern-narrative' && String(context.concernId) === '{{ $concern->id }}'"
         x-cloak
     >
@@ -384,71 +378,74 @@
             data-refresh-scope="worksheet"
             data-saving-label="Saving…"
             @submit.prevent="submitWorksheetForm($event)"
-            class="space-y-3"
         >
             @csrf
             @method('PATCH')
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
             <div
-                class="ark-ro-mention space-y-3"
+                class="row g-3"
                 x-data="arkRoMention(@js(($priorVisitMentions['suggestions'] ?? [])))"
             >
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Concern
+                <div class="col-12 position-relative">
+                    <label class="form-label" for="workspace-concern-summary-{{ $concern->id }}">Concern</label>
                     <input
+                        id="workspace-concern-summary-{{ $concern->id }}"
                         name="summary"
                         x-ref="field"
                         value="{{ old('summary', $concern->summary) }}"
                         required
                         placeholder="The problem - e.g. Overheating, brake noise. Type @RO for a previous visit."
-                        class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
+                        class="form-control"
                         @input="onInput()"
                         @keydown="onKeydown($event)"
                     >
-                    @include('operations.repair-orders.partials.repair-order-mention-suggest')
-                </label>
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Priority
+                    @include('operations.repair-orders.partials.repair-order-mention-suggest-tabler')
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="workspace-concern-priority-{{ $concern->id }}">Priority</label>
                     @include('operations.repair-orders.partials.recommendation-priority-select', [
                         'selectedPriority' => old('recommendation_posture', $concern->recommendationPriority()?->value),
                         'informationOnly' => (bool) old('information_only', $concern->isInformationOnly()),
                         'inputId' => 'workspace-concern-priority-'.$concern->id,
-                        'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                        'selectClass' => 'form-select',
                     ])
-                </label>
-                <label class="block text-[11px] font-medium text-slate-500">
-                    Work type
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="workspace-concern-intent-{{ $concern->id }}">Work type</label>
                     @include('operations.repair-orders.partials.recommendation-intent-select', [
                         'selected' => old('recommendation_intent', $concern->recommendationIntent()?->value),
                         'inputId' => 'workspace-concern-intent-'.$concern->id,
-                        'selectClass' => 'mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950',
+                        'selectClass' => 'form-select',
                     ])
-                </label>
-                <div class="grid gap-3 md:grid-cols-2">
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Customer states
-                        <textarea name="customer_states" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What the customer reported…">{{ old('customer_states', $concern->customer_states) }}</textarea>
-                    </label>
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Verified findings
-                        <textarea name="verified_findings" rows="3" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="What was verified…">{{ old('verified_findings', $concern->verified_findings) }}</textarea>
-                        @include('operations.repair-orders.partials.finding-from-verified-findings-nudge', [
-                            'repairOrder' => $repairOrder,
-                            'concern' => $concern,
-                        ])
-                    </label>
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        DTCs, if present
-                        <textarea name="dtcs_summary" rows="2" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="e.g. P0303 current">{{ old('dtcs_summary', $concern->dtcs_summary) }}</textarea>
-                    </label>
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Recommendation
-                        <textarea name="recommendation" rows="2" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950" placeholder="Recommended repair…">{{ old('recommendation', $concern->recommendation) }}</textarea>
-                    </label>
                 </div>
-                @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
-                    'visitInsert' => 'insertChip',
-                ])
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="workspace-concern-customer-states-{{ $concern->id }}">Customer states</label>
+                    <textarea id="workspace-concern-customer-states-{{ $concern->id }}" name="customer_states" rows="3" class="form-control" placeholder="What the customer reported…">{{ old('customer_states', $concern->customer_states) }}</textarea>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="workspace-concern-verified-findings-{{ $concern->id }}">Verified findings</label>
+                    <textarea id="workspace-concern-verified-findings-{{ $concern->id }}" name="verified_findings" rows="3" class="form-control" placeholder="What was verified…">{{ old('verified_findings', $concern->verified_findings) }}</textarea>
+                    @include('operations.repair-orders.partials.finding-from-verified-findings-nudge', [
+                        'repairOrder' => $repairOrder,
+                        'concern' => $concern,
+                        'ui' => 'tabler',
+                    ])
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="workspace-concern-dtcs-{{ $concern->id }}">DTCs, if present</label>
+                    <textarea id="workspace-concern-dtcs-{{ $concern->id }}" name="dtcs_summary" rows="2" class="form-control" placeholder="e.g. P0303 current">{{ old('dtcs_summary', $concern->dtcs_summary) }}</textarea>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" for="workspace-concern-recommendation-{{ $concern->id }}">Recommendation</label>
+                    <textarea id="workspace-concern-recommendation-{{ $concern->id }}" name="recommendation" rows="2" class="form-control" placeholder="Recommended repair…">{{ old('recommendation', $concern->recommendation) }}</textarea>
+                </div>
+                <div class="col-12">
+                    <x-operations.worksheet-island>
+                        @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
+                            'visitInsert' => 'insertChip',
+                        ])
+                    </x-operations.worksheet-island>
+                </div>
             </div>
         </form>
     </div>
@@ -484,7 +481,7 @@
 
     @if ($dragonReady)
     <div
-        class="ops-workspace-modal__panel"
+        data-workspace-modal-panel
         x-show="task === 'dragon-service-advisor' && String(context.concernId) === '{{ $concern->id }}'"
         x-cloak
         x-data="arkDragonServiceAdvisor({
@@ -501,62 +498,60 @@
         })"
         x-init="syncFieldFromContext($el)"
     >
-        <div class="space-y-3 text-sm text-slate-800">
-            <p class="text-[11px] text-slate-500" x-text="provenance"></p>
+        <p class="small text-secondary mb-3" x-text="provenance"></p>
 
-            <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
-                <div class="space-y-3">
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Field
-                        <select x-model="field" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950">
-                            <template x-for="opt in fields" :key="opt.value">
-                                <option :value="opt.value" x-text="opt.label"></option>
-                            </template>
-                        </select>
-                    </label>
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Mode
-                        <select x-model="mode" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950">
-                            <template x-for="opt in modes" :key="opt.value">
-                                <option :value="opt.value" x-text="opt.label"></option>
-                            </template>
-                        </select>
-                    </label>
-                    <button
-                        type="button"
-                        class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                        @click="generate()"
-                        :disabled="! canGenerate"
-                        x-text="phase === 'generating' ? 'Dragon drafting…' : 'Generate'"
-                    ></button>
-                    <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+        <template x-if="phase === 'idle' || phase === 'generating' || phase === 'error'">
+            <div>
+                <div class="mb-3">
+                    <label class="form-label" for="workspace-dragon-field-{{ $concern->id }}">Field</label>
+                    <select id="workspace-dragon-field-{{ $concern->id }}" x-model="field" class="form-select">
+                        <template x-for="opt in fields" :key="opt.value">
+                            <option :value="opt.value" x-text="opt.label"></option>
+                        </template>
+                    </select>
                 </div>
-            </template>
+                <div class="mb-3">
+                    <label class="form-label" for="workspace-dragon-mode-{{ $concern->id }}">Mode</label>
+                    <select id="workspace-dragon-mode-{{ $concern->id }}" x-model="mode" class="form-select">
+                        <template x-for="opt in modes" :key="opt.value">
+                            <option :value="opt.value" x-text="opt.label"></option>
+                        </template>
+                    </select>
+                </div>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    @click="generate()"
+                    :disabled="! canGenerate"
+                    x-text="phase === 'generating' ? 'Dragon drafting…' : 'Generate'"
+                ></button>
+                <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+            </div>
+        </template>
 
-            <template x-if="phase === 'preview' || phase === 'applying'">
-                <div class="space-y-3">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Original</p>
-                        <p class="mt-1 whitespace-pre-wrap rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" x-text="originalText"></p>
-                    </div>
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Dragon proposal</p>
-                        <template x-if="!editing">
-                            <p class="mt-1 whitespace-pre-wrap rounded-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900" x-text="assist?.proposal"></p>
-                        </template>
-                        <template x-if="editing">
-                            <textarea x-model="editedProposal" rows="6" class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"></textarea>
-                        </template>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50" @click="apply()" :disabled="phase === 'applying'" x-text="phase === 'applying' ? 'Applying…' : 'Apply'"></button>
-                        <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="editing ? cancelEdit() : startEdit()" x-text="editing ? 'Cancel edit' : 'Edit Proposal'"></button>
-                        <button type="button" class="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800" @click="reset()">Cancel</button>
-                    </div>
-                    <p class="text-xs text-rose-700" x-show="errorMessage" x-text="errorMessage" x-cloak></p>
+        <template x-if="phase === 'preview' || phase === 'applying'">
+            <div>
+                <div class="mb-3">
+                    <div class="subheader mb-1">Original</div>
+                    <div class="border rounded px-3 py-2 text-secondary" style="white-space: pre-wrap" x-text="originalText"></div>
                 </div>
-            </template>
-        </div>
+                <div class="mb-3">
+                    <div class="subheader mb-1">Dragon proposal</div>
+                    <template x-if="!editing">
+                        <div class="border rounded px-3 py-2" style="white-space: pre-wrap" x-text="assist?.proposal"></div>
+                    </template>
+                    <template x-if="editing">
+                        <textarea x-model="editedProposal" rows="6" class="form-control" aria-label="Edited proposal"></textarea>
+                    </template>
+                </div>
+                <div class="btn-list">
+                    <button type="button" class="btn btn-primary" @click="apply()" :disabled="phase === 'applying'" x-text="phase === 'applying' ? 'Applying…' : 'Apply'"></button>
+                    <button type="button" class="btn" @click="editing ? cancelEdit() : startEdit()" x-text="editing ? 'Cancel edit' : 'Edit Proposal'"></button>
+                    <button type="button" class="btn" @click="reset()">Cancel</button>
+                </div>
+                <div class="text-danger small mt-2" x-show="errorMessage" x-text="errorMessage" x-cloak></div>
+            </div>
+        </template>
     </div>
     @endif
 
@@ -568,76 +563,73 @@
             $actionStatuses = \App\Ark\Operations\RepairOrders\RepairActionStatus::cases();
         @endphp
         <div
-            class="ops-workspace-modal__panel"
+            data-workspace-modal-panel
             x-show="task === 'repair-action-meta' && String(context.workGroupId) === '{{ $workGroup->id }}'"
             x-cloak
         >
-            <div class="space-y-4">
-                @if ($techniciansForMeta->isNotEmpty())
-                    <form
-                        method="POST"
-                        action="{{ route('operations.repair-orders.work-groups.owner.update', [$repairOrder, $workGroup]) }}"
-                        data-workspace-modal-form="repair-action-meta"
-                        data-workspace-modal-bundle="repair-action-meta"
-                        data-refresh-scope="worksheet"
-                        data-saving-label="Saving…"
-                        @submit.prevent="submitWorksheetForm($event)"
-                    >
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                        <label class="block text-[11px] font-medium text-slate-500">
-                            Owner
-                            <select
-                                name="owner_user_id"
-                                required
-                                class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                            >
-                                <option value="" @selected($workGroup->owner_user_id === null) disabled>Unassigned</option>
-                                @foreach ($techniciansForMeta as $technician)
-                                    <option value="{{ $technician->id }}" @selected((int) $workGroup->owner_user_id === (int) $technician->id)>{{ $technician->name }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                    </form>
-                @endif
-
+            @if ($techniciansForMeta->isNotEmpty())
                 <form
                     method="POST"
-                    action="{{ route('operations.repair-orders.work-groups.communication.update', [$repairOrder, $workGroup]) }}"
+                    action="{{ route('operations.repair-orders.work-groups.owner.update', [$repairOrder, $workGroup]) }}"
                     data-workspace-modal-form="repair-action-meta"
                     data-workspace-modal-bundle="repair-action-meta"
                     data-refresh-scope="worksheet"
                     data-saving-label="Saving…"
                     @submit.prevent="submitWorksheetForm($event)"
-                    class="space-y-3"
+                    class="mb-3"
                 >
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Status
-                        <select
-                            name="status"
-                            class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950"
-                        >
-                            @foreach ($actionStatuses as $statusOption)
-                                <option value="{{ $statusOption->value }}" @selected($actionStatus === $statusOption)>{{ $statusOption->label() }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Update
-                        <textarea
-                            name="latest_update"
-                            rows="3"
-                            maxlength="2000"
-                            placeholder="Add an update…"
-                            class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
-                        >{{ old('latest_update', $workGroup->latest_update) }}</textarea>
-                    </label>
+                    <label class="form-label" for="workspace-repair-action-owner-{{ $workGroup->id }}">Owner</label>
+                    <select
+                        id="workspace-repair-action-owner-{{ $workGroup->id }}"
+                        name="owner_user_id"
+                        required
+                        class="form-select"
+                    >
+                        <option value="" @selected($workGroup->owner_user_id === null) disabled>Unassigned</option>
+                        @foreach ($techniciansForMeta as $technician)
+                            <option value="{{ $technician->id }}" @selected((int) $workGroup->owner_user_id === (int) $technician->id)>{{ $technician->name }}</option>
+                        @endforeach
+                    </select>
                 </form>
-            </div>
+            @endif
+
+            <form
+                method="POST"
+                action="{{ route('operations.repair-orders.work-groups.communication.update', [$repairOrder, $workGroup]) }}"
+                data-workspace-modal-form="repair-action-meta"
+                data-workspace-modal-bundle="repair-action-meta"
+                data-refresh-scope="worksheet"
+                data-saving-label="Saving…"
+                @submit.prevent="submitWorksheetForm($event)"
+            >
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+                <div class="mb-3">
+                    <label class="form-label" for="workspace-repair-action-status-{{ $workGroup->id }}">Status</label>
+                    <select
+                        id="workspace-repair-action-status-{{ $workGroup->id }}"
+                        name="status"
+                        class="form-select"
+                    >
+                        @foreach ($actionStatuses as $statusOption)
+                            <option value="{{ $statusOption->value }}" @selected($actionStatus === $statusOption)>{{ $statusOption->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <label class="form-label" for="workspace-repair-action-update-{{ $workGroup->id }}">Update</label>
+                <textarea
+                    id="workspace-repair-action-update-{{ $workGroup->id }}"
+                    name="latest_update"
+                    rows="3"
+                    maxlength="2000"
+                    placeholder="Add an update…"
+                    class="form-control"
+                >{{ old('latest_update', $workGroup->latest_update) }}</textarea>
+            </form>
         </div>
     @endforeach
 @endforeach
