@@ -3,65 +3,50 @@
     /** @var list<\App\Ark\Operations\Today\Surface\TodaySection> $sections */
 @endphp
 
-<section class="ops-today" x-data="{ whyTodayOpen: false }">
-    <div class="ops-today__sticky">
-        <header class="ops-today-cockpit" aria-label="Today orientation">
-            <div class="ops-today-cockpit__row">
-                <div class="ops-today-cockpit__brand">
-                    <h1 class="ops-today-cockpit__title">Today</h1>
-                    @if ($today->attentionCount > 0)
-                        <span class="ops-today-cockpit__badge">{{ $today->attentionCount }}</span>
-                    @endif
-                    <p class="ops-today-cockpit__greeting">{{ $today->greeting }}</p>
-                </div>
-                <div class="ops-today-cockpit__tools">
-                    <a href="{{ route('operations.workboard') }}" class="ops-today-tool">Job Board</a>
-                </div>
-            </div>
-        </header>
-    </div>
-
-    <div class="ops-today__body">
-        @forelse ($sections as $section)
-            <section class="ops-today-lane" aria-labelledby="today-lane-{{ $section->key }}">
-                <div class="ops-today-lane__header">
-                    <div class="ops-today-lane__title-wrap">
-                        <h2 id="today-lane-{{ $section->key }}" class="ops-today-lane__title">{{ $section->title }}</h2>
-                        <span class="ops-today-lane__count">({{ $section->totalCount }})</span>
+<div class="d-flex flex-column gap-3" data-today-lanes>
+    @forelse ($sections as $section)
+        <section class="card" aria-labelledby="today-lane-{{ $section->key }}" data-today-lane="{{ $section->key }}">
+            <div class="card-header">
+                <h2 id="today-lane-{{ $section->key }}" class="card-title">
+                    {{ $section->title }}
+                    <span class="badge bg-secondary-lt ms-1" data-today-lane-count>{{ $section->totalCount }}</span>
+                </h2>
+                @if (filled($section->viewAllUrl))
+                    <div class="card-actions">
+                        <a href="{{ $section->viewAllUrl }}" class="btn btn-sm">{{ $section->viewAllLabel ?: 'View all' }}</a>
                     </div>
-                    @if (filled($section->viewAllUrl))
-                        <a href="{{ $section->viewAllUrl }}" class="ops-today-lane__view-all">
-                            {{ $section->viewAllLabel ?: 'View all' }}
-                        </a>
-                    @endif
-                </div>
-                <ul class="ops-today-rows">
-                    @foreach ($section->actions as $action)
-                        <li class="ops-today-row">
-                            <a href="{{ $action->url }}" class="ops-today-row__main">
-                                <span class="ops-today-chip ops-today-chip--work">Work</span>
-                                <span class="ops-today-row__identity">
-                                    <span class="ops-today-row__title">{{ $action->title }}</span>
-                                    @if (filled($action->reason))
-                                        <span class="ops-today-row__meta">{{ $action->reason }}</span>
-                                    @endif
-                                </span>
-                                <span class="ops-today-row__owner">{{ $action->ownerLabel }}</span>
-                                <span class="ops-today-row__open" aria-hidden="true">Open RO</span>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </section>
-        @empty
-            <div class="ops-today-empty">
-                <p class="ops-today-empty__title">You&apos;re caught up.</p>
-                @if (filled($today->caughtUpDetail))
-                    <p class="ops-today-empty__detail">{{ $today->caughtUpDetail }}</p>
                 @endif
-                <p class="ops-today-empty__focus-label">Today&apos;s focus</p>
-                <p class="ops-today-empty__focus">{{ $today->caughtUpFocus }}</p>
             </div>
-        @endforelse
-    </div>
-</section>
+            <div class="list-group list-group-flush">
+                @foreach ($section->actions as $action)
+                    <a href="{{ $action->url }}" class="list-group-item list-group-item-action" data-today-action>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-auto">
+                                <span class="badge bg-green-lt">Work</span>
+                            </div>
+                            <div class="col text-truncate">
+                                <div class="fw-medium text-truncate">{{ $action->title }}</div>
+                                @if (filled($action->reason))
+                                    <div class="small text-secondary text-truncate">{{ $action->reason }}</div>
+                                @endif
+                            </div>
+                            <div class="col-auto d-none d-md-block small text-secondary">{{ $action->ownerLabel }}</div>
+                            <div class="col-auto d-none d-sm-block small text-primary" aria-hidden="true">Open RO</div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @empty
+        <div class="card" data-today-caught-up>
+            <div class="card-body">
+                <h2 class="card-title mb-1">You&apos;re caught up.</h2>
+                @if (filled($today->caughtUpDetail))
+                    <p class="text-secondary mb-3">{{ $today->caughtUpDetail }}</p>
+                @endif
+                <div class="subheader">Today&apos;s focus</div>
+                <div class="fw-medium">{{ $today->caughtUpFocus }}</div>
+            </div>
+        </div>
+    @endforelse
+</div>

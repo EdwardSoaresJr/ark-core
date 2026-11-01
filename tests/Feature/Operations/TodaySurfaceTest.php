@@ -120,6 +120,51 @@ test('technician lens still surfaces assigned work lanes', function () {
         ->assertSee(route('operations.repair-orders.show', $repairOrder), false);
 });
 
+test('technician lanes render as tabler cards with their rows, counts, and links', function () {
+    $technician = actingAsLearnCurrentStaff(ArkRole::Technician);
+
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::WaitingParts, 'Tech Customer');
+    $repairOrder->forceFill(['assigned_technician_id' => $technician->id])->save();
+
+    $sections = app(TodayProjectionBuilder::class)->forUser($technician)->nonEmptySections();
+    $assigned = collect($sections)->firstWhere('key', 'blocked_jobs');
+
+    expect($assigned)->not->toBeNull();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($this->actingAs($technician)->get(route('operations.today'))->assertOk()->getContent());
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $lane = $xpath->query('//section[@data-today-lane="'.$assigned->key.'"]')->item(0);
+
+    expect(trim($xpath->query('//h2[contains(concat(" ", @class, " "), " page-title ")]')->item(0)->firstChild->textContent))->toBe('Today')
+        ->and($xpath->query('//*[contains(concat(" ", @class, " "), " page-header ")]//a[@href="'.route('operations.workboard').'"]')->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-today-lanes]//*[contains(concat(" ", @class, " "), " ark-legacy ")]')->length)->toBe(0)
+        ->and($xpath->query('//section[@data-today-lane]')->length)->toBe(count($sections))
+        ->and($lane)->toBeInstanceOf(DOMElement::class)
+        ->and(trim($xpath->query('.//*[@data-today-lane-count]', $lane)->item(0)->textContent))->toBe((string) $assigned->totalCount)
+        ->and($xpath->query('.//a[@data-today-action][@href="'.route('operations.repair-orders.show', $repairOrder).'"]', $lane)->length)->toBe(1)
+        ->and($xpath->query('.//a[@data-today-action]', $lane)->length)->toBe(count($assigned->actions));
+
+    if (filled($assigned->viewAllUrl)) {
+        expect($xpath->query('.//*[contains(concat(" ", @class, " "), " card-actions ")]/a[@href="'.e($assigned->viewAllUrl).'"]', $lane)->length)->toBe(1);
+    }
+});
+
+test('a technician with no assigned work sees the caught up card', function () {
+    $technician = actingAsLearnCurrentStaff(ArkRole::Technician);
+
+    expect(app(TodayProjectionBuilder::class)->forUser($technician)->nonEmptySections())->toBeEmpty();
+
+    $this->actingAs($technician)
+        ->get(route('operations.today'))
+        ->assertOk()
+        ->assertSee('data-today-caught-up', false)
+        ->assertSee('You&apos;re caught up.', false)
+        ->assertDontSee('data-today-lane=', false);
+});
+
 test('business cockpit remains permission gated', function () {
     $owner = User::factory()->create(['name' => 'Alex Rivera'])->assignRole(ArkRole::Admin->value);
     completeRequiredLearnFor($owner);

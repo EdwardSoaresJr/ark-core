@@ -1,3 +1,19 @@
+// Each selector accepts the legacy class and the data hook used by the Tabler decision rows.
+const QUICK_ADD_DETAILS = '.ops-work-item-quick-add, .ops-decision-schedule-form, [data-decision-quick-add]';
+const QUICK_ADD_PANEL = '.ops-work-item-quick-add-panel, .ops-decision-schedule-panel, [data-decision-quick-add-owner]';
+const QUICK_ADD_FORM = '.ops-work-item-quick-add-form, [data-work-item-quick-add-form]';
+const QUICK_ADD_FEEDBACK = '.ops-work-item-quick-add-feedback, [data-quick-add-feedback]';
+const QUICK_ADD_ERROR = '.ops-work-item-quick-add-error, [data-quick-add-error]';
+const DECISION_ROW_FOOT = '.ops-decision-pressure-row-foot, [data-decision-row-foot]';
+const DECISION_ROW_ACTIONS = '.ops-decision-pressure-row-actions, [data-decision-row-actions]';
+const DECISION_ROW_PANEL_SLOT = '.ops-decision-pressure-row-panel-slot, [data-decision-row-panel-slot]';
+const SUMMARY_SAVED_CLASSES = ['ops-work-item-quick-add__summary--saved', 'text-success'];
+
+function setQuickAddMessageVisible(element, visible) {
+    element.classList.toggle('hidden', ! visible);
+    element.hidden = ! visible;
+}
+
 function resetQuickAddSummary(summary) {
     const label = summary.dataset.workItemQuickAddLabel;
 
@@ -5,26 +21,26 @@ function resetQuickAddSummary(summary) {
         summary.textContent = label;
     }
 
-    summary.classList.remove('ops-work-item-quick-add__summary--saved');
+    summary.classList.remove(...SUMMARY_SAVED_CLASSES);
 }
 
 function showQuickAddFeedback(form, message, isError = false) {
-    const feedback = form.querySelector('.ops-work-item-quick-add-feedback');
-    const error = form.querySelector('.ops-work-item-quick-add-error');
+    const feedback = form.querySelector(QUICK_ADD_FEEDBACK);
+    const error = form.querySelector(QUICK_ADD_ERROR);
 
     if (feedback) {
         feedback.textContent = isError ? '' : message;
-        feedback.classList.toggle('hidden', isError || message === '');
+        setQuickAddMessageVisible(feedback, ! isError && message !== '');
     }
 
     if (error) {
         error.textContent = isError ? message : '';
-        error.classList.toggle('hidden', ! isError);
+        setQuickAddMessageVisible(error, isError);
     }
 }
 
 function decisionRowDetailsForNode(node) {
-    const panel = node?.closest('.ops-work-item-quick-add-panel, .ops-decision-schedule-panel');
+    const panel = node?.closest(QUICK_ADD_PANEL);
     const ownerId = panel?.dataset.decisionQuickAddOwner;
 
     if (ownerId) {
@@ -35,19 +51,19 @@ function decisionRowDetailsForNode(node) {
 }
 
 function isDecisionRowExclusiveDetails(details) {
-    return details?.matches('.ops-work-item-quick-add, .ops-decision-schedule-form') ?? false;
+    return details?.matches(QUICK_ADD_DETAILS) ?? false;
 }
 
 function decisionRowFoot(details) {
-    return details?.closest('.ops-decision-pressure-row-foot') ?? null;
+    return details?.closest(DECISION_ROW_FOOT) ?? null;
 }
 
 function decisionRowPanelSlot(details) {
-    return decisionRowFoot(details)?.querySelector('.ops-decision-pressure-row-panel-slot') ?? null;
+    return decisionRowFoot(details)?.querySelector(DECISION_ROW_PANEL_SLOT) ?? null;
 }
 
 function decisionRowPanelInDetails(details) {
-    return details?.querySelector(':scope > .ops-work-item-quick-add-panel, :scope > .ops-decision-schedule-panel') ?? null;
+    return details?.querySelector(QUICK_ADD_PANEL.split(', ').map((selector) => `:scope > ${selector}`).join(', ')) ?? null;
 }
 
 function decisionRowPanelForDetails(details) {
@@ -73,7 +89,7 @@ function decisionRowForm(details) {
 }
 
 function restoreSlottedDecisionRowPanels(foot) {
-    foot?.querySelectorAll('.ops-decision-pressure-row-panel-slot [data-decision-quick-add-owner]').forEach((panel) => {
+    foot?.querySelectorAll(DECISION_ROW_PANEL_SLOT.split(', ').map((selector) => `${selector} [data-decision-quick-add-owner]`).join(', ')).forEach((panel) => {
         const details = document.getElementById(panel.dataset.decisionQuickAddOwner ?? '');
 
         if (details && panel.parentElement !== details) {
@@ -106,13 +122,13 @@ function unmountDecisionRowPanel(details) {
 }
 
 function closeDecisionRowExclusiveDetails(exceptDetails = null) {
-    const actions = exceptDetails?.closest('.ops-decision-pressure-row-actions');
+    const actions = exceptDetails?.closest(DECISION_ROW_ACTIONS);
 
     if (! actions) {
         return;
     }
 
-    actions.querySelectorAll('.ops-work-item-quick-add, .ops-decision-schedule-form').forEach((details) => {
+    actions.querySelectorAll(QUICK_ADD_DETAILS).forEach((details) => {
         if (details === exceptDetails || ! details.open) {
             return;
         }
@@ -143,7 +159,7 @@ function handleDecisionRowExclusiveDetails(event) {
 async function handleWorkItemQuickAddSubmit(event) {
     const form = event.target;
 
-    if (! form.matches('.ops-work-item-quick-add-form')) {
+    if (! form.matches(QUICK_ADD_FORM)) {
         return;
     }
 
@@ -205,7 +221,7 @@ async function handleWorkItemQuickAddSubmit(event) {
         }
 
         if (summary) {
-            summary.classList.add('ops-work-item-quick-add__summary--saved');
+            summary.classList.add(...SUMMARY_SAVED_CLASSES);
             summary.textContent = data.summary_label ?? 'Added';
             window.setTimeout(() => resetQuickAddSummary(summary), 2200);
         }

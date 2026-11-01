@@ -313,13 +313,12 @@
             </section>
         </x-tabler.page>
     @else
-        {{-- Technician assigned-work lanes stay legacy until their own migration. --}}
-        <div class="page-body">
-            <div class="container-fluid">
-                <div class="ark-legacy">
-                    @include('operations.today.partials.technician-lanes', ['today' => $today, 'sections' => $sections])
-                </div>
-            </div>
-        </div>
+        <x-tabler.page layout="fluid" title="Today" :title-count="$today->attentionCount" :subtitle="$today->greeting" actions-label="Today shortcuts">
+            <x-slot:actions>
+                <x-tabler.page-action :href="route('operations.workboard')" icon="layout-grid" label="Job Board" />
+            </x-slot:actions>
+
+            @include('operations.today.partials.technician-lanes', ['today' => $today, 'sections' => $sections])
+        </x-tabler.page>
     @endif
 </x-operations.app>

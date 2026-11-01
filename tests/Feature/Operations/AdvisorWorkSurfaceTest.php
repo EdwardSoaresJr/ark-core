@@ -172,7 +172,7 @@ test('work surface customer decision rows expose follow up and task quick add on
     $this->actingAs($advisor)
         ->get(route('operations.work.queue', 'decisions'))
         ->assertOk()
-        ->assertSee('ops-work-item-quick-add-form', false)
+        ->assertSee('data-work-item-quick-add-form', false)
         ->assertSee('Save follow-up', false)
         ->assertSee('Save task', false)
         ->assertSee('data-work-item-quick-add-cancel', false)

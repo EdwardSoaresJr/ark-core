@@ -163,7 +163,7 @@ The target is the 58 staff pages, the views that render `<x-operations.app>`. Up
 
 A page counts as complete only when nothing reachable on it is still legacy. Code that never renders does not hold a page back, but it is listed under Unreachable.
 
-**Complete (9):** on Tabler with no reachable legacy markup and no open corrections.
+**Complete (11):** on Tabler with no reachable legacy markup and no open corrections.
 
 - Customers (`operations.customers.search`)
 - Vehicles (`operations.vehicles.search`)
@@ -174,12 +174,12 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 - Time clock (`operations.time-clock.index`)
 - Check In (`operations.intake.create`)
 - Schedule (`operations.appointments.index`)
+- Dashboard (`operations.today`), including the technician lanes
+- Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions)
 
-**Partial, actionable (3):** on Tabler, with legacy sections that can migrate now.
+**Partial, actionable (1):** on Tabler, with legacy sections that can migrate now.
 
 - **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity and Documents / Disclaimers.
-- **Dashboard (`operations.today`):** technician lanes.
-- **Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions):** the Customer Decisions lanes (`customer-decision-pressure-section` and its rows, which carry the quick-add and schedule panels driven by `ark-work-quick-add.js`).
 
 **Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
 
@@ -216,7 +216,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 - The briefing view: its route redirects, and its controller is not routed.
 - The conversation reply view: its route goes to a redirect controller, and the reply controller is not routed.
 - The communications attention workspace view: nothing renders it.
-- Partials: `appointments/partials/capacity-bar` (no view includes it), the Comms work queue, `operations/partials/work-tab-queues`, `week-schedule-list`, the advisor triage branch of the workboard, and `operations.repair-orders.partials.operational-journey-card` on the customer hub and the repair order workspace. Both controllers always pass `operationalJourney` as `null`, so the card never renders. It stays legacy and in place.
+- Partials: `appointments/partials/capacity-bar` (no view includes it), the Comms work queue, `operations/partials/work-tab-queues` with the `work-queue-band-header` and the compact dispatch rows of `customer-decision-pressure-rows` that only it uses, `week-schedule-list`, the advisor triage branch of the workboard, and `operations.repair-orders.partials.operational-journey-card` on the customer hub and the repair order workspace. Both controllers always pass `operationalJourney` as `null`, so the card never renders. It stays legacy and in place.
 
 **Known issues across migrated pages:**
 
@@ -301,7 +301,7 @@ Before: `ops-today`, `ops-shop-dash-*` (toolbar, command cards, workflow bar, KP
 
 After: Tabler `fluid` page. The date is the pretitle; the open-queue count, Job Board, Comms, and Business are page actions with their existing permission checks. Today and Scoreboard are `nav-pills` from the shared `operations.dashboard.tabs` partial (`'ui' => 'tabler'`); the Scoreboard page keeps the legacy tabs. The four command cards, the status bar and legend, and status dots use the shop's status colors through `RepairOrderStatusColor::tablerColorForChipTone()`. Tabler's `dark` is the dark theme's card color, so a status in the closed tone (Draft, by default) uses `secondary` on the bar and legend. The sales table is a `card-table` that scrolls inside its card on phones. Unchanged: `TodayController`, the projection, every count, amount, link, and hint.
 
-Still legacy: the technician lanes (`operations.today.partials.technician-lanes`) render in an `.ark-legacy` island for staff without a shop dashboard. Their panel stays light in the dark theme.
+Staff without a shop dashboard (technicians) get a Tabler `fluid` page titled "Today", with the attention count as the title badge, the greeting as the subtitle (hidden below `md`, like every page subtitle), and Job Board as a page action. Each lane (`operations.today.partials.technician-lanes`) is a `card`: the title and its total count, View all as a card action, and the rows as a flush `list-group` of links to the repair order. The owner label shows from `md` and "Open RO" from `sm`. With no lanes, a card says "You're caught up." with the day's focus. Unchanged: `TodayOperationalComposer`, the lane order and caps, each row's link, and the View all target. Hooks: `data-today-lanes`, `data-today-lane="{key}"`, `data-today-lane-count`, `data-today-action`, and `data-today-caught-up`.
 
 ### Shop settings (`operations.settings.shop.edit`)
 
@@ -509,6 +509,16 @@ The advisor landing page at `/app` (view `operations.home`). It's a Tabler `flui
 Unchanged: `OperationsHomeController`, the projections, the routes, the `#ops-card-ro-{number}` anchors that triage links target, and the `data-home-search` and `data-home-tech-id` filter attributes.
 
 `x-tabler.status-badge` now renders the slate tone as an outline badge. `bg-dark-lt` forces near-black text, which made slate statuses such as Draft unreadable in the dark theme on every page that uses the badge.
+
+### Work queues: Customer Decisions (`operations.work.queue`)
+
+The Tasks, Follow-Ups, and Scheduled queues were already Tabler. The Customer Decisions queue's lanes no longer sit in an `.ark-legacy` island.
+
+- **Lanes:** `customer-decision-pressure-section` is a `card` with `card-status-top` in the lane tone (orange for approval, yellow for blocked, secondary for move), the title with its count badge, the note as the card subtitle, and Back to Work as a card action. They stay in `.ark-board`, so on phones each lane is 85% of the screen and the board swipes sideways.
+- **Rows:** `customer-decision-pressure-rows` renders each decision as a `list-group-item`: dollars, customer, and vehicle link to the repair order; age, detail, the scheduled note, and the last customer activity sit at the right and wrap under the name on phones. A reminder row is `bg-warning-subtle` with a Reminder badge. Text, Call, Customer, and RO are small buttons.
+- **Quick-add and schedule:** follow-up, task, and schedule are `<details>` whose summary is a ghost button and whose panel is a `card card-sm`. `ark-work-quick-add.js` still opens one panel per row, moves it into the row's panel slot, posts follow-ups and tasks as JSON, and shows the server's validation message in the panel. The schedule form still submits normally and redirects with a flash.
+
+The rows and panels use `data-*` hooks instead of the legacy class names, because `app.css` still styles `ops-*` classes on a Tabler page: `data-decision-row`, `data-decision-row-foot`, `data-decision-row-actions`, `data-decision-row-panel-slot`, `data-decision-quick-add="{follow-up|task|schedule}"`, `data-decision-quick-add-owner`, `data-work-item-quick-add-form`, `data-quick-add-feedback`, `data-quick-add-error`, and `data-decision-schedule-form`. The script's selectors still match the old class names too. The compact dispatch rows, used only by the unreachable `work-tab-queues` partial, stay legacy and have no quick-add. Unchanged: the controllers, routes, the decision lanes and their order, counts, form fields, the `ops-decision-quick-add-{RO}-{kind}` ids, and the shared `advisor-work-item-quick-add` partial's fields.
 
 ### Check In (`operations.intake.create`)
 
