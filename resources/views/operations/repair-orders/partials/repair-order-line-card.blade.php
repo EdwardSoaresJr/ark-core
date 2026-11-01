@@ -81,7 +81,7 @@
                 </div>
             @endunless
         </div>
-        <x-operations.note-body :text="$lineTitle" class="mt-1" />
+        <x-operations.note-body :text="$lineTitle" class="mt-1" ui="tabler" />
         <p class="small text-secondary mt-1 mb-0">
             @if ($noteAudience->customer && $noteAudience->technician)
                 On tech sheet and customer estimate

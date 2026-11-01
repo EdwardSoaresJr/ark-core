@@ -27,6 +27,7 @@
                     :items="$instrument['inspect']['items'] ?? []"
                     :footer="$instrument['inspect']['footer'] ?? null"
                     align="start"
+                    block
                     class="card card-sm h-100"
                     data-instrument="{{ $instrument['key'] }}"
                 >

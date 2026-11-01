@@ -11,101 +11,90 @@
         'surface' => 'labor_entry',
     ];
 @endphp
-<div
-    class="ops-line-entry-panel space-y-3"
-    :class="{
-        'ops-line-entry-panel--labor': type === 'labor',
-        'ops-line-entry-panel--note': type === 'note',
-        'ops-line-entry-panel--fee': type === 'fee',
-        'ops-line-entry-panel--sublet': type === 'sublet',
-    }"
->
+<div class="d-flex flex-column gap-3" data-line-entry-simple :data-line-entry-type="type">
     @if ($suppressLaborDescription)
         <template x-if="type === 'labor'">
-            <div class="space-y-1">
+            <div>
                 <input type="hidden" name="description" value="{{ $repairTitle }}">
-                <p class="text-[11px] text-slate-500">Labor uses the repair description above. Hours and rate below.</p>
+                <p class="form-hint mb-0">Labor uses the repair description above. Hours and rate below.</p>
             </div>
         </template>
         <template x-if="type === 'note'">
-            <label class="ops-field">
-                <span class="ops-field-label" x-text="descriptionFieldLabel()"></span>
+            <label class="d-block">
+                <span class="form-label" x-text="descriptionFieldLabel()"></span>
                 <textarea
                     name="description"
                     rows="4"
                     required
                     :placeholder="descriptionPlaceholder()"
-                    class="ops-field-input ops-field-input--note ops-field-textarea--note"
+                    class="form-control"
                 >{{ $description ?? '' }}</textarea>
             </label>
         </template>
         <template x-if="type !== 'labor' && type !== 'note'">
-            <label class="ops-field">
-                <span class="ops-field-label" x-text="descriptionFieldLabel()"></span>
+            <label class="d-block">
+                <span class="form-label" x-text="descriptionFieldLabel()"></span>
                 <input
                     name="description"
                     value="{{ $description ?? '' }}"
                     required
                     :placeholder="descriptionPlaceholder()"
-                    class="ops-field-input"
+                    class="form-control"
                 >
             </label>
         </template>
     @else
-        <label class="ops-field">
-            <span class="ops-field-label" x-text="descriptionFieldLabel()"></span>
+        <label class="d-block">
+            <span class="form-label" x-text="descriptionFieldLabel()"></span>
             <template x-if="type === 'note'">
                 <textarea
                     name="description"
                     rows="4"
                     required
                     :placeholder="descriptionPlaceholder()"
-                    class="ops-field-input ops-field-input--note ops-field-textarea--note"
+                    class="form-control"
                 >{{ $description ?? '' }}</textarea>
             </template>
             @if ($hasLaborMemory)
                 <template x-if="type === 'labor'">
                     <div
-                        class="ops-labor-memory"
+                        class="position-relative"
+                        data-labor-memory
                         x-data="arkLaborMemorySuggest(@js($laborMemoryConfig), @js((string) ($description ?? '')))"
                     >
-                        <div class="ops-labor-memory__input-wrap">
-                            <input
-                                name="description"
-                                x-model="description"
-                                x-ref="descriptionInput"
-                                required
-                                autocomplete="off"
-                                spellcheck="false"
-                                placeholder="Labor description"
-                                class="ops-field-input"
-                                @input.debounce.150ms="handleInput()"
-                                @keydown="handleKeydown($event)"
-                                @focus="handleFocus()"
-                                @blur="handleBlur()"
-                            >
-                            <div
-                                class="ops-labor-memory__suggestions"
-                                x-show="suggestionsOpen && hasMatches"
-                                @click.outside="closeSuggestions()"
-                                role="listbox"
-                                aria-label="Shop labor language"
-                            >
-                                <ul class="ops-labor-memory__list">
-                                    <template x-for="(row, index) in suggestions" :key="row.id || row.text">
-                                        <li role="option" :aria-selected="index === activeIndex">
-                                            <button
-                                                type="button"
-                                                class="ops-labor-memory__suggestion"
-                                                :class="{ 'ops-labor-memory__suggestion--active': index === activeIndex }"
-                                                @mousedown.prevent="chooseSuggestion(row)"
-                                            >
-                                                <span x-text="row.text"></span>
-                                            </button>
-                                        </li>
-                                    </template>
-                                </ul>
-                            </div>
+                        <input
+                            name="description"
+                            x-model="description"
+                            x-ref="descriptionInput"
+                            required
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="Labor description"
+                            class="form-control"
+                            @input.debounce.150ms="handleInput()"
+                            @keydown="handleKeydown($event)"
+                            @focus="handleFocus()"
+                            @blur="handleBlur()"
+                        >
+                        <div
+                            class="dropdown-menu w-100 top-100 start-0 mt-1"
+                            :class="{ show: suggestionsOpen && hasMatches }"
+                            @click.outside="closeSuggestions()"
+                            role="listbox"
+                            aria-label="Shop labor language"
+                        >
+                            <template x-for="(row, index) in suggestions" :key="row.id || row.text">
+                                <div role="option" :aria-selected="index === activeIndex">
+                                    <button
+                                        type="button"
+                                        class="dropdown-item text-wrap"
+                                        :class="{ active: index === activeIndex }"
+                                        @mousedown.prevent="chooseSuggestion(row)"
+                                    >
+                                        <span x-text="row.text"></span>
+                                    </button>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </template>
@@ -115,7 +104,7 @@
                         value="{{ $description ?? '' }}"
                         required
                         :placeholder="descriptionPlaceholder()"
-                        class="ops-field-input"
+                        class="form-control"
                     >
                 </template>
             @else
@@ -125,7 +114,7 @@
                         value="{{ $description ?? '' }}"
                         required
                         :placeholder="descriptionPlaceholder()"
-                        class="ops-field-input"
+                        class="form-control"
                     >
                 </template>
             @endif
@@ -139,11 +128,11 @@
     </template>
 
     <template x-if="type === 'sublet'">
-        <div class="ops-part-line-pricing">
-            <p class="ops-part-line-pricing-heading" x-text="pricingHeading()"></p>
-            <div class="ops-part-line-pricing-grid">
-                <label class="ops-field">
-                    <span class="ops-field-label">Vendor cost</span>
+        <fieldset class="form-fieldset mb-0">
+            <legend class="subheader mb-2" x-text="pricingHeading()"></legend>
+            <div class="row g-2">
+                <label class="col-6 col-md-3">
+                    <span class="form-label">Vendor cost</span>
                     <input
                         name="part_cost"
                         x-model="cost"
@@ -151,21 +140,21 @@
                         @blur="onCostBlur()"
                         inputmode="decimal"
                         :placeholder="costPlaceholder()"
-                        class="ops-field-input ops-field-input--numeric"
+                        class="form-control text-end ark-money"
                     >
                 </label>
-                <label class="ops-field">
-                    <span class="ops-field-label">Markup %</span>
+                <label class="col-6 col-md-3">
+                    <span class="form-label">Markup %</span>
                     <input
                         x-model="markup"
                         @input="onSubletMarkupInput()"
                         inputmode="decimal"
                         placeholder="e.g. 15"
-                        class="ops-field-input ops-field-input--numeric"
+                        class="form-control text-end ark-money"
                     >
                 </label>
-                <label class="ops-field">
-                    <span class="ops-field-label">Sell price</span>
+                <label class="col-6 col-md-3">
+                    <span class="form-label">Sell price</span>
                     <input
                         name="unit_price"
                         x-model="sell"
@@ -173,22 +162,22 @@
                         required
                         inputmode="decimal"
                         :placeholder="sellPlaceholder()"
-                        class="ops-field-input ops-field-input--numeric"
+                        class="form-control text-end ark-money"
                     >
                 </label>
-                <label class="ops-field">
-                    <span class="ops-field-label" x-text="quantityFieldLabel()"></span>
+                <label class="col-6 col-md-3">
+                    <span class="form-label" x-text="quantityFieldLabel()"></span>
                     <input
                         name="quantity"
                         value="{{ $quantity ?? '1.00' }}"
                         required
                         inputmode="decimal"
                         :placeholder="quantityPlaceholder()"
-                        class="ops-field-input ops-field-input--numeric"
+                        class="form-control text-end ark-money"
                     >
                 </label>
             </div>
-            <p class="ops-part-line-guidance">
+            <p class="form-hint mt-2 mb-0">
                 <span x-text="subletPricingGuidance()"></span>
                 <template x-if="marginPercentage">
                     <span> · Margin <span x-text="marginPercentage"></span>%</span>
@@ -200,15 +189,15 @@
                     <span> · Checking price…</span>
                 </template>
             </p>
-        </div>
+        </fieldset>
     </template>
 
     <template x-if="type !== 'note' && type !== 'labor' && type !== 'sublet'">
-        <div class="ops-part-line-pricing">
-            <p class="ops-part-line-pricing-heading" x-text="pricingHeading()"></p>
-            <div class="ops-line-entry-pricing-grid ops-line-entry-pricing-grid--pair">
-                <label class="ops-field">
-                    <span class="ops-field-label" x-text="sellFieldLabel()"></span>
+        <fieldset class="form-fieldset mb-0">
+            <legend class="subheader mb-2" x-text="pricingHeading()"></legend>
+            <div class="row g-2">
+                <label class="col-6">
+                    <span class="form-label" x-text="sellFieldLabel()"></span>
                     <input
                         name="unit_price"
                         x-model="sell"
@@ -216,26 +205,26 @@
                         required
                         inputmode="decimal"
                         :placeholder="sellPlaceholder()"
-                        class="ops-field-input ops-field-input--numeric"
+                        class="form-control text-end ark-money"
                     >
                 </label>
-                <label class="ops-field">
-                    <span class="ops-field-label" x-text="quantityFieldLabel()"></span>
+                <label class="col-6">
+                    <span class="form-label" x-text="quantityFieldLabel()"></span>
                     <input
                         name="quantity"
                         value="{{ $quantity ?? '1.00' }}"
                         required
                         inputmode="decimal"
                         :placeholder="quantityPlaceholder()"
-                        class="ops-field-input ops-field-input--numeric"
+                        class="form-control text-end ark-money"
                     >
                 </label>
             </div>
-        </div>
+        </fieldset>
     </template>
 
     <template x-if="type === 'note'">
-        <div class="space-y-2">
+        <div>
             <input type="hidden" name="type" value="note">
             <input type="hidden" name="unit_price" value="0">
             <input type="hidden" name="quantity" value="1">
@@ -248,17 +237,18 @@
                     'technician' => $noteDefaults->technician,
                     'customer' => $noteDefaults->customer,
                 ],
+                'ui' => 'tabler',
             ])
         </div>
     </template>
 
-    <p x-show="simpleLineGuidance()" class="ops-simple-line-guidance" x-text="simpleLineGuidance()"></p>
+    <p x-show="simpleLineGuidance()" class="form-hint mb-0" x-text="simpleLineGuidance()"></p>
 
-    <div class="ops-line-entry-actions">
+    <div class="d-flex justify-content-end">
         <button
             type="submit"
-            class="ops-line-add-btn"
-            :class="type ? `ops-line-add-btn--${type}` : ''"
+            class="btn btn-primary"
+            data-line-add
             x-text="addLineButtonLabel()"
         ></button>
     </div>

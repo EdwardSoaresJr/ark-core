@@ -127,19 +127,19 @@ test('repair order review header shows service lane identity band without presen
 
     $response = $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-service-lane-band', false)
+        ->assertSee('data-identity-band', false)
         ->assertSee('ops-identity-column-link', false)
         ->assertSee('>Customer</a>', false)
         ->assertSee('ops-billing-class-pill--slate', false)
         ->assertSee(route('operations.customers.show', $repairOrder->customer), false)
-        ->assertSee('>Vehicle</p>', false)
-        ->assertSee('>Visit</p>', false)
+        ->assertSee('>Vehicle</h3>', false)
+        ->assertSee('>Visit</h3>', false)
         ->assertSee('Amber Adams')
         ->assertSee('(719) 229-7105')
         ->assertSee('165,604')
         ->assertSee('Lane Advisor')
         ->assertDontSee('ops-service-lane-footer', false)
-        ->assertSee('ops-mileage-inline')
+        ->assertSee('data-mileage-inline')
         ->assertSee('data-workspace-modal-form="mileage"', false)
         ->assertSee('>In</span>', false)
         ->assertSee('>Out</span>', false)
@@ -148,16 +148,16 @@ test('repair order review header shows service lane identity band without presen
         ->assertDontSee('recommendation pending review');
 
     $html = $response->getContent();
-    $vehiclePos = strpos($html, '>Vehicle</p>');
-    $visitPos = strpos($html, '>Visit</p>');
-    $mileagePos = strpos($html, 'ops-mileage-inline');
+    $vehiclePos = strpos($html, '>Vehicle</h3>');
+    $visitPos = strpos($html, '>Visit</h3>');
+    $mileagePos = strpos($html, 'data-mileage-inline');
     $visitEnd = strpos($html, 'id="review-toolbar"');
     $visitHtml = substr($html, $visitPos, $visitEnd - $visitPos);
 
     expect($vehiclePos)->toBeInt()
         ->and($visitPos)->toBeGreaterThan($vehiclePos)
         ->and($mileagePos)->toBeGreaterThan($visitPos)
-        ->and(substr($html, $vehiclePos, $visitPos - $vehiclePos))->not->toContain('ops-mileage-inline')
+        ->and(substr($html, $vehiclePos, $visitPos - $vehiclePos))->not->toContain('data-mileage-inline')
         ->and($visitHtml)->not->toContain('>Technician<');
 });
 
@@ -171,7 +171,7 @@ test('repair order identity band owns customer and vehicle presentation once', f
         ->assertOk()
         ->assertSee('data-identity-present="customer"', false)
         ->assertSee('data-identity-present="vehicle"', false)
-        ->assertSee('ops-service-lane-band', false)
+        ->assertSee('data-identity-band', false)
         ->assertDontSee('RO Context');
 });
 

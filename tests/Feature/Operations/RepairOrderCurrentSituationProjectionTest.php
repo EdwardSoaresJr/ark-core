@@ -108,7 +108,7 @@ test('repair order surfaces render sticky current situation from orientation ser
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('id="ro-orientation-header"', false)
-        ->assertSee('ops-ro-orientation-header__owner-signal--advisor', false)
+        ->assertSee('data-ro-owner-signal="advisor"', false)
         ->assertSee('Building Estimate', false)
         ->assertDontSee('Waiting on Diagnosis', false);
 });

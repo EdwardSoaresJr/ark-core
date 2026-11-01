@@ -8,8 +8,10 @@
         : '-';
 @endphp
 
+{{-- ark-worksheet-draft.js finds this editor by data-mileage-inline: its fields sit outside a form. --}}
 <div
-    class="ops-mileage-inline"
+    class="col-12"
+    data-mileage-inline
     x-data="arkRepairOrderMileage({
         url: @js(route('operations.repair-orders.mileage.update', $repairOrder)),
         csrf: @js(csrf_token()),
@@ -21,16 +23,17 @@
     })"
     x-effect="syncDraftMarker()"
 >
-    <div class="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-x-2 text-xs leading-4">
-        <dt class="font-semibold text-slate-500">Mileage</dt>
-        <dd class="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <span class="flex items-center gap-1">
-                <span class="text-[10px] font-bold uppercase tracking-[0.06em] text-slate-400">In</span>
+    <div class="row g-0">
+        <dt class="col-4 text-secondary fw-normal">Mileage</dt>
+        <dd class="col-8 mb-1 d-flex flex-wrap align-items-center gap-2">
+            <span class="d-inline-flex align-items-center gap-1">
+                <span class="text-secondary text-uppercase small">In</span>
                 <button
                     type="button"
                     x-show="!editingIn"
                     @click="openIn()"
-                    class="ops-mileage-value"
+                    class="btn btn-link btn-sm p-0 fw-medium text-reset"
+                    aria-label="Edit mileage in"
                     x-text="displayIn()"
                 >{{ $displayIn }}</button>
                 <input
@@ -40,6 +43,7 @@
                     type="text"
                     inputmode="numeric"
                     autocomplete="off"
+                    aria-label="Mileage in"
                     x-model="mileageIn"
                     @blur.debounce.350ms="finishIn()"
                     @keydown.enter.prevent="$event.target.blur()"
@@ -47,17 +51,20 @@
                     @if ($legacyMileageIn)
                         placeholder="{{ number_format($legacyMileageIn) }}"
                     @endif
-                    class="ops-mileage-input"
+                    class="form-control form-control-sm"
+                    style="width: 6.5rem"
+                    data-mileage-input="in"
                 >
             </span>
-            <span class="text-slate-300" aria-hidden="true">·</span>
-            <span class="flex items-center gap-1">
-                <span class="text-[10px] font-bold uppercase tracking-[0.06em] text-slate-400">Out</span>
+            <span class="text-secondary" aria-hidden="true">·</span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <span class="text-secondary text-uppercase small">Out</span>
                 <button
                     type="button"
                     x-show="!editingOut"
                     @click="openOut()"
-                    class="ops-mileage-value"
+                    class="btn btn-link btn-sm p-0 fw-medium text-reset"
+                    aria-label="Edit mileage out"
                     x-text="displayOut()"
                 >{{ $displayOut }}</button>
                 <input
@@ -67,15 +74,18 @@
                     type="text"
                     inputmode="numeric"
                     autocomplete="off"
+                    aria-label="Mileage out"
                     x-model="mileageOut"
                     @blur.debounce.350ms="finishOut()"
                     @keydown.enter.prevent="$event.target.blur()"
                     @keydown.escape.prevent="cancelOut()"
-                    class="ops-mileage-input"
+                    class="form-control form-control-sm"
+                    style="width: 6.5rem"
+                    data-mileage-input="out"
                 >
             </span>
-            <span x-show="saving" x-cloak class="text-[10px] font-semibold text-slate-400">Saving…</span>
-            <span x-show="error" x-cloak x-text="error" class="text-[10px] font-semibold text-rose-700"></span>
+            <span x-show="saving" x-cloak class="small text-secondary">Saving…</span>
+            <span x-show="error" x-cloak x-text="error" class="small text-danger"></span>
         </dd>
     </div>
 </div>

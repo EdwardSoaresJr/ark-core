@@ -28,20 +28,20 @@
     <input type="hidden" name="observed_summary" :value="observedSummary || summary">
 
     @unless ($popupMode)
-        <div class="ops-worksheet-entry-intake__header">
-            <p class="ops-worksheet-entry-intake__title">Add Concern</p>
-            <p class="ops-worksheet-entry-intake__subtitle">Organize the estimate into work items. Pick a match or enter something new.</p>
+        <div class="mb-3">
+            <h3 class="card-title mb-1">Add Concern</h3>
+            <p class="text-secondary small mb-0">Organize the estimate into work items. Pick a match or enter something new.</p>
         </div>
     @endunless
 
-    <div class="ops-worksheet-entry-intake__compose">
+    <div>
         @unless ($popupMode)
-            <p class="mb-1 text-[11px] font-medium text-slate-500" data-compose-save-clarity>
+            <p class="form-hint mb-1" data-compose-save-clarity>
                 Not saved until you create the concern. Refreshing now discards typed text.
             </p>
         @endunless
-        <label class="sr-only" for="scope-entry-summary">Add concern</label>
-        <div class="ops-worksheet-entry-intake__input-wrap">
+        <label class="visually-hidden" for="scope-entry-summary">Add concern</label>
+        <div class="position-relative">
             <textarea
                 id="scope-entry-summary"
                 name="summary"
@@ -50,7 +50,7 @@
                 autocomplete="off"
                 spellcheck="true"
                 maxlength="2000"
-                class="ops-field-input ops-worksheet-entry-intake__summary"
+                @class(['form-control', 'is-invalid' => $errors->has('summary') || $errors->has('observed_summary')])
                 placeholder="e.g. Front brakes grinding, Check engine light, Oil change"
                 x-model="summary"
                 x-ref="summaryInput"
@@ -59,53 +59,46 @@
                 @focus="fetchSuggestions()"
                 @error('summary') aria-invalid="true" @enderror
             >{{ old('summary') }}</textarea>
-            @error('summary')
-                <p class="ops-field-error mt-1 text-xs font-medium text-rose-700" data-concern-error>{{ $message }}</p>
-            @enderror
-            @error('observed_summary')
-                <p class="ops-field-error mt-1 text-xs font-medium text-rose-700" data-concern-error>{{ $message }}</p>
-            @enderror
-            @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
-                'visitInsert' => 'insertPriorVisit',
-            ])
             <div
-                class="ops-worksheet-entry-intake__suggestions ark-ro-mention__menu"
-                x-show="mentionOpen && mentionMatches.length > 0"
-                x-cloak
+                class="dropdown-menu w-100 top-100 start-0 mt-1"
+                :class="{ show: mentionOpen && mentionMatches.length > 0 }"
                 role="listbox"
                 aria-label="Previous visits"
+                data-scope-entry-mentions
             >
                 <template x-for="(row, index) in mentionMatches" :key="row.number">
                     <button
                         type="button"
-                        class="ark-ro-mention__option"
-                        :class="{ 'ark-ro-mention__option--active': index === mentionActiveIndex }"
+                        class="dropdown-item flex-column align-items-start text-wrap"
+                        :class="{ active: index === mentionActiveIndex }"
                         role="option"
                         @mousedown.prevent="choosePriorVisit(row)"
                     >
-                        <span class="font-semibold" x-text="row.label"></span>
-                        <span class="block text-[11px] text-slate-500" x-text="row.detail"></span>
+                        <span class="fw-medium" x-text="row.label"></span>
+                        <span class="small text-secondary" x-text="row.detail"></span>
                     </button>
                 </template>
             </div>
             <div
-                class="ops-worksheet-entry-intake__suggestions"
-                x-show="suggestionsOpen && hasMatches"
+                class="dropdown-menu w-100 top-100 start-0 mt-1 overflow-auto"
+                style="max-height: 20rem"
+                :class="{ show: suggestionsOpen && hasMatches }"
                 @click.outside="suggestionsOpen = false; activeSuggestionIndex = -1"
                 role="listbox"
                 aria-label="Shop Memory suggestions"
+                data-scope-entry-suggestions
             >
                 <template x-if="featured?.summary">
-                    <div class="ops-worksheet-entry-intake__featured">
-                        <p class="ops-worksheet-entry-intake__featured-label">Most common at your shop</p>
+                    <div>
+                        <h6 class="dropdown-header">Most common at your shop</h6>
                         <button
                             type="button"
-                            class="ops-worksheet-entry-intake__suggestion ops-worksheet-entry-intake__suggestion--featured"
-                            :class="{ 'ops-worksheet-entry-intake__suggestion--active': isSuggestionActive(featured.entry_kind, featured.summary) }"
+                            class="dropdown-item text-wrap fw-medium"
+                            :class="{ active: isSuggestionActive(featured.entry_kind, featured.summary) }"
                             @click="chooseSuggestion(featured.entry_kind, featured.summary, featured.concept_id, featured.suggestion_id, featured.provider)"
                         >
                             <span
-                                class="ops-worksheet-entry-intake__suggestion-check"
+                                class="me-1"
                                 x-show="isSuggestionActive(featured.entry_kind, featured.summary)"
                                 aria-hidden="true"
                             >✓</span>
@@ -115,19 +108,19 @@
                 </template>
 
                 <template x-for="group in suggestionGroups" :key="group.entry_kind">
-                    <div class="ops-worksheet-entry-intake__suggestion-group">
-                        <p class="ops-worksheet-entry-intake__suggestion-label" x-text="group.label"></p>
-                        <ul class="ops-worksheet-entry-intake__suggestion-list">
+                    <div>
+                        <h6 class="dropdown-header" x-text="group.label"></h6>
+                        <ul class="list-unstyled mb-0">
                             <template x-for="row in group.suggestions" :key="suggestionKey(group.entry_kind, typeof row === 'string' ? row : row.summary)">
                                 <li role="option" :aria-selected="isSuggestionActive(group.entry_kind, typeof row === 'string' ? row : row.summary)">
                                     <button
                                         type="button"
-                                        class="ops-worksheet-entry-intake__suggestion"
-                                        :class="{ 'ops-worksheet-entry-intake__suggestion--active': isSuggestionActive(group.entry_kind, typeof row === 'string' ? row : row.summary) }"
+                                        class="dropdown-item text-wrap"
+                                        :class="{ active: isSuggestionActive(group.entry_kind, typeof row === 'string' ? row : row.summary) }"
                                         @click="chooseSuggestion(group.entry_kind, typeof row === 'string' ? row : row.summary, typeof row === 'object' ? row.concept_id : null, typeof row === 'object' ? row.suggestion_id : null, typeof row === 'object' ? row.provider : null)"
                                     >
                                         <span
-                                            class="ops-worksheet-entry-intake__suggestion-check"
+                                            class="me-1"
                                             x-show="isSuggestionActive(group.entry_kind, typeof row === 'string' ? row : row.summary)"
                                             aria-hidden="true"
                                         >✓</span>
@@ -140,16 +133,25 @@
                 </template>
             </div>
         </div>
+        @error('summary')
+            <p class="invalid-feedback d-block" data-field-error data-concern-error>{{ $message }}</p>
+        @enderror
+        @error('observed_summary')
+            <p class="invalid-feedback d-block" data-field-error data-concern-error>{{ $message }}</p>
+        @enderror
+        @include('operations.repair-orders.partials.repair-order-vehicle-memory', [
+            'visitInsert' => 'insertPriorVisit',
+        ])
 
         @unless ($hideSubmitActions)
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-                <button type="submit" class="ops-review-action ops-review-action--primary">
+            <div class="btn-list mt-3">
+                <button type="submit" class="btn btn-primary">
                     Create Concern
                 </button>
                 <template x-if="aiRewriteEnabled">
                     <button
                         type="button"
-                        class="ops-review-action"
+                        class="btn"
                         @click="rewriteSummary()"
                         :disabled="! summary.trim() || rewriting"
                     >
@@ -162,7 +164,7 @@
                 <div class="mt-3">
                     <button
                         type="button"
-                        class="ops-review-action"
+                        class="btn"
                         @click="rewriteSummary()"
                         :disabled="! summary.trim() || rewriting"
                     >
@@ -172,8 +174,8 @@
             </template>
         @endunless
 
-        <p class="ops-worksheet-entry-intake__keyboard-hint">
-            <span class="ops-worksheet-entry-intake__hint-label">Keyboard:</span>
+        <p class="form-hint mt-2 mb-0">
+            <span class="fw-medium">Keyboard:</span>
             <span x-show="hasMatches">Enter fills top match · ↑↓ choose · Esc dismiss · Shift+Enter new line · Create Concern saves</span>
             <span x-show="! hasMatches">Enter or Create Concern continues · Shift+Enter new line</span>
         </p>

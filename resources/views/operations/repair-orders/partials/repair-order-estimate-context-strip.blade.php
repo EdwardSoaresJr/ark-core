@@ -77,35 +77,35 @@
     </div>
 
     <div class="card card-sm mt-2" x-show="estimateContext === 'auth'" x-cloak>
-        <x-operations.worksheet-island>
+        <div class="card-body">
             @include('operations.repair-orders.partials.repair-order-rail-tab-auth', [
                 'repairOrder' => $repairOrder,
                 'totals' => $totals,
                 'isTerminal' => $isTerminal ?? false,
                 'estimateVersion' => $estimateVersion,
             ])
-        </x-operations.worksheet-island>
+        </div>
     </div>
 
     <div class="card card-sm mt-2" x-show="estimateContext === 'portal'" x-cloak>
-        <x-operations.worksheet-island>
+        <div class="card-body">
             @include('operations.repair-orders.partials.repair-order-rail-tab-portal', [
                 'repairOrder' => $repairOrder,
                 'isTerminal' => $isTerminal ?? false,
             ])
-        </x-operations.worksheet-island>
+        </div>
     </div>
 
     @if ($showParts)
         <div class="card card-sm mt-2" x-show="estimateContext === 'parts'" x-cloak>
-            <x-operations.worksheet-island>
+            <div class="card-body">
                 @include('operations.repair-orders.partials.repair-order-rail-tab-parts', [
                     'repairOrder' => $repairOrder,
                     'partsBlockingCount' => $partsBlockingCount,
                     'partsReadinessCounts' => $partsReadinessCounts ?? [],
                     'isTerminal' => $isTerminal ?? false,
                 ])
-            </x-operations.worksheet-island>
+            </div>
         </div>
     @endif
 </div>

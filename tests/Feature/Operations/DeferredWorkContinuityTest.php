@@ -120,7 +120,7 @@ test('repair order concern authoring shows prior deferred work for this vehicle'
 
     $this->get(route('operations.repair-orders.show', $current))
         ->assertOk()
-        ->assertSee('ark-vehicle-memory', false)
+        ->assertSee('data-vehicle-memory', false)
         ->assertSee('Front lower control arm bushings cracked.', false)
         ->assertSee('form="deferred-add-concern-'.$deferred->id.'"', false)
         ->assertSee(route('operations.repair-orders.deferred-work.add-to-estimate', [$current, $deferred]), false);
