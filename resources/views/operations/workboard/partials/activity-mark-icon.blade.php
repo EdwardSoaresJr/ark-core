@@ -4,7 +4,7 @@
     $filled = $filled ?? false;
     $badge = $badge ?? null;
 @endphp
-<span class="d-inline-flex" aria-hidden="true">
+<span class="d-inline-flex" aria-hidden="true" data-job-card-mark-icon>
     @switch($key)
         @case('estimate')
             @if ($filled)
@@ -87,5 +87,5 @@
     };
 @endphp
 @if ($badgeColor !== null)
-    <span class="badge bg-{{ $badgeColor }}" aria-hidden="true"></span>
+    <span class="badge bg-{{ $badgeColor }}" aria-hidden="true" data-job-card-mark-badge="{{ $badge }}"></span>
 @endif

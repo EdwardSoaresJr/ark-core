@@ -61,6 +61,7 @@
 >
     <article
         @class(['card card-sm', 'border-primary' => $isRecommended])
+        data-job-card
         data-workboard-attention="{{ $attention }}"
         @if ($isRecommended) data-workboard-recommended @endif
         @if ($surface?->waitingOnCustomerDecision) data-workboard-decision="1" @endif
@@ -68,9 +69,9 @@
         @if ($attentionColor)
             <div class="card-status-start bg-{{ $attentionColor }}"></div>
         @endif
-        <div class="card-body p-2">
+        <div class="card-body p-2" data-job-card-scan>
             <div class="d-flex align-items-baseline gap-2">
-                <a href="{{ $builderUrl }}" class="fw-bold text-reset">RO #{{ $repairOrder->repair_order_id }}</a>
+                <a href="{{ $builderUrl }}" class="fw-bold text-reset" data-job-card-ro>RO #{{ $repairOrder->repair_order_id }}</a>
                 <span @class(['ms-auto fw-bold ark-money text-nowrap', 'text-danger' => $isBalanceDue]) data-job-card-total>
                     {{ $moneyLabel }}
                     @if ($isBalanceDue)
@@ -80,8 +81,13 @@
                     @endif
                 </span>
             </div>
-            @if (filled($exceptionLabel))
-                <div @class(['small fw-medium d-flex align-items-center gap-1', $toneText($exceptionTone)]) data-job-card-exception>
+            {{-- The row renders even when empty, as on the legacy card, so lanes keep an even rhythm. --}}
+            <div
+                @class(['small fw-medium d-flex align-items-center gap-1', $toneText($exceptionTone)])
+                data-job-card-exception="{{ filled($exceptionLabel) ? $exceptionTone : 'empty' }}"
+                @unless (filled($exceptionLabel)) aria-hidden="true" @endunless
+            >
+                @if (filled($exceptionLabel))
                     <span class="text-truncate">{{ $exceptionLabel }}</span>
                     @if ($exceptionExtraCount > 0)
                         <span class="dropdown">
@@ -94,31 +100,31 @@
                                 title="{{ $exceptionMoreHint }}"
                                 aria-label="{{ $exceptionMoreHint }}"
                             >+{{ $exceptionExtraCount }}</button>
-                            <span class="dropdown-menu" role="list">
+                            <span class="dropdown-menu" role="list" data-job-card-exception-list>
                                 @foreach ($exceptionItems as $item)
-                                    <span @class(['dropdown-item-text small', $toneText($item['tone'] ?? null)]) role="listitem">{{ $item['label'] }}</span>
+                                    <span @class(['dropdown-item-text small', $toneText($item['tone'] ?? null)]) role="listitem" data-job-card-exception-item>{{ $item['label'] }}</span>
                                 @endforeach
                             </span>
                         </span>
                     @endif
-                </div>
-            @endif
-            <a href="{{ $builderUrl }}" class="d-block fw-bold text-reset text-truncate mt-1">{{ $card->vehicleLabel }}</a>
+                @endif
+            </div>
+            <a href="{{ $builderUrl }}" class="d-block fw-bold text-reset text-truncate mt-1" data-job-card-vehicle>{{ $card->vehicleLabel }}</a>
             <div class="small text-truncate">
                 @if ($surface?->customerHubUrl)
-                    <a href="{{ $surface->customerHubUrl }}" class="text-secondary">{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
+                    <a href="{{ $surface->customerHubUrl }}" class="text-secondary" data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</a>
                 @else
-                    <span class="text-secondary">{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
+                    <span class="text-secondary" data-job-card-customer>{{ $customerName !== '' ? $customerName : 'Unknown customer' }}</span>
                 @endif
             </div>
             <div class="d-flex align-items-center gap-2 mt-2">
-                <a href="{{ $builderUrl }}" class="text-decoration-none">
-                    <x-tabler.status-badge :tone="filled($chip?->statusColor) ? \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($chip->statusColor) : ($chip?->tone ?? 'move')">{{ $statusLabel }}</x-tabler.status-badge>
+                <a href="{{ $builderUrl }}" class="text-decoration-none" data-job-card-status data-job-card-status-tone="{{ $chip?->tone ?? 'none' }}">
+                    <x-tabler.status-badge :tone="filled($chip?->statusColor) ? \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::chipTone($chip->statusColor) : ($chip?->tone ?? 'move')" data-job-card-status-label="label">{{ $statusLabel }}</x-tabler.status-badge>
                 </a>
-                <span @class(['ms-auto small', 'text-secondary' => ! in_array($attention, ['attention', 'critical'], true), 'text-warning' => $attention === 'attention', 'text-danger' => $attention === 'critical'])>{{ $clockDisplay }}</span>
+                <span @class(['ms-auto small', 'text-secondary' => ! in_array($attention, ['attention', 'critical'], true), 'text-warning' => $attention === 'attention', 'text-danger' => $attention === 'critical']) data-job-card-clock>{{ $clockDisplay }}</span>
             </div>
         </div>
-        <div @class(['card-footer p-1', 'bg-yellow-lt' => $attention === 'attention', 'bg-red-lt' => $attention === 'critical'])>
+        <div @class(['card-footer p-1', 'bg-yellow-lt' => $attention === 'attention', 'bg-red-lt' => $attention === 'critical']) data-job-card-activity>
             <div class="d-flex justify-content-between" role="group" aria-label="Activity">
                 @foreach ($activityMarks as $mark)
                     {{-- tabindex -1: a tap focuses the mark, which shows its tooltip, without adding six tab stops per card. --}}

@@ -181,7 +181,7 @@ test('workstation lock screen retired - operational shell stays visible', functi
 
     $binding = WorkstationBrowserBinding::issueForWorkstation($workstation);
 
-    workstationGet($this, '/app', $admin, $binding, [WorkstationPresence::SESSION_LOCKED => true])
+    workstationGet($this, '/app/profile', $admin, $binding, [WorkstationPresence::SESSION_LOCKED => true])
         ->assertOk()
         ->assertSee('name="ark-workstation-privacy-active" content="0"', false)
         ->assertDontSee('Find advisor', false)

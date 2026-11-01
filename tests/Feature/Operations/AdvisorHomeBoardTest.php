@@ -82,13 +82,13 @@ test('advisor home shows compact brief and full active repair order board', func
         ->assertSee('John Smith', false)
         ->assertSee('2018 Ram 2500', false)
         ->assertSee('Estimate - Ready', false)
-        ->assertSee('ops-job-card__mark--ready', false)
-        ->assertSee('ops-job-card__mark-icon', false)
-        ->assertSee('ops-job-card__activity', false)
-        ->assertDontSee('ops-job-card__chip--warn', false)
+        ->assertSee('data-job-card-mark-state="ready"', false)
+        ->assertSee('data-job-card-mark-icon', false)
+        ->assertSee('data-job-card-activity', false)
+        ->assertDontSee('data-job-card-status-tone="warn"', false)
         ->assertSee('$9,027', false)
         ->assertSee('pending', false)
-        ->assertSee('ops-job-card__mark--none', false)
+        ->assertSee('data-job-card-mark-state="none"', false)
         ->assertDontSee('ops-job-card__exception-mark', false)
         ->assertDontSee('ops-job-card__total--empty', false)
         ->assertDontSee('! Missed appointment', false)
@@ -98,7 +98,7 @@ test('advisor home shows compact brief and full active repair order board', func
         ->assertDontSee('Waiting on decision · not sent', false)
         ->assertDontSee('RO created', false)
         ->assertDontSee('No Promise Time', false)
-        ->assertSee('+ Check In', false)
+        ->assertSee('href="'.route('operations.intake.create').'" class="btn btn-primary"', false)
         ->assertDontSee('All ROs', false)
         ->assertDontSee('Overview', false)
         ->assertDontSee('What should I work on next?');
@@ -156,10 +156,10 @@ test('advisor home waiting approval column holds customer-decision repair orders
         ->toContain('4d')
         ->toContain('pending')
         ->toContain('data-workboard-decision="1"')
-        ->toContain('ops-job-card__activity')
-        ->toContain('ops-job-card__mark--engaged')
-        ->toContain('ops-job-card__mark-badge')
-        ->toContain('ops-job-card__exception')
+        ->toContain('data-job-card-activity')
+        ->toContain('data-job-card-mark-state="engaged"')
+        ->toContain('data-job-card-mark-badge')
+        ->toContain('data-job-card-exception')
         ->not->toContain('RO created')
         ->not->toContain('ops-job-card__status-menu')
         ->not->toContain('Move to');
@@ -209,10 +209,10 @@ test('waiting approval cards surface configured status not estimate overlay', fu
         ->getContent();
 
     expect($html)
-        ->toContain('ops-job-card__chip-label">Waiting Approval')
+        ->toContain('data-job-card-status-label="label">Waiting Approval')
         ->toContain('Estimate - Ready')
-        ->not->toContain('ops-job-card__chip-label">Not Sent')
-        ->not->toContain('ops-job-card__chip--warn');
+        ->not->toContain('data-job-card-status-label="label">Not Sent')
+        ->not->toContain('data-job-card-status-tone="warn"');
 });
 
 test('home card status chip tracks lifecycle after a board move', function () {
@@ -265,9 +265,9 @@ test('in progress cards hide empty labor progress and empty promise time', funct
         ->assertSee('Search job board', false)
         ->assertSee('All employees', false)
         ->assertDontSee('RO created', false)
-        ->assertSee('ops-job-card__clock', false)
-        ->assertSee('ops-job-card__activity', false)
-        ->assertSee('ops-job-card__exception', false);
+        ->assertSee('data-job-card-clock', false)
+        ->assertSee('data-job-card-activity', false)
+        ->assertSee('data-job-card-exception', false);
 });
 
 test('in progress cards surface labor progress once hours are complete', function () {
@@ -372,8 +372,8 @@ test('home card anchors RO number upper left before vehicle and customer', funct
     $response = $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.index'))
         ->assertOk()
-        ->assertSee('ops-job-card__scan', false)
-        ->assertSee('ops-job-card__status', false)
+        ->assertSee('data-job-card-scan', false)
+        ->assertSee('data-job-card-status', false)
         ->assertDontSee('ops-job-card__status-menu', false)
         ->assertDontSee('aria-label="More actions"', false)
         ->assertDontSee('Customer hub', false);
@@ -384,17 +384,17 @@ test('home card anchors RO number upper left before vehicle and customer', funct
     $html = $response->getContent();
     $cardStart = strpos($html, 'id="ops-card-ro-'.$repairOrder->repair_order_id.'"');
     $cardHtml = $cardStart === false ? '' : substr($html, $cardStart, 8000);
-    $roPos = strpos($cardHtml, 'ops-job-card__ro');
-    $vehiclePos = strpos($cardHtml, 'ops-job-card__vehicle');
-    $customerPos = strpos($cardHtml, 'ops-job-card__customer-link');
-    $statusPos = strpos($cardHtml, 'ops-job-card__status');
-    $activityPos = strpos($cardHtml, 'ops-job-card__activity');
-    $exceptionPos = strpos($cardHtml, 'ops-job-card__exception');
+    $roPos = strpos($cardHtml, 'data-job-card-ro');
+    $vehiclePos = strpos($cardHtml, 'data-job-card-vehicle');
+    $customerPos = strpos($cardHtml, 'data-job-card-customer');
+    $statusPos = strpos($cardHtml, 'data-job-card-status');
+    $activityPos = strpos($cardHtml, 'data-job-card-activity');
+    $exceptionPos = strpos($cardHtml, 'data-job-card-exception');
 
     expect($cardHtml)->toContain($builderUrl)
         ->and($cardHtml)->toContain('href="'.e($customerHubUrl).'"')
         ->and($cardHtml)->not->toContain('href="'.e($commsUrl).'"')
-        ->and($cardHtml)->toContain('ops-job-card__customer-link')
+        ->and($cardHtml)->toContain('data-job-card-customer')
         ->and($roPos)->not->toBeFalse()
         ->and($vehiclePos)->not->toBeFalse()
         ->and($customerPos)->not->toBeFalse()
@@ -432,7 +432,7 @@ test('home card surfaces promise time on the meta row', function () {
         ->get(route('operations.index'))
         ->assertOk()
         ->assertSee('Promise Customer', false)
-        ->assertSee('ops-job-card__exception', false)
+        ->assertSee('data-job-card-exception', false)
         ->assertDontSee('Promise overdue', false);
 
     Carbon::setTestNow();
@@ -479,11 +479,11 @@ test('home card plus-count names the other attention items', function () {
         ->assertSee('Missed appointment', false)
         ->assertSee('+1', false)
         ->assertSee('Also: Needs parts', false)
-        ->assertSee('ops-job-card__mark--attention', false)
-        ->assertSee('ops-job-card__mark-badge--alert', false)
-        ->assertSee('ops-job-card__mark--ready', false)
-        ->assertSee('ops-job-card__exception-list', false)
-        ->assertSee('ops-job-card__exception-list-item', false);
+        ->assertSee('data-job-card-mark-state="attention"', false)
+        ->assertSee('data-job-card-mark-badge="alert"', false)
+        ->assertSee('data-job-card-mark-state="ready"', false)
+        ->assertSee('data-job-card-exception-list', false)
+        ->assertSee('data-job-card-exception-item', false);
 
     Carbon::setTestNow();
 });
