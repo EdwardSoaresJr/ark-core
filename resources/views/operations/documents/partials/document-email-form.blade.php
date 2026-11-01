@@ -1,6 +1,7 @@
 {{--
   Email paperwork form - viewer, Hub list expand, or RO modal.
-  Props: $customer, $documentId (or $doc with id), $emailUrl optional, $compact optional
+  Props: $customer, $documentId (or $doc with id), $emailUrl optional, $compact optional,
+  $ui optional ('tabler' on Tabler pages; the repair order workspace modal keeps the legacy markup)
 --}}
 @php
     use App\Ark\Runtime\Authorization\ArkCapability;
@@ -15,9 +16,56 @@
     $compact = (bool) ($compact ?? false);
     $customerEmail = trim((string) ($customer->email ?? ''));
     $formId = 'document-email-'.$documentId;
+    $tabler = ($ui ?? null) === 'tabler';
 @endphp
 
-@if ($canEmail && $emailUrl)
+@if ($canEmail && $emailUrl && $tabler)
+    <div id="{{ $formId }}" @class(['card', 'card-sm' => $compact])>
+        <form method="POST" action="{{ $emailUrl }}" class="card-body">
+            @csrf
+            @if ($compact)
+                <div class="subheader mb-2">Email document</div>
+            @else
+                <h3 class="card-title mb-1">Email document</h3>
+                <p class="text-secondary small">Sends this paperwork file to the customer.</p>
+            @endif
+            <div class="row g-2">
+                <div class="col-12 col-md">
+                    <label class="d-block mb-0">
+                        <span class="visually-hidden">Customer email</span>
+                        <input
+                            type="email"
+                            name="email"
+                            value="{{ old('email', $customerEmail) }}"
+                            placeholder="Customer email"
+                            required
+                            @class(['form-control', 'form-control-sm' => $compact])
+                        >
+                    </label>
+                </div>
+                <div class="col-12 col-md">
+                    <label class="d-block mb-0">
+                        <span class="visually-hidden">Optional note</span>
+                        <input
+                            type="text"
+                            name="message"
+                            value="{{ old('message') }}"
+                            placeholder="Optional note"
+                            maxlength="500"
+                            @class(['form-control', 'form-control-sm' => $compact])
+                        >
+                    </label>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" @class(['btn btn-primary w-100', 'btn-sm' => $compact])>
+                        <x-tabler.icon name="mail" />
+                        Email
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+@elseif ($canEmail && $emailUrl)
     <div
         id="{{ $formId }}"
         @class([

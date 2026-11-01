@@ -3,74 +3,75 @@
         || auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value);
 @endphp
 
-<x-operations.app :title="$document->title">
-    <section class="mx-auto max-w-5xl space-y-3 px-3 py-4">
+<x-operations.app :title="$document->title" ui="tabler">
+    <x-tabler.page layout="focused" :title="$document->title" :pretitle="$row['type_label']" actions-label="Document commands" stack-actions>
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.customers.show', [$customer, 'tab' => 'documents'])" icon="arrow-left" label="Back" />
+            <x-tabler.page-action :href="$row['download_url']" icon="arrow-down" label="Download" />
+            <x-tabler.page-action icon="printer" label="Print" onclick="window.print()" />
+            @if ($canEmail)
+                <x-tabler.page-action :href="'#document-email-'.$document->id" icon="mail" label="Email" primary />
+            @endif
+        </x-slot:actions>
+
         @if (session('status'))
-            <div class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                {{ session('status') }}
-            </div>
+            <div class="alert alert-success d-print-none" role="status">{{ session('status') }}</div>
         @endif
 
         @error('email')
-            <div class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-                {{ $message }}
-            </div>
+            <div class="alert alert-danger d-print-none" role="alert">{{ $message }}</div>
         @enderror
 
-        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3">
-            <div class="min-w-0">
-                <p class="ops-eyebrow">{{ $row['type_label'] }}</p>
-                <h1 class="mt-0.5 text-xl font-black tracking-tight text-slate-950">{{ $document->title }}</h1>
-                <p class="ops-meta mt-1">
-                    {{ $customer->name }}
-                    @if ($row['repair_order_number'] ?? null)
-                        <span class="mx-1 text-slate-300">·</span>
-                        RO #{{ $row['repair_order_number'] }}
-                    @endif
-                    <span class="mx-1 text-slate-300">·</span>
-                    {{ ($row['customer_visible'] ?? false) ? 'Customer visible' : 'Shop only' }}
-                </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-1.5">
-                <a href="{{ $row['download_url'] }}" class="inline-flex min-h-9 items-center rounded-sm border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:border-slate-500">Download</a>
-                <button type="button" class="inline-flex min-h-9 items-center rounded-sm border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:border-slate-500" onclick="window.print()">Print</button>
-                @if ($canEmail)
-                    <a href="#document-email-{{ $document->id }}" class="inline-flex min-h-9 items-center rounded-sm border border-slate-800 bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-800">Email</a>
-                @endif
-                @if ($canManage)
-                    <form method="POST" action="{{ $row['rotate_url'] }}" class="inline">
-                        @csrf
-                        <input type="hidden" name="direction" value="left">
-                        <button type="submit" class="inline-flex min-h-9 items-center rounded-sm border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:border-slate-500">Rotate Left</button>
-                    </form>
-                    <form method="POST" action="{{ $row['rotate_url'] }}" class="inline">
-                        @csrf
-                        <input type="hidden" name="direction" value="right">
-                        <button type="submit" class="inline-flex min-h-9 items-center rounded-sm border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:border-slate-500">Rotate Right</button>
-                    </form>
-                @endif
-                <a href="{{ route('operations.customers.show', [$customer, 'tab' => 'documents']) }}" class="inline-flex min-h-9 items-center rounded-sm border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:border-slate-500">Back</a>
-            </div>
+        <div class="text-secondary mb-3" data-document-viewer-meta>
+            {{ $customer->name }}
+            @if ($row['repair_order_number'] ?? null)
+                · RO #{{ $row['repair_order_number'] }}
+            @endif
+            · {{ ($row['customer_visible'] ?? false) ? 'Customer visible' : 'Shop only' }}
         </div>
 
         @if ($canEmail)
-            @include('operations.documents.partials.document-email-form', [
-                'customer' => $customer,
-                'documentId' => $document->id,
-                'emailUrl' => $row['email_url'],
-            ])
+            <div class="mb-3 d-print-none">
+                @include('operations.documents.partials.document-email-form', [
+                    'customer' => $customer,
+                    'documentId' => $document->id,
+                    'emailUrl' => $row['email_url'],
+                    'ui' => 'tabler',
+                ])
+            </div>
         @endif
 
-        @include('operations.documents.partials.document-email-log', [
-            'emailSends' => $emailSends ?? [],
-        ])
+        @if (($emailSends ?? []) !== [])
+            <div class="mb-3">
+                @include('operations.documents.partials.document-email-log', [
+                    'emailSends' => $emailSends ?? [],
+                ])
+            </div>
+        @endif
 
-        <div class="overflow-hidden rounded-sm border border-slate-200 bg-slate-100">
+        <div class="card" data-document-viewer-preview>
+            @if ($canManage)
+                <div class="card-header d-print-none">
+                    <h3 class="card-title">Preview</h3>
+                    <div class="card-actions btn-list">
+                        <form method="POST" action="{{ $row['rotate_url'] }}" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="direction" value="left">
+                            <button type="submit" class="btn btn-sm">Rotate Left</button>
+                        </form>
+                        <form method="POST" action="{{ $row['rotate_url'] }}" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="direction" value="right">
+                            <button type="submit" class="btn btn-sm">Rotate Right</button>
+                        </form>
+                    </div>
+                </div>
+            @endif
             @if ($row['is_image'] ?? false)
-                <img src="{{ $row['url'] }}" alt="{{ $document->title }}" class="mx-auto max-h-[80vh] w-auto object-contain">
+                <img src="{{ $row['url'] }}" alt="{{ $document->title }}" class="d-block mx-auto img-fluid" style="max-height: 80vh">
             @else
-                <iframe src="{{ $row['url'] }}" title="{{ $document->title }}" class="h-[80vh] w-full bg-white"></iframe>
+                <iframe src="{{ $row['url'] }}" title="{{ $document->title }}" class="d-block w-100 border-0" style="height: 80vh"></iframe>
             @endif
         </div>
-    </section>
+    </x-tabler.page>
 </x-operations.app>
