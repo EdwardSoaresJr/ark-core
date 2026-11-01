@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations', 'staff', 'excellence'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial', 'overhead', 'operations', 'staff', 'excellence', 'payments', 'partstech'];
         @endphp
 
         <div class="row g-3">
@@ -1517,14 +1517,25 @@
                     @include('operations.settings.partials.shop-excellence-targets')
                 </section>
 
+                <section class="card" x-show="active === 'payments'" x-cloak data-settings-section="payments">
+                    @include('operations.settings.partials.square-payments-settings', [
+                        'settings' => $settings,
+                        'platformPaymentsCapture' => $platformPaymentsCapture ?? false,
+                    ])
+                </section>
+
+                <section class="card" x-show="active === 'partstech'" x-cloak data-settings-section="partstech">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Parts catalogs</div>
+                            <h2 class="card-title">Catalog buttons on the estimate</h2>
+                            <div class="card-subtitle">PartsTech, RepairLink, Nexpart, and any other catalog the estimate toolbar opens.</div>
+                        </div>
+                    </div>
+                    @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
+                </section>
+
                 <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
-
-                @include('operations.settings.partials.square-payments-settings', [
-                    'settings' => $settings,
-                    'platformPaymentsCapture' => $platformPaymentsCapture ?? false,
-                ])
-
-                @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
 
                 @include('operations.settings.partials.telephony-settings', [
                     'settings' => $settings,
