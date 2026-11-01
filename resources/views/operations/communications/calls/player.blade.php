@@ -5,12 +5,12 @@
         : sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
     $kind = $kind ?? 'Recording';
 @endphp
-<div class="ops-call-library__audio-block">
-    <span class="ops-call-library__audio-label">{{ $kind }}</span>
-    <div class="ops-call-library__player" data-call-player>
-        <button type="button" class="ops-call-library__play" data-play aria-label="Play {{ strtolower($kind) }}">Play</button>
-        <input type="range" class="ops-call-library__scrub" data-scrub min="0" max="{{ $seconds }}" value="0" step="0.1" aria-label="{{ $kind }} position">
-        <span class="ops-call-library__clock" data-clock>0:00 / {{ $clock }}</span>
-        <audio preload="none" class="ops-call-library__audio" src="{{ $src }}" data-duration="{{ $seconds }}"></audio>
+<div>
+    <div class="subheader mb-1">{{ $kind }}</div>
+    <div class="d-flex align-items-center gap-2" style="max-width: 22rem" data-call-player>
+        <button type="button" class="btn btn-sm flex-shrink-0" data-play aria-label="Play {{ strtolower($kind) }}">Play</button>
+        <input type="range" class="form-range flex-fill" data-scrub min="0" max="{{ $seconds }}" value="0" step="0.1" aria-label="{{ $kind }} position">
+        <span class="small text-secondary text-nowrap ark-money" data-clock>0:00 / {{ $clock }}</span>
+        <audio preload="none" data-call-audio src="{{ $src }}" data-duration="{{ $seconds }}"></audio>
     </div>
 </div>
