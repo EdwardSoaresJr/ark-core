@@ -225,7 +225,7 @@
                     ['key' => 'ark-cloud', 'label' => 'ARK Platform', 'hidden' => \App\Ark\Runtime\DemoInstall::isDemo()],
                 ],
             ];
-            $tablerSections = ['general', 'estimates', 'workflow', 'printing'];
+            $tablerSections = ['general', 'estimates', 'workflow', 'printing', 'financial'];
         @endphp
 
         <div class="row g-3">
@@ -660,230 +660,238 @@
                         @include('operations.settings.partials.printing-qz-certificates', ['qzPrintingReference' => $qzPrintingReference ?? []])
                     </div>
                 </section>
-                <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
-
-                <section x-show="active === 'financial'" x-cloak>
-                    <div class="border-b border-slate-200 pb-2">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Financial Rules</p>
-                        <h2 class="text-base font-black text-slate-950">How estimates are priced</h2>
-                        <p class="mt-0.5 text-xs text-slate-500">These rules flow into line pricing, tax, shop supplies, totals, and estimate snapshots.</p>
+                <section class="card" x-show="active === 'financial'" x-cloak data-settings-section="financial">
+                    <div class="card-header">
+                        <div>
+                            <div class="subheader">Financial Rules</div>
+                            <h2 class="card-title">How estimates are priced</h2>
+                            <div class="card-subtitle">These rules flow into line pricing, tax, shop supplies, totals, and estimate snapshots.</div>
+                        </div>
+                    </div>
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist" aria-label="Financial Rules">
+                            @foreach ([
+                                'labor' => 'Labor',
+                                'labor-policies' => 'Labor Policies',
+                                'tax' => 'Tax Rules',
+                                'shop-fees' => 'Shop Fees',
+                                'deposits' => 'Deposits',
+                                'parts' => 'Parts Matrix',
+                                'billing-classes' => 'Billing Classes',
+                            ] as $financialTabKey => $financialTabLabel)
+                                @php
+                                    $financialTabActive = $financialTabKey === 'billing-classes'
+                                        ? "['billing-classes', 'customer-tags', 'customer-types'].includes(financialTab)"
+                                        : 'financialTab === '.\Illuminate\Support\Js::from($financialTabKey);
+                                @endphp
+                                <li class="nav-item" role="presentation">
+                                    <button
+                                        type="button"
+                                        class="nav-link"
+                                        role="tab"
+                                        id="financial-tab-{{ $financialTabKey }}"
+                                        aria-controls="financial-panel-{{ $financialTabKey }}"
+                                        :class="{ 'active': {{ $financialTabActive }} }"
+                                        :aria-selected="({{ $financialTabActive }}).toString()"
+                                        @click="setFinancialTab(@js($financialTabKey))"
+                                    >{{ $financialTabLabel }}</button>
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
 
-                    <div class="mt-3 grid gap-px border border-slate-300 bg-slate-300 text-sm sm:grid-cols-3 lg:grid-cols-7">
-                        <button type="button" @click="setFinancialTab('labor')" :class="financialTab === 'labor' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Labor</button>
-                        <button type="button" @click="setFinancialTab('labor-policies')" :class="financialTab === 'labor-policies' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Labor Policies</button>
-                        <button type="button" @click="setFinancialTab('tax')" :class="financialTab === 'tax' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Tax Rules</button>
-                        <button type="button" @click="setFinancialTab('shop-fees')" :class="financialTab === 'shop-fees' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Shop Fees</button>
-                        <button type="button" @click="setFinancialTab('deposits')" :class="financialTab === 'deposits' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Deposits</button>
-                        <button type="button" @click="setFinancialTab('parts')" :class="financialTab === 'parts' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Parts Matrix</button>
-                        <button type="button" @click="setFinancialTab('billing-classes')" :class="financialTab === 'billing-classes' ? 'bg-slate-950 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950'" class="px-3 py-2 text-left font-semibold">Billing Classes</button>
-                    </div>
-
-                    <div x-show="financialTab === 'labor'" class="mt-4 w-full">
-                        <form method="POST" action="{{ route('operations.settings.shop.labor.update') }}">
+                    <div class="card-body" id="financial-panel-labor" role="tabpanel" aria-labelledby="financial-tab-labor" x-show="financialTab === 'labor'">
+                        <form method="POST" action="{{ route('operations.settings.shop.labor.update') }}" data-settings-labor>
                             @csrf
                             @method('PATCH')
-                        @php
-                            $defaultLaborCategoryKey = old(
-                                'default_labor_category_key',
-                                collect($settings->laborCategories())->firstWhere('is_default', true)['key'] ?? 'mechanical',
-                            );
-                        @endphp
-                        <div class="overflow-hidden rounded-md border border-slate-200 bg-white">
-                            <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-                                <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Labor categories</p>
-                                <p class="mt-0.5 text-[11px] leading-4 text-slate-500">Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet. The <strong class="font-semibold text-slate-700">Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked); its <strong class="font-semibold text-slate-700">Rate / hr</strong> is the shop default labor rate. Rounding always rounds <strong class="font-semibold text-slate-700">up</strong> to the increment - never down. Set <strong class="font-semibold text-slate-700">None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
-                            </div>
+                            @php
+                                $defaultLaborCategoryKey = old(
+                                    'default_labor_category_key',
+                                    collect($settings->laborCategories())->firstWhere('is_default', true)['key'] ?? 'mechanical',
+                                );
+                            @endphp
+                            <h3 class="mb-1">Labor categories</h3>
+                            <p class="text-secondary small">Each category sets the rate, minimum hours, and rounding for labor lines on the worksheet. The <strong>Default</strong> radio is used for new labor lines (and Operation Class when no operation is picked); its <strong>Rate / hr</strong> is the shop default labor rate. Rounding always rounds <strong>up</strong> to the increment - never down. Set <strong>None</strong> to skip increment rounding. RepairPal and Warranty default with Adjust labor off.</p>
                             @error('labor_categories')
-                                <div class="border-b border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{{ $message }}</div>
+                                <div class="alert alert-danger" role="alert">{{ $message }}</div>
                             @enderror
-                            <div class="ops-shop-labor-categories">
-                                <div class="ops-shop-labor-categories__head" aria-hidden="true">
-                                    <span>Category</span>
-                                    <span>Rate / hr</span>
-                                    <span>Min hrs</span>
-                                    <span>Round to</span>
-                                    <span>Adjust labor</span>
-                                    <span>Default</span>
-                                </div>
+                            <div class="row g-2 px-3 mb-1 d-none d-xl-flex subheader" aria-hidden="true">
+                                <div class="col-xl-2">Category</div>
+                                <div class="col-xl-2">Rate / hr</div>
+                                <div class="col-xl-1">Min hrs</div>
+                                <div class="col-xl-4">Round to</div>
+                                <div class="col-xl-2">Adjust labor</div>
+                                <div class="col-xl-1">Default</div>
+                            </div>
+                            <div class="list-group">
                                 @foreach ($settings->laborCategories() as $index => $category)
                                     @php
                                         $allowsModifiers = (string) old('labor_categories.'.$index.'.allows_modifiers', $category['allows_modifiers'] ? '1' : '0') === '1';
+                                        $laborField = 'labor-category-'.$index;
                                     @endphp
-                                    <div class="ops-shop-labor-category-row">
-                                        <div class="ops-shop-labor-category-row__field">
-                                            <span class="ops-shop-labor-category-row__label">Category</span>
-                                            <input type="hidden" name="labor_categories[{{ $index }}][key]" value="{{ $category['key'] }}">
-                                            <input name="labor_categories[{{ $index }}][name]" value="{{ old('labor_categories.'.$index.'.name', $category['name']) }}" required maxlength="64" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-950">
-                                        </div>
-                                        <div class="ops-shop-labor-category-row__field">
-                                            <span class="ops-shop-labor-category-row__label">Rate / hr</span>
-                                            <div class="flex rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
-                                                <span class="inline-flex items-center rounded-l-md border-r border-slate-200 bg-slate-50 px-2 text-xs text-slate-500">$</span>
-                                                <input name="labor_categories[{{ $index }}][rate]" value="{{ old('labor_categories.'.$index.'.rate', number_format($category['rate_cents'] / 100, 2, '.', '')) }}" required inputmode="decimal" class="min-w-0 flex-1 rounded-r-md border-0 px-2 py-2 text-sm tabular-nums text-slate-950 focus:ring-0">
+                                    <div class="list-group-item" data-labor-category="{{ $category['key'] }}">
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-12 col-xl-2">
+                                                <label for="{{ $laborField }}-name" class="form-label d-xl-none">Category</label>
+                                                <input type="hidden" name="labor_categories[{{ $index }}][key]" value="{{ $category['key'] }}">
+                                                <input id="{{ $laborField }}-name" name="labor_categories[{{ $index }}][name]" value="{{ old('labor_categories.'.$index.'.name', $category['name']) }}" required maxlength="64" aria-label="Category name" class="form-control fw-medium">
                                             </div>
-                                        </div>
-                                        <div class="ops-shop-labor-category-row__field">
-                                            <span class="ops-shop-labor-category-row__label">Min hrs</span>
-                                            <input name="labor_categories[{{ $index }}][minimum_hours]" value="{{ old('labor_categories.'.$index.'.minimum_hours', $category['minimum_hours']) }}" required inputmode="decimal" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm tabular-nums text-slate-950">
-                                        </div>
-                                        <div class="ops-shop-labor-category-row__field">
-                                            <span class="ops-shop-labor-category-row__label">Round to</span>
-                                            <div class="ops-labor-rounding" role="radiogroup" aria-label="Round billable hours for {{ $category['name'] }}">
-                                                @foreach (['exact' => 'None', 'tenth' => '0.1', 'quarter' => '0.25', 'half' => '0.5'] as $ruleKey => $ruleLabel)
-                                                    <label class="ops-labor-rounding__option">
+                                            <div class="col-6 col-xl-2">
+                                                <label for="{{ $laborField }}-rate" class="form-label d-xl-none">Rate / hr</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input id="{{ $laborField }}-rate" name="labor_categories[{{ $index }}][rate]" value="{{ old('labor_categories.'.$index.'.rate', number_format($category['rate_cents'] / 100, 2, '.', '')) }}" required inputmode="decimal" aria-label="Rate per hour for {{ $category['name'] }}" class="form-control font-monospace">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-xl-1">
+                                                <label for="{{ $laborField }}-minimum" class="form-label d-xl-none">Min hrs</label>
+                                                <input id="{{ $laborField }}-minimum" name="labor_categories[{{ $index }}][minimum_hours]" value="{{ old('labor_categories.'.$index.'.minimum_hours', $category['minimum_hours']) }}" required inputmode="decimal" aria-label="Minimum hours for {{ $category['name'] }}" class="form-control font-monospace px-2">
+                                            </div>
+                                            <div class="col-12 col-xl-4">
+                                                <div class="form-label d-xl-none">Round to</div>
+                                                <div class="btn-group w-100" role="radiogroup" aria-label="Round billable hours for {{ $category['name'] }}">
+                                                    @foreach (['exact' => 'None', 'tenth' => '0.1', 'quarter' => '0.25', 'half' => '0.5'] as $ruleKey => $ruleLabel)
                                                         <input
                                                             type="radio"
+                                                            id="{{ $laborField }}-rounding-{{ $ruleKey }}"
                                                             name="labor_categories[{{ $index }}][rounding_rule]"
                                                             value="{{ $ruleKey }}"
                                                             @checked(old('labor_categories.'.$index.'.rounding_rule', $category['rounding_rule']) === $ruleKey)
-                                                            class="sr-only"
+                                                            class="btn-check"
                                                         >
-                                                        <span class="ops-labor-rounding__value">{{ $ruleLabel }}</span>
-                                                        @if ($ruleKey !== 'exact')
-                                                            <span class="ops-labor-rounding__unit">hr</span>
-                                                        @endif
-                                                    </label>
-                                                @endforeach
+                                                        <label for="{{ $laborField }}-rounding-{{ $ruleKey }}" class="btn btn-sm btn-outline-primary">{{ $ruleLabel }}@if ($ruleKey !== 'exact')<span class="ms-1 small">hr</span>@endif</label>
+                                                    @endforeach
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="ops-shop-labor-category-row__field">
-                                            <span class="ops-shop-labor-category-row__label">Adjust labor</span>
-                                            <input type="hidden" name="labor_categories[{{ $index }}][allows_modifiers]" value="0">
-                                            <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
-                                                <input
-                                                    type="checkbox"
-                                                    name="labor_categories[{{ $index }}][allows_modifiers]"
-                                                    value="1"
-                                                    @checked($allowsModifiers)
-                                                    class="rounded border-slate-300 text-slate-950 focus:ring-slate-400"
-                                                >
-                                                <span>Allow modifiers</span>
-                                            </label>
-                                            <span class="ops-shop-labor-category-row__hint">Difficulty, hour override, manual rate on worksheet.</span>
-                                        </div>
-                                        <div class="ops-shop-labor-category-row__field">
-                                            <span class="ops-shop-labor-category-row__label">Default</span>
-                                            <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
-                                                <input type="radio" name="default_labor_category_key" value="{{ $category['key'] }}" @checked($defaultLaborCategoryKey === $category['key'])>
-                                                Default
-                                            </label>
+                                            <div class="col-8 col-xl-2">
+                                                <input type="hidden" name="labor_categories[{{ $index }}][allows_modifiers]" value="0">
+                                                <label class="form-check mb-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        name="labor_categories[{{ $index }}][allows_modifiers]"
+                                                        value="1"
+                                                        @checked($allowsModifiers)
+                                                        class="form-check-input"
+                                                    >
+                                                    <span class="form-check-label">Allow modifiers</span>
+                                                    <span class="form-check-description">Difficulty, hour override, manual rate on worksheet.</span>
+                                                </label>
+                                            </div>
+                                            <div class="col-4 col-xl-1">
+                                                <label class="form-check mb-0">
+                                                    <input type="radio" name="default_labor_category_key" value="{{ $category['key'] }}" @checked($defaultLaborCategoryKey === $category['key']) class="form-check-input">
+                                                    <span class="form-check-label">Default</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
-                        <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
-                            <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                                Save Labor
-                            </button>
-                        </div>
+                            <div class="d-flex justify-content-end border-top pt-3 mt-3">
+                                <button type="submit" class="btn btn-primary">Save Labor</button>
+                            </div>
                         </form>
                     </div>
 
-                    <div x-show="financialTab === 'labor-policies'" x-cloak class="mt-4 w-full">
+                    <div class="card-body" id="financial-panel-labor-policies" role="tabpanel" aria-labelledby="financial-tab-labor-policies" x-show="financialTab === 'labor-policies'" x-cloak>
                         @include('operations.settings.partials.labor-policies')
                     </div>
 
-                    <div x-show="financialTab === 'tax'" x-cloak class="mt-4 max-w-3xl">
+                    <div class="card-body" id="financial-panel-tax" role="tabpanel" aria-labelledby="financial-tab-tax" x-show="financialTab === 'tax'" x-cloak>
                         @php
                             $taxEnabled = (bool) old('tax_enabled', $settings->tax_enabled);
                         @endphp
-                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}" x-data="{ taxEnabled: @js($taxEnabled) }">
+                        <form method="POST" action="{{ route('operations.settings.shop.tax.update') }}" x-data="{ taxEnabled: @js($taxEnabled) }" style="max-width: 48rem" data-settings-tax>
                             @csrf
                             @method('PATCH')
-                        <div class="border border-slate-200 bg-slate-50 px-3 py-2">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tax outcome</p>
-                            <p class="mt-0.5 text-xs leading-5 text-slate-600">Used when calculating taxable estimate/invoice totals. Set rate, label, and which sell amounts tax applies to - including allocated shop fees when enabled.</p>
-                        </div>
+                            <h3 class="mb-1">Tax outcome</h3>
+                            <p class="text-secondary small">Used when calculating taxable estimate/invoice totals. Set rate, label, and which sell amounts tax applies to - including allocated shop fees when enabled.</p>
 
-                        <div class="mt-3 grid gap-4 md:grid-cols-2">
-                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                            <label class="form-check form-switch">
                                 <input type="hidden" name="tax_enabled" value="0">
-                                <input type="checkbox" name="tax_enabled" value="1" x-model="taxEnabled" @checked($taxEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                <span>Charge sales tax</span>
+                                <input type="checkbox" name="tax_enabled" value="1" x-model="taxEnabled" @checked($taxEnabled) class="form-check-input">
+                                <span class="form-check-label">Charge sales tax</span>
                             </label>
-                            <p x-show="! taxEnabled" @if ($taxEnabled) x-cloak @endif class="md:col-span-2 text-xs leading-5 text-slate-500">Tax is off. Estimates and invoices show no sales tax. Turn it on to set the rate and what it applies to.</p>
-                            <div x-show="taxEnabled" @unless ($taxEnabled) x-cloak @endunless class="grid gap-4 md:col-span-2 md:grid-cols-2">
-                                <label class="block text-xs font-medium text-slate-500">
-                                    Tax display name
-                                    <input name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                                </label>
-                                <label class="block text-xs font-medium text-slate-500">
-                                    Sales tax rate
-                                    <div class="mt-1 flex rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
-                                        <input name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" class="min-w-0 flex-1 rounded-l-md border-0 px-3 py-2 text-sm text-slate-950 focus:ring-0">
-                                        <span class="inline-flex items-center rounded-r-md border-l border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">%</span>
+                            <p x-show="! taxEnabled" @if ($taxEnabled) x-cloak @endif class="text-secondary small">Tax is off. Estimates and invoices show no sales tax. Turn it on to set the rate and what it applies to.</p>
+                            <div x-show="taxEnabled" @unless ($taxEnabled) x-cloak @endunless class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-tax-label" class="form-label">Tax display name</label>
+                                    <input id="settings-tax-label" name="tax_label" value="{{ old('tax_label', $settings->taxLabel()) }}" required maxlength="64" placeholder="Tax" @class(['form-control', 'is-invalid' => $errors->has('tax_label')])>
+                                    @error('tax_label')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="settings-tax-rate" class="form-label">Sales tax rate</label>
+                                    <div @class(['input-group', 'has-validation' => $errors->has('default_tax_rate')])>
+                                        <input id="settings-tax-rate" name="default_tax_rate" value="{{ old('default_tax_rate', $settings->salesTaxRate()) }}" required inputmode="decimal" @class(['form-control', 'is-invalid' => $errors->has('default_tax_rate')])>
+                                        <span class="input-group-text">%</span>
+                                        @error('default_tax_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
-                                </label>
-                                <fieldset class="md:col-span-2">
-                                    <legend class="text-xs font-medium text-slate-500">Apply tax to</legend>
-                                    <div class="mt-1 flex flex-wrap gap-x-6 gap-y-2">
-                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                </div>
+                                <fieldset class="col-12">
+                                    <legend class="form-label">Apply tax to</legend>
+                                    <div class="d-flex flex-wrap gap-4">
+                                        <label class="form-check mb-0">
                                             <input type="hidden" name="taxable_labor" value="0">
-                                            <input type="checkbox" name="taxable_labor" value="1" @checked((bool) old('taxable_labor', $settings->taxable_labor)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                            <span>Tax labor</span>
+                                            <input type="checkbox" name="taxable_labor" value="1" @checked((bool) old('taxable_labor', $settings->taxable_labor)) class="form-check-input">
+                                            <span class="form-check-label">Tax labor</span>
                                         </label>
-                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <label class="form-check mb-0">
                                             <input type="hidden" name="taxable_parts" value="0">
-                                            <input type="checkbox" name="taxable_parts" value="1" @checked((bool) old('taxable_parts', $settings->taxable_parts)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                            <span>Tax parts</span>
+                                            <input type="checkbox" name="taxable_parts" value="1" @checked((bool) old('taxable_parts', $settings->taxable_parts)) class="form-check-input">
+                                            <span class="form-check-label">Tax parts</span>
                                         </label>
-                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <label class="form-check mb-0">
                                             <input type="hidden" name="taxable_shop_fees" value="0">
-                                            <input type="checkbox" name="taxable_shop_fees" value="1" @checked((bool) old('taxable_shop_fees', $settings->taxable_shop_fees)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                            <span>Tax shop fees</span>
+                                            <input type="checkbox" name="taxable_shop_fees" value="1" @checked((bool) old('taxable_shop_fees', $settings->taxable_shop_fees)) class="form-check-input">
+                                            <span class="form-check-label">Tax shop fees</span>
                                         </label>
                                     </div>
                                 </fieldset>
                             </div>
-                            <div class="md:col-span-2 border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-500">
+                            <div class="border rounded px-3 py-2 mt-3 small text-secondary" data-settings-tax-saved>
                                 Saved tax setup: {{ $settings->tax_enabled ? $settings->salesTaxRate().' '.$settings->taxLabel() : 'Tax disabled' }} · {{ $settings->taxable_labor ? 'labor taxable' : 'labor not taxable' }} · {{ $settings->taxable_parts ? 'parts taxable' : 'parts not taxable' }} · {{ $settings->taxable_shop_fees ? 'shop fees taxable' : 'shop fees not taxable' }}.
                             </div>
-                        </div>
-                        <div class="mt-6 flex justify-end border-t border-slate-200 pt-4">
-                            <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                                Save Tax Rules
-                            </button>
-                        </div>
+                            <div class="d-flex justify-content-end border-top pt-3 mt-3">
+                                <button type="submit" class="btn btn-primary">Save Tax Rules</button>
+                            </div>
                         </form>
                     </div>
 
-                    <div x-show="financialTab === 'shop-fees'" x-cloak class="mt-4 max-w-3xl space-y-4">
-                        <p class="text-xs leading-5 text-slate-500">
-                            Shop-wide fee rate and cap for scopes set to <strong class="font-semibold text-slate-700">Shop default</strong> or <strong class="font-semibold text-slate-700">Customer pay</strong>. Each scope on the estimate has its own Billing setting - billing classes do not turn fees on or off for the whole repair order.
-                        </p>
+                    <div class="card-body" id="financial-panel-shop-fees" role="tabpanel" aria-labelledby="financial-tab-shop-fees" x-show="financialTab === 'shop-fees'" x-cloak>
                         @php
                             $shopFeeEnabled = (bool) old('shop_fee_enabled', $settings->shop_fee_enabled);
                         @endphp
-                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" x-data="{ shopFeeEnabled: @js($shopFeeEnabled) }" class="grid gap-4 md:grid-cols-3">
+                        <form method="POST" action="{{ route('operations.settings.shop.fees.update') }}" x-data="{ shopFeeEnabled: @js($shopFeeEnabled) }" style="max-width: 48rem" data-settings-fees>
                             @csrf
                             @method('PATCH')
-                        <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-3">
-                            <input type="hidden" name="shop_fee_enabled" value="0">
-                            <input type="checkbox" name="shop_fee_enabled" value="1" x-model="shopFeeEnabled" @checked($shopFeeEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                            <span>Charge a shop fee</span>
-                        </label>
-                        <p x-show="! shopFeeEnabled" @if ($shopFeeEnabled) x-cloak @endif class="md:col-span-3 text-xs leading-5 text-slate-500">No shop fee is added to estimates. Turn it on to set the rate and cap.</p>
-                        <div x-show="shopFeeEnabled" @unless ($shopFeeEnabled) x-cloak @endunless class="grid gap-4 md:col-span-3 md:grid-cols-3">
-                            <label class="block text-xs font-medium text-slate-500">
-                                Shop fee rate
-                                <input name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                            <p class="text-secondary small">
+                                Shop-wide fee rate and cap for scopes set to <strong>Shop default</strong> or <strong>Customer pay</strong>. Each scope on the estimate has its own Billing setting - billing classes do not turn fees on or off for the whole repair order.
+                            </p>
+                            <label class="form-check form-switch">
+                                <input type="hidden" name="shop_fee_enabled" value="0">
+                                <input type="checkbox" name="shop_fee_enabled" value="1" x-model="shopFeeEnabled" @checked($shopFeeEnabled) class="form-check-input">
+                                <span class="form-check-label">Charge a shop fee</span>
                             </label>
-                            <label class="block text-xs font-medium text-slate-500">
-                                Estimate fee cap
-                                <input name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                            </label>
-                        </div>
-                        <div class="md:col-span-3 flex justify-end border-t border-slate-200 pt-4">
-                            <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                                Save Shop Fees
-                            </button>
-                        </div>
+                            <p x-show="! shopFeeEnabled" @if ($shopFeeEnabled) x-cloak @endif class="text-secondary small">No shop fee is added to estimates. Turn it on to set the rate and cap.</p>
+                            <div x-show="shopFeeEnabled" @unless ($shopFeeEnabled) x-cloak @endunless class="row g-3">
+                                <div class="col-12 col-md-4">
+                                    <label for="settings-shop-fee-rate" class="form-label">Shop fee rate</label>
+                                    <input id="settings-shop-fee-rate" name="shop_fee_rate" value="{{ old('shop_fee_rate', $settings->shop_fee_rate) }}" required inputmode="decimal" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_rate')])>
+                                    @error('shop_fee_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label for="settings-shop-fee-cap" class="form-label">Estimate fee cap</label>
+                                    <input id="settings-shop-fee-cap" name="shop_fee_cap" value="{{ old('shop_fee_cap', $settings->shopFeeCap()) }}" inputmode="decimal" placeholder="No cap" @class(['form-control', 'is-invalid' => $errors->has('shop_fee_cap')])>
+                                    @error('shop_fee_cap')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end border-top pt-3 mt-3">
+                                <button type="submit" class="btn btn-primary">Save Shop Fees</button>
+                            </div>
                         </form>
                     </div>
 
-                    <div x-show="financialTab === 'deposits'" x-cloak class="mt-4 max-w-3xl space-y-4">
+                    <div class="card-body" id="financial-panel-deposits" role="tabpanel" aria-labelledby="financial-tab-deposits" x-show="financialTab === 'deposits'" x-cloak>
                         @php
                             $selectedDiagnosticKeys = old(
                                 'default_deposit_diagnostic_labor_category_keys',
@@ -892,71 +900,71 @@
                             $depositEnabled = (bool) old('default_deposit_enabled', $settings->defaultDepositEnabled());
                             $depositIncludeDiagnostics = (bool) old('default_deposit_include_diagnostics', $settings->defaultDepositIncludeDiagnostics());
                         @endphp
-                        <p class="text-xs leading-5 text-slate-500">
-                            Suggested deposit shown with the repair order financials and used for Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
-                        </p>
-                        <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" x-data="{ depositEnabled: @js($depositEnabled), depositIncludeDiagnostics: @js($depositIncludeDiagnostics) }" class="grid gap-4 md:grid-cols-2">
+                        <form method="POST" action="{{ route('operations.settings.shop.deposits.update') }}" x-data="{ depositEnabled: @js($depositEnabled), depositIncludeDiagnostics: @js($depositIncludeDiagnostics) }" style="max-width: 48rem" data-settings-deposits>
                             @csrf
                             @method('PATCH')
-                            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 md:col-span-2">
+                            <p class="text-secondary small">
+                                Suggested deposit shown with the repair order financials and used for Square deposit capture. Sums billable estimate parts plus diagnostic labor on Diagnostics scopes only (tax and shop fees included per line).
+                            </p>
+                            <label class="form-check form-switch">
                                 <input type="hidden" name="default_deposit_enabled" value="0">
-                                <input type="checkbox" name="default_deposit_enabled" value="1" x-model="depositEnabled" @checked($depositEnabled) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                <span>Suggest a default deposit</span>
+                                <input type="checkbox" name="default_deposit_enabled" value="1" x-model="depositEnabled" @checked($depositEnabled) class="form-check-input">
+                                <span class="form-check-label">Suggest a default deposit</span>
                             </label>
-                            <p x-show="! depositEnabled" @if ($depositEnabled) x-cloak @endif class="md:col-span-2 text-xs leading-5 text-slate-500">No deposit is suggested on repair orders. Turn it on to choose what the deposit includes.</p>
-                            <div x-show="depositEnabled" @unless ($depositEnabled) x-cloak @endunless class="grid gap-4 md:col-span-2">
-                                <fieldset>
-                                    <legend class="text-xs font-medium text-slate-500">Include in the deposit</legend>
-                                    <div class="mt-1 flex flex-wrap gap-x-6 gap-y-2">
-                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                            <p x-show="! depositEnabled" @if ($depositEnabled) x-cloak @endif class="text-secondary small">No deposit is suggested on repair orders. Turn it on to choose what the deposit includes.</p>
+                            <div x-show="depositEnabled" @unless ($depositEnabled) x-cloak @endunless>
+                                <fieldset class="mb-3">
+                                    <legend class="form-label">Include in the deposit</legend>
+                                    <div class="d-flex flex-wrap gap-4">
+                                        <label class="form-check mb-0">
                                             <input type="hidden" name="default_deposit_include_parts" value="0">
-                                            <input type="checkbox" name="default_deposit_include_parts" value="1" @checked((bool) old('default_deposit_include_parts', $settings->defaultDepositIncludeParts())) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                            <span>Include parts</span>
+                                            <input type="checkbox" name="default_deposit_include_parts" value="1" @checked((bool) old('default_deposit_include_parts', $settings->defaultDepositIncludeParts())) class="form-check-input">
+                                            <span class="form-check-label">Include parts</span>
                                         </label>
-                                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                                        <label class="form-check mb-0">
                                             <input type="hidden" name="default_deposit_include_diagnostics" value="0">
-                                            <input type="checkbox" name="default_deposit_include_diagnostics" value="1" x-model="depositIncludeDiagnostics" @checked($depositIncludeDiagnostics) class="rounded border-slate-300 text-slate-950 focus:ring-slate-400">
-                                            <span>Include diagnostics</span>
+                                            <input type="checkbox" name="default_deposit_include_diagnostics" value="1" x-model="depositIncludeDiagnostics" @checked($depositIncludeDiagnostics) class="form-check-input">
+                                            <span class="form-check-label">Include diagnostics</span>
                                         </label>
                                     </div>
                                 </fieldset>
-                                <div x-show="depositIncludeDiagnostics" @unless ($depositIncludeDiagnostics) x-cloak @endunless class="border border-slate-200 bg-white px-3 py-3">
-                                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Diagnostic labor categories</p>
-                                    <p class="mt-1 text-xs leading-5 text-slate-500">On Diagnostics scopes only, labor in these categories counts toward the default deposit when diagnostics are included.</p>
-                                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                                <fieldset x-show="depositIncludeDiagnostics" @unless ($depositIncludeDiagnostics) x-cloak @endunless class="border rounded p-3">
+                                    <legend class="subheader float-none w-auto px-1 mb-1">Diagnostic labor categories</legend>
+                                    <p class="text-secondary small">On Diagnostics scopes only, labor in these categories counts toward the default deposit when diagnostics are included.</p>
+                                    <div class="row g-2">
                                         @foreach ($settings->laborCategories() as $category)
-                                            <label class="flex items-center gap-2 text-sm text-slate-700">
-                                                <input
-                                                    type="checkbox"
-                                                    name="default_deposit_diagnostic_labor_category_keys[]"
-                                                    value="{{ $category['key'] }}"
-                                                    @checked(in_array($category['key'], $selectedDiagnosticKeys, true))
-                                                    class="rounded border-slate-300 text-slate-950 focus:ring-slate-500"
-                                                >
-                                                <span>{{ $category['name'] }}</span>
-                                            </label>
+                                            <div class="col-12 col-sm-6">
+                                                <label class="form-check mb-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        name="default_deposit_diagnostic_labor_category_keys[]"
+                                                        value="{{ $category['key'] }}"
+                                                        @checked(in_array($category['key'], $selectedDiagnosticKeys, true))
+                                                        class="form-check-input"
+                                                    >
+                                                    <span class="form-check-label">{{ $category['name'] }}</span>
+                                                </label>
+                                            </div>
                                         @endforeach
                                     </div>
                                     @error('default_deposit_diagnostic_labor_category_keys')
-                                        <p class="mt-2 text-xs font-medium text-rose-800">{{ $message }}</p>
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
                                     @enderror
-                                </div>
+                                </fieldset>
                             </div>
-                            <div class="md:col-span-2 flex justify-end border-t border-slate-200 pt-4">
-                                <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                                    Save Deposit Settings
-                                </button>
+                            <div class="d-flex justify-content-end border-top pt-3 mt-3">
+                                <button type="submit" class="btn btn-primary">Save Deposit Settings</button>
                             </div>
                         </form>
                     </div>
 
-                    <div x-show="financialTab === 'parts'" x-cloak class="mt-4">
+                    <div class="card-body" id="financial-panel-parts" role="tabpanel" aria-labelledby="financial-tab-parts" x-show="financialTab === 'parts'" x-cloak>
                         @php
                             $partsMatrixCount = count($settings->partsMatrices());
                             $defaultPartsMatrixKey = $settings->defaultPartsMatrix()['key'];
                         @endphp
                         @foreach ($settings->partsMatrices() as $matrix)
-                            <form id="delete-parts-matrix-{{ $matrix['key'] }}" method="POST" action="{{ route('operations.settings.shop.parts-matrices.destroy', $matrix['key']) }}" class="hidden">
+                            <form id="delete-parts-matrix-{{ $matrix['key'] }}" method="POST" action="{{ route('operations.settings.shop.parts-matrices.destroy', $matrix['key']) }}" class="d-none">
                                 @csrf
                                 @method('DELETE')
                             </form>
@@ -964,77 +972,95 @@
                         <form id="parts-matrix-form" method="POST" action="{{ route('operations.settings.shop.parts-matrices.update', $settings->defaultPartsMatrix()['key']) }}">
                             @csrf
                             @method('PATCH')
-                        <div class="space-y-4">
-                            <div class="grid gap-px border border-slate-300 bg-slate-300 md:grid-cols-3">
-                                <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">You set</p>
-                                    <p class="mt-0.5 text-sm font-black text-slate-950">Markup %</p>
-                                    <p class="text-[11px] text-slate-500">Changes sell price policy</p>
+                            <div class="row g-2 mb-3">
+                                <div class="col-12 col-md-4">
+                                    <div class="card card-sm h-100">
+                                        <div class="card-body">
+                                            <div class="subheader">You set</div>
+                                            <div class="h3 mb-0">Markup %</div>
+                                            <div class="small text-secondary">Changes sell price policy</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Calculated</p>
-                                    <p class="mt-0.5 text-sm font-black text-slate-950">Margin %</p>
-                                    <p class="text-[11px] text-slate-500">Parts gross profit from your markup</p>
+                                <div class="col-12 col-md-4">
+                                    <div class="card card-sm h-100">
+                                        <div class="card-body">
+                                            <div class="subheader">Calculated</div>
+                                            <div class="h3 mb-0">Margin %</div>
+                                            <div class="small text-secondary">Parts gross profit from your markup</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="bg-white px-3 py-2">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Target</p>
-                                    <p class="mt-0.5 text-sm font-black text-slate-950">{{ App\Ark\Operations\Settings\ShopSettings::SURVIVABILITY_TARGETS['parts_gp'] }}</p>
-                                    <p class="text-[11px] text-slate-500">Parts GP health</p>
+                                <div class="col-12 col-md-4">
+                                    <div class="card card-sm h-100">
+                                        <div class="card-body">
+                                            <div class="subheader">Target</div>
+                                            <div class="h3 mb-0">{{ App\Ark\Operations\Settings\ShopSettings::SURVIVABILITY_TARGETS['parts_gp'] }}</div>
+                                            <div class="small text-secondary">Parts GP health</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+                            <p class="text-secondary small">
                                 Markup is the editable pricing policy. Margin is calculated visibility for parts GP health. Matrices affect new part sell pricing; line overrides remain operational exceptions, not hidden settings behavior.
-                                <a href="{{ route('operations.owner.parts-matrix-tune') }}" class="ml-1 font-bold text-slate-700 underline">Matrix tune assistant</a>
+                                <a href="{{ route('operations.owner.parts-matrix-tune') }}" class="fw-medium">Matrix tune assistant</a>
                                 - simulate tier changes from closed part-line history before saving live policy.
-                            </div>
+                            </p>
                             @error('parts_matrices')
-                                <div class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">{{ $message }}</div>
+                                <div class="alert alert-danger" role="alert">{{ $message }}</div>
                             @enderror
                             @foreach ($settings->partsMatrices() as $matrixIndex => $matrix)
                                 @php
                                     $canDeletePartsMatrix = $partsMatrixCount > 1 && $matrix['key'] !== $defaultPartsMatrixKey;
                                 @endphp
                                 <section
-                                    class="overflow-hidden rounded-md border border-slate-200"
+                                    class="card card-sm mb-3"
+                                    data-parts-matrix="{{ $matrix['key'] }}"
                                     x-data="matrixSection(@js($matrix['rows']), @js($matrix['name']), 'delete-parts-matrix-{{ $matrix['key'] }}')"
                                 >
-                                    <div class="grid gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid-cols-[1fr_1fr_120px]">
-                                        <input type="hidden" name="parts_matrices[{{ $matrixIndex }}][key]" value="{{ $matrix['key'] }}">
-                                        <input data-matrix-name-input name="parts_matrices[{{ $matrixIndex }}][name]" x-model="matrixName" @input="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')" required class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950">
-                                        <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
-                                            <input type="radio" name="default_parts_matrix_key" value="{{ $matrix['key'] }}" x-model="defaultPartsMatrixKey" @change="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')">
-                                            Default
-                                        </label>
+                                    <div class="card-header">
+                                        <div class="row g-2 align-items-center flex-fill">
+                                            <div class="col">
+                                                <input type="hidden" name="parts_matrices[{{ $matrixIndex }}][key]" value="{{ $matrix['key'] }}">
+                                                <input data-matrix-name-input name="parts_matrices[{{ $matrixIndex }}][name]" x-model="matrixName" @input="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')" required aria-label="Matrix name" class="form-control fw-medium">
+                                            </div>
+                                            <div class="col-auto">
+                                                <label class="form-check mb-0">
+                                                    <input type="radio" name="default_parts_matrix_key" value="{{ $matrix['key'] }}" x-model="defaultPartsMatrixKey" @change="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')" class="form-check-input">
+                                                    <span class="form-check-label">Default</span>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="overflow-x-auto">
-                                        <table class="min-w-full border-collapse text-sm">
-                                            <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter card-table mb-0">
+                                            <thead>
                                                 <tr>
-                                                    <th scope="col" class="border-b border-slate-200 px-3 py-2 text-left">Cost from</th>
-                                                    <th scope="col" class="border-b border-slate-200 px-3 py-2 text-left">Cost to</th>
-                                                    <th scope="col" class="border-b border-slate-200 px-3 py-2 text-left">Markup %</th>
-                                                    <th scope="col" class="border-b border-slate-200 px-3 py-2 text-left text-slate-400">Margin</th>
-                                                    <th scope="col" class="w-24 border-b border-slate-200 px-3 py-2 text-left">Action</th>
+                                                    <th scope="col">Cost from</th>
+                                                    <th scope="col">Cost to</th>
+                                                    <th scope="col">Markup %</th>
+                                                    <th scope="col">Margin</th>
+                                                    <th scope="col" class="w-1">Action</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-slate-100 bg-white">
+                                            <tbody>
                                                 <template x-for="(row, rowIndex) in rows" :key="row.uid">
                                                     <tr @input="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')" @change="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')">
-                                                        <td class="px-3 py-2 align-middle">
-                                                            <input :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][min_cost]`" x-model="row.min_cost" required inputmode="decimal" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                        <td style="min-width: 9rem">
+                                                            <input :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][min_cost]`" x-model="row.min_cost" required inputmode="decimal" :aria-label="`Cost from, row ${rowIndex + 1}`" class="form-control font-monospace">
                                                         </td>
-                                                        <td class="px-3 py-2 align-middle">
-                                                            <input :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][max_cost]`" x-model="row.max_cost" inputmode="decimal" placeholder="No upper limit" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
+                                                        <td style="min-width: 9rem">
+                                                            <input :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][max_cost]`" x-model="row.max_cost" inputmode="decimal" placeholder="No upper limit" :aria-label="`Cost to, row ${rowIndex + 1}`" class="form-control font-monospace">
                                                         </td>
-                                                        <td class="px-3 py-2 align-middle">
-                                                            <input :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][markup_percentage]`" x-model="row.markup_percentage" inputmode="decimal" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                                                        <td style="min-width: 8rem">
+                                                            <input :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][markup_percentage]`" x-model="row.markup_percentage" inputmode="decimal" :aria-label="`Markup percent, row ${rowIndex + 1}`" class="form-control font-monospace">
                                                         </td>
-                                                        <td class="px-3 py-2 align-middle text-sm text-slate-400">
+                                                        <td class="text-secondary text-nowrap">
                                                             <span x-text="row.margin_percentage ? `${row.margin_percentage}% saved` : 'Save for margin'"></span>
                                                         </td>
-                                                        <td class="px-3 py-2 align-middle">
+                                                        <td>
                                                             <input type="hidden" :name="`parts_matrices[{{ $matrixIndex }}][rows][${rowIndex}][sort_order]`" :value="rowIndex + 1">
-                                                            <button type="button" @click="removeRow(rowIndex); autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')" :disabled="rows.length === 1" class="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-30">
+                                                            <button type="button" @click="removeRow(rowIndex); autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}')" :disabled="rows.length === 1" class="btn btn-sm btn-ghost-danger">
                                                                 Remove
                                                             </button>
                                                         </td>
@@ -1043,354 +1069,377 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-3 py-2">
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <button type="button" @click="addRow()" class="min-h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950">
-                                                Add Row
-                                            </button>
-                                            @if ($canDeletePartsMatrix)
-                                                <button
-                                                    type="button"
-                                                    x-show="! deleteConfirming"
-                                                    @click="openDeleteConfirm()"
-                                                    class="text-xs font-medium text-slate-400 hover:text-slate-600"
-                                                >
-                                                    Delete matrix…
+                                    <div class="card-footer">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <button type="button" @click="addRow()" class="btn btn-sm">Add Row</button>
+                                                @if ($canDeletePartsMatrix)
+                                                    <button
+                                                        type="button"
+                                                        x-show="! deleteConfirming"
+                                                        @click="openDeleteConfirm()"
+                                                        class="btn btn-sm btn-ghost-secondary"
+                                                    >
+                                                        Delete matrix…
+                                                    </button>
+                                                @elseif ($matrix['key'] === $defaultPartsMatrixKey && $partsMatrixCount > 1)
+                                                    <span class="small text-secondary">Default matrix</span>
+                                                @endif
+                                            </div>
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <span id="parts-matrix-status-{{ $matrixIndex }}" class="small text-secondary" role="status">Autosaves edits</span>
+                                                <button type="button" @click="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}', true)" class="btn btn-sm">
+                                                    <span>Save <span x-text="matrixName"></span></span>
                                                 </button>
-                                            @elseif ($matrix['key'] === $defaultPartsMatrixKey && $partsMatrixCount > 1)
-                                                <span class="text-[11px] text-slate-400">Default matrix</span>
-                                            @endif
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                        <span id="parts-matrix-status-{{ $matrixIndex }}" class="text-xs text-slate-400">Autosaves edits</span>
-                                        <button type="button" @click="autosaveMatrix('{{ $matrix['key'] }}', 'parts-matrix-status-{{ $matrixIndex }}', true)" class="min-h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950">
-                                            Save <span x-text="matrixName"></span>
-                                        </button>
+                                            </div>
                                         </div>
                                     </div>
                                     @if ($canDeletePartsMatrix)
-                                        <div x-show="deleteConfirming" x-cloak class="border-t border-rose-200 bg-rose-50/60 px-3 py-3">
-                                            <p class="text-xs leading-5 text-slate-700">
-                                                Type <strong class="font-semibold text-slate-950" x-text="deleteMatrixName"></strong> to permanently delete this matrix. Billing classes using it fall back to shop default. Existing part lines keep stored pricing.
+                                        <div x-show="deleteConfirming" x-cloak class="card-footer bg-danger-lt" data-parts-matrix-delete>
+                                            <p class="small mb-2">
+                                                Type <strong x-text="deleteMatrixName"></strong> to permanently delete this matrix. Billing classes using it fall back to shop default. Existing part lines keep stored pricing.
                                             </p>
-                                            <div class="mt-3 flex flex-wrap items-end gap-3">
-                                                <label class="block min-w-[12rem] flex-1 text-xs font-medium text-slate-500">
-                                                    Confirm matrix name
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-12 col-sm">
+                                                    <label for="parts-matrix-delete-confirm-{{ $matrixIndex }}" class="form-label">Confirm matrix name</label>
                                                     <input
+                                                        id="parts-matrix-delete-confirm-{{ $matrixIndex }}"
                                                         x-model="deleteTypedName"
                                                         x-ref="deleteConfirmInput"
                                                         x-init="$watch('deleteConfirming', (open) => { if (open) { $nextTick(() => $refs.deleteConfirmInput?.focus()); } })"
                                                         autocomplete="off"
                                                         spellcheck="false"
-                                                        class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950"
+                                                        class="form-control"
                                                     >
-                                                </label>
-                                                <button type="button" @click="cancelDeleteConfirm()" class="min-h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950">
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    x-show="deleteTypedName.trim() !== deleteMatrixName.trim()"
-                                                    disabled
-                                                    class="ops-parts-matrix-delete-btn"
-                                                >
-                                                    Delete permanently
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    x-show="deleteTypedName.trim() === deleteMatrixName.trim()"
-                                                    x-cloak
-                                                    @click="submitDelete()"
-                                                    class="ops-parts-matrix-delete-btn is-ready"
-                                                >
-                                                    Delete permanently
-                                                </button>
+                                                </div>
+                                                <div class="col-12 col-sm-auto d-flex gap-2">
+                                                    <button type="button" @click="cancelDeleteConfirm()" class="btn">Cancel</button>
+                                                    <button
+                                                        type="button"
+                                                        x-show="deleteTypedName.trim() !== deleteMatrixName.trim()"
+                                                        disabled
+                                                        class="btn btn-danger"
+                                                    >
+                                                        Delete permanently
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        x-show="deleteTypedName.trim() === deleteMatrixName.trim()"
+                                                        x-cloak
+                                                        @click="submitDelete()"
+                                                        class="btn btn-danger"
+                                                    >
+                                                        Delete permanently
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     @endif
                                 </section>
                             @endforeach
-                        </div>
                         </form>
                     </div>
 
-                    <div x-show="financialTab === 'billing-classes' || financialTab === 'customer-tags' || financialTab === 'customer-types'" x-cloak class="mt-4 max-w-5xl space-y-3">
-                        <form method="POST" action="{{ route('operations.settings.shop.customer-types.update') }}" class="space-y-3">
+                    <div class="card-body" id="financial-panel-billing-classes" role="tabpanel" aria-labelledby="financial-tab-billing-classes" x-show="financialTab === 'billing-classes' || financialTab === 'customer-tags' || financialTab === 'customer-types'" x-cloak>
+                        <form method="POST" action="{{ route('operations.settings.shop.customer-types.update') }}" data-settings-billing-classes>
                             @csrf
                             @method('PATCH')
-                        <p class="text-xs leading-5 text-slate-500">
-                            Billing classes identify the customer for billing and set the default when a new scope is added. Fees, parts matrix, and <strong class="font-semibold text-slate-700">customer document presentation</strong> follow the billing class unless a scope's <strong class="font-semibold text-slate-700">Billing</strong> setting on the estimate overrides it.
-                        </p>
-                        <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
-                            Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer - not billing class.
-                        </p>
+                            <p class="text-secondary small">
+                                Billing classes identify the customer for billing and set the default when a new scope is added. Fees, parts matrix, and <strong>customer document presentation</strong> follow the billing class unless a scope's <strong>Billing</strong> setting on the estimate overrides it.
+                            </p>
+                            <div class="alert alert-warning small">
+                                Named billing profiles: class <strong>Fleet</strong> supplies fee rates for Fleet scopes; class <strong>Warranty</strong> supplies the parts matrix for Warranty scopes. Standing discounts on classes such as <strong>Military</strong> apply to eligible lines on non-warranty scopes. Partner leads (RepairPal) belong under <strong>Referral source</strong> on the customer - not billing class.
+                            </div>
 
-                        @php
-                            $storedCustomerTypes = $settings->storedCustomerTypeRows();
-                        @endphp
-                        @foreach ($settings->customerTypeRows() as $index => $type)
                             @php
-                                $billingProfile = $settings->customerTagBillingProfile($type['name']);
+                                $storedCustomerTypes = $settings->storedCustomerTypeRows();
+                                $billingPillBadge = [
+                                    'slate' => 'bg-secondary-lt',
+                                    'blue' => 'bg-blue-lt',
+                                    'green' => 'bg-green-lt',
+                                    'amber' => 'bg-yellow-lt',
+                                    'orange' => 'bg-orange-lt',
+                                    'rose' => 'bg-red-lt',
+                                    'violet' => 'bg-purple-lt',
+                                ];
                             @endphp
-                            <section class="rounded-md border border-slate-200 bg-white p-4">
-                                <div class="mb-3 flex flex-wrap items-center gap-2">
-                                    @if ($billingProfile === 'fleet')
-                                        <span class="rounded-sm bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">Fleet billing profile</span>
-                                    @elseif ($billingProfile === 'warranty')
-                                        <span class="rounded-sm bg-emerald-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">Warranty billing profile</span>
-                                    @else
-                                        <span class="rounded-sm bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-600">Standard billing class</span>
-                                    @endif
-                                </div>
-                                <div class="mb-3 max-w-xl">
-                                    <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                        Customer document presentation
-                                        <x-operations.help-tip
-                                            text="Controls how part lines appear on customer estimate PDFs for this billing class. Internal worksheet and purchasing data stay unchanged. A scope's Billing setting on the estimate can override this."
-                                            label="Customer document presentation help for {{ $type['name'] }}"
-                                        />
-                                    </div>
-                                    <select
-                                        name="customer_types[{{ $index }}][document_presentation_profile]"
-                                        class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
-                                    >
-                                        @foreach (App\Ark\Operations\Parts\CustomerPartPresentationProfile::cases() as $profile)
-                                            <option
-                                                value="{{ $profile->value }}"
-                                                @selected(old('customer_types.'.$index.'.document_presentation_profile', $type['document_presentation_profile'] ?? 'retail') === $profile->value)
-                                            >{{ $profile->label() }} - {{ $profile->helpText() }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="grid gap-4 lg:grid-cols-[minmax(180px,1fr)_2fr]">
-                                    <div class="space-y-3">
-                                        <div>
-                                            <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                Billing class name
-                                                <x-operations.help-tip
-                                                    text="Shown on the customer record. Warranty and Fleet names activate billing profiles for matching scope billing settings."
-                                                    label="Billing class name help"
-                                                />
-                                            </div>
-                                            <input name="customer_types[{{ $index }}][name]" value="{{ old('customer_types.'.$index.'.name', $type['name']) }}" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
+                            @foreach ($settings->customerTypeRows() as $index => $type)
+                                @php
+                                    $billingProfile = $settings->customerTagBillingProfile($type['name']);
+                                    $billingField = 'billing-class-'.$index;
+                                @endphp
+                                <section class="card card-sm mb-3" data-billing-class="{{ $index }}">
+                                    <div class="card-header">
+                                        <h4 class="card-title">{{ $type['name'] }}</h4>
+                                        <div class="card-actions">
+                                            @if ($billingProfile === 'fleet')
+                                                <span class="badge bg-blue-lt">Fleet billing profile</span>
+                                            @elseif ($billingProfile === 'warranty')
+                                                <span class="badge bg-green-lt">Warranty billing profile</span>
+                                            @else
+                                                <span class="badge bg-secondary-lt">Standard billing class</span>
+                                            @endif
                                         </div>
-                                        <div>
-                                            <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                Pill color
-                                                <x-operations.help-tip
-                                                    text="Color of this billing class next to the customer name on a repair order."
-                                                    label="Pill color help for {{ $type['name'] }}"
-                                                />
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3" style="max-width: 36rem">
+                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                <label for="{{ $billingField }}-presentation" class="form-label mb-0">Customer document presentation</label>
+                                                    <x-tabler.help-tip
+                                                        text="Controls how part lines appear on customer estimate PDFs for this billing class. Internal worksheet and purchasing data stay unchanged. A scope's Billing setting on the estimate can override this."
+                                                        label="Customer document presentation help for {{ $type['name'] }}"
+                                                    />
                                             </div>
-                                            @php
-                                                $pillColor = old('customer_types.'.$index.'.pill_color', $type['pill_color'] ?? 'slate');
-                                            @endphp
-                                            <select name="customer_types[{{ $index }}][pill_color]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                @foreach (\App\Ark\Operations\Settings\BillingClassPillColor::options() as $option)
-                                                    <option value="{{ $option['key'] }}" @selected($pillColor === $option['key'])>{{ $option['label'] }}</option>
+                                            <select id="{{ $billingField }}-presentation" name="customer_types[{{ $index }}][document_presentation_profile]" class="form-select">
+                                                @foreach (App\Ark\Operations\Parts\CustomerPartPresentationProfile::cases() as $profile)
+                                                    <option
+                                                        value="{{ $profile->value }}"
+                                                        @selected(old('customer_types.'.$index.'.document_presentation_profile', $type['document_presentation_profile'] ?? 'retail') === $profile->value)
+                                                    >{{ $profile->label() }} - {{ $profile->helpText() }}</option>
                                                 @endforeach
                                             </select>
-                                            <span class="{{ \App\Ark\Operations\Settings\BillingClassPillColor::classFor($pillColor, $type['name']) }} mt-2">{{ $type['name'] }}</span>
                                         </div>
-                                    </div>
+                                        <div class="row g-3">
+                                            <div class="col-12 col-lg-4">
+                                                <div class="mb-3">
+                                                    <div class="d-flex align-items-center gap-1 mb-2">
+                                                        <label for="{{ $billingField }}-name" class="form-label mb-0">Billing class name</label>
+                                                            <x-tabler.help-tip
+                                                                text="Shown on the customer record. Warranty and Fleet names activate billing profiles for matching scope billing settings."
+                                                                label="Billing class name help"
+                                                            />
+                                                    </div>
+                                                    <input id="{{ $billingField }}-name" name="customer_types[{{ $index }}][name]" value="{{ old('customer_types.'.$index.'.name', $type['name']) }}" class="form-control">
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex align-items-center gap-1 mb-2">
+                                                        <label for="{{ $billingField }}-pill" class="form-label mb-0">Pill color</label>
+                                                            <x-tabler.help-tip
+                                                                text="Color of this billing class next to the customer name on a repair order."
+                                                                label="Pill color help for {{ $type['name'] }}"
+                                                            />
+                                                    </div>
+                                                    @php
+                                                        $pillColor = old('customer_types.'.$index.'.pill_color', $type['pill_color'] ?? 'slate');
+                                                    @endphp
+                                                    <select id="{{ $billingField }}-pill" name="customer_types[{{ $index }}][pill_color]" class="form-select">
+                                                        @foreach (\App\Ark\Operations\Settings\BillingClassPillColor::options() as $option)
+                                                            <option value="{{ $option['key'] }}" @selected($pillColor === $option['key'])>{{ $option['label'] }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <span class="badge {{ $billingPillBadge[\App\Ark\Operations\Settings\BillingClassPillColor::resolve($pillColor, $type['name'])] ?? 'bg-secondary-lt' }} mt-2" data-billing-class-pill>{{ $type['name'] }}</span>
+                                                </div>
+                                            </div>
 
-                                    @php
-                                        $shopFeesOn = (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']);
-                                    @endphp
-                                    @if ($billingProfile === 'fleet')
-                                        <div class="grid gap-3 sm:grid-cols-2" x-data="{ shopFeesOn: @js($shopFeesOn) }">
-                                            <div>
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Fleet shop fees
-                                                    <x-operations.help-tip
-                                                        text="Used when a scope billing is set to Fleet. Controls whether Fleet scopes collect shop/hazmat fees and the optional rate override."
-                                                        label="Fleet shop fees help"
-                                                    />
-                                                </div>
-                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="1" @selected($shopFeesOn)>Use shop rate</option>
-                                                    <option value="0" @selected(! $shopFeesOn)>None</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Fleet fee rate override %
-                                                    <x-operations.help-tip
-                                                        text="Optional fee percentage for Fleet scopes. Leave blank to use the shop default rate from the Shop Fees tab."
-                                                        label="Fleet fee rate help"
-                                                    />
-                                                </div>
-                                                <input
-                                                    name="customer_types[{{ $index }}][shop_fee_rate_override]"
-                                                    value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
-                                                    inputmode="decimal"
-                                                    placeholder="Shop default"
-                                                    @disabled(! $shopFeesOn)
-                                                    :disabled="! shopFeesOn"
-                                                    class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
-                                                >
-                                            </div>
-                                            <div class="sm:col-span-2">
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Fleet parts matrix
-                                                    <x-operations.help-tip
-                                                        text="Default parts matrix for new part lines on scopes set to Fleet billing."
-                                                        label="Fleet parts matrix help"
-                                                    />
-                                                </div>
-                                                <select name="customer_types[{{ $index }}][default_parts_matrix_key]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="">Shop default</option>
-                                                    @foreach ($settings->partsMatrices() as $matrix)
-                                                        <option value="{{ $matrix['key'] }}" @selected(old('customer_types.'.$index.'.default_parts_matrix_key', $type['default_parts_matrix_key']) === $matrix['key'])>{{ $matrix['name'] }}</option>
-                                                    @endforeach
-                                                </select>
+                                            @php
+                                                $shopFeesOn = (bool) old('customer_types.'.$index.'.shop_fees_enabled', $type['shop_fees_enabled']);
+                                            @endphp
+                                            <div class="col-12 col-lg-8">
+                                                @if ($billingProfile === 'fleet')
+                                                    <div class="row g-3" x-data="{ shopFeesOn: @js($shopFeesOn) }">
+                                                        <div class="col-12 col-sm-6">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-fees" class="form-label mb-0">Fleet shop fees</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Used when a scope billing is set to Fleet. Controls whether Fleet scopes collect shop/hazmat fees and the optional rate override."
+                                                                        label="Fleet shop fees help"
+                                                                    />
+                                                            </div>
+                                                            <select id="{{ $billingField }}-fees" name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="form-select">
+                                                                <option value="1" @selected($shopFeesOn)>Use shop rate</option>
+                                                                <option value="0" @selected(! $shopFeesOn)>None</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12 col-sm-6">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-fee-rate" class="form-label mb-0">Fleet fee rate override %</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Optional fee percentage for Fleet scopes. Leave blank to use the shop default rate from the Shop Fees tab."
+                                                                        label="Fleet fee rate help"
+                                                                    />
+                                                            </div>
+                                                            <input
+                                                                id="{{ $billingField }}-fee-rate"
+                                                                name="customer_types[{{ $index }}][shop_fee_rate_override]"
+                                                                value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
+                                                                inputmode="decimal"
+                                                                placeholder="Shop default"
+                                                                @disabled(! $shopFeesOn)
+                                                                :disabled="! shopFeesOn"
+                                                                class="form-control"
+                                                            >
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-matrix" class="form-label mb-0">Fleet parts matrix</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Default parts matrix for new part lines on scopes set to Fleet billing."
+                                                                        label="Fleet parts matrix help"
+                                                                    />
+                                                            </div>
+                                                            <select id="{{ $billingField }}-matrix" name="customer_types[{{ $index }}][default_parts_matrix_key]" class="form-select">
+                                                                <option value="">Shop default</option>
+                                                                @foreach ($settings->partsMatrices() as $matrix)
+                                                                    <option value="{{ $matrix['key'] }}" @selected(old('customer_types.'.$index.'.default_parts_matrix_key', $type['default_parts_matrix_key']) === $matrix['key'])>{{ $matrix['name'] }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                @elseif ($billingProfile === 'warranty')
+                                                    <div>
+                                                        <div class="d-flex align-items-center gap-1 mb-2">
+                                                            <label for="{{ $billingField }}-matrix" class="form-label mb-0">Warranty parts matrix</label>
+                                                                <x-tabler.help-tip
+                                                                    text="Used when a scope billing is set to Warranty. Warranty scopes never collect shop/hazmat fees."
+                                                                    label="Warranty parts matrix help"
+                                                                />
+                                                        </div>
+                                                        <select id="{{ $billingField }}-matrix" name="customer_types[{{ $index }}][default_parts_matrix_key]" class="form-select">
+                                                            <option value="">Shop default</option>
+                                                            @foreach ($settings->partsMatrices() as $matrix)
+                                                                <option value="{{ $matrix['key'] }}" @selected(old('customer_types.'.$index.'.default_parts_matrix_key', $type['default_parts_matrix_key']) === $matrix['key'])>{{ $matrix['name'] }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <input type="hidden" name="customer_types[{{ $index }}][shop_fees_enabled]" value="0">
+                                                        <input type="hidden" name="customer_types[{{ $index }}][shop_fee_rate_override]" value="">
+                                                    </div>
+                                                @else
+                                                    <div class="row g-3" x-data="{ shopFeesOn: @js($shopFeesOn) }">
+                                                        <div class="col-12 col-sm-6">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-fees" class="form-label mb-0">Shop fees</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Whether shop fees apply by default to scopes that follow this billing class. Scope billing on the estimate can still override per concern."
+                                                                        label="Shop fees help for {{ $type['name'] }}"
+                                                                    />
+                                                            </div>
+                                                            <select id="{{ $billingField }}-fees" name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="form-select">
+                                                                <option value="1" @selected($shopFeesOn)>Use shop rate</option>
+                                                                <option value="0" @selected(! $shopFeesOn)>None</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12 col-sm-6">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-fee-rate" class="form-label mb-0">Fee rate override %</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Optional fee percentage for scopes using this billing class. Leave blank to use the shop default rate from the Shop Fees tab."
+                                                                        label="Fee rate override help for {{ $type['name'] }}"
+                                                                    />
+                                                            </div>
+                                                            <input
+                                                                id="{{ $billingField }}-fee-rate"
+                                                                name="customer_types[{{ $index }}][shop_fee_rate_override]"
+                                                                value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
+                                                                inputmode="decimal"
+                                                                placeholder="Shop default"
+                                                                @disabled(! $shopFeesOn)
+                                                                :disabled="! shopFeesOn"
+                                                                class="form-control"
+                                                            >
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-matrix" class="form-label mb-0">Default parts matrix</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Default parts matrix for new part lines on scopes that follow this billing class."
+                                                                        label="Default parts matrix help for {{ $type['name'] }}"
+                                                                    />
+                                                            </div>
+                                                            <select id="{{ $billingField }}-matrix" name="customer_types[{{ $index }}][default_parts_matrix_key]" class="form-select">
+                                                                <option value="">Shop default</option>
+                                                                @foreach ($settings->partsMatrices() as $matrix)
+                                                                    <option value="{{ $matrix['key'] }}" @selected(old('customer_types.'.$index.'.default_parts_matrix_key', $type['default_parts_matrix_key']) === $matrix['key'])>{{ $matrix['name'] }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-12 col-sm-6">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-discount-type" class="form-label mb-0">Standing discount</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Percent off labor, parts, or both on non-warranty scopes when this billing class is on the customer. Does not change scope billing."
+                                                                        label="Standing discount help"
+                                                                    />
+                                                            </div>
+                                                            <select id="{{ $billingField }}-discount-type" name="customer_types[{{ $index }}][discount_type]" class="form-select">
+                                                                <option value="none" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'none')>None</option>
+                                                                <option value="labor" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'labor')>Labor</option>
+                                                                <option value="parts" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'parts')>Parts</option>
+                                                                <option value="both" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'both')>Labor &amp; parts</option>
+                                                            </select>
+                                                        </div>
+                                                        @php
+                                                            $builtInDiscountAmount = \App\Ark\Operations\Settings\ShopSettings::builtInDiscountAmountFor($type['name']);
+                                                            $builtInDiscountLabel = $builtInDiscountAmount !== null ? rtrim(rtrim($builtInDiscountAmount, '0'), '.').'%' : null;
+                                                        @endphp
+                                                        <div class="col-12 col-sm-6">
+                                                            <div class="d-flex align-items-center gap-1 mb-2">
+                                                                <label for="{{ $billingField }}-discount-amount" class="form-label mb-0">Discount %</label>
+                                                                    <x-tabler.help-tip
+                                                                        text="Applied during estimate recalculation. Shop fees and tax use the discounted sell amount."
+                                                                        label="Discount percent help"
+                                                                    />
+                                                            </div>
+                                                            <input
+                                                                id="{{ $billingField }}-discount-amount"
+                                                                name="customer_types[{{ $index }}][discount_amount]"
+                                                                value="{{ old('customer_types.'.$index.'.discount_amount', $storedCustomerTypes[$index]['discount_amount'] ?? null) }}"
+                                                                inputmode="decimal"
+                                                                placeholder="{{ $builtInDiscountLabel !== null ? 'Built-in '.$builtInDiscountLabel : 'No discount' }}"
+                                                                class="form-control"
+                                                            >
+                                                            <div class="form-hint">
+                                                                @if ($builtInDiscountLabel !== null)
+                                                                    Uses the built-in {{ $builtInDiscountLabel }} when blank. Enter 0 for no discount.
+                                                                @else
+                                                                    No discount when blank.
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12 border-top pt-2 small text-secondary">
+                                                            @php
+                                                                $defaultPosture = App\Ark\Operations\RepairOrders\ConcernBillingPosture::defaultForCustomerTag($type['name']);
+                                                            @endphp
+                                                            New scopes default to <strong>{{ $defaultPosture->label() }}</strong> billing when this billing class is on the customer.
+                                                            Change fees and matrix per scope on the estimate.
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
-                                    @elseif ($billingProfile === 'warranty')
-                                        <div>
-                                            <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                Warranty parts matrix
-                                                <x-operations.help-tip
-                                                    text="Used when a scope billing is set to Warranty. Warranty scopes never collect shop/hazmat fees."
-                                                    label="Warranty parts matrix help"
-                                                />
-                                            </div>
-                                            <select name="customer_types[{{ $index }}][default_parts_matrix_key]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                <option value="">Shop default</option>
-                                                @foreach ($settings->partsMatrices() as $matrix)
-                                                    <option value="{{ $matrix['key'] }}" @selected(old('customer_types.'.$index.'.default_parts_matrix_key', $type['default_parts_matrix_key']) === $matrix['key'])>{{ $matrix['name'] }}</option>
+                                    </div>
+                                </section>
+                            @endforeach
+
+                            <section class="card card-sm mb-3" data-billing-class-add>
+                                <div class="card-body">
+                                    <div class="subheader">Add Billing Class</div>
+                                    <p class="text-secondary small">Use names Fleet or Warranty to create a billing profile. Other names are standard billing classes.</p>
+                                    <div class="row g-2">
+                                        <div class="col-12 col-sm-6">
+                                            <input :name="`customer_types[${nextCustomerTypeIndex}][name]`" placeholder="Billing class name" aria-label="New billing class name" class="form-control">
+                                        </div>
+                                        <div class="col-12 col-sm-6">
+                                            <select :name="`customer_types[${nextCustomerTypeIndex}][pill_color]`" aria-label="New billing class pill color" class="form-select">
+                                                @foreach (\App\Ark\Operations\Settings\BillingClassPillColor::options() as $option)
+                                                    <option value="{{ $option['key'] }}" @selected($option['key'] === 'slate')>{{ $option['label'] }}</option>
                                                 @endforeach
                                             </select>
-                                            <input type="hidden" name="customer_types[{{ $index }}][shop_fees_enabled]" value="0">
-                                            <input type="hidden" name="customer_types[{{ $index }}][shop_fee_rate_override]" value="">
                                         </div>
-                                    @else
-                                        <div class="grid gap-3 sm:grid-cols-2" x-data="{ shopFeesOn: @js($shopFeesOn) }">
-                                            <div>
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Shop fees
-                                                    <x-operations.help-tip
-                                                        text="Whether shop fees apply by default to scopes that follow this billing class. Scope billing on the estimate can still override per concern."
-                                                        label="Shop fees help for {{ $type['name'] }}"
-                                                    />
-                                                </div>
-                                                <select name="customer_types[{{ $index }}][shop_fees_enabled]" @change="shopFeesOn = $event.target.value === '1'" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="1" @selected($shopFeesOn)>Use shop rate</option>
-                                                    <option value="0" @selected(! $shopFeesOn)>None</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Fee rate override %
-                                                    <x-operations.help-tip
-                                                        text="Optional fee percentage for scopes using this billing class. Leave blank to use the shop default rate from the Shop Fees tab."
-                                                        label="Fee rate override help for {{ $type['name'] }}"
-                                                    />
-                                                </div>
-                                                <input
-                                                    name="customer_types[{{ $index }}][shop_fee_rate_override]"
-                                                    value="{{ old('customer_types.'.$index.'.shop_fee_rate_override', $type['shop_fee_rate_override']) }}"
-                                                    inputmode="decimal"
-                                                    placeholder="Shop default"
-                                                    @disabled(! $shopFeesOn)
-                                                    :disabled="! shopFeesOn"
-                                                    class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-400"
-                                                >
-                                            </div>
-                                            <div class="sm:col-span-2">
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Default parts matrix
-                                                    <x-operations.help-tip
-                                                        text="Default parts matrix for new part lines on scopes that follow this billing class."
-                                                        label="Default parts matrix help for {{ $type['name'] }}"
-                                                    />
-                                                </div>
-                                                <select name="customer_types[{{ $index }}][default_parts_matrix_key]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="">Shop default</option>
-                                                    @foreach ($settings->partsMatrices() as $matrix)
-                                                        <option value="{{ $matrix['key'] }}" @selected(old('customer_types.'.$index.'.default_parts_matrix_key', $type['default_parts_matrix_key']) === $matrix['key'])>{{ $matrix['name'] }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Standing discount
-                                                    <x-operations.help-tip
-                                                        text="Percent off labor, parts, or both on non-warranty scopes when this billing class is on the customer. Does not change scope billing."
-                                                        label="Standing discount help"
-                                                    />
-                                                </div>
-                                                <select name="customer_types[{{ $index }}][discount_type]" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950">
-                                                    <option value="none" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'none')>None</option>
-                                                    <option value="labor" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'labor')>Labor</option>
-                                                    <option value="parts" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'parts')>Parts</option>
-                                                    <option value="both" @selected(old('customer_types.'.$index.'.discount_type', $type['discount_type']) === 'both')>Labor &amp; parts</option>
-                                                </select>
-                                            </div>
-                                            @php
-                                                $builtInDiscountAmount = \App\Ark\Operations\Settings\ShopSettings::builtInDiscountAmountFor($type['name']);
-                                                $builtInDiscountLabel = $builtInDiscountAmount !== null ? rtrim(rtrim($builtInDiscountAmount, '0'), '.').'%' : null;
-                                            @endphp
-                                            <div>
-                                                <div class="flex items-center gap-1 text-xs font-medium text-slate-500">
-                                                    Discount %
-                                                    <x-operations.help-tip
-                                                        text="Applied during estimate recalculation. Shop fees and tax use the discounted sell amount."
-                                                        label="Discount percent help"
-                                                    />
-                                                </div>
-                                                <input
-                                                    name="customer_types[{{ $index }}][discount_amount]"
-                                                    value="{{ old('customer_types.'.$index.'.discount_amount', $storedCustomerTypes[$index]['discount_amount'] ?? null) }}"
-                                                    inputmode="decimal"
-                                                    placeholder="{{ $builtInDiscountLabel !== null ? 'Built-in '.$builtInDiscountLabel : 'No discount' }}"
-                                                    class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400"
-                                                >
-                                                <p class="mt-1 text-xs text-slate-500">
-                                                    @if ($builtInDiscountLabel !== null)
-                                                        Uses the built-in {{ $builtInDiscountLabel }} when blank. Enter 0 for no discount.
-                                                    @else
-                                                        No discount when blank.
-                                                    @endif
-                                                </p>
-                                            </div>
-                                            <div class="sm:col-span-2 border-t border-slate-100 pt-2 text-xs leading-5 text-slate-500">
-                                                @php
-                                                    $defaultPosture = App\Ark\Operations\RepairOrders\ConcernBillingPosture::defaultForCustomerTag($type['name']);
-                                                @endphp
-                                                New scopes default to <strong class="font-semibold text-slate-700">{{ $defaultPosture->label() }}</strong> billing when this billing class is on the customer.
-                                                Change fees and matrix per scope on the estimate.
-                                            </div>
-                                        </div>
-                                    @endif
+                                        <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][shop_fees_enabled]`" value="1">
+                                        <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][shop_fee_rate_override]`" value="">
+                                        <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][default_parts_matrix_key]`" value="">
+                                        <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][document_presentation_profile]`" value="retail">
+                                    </div>
                                 </div>
                             </section>
-                        @endforeach
-
-                        <section class="rounded-md border border-dashed border-slate-300 bg-slate-50/60 p-4">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Add Billing Class</p>
-                            <p class="mt-1 text-xs text-slate-500">Use names Fleet or Warranty to create a billing profile. Other names are standard billing classes.</p>
-                            <div class="mt-3 grid gap-3 sm:grid-cols-3">
-                                <input :name="`customer_types[${nextCustomerTypeIndex}][name]`" placeholder="Billing class name" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 placeholder:text-slate-400">
-                                <select :name="`customer_types[${nextCustomerTypeIndex}][pill_color]`" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950">
-                                    @foreach (\App\Ark\Operations\Settings\BillingClassPillColor::options() as $option)
-                                        <option value="{{ $option['key'] }}" @selected($option['key'] === 'slate')>{{ $option['label'] }}</option>
-                                    @endforeach
-                                </select>
-                                <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][shop_fees_enabled]`" value="1">
-                                <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][shop_fee_rate_override]`" value="">
-                                <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][default_parts_matrix_key]`" value="">
-                                <input type="hidden" :name="`customer_types[${nextCustomerTypeIndex}][document_presentation_profile]`" value="retail">
+                            <div class="d-flex justify-content-end border-top pt-3">
+                                <button type="submit" class="btn btn-primary">Save Billing Classes</button>
                             </div>
-                        </section>
-                        <div class="flex justify-end border-t border-slate-200 pt-4">
-                            <button type="submit" class="min-h-10 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800">
-                                Save Billing Classes
-                            </button>
-                        </div>
                         </form>
                     </div>
                 </section>
+
+                <div class="ark-legacy bg-white text-dark border rounded p-3" x-show="! @js($tablerSections).includes(active)" x-cloak>
 
                 @include('operations.settings.partials.square-payments-settings', [
                     'settings' => $settings,

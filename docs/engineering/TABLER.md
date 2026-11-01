@@ -179,7 +179,7 @@ A page counts as complete only when nothing reachable on it is still legacy. Cod
 
 **Partial, actionable (1):** on Tabler, with legacy sections that can migrate now.
 
-- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity, Documents / Disclaimers, Workflow Defaults, and Label Printing. See the log entry for which remaining sections wait on a hosted-service decision.
+- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity, Documents / Disclaimers, Workflow Defaults, Label Printing, and Financial Rules. See the log entry for which remaining sections wait on a hosted-service decision.
 
 **Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
 
@@ -305,7 +305,7 @@ Staff without a shop dashboard (technicians) get a Tabler `fluid` page titled "T
 
 ### Shop settings (`operations.settings.shop.edit`)
 
-Settings is one page with an Alpine section switcher and about 30 section partials. This pass migrates the page and two sections; the rest are unchanged legacy markup in one island.
+Settings is one page with an Alpine section switcher and about 30 section partials. The page and five sections are Tabler; the rest are unchanged legacy markup in one island.
 
 Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
 
@@ -317,9 +317,19 @@ Workflow Defaults and Label Printing are also Tabler cards. Their tabs are `nav-
 
 Every field name, value, default, `old()` key, route, method, and Save label is unchanged. Each form submits the same fields in the same order per field as before. Hooks: `data-settings-section`, `data-settings-job-board-lanes`, `data-settings-status-catalog`, `data-settings-inspection-templates`, and `data-settings-work-templates`.
 
+Financial Rules is a Tabler card with seven `nav-tabs card-header-tabs` buttons that call the existing `setFinancialTab()`, so `?financial-tab=` and the stored tab work as before (the old `customer-tags` and `customer-types` keys still open Billing Classes).
+
+- **Labor:** a `list-group` row per category. Rounding is a `btn-check` radio group with the same `rounding_rule` values.
+- **Labor Policies** (`partials.labor-policies`): the rate grid is a `card-table` of cell buttons; the editor and the resolver preview are `card-sm` blocks with the same forms.
+- **Tax Rules, Shop Fees, Deposits:** `form-switch` and `form-check` with the same hidden `0` inputs, `input-group` rate fields, and `invalid-feedback`.
+- **Parts Matrix:** a `card-sm` per matrix with a `card-table` of rows that scrolls sideways on phones. `parts-matrix-form`, the delete forms, `matrixSection()`, and `autosaveMatrix()` (the same request, 700 ms debounce, and status text) are unchanged.
+- **Billing Classes:** a `card-sm` per class. The profile shows as a header badge and the pill color previews as a Tabler badge. The Fleet, Warranty, and standard branches keep their hidden and disabled fields.
+
+No calculation, default, validation rule, permission, or stored value changed, and each form submits the same fields in the same order as before. Hooks: `data-settings-labor`, `data-settings-labor-policies`, `data-settings-tax`, `data-settings-fees`, `data-settings-deposits`, `data-parts-matrix`, and `data-settings-billing-classes`.
+
 Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active:
 
-- **Core sections not yet migrated:** Appointments & Setup, Staff, Financial Rules (labor, policies, tax, fees, deposits, parts matrix, billing classes), and Shop Overhead.
+- **Core sections not yet migrated:** Appointments & Setup, Staff, and Shop Overhead.
 - **Sections that also hold hosted-service settings:**
   - Owner Targets & Reporting, because its owner digest is sent by mail;
   - Square Payments, which also holds the payment ledger's Check, External Card, and EFT buttons;
