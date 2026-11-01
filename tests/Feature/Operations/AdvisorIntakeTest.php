@@ -88,6 +88,66 @@ test('advisor intake workspace renders traditional flow sections', function () {
         ->assertDontSee('Vehicle issues');
 });
 
+test('check in renders on tabler across the customer, vehicle, and open steps', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
+
+    $customer = Customer::query()->create([
+        'first_name' => 'Tabler',
+        'last_name' => 'Intake',
+        'phone' => '555-9191',
+    ]);
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'year' => 2017,
+        'make' => 'Subaru',
+        'model' => 'Outback',
+    ]);
+
+    $hasClass = fn (string $class): string => 'contains(concat(" ", normalize-space(@class), " "), " '.$class.' ")';
+    $xpathFor = function (array $params): DOMXPath {
+        $document = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $document->loadHTML($this->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
+            ->get(intakeWorkspaceUrl($params))
+            ->assertOk()
+            ->getContent());
+        libxml_clear_errors();
+
+        return new DOMXPath($document);
+    };
+
+    $find = $xpathFor(['q' => 'Intake']);
+    $workspace = $find->query('//*[@data-intake-find-workspace]')->item(0);
+
+    expect(trim($find->query('//*['.$hasClass('page-title').']')->item(0)->textContent))->toBe('Check In')
+        ->and($workspace)->toBeInstanceOf(DOMElement::class)
+        ->and($workspace->getAttribute('x-data'))->toContain('arkIntakeFindCustomer(')
+        ->and($find->query('ancestor-or-self::*['.$hasClass('ark-legacy').']', $workspace)->length)->toBe(0)
+        ->and($find->query('.//*[@data-intake-vehicle-checkin]//input[@id="intake-vehicle-checkin"]['.$hasClass('form-control').']', $workspace)->length)->toBe(1)
+        ->and($find->query('.//input[@id="intake-customer-search"]['.$hasClass('form-control').']', $workspace)->length)->toBe(1)
+        ->and($find->query('.//*[@data-intake-customer-id="'.$customer->id.'"]['.$hasClass('card').'][@role="button"]', $workspace)->length)->toBe(1)
+        ->and($find->query('.//*[@data-intake-customer-create]//input[@name="first_name"]['.$hasClass('form-control').']', $workspace)->length)->toBe(1)
+        ->and($find->query('.//*[@data-intake-customer-create]//select[@name="customer_type"]['.$hasClass('form-select').']', $workspace)->length)->toBe(1);
+
+    $vehicleStep = $xpathFor(['customer_id' => $customer->id]);
+
+    expect(trim($vehicleStep->query('//*[@data-intake-steps]/li['.$hasClass('active').']')->item(0)->textContent))->toBe('Vehicle')
+        ->and($vehicleStep->query('//*[@data-intake-vehicles]//a['.$hasClass('btn-primary').'][contains(@href, "vehicle_id='.$vehicle->id.'")]')->length)->toBe(1)
+        ->and($vehicleStep->query('//form[@data-intake-vehicle-form][@action="'.route('operations.customers.vehicles.store', $customer).'"]//input[@name="vin"]['.$hasClass('form-control').']')->length)->toBe(1);
+
+    $open = $xpathFor(['customer_id' => $customer->id, 'vehicle_id' => $vehicle->id]);
+    $form = $open->query('//form[@id="advisor-intake-form"][@data-intake-open-stack]')->item(0);
+
+    expect($form->getAttribute('action'))->toBe(route('operations.intake.store'))
+        ->and(trim($open->query('//*[@data-intake-steps]/li['.$hasClass('active').']')->item(0)->textContent))->toBe('Open RO')
+        ->and($open->query('.//textarea[@name="visit_reason"]['.$hasClass('form-control').']', $form)->length)->toBe(1)
+        ->and($open->query('.//input[@name="visit_mode"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBe(4)
+        ->and($open->query('.//input[@name="billing_class"][@type="radio"]['.$hasClass('form-selectgroup-input').']', $form)->length)->toBeGreaterThanOrEqual(1)
+        ->and($open->query('.//*['.$hasClass('ark-legacy').']//*['.$hasClass('ark-ro-mention__menu').']', $form)->length)->toBe(1)
+        ->and($open->query('.//button[@type="submit"]['.$hasClass('btn-primary').'][normalize-space()="Open Repair Order"]', $form)->length)->toBe(1);
+});
+
 test('advisor intake renders vehicle identity pressure without a repair order', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Advisor->value));
@@ -326,8 +386,8 @@ test('advisor intake vehicle step links active repair order for workspace open',
         ->assertOk()
         ->assertSee('RO #'.$repairOrder->repair_order_id)
         ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
-        ->assertSee('ops-ro-footnote-link', false)
-        ->assertDontSee('ops-ro-footnote-link" target="_blank"', false)
+        ->assertSee('data-intake-vehicle-active-ro', false)
+        ->assertSee('<a href="'.route('operations.repair-orders.show', $repairOrder).'" aria-label="Open RO #'.$repairOrder->repair_order_id.'" class="ark-money">', false)
         ->assertSee('Draft');
 });
 
@@ -868,8 +928,8 @@ test('advisor intake live customer search shows active repair order meta', funct
         ->assertSee('Waiting Approval')
         ->assertSee('RO #'.$repairOrder->repair_order_id)
         ->assertSee(route('operations.repair-orders.show', $repairOrder), false)
-        ->assertSee('ops-ro-footnote-link', false)
-        ->assertDontSee('ops-ro-footnote-link" target="_blank"', false)
+        ->assertSee('data-intake-customer-footnote', false)
+        ->assertSee('<a href="'.route('operations.repair-orders.show', $repairOrder).'" aria-label="Open RO #'.$repairOrder->repair_order_id.'" class="ark-money">', false)
         ->assertDontSee('no active RO');
 });
 

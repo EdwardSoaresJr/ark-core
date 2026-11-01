@@ -17,13 +17,14 @@
 @endphp
 
 <section
-    class="ops-intake-vehicle-step"
+    class="d-flex flex-column gap-3"
+    data-intake-vehicle-step
     x-data="arkIntakeVehicleSelect({ total: {{ $vehicleCount }}, blobs: @js($vehicleSearchBlobs) })"
 >
-    <div class="ops-intake-vehicle-step-head">
-        <div class="min-w-0">
-            <h2 class="ops-intake-vehicle-step-title">Choose vehicle</h2>
-            <p class="ops-intake-vehicle-step-lead">
+    <div class="card">
+        <div class="card-body p-2 p-md-3">
+            <h2 class="card-title mb-1">Choose vehicle</h2>
+            <div class="text-secondary">
                 @if ($vehicleCount === 0)
                     Add a vehicle to continue intake.
                 @elseif ($vehicleCount === 1)
@@ -31,114 +32,103 @@
                 @else
                     {{ $vehicleCount }} vehicles on file - pick the one in the shop today.
                 @endif
-            </p>
+            </div>
+
+            @if (($lastVisitVehicle ?? null) && $vehicleCount > 1)
+                <a
+                    href="{{ route('operations.intake.create', array_merge($intakeWorkspaceParams, ['customer_id' => $customer->id, 'vehicle_id' => $lastVisitVehicle->id])) }}"
+                    class="btn btn-outline-primary w-100 justify-content-start text-start mt-3"
+                    data-intake-last-vehicle
+                >
+                    <span class="d-block">
+                        <span class="d-block small">Continue with last vehicle</span>
+                        <span class="d-block fw-bold">{{ $lastVisitVehicle->display_name }}</span>
+                        @if ($lastVisitVehicle->plate)
+                            <span class="d-block small">Plate {{ $lastVisitVehicle->plate }}</span>
+                        @endif
+                    </span>
+                </a>
+            @endif
+
+            @if ($showVehicleSearch)
+                <div class="mt-3">
+                    <label for="intake-vehicle-filter" class="form-label">Find vehicle</label>
+                    <input
+                        id="intake-vehicle-filter"
+                        type="search"
+                        x-model="query"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        enterkeyhint="search"
+                        placeholder="Year, make, model, plate, or VIN"
+                        class="form-control"
+                    >
+                    <div class="form-hint" x-show="! filtering" x-cloak>
+                        Filter {{ $vehicleCount }} vehicles on this account. Last 4–6 of the VIN or full plate works well.
+                    </div>
+                    <div class="form-hint fw-medium" x-show="filtering" x-cloak>
+                        Showing <span x-text="visibleCount"></span> of {{ $vehicleCount }} vehicles
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
-    @if (($lastVisitVehicle ?? null) && $vehicleCount > 1)
-        <a
-            href="{{ route('operations.intake.create', array_merge($intakeWorkspaceParams, ['customer_id' => $customer->id, 'vehicle_id' => $lastVisitVehicle->id])) }}"
-            class="ops-intake-last-vehicle"
-        >
-            <span class="ops-intake-last-vehicle-label">Continue with last vehicle</span>
-            <span class="ops-intake-last-vehicle-name">{{ $lastVisitVehicle->display_name }}</span>
-            @if ($lastVisitVehicle->plate)
-                <span class="ops-intake-last-vehicle-meta">Plate {{ $lastVisitVehicle->plate }}</span>
-            @endif
-        </a>
-    @endif
-
-    @if ($showVehicleSearch)
-        <div class="ops-intake-vehicle-search">
-            <label for="intake-vehicle-filter" class="ops-index-field-label">Find vehicle</label>
-            <input
-                id="intake-vehicle-filter"
-                type="search"
-                x-model="query"
-                autocomplete="off"
-                autocapitalize="characters"
-                enterkeyhint="search"
-                placeholder="Year, make, model, plate, or VIN"
-                class="ops-intake-control ops-intake-vehicle-search-input"
-            >
-            <p class="ops-intake-vehicle-search-hint" x-show="! filtering" x-cloak>
-                Filter {{ $vehicleCount }} vehicles on this account. Last 4–6 of the VIN or full plate works well.
-            </p>
-            <p class="ops-intake-vehicle-search-hint ops-intake-vehicle-search-hint--active" x-show="filtering" x-cloak>
-                Showing <span x-text="visibleCount"></span> of {{ $vehicleCount }} vehicles
-            </p>
-        </div>
-    @endif
-
     @if ($vehicleCount > 0)
-        <div
-            class="ops-intake-vehicle-grid"
-            :class="{ 'ops-intake-vehicle-grid--compact': compact }"
-        >
+        <div class="ark-card-grid" data-intake-vehicles>
             @foreach ($customer->vehicles as $vehicle)
                 @php
                     $activeRepairOrder = $vehicle->repairOrders->first();
-                    $cardTone = $activeRepairOrder ? $activeRepairOrder->status->indexTone() : 'move';
+                    $toneColor = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
+                        $activeRepairOrder ? $activeRepairOrder->status->indexTone() : 'move',
+                    );
                     $intakeVehicleUrl = route('operations.intake.create', array_merge($intakeWorkspaceParams, [
                         'customer_id' => $customer->id,
                         'vehicle_id' => $vehicle->id,
                     ]));
                     $vehicleSearchBlob = $vehicleSearchBlobs[$loop->index];
                 @endphp
-                <div
-                    class="ops-intake-vehicle-card-wrap ops-ro-card ops-ro-card--{{ $cardTone }}"
-                    x-show="matches(@js($vehicleSearchBlob))"
-                >
-                    <a href="{{ $intakeVehicleUrl }}" class="ops-intake-vehicle-card-select">
-                        <div class="ops-intake-vehicle-card-body">
-                            <p class="ops-intake-vehicle-card-ymm">{{ $vehicle->display_name }}</p>
+                <div x-show="matches(@js($vehicleSearchBlob))">
+                    <div class="card card-sm h-100">
+                        <div class="card-status-start bg-{{ $toneColor }}"></div>
+                        <div class="card-body p-2 p-md-3">
+                            <div class="fw-bold">{{ $vehicle->display_name }}</div>
                             @if (! $vehicle->hasVin())
-                                <div class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                                    @include('operations.repair-orders.partials.repair-order-vehicle-identity-pressure-chip', ['vehicle' => $vehicle])
-                                </div>
+                                <x-tabler.vehicle-identity-chip :vehicle="$vehicle" />
                             @endif
                             @if ($vehicle->nickname && $vehicle->nickname !== $vehicle->display_name)
-                                <p class="ops-intake-vehicle-card-nickname">{{ $vehicle->nickname }}</p>
+                                <div class="small text-secondary">{{ $vehicle->nickname }}</div>
                             @endif
-                            <p class="ops-intake-vehicle-card-meta">
+                            <div class="small text-secondary text-break">
                                 @if ($vehicle->plate)
-                                    <span>Plate {{ $vehicle->plate }}@if ($vehicle->plate_state) / {{ $vehicle->plate_state }} @endif</span>
+                                    Plate {{ $vehicle->plate }}@if ($vehicle->plate_state) / {{ $vehicle->plate_state }} @endif
                                 @endif
+                                @if ($vehicle->plate && $vehicle->vin) · @endif
                                 @if ($vehicle->vin)
-                                    @if ($vehicle->plate)
-                                        <span class="ops-intake-context-sep">·</span>
-                                    @endif
-                                    <span class="ops-intake-vehicle-card-vin">VIN {{ $vehicle->vin }}</span>
+                                    VIN {{ $vehicle->vin }}
                                 @endif
                                 @if (! $vehicle->plate && ! $vehicle->vin)
-                                    <span>No plate or VIN on file</span>
+                                    No plate or VIN on file
                                 @endif
-                            </p>
+                            </div>
+                            <a href="{{ $intakeVehicleUrl }}" class="btn btn-primary w-100 mt-2">Use this vehicle</a>
                         </div>
-                        <span class="ops-intake-vehicle-card-action">Use this vehicle</span>
-                    </a>
-                    @if ($activeRepairOrder)
-                        <p class="ops-intake-vehicle-card-footnote ops-ro-footnote">
-                            <span class="ops-intake-vehicle-card-ro-label">Active</span>
-                            <a
-                                href="{{ route('operations.repair-orders.show', $activeRepairOrder) }}"
-                                class="ops-ro-footnote-link"
-                                aria-label="Open RO #{{ $activeRepairOrder->repair_order_id }}"
-                            >
-                                <span class="tabular-nums">RO #{{ $activeRepairOrder->repair_order_id }}</span>
-                            </a>
-                            <span class="ops-ro-sep">·</span>
-                            {{ $activeRepairOrder->statusDisplayLabel() }}
-                        </p>
-                    @endif
+                        @if ($activeRepairOrder)
+                            <div class="card-footer p-2 small text-secondary" data-intake-vehicle-active-ro>
+                                Active
+                                <a href="{{ route('operations.repair-orders.show', $activeRepairOrder) }}" aria-label="Open RO #{{ $activeRepairOrder->repair_order_id }}" class="ark-money">RO #{{ $activeRepairOrder->repair_order_id }}</a>
+                                · {{ $activeRepairOrder->statusDisplayLabel() }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             @endforeach
         </div>
 
         @if ($showVehicleSearch)
-            <p class="ops-intake-vehicle-search-empty" x-show="filtering && visibleCount === 0" x-cloak>
+            <div class="text-secondary" x-show="filtering && visibleCount === 0" x-cloak>
                 No vehicles match that filter. Try plate, VIN, or year/make/model.
-            </p>
+            </div>
         @endif
     @endif
 

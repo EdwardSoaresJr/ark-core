@@ -159,7 +159,7 @@ export function shouldSkipIntakePersist() {
 }
 
 export function captureIntakeDraftFromDom() {
-    const root = document.querySelector('.ops-intake-find-workspace');
+    const root = document.querySelector('[data-intake-find-workspace]');
 
     if (!root?._x_dataStack?.[0]) {
         return null;
@@ -334,7 +334,7 @@ export function initIntakeWorkspaceMemory() {
 
     window.addEventListener('scroll', schedulePersist, { passive: true });
     document.addEventListener('input', (event) => {
-        if (event.target?.closest?.('.ops-intake-find-workspace, .ops-intake-open-stack')) {
+        if (event.target?.closest?.('[data-intake-find-workspace], [data-intake-open-stack]')) {
             schedulePersist();
         }
     }, true);

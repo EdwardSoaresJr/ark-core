@@ -1,23 +1,16 @@
 @can(App\Ark\Runtime\Authorization\ArkCapability::CustomersManage->value)
     @php
         $billingClassHelp = "Sets default billing for new concerns on this customer.\n\nDoes not set visit type. Pick waiting or drop-off when you open the RO.";
+        $fieldError = fn (string $field) => $errors->first($field);
     @endphp
-    <section class="ops-intake-customer-create">
-        <div class="ops-intake-customer-create-head">
-            <p class="ops-intake-customer-create-label" x-text="panelLabel"></p>
-            <button
-                type="button"
-                x-show="isEditing"
-                x-cloak
-                @click="clearSelectedCustomer()"
-                class="ops-intake-customer-create-reset"
-            >New customer</button>
+    <section class="card" data-intake-customer-create>
+        <div class="card-header">
+            <h3 class="card-title" x-text="panelLabel"></h3>
+            <div class="card-actions">
+                <button type="button" x-show="isEditing" x-cloak @click="clearSelectedCustomer()" class="btn btn-ghost-secondary">New customer</button>
+            </div>
         </div>
-        <form
-            method="POST"
-            :action="formAction"
-            class="ops-intake-customer-create-form"
-        >
+        <form method="POST" :action="formAction" class="card-body p-2 p-md-3">
             @csrf
             <input type="hidden" name="intake" value="1">
             @include('operations.intake.partials.intake-workspace-hidden')
@@ -27,137 +20,117 @@
             <template x-if="isEditing">
                 <input type="hidden" name="customer_id" :value="selectedCustomerId">
             </template>
-            <div class="ops-intake-fields ops-intake-fields--2">
-                <div class="ops-intake-field">
-                    <label for="intake-customer-first-name" class="ops-index-field-label">First name</label>
+
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label for="intake-customer-first-name" class="form-label">First name</label>
                     <input
                         id="intake-customer-first-name"
                         name="first_name"
                         value="{{ $leadPrefillFirstName ?? '' }}"
                         x-model="firstName"
                         required
-                        class="ops-intake-control"
+                        @class(['form-control', 'is-invalid' => $fieldError('first_name')])
                         @if ($focusFirstName ?? false) autofocus @endif
                     >
-                    @error('first_name')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
+                    @error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="ops-intake-field">
-                    <label for="intake-customer-last-name" class="ops-index-field-label">Last name</label>
+                <div class="col-sm-6">
+                    <label for="intake-customer-last-name" class="form-label">Last name</label>
                     <input
                         id="intake-customer-last-name"
                         name="last_name"
                         value="{{ $leadPrefillLastName ?? '' }}"
                         x-model="lastName"
                         @unless ($lastNameOptional ?? false) required @endunless
-                        class="ops-intake-control"
+                        @class(['form-control', 'is-invalid' => $fieldError('last_name')])
                         placeholder="{{ ($lastNameOptional ?? false) ? 'Optional for website leads' : '' }}"
                     >
-                    @error('last_name')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
+                    @error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-6">
+                    <label for="intake-customer-phone" class="form-label">Phone</label>
+                    <input
+                        id="intake-customer-phone"
+                        name="phone"
+                        x-model="phone"
+                        type="tel"
+                        @class(['form-control', 'is-invalid' => $fieldError('phone')])
+                        :required="!isEditing"
+                    >
+                    @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-6">
+                    <label for="intake-customer-email" class="form-label">Email</label>
+                    <input id="intake-customer-email" name="email" x-model="email" type="email" @class(['form-control', 'is-invalid' => $fieldError('email')])>
+                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-6">
+                    @include('operations.customers.partials.contact-preference-select', [
+                        'inputId' => 'intake-customer-contact-preference',
+                        'labelClass' => 'form-label',
+                        'selectClass' => 'form-select mt-2',
+                        'xModel' => 'contactPreference',
+                    ])
+                    @error('contact_preference')<div class="small text-danger mt-1">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-8">
+                    <label for="intake-customer-address-line-1" class="form-label">Address</label>
+                    <input id="intake-customer-address-line-1" name="address_line_1" x-model="addressLine1" @class(['form-control', 'is-invalid' => $fieldError('address_line_1')]) placeholder="Street address">
+                    @error('address_line_1')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-4">
+                    <label for="intake-customer-address-line-2" class="form-label">Apt / unit / suite</label>
+                    <input id="intake-customer-address-line-2" name="address_line_2" x-model="addressLine2" @class(['form-control', 'is-invalid' => $fieldError('address_line_2')]) placeholder="Unit 4B, Apt 12, Suite 200">
+                    @error('address_line_2')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-6">
+                    <label for="intake-customer-city" class="form-label">City</label>
+                    <input id="intake-customer-city" name="city" x-model="city" @class(['form-control', 'is-invalid' => $fieldError('city')])>
+                    @error('city')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-6 col-sm-3">
+                    <label for="intake-customer-state" class="form-label">State</label>
+                    <input id="intake-customer-state" name="state" x-model="state" maxlength="32" @class(['form-control', 'is-invalid' => $fieldError('state')])>
+                    @error('state')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-6 col-sm-3">
+                    <label for="intake-customer-postal-code" class="form-label">ZIP</label>
+                    <input id="intake-customer-postal-code" name="postal_code" x-model="postalCode" maxlength="16" @class(['form-control', 'is-invalid' => $fieldError('postal_code')])>
+                    @error('postal_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-6">
+                    <label for="intake-customer-referral-source" class="form-label">How they heard about us</label>
+                    <select id="intake-customer-referral-source" name="referral_source" x-model="referralSource" @class(['form-select', 'is-invalid' => $fieldError('referral_source')])>
+                        <option value="">Choose one</option>
+                        @foreach ($referralSources as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('referral_source')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-sm-6">
+                    <div class="d-flex align-items-center gap-1 mb-2">
+                        <label for="intake-customer-type" class="form-label mb-0">Billing class</label>
+                        <x-operations.help-tip label="Billing class help" :text="$billingClassHelp" />
+                    </div>
+                    <select id="intake-customer-type" name="customer_type" x-model="customerType" class="form-select">
+                        @foreach ($customerTypes as $type)
+                            <option value="{{ $type['name'] }}">{{ $type['name'] }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
-            <div class="ops-intake-field">
-                <label for="intake-customer-phone" class="ops-index-field-label">Phone</label>
-                <input
-                    id="intake-customer-phone"
-                    name="phone"
-                    x-model="phone"
-                    type="tel"
-                    class="ops-intake-control"
-                    :required="!isEditing"
-                >
-                @error('phone')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-            </div>
-            <div class="ops-intake-field">
-                <label for="intake-customer-email" class="ops-index-field-label">Email</label>
-                <input id="intake-customer-email" name="email" x-model="email" type="email" class="ops-intake-control">
-                @error('email')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-            </div>
-            <div class="ops-intake-field">
-                @include('operations.customers.partials.contact-preference-select', [
-                    'inputId' => 'intake-customer-contact-preference',
-                    'labelClass' => 'ops-index-field-label',
-                    'selectClass' => 'ops-intake-control',
-                    'xModel' => 'contactPreference',
-                ])
-                @error('contact_preference')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-            </div>
 
-            <div class="ops-intake-customer-create-details">
-                    <div class="ops-intake-fields ops-intake-fields--address">
-                        <div class="ops-intake-field">
-                            <label for="intake-customer-address-line-1" class="ops-index-field-label">Address</label>
-                            <input id="intake-customer-address-line-1" name="address_line_1" x-model="addressLine1" class="ops-intake-control" placeholder="Street address">
-                            @error('address_line_1')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="ops-intake-field">
-                            <label for="intake-customer-address-line-2" class="ops-index-field-label">Apt / unit / suite</label>
-                            <input id="intake-customer-address-line-2" name="address_line_2" x-model="addressLine2" class="ops-intake-control" placeholder="Unit 4B, Apt 12, Suite 200">
-                            @error('address_line_2')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                        </div>
-                    </div>
-                    <div class="ops-intake-fields ops-intake-fields--locality">
-                        <div class="ops-intake-field">
-                            <label for="intake-customer-city" class="ops-index-field-label">City</label>
-                            <input id="intake-customer-city" name="city" x-model="city" class="ops-intake-control">
-                            @error('city')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="ops-intake-field">
-                            <label for="intake-customer-state" class="ops-index-field-label">State</label>
-                            <input id="intake-customer-state" name="state" x-model="state" maxlength="32" class="ops-intake-control">
-                            @error('state')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="ops-intake-field">
-                            <label for="intake-customer-postal-code" class="ops-index-field-label">ZIP</label>
-                            <input id="intake-customer-postal-code" name="postal_code" x-model="postalCode" maxlength="16" class="ops-intake-control">
-                            @error('postal_code')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                        </div>
-                    </div>
-                    <div class="ops-intake-fields ops-intake-fields--2">
-                        <div class="ops-intake-field">
-                            <label for="intake-customer-referral-source" class="ops-index-field-label">How they heard about us</label>
-                            <select id="intake-customer-referral-source" name="referral_source" x-model="referralSource" class="ops-intake-control">
-                                <option value="">Choose one</option>
-                                @foreach ($referralSources as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @error('referral_source')<p class="text-xs font-semibold text-rose-700">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="ops-intake-field">
-                            <div class="flex items-center gap-1">
-                                <label for="intake-customer-type" class="ops-index-field-label">Billing class</label>
-                                <x-operations.help-tip
-                                    label="Billing class help"
-                                    :text="$billingClassHelp"
-                                />
-                            </div>
-                            <select id="intake-customer-type" name="customer_type" x-model="customerType" class="ops-intake-control">
-                                @foreach ($customerTypes as $type)
-                                    <option value="{{ $type['name'] }}">{{ $type['name'] }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-            </div>
-
-            <p
-                x-show="isEditing && selectedCustomerName"
-                x-cloak
-                class="ops-intake-customer-create-selected"
-            >
+            <div x-show="isEditing && selectedCustomerName" x-cloak class="alert alert-info mt-3 mb-0">
                 Selected <span x-text="selectedCustomerName"></span> - review details, then continue.
-            </p>
-
-            <div class="ops-intake-field ops-intake-field--action">
-                <button type="submit" class="ops-index-btn ops-index-btn--primary ops-intake-customer-create-btn" x-text="submitLabel"></button>
             </div>
 
-            <p
-                x-show="duplicateLoading"
-                x-cloak
-                class="ops-intake-duplicate-hint-status"
-                aria-live="polite"
-            >Checking for similar customers…</p>
+            <div class="d-grid d-sm-block mt-3">
+                <button type="submit" class="btn btn-primary" x-text="submitLabel"></button>
+            </div>
+
+            <div x-show="duplicateLoading" x-cloak class="form-hint mt-2" aria-live="polite">Checking for similar customers…</div>
 
             <div x-ref="duplicates"></div>
         </form>

@@ -1,40 +1,65 @@
 @if ($searchQuery !== '')
-    <div class="ops-intake-find-search-results-panel">
-        <div class="ops-index-results-head">
+    <div class="mt-3" data-intake-search-results>
+        <div class="d-flex justify-content-between subheader mb-2">
             <span>Results</span>
-            <span class="tabular-nums">{{ $searchCustomers->count() }}</span>
+            <span class="ark-money">{{ $searchCustomers->count() }}</span>
         </div>
-        <div class="ops-ro-retrieval-grid">
+        <div class="d-flex flex-column gap-2">
             @forelse ($searchCustomers as $result)
                 @php
                     $activeRepairOrder = $result->repairOrders->first();
-                    $cardTone = $activeRepairOrder ? $activeRepairOrder->status->indexTone() : 'move';
+                    $toneColor = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone(
+                        $activeRepairOrder ? $activeRepairOrder->status->indexTone() : 'move',
+                    );
+                    $customerTag = trim((string) ($result->customer_type ?: 'Retail'));
+                    $smsCapability = filled($result->phone ?? null)
+                        ? \App\Ark\Operations\Messaging\PhoneSmsCapability::findByNormalizedPhone((string) $result->phone)
+                        : null;
+                    $vehicleCount = $result->vehicles->count();
                 @endphp
                 <div
                     data-intake-customer-id="{{ $result->id }}"
-                    class="ops-ro-card ops-ro-card--{{ $cardTone }} ops-ro-card--selectable"
+                    class="card card-sm card-link cursor-pointer"
                     role="button"
                     tabindex="0"
                 >
-                    <div class="ops-ro-card-select-body">
-                        <div class="ops-ro-card-top">
-                            <div class="ops-ro-card-primary min-w-0">
-                                <p class="ops-ro-vehicle" title="{{ $result->name }}">{{ $result->name }}</p>
-                                <p class="ops-ro-subline truncate">{{ $result->display_phone ?: 'No phone' }}</p>
+                    <div class="card-status-start bg-{{ $toneColor }}"></div>
+                    <div class="card-body p-2">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="flex-fill overflow-hidden">
+                                <div class="fw-bold text-truncate" title="{{ $result->name }}">{{ $result->name }}</div>
+                                <div class="small text-secondary text-truncate">{{ $result->display_phone ?: 'No phone' }}</div>
                             </div>
-                            @include('operations.customers.partials.customer-search-card-badges', [
-                                'result' => $result,
-                                'intakeMode' => true,
-                            ])
+                            @if ($customerTag !== 'Retail')
+                                <span class="badge bg-secondary-lt">{{ $customerTag }}</span>
+                            @endif
                         </div>
-                        @include('operations.customers.partials.customer-contact-lines', ['result' => $result])
+                        @if ($result->email)
+                            <div class="small text-secondary text-truncate">{{ $result->email }}</div>
+                        @endif
+                        @if ($result->contact_preference)
+                            <div class="small fw-medium text-azure text-truncate">{{ $result->contact_preference->outreachLabel() }}</div>
+                        @endif
+                        @if ($smsCapability !== null && ! $smsCapability->sms_capable)
+                            <div class="small text-warning text-truncate">{{ $smsCapability->blockReason() }}</div>
+                        @endif
+                        <div @class(['small text-truncate', 'text-secondary' => (bool) $result->display_address, 'text-muted' => ! $result->display_address])>
+                            {{ $result->display_address ?: 'No address on file' }}
+                        </div>
+                        <div class="small text-secondary border-top mt-2 pt-1" data-intake-customer-footnote>
+                            @if ($activeRepairOrder)
+                                <a href="{{ route('operations.repair-orders.show', $activeRepairOrder) }}" aria-label="Open RO #{{ $activeRepairOrder->repair_order_id }}" class="ark-money">RO #{{ $activeRepairOrder->repair_order_id }}</a>
+                                · {{ $activeRepairOrder->status->label() }}
+                            @else
+                                {{ $vehicleCount }} {{ Str::plural('vehicle', $vehicleCount) }} · no active RO
+                            @endif
+                        </div>
                     </div>
-                    @include('operations.customers.partials.customer-search-card-footnote', ['result' => $result])
                 </div>
             @empty
-                <div class="ops-index-empty ops-ro-retrieval-empty col-span-full">
+                <div class="text-secondary small">
                     No customers found for &ldquo;{{ $searchQuery }}&rdquo;.
-                    <a href="{{ route('operations.customers.search', ['q' => $searchQuery, 'intake' => 1]) }}" class="ml-1 font-semibold text-slate-700 underline">Open full customer search</a>
+                    <a href="{{ route('operations.customers.search', ['q' => $searchQuery, 'intake' => 1]) }}">Open full customer search</a>
                 </div>
             @endforelse
         </div>

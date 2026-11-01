@@ -1,42 +1,41 @@
 @if ($duplicateMatches->isNotEmpty())
-    <div class="ops-intake-duplicate-hint" role="status" aria-live="polite">
-        <p class="ops-intake-duplicate-hint-head">Similar customers on file</p>
-        <p class="ops-intake-duplicate-hint-copy">Possible matches while you're adding someone new. Use one below if it's the same person - otherwise continue and add them.</p>
-        <div class="ops-intake-duplicate-list">
+    <div class="alert alert-warning mt-3 mb-0" role="status" aria-live="polite" data-intake-duplicates>
+        <h4 class="alert-title">Similar customers on file</h4>
+        <div class="text-secondary mb-2">Possible matches while you're adding someone new. Use one below if it's the same person - otherwise continue and add them.</div>
+        <div class="list-group">
             @foreach ($duplicateMatches as $match)
                 @php
                     /** @var \App\Ark\Operations\Customers\Customer $customer */
                     $customer = $match['customer'];
                 @endphp
-                <div class="ops-intake-duplicate-row">
-                    <div class="ops-intake-duplicate-row-main min-w-0">
-                        <p class="ops-intake-duplicate-row-name">{{ $customer->name }}</p>
-                        <p class="ops-intake-duplicate-row-meta">
-                            @if ($customer->display_phone)
-                                <span>{{ $customer->display_phone }}</span>
+                <div class="list-group-item">
+                    <div class="row g-2 align-items-center">
+                        <div class="col overflow-hidden">
+                            <div class="fw-bold text-truncate">{{ $customer->name }}</div>
+                            <div class="small text-secondary text-truncate">
+                                @if ($customer->display_phone)
+                                    {{ $customer->display_phone }}
+                                @endif
+                                @if ($customer->email)
+                                    @if ($customer->display_phone) · @endif{{ $customer->email }}
+                                @endif
+                                @if (! $customer->display_phone && ! $customer->email)
+                                    No phone or email
+                                @endif
+                            </div>
+                            @if ($customer->display_address)
+                                <div class="small text-secondary text-truncate">{{ $customer->display_address }}</div>
                             @endif
-                            @if ($customer->email)
-                                @if ($customer->display_phone)<span class="ops-ro-sep">·</span>@endif
-                                <span class="truncate">{{ $customer->email }}</span>
-                            @endif
-                            @if (! $customer->display_phone && ! $customer->email)
-                                <span>No phone or email</span>
-                            @endif
-                        </p>
-                        @if ($customer->display_address)
-                            <p class="ops-intake-duplicate-row-address truncate">{{ $customer->display_address }}</p>
-                        @endif
-                        <span class="ops-intake-duplicate-reasons">
-                            @foreach ($match['reasons'] as $reason)
-                                <span class="ops-state-pill">{{ $reason }}</span>
-                            @endforeach
-                        </span>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                @foreach ($match['reasons'] as $reason)
+                                    <span class="badge bg-yellow-lt">{{ $reason }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-auto">
+                            <button type="button" data-intake-customer-id="{{ $customer->id }}" class="btn w-100">Use this customer</button>
+                        </div>
                     </div>
-                    <button
-                        type="button"
-                        data-intake-customer-id="{{ $customer->id }}"
-                        class="ops-intake-duplicate-use-link shrink-0"
-                    >Use this customer</button>
                 </div>
             @endforeach
         </div>
