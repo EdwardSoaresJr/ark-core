@@ -1946,17 +1946,23 @@
                     @endif
                 </x-operations.estimate-totals-panel>
 
-                <x-operations.worksheet-island stack>
-                    @include('operations.repair-orders.partials.operational-journey-card', [
-                        'operationalJourney' => $operationalJourney ?? null,
-                        'journeyComparison' => $journeyComparison ?? null,
-                    ])
+                @if (($operationalJourney ?? null) !== null)
+                    <x-operations.worksheet-island stack>
+                        @include('operations.repair-orders.partials.operational-journey-card', [
+                            'operationalJourney' => $operationalJourney,
+                            'journeyComparison' => $journeyComparison ?? null,
+                        ])
+                    </x-operations.worksheet-island>
+                @endif
 
-                    @include('operations.work.partials.advisor-work-context-panel', [
-                        'followUps' => $openFollowUps ?? [],
-                        'tasks' => $openTasks ?? [],
-                    ])
-                </x-operations.worksheet-island>
+                @if (($openFollowUps ?? []) !== [] || ($openTasks ?? []) !== [])
+                    <div class="card">
+                        @include('operations.work.partials.advisor-work-context-panel', [
+                            'followUps' => $openFollowUps ?? [],
+                            'tasks' => $openTasks ?? [],
+                        ])
+                    </div>
+                @endif
             </aside>
         </div>
 
