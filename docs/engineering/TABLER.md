@@ -477,6 +477,6 @@ The check-in workspace: recognize the customer, choose or add the vehicle, and o
 - **Vehicle step:** a header card with the last-vehicle shortcut and the filter for four or more vehicles, then an `.ark-card-grid` of vehicle cards with "Use this vehicle", then the add-vehicle form.
 - **Open step:** Reason for visit and Visit & defaults cards. Visit and billing class are `form-selectgroup` pills, so each choice is a full-size touch target. Open Repair Order is full width on phones.
 
-The page still shows only check-in markup. The customer card partials it used (`customer-search-card-badges`, `customer-contact-lines`, `customer-search-card-footnote`) had no other user and are removed.
+The page still shows only check-in markup. `customer-contact-lines` renders the result's contact lines in Tabler markup; `customer-search-card-badges` and `customer-search-card-footnote` had no other user and are removed.
 
 Unchanged: the intake controllers, routes, query parameters, form fields, and the `arkIntake*`, `arkVehicleDecode`, and `arkRoMention` components. Three script lines moved off legacy classes: `ark-intake-workspace-memory.js` finds the workspace by `[data-intake-find-workspace]` and `[data-intake-open-stack]`, and `ark-intake-find-customer.js` marks the selected result with `border-primary`.
