@@ -43,7 +43,7 @@ final class PortalEstimateDepositProjection
      */
     public function forAccessToken(
         RepairOrder $repairOrder,
-        EstimateAccessToken $accessToken,
+        ?EstimateAccessToken $accessToken,
         ?array $sessionFlash,
     ): array {
         $balance = $repairOrder->balanceDue();

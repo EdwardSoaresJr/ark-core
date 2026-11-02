@@ -106,7 +106,7 @@ test('resending estimate link creates a new token row without invalidating prior
     $this->get(route('portal.estimates.show', ['token' => $secondPlainToken]))->assertOk();
 });
 
-test('staff preview token does not invalidate existing customer estimate link', function () {
+test('staff preview creates no token and leaves the existing customer estimate link working', function () {
     $repairOrder = estimateTokenSecurityRepairOrder();
     $plainToken = str_repeat('d', 64);
 
@@ -117,7 +117,7 @@ test('staff preview token does not invalidate existing customer estimate link', 
         ->assertOk()
         ->assertSee('Staff preview');
 
-    expect(EstimateAccessToken::query()->count())->toBe(2);
+    expect(EstimateAccessToken::query()->count())->toBe(1);
 
     $this->get(route('portal.estimates.show', ['token' => $plainToken]))
         ->assertOk()

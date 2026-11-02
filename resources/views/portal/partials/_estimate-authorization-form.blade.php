@@ -2,11 +2,14 @@
     $alpineScope = $alpineScope ?? 'form';
     $authorizationConcerns = $authorizationForm->authorizationConcerns;
     $initialDispositions = $authorizationForm->initialDispositions;
+    // A staff preview has no customer access token: the form is shown as the customer sees it but cannot be sent.
+    $previewOnly = $token === null;
 @endphp
 
 <form
     method="POST"
-    action="{{ route('portal.estimates.authorize', ['token' => $token]) }}"
+    action="{{ $previewOnly ? '' : route('portal.estimates.authorize', ['token' => $token]) }}"
+    @if ($previewOnly) data-staff-preview-form onsubmit="return false" @endif
     class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
     @if ($alpineScope === 'form')
         x-data="arkPortalEstimateForm({
@@ -198,11 +201,15 @@
     <div class="border-t border-slate-100 bg-slate-50 px-4 py-4 sm:px-5">
         <button
             type="submit"
-            class="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#0099cc] px-4 text-base font-semibold text-white shadow-sm hover:bg-[#007aa3] sm:text-sm lg:max-w-none"
+            class="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#0099cc] px-4 text-base font-semibold text-white shadow-sm hover:bg-[#007aa3] disabled:opacity-60 sm:text-sm lg:max-w-none"
             x-text="submitButtonLabel()"
+            @disabled($previewOnly)
         >
             Approve all services
         </button>
+        @if ($previewOnly)
+            <p class="mt-2 text-center text-xs leading-5 text-slate-600">Staff preview: the customer approves from their own link.</p>
+        @endif
         @if ($depositEnabled ?? false)
             <p class="mt-2 text-center text-xs leading-5 text-slate-600">
                 After you send your choices, you’ll pay the deposit on the next step if one is required.

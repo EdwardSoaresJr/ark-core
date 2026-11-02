@@ -56,7 +56,7 @@
 
                 @if ($estimatePdfAvailable ?? false)
                     <div class="shrink-0 sm:pt-1">
-                        @include('portal.partials._estimate-pdf-actions', ['token' => $token])
+                        @include('portal.partials._estimate-pdf-actions', ['token' => $token, 'repairOrder' => $repairOrder])
                     </div>
                 @endif
             </div>
