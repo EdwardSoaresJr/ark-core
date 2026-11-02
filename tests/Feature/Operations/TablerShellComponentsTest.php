@@ -52,6 +52,7 @@ test('a Tabler page renders the shell components as Tabler markup outside .ark-l
         'comms interrupts' => '//*[@x-data="arkCommsInterrupt()"]',
         'call queue poller' => '//*[@data-call-queue-root]',
         'image lightbox' => '//*[@x-data="arkImageLightbox()"]',
+        'workspace tabs' => '//*[@id="ops-workspace-tabs"]',
     ];
 
     foreach ($hooks as $component => $query) {
@@ -61,7 +62,7 @@ test('a Tabler page renders the shell components as Tabler markup outside .ark-l
             ->and($xpath->query($insideLegacy, $nodes->item(0))->length)->toBe(0, "{$component} is outside .ark-legacy");
     }
 
-    foreach (['ws-presence', 'ops-topbar-comms', 'ops-global-search', 'ops-incoming-call-pop', 'ops-incoming-message-pop', 'ops-comms-interrupt-backdrop', 'ops-image-lightbox', 'ops-learn-guide-modal', 'ops-call-queue'] as $legacyClass) {
+    foreach (['ws-presence', 'ops-topbar-comms', 'ops-global-search', 'ops-incoming-call-pop', 'ops-incoming-message-pop', 'ops-comms-interrupt-backdrop', 'ops-image-lightbox', 'ops-learn-guide-modal', 'ops-call-queue', 'ops-workspace-tabs'] as $legacyClass) {
         expect($xpath->query('//*['.shellComponentsHasClass($legacyClass).']')->length)->toBe(0, "no {$legacyClass}");
     }
 
@@ -129,7 +130,7 @@ test('the overlays stack in the legacy order after the page', function (): void 
     expect($positions)->toBe($sorted);
 });
 
-test('the only islands left in the Tabler shell are the workspace tabs and the guide preview', function (): void {
+test('the only island left in the Tabler shell is the guide preview', function (): void {
     session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
 
     $html = $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
@@ -150,9 +151,41 @@ test('the only islands left in the Tabler shell are the workspace tabs and the g
         };
     }
 
-    expect($kept)->toContain('workspace tabs')
-        ->toContain('guide preview')
+    expect($kept)->toContain('guide preview')
+        ->not->toContain('workspace tabs')
         ->not->toContain('unexpected');
+});
+
+test('the workspace tabs mount renders in Tabler mode on a Tabler page and legacy mode on the legacy shell', function (): void {
+    session([WorkstationPresence::SESSION_BIND_DISMISSED => true]);
+    $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
+
+    $tabler = shellComponentsXpath($this->actingAs($admin)->get(route('operations.customers.search'))->assertOk()->getContent());
+    $legacy = shellComponentsXpath($this->actingAs($admin)
+        ->get(route('operations.learn.show', ['role' => 'admin', 'article' => 'getting-started']))
+        ->assertOk()
+        ->getContent());
+
+    $tablerMount = $tabler->query('//*[@id="ops-workspace-tabs"]');
+    $legacyMount = $legacy->query('//*[@id="ops-workspace-tabs"]');
+
+    expect($tablerMount->length)->toBe(1)
+        ->and($legacyMount->length)->toBe(1);
+
+    $tablerMount = $tablerMount->item(0);
+    $legacyMount = $legacyMount->item(0);
+
+    expect($tablerMount->getAttribute('data-workspace-tabs-ui'))->toBe('tabler')
+        ->and($tablerMount->hasAttribute('data-workspace-tabs'))->toBeTrue()
+        ->and($tablerMount->getAttribute('data-ark-workspace-dirty'))->toBe('off')
+        ->and($tablerMount->getAttribute('class'))->toBe('d-none d-print-none border-bottom bg-surface')
+        ->and($tablerMount->getAttribute('aria-hidden'))->toBe('true')
+        ->and($tablerMount->getAttribute('aria-label'))->toBe('Workspaces')
+        ->and($tabler->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " page-wrapper ")]', $tablerMount)->length)->toBe(1)
+        ->and($legacyMount->getAttribute('data-workspace-tabs-ui'))->toBe('legacy')
+        ->and($legacyMount->getAttribute('class'))->toBe('ops-workspace-tabs')
+        ->and($legacyMount->getAttribute('aria-hidden'))->toBe('true')
+        ->and($legacy->query('ancestor-or-self::*['.shellComponentsHasClass('ark-legacy').']', $legacyMount)->length)->toBe(0);
 });
 
 test('an ARKademy page keeps the legacy shell components', function (): void {
