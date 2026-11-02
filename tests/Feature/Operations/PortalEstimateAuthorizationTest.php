@@ -361,6 +361,36 @@ test('staff portal preview does not record estimate viewed or touch last viewed 
         ->and(ConversationMessage::query()->count())->toBe(0);
 });
 
+test('staff estimate preview creates no access token, cannot approve, records nothing, and totals match the customer page', function () {
+    [$repairOrder, $token, $recommendedConcern] = portalAuthorizationRepairOrder();
+    $statusBefore = $repairOrder->status;
+
+    $preview = $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.repair-orders.portal-preview', $repairOrder))
+        ->assertOk()
+        ->assertSee('Staff preview')
+        ->assertSee('data-staff-preview-form', false)
+        ->assertSee('Staff preview: the customer approves from their own link.')
+        ->assertSee('A/C performance diagnostic')
+        ->getContent();
+
+    expect($preview)->not->toContain('/portal/estimates/')
+        ->and(EstimateAccessToken::query()->count())->toBe(1)
+        ->and(ApprovalEvent::query()->count())->toBe(0)
+        ->and(CommunicationEvent::query()->count())->toBe(0)
+        ->and(ConversationMessage::query()->count())->toBe(0)
+        ->and($token->fresh()->last_viewed_at)->toBeNull()
+        ->and($repairOrder->fresh()->status)->toEqual($statusBefore)
+        ->and($recommendedConcern->fresh()->disposition)->toBe(RepairOrderConcernDisposition::Recommended);
+
+    auth()->logout();
+    $customer = $this->get(route('portal.estimates.show', ['token' => portalAuthorizationPlainToken()]))->assertOk()->getContent();
+    $amounts = fn (string $html): array => preg_match_all('/\$[0-9,]+\.[0-9]{2}/', $html, $match) > 0 ? $match[0] : [];
+
+    expect($amounts($preview))->toContain('$155.93')
+        ->and($amounts($preview))->toBe($amounts($customer));
+});
+
 test('authenticated advisor opening customer portal link does not record estimate viewed', function () {
     [$repairOrder, $token] = portalAuthorizationRepairOrder();
 

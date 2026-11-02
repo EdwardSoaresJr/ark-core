@@ -9,6 +9,7 @@ use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Evidence\EvidenceProjection;
 use App\Ark\Operations\Evidence\RecordEvidenceCustomerPresentedAction;
 use App\Ark\Operations\Payments\CardPresentCaptureProjection;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Contracts\View\View;
@@ -46,12 +47,21 @@ final class PortalEstimatePage
         return ! $user->can(ArkCapability::RepairOrdersManage->value);
     }
 
+    /**
+     * A staff preview passes no access token, only the repair order: nothing is created, recorded, or
+     * submittable, and evidence and the PDF open through staff routes.
+     */
     public function render(
-        EstimateAccessToken $accessToken,
-        string $plainToken,
+        ?EstimateAccessToken $accessToken,
+        ?string $plainToken,
         bool $recordCustomerView,
         bool $staffPreview = false,
+        ?RepairOrder $previewRepairOrder = null,
     ): View {
+        if ($accessToken === null && ! ($staffPreview && ! $recordCustomerView && $previewRepairOrder !== null)) {
+            throw new \InvalidArgumentException('Only a staff preview renders the estimate without an access token.');
+        }
+
         if ($recordCustomerView && $accessToken->last_viewed_at === null) {
             $repairOrderForView = $accessToken->repairOrder()->firstOrFail();
             $this->recordView->execute($repairOrderForView, $accessToken);
@@ -62,7 +72,7 @@ final class PortalEstimatePage
             $accessToken = $accessToken->fresh();
         }
 
-        $repairOrder = $accessToken->repairOrder()
+        $repairOrder = ($accessToken !== null ? $accessToken->repairOrder() : RepairOrder::query()->whereKey($previewRepairOrder->getKey()))
             ->with(['customer', 'vehicle', 'concerns', 'approvalEvents'])
             ->firstOrFail();
 
@@ -92,11 +102,10 @@ final class PortalEstimatePage
 
         $customerEvidence = $this->evidenceProjection
             ->forRepairOrder($repairOrder, customerFacing: true)
-            ->map(function (array $row) use ($plainToken): array {
-                $row['url'] = route('portal.estimates.evidence.show', [
-                    'token' => $plainToken,
-                    'evidence' => $row['id'],
-                ]);
+            ->map(function (array $row) use ($plainToken, $repairOrder): array {
+                $row['url'] = $plainToken !== null
+                    ? route('portal.estimates.evidence.show', ['token' => $plainToken, 'evidence' => $row['id']])
+                    : route('operations.repair-orders.evidence.show', ['repairOrder' => $repairOrder, 'evidence' => $row['id']]);
 
                 return $row;
             });

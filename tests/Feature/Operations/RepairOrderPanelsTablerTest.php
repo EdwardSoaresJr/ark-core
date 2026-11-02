@@ -257,6 +257,27 @@ test('the estimate context panels render Tabler authorization, portal, and parts
         ->and($xpath->query('.//*[@data-parts-line="'.$part->id.'"]//button[normalize-space()="Print label"]', $parts)->length)->toBe(1);
 });
 
+test('the estimate toolbar has a Preview button to the staff preview, on open and closed repair orders', function (): void {
+    [$repairOrder] = panelsTablerRepairOrder();
+    $preview = route('operations.repair-orders.portal-preview', $repairOrder);
+    $previewButton = function () use ($repairOrder, $preview): DOMNodeList {
+        $html = $this->actingAs(panelsTablerAdvisor())->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+        $xpath = panelsTablerXpath($html);
+
+        return $xpath->query('//*[@data-estimate-tools]//a[@data-estimate-preview][@href="'.$preview.'"][@target="_blank"][contains(@class, "btn")]');
+    };
+
+    expect($previewButton()->length)->toBe(1)
+        ->and(trim($previewButton()->item(0)->textContent))->toBe('Preview');
+
+    $repairOrder->forceFill(['status' => RepairOrderStatus::Closed])->save();
+    expect($repairOrder->fresh()->isTerminal())->toBeTrue()
+        ->and($previewButton()->length)->toBe(1);
+
+    RepairOrderLine::query()->where('repair_order_id', $repairOrder->id)->delete();
+    expect($previewButton()->length)->toBe(0);
+});
+
 test('the authorization history keeps the revoke form on Tabler markup', function (): void {
     [$repairOrder] = panelsTablerRepairOrder();
     $advisor = panelsTablerAdvisor();
