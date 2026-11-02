@@ -1,4 +1,5 @@
 @php
+    $tabletMode = (bool) ($tabletMode ?? false);
     $sectionWalk = $section_walk ?? [];
     $stages = $sectionWalk['stages'] ?? [];
     $progress = $sectionWalk['progress'] ?? ['addressed' => 0, 'total' => 0, 'remaining' => 0];
@@ -14,7 +15,7 @@
     class="d-flex flex-column gap-3"
     id="inspection-sections"
     data-inspection-sections
-    data-surface="standard"
+    data-surface="{{ $tabletMode ? 'tablet' : 'standard' }}"
     x-data="arkInspectionSectionWalk(@js([
         'csrf' => csrf_token(),
         'stages' => $stages,
@@ -54,7 +55,7 @@
             <div class="card-actions d-md-none">
                 <button
                     type="button"
-                    class="btn btn-sm"
+                    @class(['btn', 'btn-sm' => ! $tabletMode])
                     data-bs-toggle="collapse"
                     data-bs-target="#inspection-sections-toc-list"
                     aria-controls="inspection-sections-toc-list"
@@ -73,7 +74,7 @@
                         <template x-for="section in stage.sections" :key="section.key">
                             <button
                                 type="button"
-                                class="list-group-item list-group-item-action"
+                                @class(['list-group-item list-group-item-action', 'py-3' => $tabletMode])
                                 :class="{
                                     'is-complete': section.state === 'complete',
                                     'is-progress': section.state === 'in_progress',
@@ -205,7 +206,7 @@
                                                 <template x-for="slot in point.measurement_slots" :key="slot.key">
                                                     <label class="col-6 col-sm-4">
                                                         <span class="form-label mb-1" x-text="slot.name"></span>
-                                                        <span class="input-group">
+                                                        <span @class(['input-group', 'input-group-lg' => $tabletMode])>
                                                             <input
                                                                 type="text"
                                                                 inputmode="decimal"
@@ -231,7 +232,7 @@
                                             <span class="text-success" x-show="point.saveState === 'saved'" x-cloak>Saved</span>
                                             <button
                                                 type="button"
-                                                class="btn btn-sm btn-outline-danger"
+                                                @class(['btn btn-outline-danger', 'btn-sm' => ! $tabletMode])
                                                 x-show="point.saveState === 'error'"
                                                 x-cloak
                                                 x-on:click="retry(point)"
@@ -242,7 +243,7 @@
                                         <div class="mt-2" x-show="shouldExpandForStatus(point, point.status)" x-cloak>
                                             <button
                                                 type="button"
-                                                class="btn btn-sm"
+                                                @class(['btn', 'btn-sm' => ! $tabletMode])
                                                 :aria-expanded="point.expanded ? 'true' : 'false'"
                                                 x-on:click="toggleExpand(point)"
                                                 x-text="point.expanded ? 'Hide details' : 'Details'"
@@ -300,7 +301,7 @@
                                                         <div class="form-label">Photo / video</div>
                                                         <div class="row g-2">
                                                             <div class="col-12 col-sm-4">
-                                                                <select name="purpose" class="form-select" aria-label="Photo purpose" required>
+                                                                <select name="purpose" @class(['form-select', 'form-select-lg' => $tabletMode]) aria-label="Photo purpose" required>
                                                                     @foreach ($photoPurposes as $purpose)
                                                                         <option value="{{ $purpose->value }}" @selected($purpose === \App\Ark\Operations\Inspections\InspectionPhotoPurpose::Customer)>
                                                                             {{ $purpose->label() }}
@@ -309,10 +310,10 @@
                                                                 </select>
                                                             </div>
                                                             <div class="col-12 col-sm">
-                                                                <input type="file" name="photo" accept="image/*,video/mp4,video/quicktime,video/webm" required class="form-control" aria-label="Photo or video file">
+                                                                <input type="file" name="photo" accept="image/*,video/mp4,video/quicktime,video/webm" required @class(['form-control', 'form-control-lg' => $tabletMode]) aria-label="Photo or video file">
                                                             </div>
                                                             <div class="col-12 col-sm-auto">
-                                                                <button type="submit" class="btn w-100">Attach</button>
+                                                                <button type="submit" @class(['btn w-100', 'btn-lg' => $tabletMode])>Attach</button>
                                                             </div>
                                                         </div>
                                                     </form>

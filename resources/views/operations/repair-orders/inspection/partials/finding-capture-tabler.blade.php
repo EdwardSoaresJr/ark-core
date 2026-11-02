@@ -1,4 +1,5 @@
 @php
+    $tabletMode = (bool) ($tabletMode ?? false);
     $selectedConcernId = old('repair_order_concern_id', request()->integer('concern') ?: null);
     $defaultIntent = old('intent', session('finding_intent', $finding_intents[0]->value));
     $openCapture = $canEdit && (old('intent') !== null || request()->boolean('capture'));
@@ -230,9 +231,15 @@
     </div>
 
     @if ($canEdit)
+        {{-- On the tablet surface the FAB sits above the walk's sticky Prev/Next bar, and from md up the bay layout has room for the inline button. --}}
         <button
             type="button"
-            class="btn btn-primary btn-lg position-fixed bottom-0 end-0 m-3 shadow z-3"
+            @class([
+                'btn btn-primary btn-lg position-fixed end-0 m-3 shadow z-3',
+                'bottom-0' => ! $tabletMode,
+                'd-md-none' => $tabletMode,
+            ])
+            @if ($tabletMode) style="bottom: 3.5rem" @endif
             x-show="showFab && ! open"
             x-cloak
             x-on:click="openCapture()"
