@@ -526,7 +526,7 @@ test('the customer hub work and comms tabs render the shared communication compo
         ->and(commsTablerClassesOutsideIslands($comms))->not->toMatch('/(^|\s)ops-/m');
 });
 
-test('caller lookup uses the Tabler context panel and the repair order rail keeps its own markup', function (): void {
+test('caller lookup and the repair order communications tab use the Tabler conversation components', function (): void {
     commsTablerFakeHttp();
     $this->actingAs(actingAsLearnCurrentAdvisor());
 
@@ -547,6 +547,6 @@ test('caller lookup uses the Tabler context panel and the repair order rail keep
     $this->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'comms']))
         ->assertOk()
         ->assertSee('id="communication-rail"', false)
-        ->assertDontSee('data-comms-actions-panel', false)
-        ->assertDontSee('dropdown-menu show position-fixed', false);
+        ->assertSee('data-ark-conversation-composer', false)
+        ->assertDontSee('class="ark-legacy bg-white text-dark border rounded overflow-hidden" data-comms-composer', false);
 });
