@@ -83,7 +83,7 @@ test('the overhead calculator keeps its bindings, outputs, and save hook', funct
     $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value));
 
     $html = $this->get(route('operations.settings.shop.edit', ['section' => 'overhead']))->assertOk()->getContent();
-    $section = str($html)->betweenFirst('data-settings-section="overhead"', '<div class="ark-legacy')->toString();
+    $section = str($html)->after('data-settings-section="overhead"')->before('data-settings-section=')->toString();
 
     expect($section)
         ->toContain('action="'.route('operations.settings.shop.overhead.update').'"')

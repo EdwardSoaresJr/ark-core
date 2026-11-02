@@ -4,212 +4,193 @@
     $counts = $library['counts'];
     $rows = $library['rows'];
     $paginator = $library['paginator'];
+    $activeFilterCount = count(array_filter([
+        $filters['filter'] !== 'all',
+        $filters['handled'] !== 'all',
+        filled($filters['from']),
+        filled($filters['to']),
+    ]));
 @endphp
 
-<x-operations.app title="Calls & Voicemail">
-    <style>
-        .ops-call-library__filters { margin: 0 0 1rem; padding: 0 1rem; }
-        .ops-call-library__filter-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
-        .ops-call-library__filter { display: flex; flex-direction: column; gap: 0.25rem; min-width: 8rem; }
-        .ops-call-library__filter--grow { flex: 1; min-width: 12rem; }
-        .ops-call-library__filter-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: rgb(100 116 139); }
-        .ops-call-library__list { display: flex; flex-direction: column; gap: 0.5rem; padding: 0 1rem 1rem; }
-        .ops-call-library__row {
-            display: grid;
-            grid-template-columns: minmax(12rem, 1.2fr) minmax(16rem, 1.5fr) auto;
-            gap: 1rem;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border: 1px solid rgb(226 232 240);
-            border-radius: 0.375rem;
-            background: #fff;
-        }
-        .ops-call-library__headline { font-weight: 600; color: rgb(15 23 42); margin: 0; }
-        .ops-call-library__meta { font-size: 0.8125rem; color: rgb(71 85 105); margin: 0.25rem 0 0; }
-        .ops-call-library__age { color: rgb(148 163 184); }
-        .ops-call-library__owner { font-size: 0.75rem; color: rgb(100 116 139); margin: 0.25rem 0 0; }
-        .ops-call-library__media { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
-        .ops-call-library__audio-block { display: flex; flex-direction: column; gap: 0.25rem; }
-        .ops-call-library__audio-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: rgb(100 116 139); }
-        .ops-call-library__player {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            max-width: 22rem;
-            min-width: 0;
-            position: relative;
-        }
-        .ops-call-library__play {
-            flex: none;
-            height: 1.75rem;
-            padding: 0 0.5rem;
-            border: 1px solid rgb(203 213 225);
-            border-radius: 0.25rem;
-            background: #fff;
-            color: rgb(15 23 42);
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .ops-call-library__scrub {
-            flex: 1 1 auto;
-            min-width: 4rem;
-            accent-color: rgb(15 23 42);
-        }
-        .ops-call-library__clock {
-            flex: none;
-            font-size: 0.75rem;
-            font-variant-numeric: tabular-nums;
-            color: rgb(51 65 85);
-            white-space: nowrap;
-        }
-        .ops-call-library__audio {
-            position: absolute;
-            width: 0;
-            height: 0;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .ops-call-library__no-media { font-size: 0.8125rem; color: rgb(148 163 184); font-style: italic; }
-        .ops-call-library__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-end; }
-        .ops-call-library__empty { padding: 2rem 1rem; color: rgb(100 116 139); }
-        @media (max-width: 900px) {
-            .ops-call-library__row { grid-template-columns: 1fr; }
-            .ops-call-library__actions { justify-content: flex-start; }
-        }
-    </style>
-    <section class="ops-comms-workspace ops-call-library">
-        <x-operations.queue-page-header
-            id="ops-call-library"
-            title="Calls & Voicemail"
-            description="Inbound and outbound phone calls - listen to voicemails and recordings here."
-            :count="$paginator->total() > 0 ? $paginator->total() : null"
-            :show-back="false"
-        >
-            <x-slot:actions>
-                <a href="{{ \App\Ark\Operations\Communications\CommunicationsNeedsYou::url() }}" class="ops-page-link">Comms</a>
-                <a href="{{ route('operations.index') }}" class="ops-page-link">Work</a>
-            </x-slot:actions>
-        </x-operations.queue-page-header>
+<x-operations.app title="Calls & Voicemail" ui="tabler">
+    <x-tabler.page
+        layout="fluid"
+        title="Calls & Voicemail"
+        title-id="ops-call-library"
+        :title-count="$paginator->total()"
+        subtitle="Inbound and outbound phone calls - listen to voicemails and recordings here."
+        actions-label="Calls commands"
+    >
+        <x-slot:actions>
+            <x-tabler.page-action :href="\App\Ark\Operations\Communications\CommunicationsNeedsYou::url()" icon="message" label="Comms" />
+            <x-tabler.page-action :href="route('operations.index')" icon="layout-grid" label="Work" />
+        </x-slot:actions>
 
-        @include('operations.communications.workspace.partials.section-nav', ['section' => 'calls'])
+        <div data-call-library>
+            @include('operations.communications.workspace.partials.section-nav', ['section' => 'calls'])
 
-        <form method="get" action="{{ route('operations.communications.calls') }}" class="ops-call-library__filters">
-            <div class="ops-call-library__filter-row">
-                <label class="ops-call-library__filter">
-                    <span class="ops-call-library__filter-label">Show</span>
-                    <select name="filter" class="ops-input ops-input--dense">
-                        <option value="all" @selected($filters['filter'] === 'all')>All calls</option>
-                        <option value="voicemail" @selected($filters['filter'] === 'voicemail')>With voicemail ({{ $counts['voicemail'] }})</option>
-                        <option value="recording" @selected($filters['filter'] === 'recording')>With recording ({{ $counts['recording'] }})</option>
-                        <option value="missed" @selected($filters['filter'] === 'missed')>Missed / no answer</option>
-                    </select>
-                </label>
-                <label class="ops-call-library__filter">
-                    <span class="ops-call-library__filter-label">Handled</span>
-                    <select name="handled" class="ops-input ops-input--dense">
-                        <option value="all" @selected($filters['handled'] === 'all')>Any</option>
-                        <option value="unhandled" @selected($filters['handled'] === 'unhandled')>Needs review</option>
-                        <option value="handled" @selected($filters['handled'] === 'handled')>Handled</option>
-                    </select>
-                </label>
-                <label class="ops-call-library__filter">
-                    <span class="ops-call-library__filter-label">From</span>
-                    <input type="date" name="from" value="{{ $filters['from'] }}" class="ops-input ops-input--dense">
-                </label>
-                <label class="ops-call-library__filter">
-                    <span class="ops-call-library__filter-label">To</span>
-                    <input type="date" name="to" value="{{ $filters['to'] }}" class="ops-input ops-input--dense">
-                </label>
-                <label class="ops-call-library__filter ops-call-library__filter--grow">
-                    <span class="ops-call-library__filter-label">Search</span>
-                    <input type="search" name="q" value="{{ $filters['q'] }}" placeholder="Phone or customer name" class="ops-input ops-input--dense">
-                </label>
-                <button type="submit" class="ops-btn ops-btn--secondary ops-btn--dense">Apply</button>
-            </div>
-        </form>
-
-        @if ($rows === [])
-            <p class="ops-call-library__empty">No calls match these filters.</p>
-        @else
-            <div class="ops-call-library__list" role="list">
-                @foreach ($rows as $row)
-                    <article class="ops-call-library__row" role="listitem">
-                        <div class="ops-call-library__identity">
-                            <p class="ops-call-library__headline">{{ $row['headline'] }}</p>
-                            <p class="ops-call-library__meta">
-                                {{ $row['phone'] }}
-                                · {{ $row['direction'] }}
-                                · {{ $row['status'] }}
-                                · {{ $row['started_label'] }}
-                                <span class="ops-call-library__age">({{ $row['age_label'] }})</span>
-                            </p>
-                            @if (filled($row['owner']))
-                                <p class="ops-call-library__owner">Owned by {{ $row['owner'] }}</p>
-                            @endif
+            <div class="card mb-3">
+                <div class="card-body p-2 p-md-3">
+                    <form method="get" action="{{ route('operations.communications.calls') }}" role="search" aria-label="Filter calls">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-12 d-md-none order-3">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-ghost-secondary"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#calls-filters"
+                                    aria-controls="calls-filters"
+                                    aria-expanded="{{ $activeFilterCount > 0 ? 'true' : 'false' }}"
+                                >
+                                    <x-tabler.icon name="adjustments-horizontal" />
+                                    Filters
+                                    @if ($activeFilterCount > 0)
+                                        <span class="badge bg-primary text-primary-fg ms-2">{{ $activeFilterCount }}</span>
+                                    @endif
+                                </button>
+                            </div>
+                            <div @class(['col-12 col-xl collapse d-md-block order-4 order-md-1', 'show' => $activeFilterCount > 0]) id="calls-filters">
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label" for="calls-filter-show">Show</label>
+                                        <select id="calls-filter-show" name="filter" class="form-select">
+                                            <option value="all" @selected($filters['filter'] === 'all')>All calls</option>
+                                            <option value="voicemail" @selected($filters['filter'] === 'voicemail')>With voicemail ({{ $counts['voicemail'] }})</option>
+                                            <option value="recording" @selected($filters['filter'] === 'recording')>With recording ({{ $counts['recording'] }})</option>
+                                            <option value="missed" @selected($filters['filter'] === 'missed')>Missed / no answer</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label" for="calls-filter-handled">Handled</label>
+                                        <select id="calls-filter-handled" name="handled" class="form-select">
+                                            <option value="all" @selected($filters['handled'] === 'all')>Any</option>
+                                            <option value="unhandled" @selected($filters['handled'] === 'unhandled')>Needs review</option>
+                                            <option value="handled" @selected($filters['handled'] === 'handled')>Handled</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label" for="calls-filter-from">From</label>
+                                        <input id="calls-filter-from" type="date" name="from" value="{{ $filters['from'] }}" class="form-control">
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label" for="calls-filter-to">To</label>
+                                        <input id="calls-filter-to" type="date" name="to" value="{{ $filters['to'] }}" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col col-xl-3 order-1 order-md-2">
+                                <label class="form-label d-none d-md-block" for="calls-filter-q">Search</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon"><x-tabler.icon name="search" /></span>
+                                    <input
+                                        id="calls-filter-q"
+                                        type="search"
+                                        name="q"
+                                        value="{{ $filters['q'] }}"
+                                        placeholder="Phone or customer name"
+                                        aria-label="Search calls"
+                                        class="form-control"
+                                    >
+                                </div>
+                            </div>
+                            <div class="col-auto order-2 order-md-3">
+                                <button type="submit" class="btn btn-primary">Apply</button>
+                            </div>
                         </div>
+                    </form>
+                </div>
+            </div>
 
-                        <div class="ops-call-library__media">
+            @if ($rows === [])
+                <x-tabler.empty-state icon="phone">No calls match these filters.</x-tabler.empty-state>
+            @else
+                <div class="card">
+                    <div class="list-group list-group-flush" role="list">
+                        @foreach ($rows as $row)
                             @php
                                 $voicemailState = $row['voicemail_state'] ?? (! empty($row['has_voicemail']) ? 'playable' : 'none');
                                 $recordingState = $row['recording_state'] ?? (! empty($row['has_recording']) ? 'playable' : 'none');
                             @endphp
-                            @if ($voicemailState === 'playable' && filled($row['voicemail_url'] ?? null))
-                                @include('operations.communications.calls.player', [
-                                    'src' => $row['voicemail_url'],
-                                    'seconds' => $row['voicemail_duration'] ?? 0,
-                                    'kind' => 'Voicemail',
-                                ])
-                            @elseif ($voicemailState === 'unavailable')
-                                <span class="ops-call-library__no-media">Voicemail unavailable</span>
-                            @endif
-                            @if ($recordingState === 'playable' && filled($row['recording_url'] ?? null))
-                                @include('operations.communications.calls.player', [
-                                    'src' => $row['recording_url'],
-                                    'seconds' => $row['recording_duration'] ?? 0,
-                                    'kind' => 'Recording',
-                                ])
-                            @elseif ($recordingState === 'unavailable')
-                                <span class="ops-call-library__no-media">Recording unavailable</span>
-                            @endif
-                            @if ($voicemailState === 'none' && $recordingState === 'none')
-                                <span class="ops-call-library__no-media">No recording</span>
-                            @endif
-                        </div>
+                            <article class="list-group-item" role="listitem" data-call-row>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-12 col-lg-4">
+                                        <div class="fw-bold">{{ $row['headline'] }}</div>
+                                        <div class="small text-secondary">
+                                            {{ $row['phone'] }}
+                                            · {{ $row['direction'] }}
+                                            · {{ $row['status'] }}
+                                            · {{ $row['started_label'] }}
+                                            <span class="text-nowrap">({{ $row['age_label'] }})</span>
+                                        </div>
+                                        @if (filled($row['owner']))
+                                            <div class="small text-secondary">Owned by {{ $row['owner'] }}</div>
+                                        @endif
+                                    </div>
 
-                        <div class="ops-call-library__actions">
-                            @if ($row['customer_url'])
-                                <a href="{{ $row['customer_url'] }}" class="ops-call-queue__action">Customer</a>
-                            @endif
-                            @if ($row['text_url'] ?? null)
-                                <a href="{{ $row['text_url'] }}" class="ops-call-queue__action">Text</a>
-                            @endif
-                            @if ($row['repair_order_url'])
-                                <a href="{{ $row['repair_order_url'] }}" class="ops-call-queue__action">RO</a>
-                            @endif
-                            @if ($row['lookup_url'])
-                                <a href="{{ $row['lookup_url'] }}" class="ops-call-queue__action">Lookup</a>
-                            @endif
-                            @if (! $row['handled'])
-                                <form method="post" action="{{ $row['mark_handled_url'] }}" class="inline">
-                                    @csrf
-                                    <button type="submit" class="ops-call-queue__action ops-call-queue__action--ghost">Handled</button>
-                                </form>
-                            @else
-                                <span class="ops-call-queue__action ops-call-queue__action--owned">Handled</span>
-                            @endif
-                        </div>
-                    </article>
-                @endforeach
-            </div>
+                                    <div class="col-12 col-lg d-flex flex-column gap-2">
+                                        @if ($voicemailState === 'playable' && filled($row['voicemail_url'] ?? null))
+                                            @include('operations.communications.calls.player', [
+                                                'src' => $row['voicemail_url'],
+                                                'seconds' => $row['voicemail_duration'] ?? 0,
+                                                'kind' => 'Voicemail',
+                                            ])
+                                        @elseif ($voicemailState === 'unavailable')
+                                            <span class="small text-secondary fst-italic">Voicemail unavailable</span>
+                                        @endif
+                                        @if ($recordingState === 'playable' && filled($row['recording_url'] ?? null))
+                                            @include('operations.communications.calls.player', [
+                                                'src' => $row['recording_url'],
+                                                'seconds' => $row['recording_duration'] ?? 0,
+                                                'kind' => 'Recording',
+                                            ])
+                                        @elseif ($recordingState === 'unavailable')
+                                            <span class="small text-secondary fst-italic">Recording unavailable</span>
+                                        @endif
+                                        @if ($voicemailState === 'none' && $recordingState === 'none')
+                                            <span class="small text-secondary fst-italic">No recording</span>
+                                        @endif
+                                    </div>
 
-            <div class="ops-comms-workspace__pagination">
-                {{ $paginator->withQueryString()->links() }}
-            </div>
-        @endif
+                                    <div class="col-12 col-lg-auto">
+                                        <div class="btn-list justify-content-lg-end">
+                                            @if ($row['customer_url'])
+                                                <a href="{{ $row['customer_url'] }}" class="btn btn-sm">Customer</a>
+                                            @endif
+                                            @if ($row['text_url'] ?? null)
+                                                <a href="{{ $row['text_url'] }}" class="btn btn-sm">Text</a>
+                                            @endif
+                                            @if ($row['repair_order_url'])
+                                                <a href="{{ $row['repair_order_url'] }}" class="btn btn-sm">RO</a>
+                                            @endif
+                                            @if ($row['lookup_url'])
+                                                <a href="{{ $row['lookup_url'] }}" class="btn btn-sm">Lookup</a>
+                                            @endif
+                                            @if (! $row['handled'])
+                                                <form method="post" action="{{ $row['mark_handled_url'] }}" class="d-inline-flex">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-ghost-secondary">Handled</button>
+                                                </form>
+                                            @else
+                                                <span class="badge bg-green-lt">Handled</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                    @if ($paginator->hasPages())
+                        <div class="card-footer">
+                            {{ $paginator->withQueryString()->links('pagination::bootstrap-5') }}
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
 
         <script>
             (function () {
-                const root = document.querySelector('.ops-call-library');
+                const root = document.querySelector('[data-call-library]');
                 if (!root) {
                     return;
                 }
@@ -319,5 +300,5 @@
                 root.addEventListener('pause', onMedia, true);
             })();
         </script>
-    </section>
+    </x-tabler.page>
 </x-operations.app>

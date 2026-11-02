@@ -357,7 +357,7 @@ export function initIntakeWorkspaceMemory() {
         capture: captureIntakeWorkspaceMemory,
         persist: persistIntakeWorkspaceMemory,
         restore: restoreIntakeWorkspaceMemory,
-        consumeDraftRestore,
+        consumeDraftRestore: consumeIntakeDraftRestore,
         clear: clearIntakeWorkspaceMemory,
         clearFor: clearIntakeWorkspaceMemoryFor,
         clearIncomingCallCapture: clearIntakeIncomingCallCapture,

@@ -12,23 +12,26 @@
 @endphp
 
 @if ($hasAttention)
-    <section class="space-y-2">
-        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Needs attention</p>
+    <section class="card" aria-labelledby="shop-comms-attention">
+        <div class="card-status-top bg-yellow"></div>
+        <div class="card-header">
+            <h2 class="card-title" id="shop-comms-attention">Needs attention</h2>
+        </div>
 
         @if ($pendingCount > 0)
             @if ($pendingCount === 1)
-                <div class="rounded-sm border border-amber-200 bg-amber-50/40 px-3 py-3">
+                <div class="card-body p-2 p-md-3">
                     @include('operations.shop.communications.partials.pending-devices-panel', [
                         'shop' => $shop,
                         'showIntro' => true,
                     ])
                 </div>
             @else
-                <details class="rounded-sm border border-amber-200 bg-amber-50/40" @if ($errors->any()) open @endif>
-                    <summary class="cursor-pointer px-3 py-2.5 text-sm font-black text-amber-950">
+                <details class="border-bottom" @if ($errors->any()) open @endif>
+                    <summary class="card-body py-2 fw-bold">
                         {{ $pendingSummary }}
                     </summary>
-                    <div class="space-y-3 border-t border-amber-100 px-3 pb-3 pt-3">
+                    <div class="card-body p-2 p-md-3 pt-0 d-flex flex-column gap-3">
                         @include('operations.shop.communications.partials.pending-devices-panel', [
                             'shop' => $shop,
                             'showIntro' => false,
@@ -39,20 +42,21 @@
         @endif
 
         @if ($attention !== [])
-            <ul class="space-y-2">
+            <div class="list-group list-group-flush">
                 @foreach ($attention as $item)
-                    <li class="flex items-start gap-2 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
-                        <span class="font-black text-amber-700" aria-hidden="true">⚠</span>
-                        @if ($item->deviceId !== null)
-                            <a href="{{ route('operations.shop.devices.show', $item->deviceId) }}" class="font-semibold text-amber-900 hover:underline">
-                                {{ $item->message }}
-                            </a>
-                        @else
-                            <span class="font-semibold text-amber-900">{{ $item->message }}</span>
-                        @endif
-                    </li>
+                    @if ($item->deviceId !== null)
+                        <a href="{{ route('operations.shop.devices.show', $item->deviceId) }}" class="list-group-item list-group-item-action">
+                            <span class="badge badge-dot bg-yellow me-2" aria-hidden="true"></span>
+                            <span class="fw-medium">{{ $item->message }}</span>
+                        </a>
+                    @else
+                        <div class="list-group-item">
+                            <span class="badge badge-dot bg-yellow me-2" aria-hidden="true"></span>
+                            <span class="fw-medium">{{ $item->message }}</span>
+                        </div>
+                    @endif
                 @endforeach
-            </ul>
+            </div>
         @endif
     </section>
 @endif

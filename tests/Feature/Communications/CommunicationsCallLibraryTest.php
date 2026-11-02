@@ -65,5 +65,5 @@ test('calls library does not pretend a stored voicemail can play from Core', fun
         ->assertSee('Text', false)
         ->assertSee(route('operations.customers.show', $customer).'?compose=text#customer-communication', false)
         ->assertDontSee('No audio', false)
-        ->assertDontSee('<audio preload="none" class="ops-call-library__audio"', false);
+        ->assertDontSee('<audio preload="none" data-call-audio', false);
 });

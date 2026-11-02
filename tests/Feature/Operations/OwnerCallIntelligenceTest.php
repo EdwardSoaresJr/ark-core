@@ -3,16 +3,15 @@
 use App\Ark\Operations\Communications\ConversationSmsIntelligenceSlice;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\Telephony\AnalyzeCallSessionJob;
+use App\Ark\Operations\Documents\HtmlPdfBuilder;
+use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Telephony\CallCoachingSheetPresenter;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionAnalysisStatus;
 use App\Ark\Operations\Telephony\CallSessionAnalyzer;
-use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     ShopSettings::current()->persistTrusted([
@@ -204,9 +203,9 @@ test('owner can open coaching handout pdf', function () {
         'analyzed_at' => now(),
     ]);
 
-    $pdf = Mockery::mock(\App\Ark\Operations\Documents\HtmlPdfBuilder::class);
+    $pdf = Mockery::mock(HtmlPdfBuilder::class);
     $pdf->shouldReceive('toPdfBytes')->once()->andReturn('%PDF-fake');
-    app()->instance(\App\Ark\Operations\Documents\HtmlPdfBuilder::class, $pdf);
+    app()->instance(HtmlPdfBuilder::class, $pdf);
 
     $this->actingAs($admin)
         ->get(route('operations.owner.call-intelligence.coaching-pdf', $session))
@@ -237,7 +236,7 @@ test('coaching handout html separates customer and advisor sections', function (
         'analyzed_at' => now(),
     ]);
 
-    $sheet = app(\App\Ark\Operations\Telephony\CallCoachingSheetPresenter::class)->for($session);
+    $sheet = app(CallCoachingSheetPresenter::class)->for($session);
     $html = view('operations.documents.sheets.call-coaching', ['sheet' => $sheet])->render();
 
     expect($html)
@@ -410,7 +409,7 @@ test('core settings no longer expose call intelligence provider configuration', 
         ])
         ->assertRedirect();
 
-    expect(\App\Ark\Operations\Settings\ShopSettings::query()->value('openai_api_key'))->toBeNull();
+    expect(ShopSettings::query()->value('openai_api_key'))->toBeNull();
 });
 
 test('owner call intelligence lists analyzed sms threads', function () {
@@ -455,4 +454,187 @@ test('owner call intelligence lists analyzed sms threads', function () {
         ->assertOk()
         ->assertSee('Can I get a quote on brakes?')
         ->assertSee('Yes - send a photo if you can.');
+});
+
+function callIntelligenceTablerXpath(string $html): DOMXPath
+{
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+
+    return new DOMXPath($document);
+}
+
+function callIntelligenceTablerClass(string $class): string
+{
+    return 'contains(concat(" ", normalize-space(@class), " "), " '.$class.' ")';
+}
+
+/**
+ * The page renders in the Tabler shell, and nothing inside its page body is a legacy island.
+ */
+function callIntelligenceAssertTablerPage(string $html, string $title): DOMXPath
+{
+    $xpath = callIntelligenceTablerXpath($html);
+    $body = $xpath->query('//*['.callIntelligenceTablerClass('page-body').']')->item(0);
+
+    expect($html)->toContain('id="ark-sidebar-menu"')
+        ->and($xpath->query('//h2['.callIntelligenceTablerClass('page-title').'][contains(normalize-space(.), "'.$title.'")]')->length)->toBe(1)
+        ->and($body)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//*['.callIntelligenceTablerClass('ark-legacy').']', $body)->length)->toBe(0)
+        ->and($xpath->query('.//*[contains(@class, "ops-")]', $body)->length)->toBe(0);
+
+    return $xpath;
+}
+
+function callIntelligenceTablerAdmin(): User
+{
+    $admin = User::factory()->create(['name' => 'Alex Rivera'])->assignRole(ArkRole::Admin->value);
+    completeRequiredLearnFor($admin);
+
+    return $admin;
+}
+
+/**
+ * @return list<string>
+ */
+function callIntelligenceTablerTexts(DOMXPath $xpath, string $query): array
+{
+    $texts = [];
+    foreach ($xpath->query($query) as $node) {
+        $texts[] = preg_replace('/\s+/u', ' ', trim($node->textContent));
+    }
+
+    return $texts;
+}
+
+function callIntelligenceTablerSession(array $overrides = []): CallSession
+{
+    return CallSession::query()->create(array_merge([
+        'provider' => 'twilio',
+        'provider_call_sid' => 'CAtabler001',
+        'direction' => 'inbound',
+        'from_number' => '+17195551234',
+        'to_number' => '+17195559999',
+        'normalized_from' => '7195551234',
+        'status' => 'completed',
+        'started_at' => now()->subDay(),
+        'recording_url' => 'https://api.twilio.com/2010-04-01/Accounts/AC/Recordings/REtabler001',
+        'recording_duration_seconds' => 95,
+        'analysis_status' => CallSessionAnalysisStatus::Ready,
+        'transcript' => 'Customer asked about brake noise.',
+        'analysis_json' => [
+            'summary' => 'Customer reported front brake noise.',
+            'sentiment' => 'concerned',
+            'follow_up_needed' => true,
+            'follow_up_notes' => 'Send estimate once inspection is complete.',
+            'missed_upsell' => true,
+            'missed_upsell_notes' => 'Did not offer alignment check.',
+            'empathy_score' => 4,
+            'empathy_label' => 'Strong',
+            'coaching_priority' => 'high',
+            'coaching_improvements' => ['Offer related inspection items'],
+            'topics' => ['brakes', 'inspection'],
+        ],
+        'analyzed_at' => now(),
+    ], $overrides));
+}
+
+test('call intelligence renders on tabler with its filters, coaching queue, and call actions', function (): void {
+    $admin = callIntelligenceTablerAdmin();
+    $session = callIntelligenceTablerSession();
+
+    $response = $this->actingAs($admin)
+        ->get(route('operations.owner.call-intelligence', ['channel' => 'calls', 'analysis' => 'coaching']))
+        ->assertOk();
+    $html = $response->getContent();
+    $xpath = callIntelligenceAssertTablerPage($html, 'Call & SMS intelligence');
+    $filters = $response->viewData('filters');
+
+    $form = $xpath->query('//form[@data-call-intelligence-filters][@method="GET"][@action="'.route('operations.owner.call-intelligence').'"]')->item(0);
+    expect($form)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//input[@type="date"][@name="from"][@value="'.$filters['from'].'"]['.callIntelligenceTablerClass('form-control').']', $form)->length)->toBe(1)
+        ->and($xpath->query('.//input[@type="date"][@name="to"][@value="'.$filters['to'].'"]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//select[@name="channel"]['.callIntelligenceTablerClass('form-select').']/option[@value="calls"][@selected]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//select[@name="media"]/option[@value="recorded"][@selected]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//select[@name="analysis"]/option[@value="coaching"][@selected]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//*[@id="call-intelligence-more-filters"]['.callIntelligenceTablerClass('show').']', $form)->length)->toBe(1)
+        ->and(array_map(fn (DOMElement $field): string => $field->getAttribute('name'), iterator_to_array($xpath->query('.//*[@name]', $form))))->toBe(['from', 'to', 'channel', 'media', 'analysis']);
+
+    $queue = $xpath->query('//*[@data-call-intelligence-coaching-queue]['.callIntelligenceTablerClass('card').']')->item(0);
+    expect($queue)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('.//a[@href="'.route('operations.owner.call-intelligence', array_merge($filters, ['analysis' => 'coaching'])).'"]', $queue)->length)->toBe(1);
+
+    $row = $xpath->query('//article[@data-call-intelligence-row="call"]['.callIntelligenceTablerClass('card').']')->item(0);
+    expect($row)->toBeInstanceOf(DOMElement::class)
+        ->and($row->textContent)->toContain('(719) 555-1234')->toContain('Customer reported front brake noise.')->toContain('Empathy 4/5 · Strong')->toContain('Missed upsell')
+        ->and($xpath->query('.//form[@method="POST"][@action="'.route('operations.owner.call-intelligence.follow-up.toggle', $session).'"]//input[@name="_token"]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//a[@href="'.route('operations.owner.call-intelligence.coaching-pdf', $session).'"][@target="_blank"]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//a[@href="'.route('operations.owner.call-intelligence.show', $session).'?'.http_build_query($filters).'"]', $row)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-call-signals-customer]//*['.callIntelligenceTablerClass('badge').']['.callIntelligenceTablerClass('bg-yellow-lt').']', $row)->length)->toBeGreaterThan(0)
+        ->and($xpath->query('//*[@data-call-intelligence-links]//a[@href="'.route('operations.owner.day-review').'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-call-intelligence-links]//a[@href="'.route('operations.reports.operational').'"]')->length)->toBe(1)
+        ->and($html)->not->toContain('bg-emerald-100')
+        ->and($html)->not->toContain('bg-rose-100');
+});
+
+test('call intelligence detail renders on tabler with its analysis, actions, and coaching debrief form', function (): void {
+    $admin = callIntelligenceTablerAdmin();
+    $advisor = User::factory()->create(['name' => 'Sam Advisor'])->assignRole(ArkRole::Advisor->value);
+    $session = callIntelligenceTablerSession([
+        'owned_by_user_id' => $advisor->id,
+        'coaching_follow_up_at' => now(),
+    ]);
+
+    $html = $this->actingAs($admin)
+        ->get(route('operations.owner.call-intelligence.show', $session))
+        ->assertOk()
+        ->getContent();
+    $xpath = callIntelligenceAssertTablerPage($html, '(719) 555-1234');
+
+    expect($xpath->query('//*[@data-call-intelligence-header]//form[@action="'.route('operations.owner.call-intelligence.follow-up.toggle', $session).'"]//button[normalize-space(.)="Unpin"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-call-intelligence-header]//a[@href="'.route('operations.owner.call-intelligence.coaching-pdf', $session).'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-call-details-customer]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-call-details-advisor]//ul/li[normalize-space(.)="Offer related inspection items"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-call-transcript][normalize-space(.)="Customer asked about brake noise."]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-call-intelligence-links]//a[@href="'.route('operations.owner.call-intelligence').'"]')->length)->toBe(1);
+
+    $form = $xpath->query('//*[@data-call-coaching-debrief]//form[@method="POST"][@action="'.route('operations.owner.call-intelligence.coaching-log.store', $session).'"]')->item(0);
+    expect($form)->toBeInstanceOf(DOMElement::class)
+        ->and(array_map(fn (DOMElement $field): string => $field->getAttribute('name'), iterator_to_array($xpath->query('.//*[@name]', $form))))->toBe(['_token', 'staff_user_id', 'notes', 'complete_follow_up', 'complete_follow_up'])
+        ->and($xpath->query('.//select[@name="staff_user_id"][@id="coaching-staff-user-id"]['.callIntelligenceTablerClass('form-select').']/option[@value="'.$advisor->id.'"][@selected]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//label[@for="coaching-notes"]', $form)->length)->toBe(1)
+        ->and($xpath->query('.//a[@href="'.route('operations.owner.staff.coaching', $advisor->id).'"]', $form)->length)->toBe(1);
+});
+
+test('staff coaching renders on tabler with logs and links', function (): void {
+    $admin = callIntelligenceTablerAdmin();
+    $advisor = User::factory()->create(['name' => 'Sam Advisor'])->assignRole(ArkRole::Advisor->value);
+    $session = callIntelligenceTablerSession(['owned_by_user_id' => $advisor->id]);
+
+    $this->actingAs($admin)
+        ->post(route('operations.owner.call-intelligence.coaching-log.store', $session), [
+            'staff_user_id' => $advisor->id,
+            'notes' => 'Reviewed empathy and next steps.',
+        ])
+        ->assertRedirect();
+
+    $html = $this->actingAs($admin)->get(route('operations.owner.staff.coaching', $advisor))->assertOk()->getContent();
+    $xpath = callIntelligenceAssertTablerPage($html, 'Sam Advisor');
+
+    expect(callIntelligenceTablerTexts($xpath, '//*[@data-staff-coaching-profile]')[0])->toContain('1 coaching log')
+        ->and($xpath->query('//*[@data-staff-coaching-logs]//*['.callIntelligenceTablerClass('list-group-item').'][contains(., "Reviewed empathy and next steps.")]//a[@href="'.route('operations.owner.call-intelligence.show', $session).'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-staff-coaching-links]//a[@href="'.route('operations.owner.call-intelligence').'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-staff-coaching-links]//a[@href="'.route('operations.settings.shop.edit', ['section' => 'staff']).'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-staff-coaching-links]//a[@href="'.route('operations.owner.day-review').'"]')->length)->toBe(1);
+});
+
+test('call intelligence and staff coaching stay forbidden to advisors', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $session = callIntelligenceTablerSession();
+
+    $this->actingAs($advisor)->get(route('operations.owner.call-intelligence'))->assertForbidden();
+    $this->actingAs($advisor)->get(route('operations.owner.call-intelligence.show', $session))->assertForbidden();
+    $this->actingAs($advisor)->get(route('operations.owner.staff.coaching', $advisor))->assertForbidden();
 });

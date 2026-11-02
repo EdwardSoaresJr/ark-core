@@ -8,48 +8,51 @@
     $recipients = $actions['recipients'] ?? [];
 @endphp
 
-<div id="inspect-rail" class="ops-review-rail-tab-panel ops-inspection ops-inspection--control">
+<div id="inspect-rail" data-inspection-control>
     @if ($coverage === null)
-        <p class="px-3 py-4 text-sm text-slate-600">Inspection is not available for this repair order.</p>
+        <p class="text-secondary mb-0">Inspection is not available for this repair order.</p>
     @else
-        <section class="ops-inspection-control px-3 py-3 sm:px-4" data-inspection-entry data-inspection-entry-builder>
-            <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Inspection</p>
-            <div class="mt-1" data-inspection-coverage data-inspection-posture="{{ $coverage['posture_key'] ?? '' }}">
-                <p class="text-lg font-black text-slate-950">{{ $coverage['posture_headline'] ?? $coverage['posture_label'] }}</p>
-                @if (filled($coverage['posture_detail'] ?? null))
-                    <p class="text-sm font-semibold text-slate-600">{{ $coverage['posture_detail'] }}</p>
+        <section class="d-flex flex-column gap-3" data-inspection-entry data-inspection-entry-builder>
+            <div>
+                <div class="subheader">Inspection</div>
+                <div data-inspection-coverage data-inspection-posture="{{ $coverage['posture_key'] ?? '' }}">
+                    <div class="h2 mb-0">{{ $coverage['posture_headline'] ?? $coverage['posture_label'] }}</div>
+                    @if (filled($coverage['posture_detail'] ?? null))
+                        <div class="fw-medium text-secondary">{{ $coverage['posture_detail'] }}</div>
+                    @endif
+                </div>
+                @if (! empty($coverage['template_name']))
+                    <div class="small fw-medium mt-1" data-inspection-template-name>{{ $coverage['template_name'] }}</div>
+                @endif
+                @if ($control['assigned_technician_name'] ?? null)
+                    <div class="small text-secondary mt-1">Assigned: {{ $control['assigned_technician_name'] }}</div>
+                @endif
+
+                @if (($recommendationAwareness['headline'] ?? null))
+                    <button
+                        type="button"
+                        @class([
+                            'btn btn-link btn-sm px-0 mt-1',
+                            'text-danger' => $recommendationAwareness['strong'] ?? false,
+                        ])
+                        @click="window.arkSelectRepairOrderWorkspaceTab && window.arkSelectRepairOrderWorkspaceTab('recommendations')"
+                    >{{ $recommendationAwareness['headline'] }}</button>
                 @endif
             </div>
-            @if (! empty($coverage['template_name']))
-                <p class="mt-1 text-xs font-semibold text-slate-700" data-inspection-template-name>{{ $coverage['template_name'] }}</p>
-            @endif
-            @if ($control['assigned_technician_name'] ?? null)
-                <p class="mt-1 text-xs text-slate-600">Assigned: {{ $control['assigned_technician_name'] }}</p>
-            @endif
-
-            @if (($recommendationAwareness['headline'] ?? null))
-                <button
-                    type="button"
-                    class="mt-2 text-left text-xs font-semibold {{ ($recommendationAwareness['strong'] ?? false) ? 'text-rose-800' : 'text-slate-700' }}"
-                    @click="window.arkSelectRepairOrderWorkspaceTab && window.arkSelectRepairOrderWorkspaceTab('recommendations')"
-                >{{ $recommendationAwareness['headline'] }}</button>
-            @endif
 
             @if ($canRecord && ! ($repairOrder->isTerminal() ?? false))
-                <div class="mt-2">
-                    @include('operations.repair-orders.inspection.partials.builder-template-select', [
-                        'repairOrder' => $repairOrder,
-                        'inspectionCoverage' => $coverage,
-                    ])
-                </div>
+                @include('operations.repair-orders.inspection.partials.builder-template-select', [
+                    'repairOrder' => $repairOrder,
+                    'inspectionCoverage' => $coverage,
+                ])
             @endif
 
-            <div class="mt-3 flex flex-wrap gap-2">
+            <div class="btn-list">
                 <a
                     href="{{ $coverage['capture_url'] ?? $actions['open_inspection_url'] }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex rounded-sm bg-slate-950 px-3 py-2 text-sm font-bold text-white hover:bg-slate-800"
+                    class="btn btn-primary"
                     data-inspection-open
                     data-inspection-cta
                     data-inspection-cta-capture
@@ -63,19 +66,25 @@
                     href="{{ $actions['tablet_view_url'] }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400"
+                    class="btn"
                     data-inspection-tablet
                     title="Force bay layout - for handing a tablet to the technician"
                 >Bay layout</a>
             </div>
 
-            @include('operations.repair-orders.partials.inspection-portal-link', [
-                'repairOrder' => $repairOrder,
-                'isTerminal' => $isTerminal ?? false,
-            ])
+            @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
+                @unless ($isTerminal ?? false)
+                    <div class="card card-sm">
+                        @include('operations.repair-orders.partials.inspection-portal-link', [
+                            'repairOrder' => $repairOrder,
+                            'isTerminal' => $isTerminal ?? false,
+                        ])
+                    </div>
+                @endunless
+            @endcan
 
             <div
-                class="ops-inspection-handoff mt-4 border-t border-slate-200 pt-3"
+                class="card card-sm"
                 data-inspection-handoff
                 x-data="{
                     recipients: @js($recipients),
@@ -162,62 +171,63 @@
                     }
                 }"
             >
-                <p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">Send walk link</p>
+                <div class="card-body">
+                    <div class="subheader mb-2">Send walk link</div>
 
-                @if (count($recipients) === 0)
-                    <p class="mt-2 text-xs text-slate-500">No active staff to send to.</p>
-                @else
-                    <div class="mt-2">
-                        <label class="block">
-                            <span class="sr-only">Send to</span>
+                    @if (count($recipients) === 0)
+                        <p class="small text-secondary mb-0">No active staff to send to.</p>
+                    @else
+                        <div>
+                            <label class="visually-hidden" for="inspection-walk-recipient-{{ $repairOrder->repair_order_id }}">Send to</label>
                             <select
-                                class="w-full max-w-sm rounded-sm border border-slate-300 bg-white px-2 py-2 text-sm font-semibold text-slate-900"
+                                id="inspection-walk-recipient-{{ $repairOrder->repair_order_id }}"
+                                class="form-select"
+                                style="max-width: 24rem"
                                 x-model.number="selectedId"
                             >
-                                @foreach ($recipients as $recipient)
-                                    <option value="{{ $recipient['id'] }}">
-                                        {{ $recipient['name'] }}
-                                        · {{ $recipient['role_label'] }}
-                                        @if ($recipient['is_assigned'])
-                                            · Assigned
-                                        @endif
-                                    </option>
-                                @endforeach
+                                    @foreach ($recipients as $recipient)
+                                        <option value="{{ $recipient['id'] }}">
+                                            {{ $recipient['name'] }}
+                                            · {{ $recipient['role_label'] }}
+                                            @if ($recipient['is_assigned'])
+                                                · Assigned
+                                            @endif
+                                        </option>
+                                    @endforeach
                             </select>
-                        </label>
 
-                        <div class="mt-2 flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                class="inline-flex rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400 disabled:pointer-events-none disabled:opacity-40"
-                                x-bind:disabled="! canSms || sending !== null"
-                                x-bind:title="smsTitle"
-                                x-on:click="send('sms')"
-                                data-inspection-handoff-sms
-                            >
-                                <span x-text="sending === 'sms' ? 'Sending…' : 'SMS'"></span>
-                            </button>
+                            <div class="btn-list mt-2">
+                                <button
+                                    type="button"
+                                    class="btn"
+                                    x-bind:disabled="! canSms || sending !== null"
+                                    x-bind:title="smsTitle"
+                                    x-on:click="send('sms')"
+                                    data-inspection-handoff-sms
+                                >
+                                    <span x-text="sending === 'sms' ? 'Sending…' : 'SMS'"></span>
+                                </button>
 
-                            <button
-                                type="button"
-                                class="inline-flex rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400 disabled:pointer-events-none disabled:opacity-40"
-                                x-bind:disabled="! canEmail || sending !== null"
-                                x-bind:title="emailTitle"
-                                x-on:click="send('email')"
-                                data-inspection-handoff-email
-                            >
-                                <span x-text="sending === 'email' ? 'Sending…' : 'Email'"></span>
-                            </button>
+                                <button
+                                    type="button"
+                                    class="btn"
+                                    x-bind:disabled="! canEmail || sending !== null"
+                                    x-bind:title="emailTitle"
+                                    x-on:click="send('email')"
+                                    data-inspection-handoff-email
+                                >
+                                    <span x-text="sending === 'email' ? 'Sending…' : 'Email'"></span>
+                                </button>
+                            </div>
+
+                            <div class="small fw-bold text-success mt-2" x-show="status" x-text="status" x-cloak></div>
+                            <div class="small fw-bold text-danger mt-2" x-show="error" x-text="error" x-cloak></div>
                         </div>
-
-                        <p class="mt-2 text-xs font-semibold text-emerald-700" x-show="status" x-text="status" x-cloak></p>
-                        <p class="mt-2 text-xs font-semibold text-rose-700" x-show="error" x-text="error" x-cloak></p>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
 
             <div
-                class="mt-3"
                 x-data="{
                     copied: false,
                     url: @js($actions['copy_url'] ?? ''),
@@ -232,47 +242,49 @@
             >
                 <button
                     type="button"
-                    class="text-xs font-semibold text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline"
+                    class="btn btn-link btn-sm px-0"
                     x-on:click="copyLink()"
                     x-text="copied ? 'Link copied' : 'Copy link'"
                 ></button>
             </div>
 
             @if ($canReset)
-                <details class="ops-inspection-reset mt-4 border-t border-slate-200 pt-3">
-                    <summary class="cursor-pointer text-xs font-bold text-rose-800">Reset inspection walk</summary>
-                    <p class="mt-2 text-xs leading-5 text-slate-600">
-                        Clears checklist conditions, measurements, and walk photos so the shop can redo DVI.
-                        Other Findings stay. Admin and Advisor only.
-                    </p>
-                    <form
-                        method="post"
-                        action="{{ $actions['reset_url'] }}"
-                        class="mt-3 space-y-2"
-                        onsubmit="return confirm('Reset this inspection walk? Conditions, measurements, and walk photos will be cleared.');"
-                    >
-                        @csrf
-                        <label class="flex items-start gap-2 text-xs font-semibold text-slate-700">
-                            <input type="checkbox" name="confirm" value="1" required class="mt-0.5">
-                            <span>I understand this clears the walk and cannot be undone.</span>
-                        </label>
-                        <button
-                            type="submit"
-                            class="inline-flex rounded-sm border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-900 hover:border-rose-400"
-                        >Reset walk</button>
-                    </form>
+                <details class="card card-sm" data-inspection-reset>
+                    <summary class="card-body small fw-bold text-danger">Reset inspection walk</summary>
+                    <div class="card-body border-top">
+                        <p class="small text-secondary">
+                            Clears checklist conditions, measurements, and walk photos so the shop can redo DVI.
+                            Other Findings stay. Admin and Advisor only.
+                        </p>
+                        <form
+                            method="post"
+                            action="{{ $actions['reset_url'] }}"
+                            onsubmit="return confirm('Reset this inspection walk? Conditions, measurements, and walk photos will be cleared.');"
+                        >
+                            @csrf
+                            <label class="form-check">
+                                <input type="checkbox" name="confirm" value="1" required class="form-check-input">
+                                <span class="form-check-label">I understand this clears the walk and cannot be undone.</span>
+                            </label>
+                            <button
+                                type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                            >Reset walk</button>
+                        </form>
+                    </div>
                 </details>
             @endif
 
             @if (count($attentionItems) > 0)
-                <div class="mt-5 border-t border-slate-200 pt-4">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">Findings & evidence</p>
-                    <ul class="mt-2 divide-y divide-slate-100">
+                <div class="card card-sm" data-inspection-findings>
+                    <div class="card-header">
+                        <h3 class="card-title">Findings &amp; evidence</h3>
+                    </div>
+                    <div class="list-group list-group-flush">
                         @foreach ($attentionItems as $item)
-                            <li class="py-2">
-                                <a href="{{ $item['walk_url'] }}" target="_blank" rel="noopener noreferrer" class="block hover:bg-slate-50">
-                                    <p class="text-sm font-bold text-slate-950">{{ $item['label'] }}</p>
-                                    <p class="text-xs text-slate-600">
+                            <a href="{{ $item['walk_url'] }}" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action">
+                                    <div class="fw-bold">{{ $item['label'] }}</div>
+                                    <div class="small text-secondary">
                                         {{ $item['condition'] }}
                                         @if ($item['category'])
                                             · {{ $item['category'] }}
@@ -283,17 +295,16 @@
                                         @if ($item['photo_count'] > 0)
                                             · {{ $item['photo_count'] }} photo{{ $item['photo_count'] === 1 ? '' : 's' }}
                                         @endif
-                                    </p>
+                                    </div>
                                     @if (filled($item['note']))
-                                        <p class="mt-0.5 text-xs text-slate-500">{{ \Illuminate\Support\Str::limit($item['note'], 120) }}</p>
+                                        <div class="small text-secondary">{{ \Illuminate\Support\Str::limit($item['note'], 120) }}</div>
                                     @endif
                                 </a>
-                            </li>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
             @else
-                <p class="mt-5 text-sm text-slate-500">
+                <p class="text-secondary mb-0">
                     @if (($coverage['checked'] ?? 0) === 0)
                         No inspection points checked yet. Open Inspection to start the walk.
                     @else
@@ -303,9 +314,9 @@
             @endif
 
             @unless ($canRecord)
-                <p class="mt-4 border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div class="alert alert-warning mb-0">
                     Recording is limited to the assigned technician or an advisor.
-                </p>
+                </div>
             @endunless
         </section>
     @endif

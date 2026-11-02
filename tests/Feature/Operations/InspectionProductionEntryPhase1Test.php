@@ -68,7 +68,7 @@ test('production inspection show hosts section walk without distribution chrome'
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.inspection.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-inspection-sections', false)
+        ->assertSee('data-inspection-sections', false)
         ->assertSee('LF Tire', false)
         ->assertSee('Standard Vehicle Inspection', false)
         ->assertSee('Other Findings', false)
@@ -76,7 +76,8 @@ test('production inspection show hosts section walk without distribution chrome'
         ->assertDontSee('Advisor Review', false)
         ->assertDontSee('Send to Technician', false)
         ->assertDontSee('ops-estimate-workspace--review', false)
-        ->assertDontSee('ops-inspection-tablet-shell', false);
+        ->assertSee('data-inspection-surface="standard"', false)
+        ->assertDontSee('data-inspection-tablet-shell', false);
 });
 
 test('tablet surface uses chromeless bay shell with section walk primary', function () {
@@ -92,10 +93,11 @@ test('tablet surface uses chromeless bay shell with section walk primary', funct
     $this->actingAs($technician)
         ->get($tabletUrl)
         ->assertOk()
-        ->assertSee('ops-inspection-tablet-shell', false)
-        ->assertSee('ops-inspection-tablet-card', false)
-        ->assertSee('ops-inspection-sections', false)
-        ->assertSee('ops-inspection-sections--tablet', false)
+        ->assertSee('data-inspection-tablet-shell', false)
+        ->assertSee('data-inspection-surface="tablet"', false)
+        ->assertSee('data-inspection-sections', false)
+        ->assertSee('data-surface="tablet"', false)
+        ->assertDontSee('navbar navbar-vertical', false)
         ->assertSee('Good', false)
         ->assertSee('Needs Attention', false)
         ->assertDontSee('ops-estimate-workspace', false)
@@ -118,7 +120,8 @@ test('tablet surface uses chromeless bay shell with section walk primary', funct
             'surface' => 'tablet',
         ]))
         ->assertOk()
-        ->assertSee('ops-inspection-walk--tablet', false)
+        ->assertSee('id="inspection-walk"', false)
+        ->assertSee('data-inspection-walk-nav', false)
         ->assertSee('Back to sections', false)
         ->assertSee('surface=tablet', false)
         ->assertSee((string) $second->id, false);
@@ -145,6 +148,7 @@ test('ro inspection tab offers device actions without walk', function () {
         ->assertSee('data-inspection-handoff', false)
         ->assertDontSee('Send to Technician', false)
         ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false)
         ->assertDontSee('Next →', false);
 });
 
@@ -271,7 +275,8 @@ test('advisor inspection review tab still works on estimate review', function ()
         ]))
         ->assertOk()
         ->assertSee('Open Inspection', false)
-        ->assertDontSee('ops-inspection-walk', false);
+        ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false);
 });
 
 test('advisor inspection tab hosts capture entry and template choice', function () {
@@ -411,7 +416,8 @@ test('customer portal inspection delivery remains unchanged', function () {
         ->assertOk()
         ->assertSee('Vehicle Inspection', false)
         ->assertDontSee('Start Inspection', false)
-        ->assertDontSee('ops-inspection-walk', false);
+        ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false);
 });
 
 function productionDisciplineRepairOrder(?User $assignedTechnician = null): RepairOrder

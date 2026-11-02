@@ -25,10 +25,33 @@
             <x-tabler.icon name="file-text" />
         </button>
         <span class="badge bg-green-lt" x-show="copied" x-cloak>Copied</span>
-        <span x-ref="tooltip" x-show="tooltipOpen" x-cloak :style="tooltipStyle" class="ark-legacy ops-vin-tooltip ops-vin-tooltip--fixed" role="tooltip">
-            @include('operations.partials._vin-phonetic-tooltip', [
-                'sections' => \App\Ark\Operations\Vehicles\VinDisplay::sections($parts['vin']),
-            ])
+        <span
+            x-ref="tooltip"
+            x-show="tooltipOpen"
+            x-cloak
+            :style="tooltipStyle"
+            class="card card-sm shadow position-fixed p-2"
+            style="z-index: 1080; width: max-content; max-width: min(22rem, calc(100vw - 1rem))"
+            role="tooltip"
+            data-vin-phonetic-readback
+        >
+            <span class="subheader d-block mb-1">Phone readback</span>
+            @foreach (\App\Ark\Operations\Vehicles\VinDisplay::sections($parts['vin']) as $section)
+                <span class="d-block mb-1">
+                    <span @class(['d-block small', 'fw-bold' => $section['is_serial'], 'text-secondary' => ! $section['is_serial']])>
+                        {{ $section['label'] }}
+                        <span class="text-secondary fw-normal">{{ $section['meta'] }}</span>
+                    </span>
+                    <span class="d-flex flex-wrap gap-1">
+                        @foreach ($section['chars'] as $index => $char)
+                            <span @class(['d-inline-flex flex-column align-items-center border rounded px-1', 'border-primary' => $section['is_serial']])>
+                                <span class="font-monospace fw-bold">{{ $char }}</span>
+                                <span class="small text-secondary">{{ $section['phonetic_chars'][$index] ?? $char }}</span>
+                            </span>
+                        @endforeach
+                    </span>
+                </span>
+            @endforeach
         </span>
     </span>
 @endif

@@ -1,4 +1,4 @@
-@props(['presence'])
+@props(['presence', 'ui' => 'legacy'])
 
 @php
     use App\Ark\Operations\Workstations\Workstation;
@@ -18,7 +18,178 @@
         && ! $presence->needsPinSetup;
 @endphp
 
-@if ($presence->canManagePresence)
+@if ($presence->canManagePresence && $ui === 'tabler')
+    {{-- Overlays stay inside the root: ark-workstation-presence.js finds them with root.querySelector and toggles [hidden] on [data-ws-overlay]. --}}
+    <div
+        class="nav-item d-flex align-items-center"
+        data-ark-workstation-presence
+        data-locked="{{ $presence->locked ? '1' : '0' }}"
+        data-needs-binding="{{ $presence->needsBinding ? '1' : '0' }}"
+        data-needs-unlock="{{ $presence->needsUnlock ? '1' : '0' }}"
+        data-needs-pin-setup="{{ $presence->needsPinSetup ? '1' : '0' }}"
+        data-staff-url="{{ route('operations.workstation.staff') }}"
+        data-unlock-url="{{ route('operations.workstation.unlock') }}"
+        data-pin-store-url="{{ route('operations.workstation.pin.store') }}"
+        data-pin-update-url="{{ route('operations.workstation.pin.update') }}"
+        data-current-user-id="{{ auth()->id() }}"
+        data-lock-url="{{ route('operations.workstation.lock') }}"
+        data-bind-url="{{ route('operations.workstation.bind') }}"
+        data-bind-dismiss-url="{{ route('operations.workstation.bind.dismiss') }}"
+        data-idle-lock-minutes="{{ $idleLockMinutes }}"
+        data-station-operator-active="{{ $stationOperatorActive ? '1' : '0' }}"
+    >
+        @if ($presence->workstation)
+            <span
+                class="small fw-bold text-uppercase text-secondary text-truncate"
+                style="max-width: 10rem"
+                title="{{ $presence->workstation->applianceStationLabel() }}"
+                data-ws-station-label
+            >{{ $presence->workstation->applianceStationLabel() }}</span>
+        @endif
+
+        @if ($presence->needsBinding)
+            <div data-ws-bind-panel>
+                <div class="modal d-block" role="dialog" aria-modal="true" aria-labelledby="ws-bind-title" tabindex="-1">
+                    <div class="modal-backdrop show opacity-100 z-0" aria-hidden="true"></div>
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <form data-ws-bind-form class="modal-content">
+                            @csrf
+                            <div class="modal-status bg-primary"></div>
+                            <div class="modal-body">
+                                <h2 class="modal-title mb-1" id="ws-bind-title">Where are you working?</h2>
+                                <p class="text-secondary mb-3">Choose the station for this browser.</p>
+                                <select name="workstation_id" required class="form-select" aria-label="Station">
+                                    <option value="">Choose station…</option>
+                                    @foreach ($workstations as $workstation)
+                                        <option value="{{ $workstation->id }}">
+                                            {{ $workstation->applianceStationLabel() }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn" data-ws-action="dismiss-bind">Not now</button>
+                                <button type="submit" class="btn btn-primary">Continue</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <div data-ws-overlay="change-pin" hidden>
+            <div class="modal d-block" role="dialog" aria-modal="true" aria-labelledby="ws-change-pin-title" tabindex="-1">
+                <div class="modal-backdrop show opacity-100 z-0" aria-hidden="true"></div>
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <form data-ws-change-pin-form class="modal-content" autocomplete="off">
+                        @csrf
+                        <div class="modal-status bg-primary"></div>
+                        <div class="modal-header">
+                            <div class="overflow-hidden">
+                                <h2 class="modal-title" id="ws-change-pin-title">Change station PIN</h2>
+                                <div class="small text-secondary text-truncate">{{ auth()->user()?->name }}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-ws-action="close-overlay" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-secondary">Choose a new 4-digit PIN. Confirm with your ARK password.</p>
+                            <div class="mb-3">
+                                <label class="form-label" for="ws-change-pin-password">Current password</label>
+                                <input
+                                    id="ws-change-pin-password"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    class="form-control"
+                                >
+                            </div>
+                            {{-- type="tel" with -webkit-text-security masks the PIN without the password-manager prompts type="password" brings. --}}
+                            <div class="mb-3">
+                                <label class="form-label" for="ws-change-pin-new">New PIN</label>
+                                <input
+                                    id="ws-change-pin-new"
+                                    type="tel"
+                                    name="pin"
+                                    required
+                                    maxlength="4"
+                                    pattern="\d{4}"
+                                    inputmode="numeric"
+                                    autocomplete="one-time-code"
+                                    data-ws-pin-field
+                                    data-lpignore="true"
+                                    data-1p-ignore
+                                    class="form-control font-monospace"
+                                    style="-webkit-text-security: disc"
+                                >
+                            </div>
+                            <div>
+                                <label class="form-label" for="ws-change-pin-confirm">Confirm PIN</label>
+                                <input
+                                    id="ws-change-pin-confirm"
+                                    type="tel"
+                                    name="pin_confirmation"
+                                    required
+                                    maxlength="4"
+                                    pattern="\d{4}"
+                                    inputmode="numeric"
+                                    autocomplete="one-time-code"
+                                    data-ws-pin-field
+                                    data-lpignore="true"
+                                    data-1p-ignore
+                                    class="form-control font-monospace"
+                                    style="-webkit-text-security: disc"
+                                >
+                            </div>
+                            <div data-ws-change-pin-error class="alert alert-danger mt-3 mb-0" role="alert" hidden></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary w-100">Save PIN</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div data-ws-overlay="switch-station" hidden>
+            <div class="modal d-block" role="dialog" aria-modal="true" aria-labelledby="ws-switch-station-title" tabindex="-1">
+                <div class="modal-backdrop show opacity-100 z-0" aria-hidden="true"></div>
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-sm">
+                    <form data-ws-switch-station-form class="modal-content">
+                        @csrf
+                        <div class="modal-status bg-primary"></div>
+                        <div class="modal-header">
+                            <div>
+                                <h2 class="modal-title" id="ws-switch-station-title">Switch station</h2>
+                                <div class="small text-secondary">Where are you working?</div>
+                            </div>
+                            <button type="button" class="btn-close" data-ws-action="close-overlay" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="list-group">
+                                @foreach ($workstations as $workstation)
+                                    <label class="list-group-item d-flex align-items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="workstation_id"
+                                            value="{{ $workstation->id }}"
+                                            class="form-check-input m-0"
+                                            @checked($presence->workstation?->id === $workstation->id)
+                                        >
+                                        <span>{{ $workstation->applianceStationLabel() }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary w-100">Switch station</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@elseif ($presence->canManagePresence)
     <div
         class="ws-presence"
         data-ark-workstation-presence

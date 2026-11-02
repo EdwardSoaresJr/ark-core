@@ -80,7 +80,7 @@ test('work home shows communications metric without queue sections', function ()
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(CommunicationsNeedsYou::url())
         ->assertOk()
-        ->assertSee('ops-comms-workspace', false)
+        ->assertSee('data-comms-workspace', false)
         ->assertSee('Needs attention', false)
         ->assertDontSee('id="ops-work-recent-activity"', false);
 });
@@ -501,7 +501,7 @@ test('communications sidebar shows pressure count instead of topbar attention bu
     ingestInboundSms('7195554399', 'Need a callback', 'SMsidebar001');
 
     $this->actingAs($advisor)
-        ->get(route('profile.edit'))
+        ->followingRedirects()->get(route('operations.learn.index'))
         ->assertOk()
         ->assertSee('ops-rail-link__count', false)
         ->assertSee('need attention"', false)

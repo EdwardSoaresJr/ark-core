@@ -39,23 +39,22 @@
 
 <div id="line-editor-{{ $line->id }}" @class([
     'scroll-mt-24',
-    'border border-slate-300 bg-white px-3 py-2 ring-1 ring-slate-100' => ! $hideInlineChrome,
+    'card card-sm' => ! $hideInlineChrome,
 ])>
+    <div @class(['card-body' => ! $hideInlineChrome])>
     @unless ($hideInlineChrome)
-        <div class="mb-2 flex items-center justify-between gap-3 text-xs">
-            <span class="font-semibold text-slate-500">Editing labor</span>
+        <div class="d-flex align-items-center justify-content-between gap-3 small mb-2">
+            <span class="fw-medium text-secondary">Editing labor</span>
             <a
                 href="{{ $cancelUrl }}"
                 data-refresh-scope="worksheet"
                 data-continuity-focus="#line-{{ $line->id }} a[href*='editing_line']"
                 @click.prevent="editLine($event)"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                class="btn btn-ghost-secondary btn-icon btn-sm"
                 aria-label="Cancel editing"
                 title="Cancel editing"
             >
-                <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="none">
-                    <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-                </svg>
+                <x-tabler.icon name="x" />
             </a>
         </div>
     @endunless
@@ -82,7 +81,7 @@
             laborAdjustExpanded: @js($laborNeedsAdvanced),
             laborDescriptionExpanded: false,
         }, partsMatrices, defaultPartsMatrixKey, '{{ route('operations.repair-orders.lines.pricing-preview', $repairOrder) }}')"
-        class="space-y-2"
+        class="d-flex flex-column gap-2"
     >
         <form
             id="line-update-{{ $line->id }}"
@@ -93,7 +92,7 @@
             data-continuity-focus="#line-{{ $line->id }}"
             @if ($workspaceModalForm) data-workspace-modal-form="{{ $workspaceModalForm }}" @endif
             @submit.prevent="submitLine($event)"
-            class="space-y-2"
+            class="d-flex flex-column gap-2"
         >
             @csrf
             @method('PATCH')
@@ -103,22 +102,24 @@
             <input type="hidden" name="type" value="labor">
 
             @if ($suppressLaborDescription)
-                <div class="rounded-sm border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Labor</p>
-                    <p class="mt-0.5 text-sm font-semibold text-slate-950">{{ $compactSummary }}</p>
-                    <p class="mt-0.5 text-[11px] text-slate-500">Matches the repair above. Description stays available under Advanced.</p>
+                <div class="card card-sm bg-secondary-lt">
+                    <div class="card-body">
+                        <div class="subheader">Labor</div>
+                        <div class="fw-bold">{{ $compactSummary }}</div>
+                        <div class="small text-secondary">Matches the repair above. Description stays available under Advanced.</div>
+                    </div>
                 </div>
                 <template x-if="! laborDescriptionExpanded">
                     <input type="hidden" name="description" value="{{ $line->description }}">
                 </template>
                 <template x-if="laborDescriptionExpanded">
                     <div
-                        class="space-y-2 border-t border-slate-200 pt-2"
+                        class="border-top pt-2"
                         x-data="arkLaborMemorySuggest(@js($laborMemoryConfig), @js($line->description))"
                     >
-                        <label class="block text-[11px] font-medium text-slate-500">
-                            Labor description
-                            <div class="ops-labor-memory__input-wrap mt-1">
+                        <label class="d-block">
+                            <span class="form-label">Labor description</span>
+                            <div class="position-relative">
                                 <input
                                     name="description"
                                     x-model="description"
@@ -127,33 +128,31 @@
                                     autocomplete="off"
                                     spellcheck="false"
                                     placeholder="Labor description"
-                                    class="w-full rounded-sm border border-slate-300 px-3 py-1.5 text-sm"
+                                    class="form-control"
                                     @input.debounce.150ms="handleInput()"
                                     @keydown="handleKeydown($event)"
                                     @focus="handleFocus()"
                                     @blur="handleBlur()"
                                 >
                                 <div
-                                    class="ops-labor-memory__suggestions"
-                                    x-show="suggestionsOpen && hasMatches"
+                                    class="dropdown-menu w-100 top-100 start-0 mt-1"
+                                    :class="{ show: suggestionsOpen && hasMatches }"
                                     @click.outside="closeSuggestions()"
                                     role="listbox"
                                     aria-label="Shop labor language"
                                 >
-                                    <ul class="ops-labor-memory__list">
-                                        <template x-for="(row, index) in suggestions" :key="row.id || row.text">
-                                            <li role="option" :aria-selected="index === activeIndex">
-                                                <button
-                                                    type="button"
-                                                    class="ops-labor-memory__suggestion"
-                                                    :class="{ 'ops-labor-memory__suggestion--active': index === activeIndex }"
-                                                    @mousedown.prevent="chooseSuggestion(row)"
-                                                >
-                                                    <span x-text="row.text"></span>
-                                                </button>
-                                            </li>
-                                        </template>
-                                    </ul>
+                                    <template x-for="(row, index) in suggestions" :key="row.id || row.text">
+                                        <div role="option" :aria-selected="index === activeIndex">
+                                            <button
+                                                type="button"
+                                                class="dropdown-item text-wrap"
+                                                :class="{ active: index === activeIndex }"
+                                                @mousedown.prevent="chooseSuggestion(row)"
+                                            >
+                                                <span x-text="row.text"></span>
+                                            </button>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </label>
@@ -161,17 +160,18 @@
                 </template>
                 <button
                     type="button"
-                    class="text-[11px] font-semibold text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                    class="btn btn-link btn-sm p-0 align-self-start"
                     @click="laborDescriptionExpanded = ! laborDescriptionExpanded; if (laborDescriptionExpanded) { laborAdjustExpanded = true }"
+                    :aria-expanded="laborDescriptionExpanded"
                     x-text="laborDescriptionExpanded ? 'Hide advanced labor' : 'Advanced · Edit labor description'"
                 ></button>
             @else
                 <div
                     x-data="arkLaborMemorySuggest(@js($laborMemoryConfig), @js($line->description))"
                 >
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        Labor description
-                        <div class="ops-labor-memory__input-wrap mt-1">
+                    <label class="d-block">
+                        <span class="form-label">Labor description</span>
+                        <div class="position-relative">
                             <input
                                 name="description"
                                 x-model="description"
@@ -180,33 +180,31 @@
                                 autocomplete="off"
                                 spellcheck="false"
                                 placeholder="Labor description"
-                                class="w-full rounded-sm border border-slate-300 px-3 py-1.5 text-sm"
+                                class="form-control"
                                 @input.debounce.150ms="handleInput()"
                                 @keydown="handleKeydown($event)"
                                 @focus="handleFocus()"
                                 @blur="handleBlur()"
                             >
                             <div
-                                class="ops-labor-memory__suggestions"
-                                x-show="suggestionsOpen && hasMatches"
+                                class="dropdown-menu w-100 top-100 start-0 mt-1"
+                                :class="{ show: suggestionsOpen && hasMatches }"
                                 @click.outside="closeSuggestions()"
                                 role="listbox"
                                 aria-label="Shop labor language"
                             >
-                                <ul class="ops-labor-memory__list">
-                                    <template x-for="(row, index) in suggestions" :key="row.id || row.text">
-                                        <li role="option" :aria-selected="index === activeIndex">
-                                            <button
-                                                type="button"
-                                                class="ops-labor-memory__suggestion"
-                                                :class="{ 'ops-labor-memory__suggestion--active': index === activeIndex }"
-                                                @mousedown.prevent="chooseSuggestion(row)"
-                                            >
-                                                <span x-text="row.text"></span>
-                                            </button>
-                                        </li>
-                                    </template>
-                                </ul>
+                                <template x-for="(row, index) in suggestions" :key="row.id || row.text">
+                                    <div role="option" :aria-selected="index === activeIndex">
+                                        <button
+                                            type="button"
+                                            class="dropdown-item text-wrap"
+                                            :class="{ active: index === activeIndex }"
+                                            @mousedown.prevent="chooseSuggestion(row)"
+                                        >
+                                            <span x-text="row.text"></span>
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </label>
@@ -227,5 +225,6 @@
                 'gridPlacement' => false,
             ])
         @endunless
+    </div>
     </div>
 </div>

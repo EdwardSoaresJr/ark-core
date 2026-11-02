@@ -10,6 +10,7 @@ use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Http\Middleware\ApplyDevRolePretend;
 use App\Http\Middleware\EnsureAdvisorCommsCleared;
 use App\Http\Middleware\HideDemoCompanionSurfaces;
+use App\Http\Middleware\KeepFlashThroughJsonResponses;
 use App\Http\Middleware\PresentPublicDemo;
 use App\Http\Middleware\EnsureApiStaffActive;
 use App\Http\Middleware\EnsureAppointmentsSurfaceEnabled;
@@ -95,6 +96,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->web(append: [
+            KeepFlashThroughJsonResponses::class,
             PresentPublicDemo::class,
             HideDemoCompanionSurfaces::class,
             ApplyDevRolePretend::class,

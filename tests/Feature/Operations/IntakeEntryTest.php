@@ -9,6 +9,7 @@ use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\Process;
 
 beforeEach(function () {
     $this->seed(ArkAuthorizationSeeder::class);
@@ -95,4 +96,18 @@ test('inbound phone message builds intake entry params with concern', function (
         'phone' => '7195557777',
         'concern' => 'My Jeep overheats',
     ]);
+});
+
+test('check in restores a saved intake draft without a script error', function () {
+    $result = Process::run([
+        'node',
+        '--test',
+        base_path('tests/JavaScript/ark-intake-workspace-memory.test.mjs'),
+    ]);
+
+    if (! $result->successful()) {
+        $this->fail($result->errorOutput()."\n".$result->output());
+    }
+
+    expect($result->exitCode())->toBe(0);
 });

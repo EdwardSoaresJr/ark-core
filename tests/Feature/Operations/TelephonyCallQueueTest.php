@@ -364,14 +364,16 @@ test('completed calls remain in queue until handled', function () {
 test('operations layout exposes hidden call queue poller without topbar attention affordance', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
 
-    $this->actingAs($advisor)
+    $html = $this->actingAs($advisor)
         ->get(route('operations.index'))
         ->assertOk()
         ->assertDontSee('ops-call-queue__trigger', false)
         ->assertDontSee('ops-call-queue__label">Attention', false)
         ->assertSee('id="ark-call-queue-bootstrap"', false)
-        ->assertSee('ops-call-queue--poller-only', false)
-        ->assertSee(route('operations.telephony.call-queue'), false);
+        ->assertSee(route('operations.telephony.call-queue'), false)
+        ->getContent();
+
+    expect($html)->toMatch('/<div\s+data-call-queue-root\s+x-data="arkCallQueue\(\)"[^>]*class="d-none"\s+aria-hidden="true"\s*><\/div>/');
 });
 
 test('waiting sessions read does not reconcile stale live sessions', function () {

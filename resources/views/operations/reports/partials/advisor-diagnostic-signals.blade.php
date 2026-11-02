@@ -1,55 +1,67 @@
 @if (count($advisorQueuePressure ?? []) > 0)
-    <div class="overflow-hidden border border-slate-300 bg-white">
-        <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Advisor Queue Pressure</p>
-            <p class="text-xs text-slate-400">Live operational queue grouped by inferred service advisor - from intake creator or estimate owner.</p>
+    <section class="card mb-3" data-report-section="advisor-queue-pressure">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Advisor Queue Pressure</h3>
+                <div class="card-subtitle">Live operational queue grouped by inferred service advisor - from intake creator or estimate owner.</div>
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-100 text-sm">
-                <thead class="bg-white text-left text-[10px] uppercase tracking-[0.08em] text-slate-400">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
                     <tr>
-                        <th class="px-3 py-2 font-bold">Advisor</th>
-                        <th class="px-3 py-2 text-right font-bold">Queue</th>
-                        <th class="px-3 py-2 text-right font-bold">Approval</th>
-                        <th class="px-3 py-2 text-right font-bold">Parts</th>
-                        <th class="px-3 py-2 text-right font-bold">Unpaid</th>
-                        <th class="px-3 py-2 font-bold">Pressure</th>
+                        <th scope="col">Advisor</th>
+                        <th scope="col" class="text-end">Queue</th>
+                        <th scope="col" class="text-end">Approval</th>
+                        <th scope="col" class="text-end">Parts</th>
+                        <th scope="col" class="text-end">Unpaid</th>
+                        <th scope="col">Pressure</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody>
                     @foreach ($advisorQueuePressure as $row)
                         <tr>
-                            <td class="px-3 py-2 font-bold text-slate-950">{{ $row['advisor'] }}</td>
-                            <td class="px-3 py-2 text-right font-black tabular-nums text-slate-950">{{ $row['queue'] }}</td>
-                            <td class="px-3 py-2 text-right font-bold tabular-nums text-slate-800">{{ $row['waiting_approval'] }}</td>
-                            <td class="px-3 py-2 text-right font-bold tabular-nums text-slate-700">{{ $row['parts'] }}</td>
-                            <td class="px-3 py-2 text-right font-bold tabular-nums text-slate-700">{{ $row['unpaid'] }}</td>
-                            <td class="px-3 py-2 text-xs text-slate-500">{{ $row['hint'] }}</td>
+                            <td class="fw-bold">{{ $row['advisor'] }}</td>
+                            <td class="text-end fw-bold ark-money">{{ $row['queue'] }}</td>
+                            <td class="text-end ark-money">{{ $row['waiting_approval'] }}</td>
+                            <td class="text-end ark-money">{{ $row['parts'] }}</td>
+                            <td class="text-end ark-money">{{ $row['unpaid'] }}</td>
+                            <td class="small text-secondary">{{ $row['hint'] }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 @endif
 
-<div class="overflow-hidden border border-slate-300 bg-white">
-    <div class="border-b border-slate-200 bg-slate-50 px-3 py-2">
-        <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Diagnostic → Repair Follow-Through</p>
-        <p class="text-xs text-slate-400">{{ $diagnosticRepairFollowThrough['hint'] }}</p>
+<section class="mb-3" aria-labelledby="report-diagnostic-follow-through" data-report-section="diagnostic-follow-through">
+    <h3 class="mb-0" id="report-diagnostic-follow-through">Diagnostic → Repair Follow-Through</h3>
+    <p class="text-secondary small mb-2">{{ $diagnosticRepairFollowThrough['hint'] }}</p>
+    <div class="row row-cards">
+        <div class="col-12 col-sm-4">
+            <div class="card card-sm h-100">
+                <div class="card-body">
+                    <div class="subheader">Diagnostic ROs</div>
+                    <div class="h3 mb-0 mt-1 ark-money">{{ $diagnosticRepairFollowThrough['diagnostic_ros'] }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="card card-sm h-100">
+                <div class="card-body">
+                    <div class="subheader">Repair approved</div>
+                    <div class="h3 mb-0 mt-1 ark-money">{{ $diagnosticRepairFollowThrough['repair_follow_through'] }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="card card-sm h-100">
+                <div class="card-body">
+                    <div class="subheader">Follow-through rate</div>
+                    <div class="h3 mb-0 mt-1 ark-money">{{ $diagnosticRepairFollowThrough['rate_label'] }}</div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="grid gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-3">
-        <div class="bg-white px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Diagnostic ROs</p>
-            <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">{{ $diagnosticRepairFollowThrough['diagnostic_ros'] }}</p>
-        </div>
-        <div class="bg-white px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Repair approved</p>
-            <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">{{ $diagnosticRepairFollowThrough['repair_follow_through'] }}</p>
-        </div>
-        <div class="bg-white px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Follow-through rate</p>
-            <p class="mt-0.5 text-lg font-black tabular-nums text-slate-950">{{ $diagnosticRepairFollowThrough['rate_label'] }}</p>
-        </div>
-    </div>
-</div>
+</section>

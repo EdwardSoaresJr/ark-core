@@ -13,12 +13,153 @@
     'conversationMeta' => 'Recent messages with this customer',
     'quickReplyMessagesListIds' => ['conversation-messages-relationship'],
     'quickReplyOpenRepairOrders' => [],
+    'ui' => 'legacy',
 ])
 
 @php
     $customer = $context->customer;
 @endphp
 
+@if ($ui === 'tabler')
+<div {{ $attributes }} data-conversation-context>
+    @if ($showCustomerHeader && $customer)
+        <div class="card-body border-bottom py-2">
+            <h3 class="card-title mb-0">{{ $customer->name }}</h3>
+            <div class="text-secondary small">{{ $context->displayPhone }}</div>
+        </div>
+    @endif
+
+    @if ($showSectionHeader)
+        <div class="card-body border-bottom py-2">
+            <h3 class="card-title mb-0">Relationship Context</h3>
+            <div class="text-secondary small">Customer, open ROs, and recent conversation - do not auto-pick an RO.</div>
+        </div>
+    @endif
+
+    @if ($showActiveVehicles && $context->vehicles->isNotEmpty())
+        <div class="card-body border-bottom py-2">
+            <div class="subheader mb-1">Active Vehicles</div>
+            <ul class="list-unstyled mb-0">
+                @foreach ($context->vehicles as $vehicle)
+                    <li class="fw-medium">
+                        {{ $vehicle->display_name }}
+                        @if ($vehicle->plate)
+                            <span class="fw-normal text-secondary">· {{ $vehicle->plate }}</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if ($showOpenRepairOrders)
+    <div id="open-repair-orders">
+        <div class="card-body border-bottom py-2">
+            <h3 class="card-title mb-0">{{ $openRepairOrdersLabel }}</h3>
+            <div class="text-secondary small">
+                @if (filled($openRepairOrdersMeta))
+                    {{ $openRepairOrdersMeta }}
+                @else
+                    {{ $context->openRepairOrders->count() }} active
+                @endif
+            </div>
+        </div>
+        <div class="list-group list-group-flush">
+            @forelse ($context->openRepairOrders as $openRepairOrder)
+                @php
+                    $isHighlighted = $highlightRepairOrderId !== null
+                        && (int) $openRepairOrder->repairOrder->repair_order_id === (int) $highlightRepairOrderId;
+                    $hubRo = $openRepairOrder->repairOrder;
+                    $hubCustomer = $customer;
+                    $hubTextUrl = $hubCustomer !== null && filled($context->displayPhone)
+                        ? route('operations.customers.show', $hubCustomer).'?compose=text#customer-communication'
+                        : null;
+                    $hubStatusMoves = $hubRo->isTerminal()
+                        ? []
+                        : \App\Ark\Operations\RepairOrders\RepairOrderLifecycleSelectProjection::forCatalogTargets($hubRo, auth()->user())->boardMoves();
+                @endphp
+                <div @class(['list-group-item', 'bg-azure-lt' => $isHighlighted]) data-open-repair-order="{{ $hubRo->repair_order_id }}">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                        <div>
+                            <div class="fw-bold">{{ $openRepairOrder->vehicle->display_name }}</div>
+                            <div class="small">
+                                <a href="{{ route('operations.repair-orders.show', $hubRo) }}#builder">RO #{{ $hubRo->repair_order_id }}</a>
+                                @if ($isHighlighted)
+                                    <span class="fw-bold text-azure">· This RO</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <x-operations.lifecycle-status-menu
+                                :repair-order="$hubRo"
+                                :label="$hubRo->statusDisplayLabel()"
+                                :tone="\App\Ark\Operations\RepairOrders\RepairOrderLifecycleSelectProjection::statusTone($hubRo)"
+                                :status-moves="$hubStatusMoves"
+                                ui="tabler"
+                            />
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center column-gap-2 mt-1 small">
+                        @if ($hubCustomer)
+                            <a href="{{ route('operations.customers.show', $hubCustomer) }}">{{ $hubCustomer->name }}</a>
+                        @endif
+                        @if ($hubTextUrl)
+                            <a href="{{ $hubTextUrl }}" title="Open communications">{{ $context->displayPhone }}</a>
+                        @elseif (filled($context->displayPhone))
+                            <span class="text-secondary">{{ $context->displayPhone }}</span>
+                        @endif
+                        @unless ($isHighlighted)
+                            <a href="{{ route('operations.repair-orders.show', $hubRo) }}">Open RO</a>
+                        @endunless
+                    </div>
+                    <div class="mt-1 small">
+                        <span class="fw-bold">Workflow:</span> {{ $openRepairOrder->workflowPostureLabel }}
+                    </div>
+                    @if (is_array($openRepairOrder->orientation ?? null))
+                        <div class="mt-2">
+                            @include('operations.orientation.partials.snippet', [
+                                'orientation' => array_merge($openRepairOrder->orientation, ['density' => 'standard']),
+                                'ui' => 'tabler',
+                            ])
+                        </div>
+                    @endif
+                    <div class="small text-secondary">{{ $openRepairOrder->workflowNextAction }}</div>
+                </div>
+            @empty
+                <div class="list-group-item text-secondary small">No open repair orders for this customer.</div>
+            @endforelse
+        </div>
+    </div>
+    @endif
+
+    @if ($showConversation)
+        <div>
+            <div class="card-body border-bottom py-2">
+                <h3 class="card-title mb-0">{{ $conversationLabel }}</h3>
+                @if (filled($conversationMeta))
+                    <div class="text-secondary small">{{ $conversationMeta }}</div>
+                @endif
+            </div>
+            <div id="conversation-messages-relationship">
+                @forelse ($context->recentConversationMessages as $message)
+                    <x-operations.conversation-message :message="$message" />
+                @empty
+                    <div data-conversation-empty class="px-3 py-2 text-secondary small">No conversation history yet. Use the composer below or wait for an inbound message.</div>
+                @endforelse
+            </div>
+            @if ($showQuickReply && $customer)
+                <x-operations.conversation-quick-reply
+                    :customer="$customer"
+                    :messages-list-ids="$quickReplyMessagesListIds"
+                    :open-repair-orders="$quickReplyOpenRepairOrders"
+                    :has-conversation-history="$context->recentConversationMessages->isNotEmpty()"
+                    ui="tabler"
+                />
+            @endif
+        </div>
+    @endif
+</div>
+@else
 <div {{ $attributes->class(['divide-y divide-slate-100']) }}>
     @if ($showCustomerHeader && $customer)
         <div class="ops-index-results-head">
@@ -138,7 +279,7 @@
             </div>
             <div id="conversation-messages-relationship" class="divide-y divide-slate-100">
                 @forelse ($context->recentConversationMessages as $message)
-                    <x-operations.conversation-message :message="$message" class="border-t border-slate-100" />
+                    <x-operations.conversation-message :message="$message" ui="legacy" class="border-t border-slate-100" />
                 @empty
                     <div data-conversation-empty class="px-3 py-2 text-xs leading-4 text-slate-500">No conversation history yet. Use the composer below or wait for an inbound message.</div>
                 @endforelse
@@ -154,3 +295,4 @@
         </div>
     @endif
 </div>
+@endif

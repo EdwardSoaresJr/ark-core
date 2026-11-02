@@ -78,114 +78,112 @@
                 },
             }"
             @submit.prevent="submitConfirmed($event)"
-            class="ops-estimate-email-form px-3 py-2.5"
+            class="card-body"
+            data-estimate-email-form
         >
             @csrf
             <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
             <input type="hidden" name="acknowledge_missing_vin" :value="vinAcknowledged ? 1 : 0">
-            <div class="ops-estimate-email-form-intro">
-                <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Email estimate</p>
-                <p class="mt-0.5 text-xs leading-4 text-slate-500">Sends the current estimate PDF, portal review link, and optional note. Moves the RO to awaiting approval when sent from estimate posture.</p>
+            <div class="mb-3">
+                <div class="subheader">Email estimate</div>
+                <p class="small text-secondary mb-0">Sends the current estimate PDF, portal review link, and optional note. Moves the RO to awaiting approval when sent from estimate posture.</p>
                 @if ($contactPreference === LeadContactPreference::Email)
-                    <p class="mt-1 text-xs font-semibold text-sky-800">Customer prefers email for follow-up.</p>
+                    <div class="small fw-bold text-azure mt-1">Customer prefers email for follow-up.</div>
                 @elseif ($contactPreference === LeadContactPreference::Call)
-                    <p class="mt-1 text-xs font-semibold text-amber-900">Customer prefers a call - email only when needed.</p>
+                    <div class="small fw-bold text-orange mt-1">Customer prefers a call - email only when needed.</div>
                 @elseif ($contactPreference === LeadContactPreference::Text)
-                    <p class="mt-1 text-xs font-semibold text-slate-600">Customer prefers text - email only when needed.</p>
+                    <div class="small fw-bold text-secondary mt-1">Customer prefers text - email only when needed.</div>
                 @endif
             </div>
 
-            <div class="ops-estimate-email-form-fields">
-                <label class="block">
-                    <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">Recipient</span>
-                    <input
-                        x-ref="emailInput"
-                        type="email"
-                        name="email"
-                        value="{{ old('email', $customerEmail) }}"
-                        @required($customerEmail === '')
-                        placeholder="{{ $customerEmail !== '' ? $customerEmail : 'Customer email required' }}"
-                        class="mt-1 h-9 w-full rounded-sm border border-slate-300 bg-white px-2.5 text-sm font-semibold text-slate-800"
-                        autocomplete="email"
-                        @input="cancelConfirm()"
-                    >
-                </label>
-
-                <label class="block">
-                    <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">Optional note</span>
-                    <textarea
-                        name="message"
-                        rows="2"
-                        maxlength="500"
-                        placeholder="Short note included in the email body"
-                        class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
-                        @input="cancelConfirm()"
-                    >{{ old('message') }}</textarea>
-                </label>
-
-                <div
-                    x-show="vinWarningOpen"
-                    x-cloak
-                    class="ops-estimate-vin-warning"
+            <div class="mb-3">
+                <label class="form-label" for="estimate-email-{{ $repairOrder->repair_order_id }}">Recipient</label>
+                <input
+                    id="estimate-email-{{ $repairOrder->repair_order_id }}"
+                    x-ref="emailInput"
+                    type="email"
+                    name="email"
+                    value="{{ old('email', $customerEmail) }}"
+                    @required($customerEmail === '')
+                    placeholder="{{ $customerEmail !== '' ? $customerEmail : 'Customer email required' }}"
+                    @class(['form-control', 'is-invalid' => $errors->has('email')])
+                    autocomplete="email"
+                    @input="cancelConfirm()"
                 >
-                    <div class="ops-estimate-vin-warning-head">
-                        @include('operations.repair-orders.partials.repair-order-vehicle-identity-pressure-chip', ['repairOrder' => $repairOrder])
-                        <p class="ops-estimate-vin-warning-title">VIN missing</p>
-                    </div>
-                    <p class="ops-estimate-vin-warning-copy">
-                        Parts lookup, labor guides, service history accuracy, and OEM information may be affected.
-                    </p>
-                    <div class="ops-estimate-vin-warning-actions">
-                        <a href="#ro-identity-band" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary" @click="cancelVinWarning()">Add VIN</a>
-                        <button type="button" class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary" @click="continueWithoutVin()">Continue anyway</button>
-                    </div>
+                @if ($errors->has('email'))
+                    <div class="invalid-feedback">{{ $errors->first('email') }}</div>
+                @endif
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="estimate-email-message-{{ $repairOrder->repair_order_id }}">Optional note</label>
+                <textarea
+                    id="estimate-email-message-{{ $repairOrder->repair_order_id }}"
+                    name="message"
+                    rows="2"
+                    maxlength="500"
+                    placeholder="Short note included in the email body"
+                    class="form-control"
+                    @input="cancelConfirm()"
+                >{{ old('message') }}</textarea>
+            </div>
+
+            <div x-show="vinWarningOpen" x-cloak class="alert alert-warning" data-estimate-vin-warning>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    @if ($repairOrder->vehicle)
+                        <x-tabler.vehicle-identity-chip :vehicle="$repairOrder->vehicle" />
+                    @endif
+                    <span class="fw-bold">VIN missing</span>
                 </div>
-
-                <div class="ops-estimate-email-form-actions">
-                    <button
-                        type="button"
-                        x-show="! confirmSend && ! sending"
-                        x-on:click="armConfirm()"
-                        class="ops-estimate-email-form-btn ops-estimate-email-form-btn--primary"
-                        @if ($customerEmail === '') title="Enter customer email to send" @endif
-                    >
-                        Email estimate
-                    </button>
-
-                    <button
-                        type="submit"
-                        x-show="confirmSend && ! sending"
-                        x-cloak
-                        class="ops-estimate-email-form-btn ops-estimate-email-form-btn--confirm"
-                    >
-                        Confirm send
-                    </button>
-
-                    <button
-                        type="button"
-                        x-show="confirmSend && ! sending"
-                        x-cloak
-                        x-on:click="cancelConfirm()"
-                        class="ops-estimate-email-form-btn ops-estimate-email-form-btn--secondary"
-                    >
-                        Cancel
-                    </button>
+                <div class="small">
+                    Parts lookup, labor guides, service history accuracy, and OEM information may be affected.
                 </div>
+                <div class="btn-list mt-2">
+                    <a href="#ro-identity-band" class="btn btn-sm" @click="cancelVinWarning()">Add VIN</a>
+                    <button type="button" class="btn btn-sm btn-warning" @click="continueWithoutVin()">Continue anyway</button>
+                </div>
+            </div>
 
-                <p
+            <div class="btn-list">
+                <button
+                    type="button"
+                    x-show="! confirmSend && ! sending"
+                    x-on:click="armConfirm()"
+                    class="btn btn-primary"
+                    @if ($customerEmail === '') title="Enter customer email to send" @endif
+                >
+                    Email estimate
+                </button>
+
+                <button
+                    type="submit"
                     x-show="confirmSend && ! sending"
                     x-cloak
-                    class="text-xs font-semibold leading-4 text-amber-900"
+                    class="btn btn-warning"
                 >
-                    Confirm to email the PDF and portal link to <span x-text="$refs.emailInput.value || 'this address'"></span>. Resets in 3 seconds.
-                </p>
+                    Confirm send
+                </button>
 
-                @if ($errors->has('email'))
-                    <p class="text-xs font-semibold text-rose-700">{{ $errors->first('email') }}</p>
-                @endif
+                <button
+                    type="button"
+                    x-show="confirmSend && ! sending"
+                    x-cloak
+                    x-on:click="cancelConfirm()"
+                    class="btn"
+                >
+                    Cancel
+                </button>
+            </div>
+
+            <div
+                x-show="confirmSend && ! sending"
+                x-cloak
+                class="small fw-bold text-orange mt-2"
+            >
+                Confirm to email the PDF and portal link to <span x-text="$refs.emailInput.value || 'this address'"></span>. Resets in 3 seconds.
             </div>
         </form>
     @elseif (! $isTerminal)
-        <p class="px-3 py-2 text-xs leading-4 text-slate-500">Add estimate lines before emailing the customer.</p>
+        <p class="card-body small text-secondary mb-0">Add estimate lines before emailing the customer.</p>
     @endif
 @endcan

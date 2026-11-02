@@ -99,13 +99,13 @@ test('the history tab lists repair orders with Tabler status badges', function (
         ->assertSee('class="badge bg-', false);
 });
 
-test('shared legacy panels on the hub sit in legacy islands', function (): void {
+test('the shared communication and document panels on the hub render outside legacy islands', function (): void {
     [$customer] = hubCustomerWithFleet();
 
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.customers.show', $customer))
         ->assertOk()
-        ->assertSee('<div class="ark-legacy bg-white text-dark">', false)
+        ->assertDontSee('<div class="ark-legacy bg-white text-dark">', false)
         ->assertSee('id="conversation-messages-relationship"', false);
 });
 

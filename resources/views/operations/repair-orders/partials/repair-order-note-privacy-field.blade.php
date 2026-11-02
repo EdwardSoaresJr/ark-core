@@ -31,7 +31,8 @@
             this._hintTimer = setTimeout(() => { this.audienceHint = ''; }, 4000);
         }
     }"
-    @class(['ops-note-privacy-field', 'space-y-1.5' => ! $tabler])
+    @class(['ops-note-privacy-field space-y-1.5' => ! $tabler])
+    data-note-privacy-field
 >
     <input type="hidden" name="{{ $advisorField }}" :value="advisor ? '1' : '0'">
     <input type="hidden" name="{{ $technicianField }}" :value="technician ? '1' : '0'">

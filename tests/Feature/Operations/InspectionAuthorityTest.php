@@ -187,7 +187,7 @@ test('ro inspection tab is control center without walk', function () {
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'inspect']))
         ->assertOk()
-        ->assertSee('ops-inspection--control', false)
+        ->assertSee('data-inspection-control', false)
         ->assertSee('Open Inspection', false)
         ->assertSee('Send walk link', false)
         ->assertSee('data-inspection-handoff-sms', false)
@@ -196,6 +196,7 @@ test('ro inspection tab is control center without walk', function () {
         ->assertDontSee('Open Tablet View', false)
         ->assertDontSee('Send to Technician', false)
         ->assertDontSee('ops-inspection-walk', false)
+        ->assertDontSee('id="inspection-walk"', false)
         ->assertDontSee('Next →', false)
         ->assertDontSee('Vocabulary gap', false);
 });
@@ -209,7 +210,7 @@ test('dedicated inspection host shows section walk with condition vocabulary', f
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.inspection.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-inspection-sections', false)
+        ->assertSee('data-inspection-sections', false)
         ->assertSee('LF Tire', false)
         ->assertSee('Green', false)
         ->assertSee('Yellow', false)
@@ -330,7 +331,7 @@ test('inspection walk shows progress after condition update', function () {
         ->get(route('operations.repair-orders.inspection.show', ['repairOrder' => $repairOrder, 'point' => $item->id]))
         ->assertOk()
         ->assertSee('1/', false)
-        ->assertSee('ops-inspection-walk', false);
+        ->assertSee('id="inspection-walk"', false);
 });
 
 test('save and add another reopens capture sheet with concern preserved', function () {
@@ -383,13 +384,14 @@ test('unassigned technician cannot record findings on repair order', function ()
         ->get(route('operations.repair-orders.inspection.show', $repairOrder))
         ->assertOk()
         ->assertSee('Other Findings', false)
-        ->assertDontSee('ops-inspection-finding-btn', false);
+        ->assertDontSee('data-inspection-finding-btn', false);
 
     $this->actingAs($technician)
         ->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'inspect']))
         ->assertOk()
         ->assertSee('Open Inspection', false)
-        ->assertDontSee('ops-inspection-finding-btn', false);
+        ->assertDontSee('ops-inspection-finding-btn', false)
+        ->assertDontSee('data-inspection-finding-btn', false);
 });
 
 function inspectionRepairOrder(?User $assignedTechnician = null): RepairOrder

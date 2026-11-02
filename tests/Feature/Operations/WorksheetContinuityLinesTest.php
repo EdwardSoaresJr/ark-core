@@ -280,6 +280,42 @@ test('creating a concern declares the lines scope and the scope count', function
     expect($repairOrder->fresh()->status->is(RepairOrderStatus::Draft))->toBeTrue();
 });
 
+test('a background json request between a concern save and its redirect keeps the saved status and lines scope', function (): void {
+    $advisor = actingAsLearnCurrentStaff(ArkRole::Advisor);
+    $repairOrder = repairOrderForEstimateWorkspace();
+
+    $this->actingAs($advisor)
+        ->post(route('operations.repair-orders.concerns.store', $repairOrder), [
+            'scope_entry_kind' => ScopeEntryKind::CustomerRequested->value,
+            'summary' => 'Rear brake noise',
+            'observed_summary' => 'Rear brake noise',
+        ])
+        ->assertRedirect();
+
+    $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.concerns.vocabulary-suggest', [$repairOrder, 'q' => 'Rear brake']))
+        ->assertOk();
+
+    $page = $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('data-continuity-scope="'.WorksheetContinuity::LINES.'"', false)
+        ->assertSee('Rear brake noise', false);
+
+    expect(continuityXPath($page->getContent())->query('//*[@id="worksheet-status-flash"]/*[contains(@class, "alert")]')->length)->toBe(1);
+
+    $this->actingAs($advisor)
+        ->getJson(route('operations.repair-orders.concerns.vocabulary-suggest', [$repairOrder, 'q' => 'Rear']))
+        ->assertOk();
+
+    $reload = $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertDontSee('data-continuity-scope="'.WorksheetContinuity::LINES.'"', false);
+
+    expect(continuityXPath($reload->getContent())->query('//*[@id="worksheet-status-flash"]/*[contains(@class, "alert")]')->length)->toBe(0);
+});
+
 test('the first line declares workflow when draft becomes estimate', function (): void {
     $advisor = actingAsLearnCurrentStaff(ArkRole::Advisor);
     $repairOrder = repairOrderForEstimateWorkspace();

@@ -1585,13 +1585,12 @@
                 </div>
             </div>
 
-            {{-- Worksheet content, rail content, and the footer dock keep their legacy markup and scripts until their own slices. --}}
-            <x-operations.worksheet-island stack>
         @include('operations.repair-orders.partials.worksheet-busy-overlay')
 
+        {{-- ark-worksheet-continuity.js prepends its client notices here as Tabler alerts. --}}
         <div id="worksheet-status-flash">
             @if (session('error'))
-                <div class="border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+                <div class="alert alert-danger" role="alert">
                     {{ session('error') }}
                 </div>
             @endif
@@ -1605,9 +1604,8 @@
                 @endphp
                 <div
                     data-worksheet-server-status
-                    class="{{ $worksheetStatusSuccess
-                        ? 'border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950'
-                        : 'border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950' }}"
+                    role="status"
+                    class="alert {{ $worksheetStatusSuccess ? 'alert-success' : 'alert-warning' }}"
                 >
                     {{ $worksheetStatus }}
                 </div>
@@ -1618,37 +1616,37 @@
             @endif
 
             @if ($errors->has('lifecycle'))
-                <div class="border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+                <div class="alert alert-danger" role="alert">
                     {{ $errors->first('lifecycle') }}
                 </div>
             @endif
         </div>
 
-        <div x-show="partstechNotice" x-cloak class="border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-            <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <p x-text="partstechNotice"></p>
-                    <p x-show="partstechCartLocked" x-cloak class="mt-1 text-xs font-medium leading-4 text-amber-950">
+        <div x-show="partstechNotice" x-cloak role="status">
+            <div class="alert alert-warning d-flex align-items-start gap-3">
+                <div class="flex-fill min-w-0">
+                    <p class="mb-0" x-text="partstechNotice"></p>
+                    <p x-show="partstechCartLocked" x-cloak class="small mt-1 mb-0">
                         PartsTech is currently working with <span x-text="partstechBlockingReference || 'another RO'"></span>. Switch to this RO if you are done with that cart, or pull that quote first.
                     </p>
                     <button
                         x-show="partstechCartLocked"
                         x-cloak
                         type="button"
-                        class="mt-2 rounded-sm bg-amber-900 px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-amber-50 hover:bg-amber-950"
+                        class="btn btn-warning btn-sm mt-2"
                         @click="switchPartsTechToThisRo()"
                     >
                         Switch PartsTech to this RO
                     </button>
                 </div>
-                <button type="button" class="shrink-0 text-xs font-bold uppercase tracking-[0.08em] text-amber-800 hover:text-amber-950" @click="clearPartstechNotice()">Dismiss</button>
+                <button type="button" class="btn btn-ghost-warning btn-sm" @click="clearPartstechNotice()">Dismiss</button>
             </div>
         </div>
 
-        <div x-show="laborGuideNotice" x-cloak class="border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-950">
-            <div class="flex items-start justify-between gap-3">
-                <p x-text="laborGuideNotice"></p>
-                <button type="button" class="text-xs font-bold uppercase tracking-[0.08em] text-sky-800 hover:text-sky-950" @click="clearLaborGuideNotice()">Dismiss</button>
+        <div x-show="laborGuideNotice" x-cloak role="status">
+            <div class="alert alert-info d-flex align-items-start gap-3">
+                <p class="flex-fill mb-0" x-text="laborGuideNotice"></p>
+                <button type="button" class="btn btn-ghost-info btn-sm" @click="clearLaborGuideNotice()">Dismiss</button>
             </div>
         </div>
 
@@ -1658,16 +1656,12 @@
             'repairOrder' => $repairOrder,
         ])
 
-        <div class="ops-review-shell">
-            @include('operations.repair-orders.partials.operational-identity-band', [
-                'repairOrder' => $repairOrder,
-                'identityVariant' => 'staff',
-                'estimateVersion' => $estimateVersion,
-                'totals' => $totals,
-            ])
-
-        </div>
-            </x-operations.worksheet-island>
+        @include('operations.repair-orders.partials.operational-identity-band', [
+            'repairOrder' => $repairOrder,
+            'identityVariant' => 'staff',
+            'estimateVersion' => $estimateVersion,
+            'totals' => $totals,
+        ])
 
         <div class="ops-estimate-layout gap-3 mt-3">
             <div class="ops-estimate-main min-w-0">
@@ -1705,7 +1699,7 @@
                     'estimateVersion' => $estimateVersion,
                 ])
 
-                <div id="estimate-lines" class="scroll-mt-6" :class="worksheetBusyPending ? 'ops-worksheet-saving' : ''">
+                <div id="estimate-lines" class="scroll-mt-6" :class="worksheetBusyPending ? 'opacity-75 pe-none' : ''">
                     @include('operations.repair-orders.partials.repair-order-estimate-workspace-header', [
                         'repairOrder' => $repairOrder,
                         'totals' => $totals,
@@ -1721,9 +1715,8 @@
                         'partsReadinessCounts' => $partsReadinessCounts ?? [],
                     ])
 
-                    <x-operations.worksheet-island>
                     @if (($engineOilServices ?? collect())->isNotEmpty())
-                        @include('operations.maintenance.partials.engine-oil-panel', [
+                        @include('operations.repair-orders.partials.repair-order-engine-oil-panel', [
                             'repairOrder' => $repairOrder,
                             'engineOilServices' => $engineOilServices ?? collect(),
                             'estimateVersion' => $estimateVersion,
@@ -1732,7 +1725,7 @@
                     @endif
 
                     @if (($testingAuthorizations ?? collect())->isNotEmpty())
-                        @include('operations.work-authorization.partials.testing-package-panel', [
+                        @include('operations.repair-orders.partials.repair-order-testing-package-panel', [
                             'repairOrder' => $repairOrder,
                             'testingAuthorizations' => $testingAuthorizations ?? collect(),
                             'estimateVersion' => $estimateVersion,
@@ -1740,7 +1733,6 @@
                             'presentationOnly' => true,
                         ])
                     @endif
-                    </x-operations.worksheet-island>
 
                     @php
                         $evidenceItemsCount = ($evidenceGallery['items'] ?? collect())->count();
@@ -1762,7 +1754,6 @@
                         {{-- Add Work lives on the contextual footer - one primary CTA per viewport. --}}
                     @endunless
 
-                    <x-operations.worksheet-island>
                     @include('operations.repair-orders.partials.workspace-modal.host', [
                         'repairOrder' => $repairOrder,
                         'isTerminal' => $isTerminal,
@@ -1782,7 +1773,7 @@
                         'technicians' => $technicians ?? collect(),
                     ])
 
-                    <div class="ops-worksheet-concerns">
+                    <div data-worksheet-procurement>
                         @if (app(\App\Ark\Operations\Parts\LinkedPartsQuotes::class)->available())
                             @include('operations.repair-orders.partials.repair-order-linked-quote', [
                                 'repairOrder' => $repairOrder,
@@ -1797,12 +1788,12 @@
                                 'canImportQuote' => true,
                             ])
                         @elseif ($partsTechLauncher->usesPlatform() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
+                            <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
                                 {{ $partsTechLauncher->blockedReason($repairOrder) }}
                             </p>
                         @elseif ($partsTechLauncher->configured() && ! $isTerminal)
-                            <p class="ops-worksheet-procurement-hint text-xs font-medium text-slate-600">
-                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}" class="font-semibold underline decoration-slate-400 hover:text-slate-900">Settings → PartsTech</a>.
+                            <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
                             </p>
                         @endif
 
@@ -1813,7 +1804,6 @@
                             ])
                         @endif
                     </div>
-                    </x-operations.worksheet-island>
 
                         @php
                             // Priority order (Must Do → Should Do → Could Do → Information Only), then advisor position.
@@ -1902,7 +1892,6 @@
                                     'technicians' => $technicians ?? collect(),
                                 ])
 
-                                <x-operations.worksheet-island>
                                 @include('operations.repair-orders.partials.repair-order-concern-authorization-exception', [
                                     'repairOrder' => $repairOrder,
                                     'concern' => $concern,
@@ -1910,7 +1899,6 @@
                                     'estimateVersion' => $estimateVersion,
                                     'totals' => $totals,
                                 ])
-                                </x-operations.worksheet-island>
                             </section>
                         @empty
                             @if ($isTerminal)
@@ -1971,9 +1959,6 @@
             </aside>
         </div>
 
-            {{-- The full legacy wrapper keeps its bottom padding, which clears the fixed footer dock. --}}
-            <div class="ark-legacy ops-main">
-            <div class="ops-estimate-workspace ops-estimate-workspace--builder">
         @include('operations.repair-orders.partials.repair-order-rte-labor-panel', [
             'rteLaborGuide' => $rteLaborGuide,
             'rteLaborConcerns' => $rteLaborConcerns,
@@ -2015,8 +2000,8 @@
                         stack = parseFloat(getComputedStyle(rail).top) || 0;
                     }
 
-                    // The dock is pushed to a layout stack below this script, and continuity can replace it.
-                    const footer = document.querySelector('.ops-ro-orientation-header--dock');
+                    // Continuity can replace the dock, so look it up on every fit.
+                    const footer = document.querySelector('[data-ro-orientation-header]');
                     const footerHeight = footer ? footer.offsetHeight : 0;
                     const available = window.innerHeight - stack - footerHeight - gap;
                     const height = rail.offsetHeight;
@@ -2053,8 +2038,6 @@
                 }
             })();
         </script>
-            </div>
-            </div>
         </x-tabler.page>
     </section>
 </x-operations.app>

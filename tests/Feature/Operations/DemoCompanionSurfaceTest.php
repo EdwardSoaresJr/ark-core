@@ -38,7 +38,7 @@ test('demo hides arkademy and platform surfaces', function () {
 });
 
 test('shops outside the demo still show arkademy and platform', function () {
-    config(['app.url' => 'https://app.lugsnplugs.test']);
+    config(['app.url' => 'https://app.lugsnplugs.test', 'ark.arkademy_in_navigation' => true]);
     $this->seed(ArkAuthorizationSeeder::class);
     $admin = User::factory()->create()->assignRole(ArkRole::Admin->value);
 

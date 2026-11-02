@@ -52,7 +52,7 @@ test('admin can view operational shop settings defaults', function () {
         ->assertDontSee('Financial rules, estimate defaults, and document language')
         ->assertSeeInOrder(['Your shop', 'Shop Identity', 'Appointments &amp; Setup', 'Money', 'Financial Rules', 'Shop Overhead', 'Owner Targets &amp; Reporting', 'Documents &amp; workflow', 'Documents / Disclaimers', 'Workflow Defaults', 'Label Printing', 'Connected services', 'Square Payments', 'Parts catalogs', 'Communications', 'Stations &amp; Phones'], false)
         ->assertSee("@click=\"setActive('operations')\"", false)
-        ->assertSee('<h3 class="text-sm font-black text-slate-950">Appointments &amp; Setup</h3>', false)
+        ->assertSee('<div class="subheader">Appointments &amp; Setup</div>', false)
         ->assertSee('Shop-wide options: appointments and bays, station presence, shop profile presets, and importing customers from a spreadsheet.')
         ->assertSee('Shop name, logo, and contact details')
         ->assertSee('Shown on estimates, invoices, and other customer documents.')

@@ -35,7 +35,7 @@ The repair order board is "Job Board" for every role. Staff with operations acce
 
 ## Legacy components on a Tabler page
 
-These are not migrated yet and render inside `.ark-legacy`: channel strip (`lg` and up), workstation presence and station lock, workspace tabs, comms pressure bar, comms interrupt panel, global search, image lightbox, guide modal, call queue, print helpers, and the repair-order orientation dock.
+Every shell component is Tabler: the channel strip, workstation presence and its dialogs, the workspace tabs strip, the comms pressure bar, the comms interrupt panel, global search, the image lightbox, the guide modal, and the call queue poller. Shared components take `ui="tabler"` from `shell/tabler.blade.php`; without it they render the legacy markup the ARKademy pages still use. These still render inside `.ark-legacy` on Tabler pages, each for a stated reason (see "Remaining legacy" under "Migration inventory"): the ARKademy article text in the guide modal, the print helpers on the repair order, the Shop Settings Communications body, the conversation event rows, the printable estimate document body, and the PartsTech toolbar group.
 
 Tabler's CSS never applies inside `.ark-legacy`. The build (`resources/css/postcss-exclude-legacy-islands.js`) appends `:not(.ark-legacy *)` to the subject of every rule in `tabler.css`, before any pseudo-element, so `app.css` styles an island alone. This matters because the two stylesheets share class names with different meanings: Tabler's `.grid` is a 12-column grid that overrode Tailwind's `md:grid-cols-2` in the hub's edit forms. When a component migrates, remove its wrapper. When none remain, stop loading `app.css` on Tabler pages, delete the plugin and the coexistence rules in `tabler.css`.
 
@@ -86,7 +86,7 @@ Every migrated view picks one layout. `layout` is required, and an unknown value
 
 All four use Tabler's page padding (`--tblr-page-padding`: 1rem from `lg`, 0.5rem below).
 
-`split` and `canvas` are defined but have no migrated view yet. The first view of each kind confirms the height behavior and updates this table. `canvas` was tried on the Schedule with its legacy board: the board does not manage its own outer spacing, so it sat flush against the sidebar while the header stayed inset, and its height is set by its content. The Schedule uses `fluid` until its board is replaced.
+`split` is used by the Communications workspace (inbox, history, internal). Tabler's `.page` sets only a minimum height, so a split page wraps `<x-tabler.page layout="split">` in `.ark-split`; the rules in `tabler.css` lock that page to the viewport and let each panel scroll on its own. `canvas` still has no view. `canvas` was tried on the Schedule with its legacy board: the board does not manage its own outer spacing, so it sat flush against the sidebar while the header stayed inset, and its height is set by its content. The Schedule uses `fluid` until its board is replaced.
 
 Sign-in, password reset, and first-run setup are not in the staff shell. When they migrate they use Tabler's `page-center` with `container-tight` (32rem) in the guest layout.
 
@@ -129,9 +129,9 @@ Build record pages from these. Do not copy their markup into a view.
 | `<x-tabler.empty-state icon clear-url>` | The empty result, with "Clear search" when `clear-url` is set. |
 | `<x-tabler.status-badge :tone>` | A repair-order status badge. |
 | `<x-tabler.vehicle-identity-chip :vehicle>` | "VIN missing" with its hint as a tooltip. The legacy chip partial stays for unmigrated repair-order screens. |
-| `<x-tabler.vin-display :vin>` | The VIN with the last eight characters bold, copy on click with a Copied badge, and the phonetic readback on hover or focus (`arkVinDisplay`). The readback panel is still the legacy partial. `x-operations.vin-display` stays for the repair order workspace. |
+| `<x-tabler.vin-display :vin>` | The VIN with the last eight characters bold, copy on click with a Copied badge, and the phonetic readback on hover or focus (`arkVinDisplay`). The readback is a Tabler card listing each character with its phonetic word. `x-operations.vin-display` stays only for the printable estimate document. |
 | `<x-tabler.help-tip :text [label]>` | A Tabler `form-help` mark with the text in a popover on hover or focus. `x-operations.help-tip` stays for settings and the repair order workspace. |
-| `<x-tabler.workspace-modal [initial-task] [initial-context]>` | `arkWorkspaceModal` in a Tabler modal: same host id, refs, keyboard handling, validation message, and footer buttons as `x-operations.workspace-modal`, full screen on phones. Panels are `<div data-workspace-modal-panel x-show="…">`. The repair order workspace keeps the legacy component. |
+| `<x-tabler.workspace-modal [initial-task] [initial-context]>` | `arkWorkspaceModal` in a Tabler modal: same host id, refs, keyboard handling, validation message, and footer buttons as `x-operations.workspace-modal`, full screen on phones. Panels are `<div data-workspace-modal-panel x-show="…">`. Used by the customer hub and the repair order workspace; the legacy `x-operations.workspace-modal` is removed. |
 | `<x-tabler.icon name>` | A Tabler Icons outline icon. |
 - Pagination: `$paginator->links('pagination::bootstrap-5')`.
 - Tooltips, dropdowns, collapse, and modals use Tabler's `data-bs-*` attributes. Do not add Alpine or Preline for those.
@@ -152,90 +152,55 @@ Design the phone layout first, not as a squeezed desktop.
 
 1. Record its current behavior and the legacy classes it uses (below).
 2. Migrate the Blade view only.
-3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior. `TablerShellTest`, `MobileApplicationNavTest`, and `CoreBoundaryCleanupPhase1Test` check the legacy rail on the profile page (`profile.edit`), which every role can open; when it migrates, point them at another legacy page.
+3. Run its feature tests and `TablerShellTest`. Update assertions that named legacy classes to assert the same behavior. The checks of the legacy rail (`TablerShellTest`, `MobileApplicationNavTest`, `CoreBoundaryCleanupPhase1Test`, `StaffNavigationTest`) use the ARKademy pages, the last pages on the legacy shell.
 4. Check 390, 820, 1440, 1920, and 2560 wide, light and dark, for horizontal overflow and stretched content: forms, links, pagination, dropdowns, tooltips, the station overlay, and Ctrl/⌘K search. Capture the pull request's Visual Review screenshots during this check ([RELEASE_PROTOCOL.md](RELEASE_PROTOCOL.md#1-implement-and-pr-this)).
 5. List what still depends on `app.css`.
 6. Stop for review before the next view.
 
 ## Migration inventory
 
-The target is the 58 staff pages, the views that render `<x-operations.app>`. Update this list in the pull request that migrates a view. Names in code are route names. Reachability was checked by requesting every staff GET route as an admin, an advisor, and a technician, and following the views, includes, links, and script consumers each one renders.
+The target is the staff pages, the views that render `<x-operations.app>`. Names in code are route names. Reachability was checked by requesting every staff GET route as an admin, an advisor, and a technician, and following the views, includes, links, and script consumers each one renders.
 
-A page counts as complete only when nothing reachable on it is still legacy. Code that never renders does not hold a page back, but it is listed under Unreachable.
+**Complete:** every reachable staff page renders the Tabler shell. Where a page still holds a legacy island, the island is listed under "Remaining legacy" with its reason.
 
-**Complete (11):** on Tabler with no reachable legacy markup and no open corrections.
+- **Records and daily work:** Customers, Vehicles, Repair orders (`operations.repair-orders.index`), the customer hub, the repair order workspace, the Job Board (`operations.index`) and the technicians' Job Board (`operations.workboard`), Dashboard and the Scoreboard tab, Work queues, Schedule, Schedule appointment, Appointment detail, Check In, Time clock and the staff time clock history, the technician landing, inspection (staff shell and the tablet bay layout), engine oil confirmation, new contact, caller lookup, and observations.
+- **Communications:** inbox, history, internal, Calls & Voicemail, and Stations & Phones (index, device, person, setup required).
+- **Owner and reports:** Cockpit, Reports, the operational report, End of Day, Day Review and its bookend route, Technician production (index and detail), Call & SMS intelligence (index and detail), and Staff coaching.
+- **Settings, account, and system:** Shop Settings, Profile, ARK Cloud connecting, Platform clusters, and the 409 page.
+- **Documents and financial:** the estimate document page, the document viewer, record testing outcome, the dealer parts quote, and parts matrix tuning.
 
-- Customers (`operations.customers.search`)
-- Vehicles (`operations.vehicles.search`)
-- Repair orders (`operations.repair-orders.index`)
-- Job Board (`operations.index`)
-- Appointment detail (`operations.appointments.show`)
-- Schedule appointment (`operations.schedule`). The sidebar does not highlight Schedule on this page, because `StaffNavigation` matches only `operations.appointments.*`. That belongs to a shared navigation change, not a view slice.
-- Time clock (`operations.time-clock.index`)
-- Check In (`operations.intake.create`)
-- Schedule (`operations.appointments.index`)
-- Dashboard (`operations.today`), including the technician lanes
-- Work queues (`operations.work.queue`: tasks, follow-ups, scheduled, decisions)
+**Remaining legacy (accounted for):**
 
-**Partial, actionable (1):** on Tabler, with legacy sections that can migrate now.
+- **ARKademy, deferred on purpose:** its pages (articles, print selection, team progress) keep the legacy shell, and the guide modal shows article text in an island. ARKademy is hidden from staff navigation for launch (`ark.arkademy_in_navigation`, env `ARK_ARKADEMY_IN_NAVIGATION`, default off); its routes, content, progress, and in-page guide links are unchanged.
+- **Owned by the parallel communications workstream:** `operations/settings/partials/telephony-settings.blade.php` (the Shop Settings Communications body, including the email, channel, push, quick-reply, message-action, and call-intelligence settings it includes) and `operations/timeline/partials/event-bubble.blade.php` (conversation event rows in the communications thread and the repair order Communications tab). Both render in `.ark-legacy bg-white text-dark` islands until that workstream migrates them.
+- **Document bodies:** the estimate document page shows its printable `<article>` unchanged in one island, so printing does not change. The document viewer's preview is the file itself.
+- **Print helpers:** hidden print layouts and scripts on the repair order page (`:printing="true"`), in an island at the end of `<body>`. Their visible prompts are injected into Tabler hosts.
+- **PartsTech toolbar group:** its button and swatch classes come from `app/` as legacy classes, so it stays in an island in the estimate toolbar until that projection changes.
+- **Legacy classes kept as script hooks:** `ops-estimate-layout`, `ops-estimate-main`, `ops-review-rail` (payment capture and a layout test), `ops-worksheet-status-flash--pulse` (an `app.css` animation), and `ops-comms-workspace__thread-body` (the event-bubble grid).
 
-- **Shop settings (`operations.settings.shop.edit`):** every section except Shop Identity, Documents / Disclaimers, Workflow Defaults, Label Printing, Financial Rules, and Shop Overhead. See the log entry for which remaining sections wait on a hosted-service decision.
-
-**Partial, blocked (2):** on Tabler, with legacy sections that wait for other work.
-
-- **Repair order workspace (`operations.repair-orders.show`):**
-  - The header and command bar are Tabler (see "Repair order workspace: header and command bar"). Keep the three-section Customer | Vehicle | Visit panel and the sticky footer as they are; other slices do not redesign them.
-  - **Legacy islands:**
-    - the worksheet body and busy overlay;
-    - the engine oil panel;
-    - the workspace modal host;
-    - the authorization exception form;
-    - the RTE labor panel;
-    - the rail's Authorization, Portal, and Parts tabs;
-    - the labor guide and parts catalog toolbar buttons.
-  - Blocked on the financial and authorization workstream.
-- **Customer hub (`operations.customers.show`):** the conversation context panel (Work tab), the reply composer and message rows (Comms tab), and the document list (Documents tab), all in `.ark-legacy`. They are shared with the communications and document views and move with them. Everything else on the hub, including the customer and vehicle edit modal and the VIN display, is Tabler. The add-document panel inside the modal stays legacy for the same reason.
-
-**Not started (30):** live pages to migrate. "Navigation" pages are linked from the sidebar, a tab, or a page header; "internal" pages open only from another page or a direct link.
-
-- **Communications (8):** inbox, history, internal, and calls (navigation); shop communications index, device, and person (navigation); shop communications setup required (internal).
-- **Owner and reports (10):** business (Cockpit), reports index, operational report, day review, technician production index and detail, and the Scoreboard tab (navigation); call intelligence index and detail, and staff coaching (internal).
-- **Learning (3):** ARKademy, print selection, and team progress (navigation).
-- **Daily operations (4):** the technicians' Job Board (`operations.workboard`), their home because technicians get 403 on `/app` (navigation); new contact (`operations.leads.create-contact`), caller lookup, and observations (internal).
-- **Account and system (5):** profile and the staff time clock history (`operations.time-clock.staff`) (navigation); ARK Cloud connecting, Platform clusters, and the 409 error page (internal). The staff history page corrects and deletes compensable hours, so it migrates on its own.
-
-**Deferred (9):** live pages waiting for a decision or another workstream.
-
-- **Technician (3):** technician landing, inspection (`operations.repair-orders.inspection.show`), and engine oil confirmation, all internal. They wait for the decision on the technician phone workflow.
-- **Financial and authorization (6):** the end-of-day report (navigation); the estimate document, the document viewer, record testing outcome, the dealer parts quote, and parts matrix tuning (internal). They wait for the release-blocker workstream.
-
-**Unreachable (5 views, plus partials):** no request renders them. Remove them rather than migrate; nothing here is deleted yet.
+**Unreachable:** no request renders these. Remove them rather than migrate.
 
 - `operations/intake/index`: `operations.intake.index` redirects to the Job Board.
 - `operations/communications/workboard`: `operations.communications.workboard` redirects to the inbox.
 - The briefing view: its route redirects, and its controller is not routed.
 - The conversation reply view: its route goes to a redirect controller, and the reply controller is not routed.
 - The communications attention workspace view: nothing renders it.
-- Partials: `appointments/partials/capacity-bar` (no view includes it), the Comms work queue, `operations/partials/work-tab-queues` with the `work-queue-band-header` and the compact dispatch rows of `customer-decision-pressure-rows` that only it uses, `week-schedule-list`, the advisor triage branch of the workboard, and `operations.repair-orders.partials.operational-journey-card` on the customer hub and the repair order workspace. Both controllers always pass `operationalJourney` as `null`, so the card never renders. It stays legacy and in place.
+- The advisor triage branch of the workboard (`operations/index` renders the legacy shell only for it).
+- Partials: `appointments/partials/capacity-bar`, the Comms work queue partials, `operations/partials/work-tab-queues` with `work-queue-band-header` and the compact rows of `customer-decision-pressure-rows`, `week-schedule-list`, and `operations.repair-orders.partials.operational-journey-card` (both controllers pass `operationalJourney` as `null`). Several repair order partials replaced in this migration also have no includer left (for example `workspace-strip`, `mode-control`, `line-type-picker`, `identity-customer-inline`, `identity-vehicle-inline`); they are left in place for a cleanup change.
 
 **Known issues across migrated pages:**
 
-- **Sidebar highlight:** the Schedule item is not highlighted on `operations.schedule`; see Complete above.
-- **Slate status bars:** a `card-status-start bg-dark` bar, for the slate status tone, is nearly invisible against a dark-theme card. This appears on record cards and the Check In customer results.
+- **Sidebar highlight:** the Schedule item is not highlighted on `operations.schedule`, because `StaffNavigation` matches only `operations.appointments.*`.
+- **Slate status bars:** a `card-status-start bg-dark` bar, for the slate status tone, is nearly invisible against a dark-theme card.
+- **`x-show` and display utilities:** Bootstrap's `d-*` display utilities are `!important`, so plain `x-show` cannot hide an element that carries one. Use `x-show.important` or put `x-show` on a wrapper. `tests/Unit/TablerXShowDisplayUtilityTest.php` fails if a view combines them.
 
-**Excluded from the staff count, kept for a later design review:** these surfaces are not part of this migration and are not canceled.
-
-- sign-in and account pages (`<x-guest-layout>`, 8);
-- the installer (8);
-- the ARKademy print page;
-- wall displays (shop display, customer display, and scoreboard wall);
-- the customer portal (9);
-- the public website (10);
-- ARK Cloud pages (13).
+**Excluded from the staff count, kept for a later design review:** sign-in and account pages (`<x-guest-layout>`, 8), the installer (8), the ARKademy print page, wall displays (shop display, customer display, and scoreboard wall), the customer portal (9), the public website (10), and ARK Cloud pages (13).
 
 "Workspace layouts" describes the guest layout's target.
 
 ## Migration log
+
+Each entry records a slice as it merged. Where an earlier entry lists legacy that a later entry migrated, the later entry and "Migration inventory" describe the current state.
 
 ### Customers (`operations.customers.search`)
 
@@ -281,9 +246,9 @@ Unchanged: the controller, routes, permissions, tab and deep-link parameters (`t
 
 The edit modal (`hub-workspace-modal`) is `<x-tabler.workspace-modal>`. Edit Customer, Edit Vehicle, and Add Vehicle keep their routes (`operations.customers.update`, `operations.customers.vehicles.update`, `operations.customers.vehicles.store`), methods, field names and order, `CustomersManage` gating, and `arkVehicleDecode` VIN and plate decoding. Server errors mark the field `is-invalid` with its message and reopen the same panel; the required-field check shows the modal's alert. The vehicle fields are `workspace-vehicle-fields-tabler`; the repair order workspace keeps `workspace-vehicle-fields`. `ark-workspace-modal.js` finds panels by `[data-workspace-modal-panel]` as well as the legacy class. The Vehicles tab shows the VIN with `<x-tabler.vin-display>`, or the identity chip when it is missing.
 
-Still on `app.css`, in `.ark-legacy`: the conversation context panel on the Work tab, the reply composer and message rows on the Comms tab, the document list, and the add-document panel inside the modal. All are shared with the communications and document views. The operational journey card is also legacy, but never renders (see Unreachable).
+The conversation context panel (Work tab), the reply composer and message rows (Comms tab), the document list (Documents tab), and the add-document panel in the modal are Tabler too, through `ui="tabler"` variants of the shared communication components and `add-document-panel-tabler`. The context panel's status menu (`x-operations.lifecycle-status-menu ui="tabler"`) and orientation snippet are Tabler. Conversation event rows drawn by `timeline/partials/event-bubble` stay in islands (see "Remaining legacy"). The operational journey card is legacy, but never renders.
 
-Known visual limitation: in the dark theme the Work tab's conversation context panel, the Comms tab panels, and the add-document panel stay white inside dark cards. They have no dark style of their own, and this keeps them readable until they migrate.
+The event-row islands keep a white surface in the dark theme so they stay readable.
 
 ### Repair orders index (`operations.repair-orders.index`)
 
@@ -305,7 +270,7 @@ Staff without a shop dashboard (technicians) get a Tabler `fluid` page titled "T
 
 ### Shop settings (`operations.settings.shop.edit`)
 
-Settings is one page with an Alpine section switcher and about 30 section partials. The page and six sections are Tabler; the rest are unchanged legacy markup in one island.
+Settings is one page with an Alpine section switcher and about 30 section partials. Every section is a Tabler card (`section.card[data-settings-section]`); only the Communications body is still legacy, in one island.
 
 Migrated: the page header, the status and error alerts (`alert-success`, `alert-danger`), and the section navigation (a `list-group` card from `lg` up, a `form-select` below `lg`, both calling the existing `setActive()` and keeping the `?section=` URL). Shop Identity and Documents / Disclaimers are Tabler cards with `form-control`, `form-select`, `form-check`, `invalid-feedback`, and a card-footer Save button. Field names, `old()` values, routes, methods, and button labels are unchanged.
 
@@ -331,16 +296,17 @@ Shop Overhead is a Tabler card. The worksheet (`partials.shop-overhead-calculato
 
 The two "Settings → Staff" links are now links to `?section=staff` that call `setActive('staff')`; they used `$parent`, which Alpine 3 does not have, and did nothing. Hooks: `data-settings-overhead`, `data-overhead-walkthrough`, `data-overhead-rate`, `data-overhead-fixed-costs`, `data-overhead-fixed-cost`, `data-overhead-breakdown`, `data-overhead-status`, and `data-overhead-staff-link`.
 
-Still legacy, in one `.ark-legacy bg-white text-dark` island shown when another section is active:
+The remaining sections are Tabler cards as well, and the shared legacy wrapper is gone:
 
-- **Core sections not yet migrated:** Appointments & Setup and Staff.
-- **Sections that also hold hosted-service settings:**
-  - Owner Targets & Reporting, because its owner digest is sent by mail;
-  - Square Payments, which also holds the payment ledger's Check, External Card, and EFT buttons;
-  - Parts catalogs, Communications, and ARK Platform;
-  - Runtime health, which shows telephony health.
+- **Appointments & Setup:** the appointments form with `form-switch`, radios, and `input-group`; scheduling days and request windows as `list-group` rows; bays as `list-group` rows with `details` editors; the shop profile as `form-selectgroup` boxes; CSV import with a `card-table` preview.
+- **Staff:** the invite form, a `list-group` team list with role and status badges and inline edit forms, and the loaded labor cost calculator as a `card-sm`.
+- **Owner Targets & Reporting:** one form across three card bodies, with `input-group` units and `invalid-feedback`.
+- **Square Payments:** card-capture rules and reader names, plus the Check, External Card, and EFT ledger methods, which stay in this section.
+- **Parts catalogs:** PartsTech, RepairLink, Nexpart, and shop catalog links, with `parts-catalog-color-select` and `parts-catalog-mode-select`.
+- **ARK Platform:** connection state and a services `list-group`.
+- **Runtime health:** `arkOperationalClock` in Tabler markup, the time zone and MySQL rows, and the master-admin infrastructure block.
 
-Appointments & Setup reads business hours from the telephony call-flow settings, so it waits with the business-hours decision. Migrate the rest section by section; each moves out of the island when it does.
+Routes, methods, field names and order, hidden `0` inputs, `old()` keys, `@can(StaffManage)`, `setActive()` links, and the `?section=` and tab query parameters are unchanged. `ShopSettingsTablerRemainingTest` covers each card, its routes and key fields, and advisor and technician access. The Communications card holds `telephony-settings` in one `.ark-legacy bg-white text-dark` island (`data-settings-telephony-island`) until the parallel communications workstream migrates that partial.
 
 ### Schedule (`operations.appointments.index`)
 
@@ -567,3 +533,41 @@ The page still shows only check-in markup. `customer-contact-lines` renders the 
 The billing class help is `<x-tabler.help-tip>`, a popover on hover or focus. The previous-visit suggestions under Reason for visit are a Tabler `dropdown-menu` listbox (`repair-order-mention-suggest-tabler`), driven by the same `arkRoMention` component; the repair order workspace keeps `repair-order-mention-suggest`. Check In has no legacy markup left.
 
 Unchanged: the intake controllers, routes, query parameters, form fields, and the `arkIntake*`, `arkVehicleDecode`, and `arkRoMention` components. Three script lines moved off legacy classes: `ark-intake-workspace-memory.js` finds the workspace by `[data-intake-find-workspace]` and `[data-intake-open-stack]`, and `ark-intake-find-customer.js` marks the selected result with `border-primary`.
+
+### Repair order workspace: worksheet body, modal, rail tabs, and dock (`operations.repair-orders.show`)
+
+The worksheet has no islands of its own any more.
+
+- **Body:** flash messages, notices, collaboration banners, and the busy overlay are Tabler alerts and an overlay. Customer | Vehicle | Visit is one card (`repair-order-identity-panel`, borders from `.ark-identity-panel` in `tabler.css`) with the same edit buttons, permissions, mileage editor, and "Wrong vehicle?". Line editors, line entry, labor authority, part fields, and the new concern form use `form-control`, `form-select`, and `form-fieldset`. The engine oil, testing package, and RTE labor panels are Tabler cards and a modal. `x-operations.help-tip` and `x-operations.inspect-popover` are Alpine dropdowns, so they keep working after a continuity refresh.
+- **Dock:** the footer dock is a `sticky-bottom` card at the end of the page body; the `ops-ro-orientation-dock` stack is no longer used on Tabler pages.
+- **Modal:** the workspace modal is `<x-tabler.workspace-modal>` with the same `#workspace-modal-host`, refs, footer, keyboard handling, and `arkWorkspaceModal`. The legacy `x-operations.workspace-modal` is removed. The modal footer submits line entry with `form.requestSubmit()`, so the entry partials take `showSubmit => false`. Documents use `add-document-panel-tabler` and `document-email-form` with `'ui' => 'tabler'`.
+- **Rail tabs:** Authorization, Customer View (portal), Parts, Communications, History, Inspection, and Recommendations are stacks of `card-sm` cards, with no wrapper around the lazy tab panels. The work exception, dealer quote, and linked quote dialogs are Tabler modals, full screen on phones. History's status history is a `list-group`; Inspection's template choice is `form-check` radios with an `alert-warning` confirmation.
+- **Unchanged:** every route, method, field name and order, hidden and concurrency input, `old()` key, permission check, Alpine handler, `data-refresh-scope`, `data-continuity-focus`, confirmation prompt, and the continuity ids (`ro-identity-band`, `ro-orientation-header`, `line-*`, `concern-*`, `worksheet-line-editor`). `RepairOrderWorksheetTablerTest` checks that the page, the background refresh, and the page after a save render the same regions.
+- **Still legacy:** the PartsTech toolbar group, the event rows in the Communications tab, and the print helpers (see "Remaining legacy").
+
+### Communications (`operations.communications.*`, `operations.shop.communications*`)
+
+- **Workspace (inbox, history, internal):** the first `split` page. List, thread, and customer panels are cards that scroll on their own from `lg`; on phones one panel shows at a time (list, then thread, then customer). The shared composer, message rows, attachments, and context panel have `ui="tabler"` variants; the legacy output is unchanged where it is still used. `ark-comms-workspace.js` and `ark-conversation-quick-reply.js` find list rows and the count by `data-comms-*` hooks as well as the legacy classes.
+- **Calls & Voicemail and Stations & Phones:** `fluid` pages with `card-table` lists, the call player, and the device and person pages as cards.
+- **Unchanged:** sending, assignment, read state, polling, Echo listeners, telephony, and every route and field. New tests live in the existing `CommunicationsWorkspaceShellTest.php` and `OwnerCallIntelligenceTest.php`, because `scripts/assert-no-communications.php` rejects new files that reference communications code and CI rejects growth in its baseline.
+
+### Owner dashboards and reports
+
+Cockpit, Reports, the operational report (all five tabs), End of Day, Day Review, Technician production, Call & SMS intelligence, Staff coaching, and the Scoreboard tab are `fluid` pages: KPI `card-sm` tiles, `card-table` tables in `.table-responsive position-relative` (a `visually-hidden` header label is absolutely positioned and otherwise escapes the scroll container), date filters with the same field names, and the same export, print, and drill-down links. `operations.dashboard.tabs` no longer has a legacy branch. The scoreboard wall and its refresh fragment keep the legacy board through `scoreboard/partials/board` without `ui`. `OwnerReportsTablerTest` compares figures with the controllers' view data.
+
+### Technician, daily operations, account, and system
+
+- **Technician Job Board:** `fluid`, lanes on `.ark-board`, each card one stretched-link tap target with "Record finding" above it.
+- **Inspection:** the staff-shell page and the tablet bay layout (`?surface=tablet`, `components/layouts/inspection-tablet`) share `section-workspace-tabler`, `walk-workspace-tabler`, `walk-evidence-tabler`, and `finding-capture-tabler`; tablet mode gives extra-large condition buttons, a two-column point walk from `lg`, a bottom Prev/Next bar, and `surface=tablet` photo URLs. The bay layout loads Tabler in the staff shell's asset order, with the theme and accent, and no sidebar. The legacy inspection walk partials are removed.
+- **Engine oil confirmation, technician landing, new contact, caller lookup, observations:** `focused` or `fluid` card pages with the same forms and hooks.
+- **Profile:** `focused`, with `nav-tabs card-header-tabs` from `md` and a select below; `?tab=` and `#workstation-pin` work as before.
+- **Staff time clock history:** `focused`, the punch history as a `list-group`, Correct and Delete as inline card forms with the same `confirm()` and permission checks.
+- **ARK Cloud connecting, Platform clusters, 409:** card pages.
+
+### Documents and financial pages
+
+The document viewer, record testing outcome, the dealer parts quote, and parts matrix tuning are Tabler pages with the same fields, routes, amounts, and permissions. The estimate document page has a Tabler header and commands around its printable `<article>`, which stays unchanged in one island. The customer hub's document list and the add-document panel are Tabler.
+
+### Shell components and the workspace tabs strip
+
+Global search, the guide modal, comms interrupts, the call queue poller, and the image lightbox are `.modal` overlays (z-index 1055, backdrop inside) rendered at the end of the Tabler shell in the legacy stacking order; `app.blade.php` renders the legacy versions only for the legacy shell. Workstation presence dialogs cover the sidebar. The workspace tabs strip is built by `ark-workspace-tabs.js` from a class map chosen by the mount's `data-workspace-tabs-ui` (`resources/js/ark-workspace-tabs-ui.js`, covered by a node test): `nav nav-bordered` tabs with `status-dot` marks, `btn-close`, and urgency underlines on Tabler pages; the legacy `ops-workspace-tab*` markup on the ARKademy pages. The script finds its elements by `data-workspace-tab*` hooks.

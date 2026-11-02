@@ -323,30 +323,31 @@ use App\Ark\Runtime\Authorization\DevRolePretend;
         @endif
 
         @if ($usesTabler)
-            <div class="ark-legacy">
-        @endif
+            @if ($printing)
+                {{-- Print helpers are scripts and hidden print layouts; they inject their visible prompts into Tabler hosts on the page. --}}
+                <div class="ark-legacy">
+                    @include('components.operations.print-helpers')
+                </div>
+            @endif
+        @else
+            @stack('ops-ro-orientation-dock')
 
-        @stack('ops-ro-orientation-dock')
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                <x-operations.comms-interrupt-panel />
+                <x-operations.global-search />
+            @endcan
+            <x-operations.image-lightbox />
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                <x-operations.learn.guide-modal />
+            @endcan
 
-        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-            <x-operations.comms-interrupt-panel />
-            <x-operations.global-search />
-        @endcan
-        <x-operations.image-lightbox />
-        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-            <x-operations.learn.guide-modal />
-        @endcan
+            @if ($printing)
+                @include('components.operations.print-helpers')
+            @endif
 
-        @if ($printing)
-            @include('components.operations.print-helpers')
-        @endif
-
-        @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
-            <x-operations.call-queue :poller-only="true" />
-        @endcan
-
-        @if ($usesTabler)
-            </div>
+            @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
+                <x-operations.call-queue :poller-only="true" />
+            @endcan
         @endif
     </body>
 </html>

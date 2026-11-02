@@ -1547,14 +1547,14 @@ test('opening a repair order lands on the presentation workspace', function () {
 
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('ops-estimate-workspace--builder', false)
+        ->assertSee('data-worksheet-root', false)
         ->assertDontSee('ops-estimate-workspace--review', false)
         ->assertDontSee('data-ro-mode-control', false)
         ->assertDontSee('>Editing<', false)
         ->assertDontSee('>Viewing<', false)
         ->assertSee(route('operations.repair-orders.show', $repairOrder))
         ->assertDontSee('Edit Estimate')
-        ->assertSee('ops-service-lane-band', false)
+        ->assertSee('data-identity-band', false)
         ->assertSee('Rosa', false)
         ->assertSee('Garcia', false)
         ->assertSee('ARK123', false)
@@ -1587,7 +1587,7 @@ test('presentation workspace exposes estimate authoring without a separate build
         ->assertSee(route('operations.repair-orders.show', $repairOrder))
         ->assertSee('Building Estimate')
         ->assertSee('Fleet')
-        ->assertSee('ops-estimate-workspace--builder', false)
+        ->assertSee('data-worksheet-root', false)
         ->assertSee('+ Add Work', false)
         ->assertSee('id="workspace-modal-host"', false)
         ->assertSee('submitWorksheetForm', false)
@@ -1595,7 +1595,7 @@ test('presentation workspace exposes estimate authoring without a separate build
         ->assertDontSee('>Editing<', false)
         ->assertDontSee('Edit Estimate')
         ->assertDontSee(route('operations.repair-orders.estimate.email', $repairOrder))
-        ->assertDontSee('ops-estimate-email-form');
+        ->assertDontSee('data-estimate-email-form', false);
 });
 
 test('builder pricing guidance is server fed without client-side matrix math', function () {
@@ -1887,7 +1887,7 @@ test('terminal repair orders cannot be edited from the estimate workspace', func
         ->assertSee('Estimate PDF')
         ->assertSee(route('operations.repair-orders.estimate.pdf', $repairOrder), false)
         ->assertSee('2018 Honda Accord')
-        ->assertSee('ops-mileage-inline', false)
+        ->assertSee('data-mileage-inline', false)
         ->assertDontSee('+ Add Work')
         ->assertDontSee('Save Narrative')
         ->assertDontSee('Late diagnostic')

@@ -22,7 +22,7 @@ export function dirtyControlsOutsideForms(root) {
     }
 
     return [...root.querySelectorAll('input, textarea, select')].filter((field) => {
-        if (field.closest?.('form') || field.closest?.('.ops-mileage-inline')) {
+        if (field.closest?.('form') || field.closest?.('[data-mileage-inline]')) {
             return false;
         }
 

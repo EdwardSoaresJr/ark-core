@@ -5,22 +5,24 @@
     $estimateVersion = $estimateVersion ?? $repairOrder->estimate_version;
     $closePaid = (bool) ($closePaid ?? false);
     $modal = (bool) ($modal ?? false);
+    $primaryButtonClass = $modal ? 'btn btn-primary' : 'btn btn-sm btn-success';
+    $secondaryButtonClass = $modal ? 'btn' : 'btn btn-sm btn-outline-success';
 @endphp
 
 @if ($reviewRequest['already_sent'] && ($reviewRequest['history_entries'] !== [] || filled($reviewRequest['status_label'])))
-    <div class="space-y-1" data-review-request-status>
-        <p class="text-[11px] font-semibold leading-4 text-slate-900">Review Requested</p>
+    <div class="small" data-review-request-status>
+        <div class="fw-bold">Review Requested</div>
         @foreach ($reviewRequest['history_entries'] as $entry)
-            <p class="text-[11px] leading-4 text-slate-700">
+            <div class="text-secondary">
                 {{ $entry['channel_label'] }} · {{ $entry['when_label'] }}
-            </p>
+            </div>
         @endforeach
         @if (filled($reviewRequest['sent_by_label']))
-            <p class="text-[11px] leading-4 text-slate-600">by {{ $reviewRequest['sent_by_label'] }}</p>
+            <div class="text-secondary">by {{ $reviewRequest['sent_by_label'] }}</div>
         @endif
     </div>
     @if ($closePaid)
-        <div class="mt-3 flex flex-wrap items-center gap-2">
+        <div class="btn-list mt-3">
             <form
                 method="POST"
                 action="{{ route('operations.repair-orders.lifecycle.update', $repairOrder) }}"
@@ -32,16 +34,16 @@
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="status" value="closed:paid">
-                <button type="submit" class="{{ $modal ? 'ops-workspace-modal__primary' : 'rounded-sm bg-emerald-900 px-2 py-1 text-xs font-bold text-white' }}">
+                <button type="submit" class="{{ $primaryButtonClass }}">
                     Close paid
                 </button>
             </form>
         </div>
     @endif
 @elseif (! $reviewRequest['can_text'] && ! $reviewRequest['can_email'])
-    <p class="text-sm leading-5 text-slate-700">{{ $reviewRequest['no_contact_message'] }}</p>
+    <p class="mb-0">{{ $reviewRequest['no_contact_message'] }}</p>
     @if ($closePaid)
-        <div class="mt-4 flex flex-wrap items-center gap-2">
+        <div class="btn-list mt-3">
             <form
                 method="POST"
                 action="{{ route('operations.repair-orders.lifecycle.update', $repairOrder) }}"
@@ -53,7 +55,7 @@
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="status" value="closed:paid">
-                <button type="submit" class="{{ $modal ? 'ops-workspace-modal__primary' : 'rounded-sm bg-emerald-900 px-2 py-1 text-xs font-bold text-white' }}">
+                <button type="submit" class="{{ $primaryButtonClass }}">
                     Close paid
                 </button>
             </form>
@@ -61,10 +63,10 @@
     @endif
 @else
     @if ($errors->has('review_request'))
-        <p class="mb-3 text-sm font-semibold leading-5 text-rose-800" data-review-request-error>{{ $errors->first('review_request') }}</p>
+        <div class="alert alert-danger mb-3" data-review-request-error>{{ $errors->first('review_request') }}</div>
     @endif
 
-    <div class="flex flex-wrap items-center gap-2" data-review-request-actions>
+    <div class="btn-list" data-review-request-actions>
         @if ($reviewRequest['can_text'])
             <form
                 method="POST"
@@ -79,7 +81,7 @@
                 @if ($closePaid)
                     <input type="hidden" name="close_paid" value="1">
                 @endif
-                <button type="submit" class="{{ $modal ? 'ops-workspace-modal__primary' : 'rounded-sm bg-emerald-900 px-2 py-1 text-xs font-bold text-white' }}">
+                <button type="submit" class="{{ $primaryButtonClass }}">
                     Text
                 </button>
             </form>
@@ -102,7 +104,7 @@
                 @if ($closePaid)
                     <input type="hidden" name="close_paid" value="1">
                 @endif
-                <button type="submit" class="{{ $modal ? 'ops-workspace-modal__cancel border border-slate-300' : 'rounded-sm border border-emerald-700 bg-white px-2 py-1 text-xs font-bold text-emerald-950' }}">
+                <button type="submit" class="{{ $secondaryButtonClass }}">
                     Email
                 </button>
             </form>
@@ -125,7 +127,7 @@
                 @if ($closePaid)
                     <input type="hidden" name="close_paid" value="1">
                 @endif
-                <button type="submit" class="{{ $modal ? 'ops-workspace-modal__cancel border border-slate-300' : 'rounded-sm border border-emerald-700 bg-white px-2 py-1 text-xs font-bold text-emerald-950' }}">
+                <button type="submit" class="{{ $secondaryButtonClass }}">
                     Text + Email
                 </button>
             </form>
@@ -143,31 +145,33 @@
                 @method('PATCH')
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <input type="hidden" name="status" value="closed:paid">
-                <button type="submit" class="text-sm font-semibold text-slate-700 underline-offset-2 hover:underline">
+                <button type="submit" class="btn btn-ghost-secondary">
                     Not Now
                 </button>
             </form>
         @endif
     </div>
 
-    <details class="mt-4" data-review-request-preview>
-        <summary class="cursor-pointer text-sm font-semibold leading-5 text-slate-800 underline-offset-2 hover:underline">
+    <details class="mt-3" data-review-request-preview>
+        <summary class="fw-medium">
             Preview
         </summary>
-        <div class="mt-2 space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-5 text-slate-900">
-            @if ($reviewRequest['can_text'])
-                <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Text</p>
-                    <p class="mt-1 whitespace-pre-wrap text-slate-800">{{ $reviewRequest['preview_sms_body'] }}</p>
-                </div>
-            @endif
-            @if ($reviewRequest['can_email'])
-                <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Email</p>
-                    <p class="mt-1 font-medium text-slate-700">Subject: {{ $reviewRequest['preview_email_subject'] }}</p>
-                    <p class="mt-1 whitespace-pre-wrap text-slate-800">{{ $reviewRequest['preview_email_body'] }}</p>
-                </div>
-            @endif
+        <div class="card card-sm mt-2">
+            <div class="card-body">
+                @if ($reviewRequest['can_text'])
+                    <div @class(['mb-3' => $reviewRequest['can_email']])>
+                        <div class="subheader mb-1">Text</div>
+                        <div style="white-space: pre-wrap">{{ $reviewRequest['preview_sms_body'] }}</div>
+                    </div>
+                @endif
+                @if ($reviewRequest['can_email'])
+                    <div>
+                        <div class="subheader mb-1">Email</div>
+                        <div class="fw-medium text-secondary">Subject: {{ $reviewRequest['preview_email_subject'] }}</div>
+                        <div class="mt-1" style="white-space: pre-wrap">{{ $reviewRequest['preview_email_body'] }}</div>
+                    </div>
+                @endif
+            </div>
         </div>
     </details>
 @endif

@@ -16,36 +16,54 @@
         ])),
         default => null,
     };
+    $laneBadge = static fn (?string $lane): string => match ($lane) {
+        'waiting' => 'bg-yellow-lt',
+        'follow' => 'bg-azure-lt',
+        'resolved' => 'bg-green-lt',
+        default => 'bg-red-lt',
+    };
 @endphp
 
-<div class="ops-comms-workspace__panel ops-comms-workspace__panel--thread">
-    <header class="ops-comms-inbox__identity">
+<div class="card chat flex-fill overflow-hidden" data-comms-thread-card>
+    <div class="card-header d-block py-2" data-comms-thread-identity>
         @if ($backHref !== null)
-            <a class="ops-comms-inbox__back" href="{{ $backHref }}">Back to list</a>
+            <a class="btn btn-sm btn-ghost-secondary d-lg-none mb-1 ps-0" href="{{ $backHref }}">
+                <x-tabler.icon name="arrow-left" />
+                Back to list
+            </a>
         @endif
         @if ($identity !== null)
-            <div class="ops-comms-inbox__identity-title">
-                <h3 class="ops-comms-workspace__thread-title">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h3 class="card-title mb-0">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
                 @if (filled($identity['lane_label'] ?? null))
-                    <span @class(['ops-comms-inbox__badge', 'ops-comms-inbox__badge--'.($identity['lane'] ?? 'needs')])>{{ $identity['lane_label'] }}</span>
+                    <span class="badge {{ $laneBadge($identity['lane'] ?? 'needs') }}">{{ $identity['lane_label'] }}</span>
                 @endif
                 @if (filled($identity['link_status'] ?? $identity['customer_status'] ?? null))
-                    <span class="ops-comms-inbox__match">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
+                    <span class="text-secondary small">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
                 @endif
-                <button type="button" class="ops-comms-inbox__context-toggle" @click="contextOpen = ! contextOpen">Customer</button>
+                <button
+                    type="button"
+                    class="btn btn-sm ms-auto d-xl-none"
+                    data-comms-context-toggle
+                    :aria-pressed="contextOpen.toString()"
+                    @click="contextOpen = ! contextOpen"
+                >
+                    <x-tabler.icon name="user" />
+                    Customer
+                </button>
             </div>
-            <div class="ops-comms-inbox__identity-contact">
+            <div class="d-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
                 @if ($phoneDigits !== '')
                     <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
                 @endif
                 @if (filled($identity['email'] ?? null))
-                    <a href="mailto:{{ $identity['email'] }}">{{ $identity['email'] }}</a>
+                    <a href="mailto:{{ $identity['email'] }}" class="text-truncate">{{ $identity['email'] }}</a>
                 @endif
                 @if (filled($identity['last_interaction_label'] ?? null))
-                    <span class="ops-comms-inbox__last">{{ $identity['last_interaction_label'] }}</span>
+                    <span class="text-secondary ms-md-auto">{{ $identity['last_interaction_label'] }}</span>
                 @endif
             </div>
-            <div class="ops-comms-inbox__identity-visit">
+            <div class="d-flex flex-wrap column-gap-3 small text-secondary" data-comms-thread-visit>
                 @if (filled($identity['ro_url'] ?? null))
                     <a href="{{ $identity['ro_url'] }}">{{ $identity['ro_label'] ?? 'Repair order' }}</a>
                 @elseif (filled($identity['ro_label'] ?? null))
@@ -59,9 +77,9 @@
                 @endif
             </div>
         @else
-            <h3 class="ops-comms-workspace__thread-title">Select a conversation</h3>
+            <h3 class="card-title mb-0">Select a conversation</h3>
         @endif
-    </header>
+    </div>
 
     @if (is_array($thread['decision'] ?? null))
         @include('operations.communications.workspace.partials.decision-panel', ['decision' => $thread['decision']])
@@ -69,7 +87,8 @@
 
     <div
         id="comms-workspace-thread-messages"
-        class="ops-comms-workspace__thread-body"
+        class="card-body chat-bubbles gap-2 overflow-auto flex-fill p-2 p-md-3"
+        data-comms-thread-body
         aria-label="Conversation"
         @if (($section ?? '') !== 'history' && ($selected['kind'] ?? '') === 'conversation' && filled($identity['mark_read_url'] ?? null))
             data-mark-read-url="{{ $identity['mark_read_url'] }}"
@@ -77,7 +96,7 @@
         @endif
     >
         @if ($thread === null)
-            <p class="ops-comms-workspace__timeline-empty">Select a conversation</p>
+            <div class="text-secondary text-center my-auto">Select a conversation</div>
         @else
             @forelse ($events as $event)
                 @php
@@ -98,42 +117,57 @@
                     }
                 @endphp
                 @if ($showDate)
-                    <p class="ops-comms-inbox__date">{{ $occurred->timezone(config('app.display_timezone'))->format('D, M j, Y') }}</p>
+                    <div class="text-center text-secondary small mt-1">{{ $occurred->timezone(config('app.display_timezone'))->format('D, M j, Y') }}</div>
                 @endif
                 @if (is_array($event) && ($event['kind'] ?? '') === 'website_request')
                     @include('operations.communications.workspace.partials.website-request-card', ['event' => $event])
                 @elseif (is_array($event) && filled($event['call_session_id'] ?? null))
                     @include('operations.communications.workspace.partials.call-event-card', ['event' => $event])
                 @elseif ($event instanceof \App\Ark\Operations\Timeline\OperationalEventEntry)
-                    @include('operations.timeline.partials.event-bubble', ['event' => $event])
+                    {{-- operations.timeline.partials.event-bubble belongs to another workstream and stays legacy. --}}
+                    <div class="ark-legacy bg-white text-dark rounded">
+                        @include('operations.timeline.partials.event-bubble', ['event' => $event])
+                    </div>
                 @else
                     @php
                         $direction = $event['direction'] ?? 'inbound';
-                        $bubbleClass = match ($direction) {
-                            'outbound' => 'ops-comms-workspace__bubble--outbound',
-                            'internal', 'system' => 'ops-comms-workspace__bubble--internal',
-                            default => 'ops-comms-workspace__bubble--inbound',
-                        };
                     @endphp
-                    <article @class(['ops-comms-workspace__bubble', $bubbleClass])>
-                        <p class="ops-comms-workspace__bubble-meta">
-                            {{ $event['direction_label'] ?? 'Message' }}
-                            @if (filled($event['channel_label'] ?? null)) · {{ $event['channel_label'] }} @endif
-                            @if (filled($event['occurred_at_label'] ?? null)) · {{ $event['occurred_at_label'] }} @endif
-                        </p>
-                        @if (filled($event['body'] ?? null) && ($event['body'] ?? '') !== '(attachment)')
-                            <p class="ops-comms-workspace__bubble-body">{{ $event['body'] }}</p>
-                        @endif
-                        @include('operations.communications.workspace.partials.message-media', [
-                            'attachments' => $event['attachments'] ?? [],
-                        ])
-                        @if (filled($event['context_label'] ?? null))
-                            <p class="mt-1 text-[11px] font-medium text-slate-500">{{ $event['context_label'] }}</p>
-                        @endif
-                    </article>
+                    <div @class([
+                        'd-flex',
+                        'justify-content-end' => $direction === 'outbound',
+                        'justify-content-center' => in_array($direction, ['internal', 'system'], true),
+                    ])>
+                        <article
+                            @class([
+                                'chat-bubble px-3 py-2',
+                                'chat-bubble-me' => $direction === 'outbound',
+                                'bg-yellow-lt' => in_array($direction, ['internal', 'system'], true),
+                            ])
+                            style="max-width: 88%"
+                            data-comms-bubble="{{ $direction }}"
+                        >
+                            <div class="chat-bubble-title small text-secondary">
+                                {{ $event['direction_label'] ?? 'Message' }}
+                                @if (filled($event['channel_label'] ?? null)) · {{ $event['channel_label'] }} @endif
+                                @if (filled($event['occurred_at_label'] ?? null)) · {{ $event['occurred_at_label'] }} @endif
+                            </div>
+                            <div class="chat-bubble-body">
+                                @if (filled($event['body'] ?? null) && ($event['body'] ?? '') !== '(attachment)')
+                                    <p class="mb-0" style="white-space: pre-wrap">{{ $event['body'] }}</p>
+                                @endif
+                                @include('operations.communications.workspace.partials.message-media', [
+                                    'attachments' => $event['attachments'] ?? [],
+                                    'mediaUi' => 'tabler',
+                                ])
+                                @if (filled($event['context_label'] ?? null))
+                                    <div class="mt-1 small text-secondary">{{ $event['context_label'] }}</div>
+                                @endif
+                            </div>
+                        </article>
+                    </div>
                 @endif
             @empty
-                <p class="ops-comms-workspace__timeline-empty">No messages yet.</p>
+                <div class="text-secondary text-center my-auto">No messages yet.</div>
             @endforelse
         @endif
     </div>
@@ -145,16 +179,18 @@
             'thread' => $thread,
         ])
     @else
-        <footer class="ops-comms-workspace__composer ops-comms-workspace__composer--idle">
-            <p>{{ $thread === null ? 'Select a conversation to reply' : 'Reply is not available' }}</p>
+        <footer class="card-footer text-secondary small" data-comms-composer-idle>
+            {{ $thread === null ? 'Select a conversation to reply' : 'Reply is not available' }}
         </footer>
     @endif
 
-    <div class="ops-comms-workspace__switch" aria-hidden="true">
-        <span class="ops-comms-workspace__switch-bubble">
-            <span></span>
-            <span></span>
-            <span></span>
-        </span>
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-25 z-3 d-none" data-comms-switch aria-hidden="true">
+        <div class="d-flex h-100 align-items-center justify-content-center">
+            <div class="card card-sm shadow">
+                <div class="card-body d-flex align-items-center gap-2">
+                    <span class="spinner-border text-secondary"></span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

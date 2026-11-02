@@ -60,10 +60,7 @@
 
 <div
     id="repair-order-workspace-tabs"
-    {{ $attributes->class([
-        'card ops-ro-workspace-tabs min-w-0 scroll-mt-6',
-        'ops-ro-workspace-tabs--builder-only' => ! $showTabNav,
-    ]) }}
+    {{ $attributes->class(['card scroll-mt-6']) }}
     x-data="arkRoWorkspaceTabs({
         defaultTab: @js($workspaceDefaultTab),
         storageKey: @js('ark:ro-workspace-tab:'.$workspaceMode.':'.$repairOrder->repair_order_id),
@@ -81,6 +78,8 @@
                         <button
                             type="button"
                             role="tab"
+                            id="repair-order-workspace-tab-{{ $workspaceTab }}"
+                            aria-controls="repair-order-workspace-panel-{{ $workspaceTab }}"
                             class="nav-link"
                             data-workspace-tab="{{ $workspaceTab }}"
                             :class="{ active: tab === @js($workspaceTab) }"
@@ -99,19 +98,28 @@
     @endif
 
     <div class="card-body">
-        <div x-show="tab === 'builder'" role="tabpanel">
+        <div
+            x-show="tab === 'builder'"
+            role="tabpanel"
+            id="repair-order-workspace-panel-builder"
+            @if ($showTabNav) aria-labelledby="repair-order-workspace-tab-builder" @endif
+        >
             {{ $slot }}
         </div>
 
         @foreach ($lazyTabs as $lazyTab)
-            <div x-show="tab === '{{ $lazyTab }}'" x-cloak role="tabpanel">
+            <div
+                x-show="tab === '{{ $lazyTab }}'"
+                x-cloak
+                role="tabpanel"
+                id="repair-order-workspace-panel-{{ $lazyTab }}"
+                aria-labelledby="repair-order-workspace-tab-{{ $lazyTab }}"
+            >
                 <div x-show="tabErrors['{{ $lazyTab }}']" x-cloak class="alert alert-danger">Could not load this tab. Try selecting it again.</div>
                 <p x-show="tabLoading['{{ $lazyTab }}']" x-cloak class="text-secondary">
                     <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading…
                 </p>
-                <x-operations.worksheet-island>
-                    <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
-                </x-operations.worksheet-island>
+                <div data-workspace-tab-panel="{{ $lazyTab }}"></div>
             </div>
         @endforeach
     </div>

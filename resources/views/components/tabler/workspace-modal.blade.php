@@ -8,8 +8,8 @@
 @endphp
 
 {{--
-    Tabler markup for arkWorkspaceModal (resources/js/ark-workspace-modal.js), with the same id, refs, and bindings as
-    x-operations.workspace-modal, which the repair order workspace keeps. Panels carry data-workspace-modal-panel.
+    Tabler markup for arkWorkspaceModal (resources/js/ark-workspace-modal.js), used by the customer hub and the repair
+    order workspace. Panels carry data-workspace-modal-panel.
 --}}
 <div
     {{ $attributes }}

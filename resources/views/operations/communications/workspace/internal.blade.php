@@ -4,7 +4,7 @@
     $listDescription = 'shop coordination channels';
 @endphp
 
-<x-operations.app title="Communications">
+<x-operations.app title="Communications" ui="tabler">
     <x-operations.communications-workspace
         :section="$workspace['section']"
         :list-items="$workspace['list_items']"

@@ -77,74 +77,47 @@
 @endphp
 
 {{-- Always host the Workspace Modal on RO show: identity/mileage authoring remains available after close. --}}
-    <x-operations.workspace-modal
+    <x-tabler.workspace-modal
         :initial-task="$isTerminal ? null : $initialTask"
         :initial-context="$isTerminal ? [] : $initialContext"
     >
         @unless ($isTerminal)
         {{-- Add Work chooser - radio list, not a menu of buttons --}}
-        <div class="ops-workspace-modal__panel" x-show="task === 'add-work'" x-cloak>
-            <fieldset class="ops-workspace-modal__chooser">
-                <legend class="sr-only">What would you like to add?</legend>
-                <label class="ops-workspace-modal__chooser-option">
-                    <input
-                        type="radio"
-                        class="ops-workspace-modal__chooser-radio"
-                        name="add_work_choice"
-                        value="concern"
-                        x-model="addWorkChoice"
-                    >
-                    <span class="ops-workspace-modal__chooser-copy">
-                        <span class="ops-workspace-modal__chooser-title">Customer Concern</span>
-                        <span class="ops-workspace-modal__chooser-hint">The problem or request the customer brought in.</span>
-                    </span>
-                </label>
-                <label class="ops-workspace-modal__chooser-option">
-                    <input
-                        type="radio"
-                        class="ops-workspace-modal__chooser-radio"
-                        name="add_work_choice"
-                        value="oil"
-                        x-model="addWorkChoice"
-                    >
-                    <span class="ops-workspace-modal__chooser-copy">
-                        <span class="ops-workspace-modal__chooser-title">Engine Oil Service</span>
-                        <span class="ops-workspace-modal__chooser-hint">Authorize a maintenance oil package for this vehicle.</span>
-                    </span>
-                </label>
-                <label class="ops-workspace-modal__chooser-option">
-                    <input
-                        type="radio"
-                        class="ops-workspace-modal__chooser-radio"
-                        name="add_work_choice"
-                        value="testing"
-                        x-model="addWorkChoice"
-                    >
-                    <span class="ops-workspace-modal__chooser-copy">
-                        <span class="ops-workspace-modal__chooser-title">Testing Package</span>
-                        <span class="ops-workspace-modal__chooser-hint">Authorize diagnostic or inspection testing.</span>
-                    </span>
-                </label>
-                <label class="ops-workspace-modal__chooser-option">
-                    <input
-                        type="radio"
-                        class="ops-workspace-modal__chooser-radio"
-                        name="add_work_choice"
-                        value="saved-work"
-                        x-model="addWorkChoice"
-                    >
-                    <span class="ops-workspace-modal__chooser-copy">
-                        <span class="ops-workspace-modal__chooser-title">Common Job</span>
-                        <span class="ops-workspace-modal__chooser-hint">Add a common job from a shop template - labor, parts, and fees in one step.</span>
-                    </span>
-                </label>
+        <div data-workspace-modal-panel x-show="task === 'add-work'" x-cloak>
+            <fieldset class="form-selectgroup form-selectgroup-boxes d-flex flex-column" data-workspace-add-work-chooser>
+                <legend class="visually-hidden">What would you like to add?</legend>
+                @foreach ([
+                    'concern' => ['Customer Concern', 'The problem or request the customer brought in.'],
+                    'oil' => ['Engine Oil Service', 'Authorize a maintenance oil package for this vehicle.'],
+                    'testing' => ['Testing Package', 'Authorize diagnostic or inspection testing.'],
+                    'saved-work' => ['Common Job', 'Add a common job from a shop template - labor, parts, and fees in one step.'],
+                ] as $choiceValue => [$choiceTitle, $choiceHint])
+                    <label class="form-selectgroup-item flex-fill">
+                        <input
+                            type="radio"
+                            class="form-selectgroup-input"
+                            name="add_work_choice"
+                            value="{{ $choiceValue }}"
+                            x-model="addWorkChoice"
+                        >
+                        <span class="form-selectgroup-label d-flex align-items-center p-3 text-start">
+                            <span class="me-3">
+                                <span class="form-selectgroup-check"></span>
+                            </span>
+                            <span>
+                                <span class="d-block fw-bold text-body">{{ $choiceTitle }}</span>
+                                <span class="d-block small text-secondary">{{ $choiceHint }}</span>
+                            </span>
+                        </span>
+                    </label>
+                @endforeach
             </fieldset>
         </div>
         @endunless
 
         @unless ($isTerminal)
         {{-- Concern --}}
-        <div class="ops-workspace-modal__panel" x-show="task === 'concern'" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'concern'" x-cloak>
             <div id="concern-store">
                 @include('operations.repair-orders.partials.repair-order-estimate-new-scope-form', [
                     'repairOrder' => $repairOrder,
@@ -191,7 +164,7 @@
                 <div
                     id="concern-authoring-line-{{ $workGroup->id }}"
                     data-concern-authoring="{{ $concern->id }}"
-                    class="ops-workspace-modal__panel"
+                    data-workspace-modal-panel
                     x-show="['labor','part','sublet','note'].includes(task) && String(context.workGroupId) === '{{ $workGroup->id }}'"
                     x-cloak
                 >
@@ -213,12 +186,12 @@
                         <input type="hidden" name="repair_order_work_group_id" value="{{ $workGroup->id }}">
                         <input type="hidden" name="type" x-model="type">
                         @if ($oldBelongs && $errors->any())
-                            <p class="mb-2 text-xs font-semibold text-rose-700" data-workspace-modal-validation role="alert">
+                            <div class="alert alert-danger mb-2" data-workspace-modal-validation role="alert">
                                 {{ $errors->first() ?: 'Could not save this line. Check the fields and try again.' }}
-                            </p>
+                            </div>
                         @endif
 
-                        <template x-if="hasLineType() && type !== 'part'">
+                                                <template x-if="hasLineType() && type !== 'part'">
                             <div class="mb-2" data-line-entry-panel="simple">
                                 @include('operations.repair-orders.partials.repair-order-simple-line-entry', [
                                     'description' => $defaultLineDescription,
@@ -229,6 +202,7 @@
                                     'repairTitle' => $workGroup->title,
                                     'laborMemoryUrl' => route('operations.repair-orders.labor-memory-suggest', $repairOrder),
                                     'repairOrder' => $repairOrder,
+                                    'showSubmit' => false,
                                 ])
                             </div>
                         </template>
@@ -246,6 +220,7 @@
                                     'partWarrantyImpact' => $oldBelongs ? old('part_warranty_impact') : null,
                                     'hasCore' => $oldBelongs && old('has_core'),
                                     'saveOldPart' => $oldBelongs && old('save_old_part'),
+                                    'showSubmit' => false,
                                 ])
                             </div>
                         </template>
@@ -273,7 +248,7 @@
             <div
                 id="concern-authoring-line-concern-{{ $concern->id }}"
                 data-concern-authoring="{{ $concern->id }}"
-                class="ops-workspace-modal__panel"
+                data-workspace-modal-panel
                 x-show="['labor','part','sublet','note'].includes(task) && String(context.concernId) === '{{ $concern->id }}' && (context.workGroupId == null || context.workGroupId === '')"
                 x-cloak
             >
@@ -294,12 +269,12 @@
                     <input type="hidden" name="repair_order_concern_id" value="{{ $concern->id }}">
                     <input type="hidden" name="type" x-model="type">
                     @if ($scopeOldBelongs && $errors->any())
-                        <p class="mb-2 text-xs font-semibold text-rose-700" data-workspace-modal-validation role="alert">
+                        <div class="alert alert-danger mb-2" data-workspace-modal-validation role="alert">
                             {{ $errors->first() ?: 'Could not save this line. Check the fields and try again.' }}
-                        </p>
+                        </div>
                     @endif
 
-                    <template x-if="hasLineType() && type !== 'part'">
+                                        <template x-if="hasLineType() && type !== 'part'">
                         <div class="mb-2" data-line-entry-panel="simple">
                             @include('operations.repair-orders.partials.repair-order-simple-line-entry', [
                                 'description' => $scopeDefaultLineDescription,
@@ -310,6 +285,7 @@
                                 'repairTitle' => $concern->summary,
                                 'laborMemoryUrl' => route('operations.repair-orders.labor-memory-suggest', $repairOrder),
                                 'repairOrder' => $repairOrder,
+                                'showSubmit' => false,
                             ])
                         </div>
                     </template>
@@ -327,6 +303,7 @@
                                 'partWarrantyImpact' => $scopeOldBelongs ? old('part_warranty_impact') : null,
                                 'hasCore' => $scopeOldBelongs && old('has_core'),
                                 'saveOldPart' => $scopeOldBelongs && old('save_old_part'),
+                                'showSubmit' => false,
                             ])
                         </div>
                     </template>
@@ -335,7 +312,7 @@
 
             {{-- Add Repair Action for this concern --}}
             <div
-                class="ops-workspace-modal__panel"
+                data-workspace-modal-panel
                 x-show="task === 'repair-action' && String(context.concernId) === '{{ $concern->id }}'"
                 x-cloak
             >
@@ -350,23 +327,22 @@
                     @csrf
                     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                     <input type="hidden" name="repair_order_concern_id" value="{{ $concern->id }}">
-                    <label class="block text-[11px] font-medium text-slate-500">
-                        What are we doing?
-                        <input
-                            name="title"
-                            required
-                            value="{{ (string) old('repair_order_concern_id') === (string) $concern->id ? old('title') : '' }}"
-                            placeholder="e.g. Replace water pump"
-                            class="mt-1 w-full rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-950 placeholder:text-slate-400"
-                        >
-                    </label>
-                    <p class="mt-1 text-[11px] text-slate-400">Name the repair - labor hours hang under it.</p>
+                    <label class="form-label" for="workspace-repair-action-title-{{ $concern->id }}">What are we doing?</label>
+                    <input
+                        id="workspace-repair-action-title-{{ $concern->id }}"
+                        name="title"
+                        required
+                        value="{{ (string) old('repair_order_concern_id') === (string) $concern->id ? old('title') : '' }}"
+                        placeholder="e.g. Replace water pump"
+                        class="form-control"
+                    >
+                    <div class="form-hint">Name the repair - labor hours hang under it.</div>
                 </form>
             </div>
         @endforeach
 
         {{-- Engine Oil --}}
-        <div class="ops-workspace-modal__panel" x-show="task === 'oil'" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'oil'" x-cloak>
             <form
                 method="POST"
                 action="{{ route('operations.repair-orders.maintenance.engine-oil.store', $repairOrder) }}"
@@ -377,19 +353,19 @@
             >
                 @csrf
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                <p class="text-sm text-slate-700">
+                <p class="mb-0">
                     Authorize Engine Oil Service on this repair order. ARK creates the concern, repair action, and package line through Maintenance Service authority.
                 </p>
                 @if ($engineOilServices->isNotEmpty())
-                    <p class="mt-3 text-xs text-amber-800">
+                    <div class="alert alert-warning mt-3 mb-0">
                         An Engine Oil Service already exists on this repair order. Submitting again is idempotent.
-                    </p>
+                    </div>
                 @endif
             </form>
         </div>
 
         {{-- Testing Package --}}
-        <div class="ops-workspace-modal__panel" x-show="task === 'testing'" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'testing'" x-cloak>
             <form
                 method="POST"
                 action="{{ route('operations.repair-orders.work-authorization.testing.store', $repairOrder) }}"
@@ -400,7 +376,7 @@
             >
                 @csrf
                 <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                <p class="text-sm text-slate-700">
+                <p class="mb-0">
                     Authorize a Testing Package. ARK creates the concern, repair action, and package line through Work Authorization.
                 </p>
             </form>
@@ -408,7 +384,7 @@
 
         {{-- Saved Work (Rapid Work Templates + Historical Work Recall) --}}
         <div
-            class="ops-workspace-modal__panel"
+            data-workspace-modal-panel
             x-show="task === 'saved-work'"
             x-cloak
             x-data="arkSavedWorkPicker({
@@ -439,137 +415,126 @@
                 <input type="hidden" name="historical_match_tier" :value="recall?.tier || ''">
                 <input type="hidden" name="historical_labor_confirmed" :value="laborConfirmed ? '1' : '0'">
 
-                <label class="block text-xs font-medium text-slate-500">
-                    Search common jobs
-                    <input
-                        type="search"
-                        x-model="query"
-                        @input.debounce.200ms="search()"
-                        class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
-                        placeholder="front bra…"
-                        autocomplete="off"
-                    >
-                </label>
+                <label class="form-label" for="workspace-saved-work-search">Search common jobs</label>
+                <input
+                    id="workspace-saved-work-search"
+                    type="search"
+                    x-model="query"
+                    @input.debounce.200ms="search()"
+                    class="form-control"
+                    placeholder="front bra…"
+                    autocomplete="off"
+                >
 
-                <ul class="mt-3 max-h-40 space-y-1 overflow-y-auto" role="listbox">
+                <div class="list-group mt-3 overflow-auto" style="max-height: 10rem" role="listbox" aria-label="Common jobs">
                     <template x-for="item in results" :key="item.id">
-                        <li>
-                            <button
-                                type="button"
-                                class="flex w-full items-center justify-between rounded border px-2.5 py-2 text-left text-sm"
-                                :class="selectedId === item.id ? 'border-slate-900 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'"
-                                @click="select(item)"
-                            >
-                                <span class="font-semibold" x-text="item.title"></span>
-                            </button>
-                        </li>
+                        <button
+                            type="button"
+                            class="list-group-item list-group-item-action fw-bold"
+                            role="option"
+                            :class="selectedId === item.id ? 'active' : ''"
+                            :aria-selected="selectedId === item.id"
+                            @click="select(item)"
+                            x-text="item.title"
+                        ></button>
                     </template>
-                    <li x-show="! loading && results.length === 0" class="px-1 py-2 text-xs text-slate-500">No matching Common Jobs.</li>
-                </ul>
+                    <div x-show="! loading && results.length === 0" class="list-group-item small text-secondary">No matching Common Jobs.</div>
+                </div>
 
-                <div x-show="selected" x-cloak class="mt-3 space-y-3 rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-                    <p class="text-sm font-bold text-slate-950" x-text="selected?.title"></p>
-                    <p class="text-slate-500" x-show="concernId">Adds a Repair Action under this concern.</p>
+                <div x-show="selected" x-cloak class="card card-sm mt-3" data-saved-work-selected>
+                    <div class="card-body small">
+                        <div class="fw-bold mb-1" x-text="selected?.title"></div>
+                        <p class="text-secondary mb-3" x-show="concernId">Adds a Repair Action under this concern.</p>
 
-                    <label x-show="! concernId" x-cloak class="block text-[11px] font-medium text-slate-500">
-                        Priority
-                        <select x-model="recommendationPosture" class="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-950">
-                            <option value="">Use saved work priority</option>
-                            <template x-for="opt in priorities" :key="opt.value">
-                                <option :value="opt.value" x-text="opt.label"></option>
-                            </template>
-                        </select>
-                    </label>
-
-                    <div x-show="recallLoading" class="text-slate-500">Checking shop history…</div>
-
-                    <div x-show="! recallLoading && recall && recall.tier !== 'none'" class="rounded border border-slate-200 bg-white px-2.5 py-2">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Historical Recall</span>
-                            <span
-                                class="rounded border border-slate-300 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700"
-                                x-text="recall?.tier_label"
-                            ></span>
+                        <div x-show="! concernId" x-cloak class="mb-3">
+                            <label class="form-label" for="workspace-saved-work-priority">Priority</label>
+                            <select id="workspace-saved-work-priority" x-model="recommendationPosture" class="form-select">
+                                <option value="">Use saved work priority</option>
+                                <template x-for="opt in priorities" :key="opt.value">
+                                    <option :value="opt.value" x-text="opt.label"></option>
+                                </template>
+                            </select>
                         </div>
-                        <p class="mt-1 font-medium text-slate-800" x-text="recall?.comparable_vehicle_summary"></p>
-                        <p class="mt-0.5 text-slate-600" x-text="recall?.sample_label"></p>
-                        <template x-for="reason in (recall?.reasons || [])" :key="reason">
-                            <p class="mt-0.5 text-slate-500" x-text="reason"></p>
-                        </template>
-                    </div>
 
-                    <div x-show="assistStatus === 'reviewing'" class="text-slate-500">Dragon reviewing…</div>
+                        <div x-show="recallLoading" class="text-secondary mb-3">Checking shop history…</div>
 
-                    <div
-                        x-show="assist?.available"
-                        x-cloak
-                        class="rounded border border-slate-200 bg-white px-2.5 py-2"
-                    >
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Dragon Assist</p>
-                        <p class="mt-1 text-slate-800" x-text="assist?.summary"></p>
-                        <p x-show="assist?.confidence_comment" class="mt-1 text-slate-600" x-text="assist?.confidence_comment"></p>
-                        <template x-for="caution in (assist?.cautions || [])" :key="caution">
-                            <p class="mt-1 text-amber-800">Caution: <span x-text="caution"></span></p>
-                        </template>
-                        <p x-show="assist?.recommendation" class="mt-1 text-slate-600" x-text="assist?.recommendation"></p>
-                    </div>
+                        <div x-show="! recallLoading && recall && recall.tier !== 'none'" class="border rounded p-2 mb-3">
+                            <div class="subheader mb-1">
+                                Historical Recall
+                                <span class="badge bg-secondary-lt ms-1" x-text="recall?.tier_label"></span>
+                            </div>
+                            <div class="fw-medium" x-text="recall?.comparable_vehicle_summary"></div>
+                            <div class="text-secondary" x-text="recall?.sample_label"></div>
+                            <template x-for="reason in (recall?.reasons || [])" :key="reason">
+                                <div class="text-secondary" x-text="reason"></div>
+                            </template>
+                        </div>
 
-                    <div x-show="! recallLoading && recall && recall.tier === 'none'" class="text-slate-500">
-                        No comparable shop history found.
-                    </div>
+                        <div x-show="assistStatus === 'reviewing'" class="text-secondary mb-3">Dragon reviewing…</div>
 
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Labor</p>
-                        <div class="mt-1 flex flex-wrap items-center gap-2">
-                            <label class="inline-flex items-center gap-1.5 text-sm text-slate-900">
-                                <span x-show="recall?.prepares_labor">
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        x-model="laborHours"
-                                        class="w-20 rounded border border-slate-300 px-2 py-1 text-sm"
-                                    >
-                                    <span>hr</span>
-                                </span>
-                                <span x-show="! recall?.prepares_labor">
-                                    <template x-for="line in (selected?.lines || []).filter(l => l.type === 'labor')" :key="'labor-'+line.description">
-                                        <span>
-                                            <span x-text="line.description"></span>
-                                            <span x-show="line.hours" x-text="' - ' + line.hours + ' hr'"></span>
-                                        </span>
-                                    </template>
-                                </span>
+                        <div x-show="assist?.available" x-cloak class="border rounded p-2 mb-3">
+                            <div class="subheader mb-1">Dragon Assist</div>
+                            <div x-text="assist?.summary"></div>
+                            <div x-show="assist?.confidence_comment" class="text-secondary mt-1" x-text="assist?.confidence_comment"></div>
+                            <template x-for="caution in (assist?.cautions || [])" :key="caution">
+                                <div class="text-orange mt-1">Caution: <span x-text="caution"></span></div>
+                            </template>
+                            <div x-show="assist?.recommendation" class="text-secondary mt-1" x-text="assist?.recommendation"></div>
+                        </div>
+
+                        <div x-show="! recallLoading && recall && recall.tier === 'none'" class="text-secondary mb-3">
+                            No comparable shop history found.
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="subheader mb-1">Labor</div>
+                            <span x-show="recall?.prepares_labor">
+                                <label class="visually-hidden" for="workspace-saved-work-hours">Labor hours</label>
+                                <input
+                                    id="workspace-saved-work-hours"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    x-model="laborHours"
+                                    class="form-control form-control-sm d-inline-block"
+                                    style="width: 5rem"
+                                >
+                                <span>hr</span>
+                            </span>
+                            <span x-show="! recall?.prepares_labor">
+                                <template x-for="line in (selected?.lines || []).filter(l => l.type === 'labor')" :key="'labor-'+line.description">
+                                    <span>
+                                        <span x-text="line.description"></span>
+                                        <span x-show="line.hours" x-text="' - ' + line.hours + ' hr'"></span>
+                                    </span>
+                                </template>
+                            </span>
+                            <div class="text-secondary mt-1" x-text="recall?.source_label"></div>
+                            <div
+                                x-show="recall?.prepares_labor && recall?.min_hours != null"
+                                class="text-secondary"
+                                x-text="recall ? ('Range ' + recall.min_hours + '–' + recall.max_hours + ' hr') : ''"
+                            ></div>
+                            <div
+                                x-show="recall?.tier === 'possible' && recall?.median_hours != null"
+                                class="text-secondary mt-1"
+                                x-text="recall ? ('Historical reference: ' + recall.median_hours + ' hr') : ''"
+                            ></div>
+                            <label x-show="recall?.requires_review" class="form-check mt-2 mb-0">
+                                <input type="checkbox" class="form-check-input" x-model="laborConfirmed">
+                                <span class="form-check-label">Use suggested hours from shop history</span>
                             </label>
                         </div>
-                        <p class="mt-1 text-slate-500" x-text="recall?.source_label"></p>
-                        <p
-                            x-show="recall?.prepares_labor && recall?.min_hours != null"
-                            class="text-slate-500"
-                            x-text="recall ? ('Range ' + recall.min_hours + '–' + recall.max_hours + ' hr') : ''"
-                        ></p>
-                        <p
-                            x-show="recall?.tier === 'possible' && recall?.median_hours != null"
-                            class="mt-1 text-slate-500"
-                            x-text="recall ? ('Historical reference: ' + recall.median_hours + ' hr') : ''"
-                        ></p>
-                        <label
-                            x-show="recall?.requires_review"
-                            class="mt-2 flex items-start gap-2 text-slate-700"
-                        >
-                            <input type="checkbox" class="mt-0.5 rounded border-slate-300" x-model="laborConfirmed">
-                            <span>Use suggested hours from shop history</span>
-                        </label>
-                    </div>
 
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Parts</p>
-                        <template x-for="line in (selected?.lines || []).filter(l => l.type === 'part')" :key="'part-'+line.description">
-                            <p class="mt-0.5">
-                                <span x-text="line.description"></span>
-                                <span x-show="Number(line.quantity) > 1" x-text="' ×' + line.quantity"></span>
-                            </p>
-                        </template>
+                        <div>
+                            <div class="subheader mb-1">Parts</div>
+                            <template x-for="line in (selected?.lines || []).filter(l => l.type === 'part')" :key="'part-'+line.description">
+                                <div>
+                                    <span x-text="line.description"></span>
+                                    <span x-show="Number(line.quantity) > 1" x-text="' ×' + line.quantity"></span>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -598,7 +563,7 @@
             @endif
         >
             @if ($editingLine)
-                <div class="ops-workspace-modal__panel" x-show="task === 'edit-line'" x-cloak data-workspace-modal-form="edit-line-wrap">
+                <div data-workspace-modal-panel x-show="task === 'edit-line'" x-cloak data-workspace-modal-form="edit-line-wrap">
                     @php
                         $editConcern = $repairOrder->concerns->firstWhere('id', $editingLine->repair_order_concern_id);
                         $editWorkGroup = $editConcern?->workGroups->firstWhere('id', $editingLine->repair_order_work_group_id);
@@ -625,34 +590,40 @@
         @endunless
 
         {{-- Evidence: list when present; attach only when writable --}}
-        <div class="ops-workspace-modal__panel" x-show="task === 'evidence'" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'evidence'" x-cloak>
             @if ($evidenceItems->isNotEmpty())
-                <ul class="ops-workspace-modal__evidence-list mb-4">
+                <div class="list-group mb-3" data-workspace-evidence-list>
                     @foreach ($evidenceItems as $item)
-                        <li class="ops-workspace-modal__evidence-item">
-                            <a href="{{ $item['url'] }}" target="_blank" rel="noopener" class="ops-workspace-modal__evidence-thumb">
+                        <div class="list-group-item d-flex align-items-center gap-3">
+                            <a
+                                href="{{ $item['url'] }}"
+                                target="_blank"
+                                rel="noopener"
+                                class="avatar avatar-lg flex-shrink-0 overflow-hidden"
+                                aria-label="Open {{ $item['type_label'] }}"
+                            >
                                 @if ($item['is_image'])
-                                    <img src="{{ $item['url'] }}" alt="" class="h-full w-full object-cover">
+                                    <img src="{{ $item['url'] }}" alt="" class="w-100 h-100 object-fit-cover">
                                 @elseif ($item['is_video'])
-                                    <span>VIDEO</span>
+                                    <span class="small fw-bold">VIDEO</span>
                                 @else
-                                    <span>PDF</span>
+                                    <span class="small fw-bold">PDF</span>
                                 @endif
                             </a>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-sm font-medium text-slate-900">
+                            <div class="flex-fill" style="min-width: 0">
+                                <div class="fw-medium">
                                     {{ $item['type_label'] }}
                                     @if ($item['is_primary'])
-                                        <span class="ml-1 text-[10px] font-semibold uppercase text-amber-800">Primary</span>
+                                        <span class="badge bg-yellow-lt ms-1">Primary</span>
                                     @endif
-                                </p>
+                                </div>
                                 @if (filled($item['caption']))
-                                    <p class="text-xs text-slate-600">{{ $item['caption'] }}</p>
+                                    <div class="small text-secondary">{{ $item['caption'] }}</div>
                                 @endif
                             </div>
-                        </li>
+                        </div>
                     @endforeach
-                </ul>
+                </div>
             @endif
 
             @unless ($isTerminal)
@@ -666,18 +637,18 @@
                     @submit.prevent="submitWorksheetForm($event)"
                 >
                     @csrf
-                    <div class="grid gap-3">
-                        <div>
-                            <label class="block text-[11px] font-medium text-slate-600" for="workspace-evidence-file">File</label>
-                            <input id="workspace-evidence-file" name="file" type="file" required accept="image/*,video/*,application/pdf" class="mt-0.5 w-full text-sm">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="workspace-evidence-file">File</label>
+                            <input id="workspace-evidence-file" name="file" type="file" required accept="image/*,video/*,application/pdf" class="form-control">
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-slate-600" for="workspace-evidence-target">Attach to</label>
+                        <div class="col-12">
+                            <label class="form-label" for="workspace-evidence-target">Attach to</label>
                             <select
                                 id="workspace-evidence-target"
                                 name="attachable_id"
                                 required
-                                class="mt-0.5 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                class="form-select"
                                 onchange="document.getElementById('workspace-evidence-attachable-kind').value = this.options[this.selectedIndex].dataset.kind"
                             >
                                 <option value="{{ $repairOrder->id }}" data-kind="repair_order" selected>General (this RO)</option>
@@ -687,14 +658,16 @@
                             </select>
                             <input type="hidden" name="attachable_kind" id="workspace-evidence-attachable-kind" value="repair_order">
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-slate-600" for="workspace-evidence-caption">Caption</label>
-                            <input id="workspace-evidence-caption" name="caption" type="text" maxlength="500" placeholder="What was seen (not a diagnosis)" class="mt-0.5 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm">
+                        <div class="col-12">
+                            <label class="form-label" for="workspace-evidence-caption">Caption</label>
+                            <input id="workspace-evidence-caption" name="caption" type="text" maxlength="500" placeholder="What was seen (not a diagnosis)" class="form-control">
                         </div>
-                        <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-700">
-                            <input type="checkbox" name="as_primary" value="1" class="rounded border-slate-300">
-                            Primary
-                        </label>
+                        <div class="col-12">
+                            <label class="form-check mb-0">
+                                <input type="checkbox" name="as_primary" value="1" class="form-check-input">
+                                <span class="form-check-label">Primary</span>
+                            </label>
+                        </div>
                         <input type="hidden" name="source" value="upload">
                     </div>
                 </form>
@@ -702,13 +675,13 @@
         </div>
 
         {{-- Customer / RO Documents - paperwork, not Evidence --}}
-        <div class="ops-workspace-modal__panel" x-show="task === 'document'" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'document'" x-cloak>
             @php
                 $roDocuments = $customerDocuments ?? collect();
             @endphp
 
             @unless ($isTerminal)
-                @include('operations.documents.partials.add-document-panel', [
+                @include('operations.documents.partials.add-document-panel-tabler', [
                     'customer' => $repairOrder->customer,
                     'repairOrder' => $repairOrder,
                     'storeUrl' => route('operations.repair-orders.documents.store', $repairOrder),
@@ -719,37 +692,30 @@
             @endunless
 
             @if ($roDocuments->isNotEmpty())
-                <ul @class([
-                    'divide-y divide-slate-100 rounded-sm border border-slate-200',
-                    'mt-4' => ! $isTerminal,
-                ])>
+                <div @class(['list-group', 'mt-3' => ! $isTerminal]) data-workspace-document-list>
                     @foreach ($roDocuments as $doc)
-                        <li
-                            class="px-3 py-2"
-                            x-data="{ emailOpen: false }"
-                        >
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="min-w-0">
+                        <div class="list-group-item" x-data="{ emailOpen: false }">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div style="min-width: 0">
                                     <a
                                         href="{{ $doc['viewer_url'] }}"
                                         target="_blank"
                                         rel="noopener"
-                                        class="block truncate text-sm font-semibold text-slate-950 underline-offset-2 hover:underline"
+                                        class="d-block text-truncate fw-bold"
                                     >{{ $doc['title'] }}</a>
-                                    <p class="text-[11px] text-slate-600">
+                                    <div class="small text-secondary">
                                         {{ $doc['type_label'] }}
                                         @if (($doc['email_send_count'] ?? 0) > 0)
-                                            <span class="mx-1 text-slate-300">·</span>
-                                            Emailed {{ $doc['email_send_count'] }}×
+                                            · Emailed {{ $doc['email_send_count'] }}×
                                         @endif
-                                    </p>
+                                    </div>
                                 </div>
-                                <div class="flex shrink-0 items-center gap-2">
+                                <div class="btn-list flex-nowrap flex-shrink-0">
                                     <a
                                         href="{{ $doc['viewer_url'] }}"
                                         target="_blank"
                                         rel="noopener"
-                                        class="text-[11px] font-semibold text-slate-700 underline-offset-2 hover:underline"
+                                        class="btn btn-sm"
                                     >Open</a>
                                     @canany([
                                         \App\Ark\Runtime\Authorization\ArkCapability::CustomersManage->value,
@@ -757,7 +723,8 @@
                                     ])
                                         <button
                                             type="button"
-                                            class="text-[11px] font-semibold text-slate-900 underline-offset-2 hover:underline"
+                                            class="btn btn-sm"
+                                            :aria-expanded="emailOpen"
                                             @click="emailOpen = ! emailOpen"
                                         >Email</button>
                                     @endcanany
@@ -768,11 +735,12 @@
                                     'customer' => $repairOrder->customer,
                                     'doc' => $doc,
                                     'compact' => true,
+                                    'ui' => 'tabler',
                                 ])
                             </div>
-                        </li>
+                        </div>
                     @endforeach
-                </ul>
+                </div>
             @endif
         </div>
 
@@ -786,7 +754,7 @@
         @php
             $reviewRequestModal = $reviewRequest ?? app(\App\Ark\Operations\Messaging\ReviewRequestProjection::class)->for($repairOrder);
         @endphp
-        <div class="ops-workspace-modal__panel" x-show="task === 'review-request' && context.closePaid" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'review-request' && context.closePaid" x-cloak>
             @include('operations.repair-orders.partials.repair-order-review-request-panel', [
                 'repairOrder' => $repairOrder,
                 'estimateVersion' => $estimateVersion,
@@ -795,7 +763,7 @@
                 'modal' => true,
             ])
         </div>
-        <div class="ops-workspace-modal__panel" x-show="task === 'review-request' && ! context.closePaid" x-cloak>
+        <div data-workspace-modal-panel x-show="task === 'review-request' && ! context.closePaid" x-cloak>
             @include('operations.repair-orders.partials.repair-order-review-request-panel', [
                 'repairOrder' => $repairOrder,
                 'estimateVersion' => $estimateVersion,
@@ -804,5 +772,4 @@
                 'modal' => true,
             ])
         </div>
-    </x-operations.workspace-modal>
-
+    </x-tabler.workspace-modal>

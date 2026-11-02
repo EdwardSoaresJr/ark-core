@@ -6,16 +6,20 @@
 @endphp
 
 @if ($hasPendingFlow)
-    <section id="connect-device" class="scroll-mt-6 space-y-4 rounded-sm border border-sky-200 bg-white p-4 shadow-sm">
-        <header class="space-y-1">
-            <h2 class="text-sm font-black text-slate-950">Plug in a phone</h2>
-            <ol class="list-decimal space-y-1 pl-4 text-xs leading-5 text-slate-600">
-                <li>Plug in a factory-reset phone on the shop network.</li>
-                <li>Wait for ARK to notice it.</li>
-                <li>Choose where it should be used.</li>
-            </ol>
-        </header>
-
-        @include('operations.shop.communications.partials.pending-devices-panel', ['shop' => $shop])
+    <section id="connect-device" class="card" aria-labelledby="connect-device-title">
+        <div class="card-status-top bg-azure"></div>
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="connect-device-title">Plug in a phone</h2>
+                <ol class="card-subtitle mb-0 ps-3" style="list-style: decimal">
+                    <li>Plug in a factory-reset phone on the shop network.</li>
+                    <li>Wait for ARK to notice it.</li>
+                    <li>Choose where it should be used.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="card-body p-2 p-md-3 d-flex flex-column gap-3">
+            @include('operations.shop.communications.partials.pending-devices-panel', ['shop' => $shop])
+        </div>
     </section>
 @endif

@@ -971,7 +971,7 @@ test('authorization exceptions are append-only and the repair order says they ar
         ->assertSee('This documents an internal basis for proceeding. It does not record customer approval.', false)
         ->assertSee('data-authorization-exception-line="'.$part->id.'"', false)
         ->assertDontSee('data-authorization-exception-line="'.$labor->id.'"', false)
-        ->assertSee('ops-exception-record__basis">Internal', false)
+        ->assertSee('data-authorization-exception-basis>Internal', false)
         ->assertSee('Recorded by '.$advisor->name, false)
         ->assertSee($recordedAt, false)
         ->assertSee($note, false)
@@ -1071,7 +1071,7 @@ test('the work status menu stops offering an exception once the blocked work is 
     $html = $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('data-authorization-exception-line="'.$part->id.'"', false)
-        ->assertSee('ops-exception-record__basis">Warranty', false)
+        ->assertSee('data-authorization-exception-basis>Warranty', false)
         ->assertSee(DIAGNOSTIC_EXCEPTION_NOTE, false)
         ->getContent();
 

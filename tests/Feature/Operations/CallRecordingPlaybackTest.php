@@ -40,7 +40,7 @@ test('a linked recording without a platform connection stays unavailable and Cor
         ->assertOk()
         ->assertSee('Recording unavailable')
         ->assertDontSee('No audio', false)
-        ->assertDontSee('<audio preload="none" class="ops-call-library__audio"', false)
+        ->assertDontSee('<audio preload="none" data-call-audio', false)
         ->assertDontSee('api.twilio.com', false);
 
     Http::assertNothingSent();
@@ -84,7 +84,7 @@ test('a linked recording plays when Platform confirms ownership', function (): v
     $this->actingAs($advisor)
         ->get(route('operations.communications.calls'))
         ->assertOk()
-        ->assertSee('<audio preload="none" class="ops-call-library__audio"', false)
+        ->assertSee('<audio preload="none" data-call-audio', false)
         ->assertDontSee('Recording unavailable')
         ->assertDontSee('No audio', false)
         ->assertDontSee('api.twilio.com', false)
@@ -133,7 +133,7 @@ test('platform ownership missing leaves the recording unavailable', function ():
         ->get(route('operations.communications.calls'))
         ->assertOk()
         ->assertSee('Recording unavailable')
-        ->assertDontSee('<audio preload="none" class="ops-call-library__audio"', false)
+        ->assertDontSee('<audio preload="none" data-call-audio', false)
         ->assertDontSee('api.twilio.com', false);
 
     $this->withoutExceptionHandling();
@@ -162,7 +162,7 @@ test('platform failure leaves the recording unavailable', function (): void {
         ->assertOk()
         ->assertSee('Recording unavailable')
         ->assertDontSee('platform-down', false)
-        ->assertDontSee('<audio preload="none" class="ops-call-library__audio"', false);
+        ->assertDontSee('<audio preload="none" data-call-audio', false);
 });
 
 test('a call with no recording does not pretend one exists', function (): void {
@@ -191,7 +191,7 @@ test('a call with no recording does not pretend one exists', function (): void {
         ->assertOk()
         ->assertSee('No recording')
         ->assertDontSee('Recording unavailable')
-        ->assertDontSee('<audio preload="none" class="ops-call-library__audio"', false);
+        ->assertDontSee('<audio preload="none" data-call-audio', false);
 
     $this->withoutExceptionHandling();
 

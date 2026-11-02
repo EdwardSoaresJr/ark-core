@@ -7,6 +7,7 @@
     'statusMoves' => [],
     'confirmBaseUrl' => null,
     'align' => 'right',
+    'ui' => 'legacy',
 ])
 
 @php
@@ -16,7 +17,66 @@
     $statusMoves = is_array($statusMoves) ? $statusMoves : [];
 @endphp
 
-@if ($statusMoves !== [])
+@if ($ui === 'tabler')
+    @php
+        $badgeColor = \App\Ark\Operations\RepairOrders\Status\RepairOrderStatusColor::tablerColorForChipTone($tone);
+        $badgeClasses = $badgeColor === 'dark' ? 'badge badge-outline text-secondary' : "badge bg-{$badgeColor}-lt";
+    @endphp
+    @if ($statusMoves !== [])
+        <div
+            class="d-inline-block"
+            x-data="arkFloatingCommsMenu({ align: @js($align), minWidth: 176, flipThreshold: 240 })"
+            x-ref="menuRoot"
+            {{ $attributes }}
+        >
+            <button
+                type="button"
+                x-ref="menuTrigger"
+                class="{{ $badgeClasses }} border-0 dropdown-toggle"
+                @click.stop="toggleMenu()"
+                :aria-expanded="menuOpen"
+                aria-haspopup="menu"
+                title="Change status"
+            >{{ $label }}</button>
+
+            <template x-teleport="body">
+                <div
+                    x-show="menuOpen"
+                    x-cloak
+                    x-ref="menuPanel"
+                    :style="menuStyle"
+                    class="dropdown-menu show position-fixed"
+                    role="menu"
+                    @click.stop
+                    @wheel.stop
+                >
+                    <h6 class="dropdown-header" role="presentation">Move to</h6>
+                    @foreach ($statusMoves as $move)
+                        @if ($move['disabled'] ?? false)
+                            <button type="button" role="menuitem" disabled class="dropdown-item disabled d-block text-wrap">
+                                {{ $move['label'] }}
+                                @if (filled($move['blockedReason'] ?? null))
+                                    <span class="d-block small text-secondary">{{ $move['blockedReason'] }}</span>
+                                @endif
+                            </button>
+                        @elseif ($move['needsRoConfirmation'] ?? false)
+                            <a href="{{ $confirmBaseUrl }}?lifecycle={{ urlencode($move['value']) }}" role="menuitem" class="dropdown-item">{{ $move['label'] }}</a>
+                        @else
+                            <form method="POST" action="{{ route('operations.repair-orders.lifecycle.update', $repairOrderKey) }}" class="m-0">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="{{ $move['value'] }}">
+                                <button type="submit" role="menuitem" class="dropdown-item">{{ $move['label'] }}</button>
+                            </form>
+                        @endif
+                    @endforeach
+                </div>
+            </template>
+        </div>
+    @else
+        <span {{ $attributes->class([$badgeClasses]) }}>{{ $label }}</span>
+    @endif
+@elseif ($statusMoves !== [])
     <div
         class="ops-comms-menu ops-job-card__status-menu"
         x-data="arkFloatingCommsMenu({ align: @js($align), minWidth: 176, flipThreshold: 240 })"

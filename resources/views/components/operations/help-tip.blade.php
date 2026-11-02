@@ -9,31 +9,42 @@
     $hasItems = is_array($items) && count($items) > 0;
 @endphp
 
-<span {{ $attributes->class(['ark-legacy ops-help-tip', 'ops-help-tip--rich' => $hasItems]) }} tabindex="0" role="button" aria-label="{{ $label }}">
-    @if (isset($trigger) && $trigger->isNotEmpty())
-        {{ $trigger }}
-    @else
-        <span class="ops-help-tip__trigger" aria-hidden="true">?</span>
-    @endif
+{{-- Alpine, not a Bootstrap popover: worksheet continuity replaces these regions, and Tabler only binds popovers on page load. --}}
+<span
+    {{ $attributes->class(['position-relative d-inline-flex align-items-center']) }}
+    x-data="{ helpOpen: false }"
+    @mouseenter="helpOpen = true"
+    @mouseleave="helpOpen = false"
+    @focusin="helpOpen = true"
+    @focusout="helpOpen = false"
+    @keydown.escape="helpOpen = false"
+    data-help-tip
+>
+    <span class="form-help" tabindex="0" role="button" aria-label="{{ $label }}">
+        @if (isset($trigger) && $trigger->isNotEmpty())
+            {{ $trigger }}
+        @else
+            <span aria-hidden="true">?</span>
+        @endif
+    </span>
     <span
-        @class([
-            'ops-help-tip__content',
-            'ops-help-tip__content--list' => $hasItems,
-        ])
+        class="dropdown-menu top-100 start-0 mt-1 p-2 small text-wrap fw-normal text-body"
+        :class="{ show: helpOpen }"
+        style="width: 16rem"
         role="tooltip"
     >
         @if ($hasItems)
             @if (filled($title))
-                <p class="ops-help-tip__title">{{ $title }}</p>
+                <span class="d-block subheader mb-1">{{ $title }}</span>
             @endif
-            <ul class="ops-help-tip__list">
+            <span class="d-block">
                 @foreach ($items as $item)
-                    <li class="ops-help-tip__item">
-                        <span class="ops-help-tip__term">{{ $item['label'] }}</span>
-                        <span class="ops-help-tip__detail">{{ $item['detail'] }}</span>
-                    </li>
+                    <span class="d-block mb-1">
+                        <span class="fw-bold">{{ $item['label'] }}</span>
+                        <span class="d-block text-secondary">{{ $item['detail'] }}</span>
+                    </span>
                 @endforeach
-            </ul>
+            </span>
         @elseif ($text !== null)
             {{ $text }}
         @else

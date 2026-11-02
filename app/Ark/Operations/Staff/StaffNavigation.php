@@ -39,7 +39,7 @@ final class StaffNavigation
         $viewsRepairOrders = $can(ArkCapability::RepairOrdersView);
         $usesBusinessWorkspace = BusinessWorkspaceAccess::allows($user);
         $usesOwnerWorkspace = $user?->canAccessOwnerWorkspace() ?? false;
-        $showsArkademy = ($produces || $operates) && ! DemoInstall::isDemo();
+        $showsArkademy = ($produces || $operates) && ! DemoInstall::isDemo() && config('ark.arkademy_in_navigation');
 
         $sections = [
             [

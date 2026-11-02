@@ -4,57 +4,65 @@
     $devices = $context['devices'];
 @endphp
 
-<x-operations.app :title="$user->name.' · Shop'">
-    <div class="mx-auto max-w-3xl space-y-4 px-4 py-4">
-        <header class="space-y-1 border-b border-slate-200 pb-3">
-            <a href="{{ route('operations.shop.communications') }}" class="text-xs font-semibold text-sky-700">← Stations &amp; Phones</a>
-            <h1 class="text-xl font-black text-slate-950">{{ $user->name }}</h1>
-            @if (session('status'))
-                <p class="text-sm font-semibold text-emerald-700">{{ session('status') }}</p>
-            @endif
-        </header>
+<x-operations.app :title="$user->name.' · Shop'" ui="tabler">
+    <x-tabler.page layout="focused" :title="$user->name" pretitle="Stations & Phones" actions-label="Person commands" stack-actions>
+        <x-slot:actions>
+            <x-tabler.page-action :href="route('operations.shop.communications')" icon="arrow-left" label="Stations & Phones" />
+        </x-slot:actions>
 
-        <section class="space-y-3">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Assigned Devices</p>
+        @if (session('status'))
+            <div class="alert alert-success" role="status">{{ session('status') }}</div>
+        @endif
 
-            <ul class="divide-y divide-slate-100 rounded-sm border border-slate-200">
-                @forelse ($devices as $device)
-                    <li>
+        <div class="d-flex flex-column gap-3">
+            <section class="card" aria-labelledby="person-devices-title">
+                <div class="card-header">
+                    <h2 class="card-title" id="person-devices-title">Assigned Devices</h2>
+                </div>
+                <div class="list-group list-group-flush">
+                    @forelse ($devices as $device)
                         <a
                             href="{{ route('operations.shop.devices.show', $device) }}"
-                            class="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-slate-50"
+                            class="list-group-item list-group-item-action"
                         >
-                            <div>
-                                <p class="text-sm font-black text-slate-950">{{ $device->name }}</p>
-                                <p class="text-xs text-slate-600">{{ $device->summaryLabel() }}</p>
+                            <div class="d-flex align-items-center justify-content-between gap-3">
+                                <div>
+                                    <div class="fw-bold">{{ $device->name }}</div>
+                                    <div class="small text-secondary">{{ $device->summaryLabel() }}</div>
+                                </div>
+                                <span class="small text-secondary">Open</span>
                             </div>
-                            <span class="text-xs font-semibold text-slate-400">Open</span>
                         </a>
-                    </li>
-                @empty
-                    <li class="px-3 py-3 text-sm text-slate-600">No devices assigned to this person yet.</li>
-                @endforelse
-            </ul>
+                    @empty
+                        <div class="list-group-item text-secondary">No devices assigned to this person yet.</div>
+                    @endforelse
+                </div>
+            </section>
 
-            <form method="POST" action="{{ route('operations.shop.devices.store') }}" class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
+            <form method="POST" action="{{ route('operations.shop.devices.store') }}" class="card">
                 @csrf
                 <input type="hidden" name="assigned_user_id" value="{{ $user->id }}">
                 <input type="hidden" name="provider" value="{{ App\Ark\Operations\Communications\CommunicationDeviceProvider::ShopPhone->value }}">
-                <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Add Device</p>
-                <label class="block space-y-1">
-                    <span class="text-xs font-semibold text-slate-700">Name</span>
+                <div class="card-header">
+                    <h2 class="card-title">Add Device</h2>
+                </div>
+                <div class="card-body p-2 p-md-3">
+                    <label class="form-label" for="person-device-name">Name</label>
                     <input
+                        id="person-device-name"
                         type="text"
                         name="name"
                         required
                         placeholder="Front Desk VVX450"
-                        class="w-full rounded-sm border-slate-300 text-sm"
+                        class="form-control"
                     >
-                </label>
-                <button type="submit" class="rounded-sm bg-slate-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
-                    Add Device
-                </button>
+                </div>
+                <div class="card-footer d-grid d-sm-flex justify-content-sm-end">
+                    <button type="submit" class="btn btn-primary">
+                        Add Device
+                    </button>
+                </div>
             </form>
-        </section>
-    </div>
+        </div>
+    </x-tabler.page>
 </x-operations.app>

@@ -1,129 +1,133 @@
 @php
     /** @var array<string, mixed> $shop */
-    $toneDot = static fn (string $tone): string => match ($tone) {
-        'success' => 'bg-emerald-500',
-        'warning' => 'bg-amber-500',
-        'danger' => 'bg-rose-500',
-        default => 'bg-slate-300',
-    };
     $statusText = static fn (string $tone): string => match ($tone) {
-        'success' => 'text-emerald-700',
-        'warning' => 'text-amber-700',
-        'danger' => 'text-rose-700',
-        default => 'text-slate-600',
+        'success' => 'text-success',
+        'warning' => 'text-warning',
+        'danger' => 'text-danger',
+        default => 'text-secondary',
     };
     $activeStep = $shop['active_setup_step'] ?? null;
     $editStationId = (int) old('edit_workstation_id', 0);
 @endphp
 
-<section class="space-y-3">
-    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Stations</p>
+<section class="card" aria-labelledby="shop-comms-stations" data-shop-comms-stations>
+    <div class="card-header">
+        <h2 class="card-title" id="shop-comms-stations">Stations</h2>
+    </div>
 
     @error('workstation')
-        <p class="text-xs font-semibold text-rose-700">{{ $message }}</p>
+        <div class="alert alert-danger m-2 mb-0" role="alert">{{ $message }}</div>
     @enderror
 
-    <ul class="divide-y divide-slate-100 rounded-sm border border-slate-200 bg-white">
+    <div class="list-group list-group-flush">
         @forelse ($shop['workstations'] as $station)
-            <li>
-                @if ($station->primaryDeviceId)
-                    <a href="{{ route('operations.shop.devices.show', $station->primaryDeviceId) }}" class="flex items-center justify-between gap-3 px-3 py-3 hover:bg-slate-50">
-                @else
-                    <div class="flex items-center justify-between gap-3 px-3 py-3">
-                @endif
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-black text-slate-950">{{ $station->name }}</p>
-                        <p class="truncate text-xs text-slate-600">
-                            @if ($station->currentOperatorLabel)
-                                {{ $station->currentOperatorLabel }}
-                                @if ($station->primaryDeviceName)
-                                    · {{ $station->primaryDeviceName }}
-                                @endif
-                            @elseif ($station->primaryDeviceName)
-                                {{ $station->primaryDeviceName }}
-                            @else
-                                No device attached
-                            @endif
-                        </p>
+            @php
+                $stationSummary = $station->currentOperatorLabel
+                    ? $station->currentOperatorLabel.($station->primaryDeviceName ? ' · '.$station->primaryDeviceName : '')
+                    : ($station->primaryDeviceName ?: 'No device attached');
+            @endphp
+            @if ($station->primaryDeviceId)
+                <a href="{{ route('operations.shop.devices.show', $station->primaryDeviceId) }}" class="list-group-item list-group-item-action">
+            @else
+                <div class="list-group-item">
+            @endif
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-fill overflow-hidden">
+                        <div class="fw-bold text-truncate">{{ $station->name }}</div>
+                        <div class="small text-secondary text-truncate">{{ $stationSummary }}</div>
                     </div>
-                    <span @class(['shrink-0 text-xs font-bold uppercase tracking-wide', $statusText($station->stationStatusTone)])>
+                    <span class="flex-shrink-0 small fw-bold text-uppercase {{ $statusText($station->stationStatusTone) }}">
                         {{ $station->stationStatusLabel }}
                     </span>
-                @if ($station->primaryDeviceId)
-                    </a>
-                @else
-                    </div>
-                @endif
-            </li>
+                </div>
+            @if ($station->primaryDeviceId)
+                </a>
+            @else
+                </div>
+            @endif
         @empty
-            <li class="px-3 py-3 text-sm text-slate-600">No stations yet.</li>
+            <div class="list-group-item text-secondary">No stations yet.</div>
         @endforelse
-    </ul>
+    </div>
 
     @if ($activeStep !== 'workstation')
-        <details class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2">
-            <summary class="cursor-pointer text-xs font-semibold text-slate-700">Add a station</summary>
-            <form method="POST" action="{{ route('operations.shop.workstations.store') }}" class="mt-3 space-y-2 pb-2">
+        <details class="border-top">
+            <summary class="card-body py-2 fw-medium">Add a station</summary>
+            <form method="POST" action="{{ route('operations.shop.workstations.store') }}" class="card-body pt-0">
                 @csrf
-                <div class="grid gap-2 sm:grid-cols-2">
-                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Front Counter" class="h-9 rounded-sm border-slate-300 text-sm @error('name') border-rose-400 @enderror">
-                    <input type="text" name="location_label" value="{{ old('location_label') }}" placeholder="Location (optional)" class="h-9 rounded-sm border-slate-300 text-sm">
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="visually-hidden" for="shop-add-station-name">Station name</label>
+                        <input
+                            id="shop-add-station-name"
+                            type="text"
+                            name="name"
+                            value="{{ old('name') }}"
+                            required
+                            placeholder="Front Counter"
+                            @class(['form-control', 'is-invalid' => $errors->has('name') && ! $editStationId])
+                        >
+                        @error('name')
+                            @if (! $editStationId)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @endif
+                        @enderror
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="visually-hidden" for="shop-add-station-location">Location</label>
+                        <input id="shop-add-station-location" type="text" name="location_label" value="{{ old('location_label') }}" placeholder="Location (optional)" class="form-control">
+                    </div>
                 </div>
-                @error('name')
-                    @if (! $editStationId)
-                        <p class="text-xs font-semibold text-rose-700">{{ $message }}</p>
-                    @endif
-                @enderror
-                <button type="submit" class="text-xs font-semibold text-sky-700 hover:underline">Add station</button>
+                <button type="submit" class="btn btn-sm mt-2">Add station</button>
             </form>
         </details>
     @endif
 </section>
 
 @if (($shop['workstation_count'] ?? 0) > 0)
-    <details class="rounded-sm border border-slate-200 bg-slate-50/60 p-3">
-        <summary class="cursor-pointer text-xs font-semibold text-slate-700">Manage station names</summary>
-        <ul class="mt-3 divide-y divide-slate-200 text-sm">
+    <details class="card" data-shop-comms-station-names>
+        <summary class="card-header">
+            <span class="card-title">Manage station names</span>
+        </summary>
+        <div class="list-group list-group-flush">
             @foreach ($shop['workstations'] as $station)
-                <li class="py-2">
-                    <details class="group" @if ($editStationId === $station->workstationId) open @endif>
-                        <summary class="cursor-pointer list-none font-semibold text-slate-950 hover:text-sky-700 [&::-webkit-details-marker]:hidden">
-                            {{ $station->name }}
-                        </summary>
-                        <form
-                            method="POST"
-                            action="{{ route('operations.shop.workstations.update', $station->workstationId) }}"
-                            class="mt-2 space-y-2 rounded-sm border border-slate-200 bg-white p-3"
-                        >
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="edit_workstation_id" value="{{ $station->workstationId }}">
-                            <label class="block">
-                                <span class="text-xs font-semibold text-slate-700">Name</span>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value="{{ old('edit_workstation_id') == $station->workstationId ? old('name', $station->name) : $station->name }}"
-                                    required
-                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 text-sm"
-                                >
-                            </label>
-                            <label class="block">
-                                <span class="text-xs font-semibold text-slate-700">Location <span class="font-normal text-slate-500">(optional)</span></span>
-                                <input
-                                    type="text"
-                                    name="location_label"
-                                    value="{{ old('edit_workstation_id') == $station->workstationId ? old('location_label', $station->rawLocationLabel) : ($station->rawLocationLabel ?? '') }}"
-                                    class="mt-1 h-9 w-full rounded-sm border-slate-300 text-sm"
-                                >
-                            </label>
-                            <button type="submit" class="inline-flex min-h-9 items-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-                                Save
-                            </button>
-                        </form>
-                    </details>
-                </li>
+                <details class="list-group-item" @if ($editStationId === $station->workstationId) open @endif>
+                    <summary class="fw-medium">
+                        {{ $station->name }}
+                    </summary>
+                    <form
+                        method="POST"
+                        action="{{ route('operations.shop.workstations.update', $station->workstationId) }}"
+                        class="mt-2"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="edit_workstation_id" value="{{ $station->workstationId }}">
+                        <div class="mb-2">
+                            <label class="form-label" for="shop-station-{{ $station->workstationId }}-name">Name</label>
+                            <input
+                                id="shop-station-{{ $station->workstationId }}-name"
+                                type="text"
+                                name="name"
+                                value="{{ old('edit_workstation_id') == $station->workstationId ? old('name', $station->name) : $station->name }}"
+                                required
+                                class="form-control"
+                            >
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label" for="shop-station-{{ $station->workstationId }}-location">Location <span class="text-secondary fw-normal">(optional)</span></label>
+                            <input
+                                id="shop-station-{{ $station->workstationId }}-location"
+                                type="text"
+                                name="location_label"
+                                value="{{ old('edit_workstation_id') == $station->workstationId ? old('location_label', $station->rawLocationLabel) : ($station->rawLocationLabel ?? '') }}"
+                                class="form-control"
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </form>
+                </details>
             @endforeach
-        </ul>
+        </div>
     </details>
 @endif

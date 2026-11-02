@@ -314,14 +314,28 @@ export function arkConversationQuickReply(config = {}) {
         syncActionsMenuPosition() {
             this.$nextTick(() => {
                 const details = this.$refs.actionsMenu;
-                const panel = details?.querySelector('.ops-comms-actions__panel');
+                const panel = details?.querySelector('[data-comms-actions-panel], .ops-comms-actions__panel');
                 const summary = details?.querySelector('summary');
 
                 if (! panel || ! summary) {
                     return;
                 }
 
-                panel.classList.remove('ops-comms-actions__panel--down');
+                const tabler = panel.hasAttribute('data-comms-actions-panel');
+                const setOpenDown = (down) => {
+                    if (tabler) {
+                        panel.classList.toggle('bottom-100', ! down);
+                        panel.classList.toggle('mb-1', ! down);
+                        panel.classList.toggle('top-100', down);
+                        panel.classList.toggle('mt-1', down);
+
+                        return;
+                    }
+
+                    panel.classList.toggle('ops-comms-actions__panel--down', down);
+                };
+
+                setOpenDown(false);
                 panel.style.left = '0';
                 panel.style.right = 'auto';
                 panel.style.maxHeight = '';
@@ -334,7 +348,7 @@ export function arkConversationQuickReply(config = {}) {
                 const openDown = spaceAbove < needed && spaceBelow > spaceAbove;
 
                 if (openDown) {
-                    panel.classList.add('ops-comms-actions__panel--down');
+                    setOpenDown(true);
                 }
 
                 const room = openDown ? spaceBelow : spaceAbove;
@@ -533,7 +547,7 @@ export function arkConversationQuickReply(config = {}) {
                     emptyState.remove();
                 }
 
-                const isCommsThread = list.classList.contains('ops-comms-workspace__thread-body');
+                const isCommsThread = list.matches('[data-comms-thread-body], .ops-comms-workspace__thread-body');
                 const isHubRelationship = listId === 'conversation-messages-relationship';
                 const wrappedHtml = isHubRelationship
                     ? `<div data-conversation-row data-filter="${hubFilter}">${html}</div>`
@@ -596,20 +610,20 @@ export function arkConversationQuickReply(config = {}) {
                 const body = rawBody === '(attachment)' ? '' : this.escapeHtml(rawBody);
                 const media = this.platformMediaHtml(platformMessage.attachments);
                 const contextLabel = platformMessage.context_label
-                    ? `<p class="mt-1 text-[11px] font-medium text-slate-500">${this.escapeHtml(platformMessage.context_label)}</p>`
+                    ? `<div class="mt-1 small text-secondary">${this.escapeHtml(platformMessage.context_label)}</div>`
                     : '';
                 const idAttr = publicId ? ` data-platform-message-id="${this.escapeHtml(String(publicId))}"` : '';
                 const occurredAt = this.escapeHtml(String(platformMessage.occurred_at ?? ''));
                 const occurredAttr = occurredAt !== '' ? ` data-occurred-at="${occurredAt}"` : '';
-                const isCommsThread = list.classList.contains('ops-comms-workspace__thread-body');
+                const isCommsThread = list.matches('[data-comms-thread-body], .ops-comms-workspace__thread-body');
                 const isHubRelationship = listId === 'conversation-messages-relationship';
 
                 if (isHubRelationship) {
                     list.insertAdjacentHTML('afterbegin', `
                         <div data-conversation-row data-filter="text"${idAttr}${occurredAttr}>
-                            <div class="px-3 py-2 text-xs leading-4 text-slate-700">
-                                <p class="font-bold text-slate-950">${headline}</p>
-                                ${body !== '' ? `<p class="mt-0.5 whitespace-pre-wrap text-slate-600">${body}</p>` : ''}
+                            <div class="px-3 py-2 border-bottom">
+                                <div class="fw-bold">${headline}</div>
+                                ${body !== '' ? `<p class="mt-1 mb-0 text-secondary" style="white-space: pre-wrap">${body}</p>` : ''}
                                 ${media}
                                 ${contextLabel}
                             </div>
@@ -619,9 +633,7 @@ export function arkConversationQuickReply(config = {}) {
                     continue;
                 }
 
-                const bubbleClass = direction === 'outbound'
-                    ? 'ops-comms-workspace__bubble--outbound'
-                    : 'ops-comms-workspace__bubble--inbound';
+                const outbound = direction === 'outbound';
                 const meta = [
                     platformMessage.direction_label ?? (direction === 'outbound' ? 'Sent' : 'Received'),
                     platformMessage.channel_label ?? 'SMS',
@@ -629,12 +641,16 @@ export function arkConversationQuickReply(config = {}) {
                 ].filter(Boolean).join(' · ');
 
                 list.insertAdjacentHTML(isCommsThread ? 'beforeend' : 'afterbegin', `
-                    <article class="ops-comms-workspace__bubble ${bubbleClass}"${idAttr}>
-                        <p class="ops-comms-workspace__bubble-meta">${this.escapeHtml(meta)}</p>
-                        ${body !== '' ? `<p class="ops-comms-workspace__bubble-body">${body}</p>` : ''}
-                        ${media}
-                        ${contextLabel}
-                    </article>
+                    <div class="d-flex${outbound ? ' justify-content-end' : ''}"${idAttr}>
+                        <article class="chat-bubble px-3 py-2${outbound ? ' chat-bubble-me' : ''}" style="max-width: 88%" data-comms-bubble="${outbound ? 'outbound' : 'inbound'}">
+                            <div class="chat-bubble-title small text-secondary">${this.escapeHtml(meta)}</div>
+                            <div class="chat-bubble-body">
+                                ${body !== '' ? `<p class="mb-0" style="white-space: pre-wrap">${body}</p>` : ''}
+                                ${media}
+                                ${contextLabel}
+                            </div>
+                        </article>
+                    </div>
                 `);
 
                 if (isCommsThread) {
@@ -655,17 +671,17 @@ export function arkConversationQuickReply(config = {}) {
                 const url = item?.url ? this.escapeHtml(item.url) : '';
 
                 if (item?.kind === 'image' && url !== '') {
-                    return `<button type="button" class="ops-attachment-thumb" data-ops-lightbox="${url}" data-ops-lightbox-alt="Photo"><img src="${url}" alt="Photo" class="ops-attachment-thumb__image"></button>`;
+                    return `<button type="button" class="btn btn-ghost-secondary p-0" data-ops-lightbox="${url}" data-ops-lightbox-alt="Photo" aria-label="Open photo"><img src="${url}" alt="Photo" class="rounded border object-cover" width="96" height="96"></button>`;
                 }
 
                 if (item?.kind === 'file' && url !== '') {
-                    return `<a href="${url}" target="_blank" rel="noopener" class="inline-flex items-center text-xs font-semibold text-sky-800">${label}</a>`;
+                    return `<a href="${url}" target="_blank" rel="noopener" class="btn btn-sm">${label}</a>`;
                 }
 
-                return `<p class="text-xs text-slate-600">${label}</p>`;
+                return `<span class="text-secondary small">${label}</span>`;
             });
 
-            return `<div class="mt-2 space-y-2" data-comms-media>${items.join('')}</div>`;
+            return `<div class="d-flex flex-wrap gap-2 mt-2" data-comms-media>${items.join('')}</div>`;
         },
 
         escapeHtml(value) {

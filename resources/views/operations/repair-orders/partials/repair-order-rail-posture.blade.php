@@ -23,49 +23,49 @@
 
 <div
     @class([
-        'ops-review-rail-posture',
-        'ops-review-panel' => ! $isDock,
-        'ops-review-rail-posture--dock' => $isDock,
+        'card card-sm' => ! $isDock,
     ])
     data-persistent-context="posture"
     data-posture-layout="{{ $postureLayout }}"
 >
-    <div class="ops-review-rail-posture__band">
-        <div class="ops-review-rail-posture__row">
-            <p class="ops-review-rail-posture__label">Workflow</p>
-            <p class="ops-review-rail-posture__value">{{ $repairOrder->statusDisplayLabel() }}</p>
-            <p class="ops-review-rail-posture__hint">{{ $nextAction }}</p>
-        </div>
-        <div class="ops-review-rail-posture__row">
-            <p class="ops-review-rail-posture__label">Approval</p>
-            <p class="ops-review-rail-posture__value">{{ $approvalPosture }}</p>
-            <p class="ops-review-rail-posture__hint">{{ $approvalHint }}</p>
-            @unless ($isDock)
-                <p class="ops-review-rail-posture__meta">
-                    @if ($lastApprovalEvent)
-                        Last authorization {{ $lastApprovalEvent->approved_at?->timezone(config('app.display_timezone'))->format('M j, g:i A') ?? 'time not recorded' }}
-                    @else
-                        No authorization recorded yet
-                    @endif
-                </p>
-            @endunless
-        </div>
-        <div class="ops-review-rail-posture__row">
-            <p class="ops-review-rail-posture__label">Communication</p>
-            <p class="ops-review-rail-posture__value">{{ $repairOrder->communicationNextAction() }}</p>
-            <p class="ops-review-rail-posture__hint">{{ $repairOrder->communicationPostureLabel() }}</p>
-        </div>
-        <div class="ops-review-rail-posture__row">
-            <p class="ops-review-rail-posture__label">Financial</p>
-            <p class="ops-review-rail-posture__value">{{ $financialValue }}</p>
-            <p class="ops-review-rail-posture__hint">{{ $financialHint }}</p>
-        </div>
-        @if ($partsBlockingCount > 0)
-            <div class="ops-review-rail-posture__row ops-review-rail-posture__row--parts">
-                <p class="ops-review-rail-posture__label">Parts</p>
-                <p class="ops-review-rail-posture__value">{{ $partsBlockingCount }} line{{ $partsBlockingCount === 1 ? '' : 's' }} blocking</p>
-                <p class="ops-review-rail-posture__hint">{{ $repairOrder->procurementReadinessSummary() }}</p>
+    <div @class(['card-body' => ! $isDock])>
+        <div class="datagrid">
+            <div class="datagrid-item">
+                <div class="datagrid-title">Workflow</div>
+                <div class="datagrid-content fw-medium">{{ $repairOrder->statusDisplayLabel() }}</div>
+                <div class="small text-secondary">{{ $nextAction }}</div>
             </div>
-        @endif
+            <div class="datagrid-item">
+                <div class="datagrid-title">Approval</div>
+                <div class="datagrid-content fw-medium">{{ $approvalPosture }}</div>
+                <div class="small text-secondary">{{ $approvalHint }}</div>
+                @unless ($isDock)
+                    <div class="small text-secondary">
+                        @if ($lastApprovalEvent)
+                            Last authorization {{ $lastApprovalEvent->approved_at?->timezone(config('app.display_timezone'))->format('M j, g:i A') ?? 'time not recorded' }}
+                        @else
+                            No authorization recorded yet
+                        @endif
+                    </div>
+                @endunless
+            </div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Communication</div>
+                <div class="datagrid-content fw-medium">{{ $repairOrder->communicationNextAction() }}</div>
+                <div class="small text-secondary">{{ $repairOrder->communicationPostureLabel() }}</div>
+            </div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Financial</div>
+                <div class="datagrid-content fw-medium">{{ $financialValue }}</div>
+                <div class="small text-secondary">{{ $financialHint }}</div>
+            </div>
+            @if ($partsBlockingCount > 0)
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Parts</div>
+                    <div class="datagrid-content fw-medium text-orange">{{ $partsBlockingCount }} line{{ $partsBlockingCount === 1 ? '' : 's' }} blocking</div>
+                    <div class="small text-secondary">{{ $repairOrder->procurementReadinessSummary() }}</div>
+                </div>
+            @endif
+        </div>
     </div>
 </div>

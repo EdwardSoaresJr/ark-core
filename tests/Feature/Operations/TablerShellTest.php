@@ -53,7 +53,7 @@ test('customer search renders in the Tabler shell after the legacy stylesheet', 
 
 test('unmigrated views keep the legacy shell and never load Tabler', function (): void {
     $this->actingAs(actingAsLearnCurrentAdvisor())
-        ->get(route('profile.edit'))
+        ->followingRedirects()->get(route('operations.learn.index'))
         ->assertOk()
         ->assertSee('<!-- vite: resources/css/app.css,resources/js/app.js -->', false)
         ->assertSee('data-ops-mobile-nav', false)
@@ -63,7 +63,7 @@ test('unmigrated views keep the legacy shell and never load Tabler', function ()
 });
 
 test('the Tabler sidebar lists the same destinations as the legacy rail', function (User $user): void {
-    $legacy = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+    $legacy = $this->actingAs($user)->followingRedirects()->get(route('operations.learn.index'))->assertOk()->getContent();
     $tabler = $this->actingAs($user)->get(route('operations.customers.search'))->assertOk()->getContent();
 
     $legacyHrefs = primaryNavHrefs($legacy, '<nav aria-label="Primary operations" class="ops-rail-nav">', '</nav>');
@@ -91,12 +91,13 @@ test('below desktop width the channel strip becomes one menu with the same desti
     $html = $this->actingAs(User::factory()->create()->assignRole(ArkRole::Admin->value))
         ->get(route('operations.customers.search'))
         ->assertOk()
-        ->assertSee('class="ark-legacy flex-fill overflow-auto d-none d-lg-block"', false)
+        ->assertSee('class="flex-fill overflow-x-auto d-none d-lg-block"', false)
         ->assertSee('aria-label="Communications, 0 need attention"', false)
+        ->assertDontSee('ops-comms-channel-strip', false)
         ->getContent();
 
     $menuHrefs = primaryNavHrefs($html, '<span class="dropdown-header">Communications</span>', '</div>');
-    $stripHrefs = primaryNavHrefs($html, 'class="ops-comms-channel-strip-metrics"', '</section>');
+    $stripHrefs = primaryNavHrefs($html, 'data-ark-channel-strip', '</nav>');
 
     expect($menuHrefs)->not->toBeEmpty()
         ->and($menuHrefs)->toBe($stripHrefs);

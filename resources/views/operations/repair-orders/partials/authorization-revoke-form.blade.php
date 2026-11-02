@@ -10,8 +10,8 @@
 @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value)
     @unless ($isTerminal ?? false)
         @if ($approvedConcerns->isNotEmpty())
-            <details class="mt-2 rounded-sm border border-amber-200 bg-amber-50/60">
-                <summary class="cursor-pointer select-none px-2 py-1.5 text-[11px] font-semibold text-amber-950 hover:bg-amber-50">
+            <details class="card card-sm mt-2" data-authorization-revoke>
+                <summary class="card-body py-2 small fw-bold text-orange">
                     Revoke authorization
                 </summary>
                 <form
@@ -21,74 +21,73 @@
                     data-refresh-scope="auth"
                     data-saving-label="Revoking authorization…"
                     @submit.prevent="window.arkWorksheetFormSubmit($event)"
-                    class="space-y-2 border-t border-amber-200 px-2 py-2"
+                    class="card-body border-top"
                 >
                     @csrf
                     <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-                    <p class="text-[11px] leading-4 text-amber-900">Customer changed their mind or the authorization was recorded incorrectly. Reverts selected approved scopes and records the revocation.</p>
+                    <p class="small text-secondary">Customer changed their mind or the authorization was recorded incorrectly. Reverts selected approved scopes and records the revocation.</p>
 
-                    <div class="space-y-1">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-amber-800">Scopes to revoke</p>
+                    <fieldset class="mb-3">
+                        <legend class="form-label">Scopes to revoke</legend>
                         @foreach ($approvedConcerns as $concern)
-                            <label class="flex items-start gap-2 text-xs text-amber-950">
+                            <label class="form-check">
                                 <input
                                     type="checkbox"
                                     name="concern_ids[]"
                                     value="{{ $concern->id }}"
                                     checked
-                                    class="mt-0.5 rounded border-amber-300 text-amber-950 focus:ring-amber-500"
+                                    class="form-check-input"
                                 >
-                                <span>{{ $concern->summary }}</span>
+                                <span class="form-check-label">{{ $concern->summary }}</span>
                             </label>
                         @endforeach
+                    </fieldset>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="authorization-revert-{{ $approvalEvent->id }}">Return scopes to</label>
+                        <select id="authorization-revert-{{ $approvalEvent->id }}" name="revert_disposition" required class="form-select">
+                            <option value="{{ RepairOrderConcernDisposition::Recommended->value }}" @selected(old('revert_disposition', RepairOrderConcernDisposition::Recommended->value) === RepairOrderConcernDisposition::Recommended->value)>Recommended (pending again)</option>
+                            <option value="{{ RepairOrderConcernDisposition::Deferred->value }}" @selected(old('revert_disposition') === RepairOrderConcernDisposition::Deferred->value)>Deferred</option>
+                        </select>
                     </div>
 
-                    <div class="grid gap-2">
-                        <label class="block text-[11px] font-medium text-amber-900">
-                            Return scopes to
-                            <select name="revert_disposition" required class="mt-1 w-full rounded-sm border border-amber-300 bg-white px-2 py-1.5 text-sm text-slate-950">
-                                <option value="{{ RepairOrderConcernDisposition::Recommended->value }}" @selected(old('revert_disposition', RepairOrderConcernDisposition::Recommended->value) === RepairOrderConcernDisposition::Recommended->value)>Recommended (pending again)</option>
-                                <option value="{{ RepairOrderConcernDisposition::Deferred->value }}" @selected(old('revert_disposition') === RepairOrderConcernDisposition::Deferred->value)>Deferred</option>
-                            </select>
-                        </label>
+                    <div class="mb-3">
+                        <label class="form-label" for="authorization-revoke-source-{{ $approvalEvent->id }}">Method</label>
+                        <select id="authorization-revoke-source-{{ $approvalEvent->id }}" name="source" required class="form-select">
+                            @foreach (ApprovalSource::cases() as $source)
+                                <option value="{{ $source->value }}" @selected(old('source', ApprovalSource::Phone->value) === $source->value)>{{ $source->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                        <label class="block text-[11px] font-medium text-amber-900">
-                            Method
-                            <select name="source" required class="mt-1 w-full rounded-sm border border-amber-300 bg-white px-2 py-1.5 text-sm text-slate-950">
-                                @foreach (ApprovalSource::cases() as $source)
-                                    <option value="{{ $source->value }}" @selected(old('source', ApprovalSource::Phone->value) === $source->value)>{{ $source->label() }}</option>
-                                @endforeach
-                            </select>
-                        </label>
+                    <div class="mb-3">
+                        <label class="form-label" for="authorization-revoked-by-{{ $approvalEvent->id }}">Revoked by</label>
+                        <input
+                            id="authorization-revoked-by-{{ $approvalEvent->id }}"
+                            type="text"
+                            name="revoked_by"
+                            value="{{ old('revoked_by', $repairOrder->customer->name) }}"
+                            required
+                            class="form-control"
+                        >
+                    </div>
 
-                        <label class="block text-[11px] font-medium text-amber-900">
-                            Revoked by
-                            <input
-                                type="text"
-                                name="revoked_by"
-                                value="{{ old('revoked_by', $repairOrder->customer->name) }}"
-                                required
-                                class="mt-1 w-full rounded-sm border border-amber-300 bg-white px-2 py-1.5 text-sm text-slate-950"
-                            >
-                        </label>
-
-                        <label class="block text-[11px] font-medium text-amber-900">
-                            Notes
-                            <textarea name="notes" rows="2" class="mt-1 w-full rounded-sm border border-amber-300 bg-white px-2 py-1.5 text-sm text-slate-950" placeholder="Optional revocation notes">{{ old('notes') }}</textarea>
-                        </label>
+                    <div class="mb-3">
+                        <label class="form-label" for="authorization-revoke-notes-{{ $approvalEvent->id }}">Notes</label>
+                        <textarea id="authorization-revoke-notes-{{ $approvalEvent->id }}" name="notes" rows="2" class="form-control" placeholder="Optional revocation notes">{{ old('notes') }}</textarea>
                     </div>
 
                     @error('authorization')
-                        <p class="text-xs text-red-700">{{ $message }}</p>
+                        <div class="alert alert-danger">{{ $message }}</div>
                     @enderror
 
-                    <button type="submit" class="w-full rounded-sm border border-amber-400 bg-white px-3 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-100">
+                    <button type="submit" class="btn btn-outline-warning w-100">
                         Revoke this authorization
                     </button>
                 </form>
             </details>
         @else
-            <p class="mt-2 text-[11px] leading-4 text-slate-500">No approved scopes remain to revoke for this authorization.</p>
+            <p class="small text-secondary mt-2 mb-0">No approved scopes remain to revoke for this authorization.</p>
         @endif
     @endunless
 @endcan

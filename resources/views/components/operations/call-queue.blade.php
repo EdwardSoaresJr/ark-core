@@ -1,4 +1,4 @@
-@props(['pollerOnly' => false])
+@props(['pollerOnly' => false, 'ui' => 'legacy'])
 
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
     @php
@@ -45,6 +45,15 @@
         ];
     @endphp
     <script type="application/json" id="ark-call-queue-bootstrap">@json($callQueueBootstrap)</script>
+    @if ($ui === 'tabler' && $pollerOnly)
+    <div
+        data-call-queue-root
+        x-data="arkCallQueue()"
+        @click.outside="open = false"
+        class="d-none"
+        aria-hidden="true"
+    ></div>
+    @else
     <div
         data-call-queue-root
         x-data="arkCallQueue()"
@@ -160,4 +169,5 @@
         </div>
         @endunless
     </div>
+    @endif
 @endcan

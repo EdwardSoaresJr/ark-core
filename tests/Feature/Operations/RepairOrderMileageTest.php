@@ -16,7 +16,7 @@ test('advisor can edit mileage through direct inline input', function () {
         $this->get($url)
             ->assertOk()
             ->assertSee('arkRepairOrderMileage', false)
-            ->assertSee('ops-mileage-input', false)
+            ->assertSee('data-mileage-input="in"', false)
             ->assertSee('>In</span>', false)
             ->assertSee('>Out</span>', false);
     }
@@ -73,7 +73,7 @@ test('advisor can set mileage out on a closed repair order', function () {
     $this->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
         ->assertSee('arkRepairOrderMileage', false)
-        ->assertSee('ops-mileage-input', false);
+        ->assertSee('data-mileage-input="in"', false);
 
     $this->patchJson(route('operations.repair-orders.mileage.update', $repairOrder), [
         'mileage_in' => 78401,

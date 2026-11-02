@@ -1,38 +1,45 @@
-<x-operations.app title="Connecting ARK Platform">
-<div class="mx-auto max-w-lg px-4 py-10">
-    <h1 class="text-xl font-semibold text-slate-950">Connecting ARK Platform</h1>
-    <p class="mt-2 text-sm text-slate-600">
-        Finish signing in on ARK Platform and approve this Box. This page will update when the connection is ready.
-        ARK does not sign you into Cloud automatically - Cloud asks for your account as usual.
-    </p>
+<x-operations.app title="Connecting ARK Platform" ui="tabler">
+<x-tabler.page layout="focused" pretitle="ARK Cloud" title="Connecting ARK Platform">
+    <div class="card" data-cloud-connecting>
+        <div class="card-body p-3">
+            <p class="text-secondary">
+                Finish signing in on ARK Platform and approve this Box. This page will update when the connection is ready.
+                ARK does not sign you into Cloud automatically - Cloud asks for your account as usual.
+            </p>
 
-    @if ($pairingCode)
-        <div class="mt-4 rounded-sm border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-            <p>If you need the pairing code instead:</p>
-            <p class="mt-1 font-mono text-sm tracking-widest">{{ $pairingCode }}</p>
-            @if ($cloudPairingUrl)
-                <p class="mt-2"><a class="underline" href="{{ $cloudPairingUrl }}" target="_blank" rel="noopener">Open pairing page</a></p>
+            @if ($pairingCode)
+                <div class="card card-sm mb-3">
+                    <div class="card-body">
+                        <div class="small text-secondary">If you need the pairing code instead:</div>
+                        <div class="h3 font-monospace mb-0 mt-1">{{ $pairingCode }}</div>
+                        @if ($cloudPairingUrl)
+                            <a class="d-inline-block mt-2" href="{{ $cloudPairingUrl }}" target="_blank" rel="noopener">Open pairing page</a>
+                        @endif
+                    </div>
+                </div>
             @endif
+
+            <p id="cloud-connect-status" class="fw-medium mb-0" role="status" aria-live="polite">Waiting for approval…</p>
         </div>
-    @endif
 
-    <p id="cloud-connect-status" class="mt-6 text-sm font-medium text-slate-800">Waiting for approval…</p>
-
-    <div class="mt-6 flex flex-wrap gap-2">
-        <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="inline-flex min-h-9 items-center rounded-sm border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-800">
-            Back to Settings
-        </a>
-        <form method="POST" action="{{ route('operations.settings.shop.ark-cloud.claim') }}">
-            @csrf
-            @if ($pairingPublicId)
-                <input type="hidden" name="pairing_public_id" value="{{ $pairingPublicId }}">
-            @endif
-            <button type="submit" class="inline-flex min-h-9 items-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white">
-                Check now
-            </button>
-        </form>
+        <div class="card-footer">
+            <div class="btn-list">
+                <a href="{{ route('operations.settings.shop.edit', ['section' => 'ark-cloud']) }}" class="btn">
+                    Back to Settings
+                </a>
+                <form method="POST" action="{{ route('operations.settings.shop.ark-cloud.claim') }}">
+                    @csrf
+                    @if ($pairingPublicId)
+                        <input type="hidden" name="pairing_public_id" value="{{ $pairingPublicId }}">
+                    @endif
+                    <button type="submit" class="btn btn-primary">
+                        Check now
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
+</x-tabler.page>
 
 <script>
 (function () {

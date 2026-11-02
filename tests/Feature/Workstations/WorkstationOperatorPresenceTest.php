@@ -185,7 +185,7 @@ test('workstation lock screen retired - operational shell stays visible', functi
         ->assertOk()
         ->assertSee('name="ark-workstation-privacy-active" content="0"', false)
         ->assertDontSee('Find advisor', false)
-        ->assertSee('ops-left-rail', false);
+        ->assertSee('id="ark-sidebar-menu"', false);
 
     $this->actingAs($admin)
         ->withSession([WorkstationPresence::SESSION_LOCKED => true])
@@ -580,6 +580,6 @@ test('bound station shows station label without lock overlay', function (): void
 
     workstationGet($this, '/app', $admin, $binding)
         ->assertOk()
-        ->assertSee('ws-presence-topbar__station', false)
+        ->assertSee('data-ws-station-label', false)
         ->assertDontSee('Find advisor', false);
 });

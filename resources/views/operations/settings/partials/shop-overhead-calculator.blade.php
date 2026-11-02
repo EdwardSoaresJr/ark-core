@@ -208,15 +208,15 @@
             </div>
         </div>
         <div class="small mt-3">
-            <div x-show="monthlyProcessingCost() > 0" class="d-flex justify-content-between gap-3">
+            <div x-show.important="monthlyProcessingCost() > 0" class="d-flex justify-content-between gap-3">
                 <span class="text-secondary">Processing fees</span>
                 <span class="fw-medium" x-text="money(monthlyProcessingCost())"></span>
             </div>
-            <div x-show="monthlyFinancingCost() > 0" class="d-flex justify-content-between gap-3">
+            <div x-show.important="monthlyFinancingCost() > 0" class="d-flex justify-content-between gap-3">
                 <span class="text-secondary">Merchant financing</span>
                 <span class="fw-medium" x-text="money(monthlyFinancingCost())"></span>
             </div>
-            <div x-show="monthlyPaymentOverheadTotal() > 0" class="d-flex justify-content-between gap-3 border-top pt-1 mt-1">
+            <div x-show.important="monthlyPaymentOverheadTotal() > 0" class="d-flex justify-content-between gap-3 border-top pt-1 mt-1">
                 <span class="text-secondary">Payment costs subtotal</span>
                 <span class="fw-medium" x-text="money(monthlyPaymentOverheadTotal())"></span>
             </div>

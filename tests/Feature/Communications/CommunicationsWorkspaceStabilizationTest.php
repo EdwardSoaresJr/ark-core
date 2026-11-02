@@ -73,13 +73,13 @@ test('empty communications workspace keeps the three-column landmarks', function
         ->getContent();
 
     expect($html)
-        ->toContain('ops-comms-workspace__grid')
-        ->toContain('ops-comms-workspace__list')
-        ->toContain('ops-comms-workspace__thread')
-        ->toContain('ops-comms-workspace__context')
-        ->toContain('ops-comms-workspace__thread-header')
-        ->toContain('ops-comms-workspace__visit-strip')
-        ->toContain('ops-comms-workspace__composer--idle')
+        ->toContain('id="ops-comms-workspace-live"')
+        ->toContain('id="ops-comms-workspace-list"')
+        ->toContain('id="ops-comms-workspace-thread"')
+        ->toContain('id="ops-comms-workspace-context"')
+        ->toContain('data-comms-thread-identity')
+        ->toContain('data-comms-thread-visit')
+        ->toContain('data-comms-composer-idle')
         ->toContain('Select a conversation')
         ->toContain('Who')
         ->toContain('Current visit')
@@ -114,7 +114,7 @@ test('explicit open still loads the composer without changing queue architecture
         ->assertOk()
         ->assertSee('Dana Wait', false)
         ->assertSee('id="comms-thread-composer"', false)
-        ->assertSee('ops-comms-workspace__visit-strip', false)
+        ->assertSee('data-comms-thread-visit', false)
         ->assertSee('Next', false);
 });
 
@@ -132,8 +132,8 @@ test('empty fragment still returns the same workspace landmarks', function (): v
 
     expect($payload['thread'] ?? '')
         ->toContain('Select a conversation')
-        ->toContain('ops-comms-workspace__visit-strip')
-        ->toContain('ops-comms-workspace__composer--idle')
+        ->toContain('data-comms-thread-visit')
+        ->toContain('data-comms-composer-idle')
         ->and($payload['context'] ?? '')
         ->toContain('Who')
         ->toContain('Current visit')
@@ -158,7 +158,7 @@ test('fragment open returns thread and context without requiring a second queue 
 
     expect($payload['unchanged'] ?? true)->toBeFalse()
         ->and($payload['thread'] ?? '')->toContain('Dana Wait')
-        ->and($payload['thread'] ?? '')->toContain('ops-comms-workspace__visit-strip')
+        ->and($payload['thread'] ?? '')->toContain('data-comms-thread-visit')
         ->and($payload['thread'] ?? '')->toContain('id="comms-thread-composer"')
         ->and($payload['context'] ?? '')->toContain('Who')
         ->and($payload['context'] ?? '')->toContain('Current visit')

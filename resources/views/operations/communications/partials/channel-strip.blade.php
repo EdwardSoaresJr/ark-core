@@ -11,6 +11,22 @@
     ];
 @endphp
 
+@if ($variant === 'tabler')
+<nav class="navbar-nav flex-row flex-nowrap" aria-label="Communications by channel" data-ark-channel-strip>
+    @foreach ($comms_channel_tabs as $tab)
+        <div class="nav-item">
+            <a href="{{ $tab['url'] }}" class="nav-link px-2 text-nowrap">
+                {{ $tab['label'] }}
+                <span @class([
+                    'badge ms-2',
+                    'bg-red text-red-fg' => $tab['count'] > 0,
+                    'bg-secondary-lt' => $tab['count'] === 0,
+                ])>{{ $tab['count'] }}@if ($tab['count'] > 0)<span class="visually-hidden"> need attention</span>@endif</span>
+            </a>
+        </div>
+    @endforeach
+</nav>
+@else
 <section @class([
     'ops-home-band ops-home-band--comms' => $variant === 'band',
     'ops-topbar-comms' => $variant === 'topbar',
@@ -51,3 +67,4 @@
         </div>
     </div>
 </section>
+@endif
