@@ -150,8 +150,8 @@ test('the repair order workspace modal is a Tabler modal with every authoring pa
     $host = panelsTablerOne($xpath, '//*[@id="workspace-modal-host"]');
 
     expect($host->getAttribute('x-data'))->toContain('arkWorkspaceModal(')
-        ->and($host->getAttribute('@keydown.escape.window'))->toBe('onEscape()')
-        ->and($host->getAttribute('@keydown.tab'))->toBe('trapFocus($event)')
+        ->and($html)->toContain('@keydown.escape.window="onEscape()"')
+        ->and($html)->toContain('@keydown.tab="trapFocus($event)"')
         ->and(panelsTablerLegacyClasses($host))->toBe([])
         ->and($xpath->query('.//*[contains(@class, "modal-dialog")][@x-ref="dialog"]', $host)->length)->toBe(1)
         ->and($xpath->query('.//*[@id="workspace-modal-body"][contains(@class, "modal-body")]', $host)->length)->toBe(1)
@@ -201,7 +201,7 @@ test('the repair order workspace modal is a Tabler modal with every authoring pa
     expect($xpath->query('.//*[@x-data][contains(@x-data, "arkVehicleDecode(")]//input[@name="vin"][contains(@class, "form-control")]', $vehicleForm)->length)->toBe(1);
 
     $lineCreate = panelsTablerOne($xpath, './/form[@data-workspace-modal-form="line-create"][@id="workspace-line-create-concern-'.$concern->id.'"]', $host);
-    expect($lineCreate->getAttribute('@submit.prevent'))->toBe('submitLine($event)')
+    expect($html)->toContain('@submit.prevent="submitLine($event)"')
         ->and($lineCreate->getAttribute('data-refresh-scope'))->toBe('worksheet')
         ->and($xpath->query('.//input[@type="hidden"][@name="'.RepairOrderConcurrency::FIELD.'"]', $lineCreate)->length)->toBe(1)
         ->and($xpath->query('.//input[@type="hidden"][@name="repair_order_concern_id"][@value="'.$concern->id.'"]', $lineCreate)->length)->toBe(1);
@@ -234,7 +234,7 @@ test('the estimate context panels render Tabler authorization, portal, and parts
         ->and($xpath->query('.//*[contains(@class, "card-header")]//*[normalize-space()="Customer Authorization"]', $auth)->length)->toBe(1)
         ->and($record->getAttribute('data-refresh-scope'))->toBe('auth')
         ->and($record->getAttribute('data-continuity-focus'))->toBe("#financial-rail button[type='submit']")
-        ->and($record->getAttribute('@submit.prevent'))->toBe('window.arkWorksheetFormSubmit($event)')
+        ->and($html)->toContain('@submit.prevent="window.arkWorksheetFormSubmit($event)"')
         ->and($xpath->query('.//input[@type="hidden"][@name="'.RepairOrderConcurrency::FIELD.'"]', $record)->length)->toBe(1)
         ->and($recordFields)->toBe(['source', 'approved_by', 'approved_amount', 'notes'])
         ->and($xpath->query('.//select[@name="source"][contains(@class, "form-select")]', $record)->length)->toBe(1)
@@ -269,7 +269,8 @@ test('the authorization history keeps the revoke form on Tabler markup', functio
         ->assertRedirect();
 
     $approval = $repairOrder->approvalEvents()->latest('id')->firstOrFail();
-    $xpath = panelsTablerXpath($this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent());
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $xpath = panelsTablerXpath($html);
     $auth = panelsTablerOne($xpath, '//*[@id="authorization-rail-panel"]');
     $revoke = panelsTablerOne($xpath, './/*[@data-authorization-revoke]//form[@action="'.route('operations.repair-orders.authorization.revoke', [$repairOrder, $approval]).'"]', $auth);
     $revokeFields = [];
@@ -279,7 +280,7 @@ test('the authorization history keeps the revoke form on Tabler markup', functio
 
     expect(panelsTablerLegacyClasses($auth))->toBe([])
         ->and($revoke->getAttribute('data-refresh-scope'))->toBe('auth')
-        ->and($revoke->getAttribute('@submit.prevent'))->toBe('window.arkWorksheetFormSubmit($event)')
+        ->and($html)->toContain('@submit.prevent="window.arkWorksheetFormSubmit($event)"')
         ->and(array_values(array_unique($revokeFields)))->toBe(['concern_ids[]', 'revert_disposition', 'source', 'revoked_by', 'notes'])
         ->and($xpath->query('.//input[@name="concern_ids[]"][contains(@class, "form-check-input")][@checked]', $revoke)->length)->toBeGreaterThan(0);
 });
@@ -300,7 +301,7 @@ test('the work exception dialog is a Tabler modal with the same record form', fu
         ->and($xpath->query('.//*[contains(@class, "modal")][@role="dialog"][@aria-modal="true"]', $dialog)->length)->toBe(1)
         ->and($xpath->query('.//*[contains(@class, "modal-content")][@x-ref="dialog"][@tabindex="-1"]', $dialog)->length)->toBe(1)
         ->and($form->getAttribute('action'))->toBe(route('operations.repair-orders.concerns.authorization-exceptions.store', [$repairOrder, $concern]))
-        ->and($form->getAttribute('@submit'))->toBe('submitRecord($event)')
+        ->and($html)->toContain('@submit="submitRecord($event)"')
         ->and($xpath->query('.//input[@type="hidden"][@name="authorization_exception_concern_id"][@value="'.$concern->id.'"]', $form)->length)->toBe(1)
         ->and($xpath->query('.//select[@name="reason"][contains(@class, "form-select")]', $form)->length)->toBe(1)
         ->and($xpath->query('.//input[@name="line_ids[]"][@value="'.$part->id.'"]', $form)->length)->toBe(1)
@@ -357,7 +358,7 @@ test('the dealer quote capture and linked quote dialogs are Tabler modals', func
         ->and($dealer->getAttribute('x-data'))->toContain('arkDealerQuoteCapture(')
         ->and($xpath->query('.//*[contains(@class, "modal-dialog")]', $dealer)->length)->toBe(1)
         ->and($dealerForm->getAttribute(':action'))->toBe('importUrl')
-        ->and($dealerForm->getAttribute('@submit'))->toBe('beforeSubmit($event)')
+        ->and($html)->toContain('@submit="beforeSubmit($event)"')
         ->and($xpath->query('.//input[@type="hidden"][@name="'.RepairOrderConcurrency::FIELD.'"]', $dealerForm)->length)->toBe(1)
         ->and($xpath->query('.//*[contains(@class, "table-responsive")]//table[contains(@class, "table")]', $dealerForm)->length)->toBe(1);
 
@@ -385,7 +386,7 @@ test('the PartsTech import panel renders Tabler markup with the same import form
 
     expect(panelsTablerLegacyClasses($panel))->toBe([])
         ->and($panel->getAttribute('x-data'))->toContain('arkPartsTechQuoteImport(')
-        ->and($panel->getAttribute('@ark:partstech-pull-quote.window'))->toBe('loadQuote(false, $event.detail?.concernId)')
+        ->and($html)->toContain('@ark:partstech-pull-quote.window="loadQuote(false, $event.detail?.concernId)"')
         ->and($html)->toContain(':action="importUrl" @submit="beforeSubmit($event)"')
         ->and($xpath->query('.//button[@id="partstech-import-submit-btn"][@type="submit"][contains(@class, "btn-primary")]', $panel)->length)->toBe(1);
 });
