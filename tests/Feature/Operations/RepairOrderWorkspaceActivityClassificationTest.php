@@ -54,7 +54,7 @@ test('comms tab owns estimate sends and estimate views while portal tab shows po
         ->assertOk()
         ->assertDontSee('Estimate activity', false)
         ->assertSee('Customer opened the estimate portal link.', false)
-        ->assertSee('ops-comms-workspace__bubble', false)
+        ->assertSee('data-comms-bubble=', false)
         ->assertSee('Conversation', false);
 
     $this->actingAs($advisor)

@@ -124,10 +124,7 @@
                 @elseif (is_array($event) && filled($event['call_session_id'] ?? null))
                     @include('operations.communications.workspace.partials.call-event-card', ['event' => $event])
                 @elseif ($event instanceof \App\Ark\Operations\Timeline\OperationalEventEntry)
-                    {{-- operations.timeline.partials.event-bubble belongs to another workstream and stays legacy. --}}
-                    <div class="ark-legacy bg-white text-dark rounded">
-                        @include('operations.timeline.partials.event-bubble', ['event' => $event])
-                    </div>
+                    @include('operations.timeline.partials.event-bubble', ['event' => $event])
                 @else
                     @php
                         $direction = $event['direction'] ?? 'inbound';
