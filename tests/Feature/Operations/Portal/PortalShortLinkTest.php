@@ -15,6 +15,27 @@ test('portal short link redirects to destination', function () {
         ->assertRedirect($destination);
 });
 
+test('a short link stored on a former host opens the portal on the current host', function () {
+    $token = str_repeat('g', 64);
+    $current = route('portal.estimates.show', ['token' => $token]);
+    $path = (string) parse_url($current, PHP_URL_PATH);
+
+    foreach (['https://lugsnplugs.com', 'https://portal.former-shop.example'] as $i => $formerHost) {
+        PortalShortLink::query()->create(['code' => 'formerhost'.$i, 'destination_url' => $formerHost.$path.'?ref=sms']);
+
+        $this->get(route('portal.short.redirect', ['code' => 'formerhost'.$i]))
+            ->assertRedirect($current.'?ref=sms');
+    }
+});
+
+test('a short link to anything other than a portal page is followed as stored', function () {
+    foreach (['https://example.com/reviews' => 'otherhost0', 'https://lugsnplugs.com/app/login' => 'otherhost1', 'https://lugsnplugs.com/go/abc' => 'otherhost2'] as $destination => $code) {
+        PortalShortLink::query()->create(['code' => $code, 'destination_url' => $destination]);
+
+        $this->get(route('portal.short.redirect', ['code' => $code]))->assertRedirect($destination);
+    }
+});
+
 test('portal short link reuses active destination', function () {
     $destination = route('portal.estimates.show', ['token' => str_repeat('b', 64)]);
     $action = app(CreatePortalShortLinkAction::class);
