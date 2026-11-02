@@ -18,7 +18,7 @@
 @endphp
 
 <div
-    class="space-y-3"
+    class="d-flex flex-column gap-3"
     x-data="{
         rows: @js($editorRows),
         add() {
@@ -32,8 +32,8 @@
     <input type="hidden" name="quick_reply_templates_present" value="1">
 
     <div>
-        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Canned responses</p>
-        <p class="mt-1 text-xs leading-5 text-slate-500">
+        <div class="subheader">Canned responses</div>
+        <p class="text-secondary small mb-0">
             Each block is one reply. The name is the chip. Color is how that chip looks in the composer.
         </p>
     </div>
@@ -45,67 +45,71 @@
             ->first();
     @endphp
     @if (is_string($quickReplyError) && $quickReplyError !== '')
-        <p class="rounded-sm border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-900">{{ $quickReplyError }}</p>
+        <p class="alert alert-danger small mb-0">{{ $quickReplyError }}</p>
     @endif
 
-    <div class="space-y-3">
+    <div class="d-flex flex-column gap-3">
         <template x-for="(row, index) in rows" :key="row.id">
-            <article class="overflow-hidden rounded-sm border border-slate-300 bg-white">
-                <header class="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="min-w-0 truncate text-sm font-semibold text-slate-950" x-text="row.label || 'New response'"></p>
+            <article class="card card-sm">
+                <header class="card-header d-flex align-items-center justify-content-between gap-3">
+                    <h4 class="mb-0 text-truncate" style="min-width: 0" x-text="row.label || 'New response'"></h4>
                     <button
                         type="button"
                         @click="remove(row.id)"
-                        class="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-rose-50 hover:text-rose-700"
+                        class="btn btn-sm btn-ghost-danger flex-shrink-0"
                     >
                         Delete
                     </button>
                 </header>
-                <div class="grid gap-3 p-3 sm:grid-cols-[1fr_11rem]">
-                    <label class="block">
-                        <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Label</span>
-                        <input
-                            type="text"
-                            :name="`quick_reply_templates[${index}][label]`"
-                            x-model="row.label"
-                            maxlength="40"
-                            required
-                            class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
-                        >
-                    </label>
-                    <label class="block">
-                        <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Chip color</span>
-                        <select
-                            :name="`quick_reply_templates[${index}][color]`"
-                            x-model="row.color"
-                            class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
-                        >
-                            @foreach ($accentOptions as $option)
-                                <option value="{{ $option['key'] }}">{{ $option['label'] }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <label class="block sm:col-span-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Message</span>
-                        <textarea
-                            :name="`quick_reply_templates[${index}][body]`"
-                            x-model="row.body"
-                            rows="2"
-                            maxlength="1600"
-                            required
-                            class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950"
-                        ></textarea>
-                    </label>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <label class="col-12 col-sm-8">
+                            <span class="form-label">Label</span>
+                            <input
+                                type="text"
+                                :name="`quick_reply_templates[${index}][label]`"
+                                x-model="row.label"
+                                maxlength="40"
+                                required
+                                class="form-control"
+                            >
+                        </label>
+                        <label class="col-12 col-sm-4">
+                            <span class="form-label">Chip color</span>
+                            <select
+                                :name="`quick_reply_templates[${index}][color]`"
+                                x-model="row.color"
+                                class="form-select"
+                            >
+                                @foreach ($accentOptions as $option)
+                                    <option value="{{ $option['key'] }}">{{ $option['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="col-12">
+                            <span class="form-label">Message</span>
+                            <textarea
+                                :name="`quick_reply_templates[${index}][body]`"
+                                x-model="row.body"
+                                rows="2"
+                                maxlength="1600"
+                                required
+                                class="form-control"
+                            ></textarea>
+                        </label>
+                    </div>
                 </div>
             </article>
         </template>
     </div>
 
-    <button
-        type="button"
-        @click="add()"
-        class="min-h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-950"
-    >
-        Add response
-    </button>
+    <div>
+        <button
+            type="button"
+            @click="add()"
+            class="btn"
+        >
+            Add response
+        </button>
+    </div>
 </div>

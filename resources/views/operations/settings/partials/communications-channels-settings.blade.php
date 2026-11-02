@@ -6,55 +6,57 @@
     $shopConnection = $channelConnection->shopConnection();
     $statusTone = $channelConnection->statusTone();
     $webhookToneClasses = [
-        'success' => 'border-emerald-200 bg-emerald-50 text-emerald-900',
-        'warning' => 'border-amber-200 bg-amber-50 text-amber-900',
-        'danger' => 'border-rose-200 bg-rose-50 text-rose-900',
-        'muted' => 'border-slate-200 bg-slate-50 text-slate-700',
+        'success' => 'alert-success',
+        'warning' => 'alert-warning',
+        'danger' => 'alert-danger',
+        'muted' => 'alert-secondary',
     ];
 @endphp
 
 <form
     method="POST"
     action="{{ route('operations.settings.shop.telephony.update') }}"
-    class="space-y-3"
+    class="d-flex flex-column gap-3"
 >
     @csrf
     @method('PATCH')
     <input type="hidden" name="communications_tab" value="messenger">
 
-    <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
-        <div class="border-b border-slate-200 pb-3">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Facebook Messenger</p>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
+    <div class="border rounded p-3 d-flex flex-column gap-3">
+        <div class="border-bottom pb-3">
+            <div class="subheader">Facebook Messenger</div>
+            <p class="text-secondary small mb-0">
                 Messenger appears as a conversation channel in ARK. Outbound and inbound transport is not bundled in Core.
             </p>
         </div>
 
-        <div class="rounded-sm border px-3 py-2.5 {{ $webhookToneClasses[$statusTone] ?? $webhookToneClasses['muted'] }}">
-            <p class="text-xs font-bold uppercase tracking-wide">Messenger</p>
-            <p class="mt-1 text-sm font-semibold">{{ $channelConnection->statusLabel() }}</p>
-            <p class="mt-2 text-[11px] font-medium leading-5 text-slate-700">
+        <div class="alert mb-0 {{ $webhookToneClasses[$statusTone] ?? $webhookToneClasses['muted'] }}">
+            <p class="small fw-bold text-uppercase mb-1">Messenger</p>
+            <p class="fw-semibold mb-2">{{ $channelConnection->statusLabel() }}</p>
+            <p class="small text-secondary mb-0">
                 Messenger outbound is not configured. Historical Messenger conversations remain readable when linked to customers.
             </p>
         </div>
 
-        <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <label class="form-check mb-0">
             <input
                 type="checkbox"
                 name="channels[messenger][enabled]"
                 value="1"
-                class="rounded border-slate-300 text-slate-900"
+                class="form-check-input"
                 @checked(old('channels.messenger.enabled', $shopConnection->isEnabled()))
             >
-            Show Messenger in inbound queue filters
-            <span class="text-[11px] font-normal text-slate-500">- display only; transport is not active</span>
+            <span class="form-check-label">
+                Show Messenger in inbound queue filters
+                <span class="small text-secondary">- display only; transport is not active</span>
+            </span>
         </label>
 
-        <label class="block text-xs font-semibold text-slate-600">
-            Default outside-window message tag
+        <label class="d-block">
+            <span class="form-label">Default outside-window message tag</span>
             <select
                 name="channels[messenger][outside_window_tag]"
-                class="mt-1 h-9 w-full rounded-sm border-slate-300 text-sm"
+                class="form-select"
             >
                 <option value="">None</option>
                 @foreach (MetaMessengerMessageTag::cases() as $tag)
@@ -64,18 +66,18 @@
                     >{{ $tag->label() }}</option>
                 @endforeach
             </select>
-            <span class="mt-1 block text-[11px] font-normal leading-4 text-slate-500">
+            <span class="form-hint">
                 Reserved for future Messenger transport configuration.
             </span>
         </label>
     </div>
 
-    <div class="flex flex-wrap items-center justify-between gap-2">
-        <p class="text-[11px] text-slate-500">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <p class="small text-secondary mb-0">
             Health check:
-            <x-operations.learn.guide-link role="admin" article="comms-health-check" label="Communications health check" class="font-semibold text-slate-700" />
+            <x-operations.learn.guide-link role="admin" article="comms-health-check" label="Communications health check" class="btn btn-link p-0 align-baseline small" />
         </p>
-        <button type="submit" class="h-9 rounded-sm bg-slate-950 px-4 text-xs font-bold uppercase tracking-wide text-white">
+        <button type="submit" class="btn btn-primary">
             Save channel settings
         </button>
     </div>
