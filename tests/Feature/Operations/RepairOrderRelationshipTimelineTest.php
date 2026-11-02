@@ -217,7 +217,7 @@ test('ro comms tab uses event-bubble and conversation message history for reply 
     $this->actingAs($advisor)
         ->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $roA, 'tab' => 'comms']))
         ->assertOk()
-        ->assertSee('ops-comms-workspace__bubble', false)
+        ->assertSee('data-comms-bubble=', false)
         ->assertSee('data-timeline-refresh="comms-tab"', false)
         ->assertDontSee('Estimate activity', false)
         ->assertDontSee('Communications timeline', false)

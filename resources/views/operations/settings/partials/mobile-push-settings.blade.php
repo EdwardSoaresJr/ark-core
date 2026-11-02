@@ -12,10 +12,10 @@
     $clientWebhookRows = $telephonyHealth->mobileVoiceClientWebhookRows();
 
     $toneClasses = [
-        'success' => 'border-emerald-200 bg-emerald-50 text-emerald-900',
-        'warning' => 'border-amber-200 bg-amber-50 text-amber-900',
-        'danger' => 'border-rose-200 bg-rose-50 text-rose-900',
-        'muted' => 'border-slate-200 bg-slate-50 text-slate-700',
+        'success' => 'alert alert-success',
+        'warning' => 'alert alert-warning',
+        'danger' => 'alert alert-danger',
+        'muted' => 'alert alert-secondary',
     ];
 
     $pushTone = $mobilePush->isOperational() ? 'success' : ($mobilePush->enabled ? 'warning' : 'muted');
@@ -26,202 +26,228 @@
 <form
     method="POST"
     action="{{ route('operations.settings.shop.telephony.update') }}"
-    class="space-y-3"
+    class="d-flex flex-column gap-3"
 >
     @csrf
     @method('PATCH')
     <input type="hidden" name="communications_tab" value="mobile">
 
-    <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
-        <div class="border-b border-slate-200 pb-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">ARK Mobile</p>
-            <h3 class="mt-1 text-sm font-black text-slate-950">Staff app voice and push</h3>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
+    <div class="border rounded p-3 d-flex flex-column gap-3">
+        <div class="border-bottom pb-2">
+            <div class="subheader">ARK Mobile</div>
+            <h4 class="mb-1">Staff app voice and push</h4>
+            <p class="text-secondary small mb-0">
                 Registered devices appear when staff log into the ARK Staff app. Voice extensions and ring targets are provisioned automatically - not edited here.
             </p>
         </div>
 
-        <div class="grid gap-2 sm:grid-cols-2">
-            <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$voiceTone] ?? $toneClasses['muted'] }}">
-                <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">ARK Phone</p>
-                <p class="mt-1 text-sm font-black">
-                    @if ($platformVoiceManaged)
-                        Managed in ARK Cloud
-                    @else
-                        {{ $arkVoiceConfigured ? 'Ready' : 'Not ready' }}
-                    @endif
-                </p>
-                <p class="mt-1 text-[11px] leading-4 opacity-80">
-                    @if ($platformVoiceManaged)
-                        Inbound Voice and phone credentials are configured under Phone settings in ARK Cloud. Device list and push below remain shop operational tooling.
-                    @elseif ($arkVoiceConfigured)
-                        Twilio Client is configured. In-app calls use the Companion call screen.
-                    @else
-                        Save Twilio Voice API Key + TwiML App below, or run <span class="font-mono">php artisan ark:telephony:ensure-mobile-voice</span> on the server.
-                    @endif
-                </p>
+        <div class="row g-2">
+            <div class="col-12 col-md-6">
+                <div class="{{ $toneClasses[$voiceTone] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                    <div class="subheader">ARK Phone</div>
+                    <div class="fw-bold">
+                        @if ($platformVoiceManaged)
+                            Managed in ARK Cloud
+                        @else
+                            {{ $arkVoiceConfigured ? 'Ready' : 'Not ready' }}
+                        @endif
+                    </div>
+                    <div class="mt-1">
+                        @if ($platformVoiceManaged)
+                            Inbound Voice and phone credentials are configured under Phone settings in ARK Cloud. Device list and push below remain shop operational tooling.
+                        @elseif ($arkVoiceConfigured)
+                            Twilio Client is configured. In-app calls use the Companion call screen.
+                        @else
+                            Save Twilio Voice API Key + TwiML App below, or run <span class="font-monospace">php artisan ark:telephony:ensure-mobile-voice</span> on the server.
+                        @endif
+                    </div>
+                </div>
             </div>
-            <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$pushTone] ?? $toneClasses['muted'] }}">
-                <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">Push notifications</p>
-                <p class="mt-1 text-sm font-black">
-                    @if ($mobilePush->isOperational())
-                        Operational
-                    @elseif ($mobilePush->enabled)
-                        Enabled - server credentials missing
-                    @else
-                        Disabled for this shop
-                    @endif
-                </p>
-                <p class="mt-1 text-[11px] leading-4 opacity-80">{{ $mobilePush->transportSummary() }}</p>
+            <div class="col-12 col-md-6">
+                <div class="{{ $toneClasses[$pushTone] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                    <div class="subheader">Push notifications</div>
+                    <div class="fw-bold">
+                        @if ($mobilePush->isOperational())
+                            Operational
+                        @elseif ($mobilePush->enabled)
+                            Enabled - server credentials missing
+                        @else
+                            Disabled for this shop
+                        @endif
+                    </div>
+                    <div class="mt-1">{{ $mobilePush->transportSummary() }}</div>
+                </div>
             </div>
         </div>
 
         @if ($mobileDeviceRows === [])
-            <p class="rounded-sm border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-slate-600">
+            <p class="alert alert-secondary small py-2 mb-0">
                 No registered mobile devices yet. Staff must log into the ARK Staff app on a phone or tablet.
             </p>
         @else
-            <div class="overflow-x-auto rounded-sm border border-slate-200 bg-white">
-                <div class="min-w-[48rem]">
-                    <div class="grid grid-cols-[1.2fr_1fr_5rem_5rem_6rem_5rem_6rem] gap-x-2 border-b border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                        <span>Advisor · device</span>
-                        <span>Platform</span>
-                        <span>Ext</span>
-                        <span>Voice</span>
-                        <span>Push token</span>
-                        <span>Version</span>
-                        <span>Last seen</span>
-                    </div>
-                    @foreach ($mobileDeviceRows as $row)
-                        <div class="grid grid-cols-[1.2fr_1fr_5rem_5rem_6rem_5rem_6rem] items-center gap-x-2 border-b border-slate-100 px-2 py-1.5 text-xs last:border-b-0">
-                            <div class="min-w-0">
-                                <p class="truncate font-semibold text-slate-900">{{ $row->advisorName }}</p>
-                                <p class="truncate text-[11px] text-slate-500">{{ $row->deviceName }}</p>
-                            </div>
-                            <span class="truncate text-slate-700">{{ $row->platform }}</span>
-                            <span class="font-mono text-[11px] text-slate-800">{{ $row->extension ?? '-' }}</span>
-                            <span @class([
-                                'text-[11px] font-semibold',
-                                'text-emerald-700' => $row->voiceLive,
-                                'text-slate-500' => ! $row->voiceLive && $row->voiceEnabled,
-                                'text-slate-400' => ! $row->voiceEnabled,
-                            ])>
-                                @if ($row->voiceLive)
-                                    Live
-                                @elseif ($row->voiceEnabled)
-                                    Offline
-                                @else
-                                    Pending
-                                @endif
-                            </span>
-                            <span class="text-[11px] font-semibold {{ $row->pushTokenRegistered ? 'text-emerald-700' : 'text-slate-400' }}">
-                                {{ $row->pushTokenRegistered ? 'Yes' : 'No' }}
-                            </span>
-                            <span class="truncate font-mono text-[10px] text-slate-600">{{ $row->appVersion ?? '-' }}</span>
-                            <span class="truncate text-[11px] text-slate-500">{{ $row->lastSeenLabel ?? 'Never' }}</span>
-                        </div>
-                    @endforeach
+            <div class="card card-sm">
+                <div class="table-responsive">
+                    <table class="table table-sm table-vcenter card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Advisor · device</th>
+                                <th>Platform</th>
+                                <th>Ext</th>
+                                <th>Voice</th>
+                                <th>Push token</th>
+                                <th>Version</th>
+                                <th>Last seen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($mobileDeviceRows as $row)
+                                <tr class="small">
+                                    <td>
+                                        <div class="fw-semibold text-truncate">{{ $row->advisorName }}</div>
+                                        <div class="text-secondary text-truncate">{{ $row->deviceName }}</div>
+                                    </td>
+                                    <td class="text-truncate">{{ $row->platform }}</td>
+                                    <td class="font-monospace">{{ $row->extension ?? '-' }}</td>
+                                    <td @class([
+                                        'fw-semibold',
+                                        'text-success' => $row->voiceLive,
+                                        'text-secondary' => ! $row->voiceLive && $row->voiceEnabled,
+                                        'text-muted' => ! $row->voiceEnabled,
+                                    ])>
+                                        @if ($row->voiceLive)
+                                            Live
+                                        @elseif ($row->voiceEnabled)
+                                            Offline
+                                        @else
+                                            Pending
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold {{ $row->pushTokenRegistered ? 'text-success' : 'text-muted' }}">
+                                        {{ $row->pushTokenRegistered ? 'Yes' : 'No' }}
+                                    </td>
+                                    <td class="font-monospace text-secondary text-truncate">{{ $row->appVersion ?? '-' }}</td>
+                                    <td class="text-secondary text-truncate">{{ $row->lastSeenLabel ?? 'Never' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <p class="text-[11px] leading-4 text-slate-500">
-                Voice <span class="font-semibold">Live</span> means the app checked in within the last {{ \App\Ark\Operations\Telephony\MobileVoice\MobileVoiceEndpointRegistrar::COVERAGE_PRESENCE_MINUTES }} minutes with an enabled mobile ring target.
+            <p class="small text-secondary mb-0">
+                Voice <span class="fw-semibold">Live</span> means the app checked in within the last {{ \App\Ark\Operations\Telephony\MobileVoice\MobileVoiceEndpointRegistrar::COVERAGE_PRESENCE_MINUTES }} minutes with an enabled mobile ring target.
                 Extensions in the 8100 range are assigned automatically per device.
             </p>
         @endif
     </div>
 
     @if (! $platformVoiceManaged)
-    <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
-        <div class="border-b border-slate-200 pb-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Twilio Client</p>
-            <h3 class="mt-1 text-sm font-black text-slate-950">In-app calling credentials</h3>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
+    <div class="border rounded p-3 d-flex flex-column gap-3">
+        <div class="border-bottom pb-2">
+            <div class="subheader">Twilio Client</div>
+            <h4 class="mb-1">In-app calling credentials</h4>
+            <p class="text-secondary small mb-0">
                 Required for ARK Phone / Companion in-app voice after Twilio-native transport. Secrets are encrypted - leave blank to keep the current value.
             </p>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
-            <label class="block">
-                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Voice API Key SID</span>
-                <input
-                    type="text"
-                    name="twilio_api_key_sid"
-                    value="{{ old('twilio_api_key_sid', $settings->twilio_api_key_sid) }}"
-                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="SK…"
-                    autocomplete="off"
-                >
-            </label>
-            <label class="block">
-                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Voice API Key secret</span>
-                <input
-                    type="password"
-                    name="twilio_api_key_secret"
-                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="{{ $hasStoredApiKeySecret ? 'Saved - leave blank to keep' : 'Shown once when created' }}"
-                    autocomplete="new-password"
-                >
-            </label>
-            <label class="block">
-                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Voice TwiML App SID</span>
-                <input
-                    type="text"
-                    name="twilio_voice_twiml_app_sid"
-                    value="{{ old('twilio_voice_twiml_app_sid', $settings->twilio_voice_twiml_app_sid) }}"
-                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="AP…"
-                    autocomplete="off"
-                >
-            </label>
-            <label class="block">
-                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Twilio FCM credential SID</span>
-                <input
-                    type="text"
-                    name="twilio_fcm_credential_sid"
-                    value="{{ old('twilio_fcm_credential_sid', $settings->twilio_fcm_credential_sid) }}"
-                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="CR…"
-                    autocomplete="off"
-                >
-                <span class="mt-1 block text-[11px] leading-4 text-slate-500">Android inbound wake via Twilio Voice SDK. Auto-provisioned when Firebase service account is on the server.</span>
-            </label>
-            <label class="block">
-                <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Twilio iOS VoIP push credential SID</span>
-                <input
-                    type="text"
-                    name="twilio_apns_voip_credential_sid"
-                    value="{{ old('twilio_apns_voip_credential_sid', $settings->twilio_apns_voip_credential_sid) }}"
-                    class="mt-1 h-9 w-full rounded-sm border-slate-300 font-mono text-sm text-slate-800"
-                    placeholder="CR…"
-                    autocomplete="off"
-                >
-                <span class="mt-1 block text-[11px] leading-4 text-slate-500">iPhone locked-screen wake via PushKit. Apple: VoIP Services Certificate → export .p12 → cert.pem + key.pem. Twilio: Push Credentials → Type APN → Sandbox on for Debug → paste only the CR… SID here. Never paste .p12, PEM, or private key into ARK. Use a separate non-sandbox credential for TestFlight/Release.</span>
-            </label>
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="d-block">
+                    <span class="form-label">Voice API Key SID</span>
+                    <input
+                        type="text"
+                        name="twilio_api_key_sid"
+                        value="{{ old('twilio_api_key_sid', $settings->twilio_api_key_sid) }}"
+                        class="form-control font-monospace"
+                        placeholder="SK…"
+                        autocomplete="off"
+                    >
+                </label>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="d-block">
+                    <span class="form-label">Voice API Key secret</span>
+                    <input
+                        type="password"
+                        name="twilio_api_key_secret"
+                        class="form-control font-monospace"
+                        placeholder="{{ $hasStoredApiKeySecret ? 'Saved - leave blank to keep' : 'Shown once when created' }}"
+                        autocomplete="new-password"
+                    >
+                </label>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="d-block">
+                    <span class="form-label">Voice TwiML App SID</span>
+                    <input
+                        type="text"
+                        name="twilio_voice_twiml_app_sid"
+                        value="{{ old('twilio_voice_twiml_app_sid', $settings->twilio_voice_twiml_app_sid) }}"
+                        class="form-control font-monospace"
+                        placeholder="AP…"
+                        autocomplete="off"
+                    >
+                </label>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="d-block">
+                    <span class="form-label">Twilio FCM credential SID</span>
+                    <input
+                        type="text"
+                        name="twilio_fcm_credential_sid"
+                        value="{{ old('twilio_fcm_credential_sid', $settings->twilio_fcm_credential_sid) }}"
+                        class="form-control font-monospace"
+                        placeholder="CR…"
+                        autocomplete="off"
+                    >
+                    <span class="form-hint d-block">Android inbound wake via Twilio Voice SDK. Auto-provisioned when Firebase service account is on the server.</span>
+                </label>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="d-block">
+                    <span class="form-label">Twilio iOS VoIP push credential SID</span>
+                    <input
+                        type="text"
+                        name="twilio_apns_voip_credential_sid"
+                        value="{{ old('twilio_apns_voip_credential_sid', $settings->twilio_apns_voip_credential_sid) }}"
+                        class="form-control font-monospace"
+                        placeholder="CR…"
+                        autocomplete="off"
+                    >
+                    <span class="form-hint d-block">iPhone locked-screen wake via PushKit. Apple: VoIP Services Certificate → export .p12 → cert.pem + key.pem. Twilio: Push Credentials → Type APN → Sandbox on for Debug → paste only the CR… SID here. Never paste .p12, PEM, or private key into ARK. Use a separate non-sandbox credential for TestFlight/Release.</span>
+                </label>
+            </div>
         </div>
 
-        <div class="grid gap-2 sm:grid-cols-3">
-            <div class="rounded-sm border border-slate-200 bg-white px-2.5 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">TwiML App SID</p>
-                <p class="mt-0.5 text-xs font-semibold {{ $telephonyHealth->mobileVoiceTwimlAppPresent() ? 'text-emerald-700' : 'text-amber-700' }}">
-                    {{ $telephonyHealth->mobileVoiceTwimlAppPresent() ? 'Present' : 'Missing' }}
-                </p>
+        <div class="row g-2">
+            <div class="col-12 col-md-4">
+                <div class="border rounded px-3 py-2 h-100">
+                    <div class="subheader">TwiML App SID</div>
+                    <div class="small fw-semibold {{ $telephonyHealth->mobileVoiceTwimlAppPresent() ? 'text-success' : 'text-warning' }}">
+                        {{ $telephonyHealth->mobileVoiceTwimlAppPresent() ? 'Present' : 'Missing' }}
+                    </div>
+                </div>
             </div>
-            <div class="rounded-sm border border-slate-200 bg-white px-2.5 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">iOS VoIP push SID</p>
-                <p class="mt-0.5 text-xs font-semibold {{ $telephonyHealth->mobileVoiceIosVoipPushCredentialPresent() ? 'text-emerald-700' : 'text-amber-700' }}">
-                    {{ $telephonyHealth->mobileVoiceIosVoipPushCredentialPresent() ? 'Present' : 'Missing' }}
-                </p>
+            <div class="col-12 col-md-4">
+                <div class="border rounded px-3 py-2 h-100">
+                    <div class="subheader">iOS VoIP push SID</div>
+                    <div class="small fw-semibold {{ $telephonyHealth->mobileVoiceIosVoipPushCredentialPresent() ? 'text-success' : 'text-warning' }}">
+                        {{ $telephonyHealth->mobileVoiceIosVoipPushCredentialPresent() ? 'Present' : 'Missing' }}
+                    </div>
+                </div>
             </div>
-            <div class="rounded-sm border border-slate-200 bg-white px-2.5 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Client inbound</p>
-                <p class="mt-0.5 text-xs font-semibold {{ $telephonyHealth->mobileVoiceClientInboundEnabled() ? 'text-emerald-700' : 'text-amber-700' }}">
-                    {{ $telephonyHealth->mobileVoiceClientInboundEnabled() ? 'Enabled' : 'Blocked' }}
-                </p>
+            <div class="col-12 col-md-4">
+                <div class="border rounded px-3 py-2 h-100">
+                    <div class="subheader">Client inbound</div>
+                    <div class="small fw-semibold {{ $telephonyHealth->mobileVoiceClientInboundEnabled() ? 'text-success' : 'text-warning' }}">
+                        {{ $telephonyHealth->mobileVoiceClientInboundEnabled() ? 'Enabled' : 'Blocked' }}
+                    </div>
+                </div>
             </div>
         </div>
 
         <div
-            class="divide-y divide-slate-200 rounded-sm border border-slate-200 bg-white"
+            class="list-group"
             x-data="{
                 copiedLabel: null,
                 async copyUrl(url, label) {
@@ -240,22 +266,24 @@
                 },
             }"
         >
-            <p class="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">TwiML App webhooks</p>
+            <div class="list-group-item py-2">
+                <div class="subheader">TwiML App webhooks</div>
+            </div>
             @foreach ($clientWebhookRows as $webhook)
                 <button
                     type="button"
                     @click="copyUrl(@js($webhook['url']), @js($webhook['label']))"
-                    class="flex w-full items-center gap-2 px-2 py-1.5 text-left transition hover:bg-slate-50"
+                    class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 text-start"
                     title="{{ $webhook['hint'] }} - click to copy"
                 >
-                    <span class="w-28 shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ $webhook['label'] }}</span>
-                    <span class="min-w-0 flex-1 truncate font-mono text-[11px] text-slate-700">{{ $webhook['url'] }}</span>
+                    <span class="subheader flex-shrink-0" style="width: 7rem">{{ $webhook['label'] }}</span>
+                    <span class="flex-fill text-truncate font-monospace small" style="min-width: 0">{{ $webhook['url'] }}</span>
                     <span
-                        class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400"
+                        class="subheader flex-shrink-0"
                         x-show="copiedLabel !== @js($webhook['label'])"
                     >Copy</span>
                     <span
-                        class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-emerald-700"
+                        class="subheader flex-shrink-0 text-success"
                         x-show="copiedLabel === @js($webhook['label'])"
                         x-cloak
                     >Copied</span>
@@ -264,58 +292,66 @@
         </div>
     </div>
     @else
-    <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-3 text-xs leading-5 text-slate-600">
-        <p class="font-semibold text-slate-950">In-app calling credentials</p>
-        <p class="mt-1">
+    <div class="border rounded p-3 small text-secondary">
+        <div class="fw-semibold text-body">In-app calling credentials</div>
+        <p class="mt-1 mb-0">
             Twilio Client / TwiML App / VoIP push SIDs for Hosted Voice are managed in ARK Cloud - not edited here.
-            <a href="https://cloud.arksms.com" class="font-semibold underline" target="_blank" rel="noopener">Open ARK Cloud</a>
+            <a href="https://cloud.arksms.com" class="fw-semibold" target="_blank" rel="noopener">Open ARK Cloud</a>
         </p>
     </div>
     @endif
 
-    <div class="space-y-3 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
-        <div class="border-b border-slate-200 pb-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Push</p>
-            <h3 class="mt-1 text-sm font-black text-slate-950">Shop dispatch toggle</h3>
-            <p class="mt-1 text-xs leading-5 text-slate-500">
+    <div class="border rounded p-3 d-flex flex-column gap-3">
+        <div class="border-bottom pb-2">
+            <div class="subheader">Push</div>
+            <h4 class="mb-1">Shop dispatch toggle</h4>
+            <p class="text-secondary small mb-0">
                 Firebase credentials are platform infrastructure - mounted on the server, not configured per shop.
             </p>
         </div>
 
-        <div class="grid gap-2 sm:grid-cols-3">
-            <div class="rounded-sm border border-slate-200 bg-white px-3 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Platform credentials</p>
-                <p class="mt-1 text-sm font-black text-slate-950">{{ $mobilePush->credentialsSourceLabel() }}</p>
+        <div class="row g-2">
+            <div class="col-12 col-md-4">
+                <div class="border rounded px-3 py-2 h-100">
+                    <div class="subheader">Platform credentials</div>
+                    <div class="fw-bold">{{ $mobilePush->credentialsSourceLabel() }}</div>
+                </div>
             </div>
-            <div class="rounded-sm border border-slate-200 bg-white px-3 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Firebase project</p>
-                <p class="mt-1 truncate font-mono text-sm font-black text-slate-950">{{ $resolvedProjectId ?? '-' }}</p>
+            <div class="col-12 col-md-4">
+                <div class="border rounded px-3 py-2 h-100">
+                    <div class="subheader">Firebase project</div>
+                    <div class="fw-bold font-monospace text-truncate">{{ $resolvedProjectId ?? '-' }}</div>
+                </div>
             </div>
-            <div class="rounded-sm border border-slate-200 bg-white px-3 py-2">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Device register API</p>
-                <p class="mt-1 text-sm font-black text-slate-950">
-                    {{ $mobilePush->isOperational() ? 'push_enabled: true' : 'push_enabled: false' }}
-                </p>
+            <div class="col-12 col-md-4">
+                <div class="border rounded px-3 py-2 h-100">
+                    <div class="subheader">Device register API</div>
+                    <div class="fw-bold">
+                        {{ $mobilePush->isOperational() ? 'push_enabled: true' : 'push_enabled: false' }}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <label class="flex items-start gap-2 text-sm text-slate-800">
+        <label class="form-check form-switch mb-0">
             <input type="hidden" name="mobile_push[enabled]" value="0">
             <input
                 type="checkbox"
                 name="mobile_push[enabled]"
                 value="1"
                 @checked($pushEnabled)
-                class="mt-0.5 rounded border-slate-300"
+                class="form-check-input"
             >
-            <span>
-                <span class="font-semibold text-slate-900">Dispatch push for this shop</span>
-                <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">When off, devices still register but ARK does not send push packets for this shop.</span>
+            <span class="form-check-label">
+                <span class="fw-semibold">Dispatch push for this shop</span>
+                <span class="form-hint d-block mt-0">When off, devices still register but ARK does not send push packets for this shop.</span>
             </span>
         </label>
     </div>
 
-    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-sm bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800">
-        Save mobile settings
-    </button>
+    <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">
+            Save mobile settings
+        </button>
+    </div>
 </form>

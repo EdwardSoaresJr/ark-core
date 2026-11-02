@@ -156,7 +156,7 @@ test('history recorded filter shows the recording on file and a customer match f
         ]))
         ->assertOk()
         ->assertSee('Recording on file', false)
-        ->assertSee('ops-comms-workspace__call-media-note', false)
+        ->assertSee('data-comms-call-media-note', false)
         ->assertSee('(719) 555-4343', false)
         ->assertSee('Find customer', false)
         ->assertDontSee('Play recording', false);

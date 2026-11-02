@@ -4,91 +4,111 @@
     /** @var \App\Ark\Operations\Messaging\Messenger\MessengerHealth $messengerHealth */
 @endphp
 
-<div class="space-y-3">
-    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$telephonyHealth->providerTone($messagingHealth->webhookTone())] ?? $toneClasses['muted'] }}">
-            <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">Phone</p>
-            <p class="mt-1 text-sm font-black">{{ $telephonyHealth->providerLabel() }}</p>
+<div class="d-flex flex-column gap-3">
+    <div class="row g-2">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="{{ $toneClasses[$telephonyHealth->providerTone($messagingHealth->webhookTone())] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                <div class="subheader">Phone</div>
+                <div class="fw-bold">{{ $telephonyHealth->providerLabel() }}</div>
+            </div>
         </div>
 
-        <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$telephonyHealth->voiceIngressTone()] ?? $toneClasses['muted'] }}">
-            <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">Connection</p>
-            <p class="mt-1 text-sm font-black">{{ $telephonyHealth->voiceIngressLabel() }}</p>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="{{ $toneClasses[$telephonyHealth->voiceIngressTone()] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                <div class="subheader">Connection</div>
+                <div class="fw-bold">{{ $telephonyHealth->voiceIngressLabel() }}</div>
+            </div>
         </div>
 
-        <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$telephonyHealth->voiceSignalTone()] ?? $toneClasses['muted'] }}">
-            <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">Voice webhook</p>
-            <p class="mt-1 text-sm font-black">{{ $telephonyHealth->voiceSignalLabel() }}</p>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="{{ $toneClasses[$telephonyHealth->voiceSignalTone()] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                <div class="subheader">Voice webhook</div>
+                <div class="fw-bold">{{ $telephonyHealth->voiceSignalLabel() }}</div>
+            </div>
         </div>
 
-        <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$messagingHealth->webhookTone()] ?? $toneClasses['muted'] }}">
-            <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">SMS / MMS webhook</p>
-            <p class="mt-1 text-sm font-black">{{ $messagingHealth->webhookLabel() }}</p>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="{{ $toneClasses[$messagingHealth->webhookTone()] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                <div class="subheader">SMS / MMS webhook</div>
+                <div class="fw-bold">{{ $messagingHealth->webhookLabel() }}</div>
+            </div>
         </div>
 
-        <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$messengerHealth->webhookTone()] ?? $toneClasses['muted'] }}">
-            <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">Messenger webhook</p>
-            <p class="mt-1 text-sm font-black">{{ $messengerHealth->webhookLabel() }}</p>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="{{ $toneClasses[$messengerHealth->webhookTone()] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                <div class="subheader">Messenger webhook</div>
+                <div class="fw-bold">{{ $messengerHealth->webhookLabel() }}</div>
+            </div>
         </div>
 
-        <div class="rounded-sm border px-3 py-2 {{ $toneClasses[$telephonyHealth->reverbTone()] ?? $toneClasses['muted'] }}">
-            <p class="text-[10px] font-bold uppercase tracking-wide opacity-70">Screen pop</p>
-            <p class="mt-1 text-sm font-black">{{ $telephonyHealth->reverbLabel() }}</p>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="{{ $toneClasses[$telephonyHealth->reverbTone()] ?? $toneClasses['muted'] }} mb-0 py-2 small h-100">
+                <div class="subheader">Screen pop</div>
+                <div class="fw-bold">{{ $telephonyHealth->reverbLabel() }}</div>
+            </div>
         </div>
     </div>
 
-    <div class="grid gap-2 lg:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Last incoming call</p>
-            @if ($lastCall)
-                <p class="mt-1 text-sm font-black text-slate-950">
-                    {{ $lastCall->customer?->name ?? $lastCall->from_number }}
-                </p>
-                <p class="mt-0.5 text-xs text-slate-600">
-                    {{ $telephonyHealth->formatRelative($lastCall->started_at) }}
-                    @if ($telephonyHealth->formatTimestamp($lastCall->started_at))
-                        · {{ $telephonyHealth->formatTimestamp($lastCall->started_at) }}
-                    @endif
-                </p>
-            @else
-                <p class="mt-1 text-sm font-semibold text-slate-600">No inbound calls recorded yet.</p>
-            @endif
+    <div class="row g-2">
+        <div class="col-12 col-lg-6 col-xl-3">
+            <div class="border rounded px-3 py-2 h-100">
+                <div class="subheader">Last incoming call</div>
+                @if ($lastCall)
+                    <div class="fw-bold">
+                        {{ $lastCall->customer?->name ?? $lastCall->from_number }}
+                    </div>
+                    <div class="small text-secondary">
+                        {{ $telephonyHealth->formatRelative($lastCall->started_at) }}
+                        @if ($telephonyHealth->formatTimestamp($lastCall->started_at))
+                            · {{ $telephonyHealth->formatTimestamp($lastCall->started_at) }}
+                        @endif
+                    </div>
+                @else
+                    <div class="small fw-semibold text-secondary">No inbound calls recorded yet.</div>
+                @endif
+            </div>
         </div>
 
-        <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Last voice webhook</p>
-            @if ($lastVoiceWebhookAt)
-                <p class="mt-1 text-sm font-black text-slate-950">{{ $telephonyHealth->formatRelative($lastVoiceWebhookAt) }}</p>
-                <p class="mt-0.5 text-xs text-slate-600">{{ $telephonyHealth->formatTimestamp($lastVoiceWebhookAt) }}</p>
-            @else
-                <p class="mt-1 text-sm font-semibold text-slate-600">Waiting for the first inbound call webhook.</p>
-            @endif
+        <div class="col-12 col-lg-6 col-xl-3">
+            <div class="border rounded px-3 py-2 h-100">
+                <div class="subheader">Last voice webhook</div>
+                @if ($lastVoiceWebhookAt)
+                    <div class="fw-bold">{{ $telephonyHealth->formatRelative($lastVoiceWebhookAt) }}</div>
+                    <div class="small text-secondary">{{ $telephonyHealth->formatTimestamp($lastVoiceWebhookAt) }}</div>
+                @else
+                    <div class="small fw-semibold text-secondary">Waiting for the first inbound call webhook.</div>
+                @endif
+            </div>
         </div>
 
-        <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Last SMS / MMS webhook</p>
-            @if ($lastSmsWebhookAt)
-                <p class="mt-1 text-sm font-black text-slate-950">{{ $telephonyHealth->formatRelative($lastSmsWebhookAt) }}</p>
-                <p class="mt-0.5 text-xs text-slate-600">{{ $telephonyHealth->formatTimestamp($lastSmsWebhookAt) }}</p>
-            @else
-                <p class="mt-1 text-sm font-semibold text-slate-600">Waiting for the first inbound message webhook.</p>
-            @endif
+        <div class="col-12 col-lg-6 col-xl-3">
+            <div class="border rounded px-3 py-2 h-100">
+                <div class="subheader">Last SMS / MMS webhook</div>
+                @if ($lastSmsWebhookAt)
+                    <div class="fw-bold">{{ $telephonyHealth->formatRelative($lastSmsWebhookAt) }}</div>
+                    <div class="small text-secondary">{{ $telephonyHealth->formatTimestamp($lastSmsWebhookAt) }}</div>
+                @else
+                    <div class="small fw-semibold text-secondary">Waiting for the first inbound message webhook.</div>
+                @endif
+            </div>
         </div>
 
-        <div class="rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2">
-            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Last Messenger webhook</p>
-            @if ($lastMessengerWebhookAt)
-                <p class="mt-1 text-sm font-black text-slate-950">{{ $messengerHealth->formatRelative($lastMessengerWebhookAt) }}</p>
-                <p class="mt-0.5 text-xs text-slate-600">{{ $messengerHealth->formatTimestamp($lastMessengerWebhookAt) }}</p>
-            @else
-                <p class="mt-1 text-sm font-semibold text-slate-600">Waiting for the first inbound Messenger webhook.</p>
-            @endif
+        <div class="col-12 col-lg-6 col-xl-3">
+            <div class="border rounded px-3 py-2 h-100">
+                <div class="subheader">Last Messenger webhook</div>
+                @if ($lastMessengerWebhookAt)
+                    <div class="fw-bold">{{ $messengerHealth->formatRelative($lastMessengerWebhookAt) }}</div>
+                    <div class="small text-secondary">{{ $messengerHealth->formatTimestamp($lastMessengerWebhookAt) }}</div>
+                @else
+                    <div class="small fw-semibold text-secondary">Waiting for the first inbound Messenger webhook.</div>
+                @endif
+            </div>
         </div>
     </div>
 
     @if ($operationalNotes !== [])
-        <div class="rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
-            <ul class="list-disc space-y-1 pl-4">
+        <div class="alert alert-warning small mb-0">
+            <ul class="mb-0 ps-3">
                 @foreach ($operationalNotes as $note)
                     <li>{{ $note }}</li>
                 @endforeach
@@ -96,12 +116,12 @@
         </div>
     @endif
 
-    <div class="text-xs text-slate-600">
-        <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-            <p class="font-semibold text-slate-800">Connected transports</p>
-            <p class="text-[10px] text-slate-400">{{ $telephonyHealth->credentialSourceLabel() }}</p>
+    <div class="small text-secondary">
+        <div class="d-flex flex-wrap align-items-baseline justify-content-between column-gap-3">
+            <p class="fw-semibold text-body mb-0">Connected transports</p>
+            <p class="small text-muted mb-0">{{ $telephonyHealth->credentialSourceLabel() }}</p>
         </div>
-        <div class="mt-1.5 rounded-sm border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+        <div class="border rounded px-3 py-2 mt-2">
             Stock Core does not publish carrier webhook URLs. SMS, voice, and Messenger stay unavailable until a transport implementation is installed.
         </div>
     </div>

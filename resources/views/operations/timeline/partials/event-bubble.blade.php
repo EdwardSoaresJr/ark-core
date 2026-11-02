@@ -25,59 +25,78 @@
     @include('operations.timeline.partials.call-event-bubble', ['event' => $event])
 @else
     @php
-        $bubbleClass = match ($event->tone->value) {
-            'shop' => 'ops-comms-workspace__bubble--outbound',
-            'internal' => 'ops-comms-workspace__bubble--internal',
-            'system' => 'ops-comms-workspace__bubble--internal',
-            default => 'ops-comms-workspace__bubble--inbound',
+        $direction = match ($event->tone->value) {
+            'shop' => 'outbound',
+            'internal', 'system' => 'internal',
+            default => 'inbound',
         };
     @endphp
 
-    <article
-        @class(['ops-comms-workspace__bubble', $bubbleClass])
+    <div
+        @class([
+            'd-flex',
+            'justify-content-end' => $direction === 'outbound',
+            'justify-content-center' => $direction === 'internal',
+        ])
         @if (filled($event->metadata['platform_message_public_id'] ?? null))
             data-platform-message-id="{{ $event->metadata['platform_message_public_id'] }}"
         @endif
     >
-        <p class="ops-comms-workspace__bubble-meta">
-            {{ $event->headline }}
-            @if (filled($event->metadata['visit_label'] ?? null))
-                · {{ $event->metadata['visit_label'] }}
-                @if (filled($event->metadata['visit_vehicle_label'] ?? null))
-                    · {{ $event->metadata['visit_vehicle_label'] }}
+        <article
+            @class([
+                'chat-bubble px-3 py-2',
+                'chat-bubble-me' => $direction === 'outbound',
+                'bg-yellow-lt' => $direction === 'internal',
+            ])
+            style="max-width: 88%"
+            data-comms-bubble="{{ $direction }}"
+        >
+            <div class="chat-bubble-title small text-secondary">
+                {{ $event->headline }}
+                @if (filled($event->metadata['visit_label'] ?? null))
+                    · {{ $event->metadata['visit_label'] }}
+                    @if (filled($event->metadata['visit_vehicle_label'] ?? null))
+                        · {{ $event->metadata['visit_vehicle_label'] }}
+                    @endif
                 @endif
-            @endif
-            · {{ $occurredLabel }}
-            @if (filled($event->metadata['imported_label'] ?? null))
-                · <span class="font-semibold text-slate-500">{{ $event->metadata['imported_label'] }}</span>
-            @endif
-        </p>
-        @if (filled($body))
-            <p class="ops-comms-workspace__bubble-body">{{ $body }}</p>
-        @endif
-        @if ($message !== null)
-            @include('operations.conversations.partials.message-attachments', ['message' => $message])
-        @endif
-        @include('operations.communications.workspace.partials.message-media', [
-            'attachments' => $event->metadata['attachments'] ?? [],
-        ])
-        @if (filled($event->metadata['context_label'] ?? null))
-            <p class="mt-1 text-[11px] font-medium text-slate-500">{{ $event->metadata['context_label'] }}</p>
-        @endif
-        @if ($evidenceBits !== [] || ($event->links ?? []) !== [])
-            <details class="ops-comms-workspace__evidence">
-                <summary>Evidence</summary>
-                <ul class="ops-comms-workspace__evidence-list">
-                    @foreach ($evidenceBits as $bit)
-                        <li>{{ $bit }}</li>
-                    @endforeach
-                    @foreach ($event->links as $linkLabel => $linkUrl)
-                        <li>
-                            <a href="{{ $linkUrl }}" class="ops-page-link">{{ is_string($linkLabel) ? $linkLabel : 'Open' }}</a>
-                        </li>
-                    @endforeach
-                </ul>
-            </details>
-        @endif
-    </article>
+                · {{ $occurredLabel }}
+                @if (filled($event->metadata['imported_label'] ?? null))
+                    · <span class="fw-medium">{{ $event->metadata['imported_label'] }}</span>
+                @endif
+            </div>
+            <div class="chat-bubble-body">
+                @if (filled($body))
+                    <p class="mb-0" style="white-space: pre-wrap">{{ $body }}</p>
+                @endif
+                @if ($message !== null)
+                    @include('operations.conversations.partials.message-attachments', [
+                        'message' => $message,
+                        'mediaUi' => 'tabler',
+                    ])
+                @endif
+                @include('operations.communications.workspace.partials.message-media', [
+                    'attachments' => $event->metadata['attachments'] ?? [],
+                    'mediaUi' => 'tabler',
+                ])
+                @if (filled($event->metadata['context_label'] ?? null))
+                    <div class="mt-1 small text-secondary">{{ $event->metadata['context_label'] }}</div>
+                @endif
+                @if ($evidenceBits !== [] || ($event->links ?? []) !== [])
+                    <details class="mt-1 small" data-comms-evidence>
+                        <summary class="text-secondary">Evidence</summary>
+                        <ul class="list-unstyled mb-0 mt-1">
+                            @foreach ($evidenceBits as $bit)
+                                <li>{{ $bit }}</li>
+                            @endforeach
+                            @foreach ($event->links as $linkLabel => $linkUrl)
+                                <li>
+                                    <a href="{{ $linkUrl }}">{{ is_string($linkLabel) ? $linkLabel : 'Open' }}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
+            </div>
+        </article>
+    </div>
 @endif

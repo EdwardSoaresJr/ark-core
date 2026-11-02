@@ -34,7 +34,7 @@ function remainingSettingsPage(object $test, string $section = 'general'): DOMXP
     return remainingSettingsXpath($test->get(route('operations.settings.shop.edit', ['section' => $section]))->assertOk()->getContent());
 }
 
-test('every remaining section is a tabler card and only the telephony island stays legacy', function (): void {
+test('every remaining section is a tabler card with no legacy island', function (): void {
     $xpath = remainingSettingsPage($this);
     $legacy = remainingSettingsHasClass('ark-legacy');
 
@@ -47,14 +47,9 @@ test('every remaining section is a tabler card and only the telephony island sta
             ->and($xpath->query('ancestor::*['.$legacy.']', $cards->item(0))->length)->toBe(0, "{$section} is inside a legacy island");
     }
 
-    $islands = $xpath->query('//section[@data-settings-section]//*['.$legacy.']');
-
-    expect($islands->length)->toBe(1)
-        ->and($islands->item(0)->hasAttribute('data-settings-telephony-island'))->toBeTrue()
-        ->and($xpath->query('ancestor::section[@data-settings-section="communications"]', $islands->item(0))->length)->toBe(1)
-        ->and($xpath->query('.//section[@x-show="active === \'communications\'"]', $islands->item(0))->length)->toBe(1)
+    expect($xpath->query('//section[@data-settings-section]//*['.$legacy.']')->length)->toBe(0)
         ->and($xpath->query('//*['.$legacy.'][contains(@x-show, "includes(active)")]')->length)->toBe(0)
-        ->and($xpath->query('//*[@x-show][starts-with(@x-show, "active === ")][not(self::section[@data-settings-section])][not(ancestor::*['.$legacy.'])]')->length)->toBe(0);
+        ->and($xpath->query('//*[@x-show][starts-with(@x-show, "active === ")][not(self::section[@data-settings-section])]')->length)->toBe(0);
 });
 
 test('the remaining settings forms keep their routes and field names', function (): void {

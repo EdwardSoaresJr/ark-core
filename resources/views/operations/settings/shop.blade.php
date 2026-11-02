@@ -1534,23 +1534,18 @@
                     @include('operations.settings.partials.partstech-settings', ['settings' => $settings])
                 </section>
 
-                {{-- telephony-settings has its own heading and tabs and is migrated separately, so this card has no header. --}}
                 <section class="card" x-show="active === 'communications'" x-cloak data-settings-section="communications">
-                    <div class="card-body p-2 p-md-3">
-                        <div class="ark-legacy bg-white text-dark border rounded p-3" data-settings-telephony-island>
-                            @include('operations.settings.partials.telephony-settings', [
-                                'settings' => $settings,
-                                'telephonyHealth' => $telephonyHealth,
-                                'telephonyEndpoints' => $telephonyEndpoints,
-                                'telephonyEndpointTypes' => $telephonyEndpointTypes,
-                                'telephonyExtensions' => $telephonyExtensions,
-                                'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
-                                'staff' => $staff,
-                                'platformMailSend' => $platformMailSend ?? false,
-                                'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
-                            ])
-                        </div>
-                    </div>
+                    @include('operations.settings.partials.telephony-settings', [
+                        'settings' => $settings,
+                        'telephonyHealth' => $telephonyHealth,
+                        'telephonyEndpoints' => $telephonyEndpoints,
+                        'telephonyEndpointTypes' => $telephonyEndpointTypes,
+                        'telephonyExtensions' => $telephonyExtensions,
+                        'telephonyExtensionDeviceTypes' => $telephonyExtensionDeviceTypes,
+                        'staff' => $staff,
+                        'platformMailSend' => $platformMailSend ?? false,
+                        'platformVoiceManaged' => $platformVoiceManaged ?? \App\Ark\Platform\Voice\ManagedVoiceGate::platformVoiceReady(),
+                    ])
                 </section>
 
                 @unless (\App\Ark\Runtime\DemoInstall::isDemo())

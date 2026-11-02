@@ -312,11 +312,9 @@ test('an open inbox thread keeps the composer, forms, and event bubble islands',
     $main = commsTablerMain($html);
     $islands = substr_count($main, 'ark-legacy');
 
-    expect(substr_count($main, '<div class="ark-legacy bg-white text-dark rounded">'))->toBe($islands)
-        ->and(commsTablerClassesOutsideIslands($main))->not->toMatch('/(^|\s)ops-/m');
-
-    expect($islands)->toBeGreaterThan(0)
-        ->and($main)->toContain('ops-comms-workspace__bubble');
+    expect($islands)->toBe(0)
+        ->and(commsTablerClassesOutsideIslands($main))->not->toMatch('/(^|\s)ops-/m')
+        ->and($main)->toContain('data-comms-bubble=');
 });
 
 test('the workspace fragment returns Tabler list, thread, and context panels', function (): void {

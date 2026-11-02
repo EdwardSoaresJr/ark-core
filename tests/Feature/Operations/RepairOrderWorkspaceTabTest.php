@@ -55,7 +55,7 @@ test('workspace tab endpoint returns comms panel html on demand', function () {
         ->assertSee('id="communication-rail"', false)
         ->assertSee('Send Estimate', false)
         ->assertDontSee('Estimate activity', false)
-        ->assertSee('ops-comms-workspace__bubble', false)
+        ->assertSee('data-comms-bubble=', false)
         ->assertSee('Customer opened the estimate portal link.', false);
 });
 
@@ -86,7 +86,7 @@ test('workspace tab endpoint renders comms timeline rows from unified event entr
         ->get(route('operations.repair-orders.workspace-tabs.show', ['repairOrder' => $repairOrder, 'tab' => 'comms']))
         ->assertOk()
         ->assertSee('Conversation', false)
-        ->assertSee('ops-comms-workspace__bubble', false)
+        ->assertSee('data-comms-bubble=', false)
         ->assertSee('Send Estimate', false);
 });
 

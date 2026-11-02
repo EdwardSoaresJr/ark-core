@@ -409,7 +409,7 @@ test('the lazy workspace tabs render Tabler markup and keep their forms and hook
     $commitment = panelsTablerOne($comms, '//*[@data-repair-order-commitments]//form[@action="'.route('operations.repair-orders.commitments.store', $repairOrder).'"]');
 
     expect(panelsTablerLegacyClasses($commsRoot))->toBe([])
-        ->and($thread->getAttribute('class'))->toContain('ark-legacy')
+        ->and($thread->getAttribute('class'))->not->toContain('ark-legacy')
         ->and($thread->getAttribute('data-timeline-refresh'))->toBe('comms-tab')
         ->and($comms->query('//*[@data-comms-composer]')->length)->toBe(1)
         ->and($comms->query('//*[@data-comms-composer][contains(@class, "ark-legacy")]')->length)->toBe(0)

@@ -47,17 +47,16 @@
                 <p class="card-subtitle">Evidence linked to this repair order.</p>
             </div>
         </div>
-        {{-- Timeline rows are the shared event-bubble partial and need the legacy thread layout. --}}
         <div
             id="conversation-messages-ro"
-            class="ark-legacy ops-comms-workspace__thread-body bg-white text-dark"
+            class="card-body chat-bubbles gap-2 p-2"
             data-timeline-refresh="comms-tab"
             aria-label="Conversation"
         >
             @forelse ($timelineEvents as $event)
                 @include('operations.timeline.partials.event-bubble', ['event' => $event])
             @empty
-                <div data-conversation-empty class="px-3 py-2 text-xs leading-4 text-slate-500">
+                <div data-conversation-empty class="text-secondary small">
                     No communications linked to this repair order yet. Reply above to start outreach.
                 </div>
             @endforelse
