@@ -63,8 +63,8 @@ final class PublicWebsiteController
         }
 
         $seo = $this->seo($website, 'about', $request);
-        $seo['title'] = 'About LugsNPlugs';
-        $seo['description'] = 'LugsNPlugs Automotive is owned and operated by Edward and Molly Soares in Colorado Springs.';
+        $seo['title'] = 'About '.$website->shopName();
+        $seo['description'] = $website->ownerStory();
 
         return view('website.about', [
             'website' => $website,
@@ -152,8 +152,8 @@ final class PublicWebsiteController
             'contactPhone' => (string) ($recognition['customer']['phone'] ?? ''),
             'contactEmail' => (string) ($recognition['customer']['email'] ?? ''),
             'contactPreferences' => LeadContactPreference::cases(),
-            'phoneVerificationReady' => app(LeadPhoneVerification::class)->bookIdentityGateReady(),
-            'emailVerificationReady' => app(LeadEmailVerification::class)->ready(),
+            'phoneVerificationReady' => config('website.book_identity_verification', true) !== false && app(LeadPhoneVerification::class)->bookIdentityGateReady(),
+            'emailVerificationReady' => config('website.book_identity_verification', true) !== false && app(LeadEmailVerification::class)->ready(),
         ]);
     }
 

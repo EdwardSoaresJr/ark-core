@@ -24,7 +24,7 @@
 
             <aside class="public-service__rail">
                 <div class="public-service__promise">
-                    <p class="public-page-eyebrow">At LugsNPlugs</p>
+                    <p class="public-page-eyebrow">At {{ $website->shopName() }}</p>
                     <p>{{ $page['promise'] }}</p>
                 </div>
 

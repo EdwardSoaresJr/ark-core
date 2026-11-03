@@ -33,6 +33,8 @@ final class WebsitePublicationCatalogMerge
         'response_time_hint',
         'audience_surface_verifications',
         'instrumentation_enabled',
+        // A shop's lenders and merchant links are its own; the catalog's are one business's.
+        'financing',
     ];
 
     /**
@@ -42,7 +44,6 @@ final class WebsitePublicationCatalogMerge
         'common_problems',
         'pages',
         'seo',
-        'financing',
         'source',
     ];
 

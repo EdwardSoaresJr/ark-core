@@ -31,6 +31,7 @@ final class PublicWebsiteCatalog
             'headline' => 'Accurate Diagnostics. Honest Repairs.',
             'positioning_lede' => 'We find the real problem first. You get a clear estimate before we do any repairs.',
             'local_tagline' => 'Family owned in Colorado Springs.',
+            'about_story' => 'LugsNPlugs Automotive is owned and operated by Edward and Molly Soares. What started with Edward working as a mobile mechanic grew into a Colorado Springs repair shop built around a simple idea: diagnose the vehicle first, explain what we found, and let the customer make an informed decision.',
             'google_rating' => '4.9',
             'google_review_count' => 56,
             'reviews' => [

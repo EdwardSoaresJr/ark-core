@@ -275,8 +275,9 @@ final class PublicBookSubmission
             }
         }
 
-        $phoneReady = $this->phones->bookIdentityGateReady();
-        $emailReady = $this->emails->ready();
+        $required = config('website.book_identity_verification', true) !== false;
+        $phoneReady = $required && $this->phones->bookIdentityGateReady();
+        $emailReady = $required && $this->emails->ready();
         if (! $phoneReady && ! $emailReady) {
             return ['accepted' => true, 'verified' => false];
         }

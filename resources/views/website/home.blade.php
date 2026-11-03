@@ -36,13 +36,13 @@
             <div class="public-home__split">
                 @if ($photos['team'] !== null)
                     <figure class="public-home__figure">
-                        <img src="{{ $photos['team']['url'] }}" alt="The LugsNPlugs Automotive team">
-                        <figcaption class="public-home__caption">The LugsNPlugs Automotive team.</figcaption>
+                        <img src="{{ $photos['team']['url'] }}" alt="The {{ $website->shopName() }} team">
+                        <figcaption class="public-home__caption">The {{ $website->shopName() }} team.</figcaption>
                     </figure>
                 @endif
                 <div class="public-home__copy">
                     <h2 class="public-section-title">A repair shop built around doing it right</h2>
-                    <p class="public-page-lede">LugsNPlugs Automotive is owned and operated by Edward and Molly Soares. What started with Edward working as a mobile mechanic grew into a Colorado Springs repair shop built around a simple idea: diagnose the vehicle first, explain what we found, and let the customer make an informed decision.</p>
+                    <p class="public-page-lede">{{ $website->ownerStory() }}</p>
                     <p class="public-page-lede">We're not trying to move cars through as fast as possible. Every vehicle that comes through our shop belongs to somebody who depends on it.</p>
                     <p class="public-home__personal">Every job is personal.</p>
                 </div>
@@ -137,10 +137,12 @@
                     <h3>Warranty</h3>
                     <p>Qualifying shop repairs are covered for 24 months or 24,000 miles on parts and labor, whichever comes first. <a class="public-link" href="{{ route('public.warranty') }}">Shop warranty</a></p>
                 </div>
-                <div>
-                    <h3>RepairPal</h3>
-                    <p>RepairPal Certified coverage is separate: 12 months or 12,000 miles nationwide on qualifying repairs. <a class="public-link" href="{{ route('public.repairpal') }}">RepairPal</a></p>
-                </div>
+                @if ($website->hasPage('repairpal'))
+                    <div>
+                        <h3>RepairPal</h3>
+                        <p>RepairPal Certified coverage is separate: 12 months or 12,000 miles nationwide on qualifying repairs. <a class="public-link" href="{{ route('public.repairpal') }}">RepairPal</a></p>
+                    </div>
+                @endif
                 @if ($website->financingSummary() !== null)
                     <div>
                         <h3>Financing</h3>

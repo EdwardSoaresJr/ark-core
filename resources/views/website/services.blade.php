@@ -2,7 +2,7 @@
     <div class="public-home public-home--interior">
         <h1 class="public-page-title">Services</h1>
         <div class="public-home__copy">
-            <p class="public-page-lede">LugsNPlugs diagnoses and repairs the systems that keep a car safe and reliable. If you already know the symptom or the code, start with <a class="public-link" href="{{ route('public.common-problems.index') }}">Problems</a>.</p>
+            <p class="public-page-lede">{{ $website->shopName() }} diagnoses and repairs the systems that keep a car safe and reliable. If you already know the symptom or the code, start with <a class="public-link" href="{{ route('public.common-problems.index') }}">Problems</a>.</p>
         </div>
 
         <div class="public-services__grid">
