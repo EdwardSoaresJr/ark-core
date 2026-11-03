@@ -20,4 +20,18 @@ return [
      * and not SURFACE_PUBLIC_ALIASES.
      */
     'custom_domains' => $customDomains,
+
+    /*
+     * A notice shown above every public and sign-in page, for example a demonstration shop
+     * (array{text: string, link_label?: string, link_url?: string}). Null shows nothing.
+     * A host that serves several shops sets it per shop at runtime.
+     */
+    'public_notice' => null,
+
+    /*
+     * Online appointment requests ask for a phone or email code when the shop can send one.
+     * False skips the code step and records the request unverified, as for a shop that can send
+     * neither (for example a demonstration shop that must never contact anyone).
+     */
+    'book_identity_verification' => true,
 ];

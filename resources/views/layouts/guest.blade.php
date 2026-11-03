@@ -30,6 +30,7 @@
         @endif
     </head>
     <body class="font-sans text-slate-950 antialiased">
+        @include('partials.public-notice')
         @if (\App\Ark\Runtime\DemoInstall::isDemo())
             @include('demo.bar')
         @endif

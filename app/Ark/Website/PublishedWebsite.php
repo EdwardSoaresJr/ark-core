@@ -67,6 +67,27 @@ final class PublishedWebsite
         return $name !== '' ? $name : 'Shop';
     }
 
+    /**
+     * The shop's own story (document key about_story). A shop that has not written one gets a
+     * sentence about its own name, never another business's owners or town.
+     */
+    public function ownerStory(): string
+    {
+        $story = $this->string('about_story');
+        if ($story === '' && $this->usesCatalog()) {
+            $story = trim((string) (PublicWebsiteCatalog::document()['about_story'] ?? ''));
+        }
+
+        return $story !== '' ? $story : $this->shopName().' is a repair shop built around a simple idea: diagnose the vehicle first, explain what we found, and let the customer make an informed decision.';
+    }
+
+    public function hasPage(string $key): bool
+    {
+        $pages = $this->document['pages'] ?? [];
+
+        return is_array($pages) && is_array($pages[$key] ?? null);
+    }
+
     public function phone(): string
     {
         return trim((string) ($this->shop->phone ?? ''));
@@ -303,7 +324,7 @@ final class PublishedWebsite
         }
 
         foreach ($normalized as $index => $program) {
-            if ($program['name'] !== 'Synchrony Car Care' || ! $this->isGenericSynchronyUrl($program['url'])) {
+            if (! $this->usesCatalog() || $program['name'] !== 'Synchrony Car Care' || ! $this->isGenericSynchronyUrl($program['url'])) {
                 continue;
             }
             $merchantUrl = $this->catalogFinancingUrl('Synchrony Car Care');
@@ -513,10 +534,25 @@ final class PublishedWebsite
     }
 
     /**
+     * The catalog is one business's imported website. Only a publication made from it inherits the
+     * catalog's own answers, merchant links, and story; every other shop renders its own document.
+     */
+    private function usesCatalog(): bool
+    {
+        $source = $this->string('source');
+
+        return $source !== '' && $source === (string) (PublicWebsiteCatalog::document()['source'] ?? '');
+    }
+
+    /**
      * @return array<string, string>
      */
     private function correctedContactAnswers(): array
     {
+        if (! $this->usesCatalog()) {
+            return [];
+        }
+
         $questions = [
             'Do you accept customer-supplied parts?',
             'Do you perform inspections?',

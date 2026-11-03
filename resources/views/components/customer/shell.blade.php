@@ -50,6 +50,7 @@
         class="flex min-h-screen flex-col font-sans text-slate-950 antialiased public-surface"
         @if (filled($publicSurfacePage)) data-public-surface-page="{{ $publicSurfacePage }}" @endif
     >
+        @include('partials.public-notice')
         <div class="customer-shell flex flex-1 flex-col">
             @if ($showNav)
                 @include('partials.customer.site-header', $headerData)
