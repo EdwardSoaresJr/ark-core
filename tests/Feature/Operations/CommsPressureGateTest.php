@@ -245,3 +245,41 @@ test('comms escalation texts active advisors after delay', function () {
 
     expect(Cache::has('comms:escalated:message:'.(string) $result['message']->id))->toBeTrue();
 });
+
+test('attention gate lets configured exempt routes through and still gates everything else', function () {
+    ShopSettings::current()->update([
+        'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
+            'comms_attention_gate_enabled' => true,
+        ]),
+    ]);
+
+    \Illuminate\Support\Facades\Route::middleware('web')
+        ->get('/extension-inbox', fn () => 'extension inbox')
+        ->name('extension.inbox.index');
+    app('router')->getRoutes()->refreshNameLookups();
+
+    $advisor = actingAsLearnCurrentAdvisor();
+
+    Customer::query()->create([
+        'first_name' => 'Gate',
+        'last_name' => 'Extension',
+        'phone' => '7195556666',
+    ]);
+
+    ingestInboundSms('7195556666', 'Any news on my car?', 'SMgate-extension');
+
+    $this->actingAs($advisor)
+        ->get('/extension-inbox')
+        ->assertRedirect(CommunicationsNeedsYou::url());
+
+    config(['ark_attention.gate_exempt_routes' => ['extension.inbox.*', '', 42]]);
+
+    $this->actingAs($advisor)
+        ->get('/extension-inbox')
+        ->assertOk()
+        ->assertSee('extension inbox');
+
+    $this->actingAs($advisor)
+        ->get(route('operations.workboard'))
+        ->assertRedirect(CommunicationsNeedsYou::url());
+});

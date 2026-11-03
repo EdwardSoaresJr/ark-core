@@ -104,6 +104,14 @@ class EnsureAdvisorCommsCleared
             return true;
         }
 
+        $configured = array_values(array_filter(
+            (array) config('ark_attention.gate_exempt_routes', []),
+            static fn (mixed $pattern): bool => is_string($pattern) && $pattern !== '',
+        ));
+        if ($configured !== [] && $request->routeIs(...$configured)) {
+            return true;
+        }
+
         if ($request->routeIs('operations.work.queue')
             && $request->route('queue') === 'comms') {
             return true;
