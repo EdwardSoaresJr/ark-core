@@ -1,6 +1,8 @@
 <?php
 
+use App\Ark\Operations\Communications\CommunicationsWorkspaceProjection;
 use App\Ark\Operations\Communications\CommunicationsWorkspaceSignals;
+use App\Ark\Operations\Communications\CoreCommunicationsWorkspaceSignals;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Conversations\Conversation;
@@ -131,12 +133,12 @@ test('a host application\'s signals replace Core\'s: delivery, texting, email re
         ->and($page)->toContain('action="https://host.test/email-replies/'.$conversation->id.'"')
         ->and($page)->toContain('data-live-events="[&quot;host.delivery.updated&quot;]"');
 
-    $projection = app(\App\Ark\Operations\Communications\CommunicationsWorkspaceProjection::class);
+    $projection = app(CommunicationsWorkspaceProjection::class);
     expect($projection->pollSignature('all', $conversation->id))->not->toBe(
         (function () use ($conversation) {
-            app()->instance(CommunicationsWorkspaceSignals::class, new \App\Ark\Operations\Communications\CoreCommunicationsWorkspaceSignals);
+            app()->instance(CommunicationsWorkspaceSignals::class, new CoreCommunicationsWorkspaceSignals);
 
-            return app(\App\Ark\Operations\Communications\CommunicationsWorkspaceProjection::class)->pollSignature('all', $conversation->id);
+            return app(CommunicationsWorkspaceProjection::class)->pollSignature('all', $conversation->id);
         })(),
     );
 });

@@ -2,15 +2,18 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Timeline\OperationalEventEntry;
 use App\Ark\Operations\Timeline\OperationalEventKind;
 use App\Ark\Operations\Timeline\OperationalEventTone;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 final class CommunicationsInboxPresentation
@@ -430,12 +433,12 @@ final class CommunicationsInboxPresentation
         $repairOrder = $repairOrderId !== null ? RepairOrder::query()->find($repairOrderId) : null;
         $approval = match (true) {
             $repairOrder === null => null,
-            $repairOrder->status->is(\App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval) => 'Waiting on approval',
-            $repairOrder->status->is(\App\Ark\Operations\RepairOrders\RepairOrderStatus::Approved) => 'Approved',
+            $repairOrder->status->is(RepairOrderStatus::WaitingApproval) => 'Waiting on approval',
+            $repairOrder->status->is(RepairOrderStatus::Approved) => 'Approved',
             default => null,
         };
         $balance = $repairOrder?->balanceDue();
-        $appointment = $customer === null ? null : \App\Ark\Operations\Appointments\Appointment::query()
+        $appointment = $customer === null ? null : Appointment::query()
             ->where('customer_id', $customer->id)
             ->where('starts_at', '>=', now())
             ->whereNotIn('status', ['canceled', 'no_show', 'completed'])
@@ -452,7 +455,7 @@ final class CommunicationsInboxPresentation
             },
             'balance_tone' => $balance !== null && $balance->balanceDueCents > 0 ? 'orange' : 'green',
             'appointment' => $appointment?->starts_at?->timezone(config('app.display_timezone'))->format('D M j, g:i A'),
-            'appointment_url' => $appointment !== null && \Illuminate\Support\Facades\Route::has('operations.appointments.show')
+            'appointment_url' => $appointment !== null && Route::has('operations.appointments.show')
                 ? route('operations.appointments.show', $appointment)
                 : null,
         ];
