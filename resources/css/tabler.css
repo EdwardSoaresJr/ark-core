@@ -601,7 +601,8 @@ span.ark-legacy {
  * row of panels may then shrink below its content, and the row takes the remaining height.
  */
 .page:has(.ark-split) {
-    height: 100dvh;
+    height: var(--ark-viewport-height, 100dvh);
+    min-height: 0;
 }
 
 .page:has(.ark-split) > .page-wrapper,
@@ -632,6 +633,41 @@ span.ark-legacy {
 /* The timeline keeps room for a few messages however much the header and composer need. */
 .ark-split .ark-comms-thread {
     min-height: 7rem;
+}
+
+.ark-split .ark-comms-thread-wrap {
+    min-height: 0;
+}
+
+/* Each timeline entry is wrapped only to carry its key; the bubble stays a direct item of the thread. */
+.ark-comms-thread [data-comms-entry] {
+    display: contents;
+}
+
+/* A conversation row is a link, but reads as a row: no underline when hovered, focused, or selected. */
+.ark-comms-row,
+.ark-comms-row:hover,
+.ark-comms-row:focus,
+.ark-comms-row * {
+    text-decoration: none;
+}
+
+/* Below the widest screens the conversation's actions stack a short label under the icon, so none is icon-only. */
+@media (max-width: 1399.98px) {
+    .ark-comms-actions .btn {
+        flex-direction: column;
+        gap: 0;
+        padding: 0.25rem 0.5rem;
+        line-height: 1.1;
+    }
+
+    .ark-comms-actions .ark-comms-action-label {
+        font-size: 0.6875rem;
+    }
+
+    .ark-comms-actions .dropdown-toggle::after {
+        display: none;
+    }
 }
 
 /* Short screens (a laptop, a phone): the composer is compact so the conversation keeps the room. */
@@ -724,7 +760,7 @@ span.ark-legacy {
     line-height: 1.45;
 }
 
-.ark-comms-thread [data-comms-evidence] summary,
+.ark-comms-thread [data-comms-details] summary,
 .ark-comms-thread [data-comms-call-transcript] summary {
     font-size: 0.75rem;
 }

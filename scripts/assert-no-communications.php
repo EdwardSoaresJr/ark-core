@@ -74,7 +74,9 @@ const WORKSPACE_EXCEPTION = [
     'app/Ark/Operations/Communications/CoreCommunicationsWorkspaceSignals.php' => 'Core implementation of the workspace signals, from Core\'s own message and consent records',
     'app/Ark/Operations/Communications/CommunicationsWorkspaceSignalPresenter.php' => 'Words and badge tones for the workspace signals',
     'resources/views/operations/communications/workspace/partials/work-actions.blade.php' => 'The workspace header\'s one set of assign, follow-up, waiting, and resolve controls',
+    'tests/Feature/Communications/CommunicationsWorkspaceThreadPagingTest.php' => 'Tests of thread paging, message details and the composer and context lanes',
     'tests/Feature/Communications/CommunicationsWorkspaceSignalsTest.php' => 'Tests of the workspace signals extension point and its Core implementation',
+    'resources/views/operations/communications/workspace/partials/thread-events.blade.php' => 'The thread\'s timeline entries, split from the thread panel so earlier pages render the same way',
     'database/migrations/2026_11_04_120000_index_conversation_messages_by_direction_channel_time.php' => 'Index for the workspace\'s unread-message badge query on every staff page (owner-approved, 2026-11-04)',
 ];
 

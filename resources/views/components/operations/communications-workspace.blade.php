@@ -125,7 +125,7 @@
 
             <aside
                 id="ops-comms-workspace-context"
-                class="col-12 col-xl-3 flex-column"
+                class="col-12 col-lg col-xl-3 flex-column"
                 :class="contextOpen ? 'd-flex' : 'd-none d-xl-flex'"
                 aria-label="Customer and work"
             >

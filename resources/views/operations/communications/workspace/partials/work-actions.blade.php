@@ -15,21 +15,21 @@
 @endphp
 
 {{-- The conversation's work controls, in one place: assign, follow up, wait, resolve or reopen. --}}
-<div class="btn-list" role="group" aria-label="Conversation work" data-comms-work-actions>
+<div class="btn-list ark-comms-actions" role="group" aria-label="Conversation work" data-comms-work-actions>
     @if ($lane === 'resolved')
         <form method="POST" action="{{ $url }}" class="d-inline-flex">
             @csrf
             {!! $hidden('reopen') !!}
             <button type="submit" class="btn btn-sm">
                 <x-tabler.icon name="arrow-left" />
-                Reopen
+                <span class="ark-comms-action-label">Reopen</span>
             </button>
         </form>
     @else
         <div class="dropdown">
             <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Assign" title="Assign">
                 <x-tabler.icon name="user" />
-                <span class="d-none d-xxl-inline">Assign</span>
+                <span class="ark-comms-action-label">Assign</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
                 <form method="POST" action="{{ $url }}">
@@ -66,7 +66,7 @@
         <div class="dropdown">
             <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Follow-up" title="Follow-up">
                 <x-tabler.icon name="calendar-time" />
-                <span class="d-none d-xxl-inline">Follow-up</span>
+                <span class="ark-comms-action-label">Follow-up</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
                 <form method="POST" action="{{ $url }}">
@@ -86,7 +86,7 @@
                 {!! $hidden('wait') !!}
                 <button type="submit" class="btn btn-sm" title="Waiting on the customer" aria-label="Waiting">
                     <x-tabler.icon name="clock" />
-                    <span class="d-none d-xxl-inline">Waiting</span>
+                    <span class="ark-comms-action-label">Waiting</span>
                 </button>
             </form>
         @endif
@@ -95,7 +95,7 @@
             {!! $hidden('unread') !!}
             <button type="submit" class="btn btn-sm" title="Mark unread" aria-label="Mark unread" data-comms-work-unread>
                 <x-tabler.icon name="mail" />
-                <span class="d-none d-xxl-inline">Unread</span>
+                <span class="ark-comms-action-label">Unread</span>
             </button>
         </form>
         <form method="POST" action="{{ $url }}" class="d-inline-flex">
@@ -103,7 +103,7 @@
             {!! $hidden('resolve') !!}
             <button type="submit" class="btn btn-sm btn-success">
                 <x-tabler.icon name="check" />
-                Resolve
+                <span class="ark-comms-action-label">Resolve</span>
             </button>
         </form>
     @endif

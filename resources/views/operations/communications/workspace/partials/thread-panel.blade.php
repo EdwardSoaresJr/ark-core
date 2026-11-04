@@ -14,7 +14,6 @@
     $permission = is_array($identity['permission'] ?? null) ? $identity['permission'] : null;
     $latestDelivery = $deliveries === [] ? null : end($deliveries);
     $failedDelivery = is_array($latestDelivery) && $latestDelivery['failed'] ? $latestDelivery : null;
-    $lastDate = null;
     $backHref = match ($section ?? '') {
         'history' => route('operations.communications.history', request()->only(['q', 'from', 'to', 'media', 'page'])),
         'inbox' => route('operations.communications.inbox', array_filter([
@@ -60,7 +59,7 @@
                             <span class="text-secondary small d-none d-md-inline">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
                         @endif
                     </div>
-                    <div class="d-none d-md-flex d-xl-none d-xxl-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
+                    <div class="d-none d-xxl-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
                         @if ($phoneDigits !== '')
                             <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
                         @endif
@@ -85,15 +84,16 @@
                         @endif
                     </div>
                 </div>
-                <div class="btn-list flex-nowrap flex-shrink-0 align-self-start">
+                <div class="btn-list ark-comms-actions flex-nowrap flex-shrink-0 align-self-start">
                     @if ($phoneDigits !== '')
-                        <a href="tel:{{ $phoneDigits }}" class="btn btn-icon btn-sm" aria-label="Call" title="Call">
+                        <a href="tel:{{ $phoneDigits }}" class="btn btn-sm" title="Call">
                             <x-tabler.icon name="phone" />
+                            <span class="ark-comms-action-label">Call</span>
                         </a>
                     @endif
                     <button
                         type="button"
-                        class="btn btn-icon btn-sm d-xl-none"
+                        class="btn btn-sm d-xl-none"
                         data-comms-context-toggle
                         aria-label="Customer"
                         title="Customer"
@@ -101,6 +101,7 @@
                         @click="contextOpen = ! contextOpen"
                     >
                         <x-tabler.icon name="user" />
+                        <span class="ark-comms-action-label">Customer</span>
                     </button>
                 </div>
             </div>
@@ -118,6 +119,7 @@
         @include('operations.communications.workspace.partials.decision-panel', ['decision' => $thread['decision']])
     @endif
 
+    <div class="ark-comms-thread-wrap position-relative d-flex flex-column flex-fill">
     <div
         id="comms-workspace-thread-messages"
         class="card-body chat-bubbles ark-comms-thread gap-2 overflow-auto flex-fill p-2 p-md-3"
@@ -130,80 +132,26 @@
     >
         @if ($thread === null)
             <div class="text-secondary text-center my-auto">Select a conversation</div>
+        @elseif ($events === [])
+            <div class="text-secondary text-center my-auto">No messages yet.</div>
         @else
-            @forelse ($events as $event)
-                @php
-                    $occurred = $event instanceof \App\Ark\Operations\Timeline\OperationalEventEntry
-                        ? $event->occurredAt
-                        : null;
-                    if ($occurred === null && is_array($event) && filled($event['occurred_at'] ?? null)) {
-                        try {
-                            $occurred = \Illuminate\Support\Carbon::parse($event['occurred_at']);
-                        } catch (\Throwable) {
-                            $occurred = null;
-                        }
-                    }
-                    $dateKey = $occurred?->timezone(config('app.display_timezone'))->toDateString();
-                    $showDate = $dateKey !== null && $dateKey !== $lastDate;
-                    if ($dateKey !== null) {
-                        $lastDate = $dateKey;
-                    }
-                @endphp
-                @if ($showDate)
-                    <div class="text-center text-secondary small mt-1">{{ $occurred->timezone(config('app.display_timezone'))->format('D, M j, Y') }}</div>
-                @endif
-                @if (is_array($event) && ($event['kind'] ?? '') === 'website_request')
-                    @include('operations.communications.workspace.partials.website-request-card', ['event' => $event])
-                @elseif (is_array($event) && filled($event['call_session_id'] ?? null))
-                    @include('operations.communications.workspace.partials.call-event-card', ['event' => $event])
-                @elseif ($event instanceof \App\Ark\Operations\Timeline\OperationalEventEntry)
-                    @include('operations.timeline.partials.event-bubble', [
-                        'event' => $event,
-                        'delivery' => $eventDeliveries[$loop->index] ?? null,
-                        'notes' => $eventNotes[$loop->index] ?? [],
-                    ])
-                @else
-                    @php
-                        $direction = $event['direction'] ?? 'inbound';
-                    @endphp
-                    <div @class([
-                        'd-flex',
-                        'justify-content-end' => $direction === 'outbound',
-                        'justify-content-center' => in_array($direction, ['internal', 'system'], true),
-                    ])>
-                        <article
-                            @class([
-                                'chat-bubble px-3 py-2',
-                                'chat-bubble-me' => $direction === 'outbound',
-                                'bg-yellow-lt' => in_array($direction, ['internal', 'system'], true),
-                            ])
-                            style="max-width: 88%"
-                            data-comms-bubble="{{ $direction }}"
-                        >
-                            <div class="chat-bubble-title small text-secondary">
-                                {{ $event['direction_label'] ?? 'Message' }}
-                                @if (filled($event['channel_label'] ?? null)) · {{ $event['channel_label'] }} @endif
-                                @if (filled($event['occurred_at_label'] ?? null)) · {{ $event['occurred_at_label'] }} @endif
-                            </div>
-                            <div class="chat-bubble-body">
-                                @if (filled($event['body'] ?? null) && ($event['body'] ?? '') !== '(attachment)')
-                                    <p class="mb-0" style="white-space: pre-wrap">{{ $event['body'] }}</p>
-                                @endif
-                                @include('operations.communications.workspace.partials.message-media', [
-                                    'attachments' => $event['attachments'] ?? [],
-                                    'mediaUi' => 'tabler',
-                                ])
-                                @if (filled($event['context_label'] ?? null))
-                                    <div class="mt-1 small text-secondary">{{ $event['context_label'] }}</div>
-                                @endif
-                            </div>
-                        </article>
-                    </div>
-                @endif
-            @empty
-                <div class="text-secondary text-center my-auto">No messages yet.</div>
-            @endforelse
+            @if (is_array($thread['older'] ?? null))
+                <div class="text-center" data-comms-older data-before="{{ $thread['older']['before'] }}" data-key="{{ $thread['older']['key'] }}" data-loaded="{{ count($events) }}">
+                    <button type="button" class="btn btn-sm btn-ghost-secondary" data-comms-older-load>Load earlier messages</button>
+                </div>
+            @endif
+            @include('operations.communications.workspace.partials.thread-events', [
+                'events' => $events,
+                'eventDeliveries' => $eventDeliveries,
+                'eventNotes' => $eventNotes,
+                'eventKeys' => $thread['event_keys'] ?? [],
+            ])
         @endif
+    </div>
+        <button type="button" class="btn btn-primary btn-sm rounded-pill shadow position-absolute bottom-0 start-50 translate-middle-x mb-2 d-none" data-comms-new-below>
+            New messages
+            <x-tabler.icon name="arrow-down" />
+        </button>
     </div>
 
     @if ($showComposer && ($permission['texting'] ?? null) === 'opted_out')

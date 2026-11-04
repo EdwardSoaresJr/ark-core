@@ -29,6 +29,7 @@ use App\Ark\Runtime\Database\SchemaPresence;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -43,6 +44,10 @@ final class CommunicationsWorkspaceProjection
     public const LIST_PAGE_SIZE = 50;
 
     public const LIST_MAX = 500;
+
+    public const THREAD_PAGE = 50;
+
+    public const OLDER_PAGE = 100;
 
     /** @var array<string, CustomerCallContext|null> */
     private array $callIdentityContexts = [];
@@ -848,30 +853,17 @@ final class CommunicationsWorkspaceProjection
             return null;
         }
 
-        $events = array_reverse($this->timeline->forConversationRelationship($conversation, 50)->all());
-
         $phone = $conversation->contact_surface === ConversationContactSurface::Phone
             ? trim((string) $conversation->contact_address)
             : null;
         $displayPhone = $phone !== null && $phone !== ''
             ? (PhoneNumber::display($phone) ?? $phone)
             : (string) $conversation->contact_address;
-
-        $requestCards = $this->websiteRequests->cardsFor($conversation->id, $phone);
-        if ($requestCards !== []) {
-            $events = array_values(array_filter(
-                $events,
-                function (mixed $event): bool {
-                    if (! $event instanceof OperationalEventEntry) {
-                        return true;
-                    }
-
-                    $message = $event->subject;
-
-                    return ! ($message instanceof ConversationMessage && ($message->metadata['website_lead'] ?? false) === true);
-                },
-            ));
-            $events = $this->websiteRequests->merge($events, $requestCards);
+        $events = $this->conversationEvents($conversation, self::THREAD_PAGE + 1);
+        $older = null;
+        if (count($events) > self::THREAD_PAGE) {
+            $events = array_slice($events, -self::THREAD_PAGE);
+            $older = $this->eventCursor($events[0]);
         }
 
         $composerContext = $this->contextBuilder->conversationComposerContext($conversation);
@@ -880,28 +872,7 @@ final class CommunicationsWorkspaceProjection
             callContext: null,
             lead: $composerContext['lead'] ?? null,
         );
-        $messages = array_values(array_filter(array_map(
-            fn (mixed $event): ?ConversationMessage => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage ? $event->subject : null,
-            $events,
-        )));
-        $deliveries = array_map(
-            fn (array $delivery): array => CommunicationsWorkspaceSignalPresenter::delivery($delivery),
-            $this->signals->deliveries($messages),
-        );
-        // The thread view finds each message's delivery by its place in the timeline.
-        $eventDeliveries = array_map(
-            fn (mixed $event): ?array => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage
-                ? ($deliveries[(int) $event->subject->getKey()] ?? null)
-                : null,
-            $events,
-        );
-        $notes = $this->signals->messageNotes($messages);
-        $eventNotes = array_map(
-            fn (mixed $event): array => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage
-                ? CommunicationsWorkspaceSignalPresenter::messageNotes($notes[(int) $event->subject->getKey()] ?? [])
-                : [],
-            $events,
-        );
+        ['deliveries' => $deliveries, 'event_deliveries' => $eventDeliveries, 'event_notes' => $eventNotes] = $this->eventSignals($events);
         $permission = $this->signals->contactPermission($conversation, $composerContext['customer'] ?? null);
         $identity['permission'] = $permission === null ? null : CommunicationsWorkspaceSignalPresenter::permission($permission);
 
@@ -915,6 +886,8 @@ final class CommunicationsWorkspaceProjection
             'deliveries' => $deliveries,
             'event_deliveries' => $eventDeliveries,
             'event_notes' => $eventNotes,
+            'event_keys' => array_map(fn (mixed $event): string => $this->eventCursor($event)['key'], $events),
+            'older' => $older,
             'empty_label' => 'No messages in this thread yet.',
             'composer' => $section === 'history' ? null : [
                 'kind' => 'conversation',
@@ -934,6 +907,119 @@ final class CommunicationsWorkspaceProjection
                 },
                 'email_address' => $identity['email'] ?? null,
             ],
+        ];
+    }
+
+    /**
+     * The page of a conversation's timeline just older than the entry the reader has reached (the cursor), with the
+     * same signals as the thread, and where the next older page starts, if there is one.
+     *
+     * @param  array{before: string, key: string}  $cursor
+     * @return array{events: list<mixed>, event_deliveries: list<?array<string, mixed>>, event_notes: list<list<array<string, mixed>>>, event_keys: list<string>, older: ?array{before: string, key: string}}|null
+     */
+    public function olderConversationEvents(int $conversationId, array $cursor, int $loaded): ?array
+    {
+        $conversation = Conversation::query()->find($conversationId);
+
+        if ($conversation === null) {
+            return null;
+        }
+
+        $window = min(max($loaded, self::THREAD_PAGE) + self::OLDER_PAGE + 25, 20_000);
+        $events = $this->conversationEvents($conversation, $window);
+        $keys = array_map(fn (mixed $event): string => $this->eventCursor($event)['key'], $events);
+        $at = array_search($cursor['key'], $keys, true);
+        $before = $at !== false
+            ? array_slice($events, 0, $at)
+            : array_values(array_filter($events, fn (mixed $event): bool => $this->eventCursor($event)['before'] < $cursor['before']));
+        $page = array_slice($before, -self::OLDER_PAGE);
+        $more = count($before) > self::OLDER_PAGE || (count($events) >= $window && $page !== []);
+        ['event_deliveries' => $eventDeliveries, 'event_notes' => $eventNotes] = $this->eventSignals($page);
+
+        return [
+            'events' => $page,
+            'event_deliveries' => $eventDeliveries,
+            'event_notes' => $eventNotes,
+            'event_keys' => array_map(fn (mixed $event): string => $this->eventCursor($event)['key'], $page),
+            'older' => $more ? $this->eventCursor($page[0]) : null,
+        ];
+    }
+
+    /**
+     * A conversation's timeline, oldest first: the newest $limit entries of the customer's whole relationship, with
+     * website requests as cards.
+     *
+     * @return list<mixed>
+     */
+    private function conversationEvents(Conversation $conversation, int $limit): array
+    {
+        $events = array_reverse($this->timeline->forConversationRelationship($conversation, $limit)->all());
+        $phone = $conversation->contact_surface === ConversationContactSurface::Phone
+            ? trim((string) $conversation->contact_address)
+            : null;
+        $requestCards = $this->websiteRequests->cardsFor($conversation->id, $phone);
+
+        if ($requestCards === []) {
+            return $events;
+        }
+
+        $events = array_values(array_filter(
+            $events,
+            fn (mixed $event): bool => ! ($event instanceof OperationalEventEntry
+                && $event->subject instanceof ConversationMessage
+                && ($event->subject->metadata['website_lead'] ?? false) === true),
+        ));
+
+        return $this->websiteRequests->merge($events, $requestCards);
+    }
+
+    /**
+     * @return array{before: string, key: string}
+     */
+    private function eventCursor(mixed $event): array
+    {
+        if ($event instanceof OperationalEventEntry) {
+            $subject = $event->subject;
+
+            return [
+                'before' => $event->occurredAt->copy()->utc()->format('Y-m-d\TH:i:s.u\Z'),
+                'key' => $event->source->value.':'.($subject instanceof Model ? $subject->getKey() : md5($event->headline.$event->occurredAt->toIso8601String())),
+            ];
+        }
+
+        $occurredAt = is_array($event) && filled($event['occurred_at'] ?? null) ? Carbon::parse($event['occurred_at']) : now();
+
+        return [
+            'before' => $occurredAt->copy()->utc()->format('Y-m-d\TH:i:s.u\Z'),
+            'key' => 'card:'.(is_array($event) ? (string) ($event['id'] ?? $event['key'] ?? md5(json_encode($event) ?: '')) : ''),
+        ];
+    }
+
+    /**
+     * Each timeline entry's delivery and notes, by its place in the timeline (the thread view finds them that way).
+     *
+     * @param  list<mixed>  $events
+     * @return array{deliveries: array<int, array<string, mixed>>, event_deliveries: list<?array<string, mixed>>, event_notes: list<list<array<string, mixed>>>}
+     */
+    private function eventSignals(array $events): array
+    {
+        $messages = array_values(array_filter(array_map(
+            fn (mixed $event): ?ConversationMessage => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage ? $event->subject : null,
+            $events,
+        )));
+        $deliveries = array_map(
+            fn (array $delivery): array => CommunicationsWorkspaceSignalPresenter::delivery($delivery),
+            $this->signals->deliveries($messages),
+        );
+        $notes = $this->signals->messageNotes($messages);
+        $messageOf = fn (mixed $event): ?ConversationMessage => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage ? $event->subject : null;
+
+        return [
+            'deliveries' => $deliveries,
+            'event_deliveries' => array_map(fn (mixed $event): ?array => ($message = $messageOf($event)) !== null ? ($deliveries[(int) $message->getKey()] ?? null) : null, $events),
+            'event_notes' => array_map(fn (mixed $event): array => ($message = $messageOf($event)) !== null
+                ? CommunicationsWorkspaceSignalPresenter::messageNotes($notes[(int) $message->getKey()] ?? [])
+                : [], $events),
         ];
     }
 
@@ -1232,10 +1318,6 @@ final class CommunicationsWorkspaceProjection
                 if (is_array($composer) && in_array($composer['kind'] ?? '', ['conversation', 'call'], true)) {
                     $thread['composer']['nudge_key'] = $nudge['key'] ?? null;
                     $thread['composer']['entity_key'] = $nudge['entity_key'] ?? null;
-
-                    if (filled($nudge['draft_reply'] ?? null)) {
-                        $thread['composer']['draft_reply'] = $nudge['draft_reply'];
-                    }
                 }
             }
         }

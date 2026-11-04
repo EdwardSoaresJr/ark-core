@@ -164,16 +164,6 @@
                     <div class="text-secondary small">No visits yet</div>
                 @endforelse
             </section>
-
-            @if (filled($context['internal_note_url'] ?? null))
-                <form method="POST" action="{{ $context['internal_note_url'] }}" class="p-3">
-                    @csrf
-                    <input type="hidden" name="section" value="inbox">
-                    <label class="subheader mb-1 d-block" for="comms-context-internal-note">Internal notes</label>
-                    <textarea id="comms-context-internal-note" name="body" rows="3" required maxlength="2000" class="form-control" placeholder="Add an internal note…"></textarea>
-                    <button type="submit" class="btn btn-sm mt-2">Save</button>
-                </form>
-            @endif
         </div>
     @endif
 </div>

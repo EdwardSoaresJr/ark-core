@@ -213,7 +213,6 @@
                         :has-conversation-history="$hasHistory"
                         :nudge-key="$composer['nudge_key'] ?? null"
                         :entity-key="$composer['entity_key'] ?? null"
-                        :initial-body="$composer['draft_reply'] ?? null"
                         always-open
                         keep-open-after-send
                         show-quick-replies
@@ -229,7 +228,6 @@
                         :has-conversation-history="$hasHistory"
                         :nudge-key="$composer['nudge_key'] ?? null"
                         :entity-key="$composer['entity_key'] ?? null"
-                        :initial-body="$composer['draft_reply'] ?? null"
                         actions-menu
                         id="comms-thread-composer"
                     />
@@ -315,7 +313,7 @@
                     maxlength="2000"
                     placeholder="Log what happened on this call"
                     class="form-control"
-                >{{ $composer['draft_reply'] ?? '' }}</textarea>
+                ></textarea>
             </div>
             <div class="d-flex justify-content-end px-3 py-2 border-top">
                 <button type="submit" class="btn btn-primary btn-sm">Log call note</button>

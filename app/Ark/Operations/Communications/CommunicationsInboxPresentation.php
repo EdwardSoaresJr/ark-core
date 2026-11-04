@@ -173,9 +173,6 @@ final class CommunicationsInboxPresentation
         $context['customer_url'] = $customer instanceof Customer
             ? route('operations.customers.show', $customer)
             : ($context['customer_url'] ?? null);
-        $context['internal_note_url'] = $conversation instanceof Conversation
-            ? route('operations.communications.conversations.internal-note', $conversation)
-            : ($context['internal_note_url'] ?? null);
         $context['recent_visits'] = $this->recentVisits($customer);
         $visitRepairOrderId = $primary['repair_order_id'] ?? data_get($context, 'current_visit.repair_order_id');
         $context['shop'] = $this->shopContext($customer, filled($visitRepairOrderId) ? (int) $visitRepairOrderId : null);

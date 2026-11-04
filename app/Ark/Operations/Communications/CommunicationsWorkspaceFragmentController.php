@@ -66,6 +66,25 @@ class CommunicationsWorkspaceFragmentController
         $leadId = $request->integer('lead') ?: null;
         $callSessionId = $request->integer('call') ?: null;
 
+        if ($conversationId !== null && $request->filled('older_before')) {
+            $older = $projection->olderConversationEvents($conversationId, [
+                'before' => $request->string('older_before')->limit(40, '')->toString(),
+                'key' => $request->string('older_key')->limit(120, '')->toString(),
+            ], max(0, $request->integer('loaded')));
+            abort_if($older === null, 404);
+
+            return response()->json([
+                'older_html' => view('operations.communications.workspace.partials.thread-events', [
+                    'events' => $older['events'],
+                    'eventDeliveries' => $older['event_deliveries'],
+                    'eventNotes' => $older['event_notes'],
+                    'eventKeys' => $older['event_keys'],
+                ])->render(),
+                'older' => $older['older'],
+                'count' => count($older['events']),
+            ]);
+        }
+
         if ($section === 'inbox') {
             $pollSignature = $projection->pollSignature($filter, $conversationId, $leadId, $callSessionId);
 

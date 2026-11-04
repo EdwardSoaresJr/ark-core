@@ -16,11 +16,26 @@
     $delivery = isset($delivery) && is_array($delivery) ? $delivery : null;
     $notes = isset($notes) && is_array($notes) ? $notes : [];
     $subject = trim((string) (($message?->metadata ?? [])['subject'] ?? ''));
-    $evidenceBits = array_values(array_filter([
-        $channelLabel !== '' ? $channelLabel : null,
-        $occurredLabel,
-        filled($event->actor) ? 'Actor: '.$event->actor : null,
-        filled($event->source->value ?? null) ? 'Source: '.$event->source->value : null,
+    $tone = $event->tone->value;
+    $attachmentCount = $message !== null && $message->relationLoaded('attachments') ? $message->attachments->count() : 0;
+    $kindLabel = match (true) {
+        in_array($tone, ['internal', 'system'], true) => 'Internal note',
+        $channelLabel === 'MMS' => 'Picture message',
+        $channelLabel === 'SMS' => 'Text message',
+        $channelLabel !== '' => $channelLabel,
+        default => null,
+    };
+    $detailLines = array_values(array_filter([
+        $kindLabel !== null && $attachmentCount > 0 ? $kindLabel.' with '.$attachmentCount.' '.str('attachment')->plural($attachmentCount) : $kindLabel,
+        match (true) {
+            in_array($tone, ['internal', 'system'], true) => 'Added '.$occurredLabel.(filled($event->actor) ? ' by '.$event->actor : ''),
+            $tone === 'shop' => 'Sent '.$occurredLabel.(filled($event->actor) ? ' by '.$event->actor : ''),
+            default => 'Received '.$occurredLabel.(filled($event->actor) ? ' from '.$event->actor : ''),
+        },
+        filled($event->metadata['visit_label'] ?? null)
+            ? 'About '.$event->metadata['visit_label'].(filled($event->metadata['visit_vehicle_label'] ?? null) ? ' · '.$event->metadata['visit_vehicle_label'] : '')
+            : null,
+        filled($event->metadata['imported_label'] ?? null) ? 'Imported from earlier records' : null,
     ]));
 @endphp
 
@@ -91,11 +106,11 @@
                 @if (filled($event->metadata['context_label'] ?? null))
                     <div class="mt-1 small text-secondary">{{ $event->metadata['context_label'] }}</div>
                 @endif
-                @if ($evidenceBits !== [] || ($event->links ?? []) !== [])
-                    <details class="mt-1 small" data-comms-evidence>
-                        <summary class="text-secondary">Evidence</summary>
+                @if ($detailLines !== [] || ($event->links ?? []) !== [])
+                    <details class="mt-1 small" data-comms-details>
+                        <summary class="text-secondary">Details</summary>
                         <ul class="list-unstyled mb-0 mt-1">
-                            @foreach ($evidenceBits as $bit)
+                            @foreach ($detailLines as $bit)
                                 <li>{{ $bit }}</li>
                             @endforeach
                             @foreach ($event->links as $linkLabel => $linkUrl)
