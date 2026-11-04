@@ -8,7 +8,6 @@ use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Exceptions\ExceptionReporter;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Http\Middleware\ApplyDevRolePretend;
-use App\Http\Middleware\EnsureAdvisorCommsCleared;
 use App\Http\Middleware\HideDemoCompanionSurfaces;
 use App\Http\Middleware\KeepFlashThroughJsonResponses;
 use App\Http\Middleware\PresentPublicDemo;
@@ -103,9 +102,7 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureUserIsActive::class,
             EnsurePasswordIsSet::class,
             // LearnArkTrainingGate retired: no shop-wide ARKademy workboard wall.
-            // Presence must run before the comms gate so previous_last_seen_at is
             TrackStaffCallPresence::class,
-            EnsureAdvisorCommsCleared::class,
             SyncEcosystemDisplayThemeCookie::class,
             CommitRepairOrderEstimateLock::class,
         ]);

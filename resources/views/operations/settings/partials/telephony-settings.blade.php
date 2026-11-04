@@ -405,7 +405,7 @@
                         @checked(old('telephony_call_flow.comms_attention_gate_enabled', $callFlowConfig['comms_attention_gate_enabled'] ?? true))
                         class="form-check-input"
                     >
-                    <span class="form-check-label">Block other ARK pages until the Work communications queue is cleared (Mark Handled / Mark Read / Reply). Incoming call and text popups still appear either way.</span>
+                    <span class="form-check-label">Show the attention bar on every page while customer communications need action, and bring new call and text popups to the front. Staff can always keep working on other pages.</span>
                 </label>
                 <label class="form-check mb-0">
                     <input type="hidden" name="telephony_call_flow[comms_escalation_enabled]" value="0">

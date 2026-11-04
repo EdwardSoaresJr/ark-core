@@ -14,7 +14,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Cache;
 
-test('attention gate allows intake while website lead pressure is active', function () {
+test('intake opens while website lead pressure is active', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -39,7 +39,7 @@ test('attention gate allows intake while website lead pressure is active', funct
         ->assertSee('Optional for website leads', false);
 });
 
-test('attention gate redirects advisors with unresolved comms pressure', function () {
+test('unresolved comms never send advisors away; every page shows the attention bar with the count', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -57,16 +57,20 @@ test('attention gate redirects advisors with unresolved comms pressure', functio
     ingestInboundSms('7195557777', 'Still waiting on an update', 'SMgate001');
 
     $this->actingAs($advisor)
-        ->get(route('operations.workboard'))
-        ->assertRedirect(CommunicationsNeedsYou::url())
-        ->assertSessionHas('comms_gate');
+        ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
+        ->get(route('operations.repair-orders.index'))
+        ->assertOk()
+        ->assertSee('data-ops-comms-pressure-bar="attention"', false)
+        ->assertSeeInOrder(['<strong>1</strong>', 'customer needs you'], false)
+        ->assertSee(CommunicationsNeedsYou::url(), false);
 
     $this->actingAs($advisor)
         ->get(CommunicationsNeedsYou::url())
-        ->assertOk();
+        ->assertOk()
+        ->assertSee('Gate Test');
 });
 
-test('attention gate does not block repair orders when only workboard lead pressure exists', function () {
+test('repair orders open while workboard lead pressure exists', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -117,7 +121,7 @@ test('attention gate does not block repair orders when only workboard lead press
         ->assertSee('F-150', false);
 });
 
-test('attention gate allows customer and ro reply destinations while pressure is active', function () {
+test('customer and repair-order reply destinations open while pressure is active', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -140,7 +144,7 @@ test('attention gate allows customer and ro reply destinations while pressure is
         ->assertSee('customer-communication', false);
 });
 
-test('attention gate does not block technicians with unresolved comms pressure', function () {
+test('technicians open the workboard and their repair orders while comms need attention', function () {
     $this->seed(ArkAuthorizationSeeder::class);
 
     ShopSettings::current()->update([
@@ -191,7 +195,7 @@ test('attention gate does not block technicians with unresolved comms pressure',
         ->assertOk();
 });
 
-test('attention gate is disabled when shop setting is off', function () {
+test('the operations index opens when the attention setting is off', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => false,
@@ -246,7 +250,7 @@ test('comms escalation texts active advisors after delay', function () {
     expect(Cache::has('comms:escalated:message:'.(string) $result['message']->id))->toBeTrue();
 });
 
-test('attention gate lets configured exempt routes through and still gates everything else', function () {
+test('pages an installation adds, such as its own settings, open while comms need attention', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -254,8 +258,8 @@ test('attention gate lets configured exempt routes through and still gates every
     ]);
 
     \Illuminate\Support\Facades\Route::middleware('web')
-        ->get('/extension-inbox', fn () => 'extension inbox')
-        ->name('extension.inbox.index');
+        ->get('/extension-settings', fn () => 'extension settings')
+        ->name('extension.settings.index');
     app('router')->getRoutes()->refreshNameLookups();
 
     $advisor = actingAsLearnCurrentAdvisor();
@@ -269,17 +273,7 @@ test('attention gate lets configured exempt routes through and still gates every
     ingestInboundSms('7195556666', 'Any news on my car?', 'SMgate-extension');
 
     $this->actingAs($advisor)
-        ->get('/extension-inbox')
-        ->assertRedirect(CommunicationsNeedsYou::url());
-
-    config(['ark_attention.gate_exempt_routes' => ['extension.inbox.*', '', 42]]);
-
-    $this->actingAs($advisor)
-        ->get('/extension-inbox')
+        ->get('/extension-settings')
         ->assertOk()
-        ->assertSee('extension inbox');
-
-    $this->actingAs($advisor)
-        ->get(route('operations.workboard'))
-        ->assertRedirect(CommunicationsNeedsYou::url());
+        ->assertSee('extension settings');
 });
