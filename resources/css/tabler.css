@@ -630,6 +630,34 @@ span.ark-legacy {
     min-height: 0;
 }
 
+/* Desktop and tablet: a compact title row and tight margins leave the panels the rest of the screen. */
+@media (min-width: 992px) {
+    .ark-split > .page-header {
+        margin-top: 0.5rem;
+    }
+
+    .ark-split > .page-header .page-title {
+        font-size: 1.125rem;
+    }
+
+    .ark-split > .page-header .btn {
+        min-height: 2rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .ark-split > .page-body {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Side by side, the panels need no vertical gutter; with it each panel overran the row by the gutter. */
+    .ark-split > .page-body > .container-fluid > .row {
+        --bs-gutter-y: 0;
+        --tblr-gutter-y: 0;
+    }
+}
+
 /* The timeline keeps room for a few messages however much the header and composer need. */
 .ark-split .ark-comms-thread {
     min-height: 7rem;
