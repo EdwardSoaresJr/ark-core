@@ -12,6 +12,8 @@ use App\Ark\Mobile\Push\Transport\Firebase\FirebasePushTransport;
 use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Commands\OperationsCommandRegistry;
 use App\Ark\Operations\Commands\RegisterCoreOperationsCommands;
+use App\Ark\Operations\Communications\CommunicationsWorkspaceSignals;
+use App\Ark\Operations\Communications\CoreCommunicationsWorkspaceSignals;
 use App\Ark\Operations\Documents\HeadlessChromiumPdfRenderer;
 use App\Ark\Operations\Documents\PdfRenderer;
 use App\Ark\Operations\Documents\PdfRuntimeConfigurator;
@@ -85,6 +87,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RepairOrderReadCache::class);
         $this->app->bind(LinkedPartsQuotes::class, UnavailableLinkedPartsQuotes::class);
+        $this->app->bind(CommunicationsWorkspaceSignals::class, CoreCommunicationsWorkspaceSignals::class);
 
         // Pre-DB first-run: avoid database session/cache before installer configures MySQL.
         // A hosted shop's install marker lives in tenant storage, which is not active yet.

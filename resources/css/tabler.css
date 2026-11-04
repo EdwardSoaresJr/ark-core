@@ -601,7 +601,8 @@ span.ark-legacy {
  * row of panels may then shrink below its content, and the row takes the remaining height.
  */
 .page:has(.ark-split) {
-    height: 100dvh;
+    height: var(--ark-viewport-height, 100dvh);
+    min-height: 0;
 }
 
 .page:has(.ark-split) > .page-wrapper,
@@ -621,4 +622,145 @@ span.ark-legacy {
 .ark-split > .page-body > .container-fluid > .row {
     flex: 1 1 0;
     min-height: 0;
+}
+
+/* A wrapping row sizes its line to the tallest panel; cap each panel at the row so it scrolls inside. */
+.ark-split > .page-body > .container-fluid > .row > * {
+    max-height: 100%;
+    min-height: 0;
+}
+
+/* The timeline keeps room for a few messages however much the header and composer need. */
+.ark-split .ark-comms-thread {
+    min-height: 7rem;
+}
+
+.ark-split .ark-comms-thread-wrap {
+    min-height: 0;
+}
+
+/* Each timeline entry is wrapped only to carry its key; the bubble stays a direct item of the thread. */
+.ark-comms-thread [data-comms-entry] {
+    display: contents;
+}
+
+/* A conversation row is a link, but reads as a row: no underline when hovered, focused, or selected. */
+.ark-comms-row,
+.ark-comms-row:hover,
+.ark-comms-row:focus,
+.ark-comms-row * {
+    text-decoration: none;
+}
+
+/* Below the widest screens the conversation's actions stack a short label under the icon, so none is icon-only. */
+@media (max-width: 1399.98px) {
+    .ark-comms-actions .btn {
+        flex-direction: column;
+        gap: 0;
+        padding: 0.25rem 0.5rem;
+        line-height: 1.1;
+    }
+
+    .ark-comms-actions .ark-comms-action-label {
+        font-size: 0.6875rem;
+    }
+
+    .ark-comms-actions .dropdown-toggle::after {
+        display: none;
+    }
+}
+
+/* Short screens (a laptop, a phone): the composer is compact so the conversation keeps the room. */
+@media (max-height: 820px) {
+    .ark-split [data-comms-quick-replies] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .ark-split [data-comms-quick-replies] > .btn {
+        flex-shrink: 0;
+    }
+
+    .ark-split [data-comms-composer] textarea {
+        height: 3.5rem;
+    }
+}
+
+/* On a phone an open conversation takes the screen: the back button replaces the page title and section tabs. */
+@media (max-width: 991.98px) {
+    .ark-split.ark-comms-thread-open > .page-header,
+    .ark-split.ark-comms-thread-open [data-comms-section-nav] {
+        display: none;
+    }
+
+    .ark-split.ark-comms-thread-open > .page-body {
+        margin-top: 0.5rem;
+    }
+
+    .ark-split [data-comms-quick-replies] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .ark-split [data-comms-quick-replies] > .btn {
+        flex-shrink: 0;
+    }
+
+    .ark-split [data-comms-composer] textarea {
+        height: 3.5rem;
+    }
+}
+
+/*
+ * Communications workspace: the conversation is the focus. The shop's messages are filled with the accent colour
+ * and the customer's are a quiet surface, like a phone's messages; a message the carrier did not deliver keeps a
+ * red outline. The selected conversation is marked by an accent edge.
+ */
+.ark-comms-thread .chat-bubble {
+    border-radius: 1rem;
+}
+
+.ark-comms-thread .chat-bubble:not(.chat-bubble-me):not(.bg-yellow-lt) {
+    background: var(--tblr-bg-surface-secondary);
+}
+
+.ark-comms-thread .chat-bubble-me {
+    background: var(--tblr-primary);
+    color: var(--tblr-primary-fg, #fff);
+}
+
+.ark-comms-thread .chat-bubble-me .chat-bubble-title,
+.ark-comms-thread .chat-bubble-me .text-secondary,
+.ark-comms-thread .chat-bubble-me summary {
+    color: color-mix(in srgb, currentColor 75%, transparent) !important;
+}
+
+.ark-comms-thread .chat-bubble-me a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.ark-comms-thread .chat-bubble-me .badge {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: var(--tblr-primary-fg, #fff) !important;
+}
+
+.ark-comms-thread .chat-bubble.border-danger {
+    border-width: 2px !important;
+}
+
+.ark-comms-row.active {
+    box-shadow: inset 3px 0 0 var(--tblr-primary);
+}
+
+.ark-comms-thread .chat-bubble-body {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+}
+
+.ark-comms-thread [data-comms-details] summary,
+.ark-comms-thread [data-comms-call-transcript] summary {
+    font-size: 0.75rem;
 }

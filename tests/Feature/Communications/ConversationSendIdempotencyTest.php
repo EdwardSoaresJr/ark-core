@@ -2,15 +2,21 @@
 
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
+use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Conversations\ConversationMessageAttachment;
+use App\Ark\Operations\Messaging\OutboundAttachmentStore;
 use App\Ark\Operations\Messaging\OutboundSmsResult;
 use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Messaging\SendOutboundContactMessageAction;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
     $this->seed(ArkAuthorizationSeeder::class);
+    Storage::fake('local');
 
     $this->sent = new class implements OutboundSmsTransport
     {
@@ -57,4 +63,36 @@ test('a conversation send without a key passes no idempotency context', function
     app(SendOutboundContactMessageAction::class)->execute(idempotencyConversation(), $advisor, 'Your car is ready.');
 
     expect($this->sent->contexts)->toBe([[]]);
+});
+
+test('a repeated key the transport answers with the first send is not recorded again', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $transport = new class implements OutboundSmsTransport
+    {
+        public int $sends = 0;
+
+        public function isConfigured(): bool
+        {
+            return true;
+        }
+
+        public function send(string $toPhone, string $body, array $mediaUrls = [], array $context = []): OutboundSmsResult
+        {
+            $this->sends++;
+
+            return new OutboundSmsResult('SMreplay00000000000000000000000001', 'queued');
+        }
+    };
+    app()->instance(OutboundSmsTransport::class, $transport);
+    $conversation = idempotencyConversation();
+    $send = fn () => app(SendOutboundContactMessageAction::class)->execute($conversation, $advisor, 'Here are the photos.',
+        idempotencyKey: 'compose-photo', attachments: [UploadedFile::fake()->image('pads.jpg', 64, 64)]);
+
+    $first = $send();
+    $again = $send();
+
+    expect($again['message']->is($first['message']))->toBeTrue()
+        ->and(ConversationMessage::query()->where('conversation_id', $conversation->id)->count())->toBe(1)
+        ->and(ConversationMessageAttachment::query()->count())->toBe(1)
+        ->and(Storage::disk('local')->files(OutboundAttachmentStore::STORAGE_DIRECTORY))->toHaveCount(1);
 });

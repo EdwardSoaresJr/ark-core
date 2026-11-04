@@ -1,8 +1,12 @@
 <?php
 
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
+use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationLink;
+use App\Ark\Operations\Conversations\ConversationLinker;
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerHubCommsTimeline;
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
@@ -36,7 +40,6 @@ test('outbound sms appears on customer hub timeline after send', function () {
     $this->seed(ArkAuthorizationSeeder::class);
     bindFakeOutboundSms();
 
-        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -88,7 +91,6 @@ test('mobile conversation send records on the viewed conversation thread', funct
     ]);
     bindFakeOutboundSms();
 
-        
     ShopSettings::current()->update([
         'telephony_inbound_number' => '7195559999',
     ]);
@@ -121,4 +123,88 @@ test('mobile conversation send records on the viewed conversation thread', funct
         'First message to seed conversation.',
         'Reply from mobile thread.',
     ]);
+});
+
+test('a workspace reply goes to the number the conversation is with, not only the customer main phone', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $transport = bindFakeOutboundSms('SMsecondline');
+    config(['services.twilio.account_sid' => 'ACsynthetic', 'services.twilio.auth_token' => 'synthetic-token']);
+
+    ShopSettings::current()->update([
+        'telephony_inbound_number' => '7195559999',
+    ]);
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::InProgress, 'Second Line Customer');
+    $customer = smsCapableCustomer($repairOrder->customer, '7195553000');
+    PhoneSmsCapability::query()->create([
+        'normalized_phone' => PhoneNumber::normalize('7195553111'),
+        'valid' => true,
+        'line_type' => 'mobile',
+        'carrier_name' => 'Test',
+        'sms_capable' => true,
+        'reason' => null,
+        'checked_at' => now(),
+        'raw_payload' => ['source' => 'test'],
+    ]);
+
+    $conversation = Conversation::query()->create([
+        'contact_surface' => ConversationContactSurface::Phone,
+        'contact_address' => '7195553111',
+        'status' => ConversationStatus::Open,
+    ]);
+    app(ConversationLinker::class)->link($conversation, $customer);
+
+    $thread = $this->actingAs($advisor)
+        ->getJson(route('operations.communications.workspace.fragment', [
+            'section' => 'inbox',
+            'filter' => 'all',
+            'conversation' => $conversation->id,
+        ]))
+        ->assertOk()
+        ->json('thread');
+
+    expect($thread)->toContain('conversation-messages?conversation_id='.$conversation->id);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.customers.conversation-messages.store', $customer), [
+            'body' => 'Replying on the number you texted from.',
+            'conversation_id' => $conversation->id,
+        ])
+        ->assertOk();
+
+    expect($transport->sent)->toHaveCount(1)
+        ->and(PhoneNumber::normalize($transport->sent[0]['to']))->toBe(PhoneNumber::normalize('7195553111'))
+        ->and(ConversationMessage::query()->sole()->conversation_id)->toBe($conversation->id);
+});
+
+test('a workspace reply refuses a conversation that is with a different customer', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $transport = bindFakeOutboundSms();
+    config(['services.twilio.account_sid' => 'ACsynthetic', 'services.twilio.auth_token' => 'synthetic-token']);
+
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = repairOrderForCommunication(RepairOrderStatus::InProgress, 'Right Customer');
+    $customer = smsCapableCustomer($repairOrder->customer, '7195554000');
+    $other = smsCapableCustomer(
+        repairOrderForCommunication(RepairOrderStatus::InProgress, 'Other Customer')->customer,
+        '7195554111',
+    );
+
+    $conversation = Conversation::query()->create([
+        'contact_surface' => ConversationContactSurface::Phone,
+        'contact_address' => '7195554111',
+        'status' => ConversationStatus::Open,
+    ]);
+    app(ConversationLinker::class)->link($conversation, $other);
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.customers.conversation-messages.store', $customer), [
+            'body' => 'This should not go out.',
+            'conversation_id' => $conversation->id,
+        ])
+        ->assertStatus(422);
+
+    expect($transport->sent)->toBe([])
+        ->and(ConversationMessage::query()->count())->toBe(0);
 });

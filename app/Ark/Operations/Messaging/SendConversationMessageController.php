@@ -5,9 +5,12 @@ namespace App\Ark\Operations\Messaging;
 use App\Ark\Operations\Attention\AdvisorNudgeResponseKind;
 use App\Ark\Operations\Attention\RecordAdvisorNudgeResponseAction;
 use App\Ark\Operations\Communications\CancelScheduledOutboundMessagesAction;
+use App\Ark\Operations\Communications\CommunicationsWorkspaceContextBuilder;
 use App\Ark\Operations\Communications\ScheduledOutboundSmsProjection;
 use App\Ark\Operations\Communications\ScheduleOutboundSmsReplyAction;
 use App\Ark\Operations\Communications\TomorrowMorningSchedule;
+use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerHubCommsTimeline;
 use App\Ark\Operations\Messaging\Messenger\MetaMessengerMessageTag;
@@ -33,6 +36,7 @@ class SendConversationMessageController
         ConversationMessageRenderer $renderer,
         RecordAdvisorNudgeResponseAction $recordNudge,
         CustomerHubCommsTimeline $hubCommsTimeline,
+        CommunicationsWorkspaceContextBuilder $workspaceContext,
     ): JsonResponse {
         $validated = $request->validate([
             'channel' => ['nullable', 'string', Rule::in(['sms', 'messenger'])],
@@ -40,6 +44,7 @@ class SendConversationMessageController
             'scheduled_for' => ['nullable', 'string', 'max:64'],
             'body' => ['nullable', 'string', 'max:1600'],
             'repair_order_id' => ['nullable', 'integer'],
+            'conversation_id' => ['nullable', 'integer'],
             'messenger_message_tag' => ['nullable', 'string', Rule::enum(MetaMessengerMessageTag::class)],
             'nudge_key' => ['nullable', 'string', 'max:64'],
             'entity_key' => ['nullable', 'string', 'max:64'],
@@ -66,6 +71,21 @@ class SendConversationMessageController
             abort_if($repairOrder === null, 422, 'Repair order does not belong to this customer.');
         }
 
+        $conversation = null;
+
+        if (filled($validated['conversation_id'] ?? null)) {
+            $conversation = Conversation::query()->find((int) $validated['conversation_id']);
+
+            abort_if($conversation === null, 422, 'This conversation no longer exists.');
+            abort_unless(
+                $conversation->contact_surface === ConversationContactSurface::Phone
+                    && filled($conversation->contact_address)
+                    && $workspaceContext->conversationComposerContext($conversation)['customer']?->is($customer),
+                422,
+                'This conversation is not with this customer. Reload it and try again.',
+            );
+        }
+
         $channel = (string) ($validated['channel'] ?? 'sms');
         $timing = (string) ($validated['timing'] ?? 'now');
         $wantsSchedule = $timing === 'tomorrow_morning' || filled($validated['scheduled_for'] ?? null);
@@ -89,6 +109,7 @@ class SendConversationMessageController
                     actor: $request->user(),
                     body: (string) ($validated['body'] ?? ''),
                     repairOrder: $repairOrder,
+                    conversation: $conversation,
                     scheduledFor: $scheduledFor,
                 );
             } catch (RuntimeException $exception) {
@@ -130,6 +151,8 @@ class SendConversationMessageController
                     actor: $request->user(),
                     body: (string) ($validated['body'] ?? ''),
                     repairOrder: $repairOrder,
+                    conversation: $conversation,
+                    toPhone: $conversation?->contact_address,
                     attachments: $files,
                 );
             }

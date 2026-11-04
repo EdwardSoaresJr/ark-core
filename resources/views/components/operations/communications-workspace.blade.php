@@ -18,7 +18,9 @@
     'listShown' => null,
     'listTotal' => null,
     'listTruncated' => false,
+    'listNext' => null,
     'pollSignature' => null,
+    'liveEvents' => [],
     'platformBacked' => false,
 ])
 
@@ -34,6 +36,7 @@
     class="d-flex flex-column flex-fill ark-split"
     data-comms-workspace
     x-data="{ threadOpen: {{ $threadOpen ? 'true' : 'false' }}, contextOpen: false }"
+    :class="{ 'ark-comms-thread-open': threadOpen || contextOpen }"
 >
     <x-tabler.page
         layout="split"
@@ -66,6 +69,7 @@
             class="row g-2 g-lg-3"
             data-fragment-url="{{ route('operations.communications.workspace.fragment', array_merge(request()->query(), ['section' => $section])) }}"
             data-poll-signature="{{ $pollSignature ?? '' }}"
+            data-live-events="{{ json_encode(array_values($liveEvents)) }}"
             data-section="{{ $section }}"
         >
             <aside
@@ -91,6 +95,7 @@
                             'listShown' => $listShown,
                             'listTotal' => $listTotal,
                             'listTruncated' => $listTruncated,
+                            'listNext' => $listNext,
                             'section' => $section,
                             'platformBacked' => $platformBacked,
                         ])
@@ -120,7 +125,7 @@
 
             <aside
                 id="ops-comms-workspace-context"
-                class="col-12 col-xl-3 flex-column"
+                class="col-12 col-lg col-xl-3 flex-column"
                 :class="contextOpen ? 'd-flex' : 'd-none d-xl-flex'"
                 aria-label="Customer and work"
             >

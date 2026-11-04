@@ -10,6 +10,7 @@
     $ownerInitials = (string) ($item['owner_initials'] ?? '');
     $sourceLabel = trim((string) ($item['source_label'] ?? ''));
     $assignedLabel = trim((string) ($item['assigned_label'] ?? ''));
+    $unread = ! empty($item['unread']);
     $roHint = trim(implode(' · ', array_filter([
         $item['ro_label'] ?? null,
         $item['vehicle_label'] ?? null,
@@ -26,27 +27,24 @@
     href="{{ $itemUrl }}"
     data-comms-list-row
     data-comms-row-key="{{ $item['key'] ?? '' }}"
-    @class(['list-group-item list-group-item-action px-3 py-2', 'active' => $isSelected])
+    @class(['list-group-item list-group-item-action ark-comms-row px-3 py-2', 'active' => $isSelected, 'ark-comms-row--unread' => $unread])
     @if ($isSelected) aria-current="true" @endif
 >
-    <div class="d-flex gap-2">
-        <span class="avatar avatar-sm flex-shrink-0" aria-hidden="true">{{ $initials !== '' ? $initials : '•' }}</span>
+    <div class="d-flex gap-3">
+        <x-tabler.avatar :name="$headline" :initials="$initials" class="flex-shrink-0" />
         <div class="flex-fill overflow-hidden">
             <div class="d-flex align-items-center gap-1">
-                @if (! empty($item['unread']))
-                    <span class="badge badge-dot bg-primary flex-shrink-0" role="img" aria-label="Unread" data-comms-unread></span>
-                @endif
-                <span class="fw-bold text-truncate">{{ $headline }}</span>
+                <span @class(['text-truncate', 'fw-bold' => $unread, 'fw-medium' => ! $unread])>{{ $headline }}</span>
                 @if ($ageLabel !== '')
-                    <span class="ms-auto ps-1 small text-secondary text-nowrap">{{ $ageLabel }}</span>
+                    <span @class(['ms-auto ps-1 small text-nowrap', 'text-primary fw-medium' => $unread, 'text-secondary' => ! $unread])>{{ $ageLabel }}</span>
                 @endif
             </div>
-            @if ($phone !== '' && $phone !== $headline)
-                <div class="small text-secondary text-truncate">{{ $phone }}</div>
-            @endif
-            @if ($preview !== '')
-                <div class="small text-secondary text-truncate">{{ $preview }}</div>
-            @endif
+            <div class="d-flex align-items-center gap-2">
+                <div @class(['small text-truncate flex-fill', 'text-body' => $unread, 'text-secondary' => ! $unread])>{{ $preview !== '' ? $preview : $phone }}</div>
+                @if ($unread)
+                    <span class="badge badge-dot bg-primary flex-shrink-0" role="img" aria-label="Unread" data-comms-unread></span>
+                @endif
+            </div>
             <div class="d-flex flex-wrap align-items-center gap-1 mt-1 small">
                 @if ($sourceLabel !== '')
                     <span class="badge bg-secondary-lt">{{ $sourceLabel }}</span>
@@ -57,11 +55,14 @@
                 @if ($sourceLabel !== '' && $assignedLabel !== '')
                     <span class="text-secondary">{{ $assignedLabel }}</span>
                 @endif
-                @if ($roHint !== '')
-                    <span class="text-secondary text-truncate">{{ $roHint }}</span>
+                @php
+                    $meta = implode(' · ', array_filter([$roHint, $phone !== $headline && $preview !== '' ? $phone : '']));
+                @endphp
+                @if ($meta !== '')
+                    <span class="text-secondary text-truncate">{{ $meta }}</span>
                 @endif
                 @if ($ownerInitials !== '')
-                    <span class="ms-auto fw-bold text-secondary" title="Owner">{{ $ownerInitials }}</span>
+                    <span class="avatar avatar-xs ms-auto" title="Owner">{{ $ownerInitials }}</span>
                 @endif
             </div>
         </div>

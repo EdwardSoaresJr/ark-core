@@ -6,7 +6,12 @@ use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Conversations\ConversationParticipantResolver;
+use App\Ark\Operations\Conversations\ConversationRead;
+use App\Ark\Operations\Conversations\ConversationReadTracker;
+use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Conversations\ConversationStatus;
+use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionDirection;
 use App\Ark\Operations\Telephony\CallSessionStatus;
@@ -230,6 +235,62 @@ test('technician cannot use communications workspace action routes', function ()
     $this->actingAs($technician)
         ->post(route('operations.communications.calls.note', $session), ['body' => 'Nope'])
         ->assertForbidden();
+});
+
+test('mark unread puts the customer\'s latest message back to unread for this advisor only, and returns to the list', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $colleague = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $conversation = workspaceConversationFixture('7195558111');
+    $inboundAt = now()->subMinutes(5)->startOfSecond();
+    $customer = Customer::query()->create(['first_name' => 'Una', 'last_name' => 'Read', 'phone' => '7195558111']);
+    app(ConversationRecorder::class)->record($conversation, app(ConversationParticipantResolver::class)->customer($conversation, $customer),
+        OperationalCommunicationChannel::Sms, OperationalCommunicationDirection::Inbound, 'Is it ready?', $inboundAt);
+    $reads = app(ConversationReadTracker::class);
+    $reads->markRead($conversation, $advisor);
+    $reads->markRead($conversation, $colleague);
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.conversations.work', $conversation), ['action' => 'unread', 'filter' => 'needs'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('operations.communications.inbox', ['filter' => 'needs']))
+        ->assertSessionHas('status', 'Marked unread.');
+
+    $marked = fn (User $viewer): bool => str_contains((string) $this->actingAs($viewer)->get(route('operations.communications.inbox', ['filter' => 'needs']))->getContent(), 'data-comms-unread');
+    expect($marked($advisor))->toBeTrue()
+        ->and($marked($colleague))->toBeFalse()
+        ->and($reads->unreadInboundCount($conversation, $advisor))->toBe(1)
+        ->and($reads->unreadInboundCount($conversation, $colleague))->toBe(0)
+        ->and(ConversationRead::query()->where('user_id', $advisor->id)->value('read_through_at')->lt($inboundAt))->toBeTrue();
+});
+
+test('an owned conversation can be unassigned from the workspace', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $conversation = workspaceConversationFixture('7195558112');
+    $conversation->forceFill(['owned_by_user_id' => $advisor->id])->save();
+
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs', 'conversation' => $conversation->id]))
+        ->assertOk()
+        ->assertSee('data-comms-work-unassign', false)
+        ->assertSee('data-comms-work-unread', false);
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.conversations.work', $conversation), ['action' => 'assign', 'assign_to' => 'unassign', 'filter' => 'needs'])
+        ->assertSessionHas('status', 'Unassigned.');
+
+    expect($conversation->refresh()->owned_by_user_id)->toBeNull();
+});
+
+test('only an active advisor can be assigned, whatever the request says', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $conversation = workspaceConversationFixture('7195558113');
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.conversations.work', $conversation), ['action' => 'assign', 'assign_to' => 'user', 'user_id' => $technician->id])
+        ->assertSessionHas('error', 'Choose an active advisor to assign.');
+
+    expect($conversation->refresh()->owned_by_user_id)->toBeNull();
 });
 
 function workspaceConversationFixture(string $phone, ConversationStatus $status = ConversationStatus::Open): Conversation

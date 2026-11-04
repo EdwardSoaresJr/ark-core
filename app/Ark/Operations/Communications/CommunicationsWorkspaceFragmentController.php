@@ -66,6 +66,25 @@ class CommunicationsWorkspaceFragmentController
         $leadId = $request->integer('lead') ?: null;
         $callSessionId = $request->integer('call') ?: null;
 
+        if ($conversationId !== null && $request->filled('older_before')) {
+            $older = $projection->olderConversationEvents($conversationId, [
+                'before' => $request->string('older_before')->limit(40, '')->toString(),
+                'key' => $request->string('older_key')->limit(120, '')->toString(),
+            ], max(0, $request->integer('loaded')));
+            abort_if($older === null, 404);
+
+            return response()->json([
+                'older_html' => view('operations.communications.workspace.partials.thread-events', [
+                    'events' => $older['events'],
+                    'eventDeliveries' => $older['event_deliveries'],
+                    'eventNotes' => $older['event_notes'],
+                    'eventKeys' => $older['event_keys'],
+                ])->render(),
+                'older' => $older['older'],
+                'count' => count($older['events']),
+            ]);
+        }
+
         if ($section === 'inbox') {
             $pollSignature = $projection->pollSignature($filter, $conversationId, $leadId, $callSessionId);
 
@@ -87,6 +106,7 @@ class CommunicationsWorkspaceFragmentController
                 $this->previousLastSeenAt($request),
                 $filter,
                 $request->string('owner')->toString() ?: 'everyone',
+                $request->integer('shown') ?: null,
             ),
             'history' => $projection->history(
                 $request,
@@ -125,6 +145,10 @@ class CommunicationsWorkspaceFragmentController
                 'filterCounts' => $workspace['filter_counts'] ?? null,
                 'ownerFilter' => $workspace['owner_filter'] ?? 'everyone',
                 'ownerCounts' => $workspace['owner_counts'] ?? null,
+                'listShown' => $workspace['list_shown'] ?? null,
+                'listTotal' => $workspace['list_total'] ?? null,
+                'listTruncated' => $workspace['list_truncated'] ?? false,
+                'listNext' => $workspace['list_next'] ?? null,
                 'turnFilter' => $workspace['turn_filter'] ?? null,
                 'turnCounts' => $workspace['turn_counts'] ?? null,
                 'section' => $section,

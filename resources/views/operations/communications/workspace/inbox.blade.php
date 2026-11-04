@@ -30,9 +30,11 @@
         :list-shown="$workspace['list_shown'] ?? null"
         :list-total="$workspace['list_total'] ?? null"
         :list-truncated="$workspace['list_truncated'] ?? false"
+        :list-next="$workspace['list_next'] ?? null"
         :turn-filter="$workspace['turn_filter'] ?? null"
         :turn-counts="$workspace['turn_counts'] ?? null"
         :poll-signature="$workspace['poll_signature'] ?? ''"
+        :live-events="$workspace['live_events'] ?? []"
         :platform-backed="(bool) ($workspace['platform_backed'] ?? false)"
         :owner-filter="$workspace['owner_filter'] ?? 'everyone'"
         :owner-counts="$workspace['owner_counts'] ?? null"
@@ -42,6 +44,9 @@
                 {{ $workspace['error'] ?? session('error') }}
             </div>
         @endif
+        @foreach ($workspace['notices'] ?? [] as $notice)
+            <div class="alert alert-info flex-shrink-0 mb-2 py-2 small" role="status" data-comms-workspace-notice>{{ $notice }}</div>
+        @endforeach
         @if (session('status'))
             <div class="alert alert-success flex-shrink-0 mb-2" role="status">
                 {{ session('status') }}
