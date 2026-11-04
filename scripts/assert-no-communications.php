@@ -75,6 +75,7 @@ const WORKSPACE_EXCEPTION = [
     'app/Ark/Operations/Communications/CommunicationsWorkspaceSignalPresenter.php' => 'Words and badge tones for the workspace signals',
     'resources/views/operations/communications/workspace/partials/work-actions.blade.php' => 'The workspace header\'s one set of assign, follow-up, waiting, and resolve controls',
     'tests/Feature/Communications/CommunicationsWorkspaceSignalsTest.php' => 'Tests of the workspace signals extension point and its Core implementation',
+    'database/migrations/2026_11_04_120000_index_conversation_messages_by_direction_channel_time.php' => 'Index for the workspace\'s unread-message badge query on every staff page (owner-approved, 2026-11-04)',
 ];
 
 $namespaces = array_map(
