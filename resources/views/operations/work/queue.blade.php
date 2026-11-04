@@ -90,11 +90,6 @@
                 @endforeach
             </nav>
 
-            @if (session('comms_gate'))
-                <div class="alert alert-danger mb-0" role="alert">
-                    {{ (int) (session('comms_gate.count') ?? 0) }} customer {{ ((int) (session('comms_gate.count') ?? 0)) === 1 ? 'contact' : 'contacts' }} still need action. Clear the communications queue before opening other ARK pages.
-                </div>
-            @endif
             @if (session('status'))
                 <div class="alert alert-success mb-0" role="status">{{ session('status') }}</div>
             @endif

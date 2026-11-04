@@ -2,11 +2,12 @@
 
 use App\Ark\Operations\Communications\CommunicationsNeedsYou;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\Leads\LeadState;
-use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
@@ -14,7 +15,7 @@ use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Facades\Cache;
 
-test('attention gate allows intake while website lead pressure is active', function () {
+test('intake opens while website lead pressure is active', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -24,7 +25,7 @@ test('attention gate allows intake while website lead pressure is active', funct
 
     $advisor = actingAsLearnCurrentAdvisor();
 
-    $lead = \App\Ark\Operations\Leads\Lead::query()->create([
+    $lead = Lead::query()->create([
         'source' => LeadSource::Website,
         'state' => LeadState::Received,
         'concern' => 'Brake quote',
@@ -39,7 +40,7 @@ test('attention gate allows intake while website lead pressure is active', funct
         ->assertSee('Optional for website leads', false);
 });
 
-test('attention gate redirects advisors with unresolved comms pressure', function () {
+test('advisors with unresolved comms keep working on every page and see the reminder instead', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -48,7 +49,7 @@ test('attention gate redirects advisors with unresolved comms pressure', functio
 
     $advisor = actingAsLearnCurrentAdvisor();
 
-    Customer::query()->create([
+    $customer = Customer::query()->create([
         'first_name' => 'Gate',
         'last_name' => 'Test',
         'phone' => '7195557777',
@@ -56,17 +57,53 @@ test('attention gate redirects advisors with unresolved comms pressure', functio
 
     ingestInboundSms('7195557777', 'Still waiting on an update', 'SMgate001');
 
-    $this->actingAs($advisor)
-        ->get(route('operations.workboard'))
-        ->assertRedirect(CommunicationsNeedsYou::url())
-        ->assertSessionHas('comms_gate');
+    $vehicle = Vehicle::query()->create([
+        'customer_id' => $customer->id,
+        'plate' => 'GATE1',
+        'year' => 2021,
+        'make' => 'Honda',
+        'model' => 'Pilot',
+        'vin' => '5FNYF6H59MB012345',
+    ]);
+    $repairOrder = RepairOrder::query()->create([
+        'customer_id' => $customer->id,
+        'vehicle_id' => $vehicle->id,
+        'status' => RepairOrderStatus::InProgress,
+        'concern_summary' => 'Check engine light.',
+    ]);
 
-    $this->actingAs($advisor)
-        ->get(CommunicationsNeedsYou::url())
+    $session = [WorkstationPresence::SESSION_BIND_DISMISSED => true];
+
+    $this->actingAs($advisor)->withSession($session)
+        ->get(route('operations.index'))
         ->assertOk();
+
+    $this->actingAs($advisor)->withSession($session)
+        ->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Pilot', false)
+        ->assertSee('ops-comms-pressure-bar', false)
+        ->assertSee('customer needs you', false);
+
+    $this->actingAs($advisor)->withSession($session)
+        ->get(route('operations.customers.show', $customer))
+        ->assertOk();
+
+    $customerView = $this->actingAs($advisor)->withSession($session)
+        ->get(route('operations.repair-orders.portal-session', $repairOrder));
+    expect($customerView->headers->get('Location'))->not->toBe(CommunicationsNeedsYou::url());
+
+    $this->actingAs($advisor)->withSession($session)
+        ->getJson(route('operations.index'))
+        ->assertOk();
+
+    $this->actingAs($advisor)->withSession($session)
+        ->get(CommunicationsNeedsYou::url())
+        ->assertOk()
+        ->assertSee('Still waiting on an update', false);
 });
 
-test('attention gate does not block repair orders when only workboard lead pressure exists', function () {
+test('repair orders open when only workboard lead pressure exists', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -90,7 +127,7 @@ test('attention gate does not block repair orders when only workboard lead press
         'vin' => '1FTFW1E50KFA12345',
     ]);
 
-    \App\Ark\Operations\Leads\Lead::query()->create([
+    Lead::query()->create([
         'source' => LeadSource::Website,
         'state' => LeadState::Received,
         'concern' => 'Brake noise',
@@ -117,7 +154,7 @@ test('attention gate does not block repair orders when only workboard lead press
         ->assertSee('F-150', false);
 });
 
-test('attention gate allows customer and ro reply destinations while pressure is active', function () {
+test('customer reply destinations open while pressure is active', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => true,
@@ -140,7 +177,7 @@ test('attention gate allows customer and ro reply destinations while pressure is
         ->assertSee('customer-communication', false);
 });
 
-test('attention gate does not block technicians with unresolved comms pressure', function () {
+test('technicians keep working with unresolved comms pressure', function () {
     $this->seed(ArkAuthorizationSeeder::class);
 
     ShopSettings::current()->update([
@@ -191,7 +228,7 @@ test('attention gate does not block technicians with unresolved comms pressure',
         ->assertOk();
 });
 
-test('attention gate is disabled when shop setting is off', function () {
+test('the reminder bar is off when the shop setting is off', function () {
     ShopSettings::current()->update([
         'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
             'comms_attention_gate_enabled' => false,
@@ -200,7 +237,7 @@ test('attention gate is disabled when shop setting is off', function () {
 
     $advisor = actingAsLearnCurrentAdvisor();
 
-    Customer::query()->create([
+    $customer = Customer::query()->create([
         'first_name' => 'Open',
         'last_name' => 'Board',
         'phone' => '7195558888',
@@ -210,8 +247,9 @@ test('attention gate is disabled when shop setting is off', function () {
 
     $this->actingAs($advisor)
         ->withSession([WorkstationPresence::SESSION_BIND_DISMISSED => true])
-        ->get(route('operations.index'))
-        ->assertOk();
+        ->get(route('operations.customers.show', $customer))
+        ->assertOk()
+        ->assertDontSee('ops-comms-pressure-bar', false);
 });
 
 test('comms escalation texts active advisors after delay', function () {
@@ -244,42 +282,4 @@ test('comms escalation texts active advisors after delay', function () {
     $this->artisan('comms:escalate-unhandled')->assertSuccessful();
 
     expect(Cache::has('comms:escalated:message:'.(string) $result['message']->id))->toBeTrue();
-});
-
-test('attention gate lets configured exempt routes through and still gates everything else', function () {
-    ShopSettings::current()->update([
-        'telephony_call_flow' => array_merge(ShopSettings::defaultTelephonyCallFlow(), [
-            'comms_attention_gate_enabled' => true,
-        ]),
-    ]);
-
-    \Illuminate\Support\Facades\Route::middleware('web')
-        ->get('/extension-inbox', fn () => 'extension inbox')
-        ->name('extension.inbox.index');
-    app('router')->getRoutes()->refreshNameLookups();
-
-    $advisor = actingAsLearnCurrentAdvisor();
-
-    Customer::query()->create([
-        'first_name' => 'Gate',
-        'last_name' => 'Extension',
-        'phone' => '7195556666',
-    ]);
-
-    ingestInboundSms('7195556666', 'Any news on my car?', 'SMgate-extension');
-
-    $this->actingAs($advisor)
-        ->get('/extension-inbox')
-        ->assertRedirect(CommunicationsNeedsYou::url());
-
-    config(['ark_attention.gate_exempt_routes' => ['extension.inbox.*', '', 42]]);
-
-    $this->actingAs($advisor)
-        ->get('/extension-inbox')
-        ->assertOk()
-        ->assertSee('extension inbox');
-
-    $this->actingAs($advisor)
-        ->get(route('operations.workboard'))
-        ->assertRedirect(CommunicationsNeedsYou::url());
 });

@@ -2,28 +2,27 @@
 
 use App\Ark\Console\HostedShopSchedule;
 use App\Ark\Console\ShopSchedule;
+use App\Ark\Install\Middleware\RedirectUninstalledToSetup;
+use App\Ark\Install\Middleware\UseInstallerRuntime;
 use App\Ark\Operations\RepairOrders\RepairOrderEstimateConflictException;
 use App\Ark\Operations\Settings\SettingsAuthorizationFailureResponse;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Exceptions\ExceptionReporter;
 use App\Ark\Runtime\Preferences\EcosystemDisplayTheme;
 use App\Http\Middleware\ApplyDevRolePretend;
-use App\Http\Middleware\EnsureAdvisorCommsCleared;
-use App\Http\Middleware\HideDemoCompanionSurfaces;
-use App\Http\Middleware\KeepFlashThroughJsonResponses;
-use App\Http\Middleware\PresentPublicDemo;
+use App\Http\Middleware\CommitRepairOrderEstimateLock;
+use App\Http\Middleware\ConfigureSessionCookieDomain;
 use App\Http\Middleware\EnsureApiStaffActive;
 use App\Http\Middleware\EnsureAppointmentsSurfaceEnabled;
 use App\Http\Middleware\EnsureBusinessWorkspaceAccess;
 use App\Http\Middleware\EnsureOwnerWorkspaceAccess;
 use App\Http\Middleware\EnsurePasswordIsSet;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\HideDemoCompanionSurfaces;
+use App\Http\Middleware\KeepFlashThroughJsonResponses;
+use App\Http\Middleware\PresentPublicDemo;
 use App\Http\Middleware\PreventPortalSearchIndexing;
 use App\Http\Middleware\RecordStaffFrontDoorLanding;
-use App\Ark\Install\Middleware\RedirectUninstalledToSetup;
-use App\Ark\Install\Middleware\UseInstallerRuntime;
-use App\Http\Middleware\CommitRepairOrderEstimateLock;
-use App\Http\Middleware\ConfigureSessionCookieDomain;
 use App\Http\Middleware\RedirectCrossSurfaceRequests;
 use App\Http\Middleware\SyncEcosystemDisplayThemeCookie;
 use App\Http\Middleware\TrackStaffCallPresence;
@@ -103,9 +102,7 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureUserIsActive::class,
             EnsurePasswordIsSet::class,
             // LearnArkTrainingGate retired: no shop-wide ARKademy workboard wall.
-            // Presence must run before the comms gate so previous_last_seen_at is
             TrackStaffCallPresence::class,
-            EnsureAdvisorCommsCleared::class,
             SyncEcosystemDisplayThemeCookie::class,
             CommitRepairOrderEstimateLock::class,
         ]);
