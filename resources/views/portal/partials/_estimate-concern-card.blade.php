@@ -16,7 +16,7 @@
         'approved' => 'border-l-emerald-500',
         'deferred' => 'border-l-amber-500',
         'declined' => 'border-l-rose-500',
-        'recommended' => 'border-l-[#0099cc]',
+        'recommended' => 'border-l-[color:var(--public-link)]',
         default => 'border-l-slate-300',
     };
 @endphp
@@ -111,7 +111,7 @@
         @if ($lineCount > 0)
             <button
                 type="button"
-                class="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-[#0099cc] hover:text-[#007aa3]"
+                class="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-[color:var(--public-link)] hover:text-[color:var(--public-link-hover)]"
                 @click="showDetails = ! showDetails"
                 :aria-expanded="showDetails.toString()"
             >

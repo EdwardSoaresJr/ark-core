@@ -31,7 +31,7 @@
                     <li>
                         <a
                             href="{{ $link['href'] }}"
-                            class="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 no-underline transition hover:border-[#0099cc]"
+                            class="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 no-underline transition hover:border-[color:var(--public-link)]"
                         >
                             <span class="text-sm font-semibold text-slate-950">{{ $link['label'] }}</span>
                             <span class="mt-1 block text-sm leading-5 text-slate-600">{{ $link['description'] }}</span>

@@ -24,7 +24,7 @@
 
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="min-w-0">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0099cc]">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--public-link)]">
                         {{ $identity['title'] ?? 'Vehicle Inspection' }}
                     </p>
                     <h1 class="mt-1.5 text-2xl font-bold tracking-tight text-slate-950 sm:text-[1.75rem]">
@@ -66,7 +66,7 @@
                     href="{{ $access['simple_url'] }}"
                     @class([
                         'inline-flex min-h-9 items-center rounded-md px-3 text-xs font-semibold no-underline',
-                        'bg-[#0099cc] text-white' => ! $isDetailed,
+                        'bg-[color:var(--public-brand)] text-[color:var(--public-on-brand)]' => ! $isDetailed,
                         'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50' => $isDetailed,
                     ])
                 >Simple</a>
@@ -74,7 +74,7 @@
                     href="{{ $access['detailed_url'] }}"
                     @class([
                         'inline-flex min-h-9 items-center rounded-md px-3 text-xs font-semibold no-underline',
-                        'bg-[#0099cc] text-white' => $isDetailed,
+                        'bg-[color:var(--public-brand)] text-[color:var(--public-on-brand)]' => $isDetailed,
                         'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50' => ! $isDetailed,
                     ])
                 >Detailed</a>

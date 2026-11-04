@@ -155,9 +155,13 @@ test('site foundation exposes services, problems, and an appointment request', f
     $desktopNav = strstr($home->getContent(), 'customer-header__nav--desktop');
     $desktopNav = substr($desktopNav, 0, strpos($desktopNav, 'customer-header__nav--mobile'));
     $mobileNav = strstr($home->getContent(), 'customer-header__nav--mobile');
+    $headerBar = substr($home->getContent(), (int) strpos($home->getContent(), 'customer-header__bar'));
+    $headerBar = substr($headerBar, 0, (int) strpos($headerBar, 'customer-header__nav--desktop'));
     expect(strpos($desktopNav, 'Home'))->toBeLessThan(strpos($desktopNav, 'Services'))
-        ->and(strpos($desktopNav, 'Contact'))->toBeLessThan(strpos($desktopNav, 'Request an appointment'))
-        ->and(strpos($desktopNav, 'Request an appointment'))->toBeLessThan(strpos($desktopNav, 'Sign In'))
+        ->and(strpos($desktopNav, 'Contact'))->toBeLessThan(strpos($desktopNav, 'Sign In'))
+        ->and($desktopNav)->not->toContain('Request an appointment')
+        ->and($headerBar)->toContain('class="customer-header__book"')
+        ->and($headerBar)->toContain('Request an appointment')
         ->and(strpos($mobileNav, 'Home'))->toBeLessThan(strpos($mobileNav, 'Services'))
         ->and($desktopNav)->toContain('href="https://lugsnplugs.com"');
 
@@ -172,9 +176,9 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertSee('/common-problems/electrical-diagnostics', false)
         ->assertDontSee('Auto Repair Colorado Springs')
         ->assertSee('https://lugsnplugs.com/services', false)
-        ->assertSee('href="https://lugsnplugs.com" class="text-[#0099cc] no-underline hover:text-[#0088b8]">Home', false)
+        ->assertSee('href="https://lugsnplugs.com" class="text-[color:var(--public-link)] no-underline hover:text-[color:var(--public-link-hover)]">Home', false)
         ->assertDontSee('href="https://lugsnplugs.arksms.com" class="customer-header__brand"', false)
-        ->assertDontSee('href="https://lugsnplugs.arksms.com" class="text-[#0099cc]', false);
+        ->assertDontSee('href="https://lugsnplugs.arksms.com" class="text-[color:var(--public-link)]', false);
 
     $hub = $this->get('http://lugsnplugs.com/common-problems');
     $hub->assertOk()

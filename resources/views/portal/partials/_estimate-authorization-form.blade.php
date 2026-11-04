@@ -28,7 +28,7 @@
 >
     @csrf
 
-    <div class="border-b border-slate-100 bg-gradient-to-r from-[#0099cc]/8 to-white px-4 py-4 sm:px-5">
+    <div class="border-b border-slate-100 bg-gradient-to-r from-[rgb(var(--public-link-rgb)_/_0.08)] to-white px-4 py-4 sm:px-5">
         <h2 class="text-base font-semibold text-slate-950">Choose what to approve</h2>
         <p class="mt-1 text-sm leading-6 text-slate-600">
             Approve what you want done now. Defer means not now - we keep it for a later visit. Decline means you do not want that repair.
@@ -106,7 +106,7 @@
             </div>
 
             <div
-                class="hidden rounded-lg border border-[#0099cc]/30 bg-[#0099cc]/5 px-4 py-3 md:block"
+                class="hidden rounded-lg border border-[rgb(var(--public-link-rgb)_/_0.3)] bg-[rgb(var(--public-link-rgb)_/_0.05)] px-4 py-3 md:block"
                 aria-live="polite"
             >
                 <div class="flex items-center justify-between gap-3">
@@ -201,7 +201,7 @@
     <div class="border-t border-slate-100 bg-slate-50 px-4 py-4 sm:px-5">
         <button
             type="submit"
-            class="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#0099cc] px-4 text-base font-semibold text-white shadow-sm hover:bg-[#007aa3] disabled:opacity-60 sm:text-sm lg:max-w-none"
+            class="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--public-radius-control)] bg-[color:var(--public-brand)] px-4 text-base font-semibold text-[color:var(--public-on-brand)] shadow-sm hover:bg-[color:var(--public-brand-hover)] disabled:opacity-60 sm:text-sm lg:max-w-none"
             x-text="submitButtonLabel()"
             @disabled($previewOnly)
         >

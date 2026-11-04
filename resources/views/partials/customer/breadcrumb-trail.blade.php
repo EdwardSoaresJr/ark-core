@@ -9,7 +9,7 @@
         @endif
 
         @if (filled($item['href'] ?? null))
-            <a href="{{ $item['href'] }}" class="text-[#0099cc] no-underline hover:text-[#0088b8]">{{ $item['label'] }}</a>
+            <a href="{{ $item['href'] }}" class="text-[color:var(--public-link)] no-underline hover:text-[color:var(--public-link-hover)]">{{ $item['label'] }}</a>
         @else
             <span class="font-medium text-slate-700">{{ $item['label'] }}</span>
         @endif

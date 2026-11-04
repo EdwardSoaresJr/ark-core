@@ -20,7 +20,7 @@
     ]);
 @endphp
 
-<header {{ $attributes->merge(['class' => 'border-b-2 border-[#0099cc] pb-5']) }}>
+<header {{ $attributes->merge(['class' => 'border-b-2 border-[color:var(--public-link)] pb-5']) }}>
     <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div class="flex min-w-0 items-center gap-4">
             @if (filled($logoUrl))
@@ -30,7 +30,7 @@
                     class="h-14 w-auto max-w-[140px] shrink-0 object-contain object-left sm:h-16 sm:max-w-[160px]"
                 >
             @else
-                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#0099cc]/10 text-lg font-black text-[#0099cc] sm:h-16 sm:w-16">
+                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--public-link-rgb)_/_0.1)] text-lg font-black text-[color:var(--public-link)] sm:h-16 sm:w-16">
                     {{ strtoupper(substr(preg_replace('/\s+/', '', $name) ?: 'A', 0, 1)) }}
                 </div>
             @endif

@@ -28,6 +28,24 @@ When favicons change, update the **pack first**, then sync downstream surfaces.
 
 `demo-auto.test` is customer-facing marketing. It keeps **Demo Auto Repair** favicon, OG image, and SEO copy. Operational hosts (`app.*`, `learn.*`, `platform.*`) share the ARK tab mark so staff recognize ecosystem tools.
 
+## Customer pages: the shop's identity, not ARK's
+
+Website shell, booking, portal sign-in and dashboard, estimates, inspections, repair status, and payment
+pages (`x-customer.shell`) carry the shop's identity: its name (tab title), logo, contact facts
+(`ShopSettings`), and its theme, `App\Ark\Customer\Theme\CustomerTheme`:
+
+- Main, accent, and dark colors (hex only), page background (must be light), heading and text fonts
+  (fixed list, loaded from fonts.bunny.net), corners, header style (`light`, `dark`, `brand`), and an
+  optional favicon path on the shop's own host.
+- Core derives button text, link, hover, and dark-mode link colors so text keeps 4.5:1 contrast, and
+  writes them as `--public-*` custom properties (`<style data-customer-theme>`). Customer CSS and views
+  use only those tokens; no customer rule names a brand hex.
+- Without a host source a self-hosted install gets Core's defaults (neutral blue, Figtree, light header,
+  the ARK favicon). A host binds `CustomerThemeSource` (theme values) and optionally
+  `CustomerSiteNavigation` (its website's page links); both are read on every request, never cached
+  across shops, and a failing source falls back to the defaults.
+- A theme changes presentation only: amounts, approvals, tokens, and payments never read it.
+
 ## Upgrade survival
 
 | Surface | Survives upgrade how |

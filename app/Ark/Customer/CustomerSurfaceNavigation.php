@@ -13,6 +13,11 @@ final class CustomerSurfaceNavigation
      */
     public function shopLinks(): array
     {
+        $links = $this->siteLinks();
+        if ($links !== null) {
+            return [...$links, ...$this->appointmentLink()];
+        }
+
         $links = [];
 
         if (Route::has('public.home')) {
@@ -48,16 +53,57 @@ final class CustomerSurfaceNavigation
             ];
         }
 
-        if (Route::has('public.book')) {
-            $links[] = [
-                'label' => 'Request an appointment',
-                'href' => route('public.book'),
-                'active' => request()->routeIs('public.book'),
-                'appointment' => true,
-            ];
+        return [...$links, ...$this->appointmentLink()];
+    }
+
+    /** @return list<array{label: string, href: string, active: bool, appointment: true}> */
+    private function appointmentLink(): array
+    {
+        if (! Route::has('public.book')) {
+            return [];
         }
 
-        return $links;
+        return [[
+            'label' => 'Request an appointment',
+            'href' => route('public.book'),
+            'active' => request()->routeIs('public.book'),
+            'appointment' => true,
+        ]];
+    }
+
+    /**
+     * The host website's own pages (CustomerSiteNavigation), limited to paths on this host.
+     *
+     * @return list<array{label: string, href: string, active: bool}>|null
+     */
+    private function siteLinks(): ?array
+    {
+        if (! app()->bound(CustomerSiteNavigation::class)) {
+            return null;
+        }
+
+        try {
+            $links = app(CustomerSiteNavigation::class)->links();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+        if ($links === null) {
+            return null;
+        }
+
+        $safe = [];
+        foreach (array_slice($links, 0, 8) as $link) {
+            $href = (string) ($link['href'] ?? '');
+            $label = trim((string) ($link['label'] ?? ''));
+            if ($label === '' || preg_match('#^/(?!/)[^\s\\\\]*$#', $href) !== 1) {
+                continue;
+            }
+            $safe[] = ['label' => mb_substr($label, 0, 40), 'href' => $href, 'active' => (bool) ($link['active'] ?? false)];
+        }
+
+        return $safe;
     }
 
     /**
@@ -91,20 +137,6 @@ final class CustomerSurfaceNavigation
      */
     public function items(): array
     {
-        if (request()->routeIs('portal.*') && auth('portal')->check()) {
-            $items = [];
-
-            if (Route::has('portal.home')) {
-                $items[] = [
-                    'label' => 'My Vehicles',
-                    'href' => CustomerSurfaceUrls::portalHome(),
-                    'active' => request()->routeIs('portal.home', 'portal.vehicles.*'),
-                ];
-            }
-
-            return $items;
-        }
-
         $items = $this->shopLinks();
         $utility = $this->utilityLink();
         if ($utility !== null) {

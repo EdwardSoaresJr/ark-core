@@ -14,7 +14,7 @@
         href="{{ $pdfViewUrl }}"
         target="_blank"
         rel="noopener"
-        class="inline-flex min-h-10 items-center gap-1.5 font-semibold text-[#0099cc] hover:text-[#007aa3]"
+        class="inline-flex min-h-10 items-center gap-1.5 font-semibold text-[color:var(--public-link)] hover:text-[color:var(--public-link-hover)]"
     >
         <span aria-hidden="true">↗</span>
         View PDF
