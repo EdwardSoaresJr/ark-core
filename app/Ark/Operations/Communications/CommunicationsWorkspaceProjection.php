@@ -155,7 +155,7 @@ final class CommunicationsWorkspaceProjection
         $listItems = $this->listDedupe->dedupe($listItems);
         $listItems = $this->enrichListIdentities($listItems);
         $presentation = app(CommunicationsInboxPresentation::class);
-        $listItems = $presentation->decorateList($listItems);
+        $listItems = $presentation->decorateList($listItems, $viewer);
         $ownerCounts = $this->ownerCounts($filter, $filterCounts, $viewer, $listItems);
         $listItems = $presentation->applyOwnerFilter($listItems, $ownerFilter, $viewer);
 

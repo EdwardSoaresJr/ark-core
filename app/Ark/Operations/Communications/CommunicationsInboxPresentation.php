@@ -13,6 +13,8 @@ use App\Ark\Operations\Timeline\OperationalEventEntry;
 use App\Ark\Operations\Timeline\OperationalEventKind;
 use App\Ark\Operations\Timeline\OperationalEventTone;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -23,10 +25,13 @@ final class CommunicationsInboxPresentation
     ) {}
 
     /**
+     * With a viewer, a conversation is unread for them when the customer wrote after their read mark, or they have
+     * none.
+     *
      * @param  list<array<string, mixed>>  $items
      * @return list<array<string, mixed>>
      */
-    public function decorateList(array $items): array
+    public function decorateList(array $items, ?User $viewer = null): array
     {
         $ids = [];
         foreach ($items as $item) {
@@ -40,7 +45,9 @@ final class CommunicationsInboxPresentation
             ? collect()
             : Conversation::query()->with('owner:id,name')->whereIn('id', array_unique($ids))->get()->keyBy('id');
 
-        return array_values(array_map(function (array $item) use ($conversations): array {
+        $unread = $viewer === null || $ids === [] ? [] : $this->unreadFor(array_values(array_unique($ids)), (int) $viewer->id);
+
+        return array_values(array_map(function (array $item) use ($conversations, $unread): array {
             $conversation = $conversations->get($this->conversationId($item));
             $lane = $conversation instanceof Conversation
                 ? $this->work->lane($conversation)
@@ -62,9 +69,39 @@ final class CommunicationsInboxPresentation
             $item['owner_id'] = $conversation?->owned_by_user_id ?? ($item['owner_id'] ?? null);
             $item['owner_initials'] = $this->initials($ownerName);
             $item['preview'] = $preview;
+            if ($conversation instanceof Conversation && ! array_key_exists('unread', $item)) {
+                $item['unread'] = isset($unread[(int) $conversation->id]);
+            }
 
             return $item;
         }, $items));
+    }
+
+    /**
+     * @param  list<int>  $conversationIds
+     * @return array<int, true>
+     */
+    private function unreadFor(array $conversationIds, int $userId): array
+    {
+        $latestInbound = DB::table('conversation_messages')
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('direction', 'inbound')
+            ->selectRaw('conversation_id, MAX(occurred_at) AS last_inbound')
+            ->groupBy('conversation_id')
+            ->pluck('last_inbound', 'conversation_id');
+        $reads = DB::table('conversation_reads')
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('user_id', $userId)
+            ->pluck('read_through_at', 'conversation_id');
+
+        $unread = [];
+        foreach ($latestInbound as $conversationId => $at) {
+            if (! isset($reads[$conversationId]) || Carbon::parse((string) $at)->greaterThan(Carbon::parse((string) $reads[$conversationId]))) {
+                $unread[(int) $conversationId] = true;
+            }
+        }
+
+        return $unread;
     }
 
     /**

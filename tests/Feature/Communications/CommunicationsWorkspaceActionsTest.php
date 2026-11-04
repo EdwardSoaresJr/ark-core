@@ -255,7 +255,10 @@ test('mark unread puts the customer\'s latest message back to unread for this ad
         ->assertRedirect(route('operations.communications.inbox', ['filter' => 'needs']))
         ->assertSessionHas('status', 'Marked unread.');
 
-    expect($reads->unreadInboundCount($conversation, $advisor))->toBe(1)
+    $marked = fn (User $viewer): bool => str_contains((string) $this->actingAs($viewer)->get(route('operations.communications.inbox', ['filter' => 'needs']))->getContent(), 'data-comms-unread');
+    expect($marked($advisor))->toBeTrue()
+        ->and($marked($colleague))->toBeFalse()
+        ->and($reads->unreadInboundCount($conversation, $advisor))->toBe(1)
         ->and($reads->unreadInboundCount($conversation, $colleague))->toBe(0)
         ->and(ConversationRead::query()->where('user_id', $advisor->id)->value('read_through_at')->lt($inboundAt))->toBeTrue();
 });
