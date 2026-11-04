@@ -74,6 +74,7 @@ const WORKSPACE_EXCEPTION = [
     'app/Ark/Operations/Communications/CoreCommunicationsWorkspaceSignals.php' => 'Core implementation of the workspace signals, from Core\'s own message and consent records',
     'app/Ark/Operations/Communications/CommunicationsWorkspaceSignalPresenter.php' => 'Words and badge tones for the workspace signals',
     'resources/views/operations/communications/workspace/partials/work-actions.blade.php' => 'The workspace header\'s one set of assign, follow-up, waiting, and resolve controls',
+    'tests/Feature/Communications/CommunicationsWorkspaceSignalsTest.php' => 'Tests of the workspace signals extension point and its Core implementation',
 ];
 
 $namespaces = array_map(

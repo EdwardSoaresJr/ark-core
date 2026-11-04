@@ -151,7 +151,10 @@
                 ['key' => 'internal', 'label' => 'Internal note', 'icon' => 'file-text', 'reason' => null],
             ];
         @endphp
-        <div x-data="{ tab: 'reply' }" data-comms-composer-tabs>
+        @php
+            $defaultTab = filled($emailUrl) && ($composer['conversation']->contact_surface?->value ?? null) === 'email' ? 'email' : 'reply';
+        @endphp
+        <div x-data="{ tab: @js($defaultTab) }" data-comms-composer-tabs>
             <ul class="nav nav-tabs px-2 pt-1" role="tablist" aria-label="Reply, email, or note">
                 @foreach ($tabs as $tab)
                     <li class="nav-item" role="presentation">
