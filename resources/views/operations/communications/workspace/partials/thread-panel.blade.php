@@ -8,6 +8,8 @@
     $ownerFilter = $ownerFilter ?? 'everyone';
     $events = $thread['events'] ?? [];
     $deliveries = is_array($thread['deliveries'] ?? null) ? $thread['deliveries'] : [];
+    $eventDeliveries = is_array($thread['event_deliveries'] ?? null) ? $thread['event_deliveries'] : [];
+    $work = is_array($thread['decision']['work'] ?? null) ? $thread['decision']['work'] : null;
     $permission = is_array($identity['permission'] ?? null) ? $identity['permission'] : null;
     $latestDelivery = $deliveries === [] ? null : end($deliveries);
     $failedDelivery = is_array($latestDelivery) && $latestDelivery['failed'] ? $latestDelivery : null;
@@ -96,6 +98,11 @@
                     </button>
                 </div>
             </div>
+            @if (is_array($work) && filled($work['url'] ?? null))
+                <div class="d-flex flex-wrap justify-content-md-end mt-2">
+                    @include('operations.communications.workspace.partials.work-actions', ['work' => $work])
+                </div>
+            @endif
         @else
             <h3 class="card-title mb-0">Select a conversation</h3>
         @endif
@@ -146,7 +153,7 @@
                 @elseif ($event instanceof \App\Ark\Operations\Timeline\OperationalEventEntry)
                     @include('operations.timeline.partials.event-bubble', [
                         'event' => $event,
-                        'delivery' => $event->subject instanceof \App\Ark\Operations\Conversations\ConversationMessage ? ($deliveries[$event->subject->getKey()] ?? null) : null,
+                        'delivery' => $eventDeliveries[$loop->index] ?? null,
                     ])
                 @else
                     @php

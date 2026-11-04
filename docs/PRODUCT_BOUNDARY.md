@@ -14,7 +14,7 @@ A change belongs in this repository when a shop needs it to operate with no ARK 
 
 Core manages the shop. ARK Shop powers its communications.
 
-Core does not contain a functional communications subsystem. That includes one described as optional, self-hosted, or bring-your-own-provider. Core must not send, receive, route, store, or display customer communications through any provider. That covers:
+Core does not contain a functional communications subsystem, except the shared Communications workspace described below. That includes one described as optional, self-hosted, or bring-your-own-provider. Core must not send, receive, route, store, or display customer communications through any provider. That covers:
 
 - email sending and delivery to customers
 - SMS and MMS, in either direction
@@ -46,7 +46,28 @@ Core may confirm a code that ARK Shop sent through a minimal contract. Core neve
 
 An extension point must not contain a working sender, receiver, router, or store. With no ARK Shop installed, a shop has no communications features, and Core says so without failing. A fresh Core install creates no communications tables and does not depend on tables ARK Shop owns.
 
-There is no self-hosted Twilio or SMTP exception.
+There is no self-hosted Twilio exception. The one exception to this section is the shared Communications workspace below.
+
+### Owner-approved exception: the shared Communications workspace (2026-11-03)
+
+The project owner approved one narrowly scoped exception. Core keeps one provider-neutral, three-lane Communications workspace (`/app/communications`), and ARK Core and ARK Shop both use it. There is no second workspace or inbox in ARK Shop.
+
+- **The workspace in Core:**
+  - the conversation list (needs attention, waiting, resolved, calls and voicemail, history; everyone, mine, unassigned; search);
+  - the conversation with its customer and repair-order header, message timeline, repair-order activity, and composer;
+  - the shop context lane (customer, vehicles, repair orders, assignment, follow-up, internal notes, recent visits);
+  - the workflows on Core's own records: assignment, attention, waiting, follow-up, resolve and reopen, read state, internal notes, and conversation history.
+- **Core's own communications capability:** email to and from customers where the shop has configured mail, plus the records above. With nothing configured, the workspace still shows history, notes, assignments, and context, and says plainly what cannot be sent.
+- **What ARK Shop adds to the same workspace,** through Core's extension points (`App\Ark\Operations\Communications\CommunicationsWorkspaceSignals` and the workspace's actions and slots):
+  - hosted SMS and MMS;
+  - voice, voicemail, and recordings;
+  - delivery tracking and provider errors;
+  - consent and quiet hours;
+  - real-time provider updates;
+  - paid usage and integrations.
+- **What stays out of Core:** provider-specific code, provider credentials, and commercial controls (entitlements, metering, pricing). Core's implementation of each extension point uses only Core's own records.
+- **Enforcement:** `scripts/assert-no-communications.php` lists every file added under this exception in `WORKSPACE_EXCEPTION`, each with its reason. Any other new communications code still fails, and the legacy baseline can still only shrink. Adding a file to the exception needs the owner's approval.
+
 
 Previously published versions of Core included communications code under AGPL-3.0. That code stays available under that license. This policy covers what Core contains from now on.
 

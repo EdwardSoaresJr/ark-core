@@ -883,6 +883,13 @@ final class CommunicationsWorkspaceProjection
             fn (array $delivery): array => CommunicationsWorkspaceSignalPresenter::delivery($delivery),
             $this->signals->deliveries($messages),
         );
+        // The thread view finds each message's delivery by its place in the timeline.
+        $eventDeliveries = array_map(
+            fn (mixed $event): ?array => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage
+                ? ($deliveries[(int) $event->subject->getKey()] ?? null)
+                : null,
+            $events,
+        );
         $permission = $this->signals->contactPermission($conversation, $composerContext['customer'] ?? null);
         $identity['permission'] = $permission === null ? null : CommunicationsWorkspaceSignalPresenter::permission($permission);
 
@@ -894,6 +901,7 @@ final class CommunicationsWorkspaceProjection
             'identity' => $identity,
             'events' => $events,
             'deliveries' => $deliveries,
+            'event_deliveries' => $eventDeliveries,
             'empty_label' => 'No messages in this thread yet.',
             'composer' => $section === 'history' ? null : [
                 'kind' => 'conversation',
@@ -905,6 +913,8 @@ final class CommunicationsWorkspaceProjection
                 'customer' => $composerContext['customer'],
                 'repair_order' => $composerContext['repair_order'],
                 'open_repair_orders' => $composerContext['open_repair_orders'],
+                'email_reply_url' => $this->signals->emailReplyUrl($conversation),
+                'email_address' => $identity['email'] ?? null,
             ],
         ];
     }

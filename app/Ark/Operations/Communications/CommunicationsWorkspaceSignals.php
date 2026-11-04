@@ -31,6 +31,12 @@ interface CommunicationsWorkspaceSignals
     public function contactPermission(Conversation $conversation, ?Customer $customer): ?array;
 
     /**
+     * Where the composer's Email mode posts a reply (fields: body, idempotency_key, return_to), or null when this shop
+     * cannot email the conversation's contact from the workspace.
+     */
+    public function emailReplyUrl(Conversation $conversation): ?string;
+
+    /**
      * Changes when any signal for this conversation (or, without one, for the workspace) changes, so an open workspace
      * refreshes. Empty when the signals only change with Core's own records, which the workspace already watches.
      */

@@ -67,6 +67,14 @@ const TRAINING = '/\b(sms|mms|texting|inbox|voicemail|incoming calls?|telephony|
 const ALLOWED = [
     'config/mail.php' => 'Laravel mailer configuration, used for staff sign-in and password-reset mail',
 ];
+// The shared Communications workspace (docs/PRODUCT_BOUNDARY.md, owner-approved exception 2026-11-03): files added for
+// it, each with its reason. Adding a file here needs the project owner's approval.
+const WORKSPACE_EXCEPTION = [
+    'app/Ark/Operations/Communications/CommunicationsWorkspaceSignals.php' => 'Extension point: delivery, texting permission, and refresh signals a host application supplies to the shared workspace',
+    'app/Ark/Operations/Communications/CoreCommunicationsWorkspaceSignals.php' => 'Core implementation of the workspace signals, from Core\'s own message and consent records',
+    'app/Ark/Operations/Communications/CommunicationsWorkspaceSignalPresenter.php' => 'Words and badge tones for the workspace signals',
+    'resources/views/operations/communications/workspace/partials/work-actions.blade.php' => 'The workspace header\'s one set of assign, follow-up, waiting, and resolve controls',
+];
 
 $namespaces = array_map(
     fn (string $dir): string => 'App\\'.str_replace('/', '\\', substr($dir, 4)).'\\',
@@ -285,6 +293,18 @@ foreach (['composer.json' => ['require', 'require-dev'], 'package.json' => ['dep
     }
 }
 
+// The workspace exception covers exactly its listed files; an entry whose file is gone is stale and fails.
+foreach (array_keys(WORKSPACE_EXCEPTION) as $path) {
+    if ($root === dirname(__DIR__) && ! is_file($root.'/'.$path)) {
+        fwrite(STDERR, "WORKSPACE_EXCEPTION lists {$path}, which does not exist. Remove the entry.\n");
+        exit(1);
+    }
+}
+$violations = array_filter(
+    $violations,
+    fn (string $key): bool => ! isset(WORKSPACE_EXCEPTION[substr($key, strpos($key, ': ') + 2)]),
+    ARRAY_FILTER_USE_KEY,
+);
 $found = array_keys($violations);
 sort($found);
 

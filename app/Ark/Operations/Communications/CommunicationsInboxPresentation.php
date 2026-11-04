@@ -137,6 +137,8 @@ final class CommunicationsInboxPresentation
             ? route('operations.communications.conversations.internal-note', $conversation)
             : ($context['internal_note_url'] ?? null);
         $context['recent_visits'] = $this->recentVisits($customer);
+        $visitRepairOrderId = $primary['repair_order_id'] ?? data_get($context, 'current_visit.repair_order_id');
+        $context['shop'] = $this->shopContext($customer, filled($visitRepairOrderId) ? (int) $visitRepairOrderId : null);
         $context['vehicle'] = [
             'label' => $primary['vehicle'] ?? data_get($context, 'current_visit.vehicle_label'),
             'ro_number' => $primary['number'] ?? data_get($context, 'current_visit.ro_label'),
@@ -155,6 +157,8 @@ final class CommunicationsInboxPresentation
                 'posture_changed_at' => $conversation->posture_changed_at?->toIso8601String(),
                 'owned_by_user_id' => $conversation->owned_by_user_id,
                 'owner_name' => $conversation->owner?->name ?? 'Unassigned',
+                'follow_up_due_label' => $conversation->follow_up_due_at
+                    ?->timezone(config('app.display_timezone'))->format('D M j, g:i A'),
             ], array_filter([
                 'url' => $existingWork['url'] ?? null,
                 'advisors' => $existingWork['advisors'] ?? null,
@@ -414,5 +418,43 @@ final class CommunicationsInboxPresentation
         }
 
         return $letters;
+    }
+
+    /**
+     * What the advisor needs beside the conversation: the visit's approval and balance, and the next appointment.
+     *
+     * @return array{approval: ?string, approval_tone: string, balance: ?string, balance_tone: string, appointment: ?string, appointment_url: ?string}
+     */
+    private function shopContext(?Customer $customer, ?int $repairOrderId): array
+    {
+        $repairOrder = $repairOrderId !== null ? RepairOrder::query()->find($repairOrderId) : null;
+        $approval = match (true) {
+            $repairOrder === null => null,
+            $repairOrder->status === \App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval => 'Waiting on approval',
+            $repairOrder->status === \App\Ark\Operations\RepairOrders\RepairOrderStatus::Approved => 'Approved',
+            default => null,
+        };
+        $balance = $repairOrder?->balanceDue();
+        $appointment = $customer === null ? null : \App\Ark\Operations\Appointments\Appointment::query()
+            ->where('customer_id', $customer->id)
+            ->where('starts_at', '>=', now())
+            ->whereNotIn('status', ['canceled', 'no_show', 'completed'])
+            ->orderBy('starts_at')
+            ->first();
+
+        return [
+            'approval' => $approval,
+            'approval_tone' => $approval === 'Approved' ? 'green' : 'yellow',
+            'balance' => match (true) {
+                $balance === null || ! $balance->hasIssuedInvoice => null,
+                $balance->balanceDueCents > 0 => '$'.number_format($balance->balanceDueCents / 100, 2).' due',
+                default => 'Paid',
+            },
+            'balance_tone' => $balance !== null && $balance->balanceDueCents > 0 ? 'orange' : 'green',
+            'appointment' => $appointment?->starts_at?->timezone(config('app.display_timezone'))->format('D M j, g:i A'),
+            'appointment_url' => $appointment !== null && \Illuminate\Support\Facades\Route::has('operations.appointments.show')
+                ? route('operations.appointments.show', $appointment)
+                : null,
+        ];
     }
 }

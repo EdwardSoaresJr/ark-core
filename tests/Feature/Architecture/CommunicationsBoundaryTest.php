@@ -48,6 +48,21 @@ test('a clean tree with an empty baseline passes', function (): void {
     expect($exit)->toBe(0, $out);
 });
 
+test('the shared workspace exception covers exactly its listed files', function (): void {
+    $root = communicationsFixture();
+    file_put_contents($root.'/baseline.json', json_encode(['violations' => []]));
+    @mkdir($root.'/app/Ark/Operations/Communications', 0777, true);
+    file_put_contents($root.'/app/Ark/Operations/Communications/CommunicationsWorkspaceSignals.php', "<?php\n");
+
+    [$exit, $out] = communicationsCheck(['--root', $root, '--baseline', $root.'/baseline.json', '--routes', $root.'/routes.json']);
+    expect($exit)->toBe(0, $out);
+
+    file_put_contents($root.'/app/Ark/Operations/Communications/WorkspaceSmsSender.php', "<?php\n");
+
+    [$exit, $out] = communicationsCheck(['--root', $root, '--baseline', $root.'/baseline.json', '--routes', $root.'/routes.json']);
+    expect($exit)->toBe(1)->and($out)->toContain('code: app/Ark/Operations/Communications/WorkspaceSmsSender.php');
+});
+
 test('new communications code fails', function (string $path, string $contents, string $expected): void {
     $root = communicationsFixture();
     file_put_contents($root.'/baseline.json', json_encode(['violations' => []]));

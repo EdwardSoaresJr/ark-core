@@ -664,3 +664,13 @@ span.ark-legacy {
 .ark-comms-row.active {
     box-shadow: inset 3px 0 0 var(--tblr-primary);
 }
+
+.ark-comms-thread .chat-bubble-body {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+}
+
+.ark-comms-thread [data-comms-evidence] summary,
+.ark-comms-thread [data-comms-call-transcript] summary {
+    font-size: 0.75rem;
+}

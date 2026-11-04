@@ -137,36 +137,45 @@
             $hasHistory = ($thread['events'] ?? []) !== [];
         @endphp
 
+        @php
+            $emailUrl = $composer['email_reply_url'] ?? null;
+            $emailAddress = trim((string) ($composer['email_address'] ?? ''));
+            $emailReason = match (true) {
+                filled($emailUrl) => null,
+                $emailAddress === '' => 'No email address on file.',
+                default => 'Email replies are not set up for this shop.',
+            };
+            $tabs = [
+                ['key' => 'reply', 'label' => 'SMS', 'icon' => 'message', 'reason' => null],
+                ['key' => 'email', 'label' => 'Email', 'icon' => 'mail', 'reason' => $emailReason],
+                ['key' => 'internal', 'label' => 'Internal note', 'icon' => 'file-text', 'reason' => null],
+            ];
+        @endphp
         <div x-data="{ tab: 'reply' }" data-comms-composer-tabs>
-            <ul class="nav nav-tabs px-2 pt-1" role="tablist" aria-label="Reply or note">
-                <li class="nav-item" role="presentation">
-                    <button
-                        type="button"
-                        role="tab"
-                        id="comms-composer-tab-reply"
-                        aria-controls="comms-composer-panel-reply"
-                        class="nav-link"
-                        :class="{ active: tab === 'reply' }"
-                        :aria-selected="(tab === 'reply').toString()"
-                        @click="tab = 'reply'"
-                    >
-                        SMS
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button
-                        type="button"
-                        role="tab"
-                        id="comms-composer-tab-internal"
-                        aria-controls="comms-composer-panel-internal"
-                        class="nav-link"
-                        :class="{ active: tab === 'internal' }"
-                        :aria-selected="(tab === 'internal').toString()"
-                        @click="tab = 'internal'"
-                    >
-                        Internal note
-                    </button>
-                </li>
+            <ul class="nav nav-tabs px-2 pt-1" role="tablist" aria-label="Reply, email, or note">
+                @foreach ($tabs as $tab)
+                    <li class="nav-item" role="presentation">
+                        <button
+                            type="button"
+                            role="tab"
+                            id="comms-composer-tab-{{ $tab['key'] }}"
+                            aria-controls="comms-composer-panel-{{ $tab['key'] }}"
+                            class="nav-link"
+                            :class="{ active: tab === '{{ $tab['key'] }}' }"
+                            :aria-selected="(tab === '{{ $tab['key'] }}').toString()"
+                            @if ($tab['reason'] !== null)
+                                disabled
+                                title="{{ $tab['reason'] }}"
+                                data-comms-composer-unavailable="{{ $tab['reason'] }}"
+                            @else
+                                @click="tab = '{{ $tab['key'] }}'"
+                            @endif
+                        >
+                            <x-tabler.icon :name="$tab['icon']" />
+                            {{ $tab['label'] }}
+                        </button>
+                    </li>
+                @endforeach
             </ul>
 
             <div
@@ -219,6 +228,34 @@
                 @endif
             </div>
 
+            @if (filled($emailUrl))
+                <form
+                    id="comms-composer-panel-email"
+                    role="tabpanel"
+                    aria-labelledby="comms-composer-tab-email"
+                    x-show="tab === 'email'"
+                    x-cloak
+                    method="POST"
+                    action="{{ $emailUrl }}"
+                    data-comms-email-composer
+                >
+                    @csrf
+                    <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
+                    <input type="hidden" name="return_to" value="{{ request()->fullUrl() }}">
+                    <div class="px-3 py-2">
+                        <div class="small text-secondary mb-1">To {{ $emailAddress }}</div>
+                        <label class="visually-hidden" for="comms-email-body">Email</label>
+                        <textarea id="comms-email-body" name="body" rows="4" required maxlength="20000" class="form-control" placeholder="Write an email reply"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end px-3 py-2 border-top">
+                        <button type="submit" class="btn btn-primary">
+                            <x-tabler.icon name="mail" />
+                            Send email
+                        </button>
+                    </div>
+                </form>
+            @endif
+
             <form
                 id="comms-composer-panel-internal"
                 role="tabpanel"
@@ -235,7 +272,7 @@
                     <textarea
                         id="comms-internal-note-body"
                         name="body"
-                        rows="2"
+                        rows="3"
                         required
                         maxlength="2000"
                         placeholder="Internal note - never sent to customer"
@@ -243,7 +280,10 @@
                     ></textarea>
                 </div>
                 <div class="d-flex justify-content-end px-3 py-2 border-top">
-                    <button type="submit" class="btn btn-sm">Add internal note</button>
+                    <button type="submit" class="btn btn-yellow">
+                        <x-tabler.icon name="file-text" />
+                        Add internal note
+                    </button>
                 </div>
             </form>
         </div>

@@ -36,6 +36,11 @@ final class CoreCommunicationsWorkspaceSignals implements CommunicationsWorkspac
         };
     }
 
+    public function emailReplyUrl(Conversation $conversation): ?string
+    {
+        return null;
+    }
+
     public function signature(?int $conversationId): string
     {
         return '';
