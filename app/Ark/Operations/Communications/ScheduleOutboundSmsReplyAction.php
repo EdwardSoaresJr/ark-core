@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Communications;
 
 use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Messaging\OutboundDeliveryMode;
@@ -54,7 +55,11 @@ final class ScheduleOutboundSmsReplyAction
             throw new RuntimeException($blockReason);
         }
 
-        $recipientPhone = PhoneNumber::normalize($customer->phone);
+        $recipientPhone = PhoneNumber::normalize(
+            $conversation?->contact_surface === ConversationContactSurface::Phone && filled($conversation->contact_address)
+                ? $conversation->contact_address
+                : $customer->phone,
+        );
 
         if ($recipientPhone === null || $recipientPhone === '') {
             throw new RuntimeException('Customer does not have a phone number on file.');

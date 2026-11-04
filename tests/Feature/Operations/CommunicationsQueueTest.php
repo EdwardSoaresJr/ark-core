@@ -527,7 +527,7 @@ test('work communications queue lane shows reply for inbound sms and mms', funct
     $this->actingAs($advisor)
         ->get(CommunicationsNeedsYou::url())
         ->assertOk()
-        ->assertSee('Is my car ready?')
+        ->assertSee('Photo')
         ->assertSee('Lane Reply', false)
         ->assertSee('>Reply</', false);
 

@@ -238,7 +238,7 @@
                 x-data="arkConversationQuickReply(@js([
                     'sendUrl' => filled($sendUrl)
                         ? $sendUrl
-                        : route('operations.customers.conversation-messages.store', $customer),
+                        : route('operations.customers.conversation-messages.store', array_filter([$customer, 'conversation_id' => $conversation?->id])),
                     'repairOrderId' => $repairOrderId,
                     'sendEstimateUrl' => $sendEstimateUrl,
                     'cancelScheduledEstimateUrl' => $cancelScheduledEstimateUrl,
