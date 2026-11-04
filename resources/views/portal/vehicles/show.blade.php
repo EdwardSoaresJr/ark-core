@@ -14,7 +14,7 @@
                 <div class="public-hero">
                     <a
                         href="{{ route('portal.home') }}"
-                        class="text-sm font-semibold text-[#0099cc] no-underline hover:text-[#0088b8]"
+                        class="text-sm font-semibold text-[color:var(--public-link)] no-underline hover:text-[color:var(--public-link-hover)]"
                     >
                         ← All vehicles
                     </a>
@@ -76,7 +76,7 @@
                                 @if ($activeVisit['needs_attention'] && filled($activeVisit['review_url'] ?? null))
                                     <a
                                         href="{{ $activeVisit['review_url'] }}"
-                                        class="inline-flex min-h-11 items-center justify-center rounded-md bg-[#0099cc] px-4 text-sm font-semibold text-white no-underline shadow-sm hover:bg-[#0088b8]"
+                                        class="inline-flex min-h-11 items-center justify-center rounded-[var(--public-radius-control)] bg-[color:var(--public-brand)] px-4 text-sm font-semibold text-[color:var(--public-on-brand)] no-underline shadow-sm hover:bg-[color:var(--public-brand-hover)]"
                                     >
                                         Review {{ $activeVisit['review_label'] ?? 'estimate' }}
                                     </a>
@@ -123,7 +123,7 @@
                                         @if (filled($visit['inspection_url'] ?? null))
                                             <a
                                                 href="{{ $visit['inspection_url'] }}"
-                                                class="mt-2 inline-flex text-sm font-semibold text-[#0099cc] no-underline hover:text-[#0088b8]"
+                                                class="mt-2 inline-flex text-sm font-semibold text-[color:var(--public-link)] no-underline hover:text-[color:var(--public-link-hover)]"
                                             >
                                                 View inspection
                                             </a>
@@ -161,7 +161,7 @@
                                         @if (filled($document['review_url'] ?? null))
                                             <a
                                                 href="{{ $document['review_url'] }}"
-                                                class="inline-flex min-h-9 items-center justify-center rounded-md bg-[#0099cc] px-3 text-xs font-semibold text-white no-underline hover:bg-[#0088b8]"
+                                                class="inline-flex min-h-9 items-center justify-center rounded-[var(--public-radius-control)] bg-[color:var(--public-brand)] px-3 text-xs font-semibold text-[color:var(--public-on-brand)] no-underline hover:bg-[color:var(--public-brand-hover)]"
                                             >
                                                 {{ $document['review_label'] ?? 'Review estimate' }}
                                             </a>

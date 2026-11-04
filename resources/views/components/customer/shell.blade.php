@@ -12,6 +12,7 @@
 
 @php
     $headerData = \App\Ark\Customer\CustomerSurfaceHeaderData::viewData();
+    $theme = \App\Ark\Customer\Theme\CustomerThemes::current();
 
     $mainClass = $layout === 'split'
         ? 'customer-shell__main customer-shell__main--split'
@@ -29,25 +30,36 @@
         @endif
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $title ?? \App\Support\Branding\Branding::tabTitle() }}</title>
+        <title>{{ $title ?? $headerData['shop']->displayName() }}</title>
 
         @isset($head)
             {{ $head }}
         @endisset
 
-        @include('partials.branding._favicons')
+        @if (filled($theme->faviconUrl()))
+            <link rel="icon" href="{{ $theme->faviconUrl() }}">
+            <link rel="apple-touch-icon" href="{{ $theme->faviconUrl() }}">
+        @else
+            <link rel="icon" type="image/svg+xml" href="{{ $theme->monogramIcon($headerData['shop']->displayName()) }}">
+        @endif
 
         @include('partials.customer.theme-init')
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">
+        @if ($theme->fontStylesheets() !== [])
+            <link rel="preconnect" href="https://fonts.bunny.net">
+            @foreach ($theme->fontStylesheets() as $stylesheet)
+                <link href="{{ $stylesheet }}" rel="stylesheet">
+            @endforeach
+        @endif
 
         @stack('commercial-scripts')
         @include('partials.shop-channel')
         @vite($vite)
+        <style data-customer-theme>{!! $theme->css() !!}</style>
     </head>
     <body
         class="flex min-h-screen flex-col font-sans text-slate-950 antialiased public-surface"
+        data-customer-header="{{ $theme->header() }}"
         @if (filled($publicSurfacePage)) data-public-surface-page="{{ $publicSurfacePage }}" @endif
     >
         @include('partials.public-notice')

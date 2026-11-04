@@ -16,7 +16,7 @@
                 </div>
             @endif
 
-            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0099cc]">Vehicle inspection</p>
+            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--public-link)]">Vehicle inspection</p>
             <h1 class="mt-1.5 text-2xl font-bold tracking-tight text-slate-950 sm:text-[1.75rem]">
                 {{ $vehicle['display_name'] ?? 'Your vehicle' }}
             </h1>

@@ -21,7 +21,9 @@
         trim((string) $shop->postal_code),
     ]);
     $addressLine = implode(' · ', $addressParts);
-    $navItems = app(CustomerSurfaceNavigation::class)->items();
+    $allNavItems = app(CustomerSurfaceNavigation::class)->items();
+    $bookItem = collect($allNavItems)->first(fn (array $item): bool => (bool) ($item['appointment'] ?? false));
+    $navItems = array_values(array_filter($allNavItems, fn (array $item): bool => ! ($item['appointment'] ?? false)));
     $homeUrl = CustomerSurfaceUrls::shopHome();
 @endphp
 
@@ -47,16 +49,23 @@
             @if ($phoneTel !== '')
                 <a
                     href="tel:{{ $phoneTel }}"
-                    class="customer-header__contact-link customer-header__contact-link--primary"
+                    class="customer-header__contact-link customer-header__contact-link--primary customer-header__contact-link--desktop-only"
                 >
                     <span class="customer-header__call-short">Call</span>
                     <span class="customer-header__call-full">{{ $phoneDisplay }}</span>
                 </a>
                 <a
                     href="{{ $smsHref }}"
-                    class="customer-header__contact-link customer-header__contact-link--secondary"
+                    class="customer-header__contact-link customer-header__contact-link--secondary customer-header__contact-link--desktop-only"
                 >
                     Text
+                </a>
+            @endif
+
+            @if ($bookItem !== null)
+                <a href="{{ $bookItem['href'] }}" class="customer-header__book" @if ($bookItem['active']) aria-current="page" @endif>
+                    <span class="customer-header__book-label-short">Book</span>
+                    <span class="customer-header__book-label-full">{{ $bookItem['label'] }}</span>
                 </a>
             @endif
 
@@ -90,6 +99,9 @@
             @click="menuOpen = false"
         >
             @include('partials.customer.site-nav-links', ['navItems' => $navItems])
+            @if ($phoneTel !== '')
+                <a href="tel:{{ $phoneTel }}" class="customer-header__nav-link">Call {{ $phoneDisplay }}</a>
+            @endif
         </nav>
     @endif
 </header>

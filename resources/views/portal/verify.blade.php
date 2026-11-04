@@ -55,7 +55,7 @@
                             pattern="\d{6}"
                             maxlength="6"
                             required
-                            class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-center text-lg tracking-[0.35em] text-slate-950 shadow-sm focus:border-[#0099cc] focus:outline-none focus:ring-2 focus:ring-sky-100"
+                            class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-center text-lg tracking-[0.35em] text-slate-950 shadow-sm focus:border-[color:var(--public-link)] focus:outline-none focus:ring-2 focus:ring-sky-100"
                             placeholder="000000"
                         >
                         @error('code')
@@ -69,7 +69,7 @@
                 </form>
 
                 <p class="mt-4 text-center text-sm text-slate-600">
-                    <a href="{{ $retryAccessUrl }}" class="font-semibold text-[#0099cc] no-underline hover:text-[#0088b8]">
+                    <a href="{{ $retryAccessUrl }}" class="font-semibold text-[color:var(--public-link)] no-underline hover:text-[color:var(--public-link-hover)]">
                         Use a different email or number
                     </a>
                 </p>

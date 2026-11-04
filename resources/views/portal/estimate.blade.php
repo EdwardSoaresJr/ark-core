@@ -50,7 +50,7 @@
 
             <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                 <div class="min-w-0">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0099cc]">Repair estimate</p>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--public-link)]">Repair estimate</p>
                     <h1 class="mt-1.5 text-2xl font-bold tracking-tight text-slate-950 sm:text-[1.75rem] lg:text-[2rem]">{{ $repairOrder->vehicle->display_name }}</h1>
                 </div>
 
@@ -425,7 +425,7 @@
                         @elseif ($canAuthorize)
                             <a
                                 href="#portal-estimate-authorize"
-                                class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-[#0099cc] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#007aa3]"
+                                class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[var(--public-radius-control)] bg-[color:var(--public-brand)] px-5 text-sm font-semibold text-[color:var(--public-on-brand)] shadow-sm hover:bg-[color:var(--public-brand-hover)]"
                             >
                                 Approve
                             </a>

@@ -16,19 +16,23 @@
                         </p>
                     </div>
 
-                    <div class="mt-6 grid gap-3 sm:grid-cols-2">
-                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Your vehicles</p>
-                            <p class="mt-1 text-2xl font-bold text-slate-950">{{ count($home['vehicle_cards']) }}</p>
+                    <p class="mt-4 text-sm font-semibold text-slate-700" data-portal-home-summary>
+                        {{ count($home['vehicle_cards']) }} {{ count($home['vehicle_cards']) === 1 ? 'vehicle' : 'vehicles' }}
+                        ·
+                        {{ $home['active_visit_count'] }} {{ $home['active_visit_count'] === 1 ? 'active visit' : 'active visits' }}
+                    </p>
+
+                    @if (Route::has('public.book'))
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <a href="{{ route('public.book') }}" class="public-cta public-cta--primary no-underline">Request an appointment</a>
+                            @if (filled($home['phone_tel'] ?? null))
+                                <a href="tel:{{ $home['phone_tel'] }}" class="public-cta public-cta--secondary w-auto no-underline">Call {{ $home['phone_display'] }}</a>
+                            @endif
                         </div>
-                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Active visits</p>
-                            <p class="mt-1 text-2xl font-bold text-slate-950">{{ $home['active_visit_count'] }}</p>
-                        </div>
-                    </div>
+                    @endif
 
                     @if (filled($home['personality_line'] ?? null))
-                        <p class="mt-6 border-l-4 border-[#0099cc] pl-4 text-sm leading-6 text-slate-700 sm:text-base">
+                        <p class="mt-6 border-l-4 border-[color:var(--public-link)] pl-4 text-sm leading-6 text-slate-700 sm:text-base">
                             <span class="font-semibold text-slate-950">{{ $home['personality_line'] }}</span>
                         </p>
                     @endif
@@ -46,7 +50,7 @@
                         <div class="public-panel">
                             <p class="text-sm leading-6 text-slate-600">No vehicles are linked to this account yet.</p>
                             <p class="mt-3 text-sm text-slate-600">
-                                <a href="{{ Route::has('public.contact') ? route('public.contact') : url('/contact') }}" class="font-semibold text-[#0099cc] no-underline hover:text-[#0088b8]">
+                                <a href="{{ Route::has('public.contact') ? route('public.contact') : url('/contact') }}" class="font-semibold text-[color:var(--public-link)] no-underline hover:text-[color:var(--public-link-hover)]">
                                     Contact the shop
                                 </a>
                                 if that looks wrong.
@@ -58,7 +62,7 @@
                                 <li>
                                     <a
                                         href="{{ $vehicle['url'] }}"
-                                        class="public-panel block no-underline transition hover:border-[#0099cc]"
+                                        class="public-panel block no-underline transition hover:border-[color:var(--public-link)]"
                                     >
                                         <div class="flex flex-wrap items-start justify-between gap-3">
                                             <div>
@@ -100,7 +104,7 @@
                                             <p class="mt-3 text-sm text-slate-600">Last visit {{ $vehicle['last_visit_label'] }}</p>
                                         @endif
 
-                                        <p class="mt-4 text-sm font-semibold text-[#0099cc]">
+                                        <p class="mt-4 text-sm font-semibold text-[color:var(--public-link)]">
                                             @if (data_get($vehicle, 'active_visit.needs_attention') === true)
                                                 Review what needs your attention →
                                             @else

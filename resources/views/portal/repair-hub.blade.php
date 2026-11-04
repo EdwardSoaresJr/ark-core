@@ -6,7 +6,7 @@
 
     <section class="customer-panel customer-panel--flush overflow-hidden">
         <div class="border-b border-slate-200/80 px-4 py-6 sm:px-6 lg:px-8">
-            <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-[#0099cc]">Your vehicle online</p>
+            <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--public-link)]">Your vehicle online</p>
             <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{{ $vehicle_line }}</h1>
             <p class="mt-1 text-sm text-slate-600">
                 RO #{{ $repair_order->repair_order_id }}
@@ -20,11 +20,45 @@
         </div>
 
         <div class="space-y-4 px-4 py-5 sm:px-6 lg:px-8">
-            <section class="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+            @php
+                $stage = match ((string) $repair_order->status) {
+                    'draft', 'estimate' => 0,
+                    'waiting_approval' => 1,
+                    'approved', 'ready_for_work', 'in_progress', 'waiting_parts', 'quality_check' => 2,
+                    'completed', 'invoiced', 'ready_pickup' => 3,
+                    'closed' => 4,
+                    default => null,
+                };
+                $stages = ['Checked in', 'Your approval', 'Repair in progress', 'Ready for pickup'];
+            @endphp
+            <section class="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm" data-repair-progress>
                 <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Current status</p>
                 <p class="mt-1 text-lg font-semibold text-slate-950">{{ $status_label }}</p>
                 @if (filled($status_detail) && $status_detail !== $status_label)
                     <p class="mt-0.5 text-sm text-slate-600">{{ $status_detail }}</p>
+                @endif
+                @if ($stage !== null)
+                    <ol class="mt-4 grid grid-cols-4 gap-1.5" aria-label="Repair progress">
+                        @foreach ($stages as $index => $label)
+                            <li @if ($index === min($stage, 3) && $stage < 4) aria-current="step" @endif>
+                                <span @class([
+                                    'block h-1.5 rounded-full',
+                                    'bg-[color:var(--public-brand)]' => $index <= $stage,
+                                    'bg-slate-200' => $index > $stage,
+                                ])></span>
+                                <span @class([
+                                    'mt-1.5 block text-[11px] font-semibold leading-tight sm:text-xs',
+                                    'text-slate-950' => $index <= $stage,
+                                    'text-slate-500' => $index > $stage,
+                                ])>{{ $label }}</span>
+                            </li>
+                        @endforeach
+                    </ol>
+                @endif
+                @if ((string) $repair_order->status === 'waiting_approval')
+                    <p class="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-sm leading-6 text-amber-900">
+                        Your estimate is ready. Open the estimate link we sent you by text or email to approve, defer, or decline each repair.
+                    </p>
                 @endif
             </section>
 
@@ -87,7 +121,7 @@
                     </p>
                     <a
                         href="{{ $inspection['url'] }}"
-                        class="mt-3 inline-flex min-h-9 items-center rounded-md bg-[#0099cc] px-3 text-xs font-semibold text-white no-underline hover:bg-[#0086b3]"
+                        class="mt-3 inline-flex min-h-9 items-center rounded-[var(--public-radius-control)] bg-[color:var(--public-brand)] px-3 text-xs font-semibold text-[color:var(--public-on-brand)] no-underline hover:bg-[color:var(--public-brand-hover)]"
                     >View inspection report</a>
                 @else
                     <p class="mt-2 text-sm text-slate-600">Inspection results will appear here when available.</p>

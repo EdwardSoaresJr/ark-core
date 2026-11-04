@@ -28,7 +28,7 @@
                 autocomplete="email tel"
                 value="{{ old('contact') }}"
                 required
-                class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-950 shadow-sm focus:border-[#0099cc] focus:outline-none focus:ring-2 focus:ring-sky-100"
+                class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm text-slate-950 shadow-sm focus:border-[color:var(--public-link)] focus:outline-none focus:ring-2 focus:ring-sky-100"
                 placeholder="{{ $contactPlaceholder }}"
             >
             @error('contact')

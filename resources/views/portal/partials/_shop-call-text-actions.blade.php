@@ -13,7 +13,7 @@
     <div @class(['grid grid-cols-2 gap-3', $class])>
         <a
             href="{{ $telHref }}"
-            class="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0099cc] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#007aa3]"
+            class="inline-flex min-h-11 items-center justify-center rounded-[var(--public-radius-control)] bg-[color:var(--public-brand)] px-4 text-sm font-semibold text-[color:var(--public-on-brand)] shadow-sm hover:bg-[color:var(--public-brand-hover)]"
         >
             Call
         </a>
