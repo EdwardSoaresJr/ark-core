@@ -145,14 +145,19 @@
                 $emailAddress === '' => 'No email address on file.',
                 default => 'Email replies are not set up for this shop.',
             };
+            $smsReason = $composer['sms_unavailable'] ?? null;
             $tabs = [
-                ['key' => 'reply', 'label' => 'SMS', 'icon' => 'message', 'reason' => null],
+                ['key' => 'reply', 'label' => 'SMS', 'icon' => 'message', 'reason' => $smsReason],
                 ['key' => 'email', 'label' => 'Email', 'icon' => 'mail', 'reason' => $emailReason],
                 ['key' => 'internal', 'label' => 'Internal note', 'icon' => 'file-text', 'reason' => null],
             ];
         @endphp
         @php
-            $defaultTab = filled($emailUrl) && ($composer['conversation']->contact_surface?->value ?? null) === 'email' ? 'email' : 'reply';
+            $defaultTab = match (true) {
+                filled($emailUrl) && (($composer['conversation']->contact_surface?->value ?? null) === 'email' || $smsReason !== null) => 'email',
+                $smsReason !== null => 'internal',
+                default => 'reply',
+            };
         @endphp
         <div x-data="{ tab: @js($defaultTab) }" data-comms-composer-tabs>
             <ul class="nav nav-tabs px-2 pt-1" role="tablist" aria-label="Reply, email, or note">

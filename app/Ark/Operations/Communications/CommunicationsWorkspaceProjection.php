@@ -16,6 +16,7 @@ use App\Ark\Operations\Leads\ConversationLeadResolver;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadConfirmationAuditConversation;
 use App\Ark\Operations\Leads\WebsiteLeadRequestPresentation;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionStatus;
@@ -926,6 +927,11 @@ final class CommunicationsWorkspaceProjection
                 'repair_order' => $composerContext['repair_order'],
                 'open_repair_orders' => $composerContext['open_repair_orders'],
                 'email_reply_url' => $this->signals->emailReplyUrl($conversation),
+                'sms_unavailable' => match (true) {
+                    $conversation->contact_surface !== ConversationContactSurface::Phone => 'This conversation is not by phone.',
+                    ! app(OutboundSmsTransport::class)->isConfigured() => 'Texting is not set up for this shop.',
+                    default => null,
+                },
                 'email_address' => $identity['email'] ?? null,
             ],
         ];

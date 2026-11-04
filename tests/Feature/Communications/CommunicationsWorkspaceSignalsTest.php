@@ -11,6 +11,8 @@ use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsConsentStatus;
+use App\Ark\Operations\Messaging\OutboundSmsResult;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -77,14 +79,36 @@ test('a customer who replied STOP shows texting off in the header, the context l
         ->and($page)->toContain('Texting off');
 });
 
-test('with Core alone the composer offers SMS and internal notes and says why email is not available', function () {
+test('with Core alone and no texting provider the composer keeps internal notes and says why texting and email are not available', function () {
     $page = signalsPage($this->advisor, signalsConversation($this->advisor, []));
 
     expect($page)->toContain('id="comms-composer-tab-reply"')
-        ->and($page)->toContain('id="comms-composer-tab-internal"')
+        ->and($page)->toContain('data-comms-composer-unavailable="Texting is not set up for this shop."')
         ->and($page)->toContain('data-comms-composer-unavailable="Email replies are not set up for this shop."')
+        ->and($page)->toContain('id="comms-composer-tab-internal"')
+        ->and($page)->toContain('x-data="{ tab: \'internal\' }"')
         ->and($page)->not->toContain('data-comms-email-composer')
         ->and($page)->toContain('data-live-events="[]"');
+});
+
+test('with a texting provider the composer offers SMS', function () {
+    app()->instance(OutboundSmsTransport::class, new class implements OutboundSmsTransport
+    {
+        public function isConfigured(): bool
+        {
+            return true;
+        }
+
+        public function send(string $toPhone, string $body, array $mediaUrls = [], array $context = []): OutboundSmsResult
+        {
+            return new OutboundSmsResult('SMsignals0000000000000000000000001', 'queued');
+        }
+    });
+
+    $page = signalsPage($this->advisor, signalsConversation($this->advisor, []));
+
+    expect($page)->not->toContain('data-comms-composer-unavailable="Texting is not set up for this shop."')
+        ->and($page)->toContain('x-data="{ tab: \'reply\' }"');
 });
 
 test('a host application\'s signals replace Core\'s: delivery, texting, message notes, notices, email replies, live events, and refresh', function () {
