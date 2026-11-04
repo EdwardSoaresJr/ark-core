@@ -42,6 +42,21 @@ class Customer extends Model implements AuthenticatableContract
 {
     use Authenticatable;
 
+    protected static function booted(): void
+    {
+        // The last delivery result describes the main phone; a new number starts without one.
+        static::updating(function (Customer $customer): void {
+            if ($customer->isDirty('phone') && ! $customer->isDirty('last_sms_delivery_status')) {
+                $customer->forceFill([
+                    'last_sms_delivery_status' => null,
+                    'last_sms_delivered_at' => null,
+                    'last_sms_failed_at' => null,
+                    'last_sms_error_code' => null,
+                ]);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

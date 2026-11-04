@@ -11,6 +11,7 @@ use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSmsSendEligibility;
 use App\Ark\Operations\Observations\CustomerRepliedObservationEmitter;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\CommunicationMessageContext;
@@ -53,13 +54,12 @@ class SendOutboundMessageAction
             throw new RuntimeException('Outbound SMS is not configured.');
         }
 
-        $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials);
+        $destinationPhone = filled($toPhone) ? $toPhone : $customer->phone;
+        $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials, $destinationPhone);
 
         if ($blockReason = $eligibility->blockReason()) {
             throw new RuntimeException($blockReason);
         }
-
-        $destinationPhone = filled($toPhone) ? $toPhone : $customer->phone;
 
         if (! filled($destinationPhone)) {
             throw new RuntimeException('Customer does not have a phone number on file.');
@@ -88,9 +88,11 @@ class SendOutboundMessageAction
 
         $result = $this->transport->send((string) $destinationPhone, $advisorBody, $mediaUrls, $context);
 
-        $customer->forceFill([
-            'last_sms_delivery_status' => $result->status !== '' ? $result->status : 'queued',
-        ])->save();
+        if (PhoneNumber::normalize($destinationPhone) === PhoneNumber::normalize($customer->phone)) {
+            $customer->forceFill([
+                'last_sms_delivery_status' => $result->status !== '' ? $result->status : 'queued',
+            ])->save();
+        }
 
         $message = $this->recordOutboundMessage(
             customer: $customer,

@@ -49,17 +49,16 @@ final class ScheduleOutboundSmsReplyAction
             throw new RuntimeException('Shop messaging is disabled.');
         }
 
-        $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials);
-
-        if ($blockReason = $eligibility->blockReason()) {
-            throw new RuntimeException($blockReason);
-        }
-
         $recipientPhone = PhoneNumber::normalize(
             $conversation?->contact_surface === ConversationContactSurface::Phone && filled($conversation->contact_address)
                 ? $conversation->contact_address
                 : $customer->phone,
         );
+        $eligibility = CustomerSmsSendEligibility::for($customer, $this->credentials, $recipientPhone);
+
+        if ($blockReason = $eligibility->blockReason()) {
+            throw new RuntimeException($blockReason);
+        }
 
         if ($recipientPhone === null || $recipientPhone === '') {
             throw new RuntimeException('Customer does not have a phone number on file.');

@@ -55,6 +55,12 @@ class SendOutboundContactMessageAction
             throw new RuntimeException('Conversation does not have a phone number.');
         }
 
+        $capability = PhoneSmsCapability::findByNormalizedPhone(PhoneNumber::normalize($phone));
+
+        if ($capability !== null && ! $capability->sms_capable) {
+            throw new RuntimeException($capability->blockReason() ?? 'This number cannot receive SMS.');
+        }
+
         $files = [];
         if ($attachment instanceof UploadedFile) {
             $files[] = $attachment;
