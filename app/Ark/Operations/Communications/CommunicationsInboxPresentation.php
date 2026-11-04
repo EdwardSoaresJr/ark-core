@@ -6,6 +6,7 @@ use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -173,6 +174,9 @@ final class CommunicationsInboxPresentation
         $context['customer_url'] = $customer instanceof Customer
             ? route('operations.customers.show', $customer)
             : ($context['customer_url'] ?? null);
+        $context['customer_primary_phone'] = $customer instanceof Customer && filled($customer->phone)
+            ? (PhoneNumber::display((string) $customer->phone) ?? (string) $customer->phone)
+            : null;
         $context['recent_visits'] = $this->recentVisits($customer);
         $visitRepairOrderId = $primary['repair_order_id'] ?? data_get($context, 'current_visit.repair_order_id');
         $context['shop'] = $this->shopContext($customer, filled($visitRepairOrderId) ? (int) $visitRepairOrderId : null);

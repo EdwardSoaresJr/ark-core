@@ -40,72 +40,72 @@
                     <span class="ark-comms-action-label">Resolve</span>
                 </button>
             </form>
-            <div class="dropdown">
-                <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Conversation actions" title="Conversation actions">
-                    <x-tabler.icon name="dots" />
-                    <span class="ark-comms-action-label">Actions</span>
-                </button>
-                <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
+        @endif
+        <div class="dropdown">
+            <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Conversation actions" title="Conversation actions">
+                <x-tabler.icon name="dots" />
+                <span class="ark-comms-action-label">Actions</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
+                <form method="POST" action="{{ $url }}">
+                    @csrf
+                    {!! $hidden('assign') !!}
+                    <input type="hidden" name="assign_to" value="me">
+                    <button type="submit" class="btn btn-sm w-100 mb-2">Assign to me</button>
+                </form>
+                @if ($ownerId !== null)
                     <form method="POST" action="{{ $url }}">
                         @csrf
                         {!! $hidden('assign') !!}
-                        <input type="hidden" name="assign_to" value="me">
-                        <button type="submit" class="btn btn-sm w-100 mb-2">Assign to me</button>
+                        <input type="hidden" name="assign_to" value="unassign">
+                        <button type="submit" class="btn btn-sm w-100 mb-2" data-comms-work-unassign>Unassign</button>
                     </form>
-                    @if ($ownerId !== null)
-                        <form method="POST" action="{{ $url }}">
-                            @csrf
-                            {!! $hidden('assign') !!}
-                            <input type="hidden" name="assign_to" value="unassign">
-                            <button type="submit" class="btn btn-sm w-100 mb-2" data-comms-work-unassign>Unassign</button>
-                        </form>
-                    @endif
-                    <form method="POST" action="{{ $url }}" class="mb-2">
-                        @csrf
-                        {!! $hidden('assign') !!}
-                        <input type="hidden" name="assign_to" value="user">
-                        <label class="form-label small mb-1" for="{{ $assignId }}">Assign to</label>
-                        <div class="input-group input-group-sm">
-                            <select id="{{ $assignId }}" name="user_id" class="form-select" required>
-                                <option value="" disabled @selected($ownerId === null)>Choose…</option>
-                                @foreach ($advisors as $advisor)
-                                    <option value="{{ $advisor['id'] }}" @selected((int) $ownerId === (int) $advisor['id'])>{{ $advisor['name'] }}</option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn">Assign</button>
-                        </div>
-                    </form>
+                @endif
+                <form method="POST" action="{{ $url }}" class="mb-2">
+                    @csrf
+                    {!! $hidden('assign') !!}
+                    <input type="hidden" name="assign_to" value="user">
+                    <label class="form-label small mb-1" for="{{ $assignId }}">Assign to</label>
+                    <div class="input-group input-group-sm">
+                        <select id="{{ $assignId }}" name="user_id" class="form-select" required>
+                            <option value="" disabled @selected($ownerId === null)>Choose…</option>
+                            @foreach ($advisors as $advisor)
+                                <option value="{{ $advisor['id'] }}" @selected((int) $ownerId === (int) $advisor['id'])>{{ $advisor['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn">Assign</button>
+                    </div>
+                </form>
+                <form method="POST" action="{{ $url }}">
+                    @csrf
+                    {!! $hidden('follow_up') !!}
+                    <label class="form-label small mb-1" for="{{ $dueId }}">Follow up on</label>
+                    <div class="input-group input-group-sm">
+                        <input id="{{ $dueId }}" type="datetime-local" name="due_at" value="{{ $defaultDue }}" required class="form-control">
+                        <button type="submit" class="btn">Set</button>
+                    </div>
+                </form>
+                <div class="dropdown-divider"></div>
+                @if ($lane === 'needs')
                     <form method="POST" action="{{ $url }}">
                         @csrf
-                        {!! $hidden('follow_up') !!}
-                        <label class="form-label small mb-1" for="{{ $dueId }}">Follow up on</label>
-                        <div class="input-group input-group-sm">
-                            <input id="{{ $dueId }}" type="datetime-local" name="due_at" value="{{ $defaultDue }}" required class="form-control">
-                            <button type="submit" class="btn">Set</button>
-                        </div>
-                    </form>
-                    <div class="dropdown-divider"></div>
-                    @if ($lane === 'needs')
-                        <form method="POST" action="{{ $url }}">
-                            @csrf
-                            {!! $hidden('wait') !!}
-                            <button type="submit" class="dropdown-item">
-                                <x-tabler.icon name="clock" class="me-2" />
-                                Waiting on the customer
-                            </button>
-                        </form>
-                    @endif
-                    <form method="POST" action="{{ $url }}">
-                        @csrf
-                        {!! $hidden('unread') !!}
-                        <button type="submit" class="dropdown-item" data-comms-work-unread>
-                            <x-tabler.icon name="mail" class="me-2" />
-                            Mark unread
+                        {!! $hidden('wait') !!}
+                        <button type="submit" class="dropdown-item">
+                            <x-tabler.icon name="clock" class="me-2" />
+                            Waiting on the customer
                         </button>
                     </form>
-                </div>
+                @endif
+                <form method="POST" action="{{ $url }}">
+                    @csrf
+                    {!! $hidden('unread') !!}
+                    <button type="submit" class="dropdown-item" data-comms-work-unread>
+                        <x-tabler.icon name="mail" class="me-2" />
+                        Mark unread
+                    </button>
+                </form>
             </div>
-        @endif
+        </div>
     </div>
 @else
     {{-- The context lane: every work control, labelled. --}}
@@ -128,78 +128,78 @@
                     Resolve
                 </button>
             </form>
-            <div class="dropdown">
-                <button type="button" class="btn btn-sm dropdown-toggle w-100" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
-                    <x-tabler.icon name="user" />
-                    Assign
-                </button>
-                <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
-                    <form method="POST" action="{{ $url }}">
-                        @csrf
-                        {!! $hidden('assign') !!}
-                        <input type="hidden" name="assign_to" value="me">
-                        <button type="submit" class="btn btn-sm w-100 mb-2">Assign to me</button>
-                    </form>
-                    @if ($ownerId !== null)
-                        <form method="POST" action="{{ $url }}">
-                            @csrf
-                            {!! $hidden('assign') !!}
-                            <input type="hidden" name="assign_to" value="unassign">
-                            <button type="submit" class="btn btn-sm w-100 mb-2" data-comms-work-unassign>Unassign</button>
-                        </form>
-                    @endif
-                    <form method="POST" action="{{ $url }}">
-                        @csrf
-                        {!! $hidden('assign') !!}
-                        <input type="hidden" name="assign_to" value="user">
-                        <label class="form-label small mb-1" for="{{ $assignId }}">Assign to</label>
-                        <div class="input-group input-group-sm">
-                            <select id="{{ $assignId }}" name="user_id" class="form-select" required>
-                                <option value="" disabled @selected($ownerId === null)>Choose…</option>
-                                @foreach ($advisors as $advisor)
-                                    <option value="{{ $advisor['id'] }}" @selected((int) $ownerId === (int) $advisor['id'])>{{ $advisor['name'] }}</option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn">Assign</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button type="button" class="btn btn-sm dropdown-toggle w-100" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
-                    <x-tabler.icon name="calendar-time" />
-                    Follow-up
-                </button>
-                <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
-                    <form method="POST" action="{{ $url }}">
-                        @csrf
-                        {!! $hidden('follow_up') !!}
-                        <label class="form-label small mb-1" for="{{ $dueId }}">Follow up on</label>
-                        <div class="input-group input-group-sm">
-                            <input id="{{ $dueId }}" type="datetime-local" name="due_at" value="{{ $defaultDue }}" required class="form-control">
-                            <button type="submit" class="btn">Set</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            @if ($lane === 'needs')
-                <form method="POST" action="{{ $url }}" class="d-flex">
+        @endif
+        <div class="dropdown">
+            <button type="button" class="btn btn-sm dropdown-toggle w-100" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+                <x-tabler.icon name="user" />
+                Assign
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
+                <form method="POST" action="{{ $url }}">
                     @csrf
-                    {!! $hidden('wait') !!}
-                    <button type="submit" class="btn btn-sm w-100" title="Waiting on the customer">
-                        <x-tabler.icon name="clock" />
-                        Waiting
-                    </button>
+                    {!! $hidden('assign') !!}
+                    <input type="hidden" name="assign_to" value="me">
+                    <button type="submit" class="btn btn-sm w-100 mb-2">Assign to me</button>
                 </form>
-            @endif
+                @if ($ownerId !== null)
+                    <form method="POST" action="{{ $url }}">
+                        @csrf
+                        {!! $hidden('assign') !!}
+                        <input type="hidden" name="assign_to" value="unassign">
+                        <button type="submit" class="btn btn-sm w-100 mb-2" data-comms-work-unassign>Unassign</button>
+                    </form>
+                @endif
+                <form method="POST" action="{{ $url }}">
+                    @csrf
+                    {!! $hidden('assign') !!}
+                    <input type="hidden" name="assign_to" value="user">
+                    <label class="form-label small mb-1" for="{{ $assignId }}">Assign to</label>
+                    <div class="input-group input-group-sm">
+                        <select id="{{ $assignId }}" name="user_id" class="form-select" required>
+                            <option value="" disabled @selected($ownerId === null)>Choose…</option>
+                            @foreach ($advisors as $advisor)
+                                <option value="{{ $advisor['id'] }}" @selected((int) $ownerId === (int) $advisor['id'])>{{ $advisor['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button type="button" class="btn btn-sm dropdown-toggle w-100" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+                <x-tabler.icon name="calendar-time" />
+                Follow-up
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
+                <form method="POST" action="{{ $url }}">
+                    @csrf
+                    {!! $hidden('follow_up') !!}
+                    <label class="form-label small mb-1" for="{{ $dueId }}">Follow up on</label>
+                    <div class="input-group input-group-sm">
+                        <input id="{{ $dueId }}" type="datetime-local" name="due_at" value="{{ $defaultDue }}" required class="form-control">
+                        <button type="submit" class="btn">Set</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @if ($lane === 'needs')
             <form method="POST" action="{{ $url }}" class="d-flex">
                 @csrf
-                {!! $hidden('unread') !!}
-                <button type="submit" class="btn btn-sm w-100" data-comms-work-unread>
-                    <x-tabler.icon name="mail" />
-                    Mark unread
+                {!! $hidden('wait') !!}
+                <button type="submit" class="btn btn-sm w-100" title="Waiting on the customer">
+                    <x-tabler.icon name="clock" />
+                    Waiting
                 </button>
             </form>
         @endif
+        <form method="POST" action="{{ $url }}" class="d-flex">
+            @csrf
+            {!! $hidden('unread') !!}
+            <button type="submit" class="btn btn-sm w-100" data-comms-work-unread>
+                <x-tabler.icon name="mail" />
+                Mark unread
+            </button>
+        </form>
     </div>
 @endif
