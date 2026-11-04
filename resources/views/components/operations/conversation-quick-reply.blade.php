@@ -238,7 +238,7 @@
                 x-data="arkConversationQuickReply(@js([
                     'sendUrl' => filled($sendUrl)
                         ? $sendUrl
-                        : route('operations.customers.conversation-messages.store', $customer),
+                        : route('operations.customers.conversation-messages.store', array_filter([$customer, 'conversation_id' => $conversation?->id])),
                     'repairOrderId' => $repairOrderId,
                     'sendEstimateUrl' => $sendEstimateUrl,
                     'cancelScheduledEstimateUrl' => $cancelScheduledEstimateUrl,
@@ -284,14 +284,15 @@
                 ]))"
                 {{ $attributes->except('id') }}
             >
-                @if ($contextProjection !== null && filled($contextProjection['estimate']['send_block_reason'] ?? null))
+                {{-- In the Communications workspace (actions menu) an estimate or payment block shows on that action, not over the conversation. --}}
+                @if (! $actionsMenu && $contextProjection !== null && filled($contextProjection['estimate']['send_block_reason'] ?? null))
                     <div class="alert alert-warning m-2 mb-0 py-2" role="status">
                         <div>{{ $contextProjection['estimate']['send_block_reason'] }}</div>
                         @if ($repairOrder instanceof \App\Ark\Operations\RepairOrders\RepairOrder && $contextProjection['estimate']['send_block_reason'] === \App\Ark\Operations\RepairOrders\RepairOrder::ESTIMATE_SEND_DRAFT_ONLY_MESSAGE)
                             <a href="{{ $repairOrder->estimateConcernReviewUrl() }}" class="alert-link">Review concerns</a>
                         @endif
                     </div>
-                @elseif ($contextProjection !== null && filled($contextProjection['payment']['send_block_reason'] ?? null))
+                @elseif (! $actionsMenu && $contextProjection !== null && filled($contextProjection['payment']['send_block_reason'] ?? null))
                     <div class="alert alert-warning m-2 mb-0 py-2" role="status">
                         {{ $contextProjection['payment']['send_block_reason'] }}
                     </div>
@@ -383,7 +384,12 @@
                                             Call
                                         </a>
                                     @endif
-                                    @if ($canSendEstimate)
+                                    @if ($canSendEstimate && filled($contextProjection['estimate']['send_block_reason'] ?? null))
+                                        <span class="dropdown-item disabled flex-column align-items-start" aria-disabled="true">
+                                            Send Estimate
+                                            <span class="small text-secondary text-wrap">{{ $contextProjection['estimate']['send_block_reason'] }}</span>
+                                        </span>
+                                    @elseif ($canSendEstimate)
                                         <button type="button" class="dropdown-item" :disabled="sending" @click.stop="sendEstimate('sms')">Send Estimate</button>
                                     @endif
                                     @if ($canSendInspection)
@@ -395,22 +401,13 @@
                                             Schedule
                                         </a>
                                     @endif
-                                    @if ($canSendPayment)
+                                    @if ($canSendPayment && filled($contextProjection['payment']['send_block_reason'] ?? null))
+                                        <span class="dropdown-item disabled flex-column align-items-start" aria-disabled="true">
+                                            Send Pay Link
+                                            <span class="small text-secondary text-wrap">{{ $contextProjection['payment']['send_block_reason'] }}</span>
+                                        </span>
+                                    @elseif ($canSendPayment)
                                         <button type="button" class="dropdown-item" :disabled="sending" @click.stop="sendPaymentLink('sms')">Send Pay Link</button>
-                                    @endif
-                                    @if ($showSmsComposer)
-                                        <label class="dropdown-item">
-                                            <x-tabler.icon name="paperclip" class="dropdown-item-icon" />
-                                            Attach file
-                                            <input
-                                                x-ref="attachmentInput"
-                                                type="file"
-                                                multiple
-                                                class="d-none"
-                                                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
-                                                @change="pickAttachment($event)"
-                                            >
-                                        </label>
                                     @endif
                                     @foreach ($messageActions as $messageAction)
                                         <button
@@ -428,6 +425,19 @@
                                     @endforeach
                                 </div>
                             </details>
+                            @if ($showSmsComposer)
+                                <label class="btn btn-icon btn-sm me-auto" title="Attach a photo, video, or PDF" aria-label="Attach a photo, video, or PDF" data-comms-attach>
+                                    <x-tabler.icon name="paperclip" />
+                                    <input
+                                        x-ref="attachmentInput"
+                                        type="file"
+                                        multiple
+                                        class="d-none"
+                                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,application/pdf"
+                                        @change="pickAttachment($event)"
+                                    >
+                                </label>
+                            @endif
                         @endif
                         @if (! $actionsMenu && $callHref)
                             <a href="{{ $callHref }}" class="btn btn-sm">
@@ -454,7 +464,7 @@
                                     x-ref="smsSendMenuTrigger"
                                     @click.stop="toggleSmsSendMenu()"
                                     :disabled="sending"
-                                    class="btn btn-sm btn-primary dropdown-toggle"
+                                    @class(['btn btn-primary dropdown-toggle', 'btn-sm' => ! $actionsMenu, 'px-4' => $actionsMenu])
                                     :aria-expanded="smsSendMenuOpen"
                                     aria-haspopup="menu"
                                 >
@@ -788,7 +798,7 @@
                                 id="{{ $attributes->get('id', 'ark-composer-'.$customer->id) }}-body"
                                 x-ref="replyBody"
                                 x-model="body"
-                                rows="2"
+                                rows="{{ $actionsMenu ? 3 : 2 }}"
                                 @if (request()->query('compose') === 'text') autofocus @endif
                                 placeholder="{{ $hasConversationHistory ? 'Message or MMS to '.$customer->display_phone : 'First text or MMS to '.$customer->display_phone }}"
                                 :placeholder="composerPlaceholder()"

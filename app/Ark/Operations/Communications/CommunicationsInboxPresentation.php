@@ -2,15 +2,20 @@
 
 namespace App\Ark\Operations\Communications;
 
+use App\Ark\Operations\Appointments\Appointment;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Timeline\OperationalEventEntry;
 use App\Ark\Operations\Timeline\OperationalEventKind;
 use App\Ark\Operations\Timeline\OperationalEventTone;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 final class CommunicationsInboxPresentation
@@ -20,10 +25,13 @@ final class CommunicationsInboxPresentation
     ) {}
 
     /**
+     * With a viewer, a conversation is unread for them when the customer wrote after their read mark, or they have
+     * none.
+     *
      * @param  list<array<string, mixed>>  $items
      * @return list<array<string, mixed>>
      */
-    public function decorateList(array $items): array
+    public function decorateList(array $items, ?User $viewer = null): array
     {
         $ids = [];
         foreach ($items as $item) {
@@ -37,7 +45,9 @@ final class CommunicationsInboxPresentation
             ? collect()
             : Conversation::query()->with('owner:id,name')->whereIn('id', array_unique($ids))->get()->keyBy('id');
 
-        return array_values(array_map(function (array $item) use ($conversations): array {
+        $unread = $viewer === null || $ids === [] ? [] : $this->unreadFor(array_values(array_unique($ids)), (int) $viewer->id);
+
+        return array_values(array_map(function (array $item) use ($conversations, $unread): array {
             $conversation = $conversations->get($this->conversationId($item));
             $lane = $conversation instanceof Conversation
                 ? $this->work->lane($conversation)
@@ -59,9 +69,39 @@ final class CommunicationsInboxPresentation
             $item['owner_id'] = $conversation?->owned_by_user_id ?? ($item['owner_id'] ?? null);
             $item['owner_initials'] = $this->initials($ownerName);
             $item['preview'] = $preview;
+            if ($conversation instanceof Conversation && ! array_key_exists('unread', $item)) {
+                $item['unread'] = isset($unread[(int) $conversation->id]);
+            }
 
             return $item;
         }, $items));
+    }
+
+    /**
+     * @param  list<int>  $conversationIds
+     * @return array<int, true>
+     */
+    private function unreadFor(array $conversationIds, int $userId): array
+    {
+        $latestInbound = DB::table('conversation_messages')
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('direction', 'inbound')
+            ->selectRaw('conversation_id, MAX(occurred_at) AS last_inbound')
+            ->groupBy('conversation_id')
+            ->pluck('last_inbound', 'conversation_id');
+        $reads = DB::table('conversation_reads')
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('user_id', $userId)
+            ->pluck('read_through_at', 'conversation_id');
+
+        $unread = [];
+        foreach ($latestInbound as $conversationId => $at) {
+            if (! isset($reads[$conversationId]) || Carbon::parse((string) $at)->greaterThan(Carbon::parse((string) $reads[$conversationId]))) {
+                $unread[(int) $conversationId] = true;
+            }
+        }
+
+        return $unread;
     }
 
     /**
@@ -133,10 +173,9 @@ final class CommunicationsInboxPresentation
         $context['customer_url'] = $customer instanceof Customer
             ? route('operations.customers.show', $customer)
             : ($context['customer_url'] ?? null);
-        $context['internal_note_url'] = $conversation instanceof Conversation
-            ? route('operations.communications.conversations.internal-note', $conversation)
-            : ($context['internal_note_url'] ?? null);
         $context['recent_visits'] = $this->recentVisits($customer);
+        $visitRepairOrderId = $primary['repair_order_id'] ?? data_get($context, 'current_visit.repair_order_id');
+        $context['shop'] = $this->shopContext($customer, filled($visitRepairOrderId) ? (int) $visitRepairOrderId : null);
         $context['vehicle'] = [
             'label' => $primary['vehicle'] ?? data_get($context, 'current_visit.vehicle_label'),
             'ro_number' => $primary['number'] ?? data_get($context, 'current_visit.ro_label'),
@@ -155,6 +194,8 @@ final class CommunicationsInboxPresentation
                 'posture_changed_at' => $conversation->posture_changed_at?->toIso8601String(),
                 'owned_by_user_id' => $conversation->owned_by_user_id,
                 'owner_name' => $conversation->owner?->name ?? 'Unassigned',
+                'follow_up_due_label' => $conversation->follow_up_due_at
+                    ?->timezone(config('app.display_timezone'))->format('D M j, g:i A'),
             ], array_filter([
                 'url' => $existingWork['url'] ?? null,
                 'advisors' => $existingWork['advisors'] ?? null,
@@ -414,5 +455,43 @@ final class CommunicationsInboxPresentation
         }
 
         return $letters;
+    }
+
+    /**
+     * What the advisor needs beside the conversation: the visit's approval and balance, and the next appointment.
+     *
+     * @return array{approval: ?string, approval_tone: string, balance: ?string, balance_tone: string, appointment: ?string, appointment_url: ?string}
+     */
+    private function shopContext(?Customer $customer, ?int $repairOrderId): array
+    {
+        $repairOrder = $repairOrderId !== null ? RepairOrder::query()->find($repairOrderId) : null;
+        $approval = match (true) {
+            $repairOrder === null => null,
+            $repairOrder->status->is(RepairOrderStatus::WaitingApproval) => 'Waiting on approval',
+            $repairOrder->status->is(RepairOrderStatus::Approved) => 'Approved',
+            default => null,
+        };
+        $balance = $repairOrder?->balanceDue();
+        $appointment = $customer === null ? null : Appointment::query()
+            ->where('customer_id', $customer->id)
+            ->where('starts_at', '>=', now())
+            ->whereNotIn('status', ['canceled', 'no_show', 'completed'])
+            ->orderBy('starts_at')
+            ->first();
+
+        return [
+            'approval' => $approval,
+            'approval_tone' => $approval === 'Approved' ? 'green' : 'yellow',
+            'balance' => match (true) {
+                $balance === null || ! $balance->hasIssuedInvoice => null,
+                $balance->balanceDueCents > 0 => '$'.number_format($balance->balanceDueCents / 100, 2).' due',
+                default => 'Paid',
+            },
+            'balance_tone' => $balance !== null && $balance->balanceDueCents > 0 ? 'orange' : 'green',
+            'appointment' => $appointment?->starts_at?->timezone(config('app.display_timezone'))->format('D M j, g:i A'),
+            'appointment_url' => $appointment !== null && Route::has('operations.appointments.show')
+                ? route('operations.appointments.show', $appointment)
+                : null,
+        ];
     }
 }

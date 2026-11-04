@@ -10,12 +10,14 @@ use App\Ark\Operations\Conversations\ConversationParticipant;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
+use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Workstations\WorkstationPresence;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
@@ -221,7 +223,8 @@ test('waiting queue query cost does not scale with relationship work per row', f
 
         expect($measured['result']['selected'])->toBeNull()
             ->and($measured['result']['thread'])->toBeNull()
-            ->and($measured['result']['list_count'])->toBe($target);
+            ->and($measured['result']['list_count'])->toBe(min($target, CommunicationsWorkspaceProjection::LIST_PAGE_SIZE))
+            ->and($measured['result']['list_total'])->toBe($target);
 
         $counts[$target] = $measured['count'];
     }
@@ -230,4 +233,81 @@ test('waiting queue query cost does not scale with relationship work per row', f
         ->and($counts[500])->toBeLessThan(80)
         ->and($counts[1000])->toBeLessThan(80)
         ->and($counts[1000] / max(1, $counts[100]))->toBeLessThan(3);
+});
+
+function pagingConversations(int $count, ?User $owner = null, int $minutesAgo = 0): void
+{
+    $work = app(ConversationWork::class);
+
+    foreach (range(1, $count) as $index) {
+        $conversation = $work->ensureForPhone('719556'.str_pad((string) (Conversation::query()->count() + 1), 4, '0', STR_PAD_LEFT));
+        $work->markNeedsAttention($conversation);
+        $conversation->forceFill([
+            'owned_by_user_id' => $owner?->id,
+            'posture_changed_at' => now()->subMinutes($minutesAgo + $index),
+        ])->save();
+    }
+}
+
+test('the inbox lane loads one page and offers the next', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    pagingConversations(CommunicationsWorkspaceProjection::LIST_PAGE_SIZE + 10);
+
+    $response = $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs']))
+        ->assertOk()
+        ->assertSee('data-comms-list-more', false)
+        ->assertSee('shown=100', false);
+
+    $workspace = $response->viewData('workspace');
+    expect($workspace['list_items'])->toHaveCount(CommunicationsWorkspaceProjection::LIST_PAGE_SIZE)
+        ->and($workspace['list_truncated'])->toBeTrue()
+        ->and($workspace['list_total'])->toBe(CommunicationsWorkspaceProjection::LIST_PAGE_SIZE + 10);
+
+    $next = $this->actingAs($advisor)
+        ->getJson(route('operations.communications.workspace.fragment', ['section' => 'inbox', 'filter' => 'needs', 'shown' => 100]))
+        ->assertOk()
+        ->json('list');
+
+    expect(substr_count($next, 'data-comms-list-row'))->toBe(CommunicationsWorkspaceProjection::LIST_PAGE_SIZE + 10)
+        ->and($next)->not->toContain('data-comms-list-more');
+});
+
+test('the advisor filter queries the whole lane, not the loaded page', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    pagingConversations(CommunicationsWorkspaceProjection::LIST_PAGE_SIZE + 5);
+    pagingConversations(3, $advisor, minutesAgo: 600);
+
+    $workspace = $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'needs', 'owner' => 'mine']))
+        ->assertOk()
+        ->viewData('workspace');
+
+    expect($workspace['list_items'])->toHaveCount(3)
+        ->and($workspace['owner_counts'])->toBe([
+            'everyone' => CommunicationsWorkspaceProjection::LIST_PAGE_SIZE + 8,
+            'mine' => 3,
+            'unassigned' => CommunicationsWorkspaceProjection::LIST_PAGE_SIZE + 5,
+        ])
+        ->and($workspace['list_truncated'])->toBeFalse();
+});
+
+test('list rows do not load their owner one query at a time', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    pagingConversations(20, $advisor);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $this->actingAs($advisor)->get(route('operations.communications.inbox', ['filter' => 'needs']))->assertOk();
+    $ownerLookups = collect(DB::getQueryLog())
+        ->filter(fn (array $query): bool => str_contains($query['query'], 'from "users" where "users"."id" = ?'))
+        ->count();
+
+    expect($ownerLookups)->toBeLessThan(5);
+});
+
+test('the requested page size is bounded', function (): void {
+    expect(CommunicationsWorkspaceProjection::listLimit(null))->toBe(50)
+        ->and(CommunicationsWorkspaceProjection::listLimit(51))->toBe(100)
+        ->and(CommunicationsWorkspaceProjection::listLimit(100000))->toBe(CommunicationsWorkspaceProjection::LIST_MAX);
 });

@@ -334,6 +334,160 @@ function restoreComposerState(state) {
 
 let lastMarkedReadKey = '';
 
+const NEAR_BOTTOM = 96;
+const DRAFT_PREFIX = 'ark-comms-draft:';
+
+function threadKey() {
+    return threadMessagesEl()?.dataset.conversationKey ?? '';
+}
+
+function distanceFromBottom(el) {
+    return el.scrollHeight - el.scrollTop - el.clientHeight;
+}
+
+function composerFields() {
+    return [...document.querySelectorAll('#ops-comms-workspace-thread [data-comms-composer] textarea')]
+        .filter((field) => field.id || field.name);
+}
+
+function saveDraft() {
+    const key = threadKey();
+
+    if (key === '') {
+        return;
+    }
+
+    const draft = {};
+    composerFields().forEach((field) => {
+        if (field.value.trim() !== '') {
+            draft[field.id || field.name] = field.value;
+        }
+    });
+
+    try {
+        if (Object.keys(draft).length === 0) {
+            sessionStorage.removeItem(DRAFT_PREFIX + key);
+        } else {
+            sessionStorage.setItem(DRAFT_PREFIX + key, JSON.stringify(draft));
+        }
+    } catch {
+        // Private browsing without storage: drafts last until the page changes.
+    }
+}
+
+function restoreDraft() {
+    const key = threadKey();
+    let draft = null;
+
+    try {
+        draft = key === '' ? null : JSON.parse(sessionStorage.getItem(DRAFT_PREFIX + key) || 'null');
+    } catch {
+        draft = null;
+    }
+
+    if (! draft) {
+        return;
+    }
+
+    composerFields().forEach((field) => {
+        const value = draft[field.id || field.name];
+
+        if (typeof value === 'string' && field.value === '') {
+            field.value = value;
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+}
+
+function forgetDraftField(field) {
+    const key = threadKey();
+
+    if (key === '' || ! field) {
+        return;
+    }
+
+    try {
+        const draft = JSON.parse(sessionStorage.getItem(DRAFT_PREFIX + key) || 'null');
+
+        if (! draft) {
+            return;
+        }
+
+        delete draft[field.id || field.name];
+
+        if (Object.keys(draft).length === 0) {
+            sessionStorage.removeItem(DRAFT_PREFIX + key);
+        } else {
+            sessionStorage.setItem(DRAFT_PREFIX + key, JSON.stringify(draft));
+        }
+    } catch {
+        // Nothing stored.
+    }
+}
+
+function lastEntryKey(scope = document) {
+    const entries = scope.querySelectorAll('#comms-workspace-thread-messages [data-comms-entry], [data-comms-thread-body] [data-comms-entry]');
+
+    return entries.length > 0 ? entries[entries.length - 1].dataset.commsEntry : '';
+}
+
+/**
+ * Appends the refreshed thread's entries that came after the newest one on screen; returns how many.
+ */
+function appendNewEntries(threadHtml, afterKey) {
+    const body = threadMessagesEl();
+
+    if (! body || afterKey === '') {
+        return 0;
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = threadHtml;
+    const freshBody = template.content.querySelector('[data-comms-thread-body]');
+
+    if (! freshBody) {
+        return 0;
+    }
+
+    const children = [...freshBody.children];
+    const at = children.findIndex((child) => child.dataset?.commsEntry === afterKey);
+
+    if (at === -1) {
+        return 0;
+    }
+
+    const fresh = children.slice(at + 1).filter((child) => ! child.dataset?.commsEntry || ! body.querySelector(`[data-comms-entry="${CSS.escape(child.dataset.commsEntry)}"]`));
+    const lastDate = [...body.querySelectorAll('[data-comms-date]')].pop()?.dataset.commsDate;
+    fresh.forEach((child) => {
+        if (child.dataset?.commsDate && child.dataset.commsDate === lastDate) {
+            return;
+        }
+        body.appendChild(child);
+    });
+
+    return fresh.filter((child) => child.dataset?.commsEntry).length;
+}
+
+function newBelowButton() {
+    return document.querySelector('#ops-comms-workspace-thread [data-comms-new-below]');
+}
+
+function showNewBelow() {
+    newBelowButton()?.classList.remove('d-none');
+}
+
+function hideNewBelow() {
+    newBelowButton()?.classList.add('d-none');
+}
+
+function syncViewportHeight() {
+    const viewport = window.visualViewport;
+
+    if (viewport) {
+        document.documentElement.style.setProperty('--ark-viewport-height', `${Math.round(viewport.height)}px`);
+    }
+}
+
 function markOpenConversationRead() {
     const body = threadMessagesEl();
     const markUrl = body?.dataset.markReadUrl ?? '';
@@ -384,13 +538,24 @@ export function initCommsWorkspace() {
         const listScroll = captureListScroll();
         const selectedKey = selectedHref
             ?? activeListRowHref();
+        const keyBefore = threadKey();
+        const newestBefore = lastEntryKey();
+        const thread = threadMessagesEl();
+        // A reader who loaded earlier messages and is reading them keeps them: the refresh would cut the thread back
+        // to its latest page. New messages still arrive live, with the indicator.
+        const keepThread = selectedHref === null && thread?.dataset.extended === '1'
+            && threadScroll !== null && threadScroll.distanceFromBottom >= NEAR_BOTTOM;
 
         if (replaceList && typeof payload.list === 'string' && payload.list !== '') {
             replaceSection('ops-comms-workspace-list-body', payload.list);
         }
-        if (typeof payload.thread === 'string' && payload.thread !== '') {
+        let appended = 0;
+        if (typeof payload.thread === 'string' && payload.thread !== '' && ! keepThread) {
             replaceSection('ops-comms-workspace-thread', payload.thread);
+        } else if (keepThread && typeof payload.thread === 'string' && payload.thread !== '') {
+            appended = appendNewEntries(payload.thread, newestBefore);
         }
+        const sameConversation = keyBefore !== '' && keyBefore === threadKey();
         if (typeof payload.context === 'string' && payload.context !== '') {
             replaceSection('ops-comms-workspace-context', payload.context);
         }
@@ -399,10 +564,21 @@ export function initCommsWorkspace() {
         }
 
         requestAnimationFrame(() => {
-            restoreThreadScroll(threadScroll);
-            restoreComposerState(composerState);
+            if (! keepThread) {
+                restoreThreadScroll(sameConversation ? threadScroll : null);
+            }
+            if (sameConversation) {
+                restoreComposerState(composerState);
+            } else {
+                restoreDraft();
+            }
             restoreListScroll(listScroll);
             markOpenConversationRead();
+
+            const newArrived = keepThread ? appended > 0 : (newestBefore !== '' && lastEntryKey() !== newestBefore);
+            if (sameConversation && newArrived && threadScroll !== null && threadScroll.distanceFromBottom >= NEAR_BOTTOM) {
+                showNewBelow();
+            }
 
             if (selectedKey) {
                 markSelectedRow(selectedKey);
@@ -583,8 +759,18 @@ export function initCommsWorkspace() {
         echo.private(window.arkShopChannel('operations.incoming-calls'))
             .listen('.call.updated', sync.trigger);
 
-        echo.private(window.arkShopChannel('operations.conversations'))
+        const conversations = echo.private(window.arkShopChannel('operations.conversations'))
             .listen('.conversation.message.received', sync.trigger);
+
+        let liveEvents = [];
+        try {
+            liveEvents = JSON.parse(document.getElementById('ops-comms-workspace-live')?.dataset.liveEvents || '[]');
+        } catch {
+            liveEvents = [];
+        }
+        liveEvents
+            .filter((name) => typeof name === 'string' && name !== '')
+            .forEach((name) => conversations.listen(name.startsWith('.') ? name : `.${name}`, sync.trigger));
 
         echo.private(window.arkShopChannel('operations.comms-interrupts'))
             .listen('.comms.interrupt', sync.trigger);
@@ -614,7 +800,182 @@ export function initCommsWorkspace() {
         setActionBusy(true);
     });
 
+    let loadingOlder = false;
+
+    const loadOlder = async () => {
+        const body = threadMessagesEl();
+        const marker = body?.querySelector('[data-comms-older]');
+        const live = document.getElementById('ops-comms-workspace-live');
+
+        if (! body || ! marker || ! live || loadingOlder) {
+            return;
+        }
+
+        loadingOlder = true;
+        const button = marker.querySelector('[data-comms-older-load]');
+        button?.classList.add('disabled');
+        const request = new URL(live.dataset.fragmentUrl || url, window.location.origin);
+        request.searchParams.set('older_before', marker.dataset.before ?? '');
+        request.searchParams.set('older_key', marker.dataset.key ?? '');
+        request.searchParams.set('loaded', marker.dataset.loaded ?? '0');
+        request.searchParams.delete('signature');
+
+        try {
+            const payload = await fetchWorkspace(`${request.pathname}${request.search}`);
+
+            if (! payload || threadMessagesEl() !== body || typeof payload.older_html !== 'string') {
+                return;
+            }
+
+            const heightBefore = body.scrollHeight;
+            const topBefore = body.scrollTop;
+            marker.insertAdjacentHTML('afterend', payload.older_html);
+
+            let previous = null;
+            body.querySelectorAll('[data-comms-date]').forEach((line) => {
+                if (previous && previous.dataset.commsDate === line.dataset.commsDate) {
+                    line.remove();
+                } else {
+                    previous = line;
+                }
+            });
+
+            body.scrollTop = topBefore + (body.scrollHeight - heightBefore);
+            body.dataset.extended = '1';
+            marker.dataset.loaded = String(Number(marker.dataset.loaded || 0) + Number(payload.count || 0));
+
+            if (payload.older) {
+                marker.dataset.before = payload.older.before;
+                marker.dataset.key = payload.older.key;
+            } else {
+                marker.remove();
+            }
+        } catch {
+            // The button stays for another try.
+        } finally {
+            loadingOlder = false;
+            button?.classList.remove('disabled');
+        }
+    };
+
+    root.addEventListener('scroll', (event) => {
+        const body = event.target;
+
+        if (! (body instanceof Element) || ! body.matches('[data-comms-thread-body]')) {
+            return;
+        }
+
+        if (distanceFromBottom(body) < NEAR_BOTTOM) {
+            hideNewBelow();
+        }
+
+        if (body.scrollTop < 150 && body.querySelector('[data-comms-older]')) {
+            loadOlder();
+        }
+    }, true);
+
+    root.addEventListener('input', (event) => {
+        if (event.target instanceof HTMLTextAreaElement && event.target.closest('[data-comms-composer]')) {
+            saveDraft();
+        }
+    });
+
+    root.addEventListener('ark:composer-sent', (event) => {
+        const composer = event.target instanceof Element ? event.target.closest('[data-ark-conversation-composer], #comms-thread-composer') : null;
+        forgetDraftField(composer?.querySelector('textarea') ?? null);
+    });
+
+    root.addEventListener('submit', (event) => {
+        if (event.target instanceof HTMLFormElement && event.target.closest('[data-comms-composer]')) {
+            forgetDraftField(event.target.querySelector('textarea'));
+        }
+    });
+
+    document.addEventListener('ark:comms-new-below', showNewBelow);
+
+    window.visualViewport?.addEventListener('resize', syncViewportHeight);
+    syncViewportHeight();
+
+    let loadingMore = false;
+
+    const loadMore = async (link) => {
+        const live = document.getElementById('ops-comms-workspace-live');
+
+        if (loadingMore || inflight || ! live || ! link) {
+            return;
+        }
+
+        loadingMore = true;
+        inflight = true;
+        const generation = selectionGeneration;
+        const fragment = new URL(live.dataset.fragmentUrl || url, window.location.origin);
+        fragment.searchParams.set('shown', link.dataset.shown ?? '');
+        fragment.searchParams.delete('signature');
+        link.classList.add('disabled');
+
+        try {
+            const payload = await fetchWorkspace(`${fragment.pathname}${fragment.search}`);
+
+            if (! payload || generation !== selectionGeneration) {
+                return;
+            }
+
+            live.dataset.fragmentUrl = `${fragment.pathname}${fragment.search}`;
+            lastSignature = String(payload.signature ?? lastSignature);
+            applyPayload(payload);
+
+            const page = new URL(window.location.href);
+            page.searchParams.set('shown', link.dataset.shown ?? '');
+            window.history.replaceState(window.history.state, '', `${page.pathname}${page.search}`);
+        } catch {
+            link.classList.remove('disabled');
+        } finally {
+            loadingMore = false;
+
+            if (generation === selectionGeneration) {
+                inflight = false;
+            }
+        }
+    };
+
+    root.addEventListener('scroll', (event) => {
+        const list = event.target;
+
+        if (! (list instanceof Element) || ! list.matches('[data-comms-list-items]')) {
+            return;
+        }
+
+        if (list.scrollHeight - list.scrollTop - list.clientHeight < 240) {
+            loadMore(list.querySelector('[data-comms-list-more]'));
+        }
+    }, true);
+
     root.addEventListener('click', async (event) => {
+        if (event.target instanceof Element && event.target.closest('[data-comms-older-load]')) {
+            event.preventDefault();
+            loadOlder();
+
+            return;
+        }
+
+        if (event.target instanceof Element && event.target.closest('[data-comms-new-below]')) {
+            scrollThreadToBottom();
+            hideNewBelow();
+
+            return;
+        }
+
+        const more = event.target instanceof Element
+            ? event.target.closest('[data-comms-list-more]')
+            : null;
+
+        if (more && ! event.defaultPrevented && event.button === 0 && ! event.metaKey && ! event.ctrlKey) {
+            event.preventDefault();
+            loadMore(more);
+
+            return;
+        }
+
         const row = event.target instanceof Element
             ? event.target.closest(LIST_ROW)
             : null;
@@ -665,6 +1026,7 @@ export function initCommsWorkspace() {
 
     requestAnimationFrame(() => {
         scrollThreadToBottom();
+        restoreDraft();
         markOpenConversationRead();
     });
 }

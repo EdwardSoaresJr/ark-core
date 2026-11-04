@@ -13,6 +13,7 @@ use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 class SendOutboundContactMessageAction
@@ -54,6 +55,12 @@ class SendOutboundContactMessageAction
             throw new RuntimeException('Conversation does not have a phone number.');
         }
 
+        $capability = PhoneSmsCapability::findByNormalizedPhone(PhoneNumber::normalize($phone));
+
+        if ($capability !== null && ! $capability->sms_capable) {
+            throw new RuntimeException($capability->blockReason() ?? 'This number cannot receive SMS.');
+        }
+
         $files = [];
         if ($attachment instanceof UploadedFile) {
             $files[] = $attachment;
@@ -83,6 +90,25 @@ class SendOutboundContactMessageAction
             $mediaUrls,
             filled($idempotencyKey) ? [['type' => 'idempotency_key', 'id' => 'conversation-send:'.$idempotencyKey]] : [],
         );
+
+        // A repeated one-time key is answered with the first send's reference: that send is already in the conversation.
+        $alreadyRecorded = filled($idempotencyKey) && filled($result->messageId)
+            ? ConversationMessage::query()
+                ->where('conversation_id', $conversation->id)
+                ->where('metadata->twilio_message_sid', $result->messageId)
+                ->first()
+            : null;
+
+        if ($alreadyRecorded instanceof ConversationMessage) {
+            foreach ($storedAttachments as $storedAttachment) {
+                Storage::disk('local')->delete((string) $storedAttachment['storage_path']);
+            }
+
+            return [
+                'message' => $alreadyRecorded,
+                'provider_message_sid' => $result->messageId,
+            ];
+        }
 
         $this->linkKnownCustomer($conversation, $phone);
 

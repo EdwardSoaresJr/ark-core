@@ -6,6 +6,7 @@ use App\Ark\Operations\Attention\AdvisorNudgeResponseKind;
 use App\Ark\Operations\Attention\RecordAdvisorNudgeResponseAction;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationPosture;
+use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,9 +30,13 @@ class AssignConversationController
 
         $owner = match ($data['assign_to']) {
             'unassign' => null,
-            'user' => User::query()->findOrFail((int) $data['user_id']),
+            'user' => User::query()->active()->role([ArkRole::Admin->value, ArkRole::Advisor->value])->whereKey((int) $data['user_id'])->first(),
             default => $request->user(),
         };
+
+        if ($data['assign_to'] === 'user' && $owner === null) {
+            return back()->with('error', 'Choose an active advisor to assign.');
+        }
 
         $posture->assign($conversation, $owner);
 

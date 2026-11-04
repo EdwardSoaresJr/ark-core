@@ -684,7 +684,6 @@
         "link: resources/views/operations/communications/workspace/partials/composer-panel.blade.php",
         "link: resources/views/operations/communications/workspace/partials/list-panel.blade.php",
         "link: resources/views/operations/communications/workspace/partials/section-nav.blade.php",
-        "link: resources/views/operations/communications/workspace/partials/thread-panel.blade.php",
         "link: resources/views/operations/conversations/partials/message-attachments.blade.php",
         "link: resources/views/operations/leads/create-contact.blade.php",
         "migration: database/migrations/2026_06_03_043000_create_operational_communications_table.php",

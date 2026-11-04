@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Messaging\PhoneSmsCapability;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Platform\Communications\ManagedCommunicationsGate;
 use Illuminate\Support\Carbon;
@@ -13,15 +14,23 @@ final class CustomerSmsSendEligibility
         private readonly Customer $customer,
         private readonly bool $twilioConfigured,
         private readonly ?PhoneSmsCapability $capability = null,
+        private readonly ?string $phone = null,
     ) {}
 
-    public static function for(Customer $customer, ShopIntegrationCredentials $credentials): self
+    /**
+     * Eligibility to text $phone (the customer's main phone when null). A number's capability is its own; the
+     * customer's last delivery result describes the main phone only.
+     */
+    public static function for(Customer $customer, ShopIntegrationCredentials $credentials, ?string $phone = null): self
     {
-        $capability = filled($customer->phone)
-            ? PhoneSmsCapability::findByNormalizedPhone((string) $customer->phone)
-            : null;
+        $normalized = PhoneNumber::normalize(filled($phone) ? $phone : $customer->phone);
 
-        return new self($customer, $credentials->twilioConfigured(), $capability);
+        return new self(
+            $customer,
+            $credentials->twilioConfigured(),
+            PhoneSmsCapability::findByNormalizedPhone($normalized),
+            $normalized,
+        );
     }
 
     public function canSend(): bool
@@ -31,7 +40,7 @@ final class CustomerSmsSendEligibility
 
     public function blockReason(): ?string
     {
-        if (! filled($this->customer->phone)) {
+        if (! filled($this->phone ?? $this->customer->phone)) {
             return 'Customer does not have a phone number on file.';
         }
 
@@ -70,6 +79,10 @@ final class CustomerSmsSendEligibility
             return null;
         }
 
+        if (! $this->isMainPhone()) {
+            return null;
+        }
+
         $status = strtolower(trim((string) ($this->customer->last_sms_delivery_status ?? '')));
 
         if (! in_array($status, ['failed', 'undelivered'], true)) {
@@ -89,6 +102,11 @@ final class CustomerSmsSendEligibility
         }
 
         return 'Recent text delivery failed. Verify the customer\'s phone number before texting again.';
+    }
+
+    private function isMainPhone(): bool
+    {
+        return $this->phone === null || $this->phone === PhoneNumber::normalize($this->customer->phone);
     }
 
     public function optedOut(): bool

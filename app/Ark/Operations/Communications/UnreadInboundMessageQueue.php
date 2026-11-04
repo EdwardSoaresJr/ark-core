@@ -70,6 +70,7 @@ class UnreadInboundMessageQueue
                     });
             })
             ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
             ->limit(100)
             ->get();
 

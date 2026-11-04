@@ -16,6 +16,7 @@ use App\Ark\Operations\Leads\ConversationLeadResolver;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadConfirmationAuditConversation;
 use App\Ark\Operations\Leads\WebsiteLeadRequestPresentation;
+use App\Ark\Operations\Messaging\OutboundSmsTransport;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\Telephony\CallSession;
 use App\Ark\Operations\Telephony\CallSessionStatus;
@@ -27,6 +28,8 @@ use App\Ark\Operations\Timeline\UnifiedOperationalTimeline;
 use App\Ark\Runtime\Database\SchemaPresence;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -38,6 +41,14 @@ use Illuminate\Support\Str;
  */
 final class CommunicationsWorkspaceProjection
 {
+    public const LIST_PAGE_SIZE = 50;
+
+    public const LIST_MAX = 500;
+
+    public const THREAD_PAGE = 50;
+
+    public const OLDER_PAGE = 100;
+
     /** @var array<string, CustomerCallContext|null> */
     private array $callIdentityContexts = [];
 
@@ -60,6 +71,7 @@ final class CommunicationsWorkspaceProjection
         private readonly ConversationLeadResolver $conversationLeadResolver,
         private readonly CommunicationsRelationshipContextResolver $relationshipContext,
         private readonly WebsiteLeadRequestPresentation $websiteRequests,
+        private readonly CommunicationsWorkspaceSignals $signals,
     ) {}
 
     /**
@@ -128,6 +140,7 @@ final class CommunicationsWorkspaceProjection
         ?Carbon $previousLastSeenAt = null,
         ?string $listFilter = null,
         ?string $ownerFilter = null,
+        ?int $listLimit = null,
     ): array {
         if ($viewer === null || ! SchemaPresence::hasTable('conversations')) {
             return $this->emptySection('inbox');
@@ -135,24 +148,21 @@ final class CommunicationsWorkspaceProjection
 
         $filter = $this->normalizeListFilter($listFilter, $turnFilter);
         $filterCounts = $this->cheapFilterCounts($viewer, $previousLastSeenAt, $filter);
+        $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
+        $limit = self::listLimit($listLimit);
 
         $listItems = match ($filter) {
-            'waiting' => $this->waitingListItems(),
-            'resolved' => $this->resolvedListItems(),
-            'all' => $this->allActiveListItems($viewer, $previousLastSeenAt),
-            default => $this->needsAttentionListItems($viewer, $previousLastSeenAt),
+            'waiting' => $this->waitingListItems($viewer, $ownerFilter, $limit),
+            'resolved' => $this->resolvedListItems($viewer, $ownerFilter, $limit),
+            'all' => $this->allActiveListItems($viewer, $previousLastSeenAt, $ownerFilter, $limit),
+            default => $this->needsAttentionListItems($viewer, $previousLastSeenAt, $ownerFilter, $limit),
         };
 
         $listItems = $this->listDedupe->dedupe($listItems);
         $listItems = $this->enrichListIdentities($listItems);
         $presentation = app(CommunicationsInboxPresentation::class);
-        $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
-        $listItems = $presentation->decorateList($listItems);
-        $ownerCounts = [
-            'everyone' => count($listItems),
-            'mine' => count(array_filter($listItems, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === (int) $viewer->id)),
-            'unassigned' => count(array_filter($listItems, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === 0)),
-        ];
+        $listItems = $presentation->decorateList($listItems, $viewer);
+        $ownerCounts = $this->ownerCounts($filter, $filterCounts, $viewer, $listItems);
         $listItems = $presentation->applyOwnerFilter($listItems, $ownerFilter, $viewer);
 
         $selectedKey = match (true) {
@@ -175,6 +185,9 @@ final class CommunicationsWorkspaceProjection
             if (is_array($thread) && is_array($context['work'] ?? null)) {
                 $thread['decision']['work'] = $context['work'];
             }
+            if (is_array($context) && is_array($thread['identity']['permission'] ?? null)) {
+                $context['permission'] = $thread['identity']['permission'];
+            }
         }
 
         return [
@@ -185,11 +198,14 @@ final class CommunicationsWorkspaceProjection
             'thread' => $thread,
             'context' => $context,
             'poll_signature' => $this->pollSignature($filter, $conversationId, $leadId, $callSessionId),
+            'live_events' => $this->liveEvents(),
+            'notices' => $this->signals->notices(),
             'list_filter' => $filter,
             'filter_counts' => $filterCounts,
             'list_shown' => count($listItems),
-            'list_total' => $this->listTotalForFilter($filter, $filterCounts, count($listItems)),
-            'list_truncated' => $this->listTotalForFilter($filter, $filterCounts, count($listItems)) > count($listItems),
+            'list_total' => max(count($listItems), (int) $ownerCounts[$ownerFilter]),
+            'list_truncated' => (int) $ownerCounts[$ownerFilter] > count($listItems),
+            'list_next' => min(self::LIST_MAX, $limit + self::LIST_PAGE_SIZE),
             'owner_filter' => $ownerFilter,
             'owner_counts' => $ownerCounts,
             // Compatibility aliases for older nav / deep links.
@@ -209,9 +225,9 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function needsAttentionListItems(User $viewer, ?Carbon $previousLastSeenAt): array
+    private function needsAttentionListItems(User $viewer, ?Carbon $previousLastSeenAt, string $ownerFilter, int $limit): array
     {
-        $items = $this->inboxConversationItems('needs');
+        $items = $this->inboxConversationItems('needs', $viewer, $ownerFilter, $limit);
         $liveCalls = array_values(array_filter(
             $this->inboxCallItems(),
             fn (array $item): bool => in_array($item['call_status'] ?? '', [
@@ -286,9 +302,9 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function waitingListItems(): array
+    private function waitingListItems(User $viewer, string $ownerFilter, int $limit): array
     {
-        $items = $this->inboxConversationItems('waiting');
+        $items = $this->inboxConversationItems('waiting', $viewer, $ownerFilter, $limit);
 
         usort($items, fn (array $left, array $right): int => strcmp(
             (string) ($right['sort_at'] ?? ''),
@@ -301,10 +317,10 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function allActiveListItems(User $viewer, ?Carbon $previousLastSeenAt): array
+    private function allActiveListItems(User $viewer, ?Carbon $previousLastSeenAt, string $ownerFilter, int $limit): array
     {
-        $needs = $this->needsAttentionListItems($viewer, $previousLastSeenAt);
-        $waiting = $this->waitingListItems();
+        $needs = $this->needsAttentionListItems($viewer, $previousLastSeenAt, $ownerFilter, $limit);
+        $waiting = $this->waitingListItems($viewer, $ownerFilter, $limit);
         $needsKeys = collect($needs)->pluck('key')->filter()->all();
 
         foreach ($waiting as $item) {
@@ -325,15 +341,15 @@ final class CommunicationsWorkspaceProjection
                 ?: strcmp((string) ($right['sort_at'] ?? ''), (string) ($left['sort_at'] ?? ''));
         });
 
-        return $needs;
+        return array_slice($needs, 0, $limit);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    private function resolvedListItems(): array
+    private function resolvedListItems(User $viewer, string $ownerFilter, int $limit): array
     {
-        return Conversation::query()
+        return $this->scopeToOwner(Conversation::query(), $ownerFilter, $viewer)
             ->where('status', ConversationStatus::Resolved->value)
             ->with([
                 'owner:id,name',
@@ -341,7 +357,7 @@ final class CommunicationsWorkspaceProjection
                 'messages.attachments',
             ])
             ->orderByDesc('updated_at')
-            ->limit(40)
+            ->limit($limit)
             ->get()
             ->map(fn (Conversation $conversation): array => $this->cheapConversationQueueItem(
                 $conversation,
@@ -519,21 +535,20 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function inboxConversationItems(?string $lane = null): array
+    private function inboxConversationItems(string $lane, User $viewer, string $ownerFilter, int $limit): array
     {
-        $query = Conversation::query()
+        $query = $this->scopeToOwner(Conversation::query(), $ownerFilter, $viewer)
             ->with([
                 'owner:id,name',
                 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->orderByDesc('id')->limit(1),
                 'messages.attachments',
             ])
-            ->orderByDesc('updated_at');
+            // Matches the list's sort_at so the newest page is the page shown.
+            ->orderByRaw('COALESCE(posture_changed_at, updated_at) DESC')
+            ->orderByDesc('id')
+            ->limit($limit);
 
-        if ($lane !== null) {
-            app(ConversationWork::class)->applyLane($query, $lane);
-        } else {
-            $query->where('status', ConversationStatus::Open->value);
-        }
+        app(ConversationWork::class)->applyLane($query, $lane);
 
         return $query
             ->get()
@@ -838,30 +853,17 @@ final class CommunicationsWorkspaceProjection
             return null;
         }
 
-        $events = array_reverse($this->timeline->forConversationRelationship($conversation, 50)->all());
-
         $phone = $conversation->contact_surface === ConversationContactSurface::Phone
             ? trim((string) $conversation->contact_address)
             : null;
         $displayPhone = $phone !== null && $phone !== ''
             ? (PhoneNumber::display($phone) ?? $phone)
             : (string) $conversation->contact_address;
-
-        $requestCards = $this->websiteRequests->cardsFor($conversation->id, $phone);
-        if ($requestCards !== []) {
-            $events = array_values(array_filter(
-                $events,
-                function (mixed $event): bool {
-                    if (! $event instanceof OperationalEventEntry) {
-                        return true;
-                    }
-
-                    $message = $event->subject;
-
-                    return ! ($message instanceof ConversationMessage && ($message->metadata['website_lead'] ?? false) === true);
-                },
-            ));
-            $events = $this->websiteRequests->merge($events, $requestCards);
+        $events = $this->conversationEvents($conversation, self::THREAD_PAGE + 1);
+        $older = null;
+        if (count($events) > self::THREAD_PAGE) {
+            $events = array_slice($events, -self::THREAD_PAGE);
+            $older = $this->eventCursor($events[0]);
         }
 
         $composerContext = $this->contextBuilder->conversationComposerContext($conversation);
@@ -870,6 +872,9 @@ final class CommunicationsWorkspaceProjection
             callContext: null,
             lead: $composerContext['lead'] ?? null,
         );
+        ['deliveries' => $deliveries, 'event_deliveries' => $eventDeliveries, 'event_notes' => $eventNotes] = $this->eventSignals($events);
+        $permission = $this->signals->contactPermission($conversation, $composerContext['customer'] ?? null);
+        $identity['permission'] = $permission === null ? null : CommunicationsWorkspaceSignalPresenter::permission($permission);
 
         return [
             'title' => $identity['name'] ?? $displayPhone,
@@ -878,6 +883,11 @@ final class CommunicationsWorkspaceProjection
             'assignment_label' => $conversation->owner?->name ?? 'Unassigned',
             'identity' => $identity,
             'events' => $events,
+            'deliveries' => $deliveries,
+            'event_deliveries' => $eventDeliveries,
+            'event_notes' => $eventNotes,
+            'event_keys' => array_map(fn (mixed $event): string => $this->eventCursor($event)['key'], $events),
+            'older' => $older,
             'empty_label' => 'No messages in this thread yet.',
             'composer' => $section === 'history' ? null : [
                 'kind' => 'conversation',
@@ -889,7 +899,127 @@ final class CommunicationsWorkspaceProjection
                 'customer' => $composerContext['customer'],
                 'repair_order' => $composerContext['repair_order'],
                 'open_repair_orders' => $composerContext['open_repair_orders'],
+                'email_reply_url' => $this->signals->emailReplyUrl($conversation),
+                'sms_unavailable' => match (true) {
+                    $conversation->contact_surface !== ConversationContactSurface::Phone => 'This conversation is not by phone.',
+                    ! app(OutboundSmsTransport::class)->isConfigured() => 'Texting is not set up for this shop.',
+                    default => null,
+                },
+                'email_address' => $identity['email'] ?? null,
             ],
+        ];
+    }
+
+    /**
+     * The page of a conversation's timeline just older than the entry the reader has reached (the cursor), with the
+     * same signals as the thread, and where the next older page starts, if there is one.
+     *
+     * @param  array{before: string, key: string}  $cursor
+     * @return array{events: list<mixed>, event_deliveries: list<?array<string, mixed>>, event_notes: list<list<array<string, mixed>>>, event_keys: list<string>, older: ?array{before: string, key: string}}|null
+     */
+    public function olderConversationEvents(int $conversationId, array $cursor, int $loaded): ?array
+    {
+        $conversation = Conversation::query()->find($conversationId);
+
+        if ($conversation === null) {
+            return null;
+        }
+
+        $window = min(max($loaded, self::THREAD_PAGE) + self::OLDER_PAGE + 25, 20_000);
+        $events = $this->conversationEvents($conversation, $window);
+        $keys = array_map(fn (mixed $event): string => $this->eventCursor($event)['key'], $events);
+        $at = array_search($cursor['key'], $keys, true);
+        $before = $at !== false
+            ? array_slice($events, 0, $at)
+            : array_values(array_filter($events, fn (mixed $event): bool => $this->eventCursor($event)['before'] < $cursor['before']));
+        $page = array_slice($before, -self::OLDER_PAGE);
+        $more = count($before) > self::OLDER_PAGE || (count($events) >= $window && $page !== []);
+        ['event_deliveries' => $eventDeliveries, 'event_notes' => $eventNotes] = $this->eventSignals($page);
+
+        return [
+            'events' => $page,
+            'event_deliveries' => $eventDeliveries,
+            'event_notes' => $eventNotes,
+            'event_keys' => array_map(fn (mixed $event): string => $this->eventCursor($event)['key'], $page),
+            'older' => $more ? $this->eventCursor($page[0]) : null,
+        ];
+    }
+
+    /**
+     * A conversation's timeline, oldest first: the newest $limit entries of the customer's whole relationship, with
+     * website requests as cards.
+     *
+     * @return list<mixed>
+     */
+    private function conversationEvents(Conversation $conversation, int $limit): array
+    {
+        $events = array_reverse($this->timeline->forConversationRelationship($conversation, $limit)->all());
+        $phone = $conversation->contact_surface === ConversationContactSurface::Phone
+            ? trim((string) $conversation->contact_address)
+            : null;
+        $requestCards = $this->websiteRequests->cardsFor($conversation->id, $phone);
+
+        if ($requestCards === []) {
+            return $events;
+        }
+
+        $events = array_values(array_filter(
+            $events,
+            fn (mixed $event): bool => ! ($event instanceof OperationalEventEntry
+                && $event->subject instanceof ConversationMessage
+                && ($event->subject->metadata['website_lead'] ?? false) === true),
+        ));
+
+        return $this->websiteRequests->merge($events, $requestCards);
+    }
+
+    /**
+     * @return array{before: string, key: string}
+     */
+    private function eventCursor(mixed $event): array
+    {
+        if ($event instanceof OperationalEventEntry) {
+            $subject = $event->subject;
+
+            return [
+                'before' => $event->occurredAt->copy()->utc()->format('Y-m-d\TH:i:s.u\Z'),
+                'key' => $event->source->value.':'.($subject instanceof Model ? $subject->getKey() : md5($event->headline.$event->occurredAt->toIso8601String())),
+            ];
+        }
+
+        $occurredAt = is_array($event) && filled($event['occurred_at'] ?? null) ? Carbon::parse($event['occurred_at']) : now();
+
+        return [
+            'before' => $occurredAt->copy()->utc()->format('Y-m-d\TH:i:s.u\Z'),
+            'key' => 'card:'.(is_array($event) ? (string) ($event['id'] ?? $event['key'] ?? md5(json_encode($event) ?: '')) : ''),
+        ];
+    }
+
+    /**
+     * Each timeline entry's delivery and notes, by its place in the timeline (the thread view finds them that way).
+     *
+     * @param  list<mixed>  $events
+     * @return array{deliveries: array<int, array<string, mixed>>, event_deliveries: list<?array<string, mixed>>, event_notes: list<list<array<string, mixed>>>}
+     */
+    private function eventSignals(array $events): array
+    {
+        $messages = array_values(array_filter(array_map(
+            fn (mixed $event): ?ConversationMessage => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage ? $event->subject : null,
+            $events,
+        )));
+        $deliveries = array_map(
+            fn (array $delivery): array => CommunicationsWorkspaceSignalPresenter::delivery($delivery),
+            $this->signals->deliveries($messages),
+        );
+        $notes = $this->signals->messageNotes($messages);
+        $messageOf = fn (mixed $event): ?ConversationMessage => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage ? $event->subject : null;
+
+        return [
+            'deliveries' => $deliveries,
+            'event_deliveries' => array_map(fn (mixed $event): ?array => ($message = $messageOf($event)) !== null ? ($deliveries[(int) $message->getKey()] ?? null) : null, $events),
+            'event_notes' => array_map(fn (mixed $event): array => ($message = $messageOf($event)) !== null
+                ? CommunicationsWorkspaceSignalPresenter::messageNotes($notes[(int) $message->getKey()] ?? [])
+                : [], $events),
         ];
     }
 
@@ -1188,10 +1318,6 @@ final class CommunicationsWorkspaceProjection
                 if (is_array($composer) && in_array($composer['kind'] ?? '', ['conversation', 'call'], true)) {
                     $thread['composer']['nudge_key'] = $nudge['key'] ?? null;
                     $thread['composer']['entity_key'] = $nudge['entity_key'] ?? null;
-
-                    if (filled($nudge['draft_reply'] ?? null)) {
-                        $thread['composer']['draft_reply'] = $nudge['draft_reply'];
-                    }
                 }
             }
         }
@@ -1323,7 +1449,7 @@ final class CommunicationsWorkspaceProjection
             : $this->callContextResolver->mapForAttentionList($nonConversationPhones);
         $conversations = $conversationIds === []
             ? collect()
-            : Conversation::query()->whereIn('id', array_values(array_filter($conversationIds)))->get();
+            : Conversation::query()->with('owner:id,name')->whereIn('id', array_values(array_filter($conversationIds)))->get();
         $relationships = $this->relationshipContext->mapForConversations($conversations);
 
         return array_map(function (array $item) use ($contexts, $relationships): array {
@@ -1376,20 +1502,51 @@ final class CommunicationsWorkspaceProjection
         return $parts !== [] ? implode(' · ', $parts) : 'No current visit';
     }
 
-    /**
-     * @param  array{all: int, needs: int, waiting: int, resolved: int}  $filterCounts
-     */
-    private function listTotalForFilter(string $filter, array $filterCounts, int $shown): int
+    public static function listLimit(?int $requested): int
     {
-        $total = match ($filter) {
-            'waiting' => (int) ($filterCounts['waiting'] ?? $shown),
-            'needs' => (int) ($filterCounts['needs'] ?? $shown),
-            'all' => (int) ($filterCounts['all'] ?? $shown),
-            'resolved' => (int) ($filterCounts['resolved'] ?? $shown),
-            default => $shown,
-        };
+        $requested = max(self::LIST_PAGE_SIZE, (int) $requested);
 
-        return max($shown, $total);
+        return min(self::LIST_MAX, (int) ceil($requested / self::LIST_PAGE_SIZE) * self::LIST_PAGE_SIZE);
+    }
+
+    /**
+     * @param  Builder<Conversation>  $query
+     * @return Builder<Conversation>
+     */
+    private function scopeToOwner(Builder $query, string $ownerFilter, User $viewer): Builder
+    {
+        return match ($ownerFilter) {
+            'mine' => $query->where('owned_by_user_id', $viewer->id),
+            'unassigned' => $query->whereNull('owned_by_user_id'),
+            default => $query,
+        };
+    }
+
+    /**
+     * Conversation totals come from the lane queries so the advisor filter
+     * counts the whole lane, not just the page that was loaded.
+     *
+     * @param  array{all: int, needs: int, waiting: int, resolved: int}  $filterCounts
+     * @param  list<array<string, mixed>>  $listItems
+     * @return array{everyone: int, mine: int, unassigned: int}
+     */
+    private function ownerCounts(string $filter, array $filterCounts, User $viewer, array $listItems): array
+    {
+        $lanes = $filter === 'all' ? ['needs', 'waiting'] : [$filter];
+        $work = app(ConversationWork::class);
+        $laneCount = fn (string $ownerFilter): int => array_sum(array_map(
+            fn (string $lane): int => $ownerFilter === 'everyone'
+                ? (int) ($filterCounts[$lane] ?? 0)
+                : $work->applyLane($this->scopeToOwner(Conversation::query(), $ownerFilter, $viewer), $lane)->count(),
+            $lanes,
+        ));
+        $callRows = array_values(array_filter($listItems, fn (array $item): bool => ($item['kind'] ?? '') !== 'conversation'));
+
+        return [
+            'everyone' => $laneCount('everyone') + count($callRows),
+            'mine' => $laneCount('mine') + count(array_filter($callRows, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === (int) $viewer->id)),
+            'unassigned' => $laneCount('unassigned') + count(array_filter($callRows, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === 0)),
+        ];
     }
 
     /**
@@ -1648,7 +1805,19 @@ final class CommunicationsWorkspaceProjection
             $parts[] = (string) (Lead::query()->whereKey($leadId)->value('updated_at') ?? '');
         }
 
+        $parts[] = $this->signals->signature($conversationId);
+
         return md5(implode('|', $parts));
+    }
+
+    /**
+     * Broadcast events, besides Core's own, that refresh an open workspace.
+     *
+     * @return list<string>
+     */
+    public function liveEvents(): array
+    {
+        return $this->signals->liveEvents();
     }
 
     /**

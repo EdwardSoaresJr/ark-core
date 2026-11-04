@@ -517,7 +517,7 @@ export function arkConversationQuickReply(config = {}) {
             }
         },
 
-        prependMessage(html, messageId = null, hubFilter = 'text') {
+        prependMessage(html, messageId = null, hubFilter = 'text', fromSelf = false) {
             let refreshedCanonical = false;
 
             for (const listId of this.messagesListIds) {
@@ -548,6 +548,7 @@ export function arkConversationQuickReply(config = {}) {
                 }
 
                 const isCommsThread = list.matches('[data-comms-thread-body], .ops-comms-workspace__thread-body');
+                const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 96;
                 const isHubRelationship = listId === 'conversation-messages-relationship';
                 const wrappedHtml = isHubRelationship
                     ? `<div data-conversation-row data-filter="${hubFilter}">${html}</div>`
@@ -564,8 +565,10 @@ export function arkConversationQuickReply(config = {}) {
                     }));
                 }
 
-                if (isCommsThread) {
+                if (isCommsThread && (fromSelf || nearBottom)) {
                     list.scrollTop = list.scrollHeight;
+                } else if (isCommsThread) {
+                    document.dispatchEvent(new CustomEvent('ark:comms-new-below'));
                 }
             }
 
@@ -1677,6 +1680,7 @@ export function arkConversationQuickReply(config = {}) {
 
                     if (data?.scheduled) {
                         this.body = '';
+                        this.$el.dispatchEvent(new CustomEvent('ark:composer-sent', { bubbles: true }));
                         this.clearAttachment();
                         this.nudgeKey = '';
                         this.entityKey = '';
@@ -1694,7 +1698,7 @@ export function arkConversationQuickReply(config = {}) {
                     }
 
                     if (data?.html) {
-                        this.prependMessage(data.html, data?.message_id, data?.filter ?? 'text');
+                        this.prependMessage(data.html, data?.message_id, data?.filter ?? 'text', true);
                     } else if (data?.platform_message || data?.platform_authoritative) {
                         this.prependPlatformMessage(data.platform_message ?? {
                             direction: 'outbound',
@@ -1707,6 +1711,7 @@ export function arkConversationQuickReply(config = {}) {
                     }
 
                     this.body = '';
+                    this.$el.dispatchEvent(new CustomEvent('ark:composer-sent', { bubbles: true }));
                     this.clearAttachment();
                     this.nudgeKey = '';
                     this.entityKey = '';

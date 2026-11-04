@@ -7,8 +7,10 @@ use App\Ark\Operations\Communications\CommunicationEventRecorder;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Communications\OperationalCommunicationType;
+use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\PhoneNumber;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Support\Carbon;
 
@@ -19,8 +21,17 @@ class RecordCustomerSmsDeliveryStatusAction
         private readonly ResolvePhoneSmsCapabilityAction $smsCapability,
     ) {}
 
-    public function execute(Customer $customer, string $messageSid, string $status, ?string $errorCode = null): void
-    {
+    /**
+     * $toPhone is the number the text went to. Without it, the message's own conversation number is used, then the
+     * customer's main phone. The customer's last delivery result is only changed for texts to the main phone.
+     */
+    public function execute(
+        Customer $customer,
+        string $messageSid,
+        string $status,
+        ?string $errorCode = null,
+        ?string $toPhone = null,
+    ): void {
         $messageSid = trim($messageSid);
         $status = strtolower(trim($status));
 
@@ -30,21 +41,23 @@ class RecordCustomerSmsDeliveryStatusAction
 
         $occurredAt = now();
         $errorCode = trim((string) $errorCode);
+        $message = $this->findOutboundMessage($messageSid);
+        $destination = PhoneNumber::normalize($toPhone)
+            ?? $this->conversationPhone($message)
+            ?? PhoneNumber::normalize($customer->phone);
 
-        $this->applyCustomerState($customer, $status, $errorCode, $occurredAt);
+        if ($destination !== null && $destination === PhoneNumber::normalize($customer->phone)) {
+            $this->applyCustomerState($customer, $status, $errorCode, $occurredAt);
+        }
 
-        if (in_array($status, ['failed', 'undelivered'], true) && filled($customer->phone)) {
-            $this->smsCapability->markNotCapableFromDeliveryFailure(
-                (string) $customer->phone,
-                $errorCode !== '' ? $errorCode : null,
-            );
+        if ($destination !== null) {
+            $this->recordForNumber($destination, $status, $errorCode);
         }
 
         if (! in_array($status, ['delivered', 'failed', 'undelivered'], true)) {
             return;
         }
 
-        $message = $this->findOutboundMessage($messageSid);
         $repairOrder = $this->resolveRepairOrder($customer, $message);
 
         if ($repairOrder === null) {
@@ -74,6 +87,26 @@ class RecordCustomerSmsDeliveryStatusAction
             message: $message,
             occurredAt: $occurredAt,
         );
+    }
+
+    /**
+     * A failed text to a number with or without a customer: the number itself may be unable to receive texts.
+     */
+    public function recordForNumber(string $toPhone, string $status, ?string $errorCode = null): void
+    {
+        if (in_array(strtolower(trim($status)), ['failed', 'undelivered'], true)) {
+            $errorCode = trim((string) $errorCode);
+            $this->smsCapability->markNotCapableFromDeliveryFailure($toPhone, $errorCode !== '' ? $errorCode : null);
+        }
+    }
+
+    private function conversationPhone(?ConversationMessage $message): ?string
+    {
+        $conversation = $message?->conversation;
+
+        return $conversation?->contact_surface === ConversationContactSurface::Phone
+            ? PhoneNumber::normalize($conversation->contact_address)
+            : null;
     }
 
     private function applyCustomerState(
