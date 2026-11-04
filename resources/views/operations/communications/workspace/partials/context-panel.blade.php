@@ -74,6 +74,19 @@
                 </dl>
             </section>
 
+            @if (is_array($work) && filled($work['url'] ?? null))
+                <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-work-summary>
+                    <div class="subheader mb-1" id="comms-context-work">Conversation</div>
+                    <dl class="row g-0 small mb-2">
+                        <dt class="col-4 text-secondary fw-normal">Owner</dt>
+                        <dd class="col-8 mb-1 fw-medium">{{ $work['owner_name'] ?? 'Unassigned' }}</dd>
+                        <dt class="col-4 text-secondary fw-normal">Follow-up</dt>
+                        <dd class="col-8 mb-1">{{ $work['follow_up_due_label'] ?? 'None' }}</dd>
+                    </dl>
+                    @include('operations.communications.workspace.partials.work-actions', ['work' => $work, 'variant' => 'rail'])
+                </section>
+            @endif
+
             <section class="p-3 border-bottom" aria-labelledby="comms-context-vehicle">
                 <div class="subheader mb-1" id="comms-context-vehicle">Vehicle &amp; visit</div>
                 @if (is_array($context['open_repair_orders'] ?? null))
@@ -139,18 +152,6 @@
                     </dl>
                 @endif
             </section>
-
-            @if (is_array($work) && filled($work['url'] ?? null))
-                <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-work-summary>
-                    <div class="subheader mb-1" id="comms-context-work">Assignment</div>
-                    <dl class="row g-0 small mb-0">
-                        <dt class="col-4 text-secondary fw-normal">Owner</dt>
-                        <dd class="col-8 mb-1 fw-medium">{{ $work['owner_name'] ?? 'Unassigned' }}</dd>
-                        <dt class="col-4 text-secondary fw-normal">Follow-up</dt>
-                        <dd class="col-8 mb-1">{{ $work['follow_up_due_label'] ?? 'None' }}</dd>
-                    </dl>
-                </section>
-            @endif
 
             <section class="p-3 border-bottom" aria-labelledby="comms-context-visits">
                 <div class="subheader mb-1" id="comms-context-visits">Recent visits</div>
