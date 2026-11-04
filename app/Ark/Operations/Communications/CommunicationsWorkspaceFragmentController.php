@@ -87,6 +87,7 @@ class CommunicationsWorkspaceFragmentController
                 $this->previousLastSeenAt($request),
                 $filter,
                 $request->string('owner')->toString() ?: 'everyone',
+                $request->integer('shown') ?: null,
             ),
             'history' => $projection->history(
                 $request,
@@ -125,6 +126,10 @@ class CommunicationsWorkspaceFragmentController
                 'filterCounts' => $workspace['filter_counts'] ?? null,
                 'ownerFilter' => $workspace['owner_filter'] ?? 'everyone',
                 'ownerCounts' => $workspace['owner_counts'] ?? null,
+                'listShown' => $workspace['list_shown'] ?? null,
+                'listTotal' => $workspace['list_total'] ?? null,
+                'listTruncated' => $workspace['list_truncated'] ?? false,
+                'listNext' => $workspace['list_next'] ?? null,
                 'turnFilter' => $workspace['turn_filter'] ?? null,
                 'turnCounts' => $workspace['turn_counts'] ?? null,
                 'section' => $section,

@@ -30,6 +30,7 @@
         :list-shown="$workspace['list_shown'] ?? null"
         :list-total="$workspace['list_total'] ?? null"
         :list-truncated="$workspace['list_truncated'] ?? false"
+        :list-next="$workspace['list_next'] ?? null"
         :turn-filter="$workspace['turn_filter'] ?? null"
         :turn-counts="$workspace['turn_counts'] ?? null"
         :poll-signature="$workspace['poll_signature'] ?? ''"

@@ -287,7 +287,9 @@ test('unhandled inbound call is a shop interrupt without a manufactured visit', 
 test('resolved list exposes shown versus total instead of implying every counted row is displayed', function (): void {
     $advisor = actingAsLearnCurrentAdvisor();
 
-    for ($i = 0; $i < 41; $i++) {
+    $pageSize = CommunicationsWorkspaceProjection::LIST_PAGE_SIZE;
+
+    for ($i = 0; $i <= $pageSize; $i++) {
         Conversation::query()->create([
             'contact_surface' => ConversationContactSurface::Phone,
             'contact_address' => '7195553'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
@@ -306,9 +308,9 @@ test('resolved list exposes shown versus total instead of implying every counted
         'resolved',
     );
 
-    expect($workspace['list_shown'])->toBe(40)
-        ->and($workspace['list_total'])->toBe(41)
+    expect($workspace['list_shown'])->toBe($pageSize)
+        ->and($workspace['list_total'])->toBe($pageSize + 1)
         ->and($workspace['list_truncated'])->toBeTrue()
-        ->and($workspace['filter_counts']['resolved'])->toBe(41)
-        ->and(count($workspace['list_items']))->toBe(40);
+        ->and($workspace['filter_counts']['resolved'])->toBe($pageSize + 1)
+        ->and(count($workspace['list_items']))->toBe($pageSize);
 });

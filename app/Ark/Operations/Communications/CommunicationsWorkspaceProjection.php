@@ -27,6 +27,7 @@ use App\Ark\Operations\Timeline\UnifiedOperationalTimeline;
 use App\Ark\Runtime\Database\SchemaPresence;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -38,6 +39,10 @@ use Illuminate\Support\Str;
  */
 final class CommunicationsWorkspaceProjection
 {
+    public const LIST_PAGE_SIZE = 50;
+
+    public const LIST_MAX = 500;
+
     /** @var array<string, CustomerCallContext|null> */
     private array $callIdentityContexts = [];
 
@@ -129,6 +134,7 @@ final class CommunicationsWorkspaceProjection
         ?Carbon $previousLastSeenAt = null,
         ?string $listFilter = null,
         ?string $ownerFilter = null,
+        ?int $listLimit = null,
     ): array {
         if ($viewer === null || ! SchemaPresence::hasTable('conversations')) {
             return $this->emptySection('inbox');
@@ -136,24 +142,21 @@ final class CommunicationsWorkspaceProjection
 
         $filter = $this->normalizeListFilter($listFilter, $turnFilter);
         $filterCounts = $this->cheapFilterCounts($viewer, $previousLastSeenAt, $filter);
+        $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
+        $limit = self::listLimit($listLimit);
 
         $listItems = match ($filter) {
-            'waiting' => $this->waitingListItems(),
-            'resolved' => $this->resolvedListItems(),
-            'all' => $this->allActiveListItems($viewer, $previousLastSeenAt),
-            default => $this->needsAttentionListItems($viewer, $previousLastSeenAt),
+            'waiting' => $this->waitingListItems($viewer, $ownerFilter, $limit),
+            'resolved' => $this->resolvedListItems($viewer, $ownerFilter, $limit),
+            'all' => $this->allActiveListItems($viewer, $previousLastSeenAt, $ownerFilter, $limit),
+            default => $this->needsAttentionListItems($viewer, $previousLastSeenAt, $ownerFilter, $limit),
         };
 
         $listItems = $this->listDedupe->dedupe($listItems);
         $listItems = $this->enrichListIdentities($listItems);
         $presentation = app(CommunicationsInboxPresentation::class);
-        $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
         $listItems = $presentation->decorateList($listItems);
-        $ownerCounts = [
-            'everyone' => count($listItems),
-            'mine' => count(array_filter($listItems, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === (int) $viewer->id)),
-            'unassigned' => count(array_filter($listItems, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === 0)),
-        ];
+        $ownerCounts = $this->ownerCounts($filter, $filterCounts, $viewer, $listItems);
         $listItems = $presentation->applyOwnerFilter($listItems, $ownerFilter, $viewer);
 
         $selectedKey = match (true) {
@@ -193,8 +196,9 @@ final class CommunicationsWorkspaceProjection
             'list_filter' => $filter,
             'filter_counts' => $filterCounts,
             'list_shown' => count($listItems),
-            'list_total' => $this->listTotalForFilter($filter, $filterCounts, count($listItems)),
-            'list_truncated' => $this->listTotalForFilter($filter, $filterCounts, count($listItems)) > count($listItems),
+            'list_total' => max(count($listItems), (int) $ownerCounts[$ownerFilter]),
+            'list_truncated' => (int) $ownerCounts[$ownerFilter] > count($listItems),
+            'list_next' => min(self::LIST_MAX, $limit + self::LIST_PAGE_SIZE),
             'owner_filter' => $ownerFilter,
             'owner_counts' => $ownerCounts,
             // Compatibility aliases for older nav / deep links.
@@ -214,9 +218,9 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function needsAttentionListItems(User $viewer, ?Carbon $previousLastSeenAt): array
+    private function needsAttentionListItems(User $viewer, ?Carbon $previousLastSeenAt, string $ownerFilter, int $limit): array
     {
-        $items = $this->inboxConversationItems('needs');
+        $items = $this->inboxConversationItems('needs', $viewer, $ownerFilter, $limit);
         $liveCalls = array_values(array_filter(
             $this->inboxCallItems(),
             fn (array $item): bool => in_array($item['call_status'] ?? '', [
@@ -291,9 +295,9 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function waitingListItems(): array
+    private function waitingListItems(User $viewer, string $ownerFilter, int $limit): array
     {
-        $items = $this->inboxConversationItems('waiting');
+        $items = $this->inboxConversationItems('waiting', $viewer, $ownerFilter, $limit);
 
         usort($items, fn (array $left, array $right): int => strcmp(
             (string) ($right['sort_at'] ?? ''),
@@ -306,10 +310,10 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function allActiveListItems(User $viewer, ?Carbon $previousLastSeenAt): array
+    private function allActiveListItems(User $viewer, ?Carbon $previousLastSeenAt, string $ownerFilter, int $limit): array
     {
-        $needs = $this->needsAttentionListItems($viewer, $previousLastSeenAt);
-        $waiting = $this->waitingListItems();
+        $needs = $this->needsAttentionListItems($viewer, $previousLastSeenAt, $ownerFilter, $limit);
+        $waiting = $this->waitingListItems($viewer, $ownerFilter, $limit);
         $needsKeys = collect($needs)->pluck('key')->filter()->all();
 
         foreach ($waiting as $item) {
@@ -330,15 +334,15 @@ final class CommunicationsWorkspaceProjection
                 ?: strcmp((string) ($right['sort_at'] ?? ''), (string) ($left['sort_at'] ?? ''));
         });
 
-        return $needs;
+        return array_slice($needs, 0, $limit);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    private function resolvedListItems(): array
+    private function resolvedListItems(User $viewer, string $ownerFilter, int $limit): array
     {
-        return Conversation::query()
+        return $this->scopeToOwner(Conversation::query(), $ownerFilter, $viewer)
             ->where('status', ConversationStatus::Resolved->value)
             ->with([
                 'owner:id,name',
@@ -346,7 +350,7 @@ final class CommunicationsWorkspaceProjection
                 'messages.attachments',
             ])
             ->orderByDesc('updated_at')
-            ->limit(40)
+            ->limit($limit)
             ->get()
             ->map(fn (Conversation $conversation): array => $this->cheapConversationQueueItem(
                 $conversation,
@@ -524,21 +528,20 @@ final class CommunicationsWorkspaceProjection
     /**
      * @return list<array<string, mixed>>
      */
-    private function inboxConversationItems(?string $lane = null): array
+    private function inboxConversationItems(string $lane, User $viewer, string $ownerFilter, int $limit): array
     {
-        $query = Conversation::query()
+        $query = $this->scopeToOwner(Conversation::query(), $ownerFilter, $viewer)
             ->with([
                 'owner:id,name',
                 'messages' => fn ($query) => $query->orderByDesc('occurred_at')->orderByDesc('id')->limit(1),
                 'messages.attachments',
             ])
-            ->orderByDesc('updated_at');
+            // Matches the list's sort_at so the newest page is the page shown.
+            ->orderByRaw('COALESCE(posture_changed_at, updated_at) DESC')
+            ->orderByDesc('id')
+            ->limit($limit);
 
-        if ($lane !== null) {
-            app(ConversationWork::class)->applyLane($query, $lane);
-        } else {
-            $query->where('status', ConversationStatus::Open->value);
-        }
+        app(ConversationWork::class)->applyLane($query, $lane);
 
         return $query
             ->get()
@@ -1349,7 +1352,7 @@ final class CommunicationsWorkspaceProjection
             : $this->callContextResolver->mapForAttentionList($nonConversationPhones);
         $conversations = $conversationIds === []
             ? collect()
-            : Conversation::query()->whereIn('id', array_values(array_filter($conversationIds)))->get();
+            : Conversation::query()->with('owner:id,name')->whereIn('id', array_values(array_filter($conversationIds)))->get();
         $relationships = $this->relationshipContext->mapForConversations($conversations);
 
         return array_map(function (array $item) use ($contexts, $relationships): array {
@@ -1402,20 +1405,51 @@ final class CommunicationsWorkspaceProjection
         return $parts !== [] ? implode(' · ', $parts) : 'No current visit';
     }
 
-    /**
-     * @param  array{all: int, needs: int, waiting: int, resolved: int}  $filterCounts
-     */
-    private function listTotalForFilter(string $filter, array $filterCounts, int $shown): int
+    public static function listLimit(?int $requested): int
     {
-        $total = match ($filter) {
-            'waiting' => (int) ($filterCounts['waiting'] ?? $shown),
-            'needs' => (int) ($filterCounts['needs'] ?? $shown),
-            'all' => (int) ($filterCounts['all'] ?? $shown),
-            'resolved' => (int) ($filterCounts['resolved'] ?? $shown),
-            default => $shown,
-        };
+        $requested = max(self::LIST_PAGE_SIZE, (int) $requested);
 
-        return max($shown, $total);
+        return min(self::LIST_MAX, (int) ceil($requested / self::LIST_PAGE_SIZE) * self::LIST_PAGE_SIZE);
+    }
+
+    /**
+     * @param  Builder<Conversation>  $query
+     * @return Builder<Conversation>
+     */
+    private function scopeToOwner(Builder $query, string $ownerFilter, User $viewer): Builder
+    {
+        return match ($ownerFilter) {
+            'mine' => $query->where('owned_by_user_id', $viewer->id),
+            'unassigned' => $query->whereNull('owned_by_user_id'),
+            default => $query,
+        };
+    }
+
+    /**
+     * Conversation totals come from the lane queries so the advisor filter
+     * counts the whole lane, not just the page that was loaded.
+     *
+     * @param  array{all: int, needs: int, waiting: int, resolved: int}  $filterCounts
+     * @param  list<array<string, mixed>>  $listItems
+     * @return array{everyone: int, mine: int, unassigned: int}
+     */
+    private function ownerCounts(string $filter, array $filterCounts, User $viewer, array $listItems): array
+    {
+        $lanes = $filter === 'all' ? ['needs', 'waiting'] : [$filter];
+        $work = app(ConversationWork::class);
+        $laneCount = fn (string $ownerFilter): int => array_sum(array_map(
+            fn (string $lane): int => $ownerFilter === 'everyone'
+                ? (int) ($filterCounts[$lane] ?? 0)
+                : $work->applyLane($this->scopeToOwner(Conversation::query(), $ownerFilter, $viewer), $lane)->count(),
+            $lanes,
+        ));
+        $callRows = array_values(array_filter($listItems, fn (array $item): bool => ($item['kind'] ?? '') !== 'conversation'));
+
+        return [
+            'everyone' => $laneCount('everyone') + count($callRows),
+            'mine' => $laneCount('mine') + count(array_filter($callRows, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === (int) $viewer->id)),
+            'unassigned' => $laneCount('unassigned') + count(array_filter($callRows, fn (array $item): bool => (int) ($item['owner_id'] ?? 0) === 0)),
+        ];
     }
 
     /**

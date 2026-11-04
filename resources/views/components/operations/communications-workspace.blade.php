@@ -18,6 +18,7 @@
     'listShown' => null,
     'listTotal' => null,
     'listTruncated' => false,
+    'listNext' => null,
     'pollSignature' => null,
     'liveEvents' => [],
     'platformBacked' => false,
@@ -93,6 +94,7 @@
                             'listShown' => $listShown,
                             'listTotal' => $listTotal,
                             'listTruncated' => $listTruncated,
+                            'listNext' => $listNext,
                             'section' => $section,
                             'platformBacked' => $platformBacked,
                         ])

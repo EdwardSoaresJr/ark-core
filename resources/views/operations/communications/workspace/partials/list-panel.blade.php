@@ -51,6 +51,16 @@
                     'isSelected' => filled($selected['key'] ?? null) && ($selected['key'] ?? null) === ($item['key'] ?? null),
                 ])
             @endforeach
+            @if ($section === 'inbox' && ($listTruncated ?? false) && filled($listNext ?? null) && (int) $listNext > count($items))
+                <a
+                    href="{{ route('operations.communications.inbox', array_merge($selection, ['owner' => $ownerFilter, 'shown' => (int) $listNext])) }}"
+                    class="list-group-item list-group-item-action text-center text-secondary small"
+                    data-comms-list-more
+                    data-shown="{{ (int) $listNext }}"
+                >
+                    Show more <span class="ms-1">{{ count($items) }} of {{ (int) ($listTotal ?? count($items)) }}</span>
+                </a>
+            @endif
         </div>
     @endif
 </div>

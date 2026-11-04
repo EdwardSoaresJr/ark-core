@@ -85,6 +85,7 @@ class CommunicationsWorkspaceController
                 $this->previousLastSeenAt($request),
                 $filter,
                 $request->string('owner')->toString() ?: 'everyone',
+                $request->integer('shown') ?: null,
             ),
         ]);
     }

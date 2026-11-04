@@ -624,7 +624,72 @@ export function initCommsWorkspace() {
         setActionBusy(true);
     });
 
+    let loadingMore = false;
+
+    const loadMore = async (link) => {
+        const live = document.getElementById('ops-comms-workspace-live');
+
+        if (loadingMore || inflight || ! live || ! link) {
+            return;
+        }
+
+        loadingMore = true;
+        inflight = true;
+        const generation = selectionGeneration;
+        const fragment = new URL(live.dataset.fragmentUrl || url, window.location.origin);
+        fragment.searchParams.set('shown', link.dataset.shown ?? '');
+        fragment.searchParams.delete('signature');
+        link.classList.add('disabled');
+
+        try {
+            const payload = await fetchWorkspace(`${fragment.pathname}${fragment.search}`);
+
+            if (! payload || generation !== selectionGeneration) {
+                return;
+            }
+
+            live.dataset.fragmentUrl = `${fragment.pathname}${fragment.search}`;
+            lastSignature = String(payload.signature ?? lastSignature);
+            applyPayload(payload);
+
+            const page = new URL(window.location.href);
+            page.searchParams.set('shown', link.dataset.shown ?? '');
+            window.history.replaceState(window.history.state, '', `${page.pathname}${page.search}`);
+        } catch {
+            link.classList.remove('disabled');
+        } finally {
+            loadingMore = false;
+
+            if (generation === selectionGeneration) {
+                inflight = false;
+            }
+        }
+    };
+
+    root.addEventListener('scroll', (event) => {
+        const list = event.target;
+
+        if (! (list instanceof Element) || ! list.matches('[data-comms-list-items]')) {
+            return;
+        }
+
+        if (list.scrollHeight - list.scrollTop - list.clientHeight < 240) {
+            loadMore(list.querySelector('[data-comms-list-more]'));
+        }
+    }, true);
+
     root.addEventListener('click', async (event) => {
+        const more = event.target instanceof Element
+            ? event.target.closest('[data-comms-list-more]')
+            : null;
+
+        if (more && ! event.defaultPrevented && event.button === 0 && ! event.metaKey && ! event.ctrlKey) {
+            event.preventDefault();
+            loadMore(more);
+
+            return;
+        }
+
         const row = event.target instanceof Element
             ? event.target.closest(LIST_ROW)
             : null;
