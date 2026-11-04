@@ -33,11 +33,6 @@
             </div>
         @endif
 
-        @if (session('comms_gate'))
-            <div class="ops-board-shell border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-950" role="alert">
-                {{ (int) (session('comms_gate.count') ?? 0) }} customer {{ ((int) (session('comms_gate.count') ?? 0)) === 1 ? 'contact' : 'contacts' }} still need action. Clear communications before opening other ARK pages.
-            </div>
-        @endif
 
         @include('operations.communications.partials.channel-tabs')
 

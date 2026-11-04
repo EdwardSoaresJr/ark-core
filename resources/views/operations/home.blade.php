@@ -41,11 +41,6 @@
                 },
             }"
         >
-            @if (session('comms_gate'))
-                <div class="alert alert-danger mb-0" role="alert">
-                    {{ (int) (session('comms_gate.count') ?? 0) }} customer {{ ((int) (session('comms_gate.count') ?? 0)) === 1 ? 'contact' : 'contacts' }} still need action. Clear communications before opening other ARK pages.
-                </div>
-            @endif
             @if ($errors->has('lifecycle'))
                 <div class="alert alert-danger mb-0" role="alert">{{ $errors->first('lifecycle') }}</div>
             @endif
