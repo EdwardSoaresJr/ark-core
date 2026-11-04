@@ -28,7 +28,9 @@ test('without a host theme source the customer shell uses Core defaults and the 
         ->toContain('<style data-customer-theme>.public-surface{--public-brand:#0b5ed7;')
         ->toContain('data-customer-header="light"')
         ->toContain('<title>Fir Auto</title>')
-        ->toContain('ark-32x32.png');
+        ->toContain('<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,')
+        ->not->toContain('ark-32x32.png')
+        ->not->toContain('ARK_SMS_FINAL_DROP_IN_PACK/manifest.json');
 });
 
 test('a host theme source sets the brand, header, fonts, and favicon of every customer page', function () {

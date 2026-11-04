@@ -40,7 +40,7 @@
             <link rel="icon" href="{{ $theme->faviconUrl() }}">
             <link rel="apple-touch-icon" href="{{ $theme->faviconUrl() }}">
         @else
-            @include('partials.branding._favicons')
+            <link rel="icon" type="image/svg+xml" href="{{ $theme->monogramIcon($headerData['shop']->displayName()) }}">
         @endif
 
         @include('partials.customer.theme-init')

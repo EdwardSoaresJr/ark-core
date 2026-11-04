@@ -69,6 +69,19 @@ test('a favicon must be a path on the shop host', function (mixed $favicon, ?str
     [42, null],
 ]);
 
+test('a shop without its own icon gets its initial on its main color, never markup from its name', function () {
+    $icon = rawurldecode(CustomerTheme::fromArray(['brand' => '#e37b24'])->monogramIcon('lugsnplugs Automotive'));
+
+    expect($icon)->toStartWith('data:image/svg+xml,<svg ')
+        ->toContain("fill='#e37b24'")
+        ->toContain('>L</text>');
+
+    $hostile = rawurldecode(CustomerTheme::default()->monogramIcon('"><script>alert(1)</script>'));
+    expect($hostile)->toContain('>S</text>')->not->toContain('<script')->not->toContain('alert(');
+
+    expect(rawurldecode(CustomerTheme::default()->monogramIcon('—')))->not->toContain('<text');
+});
+
 test('the system font loads nothing from outside', function () {
     expect(CustomerTheme::fromArray(['font_body' => 'system', 'font_heading' => 'system'])->fontStylesheets())->toBe([]);
 });

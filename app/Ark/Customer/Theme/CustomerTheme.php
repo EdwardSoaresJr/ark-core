@@ -124,6 +124,23 @@ final class CustomerTheme
         return $this->values['favicon'];
     }
 
+    /**
+     * The browser icon for a shop without one of its own: its initial on its main color, as an inline
+     * SVG. Only a letter or digit from the name and a generated color reach the markup.
+     */
+    public function monogramIcon(string $shopName): string
+    {
+        preg_match('/[A-Za-z0-9]/', $shopName, $initial);
+        $letter = strtoupper($initial[0] ?? '');
+        $fill = $this->variables()['all']['--public-brand'];
+        $text = $this->variables()['all']['--public-on-brand'];
+        $svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='{$fill}'/>"
+            .($letter === '' ? '' : "<text x='32' y='45' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='38' font-weight='700' fill='{$text}'>{$letter}</text>")
+            .'</svg>';
+
+        return 'data:image/svg+xml,'.rawurlencode($svg);
+    }
+
     /** @return list<string> stylesheets for the chosen fonts, all on fonts.bunny.net */
     public function fontStylesheets(): array
     {
