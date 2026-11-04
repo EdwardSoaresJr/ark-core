@@ -22,10 +22,10 @@
         @endif
     </div>
     @if ($excerpt !== '')
-        <div class="text-secondary text-truncate">{{ $excerpt }}</div>
+        <div class="text-secondary text-truncate d-none d-md-block">{{ $excerpt }}</div>
     @endif
     @if ($prompt !== '')
-        <div class="text-secondary">{{ $prompt }}</div>
+        <div class="text-secondary d-none d-md-block">{{ $prompt }}</div>
     @endif
 
     @php

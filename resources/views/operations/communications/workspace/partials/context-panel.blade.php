@@ -18,23 +18,55 @@
         <div class="card-body text-secondary">Select a conversation</div>
     @else
         <div class="card-body overflow-auto flex-fill p-0" data-comms-context-rail>
-            <section class="p-3 border-bottom" aria-labelledby="comms-context-customer">
-                <div class="subheader mb-1" id="comms-context-customer">Customer</div>
-                <div class="fw-bold">{{ $customer['name'] ?? data_get($context, 'headline') ?? 'Unknown' }}</div>
+            @php
+                $customerName = $customer['name'] ?? data_get($context, 'headline') ?? 'Unknown';
+                $customerPhone = $customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone');
+                $phoneHref = \App\Ark\Operations\PhoneNumber::telUri((string) $customerPhone);
+                $permission = is_array($context['permission'] ?? null) ? $context['permission'] : null;
+            @endphp
+            <section class="p-3 border-bottom text-center" aria-labelledby="comms-context-customer">
+                <div class="subheader mb-2 text-start" id="comms-context-customer">Customer</div>
+                <x-tabler.avatar :name="$customerName" size="lg" class="mb-2" />
+                <div class="fw-bold">{{ $customerName }}</div>
                 <div class="text-secondary small">{{ $customer['status'] ?? data_get($context, 'link_status') }}</div>
-                @if (filled($customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone')))
-                    <div class="small">{{ $customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone') }}</div>
-                @endif
-                @if (filled($customer['email'] ?? null))
-                    <div class="small text-truncate">{{ $customer['email'] }}</div>
-                @endif
+                <div class="btn-list justify-content-center mt-2">
+                    @if ($phoneHref !== null)
+                        <a href="{{ $phoneHref }}" class="btn btn-icon" aria-label="Call" title="Call"><x-tabler.icon name="phone" /></a>
+                    @endif
+                    <a href="#comms-thread-composer" class="btn btn-icon" aria-label="Text" title="Text" @click="contextOpen = false"><x-tabler.icon name="message" /></a>
+                    @if (filled($customer['email'] ?? null))
+                        <a href="mailto:{{ $customer['email'] }}" class="btn btn-icon" aria-label="Email" title="Email"><x-tabler.icon name="mail" /></a>
+                    @endif
+                    @if (filled($context['customer_url'] ?? null))
+                        <a href="{{ $context['customer_url'] }}" class="btn btn-icon" aria-label="View full profile" title="View full profile"><x-tabler.icon name="user" /></a>
+                    @endif
+                </div>
+                <dl class="row g-0 small text-start mt-3 mb-0">
+                    @if (filled($customerPhone))
+                        <dt class="col-4 text-secondary fw-normal">Phone</dt>
+                        <dd class="col-8 mb-1">{{ $customerPhone }}</dd>
+                    @endif
+                    @if (filled($customer['email'] ?? null))
+                        <dt class="col-4 text-secondary fw-normal">Email</dt>
+                        <dd class="col-8 mb-1 text-truncate">{{ $customer['email'] }}</dd>
+                    @endif
+                    @if ($permission !== null)
+                        <dt class="col-4 text-secondary fw-normal">Texting</dt>
+                        <dd class="col-8 mb-1">
+                            <span class="badge bg-{{ $permission['tone'] }}-lt" data-comms-context-texting="{{ $permission['texting'] }}">{{ $permission['label'] }}</span>
+                            @if (filled($permission['detail'] ?? null))
+                                <div class="text-secondary mt-1">{{ $permission['detail'] }}</div>
+                            @endif
+                        </dd>
+                    @endif
+                </dl>
                 @if (filled($context['customer_url'] ?? null))
-                    <a href="{{ $context['customer_url'] }}" class="btn btn-sm mt-2">
+                    <a href="{{ $context['customer_url'] }}" class="btn btn-sm w-100 mt-2">
                         <x-tabler.icon name="user" />
                         View full profile
                     </a>
                 @elseif (is_array($match) && filled($match['url'] ?? null))
-                    <a href="{{ $match['url'] }}" class="btn btn-sm mt-2">{{ $match['label'] }}</a>
+                    <a href="{{ $match['url'] }}" class="btn btn-sm w-100 mt-2">{{ $match['label'] }}</a>
                 @endif
             </section>
 
@@ -50,7 +82,7 @@
                                 <div>{{ $order['number'] }}</div>
                             @endif
                             @if (filled($order['status'] ?? null))
-                                <div class="text-secondary">{{ $order['status'] }}</div>
+                                <span class="badge bg-secondary-lt mt-1">{{ $order['status'] }}</span>
                             @endif
                             @if (filled($order['url'] ?? null))
                                 <a href="{{ $order['url'] }}">View repair order</a>
@@ -68,7 +100,7 @@
                             <div>{{ $vehicle['ro_number'] }}</div>
                         @endif
                         @if (filled($vehicle['status'] ?? null))
-                            <div class="text-secondary">{{ $vehicle['status'] }}</div>
+                            <span class="badge bg-secondary-lt mt-1">{{ $vehicle['status'] }}</span>
                         @endif
                         @if (filled($vehicle['url'] ?? null))
                             <a href="{{ $vehicle['url'] }}">View repair order</a>

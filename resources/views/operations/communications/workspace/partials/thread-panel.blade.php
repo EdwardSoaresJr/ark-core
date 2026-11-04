@@ -7,6 +7,10 @@
     $listFilter = $listFilter ?? 'needs';
     $ownerFilter = $ownerFilter ?? 'everyone';
     $events = $thread['events'] ?? [];
+    $deliveries = is_array($thread['deliveries'] ?? null) ? $thread['deliveries'] : [];
+    $permission = is_array($identity['permission'] ?? null) ? $identity['permission'] : null;
+    $latestDelivery = $deliveries === [] ? null : end($deliveries);
+    $failedDelivery = is_array($latestDelivery) && $latestDelivery['failed'] ? $latestDelivery : null;
     $lastDate = null;
     $backHref = match ($section ?? '') {
         'history' => route('operations.communications.history', request()->only(['q', 'from', 'to', 'media', 'page'])),
@@ -33,48 +37,64 @@
             </a>
         @endif
         @if ($identity !== null)
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <h3 class="card-title mb-0">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
-                @if (filled($identity['lane_label'] ?? null))
-                    <span class="badge {{ $laneBadge($identity['lane'] ?? 'needs') }}">{{ $identity['lane_label'] }}</span>
-                @endif
-                @if (filled($identity['link_status'] ?? $identity['customer_status'] ?? null))
-                    <span class="text-secondary small">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
-                @endif
-                <button
-                    type="button"
-                    class="btn btn-sm ms-auto d-xl-none"
-                    data-comms-context-toggle
-                    :aria-pressed="contextOpen.toString()"
-                    @click="contextOpen = ! contextOpen"
-                >
-                    <x-tabler.icon name="user" />
-                    Customer
-                </button>
-            </div>
-            <div class="d-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
-                @if ($phoneDigits !== '')
-                    <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
-                @endif
-                @if (filled($identity['email'] ?? null))
-                    <a href="mailto:{{ $identity['email'] }}" class="text-truncate">{{ $identity['email'] }}</a>
-                @endif
-                @if (filled($identity['last_interaction_label'] ?? null))
-                    <span class="text-secondary ms-md-auto">{{ $identity['last_interaction_label'] }}</span>
-                @endif
-            </div>
-            <div class="d-flex flex-wrap column-gap-3 small text-secondary" data-comms-thread-visit>
-                @if (filled($identity['ro_url'] ?? null))
-                    <a href="{{ $identity['ro_url'] }}">{{ $identity['ro_label'] ?? 'Repair order' }}</a>
-                @elseif (filled($identity['ro_label'] ?? null))
-                    <span>{{ $identity['ro_label'] }}</span>
-                @endif
-                @if (filled($identity['vehicle_label'] ?? null))
-                    <span>{{ $identity['vehicle_label'] }}</span>
-                @endif
-                @if (filled($identity['ro_status'] ?? null))
-                    <span>{{ $identity['ro_status'] }}</span>
-                @endif
+            <div class="d-flex align-items-center gap-3">
+                <x-tabler.avatar :name="$identity['name'] ?? $thread['title'] ?? ''" class="flex-shrink-0 d-none d-sm-inline-flex" />
+                <div class="flex-fill overflow-hidden">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h3 class="card-title mb-0 text-truncate">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
+                        @if (filled($identity['lane_label'] ?? null))
+                            <span class="badge {{ $laneBadge($identity['lane'] ?? 'needs') }}">{{ $identity['lane_label'] }}</span>
+                        @endif
+                        @if (is_array($permission))
+                            <span class="badge bg-{{ $permission['tone'] }}-lt" title="{{ $permission['detail'] ?? '' }}" data-comms-texting="{{ $permission['texting'] }}">{{ $permission['label'] }}</span>
+                        @endif
+                        @if (filled($identity['link_status'] ?? $identity['customer_status'] ?? null))
+                            <span class="text-secondary small">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
+                        @endif
+                    </div>
+                    <div class="d-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
+                        @if ($phoneDigits !== '')
+                            <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
+                        @endif
+                        @if (filled($identity['email'] ?? null))
+                            <a href="mailto:{{ $identity['email'] }}" class="text-truncate">{{ $identity['email'] }}</a>
+                        @endif
+                        @if (filled($identity['last_interaction_label'] ?? null))
+                            <span class="text-secondary">{{ $identity['last_interaction_label'] }}</span>
+                        @endif
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center column-gap-3 small text-secondary" data-comms-thread-visit>
+                        @if (filled($identity['ro_url'] ?? null))
+                            <a href="{{ $identity['ro_url'] }}" class="fw-medium">{{ $identity['ro_label'] ?? 'Repair order' }}</a>
+                        @elseif (filled($identity['ro_label'] ?? null))
+                            <span>{{ $identity['ro_label'] }}</span>
+                        @endif
+                        @if (filled($identity['vehicle_label'] ?? null))
+                            <span>{{ $identity['vehicle_label'] }}</span>
+                        @endif
+                        @if (filled($identity['ro_status'] ?? null))
+                            <span class="badge bg-secondary-lt">{{ $identity['ro_status'] }}</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="btn-list flex-nowrap flex-shrink-0 align-self-start">
+                    @if ($phoneDigits !== '')
+                        <a href="tel:{{ $phoneDigits }}" class="btn btn-icon btn-sm" aria-label="Call" title="Call">
+                            <x-tabler.icon name="phone" />
+                        </a>
+                    @endif
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm d-xl-none"
+                        data-comms-context-toggle
+                        aria-label="Customer"
+                        title="Customer"
+                        :aria-pressed="contextOpen.toString()"
+                        @click="contextOpen = ! contextOpen"
+                    >
+                        <x-tabler.icon name="user" />
+                    </button>
+                </div>
             </div>
         @else
             <h3 class="card-title mb-0">Select a conversation</h3>
@@ -87,7 +107,7 @@
 
     <div
         id="comms-workspace-thread-messages"
-        class="card-body chat-bubbles gap-2 overflow-auto flex-fill p-2 p-md-3"
+        class="card-body chat-bubbles ark-comms-thread gap-2 overflow-auto flex-fill p-2 p-md-3"
         data-comms-thread-body
         aria-label="Conversation"
         @if (($section ?? '') !== 'history' && ($selected['kind'] ?? '') === 'conversation' && filled($identity['mark_read_url'] ?? null))
@@ -124,7 +144,10 @@
                 @elseif (is_array($event) && filled($event['call_session_id'] ?? null))
                     @include('operations.communications.workspace.partials.call-event-card', ['event' => $event])
                 @elseif ($event instanceof \App\Ark\Operations\Timeline\OperationalEventEntry)
-                    @include('operations.timeline.partials.event-bubble', ['event' => $event])
+                    @include('operations.timeline.partials.event-bubble', [
+                        'event' => $event,
+                        'delivery' => $event->subject instanceof \App\Ark\Operations\Conversations\ConversationMessage ? ($deliveries[$event->subject->getKey()] ?? null) : null,
+                    ])
                 @else
                     @php
                         $direction = $event['direction'] ?? 'inbound';
@@ -168,6 +191,16 @@
             @endforelse
         @endif
     </div>
+
+    @if ($showComposer && ($permission['texting'] ?? null) === 'opted_out')
+        <div class="alert alert-danger m-2 mb-0 py-2 small" role="status" data-comms-texting-notice>
+            <span class="fw-bold">{{ $permission['label'] }}.</span> {{ $permission['detail'] }}
+        </div>
+    @elseif ($showComposer && $failedDelivery !== null)
+        <div class="alert alert-warning m-2 mb-0 py-2 small" role="status" data-comms-delivery-notice>
+            <span class="fw-bold">Last text not delivered.</span> {{ $failedDelivery['detail'] }}
+        </div>
+    @endif
 
     @if ($showComposer)
         @include('operations.communications.workspace.partials.composer-panel', [

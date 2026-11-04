@@ -583,8 +583,18 @@ export function initCommsWorkspace() {
         echo.private(window.arkShopChannel('operations.incoming-calls'))
             .listen('.call.updated', sync.trigger);
 
-        echo.private(window.arkShopChannel('operations.conversations'))
+        const conversations = echo.private(window.arkShopChannel('operations.conversations'))
             .listen('.conversation.message.received', sync.trigger);
+
+        let liveEvents = [];
+        try {
+            liveEvents = JSON.parse(document.getElementById('ops-comms-workspace-live')?.dataset.liveEvents || '[]');
+        } catch {
+            liveEvents = [];
+        }
+        liveEvents
+            .filter((name) => typeof name === 'string' && name !== '')
+            .forEach((name) => conversations.listen(name.startsWith('.') ? name : `.${name}`, sync.trigger));
 
         echo.private(window.arkShopChannel('operations.comms-interrupts'))
             .listen('.comms.interrupt', sync.trigger);

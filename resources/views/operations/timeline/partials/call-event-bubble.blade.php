@@ -49,6 +49,12 @@
             @elseif ($callSession->hasVoicemail())
                 <div class="small text-secondary mt-1" data-comms-call-media-note>Voicemail on file</div>
             @endif
+            @if (filled($callSession->transcript))
+                <details class="mt-1 small" data-comms-call-transcript @if ($callSession->hasVoicemail()) open @endif>
+                    <summary class="text-secondary">{{ $callSession->hasVoicemail() ? 'Voicemail transcript' : 'Transcript' }}@if ((int) ($callSession->voicemail_duration_seconds ?? 0) > 0) · {{ gmdate('i:s', (int) $callSession->voicemail_duration_seconds) }}@endif</summary>
+                    <p class="mb-0 mt-1" style="white-space: pre-wrap">{{ $callSession->transcript }}</p>
+                </details>
+            @endif
         </div>
     </article>
 </div>

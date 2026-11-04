@@ -60,6 +60,7 @@ final class CommunicationsWorkspaceProjection
         private readonly ConversationLeadResolver $conversationLeadResolver,
         private readonly CommunicationsRelationshipContextResolver $relationshipContext,
         private readonly WebsiteLeadRequestPresentation $websiteRequests,
+        private readonly CommunicationsWorkspaceSignals $signals,
     ) {}
 
     /**
@@ -175,6 +176,9 @@ final class CommunicationsWorkspaceProjection
             if (is_array($thread) && is_array($context['work'] ?? null)) {
                 $thread['decision']['work'] = $context['work'];
             }
+            if (is_array($context) && is_array($thread['identity']['permission'] ?? null)) {
+                $context['permission'] = $thread['identity']['permission'];
+            }
         }
 
         return [
@@ -185,6 +189,7 @@ final class CommunicationsWorkspaceProjection
             'thread' => $thread,
             'context' => $context,
             'poll_signature' => $this->pollSignature($filter, $conversationId, $leadId, $callSessionId),
+            'live_events' => $this->liveEvents(),
             'list_filter' => $filter,
             'filter_counts' => $filterCounts,
             'list_shown' => count($listItems),
@@ -870,6 +875,16 @@ final class CommunicationsWorkspaceProjection
             callContext: null,
             lead: $composerContext['lead'] ?? null,
         );
+        $messages = array_values(array_filter(array_map(
+            fn (mixed $event): ?ConversationMessage => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage ? $event->subject : null,
+            $events,
+        )));
+        $deliveries = array_map(
+            fn (array $delivery): array => CommunicationsWorkspaceSignalPresenter::delivery($delivery),
+            $this->signals->deliveries($messages),
+        );
+        $permission = $this->signals->contactPermission($conversation, $composerContext['customer'] ?? null);
+        $identity['permission'] = $permission === null ? null : CommunicationsWorkspaceSignalPresenter::permission($permission);
 
         return [
             'title' => $identity['name'] ?? $displayPhone,
@@ -878,6 +893,7 @@ final class CommunicationsWorkspaceProjection
             'assignment_label' => $conversation->owner?->name ?? 'Unassigned',
             'identity' => $identity,
             'events' => $events,
+            'deliveries' => $deliveries,
             'empty_label' => 'No messages in this thread yet.',
             'composer' => $section === 'history' ? null : [
                 'kind' => 'conversation',
@@ -1648,7 +1664,19 @@ final class CommunicationsWorkspaceProjection
             $parts[] = (string) (Lead::query()->whereKey($leadId)->value('updated_at') ?? '');
         }
 
+        $parts[] = $this->signals->signature($conversationId);
+
         return md5(implode('|', $parts));
+    }
+
+    /**
+     * Broadcast events, besides Core's own, that refresh an open workspace.
+     *
+     * @return list<string>
+     */
+    public function liveEvents(): array
+    {
+        return $this->signals->liveEvents();
     }
 
     /**

@@ -19,6 +19,7 @@
     'listTotal' => null,
     'listTruncated' => false,
     'pollSignature' => null,
+    'liveEvents' => [],
     'platformBacked' => false,
 ])
 
@@ -66,6 +67,7 @@
             class="row g-2 g-lg-3"
             data-fragment-url="{{ route('operations.communications.workspace.fragment', array_merge(request()->query(), ['section' => $section])) }}"
             data-poll-signature="{{ $pollSignature ?? '' }}"
+            data-live-events="{{ json_encode(array_values($liveEvents)) }}"
             data-section="{{ $section }}"
         >
             <aside

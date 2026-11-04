@@ -622,3 +622,45 @@ span.ark-legacy {
     flex: 1 1 0;
     min-height: 0;
 }
+
+/*
+ * Communications workspace: the conversation is the focus. The shop's messages are filled with the accent colour
+ * and the customer's are a quiet surface, like a phone's messages; a message the carrier did not deliver keeps a
+ * red outline. The selected conversation is marked by an accent edge.
+ */
+.ark-comms-thread .chat-bubble {
+    border-radius: 1rem;
+}
+
+.ark-comms-thread .chat-bubble:not(.chat-bubble-me):not(.bg-yellow-lt) {
+    background: var(--tblr-bg-surface-secondary);
+}
+
+.ark-comms-thread .chat-bubble-me {
+    background: var(--tblr-primary);
+    color: var(--tblr-primary-fg, #fff);
+}
+
+.ark-comms-thread .chat-bubble-me .chat-bubble-title,
+.ark-comms-thread .chat-bubble-me .text-secondary,
+.ark-comms-thread .chat-bubble-me summary {
+    color: color-mix(in srgb, currentColor 75%, transparent) !important;
+}
+
+.ark-comms-thread .chat-bubble-me a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.ark-comms-thread .chat-bubble-me .badge {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: var(--tblr-primary-fg, #fff) !important;
+}
+
+.ark-comms-thread .chat-bubble.border-danger {
+    border-width: 2px !important;
+}
+
+.ark-comms-row.active {
+    box-shadow: inset 3px 0 0 var(--tblr-primary);
+}

@@ -13,6 +13,8 @@
         $channelLabel = 'MMS';
     }
     $occurredLabel = $event->occurredAt->timezone(config('app.display_timezone'))->format('M j, g:i A');
+    $delivery = isset($delivery) && is_array($delivery) ? $delivery : null;
+    $subject = trim((string) (($message?->metadata ?? [])['subject'] ?? ''));
     $evidenceBits = array_values(array_filter([
         $channelLabel !== '' ? $channelLabel : null,
         $occurredLabel,
@@ -42,16 +44,20 @@
             data-platform-message-id="{{ $event->metadata['platform_message_public_id'] }}"
         @endif
     >
+        <div @class(['d-flex flex-column', 'align-items-end' => $direction === 'outbound']) style="max-width: 88%">
         <article
             @class([
                 'chat-bubble px-3 py-2',
                 'chat-bubble-me' => $direction === 'outbound',
                 'bg-yellow-lt' => $direction === 'internal',
+                'border border-danger' => $delivery['failed'] ?? false,
             ])
-            style="max-width: 88%"
             data-comms-bubble="{{ $direction }}"
         >
             <div class="chat-bubble-title small text-secondary">
+                @if ($channelLabel !== '' && $direction !== 'internal')
+                    <span class="badge bg-secondary-lt me-1" data-comms-channel>{{ $channelLabel }}</span>
+                @endif
                 {{ $event->headline }}
                 @if (filled($event->metadata['visit_label'] ?? null))
                     · {{ $event->metadata['visit_label'] }}
@@ -65,6 +71,9 @@
                 @endif
             </div>
             <div class="chat-bubble-body">
+                @if ($subject !== '')
+                    <div class="fw-bold mb-1" data-comms-email-subject>{{ $subject }}</div>
+                @endif
                 @if (filled($body))
                     <p class="mb-0" style="white-space: pre-wrap">{{ $body }}</p>
                 @endif
@@ -98,5 +107,15 @@
                 @endif
             </div>
         </article>
+        @if ($delivery !== null)
+            <div @class(['small mt-1 px-1', 'text-danger' => $delivery['failed'], 'text-secondary' => ! $delivery['failed']]) data-comms-delivery="{{ $delivery['status'] }}">
+                <x-tabler.icon :name="match (true) { $delivery['failed'] => 'circle-x', in_array($delivery['status'], ['delivered', 'read'], true) => 'circle-check', $delivery['status'] === 'sent' => 'check', default => 'clock' }" />
+                {{ $delivery['label'] }}@if (filled($delivery['at_label'] ?? null)) · {{ $delivery['at_label'] }}@endif
+                @if (filled($delivery['detail'] ?? null))
+                    <div>{{ $delivery['detail'] }}</div>
+                @endif
+            </div>
+        @endif
+        </div>
     </div>
 @endif

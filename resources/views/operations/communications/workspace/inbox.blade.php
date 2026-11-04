@@ -33,6 +33,7 @@
         :turn-filter="$workspace['turn_filter'] ?? null"
         :turn-counts="$workspace['turn_counts'] ?? null"
         :poll-signature="$workspace['poll_signature'] ?? ''"
+        :live-events="$workspace['live_events'] ?? []"
         :platform-backed="(bool) ($workspace['platform_backed'] ?? false)"
         :owner-filter="$workspace['owner_filter'] ?? 'everyone'"
         :owner-counts="$workspace['owner_counts'] ?? null"
