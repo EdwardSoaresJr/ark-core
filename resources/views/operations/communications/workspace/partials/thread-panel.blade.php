@@ -60,7 +60,7 @@
                             <span class="text-secondary small d-none d-md-inline">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
                         @endif
                     </div>
-                    <div class="d-none d-md-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
+                    <div class="d-none d-md-flex d-xl-none d-xxl-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
                         @if ($phoneDigits !== '')
                             <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
                         @endif

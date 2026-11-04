@@ -629,6 +629,28 @@ span.ark-legacy {
     min-height: 0;
 }
 
+/* The timeline keeps room for a few messages however much the header and composer need. */
+.ark-split .ark-comms-thread {
+    min-height: 7rem;
+}
+
+/* Short screens (a laptop, a phone): the composer is compact so the conversation keeps the room. */
+@media (max-height: 820px) {
+    .ark-split [data-comms-quick-replies] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .ark-split [data-comms-quick-replies] > .btn {
+        flex-shrink: 0;
+    }
+
+    .ark-split [data-comms-composer] textarea {
+        height: 3.5rem;
+    }
+}
+
 /* On a phone an open conversation takes the screen: the back button replaces the page title and section tabs. */
 @media (max-width: 991.98px) {
     .ark-split.ark-comms-thread-open > .page-header,

@@ -29,7 +29,7 @@
         <div class="dropdown">
             <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Assign" title="Assign">
                 <x-tabler.icon name="user" />
-                <span class="d-none d-sm-inline">Assign</span>
+                <span class="d-none d-xxl-inline">Assign</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
                 <form method="POST" action="{{ $url }}">
@@ -66,7 +66,7 @@
         <div class="dropdown">
             <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Follow-up" title="Follow-up">
                 <x-tabler.icon name="calendar-time" />
-                <span class="d-none d-sm-inline">Follow-up</span>
+                <span class="d-none d-xxl-inline">Follow-up</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
                 <form method="POST" action="{{ $url }}">
@@ -86,7 +86,7 @@
                 {!! $hidden('wait') !!}
                 <button type="submit" class="btn btn-sm" title="Waiting on the customer" aria-label="Waiting">
                     <x-tabler.icon name="clock" />
-                    <span class="d-none d-sm-inline">Waiting</span>
+                    <span class="d-none d-xxl-inline">Waiting</span>
                 </button>
             </form>
         @endif

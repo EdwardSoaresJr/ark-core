@@ -27,7 +27,7 @@
                         @if ($ownerFilter === $ownerLink['key']) aria-current="page" @endif
                     >
                         {{ $ownerLink['label'] }}
-                        <span class="text-secondary ms-1">{{ $ownerCounts[$ownerLink['key']] ?? 0 }}</span>
+                        <span class="text-secondary ms-1 d-xl-none d-xxl-inline">{{ $ownerCounts[$ownerLink['key']] ?? 0 }}</span>
                     </a>
                 @endforeach
             </div>
