@@ -7,6 +7,7 @@ use App\Ark\Operations\Conversations\ConversationReadTracker;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Conversations\StaleConversationWorkException;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
+use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,11 @@ final class ConversationWorkController
         }
 
         $actor = $request->user();
+
+        if ($data['action'] === 'assign' && ($data['assign_to'] ?? 'me') === 'user'
+            && ! User::query()->active()->role([ArkRole::Admin->value, ArkRole::Advisor->value])->whereKey((int) ($data['user_id'] ?? 0))->exists()) {
+            return back()->with('error', 'Choose an active advisor to assign.');
+        }
 
         match ($data['action']) {
             'assign' => $work->assign($conversation, $this->owner($data, $actor)),

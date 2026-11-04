@@ -278,6 +278,18 @@ test('an owned conversation can be unassigned from the workspace', function (): 
     expect($conversation->refresh()->owned_by_user_id)->toBeNull();
 });
 
+test('only an active advisor can be assigned, whatever the request says', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $technician = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $conversation = workspaceConversationFixture('7195558113');
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.conversations.work', $conversation), ['action' => 'assign', 'assign_to' => 'user', 'user_id' => $technician->id])
+        ->assertSessionHas('error', 'Choose an active advisor to assign.');
+
+    expect($conversation->refresh()->owned_by_user_id)->toBeNull();
+});
+
 function workspaceConversationFixture(string $phone, ConversationStatus $status = ConversationStatus::Open): Conversation
 {
     return Conversation::query()->create([
