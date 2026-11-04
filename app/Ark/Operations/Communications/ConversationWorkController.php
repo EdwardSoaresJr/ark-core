@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Communications;
 
 use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationReadTracker;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Conversations\StaleConversationWorkException;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
@@ -17,9 +18,10 @@ final class ConversationWorkController
         Request $request,
         Conversation $conversation,
         ConversationWork $work,
+        ConversationReadTracker $reads,
     ): RedirectResponse {
         $data = $request->validate([
-            'action' => ['required', Rule::in(['assign', 'follow_up', 'wait', 'resolve', 'reopen'])],
+            'action' => ['required', Rule::in(['assign', 'follow_up', 'wait', 'resolve', 'reopen', 'unread'])],
             'assign_to' => ['nullable', Rule::in(['me', 'user', 'unassign'])],
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'due_at' => ['nullable', 'date'],
@@ -27,6 +29,19 @@ final class ConversationWorkController
             'owner' => ['nullable', Rule::in(['everyone', 'mine', 'unassigned'])],
             'posture_changed_at' => ['nullable', 'string', 'max:64'],
         ]);
+
+        // Read marks are each advisor's own, so they are not checked against the shared posture.
+        if ($data['action'] === 'unread') {
+            $reads->markUnread($conversation, $request->user());
+
+            // Back to the list: opening the conversation again would read it.
+            return redirect()
+                ->route('operations.communications.inbox', array_filter([
+                    'filter' => $this->workingFilter($data['filter'] ?? null),
+                    'owner' => ($data['owner'] ?? 'everyone') !== 'everyone' ? $data['owner'] : null,
+                ]))
+                ->with('status', 'Marked unread.');
+        }
 
         try {
             $work->assertCurrent($conversation, $data['posture_changed_at'] ?? null);
@@ -59,7 +74,7 @@ final class ConversationWorkController
                 default => 'needs',
             };
         $status = match ($data['action']) {
-            'assign' => 'Assigned.',
+            'assign' => $conversation->owned_by_user_id === null ? 'Unassigned.' : 'Assigned.',
             'follow_up' => 'Follow-up scheduled.',
             'wait' => 'Marked waiting.',
             'resolve' => 'Conversation resolved.',

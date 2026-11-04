@@ -14,6 +14,7 @@
     }
     $occurredLabel = $event->occurredAt->timezone(config('app.display_timezone'))->format('M j, g:i A');
     $delivery = isset($delivery) && is_array($delivery) ? $delivery : null;
+    $notes = isset($notes) && is_array($notes) ? $notes : [];
     $subject = trim((string) (($message?->metadata ?? [])['subject'] ?? ''));
     $evidenceBits = array_values(array_filter([
         $channelLabel !== '' ? $channelLabel : null,
@@ -114,6 +115,13 @@
                 @if (filled($delivery['detail'] ?? null))
                     <div>{{ $delivery['detail'] }}</div>
                 @endif
+            </div>
+        @endif
+        @if ($notes !== [])
+            <div class="d-flex flex-wrap gap-1 mt-1 px-1">
+                @foreach ($notes as $note)
+                    <span class="badge bg-{{ $note['tone'] }}-lt" @if (filled($note['title'])) title="{{ $note['title'] }}" @endif data-comms-message-note>{{ $note['label'] }}</span>
+                @endforeach
             </div>
         @endif
         </div>

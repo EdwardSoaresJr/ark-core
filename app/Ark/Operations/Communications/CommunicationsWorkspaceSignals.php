@@ -26,9 +26,27 @@ interface CommunicationsWorkspaceSignals
     /**
      * Whether the shop may text this conversation's contact now, or null when nothing is known.
      *
-     * @return array{texting: 'allowed'|'opted_out'|'unknown', source?: string|null, quiet_hours_until?: \DateTimeInterface|null}|null
+     * Notes are further plain sentences shown with it, such as where an opt-out was recorded or the quiet-hours window.
+     *
+     * @return array{texting: 'allowed'|'opted_out'|'unknown', source?: string|null, quiet_hours_until?: \DateTimeInterface|null, notes?: list<string>}|null
      */
     public function contactPermission(Conversation $conversation, ?Customer $customer): ?array;
+
+    /**
+     * Short notes about individual messages, keyed by message id: for example whether an email's sender was verified,
+     * or an attachment that was not kept.
+     *
+     * @param  iterable<ConversationMessage>  $messages
+     * @return array<int, list<array{label: string, tone?: 'success'|'warning'|'danger'|'secondary', title?: string|null}>>
+     */
+    public function messageNotes(iterable $messages): array;
+
+    /**
+     * Notices for the whole workspace, such as texts not being sent from this environment.
+     *
+     * @return list<string>
+     */
+    public function notices(): array;
 
     /**
      * Where the composer's Email mode posts a reply (fields: body, idempotency_key, return_to), or null when this shop

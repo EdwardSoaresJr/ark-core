@@ -21,6 +21,29 @@ class ConversationReadTracker
         );
     }
 
+    /**
+     * Unread again from the customer's latest message: the read mark moves to just before it. With no customer
+     * message there is nothing to be unread, so the mark is removed.
+     */
+    public function markUnread(Conversation $conversation, User $user): void
+    {
+        $latestInbound = ConversationMessage::query()
+            ->where('conversation_id', $conversation->id)
+            ->where('direction', OperationalCommunicationDirection::Inbound)
+            ->max('occurred_at');
+
+        if ($latestInbound === null) {
+            ConversationRead::query()
+                ->where('conversation_id', $conversation->id)
+                ->where('user_id', $user->id)
+                ->delete();
+
+            return;
+        }
+
+        $this->markRead($conversation, $user, Carbon::parse($latestInbound)->subSecond());
+    }
+
     public function unreadInboundCount(Conversation $conversation, User $user): int
     {
         $readThrough = ConversationRead::query()

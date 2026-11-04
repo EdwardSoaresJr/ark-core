@@ -50,8 +50,21 @@ final class CommunicationsWorkspaceSignalPresenter
     }
 
     /**
-     * @param  array{texting: string, source?: string|null, quiet_hours_until?: \DateTimeInterface|null}  $permission
-     * @return array{texting: string, label: string, tone: string, detail: ?string}
+     * @param  list<array{label: string, tone?: string, title?: string|null}>  $notes
+     * @return list<array{label: string, tone: string, title: ?string}>
+     */
+    public static function messageNotes(array $notes): array
+    {
+        return array_values(array_map(fn (array $note): array => [
+            'label' => (string) $note['label'],
+            'tone' => in_array($note['tone'] ?? null, ['success', 'warning', 'danger'], true) ? $note['tone'] : 'secondary',
+            'title' => filled($note['title'] ?? null) ? (string) $note['title'] : null,
+        ], array_filter($notes, fn (mixed $note): bool => is_array($note) && filled($note['label'] ?? null))));
+    }
+
+    /**
+     * @param  array{texting: string, source?: string|null, quiet_hours_until?: \DateTimeInterface|null, notes?: list<string>}  $permission
+     * @return array{texting: string, label: string, tone: string, detail: ?string, notes: list<string>}
      */
     public static function permission(array $permission): array
     {
@@ -77,6 +90,7 @@ final class CommunicationsWorkspaceSignalPresenter
                 $texting === 'opted_out' ? trim(($permission['source'] ?? 'The customer opted out').'. Texts are not sent until they reply START.') : null,
                 $quiet,
             ]))) ?: null,
+            'notes' => array_values(array_filter(array_map('strval', $permission['notes'] ?? []), fn (string $note): bool => trim($note) !== '')),
         ];
     }
 }

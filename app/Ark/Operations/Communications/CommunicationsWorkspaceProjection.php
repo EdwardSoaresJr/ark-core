@@ -193,6 +193,7 @@ final class CommunicationsWorkspaceProjection
             'context' => $context,
             'poll_signature' => $this->pollSignature($filter, $conversationId, $leadId, $callSessionId),
             'live_events' => $this->liveEvents(),
+            'notices' => $this->signals->notices(),
             'list_filter' => $filter,
             'filter_counts' => $filterCounts,
             'list_shown' => count($listItems),
@@ -893,6 +894,13 @@ final class CommunicationsWorkspaceProjection
                 : null,
             $events,
         );
+        $notes = $this->signals->messageNotes($messages);
+        $eventNotes = array_map(
+            fn (mixed $event): array => $event instanceof OperationalEventEntry && $event->subject instanceof ConversationMessage
+                ? CommunicationsWorkspaceSignalPresenter::messageNotes($notes[(int) $event->subject->getKey()] ?? [])
+                : [],
+            $events,
+        );
         $permission = $this->signals->contactPermission($conversation, $composerContext['customer'] ?? null);
         $identity['permission'] = $permission === null ? null : CommunicationsWorkspaceSignalPresenter::permission($permission);
 
@@ -905,6 +913,7 @@ final class CommunicationsWorkspaceProjection
             'events' => $events,
             'deliveries' => $deliveries,
             'event_deliveries' => $eventDeliveries,
+            'event_notes' => $eventNotes,
             'empty_label' => 'No messages in this thread yet.',
             'composer' => $section === 'history' ? null : [
                 'kind' => 'conversation',

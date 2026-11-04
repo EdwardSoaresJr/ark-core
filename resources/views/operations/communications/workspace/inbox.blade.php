@@ -44,6 +44,9 @@
                 {{ $workspace['error'] ?? session('error') }}
             </div>
         @endif
+        @foreach ($workspace['notices'] ?? [] as $notice)
+            <div class="alert alert-info flex-shrink-0 mb-2 py-2 small" role="status" data-comms-workspace-notice>{{ $notice }}</div>
+        @endforeach
         @if (session('status'))
             <div class="alert alert-success flex-shrink-0 mb-2" role="status">
                 {{ session('status') }}

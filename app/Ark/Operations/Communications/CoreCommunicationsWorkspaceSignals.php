@@ -36,6 +36,16 @@ final class CoreCommunicationsWorkspaceSignals implements CommunicationsWorkspac
         };
     }
 
+    public function messageNotes(iterable $messages): array
+    {
+        return [];
+    }
+
+    public function notices(): array
+    {
+        return [];
+    }
+
     public function emailReplyUrl(Conversation $conversation): ?string
     {
         return null;

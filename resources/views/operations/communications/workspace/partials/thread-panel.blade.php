@@ -9,6 +9,7 @@
     $events = $thread['events'] ?? [];
     $deliveries = is_array($thread['deliveries'] ?? null) ? $thread['deliveries'] : [];
     $eventDeliveries = is_array($thread['event_deliveries'] ?? null) ? $thread['event_deliveries'] : [];
+    $eventNotes = is_array($thread['event_notes'] ?? null) ? $thread['event_notes'] : [];
     $work = is_array($thread['decision']['work'] ?? null) ? $thread['decision']['work'] : null;
     $permission = is_array($identity['permission'] ?? null) ? $identity['permission'] : null;
     $latestDelivery = $deliveries === [] ? null : end($deliveries);
@@ -159,6 +160,7 @@
                     @include('operations.timeline.partials.event-bubble', [
                         'event' => $event,
                         'delivery' => $eventDeliveries[$loop->index] ?? null,
+                        'notes' => $eventNotes[$loop->index] ?? [],
                     ])
                 @else
                     @php

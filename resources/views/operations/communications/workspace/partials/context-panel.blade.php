@@ -66,6 +66,9 @@
                             @if (filled($permission['detail'] ?? null))
                                 <div class="text-secondary mt-1">{{ $permission['detail'] }}</div>
                             @endif
+                            @foreach ($permission['notes'] ?? [] as $note)
+                                <div class="text-secondary mt-1" data-comms-context-consent-note>{{ $note }}</div>
+                            @endforeach
                         </dd>
                     @endif
                 </dl>

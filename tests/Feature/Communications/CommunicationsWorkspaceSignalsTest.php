@@ -87,7 +87,7 @@ test('with Core alone the composer offers SMS and internal notes and says why em
         ->and($page)->toContain('data-live-events="[]"');
 });
 
-test('a host application\'s signals replace Core\'s: delivery, texting, email replies, live events, and refresh', function () {
+test('a host application\'s signals replace Core\'s: delivery, texting, message notes, notices, email replies, live events, and refresh', function () {
     $conversation = signalsConversation($this->advisor, [['delivery_status' => 'sent']]);
     app()->instance(CommunicationsWorkspaceSignals::class, new class implements CommunicationsWorkspaceSignals
     {
@@ -105,7 +105,24 @@ test('a host application\'s signals replace Core\'s: delivery, texting, email re
 
         public function contactPermission(Conversation $conversation, ?Customer $customer): ?array
         {
-            return ['texting' => 'allowed', 'quiet_hours_until' => now()->addHours(3)];
+            return ['texting' => 'allowed', 'quiet_hours_until' => now()->addHours(3), 'notes' => ['Agreed to marketing texts.']];
+        }
+
+        public function messageNotes(iterable $messages): array
+        {
+            $out = [];
+            foreach ($messages as $message) {
+                if ($message->direction === OperationalCommunicationDirection::Inbound) {
+                    $out[(int) $message->id] = [['label' => 'Sender verified', 'tone' => 'success', 'title' => 'SPF pass']];
+                }
+            }
+
+            return $out;
+        }
+
+        public function notices(): array
+        {
+            return ['Texts are not sent from this environment.'];
         }
 
         public function emailReplyUrl(Conversation $conversation): ?string
@@ -131,7 +148,11 @@ test('a host application\'s signals replace Core\'s: delivery, texting, email re
         ->and($page)->toContain('Quiet hours: automated texts wait until')
         ->and($page)->toContain('data-comms-email-composer')
         ->and($page)->toContain('action="https://host.test/email-replies/'.$conversation->id.'"')
-        ->and($page)->toContain('data-live-events="[&quot;host.delivery.updated&quot;]"');
+        ->and($page)->toContain('data-live-events="[&quot;host.delivery.updated&quot;]"')
+        ->and($page)->toContain('data-comms-context-consent-note>Agreed to marketing texts.')
+        ->and($page)->toContain('title="SPF pass"')
+        ->and($page)->toContain('data-comms-message-note>Sender verified')
+        ->and($page)->toContain('data-comms-workspace-notice>Texts are not sent from this environment.');
 
     $projection = app(CommunicationsWorkspaceProjection::class);
     expect($projection->pollSignature('all', $conversation->id))->not->toBe(

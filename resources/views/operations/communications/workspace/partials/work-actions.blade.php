@@ -38,6 +38,14 @@
                     <input type="hidden" name="assign_to" value="me">
                     <button type="submit" class="btn btn-sm w-100 mb-2">Assign to me</button>
                 </form>
+                @if ($ownerId !== null)
+                    <form method="POST" action="{{ $url }}">
+                        @csrf
+                        {!! $hidden('assign') !!}
+                        <input type="hidden" name="assign_to" value="unassign">
+                        <button type="submit" class="btn btn-sm w-100 mb-2" data-comms-work-unassign>Unassign</button>
+                    </form>
+                @endif
                 <form method="POST" action="{{ $url }}">
                     @csrf
                     {!! $hidden('assign') !!}
@@ -82,6 +90,14 @@
                 </button>
             </form>
         @endif
+        <form method="POST" action="{{ $url }}" class="d-inline-flex">
+            @csrf
+            {!! $hidden('unread') !!}
+            <button type="submit" class="btn btn-sm" title="Mark unread" aria-label="Mark unread" data-comms-work-unread>
+                <x-tabler.icon name="mail" />
+                <span class="d-none d-xxl-inline">Unread</span>
+            </button>
+        </form>
         <form method="POST" action="{{ $url }}" class="d-inline-flex">
             @csrf
             {!! $hidden('resolve') !!}
