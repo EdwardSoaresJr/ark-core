@@ -32,29 +32,34 @@
 
 <div class="card chat flex-fill overflow-hidden" data-comms-thread-card>
     <div class="card-header d-block py-2" data-comms-thread-identity>
-        @if ($backHref !== null)
+        @if ($backHref !== null && $identity === null)
             <a class="btn btn-sm btn-ghost-secondary d-lg-none mb-1 ps-0" href="{{ $backHref }}">
                 <x-tabler.icon name="arrow-left" />
                 Back to list
             </a>
         @endif
         @if ($identity !== null)
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+                @if ($backHref !== null)
+                    <a class="btn btn-icon btn-sm btn-ghost-secondary d-lg-none flex-shrink-0" href="{{ $backHref }}" aria-label="Back to list" title="Back to list">
+                        <x-tabler.icon name="arrow-left" />
+                    </a>
+                @endif
                 <x-tabler.avatar :name="$identity['name'] ?? $thread['title'] ?? ''" class="flex-shrink-0 d-none d-sm-inline-flex" />
                 <div class="flex-fill overflow-hidden">
-                    <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="d-flex flex-wrap align-items-center column-gap-2 row-gap-1">
                         <h3 class="card-title mb-0 text-truncate">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
                         @if (filled($identity['lane_label'] ?? null))
                             <span class="badge {{ $laneBadge($identity['lane'] ?? 'needs') }}">{{ $identity['lane_label'] }}</span>
                         @endif
                         @if (is_array($permission))
-                            <span class="badge bg-{{ $permission['tone'] }}-lt" title="{{ $permission['detail'] ?? '' }}" data-comms-texting="{{ $permission['texting'] }}">{{ $permission['label'] }}</span>
+                            <span @class(['badge bg-'.$permission['tone'].'-lt', 'd-none d-sm-inline-flex' => $permission['texting'] === 'allowed']) title="{{ $permission['detail'] ?? '' }}" data-comms-texting="{{ $permission['texting'] }}">{{ $permission['label'] }}</span>
                         @endif
                         @if (filled($identity['link_status'] ?? $identity['customer_status'] ?? null))
-                            <span class="text-secondary small">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
+                            <span class="text-secondary small d-none d-md-inline">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
                         @endif
                     </div>
-                    <div class="d-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
+                    <div class="d-none d-md-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
                         @if ($phoneDigits !== '')
                             <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
                         @endif
@@ -65,17 +70,17 @@
                             <span class="text-secondary">{{ $identity['last_interaction_label'] }}</span>
                         @endif
                     </div>
-                    <div class="d-flex flex-wrap align-items-center column-gap-3 small text-secondary" data-comms-thread-visit>
+                    <div class="d-flex flex-nowrap flex-md-wrap align-items-center column-gap-2 column-gap-md-3 small text-secondary overflow-hidden" data-comms-thread-visit>
                         @if (filled($identity['ro_url'] ?? null))
-                            <a href="{{ $identity['ro_url'] }}" class="fw-medium">{{ $identity['ro_label'] ?? 'Repair order' }}</a>
+                            <a href="{{ $identity['ro_url'] }}" class="fw-medium flex-shrink-0">{{ $identity['ro_label'] ?? 'Repair order' }}</a>
                         @elseif (filled($identity['ro_label'] ?? null))
-                            <span>{{ $identity['ro_label'] }}</span>
+                            <span class="flex-shrink-0">{{ $identity['ro_label'] }}</span>
                         @endif
                         @if (filled($identity['vehicle_label'] ?? null))
-                            <span>{{ $identity['vehicle_label'] }}</span>
+                            <span class="text-truncate">{{ $identity['vehicle_label'] }}</span>
                         @endif
                         @if (filled($identity['ro_status'] ?? null))
-                            <span class="badge bg-secondary-lt">{{ $identity['ro_status'] }}</span>
+                            <span class="badge bg-secondary-lt flex-shrink-0">{{ $identity['ro_status'] }}</span>
                         @endif
                     </div>
                 </div>
@@ -99,7 +104,7 @@
                 </div>
             </div>
             @if (is_array($work) && filled($work['url'] ?? null))
-                <div class="d-flex flex-wrap justify-content-md-end mt-2">
+                <div class="d-flex flex-wrap justify-content-md-end mt-1 mt-md-2">
                     @include('operations.communications.workspace.partials.work-actions', ['work' => $work])
                 </div>
             @endif

@@ -623,6 +623,38 @@ span.ark-legacy {
     min-height: 0;
 }
 
+/* A wrapping row sizes its line to the tallest panel; cap each panel at the row so it scrolls inside. */
+.ark-split > .page-body > .container-fluid > .row > * {
+    max-height: 100%;
+    min-height: 0;
+}
+
+/* On a phone an open conversation takes the screen: the back button replaces the page title and section tabs. */
+@media (max-width: 991.98px) {
+    .ark-split.ark-comms-thread-open > .page-header,
+    .ark-split.ark-comms-thread-open [data-comms-section-nav] {
+        display: none;
+    }
+
+    .ark-split.ark-comms-thread-open > .page-body {
+        margin-top: 0.5rem;
+    }
+
+    .ark-split [data-comms-quick-replies] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .ark-split [data-comms-quick-replies] > .btn {
+        flex-shrink: 0;
+    }
+
+    .ark-split [data-comms-composer] textarea {
+        height: 3.5rem;
+    }
+}
+
 /*
  * Communications workspace: the conversation is the focus. The shop's messages are filled with the accent colour
  * and the customer's are a quiet surface, like a phone's messages; a message the carrier did not deliver keeps a

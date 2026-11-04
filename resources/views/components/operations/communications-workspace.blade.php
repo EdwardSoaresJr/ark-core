@@ -36,6 +36,7 @@
     class="d-flex flex-column flex-fill ark-split"
     data-comms-workspace
     x-data="{ threadOpen: {{ $threadOpen ? 'true' : 'false' }}, contextOpen: false }"
+    :class="{ 'ark-comms-thread-open': threadOpen || contextOpen }"
 >
     <x-tabler.page
         layout="split"

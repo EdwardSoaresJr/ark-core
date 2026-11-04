@@ -27,9 +27,9 @@
         </form>
     @else
         <div class="dropdown">
-            <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+            <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Assign" title="Assign">
                 <x-tabler.icon name="user" />
-                Assign
+                <span class="d-none d-sm-inline">Assign</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
                 <form method="POST" action="{{ $url }}">
@@ -56,9 +56,9 @@
             </div>
         </div>
         <div class="dropdown">
-            <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+            <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Follow-up" title="Follow-up">
                 <x-tabler.icon name="calendar-time" />
-                Follow-up
+                <span class="d-none d-sm-inline">Follow-up</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 16rem">
                 <form method="POST" action="{{ $url }}">
@@ -76,9 +76,9 @@
             <form method="POST" action="{{ $url }}" class="d-inline-flex">
                 @csrf
                 {!! $hidden('wait') !!}
-                <button type="submit" class="btn btn-sm" title="Waiting on the customer">
+                <button type="submit" class="btn btn-sm" title="Waiting on the customer" aria-label="Waiting">
                     <x-tabler.icon name="clock" />
-                    Waiting
+                    <span class="d-none d-sm-inline">Waiting</span>
                 </button>
             </form>
         @endif
