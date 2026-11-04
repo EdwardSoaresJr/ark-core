@@ -23,6 +23,10 @@
                 $customerPhone = $customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone');
                 $phoneHref = \App\Ark\Operations\PhoneNumber::telUri((string) $customerPhone);
                 $permission = is_array($context['permission'] ?? null) ? $context['permission'] : null;
+                // Replies and calls use this conversation's number; say so when it is not the customer's main phone.
+                $primaryPhone = $context['customer_primary_phone'] ?? null;
+                $otherNumber = filled($customerPhone) && filled($primaryPhone)
+                    && \App\Ark\Operations\PhoneNumber::normalize((string) $customerPhone) !== \App\Ark\Operations\PhoneNumber::normalize((string) $primaryPhone);
             @endphp
             <section class="p-3 border-bottom" aria-labelledby="comms-context-customer">
                 <div class="subheader mb-2" id="comms-context-customer">Customer</div>
@@ -51,7 +55,13 @@
                     @endif
                 </div>
                 <dl class="row g-0 small mt-3 mb-0">
-                    @if (filled($customerPhone))
+                    @if ($otherNumber)
+                        <dt class="col-4 text-secondary fw-normal">Phones</dt>
+                        <dd class="col-8 mb-1">
+                            <div data-comms-context-thread-phone>{{ $customerPhone }}<div class="text-secondary">This conversation</div></div>
+                            <div class="mt-1" data-comms-context-primary-phone>{{ $primaryPhone }}<div class="text-secondary">Main phone</div></div>
+                        </dd>
+                    @elseif (filled($customerPhone))
                         <dt class="col-4 text-secondary fw-normal">Phone</dt>
                         <dd class="col-8 mb-1">{{ $customerPhone }}</dd>
                     @endif
@@ -73,6 +83,19 @@
                     @endif
                 </dl>
             </section>
+
+            @if (is_array($work) && filled($work['url'] ?? null))
+                <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-work-summary>
+                    <div class="subheader mb-1" id="comms-context-work">Conversation</div>
+                    <dl class="row g-0 small mb-2">
+                        <dt class="col-4 text-secondary fw-normal">Owner</dt>
+                        <dd class="col-8 mb-1 fw-medium">{{ $work['owner_name'] ?? 'Unassigned' }}</dd>
+                        <dt class="col-4 text-secondary fw-normal">Follow-up</dt>
+                        <dd class="col-8 mb-1">{{ $work['follow_up_due_label'] ?? 'None' }}</dd>
+                    </dl>
+                    @include('operations.communications.workspace.partials.work-actions', ['work' => $work, 'variant' => 'rail'])
+                </section>
+            @endif
 
             <section class="p-3 border-bottom" aria-labelledby="comms-context-vehicle">
                 <div class="subheader mb-1" id="comms-context-vehicle">Vehicle &amp; visit</div>
@@ -139,18 +162,6 @@
                     </dl>
                 @endif
             </section>
-
-            @if (is_array($work) && filled($work['url'] ?? null))
-                <section class="p-3 border-bottom" aria-labelledby="comms-context-work" data-comms-work-summary>
-                    <div class="subheader mb-1" id="comms-context-work">Assignment</div>
-                    <dl class="row g-0 small mb-0">
-                        <dt class="col-4 text-secondary fw-normal">Owner</dt>
-                        <dd class="col-8 mb-1 fw-medium">{{ $work['owner_name'] ?? 'Unassigned' }}</dd>
-                        <dt class="col-4 text-secondary fw-normal">Follow-up</dt>
-                        <dd class="col-8 mb-1">{{ $work['follow_up_due_label'] ?? 'None' }}</dd>
-                    </dl>
-                </section>
-            @endif
 
             <section class="p-3 border-bottom" aria-labelledby="comms-context-visits">
                 <div class="subheader mb-1" id="comms-context-visits">Recent visits</div>

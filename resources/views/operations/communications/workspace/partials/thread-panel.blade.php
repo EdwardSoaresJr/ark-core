@@ -31,7 +31,7 @@
 @endphp
 
 <div class="card chat flex-fill overflow-hidden" data-comms-thread-card>
-    <div class="card-header d-block py-2" data-comms-thread-identity>
+    <div class="card-header d-block py-2 ark-comms-thread-header" data-comms-thread-identity>
         @if ($backHref !== null && $identity === null)
             <a class="btn btn-sm btn-ghost-secondary d-lg-none mb-1 ps-0" href="{{ $backHref }}">
                 <x-tabler.icon name="arrow-left" />
@@ -39,38 +39,30 @@
             </a>
         @endif
         @if ($identity !== null)
-            <div class="d-flex align-items-center gap-2 gap-md-3">
+            {{-- Read and reply here; the customer, their details and the work controls are in the context lane. --}}
+            <div class="d-flex align-items-center gap-2 ark-comms-thread-header-row">
                 @if ($backHref !== null)
                     <a class="btn btn-icon btn-sm btn-ghost-secondary d-lg-none flex-shrink-0" href="{{ $backHref }}" aria-label="Back to list" title="Back to list">
                         <x-tabler.icon name="arrow-left" />
                     </a>
                 @endif
-                <x-tabler.avatar :name="$identity['name'] ?? $thread['title'] ?? ''" class="flex-shrink-0 d-none d-sm-inline-flex" />
                 <div class="flex-fill overflow-hidden">
-                    <div class="d-flex flex-wrap align-items-center column-gap-2 row-gap-1">
+                    @php
+                        // The status, and texting when it is not allowed, follow the name on wide screens and lead
+                        // the second line on narrower ones, where the header's actions share the first line.
+                        $badges = static fn (string $class): string => (filled($identity['lane_label'] ?? null)
+                                ? '<span class="badge '.$laneBadge($identity['lane'] ?? 'needs').' flex-shrink-0 '.$class.'">'.e($identity['lane_label']).'</span>'
+                                : '')
+                            .(is_array($permission) && $permission['texting'] !== 'allowed'
+                                ? '<span class="badge bg-'.e($permission['tone']).'-lt flex-shrink-0 '.$class.'" title="'.e($permission['detail'] ?? '').'" data-comms-texting="'.e($permission['texting']).'">'.e($permission['label']).'</span>'
+                                : '');
+                    @endphp
+                    <div class="d-flex align-items-center column-gap-2 overflow-hidden">
                         <h3 class="card-title mb-0 text-truncate">{{ $identity['name'] ?? $thread['title'] ?? 'Unknown' }}</h3>
-                        @if (filled($identity['lane_label'] ?? null))
-                            <span class="badge {{ $laneBadge($identity['lane'] ?? 'needs') }}">{{ $identity['lane_label'] }}</span>
-                        @endif
-                        @if (is_array($permission))
-                            <span @class(['badge bg-'.$permission['tone'].'-lt', 'd-none d-sm-inline-flex' => $permission['texting'] === 'allowed']) title="{{ $permission['detail'] ?? '' }}" data-comms-texting="{{ $permission['texting'] }}">{{ $permission['label'] }}</span>
-                        @endif
-                        @if (filled($identity['link_status'] ?? $identity['customer_status'] ?? null))
-                            <span class="text-secondary small d-none d-md-inline">{{ $identity['link_status'] ?? $identity['customer_status'] }}</span>
-                        @endif
+                        {!! $badges('d-none d-xl-inline-flex') !!}
                     </div>
-                    <div class="d-none d-xxl-flex flex-wrap column-gap-3 small mt-1" data-comms-thread-contact>
-                        @if ($phoneDigits !== '')
-                            <a href="tel:{{ $phoneDigits }}">{{ $identity['phone'] }}</a>
-                        @endif
-                        @if (filled($identity['email'] ?? null))
-                            <a href="mailto:{{ $identity['email'] }}" class="text-truncate">{{ $identity['email'] }}</a>
-                        @endif
-                        @if (filled($identity['last_interaction_label'] ?? null))
-                            <span class="text-secondary">{{ $identity['last_interaction_label'] }}</span>
-                        @endif
-                    </div>
-                    <div class="d-flex flex-nowrap flex-md-wrap align-items-center column-gap-2 column-gap-md-3 small text-secondary overflow-hidden" data-comms-thread-visit>
+                    <div class="d-flex flex-nowrap align-items-center column-gap-2 small text-secondary overflow-hidden" data-comms-thread-visit>
+                        {!! $badges('d-xl-none') !!}
                         @if (filled($identity['ro_url'] ?? null))
                             <a href="{{ $identity['ro_url'] }}" class="fw-medium flex-shrink-0">{{ $identity['ro_label'] ?? 'Repair order' }}</a>
                         @elseif (filled($identity['ro_label'] ?? null))
@@ -80,11 +72,12 @@
                             <span class="text-truncate">{{ $identity['vehicle_label'] }}</span>
                         @endif
                         @if (filled($identity['ro_status'] ?? null))
-                            <span class="badge bg-secondary-lt flex-shrink-0">{{ $identity['ro_status'] }}</span>
+                            <span class="badge bg-secondary-lt flex-shrink-0 d-none d-sm-inline-flex">{{ $identity['ro_status'] }}</span>
                         @endif
                     </div>
                 </div>
-                <div class="btn-list ark-comms-actions flex-nowrap flex-shrink-0 align-self-start">
+                {{-- Tablet and phone: the context lane is a separate view, so the common actions stay here. --}}
+                <div class="btn-list ark-comms-actions flex-nowrap flex-shrink-0 d-xl-none">
                     @if ($phoneDigits !== '')
                         <a href="tel:{{ $phoneDigits }}" class="btn btn-sm" title="Call">
                             <x-tabler.icon name="phone" />
@@ -93,7 +86,7 @@
                     @endif
                     <button
                         type="button"
-                        class="btn btn-sm d-xl-none"
+                        class="btn btn-sm"
                         data-comms-context-toggle
                         aria-label="Customer"
                         title="Customer"
@@ -103,13 +96,11 @@
                         <x-tabler.icon name="user" />
                         <span class="ark-comms-action-label">Customer</span>
                     </button>
+                    @if (is_array($work) && filled($work['url'] ?? null))
+                        @include('operations.communications.workspace.partials.work-actions', ['work' => $work, 'variant' => 'menu'])
+                    @endif
                 </div>
             </div>
-            @if (is_array($work) && filled($work['url'] ?? null))
-                <div class="d-flex flex-wrap justify-content-md-end mt-1 mt-md-2">
-                    @include('operations.communications.workspace.partials.work-actions', ['work' => $work])
-                </div>
-            @endif
         @else
             <h3 class="card-title mb-0">Select a conversation</h3>
         @endif

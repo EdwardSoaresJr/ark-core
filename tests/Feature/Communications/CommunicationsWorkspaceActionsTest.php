@@ -5,8 +5,11 @@ use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
+use App\Ark\Operations\Conversations\ConversationLinker;
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Conversations\ConversationParticipant;
 use App\Ark\Operations\Conversations\ConversationParticipantResolver;
+use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Conversations\ConversationRead;
 use App\Ark\Operations\Conversations\ConversationReadTracker;
 use App\Ark\Operations\Conversations\ConversationRecorder;
@@ -291,6 +294,72 @@ test('only an active advisor can be assigned, whatever the request says', functi
         ->assertSessionHas('error', 'Choose an active advisor to assign.');
 
     expect($conversation->refresh()->owned_by_user_id)->toBeNull();
+});
+
+test('a resolved conversation keeps assign, follow-up and mark unread beside reopen, and assigning keeps it resolved', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $conversation = workspaceConversationFixture('7195558114', ConversationStatus::Resolved);
+
+    $page = $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'resolved', 'conversation' => $conversation->id]))
+        ->assertOk()
+        ->getContent();
+
+    foreach (['menu', 'rail'] as $variant) {
+        $start = strpos($page, 'data-comms-work-actions="'.$variant.'"');
+        $controls = substr($page, (int) $start, 9000);
+
+        expect($start)->not->toBeFalse()
+            ->and($controls)->toContain('Reopen')
+            ->toContain('Assign to me')
+            ->toContain('Follow up on')
+            ->toContain('data-comms-work-unread')
+            ->not->toContain('name="action" value="resolve"');
+    }
+
+    $this->actingAs($advisor)
+        ->post(route('operations.communications.conversations.work', $conversation), ['action' => 'assign', 'assign_to' => 'me', 'filter' => 'resolved'])
+        ->assertSessionHas('status', 'Assigned.');
+
+    expect($conversation->refresh()->status)->toBe(ConversationStatus::Resolved)
+        ->and($conversation->owned_by_user_id)->toBe($advisor->id);
+});
+
+test('the context lane names the conversation number apart from the customer main phone', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $pair = function (string $mainPhone, string $conversationPhone): Conversation {
+        $customer = Customer::query()->create(['first_name' => 'Two', 'last_name' => 'Numbers', 'phone' => $mainPhone]);
+        $conversation = workspaceConversationFixture($conversationPhone);
+        $participant = ConversationParticipant::query()->create([
+            'conversation_id' => $conversation->id,
+            'participant_type' => ConversationParticipantType::Customer,
+            'customer_id' => $customer->id,
+        ]);
+        app(ConversationLinker::class)->link($conversation, $customer);
+        ConversationMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'conversation_participant_id' => $participant->id,
+            'channel' => OperationalCommunicationChannel::Sms,
+            'direction' => OperationalCommunicationDirection::Inbound,
+            'body' => 'From my work phone',
+            'occurred_at' => now(),
+        ]);
+
+        return $conversation;
+    };
+
+    $other = $pair('7195558201', '7195558202');
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'all', 'conversation' => $other->id]))
+        ->assertOk()
+        ->assertSeeInOrder(['(719) 555-8202', 'This conversation', '(719) 555-8201', 'Main phone'], false);
+
+    $same = $pair('7195558203', '7195558203');
+    $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['filter' => 'all', 'conversation' => $same->id]))
+        ->assertOk()
+        ->assertDontSee('data-comms-context-primary-phone', false)
+        ->assertDontSee('This conversation', false);
 });
 
 function workspaceConversationFixture(string $phone, ConversationStatus $status = ConversationStatus::Open): Conversation
