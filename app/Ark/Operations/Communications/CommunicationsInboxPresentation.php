@@ -430,8 +430,8 @@ final class CommunicationsInboxPresentation
         $repairOrder = $repairOrderId !== null ? RepairOrder::query()->find($repairOrderId) : null;
         $approval = match (true) {
             $repairOrder === null => null,
-            $repairOrder->status === \App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval => 'Waiting on approval',
-            $repairOrder->status === \App\Ark\Operations\RepairOrders\RepairOrderStatus::Approved => 'Approved',
+            $repairOrder->status->is(\App\Ark\Operations\RepairOrders\RepairOrderStatus::WaitingApproval) => 'Waiting on approval',
+            $repairOrder->status->is(\App\Ark\Operations\RepairOrders\RepairOrderStatus::Approved) => 'Approved',
             default => null,
         };
         $balance = $repairOrder?->balanceDue();

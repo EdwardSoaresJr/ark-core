@@ -1,5 +1,7 @@
 <?php
 
+use App\Ark\Operations\Appointments\Appointment;
+use App\Ark\Operations\Appointments\AppointmentStatus;
 use App\Ark\Operations\Communications\CommunicationsWorkspaceProjection;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
@@ -7,6 +9,7 @@ use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
@@ -123,4 +126,38 @@ test('h3 global search returns customer matches as json', function (): void {
         ->assertOk()
         ->assertJsonPath('count', fn ($count) => $count >= 1)
         ->assertJsonFragment(['label' => 'Searchable Patron']);
+});
+
+test('the customer lane shows the visit approval, balance due and next appointment', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $repairOrder = financialCloseoutRepairOrder(RepairOrderStatus::WaitingApproval);
+    $repairOrder->customer->forceFill(['phone' => '7195554444'])->save();
+    $conversation = Conversation::query()->create([
+        'contact_surface' => ConversationContactSurface::Phone,
+        'contact_address' => '7195554444',
+        'status' => ConversationStatus::Open,
+        'waiting_on' => ConversationWaitingOn::Shop,
+        'posture_changed_at' => now(),
+    ]);
+    $page = fn () => $this->actingAs($advisor)
+        ->get(route('operations.communications.inbox', ['conversation' => $conversation->id, 'filter' => 'needs']))
+        ->assertOk();
+
+    $page()->assertSee('data-comms-context-visit', false)->assertSee('Waiting on approval');
+
+    issueFinalInvoiceFor($repairOrder);
+    $appointment = Appointment::query()->create([
+        'customer_id' => $repairOrder->customer_id,
+        'vehicle_id' => $repairOrder->vehicle_id,
+        'created_by_user_id' => $advisor->id,
+        'advisor_user_id' => $advisor->id,
+        'starts_at' => now()->addDays(2)->setTime(9, 0),
+        'ends_at' => now()->addDays(2)->setTime(10, 0),
+        'concern' => 'Brake follow-up',
+        'status' => AppointmentStatus::Scheduled,
+    ]);
+
+    $page()
+        ->assertSee('$150.00 due')
+        ->assertSee($appointment->starts_at->timezone(config('app.display_timezone'))->format('D M j, g:i A'));
 });
