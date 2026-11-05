@@ -220,12 +220,15 @@ final class CommunicationsInboxPresentation
         $tone = $overdue ? 'overdue' : $lane;
 
         if ($lane === 'resolved') {
-            $actor = $conversation?->owner?->name ?? 'an advisor';
+            $actor = $conversation?->owner?->name;
             $when = $conversation?->resolved_at
                 ? ShopDisplayTimezone::format($conversation->resolved_at, 'M j · g:i A')
                 : null;
             $title = 'Resolved';
-            $prompt = 'Resolved by '.$actor.($when ? ' at '.$when.'.' : '.');
+            // Staff resolving a conversation always own it; one no one owns was filed as history (a document send).
+            $prompt = $actor !== null
+                ? 'Resolved by '.$actor.($when ? ' at '.$when.'.' : '.')
+                : 'Nothing to do: filed as history'.($when ? ' at '.$when.'.' : '.');
             $excerpt = '';
         } elseif ($overdue) {
             $when = $conversation?->follow_up_due_at

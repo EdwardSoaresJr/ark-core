@@ -347,7 +347,9 @@ test('posture 1: an estimate emailed to a warranty company is history, not inbox
     expect(lane($message->conversation))->toBe('resolved')
         ->and($after['needs'])->toBe($before['needs'])
         ->and($after['waiting'])->toBe($before['waiting'])
-        ->and(app(ConversationTimeline::class)->forRepairOrder($repairOrder)->pluck('id'))->toContain($message->id);
+        ->and(app(ConversationTimeline::class)->forRepairOrder($repairOrder)->pluck('id'))->toContain($message->id)
+        ->and(workspacePage($this->advisor, $message->conversation))->toContain('Nothing to do: filed as history')
+        ->and(workspacePage($this->advisor, $message->conversation))->not->toContain('Resolved by an advisor');
 });
 
 test('posture 2: an estimate emailed to the customer is logged without creating inbox work', function () {
