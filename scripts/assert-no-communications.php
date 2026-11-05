@@ -78,6 +78,8 @@ const WORKSPACE_EXCEPTION = [
     'tests/Feature/Communications/CommunicationsWorkspaceSignalsTest.php' => 'Tests of the workspace signals extension point and its Core implementation',
     'resources/views/operations/communications/workspace/partials/thread-events.blade.php' => 'The thread\'s timeline entries, split from the thread panel so earlier pages render the same way',
     'database/migrations/2026_11_04_120000_index_conversation_messages_by_direction_channel_time.php' => 'Index for the workspace\'s unread-message badge query on every staff page (owner-approved, 2026-11-04)',
+    'app/Console/Commands/RepairDocumentEmailRecipientsCommand.php' => 'Reports and repairs email threads a document send attached to a customer who was not its recipient, with a backup and rollback (pending owner approval)',
+    'tests/Feature/Operations/DocumentEmailRecipientTest.php' => 'Tests that an emailed document stays its recipient\'s thread, on the repair order and in the customer\'s history (pending owner approval)',
 ];
 
 $namespaces = array_map(

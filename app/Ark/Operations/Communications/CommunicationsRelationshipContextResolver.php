@@ -120,7 +120,7 @@ final class CommunicationsRelationshipContextResolver
             $conversationLinks = $links->get($conversation->id) ?? collect();
             if ($customer === null) {
                 foreach ($conversationLinks as $link) {
-                    if ($link->linkable instanceof Customer) {
+                    if ($link->linkable instanceof Customer && $conversation->isWithCustomer($link->linkable)) {
                         $customer = $link->linkable;
                         break;
                     }

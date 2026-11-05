@@ -18,8 +18,11 @@
     $subject = trim((string) (($message?->metadata ?? [])['subject'] ?? ''));
     $tone = $event->tone->value;
     $attachmentCount = $message !== null && $message->relationLoaded('attachments') ? $message->attachments->count() : 0;
+    $recipient = $event->metadata['recipient_email'] ?? null;
+    $documentLabel = $event->metadata['document_label'] ?? null;
     $kindLabel = match (true) {
         in_array($tone, ['internal', 'system'], true) => 'Internal note',
+        filled($documentLabel) && $channelLabel === 'Email' => 'Document emailed',
         $channelLabel === 'MMS' => 'Picture message',
         $channelLabel === 'SMS' => 'Text message',
         $channelLabel !== '' => $channelLabel,
@@ -32,6 +35,8 @@
             $tone === 'shop' => 'Sent '.$occurredLabel.(filled($event->actor) ? ' by '.$event->actor : ''),
             default => 'Received '.$occurredLabel.(filled($event->actor) ? ' from '.$event->actor : ''),
         },
+        filled($documentLabel) ? 'Document: '.$documentLabel : null,
+        filled($recipient) ? 'To '.$recipient : null,
         filled($event->metadata['visit_label'] ?? null)
             ? 'About '.$event->metadata['visit_label'].(filled($event->metadata['visit_vehicle_label'] ?? null) ? ' · '.$event->metadata['visit_vehicle_label'] : '')
             : null,

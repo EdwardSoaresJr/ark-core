@@ -1446,7 +1446,6 @@
         "term: app/Ark/Operations/Appointments/AppointmentShowController.php",
         "term: app/Ark/Operations/Appointments/AppointmentSmsCopy.php",
         "term: app/Ark/Operations/Appointments/AppointmentSmsDelivery.php",
-        "term: app/Ark/Operations/Appointments/ScheduleContextResolver.php",
         "term: app/Ark/Operations/Appointments/SendAppointmentConfirmationSmsAction.php",
         "term: app/Ark/Operations/Appointments/SendAppointmentReminderSmsAction.php",
         "term: app/Ark/Operations/ArkManager/DeterministicAiManagerProvider.php",

@@ -94,6 +94,7 @@ final class DocumentEmailDelivery
                 $summary,
                 metadata: [
                     'document_id' => $document->id,
+                    'document_label' => $document->title,
                 ],
             );
 
@@ -112,7 +113,9 @@ final class DocumentEmailDelivery
             metadata: [
                 'actor_user_id' => $actor->id,
                 'document_id' => $document->id,
+                'document_label' => $document->title,
                 'customer_id' => $customer->id,
+                'recipient_email' => strtolower(trim($recipientEmail)),
             ],
         );
     }

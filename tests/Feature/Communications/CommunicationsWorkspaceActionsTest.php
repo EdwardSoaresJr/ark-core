@@ -359,7 +359,7 @@ test('the context lane names the conversation number apart from the customer mai
         ->get(route('operations.communications.inbox', ['filter' => 'all', 'conversation' => $same->id]))
         ->assertOk()
         ->assertDontSee('data-comms-context-primary-phone', false)
-        ->assertDontSee('This conversation', false);
+        ->assertDontSee('data-comms-context-thread-phone', false);
 });
 
 test('a workspace action answered in place says whether the conversation stays in the lane being worked', function (): void {

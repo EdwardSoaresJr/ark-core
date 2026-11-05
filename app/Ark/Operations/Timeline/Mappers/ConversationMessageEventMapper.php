@@ -5,13 +5,19 @@ namespace App\Ark\Operations\Timeline\Mappers;
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
 use App\Ark\Operations\Conversations\ConversationMessage;
+use App\Ark\Operations\Documents\Document;
 use App\Ark\Operations\Timeline\OperationalEventEntry;
 use App\Ark\Operations\Timeline\OperationalEventKind;
 use App\Ark\Operations\Timeline\OperationalEventSource;
 use App\Ark\Operations\Timeline\OperationalEventTone;
+use App\Ark\Runtime\Authorization\ArkCapability;
+use App\Models\User;
 
 final class ConversationMessageEventMapper
 {
+    /** @var array<int, string|null> */
+    private array $actorNames = [];
+
     public function map(ConversationMessage $message): OperationalEventEntry
     {
         $message->loadMissing(['participant.user', 'participant.customer', 'attachments']);
@@ -53,8 +59,12 @@ final class ConversationMessageEventMapper
                 : null,
             actor: $this->actorLabel($message),
             tone: $tone,
-            links: [],
+            links: $this->documentLinks($message),
             metadata: [
+                'recipient_email' => $message->direction === OperationalCommunicationDirection::Outbound
+                    ? ($message->metadata['recipient_email'] ?? null)
+                    : null,
+                'document_label' => $message->metadata['document_label'] ?? null,
                 'hub_filter' => $hubFilter,
                 'message_id' => $message->id,
                 'conversation_id' => $message->conversation_id,
@@ -107,6 +117,59 @@ final class ConversationMessageEventMapper
 
         return $participant->user?->name
             ?? $participant->customer?->name
-            ?? null;
+            ?? $this->actorName($message->metadata['actor_user_id'] ?? null);
+    }
+
+    /**
+     * The staff member who sent a message the shop recorded on their behalf, such as an emailed document.
+     */
+    private function actorName(mixed $userId): ?string
+    {
+        if (! is_numeric($userId)) {
+            return null;
+        }
+
+        $userId = (int) $userId;
+
+        return $this->actorNames[$userId] ??= User::query()->whereKey($userId)->value('name');
+    }
+
+    /**
+     * The emailed document, for staff allowed to open it.
+     *
+     * @return array<string, string>
+     */
+    private function documentLinks(ConversationMessage $message): array
+    {
+        $metadata = $message->metadata ?? [];
+        $viewer = auth()->user();
+
+        if (! $viewer instanceof User) {
+            return [];
+        }
+
+        $label = 'Open '.strtolower((string) ($metadata['document_label'] ?? 'document'));
+
+        if (is_numeric($metadata['estimate_document_id'] ?? null) && is_numeric($metadata['repair_order_id'] ?? null)
+            && $viewer->can(ArkCapability::RepairOrdersView->value)) {
+            return [$label => route('operations.repair-orders.estimate-documents.show', [
+                'repairOrder' => (int) $metadata['repair_order_id'],
+                'document' => (int) $metadata['estimate_document_id'],
+            ])];
+        }
+
+        if (is_numeric($metadata['document_id'] ?? null)
+            && ($viewer->can(ArkCapability::CustomersManage->value) || $viewer->can(ArkCapability::RepairOrdersView->value))) {
+            $customerId = Document::query()->whereKey((int) $metadata['document_id'])->value('customer_id');
+
+            if ($customerId !== null) {
+                return [$label => route('operations.customers.documents.show', [
+                    'customer' => (int) $customerId,
+                    'document' => (int) $metadata['document_id'],
+                ])];
+            }
+        }
+
+        return [];
     }
 }

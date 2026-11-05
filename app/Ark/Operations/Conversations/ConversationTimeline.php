@@ -32,10 +32,7 @@ class ConversationTimeline
      */
     public function forCustomerRelationship(Customer $customer, ?string $normalizedPhone = null, int $limit = 8): Collection
     {
-        $conversationIds = ConversationLink::query()
-            ->where('linkable_type', $customer->getMorphClass())
-            ->where('linkable_id', $customer->id)
-            ->pluck('conversation_id');
+        $conversationIds = $this->relationshipConversationIds($customer);
 
         if ($normalizedPhone !== null) {
             $phoneConversation = Conversation::query()
@@ -60,10 +57,7 @@ class ConversationTimeline
         ?string $normalizedPhone = null,
         int $limit = 20,
     ): Collection {
-        $conversationIds = ConversationLink::query()
-            ->where('linkable_type', $customer->getMorphClass())
-            ->where('linkable_id', $customer->id)
-            ->pluck('conversation_id');
+        $conversationIds = $this->relationshipConversationIds($customer);
 
         if ($normalizedPhone !== null) {
             $phoneConversation = Conversation::query()
@@ -103,6 +97,36 @@ class ConversationTimeline
             ->pluck('conversation_id');
 
         return $this->messagesForConversations($conversationIds, $limit);
+    }
+
+    /**
+     * @return Collection<int, ConversationMessage>
+     */
+    public function forConversation(Conversation $conversation, int $limit = 12): Collection
+    {
+        return $this->messagesForConversations(collect([$conversation->id]), $limit);
+    }
+
+    /**
+     * The customer's conversations and every conversation about one of their repair orders: a document emailed to
+     * a warranty company belongs to the job's history without being the customer's conversation.
+     *
+     * @return Collection<int, int|string>
+     */
+    private function relationshipConversationIds(Customer $customer): Collection
+    {
+        $repairOrderIds = RepairOrder::query()->where('customer_id', $customer->id)->pluck('id');
+
+        return ConversationLink::query()
+            ->where(fn ($query) => $query
+                ->where('linkable_type', $customer->getMorphClass())
+                ->where('linkable_id', $customer->id))
+            ->when($repairOrderIds->isNotEmpty(), fn ($query) => $query->orWhere(fn ($query) => $query
+                ->where('linkable_type', (new RepairOrder)->getMorphClass())
+                ->whereIn('linkable_id', $repairOrderIds->all())))
+            ->pluck('conversation_id')
+            ->unique()
+            ->values();
     }
 
     /**

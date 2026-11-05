@@ -904,11 +904,15 @@ final class CommunicationsWorkspaceProjection
                 'open_repair_orders' => $composerContext['open_repair_orders'],
                 'email_reply_url' => $this->signals->emailReplyUrl($conversation),
                 'sms_unavailable' => match (true) {
+                    $conversation->contact_surface === ConversationContactSurface::Email => 'This conversation is by email. Text the customer from the Customer panel.',
                     $conversation->contact_surface !== ConversationContactSurface::Phone => 'This conversation is not by phone.',
                     ! app(OutboundSmsTransport::class)->isConfigured() => 'Texting is not set up for this shop.',
                     default => null,
                 },
-                'email_address' => $identity['email'] ?? null,
+                // An email reply goes to the thread's own address, whoever the customer is.
+                'email_address' => $conversation->contact_surface === ConversationContactSurface::Email
+                    ? (string) $conversation->contact_address
+                    : ($identity['email'] ?? null),
             ],
         ];
     }

@@ -4,7 +4,6 @@ namespace App\Ark\Operations\Conversations;
 
 use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
-use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Messaging\MessageActionContract;
 use App\Ark\Operations\Messaging\MessageActionReply;
 use App\Ark\Operations\PhoneNumber;
@@ -274,11 +273,6 @@ final class ConversationTurnPrecedence
 
     private function linkedCustomerId(Conversation $conversation): ?int
     {
-        $link = ConversationLink::query()
-            ->where('conversation_id', $conversation->id)
-            ->where('linkable_type', (new Customer)->getMorphClass())
-            ->first();
-
-        return $link !== null ? (int) $link->linkable_id : null;
+        return $conversation->linkedCustomerId();
     }
 }

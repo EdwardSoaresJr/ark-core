@@ -84,7 +84,7 @@ test('with Core alone and no texting provider the composer keeps internal notes 
 
     expect($page)->toContain('id="comms-composer-tab-reply"')
         ->and($page)->toContain('data-comms-composer-unavailable="Texting is not set up for this shop."')
-        ->and($page)->toContain('data-comms-composer-unavailable="Email replies are not set up for this shop."')
+        ->and($page)->toContain('data-comms-composer-unavailable="This conversation is by text. Email the customer from the Customer panel."')
         ->and($page)->toContain('id="comms-composer-tab-internal"')
         ->and($page)->toContain('x-data="{ tab: \'internal\' }"')
         ->and($page)->not->toContain('data-comms-email-composer')

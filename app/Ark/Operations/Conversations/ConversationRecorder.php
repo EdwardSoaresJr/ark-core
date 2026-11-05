@@ -124,8 +124,22 @@ class ConversationRecorder
     ): ConversationMessage {
         $repairOrder->loadMissing(['customer', 'vehicle']);
 
-        $conversation = $this->resolver->forEmail($recipientEmail);
-        $this->linker->linkRepairOrderContext($conversation, $repairOrder);
+        // The thread is the recipient's. It concerns the repair order either way, but only the customer's own
+        // address makes it the customer's: a warranty company or vendor never becomes the customer's contact.
+        $recipient = strtolower(trim($recipientEmail));
+        $conversation = $this->resolver->forEmail($recipient);
+
+        if ($repairOrder->customer !== null && $conversation->isWithCustomer($repairOrder->customer)) {
+            $this->linker->linkRepairOrderContext($conversation, $repairOrder);
+        } else {
+            $this->linker->link($conversation, $repairOrder);
+
+            if ($repairOrder->vehicle !== null) {
+                $this->linker->link($conversation, $repairOrder->vehicle);
+            }
+
+            $this->participants->customer($conversation, null, $recipient);
+        }
 
         $participant = $this->participants->system($conversation, displayName: 'Shop');
 
@@ -138,6 +152,7 @@ class ConversationRecorder
             metadata: array_filter(array_merge([
                 'actor_user_id' => $actor->id,
                 'repair_order_id' => $repairOrder->id,
+                'recipient_email' => $recipient,
             ], $metadata), fn (mixed $value): bool => $value !== null && $value !== []),
         );
         $this->leaveShopHistoryWaiting($conversation);

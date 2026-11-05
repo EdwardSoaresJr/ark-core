@@ -86,7 +86,10 @@ class EstimateDocumentEmailDelivery
             $repairOrder,
             $actor,
             $recipientEmail,
-            $summary,
+            $summary,            metadata: [
+                'document_label' => 'Estimate',
+                'estimate_document_id' => $document?->id,
+            ],
         );
 
         $event = $this->communicationEvents->record(
