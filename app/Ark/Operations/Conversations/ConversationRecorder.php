@@ -128,6 +128,7 @@ class ConversationRecorder
         // address makes it the customer's: a warranty company or vendor never becomes the customer's contact.
         $recipient = strtolower(trim($recipientEmail));
         $conversation = $this->resolver->forEmail($recipient);
+        $opened = $conversation->wasRecentlyCreated;
 
         if ($repairOrder->customer !== null && $conversation->isWithCustomer($repairOrder->customer)) {
             $this->linker->linkRepairOrderContext($conversation, $repairOrder);
@@ -155,7 +156,7 @@ class ConversationRecorder
                 'recipient_email' => $recipient,
             ], $metadata), fn (mixed $value): bool => $value !== null && $value !== []),
         );
-        $this->leaveShopHistoryWaiting($conversation);
+        $this->fileDocumentSend($conversation, $opened);
 
         return $message;
     }
@@ -470,6 +471,26 @@ class ConversationRecorder
         $this->leaveShopHistoryWaiting($conversation);
 
         return $message;
+    }
+
+    /**
+     * A document send is history, not work. A thread the send opened is filed as resolved, so it neither waits nor
+     * asks for attention; a thread that already existed keeps its posture. A reply reopens the thread as usual, and
+     * staff can still set a follow-up on it.
+     */
+    public function fileDocumentSend(Conversation $conversation, bool $opened): void
+    {
+        if (! $opened) {
+            return;
+        }
+
+        $conversation->forceFill([
+            'status' => ConversationStatus::Resolved,
+            'waiting_on' => ConversationWaitingOn::Customer,
+            'resolved_at' => now(),
+            'follow_up_due_at' => null,
+            'posture_changed_at' => now(),
+        ])->save();
     }
 
     /**

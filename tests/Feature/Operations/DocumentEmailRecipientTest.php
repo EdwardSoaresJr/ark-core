@@ -10,9 +10,12 @@ use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationParticipant;
 use App\Ark\Operations\Conversations\ConversationParticipantResolver;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
+use App\Ark\Operations\Conversations\ConversationPosture;
 use App\Ark\Operations\Conversations\ConversationRecorder;
 use App\Ark\Operations\Conversations\ConversationResolver;
 use App\Ark\Operations\Conversations\ConversationTimeline;
+use App\Ark\Operations\Conversations\ConversationWaitingOn;
+use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Documents\DocumentEvent;
 use App\Ark\Operations\Documents\DocumentEventType;
@@ -29,6 +32,7 @@ use Database\Seeders\ArkAuthorizationSeeder;
 use Database\Seeders\RepairOrderStatusCatalogSeeder;
 use Database\Seeders\ShopSettingsSeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -284,9 +288,13 @@ test('G: existing threads attached to the wrong customer are reported, repaired 
         ->assertSuccessful();
     expect(linkedTo($legacy, $customer))->toBeTrue();
 
-    $this->artisan('ark:documents:repair-email-recipients --apply')->assertSuccessful();
+    expect(lane($legacy))->toBe('needs');
 
-    expect(linkedTo($legacy, $customer))->toBeFalse()
+    $this->artisan('ark:documents:repair-email-recipients --apply --file-as-history')->assertSuccessful();
+
+    expect(lane($legacy))->toBe('resolved')
+        ->and(lane($replied))->toBe('needs')
+        ->and(linkedTo($legacy, $customer))->toBeFalse()
         ->and(linkedTo($legacy, $repairOrder))->toBeTrue()
         ->and(linkedTo($replied, $customer))->toBeTrue()
         ->and(ConversationMessage::query()->whereKey($legacyMessage->id)->exists())->toBeTrue()
@@ -305,9 +313,188 @@ test('G: existing threads attached to the wrong customer are reported, repaired 
     $this->artisan('ark:documents:repair-email-recipients --rollback='.$backup->getPathname())->assertSuccessful();
 
     expect(linkedTo($legacy, $customer))->toBeTrue()
+        ->and(lane($legacy))->toBe('needs')
         ->and(ConversationParticipant::query()->where('conversation_id', $legacy->id)->whereNull('customer_id')
             ->where('participant_type', ConversationParticipantType::Customer->value)->exists())->toBeFalse()
         ->and(ConversationMessage::query()->whereKey($legacyMessage->id)->exists())->toBeTrue();
 
     File::delete($backup->getPathname());
+});
+
+/**
+ * Another customer with their own repair order, for threads several jobs share.
+ */
+function secondRepairOrder(string $first = 'Cy', string $email = 'cy.ward@example.test'): RepairOrder
+{
+    $customer = Customer::query()->create(['first_name' => $first, 'last_name' => 'Ward', 'phone' => '7195550282', 'email' => $email, 'customer_type' => 'Retail']);
+    $vehicle = Vehicle::query()->create(['customer_id' => $customer->id, 'plate' => 'RCP282', 'year' => 2020, 'make' => 'Jeep', 'model' => 'Wrangler']);
+
+    return RepairOrder::query()->create(['customer_id' => $customer->id, 'vehicle_id' => $vehicle->id, 'status' => RepairOrderStatus::Draft, 'concern_summary' => 'Warranty claim'])->fresh();
+}
+
+function lane(Conversation $conversation): string
+{
+    return app(ConversationWork::class)->lane($conversation->fresh());
+}
+
+test('posture 1: an estimate emailed to a warranty company is history, not inbox work', function () {
+    [, $repairOrder] = recipientFixture($this->advisor);
+    $before = app(ConversationWork::class)->counts();
+
+    $message = emailDocument($repairOrder, $this->advisor, 'claims@warranty.test');
+    $after = app(ConversationWork::class)->counts();
+
+    expect(lane($message->conversation))->toBe('resolved')
+        ->and($after['needs'])->toBe($before['needs'])
+        ->and($after['waiting'])->toBe($before['waiting'])
+        ->and(app(ConversationTimeline::class)->forRepairOrder($repairOrder)->pluck('id'))->toContain($message->id);
+});
+
+test('posture 2: an estimate emailed to the customer is logged without creating inbox work', function () {
+    [$customer, $repairOrder] = recipientFixture($this->advisor);
+    $before = app(ConversationWork::class)->counts();
+
+    $message = emailDocument($repairOrder, $this->advisor, 'bo.vale@example.test');
+
+    expect(lane($message->conversation))->toBe('resolved')
+        ->and(app(ConversationWork::class)->counts()['needs'])->toBe($before['needs'])
+        ->and(app(ConversationWork::class)->counts()['waiting'])->toBe($before['waiting'])
+        ->and(app(ConversationTimeline::class)->forCustomerRelationship($customer, '7195550181', 20)->pluck('id'))->toContain($message->id);
+});
+
+test('posture 3 and 4: a document emailed into an existing thread leaves its posture alone', function (string $lane) {
+    [, $repairOrder] = recipientFixture($this->advisor);
+    $thread = app(ConversationResolver::class)->forEmail('bo.vale@example.test');
+    $dueAt = now()->addDays(2)->startOfMinute();
+    $thread->forceFill($lane === 'needs'
+        ? ['waiting_on' => ConversationWaitingOn::Shop, 'posture_changed_at' => now()->subHour()]
+        : ['waiting_on' => ConversationWaitingOn::Customer, 'follow_up_due_at' => $dueAt, 'posture_changed_at' => now()->subHour()])->save();
+    $posture = $thread->fresh()->only(['status', 'waiting_on', 'follow_up_due_at', 'posture_changed_at', 'owned_by_user_id']);
+
+    emailDocument($repairOrder, $this->advisor, 'bo.vale@example.test');
+
+    expect(lane($thread))->toBe($lane)
+        ->and($thread->fresh()->only(array_keys($posture)))->toEqual($posture);
+})->with(['needs attention' => 'needs', 'waiting' => 'waiting']);
+
+test('posture 5: a reply to a document thread asks for attention', function () {
+    [, $repairOrder] = recipientFixture($this->advisor);
+    $thread = emailDocument($repairOrder, $this->advisor, 'claims@warranty.test')->conversation;
+
+    // As the hosted inbound-email handler records a reply: the message, then the reply's posture.
+    app(ConversationRecorder::class)->record($thread, app(ConversationParticipantResolver::class)->customer($thread, null, 'claims@warranty.test'),
+        OperationalCommunicationChannel::Email, OperationalCommunicationDirection::Inbound, 'Claim approved.');
+    app(ConversationPosture::class)->recordInbound($thread->fresh());
+
+    expect(lane($thread))->toBe('needs')
+        ->and($thread->fresh()->reopen_count)->toBe(1);
+});
+
+test('posture 6: a follow-up staff set on a document thread waits, then asks for attention when due', function () {
+    [, $repairOrder] = recipientFixture($this->advisor);
+    $thread = emailDocument($repairOrder, $this->advisor, 'claims@warranty.test')->conversation;
+    $dueAt = now()->addDay()->startOfHour();
+
+    $this->actingAs($this->advisor)
+        ->post(route('operations.communications.conversations.work', $thread), [
+            'action' => 'follow_up',
+            'due_at' => $dueAt->copy()->timezone(config('app.display_timezone'))->format('Y-m-d H:i'),
+            'posture_changed_at' => $thread->fresh()->posture_changed_at->toIso8601String(),
+        ])
+        ->assertRedirect();
+
+    expect(lane($thread))->toBe('waiting');
+
+    $this->travelTo($dueAt->copy()->addMinute());
+    expect(lane($thread))->toBe('needs');
+});
+
+test('event level: each repair order shows only its own sends from a thread several jobs share', function () {
+    [$customer, $first] = recipientFixture($this->advisor);
+    $second = RepairOrder::query()->create(['customer_id' => $customer->id, 'vehicle_id' => $first->vehicle_id, 'status' => RepairOrderStatus::Draft, 'concern_summary' => 'Second visit'])->fresh();
+    $other = secondRepairOrder();
+
+    $firstEstimate = emailDocument($first, $this->advisor, 'claims@warranty.test');
+    $secondEstimate = emailDocument($second, $this->advisor, 'claims@warranty.test');
+    $otherInvoice = emailDocument($other, $this->advisor, 'claims@warranty.test', 'Final invoice');
+    $timeline = app(ConversationTimeline::class);
+
+    expect($firstEstimate->conversation_id)->toBe($otherInvoice->conversation_id)
+        ->and($timeline->forConversation($firstEstimate->conversation)->pluck('id')->sort()->values()->all())
+        ->toBe(collect([$firstEstimate->id, $secondEstimate->id, $otherInvoice->id])->sort()->values()->all())
+        ->and($timeline->forRepairOrder($first)->pluck('id')->all())->toBe([$firstEstimate->id])
+        ->and($timeline->forRepairOrder($second)->pluck('id')->all())->toBe([$secondEstimate->id])
+        ->and($timeline->forRepairOrder($other)->pluck('id')->all())->toBe([$otherInvoice->id]);
+
+    $customerHistory = $timeline->forCustomerRelationship($customer, '7195550181', 50)->pluck('id');
+    $otherHistory = $timeline->forCustomerRelationship($other->customer, '7195550282', 50)->pluck('id');
+
+    expect($customerHistory)->toContain($firstEstimate->id, $secondEstimate->id)
+        ->and($customerHistory)->not->toContain($otherInvoice->id)
+        ->and($otherHistory->all())->toBe([$otherInvoice->id])
+        ->and($timeline->forCustomerRelationshipSince($other->customer, 0, '7195550282')->pluck('id')->all())->toBe([$otherInvoice->id]);
+});
+
+test('event level: one document to two recipients appears once per send on the repair order', function () {
+    [$customer, $repairOrder] = recipientFixture($this->advisor);
+
+    $toCustomer = emailDocument($repairOrder, $this->advisor, 'bo.vale@example.test');
+    $toWarranty = emailDocument($repairOrder, $this->advisor, 'claims@warranty.test');
+    $roIds = app(ConversationTimeline::class)->forRepairOrder($repairOrder)->pluck('id');
+
+    expect($roIds->filter(fn ($id): bool => in_array($id, [$toCustomer->id, $toWarranty->id], true))->count())->toBe(2)
+        ->and($roIds->duplicates())->toBeEmpty();
+});
+
+test('event level: a message that names no repair order stays in its thread and is never assigned to a job', function () {
+    [$customer, $repairOrder, $phoneThread] = recipientFixture($this->advisor);
+    $other = secondRepairOrder();
+    $timeline = app(ConversationTimeline::class);
+    $recorder = app(ConversationRecorder::class);
+    $participants = app(ConversationParticipantResolver::class);
+
+    // A third-party thread recorded before messages named their repair order.
+    $shared = app(ConversationResolver::class)->forEmail('claims@warranty.test');
+    foreach ([$repairOrder, $other] as $linked) {
+        ConversationLink::query()->create(['conversation_id' => $shared->id, 'linkable_type' => $linked->getMorphClass(), 'linkable_id' => $linked->id]);
+    }
+    $untagged = $recorder->record($shared, $participants->system($shared, 'Shop'), OperationalCommunicationChannel::Email,
+        OperationalCommunicationDirection::Outbound, 'Estimate emailed to claims@warranty.test.');
+    $asString = $recorder->record($shared, $participants->system($shared, 'Shop'), OperationalCommunicationChannel::Email,
+        OperationalCommunicationDirection::Outbound, 'Invoice emailed to claims@warranty.test.', metadata: ['repair_order_id' => (string) $repairOrder->id]);
+    $both = $recorder->record($shared, $participants->system($shared, 'Shop'), OperationalCommunicationChannel::Email,
+        OperationalCommunicationDirection::Outbound, 'Fleet summary emailed.', metadata: ['repair_order_ids' => [$repairOrder->id, $other->id]]);
+
+    // The customer's own text thread, linked to the job: untagged texts are the customer's conversation about it.
+    ConversationLink::query()->create(['conversation_id' => $phoneThread->id, 'linkable_type' => $repairOrder->getMorphClass(), 'linkable_id' => $repairOrder->id]);
+    $ownUntagged = $phoneThread->messages()->sole();
+    $ownOtherJob = $recorder->record($phoneThread, $participants->advisor($phoneThread, $this->advisor), OperationalCommunicationChannel::Sms,
+        OperationalCommunicationDirection::Outbound, 'About your other visit.', metadata: ['repair_order_id' => $other->id]);
+
+    $roIds = $timeline->forRepairOrder($repairOrder)->pluck('id');
+    expect($roIds)->toContain($asString->id, $both->id, $ownUntagged->id)
+        ->and($roIds)->not->toContain($untagged->id)
+        ->and($roIds)->not->toContain($ownOtherJob->id)
+        ->and($timeline->forRepairOrder($other)->pluck('id')->all())->toBe([$both->id])
+        ->and($timeline->forConversation($shared)->pluck('id'))->toContain($untagged->id)
+        ->and($timeline->forCustomerRelationship($customer, '7195550181', 50)->pluck('id'))->not->toContain($untagged->id)
+        ->and($timeline->forCustomerRelationship($other->customer, '7195550282', 50)->pluck('id')->all())->toBe([$both->id]);
+});
+
+test('event level: the repair order history takes a fixed number of queries however busy the shared thread is', function () {
+    [, $repairOrder] = recipientFixture($this->advisor);
+    $other = secondRepairOrder();
+    foreach (range(1, 15) as $i) {
+        emailDocument($other, $this->advisor, 'claims@warranty.test');
+    }
+    emailDocument($repairOrder, $this->advisor, 'claims@warranty.test');
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $messages = app(ConversationTimeline::class)->forRepairOrder($repairOrder->fresh());
+    $queries = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    expect($messages)->toHaveCount(1)
+        ->and($queries)->toBeLessThanOrEqual(9);
 });

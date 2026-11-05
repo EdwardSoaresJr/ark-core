@@ -8,6 +8,9 @@ use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationLink;
 use App\Ark\Operations\Conversations\ConversationParticipant;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
+use App\Ark\Operations\Conversations\ConversationStatus;
+use App\Ark\Operations\Conversations\ConversationWaitingOn;
+use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use Illuminate\Console\Command;
@@ -18,12 +21,14 @@ use Illuminate\Support\Facades\File;
  * Email threads that a document send attached to the repair order's customer although the document went to someone
  * else (a warranty company, a fleet manager). Repairing one removes only the customer link, so the thread stops
  * presenting itself as the customer's while staying on the repair order, and in the customer's history through it.
+ * With --file-as-history it is also filed as resolved, since a document send is history rather than inbox work.
  * Messages, attachments, send logs and audit history are never touched.
  */
 class RepairDocumentEmailRecipientsCommand extends Command
 {
     protected $signature = 'ark:documents:repair-email-recipients
                             {--apply : Remove the customer links of the threads that are safe to repair}
+                            {--file-as-history : With --apply, also file those threads as resolved history, as a document send now does}
                             {--rollback= : Restore the links and recipients removed or added by an earlier --apply, from its backup file}';
 
     protected $description = 'Report, repair or restore email threads attached to a customer who was not the recipient of an emailed document.';
@@ -43,7 +48,7 @@ class RepairDocumentEmailRecipientsCommand extends Command
         }
 
         $this->table(
-            ['Thread', 'Recipient', 'Customer', 'Repair orders', 'Messages', 'Replies', 'Verdict'],
+            ['Thread', 'Recipient', 'Customer', 'Repair orders', 'Messages', 'Replies', 'Lane', 'Verdict'],
             array_map(fn (array $row): array => [
                 $row['conversation_id'],
                 $row['recipient'],
@@ -51,6 +56,7 @@ class RepairDocumentEmailRecipientsCommand extends Command
                 implode(', ', $row['repair_orders']),
                 $row['messages'],
                 $row['inbound'],
+                $row['lane'],
                 $row['safe'] ? 'safe to repair' : 'manual review: '.$row['reason'],
             ], $candidates),
         );
@@ -68,9 +74,10 @@ class RepairDocumentEmailRecipientsCommand extends Command
             return self::SUCCESS;
         }
 
-        $backup = ['created_at' => now()->toIso8601String(), 'links' => [], 'participants' => []];
+        $backup = ['created_at' => now()->toIso8601String(), 'links' => [], 'participants' => [], 'postures' => []];
+        $fileAsHistory = (bool) $this->option('file-as-history');
 
-        DB::transaction(function () use ($safe, &$backup): void {
+        DB::transaction(function () use ($safe, $fileAsHistory, &$backup): void {
             foreach ($safe as $row) {
                 $link = ConversationLink::query()->findOrFail($row['link_id']);
                 $backup['links'][] = $link->getAttributes();
@@ -89,6 +96,19 @@ class RepairDocumentEmailRecipientsCommand extends Command
                     ]);
                     $backup['participants'][] = $participant->id;
                 }
+
+                $conversation = Conversation::query()->findOrFail($row['conversation_id']);
+                if ($fileAsHistory && $conversation->status !== ConversationStatus::Resolved) {
+                    $backup['postures'][$conversation->id] = array_intersect_key($conversation->getAttributes(),
+                        array_flip(['status', 'waiting_on', 'follow_up_due_at', 'resolved_at', 'posture_changed_at']));
+                    $conversation->forceFill([
+                        'status' => ConversationStatus::Resolved,
+                        'waiting_on' => ConversationWaitingOn::Customer,
+                        'resolved_at' => now(),
+                        'follow_up_due_at' => null,
+                        'posture_changed_at' => now(),
+                    ])->save();
+                }
             }
         });
 
@@ -96,14 +116,14 @@ class RepairDocumentEmailRecipientsCommand extends Command
         File::ensureDirectoryExists(dirname($path));
         File::put($path, json_encode($backup, JSON_PRETTY_PRINT));
 
-        $this->components->info('Repaired '.count($safe).' thread(s). Backup: '.$path);
+        $this->components->info('Repaired '.count($safe).' thread(s)'.($backup['postures'] !== [] ? ', '.count($backup['postures']).' filed as history' : '').'. Backup: '.$path);
         $this->components->info('Undo with --rollback='.$path);
 
         return self::SUCCESS;
     }
 
     /**
-     * @return list<array{conversation_id: int, link_id: int, recipient: string, customer_id: int, repair_orders: list<string>, messages: int, inbound: int, safe: bool, reason: string|null}>
+     * @return list<array{conversation_id: int, link_id: int, recipient: string, customer_id: int, repair_orders: list<string>, messages: int, inbound: int, lane: string, safe: bool, reason: string|null}>
      */
     private function candidates(): array
     {
@@ -163,6 +183,7 @@ class RepairDocumentEmailRecipientsCommand extends Command
                     'repair_orders' => RepairOrder::query()->whereIn('id', $repairOrderIds)->pluck('repair_order_id')->map(fn ($number): string => '#'.$number)->all(),
                     'messages' => $messages->count(),
                     'inbound' => $inbound,
+                    'lane' => app(ConversationWork::class)->lane($conversation),
                     'safe' => $reason === null,
                     'reason' => $reason,
                 ];
@@ -189,6 +210,10 @@ class RepairDocumentEmailRecipientsCommand extends Command
                     DB::table((new ConversationLink)->getTable())->insert($attributes);
                     $restored++;
                 }
+            }
+
+            foreach ($backup['postures'] ?? [] as $conversationId => $attributes) {
+                DB::table((new Conversation)->getTable())->where('id', $conversationId)->update($attributes);
             }
 
             ConversationParticipant::query()

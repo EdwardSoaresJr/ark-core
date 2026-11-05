@@ -102,6 +102,7 @@ final class DocumentEmailDelivery
         }
 
         $conversation = $this->conversationResolver->forEmail($recipientEmail);
+        $opened = $conversation->wasRecentlyCreated;
         $participant = $this->participants->system($conversation, displayName: 'Shop');
 
         $this->conversations->record(
@@ -118,6 +119,7 @@ final class DocumentEmailDelivery
                 'recipient_email' => strtolower(trim($recipientEmail)),
             ],
         );
+        $this->conversations->fileDocumentSend($conversation, $opened);
     }
 
     /**
