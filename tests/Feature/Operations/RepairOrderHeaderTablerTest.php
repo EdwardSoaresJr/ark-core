@@ -41,6 +41,7 @@ test('the repair order page begins with the Customer, Vehicle, and Visit panel, 
         ->and($xpath->query('//*['.repairOrderHeaderHasClass('page-pretitle').']')->length)->toBe(0)
         ->and($visit)->toBeInstanceOf(DOMElement::class)
         ->and(trim($xpath->query('.//h2[@data-ro-number]', $visit)->item(0)->textContent))->toBe($roNumber)
+        ->and($xpath->query('.//*[@data-ro-visit-heading]['.repairOrderHeaderHasClass('flex-wrap').']//h2[@data-ro-number]', $visit)->length)->toBe(1)
         ->and($xpath->query('//h2[normalize-space()="'.$roNumber.'"]')->length)->toBe(1)
         ->and($xpath->query('.//*[@id="review-toolbar"]', $visit)->length)->toBe(1)
         ->and($xpath->query('.//dt[normalize-space()="Visit type"]', $visit)->length)->toBe(1)

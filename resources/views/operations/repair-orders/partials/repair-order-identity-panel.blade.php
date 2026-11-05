@@ -170,7 +170,8 @@
             <h3 class="subheader mb-1" id="ro-identity-visit-heading">Visit</h3>
             <div class="ark-ro-visit">
                 <div class="min-w-0">
-                    <div class="d-flex align-items-start justify-content-between gap-2">
+                    {{-- Review Notes and Print drop below the RO number when the Visit column is too narrow for both. --}}
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2" data-ro-visit-heading>
                         <div class="d-flex flex-wrap align-items-center gap-2 min-w-0">
                             <h2 class="page-title mb-0 text-nowrap" data-ro-number>RO #{{ $repairOrder->repair_order_id }}</h2>
                             @unless ($statusSelectShown)
