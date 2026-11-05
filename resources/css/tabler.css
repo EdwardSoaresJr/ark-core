@@ -525,15 +525,6 @@
     }
 }
 
-/* On phones the Visit section (RO number, status, technician) comes first; it stays last in source so desktop reading and focus order run Customer, Vehicle, Visit. */
-@media (max-width: 767.98px) {
-    .ark-identity-panel > .ark-identity-panel__visit {
-        order: -1;
-        border-top: 0;
-        border-bottom: var(--tblr-border-width) solid var(--tblr-border-color);
-    }
-}
-
 /* Money columns align by digit. Tabler has no tabular-figures utility. */
 .ark-money {
     font-variant-numeric: tabular-nums;

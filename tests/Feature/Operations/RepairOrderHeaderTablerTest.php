@@ -44,6 +44,8 @@ test('the repair order page begins with the Customer, Vehicle, and Visit panel, 
         ->and($xpath->query('//h2[normalize-space()="'.$roNumber.'"]')->length)->toBe(1)
         ->and($xpath->query('.//*[@id="review-toolbar"]', $visit)->length)->toBe(1)
         ->and($xpath->query('.//dt[normalize-space()="Visit type"]', $visit)->length)->toBe(1)
+        ->and($xpath->query('.//dt[normalize-space()="Advisor"]', $visit)->length)->toBe(0)
+        ->and(array_map(fn (DOMElement $section): string => $section->getAttribute('data-identity-present'), iterator_to_array($xpath->query('//*['.repairOrderHeaderHasClass('ark-identity-panel').']/section'))))->toBe(['customer', 'vehicle', 'visit'])
         ->and($xpath->query('.//dt[normalize-space()="Status"]', $visit)->length)->toBe(0);
 });
 
