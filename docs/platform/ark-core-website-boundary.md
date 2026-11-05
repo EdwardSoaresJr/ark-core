@@ -21,11 +21,12 @@ Core may hold website **records** (sites, drafts, publications) and a signed rea
 - Leads as basic intake records: the website contact or booking request, `LeadSource::Website` for source labeling, `LeadRecorder`, and status. Lead conversations, replies, escalation, and interrupts for uncontacted leads belong to ARK Shop.
 - Ingress hygiene / spam observation on lead authority (no public marketing form required)
 - `PUBLIC_DOMAIN` / `surfaces.public` as an optional **host routing** seam for portal co-location - not a marketing CMS
-- Appointment **availability** configuration (when the shop can take requests) - presentation of booking UI is Website
+- Appointment **availability** configuration (when the shop can take requests)
+- Online booking: the shop's booking settings, the `/book` form, its popup script, and the request it records ([../booking/online-booking.md](../booking/online-booking.md)). A website, ARK Sites included, links to it and supplies the theme; it does not keep a booking form or calendar of its own.
 
 ## What left Core (REMOVE / left)
 
-- Public marketing pages (home, book, common problems, financing, RepairPal, SEO assets)
+- Public marketing pages (home, common problems, financing, RepairPal, SEO assets)
 - Growth opportunity / attribution / journey explorer product surfaces
 - Website admin / performance settings UI
 - `public_surface_settings`, `growth_integrations`, `growth_google_service_account`

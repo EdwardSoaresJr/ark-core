@@ -1,5 +1,6 @@
 <?php
 
+use App\Ark\Operations\Booking\Http\BookingSettingsController;
 use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Import\ShopCsv\ShopCsvImportController;
 use App\Ark\Operations\Workboard\JobBoardLaneSettingsController;
@@ -134,6 +135,31 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
 
     Route::patch('/app/settings/shop/appointments', [ShopOperationsSettingsController::class, 'updateAppointments'])
         ->name('operations.settings.shop.appointments.update');
+
+    Route::get('/app/settings/booking', [BookingSettingsController::class, 'edit'])
+        ->name('operations.settings.booking');
+    Route::patch('/app/settings/booking', [BookingSettingsController::class, 'update'])
+        ->name('operations.settings.booking.update');
+    Route::post('/app/settings/booking/services', [BookingSettingsController::class, 'storeService'])
+        ->name('operations.settings.booking.services.store');
+    Route::post('/app/settings/booking/services/starter', [BookingSettingsController::class, 'seedServices'])
+        ->name('operations.settings.booking.services.seed');
+    Route::patch('/app/settings/booking/services/{service}', [BookingSettingsController::class, 'updateService'])
+        ->name('operations.settings.booking.services.update');
+    Route::post('/app/settings/booking/services/{service}/move', [BookingSettingsController::class, 'moveService'])
+        ->name('operations.settings.booking.services.move');
+    Route::delete('/app/settings/booking/services/{service}', [BookingSettingsController::class, 'destroyService'])
+        ->name('operations.settings.booking.services.destroy');
+    Route::post('/app/settings/booking/questions', [BookingSettingsController::class, 'storeQuestion'])
+        ->name('operations.settings.booking.questions.store');
+    Route::patch('/app/settings/booking/questions/{question}', [BookingSettingsController::class, 'updateQuestion'])
+        ->name('operations.settings.booking.questions.update');
+    Route::delete('/app/settings/booking/questions/{question}', [BookingSettingsController::class, 'destroyQuestion'])
+        ->name('operations.settings.booking.questions.destroy');
+    Route::post('/app/settings/booking/closed-dates', [BookingSettingsController::class, 'storeClosedDate'])
+        ->name('operations.settings.booking.closed-dates.store');
+    Route::delete('/app/settings/booking/closed-dates/{exception}', [BookingSettingsController::class, 'destroyClosedDate'])
+        ->name('operations.settings.booking.closed-dates.destroy');
 
     Route::post('/app/settings/shop/appointments/bays', StoreScheduleBayController::class)
         ->name('operations.settings.shop.appointments.bays.store');

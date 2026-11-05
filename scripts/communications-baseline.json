@@ -1071,7 +1071,6 @@
         "reference: resources/views/operations/today/index.blade.php",
         "reference: resources/views/operations/work/partials/queue-comms-body.blade.php",
         "reference: resources/views/operations/work/partials/work-queue-band-header.blade.php",
-        "reference: resources/views/website/book.blade.php",
         "reference: routes/api.php",
         "reference: routes/operations/settings.php",
         "reference: routes/twilio-webhooks.php",

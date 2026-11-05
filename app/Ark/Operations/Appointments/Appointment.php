@@ -2,6 +2,8 @@
 
 namespace App\Ark\Operations\Appointments;
 
+use App\Ark\Operations\Booking\AppointmentRequest;
+use App\Ark\Operations\Booking\ServiceLocationType;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\RepairOrders\RepairOrder;
@@ -11,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'customer_id',
@@ -39,6 +42,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'reminder_hours_before',
     'reminder_day_before_sent_at',
     'reminder_hours_before_sent_at',
+    'service_location_type',
+    'service_address',
 ])]
 class Appointment extends Model
 {
@@ -58,7 +63,14 @@ class Appointment extends Model
             'reminder_hours_before' => 'integer',
             'reminder_day_before_sent_at' => 'datetime',
             'reminder_hours_before_sent_at' => 'datetime',
+            'service_location_type' => ServiceLocationType::class,
+            'service_address' => 'array',
         ];
+    }
+
+    public function bookingRequest(): HasOne
+    {
+        return $this->hasOne(AppointmentRequest::class);
     }
 
     public function customer(): BelongsTo

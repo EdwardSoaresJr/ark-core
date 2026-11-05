@@ -24,8 +24,9 @@ test('book does not redirect to an external booking origin', function (): void {
     config(['booking_surface.base_url' => 'https://lugsnplugs.com']);
 
     $this->get('/book')
-        ->assertNotFound()
-        ->assertSee('This website is not published.');
+        ->assertOk()
+        ->assertHeaderMissing('Location')
+        ->assertSee('data-booking-form', false);
 });
 
 test('guard passes when protected marketing hosts are not claimed', function (): void {

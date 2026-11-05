@@ -84,6 +84,10 @@
             @endif
 
             @stack('public-surface-footer')
+            @if (filled($publicSurfacePage) && $publicSurfacePage !== 'book' && Route::has('public.book.popup'))
+                {{-- Book Appointment links on the shop's website pages open the booking popup. --}}
+                <script src="{{ route('public.book.popup', ['v' => \App\Ark\Operations\Booking\Http\PublicBookingController::assetVersion()]) }}" defer></script>
+            @endif
         </div>
 
         <x-operations.image-lightbox />

@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Appointments;
 
+use App\Ark\Operations\Booking\PendingAppointmentRequests;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Runtime\Preferences\ScheduleBoardPreference;
 use Illuminate\Http\Request;
@@ -37,6 +38,7 @@ class AppointmentIndexController
         return view('operations.appointments.index', [
             'workspace' => $workspace,
             'requestDayStatus' => $requestDayStatus,
+            'bookingRequests' => app(PendingAppointmentRequests::class)->forSchedule($day),
         ]);
     }
 }

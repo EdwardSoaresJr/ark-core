@@ -7,6 +7,7 @@ use App\Ark\Operations\Appointments\AppointmentCreateController;
 use App\Ark\Operations\Appointments\AppointmentIndexController;
 use App\Ark\Operations\Appointments\AppointmentReminderSettingsController;
 use App\Ark\Operations\Appointments\AppointmentRequestExceptionController;
+use App\Ark\Operations\Booking\Http\AppointmentRequestDeclineController;
 use App\Ark\Operations\Appointments\AppointmentRescheduleController;
 use App\Ark\Operations\Appointments\AppointmentScheduleBoardViewController;
 use App\Ark\Operations\Appointments\AppointmentShowController;
@@ -649,6 +650,9 @@ SurfaceRouting::appRoutes(function (): void {
 
                 Route::post('/app/appointments/request-availability', AppointmentRequestExceptionController::class)
                     ->name('operations.appointments.request-availability');
+
+                Route::post('/app/appointment-requests/{appointmentRequest}/decline', AppointmentRequestDeclineController::class)
+                    ->name('operations.appointment-requests.decline');
             });
         });
 

@@ -94,7 +94,8 @@ test('homepage tells the shop story with the published photos', function (): voi
 
     $this->get('http://lugsnplugs.com/book?concern=Something%20Else')
         ->assertOk()
-        ->assertSee('value="Something Else" selected', false);
+        ->assertSee('name="concern_choice"', false)
+        ->assertDontSee('>Something Else</textarea>', false);
 });
 
 test('about page uses the team photo and shop facts', function (): void {
@@ -229,18 +230,17 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertOk()
         ->assertSee('<title>Request an appointment', false)
         ->assertSeeInOrder([
-            'public-page-title',
-            'This is a request. It does not reserve a bay.',
-            'public-canvas__layout--form',
+            'ark-booking__title',
+            'This is a request, not a confirmed appointment.',
+            'data-booking-form',
         ], false)
-        ->assertSee('public-book-form', false)
-        ->assertSee('public-lead-form__section', false)
-        ->assertSee('name="concern_category"', false)
+        ->assertSee('rel="canonical" href="https://lugsnplugs.com/book"', false)
+        ->assertSee('name="concern_choice"', false)
         ->assertSee('name="preferred_date"', false)
         ->assertSee('name="contact_preference"', false)
         ->assertSee('type="tel"', false)
         ->assertSee('type="email"', false)
-        ->assertSee('action="/leads"', false)
+        ->assertSee('action="/book"', false)
         ->assertSee('Send appointment request')
         ->assertDontSee('name="phone_code"', false)
         ->assertDontSee('name="email_code"', false)
@@ -299,7 +299,7 @@ test('diagnostics brakes and maintenance share one service page pattern', functi
 
     $this->get('http://lugsnplugs.com/book?concern=I%20need%20a%20diagnosis%20before%20parts%20are%20recommended.')
         ->assertOk()
-        ->assertSee('value="Diagnostics" selected', false)
+        ->assertSee('value="Diagnostics" checked', false)
         ->assertSee('I need a diagnosis before parts are recommended.');
 
     $this->get('http://lugsnplugs.com/services/brakes')
@@ -314,7 +314,7 @@ test('diagnostics brakes and maintenance share one service page pattern', functi
 
     $this->get('http://lugsnplugs.com/book?concern=My%20brakes%20need%20to%20be%20inspected.')
         ->assertOk()
-        ->assertSee('value="Brakes" selected', false)
+        ->assertSee('value="Brakes" checked', false)
         ->assertSee('My brakes need to be inspected.');
 
     $this->get('http://lugsnplugs.com/services/maintenance')
@@ -332,7 +332,7 @@ test('diagnostics brakes and maintenance share one service page pattern', functi
 
     $this->get('http://lugsnplugs.com/book?concern=The%20car%20is%20due%20for%20maintenance.')
         ->assertOk()
-        ->assertSee('value="Maintenance" selected', false)
+        ->assertSee('value="Maintenance" checked', false)
         ->assertSee('The car is due for maintenance.');
 
     $this->get('http://lugsnplugs.com/sitemap.xml')

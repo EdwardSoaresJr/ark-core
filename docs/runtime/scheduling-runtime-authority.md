@@ -84,6 +84,8 @@ Controllers, views, and guards must not duplicate the math.
 | `shop_settings.appointment_capacity_enforcement` | `warn` or `block` when beyond target |
 | `users.scheduling_hours` | Optional technician windows (null inherits shop) |
 
+Online booking ([../booking/online-booking.md](../booking/online-booking.md)) reads these stores and adds none of its own scheduling math. Requests (`appointment_requests`) reserve no capacity. A shop that opts into confirmed online bookings gets only starts that fit scheduling hours, its concurrency limit, and the day's target from `SchedulingCapacityCalculator`.
+
 **Business Hours (telephony) are the default scheduling windows.** Custom `scheduling_hours` are optional deviations (blacklist a day, narrower open/close). Request availability answers “when may customers request?” - not “when is the shop open?” Soft capacity is not consulted for `/book` day lists (v1).
 
 ## Soft capacity

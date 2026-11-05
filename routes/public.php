@@ -1,10 +1,33 @@
 <?php
 
-use App\Ark\Runtime\Surfaces\SurfaceRouting;
+use App\Ark\Operations\Booking\Http\PublicBookingController;
 use App\Ark\Operations\Leads\Measurement\RememberAppointmentAttribution;
+use App\Ark\Runtime\Surfaces\SurfaceRouting;
 use App\Ark\Website\Http\CoreWebsiteResponse;
 use App\Ark\Website\Http\PublicWebsiteController;
 use Illuminate\Support\Facades\Route;
+
+// Online booking lives on the customer host whether or not the shop publishes a website here,
+// so another site's Book Appointment button can open it (see PublicBookingController).
+SurfaceRouting::portalRoutes(function (): void {
+    Route::middleware(['web', CoreWebsiteResponse::class])->group(function (): void {
+        Route::get('/book', [PublicBookingController::class, 'show'])
+            ->middleware(RememberAppointmentAttribution::class)
+            ->name('public.book');
+        Route::post('/book', [PublicBookingController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('public.book.store');
+        Route::get('/book/availability', [PublicBookingController::class, 'availability'])
+            ->middleware('throttle:60,1')
+            ->name('public.book.availability');
+        Route::get('/book/popup.js', [PublicBookingController::class, 'popupScript'])
+            ->name('public.book.popup');
+        Route::get('/book/received/{uuid}', [PublicBookingController::class, 'receipt'])
+            ->middleware('signed')
+            ->where('uuid', '[a-z0-9-]{8,36}')
+            ->name('public.book.received');
+    });
+});
 
 SurfaceRouting::publicRoutes(function (): void {
     Route::middleware(['web', CoreWebsiteResponse::class, RememberAppointmentAttribution::class])->group(function (): void {
@@ -14,7 +37,6 @@ SurfaceRouting::publicRoutes(function (): void {
         Route::get('/services/{service}', [PublicWebsiteController::class, 'service'])
             ->where('service', 'diagnostics|brakes|maintenance')
             ->name('public.services.show');
-        Route::get('/book', [PublicWebsiteController::class, 'book'])->name('public.book');
         Route::get('/contact', [PublicWebsiteController::class, 'contact'])->name('public.contact');
         Route::get('/common-problems', [PublicWebsiteController::class, 'problems'])->name('public.common-problems.index');
         Route::get('/common-problems/{slug}', [PublicWebsiteController::class, 'problem'])

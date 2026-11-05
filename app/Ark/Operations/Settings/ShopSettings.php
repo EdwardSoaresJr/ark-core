@@ -143,6 +143,7 @@ use InvalidArgumentException;
     'operational_profile',
     'scheduling_hours',
     'appointment_request_availability',
+    'online_booking',
     'workstation_idle_lock_minutes',
 ])]
 class ShopSettings extends Model
@@ -448,6 +449,7 @@ TEXT;
         'appointment_capacity_enforcement' => 'string',
         'scheduling_hours' => 'array',
         'appointment_request_availability' => 'array',
+        'online_booking' => 'array',
         'portal_signature_required' => 'boolean',
         'customer_part_show_manufacturer_number' => 'boolean',
         'customer_part_show_supplier' => 'boolean',
@@ -611,6 +613,7 @@ TEXT;
             'appointment_capacity_enforcement' => AppointmentCapacityEnforcement::Warn->value,
             'scheduling_hours' => null,
             'appointment_request_availability' => null,
+            'online_booking' => null,
             'quick_reply_templates' => CommunicationsQuickReplyTemplates::defaults(),
         ];
     }
