@@ -147,6 +147,34 @@
  * cards, badges, and controls inside are Tabler classes. Lines and fills use Tabler variables so the board follows the theme.
  */
 
+/*
+ * Docked repair order footer. On phones it is one row of full-size touch targets clear of the home indicator;
+ * the Tools sheet holds what does not fit.
+ */
+[data-ro-orientation-header] {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (max-width: 767.98px) {
+    [data-ro-footer] .btn {
+        min-height: 2.75rem;
+    }
+
+    [data-ro-footer] .btn-icon {
+        min-width: 2.75rem;
+    }
+}
+
+.ark-ro-footer-sheet {
+    max-height: 75vh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.ark-ro-footer-sheet .list-group-item {
+    min-height: 2.75rem;
+}
+
 /* The capacity strip's daily bars: seven across from lg, Bootstrap's row-cols stop at six. */
 .ark-cal-capacity-week {
     display: grid;

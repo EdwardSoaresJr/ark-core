@@ -391,25 +391,25 @@ test('the dealer quote capture and linked quote dialogs are Tabler modals', func
         ->and($xpath->query('.//*[@data-linked-parts-quote-dialog]//*[contains(@class, "modal-content")][@x-ref="dialog"]', $linked)->length)->toBe(1);
 });
 
-test('the PartsTech import panel renders Tabler markup with the same import form', function (): void {
+test('the PartsTech Cart Manager renders a Tabler modal with pull, assignment and import controls', function (): void {
     [$repairOrder] = panelsTablerRepairOrder();
     $this->actingAs(panelsTablerAdvisor());
 
-    $html = view('operations.repair-orders.partials.repair-order-partstech-import', [
+    $html = view('operations.repair-orders.partials.repair-order-partstech-cart-manager', [
         'repairOrder' => $repairOrder,
         'estimateVersion' => $repairOrder->estimate_version,
-        'partstechPoNumber' => 'RO'.$repairOrder->repair_order_id,
-        'partstechPrepareUrl' => null,
         'canImportQuote' => true,
     ])->render();
     $xpath = panelsTablerXpath($html);
-    $panel = panelsTablerOne($xpath, '//*[@id="partstech-quote-import"]');
+    $panel = panelsTablerOne($xpath, '//*[@id="partstech-cart-manager"]');
 
     expect(panelsTablerLegacyClasses($panel))->toBe([])
-        ->and($panel->getAttribute('x-data'))->toContain('arkPartsTechQuoteImport(')
-        ->and($html)->toContain('@ark:partstech-pull-quote.window="loadQuote(false, $event.detail?.concernId)"')
-        ->and($html)->toContain(':action="importUrl" @submit="beforeSubmit($event)"')
-        ->and($xpath->query('.//button[@id="partstech-import-submit-btn"][@type="submit"][contains(@class, "btn-primary")]', $panel)->length)->toBe(1);
+        ->and($panel->getAttribute('x-data'))->toContain('arkPartsTechCartManager(')
+        ->and($html)->toContain('@ark:partstech-pull-quote.window="openManager({ pull: true, concernId: $event.detail?.concernId })"')
+        ->and($xpath->query('.//*[contains(@class, "modal-dialog")][contains(@class, "modal-fullscreen-md-down")]', $panel)->length)->toBe(1)
+        ->and($xpath->query('.//button[@data-cart-pull]', $panel)->length)->toBe(1)
+        ->and($xpath->query('.//input[@name="'.App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD.'"][@x-ref="estimateVersion"]', $panel)->length)->toBe(1)
+        ->and($xpath->query('.//button[@data-cart-import][contains(@class, "btn-primary")]', $panel)->length)->toBe(1);
 });
 
 test('the lazy workspace tabs render Tabler markup and keep their forms and hooks', function (): void {
