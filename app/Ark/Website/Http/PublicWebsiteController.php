@@ -2,11 +2,18 @@
 
 namespace App\Ark\Website\Http;
 
+use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Customers\Recognition\CustomerRecognitionProjection;
+use App\Ark\Operations\Leads\LeadContactPreference;
 use App\Ark\Operations\Leads\LeadFormRenderStamp;
 use App\Ark\Operations\Leads\LeadIngressContext;
 use App\Ark\Operations\Leads\LeadIngressHygiene;
 use App\Ark\Operations\Leads\LeadRecorder;
 use App\Ark\Operations\Leads\LeadSource;
+use App\Ark\Operations\Leads\Public\LeadEmailVerification;
+use App\Ark\Operations\Leads\Public\LeadPhoneVerification;
+use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
+use App\Ark\Operations\Leads\Public\PublicBookWizardConcerns;
 use App\Ark\Operations\PhoneNumber;
 use App\Ark\Website\PublicLegacyRedirect;
 use App\Ark\Website\PublicLlmsTxt;
@@ -21,6 +28,7 @@ use App\Ark\Website\WebsiteHosts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 final class PublicWebsiteController
@@ -103,6 +111,49 @@ final class PublicWebsiteController
             'website' => $website,
             'page' => $page,
             'seo' => $seo,
+        ]);
+    }
+
+    public function book(Request $request): View|Response|RedirectResponse
+    {
+        $website = $this->requireWebsite($request);
+        if (! $website instanceof PublishedWebsite) {
+            return $website;
+        }
+
+        $availability = PublicAppointmentRequest::availabilityProjection();
+        $customer = Auth::guard('portal')->user();
+        $recognition = $customer instanceof Customer
+            ? app(CustomerRecognitionProjection::class)->forCustomer($customer)
+            : null;
+        $prefill = trim((string) $request->query('concern', ''));
+        $selected = PublicBookWizardConcerns::matchCategory($prefill);
+        $details = '';
+        if ($selected === PublicBookWizardConcerns::SOMETHING_ELSE) {
+            $details = $prefill;
+        } elseif ($selected !== null && $prefill !== '' && strcasecmp($prefill, $selected) !== 0) {
+            $details = $prefill;
+        }
+
+        $seo = $this->seo($website, 'book', $request);
+        $seo['title'] = 'Request an appointment';
+
+        return view('website.book', [
+            'website' => $website,
+            'seo' => $seo,
+            'closed' => ! ($availability['accepting_requests'] ?? false),
+            'dates' => $availability['dates'] ?? [],
+            'periods' => $availability['periods'] ?? [],
+            'concerns' => PublicBookWizardConcerns::options(),
+            'selectedConcern' => $selected ?? PublicBookWizardConcerns::options()[0],
+            'concernDetails' => $details,
+            'vehicles' => $recognition['vehicles'] ?? [],
+            'contactName' => trim((string) ($recognition['customer']['first_name'] ?? '').' '.($recognition['customer']['last_name'] ?? '')),
+            'contactPhone' => (string) ($recognition['customer']['phone'] ?? ''),
+            'contactEmail' => (string) ($recognition['customer']['email'] ?? ''),
+            'contactPreferences' => LeadContactPreference::cases(),
+            'phoneVerificationReady' => config('website.book_identity_verification', true) !== false && app(LeadPhoneVerification::class)->bookIdentityGateReady(),
+            'emailVerificationReady' => config('website.book_identity_verification', true) !== false && app(LeadEmailVerification::class)->ready(),
         ]);
     }
 

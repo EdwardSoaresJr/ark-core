@@ -30,7 +30,7 @@ use Illuminate\Support\Str;
     'mode',
     'lead_id',
     'appointment_id',
-    'booking_service_id',
+    'service_reference',
     'service_name',
     'service_option',
     'customer_id',
@@ -94,11 +94,6 @@ class AppointmentRequest extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
-    }
-
-    public function service(): BelongsTo
-    {
-        return $this->belongsTo(BookingService::class, 'booking_service_id');
     }
 
     public function customer(): BelongsTo

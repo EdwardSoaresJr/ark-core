@@ -52,13 +52,11 @@ test('appointment request from a new customer reaches the core lead recorder', f
     publishCutoverSite();
     Http::fake();
     Mail::fake();
-    // A weekday morning, so today's morning window is still open.
-    \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse('2026-11-09 08:00', 'America/Denver'));
 
     $this->get('http://lugsnplugs.arksms.com/book?concern=Brakes')
         ->assertOk()
         ->assertSee('Request an appointment')
-        ->assertSee('This is a request, not a confirmed appointment.')
+        ->assertSee('does not reserve a bay')
         ->assertSee('Check Engine Light')
         ->assertSee('Morning')
         ->assertSee('Afternoon')
@@ -140,7 +138,7 @@ test('paused appointment requests do not create a lead', function (): void {
 
     $this->get('http://lugsnplugs.arksms.com/book')
         ->assertOk()
-        ->assertSee('We are not taking online bookings for the next few days.')
+        ->assertSee('Online appointment requests are paused')
         ->assertDontSee('Send appointment request');
 
     $this->post('http://lugsnplugs.arksms.com/leads', bookPayload())
@@ -276,11 +274,11 @@ test('book verification controls follow the sent and verified state', function (
 
     $this->get('http://lugsnplugs.arksms.com/book')
         ->assertOk()
-        ->assertSee('Text me a code')
-        ->assertSee('Email me a code instead')
+        ->assertSee('Text me a verification code')
+        ->assertSee('Verify with email instead')
         ->assertDontSee('name="phone_code"', false)
         ->assertDontSee('name="email_code"', false)
-        ->assertSee('name="concern_choice"', false)
+        ->assertSee('name="concern_category"', false)
         ->assertSee('name="preferred_period"', false);
 
     $this->followingRedirects()

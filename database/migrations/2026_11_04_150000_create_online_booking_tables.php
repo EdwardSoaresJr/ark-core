@@ -6,8 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Online booking: shop-configured services and questions, the customer's appointment request,
- * and the service location an appointment happens at (shop, customer site, fleet yard).
+ * Online appointment requests: the shop's scheduling policy for them, the request a customer sends
+ * (whatever booking product collected it), and the service location an appointment happens at
+ * (shop, customer site, fleet yard).
  */
 return new class extends Migration
 {
@@ -15,36 +16,6 @@ return new class extends Migration
     {
         Schema::table('shop_settings', function (Blueprint $table) {
             $table->json('online_booking')->nullable();
-        });
-
-        Schema::create('booking_services', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 120);
-            $table->string('slug', 80)->unique('booking_services_slug_uq');
-            $table->string('description', 500)->nullable();
-            $table->unsignedSmallInteger('duration_minutes')->default(60);
-            $table->decimal('labor_hours', 5, 2)->nullable();
-            $table->string('concern_prompt', 500)->nullable();
-            $table->string('location_mode', 16)->default('shop');
-            $table->boolean('requires_approval')->default(false);
-            $table->boolean('is_public')->default(true);
-            $table->json('options')->nullable();
-            $table->unsignedInteger('position')->default(0);
-            $table->timestamp('archived_at')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('booking_questions', function (Blueprint $table) {
-            $table->id();
-            $table->string('label', 200);
-            $table->string('help', 500)->nullable();
-            $table->string('type', 16)->default('text');
-            $table->json('choices')->nullable();
-            $table->boolean('required')->default(false);
-            $table->json('service_ids')->nullable();
-            $table->unsignedInteger('position')->default(0);
-            $table->timestamp('archived_at')->nullable();
-            $table->timestamps();
         });
 
         Schema::create('appointment_requests', function (Blueprint $table) {
@@ -55,9 +26,9 @@ return new class extends Migration
             $table->string('mode', 16)->default('request');
             $table->foreignId('lead_id')->nullable()->constrained('leads')->nullOnDelete();
             $table->foreignId('appointment_id')->nullable()->constrained('appointments')->nullOnDelete();
-            $table->foreignId('booking_service_id')->nullable()->constrained('booking_services')->nullOnDelete();
+            $table->string('service_reference', 64)->nullable();
             $table->string('service_name', 120)->nullable();
-            $table->string('service_option', 120)->nullable();
+            $table->string('service_option', 255)->nullable();
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->foreignId('vehicle_id')->nullable()->constrained('vehicles')->nullOnDelete();
             $table->string('contact_name', 120);
@@ -99,8 +70,6 @@ return new class extends Migration
         });
 
         Schema::dropIfExists('appointment_requests');
-        Schema::dropIfExists('booking_questions');
-        Schema::dropIfExists('booking_services');
 
         Schema::table('shop_settings', function (Blueprint $table) {
             $table->dropColumn('online_booking');

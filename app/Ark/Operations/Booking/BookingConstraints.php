@@ -89,7 +89,7 @@ final class BookingConstraints
             'constraint' => $constraint::class,
             'required' => $required,
             'date' => $candidate->date,
-            'service_id' => $candidate->context->service?->id,
+            'service' => $candidate->context->serviceReference ?? $candidate->context->serviceName,
             'location' => $candidate->context->location->value,
             'error' => $e->getMessage(),
         ]);

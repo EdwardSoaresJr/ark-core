@@ -8,18 +8,19 @@ use App\Ark\Operations\Booking\AppointmentRequest;
 use App\Ark\Operations\Booking\AppointmentRequestStatus;
 use App\Ark\Operations\Booking\BookingAvailability;
 use App\Ark\Operations\Booking\BookingConstraints;
+use App\Ark\Operations\Booking\BookingContext;
 use App\Ark\Operations\Booking\BookingMode;
-use App\Ark\Operations\Booking\BookingQuestion;
-use App\Ark\Operations\Booking\BookingService;
+use App\Ark\Operations\Booking\BookingRefused;
 use App\Ark\Operations\Booking\BookingSettings;
 use App\Ark\Operations\Booking\Contracts\AdvisoryBookingConstraint;
 use App\Ark\Operations\Booking\Contracts\BookingAvailabilityConstraint;
 use App\Ark\Operations\Booking\Contracts\BookingCandidate;
 use App\Ark\Operations\Booking\Events\AppointmentRequestDecided;
 use App\Ark\Operations\Booking\Events\AppointmentRequestReceived;
+use App\Ark\Operations\Booking\OnlineBooking;
+use App\Ark\Operations\Booking\OnlineBookingRequest;
 use App\Ark\Operations\Booking\ServiceLocationType;
 use App\Ark\Operations\Leads\Lead;
-use App\Ark\Operations\Leads\LeadFormRenderStamp;
 use App\Ark\Operations\Leads\LeadState;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -61,7 +62,6 @@ beforeEach(function (): void {
         'online_booking' => null,
     ]);
     ShopSettings::forgetCurrent();
-    config(['website.book_identity_verification' => false]);
 
     Workstation::query()->create([
         'shop_settings_id' => ShopSettings::current()->id,
@@ -78,120 +78,82 @@ afterEach(function (): void {
     Carbon::setTestNow();
 });
 
-function bookingSettings(array $changes): void
+function bookingPolicy(array $changes): void
 {
     $settings = ShopSettings::current();
     $settings->forceFill(['online_booking' => BookingSettings::normalize(array_replace_recursive(BookingSettings::forShop($settings), $changes))])->save();
     ShopSettings::forgetCurrent();
 }
 
-function bookingPost(array $overrides = []): array
+function brakesContext(array $overrides = []): BookingContext
 {
-    return array_replace_recursive([
-        'form_rendered_at' => LeadFormRenderStamp::issue(now()->subMinute()),
+    return new BookingContext(...array_merge([
+        'serviceName' => 'Brakes',
+        'option' => 'Rear',
+        'perVehicleMinutes' => 120,
+        'serviceReference' => 'svc-brakes',
+    ], $overrides));
+}
+
+function onlineRequest(array $overrides = []): OnlineBookingRequest
+{
+    return new OnlineBookingRequest(...array_merge([
+        'booking' => brakesContext(),
+        'contactName' => 'Pat Example',
+        'contactPhone' => '719-555-0142',
+        'contactEmail' => 'pat@example.test',
+        'preferredDate' => '2026-11-10',
+        'preferredPeriod' => 'morning',
         'concern' => 'Grinding noise when braking',
-        'preferred_date' => '2026-11-10',
-        'preferred_period' => 'morning',
-        'contact_name' => 'Pat Example',
-        'contact_phone' => '719-555-0142',
-        'contact_email' => 'pat@example.test',
         'vehicles' => [['year' => 2016, 'make' => 'Honda', 'model' => 'Civic']],
-        'book_intent' => 'submit',
-    ], $overrides);
+    ], $overrides));
 }
 
-function brakesService(array $attributes = []): BookingService
+function submitOnline(array $overrides = []): AppointmentRequest
 {
-    return BookingService::query()->create(array_merge([
-        'name' => 'Brakes',
-        'description' => 'Brake inspection and repair.',
-        'duration_minutes' => 90,
-        'location_mode' => 'shop',
-        'is_public' => true,
-        'options' => [['label' => 'Front'], ['label' => 'Rear', 'duration_minutes' => 120]],
-    ], $attributes));
+    return app(OnlineBooking::class)->submit(onlineRequest($overrides))->request;
 }
 
-test('the booking form shows what the shop configured in settings', function (): void {
-    $brakes = brakesService();
-    BookingService::query()->create(['name' => 'Fleet PM', 'duration_minutes' => 60, 'is_public' => false]);
-    BookingQuestion::query()->create(['label' => 'Is it under warranty?', 'type' => 'yes_no', 'required' => true]);
-    BookingQuestion::query()->create(['label' => 'Which pads do you prefer?', 'type' => 'choice', 'choices' => ['Ceramic', 'Semi-metallic'], 'service_ids' => [$brakes->id]]);
+function refusal(array $overrides): BookingRefused
+{
+    try {
+        submitOnline($overrides);
+    } catch (BookingRefused $e) {
+        return $e;
+    }
 
-    $this->actingAs($this->admin)->patch(route('operations.settings.booking.update'), [
-        'section' => 'form',
-        'enabled' => '1',
-        'mode' => 'request',
-        'title' => 'Book your brake visit',
-        'intro' => 'We answer within one business hour.',
-        'instructions' => 'Drop keys in the box by the door.',
-        'request_confirmation' => 'Thanks, we will call you.',
-        'instant_confirmation' => 'See you then.',
-        'concern_choices' => "Squealing\nPulsing pedal",
-        'fields' => ['email' => 'hidden', 'vehicle' => 'required', 'concern' => 'optional', 'vin' => '1', 'contact_preference' => '0', 'drivability' => '1'],
-        'max_vehicles' => 1,
-    ])->assertRedirect();
+    throw new RuntimeException('Expected the booking to be refused.');
+}
 
-    $page = $this->get('/book')->assertOk();
-
-    $page->assertSee('Book your brake visit')
-        ->assertSee('We answer within one business hour.')
-        ->assertSee('Drop keys in the box by the door.')
-        ->assertSee('Brakes')
-        ->assertDontSee('Fleet PM')
-        ->assertSee('Squealing')
-        ->assertDontSee('Check Engine Light')
-        ->assertSee('Is it under warranty?')
-        ->assertSee('Which pads do you prefer?')
-        ->assertSee('It is not safe to drive')
-        ->assertSee('name="vehicles[0][vin]"', false)
-        ->assertDontSee('name="contact_email"', false)
-        ->assertDontSee('name="contact_preference"', false)
-        ->assertSee('This is a request, not a confirmed appointment.');
-});
-
-test('service and problem pages prefill the concern or the service', function (): void {
-    brakesService(['slug' => 'brakes']);
-    bookingSettings(['concern_choices' => ['Brakes', 'Strange Noise']]);
-
-    $this->get('/book?concern=Brakes')->assertOk()
-        ->assertSee('value="Brakes" checked', false);
-
-    $this->get('/book?service=brakes')->assertOk()
-        ->assertSee('data-concern-prompt=""'."\n".'                                        checked', false);
-
-    $this->get('/book?concern='.urlencode('Grinding when I stop'))->assertOk()
-        ->assertSee('>Grinding when I stop</textarea>', false);
-});
-
-test('a customer request waits for the shop and reserves nothing', function (): void {
+test('a request waits for the shop, reserves nothing, and keeps what the booking product sent', function (): void {
     Event::fake([AppointmentRequestReceived::class]);
-    $brakes = brakesService();
 
-    $response = $this->post('/book', bookingPost(['service_id' => $brakes->id, 'service_option' => 'Rear']));
-    $response->assertStatus(303);
+    $request = submitOnline([
+        'answers' => [['label' => 'Under warranty?', 'answer' => 'Yes']],
+        'context' => ['host' => 'shop.example.test', 'embedded' => true],
+        'unsafeToDrive' => true,
+    ]);
 
-    $request = AppointmentRequest::query()->sole();
     expect($request->status)->toBe(AppointmentRequestStatus::Pending)
         ->and($request->mode)->toBe(BookingMode::Request)
         ->and($request->appointment_id)->toBeNull()
         ->and($request->serviceLabel())->toBe('Brakes · Rear')
+        ->and($request->service_reference)->toBe('svc-brakes')
         ->and($request->duration_minutes)->toBe(120)
+        ->and((float) $request->workload_hours)->toBe(2.0)
         ->and($request->preferred_date->toDateString())->toBe('2026-11-10')
+        ->and($request->concern)->toContain('Brakes (Rear)')->toContain('Grinding noise')->toContain('Unsafe to drive')
+        ->and($request->staffNotes())->toContain('Under warranty? Yes')
+        ->and($request->context['host'])->toBe('shop.example.test')
         ->and($request->lead->state)->toBe(LeadState::Received)
         ->and(Appointment::query()->count())->toBe(0);
 
     Event::assertDispatched(AppointmentRequestReceived::class);
-
-    $this->get($response->headers->get('Location'))->assertOk()
-        ->assertSee('Request received')
-        ->assertSee('Not confirmed yet.');
 });
 
 test('staff see the request on the schedule, schedule it, and the request is answered', function (): void {
     Event::fake([AppointmentRequestDecided::class]);
-    $this->post('/book', bookingPost())->assertStatus(303);
-    $request = AppointmentRequest::query()->sole();
+    $request = submitOnline();
 
     $this->actingAs($this->admin)->get(route('operations.appointments.index', ['day' => '2026-11-10']))
         ->assertOk()
@@ -231,8 +193,7 @@ test('staff see the request on the schedule, schedule it, and the request is ans
 });
 
 test('staff can decline a request and it closes the lead', function (): void {
-    $this->post('/book', bookingPost())->assertStatus(303);
-    $request = AppointmentRequest::query()->sole();
+    $request = submitOnline();
 
     $this->actingAs($this->admin)->post(route('operations.appointment-requests.decline', $request), ['reason' => 'Fully booked'])
         ->assertRedirect();
@@ -249,26 +210,22 @@ test('staff can decline a request and it closes the lead', function (): void {
 test('closed dates and closed weekdays are not offered and cannot be submitted', function (): void {
     AppointmentRequestException::query()->create(['date' => '2026-11-11', 'mode' => 'disable', 'reason' => 'Veterans Day']);
 
-    $json = $this->getJson('/book/availability')->assertOk()->json();
-    $dates = array_column($json['dates'], 'date');
+    $dates = array_column(app(OnlineBooking::class)->availability(brakesContext())['dates'], 'date');
+    expect($dates)->not->toContain('2026-11-11')->not->toContain('2026-11-14')->toContain('2026-11-12');
 
-    expect($dates)->not->toContain('2026-11-11')
-        ->and($dates)->not->toContain('2026-11-14')
-        ->and($dates)->toContain('2026-11-12');
-
-    $this->post('/book', bookingPost(['preferred_date' => '2026-11-11']))->assertStatus(422)->assertSee('That day is no longer available.');
-    $this->post('/book', bookingPost(['preferred_date' => '2026-11-14']))->assertStatus(422);
-    expect(AppointmentRequest::query()->count())->toBe(0);
+    expect(refusal(['preferredDate' => '2026-11-11'])->getMessage())->toBe('That day is no longer available. Pick another day.')
+        ->and(refusal(['preferredDate' => '2026-11-14'])->field)->toBe('preferred_date')
+        ->and(AppointmentRequest::query()->count())->toBe(0);
 });
 
 test('a daily intake limit fills a day', function (): void {
-    bookingSettings(['limits' => ['daily_requests' => 2]]);
+    bookingPolicy(['limits' => ['daily_requests' => 2]]);
 
-    $this->post('/book', bookingPost(['contact_phone' => '719-555-0101']))->assertStatus(303);
-    $this->post('/book', bookingPost(['contact_phone' => '719-555-0102']))->assertStatus(303);
-    $this->post('/book', bookingPost(['contact_phone' => '719-555-0103']))->assertStatus(422)->assertSee('Fully booked');
+    submitOnline(['contactPhone' => '719-555-0101']);
+    submitOnline(['contactPhone' => '719-555-0102']);
+    expect(refusal(['contactPhone' => '719-555-0103'])->getMessage())->toBe('Fully booked');
 
-    $day = collect($this->getJson('/book/availability')->json('dates'))->firstWhere('date', '2026-11-10');
+    $day = collect(app(OnlineBooking::class)->availability(brakesContext())['dates'])->firstWhere('date', '2026-11-10');
     expect($day['available'])->toBeFalse()->and($day['reason'])->toBe('Fully booked');
 });
 
@@ -284,26 +241,22 @@ test('a day at its scheduling target is not offered', function (): void {
         'status' => AppointmentStatus::Scheduled,
     ]);
 
-    $day = collect($this->getJson('/book/availability')->json('dates'))->firstWhere('date', '2026-11-10');
-    expect($day['available'])->toBeFalse();
+    $day = fn () => collect(app(OnlineBooking::class)->availability(brakesContext())['dates'])->firstWhere('date', '2026-11-10');
+    expect($day()['available'])->toBeFalse();
 
-    bookingSettings(['limits' => ['respect_capacity' => false]]);
-    $day = collect($this->getJson('/book/availability')->json('dates'))->firstWhere('date', '2026-11-10');
-    expect($day['available'])->toBeTrue();
+    bookingPolicy(['limits' => ['respect_capacity' => false]]);
+    expect($day()['available'])->toBeTrue();
 });
 
-test('instant booking confirms only an open time, and never twice', function (): void {
-    bookingSettings(['mode' => 'instant', 'limits' => ['concurrent_appointments' => 1]]);
-    $oil = BookingService::query()->create(['name' => 'Oil change', 'duration_minutes' => 60, 'is_public' => true]);
+test('confirmed booking takes only an open time, and never twice', function (): void {
+    bookingPolicy(['mode' => 'instant', 'limits' => ['concurrent_appointments' => 1]]);
+    $oil = new BookingContext(serviceName: 'Oil change', perVehicleMinutes: 60);
 
-    $slots = $this->getJson('/book/availability?service_id='.$oil->id.'&date=2026-11-10')->json('slots');
-    expect(array_column($slots, 'value'))->toContain('08:00')->toContain('16:00')->not->toContain('16:30');
+    $slots = array_column(app(OnlineBooking::class)->availability($oil, '2026-11-10')['slots'], 'value');
+    expect($slots)->toContain('08:00')->toContain('16:00')->not->toContain('16:30');
 
-    $first = $this->post('/book', bookingPost(['service_id' => $oil->id, 'preferred_time' => '09:00', 'preferred_period' => null]));
-    $first->assertStatus(303);
-
+    $request = submitOnline(['booking' => $oil, 'preferredTime' => '09:00', 'preferredPeriod' => null]);
     $appointment = Appointment::query()->sole();
-    $request = AppointmentRequest::query()->sole();
     expect($appointment->status)->toBe(AppointmentStatus::Scheduled)
         ->and($appointment->created_by_user_id)->toBeNull()
         ->and($request->status)->toBe(AppointmentRequestStatus::Scheduled)
@@ -311,167 +264,108 @@ test('instant booking confirms only an open time, and never twice', function ():
         ->and($request->lead->state)->toBe(LeadState::Scheduled)
         ->and(ShopDisplayTimezone::format($appointment->starts_at, 'H:i'))->toBe('09:00');
 
-    $this->get($first->headers->get('Location'))->assertSee('Your appointment is booked');
-
-    $this->post('/book', bookingPost(['service_id' => $oil->id, 'preferred_time' => '09:00', 'contact_phone' => '719-555-0177']))
-        ->assertStatus(422)
-        ->assertSee('That time was just taken.');
-    $this->post('/book', bookingPost(['service_id' => $oil->id, 'preferred_time' => '09:30', 'contact_phone' => '719-555-0177']))
-        ->assertStatus(422);
+    expect(refusal(['booking' => $oil, 'preferredTime' => '09:00', 'contactPhone' => '719-555-0177'])->getMessage())->toBe('That time was just taken. Pick another time.');
+    refusal(['booking' => $oil, 'preferredTime' => '09:30', 'contactPhone' => '719-555-0177']);
     expect(Appointment::query()->count())->toBe(1);
 
-    $slots = array_column($this->getJson('/book/availability?service_id='.$oil->id.'&date=2026-11-10')->json('slots'), 'value');
+    $slots = array_column(app(OnlineBooking::class)->availability($oil, '2026-11-10')['slots'], 'value');
     expect($slots)->not->toContain('09:00')->not->toContain('08:30')->toContain('10:00');
 });
 
-test('a service that needs approval stays a request even when the shop takes instant bookings', function (): void {
-    bookingSettings(['mode' => 'instant']);
-    $diag = BookingService::query()->create(['name' => 'Diagnostics', 'duration_minutes' => 60, 'is_public' => true, 'requires_approval' => true]);
+test('a booking that needs approval stays a request even when the shop takes confirmed bookings', function (): void {
+    bookingPolicy(['mode' => 'instant']);
+    $diag = new BookingContext(serviceName: 'Diagnostics', perVehicleMinutes: 60, requiresApproval: true);
 
-    expect($this->getJson('/book/availability?service_id='.$diag->id)->json('mode'))->toBe('request');
+    expect(app(OnlineBooking::class)->availability($diag)['mode'])->toBe('request');
 
-    $this->post('/book', bookingPost(['service_id' => $diag->id, 'preferred_time' => '09:00']))->assertStatus(303);
-
-    expect(Appointment::query()->count())->toBe(0)
-        ->and(AppointmentRequest::query()->sole()->status)->toBe(AppointmentRequestStatus::Pending);
+    $request = submitOnline(['booking' => $diag, 'preferredTime' => '09:00']);
+    expect(Appointment::query()->count())->toBe(0)->and($request->status)->toBe(AppointmentRequestStatus::Pending);
 });
 
-test('mobile service requires an address inside the service area and carries it to the appointment', function (): void {
-    bookingSettings(['service_area' => ['postal_codes' => ['80903', '80904'], 'message' => 'We only drive to central Springs.']]);
-    $mobile = BookingService::query()->create(['name' => 'Mobile battery swap', 'duration_minutes' => 60, 'is_public' => true, 'location_mode' => 'mobile']);
+test('on-site work must be inside the service area and carries its address to the appointment', function (): void {
+    bookingPolicy(['service_area' => ['postal_codes' => ['80903', '80904'], 'message' => 'We only drive to central Springs.']]);
+    $at = fn (string $zip) => new BookingContext(serviceName: 'Mobile battery swap', perVehicleMinutes: 60, location: ServiceLocationType::CustomerSite,
+        address: ['line1' => '12 Pine St', 'city' => 'Colorado Springs', 'postal_code' => $zip, 'notes' => 'Blue gate']);
 
-    $this->post('/book', bookingPost(['service_id' => $mobile->id]))->assertStatus(422)->assertSee('street address');
+    expect(refusal(['booking' => $at('81001')])->getMessage())->toBe('We only drive to central Springs.');
 
-    $this->post('/book', bookingPost(['service_id' => $mobile->id, 'address' => ['line1' => '1 Far Rd', 'city' => 'Pueblo', 'postal_code' => '81001']]))
-        ->assertStatus(422)
-        ->assertSee('We only drive to central Springs.');
-
-    $this->post('/book', bookingPost(['service_id' => $mobile->id, 'address' => ['line1' => '12 Pine St', 'city' => 'Colorado Springs', 'state' => 'CO', 'postal_code' => '80903', 'notes' => 'Blue gate']]))
-        ->assertStatus(303);
-
-    $request = AppointmentRequest::query()->sole();
+    $request = submitOnline(['booking' => $at('80903')]);
     expect($request->locationType())->toBe(ServiceLocationType::CustomerSite)
-        ->and($request->service_address['postal_code'])->toBe('80903')
-        ->and($request->staffNotes())->toContain('Blue gate');
+        ->and($request->addressLabel())->toBe('12 Pine St, Colorado Springs, 80903')
+        ->and($request->staffNotes())->toContain('Access notes: Blue gate');
 
     $this->actingAs($this->admin)->post(route('operations.appointments.store'), [
         'lead_id' => $request->lead_id,
+        'appointment_request_id' => $request->id,
         'contact_name' => 'Pat Example',
         'contact_phone' => '719-555-0142',
         'starts_date' => '2026-11-10',
-        'starts_time' => '10:00',
+        'starts_time' => '09:00',
         'duration_minutes' => 60,
         'concern' => 'Battery',
     ])->assertRedirect();
 
     $appointment = Appointment::query()->sole();
     expect($appointment->service_location_type)->toBe(ServiceLocationType::CustomerSite)
-        ->and($appointment->service_address['line1'])->toBe('12 Pine St')
-        ->and($request->refresh()->status)->toBe(AppointmentRequestStatus::Scheduled);
-
-    $this->actingAs($this->admin)->get(route('operations.appointments.show', $appointment))
-        ->assertSee('At the customer&#039;s location', false)
-        ->assertSee('12 Pine St');
+        ->and($appointment->service_address['line1'])->toBe('12 Pine St');
 });
 
-test('a fleet can request several vehicles in one visit and the workload scales', function (): void {
-    bookingSettings(['max_vehicles' => 3]);
-    $pm = BookingService::query()->create(['name' => 'Fleet PM', 'duration_minutes' => 60, 'labor_hours' => 1.5, 'is_public' => true, 'location_mode' => 'either']);
+test('a fleet visit scales its length and workload with the vehicle count', function (): void {
+    $pm = new BookingContext(serviceName: 'Fleet PM', perVehicleMinutes: 60, perVehicleHours: 1.5, vehicleCount: 3, location: ServiceLocationType::FleetSite,
+        address: ['line1' => '1 Yard Rd', 'city' => 'Pueblo', 'postal_code' => '81001']);
 
-    $this->post('/book', bookingPost([
-        'service_id' => $pm->id,
-        'location' => 'fleet_site',
-        'address' => ['line1' => '400 Yard Way', 'city' => 'Colorado Springs', 'postal_code' => '80915'],
-        'vehicles' => [
-            ['year' => 2020, 'make' => 'Ford', 'model' => 'Transit'],
-            ['year' => 2021, 'make' => 'Ford', 'model' => 'Transit'],
-            ['year' => 2019, 'make' => 'Ram', 'model' => 'ProMaster', 'vin' => '3c6trvdg0ke500001'],
-        ],
-    ]))->assertStatus(303);
+    $request = submitOnline(['booking' => $pm, 'vehicles' => [
+        ['year' => 2019, 'make' => 'Ford', 'model' => 'Transit'],
+        ['year' => 2020, 'make' => 'Ford', 'model' => 'Transit'],
+        ['year' => 2021, 'make' => 'Ram', 'model' => 'ProMaster'],
+    ]]);
 
-    $request = AppointmentRequest::query()->sole();
     expect($request->vehicle_count)->toBe(3)
-        ->and((float) $request->workload_hours)->toBe(4.5)
         ->and($request->duration_minutes)->toBe(180)
-        ->and($request->locationType())->toBe(ServiceLocationType::FleetSite)
-        ->and($request->vehicleLabels()[2])->toContain('VIN 3C6TRVDG0KE500001');
+        ->and((float) $request->workload_hours)->toBe(4.5)
+        ->and($request->vehicleLabels())->toHaveCount(3)
+        ->and($request->staffNotes())->toContain('Vehicles (3)');
 });
 
-test('a resubmitted form or a second request for the same day saves one request', function (): void {
-    $payload = bookingPost(['submission_key' => str_repeat('a', 40)]);
-    $this->post('/book', $payload)->assertStatus(303);
-    $this->post('/book', $payload)->assertStatus(303);
-    $this->post('/book', bookingPost())->assertStatus(303);
+test('a resubmitted booking or a second request for the same day saves one request', function (): void {
+    $first = submitOnline(['submissionKey' => 'abc123']);
+    $again = submitOnline(['submissionKey' => 'abc123']);
+    $sameDay = submitOnline(['concern' => 'Also the wipers']);
 
-    expect(AppointmentRequest::query()->count())->toBe(1)
-        ->and(Lead::query()->count())->toBe(1);
+    expect($again->id)->toBe($first->id)->and($sameDay->id)->toBe($first->id)
+        ->and(AppointmentRequest::query()->count())->toBe(1);
 });
 
-test('spam is caught without creating a request', function (): void {
-    $this->post('/book', bookingPost(['company_website' => 'https://spam.example']))->assertStatus(303);
-    expect(Lead::query()->count())->toBe(0);
+test('spam is recorded as a quiet lead without a request', function (): void {
+    $outcome = app(OnlineBooking::class)->submit(onlineRequest(['spam' => true, 'spamSignals' => ['too_fast']]));
 
-    $this->post('/book', bookingPost(['form_rendered_at' => '']))->assertStatus(303);
-    expect(AppointmentRequest::query()->count())->toBe(0)
+    expect($outcome->request)->toBeNull()
+        ->and(AppointmentRequest::query()->count())->toBe(0)
         ->and(Lead::query()->sole()->state)->toBe(LeadState::Spam);
-
-    $this->post('/book', bookingPost(['form_rendered_at' => LeadFormRenderStamp::issue(now())]))
-        ->assertStatus(422)
-        ->assertSee('Wait a few seconds');
 });
 
-test('a re-rendered form keeps its first render time, so sending right after a code check is not too fast', function (): void {
-    $firstRender = now()->subMinute();
-    $page = $this->post('/book', bookingPost([
-        'form_rendered_at' => LeadFormRenderStamp::issue($firstRender),
-        'book_intent' => 'check_phone_code',
-        'phone_code' => '000000',
-    ]))->assertOk();
+test('settings hold only the scheduling policy, and staff without settings access cannot change it', function (): void {
+    $this->actingAs($this->admin)->get(route('operations.settings.booking'))->assertOk()
+        ->assertSee('Online requests')
+        ->assertSee('Requests or confirmed appointments')
+        ->assertDontSee('Website popup');
 
-    preg_match('/name="form_rendered_at" value="([^"]+)"/', $page->getContent(), $stamp);
-    expect(LeadFormRenderStamp::read(html_entity_decode($stamp[1]))['rendered_at']->getTimestamp())->toBe($firstRender->getTimestamp());
+    $this->actingAs($this->admin)->patch(route('operations.settings.booking.update'), [
+        'mode' => 'instant', 'daily_requests' => 8, 'respect_capacity' => '1', 'service_area_postal_codes' => '80903 80904',
+    ])->assertRedirect();
 
-    $this->post('/book', bookingPost(['form_rendered_at' => html_entity_decode($stamp[1])]))->assertStatus(303);
-    expect(AppointmentRequest::query()->count())->toBe(1);
-});
+    expect(BookingSettings::forShop())->toBe([
+        'mode' => 'instant',
+        'service_area' => ['postal_codes' => ['80903', '80904'], 'message' => ''],
+        'limits' => ['daily_requests' => 8, 'respect_capacity' => true, 'concurrent_appointments' => null],
+    ]);
 
-test('online booking can be turned off', function (): void {
-    bookingSettings(['enabled' => false]);
+    $this->actingAs($this->admin)->post(route('operations.settings.booking.closed-dates.store'), ['date' => '2026-11-26', 'reason' => 'Thanksgiving'])->assertRedirect();
+    expect(AppointmentRequestException::query()->sole()->disablesRequests())->toBeTrue();
 
-    $this->get('/book')->assertOk()->assertSee('Online booking is not available right now.')->assertDontSee('data-booking-form', false);
-    $this->post('/book', bookingPost())->assertStatus(422);
-    expect(AppointmentRequest::query()->count())->toBe(0);
-});
-
-test('the popup page may only be framed by the shop and its listed websites', function (): void {
-    bookingSettings(['popup' => ['allowed_domains' => ['lugsdemo-site.example']]]);
-
-    $embed = $this->get('/book?embed=1')->assertOk();
-    expect($embed->headers->get('Content-Security-Policy'))
-        ->toBe("frame-ancestors 'self' https://lugsdemo-site.example https://www.lugsdemo-site.example")
-        ->and($embed->headers->has('X-Frame-Options'))->toBeFalse();
-    $embed->assertDontSee('customer-shell', false)->assertSee('name="embed" value="1"', false);
-
-    expect($this->get('/book')->headers->get('Content-Security-Policy'))->toBe("frame-ancestors 'self'");
-
-    $script = $this->get('/book/popup.js')->assertOk();
-    expect($script->headers->get('Content-Type'))->toContain('javascript')
-        ->and($script->getContent())->toContain('"allowedHosts":["lugsdemo-site.example"]')
-        ->and($script->getContent())->toContain('ark-book-dialog');
-});
-
-test('too many tries in a minute get a page the popup can show', function (): void {
-    bookingSettings(['popup' => ['allowed_domains' => ['lugsdemo-site.example']]]);
-
-    foreach (range(1, 10) as $try) {
-        $this->post('/book', bookingPost(['embed' => '1', 'book_intent' => 'check_phone_code', 'phone_code' => '000000']))->assertOk();
-    }
-
-    $refused = $this->post('/book', bookingPost(['embed' => '1']));
-    $refused->assertStatus(429)->assertSee('Too many tries')->assertDontSee('customer-shell', false);
-    expect($refused->headers->get('Content-Security-Policy'))->toContain('https://lugsdemo-site.example')
-        ->and($refused->headers->has('Retry-After'))->toBeTrue()
-        ->and(AppointmentRequest::query()->count())->toBe(0);
+    $tech = User::factory()->create()->assignRole(ArkRole::Technician->value);
+    $this->actingAs($tech)->patch(route('operations.settings.booking.update'), ['mode' => 'request'])->assertRedirect();
+    expect(BookingSettings::mode())->toBe(BookingMode::Instant);
 });
 
 test('a host can add an availability rule such as travel time', function (): void {
@@ -489,10 +383,9 @@ test('a host can add an availability rule such as travel time', function (): voi
     });
     app()->tag(['test.travel'], BookingConstraints::TAG);
 
-    $day = collect($this->getJson('/book/availability')->json('dates'))->firstWhere('date', '2026-11-12');
-    expect($day['available'])->toBeFalse()->and($day['reason'])->toBe('No technician near you that day');
-
-    $this->post('/book', bookingPost(['preferred_date' => '2026-11-12']))->assertStatus(422)->assertSee('No technician near you that day');
+    $day = collect(app(OnlineBooking::class)->availability(brakesContext())['dates'])->firstWhere('date', '2026-11-12');
+    expect($day['available'])->toBeFalse()->and($day['reason'])->toBe('No technician near you that day')
+        ->and(refusal(['preferredDate' => '2026-11-12'])->getMessage())->toBe('No technician near you that day');
 });
 
 function failingTravelCheck(bool $advisory = false): object
@@ -537,159 +430,65 @@ function failingTravelCheck(bool $advisory = false): object
     return $check;
 }
 
-function mobileVisit(): BookingService
+function mobileContext(): BookingContext
 {
-    return BookingService::query()->create(['name' => 'Mobile battery swap', 'duration_minutes' => 60, 'is_public' => true, 'location_mode' => 'mobile']);
-}
-
-function mobileAddress(): array
-{
-    return ['address' => ['line1' => '12 Pine St', 'city' => 'Colorado Springs', 'state' => 'CO', 'postal_code' => '80903']];
+    return new BookingContext(serviceName: 'Mobile battery swap', perVehicleMinutes: 60, location: ServiceLocationType::CustomerSite,
+        address: ['line1' => '12 Pine St', 'city' => 'Colorado Springs', 'state' => 'CO', 'postal_code' => '80903']);
 }
 
 test('when a required travel check cannot run, nothing is confirmed and the booking becomes a request', function (): void {
     Exceptions::fake();
     Log::spy();
-    bookingSettings(['mode' => 'instant']);
-    $mobile = mobileVisit();
+    bookingPolicy(['mode' => 'instant']);
     $check = failingTravelCheck();
 
-    $availability = $this->getJson('/book/availability?service_id='.$mobile->id.'&location=customer_site&postal_code=80903&date=2026-11-10')->json();
+    $availability = app(OnlineBooking::class)->availability(mobileContext(), '2026-11-10');
     expect($availability['mode'])->toBe('request')
         ->and($availability['slots'])->toBe([])
         ->and($availability['periods'])->not->toBe([])
         ->and($availability['notice'])->toBe(BookingAvailability::UNCHECKED_NOTICE)
-        ->and(collect($availability['dates'])->firstWhere('date', '2026-11-10')['available'])->toBeTrue()
         ->and($check->calls)->toBe(1);
 
-    $this->get('/book?service='.$mobile->slug)->assertOk()
-        ->assertSee(BookingAvailability::UNCHECKED_NOTICE)
-        ->assertSee('data-availability-mode="request"', false)
-        ->assertSee('data-booking-mode="instant"', false);
+    $request = submitOnline(['booking' => mobileContext(), 'preferredTime' => '09:00', 'preferredPeriod' => null, 'concern' => 'Battery dead in the driveway']);
 
-    $response = $this->post('/book', bookingPost([
-        'service_id' => $mobile->id,
-        'location' => 'customer_site',
-        'preferred_time' => '09:00',
-        'preferred_period' => null,
-        'concern' => 'Battery dead in the driveway',
-        ...mobileAddress(),
-    ]));
-    $response->assertStatus(303);
-
-    $request = AppointmentRequest::query()->sole();
     expect(Appointment::query()->count())->toBe(0)
         ->and($request->status)->toBe(AppointmentRequestStatus::Pending)
         ->and($request->mode)->toBe(BookingMode::Request)
         ->and($request->preferred_period)->toBe('morning')
         ->and($request->requested_starts_at)->toBeNull()
-        ->and($request->concern)->toContain('Battery dead in the driveway')
-        ->and($request->service_address['line1'])->toBe('12 Pine St')
         ->and($request->uncheckedRules())->toBe(['Travel time'])
         ->and($request->preferenceLabel())->toBe('Tue, Nov 10 · Morning, around 9:00 AM')
-        ->and($request->staffNotes())->toContain('Not checked online: Travel time. Confirm before scheduling.')
-        ->and($request->lead->state)->not->toBe(LeadState::Scheduled);
-
-    $this->get($response->headers->get('Location'))
-        ->assertSee('Request received')
-        ->assertSee("We couldn't confirm a time online just now", false)
-        ->assertDontSee('Your appointment is booked');
+        ->and($request->staffNotes())->toContain('Not checked online: Travel time. Confirm before scheduling.');
 
     $this->actingAs($this->admin)->get(route('operations.appointments.index', ['day' => '2026-11-10']))
         ->assertOk()
-        ->assertSee('Not checked online: Travel time')
-        ->assertSee('Tue, Nov 10 · Morning, around 9:00 AM');
+        ->assertSee('Not checked online: Travel time');
 
     Exceptions::assertReported(fn (RuntimeException $e): bool => $e->getMessage() === 'Maps provider timed out');
-    Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context = []): bool => $message === 'Online booking check could not run.' && $context['required'] === true && $context['error'] === 'Maps provider timed out');
-});
-
-test('a request shop still takes requests when a required check cannot run, and staff see what was not checked', function (): void {
-    Exceptions::fake();
-    $mobile = mobileVisit();
-    failingTravelCheck();
-
-    $availability = $this->getJson('/book/availability?service_id='.$mobile->id.'&location=customer_site&postal_code=80903')->json();
-    expect($availability['mode'])->toBe('request')->and($availability['accepting'])->toBeTrue()->and($availability['notice'])->not->toBeNull();
-
-    $this->post('/book', bookingPost(['service_id' => $mobile->id, 'location' => 'customer_site', ...mobileAddress()]))->assertStatus(303);
-
-    $request = AppointmentRequest::query()->sole();
-    expect($request->status)->toBe(AppointmentRequestStatus::Pending)
-        ->and($request->uncheckedRules())->toBe(['Travel time'])
-        ->and($request->askedTimeLabel())->toBeNull();
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context = []): bool => $message === 'Online booking check could not run.' && $context['required'] === true);
 });
 
 test('a refusal from a working check still wins when another required check cannot run', function (): void {
     Exceptions::fake();
-    bookingSettings(['mode' => 'instant', 'service_area' => ['postal_codes' => ['80903'], 'message' => 'We only drive to central Springs.']]);
-    $mobile = mobileVisit();
+    bookingPolicy(['mode' => 'instant', 'service_area' => ['postal_codes' => ['80903'], 'message' => 'We only drive to central Springs.']]);
     failingTravelCheck();
 
-    $this->post('/book', bookingPost([
-        'service_id' => $mobile->id,
-        'location' => 'customer_site',
-        'preferred_time' => '09:00',
-        'address' => ['line1' => '1 Far Rd', 'city' => 'Pueblo', 'postal_code' => '81001'],
-    ]))->assertStatus(422)->assertSee('We only drive to central Springs.');
-
-    expect(AppointmentRequest::query()->count())->toBe(0);
+    $far = new BookingContext(serviceName: 'Mobile battery swap', location: ServiceLocationType::CustomerSite, address: ['line1' => '1 Far Rd', 'city' => 'Pueblo', 'postal_code' => '81001']);
+    expect(refusal(['booking' => $far, 'preferredTime' => '09:00'])->getMessage())->toBe('We only drive to central Springs.')
+        ->and(AppointmentRequest::query()->count())->toBe(0);
 });
 
 test('an advisory check that cannot run does not stop a confirmed booking', function (): void {
     Exceptions::fake();
-    bookingSettings(['mode' => 'instant', 'limits' => ['concurrent_appointments' => 1]]);
-    $oil = BookingService::query()->create(['name' => 'Oil change', 'duration_minutes' => 60, 'is_public' => true]);
+    bookingPolicy(['mode' => 'instant', 'limits' => ['concurrent_appointments' => 1]]);
     $check = failingTravelCheck(advisory: true);
+    $oil = new BookingContext(serviceName: 'Oil change', perVehicleMinutes: 60);
 
-    $availability = $this->getJson('/book/availability?service_id='.$oil->id.'&date=2026-11-10')->json();
-    expect($availability['mode'])->toBe('instant')
-        ->and($availability['notice'])->toBeNull()
+    $availability = app(OnlineBooking::class)->availability($oil, '2026-11-10');
+    expect($availability['mode'])->toBe('instant')->and($availability['notice'])->toBeNull()
         ->and(array_column($availability['slots'], 'value'))->toContain('09:00')
         ->and($check->calls)->toBe(1);
 
-    $this->post('/book', bookingPost(['service_id' => $oil->id, 'preferred_time' => '09:00', 'preferred_period' => null]))->assertStatus(303);
-
-    expect(Appointment::query()->sole()->status)->toBe(AppointmentStatus::Scheduled)
-        ->and(AppointmentRequest::query()->sole()->uncheckedRules())->toBe([]);
-    Exceptions::assertReported(RuntimeException::class);
-});
-
-test('settings manage services, questions, and closed dates', function (): void {
-    $this->actingAs($this->admin)->post(route('operations.settings.booking.services.store'), [
-        'name' => 'Mobile diagnostic',
-        'duration_minutes' => 90,
-        'location_mode' => 'mobile',
-        'is_public' => '1',
-        'requires_approval' => '1',
-        'options' => [['label' => 'Check engine light', 'duration_minutes' => 60, 'requires_details' => '1'], ['label' => '']],
-    ])->assertRedirect(route('operations.settings.booking', ['tab' => 'services']));
-
-    $service = BookingService::query()->sole();
-    expect($service->slug)->toBe('mobile-diagnostic')
-        ->and($service->requires_approval)->toBeTrue()
-        ->and($service->optionList())->toHaveCount(1);
-
-    $this->actingAs($this->admin)->post(route('operations.settings.booking.questions.store'), [
-        'label' => 'Where is it parked?', 'type' => 'choice', 'choices' => "Driveway\nStreet", 'required' => '1', 'service_ids' => [$service->id],
-    ])->assertRedirect();
-    expect(BookingQuestion::query()->sole()->choiceList())->toBe(['Driveway', 'Street']);
-
-    $this->actingAs($this->admin)->post(route('operations.settings.booking.closed-dates.store'), ['date' => '2026-11-26', 'reason' => 'Thanksgiving'])->assertRedirect();
-    expect(AppointmentRequestException::query()->sole()->disablesRequests())->toBeTrue();
-
-    $this->actingAs($this->admin)->get(route('operations.settings.booking', ['tab' => 'availability']))->assertOk()->assertSee('Thanksgiving');
-    $this->actingAs($this->admin)->get(route('operations.settings.booking', ['tab' => 'services']))->assertOk()->assertSee('Mobile diagnostic');
-
-    $this->actingAs($this->admin)->delete(route('operations.settings.booking.services.destroy', $service))->assertRedirect();
-    $this->get('/book')->assertDontSee('Mobile diagnostic');
-});
-
-test('staff without settings access cannot change online booking', function (): void {
-    $tech = User::factory()->create()->assignRole(ArkRole::Technician->value);
-
-    $this->actingAs($tech)->get(route('operations.settings.booking'))->assertRedirect();
-    $this->actingAs($tech)->patch(route('operations.settings.booking.update'), ['section' => 'form', 'enabled' => '0'])->assertRedirect();
-
-    expect(BookingSettings::forShop()['enabled'])->toBeTrue();
+    $request = submitOnline(['booking' => $oil, 'preferredTime' => '09:00', 'preferredPeriod' => null]);
+    expect(Appointment::query()->sole()->status)->toBe(AppointmentStatus::Scheduled)->and($request->uncheckedRules())->toBe([]);
 });

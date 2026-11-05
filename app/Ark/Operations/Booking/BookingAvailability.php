@@ -71,7 +71,7 @@ final class BookingAvailability
         $open = array_values(array_filter($dates, fn (array $d): bool => $d['available']));
 
         return [
-            'accepting' => $settings['enabled'] && $open !== [],
+            'accepting' => $open !== [],
             'mode' => $mode->value,
             'timezone' => ShopDisplayTimezone::resolve(),
             'dates' => $dates,

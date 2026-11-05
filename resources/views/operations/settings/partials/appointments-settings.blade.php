@@ -211,7 +211,7 @@
         <h4 class="mb-1">Appointment Request Availability</h4>
         <p class="text-secondary small">
             Controls which days online booking may offer. Independent of Business Hours and staff Scheduling hours above.
-            Services, questions, closed dates, and the website popup are in <a href="{{ route('operations.settings.booking') }}">Online booking</a>.
+            Closed dates, daily limits, and whether online customers may take an open time are in <a href="{{ route('operations.settings.booking') }}">Online requests</a>.
         </p>
 
         <fieldset class="mb-3">

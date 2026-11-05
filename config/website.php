@@ -33,5 +33,5 @@ return [
      * False skips the code step and records the request unverified, as for a shop that can send
      * neither (for example a demonstration shop that must never contact anyone).
      */
-    'book_identity_verification' => filter_var(env('WEBSITE_BOOK_IDENTITY_VERIFICATION', true), FILTER_VALIDATE_BOOLEAN),
+    'book_identity_verification' => true,
 ];

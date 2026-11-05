@@ -86,7 +86,7 @@ test('preferred custom domain is the public canonical on both hosts', function (
 
     $this->get('http://lugsnplugs.com/book')
         ->assertOk()
-        ->assertSee('action="/book"', false)
+        ->assertSee('action="/leads"', false)
         ->assertSee('rel="canonical" href="https://lugsnplugs.com/book"', false);
 
     $this->get('http://lugsnplugs.arksms.com/sitemap.xml')

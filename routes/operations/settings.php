@@ -1,24 +1,25 @@
 <?php
 
-use App\Ark\Operations\Booking\Http\BookingSettingsController;
-use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Import\ShopCsv\ShopCsvImportController;
-use App\Ark\Operations\Workboard\JobBoardLaneSettingsController;
 use App\Ark\Operations\Appointments\RemoveScheduleBayController;
 use App\Ark\Operations\Appointments\StoreScheduleBayController;
 use App\Ark\Operations\Appointments\UpdateScheduleBayController;
+use App\Ark\Operations\Booking\Http\BookingSettingsController;
 use App\Ark\Operations\Inspections\InspectionTemplateSettingsController;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalogSettingsController;
 use App\Ark\Operations\Settings\LaborPolicySettingsController;
-use App\Ark\Operations\Settings\ShopPlatformSettingsController;
 use App\Ark\Operations\Settings\ShopCommunicationsSettingsController;
 use App\Ark\Operations\Settings\ShopFinancialSettingsController;
 use App\Ark\Operations\Settings\ShopGeneralSettingsController;
 use App\Ark\Operations\Settings\ShopIntegrationSettingsController;
 use App\Ark\Operations\Settings\ShopOperationsSettingsController;
+use App\Ark\Operations\Settings\ShopPlatformSettingsController;
 use App\Ark\Operations\Settings\ShopSettingsPageController;
 use App\Ark\Operations\Staff\StaffMemberController;
 use App\Ark\Operations\Telephony\SimulateIncomingCallController;
+use App\Ark\Operations\Workboard\JobBoardLaneSettingsController;
+use App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController;
+use App\Ark\Platform\Http\PlatformConnectController;
 use App\Ark\Runtime\Authorization\ArkCapability;
 use Illuminate\Support\Facades\Route;
 
@@ -140,22 +141,6 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
         ->name('operations.settings.booking');
     Route::patch('/app/settings/booking', [BookingSettingsController::class, 'update'])
         ->name('operations.settings.booking.update');
-    Route::post('/app/settings/booking/services', [BookingSettingsController::class, 'storeService'])
-        ->name('operations.settings.booking.services.store');
-    Route::post('/app/settings/booking/services/starter', [BookingSettingsController::class, 'seedServices'])
-        ->name('operations.settings.booking.services.seed');
-    Route::patch('/app/settings/booking/services/{service}', [BookingSettingsController::class, 'updateService'])
-        ->name('operations.settings.booking.services.update');
-    Route::post('/app/settings/booking/services/{service}/move', [BookingSettingsController::class, 'moveService'])
-        ->name('operations.settings.booking.services.move');
-    Route::delete('/app/settings/booking/services/{service}', [BookingSettingsController::class, 'destroyService'])
-        ->name('operations.settings.booking.services.destroy');
-    Route::post('/app/settings/booking/questions', [BookingSettingsController::class, 'storeQuestion'])
-        ->name('operations.settings.booking.questions.store');
-    Route::patch('/app/settings/booking/questions/{question}', [BookingSettingsController::class, 'updateQuestion'])
-        ->name('operations.settings.booking.questions.update');
-    Route::delete('/app/settings/booking/questions/{question}', [BookingSettingsController::class, 'destroyQuestion'])
-        ->name('operations.settings.booking.questions.destroy');
     Route::post('/app/settings/booking/closed-dates', [BookingSettingsController::class, 'storeClosedDate'])
         ->name('operations.settings.booking.closed-dates.store');
     Route::delete('/app/settings/booking/closed-dates/{exception}', [BookingSettingsController::class, 'destroyClosedDate'])
@@ -191,15 +176,15 @@ Route::middleware('permission:'.ArkCapability::SettingsManage->value)->group(fun
     Route::patch('/app/settings/shop/inspection-templates', InspectionTemplateSettingsController::class)
         ->name('operations.settings.shop.inspection-templates.update');
 
-    Route::post('/app/settings/shop/work-templates', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'store'])
+    Route::post('/app/settings/shop/work-templates', [WorkTemplateSettingsController::class, 'store'])
         ->name('operations.settings.shop.work-templates.store');
-    Route::put('/app/settings/shop/work-templates/{workTemplate}', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'update'])
+    Route::put('/app/settings/shop/work-templates/{workTemplate}', [WorkTemplateSettingsController::class, 'update'])
         ->name('operations.settings.shop.work-templates.update');
-    Route::post('/app/settings/shop/work-templates/{workTemplate}/duplicate', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'duplicate'])
+    Route::post('/app/settings/shop/work-templates/{workTemplate}/duplicate', [WorkTemplateSettingsController::class, 'duplicate'])
         ->name('operations.settings.shop.work-templates.duplicate');
-    Route::patch('/app/settings/shop/work-templates/{workTemplate}/retire', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'retire'])
+    Route::patch('/app/settings/shop/work-templates/{workTemplate}/retire', [WorkTemplateSettingsController::class, 'retire'])
         ->name('operations.settings.shop.work-templates.retire');
-    Route::patch('/app/settings/shop/work-templates/{workTemplate}/restore', [\App\Ark\Operations\WorkTemplates\WorkTemplateSettingsController::class, 'restore'])
+    Route::patch('/app/settings/shop/work-templates/{workTemplate}/restore', [WorkTemplateSettingsController::class, 'restore'])
         ->name('operations.settings.shop.work-templates.restore');
 
     Route::patch('/app/settings/shop/excellence', [ShopOperationsSettingsController::class, 'updateExcellence'])
