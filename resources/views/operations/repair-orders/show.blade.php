@@ -1365,7 +1365,7 @@
                 this.partstechLastStampedOrders = stampedOrderCount;
                 this.partstechCatalogWindow = window.open(catalogUrl, 'ark-partstech-catalog');
                 window.dispatchEvent(new CustomEvent('ark:partstech-launched', {
-                    detail: { concernId: preferredConcernId, catalogWindow: this.partstechCatalogWindow },
+                    detail: { repairOrderId: @js($repairOrder->id), concernId: preferredConcernId, catalogWindow: this.partstechCatalogWindow },
                 }));
                 this.startPartsTechPoWatch();
             },

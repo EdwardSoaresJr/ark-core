@@ -119,15 +119,15 @@
         data-ro-footer-cart
     >
         <x-tabler.icon name="shopping-cart" />
-        <span x-text="$store.partsCart.attention ? 'Pull Cart' : 'Cart'">Cart</span>
+        <span class="ark-ro-footer-label-narrow" x-text="$store.partsCart.attention ? 'Pull Cart' : 'Cart'">Cart</span>
         <span x-show="$store.partsCart.count > 0" x-cloak class="badge bg-red text-red-fg ms-1" x-text="$store.partsCart.count"></span>
     </button>
 @endif
 
 <div class="d-md-none" x-data="{ toolsOpen: false }" @keydown.escape.window="toolsOpen = false">
-    <button type="button" class="btn btn-sm" @click="toolsOpen = true" aria-haspopup="dialog" :aria-expanded="toolsOpen" data-ro-footer-tools-toggle>
+    <button type="button" class="btn btn-sm" @click="toolsOpen = true" aria-label="Tools" aria-haspopup="dialog" :aria-expanded="toolsOpen" data-ro-footer-tools-toggle>
         <x-tabler.icon name="tool" />
-        Tools
+        <span class="ark-ro-footer-label">Tools</span>
     </button>
     <div x-show="toolsOpen" x-cloak>
         <div class="offcanvas-backdrop show" @click="toolsOpen = false"></div>

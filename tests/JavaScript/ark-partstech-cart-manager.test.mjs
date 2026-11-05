@@ -5,6 +5,8 @@ import {
     assignConcern,
     assignmentsFor,
     chooseMatrix,
+    importIssues,
+    launchedForRepairOrder,
     makeRow,
     matrixKeyForConcern,
     normalizeConcerns,
@@ -92,33 +94,72 @@ test('pulling again keeps each part\'s concern, matrix override and edited cost'
     assert.equal(costChangedInCart.part_cost, '85.00');
 });
 
-test('parts already on the estimate start unselected and import only as an explicit repeat', () => {
+test('new cart parts start selected and parts already on the estimate start unselected', () => {
     const imported = makeRow(line({
         import_status: IMPORT_STATUS.IMPORTED,
         imported_lines: [{ line_id: 9, repair_order_concern_id: 12, concern_summary: 'Warranty oil leak' }],
     }), context, { defaultConcernId: '11' });
+    const changed = makeRow(line({ source_key: 'pt:item-changed', import_status: IMPORT_STATUS.CHANGED, imported_lines: [{ line_id: 10 }] }), context);
     const fresh = makeRow(line({ source_key: 'pt:item-rotor' }), context, { defaultConcernId: '11' });
 
+    assert.equal(fresh.selected, true);
     assert.equal(imported.selected, false);
+    assert.equal(changed.selected, false);
     assert.equal(imported.concern_id, '12');
-    assert.deepEqual(assignmentsFor([imported, fresh]).map((row) => row.source_key), ['pt:item-rotor']);
-
-    imported.selected = true;
-    const assignments = assignmentsFor([imported, fresh]);
-
-    assert.equal(assignments.find((row) => row.source_key === 'pt:item-pads').import_again, true);
-    assert.equal(assignments.find((row) => row.source_key === 'pt:item-rotor').import_again, false);
-    assert.equal(assignments[0].pricing_matrix_key, 'warranty-no-markup');
+    assert.deepEqual(assignmentsFor([imported, changed, fresh]).map((row) => row.source_key), ['pt:item-rotor']);
 });
 
-test('selected sell totals unit sell times quantity for priced rows only', () => {
+test('another copy imports only after the advisor confirms it, naming the lines already on the estimate', () => {
+    const imported = makeRow(line({
+        import_status: IMPORT_STATUS.IMPORTED,
+        imported_lines: [{ line_id: 9, repair_order_concern_id: 12 }, { line_id: 14, repair_order_concern_id: 11 }],
+    }), context);
+    const fresh = makeRow(line({ source_key: 'pt:item-rotor', description: 'Front Rotor' }), context, { defaultConcernId: '11' });
+
+    imported.selected = true;
+
+    assert.deepEqual(assignmentsFor([imported, fresh]).map((row) => row.source_key), ['pt:item-rotor']);
+    assert.deepEqual(importIssues([imported, fresh]), ['Confirm the extra copy of Front Brake Pad Set, or untick it.']);
+    assert.equal('acknowledged_duplicate_line_ids' in assignmentsFor([fresh])[0], false);
+
+    imported.duplicate_acknowledged = true;
+    const assignments = assignmentsFor([imported, fresh]);
+
+    assert.deepEqual(assignments.find((row) => row.source_key === 'pt:item-pads').acknowledged_duplicate_line_ids, [9, 14]);
+    assert.equal(assignments[0].pricing_matrix_key, 'warranty-no-markup');
+    assert.deepEqual(importIssues([imported, fresh]), []);
+});
+
+test('import issues name the parts that need a concern or a price', () => {
+    const rows = ['Wiper Blade', 'Cabin Filter', 'Air Filter'].map((description, index) => makeRow(line({ source_key: 'pt:' + index, description }), context));
+    rows[2].concern_id = '11';
+    rows[2].pricing_error = 'Enter a valid cost.';
+
+    assert.deepEqual(importIssues(rows), [
+        'Choose a concern for Wiper Blade and Cabin Filter.',
+        'Fix the price for Air Filter.',
+    ]);
+
+    const many = ['A', 'B', 'C', 'D'].map((description) => makeRow(line({ source_key: 'pt:' + description, description }), context));
+    assert.deepEqual(importIssues(many), ['Choose a concern for A, B and 2 more.']);
+});
+
+test('a PartsTech launch only applies to the repair order that launched it', () => {
+    assert.equal(launchedForRepairOrder({ repairOrderId: 7, concernId: 12 }, '7'), true);
+    assert.equal(launchedForRepairOrder({ repairOrderId: 8, concernId: 12 }, '7'), false);
+    assert.equal(launchedForRepairOrder({ concernId: 12 }, '7'), false);
+    assert.equal(launchedForRepairOrder({ repairOrderId: '' }, ''), false);
+});
+
+test('selected sell totals unit sell times quantity for priced rows across concerns', () => {
     const rows = [
-        { selected: true, quantity: '2.00', pricing: { unit_sell_cents: 1999 }, pricing_error: '' },
-        { selected: true, quantity: '1.00', pricing: null, pricing_error: 'Enter a cost.' },
-        { selected: false, quantity: '1.00', pricing: { unit_sell_cents: 5000 }, pricing_error: '' },
+        { selected: true, concern_id: '11', quantity: '2.00', pricing: { unit_sell_cents: 11895 }, pricing_error: '' },
+        { selected: true, concern_id: '12', quantity: '5.00', pricing: { unit_sell_cents: 1216 }, pricing_error: '' },
+        { selected: true, concern_id: '12', quantity: '1.00', pricing: null, pricing_error: 'Enter a cost.' },
+        { selected: false, concern_id: '11', quantity: '1.00', pricing: { unit_sell_cents: 5000 }, pricing_error: '' },
     ];
 
-    assert.equal(selectedSellCents(rows), 3998);
+    assert.equal(selectedSellCents(rows), 2 * 11895 + 5 * 1216);
 });
 
 test('the launch concern is remembered per repair order for four hours', () => {
@@ -128,6 +169,6 @@ test('the launch concern is remembered per repair order for four hours', () => {
     writeLaunchContext(store, 7, 12, { now: 1_000 });
 
     assert.deepEqual(readLaunchContext(store, 7, 2_000), { concernId: '12', at: 1_000, pulled: false });
-    assert.equal(readLaunchContext(store, 8, 2_000), null);
+    assert.equal(readLaunchContext(store, 8, 2_000), null, 'another repair order never reads this launch');
     assert.equal(readLaunchContext(store, 7, 1_000 + 4 * 60 * 60 * 1000 + 1), null);
 });

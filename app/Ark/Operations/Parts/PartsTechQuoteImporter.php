@@ -10,6 +10,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
 use App\Ark\Operations\RepairOrders\RepairOrderLinePricing;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
@@ -32,9 +33,10 @@ final class PartsTechQuoteImporter
     ) {}
 
     /**
-     * A cart line already on this repair order is refused unless its assignment sets import_again.
+     * A cart line already on this repair order imports another copy only when its assignment names exactly
+     * the estimate lines the advisor confirmed (acknowledged_duplicate_line_ids).
      *
-     * @param  list<array{source_key: string, repair_order_concern_id: int, repair_order_work_group_id?: int|null, part_cost?: string|null, pricing_matrix_key?: string|null, import_again?: bool|null}>  $assignments
+     * @param  list<array{source_key: string, repair_order_concern_id: int, repair_order_work_group_id?: int|null, part_cost?: string|null, pricing_matrix_key?: string|null, acknowledged_duplicate_line_ids?: list<int>|null}>  $assignments
      * @return array{imported: int, concerns: list<string>, work_group_ids: list<int>}
      */
     public function importAssignments(RepairOrder $repairOrder, array $assignments, User $actor): array
@@ -89,11 +91,11 @@ final class PartsTechQuoteImporter
 
                 $seen[$sourceKey] = true;
 
-                if ($alreadyImported->has($sourceKey) && ! filter_var($assignment['import_again'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
-                    $description = $quoteByKey->get($sourceKey)?->description ?? 'A selected part';
-
-                    throw new RuntimeException($description.' is already on this estimate. Pull the cart again to see what is new.');
-                }
+                $this->assertDuplicateAcknowledged(
+                    $alreadyImported->get($sourceKey),
+                    $assignment['acknowledged_duplicate_line_ids'] ?? null,
+                    $quoteByKey->get($sourceKey)?->description ?? 'A selected part',
+                );
 
                 $this->assertWorkGroupAssignment($concernId, $workGroupId);
 
@@ -135,6 +137,27 @@ final class PartsTechQuoteImporter
             'concerns' => array_values($concernSummaries),
             'work_group_ids' => array_values(array_unique($workGroupIds)),
         ];
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderLine>|null  $existing
+     */
+    private function assertDuplicateAcknowledged(?Collection $existing, mixed $acknowledged, string $description): void
+    {
+        if ($existing === null || $existing->isEmpty()) {
+            return;
+        }
+
+        if (! is_array($acknowledged) || $acknowledged === []) {
+            throw new RuntimeException($description.' is already on this estimate. Confirm adding another copy in the cart to import it again.');
+        }
+
+        $existingIds = $existing->pluck('id')->map(fn (mixed $id): int => (int) $id)->sort()->values()->all();
+        $acknowledgedIds = collect($acknowledged)->map(fn (mixed $id): int => (int) $id)->unique()->sort()->values()->all();
+
+        if ($acknowledgedIds !== $existingIds) {
+            throw new RuntimeException($description.' changed on the estimate since you confirmed another copy. Pull the cart again.');
+        }
     }
 
     private function assertWorkGroupAssignment(int $concernId, ?int $workGroupId): void

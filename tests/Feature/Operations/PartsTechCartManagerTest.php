@@ -307,7 +307,7 @@ test('re-pulling the cart marks imported parts and refuses to import them again 
         ['source_key' => 'pt:item-rotor', 'repair_order_concern_id' => $brakes->id, 'part_cost' => '61.00', 'pricing_matrix_key' => 'aft-parts'],
     ])
         ->assertUnprocessable()
-        ->assertJsonPath('message', 'Front Brake Pad Set is already on this estimate. Pull the cart again to see what is new.');
+        ->assertJsonPath('message', 'Front Brake Pad Set is already on this estimate. Confirm adding another copy in the cart to import it again.');
 
     expect(RepairOrderLine::query()->where('repair_order_id', $repairOrder->id)->count())->toBe(1);
 
@@ -336,18 +336,85 @@ test('a cart line changed after import is flagged and never rewrites the estimat
     $this->getJson(route('operations.repair-orders.partstech.import.preview', $repairOrder))
         ->assertOk()
         ->assertJsonPath('lines.0.import_status', PartsCartImportLedger::STATUS_CHANGED)
+        ->assertJsonPath('lines.0.imported_lines.0.line_id', $line->id)
         ->assertJsonPath('lines.0.imported_lines.0.cart_quantity', '1.00')
-        ->assertJsonPath('lines.0.imported_lines.0.cart_part_cost', '82.50');
+        ->assertJsonPath('lines.0.imported_lines.0.cart_part_cost', '82.50')
+        ->assertJsonPath('lines.0.imported_lines.0.estimate_quantity', '1.00')
+        ->assertJsonPath('lines.0.imported_lines.0.estimate_unit_sell', '$159.95');
 
     expect($line->fresh()->only($advisorOwned))->toBe($edited);
 
-    cartManagerImport($repairOrder, [
-        ['source_key' => 'pt:item-pads', 'repair_order_concern_id' => $brakes->id, 'part_cost' => '79.00', 'pricing_matrix_key' => 'aft-parts', 'import_again' => true],
-    ])->assertOk();
+    $copy = ['source_key' => 'pt:item-pads', 'repair_order_concern_id' => $brakes->id, 'part_cost' => '79.00', 'pricing_matrix_key' => 'aft-parts'];
+
+    cartManagerImport($repairOrder, [$copy])
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Front Brake Pad Set is already on this estimate. Confirm adding another copy in the cart to import it again.');
+    cartManagerImport($repairOrder, [[...$copy, 'import_again' => true]])->assertUnprocessable();
+    cartManagerImport($repairOrder, [[...$copy, 'acknowledged_duplicate_line_ids' => [$line->id + 999]]])
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Front Brake Pad Set changed on the estimate since you confirmed another copy. Pull the cart again.');
+
+    expect(RepairOrderLine::query()->where('parts_cart_source_key', 'pt:item-pads')->count())->toBe(1);
+
+    cartManagerImport($repairOrder, [[...$copy, 'acknowledged_duplicate_line_ids' => [$line->id]]])->assertOk();
+
+    $this->getJson(route('operations.repair-orders.partstech.import.preview', $repairOrder))
+        ->assertOk()
+        ->assertJsonPath('lines.0.import_status', PartsCartImportLedger::STATUS_IMPORTED)
+        ->assertJsonPath('lines.0.imported_lines.0.cart_changed', true)
+        ->assertJsonPath('lines.0.imported_lines.1.cart_changed', false);
 
     expect($line->fresh()->only($advisorOwned))->toBe($edited)
         ->and(RepairOrderLine::query()->where('parts_cart_source_key', 'pt:item-pads')->count())->toBe(2)
         ->and(RepairOrderLine::query()->where('parts_cart_source_key', 'pt:item-pads')->latest('id')->first()->quantity)->toBe('2.00');
+
+    $both = RepairOrderLine::query()->where('parts_cart_source_key', 'pt:item-pads')->pluck('id')->all();
+
+    cartManagerImport($repairOrder, [[...$copy, 'acknowledged_duplicate_line_ids' => [$line->id]]])
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Front Brake Pad Set changed on the estimate since you confirmed another copy. Pull the cart again.');
+    cartManagerImport($repairOrder, [[...$copy, 'acknowledged_duplicate_line_ids' => array_reverse($both)]])->assertOk();
+
+    expect(RepairOrderLine::query()->where('parts_cart_source_key', 'pt:item-pads')->count())->toBe(3)
+        ->and($line->fresh()->only($advisorOwned))->toBe($edited);
+});
+
+test('cart pricing flags a sell price below cost and reports margin, not markup', function () {
+    [$repairOrder, $brakes] = cartManagerRepairOrder();
+    $matrices = ShopSettings::DEFAULT_PARTS_MATRICES;
+    $matrices[] = [
+        'key' => 'clearance',
+        'name' => 'Clearance',
+        'is_default' => false,
+        'rows' => [['min_cost' => '0.00', 'max_cost' => '99999.99', 'markup_percentage' => '-10.00', 'sort_order' => 1]],
+    ];
+    $matrices[] = [
+        'key' => 'flat-sixty',
+        'name' => 'Flat 60',
+        'is_default' => false,
+        'rows' => [['min_cost' => '0.00', 'max_cost' => '99999.99', 'markup_percentage' => '60.00', 'sort_order' => 1]],
+    ];
+    ShopSettings::current()->update(['parts_matrices' => $matrices]);
+
+    $rows = collect($this->postJson(route('operations.repair-orders.partstech.import.pricing', $repairOrder), [
+        'rows' => [
+            ['key' => 'below', 'repair_order_concern_id' => $brakes->id, 'part_cost' => '100.00', 'quantity' => '3.00', 'pricing_matrix_key' => 'clearance'],
+            ['key' => 'sixty', 'repair_order_concern_id' => $brakes->id, 'part_cost' => '100.00', 'quantity' => '3.00', 'pricing_matrix_key' => 'flat-sixty'],
+        ],
+    ])->assertOk()->json('rows'))->keyBy('key');
+
+    expect($rows['below'])->toMatchArray([
+        'unit_cost_cents' => 10000,
+        'unit_sell_cents' => 9000,
+        'line_sell' => '$270.00',
+        'margin_percentage' => '-11.1',
+        'below_cost' => true,
+    ])->and($rows['sixty'])->toMatchArray([
+        'unit_sell_cents' => 16000,
+        'line_sell' => '$480.00',
+        'margin_percentage' => '37.5',
+        'below_cost' => false,
+    ]);
 });
 
 test('a deleted imported line makes its cart part new again', function () {

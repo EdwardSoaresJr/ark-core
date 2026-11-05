@@ -114,8 +114,10 @@ export function makeRow(line, context, { previous = null, defaultConcernId = '' 
         work_group_id: '',
         pricing_matrix_key: '',
         matrix_explicit: false,
+        duplicate_acknowledged: false,
         pricing: null,
         pricing_error: '',
+        pricing_pending: false,
         pricing_sequence: 0,
     };
 
@@ -148,17 +150,53 @@ export function canPrice(row) {
     return /^\d+(\.\d{0,2})?$/.test(String(row.part_cost).trim()) && row.pricing_matrix_key !== '';
 }
 
+export function isDuplicate(row) {
+    return row.import_status !== IMPORT_STATUS.NEW;
+}
+
+/** An extra copy of a part already on the estimate names the estimate lines the advisor confirmed. */
 export function assignmentsFor(rows) {
     return rows
-        .filter((row) => row.selected && row.concern_id)
+        .filter((row) => row.selected && row.concern_id && (! isDuplicate(row) || row.duplicate_acknowledged))
         .map((row) => ({
             source_key: row.source_key,
             repair_order_concern_id: row.concern_id,
             repair_order_work_group_id: row.work_group_id || null,
             part_cost: String(row.part_cost).trim(),
             pricing_matrix_key: row.pricing_matrix_key,
-            import_again: row.import_status !== IMPORT_STATUS.NEW,
+            ...(isDuplicate(row)
+                ? { acknowledged_duplicate_line_ids: row.imported_lines.map((line) => Number(line.line_id)) }
+                : {}),
         }));
+}
+
+function namedParts(rows) {
+    const names = rows.map((row) => row.description);
+
+    return names.length > 2 ? names.slice(0, 2).join(', ') + ' and ' + (names.length - 2) + ' more' : names.join(' and ');
+}
+
+/** What keeps the selected parts from importing, in words an advisor can act on. */
+export function importIssues(rows) {
+    const selected = rows.filter((row) => row.selected);
+    const issues = [];
+    const missingConcern = selected.filter((row) => ! row.concern_id);
+    const unpriced = selected.filter((row) => row.pricing_error);
+    const unconfirmed = selected.filter((row) => isDuplicate(row) && ! row.duplicate_acknowledged);
+
+    if (missingConcern.length > 0) {
+        issues.push('Choose a concern for ' + namedParts(missingConcern) + '.');
+    }
+
+    if (unpriced.length > 0) {
+        issues.push('Fix the price for ' + namedParts(unpriced) + '.');
+    }
+
+    if (unconfirmed.length > 0) {
+        issues.push('Confirm the extra copy of ' + namedParts(unconfirmed) + ', or untick it.');
+    }
+
+    return issues;
 }
 
 export function selectedSellCents(rows) {
@@ -175,6 +213,10 @@ export function formatQuantity(quantity) {
     const value = Number(quantity);
 
     return Number.isInteger(value) ? String(value) : String(value.toFixed(2)).replace(/0$/, '');
+}
+
+export function launchedForRepairOrder(detail, repairOrderId) {
+    return String(detail?.repairOrderId ?? '') === String(repairOrderId ?? '') && String(repairOrderId ?? '') !== '';
 }
 
 export function launchContextKey(repairOrderId) {
@@ -274,16 +316,20 @@ export function arkPartsTechCartManager(config = {}) {
             return formatCents(selectedSellCents(this.rows));
         },
 
-        get missingConcernCount() {
-            return this.selectedRows.filter((row) => ! row.concern_id).length;
+        get issues() {
+            return importIssues(this.rows);
+        },
+
+        get pricingPending() {
+            return this.selectedRows.some((row) => row.pricing_pending || (! row.pricing && ! row.pricing_error));
         },
 
         get canImport() {
             return ! this.importing
                 && ! this.loading
                 && this.selectedRows.length > 0
-                && this.missingConcernCount === 0
-                && this.selectedRows.every((row) => row.pricing && ! row.pricing_error);
+                && this.issues.length === 0
+                && ! this.pricingPending;
         },
 
         workGroups(concernId) {
@@ -328,6 +374,10 @@ export function arkPartsTechCartManager(config = {}) {
         },
 
         onLaunched(detail = {}) {
+            if (! launchedForRepairOrder(detail, this.repairOrderId)) {
+                return;
+            }
+
             this.launchConcernId = this.knownConcern(detail.concernId);
             writeLaunchContext(window.sessionStorage, this.repairOrderId, this.launchConcernId);
             this.store().attention = true;
@@ -465,6 +515,22 @@ export function arkPartsTechCartManager(config = {}) {
             this.priceRows(changed);
         },
 
+        onSelectedChange(row) {
+            if (! row.selected) {
+                row.duplicate_acknowledged = false;
+            }
+        },
+
+        keepFocusedFieldVisible(event) {
+            const field = event.target;
+
+            if (! (field instanceof HTMLElement) || ! field.matches('input, select')) {
+                return;
+            }
+
+            window.setTimeout(() => field.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+        },
+
         onConcernChange(row) {
             assignConcern(row, row.concern_id, this.context);
             this.priceRows([row]);
@@ -498,6 +564,9 @@ export function arkPartsTechCartManager(config = {}) {
             }
 
             const sequences = new Map(priceable.map((row) => [row.source_key, ++row.pricing_sequence]));
+            priceable.forEach((row) => {
+                row.pricing_pending = true;
+            });
 
             try {
                 const response = await fetch(this.pricingUrl, {
@@ -523,12 +592,14 @@ export function arkPartsTechCartManager(config = {}) {
 
                     row.pricing = result && ! result.error ? result : null;
                     row.pricing_error = result?.error || (result ? '' : (payload?.message || 'Pricing is unavailable.'));
+                    row.pricing_pending = false;
                 });
             } catch {
                 priceable.forEach((row) => {
                     if (sequences.get(row.source_key) === row.pricing_sequence) {
                         row.pricing = null;
                         row.pricing_error = 'Pricing is unavailable.';
+                        row.pricing_pending = false;
                     }
                 });
             }
@@ -540,9 +611,7 @@ export function arkPartsTechCartManager(config = {}) {
 
         async submit() {
             if (! this.canImport) {
-                this.error = this.missingConcernCount > 0
-                    ? 'Choose a concern for every selected part.'
-                    : 'Select at least one priced part to import.';
+                this.error = this.issues[0] || 'Select at least one priced part to import.';
 
                 return;
             }

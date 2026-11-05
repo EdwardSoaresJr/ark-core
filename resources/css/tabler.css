@@ -163,6 +163,38 @@
     [data-ro-footer] .btn-icon {
         min-width: 2.75rem;
     }
+
+    [data-ro-footer] .btn {
+        flex-shrink: 0;
+        min-width: 2.75rem;
+    }
+
+    /* Full-screen Cart Manager: follows the visible viewport and keeps Import above the home indicator. */
+    #partstech-cart-manager .modal-dialog {
+        height: 100dvh;
+    }
+
+    #partstech-cart-manager .modal-footer {
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* Narrow phones: Tools shows its icon only (named by aria-label) so the row never scrolls sideways. */
+@media (max-width: 389.98px) {
+    [data-ro-footer] .btn:not(.btn-icon) {
+        padding-inline: 0.5rem;
+    }
+
+    [data-ro-footer] .ark-ro-footer-label {
+        display: none;
+    }
+}
+
+/* 320 px phones: Cart shows its icon and count; it turns solid when a pull is due. */
+@media (max-width: 359.98px) {
+    [data-ro-footer] .ark-ro-footer-label-narrow {
+        display: none;
+    }
 }
 
 .ark-ro-footer-sheet {

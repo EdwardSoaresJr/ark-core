@@ -12,7 +12,7 @@
 {{-- Own x-data so @click and the PRINT menu bind wherever the dock renders. --}}
 <footer
     @class([
-        'border-top mt-2 pt-2' => $docked,
+        'border-top mt-1 pt-1 mt-md-2 pt-md-2' => $docked,
     ])
     data-ro-footer
     @if ($docked) data-ro-footer-docked @endif
@@ -20,9 +20,9 @@
     x-data
 >
     <div @class([
-        'd-flex align-items-center gap-2',
-        'flex-wrap' => $estimatingTools === null,
-        'flex-nowrap flex-md-wrap' => $estimatingTools !== null,
+        'd-flex align-items-center',
+        'flex-wrap gap-2' => $estimatingTools === null,
+        'flex-nowrap flex-md-wrap gap-1 gap-sm-2' => $estimatingTools !== null,
     ])>
         <div class="d-flex align-items-center gap-2">
             @if ($workflow->key !== 'none')

@@ -200,7 +200,8 @@ class RepairOrderPartsTechQuoteImportController
                 'max:255',
                 Rule::in(collect(ShopSettings::current()->partsMatrices())->pluck('key')->all()),
             ],
-            'assignments.*.import_again' => ['nullable', 'boolean'],
+            'assignments.*.acknowledged_duplicate_line_ids' => ['nullable', 'array', 'max:50'],
+            'assignments.*.acknowledged_duplicate_line_ids.*' => ['integer'],
         ]);
 
         $assignments = collect($data['assignments'])

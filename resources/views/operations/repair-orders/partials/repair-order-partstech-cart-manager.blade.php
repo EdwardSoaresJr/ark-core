@@ -82,7 +82,7 @@
                             <button type="button" class="btn-close ms-1" aria-label="Close" @click="close()"></button>
                         </div>
 
-                        <div class="modal-body p-0">
+                        <div class="modal-body p-0" @focusin="keepFocusedFieldVisible($event)">
                             <input type="hidden" x-ref="estimateVersion" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
 
                             <div x-show="loading" x-cloak class="px-3 py-2 border-bottom small text-secondary" role="status" aria-live="polite">
@@ -138,6 +138,7 @@
                                                 type="checkbox"
                                                 class="form-check-input mt-1 flex-shrink-0"
                                                 x-model="row.selected"
+                                                @change="onSelectedChange(row)"
                                                 :aria-label="'Import ' + row.description"
                                             >
                                             <div class="flex-fill min-w-0" :class="row.selected ? '' : 'opacity-75'">
@@ -154,7 +155,7 @@
                                                     ></span>
                                                 </div>
                                                 <div
-                                                    class="small text-secondary text-truncate"
+                                                    class="small text-secondary text-break"
                                                     x-show="row.part_number || row.vendor_name"
                                                     x-text="[row.part_number, row.vendor_name].filter(Boolean).join(' · ')"
                                                 ></div>
@@ -177,7 +178,15 @@
                                                         </span>
                                                     </label>
                                                     <span class="text-secondary" aria-hidden="true">•</span>
-                                                    <span>Sell <span class="fw-bold ark-money" x-text="row.pricing ? row.pricing.unit_sell : '—'" data-cart-sell></span></span>
+                                                    <span>
+                                                        Sell <span class="fw-bold ark-money" x-text="row.pricing ? row.pricing.unit_sell : '—'" data-cart-sell></span><span
+                                                            x-show="row.pricing && Number(row.quantity) !== 1"
+                                                            x-cloak
+                                                            class="ark-money"
+                                                            x-text="' ea · ' + row.pricing?.line_sell"
+                                                            data-cart-line-sell
+                                                        ></span>
+                                                    </span>
                                                     <span class="text-secondary" aria-hidden="true">•</span>
                                                     <span :class="row.pricing?.below_cost ? 'text-danger fw-bold' : ''">
                                                         Margin <span class="ark-money" x-text="row.pricing?.margin_percentage != null ? row.pricing.margin_percentage + '%' : '—'" data-cart-margin></span>
@@ -186,16 +195,21 @@
                                                     <span x-show="row.pricing_error" x-cloak class="text-danger" x-text="row.pricing_error"></span>
                                                 </div>
 
-                                                <div
-                                                    x-show="row.import_status !== IMPORT_STATUS.NEW"
-                                                    x-cloak
-                                                    class="small text-secondary mt-1"
-                                                    data-cart-imported
-                                                >
-                                                    <span x-text="'On estimate under ' + (row.imported_lines.map((line) => line.concern_summary).filter(Boolean).join(', ') || 'this RO')"></span><span
-                                                        x-show="row.import_status === IMPORT_STATUS.CHANGED && row.imported_lines[0]?.cart_quantity"
-                                                        x-text="' · imported as qty ' + formatQuantity(row.imported_lines[0]?.cart_quantity) + ' at $' + row.imported_lines[0]?.cart_part_cost"
-                                                    ></span><span x-show="row.selected" x-text="' · importing again adds another line; the existing line is not changed.'"></span>
+                                                <div x-show="row.import_status !== IMPORT_STATUS.NEW" x-cloak class="small mt-1" data-cart-imported>
+                                                    <template x-for="line in row.imported_lines" :key="row.source_key + '-l-' + line.line_id">
+                                                        <div class="text-secondary">
+                                                            <span x-text="'On estimate under ' + (line.concern_summary || 'this RO') + ': qty ' + formatQuantity(line.estimate_quantity) + ' at ' + line.estimate_unit_sell + ' each'"></span><span
+                                                                x-show="line.cart_changed && line.cart_quantity"
+                                                                x-text="'. Imported as qty ' + formatQuantity(line.cart_quantity) + ' at $' + line.cart_part_cost + ' cost; the cart now has qty ' + formatQuantity(row.quantity) + ' at $' + row.cart_part_cost + '.'"
+                                                            ></span>
+                                                        </div>
+                                                    </template>
+                                                    <div x-show="row.selected" x-cloak class="alert alert-warning py-2 px-2 mt-1 mb-0" role="group" :aria-label="'Confirm another copy of ' + row.description" data-cart-duplicate-confirm>
+                                                        <label class="form-check mb-0">
+                                                            <input type="checkbox" class="form-check-input" x-model="row.duplicate_acknowledged" data-cart-duplicate-ack>
+                                                            <span class="form-check-label">Add another copy as a new estimate line. Nothing already on the estimate changes.</span>
+                                                        </label>
+                                                    </div>
                                                 </div>
 
                                                 <div class="row g-2 mt-1">
@@ -256,23 +270,33 @@
                             </div>
                         </div>
 
-                        <div class="modal-footer flex-nowrap gap-2" data-cart-footer>
-                            <div class="me-auto small min-w-0">
-                                <span class="fw-bold" x-text="selectedRows.length + ' selected'"></span>
-                                <span x-show="selectedRows.length > 0" x-text="' · Sell ' + selectedSell"></span>
-                                <span x-show="missingConcernCount > 0" x-cloak class="text-danger" x-text="' · ' + missingConcernCount + ' need a concern'"></span>
+                        <div class="modal-footer d-block" data-cart-footer>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="me-auto small" data-cart-summary>
+                                    <span class="fw-bold" x-text="selectedRows.length + ' selected'"></span>
+                                    <span x-show="selectedRows.length > 0" x-text="' · Sell ' + selectedSell"></span>
+                                </div>
+                                <button type="button" class="btn d-none d-sm-inline-flex" @click="close()" :disabled="importing">Close</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    :disabled="! canImport"
+                                    :aria-disabled="canImport ? 'false' : 'true'"
+                                    aria-describedby="partstech-cart-issues"
+                                    @click="submit()"
+                                    data-cart-import
+                                >
+                                    <span x-show="importing" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                                    <span x-text="importing ? 'Importing…' : 'Import selected'">Import selected</span>
+                                </button>
                             </div>
-                            <button type="button" class="btn d-none d-sm-inline-flex" @click="close()" :disabled="importing">Close</button>
-                            <button
-                                type="button"
-                                class="btn btn-primary"
-                                :disabled="! canImport"
-                                @click="submit()"
-                                data-cart-import
-                            >
-                                <span x-show="importing" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-                                <span x-text="importing ? 'Importing…' : 'Import selected'">Import selected</span>
-                            </button>
+                            <div id="partstech-cart-issues" class="small mt-1" role="status" aria-live="polite" data-cart-issues>
+                                <template x-for="issue in issues" :key="issue">
+                                    <div class="text-danger" x-text="issue"></div>
+                                </template>
+                                <div x-show="issues.length === 0 && selectedRows.length > 0 && pricingPending" x-cloak class="text-secondary">Pricing parts…</div>
+                                <div x-show="loaded && selectedRows.length === 0" x-cloak class="text-secondary">Tick the parts to import.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
