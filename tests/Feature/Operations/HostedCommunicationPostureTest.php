@@ -1,6 +1,7 @@
 <?php
 
 use App\Ark\Install\InstallationIdentity;
+use App\Ark\Operations\Communications\OperationalCommunicationChannel;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationRecorder;
@@ -8,11 +9,15 @@ use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
 use App\Ark\Operations\Conversations\ConversationWork;
 use App\Ark\Operations\Conversations\InboundConversationPayload;
+use App\Ark\Operations\Events\OperationalEvent;
+use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Messaging\InboundSmsConversationIngress;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Platform\Communications\ManagedCommunicationsGate;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 
 beforeEach(function () {
     config()->set('broadcasting.default', 'null');
@@ -65,7 +70,7 @@ test('hosted inbound sms reopens a resolved thread into Needs', function () {
         contactSurface: ConversationContactSurface::Phone,
         contactKey: $phone,
         providerMessageId: 'SM-posture-sms-1',
-        channel: \App\Ark\Operations\Communications\OperationalCommunicationChannel::Sms,
+        channel: OperationalCommunicationChannel::Sms,
         body: 'Are you open?',
     ));
 
@@ -91,7 +96,7 @@ test('hosted inbound sms into an open waiting thread gives the shop the turn', f
         contactSurface: ConversationContactSurface::Phone,
         contactKey: $phone,
         providerMessageId: 'SM-posture-open-1',
-        channel: \App\Ark\Operations\Communications\OperationalCommunicationChannel::Sms,
+        channel: OperationalCommunicationChannel::Sms,
         body: 'I can come in tomorrow',
     ));
 
@@ -237,6 +242,112 @@ test('a website request reopens a resolved thread into Needs', function () {
         ->and($work->lane($fresh))->toBe('needs');
 });
 
+test('a staff resolution still takes an unowned thread and records who resolved it', function () {
+    $advisor = User::factory()->create();
+    $work = app(ConversationWork::class);
+    $conversation = $work->markNeedsAttention($work->ensureForPhone('7195550207'));
+
+    $resolved = $work->resolve($conversation, $advisor);
+    $event = resolutionEvents($resolved)->sole();
+
+    expect($resolved->owned_by_user_id)->toBe($advisor->id)
+        ->and($event->actor_user_id)->toBe($advisor->id)
+        ->and($event->payload_json['source'])->toBe('staff')
+        ->and($event->payload_json['previous']['status'])->toBe('open')
+        ->and($event->payload_json['previous']['owned_by_user_id'])->toBeNull();
+});
+
+test('an automatic resolution records its reason and keeps the owner as it was', function () {
+    $owner = User::factory()->create();
+    $work = app(ConversationWork::class);
+    $owned = $work->assign($work->markNeedsAttention($work->ensureForPhone('7195550208')), $owner);
+    $unowned = $work->followUp($work->ensureForPhone('7195550209'), null, now()->addDay());
+
+    $this->travel(5)->minutes();
+    $resolvedOwned = $work->resolveAutomatically($owned, 'Backlog cleanup: repair order closed', ['repair_order_ids' => [41]]);
+    $resolvedUnowned = $work->resolveAutomatically($unowned, 'Backlog cleanup: repair order closed');
+
+    expect($resolvedOwned->status)->toBe(ConversationStatus::Resolved)
+        ->and($resolvedOwned->owned_by_user_id)->toBe($owner->id)
+        ->and($resolvedOwned->resolved_at?->equalTo(now()->startOfSecond()))->toBeTrue()
+        ->and($work->lane($resolvedOwned))->toBe('resolved')
+        ->and($resolvedUnowned->owned_by_user_id)->toBeNull()
+        ->and($resolvedUnowned->follow_up_due_at)->toBeNull();
+
+    $event = resolutionEvents($resolvedOwned)->sole();
+
+    expect($event->actor_user_id)->toBeNull()
+        ->and($event->occurred_at->equalTo($resolvedOwned->resolved_at))->toBeTrue()
+        ->and($event->payload_json['source'])->toBe('system')
+        ->and($event->payload_json['reason'])->toBe('Backlog cleanup: repair order closed')
+        ->and($event->payload_json['context'])->toBe(['repair_order_ids' => [41]])
+        ->and($event->payload_json['previous']['owned_by_user_id'])->toBe($owner->id)
+        ->and($event->payload_json['previous']['waiting_on'])->toBe('shop');
+
+    expect(resolutionEvents($resolvedUnowned)->sole()->payload_json)->not->toHaveKey('context')
+        ->and(resolutionEvents($resolvedUnowned)->sole()->payload_json['previous']['follow_up_due_at'])->not->toBeNull();
+});
+
+test('an automatic resolution of a thread that is no longer open changes nothing', function () {
+    $advisor = User::factory()->create();
+    $work = app(ConversationWork::class);
+    $conversation = $work->resolve($work->markNeedsAttention($work->ensureForPhone('7195550210')), $advisor);
+    $resolvedAt = $conversation->resolved_at;
+
+    $this->travel(1)->hour();
+    $work->resolveAutomatically($conversation, 'Backlog cleanup: repair order closed');
+    $work->resolveAutomatically($conversation, 'Backlog cleanup: repair order closed');
+
+    expect($conversation->fresh()->resolved_at->equalTo($resolvedAt))->toBeTrue()
+        ->and(resolutionEvents($conversation)->pluck('payload_json.source')->all())->toBe(['staff']);
+});
+
+test('an automatic resolution needs a reason', function () {
+    $work = app(ConversationWork::class);
+    $conversation = $work->markNeedsAttention($work->ensureForPhone('7195550211'));
+
+    expect(fn () => $work->resolveAutomatically($conversation, '  '))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($conversation->fresh()->status)->toBe(ConversationStatus::Open)
+        ->and(resolutionEvents($conversation))->toHaveCount(0);
+});
+
+test('a customer reply reopens an automatically resolved thread for its owner', function () {
+    $owner = User::factory()->create();
+    $phone = '7195550212';
+    $work = app(ConversationWork::class);
+    $conversation = $work->assign($work->markNeedsAttention($work->ensureForPhone($phone)), $owner);
+    $work->resolveAutomatically($conversation, 'Backlog cleanup: repair order closed');
+
+    app(InboundSmsConversationIngress::class)->ingest(new InboundConversationPayload(
+        contactSurface: ConversationContactSurface::Phone,
+        contactKey: $phone,
+        providerMessageId: 'SM-posture-auto-reopen',
+        channel: OperationalCommunicationChannel::Sms,
+        body: 'One more question about the brakes',
+    ));
+
+    $fresh = $conversation->fresh();
+
+    expect($work->lane($fresh))->toBe('needs')
+        ->and($fresh->owned_by_user_id)->toBe($owner->id)
+        ->and($fresh->reopen_count)->toBe(1);
+});
+
+/**
+ * @return Collection<int, OperationalEvent>
+ */
+function resolutionEvents(Conversation $conversation): Collection
+{
+    return OperationalEvent::query()
+        ->where('event_name', OperationalEventName::ConversationResolved->value)
+        ->where('aggregate_type', Conversation::class)
+        ->where('aggregate_id', $conversation->id)
+        ->orderBy('id')
+        ->get();
+}
+
 /**
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
@@ -254,7 +365,7 @@ function postureVoicePayload(string $sid, string $phone, array $overrides = []):
 /**
  * @param  array<string, mixed>  $payload
  */
-function postPostureVoice(string $operation, array $payload): \Illuminate\Testing\TestResponse
+function postPostureVoice(string $operation, array $payload): TestResponse
 {
     $body = [
         'operation' => $operation,

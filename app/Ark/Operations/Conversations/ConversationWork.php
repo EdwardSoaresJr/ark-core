@@ -51,6 +51,14 @@ final class ConversationWork
         return $this->posture->resolve($conversation, $actor);
     }
 
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    public function resolveAutomatically(Conversation $conversation, string $reason, array $context = []): Conversation
+    {
+        return $this->posture->resolveAutomatically($conversation, $reason, $context);
+    }
+
     public function assign(Conversation $conversation, ?User $owner): Conversation
     {
         return $this->posture->assign($conversation, $owner);

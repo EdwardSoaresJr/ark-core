@@ -5,6 +5,7 @@ namespace App\Ark\Operations\Events;
 enum OperationalEventName: string
 {
     case ConversationMessageReceived = 'conversation_message_received';
+    case ConversationResolved = 'conversation_resolved';
     case EncounterCreated = 'encounter_created';
     case EncounterCustomerResolved = 'encounter_customer_resolved';
     case EncounterVehicleResolved = 'encounter_vehicle_resolved';
