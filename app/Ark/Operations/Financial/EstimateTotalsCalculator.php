@@ -370,7 +370,7 @@ class EstimateTotalsCalculator
         return null;
     }
 
-    public function grossMarginPercentage(?int $costCents, int $sellCents): ?string
+    public function grossMarginPercentage(?int $costCents, int $sellCents, int $scale = 0): ?string
     {
         if ($costCents === null || $sellCents <= 0) {
             return null;
@@ -378,8 +378,8 @@ class EstimateTotalsCalculator
 
         return BigDecimal::of($sellCents - $costCents)
             ->multipliedBy(100)
-            ->dividedBy($sellCents, 0, RoundingMode::HALF_UP)
-            ->toScale(0)
+            ->dividedBy($sellCents, $scale, RoundingMode::HALF_UP)
+            ->toScale($scale)
             ->__toString();
     }
 

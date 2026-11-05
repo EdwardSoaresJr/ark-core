@@ -29,6 +29,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'vendor_name',
     'part_number',
     'dealer_quote_line_id',
+    'parts_cart_source_key',
+    'parts_cart_snapshot',
     'is_private',
     'visible_to_advisor',
     'visible_to_technician',
@@ -110,6 +112,7 @@ class RepairOrderLine extends Model
             'total_cents' => 'integer',
             'is_overridden' => 'boolean',
             'legacy_approved_amounts' => 'array',
+            'parts_cart_snapshot' => 'array',
         ];
     }
 

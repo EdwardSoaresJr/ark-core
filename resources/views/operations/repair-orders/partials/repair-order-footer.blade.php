@@ -6,19 +6,24 @@
     $keyTagUrl = route('operations.repair-orders.print-key-tag', $repairOrder);
     $oilStickerUrl = route('operations.repair-orders.print-oil-change-sticker', $repairOrder);
     $docked = (bool) ($docked ?? false);
+    $estimatingTools = $estimatingTools ?? null;
 @endphp
 
 {{-- Own x-data so @click and the PRINT menu bind wherever the dock renders. --}}
 <footer
     @class([
-        'border-top mt-2 pt-2' => $docked,
+        'border-top mt-1 pt-1 mt-md-2 pt-md-2' => $docked,
     ])
     data-ro-footer
     @if ($docked) data-ro-footer-docked @endif
     aria-label="Repair Order actions"
     x-data
 >
-    <div class="d-flex flex-wrap align-items-center gap-2">
+    <div @class([
+        'd-flex align-items-center',
+        'flex-wrap gap-2' => $estimatingTools === null,
+        'flex-nowrap flex-md-wrap gap-1 gap-sm-2' => $estimatingTools !== null,
+    ])>
         <div class="d-flex align-items-center gap-2">
             @if ($workflow->key !== 'none')
                 @if ($workflow->opensModal)
@@ -53,7 +58,18 @@
             @endif
         </div>
 
-        <div class="d-flex flex-wrap align-items-center gap-1 flex-fill">
+        @if ($estimatingTools !== null)
+            @include('operations.repair-orders.partials.repair-order-footer-estimating-tools', [
+                'tools' => $estimatingTools,
+                'presentActions' => $footer->present,
+            ])
+        @endif
+
+        <div @class([
+            'flex-wrap align-items-center gap-1 flex-fill',
+            'd-flex' => $estimatingTools === null,
+            'd-none d-md-flex' => $estimatingTools !== null,
+        ])>
             @foreach ($footer->present as $action)
                 @if ($action->opensModal)
                     <button
@@ -90,9 +106,10 @@
                 @click="open = ! open"
                 :aria-expanded="open"
                 aria-haspopup="menu"
+                aria-label="Print"
             >
                 <x-tabler.icon name="printer" />
-                PRINT
+                <span @class(['d-none d-sm-inline' => $estimatingTools !== null])>PRINT</span>
             </button>
             <div
                 class="dropdown-menu dropdown-menu-end bottom-100 end-0 mb-1"

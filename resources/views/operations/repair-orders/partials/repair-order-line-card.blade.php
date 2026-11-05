@@ -282,5 +282,13 @@
                 @endif
             </div>
         </div>
+        {{-- Phones show no Subtotal / Fee / Tax columns, so a total that includes them says so. --}}
+        @if ($line->shop_fee_cents > 0 || $line->tax_cents > 0 || $line->standing_discount_cents > 0)
+            <p class="small text-secondary text-end mt-1 mb-0 d-md-none" data-line-total-breakdown>
+                {{ $totals->format($line->subtotal_cents) }}@if ($line->standing_discount_cents > 0) − {{ $totals->format($line->standing_discount_cents) }} discount @endif
+                @if ($line->shop_fee_cents > 0) + {{ $totals->format($line->shop_fee_cents) }} shop fee @endif
+                @if ($line->tax_cents > 0) + {{ $totals->format($line->tax_cents) }} tax @endif
+            </p>
+        @endif
     </div>
 @endif

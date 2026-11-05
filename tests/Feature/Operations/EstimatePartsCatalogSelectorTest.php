@@ -59,8 +59,9 @@ test('pull cart is registered with alpine', function () {
     $source = file_get_contents(base_path('resources/js/app.js'));
 
     expect($source)
-        ->toContain("import { arkPartsTechQuoteImport } from './ark-partstech-quote-import';")
-        ->toContain("Alpine.data('arkPartsTechQuoteImport', (config = {}) => arkPartsTechQuoteImport(config));");
+        ->toContain("import { arkPartsTechCartManager, partsCartStore } from './ark-partstech-cart-manager';")
+        ->toContain("Alpine.store('partsCart', partsCartStore());")
+        ->toContain("Alpine.data('arkPartsTechCartManager', (config = {}) => arkPartsTechCartManager(config));");
 });
 
 test('partstech default selects partstech actions on a new repair order', function () {
@@ -81,7 +82,7 @@ test('partstech default selects partstech actions on a new repair order', functi
         ->toContain('>PartsTech</span>')
         ->toContain('title="Open PartsTech"')
         ->toContain('>Pull Cart</span>')
-        ->toContain('arkPartsTechQuoteImport(')
+        ->toContain('arkPartsTechCartManager(')
         ->toContain('Open RepairLink')
         ->toContain('activatePartsCatalogItem(item)')
         ->toContain('selectPartsCatalog(')
@@ -154,8 +155,18 @@ test('pull quote is gated to the selected partstech catalog', function () {
 
     expect($html)
         ->toContain("if (key !== 'partstech' || this.partsCatalogSelectedKey !== 'partstech')")
-        ->toContain('x-show="partsCatalogSelected()?.can_pull_quote"')
+        ->toContain('data-ro-footer-cart')
         ->toContain("window.open(catalogUrl, 'ark-partstech-catalog')");
+
+    config()->set('services.partstech.username', null);
+    config()->set('services.partstech.password', null);
+
+    $this->actingAs($advisor)
+        ->get(route('operations.repair-orders.show', partsCatalogSelectorRepairOrder()))
+        ->assertOk()
+        ->assertSee('Open RepairLink', false)
+        ->assertDontSee('data-ro-footer-cart', false)
+        ->assertDontSee('data-partstech-cart-manager', false);
 });
 
 test('making repairlink default does not replace partstech on the main catalog button', function () {

@@ -1009,6 +1009,14 @@
             App\Ark\Runtime\Preferences\EstimateToolbarPreference::KIND_LABOR,
             array_column($laborGuides, 'key'),
         );
+        $estimatingTools = $isTerminal ? null : [
+            'parts_catalogs' => $partsCatalogs,
+            'parts_catalog_default' => $partsCatalogDefault,
+            'labor_guides' => $laborGuides,
+            'labor_guide_default' => $laborGuideDefault,
+            'cart' => $canImportPartstechQuote
+                && (auth()->user()?->can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value) ?? false),
+        ];
     @endphp
     <section
         data-worksheet-root
@@ -1189,14 +1197,6 @@
             toggleEstimateContext(name) {
                 this.estimateContext = this.estimateContext === name ? null : name;
             },
-            focusCreateScope() {
-                window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', {
-                    detail: {
-                        task: 'add-work',
-                        invokeEl: document.querySelector('[data-workspace-modal-trigger=add-work]'),
-                    },
-                }));
-            },
             openPartsCatalog(key, forceCartSwitch = false, concernId = null) {
                 const catalog = this.partsCatalogByKey(key);
                 this.partsCatalogActionLabel = catalog?.label || '';
@@ -1356,6 +1356,9 @@
                 this.partstechOpenedCatalogUrl = catalogUrl;
                 this.partstechLastStampedOrders = stampedOrderCount;
                 this.partstechCatalogWindow = window.open(catalogUrl, 'ark-partstech-catalog');
+                window.dispatchEvent(new CustomEvent('ark:partstech-launched', {
+                    detail: { repairOrderId: @js($repairOrder->id), concernId: preferredConcernId, catalogWindow: this.partstechCatalogWindow },
+                }));
                 this.startPartsTechPoWatch();
             },
             partsTechPastePoNotice(existing) {
@@ -1517,6 +1520,7 @@
         @ark:partstech-warning.window="partstechNotice = $event.detail.message || ''; partstechCartLocked = Boolean($event.detail.cartLocked)"
         @ark:partstech-pull-quote-state.window="partstechPullLoading = Boolean($event.detail?.loading); partstechPullStatus = $event.detail?.status || ''"
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
+        @ark:partstech-open.window="openPartsCatalog('partstech', false, $event.detail?.concernId ?? null)"
         @keydown.escape.window="partsCatalogMenu = false; laborGuideMenu = false"
     >
         {{-- No page title: the RO number heads the Visit panel, which begins the page. --}}
@@ -1640,14 +1644,6 @@
                     'repairOrder' => $repairOrder,
                     'mode' => 'edit',
                     'isTerminal' => $isTerminal,
-                    'showConcernStore' => (bool) ($canAuthorRepairOrder ?? false),
-                    'partsCatalogs' => $partsCatalogs,
-                    'partsCatalogDefault' => $partsCatalogDefault,
-                    'laborGuides' => $laborGuides,
-                    'laborGuideDefault' => $laborGuideDefault,
-                    'estimateToolbarPersistUrl' => $estimateToolbarPersistUrl,
-                    'laborGuideConcernId' => $laborGuideConcernId,
-                    'rteLaborGuide' => $rteLaborGuide,
                 ])
 
                 @include('operations.repair-orders.partials.repair-order-visit-reason', [
@@ -1736,23 +1732,17 @@
                                 'repairOrder' => $repairOrder,
                             ])
                         @endif
-                        @if ($canImportPartstechQuote)
-                            @include('operations.repair-orders.partials.repair-order-partstech-import', [
-                                'repairOrder' => $repairOrder,
-                                'estimateVersion' => $estimateVersion,
-                                'partstechPoNumber' => $partstechPoNumber,
-                                'partstechPrepareUrl' => $partstechPrepareUrl,
-                                'canImportQuote' => true,
-                            ])
-                        @elseif ($partsTechLauncher->usesPlatform() && ! $isTerminal)
-                            <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
-                                {{ $partsTechLauncher->blockedReason($repairOrder) }}
-                            </p>
-                        @elseif ($partsTechLauncher->configured() && ! $isTerminal)
-                            <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
-                                PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
-                            </p>
-                        @endif
+                        @unless ($canImportPartstechQuote || $isTerminal)
+                            @if ($partsTechLauncher->usesPlatform())
+                                <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                    {{ $partsTechLauncher->blockedReason($repairOrder) }}
+                                </p>
+                            @elseif ($partsTechLauncher->configured())
+                                <p class="small text-secondary mb-3" data-worksheet-procurement-hint>
+                                    PartsTech pull quote requires a shop username and password in <a href="{{ route('operations.settings.shop.edit', ['section' => 'partstech']) }}">Settings → PartsTech</a>.
+                                </p>
+                            @endif
+                        @endunless
 
                         @if (! $isTerminal)
                             @include('operations.repair-orders.partials.repair-order-dealer-quote-capture', [
@@ -1915,6 +1905,12 @@
                 @endif
             </aside>
         </div>
+
+        @include('operations.repair-orders.partials.repair-order-partstech-cart-manager', [
+            'repairOrder' => $repairOrder,
+            'estimateVersion' => $estimateVersion,
+            'canImportQuote' => (bool) ($estimatingTools['cart'] ?? false),
+        ])
 
         @include('operations.repair-orders.partials.repair-order-rte-labor-panel', [
             'rteLaborGuide' => $rteLaborGuide,

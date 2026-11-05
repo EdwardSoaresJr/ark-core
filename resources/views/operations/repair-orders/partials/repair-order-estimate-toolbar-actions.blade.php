@@ -1,92 +1,27 @@
+{{-- Add Work, PartsTech, other parts catalogs, labor guides and the PartsTech cart live in the docked RO footer. --}}
 @php
-    use App\Ark\Operations\LaborGuides\LaborGuideConnections;
-    use App\Ark\Operations\Parts\PartsCatalogConnections;
-    use App\Ark\Runtime\Preferences\EstimateToolbarPreference;
-
     $mode = $mode ?? 'edit';
     $isTerminal = $isTerminal ?? false;
-    if (! isset($partsCatalogs)) {
-        $partsCatalogs = $mode === 'edit' && ! $isTerminal && isset($repairOrder)
-            ? app(PartsCatalogConnections::class)->forRepairOrder($repairOrder, auth()->user())
-            : [];
-    } elseif ($mode !== 'edit' || $isTerminal) {
-        $partsCatalogs = [];
-    }
-
-    $laborGuideConcernId = $laborGuideConcernId ?? null;
-    $laborGuides = $laborGuides ?? [];
-    $showConcernStore = ($showConcernStore ?? false) && $mode === 'edit' && ! $isTerminal;
     $showCaptureDealerQuote = $mode === 'edit' && ! $isTerminal;
-    $showLaborGuide = $mode === 'edit' && ! $isTerminal;
-
-    if ($showLaborGuide && $laborGuides === [] && isset($repairOrder)) {
-        $laborGuides = app(LaborGuideConnections::class)->forRepairOrder(
-            $repairOrder,
-            $laborGuideConcernId,
-            $rteLaborGuide ?? [],
-        );
-    } elseif (! $showLaborGuide) {
-        $laborGuides = [];
-    }
-
-    $partsCatalogDefault = $partsCatalogDefault
-        ?? EstimateToolbarPreference::resolve(
-            auth()->user(),
-            EstimateToolbarPreference::KIND_PARTS,
-            collect($partsCatalogs)
-                ->filter(fn (array $catalog): bool => ($catalog['mode'] ?? 'catalog') === 'catalog' && $catalog['can_open'])
-                ->pluck('key')
-                ->all()
-                ?: collect($partsCatalogs)->filter(fn (array $catalog): bool => $catalog['can_open'])->pluck('key')->all()
-                ?: array_column($partsCatalogs, 'key'),
-        );
-    $laborGuideDefault = $laborGuideDefault
-        ?? EstimateToolbarPreference::resolve(auth()->user(), EstimateToolbarPreference::KIND_LABOR, array_column($laborGuides, 'key'));
-    $showProcurement = $partsCatalogs !== [] || $showCaptureDealerQuote;
     // The customer's estimate as they see it, for staff: shown on locked and closed estimates too.
     $showEstimatePreview = isset($repairOrder)
         && (auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value) ?? false)
         && $repairOrder->lines()->exists();
-    $showCustomerView = $showConcernStore || $showProcurement || $showLaborGuide;
+    $showCustomerView = $mode === 'edit' && ! $isTerminal;
 @endphp
 
 @if ($showCustomerView || $showEstimatePreview)
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" role="toolbar" aria-label="Estimate tools" data-estimate-tools>
         <div class="d-flex flex-wrap align-items-start gap-2">
-            @if ($showConcernStore)
+            @if ($showCaptureDealerQuote)
                 <button
                     type="button"
-                    class="btn btn-primary"
-                    @click="focusCreateScope()"
+                    class="btn"
+                    @click="$dispatch('ark:dealer-quote-capture-open')"
+                    title="Import a dealer quote PDF or pasted text onto this estimate"
                 >
-                    + Add Work
+                    Import
                 </button>
-            @endif
-
-            @if ($showLaborGuide && $laborGuides !== [])
-                @include('operations.repair-orders.partials.repair-order-labor-guide-intent-button', [
-                    'laborGuides' => $laborGuides,
-                    'laborGuideDefault' => $laborGuideDefault,
-                ])
-            @endif
-
-            @if ($showProcurement)
-                @if ($partsCatalogs !== [])
-                    @include('operations.repair-orders.partials.repair-order-partstech-toolbar-group', [
-                        'partsCatalogs' => $partsCatalogs,
-                        'partsCatalogDefault' => $partsCatalogDefault,
-                    ])
-                @endif
-                @if ($showCaptureDealerQuote)
-                    <button
-                        type="button"
-                        class="btn"
-                        @click="$dispatch('ark:dealer-quote-capture-open')"
-                        title="Import a dealer quote PDF or pasted text onto this estimate"
-                    >
-                        Import
-                    </button>
-                @endif
             @endif
         </div>
 

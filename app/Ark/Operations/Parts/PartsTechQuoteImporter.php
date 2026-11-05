@@ -10,6 +10,7 @@ use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
 use App\Ark\Operations\RepairOrders\RepairOrderLifecycleTransition;
 use App\Ark\Operations\RepairOrders\RepairOrderLinePricing;
+use App\Ark\Operations\RepairOrders\RepairOrderLine;
 use App\Ark\Operations\RepairOrders\RepairOrderLineType;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderWorkGroup;
@@ -28,10 +29,14 @@ final class PartsTechQuoteImporter
         private readonly OperationalEventRecorder $events,
         private readonly RepairOrderLifecycleTransition $lifecycle,
         private readonly CustomerPartDescriptionAttributes $customerDescriptions,
+        private readonly PartsCartImportLedger $ledger,
     ) {}
 
     /**
-     * @param  list<array{source_key: string, repair_order_concern_id: int, repair_order_work_group_id?: int|null, part_cost?: string|null, pricing_matrix_key?: string|null}>  $assignments
+     * A cart line already on this repair order imports another copy only when its assignment names exactly
+     * the estimate lines the advisor confirmed (acknowledged_duplicate_line_ids).
+     *
+     * @param  list<array{source_key: string, repair_order_concern_id: int, repair_order_work_group_id?: int|null, part_cost?: string|null, pricing_matrix_key?: string|null, acknowledged_duplicate_line_ids?: list<int>|null}>  $assignments
      * @return array{imported: int, concerns: list<string>, work_group_ids: list<int>}
      */
     public function importAssignments(RepairOrder $repairOrder, array $assignments, User $actor): array
@@ -59,6 +64,12 @@ final class PartsTechQuoteImporter
         $workGroupIds = [];
 
         DB::transaction(function () use ($repairOrder, $assignments, $quoteByKey, $concernIds, $actor, &$imported, &$concernSummaries, &$workGroupIds): void {
+            RepairOrder::query()->whereKey($repairOrder->getKey())->lockForUpdate()->first();
+
+            $alreadyImported = $this->ledger->importedLines($repairOrder);
+            /** @var array<string, true> $seen */
+            $seen = [];
+
             foreach ($assignments as $assignment) {
                 $sourceKey = (string) ($assignment['source_key'] ?? '');
                 $concernId = (int) ($assignment['repair_order_concern_id'] ?? 0);
@@ -73,6 +84,18 @@ final class PartsTechQuoteImporter
                 if (! in_array($concernId, $concernIds, true)) {
                     throw new RuntimeException('One or more selected concerns are not on this repair order.');
                 }
+
+                if (isset($seen[$sourceKey])) {
+                    throw new RuntimeException('The same cart part was selected twice. Pull the cart again and import once.');
+                }
+
+                $seen[$sourceKey] = true;
+
+                $this->assertDuplicateAcknowledged(
+                    $alreadyImported->get($sourceKey),
+                    $assignment['acknowledged_duplicate_line_ids'] ?? null,
+                    $quoteByKey->get($sourceKey)?->description ?? 'A selected part',
+                );
 
                 $this->assertWorkGroupAssignment($concernId, $workGroupId);
 
@@ -114,6 +137,27 @@ final class PartsTechQuoteImporter
             'concerns' => array_values($concernSummaries),
             'work_group_ids' => array_values(array_unique($workGroupIds)),
         ];
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderLine>|null  $existing
+     */
+    private function assertDuplicateAcknowledged(?Collection $existing, mixed $acknowledged, string $description): void
+    {
+        if ($existing === null || $existing->isEmpty()) {
+            return;
+        }
+
+        if (! is_array($acknowledged) || $acknowledged === []) {
+            throw new RuntimeException($description.' is already on this estimate. Confirm adding another copy in the cart to import it again.');
+        }
+
+        $existingIds = $existing->pluck('id')->map(fn (mixed $id): int => (int) $id)->sort()->values()->all();
+        $acknowledgedIds = collect($acknowledged)->map(fn (mixed $id): int => (int) $id)->unique()->sort()->values()->all();
+
+        if ($acknowledgedIds !== $existingIds) {
+            throw new RuntimeException($description.' changed on the estimate since you confirmed another copy. Pull the cart again.');
+        }
     }
 
     private function assertWorkGroupAssignment(int $concernId, ?int $workGroupId): void
@@ -190,6 +234,8 @@ final class PartsTechQuoteImporter
             'vendor_name' => $pricingAttributes['vendor_name'],
             'part_number' => $pricingAttributes['part_number'],
             'sourcing_notes' => $pricingAttributes['sourcing_notes'],
+            'parts_cart_source_key' => $quoteLine->sourceKey,
+            'parts_cart_snapshot' => $this->ledger->snapshotFor($quoteLine),
             'is_overridden' => $pricingAttributes['is_overridden'],
             'subtotal_cents' => $this->calculator->lineTotalCents($data['quantity'], $pricingAttributes['unit_price_cents']),
         ]);
