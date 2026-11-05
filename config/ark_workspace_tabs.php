@@ -14,6 +14,10 @@ return [
 
     'enabled' => (bool) env('ARK_WORKSPACE_TABS_ENABLED', true),
 
+    /**
+     * Most tabs whose activity is refreshed at once: the active tab and the most recently focused. Open tabs are never
+     * closed to stay under it; those that do not fit the strip are listed in its overflow menu.
+     */
     'max_tabs' => (int) env('ARK_WORKSPACE_TABS_MAX', 12),
 
     'tab_min_width' => 176,

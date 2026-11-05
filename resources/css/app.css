@@ -3592,9 +3592,11 @@
 
     .ops-workspace-tabs__overflow-wrap {
         position: relative;
+        display: flex;
         flex: 0 0 auto;
         flex-shrink: 0;
-        padding: 0;
+        align-items: center;
+        padding: 0 0.25rem;
     }
 
     .ops-workspace-tabs__divider--rail {

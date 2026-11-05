@@ -2031,7 +2031,11 @@
                 };
 
                 fit();
-                document.addEventListener('DOMContentLoaded', fit, { once: true });
+                // The sticky offset includes the workspace strip, whose height is set once the deferred scripts ran.
+                document.addEventListener('DOMContentLoaded', () => {
+                    stack = null;
+                    fit();
+                }, { once: true });
                 window.addEventListener('resize', fit);
                 if (typeof ResizeObserver !== 'undefined') {
                     new ResizeObserver(fit).observe(rail);

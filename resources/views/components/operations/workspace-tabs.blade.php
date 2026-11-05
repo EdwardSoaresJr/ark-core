@@ -4,7 +4,7 @@
         {{-- The unsaved-changes trackers skip .ops-workspace-tabs, which this mount does not carry. --}}
         <div
             id="ops-workspace-tabs"
-            class="d-none d-print-none border-bottom bg-surface"
+            class="ark-workspace-tabs d-none d-print-none border-bottom bg-surface"
             data-workspace-tabs
             data-workspace-tabs-ui="tabler"
             data-ark-workspace-dirty="off"
