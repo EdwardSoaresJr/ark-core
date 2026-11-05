@@ -8,6 +8,8 @@ import {
     createIntakeWorkspaceId,
     hasIncomingCallPhoneParam,
     INTAKE_LAUNCHER_ENTITY_ID,
+    intakeSearchIsBare,
+    intakeWorkspaceIsUntouched,
     isExplicitIntakeResetRoute,
     intakeWorkspaceIdFromSearch,
     isValidIntakeWorkspaceId,
@@ -1697,6 +1699,35 @@ function updateIntakeTab({ title, subtitle, route, workspaceId = null } = {}) {
     renderBar();
 }
 
+function isBareIntakeLauncherRoute(route) {
+    try {
+        const url = new URL(String(route), window.location.origin);
+
+        return url.pathname === '/app/intake/new' && intakeSearchIsBare(url.search);
+    } catch {
+        return false;
+    }
+}
+
+/** An open Check In tab with nothing entered, which a new Check In reuses: the current one first, else the latest. */
+function untouchedIntakeTab() {
+    if (isIntakeKey(state.activeKey)) {
+        window.ARK?.intakeWorkspaceMemory?.persist?.();
+    }
+
+    const candidates = state.tabs.filter((tab) => isIntakeKey(tab.key)
+        && !isDockedTabKey(tab.key)
+        && !tab.customerName
+        && !tab.dirty
+        && !keyHasUnsavedChanges(tab.key)
+        && isBareIntakeLauncherRoute(tab.route)
+        && intakeWorkspaceIsUntouched(tab.key.split(':')[1]));
+
+    return candidates.find((tab) => tab.key === state.activeKey)
+        || [...candidates].sort((a, b) => (b.focusedAt || 0) - (a.focusedAt || 0))[0]
+        || null;
+}
+
 function spawnFreshIntakeWorkspace(sourceRoute = '/app/intake/new') {
     openWorkspace({
         entityType: 'intake',
@@ -1755,6 +1786,14 @@ function openWorkspace(opts) {
 
     if (type === 'intake') {
         freshIntake = isExplicitIntakeResetRoute(targetRoute) || id === INTAKE_LAUNCHER_ENTITY_ID;
+
+        const emptyIntake = freshIntake && isBareIntakeLauncherRoute(targetRoute) ? untouchedIntakeTab() : null;
+
+        if (emptyIntake) {
+            focusWorkspace(emptyIntake.key);
+
+            return;
+        }
 
         if (freshIntake) {
             id = createIntakeWorkspaceId();
