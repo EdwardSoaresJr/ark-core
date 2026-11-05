@@ -136,6 +136,14 @@ class CommunicationsWorkspaceFragmentController
             'signature' => (string) ($workspace['poll_signature'] ?? $this->signature($workspace)),
             'unchanged' => false,
             'list_count' => (int) ($workspace['list_count'] ?? 0),
+            'nav' => view('operations.communications.workspace.partials.section-nav', [
+                'section' => $section,
+                'listFilter' => $listFilter,
+                'filterCounts' => $workspace['filter_counts'] ?? null,
+                'ownerFilter' => $workspace['owner_filter'] ?? 'everyone',
+                'turnFilter' => $workspace['turn_filter'] ?? null,
+                'turnCounts' => $workspace['turn_counts'] ?? null,
+            ])->render(),
             'list' => view('operations.communications.workspace.partials.list-panel', [
                 'title' => $listTitle,
                 'count' => $workspace['list_count'],

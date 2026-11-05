@@ -147,6 +147,9 @@ final class CommunicationsWorkspaceProjection
         }
 
         $filter = $this->normalizeListFilter($listFilter, $turnFilter);
+        // Taken before the list is read: a change landing while the page is built then makes the next poll differ,
+        // instead of being reported as already shown.
+        $pollSignature = $this->pollSignature($filter, $conversationId, $leadId, $callSessionId);
         $filterCounts = $this->cheapFilterCounts($viewer, $previousLastSeenAt, $filter);
         $ownerFilter = in_array($ownerFilter, ['everyone', 'mine', 'unassigned'], true) ? $ownerFilter : 'everyone';
         $limit = self::listLimit($listLimit);
@@ -197,7 +200,7 @@ final class CommunicationsWorkspaceProjection
             'selected' => $selected,
             'thread' => $thread,
             'context' => $context,
-            'poll_signature' => $this->pollSignature($filter, $conversationId, $leadId, $callSessionId),
+            'poll_signature' => $pollSignature,
             'live_events' => $this->liveEvents(),
             'notices' => $this->signals->notices(),
             'list_filter' => $filter,

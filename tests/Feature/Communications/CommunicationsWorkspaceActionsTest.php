@@ -362,6 +362,81 @@ test('the context lane names the conversation number apart from the customer mai
         ->assertDontSee('This conversation', false);
 });
 
+test('a workspace action answered in place says whether the conversation stays in the lane being worked', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $work = fn (Conversation $conversation, array $data) => $this->actingAs($advisor)
+        ->postJson(route('operations.communications.conversations.work', $conversation), $data + [
+            'filter' => 'needs',
+            'posture_changed_at' => $conversation->fresh()->posture_changed_at?->toIso8601String(),
+        ]);
+
+    $resolved = workspaceConversationFixture('7195558301');
+    $work($resolved, ['action' => 'resolve'])
+        ->assertOk()
+        ->assertJson(['ok' => true, 'action' => 'resolve', 'lane' => 'resolved', 'in_list' => false, 'leave' => false]);
+    expect($resolved->fresh()->status)->toBe(ConversationStatus::Resolved);
+
+    $assigned = workspaceConversationFixture('7195558302');
+    $work($assigned, ['action' => 'assign', 'assign_to' => 'me'])
+        ->assertOk()
+        ->assertJson(['ok' => true, 'lane' => 'needs', 'in_list' => true]);
+    $work($assigned, ['action' => 'assign', 'assign_to' => 'unassign', 'owner' => 'mine'])
+        ->assertOk()
+        ->assertJson(['ok' => true, 'lane' => 'needs', 'in_list' => false]);
+
+    $followed = workspaceConversationFixture('7195558303');
+    $work($followed, ['action' => 'follow_up'])
+        ->assertOk()
+        ->assertJson(['lane' => 'waiting', 'in_list' => false]);
+    $work($followed->fresh(), ['action' => 'resolve', 'filter' => 'waiting'])
+        ->assertOk()
+        ->assertJson(['lane' => 'resolved', 'in_list' => false]);
+
+    $reopened = workspaceConversationFixture('7195558304', ConversationStatus::Resolved);
+    $work($reopened, ['action' => 'reopen', 'filter' => 'resolved'])
+        ->assertOk()
+        ->assertJson(['lane' => 'needs', 'in_list' => false]);
+
+    $unread = workspaceConversationFixture('7195558305');
+    $work($unread, ['action' => 'unread'])
+        ->assertOk()
+        ->assertJson(['ok' => true, 'action' => 'unread', 'in_list' => true, 'leave' => true]);
+});
+
+test('a workspace action on a conversation someone else just changed is refused and changes nothing', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    $conversation = workspaceConversationFixture('7195558306');
+    $conversation->forceFill(['posture_changed_at' => now()])->save();
+
+    $this->actingAs($advisor)
+        ->postJson(route('operations.communications.conversations.work', $conversation), [
+            'action' => 'resolve',
+            'filter' => 'needs',
+            'posture_changed_at' => now()->subHour()->toIso8601String(),
+        ])
+        ->assertStatus(409)
+        ->assertJson(['ok' => false]);
+
+    expect($conversation->fresh()->status)->toBe(ConversationStatus::Open);
+});
+
+test('the workspace fragment carries the lane counts so they change without reloading the page', function (): void {
+    $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    workspaceConversationFixture('7195558307');
+    workspaceConversationFixture('7195558308', ConversationStatus::Resolved);
+
+    $payload = $this->actingAs($advisor)
+        ->getJson(route('operations.communications.workspace.fragment', ['section' => 'inbox', 'filter' => 'needs']))
+        ->assertOk()
+        ->json();
+
+    $text = preg_replace('/\s+/', ' ', strip_tags($payload['nav']));
+
+    expect($payload['nav'])->toContain('data-comms-section-nav')
+        ->and($text)->toContain('Needs attention 1')
+        ->and($text)->toContain('Resolved 1');
+});
+
 function workspaceConversationFixture(string $phone, ConversationStatus $status = ConversationStatus::Open): Conversation
 {
     return Conversation::query()->create([
