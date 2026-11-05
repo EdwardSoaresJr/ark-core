@@ -210,7 +210,7 @@
                         @endif
                         @foreach ($visitLines as $line)
                             {{-- The presenter's "Advisor" is who last prepared the estimate (RepairOrder::serviceAdvisorName); documents keep their own label. --}}
-                            <dt class="col-4 text-secondary fw-normal">{{ $line['label'] === 'Advisor' ? 'Estimate prepared by' : $line['label'] }}</dt>
+                            <dt class="col-4 text-secondary fw-normal">{{ $line['label'] === 'Advisor' ? 'Estimate by' : $line['label'] }}</dt>
                             <dd class="col-8 mb-1 fw-medium text-break">{{ $line['value'] }}</dd>
                         @endforeach
                         @if ($arrivalPosture?->present)
