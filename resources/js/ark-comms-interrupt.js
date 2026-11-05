@@ -39,6 +39,41 @@ function currentUserId() {
     return Number(document.querySelector('meta[name="ark-current-user-id"]')?.content ?? 0);
 }
 
+// A dismissed message popup stays dismissed across pages and tabs for as long as the unread queue looks back.
+const DISMISSED_TTL_MS = 12 * 60 * 60 * 1000;
+
+function dismissedStorageKey() {
+    return `ark:comms-dismissed:${currentUserId()}`;
+}
+
+function readDismissed() {
+    try {
+        const rows = JSON.parse(window.localStorage.getItem(dismissedStorageKey()) || '[]');
+        const now = Date.now();
+
+        return Array.isArray(rows)
+            ? rows.filter((row) => row && typeof row.k === 'string' && now - Number(row.t) < DISMISSED_TTL_MS)
+            : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeDismissed(rows) {
+    try {
+        window.localStorage.setItem(dismissedStorageKey(), JSON.stringify(rows.slice(-200)));
+    } catch {
+        // Private browsing: the dismissal still holds for this page.
+    }
+}
+
+// One popup per conversation: a newer message in the same conversation updates it.
+function conversationKeyOf(message) {
+    const id = coreConversationId(message);
+
+    return id ? `conversation:${id}` : interruptMessageKey(message);
+}
+
 function browserNotificationsEnabled() {
     return document.querySelector('meta[name="ark-comms-browser-notifications"]')?.content === '1';
 }
@@ -222,6 +257,9 @@ export function arkCommsInterrupt() {
         pollTimer: null,
         dismissedCallSessionIds: [],
         dismissedMessageKeys: [],
+        lastMessages: [],
+        otherKeys: [],
+        moreCount: 0,
         lastFocusedInterruptKey: '',
         ownedByOtherDismissTimer: null,
         ownedByOtherDismissSessionId: 0,
@@ -236,6 +274,8 @@ export function arkCommsInterrupt() {
             }
 
             requestBrowserNotificationPermission();
+            this.dismissedMessageKeys = readDismissed().map((row) => row.k);
+            this.bindDismissalSync();
             this.bindRealtime();
             this.bindQueueWatch();
             this.bindWorkstationPresenceGate();
@@ -246,6 +286,24 @@ export function arkCommsInterrupt() {
 
             this.bootstrapPendingInterrupts();
             this.scheduleInterruptFocus();
+        },
+
+        bindDismissalSync() {
+            window.addEventListener('storage', (event) => {
+                if (event.key !== dismissedStorageKey()) {
+                    return;
+                }
+
+                this.dismissedMessageKeys = readDismissed().map((row) => row.k);
+
+                if (this.activeMessage !== null && this.wasMessageDismissed(interruptMessageKey(this.activeMessage))) {
+                    this.activeMessage = null;
+                    this.processMessages(this.lastMessages, { announce: false });
+                }
+            });
+
+            // Reading, resolving or replying elsewhere on the page asks for the unread state again now.
+            document.addEventListener('ark:call-queue-refresh', () => this.pollTimer?.trigger?.());
         },
 
         bindWorkstationPresenceGate() {
@@ -280,6 +338,7 @@ export function arkCommsInterrupt() {
 
             if (key !== '' && key !== '0' && ! this.dismissedMessageKeys.includes(key)) {
                 this.dismissedMessageKeys.push(key);
+                writeDismissed([...readDismissed().filter((row) => row.k !== key), { k: key, t: Date.now() }]);
             }
         },
 
@@ -307,15 +366,8 @@ export function arkCommsInterrupt() {
 
             const messages = Array.isArray(bootstrap.messages) ? bootstrap.messages : [];
 
-            for (const row of messages) {
-                if (unreadMessageId(row)) {
-                    this.presentMessage({
-                        message_id: unreadMessageId(row),
-                        ...row,
-                    }, { announce: false });
-
-                    return;
-                }
+            if (messages.length > 0) {
+                this.processMessages(messages, { announce: false });
             }
         },
 
@@ -498,14 +550,23 @@ export function arkCommsInterrupt() {
             }
         },
 
+        /**
+         * The unread messages waiting for this advisor (the server's list) decide what the popup shows. It stays on
+         * the conversation it is showing while that one is still waiting; other conversations are counted beside
+         * it instead of replacing it.
+         */
         processMessages(messages, options = {}) {
             if (this.shouldSuppressInterrupt()) {
                 return;
             }
 
+            this.lastMessages = messages;
+
             if (this.activeCall !== null) {
                 return;
             }
+
+            const waiting = [];
 
             for (const row of messages) {
                 const messageId = unreadMessageId(row);
@@ -514,31 +575,34 @@ export function arkCommsInterrupt() {
                     continue;
                 }
 
-                const presented = {
-                    ...row,
-                    message_id: messageId,
-                };
-                const activeKey = interruptMessageKey(this.activeMessage);
-                const rowKey = interruptMessageKey(presented);
+                const presented = { ...row, message_id: messageId };
 
-                if (this.wasMessageDismissed(rowKey)) {
-                    continue;
+                if (! this.wasMessageDismissed(interruptMessageKey(presented))) {
+                    waiting.push(presented);
                 }
+            }
 
-                if (activeKey === rowKey && activeKey !== '0' && activeKey !== '') {
-                    return;
-                }
+            const activeConversation = this.activeMessage !== null ? conversationKeyOf(this.activeMessage) : '';
+            const current = activeConversation === ''
+                ? null
+                : (waiting.find((message) => conversationKeyOf(message) === activeConversation) ?? null);
+            const keepCacheBacked = current === null && isCacheBackedInterrupt(this.activeMessage);
+            const shown = current ?? (keepCacheBacked ? this.activeMessage : (waiting[0] ?? null));
 
-                this.presentMessage(presented, options);
+            this.otherKeys = [...new Set(waiting
+                .filter((message) => shown === null || conversationKeyOf(message) !== conversationKeyOf(shown))
+                .map(conversationKeyOf))];
+            this.moreCount = this.otherKeys.length;
+
+            if (shown === null) {
+                this.activeMessage = null;
 
                 return;
             }
 
-            if (isCacheBackedInterrupt(this.activeMessage)) {
-                return;
+            if (shown !== this.activeMessage) {
+                this.presentMessage(shown, options);
             }
-
-            this.activeMessage = null;
         },
 
         showCall(payload, options = {}) {
@@ -650,6 +714,18 @@ export function arkCommsInterrupt() {
             };
 
             if (this.wasMessageDismissed(interruptMessageKey(presented))) {
+                return;
+            }
+
+            if (this.activeMessage !== null && conversationKeyOf(this.activeMessage) !== conversationKeyOf(presented)) {
+                const key = conversationKeyOf(presented);
+
+                if (! this.otherKeys.includes(key)) {
+                    this.otherKeys = [...this.otherKeys, key];
+                    this.moreCount = this.otherKeys.length;
+                    this.announceInterrupt(presented.channel_label ?? 'Text', presented.headline ?? presented.display_phone ?? 'New message');
+                }
+
                 return;
             }
 
@@ -1038,6 +1114,55 @@ export function arkCommsInterrupt() {
 
             await this.dismissWebsiteLead();
             window.location.href = intakeUrl;
+        },
+
+        /**
+         * Hides this popup only. The message stays unread, in Needs attention and in the attention count, and the
+         * next waiting conversation (if any) takes its place.
+         */
+        dismissMessage() {
+            this.rememberDismissedMessage(interruptMessageKey(this.activeMessage));
+            this.activeMessage = null;
+            this.processMessages(this.lastMessages, { announce: false });
+            this.pollTimer?.trigger?.();
+        },
+
+        conversationUrl() {
+            const id = coreConversationId(this.activeMessage);
+            const template = this.$root?.dataset?.conversationUrlTemplate ?? '';
+
+            return id && template !== '' ? template.replace('__CONVERSATION__', String(id)) : '';
+        },
+
+        waitingUrl() {
+            return this.$root?.dataset?.waitingUrl ?? '';
+        },
+
+        moreLabel() {
+            return this.moreCount === 1 ? '1 more conversation waiting' : `${this.moreCount} more conversations waiting`;
+        },
+
+        openConversation(event) {
+            const url = this.conversationUrl();
+
+            if (url === '') {
+                return;
+            }
+
+            event?.preventDefault?.();
+
+            // Opening the thread reads it; until then the popup must not come back on the next page.
+            this.rememberDismissedMessage(interruptMessageKey(this.activeMessage));
+            this.activeMessage = null;
+
+            const request = { url, handled: false };
+            document.dispatchEvent(new CustomEvent('ark:comms-open-conversation', { detail: request }));
+
+            if (! request.handled) {
+                window.location.href = url;
+            }
+
+            this.processMessages(this.lastMessages, { announce: false });
         },
 
         async markMessageRead() {

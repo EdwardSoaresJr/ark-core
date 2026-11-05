@@ -3,7 +3,7 @@
 @can(App\Ark\Runtime\Authorization\ArkCapability::OperationsAccess->value)
 @if ($ui === 'tabler')
     {{-- x-show sits on a wrapper because .d-block (!important) would override Alpine's inline display: none. --}}
-    <div x-data="arkCommsInterrupt()" data-ark-comms-interrupt>
+    <div x-data="arkCommsInterrupt()" data-ark-comms-interrupt data-conversation-url-template="{{ Route::has('operations.communications.inbox') ? route('operations.communications.inbox', ['conversation' => '__CONVERSATION__']) : '' }}" data-waiting-url="{{ Route::has('operations.communications.inbox') ? route('operations.communications.inbox', ['filter' => 'needs']) : '' }}">
         <div x-show="activeCall !== null" x-cloak>
             <div
                 x-ref="callInterruptDialog"
@@ -166,6 +166,13 @@
                                     x-show="snippetPreview() !== ''"
                                     x-text="snippetPreview()"
                                 ></p>
+                                <a
+                                    x-show="moreCount > 0 && waitingUrl() !== ''"
+                                    :href="waitingUrl()"
+                                    class="d-inline-block small mt-2"
+                                    data-comms-interrupt-more
+                                    x-text="moreLabel()"
+                                ></a>
                                 <template x-if="activeMessage?.orientation?.situation">
                                     <div class="border-start border-3 border-primary ps-2 mt-2">
                                         <div class="subheader">Current Situation</div>
@@ -252,6 +259,14 @@
                                     @click="activeMessage?.show_mark_read_action ? markMessageRead() : dismissPortal()"
                                 >Open RO</a>
                                 <a
+                                    x-show="(activeMessage?.kind === 'sms' || activeMessage?.kind === 'mms') && conversationUrl() !== ''"
+                                    :href="conversationUrl()"
+                                    data-comms-interrupt-primary
+                                    data-comms-interrupt-open
+                                    class="btn btn-primary"
+                                    @click="openConversation($event)"
+                                >Open conversation</a>
+                                <a
                                     x-show="activeMessage?.kind !== 'portal' && activeMessage?.direction === 'inbound' && activeMessage?.reply_url"
                                     :href="activeMessage.reply_url"
                                     data-comms-interrupt-primary
@@ -290,7 +305,7 @@
                                     class="btn btn-ghost-secondary"
                                     @click="activeMessage?.kind === 'website_lead'
                                         ? dismissWebsiteLead()
-                                        : (activeMessage?.kind === 'portal' ? dismissPortal() : markMessageRead())"
+                                        : (activeMessage?.kind === 'portal' ? dismissPortal() : dismissMessage())"
                                 >Dismiss</button>
                             </div>
                         </div>
@@ -300,7 +315,7 @@
         </div>
     </div>
 @else
-    <div x-data="arkCommsInterrupt()">
+    <div x-data="arkCommsInterrupt()" data-ark-comms-interrupt data-conversation-url-template="{{ Route::has('operations.communications.inbox') ? route('operations.communications.inbox', ['conversation' => '__CONVERSATION__']) : '' }}" data-waiting-url="{{ Route::has('operations.communications.inbox') ? route('operations.communications.inbox', ['filter' => 'needs']) : '' }}">
         <div
             x-show="(activeCall !== null || activeMessage !== null) && attentionGateEnabled()"
             x-cloak
@@ -470,6 +485,13 @@
                             x-show="snippetPreview() !== ''"
                             x-text="snippetPreview()"
                         ></p>
+                        <a
+                            x-show="moreCount > 0 && waitingUrl() !== ''"
+                            :href="waitingUrl()"
+                            class="ops-incoming-call-pop__meta"
+                            data-comms-interrupt-more
+                            x-text="moreLabel()"
+                        ></a>
                         <template x-if="activeMessage?.orientation?.situation">
                             <div class="ops-incoming-call-pop__orientation">
                                 <p class="ops-incoming-call-pop__orientation-eyebrow">Current Situation</p>
@@ -553,6 +575,14 @@
                             @click="activeMessage?.show_mark_read_action ? markMessageRead() : dismissPortal()"
                         >Open RO</a>
                         <a
+                            x-show="(activeMessage?.kind === 'sms' || activeMessage?.kind === 'mms') && conversationUrl() !== ''"
+                            :href="conversationUrl()"
+                            data-comms-interrupt-primary
+                            data-comms-interrupt-open
+                            class="ops-incoming-call-pop__action ops-incoming-call-pop__action--primary"
+                            @click="openConversation($event)"
+                        >Open conversation</a>
+                        <a
                             x-show="activeMessage?.kind !== 'portal' && activeMessage?.direction === 'inbound' && activeMessage?.reply_url"
                             :href="activeMessage.reply_url"
                             data-comms-interrupt-primary
@@ -591,7 +621,7 @@
                             class="ops-incoming-call-pop__action ops-incoming-call-pop__action--ghost"
                             @click="activeMessage?.kind === 'website_lead'
                                 ? dismissWebsiteLead()
-                                : (activeMessage?.kind === 'portal' ? dismissPortal() : markMessageRead())"
+                                : (activeMessage?.kind === 'portal' ? dismissPortal() : dismissMessage())"
                         >Dismiss</button>
                     </div>
             </div>

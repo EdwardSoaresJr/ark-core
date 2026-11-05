@@ -215,7 +215,11 @@ export function arkCallQueue(bootstrap = null) {
                     }
                 }
 
-                notifyQueueChanged(payload);
+                // A summary-only poll knows the count, not which calls and messages are waiting: announcing empty
+                // lists would tell the popup that nothing is unread and close it.
+                notifyQueueChanged(data.summary_only === true
+                    ? { ...payload, calls: undefined, messages: undefined, items: undefined }
+                    : payload);
             } catch {
                 // Queue polling is a calm backup when realtime misses.
             } finally {

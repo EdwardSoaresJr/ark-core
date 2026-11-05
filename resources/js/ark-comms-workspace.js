@@ -686,6 +686,9 @@ function markOpenConversationRead() {
         },
         credentials: 'same-origin',
         body: '{}',
+    }).then(() => {
+        // The message popup and attention count follow the read state.
+        document.dispatchEvent(new CustomEvent('ark:call-queue-refresh', { bubbles: true }));
     }).catch(() => {
         // Read state catches up on the next open - stay quiet.
     });
@@ -1027,6 +1030,7 @@ export function initCommsWorkspace() {
             }
 
             showListPending(false);
+            document.dispatchEvent(new CustomEvent('ark:call-queue-refresh', { bubbles: true }));
             const opened = await openSelection(next, { push: false, replace: true, mergeList: true });
 
             if (opened === false) {
@@ -1285,6 +1289,26 @@ export function initCommsWorkspace() {
         if (opened === false) {
             window.location.assign(href);
         }
+    });
+
+    // The message popup's Open conversation, while the workspace is on screen: open it here, not by a page load.
+    document.addEventListener('ark:comms-open-conversation', (event) => {
+        const request = event.detail;
+        const target = request?.url ? new URL(request.url, window.location.origin) : null;
+
+        if (! target || target.pathname !== window.location.pathname || ! selectionHref(target)) {
+            return;
+        }
+
+        request.handled = true;
+        const next = new URL(window.location.href);
+        ['conversation', 'lead', 'call', 'platform_conversation'].forEach((key) => next.searchParams.delete(key));
+        next.searchParams.set('conversation', target.searchParams.get('conversation'));
+        openSelection(next, { refreshList: false }).then((opened) => {
+            if (opened === false) {
+                window.location.assign(target.href);
+            }
+        });
     });
 
     window.addEventListener('popstate', () => {
