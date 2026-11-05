@@ -21,7 +21,11 @@
             <div><dt>Name</dt><dd>{{ $bookingRequest->contact_name }}</dd></div>
         </dl>
         @unless ($booked)
-            <p class="ark-booking__mode"><strong>Not confirmed yet.</strong> The shop will contact you to confirm the exact time.</p>
+            @if ($bookingRequest->askedTimeLabel() !== null || $bookingRequest->uncheckedRules() !== [])
+                <p class="ark-booking__mode" data-booking-unchecked><strong>Not confirmed yet.</strong> We couldn't confirm a time online just now, so we sent this to the shop as a request. The shop will contact you to confirm the time.</p>
+            @else
+                <p class="ark-booking__mode"><strong>Not confirmed yet.</strong> The shop will contact you to confirm the exact time.</p>
+            @endif
         @endunless
     @endif
 

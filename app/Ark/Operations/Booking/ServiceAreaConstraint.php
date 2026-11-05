@@ -28,4 +28,9 @@ final class ServiceAreaConstraint implements BookingAvailabilityConstraint
             ? $area['message']
             : 'That address is outside our service area. Call us and we will see what we can do.';
     }
+
+    public function label(): string
+    {
+        return 'Service area';
+    }
 }

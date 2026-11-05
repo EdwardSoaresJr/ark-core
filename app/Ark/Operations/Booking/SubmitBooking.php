@@ -7,6 +7,7 @@ use App\Ark\Operations\Appointments\AppointmentKind;
 use App\Ark\Operations\Appointments\AppointmentRequestAvailability;
 use App\Ark\Operations\Appointments\AppointmentStatus;
 use App\Ark\Operations\Appointments\RecordAppointmentFact;
+use App\Ark\Operations\Appointments\ScheduleRequestWindows;
 use App\Ark\Operations\Booking\Events\AppointmentRequestReceived;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Events\OperationalEventName;
@@ -87,6 +88,26 @@ final class SubmitBooking
             }
 
             $date = (string) $data['preferred_date'];
+            $time = (string) ($data['preferred_time'] ?? '');
+            $askedTime = null;
+
+            if ($mode === BookingMode::Instant) {
+                $refusal = $this->availability->refuseSlot($context, $date, $time);
+
+                if ($this->availability->unchecked() !== []) {
+                    $mode = BookingMode::Request;
+                    $askedTime = $time !== '' ? $time : null;
+                    $data['preferred_period'] = $this->fallbackPeriod($date, $time, (string) ($data['preferred_period'] ?? ''));
+                    $refusal = $data['preferred_period'] === null
+                        ? 'That day is no longer available. Pick another day.'
+                        : $this->availability->refuseRequest($context, $date, $data['preferred_period']);
+                } elseif ($time === '') {
+                    $refusal = 'Pick a time.';
+                }
+            } else {
+                $refusal = $this->availability->refuseRequest($context, $date, (string) $data['preferred_period']);
+            }
+
             $duplicate = AppointmentRequest::query()
                 ->where('contact_phone', $phone)
                 ->whereDate('preferred_date', $date)
@@ -96,9 +117,6 @@ final class SubmitBooking
                 return BookingOutcome::for($duplicate);
             }
 
-            $refusal = $mode === BookingMode::Instant
-                ? $this->availability->refuseSlot($context, $date, (string) $data['preferred_time'])
-                : $this->availability->refuseRequest($context, $date, (string) $data['preferred_period']);
             if ($refusal !== null) {
                 throw ValidationException::withMessages([$mode === BookingMode::Instant ? 'preferred_time' : 'preferred_date' => $refusal]);
             }
@@ -134,7 +152,11 @@ final class SubmitBooking
                 'answers' => $data['answers'],
                 'location_mode' => $context->location,
                 'service_address' => $context->location->isOnSite() ? $context->address : null,
-                'context' => $data['context'],
+                'context' => array_filter([
+                    ...($data['context'] ?? []),
+                    'asked_time' => $askedTime,
+                    'unchecked' => $this->availability->unchecked() ?: null,
+                ]) ?: null,
             ]);
 
             if ($mode === BookingMode::Instant) {
@@ -199,8 +221,8 @@ final class SubmitBooking
             'preferred_date' => ['required', 'date_format:Y-m-d'],
             'preferred_period' => $mode === BookingMode::Request
                 ? ['required', 'string', Rule::in(AppointmentRequestAvailability::periodValues())]
-                : ['nullable'],
-            'preferred_time' => $mode === BookingMode::Instant ? ['required', 'date_format:H:i'] : ['nullable'],
+                : ['nullable', 'string', Rule::in(AppointmentRequestAvailability::periodValues())],
+            'preferred_time' => $mode === BookingMode::Instant ? ['nullable', 'date_format:H:i'] : ['nullable'],
             'submission_key' => ['nullable', 'string', 'max:64'],
         ];
 
@@ -300,6 +322,30 @@ final class SubmitBooking
             BookingLocationMode::Mobile => $chosen === ServiceLocationType::FleetSite->value ? ServiceLocationType::FleetSite : ServiceLocationType::CustomerSite,
             BookingLocationMode::Either => ServiceLocationType::tryFrom($chosen) ?? ServiceLocationType::Shop,
         };
+    }
+
+    /**
+     * The time of day for an instant booking sent as a request: what the customer picked, else the
+     * open window holding the time they asked for, else Flexible or the first open window.
+     */
+    private function fallbackPeriod(string $date, string $time, string $posted): ?string
+    {
+        $open = array_column($this->availability->periodsFor($date), 'value');
+
+        if (in_array($posted, $open, true)) {
+            return $posted;
+        }
+
+        foreach ($open as $period) {
+            $window = ScheduleRequestWindows::windowForPeriod($period);
+            if ($time !== '' && $window !== null && $time >= $window['open'] && $time < $window['close']) {
+                return $period;
+            }
+        }
+
+        return in_array(AppointmentRequestAvailability::PERIOD_ANY, $open, true)
+            ? AppointmentRequestAvailability::PERIOD_ANY
+            : ($open[0] ?? null);
     }
 
     private function bookInstantly(AppointmentRequest $request, Lead $lead, Carbon $startsAt, Carbon $endsAt): void

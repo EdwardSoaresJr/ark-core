@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -141,11 +142,35 @@ class AppointmentRequest extends Model
         $date = $this->preferred_date->format('D, M j');
         $period = (string) $this->preferred_period;
 
-        if ($period === '' || $period === AppointmentRequestAvailability::PERIOD_ANY) {
-            return $date.' · Flexible';
-        }
+        $label = $period === '' || $period === AppointmentRequestAvailability::PERIOD_ANY
+            ? $date.' · Flexible'
+            : $date.' · '.AppointmentRequestAvailability::periodLabel($period);
 
-        return $date.' · '.AppointmentRequestAvailability::periodLabel($period);
+        $asked = $this->askedTimeLabel();
+
+        return $asked !== null ? $label.', around '.$asked : $label;
+    }
+
+    /**
+     * The exact time the customer picked when online booking could not confirm it and sent a request instead.
+     */
+    public function askedTimeLabel(): ?string
+    {
+        $time = (string) ($this->context['asked_time'] ?? '');
+
+        return preg_match('/^\d{2}:\d{2}$/', $time) === 1 ? Carbon::createFromFormat('H:i', $time)->format('g:i A') : null;
+    }
+
+    /**
+     * Required availability checks that could not run when the customer booked ("Travel time").
+     *
+     * @return list<string>
+     */
+    public function uncheckedRules(): array
+    {
+        $labels = $this->context['unchecked'] ?? [];
+
+        return is_array($labels) ? array_values(array_filter($labels, fn (mixed $label): bool => is_string($label) && $label !== '')) : [];
     }
 
     public function locationType(): ServiceLocationType
@@ -206,6 +231,10 @@ class AppointmentRequest extends Model
 
         if ($this->mode === BookingMode::Request) {
             $lines[] = 'Customer preferred: '.$this->preferenceLabel();
+        }
+
+        if (($unchecked = $this->uncheckedRules()) !== []) {
+            $lines[] = 'Not checked online: '.implode(', ', $unchecked).'. Confirm before scheduling.';
         }
 
         $vehicles = $this->vehicleLabels();

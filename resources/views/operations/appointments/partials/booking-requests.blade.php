@@ -28,6 +28,9 @@
                                 @if ($row['past_due'])
                                     <span class="badge bg-red-lt">Preferred day has passed</span>
                                 @endif
+                                @if ($row['unchecked'] !== [])
+                                    <span class="badge bg-yellow-lt" data-booking-request-unchecked>Not checked online: {{ implode(', ', $row['unchecked']) }}</span>
+                                @endif
                             </div>
                             <div class="small mt-1"><span class="fw-medium">Wants:</span> {{ $row['preference'] }} <span class="text-secondary">· received {{ $row['received'] }}</span></div>
                             <div class="small text-secondary mt-1" style="white-space: pre-line">{{ \Illuminate\Support\Str::limit($row['concern'], 280) }}</div>

@@ -24,7 +24,8 @@ use Illuminate\Support\Collection;
  * - intake: the shop's daily request limit (pending and scheduled requests for that day);
  * - capacity: SchedulingCapacityCalculator. A day already at its target is not offered;
  * - instant starts: scheduling hours, latest arrival, slot step, concurrent appointments, capacity;
- * - extension constraints (service area, and travel or routing rules a host adds).
+ * - extension constraints (service area, and travel or routing rules a host adds). When a required
+ *   one cannot run, no exact time is offered and instant booking falls back to a request.
  *
  * Submission calls the same refuse* methods inside the booking lock.
  */
@@ -33,6 +34,8 @@ final class BookingAvailability
     public const SAME_DAY_LEAD_MINUTES = 60;
 
     public const FULL = 'Fully booked';
+
+    public const UNCHECKED_NOTICE = 'We can\'t confirm times online right now, so this will be a request. Pick a day and a time of day, and the shop will contact you to confirm.';
 
     public function __construct(
         private readonly AppointmentRequestAvailabilityProjection $requestDays,
@@ -48,7 +51,8 @@ final class BookingAvailability
      *     timezone: string,
      *     dates: list<array{date: string, label: string, available: bool, reason: string|null}>,
      *     periods: list<array{value: string, label: string}>,
-     *     message: string|null
+     *     message: string|null,
+     *     notice: string|null
      * }
      */
     public function forContext(BookingContext $context, ?CarbonInterface $now = null): array
@@ -58,18 +62,10 @@ final class BookingAvailability
         $now = $this->now($now);
         $book = $this->requestDays->forBook(null, $now);
 
-        $dates = [];
-        foreach ($book['dates'] as $row) {
-            $reason = $mode === BookingMode::Instant
-                ? ($this->slotsFor($row['date'], $context, $now) === [] ? self::FULL : null)
-                : $this->refuseDay($row['date'], $context, $settings);
-
-            $dates[] = [
-                'date' => $row['date'],
-                'label' => $row['label'],
-                'available' => $reason === null,
-                'reason' => $reason,
-            ];
+        $dates = $this->dates($book['dates'], $mode, $context, $settings, $now);
+        if ($mode === BookingMode::Instant && $this->unchecked() !== []) {
+            $mode = BookingMode::Request;
+            $dates = $this->dates($book['dates'], $mode, $context, $settings, $now);
         }
 
         $open = array_values(array_filter($dates, fn (array $d): bool => $d['available']));
@@ -85,7 +81,42 @@ final class BookingAvailability
                     ? $dates[0]['reason']
                     : 'We are not taking online bookings for the next few days. Call us and we will find a time.')
                 : null,
+            'notice' => $this->unchecked() !== [] ? self::UNCHECKED_NOTICE : null,
         ];
+    }
+
+    /**
+     * Required checks that could not run while this instance evaluated availability. While any are
+     * listed, no exact time is offered or confirmed; requests still go to staff.
+     *
+     * @return list<string>
+     */
+    public function unchecked(): array
+    {
+        return $this->constraints->unavailable();
+    }
+
+    /**
+     * @param  list<array{date: string, label: string}>  $days
+     * @return list<array{date: string, label: string, available: bool, reason: string|null}>
+     */
+    private function dates(array $days, BookingMode $mode, BookingContext $context, array $settings, CarbonInterface $now): array
+    {
+        $dates = [];
+        foreach ($days as $row) {
+            $reason = $mode === BookingMode::Instant
+                ? ($this->slotsFor($row['date'], $context, $now) === [] ? ($this->refuseDay($row['date'], $context, $settings, alwaysCheckCapacity: true) ?? self::FULL) : null)
+                : $this->refuseDay($row['date'], $context, $settings);
+
+            $dates[] = [
+                'date' => $row['date'],
+                'label' => $row['label'],
+                'available' => $reason === null,
+                'reason' => $reason,
+            ];
+        }
+
+        return $dates;
     }
 
     /**
@@ -119,7 +150,9 @@ final class BookingAvailability
         $now = $this->now($now);
         $settings = BookingSettings::forShop();
 
-        if (! $this->isRequestableDay($date, $now) || $this->refuseDay($date, $context, $settings, alwaysCheckCapacity: true) !== null) {
+        if (! $this->isRequestableDay($date, $now)
+            || $this->refuseDay($date, $context, $settings, alwaysCheckCapacity: true) !== null
+            || $this->unchecked() !== []) {
             return [];
         }
 
@@ -148,7 +181,7 @@ final class BookingAvailability
             if ($start->greaterThanOrEqualTo($earliest)
                 && ($latest === null || $clock <= $latest)
                 && $this->overlapCount($existing, $start, $end) < $limit
-                && $this->constraints->refuse(new BookingCandidate($date, $context, null, $start, $end)) === null) {
+                && $this->constraints->confirms(new BookingCandidate($date, $context, null, $start, $end))) {
                 $slots[] = ['value' => $clock, 'label' => $start->format('g:i A')];
             }
 
@@ -187,7 +220,14 @@ final class BookingAvailability
             }
         }
 
-        return 'That time was just taken. Pick another time.';
+        $now = $this->now($now);
+        if (! $this->isRequestableDay($date, $now)) {
+            return 'That day is no longer available. Pick another day.';
+        }
+
+        $reason = $this->refuseDay($date, $context, BookingSettings::forShop(), alwaysCheckCapacity: true);
+
+        return $reason !== null && $reason !== self::FULL ? $reason : 'That time was just taken. Pick another time.';
     }
 
     private function refuseDay(string $date, BookingContext $context, array $settings, bool $alwaysCheckCapacity = false): ?string

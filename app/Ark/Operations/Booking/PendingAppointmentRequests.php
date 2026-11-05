@@ -39,6 +39,7 @@ final class PendingAppointmentRequests
             'location' => $request->locationType()->isOnSite() ? $request->locationType()->label() : null,
             'address' => $request->locationType()->isOnSite() ? $request->addressLabel() : null,
             'answers' => is_array($request->answers) ? $request->answers : [],
+            'unchecked' => $request->uncheckedRules(),
             'received' => ShopDisplayTimezone::format($request->created_at, 'M j, g:i A'),
             'for_focus_day' => $focus !== null && $request->preferred_date?->toDateString() === $focus,
             'past_due' => $request->preferred_date !== null && $request->preferred_date->toDateString() < ShopDisplayTimezone::now()->toDateString(),
