@@ -22,7 +22,15 @@ All calls run inside the shop (tenancy initialized).
 
 - `OnlineBooking::availability(BookingContext $context, ?string $date): array` — `mode` (`request` or `instant`), `dates` (each `available` with a `reason`), `selected_date`, `periods` (request mode) or `slots` (instant mode) for that date, `timezone`, `accepting`, `message`, and `notice` when a required check could not run.
 - `OnlineBooking::submit(OnlineBookingRequest $request): BookingOutcome` — repeats every check inside a lock on the shop's settings row, records the lead and an `appointment_requests` row, and books the appointment only when confirmed booking applies and the time is still open. A resubmitted `submissionKey`, or a second pending request for the same phone and day, returns the first request. Throws `BookingRefused` (`field`, customer-readable message) when the day, time or address cannot be taken.
-- `OnlineBooking::request(string $uuid): ?AppointmentRequest` — for the product's receipt.
+- `OnlineBooking::request(string $uuid): ?AppointmentRequest` — for the product's receipt; `forSubmission(string $key)` — the request a submission key already created, to answer a retry.
+
+### Proof of identity
+
+A product passes its customer's verification as `OnlineBookingRequest::$proof` (`Contracts\BookingProof`). Core spends it inside the booking transaction, under the shop lock, after the submission-key and same-day checks and every refusal, and before recording anything: a spent or expired proof is refused (`BookingRefused('verification', …)`), and a booking that fails afterwards rolls the spend back. Phone and email proofs are consumed with a conditional update that must change exactly one verification row for that contact, so two requests holding copies of the same proof cannot both book. A resubmitted submission key returns the first outcome without spending anything.
+
+`submit` sends nothing: not the website lead confirmation either (`LeadRecorder` is called with `confirm: false`). `AppointmentRequestReceived` fires after commit for new requests only; the product acknowledges the customer. The lead's `metadata.identity` is `verified` when a proof was spent.
+
+Core's own website form (`/leads`) stays separate: its leads carry `metadata.identity` (`verified` or `unverified`); staff see "unverified contact" on unverified ones, and they are linked to a customer only through a signed-in portal customer, never by matching a phone or email.
 
 `BookingContext` is what the scheduler needs from the product's catalog: service and option labels, per-vehicle minutes and labor hours, vehicle count, location (`shop`, `customer_site`, `fleet_site`) and address, whether the booking insists on approval, and an opaque `serviceReference`. `OnlineBookingRequest` adds contact, vehicles, concern text, answers (`label`, `answer`), the preferred day with a time of day or exact time, drivability flags, an optional verified customer and vehicle, the ingress context and spam signals. The product validates its own form and the customer's identity before calling; Core trusts nothing about availability.
 

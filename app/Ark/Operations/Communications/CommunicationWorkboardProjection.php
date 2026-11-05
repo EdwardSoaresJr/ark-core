@@ -226,7 +226,7 @@ final class CommunicationWorkboardProjection
             'kind' => 'lead',
             'lead_id' => $lead->id,
             'source' => $lead->source->value,
-            'source_label' => $lead->source->label(),
+            'source_label' => $lead->sourceLabel(),
             'age_label' => $lead->ageLabel(),
             'concern' => $lead->concern,
             'contact_name' => $lead->contact_name ?: 'Unknown',
@@ -246,7 +246,7 @@ final class CommunicationWorkboardProjection
             'reply_url' => $replyUrl,
             'intake_url' => route('operations.leads.intake', $lead),
             'create_contact_url' => IngressCreateContactUrl::forLead($lead),
-            'leads_url' => \App\Ark\Operations\Communications\CommunicationsNeedsYou::url(),
+            'leads_url' => CommunicationsNeedsYou::url(),
             'queue_tab' => CommunicationsSurfaceChannel::Sms->value,
         ];
     }

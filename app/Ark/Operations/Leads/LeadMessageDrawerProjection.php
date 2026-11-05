@@ -61,7 +61,7 @@ final class LeadMessageDrawerProjection
             'lead_id' => $lead->id,
             'contact_name' => filled($lead->contact_name) ? $lead->contact_name : 'Unknown',
             'display_phone' => $lead->display_phone ?: '-',
-            'source_label' => $lead->source->label(),
+            'source_label' => $lead->sourceLabel(),
             'concern' => $lead->concern,
             'intake_url' => route('operations.leads.intake', $lead),
             'reply_page_url' => $replyPageUrl,

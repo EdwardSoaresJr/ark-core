@@ -34,8 +34,10 @@ use Illuminate\Support\Facades\DB;
  * bookings, the booking does not insist on approval, the exact time is still open and every required
  * check ran. Everything is checked again inside a lock on the shop's settings row.
  *
- * Call it inside the shop (tenancy initialized). It sends nothing; AppointmentRequestReceived tells
- * the host a request arrived.
+ * Call it inside the shop (tenancy initialized). It sends nothing, not even the website lead
+ * confirmation; AppointmentRequestReceived (after commit, new requests only) tells the host a
+ * request arrived, and the booking product acknowledges it. A product's BookingProof is spent in
+ * the same transaction, after the submission key and same-day checks and every refusal.
  */
 final class OnlineBooking
 {
@@ -80,7 +82,10 @@ final class OnlineBooking
         $this->assertOwnership($input);
 
         if ($input->spam) {
-            $this->recordLead($input, $phone, $mode, $input->preferredPeriod ?? AppointmentRequestAvailability::PERIOD_ANY, LeadState::Spam);
+            DB::transaction(function () use ($input, $phone, $mode): void {
+                $input->proof?->consume();
+                $this->recordLead($input, $phone, $mode, $input->preferredPeriod ?? AppointmentRequestAvailability::PERIOD_ANY, LeadState::Spam);
+            });
 
             return BookingOutcome::quiet();
         }
@@ -126,6 +131,10 @@ final class OnlineBooking
 
             if ($refusal !== null) {
                 throw new BookingRefused($mode === BookingMode::Instant ? 'preferred_time' : 'preferred_date', $refusal);
+            }
+
+            if ($input->proof !== null && ! $input->proof->consume()) {
+                throw new BookingRefused('verification', 'Your confirmation code was already used or has expired. Confirm your phone or email again.');
             }
 
             [$startsAt, $endsAt] = $mode === BookingMode::Instant ? $this->instantWindow($date, $time, $context) : [null, null];
@@ -184,6 +193,14 @@ final class OnlineBooking
     public function request(string $uuid): ?AppointmentRequest
     {
         return AppointmentRequest::query()->where('uuid', $uuid)->first();
+    }
+
+    /**
+     * The request a submission key already created, so a product can answer a retry with it.
+     */
+    public function forSubmission(string $submissionKey): ?AppointmentRequest
+    {
+        return $submissionKey === '' ? null : AppointmentRequest::query()->where('submission_key', $submissionKey)->first();
     }
 
     /**
@@ -279,8 +296,9 @@ final class OnlineBooking
                 'public_host' => $input->context['host'] ?? null,
                 'booking_mode' => $mode->value,
                 'location' => $input->booking->location->value,
+                'identity' => $input->proof !== null ? 'verified' : 'unverified',
             ]), $date, $period, $preferredLabel),
-        ], ingress: $input->ingress, forcedState: $forcedState, spamSignals: $input->spamSignals);
+        ], ingress: $input->ingress, forcedState: $forcedState, spamSignals: $input->spamSignals, confirm: false);
     }
 
     /**

@@ -251,7 +251,9 @@ class AppointmentRequest extends Model
         $lines = [count($items) > 1 ? 'Booked online: '.count($items).' items' : 'Booked online: '.$this->serviceLabel()];
 
         foreach (count($items) > 1 || $this->itemsHaveDetail($items) ? $items : [] as $item) {
-            $lines[] = '- '.self::workItemLabel($item).(isset($item['recommendation_id']) ? ' (recommendation #'.$item['recommendation_id'].')' : '');
+            $lines[] = '- '.self::workItemLabel($item).(isset($item['recommendation_id'])
+                ? ' (recommendation #'.$item['recommendation_id'].'; customer asked to discuss it, nothing approved)'
+                : '');
             if (filled($item['details'] ?? null)) {
                 $lines[] = '  '.trim((string) $item['details']);
             }

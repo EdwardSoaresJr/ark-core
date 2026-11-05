@@ -16,12 +16,14 @@ use App\Ark\Operations\Booking\BookingWorkItem;
 use App\Ark\Operations\Booking\Contracts\AdvisoryBookingConstraint;
 use App\Ark\Operations\Booking\Contracts\BookingAvailabilityConstraint;
 use App\Ark\Operations\Booking\Contracts\BookingCandidate;
+use App\Ark\Operations\Booking\Contracts\BookingProof;
 use App\Ark\Operations\Booking\Events\AppointmentRequestDecided;
 use App\Ark\Operations\Booking\Events\AppointmentRequestReceived;
 use App\Ark\Operations\Booking\OnlineBooking;
 use App\Ark\Operations\Booking\OnlineBookingRequest;
 use App\Ark\Operations\Booking\ServiceLocationType;
 use App\Ark\Operations\Customers\Customer;
+use App\Ark\Operations\Leads\Jobs\SendWebsiteLeadConfirmationJob;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadState;
 use App\Ark\Operations\Recommendations\Recommendation;
@@ -33,6 +35,8 @@ use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
@@ -574,7 +578,68 @@ test('saved vehicles and recommended work must belong to the recognized customer
 
     expect($request->vehicle_id)->toBe($camry->id)
         ->and($request->workItems()[1])->toMatchArray(['kind' => 'recommendation', 'recommendation_id' => $pads->id, 'reference' => 'recommendation:'.$pads->id])
-        ->and($request->staffNotes())->toContain('Recommended: Front pads (recommendation #'.$pads->id.')')
+        ->and($request->staffNotes())->toContain('Recommended: Front pads (recommendation #'.$pads->id.'; customer asked to discuss it, nothing approved)')
         ->and($pads->refresh()->lifecycle->value)->toBe('open')
         ->and($pads->events()->count())->toBe(0);
+});
+
+function countingProof(bool $valid = true): BookingProof
+{
+    return new class($valid) implements BookingProof
+    {
+        public int $calls = 0;
+
+        public function __construct(private readonly bool $valid) {}
+
+        public function consume(): bool
+        {
+            $this->calls++;
+            DB::table('cache')->insert(['key' => 'proof-spent-'.$this->calls, 'value' => '1', 'expiration' => time() + 60]);
+
+            return $this->valid;
+        }
+    };
+}
+
+test('the proof is spent once, inside the booking, and only after every check passed', function (): void {
+    $proof = countingProof();
+    expect(refusal(['preferredDate' => '2026-11-14', 'proof' => $proof])->field)->toBe('preferred_date')
+        ->and($proof->calls)->toBe(0);
+
+    $request = submitOnline(['proof' => $proof, 'submissionKey' => 'visit-1']);
+    expect($proof->calls)->toBe(1)
+        ->and($request->lead->metadata['identity'])->toBe('verified');
+
+    $retry = app(OnlineBooking::class)->submit(onlineRequest(['proof' => $proof, 'submissionKey' => 'visit-1']));
+    expect($retry->created)->toBeFalse()
+        ->and($retry->request->id)->toBe($request->id)
+        ->and($proof->calls)->toBe(1, 'A retry with the same submission key gets the first outcome without spending anything.')
+        ->and(app(OnlineBooking::class)->forSubmission('visit-1')?->id)->toBe($request->id);
+});
+
+test('a spent or expired proof books nothing', function (): void {
+    $error = refusal(['proof' => countingProof(valid: false), 'submissionKey' => 'visit-2']);
+
+    expect($error->field)->toBe('verification')
+        ->and(AppointmentRequest::query()->count())->toBe(0)
+        ->and(Lead::query()->count())->toBe(0)
+        ->and(DB::table('cache')->where('key', 'like', 'proof-spent-%')->count())->toBe(0, 'The refused booking rolled the spend back.');
+});
+
+test('a booking that fails after spending the proof leaves it unspent', function (): void {
+    bookingPolicy(['mode' => 'instant']);
+    Appointment::creating(fn () => throw new RuntimeException('Calendar write failed'));
+
+    expect(fn () => submitOnline(['preferredTime' => '10:00', 'preferredPeriod' => null, 'proof' => countingProof()]))->toThrow(RuntimeException::class);
+    expect(DB::table('cache')->where('key', 'like', 'proof-spent-%')->count())->toBe(0)
+        ->and(AppointmentRequest::query()->count())->toBe(0);
+});
+
+test('online bookings send nothing themselves and leave the acknowledgment to the booking product', function (): void {
+    Bus::fake([SendWebsiteLeadConfirmationJob::class]);
+
+    $request = submitOnline();
+
+    Bus::assertNotDispatchedAfterResponse(SendWebsiteLeadConfirmationJob::class);
+    expect($request->lead->metadata['identity'])->toBe('unverified');
 });

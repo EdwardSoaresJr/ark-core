@@ -146,6 +146,9 @@ final class EmailVerificationAuthority
         return $email;
     }
 
+    /**
+     * One-time consume of the verified session, atomic like the phone proof.
+     */
     public function consumeVerifiedSession(Session $session, ?string $email = null): bool
     {
         $proofEmail = $this->verifiedEmail($session);
@@ -166,16 +169,19 @@ final class EmailVerificationAuthority
             ? ($session->get(self::SESSION_KEY)['verification_id'] ?? 0)
             : 0);
 
+        $consumed = true;
         if ($verificationId > 0) {
-            EmailVerification::query()
+            $consumed = EmailVerification::query()
                 ->where('id', $verificationId)
+                ->where('email', $proofEmail)
+                ->whereNotNull('verified_at')
                 ->whereNull('consumed_at')
-                ->update(['consumed_at' => now()]);
+                ->update(['consumed_at' => now()]) === 1;
         }
 
         $session->forget(self::SESSION_KEY);
 
-        return true;
+        return $consumed;
     }
 
     /**

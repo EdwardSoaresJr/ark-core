@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Booking;
 
+use App\Ark\Operations\Booking\Contracts\BookingProof;
 use App\Ark\Operations\Leads\LeadContactPreference;
 use App\Ark\Operations\Leads\LeadIngressContext;
 
@@ -16,6 +17,7 @@ final class OnlineBookingRequest
      * @param  list<array{label: string, answer: string}>  $answers
      * @param  array<string, scalar|null>  $context  where it came from (page, host, embedded) and product details for staff
      * @param  list<string>  $spamSignals
+     * @param  BookingProof|null  $proof  spent inside the booking transaction; a resubmitted submission key returns the first outcome without it
      */
     public function __construct(
         public readonly BookingContext $booking,
@@ -38,5 +40,6 @@ final class OnlineBookingRequest
         public readonly ?LeadIngressContext $ingress = null,
         public readonly bool $spam = false,
         public readonly array $spamSignals = [],
+        public readonly ?BookingProof $proof = null,
     ) {}
 }

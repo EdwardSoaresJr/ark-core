@@ -40,6 +40,7 @@ class LeadRecorder
         ?LeadIngressContext $ingress = null,
         ?LeadState $forcedState = null,
         array $spamSignals = [],
+        bool $confirm = true,
     ): Lead {
         $source = $data['source'] ?? LeadSource::Website;
         $phone = PhoneNumber::normalize($data['contact_phone']);
@@ -99,8 +100,10 @@ class LeadRecorder
             'metadata' => $metadata !== [] ? $metadata : null,
             'spam_signals' => $spamSignals !== [] ? $spamSignals : null,
             ...($ingress?->observationAttributes() ?? []),
-        ]), function (Lead $lead): void {
-            Bus::dispatchAfterResponse(new SendWebsiteLeadConfirmationJob($lead->id));
+        ]), function (Lead $lead) use ($confirm): void {
+            if ($confirm) {
+                Bus::dispatchAfterResponse(new SendWebsiteLeadConfirmationJob($lead->id));
+            }
         });
     }
 
