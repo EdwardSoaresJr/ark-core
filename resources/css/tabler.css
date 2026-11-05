@@ -47,99 +47,16 @@
 }
 
 /*
- * Repair order command bar, the full-width row under the RO title: appointment and inspection signals, then the
- * technician and status selects and the document actions. When the controls wrap below the signals they span the row,
- * selects first and actions last. On phones the selects share a row and the actions are icon buttons named by
- * aria-label and title.
+ * Repair order Visit panel controls (#review-toolbar): the status and technician selects and the review-request
+ * follow-up, as label | control rows on the panel's own label column.
  */
-.ark-ro-command-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem 1rem;
-    width: 100%;
+.ark-ro-visit-commands__workflow {
+    display: grid;
+    gap: 0.25rem;
 }
 
-.ark-ro-signal {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    max-width: 100%;
-    min-height: var(--tblr-btn-height, 2.25rem);
-    padding: 0.25rem 0.625rem;
-    overflow: hidden;
-    border: 1px solid var(--tblr-border-color);
-    border-radius: var(--tblr-border-radius);
-    background: var(--tblr-bg-surface);
-    font-size: 0.8125rem;
-    white-space: nowrap;
-}
-
-.ark-ro-signal .subheader {
-    margin: 0;
-}
-
-.ark-ro-signal > :last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ark-ro-command-bar__controls,
-.ark-ro-command-bar__workflow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 0.5rem;
-}
-
-.ark-ro-command-bar__controls {
-    flex: 1 1 auto;
-    justify-content: space-between;
-}
-
-.ark-ro-command-bar__tech {
-    width: 12rem;
-}
-
-.ark-ro-command-bar__status {
-    width: 16rem;
-}
-
-.ark-ro-command-bar__review {
-    max-width: 16rem;
-}
-
-@media (max-width: 575.98px) {
-    .ark-ro-command-bar__controls,
-    .ark-ro-command-bar__workflow {
-        width: 100%;
-    }
-
-    .ark-ro-command-bar__workflow {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .ark-ro-command-bar__tech,
-    .ark-ro-command-bar__status {
-        width: auto;
-        min-width: 0;
-    }
-
-    .ark-ro-command-bar [data-ro-command-actions] .btn {
-        padding-inline: 0.625rem;
-    }
-
-    .ark-ro-command-bar [data-ro-command-actions] .btn .icon {
-        margin: 0;
-    }
-
-    .ark-ro-command-bar__review,
-    .ark-ro-command-bar__status:has([data-lost-reason-panel]:not([hidden])) {
-        grid-column: 1 / -1;
-        max-width: none;
-    }
+.ark-ro-visit-commands__workflow > :first-child {
+    margin-top: 0.5rem;
 }
 
 /*
@@ -572,6 +489,48 @@
     .ark-identity-panel > * + * {
         border-top: 0;
         border-inline-start: var(--tblr-border-width) solid var(--tblr-border-color);
+    }
+}
+
+/*
+ * The Visit section sizes by its own width: wide enough (half the panel from xxl) its controls and details sit side by
+ * side; below 24rem its action buttons show only their icons, named by aria-label and title.
+ */
+.ark-identity-panel__visit {
+    container-type: inline-size;
+}
+
+.ark-ro-visit__action-label {
+    display: none;
+}
+
+@container (max-width: 23.99rem) {
+    [data-ro-command-actions] .btn .icon {
+        margin: 0;
+    }
+}
+
+@container (min-width: 24rem) {
+    .ark-ro-visit__action-label {
+        display: inline;
+    }
+}
+
+@container (min-width: 32rem) {
+    .ark-ro-visit {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 1.5rem;
+        align-items: start;
+    }
+}
+
+/* On phones the Visit section (RO number, status, technician) comes first; it stays last in source so desktop reading and focus order run Customer, Vehicle, Visit. */
+@media (max-width: 767.98px) {
+    .ark-identity-panel > .ark-identity-panel__visit {
+        order: -1;
+        border-top: 0;
+        border-bottom: var(--tblr-border-width) solid var(--tblr-border-color);
     }
 }
 

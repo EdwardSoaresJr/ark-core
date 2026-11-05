@@ -28,7 +28,7 @@ test('builder continuity config always includes totals panel authority', functio
         ->assertSee('id="estimate-total-panel"', false)
         ->assertSee('id="estimate-builder-rail"', false)
         ->assertSee('id="worksheet-status-flash"', false)
-        ->assertSee("continuityPanelIds: ['worksheet-status-flash', 'ro-identity-band', 'visit-reason', 'estimate-builder-rail', 'estimate-total-panel', 'review-toolbar', 'workspace-modal-host', 'ro-orientation-header']", false)
+        ->assertSee("continuityPanelIds: ['worksheet-status-flash', 'ro-identity-band', 'ro-inspection-tab-signal', 'visit-reason', 'estimate-builder-rail', 'estimate-total-panel', 'review-toolbar', 'workspace-modal-host', 'ro-orientation-header']", false)
         ->assertSee('data-worksheet-root', false)
         ->assertSee('submitWorksheetForm', false)
         ->assertSee('+ Add Work', false)

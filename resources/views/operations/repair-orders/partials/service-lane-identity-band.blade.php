@@ -3,4 +3,5 @@
     'identity' => $identity ?? null,
     'estimateVersion' => $estimateVersion ?? null,
     'mileageEditable' => $mileageEditable ?? true,
+    'visitCommands' => $visitCommands ?? null,
 ])

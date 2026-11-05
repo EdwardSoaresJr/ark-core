@@ -56,6 +56,15 @@
             : null,
     ];
     $workspaceTabUrl = url('/app/repair-orders/'.$repairOrder->repair_order_id.'/workspace-tabs');
+    $inspectionPosture = in_array('inspect', $workspaceTabs, true)
+        ? app(\App\Ark\Operations\Inspections\InspectionPostureProjection::class)->forRepairOrder($repairOrder)
+        : null;
+    $inspectionPostureColor = match ($inspectionPosture?->key) {
+        \App\Ark\Operations\Inspections\InspectionPosture::IN_PROGRESS => 'azure',
+        \App\Ark\Operations\Inspections\InspectionPosture::COMPLETE => 'green',
+        \App\Ark\Operations\Inspections\InspectionPosture::NEEDS_REVIEW => 'orange',
+        default => 'secondary',
+    };
 @endphp
 
 <div
@@ -87,6 +96,19 @@
                             :aria-selected="tab === @js($workspaceTab)"
                         >
                             {{ $tabLabels[$workspaceTab] }}
+                            @if ($workspaceTab === 'inspect' && $inspectionPosture)
+                                {{-- Worksheet continuity replaces this signal by its id. --}}
+                                <span
+                                    id="ro-inspection-tab-signal"
+                                    class="d-inline-flex align-items-center gap-1 ms-2 small fw-normal text-secondary"
+                                    data-inspection-posture="{{ $inspectionPosture->key }}"
+                                    title="{{ collect(['Inspection', $inspectionPosture->label(), $inspectionPosture->detail, $inspectionPosture->templateName])->filter()->implode(' · ') }}"
+                                >
+                                    <span class="status-dot status-{{ $inspectionPostureColor }}" aria-hidden="true"></span>
+                                    <span class="d-none d-sm-inline">{{ $inspectionPosture->label() }}</span>
+                                    <span class="visually-hidden d-sm-none">{{ $inspectionPosture->label() }}</span>
+                                </span>
+                            @endif
                             @if ($tabCounts[$workspaceTab] ?? null)
                                 <span class="badge {{ $tabCounts[$workspaceTab]['tone'] }} ms-2" data-workspace-tab-count="{{ $tabCounts[$workspaceTab]['meta'] }}">{{ $tabCounts[$workspaceTab]['count'] }}</span>
                             @endif
