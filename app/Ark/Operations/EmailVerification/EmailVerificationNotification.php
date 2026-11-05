@@ -16,6 +16,11 @@ final class EmailVerificationNotification
 {
     public function __construct(private readonly ArkMailClient $mail) {}
 
+    public function available(): bool
+    {
+        return ManagedMailGate::platformSend();
+    }
+
     public function send(string $email, string $plainCode): void
     {
         if (! ManagedMailGate::platformSend()) {

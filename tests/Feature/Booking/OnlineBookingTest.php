@@ -12,6 +12,7 @@ use App\Ark\Operations\Booking\BookingContext;
 use App\Ark\Operations\Booking\BookingMode;
 use App\Ark\Operations\Booking\BookingRefused;
 use App\Ark\Operations\Booking\BookingSettings;
+use App\Ark\Operations\Booking\BookingWorkItem;
 use App\Ark\Operations\Booking\Contracts\AdvisoryBookingConstraint;
 use App\Ark\Operations\Booking\Contracts\BookingAvailabilityConstraint;
 use App\Ark\Operations\Booking\Contracts\BookingCandidate;
@@ -20,10 +21,13 @@ use App\Ark\Operations\Booking\Events\AppointmentRequestReceived;
 use App\Ark\Operations\Booking\OnlineBooking;
 use App\Ark\Operations\Booking\OnlineBookingRequest;
 use App\Ark\Operations\Booking\ServiceLocationType;
+use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\LeadState;
+use App\Ark\Operations\Recommendations\Recommendation;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Workstations\Workstation;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -348,14 +352,16 @@ test('settings hold only the scheduling policy, and staff without settings acces
     $this->actingAs($this->admin)->get(route('operations.settings.booking'))->assertOk()
         ->assertSee('Online requests')
         ->assertSee('Requests or confirmed appointments')
+        ->assertSee('Several services in one visit')
         ->assertDontSee('Website popup');
 
     $this->actingAs($this->admin)->patch(route('operations.settings.booking.update'), [
-        'mode' => 'instant', 'daily_requests' => 8, 'respect_capacity' => '1', 'service_area_postal_codes' => '80903 80904',
+        'mode' => 'instant', 'visit_length' => 'sequential', 'daily_requests' => 8, 'respect_capacity' => '1', 'service_area_postal_codes' => '80903 80904',
     ])->assertRedirect();
 
     expect(BookingSettings::forShop())->toBe([
         'mode' => 'instant',
+        'visit_length' => 'sequential',
         'service_area' => ['postal_codes' => ['80903', '80904'], 'message' => ''],
         'limits' => ['daily_requests' => 8, 'respect_capacity' => true, 'concurrent_appointments' => null],
     ]);
@@ -491,4 +497,84 @@ test('an advisory check that cannot run does not stop a confirmed booking', func
 
     $request = submitOnline(['booking' => $oil, 'preferredTime' => '09:00', 'preferredPeriod' => null]);
     expect(Appointment::query()->sole()->status)->toBe(AppointmentStatus::Scheduled)->and($request->uncheckedRules())->toBe([]);
+});
+
+function visitWork(): array
+{
+    return [
+        new BookingWorkItem(BookingWorkItem::SERVICE, 'Oil change', minutes: 45, hours: 0.5, reference: 'svc-oil'),
+        new BookingWorkItem(BookingWorkItem::SERVICE, 'Brakes', option: 'Front · Ceramic', minutes: 120, hours: 1.8, details: 'Squeals when cold',
+            answers: [['label' => 'Under warranty?', 'answer' => 'No']]),
+        new BookingWorkItem(BookingWorkItem::CONCERN, 'Check engine light', minutes: 60, hours: 1.0, details: 'Flashing on the highway'),
+    ];
+}
+
+test('a drop-off visit lasts as long as its longest item and counts every item as workload', function (): void {
+    $context = BookingContext::forWork(visitWork());
+
+    expect($context->durationMinutes())->toBe(120)
+        ->and($context->workloadHours())->toBe(3.3)
+        ->and($context->serviceName)->toBe('Oil change, Brakes, Check engine light')
+        ->and($context->serviceReference)->toBeNull()
+        ->and($context->serviceLabel())->toBe('Oil change + Brakes · Front · Ceramic + Check engine light');
+
+    $fleet = BookingContext::forWork(visitWork(), vehicleCount: 2);
+    expect($fleet->durationMinutes())->toBe(240)->and($fleet->workloadHours())->toBe(6.6);
+});
+
+test('a sequential visit adds the items up, and a visit longer than a day is only ever a request', function (): void {
+    bookingPolicy(['mode' => 'instant', 'visit_length' => BookingSettings::VISIT_SEQUENTIAL]);
+
+    $context = BookingContext::forWork(visitWork());
+    expect($context->durationMinutes())->toBe(225)
+        ->and($context->mode(BookingSettings::forShop()))->toBe(BookingMode::Instant);
+
+    $long = BookingContext::forWork([...visitWork(), new BookingWorkItem(BookingWorkItem::SERVICE, 'Transmission rebuild', minutes: 300)]);
+    expect($long->durationMinutes())->toBe(480)
+        ->and($long->requiresApproval)->toBeTrue()
+        ->and($long->mode(BookingSettings::forShop()))->toBe(BookingMode::Request);
+
+    bookingPolicy(['visit_length' => 'anything else']);
+    expect(BookingSettings::forShop()['visit_length'])->toBe(BookingSettings::VISIT_DROP_OFF);
+});
+
+test('one submission keeps every selection, in order, for staff', function (): void {
+    $request = submitOnline(['booking' => BookingContext::forWork(visitWork()), 'concern' => 'Please call first']);
+
+    expect(AppointmentRequest::query()->count())->toBe(1)
+        ->and($request->workItems())->toHaveCount(3)
+        ->and($request->workItems()[1])->toMatchArray(['kind' => 'service', 'name' => 'Brakes', 'option' => 'Front · Ceramic', 'duration_minutes' => 120, 'labor_hours' => 1.8, 'details' => 'Squeals when cold'])
+        ->and($request->duration_minutes)->toBe(120)
+        ->and($request->serviceLabel())->toBe('Oil change + Brakes · Front · Ceramic + Check engine light')
+        ->and($request->concern)->toContain('• Brakes · Front · Ceramic — Squeals when cold')->toContain('Please call first')
+        ->and($request->staffNotes())->toContain('Booked online: 3 items')->toContain('- Brakes · Front · Ceramic')->toContain('Under warranty? No');
+});
+
+test('saved vehicles and recommended work must belong to the recognized customer and stay untouched', function (): void {
+    $pat = Customer::query()->create(['first_name' => 'Pat', 'last_name' => 'Example', 'phone' => '7195550142']);
+    $sam = Customer::query()->create(['first_name' => 'Sam', 'last_name' => 'Example', 'phone' => '7195550199']);
+    $camry = Vehicle::query()->create(['customer_id' => $pat->id, 'year' => 2019, 'make' => 'Toyota', 'model' => 'Camry']);
+    $truck = Vehicle::query()->create(['customer_id' => $sam->id, 'year' => 2020, 'make' => 'Ford', 'model' => 'F-150']);
+    $pads = Recommendation::query()->create(['customer_id' => $pat->id, 'vehicle_id' => $camry->id, 'title' => 'Front pads', 'lifecycle' => 'open', 'discovered_at' => now()]);
+    $samPads = Recommendation::query()->create(['customer_id' => $sam->id, 'vehicle_id' => $truck->id, 'title' => 'Sam pads', 'lifecycle' => 'open', 'discovered_at' => now()]);
+    $done = Recommendation::query()->create(['customer_id' => $pat->id, 'vehicle_id' => $camry->id, 'title' => 'Done', 'lifecycle' => 'resolved', 'discovered_at' => now()]);
+
+    expect(refusal(['customerId' => $pat->id, 'vehicleId' => $truck->id])->field)->toBe('vehicle')
+        ->and(refusal(['customerId' => null, 'vehicleId' => $camry->id])->field)->toBe('vehicle');
+
+    foreach ([$samPads, $done] as $foreign) {
+        expect(refusal(['customerId' => $pat->id, 'vehicleId' => $camry->id,
+            'booking' => BookingContext::forWork([BookingWorkItem::recommendation($foreign->id, 'Pads', $camry->id)])])->field)->toBe('recommendations');
+    }
+
+    $request = submitOnline(['customerId' => $pat->id, 'vehicleId' => $camry->id, 'booking' => BookingContext::forWork([
+        visitWork()[0],
+        BookingWorkItem::recommendation($pads->id, 'Front pads', $camry->id),
+    ])]);
+
+    expect($request->vehicle_id)->toBe($camry->id)
+        ->and($request->workItems()[1])->toMatchArray(['kind' => 'recommendation', 'recommendation_id' => $pads->id, 'reference' => 'recommendation:'.$pads->id])
+        ->and($request->staffNotes())->toContain('Recommended: Front pads (recommendation #'.$pads->id.')')
+        ->and($pads->refresh()->lifecycle->value)->toBe('open')
+        ->and($pads->events()->count())->toBe(0);
 });

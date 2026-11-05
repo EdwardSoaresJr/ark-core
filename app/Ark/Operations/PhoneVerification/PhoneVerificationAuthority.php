@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\PhoneVerification;
 
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Carbon;
@@ -21,15 +20,14 @@ final class PhoneVerificationAuthority
 
     public function __construct(
         private readonly PhoneVerificationNotification $notification,
-        private readonly ShopIntegrationCredentials $credentials,
     ) {}
 
     /**
-     * True when ARK can deliver an OTP SMS (shop Twilio + inbound SMS number).
+     * True when the shop's outbound SMS transport can deliver an OTP and the shop has an inbound SMS number.
      */
     public function ready(): bool
     {
-        if (! $this->credentials->twilioConfigured()) {
+        if (! $this->notification->available()) {
             return false;
         }
 

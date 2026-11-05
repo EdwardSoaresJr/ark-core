@@ -3,10 +3,12 @@
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Ark\Website\Catalog\PublicWebsiteCatalog;
 use App\Ark\Website\PublishWebsiteCatalog;
 use App\Ark\Website\WebsitePublicationCatalogMerge;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 /**
  * A shop whose website is not the imported catalog: its own name, story, and lenders only.
@@ -38,7 +40,7 @@ function publishOtherShopWebsite(array $overrides = []): void
     ];
 
     app(PublishWebsiteCatalog::class)->publish('example.arksms.com', array_replace_recursive($document, $overrides), true);
-    \Illuminate\Support\Facades\URL::forceScheme('https');
+    URL::forceScheme('https');
 }
 
 function otherShopBookPayload(): array
@@ -103,7 +105,7 @@ test('the catalog publication keeps its own story, answers, and merchant link', 
     $document['trust_signals'] = ['financing_available' => true];
     $document['financing']['programs'][1]['url'] = 'https://www.synchrony.com/financing/car-care/prospecting';
     app(PublishWebsiteCatalog::class)->publish('lugsnplugs.arksms.com', $document, true);
-    \Illuminate\Support\Facades\URL::forceScheme('https');
+    URL::forceScheme('https');
 
     $this->get('http://lugsnplugs.arksms.com/')->assertOk()
         ->assertSee('LugsNPlugs Automotive is owned and operated by Edward and Molly Soares.', false)
@@ -137,6 +139,16 @@ test('appointment requests still need a code when the shop can send one', functi
     publishOtherShopWebsite();
     Mail::fake();
     config(['mail.from.address' => 'shop@example.test']);
+
+    $this->get('http://example.arksms.com/book')->assertOk()->assertDontSee('Email me a code', false);
+
+    app()->instance(ManagedMailGate::class, new class extends ManagedMailGate
+    {
+        public function sendEnabled(): bool
+        {
+            return true;
+        }
+    });
 
     $this->get('http://example.arksms.com/book')->assertOk()->assertSee('Email me a code', false);
     $this->post('http://example.arksms.com/leads', otherShopBookPayload())

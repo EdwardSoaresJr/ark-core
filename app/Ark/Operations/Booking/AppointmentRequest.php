@@ -21,6 +21,7 @@ use Illuminate\Support\Str;
  *
  * @property list<array{year: int|null, make: string|null, model: string|null, vin: string|null}>|null $vehicles
  * @property list<array{question_id: int, label: string, answer: string}>|null $answers
+ * @property list<array<string, mixed>>|null $selections BookingWorkItem::toArray(), in the order chosen
  * @property array{line1?: string, line2?: string, city?: string, state?: string, postal_code?: string, notes?: string}|null $service_address
  */
 #[Fillable([
@@ -48,6 +49,7 @@ use Illuminate\Support\Str;
     'vehicles',
     'concern',
     'answers',
+    'selections',
     'location_mode',
     'service_address',
     'context',
@@ -79,6 +81,7 @@ class AppointmentRequest extends Model
             'vehicle_count' => 'integer',
             'vehicles' => 'array',
             'answers' => 'array',
+            'selections' => 'array',
             'location_mode' => ServiceLocationType::class,
             'service_address' => 'array',
             'context' => 'array',
@@ -116,8 +119,30 @@ class AppointmentRequest extends Model
         return $this->status === AppointmentRequestStatus::Pending;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function workItems(): array
+    {
+        return array_values(array_filter(is_array($this->selections) ? $this->selections : [], fn (mixed $item): bool => is_array($item) && filled($item['name'] ?? null)));
+    }
+
+    public static function workItemLabel(array $item): string
+    {
+        $label = trim((string) ($item['name'] ?? ''));
+        $option = trim((string) ($item['option'] ?? ''));
+
+        return ($item['kind'] ?? null) === BookingWorkItem::RECOMMENDATION
+            ? 'Recommended: '.$label
+            : ($option !== '' ? "{$label} · {$option}" : $label);
+    }
+
     public function serviceLabel(): string
     {
+        if (count($items = $this->workItems()) > 1) {
+            return implode(' + ', array_map(fn (array $item): string => self::workItemLabel($item), $items));
+        }
+
         $name = trim((string) $this->service_name);
         $option = trim((string) $this->service_option);
 
@@ -222,7 +247,18 @@ class AppointmentRequest extends Model
      */
     public function staffNotes(): string
     {
-        $lines = ['Booked online: '.$this->serviceLabel()];
+        $items = $this->workItems();
+        $lines = [count($items) > 1 ? 'Booked online: '.count($items).' items' : 'Booked online: '.$this->serviceLabel()];
+
+        foreach (count($items) > 1 || $this->itemsHaveDetail($items) ? $items : [] as $item) {
+            $lines[] = '- '.self::workItemLabel($item).(isset($item['recommendation_id']) ? ' (recommendation #'.$item['recommendation_id'].')' : '');
+            if (filled($item['details'] ?? null)) {
+                $lines[] = '  '.trim((string) $item['details']);
+            }
+            foreach (is_array($item['answers'] ?? null) ? $item['answers'] : [] as $answer) {
+                $lines[] = '  '.self::answerLabel((string) ($answer['label'] ?? '')).' '.trim((string) ($answer['answer'] ?? ''));
+            }
+        }
 
         if ($this->mode === BookingMode::Request) {
             $lines[] = 'Customer preferred: '.$this->preferenceLabel();
@@ -250,5 +286,13 @@ class AppointmentRequest extends Model
         }
 
         return mb_substr(implode("\n", $lines), 0, 2000);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     */
+    private function itemsHaveDetail(array $items): bool
+    {
+        return array_filter($items, fn (array $item): bool => ! empty($item['answers']) || isset($item['recommendation_id'])) !== [];
     }
 }

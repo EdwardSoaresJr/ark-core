@@ -16,8 +16,11 @@ use App\Ark\Operations\Leads\LeadSource;
 use App\Ark\Operations\Leads\LeadState;
 use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
 use App\Ark\Operations\PhoneNumber;
+use App\Ark\Operations\Recommendations\Recommendation;
+use App\Ark\Operations\Recommendations\RecommendationLifecycle;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Operations\Settings\ShopSettings;
+use App\Ark\Operations\Vehicles\Vehicle;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -74,6 +77,7 @@ final class OnlineBooking
 
         $context = $input->booking;
         $mode = $context->mode(BookingSettings::forShop());
+        $this->assertOwnership($input);
 
         if ($input->spam) {
             $this->recordLead($input, $phone, $mode, $input->preferredPeriod ?? AppointmentRequestAvailability::PERIOD_ANY, LeadState::Spam);
@@ -151,6 +155,7 @@ final class OnlineBooking
                 'vehicles' => $input->vehicles !== [] ? array_values($input->vehicles) : null,
                 'concern' => $this->composeConcern($input),
                 'answers' => $input->answers !== [] ? array_values($input->answers) : null,
+                'selections' => $context->work !== [] ? array_map(fn (BookingWorkItem $item): array => $item->toArray(), $context->work) : null,
                 'location_mode' => $context->location,
                 'service_address' => $context->location->isOnSite() ? $context->address : null,
                 'context' => array_filter([
@@ -278,9 +283,50 @@ final class OnlineBooking
         ], ingress: $input->ingress, forcedState: $forcedState, spamSignals: $input->spamSignals);
     }
 
+    /**
+     * Saved vehicles and recommended work must belong to the customer the product recognized.
+     *
+     * @throws BookingRefused
+     */
+    private function assertOwnership(OnlineBookingRequest $input): void
+    {
+        $vehicleIds = array_values(array_unique(array_filter([
+            $input->vehicleId,
+            ...array_map(fn (array $vehicle): mixed => $vehicle['vehicle_id'] ?? null, $input->vehicles),
+            ...array_map(fn (BookingWorkItem $item): ?int => $item->vehicleId, $input->booking->work),
+        ], fn (mixed $id): bool => $id !== null)));
+        $recommendationIds = array_values(array_filter(array_map(fn (BookingWorkItem $item): ?int => $item->recommendationId, $input->booking->work)));
+
+        if ($vehicleIds === [] && $recommendationIds === []) {
+            return;
+        }
+
+        if ($input->customerId === null
+            || Vehicle::query()->where('customer_id', $input->customerId)->whereIn('id', $vehicleIds)->count() !== count($vehicleIds)) {
+            throw new BookingRefused('vehicle', 'Choose one of your vehicles or add a new one.');
+        }
+
+        $open = Recommendation::query()
+            ->where('customer_id', $input->customerId)
+            ->where('lifecycle', RecommendationLifecycle::Open->value)
+            ->whereIn('id', $recommendationIds)
+            ->pluck('vehicle_id', 'id');
+
+        foreach ($input->booking->work as $item) {
+            if ($item->recommendationId !== null
+                && (! $open->has($item->recommendationId) || ($item->vehicleId !== null && (int) $open[$item->recommendationId] !== $item->vehicleId))) {
+                throw new BookingRefused('recommendations', 'Some recommended work is no longer available. Review your selections.');
+            }
+        }
+    }
+
     private function composeConcern(OnlineBookingRequest $input): string
     {
-        $head = (string) $input->booking->serviceLabel();
+        $work = $input->booking->work;
+        $head = count($work) > 1
+            ? implode("\n", array_map(fn (BookingWorkItem $item): string => '• '.($item->kind === BookingWorkItem::RECOMMENDATION ? 'Recommended: ' : '').$item->label()
+                .(filled($item->details) ? ' — '.trim((string) $item->details) : ''), $work))
+            : (string) $input->booking->serviceLabel();
         $details = trim($input->concern);
         $flags = array_filter([
             $input->unsafeToDrive ? 'Unsafe to drive' : null,

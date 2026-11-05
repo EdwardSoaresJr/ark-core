@@ -40,6 +40,7 @@ final class BookingSettingsController
     {
         $data = $request->validate([
             'mode' => ['required', Rule::enum(BookingMode::class)],
+            'visit_length' => ['nullable', Rule::in([BookingSettings::VISIT_DROP_OFF, BookingSettings::VISIT_SEQUENTIAL])],
             'service_area_postal_codes' => ['nullable', 'string', 'max:6000'],
             'service_area_message' => ['nullable', 'string', 'max:300'],
             'daily_requests' => ['nullable', 'integer', 'min:1', 'max:500'],
@@ -47,8 +48,9 @@ final class BookingSettingsController
             'concurrent_appointments' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
-        ShopSettings::current()->forceFill(['online_booking' => BookingSettings::normalize([
+        BookingSettings::save([
             'mode' => $data['mode'],
+            'visit_length' => $data['visit_length'] ?? BookingSettings::VISIT_DROP_OFF,
             'limits' => [
                 'daily_requests' => $data['daily_requests'] ?? null,
                 'respect_capacity' => $request->boolean('respect_capacity'),
@@ -58,8 +60,7 @@ final class BookingSettingsController
                 'postal_codes' => BookingSettings::postalCodes((string) ($data['service_area_postal_codes'] ?? '')),
                 'message' => (string) ($data['service_area_message'] ?? ''),
             ],
-        ])])->save();
-        ShopSettings::forgetCurrent();
+        ]);
 
         return redirect()->route('operations.settings.booking')->with('status', 'Online request rules saved.');
     }

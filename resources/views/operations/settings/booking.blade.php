@@ -105,6 +105,23 @@
                         @endforeach
                     </fieldset>
 
+                    <fieldset class="mt-4">
+                        <legend class="h3 mb-1">Several services in one visit</legend>
+                        <p class="text-secondary small">How long the visit is when a customer books more than one thing. The workload always counts every item's labor.</p>
+                        @php($visitLength = old('visit_length', $booking['visit_length']))
+                        <label class="form-check">
+                            <input type="radio" name="visit_length" value="{{ \App\Ark\Operations\Booking\BookingSettings::VISIT_DROP_OFF }}" class="form-check-input" @checked($visitLength === \App\Ark\Operations\Booking\BookingSettings::VISIT_DROP_OFF)>
+                            <span class="form-check-label">Drop-off: as long as the longest item</span>
+                            <span class="form-check-description">The vehicle stays while the work is done. Best for most repair shops.</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="radio" name="visit_length" value="{{ \App\Ark\Operations\Booking\BookingSettings::VISIT_SEQUENTIAL }}" class="form-check-input" @checked($visitLength === \App\Ark\Operations\Booking\BookingSettings::VISIT_SEQUENTIAL)>
+                            <span class="form-check-label">One after another: add the times up</span>
+                            <span class="form-check-description">The customer waits, or a mobile technician works through the list on site.</span>
+                        </label>
+                        <p class="text-secondary small mb-0">A visit longer than a day is never confirmed online; it comes to you as a request.</p>
+                    </fieldset>
+
                     <h3 class="mb-1 mt-4">Limits</h3>
                     <div class="row g-3">
                         <div class="col-sm-6">

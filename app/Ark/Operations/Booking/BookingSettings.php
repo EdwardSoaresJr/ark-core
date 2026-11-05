@@ -15,13 +15,20 @@ use App\Ark\Operations\Settings\ShopSettings;
  */
 final class BookingSettings
 {
+    /** The visit lasts as long as its longest item; the vehicle stays while the work is done. */
+    public const VISIT_DROP_OFF = 'drop_off';
+
+    /** The items' times add up: the customer waits, or a mobile technician works through the list. */
+    public const VISIT_SEQUENTIAL = 'sequential';
+
     /**
-     * @return array{mode: string, service_area: array{postal_codes: list<string>, message: string}, limits: array{daily_requests: int|null, respect_capacity: bool, concurrent_appointments: int|null}}
+     * @return array{mode: string, visit_length: string, service_area: array{postal_codes: list<string>, message: string}, limits: array{daily_requests: int|null, respect_capacity: bool, concurrent_appointments: int|null}}
      */
     public static function defaults(): array
     {
         return [
             'mode' => BookingMode::Request->value,
+            'visit_length' => self::VISIT_DROP_OFF,
             'service_area' => [
                 'postal_codes' => [],
                 'message' => '',
@@ -35,7 +42,7 @@ final class BookingSettings
     }
 
     /**
-     * @return array{mode: string, service_area: array{postal_codes: list<string>, message: string}, limits: array{daily_requests: int|null, respect_capacity: bool, concurrent_appointments: int|null}}
+     * @return array{mode: string, visit_length: string, service_area: array{postal_codes: list<string>, message: string}, limits: array{daily_requests: int|null, respect_capacity: bool, concurrent_appointments: int|null}}
      */
     public static function forShop(?ShopSettings $settings = null): array
     {
@@ -47,7 +54,7 @@ final class BookingSettings
 
     /**
      * @param  array<string, mixed>|null  $config
-     * @return array{mode: string, service_area: array{postal_codes: list<string>, message: string}, limits: array{daily_requests: int|null, respect_capacity: bool, concurrent_appointments: int|null}}
+     * @return array{mode: string, visit_length: string, service_area: array{postal_codes: list<string>, message: string}, limits: array{daily_requests: int|null, respect_capacity: bool, concurrent_appointments: int|null}}
      */
     public static function normalize(?array $config): array
     {
@@ -57,6 +64,7 @@ final class BookingSettings
 
         return [
             'mode' => (BookingMode::tryFrom((string) ($config['mode'] ?? '')) ?? BookingMode::Request)->value,
+            'visit_length' => ($config['visit_length'] ?? null) === self::VISIT_SEQUENTIAL ? self::VISIT_SEQUENTIAL : self::VISIT_DROP_OFF,
             'service_area' => [
                 'postal_codes' => self::postalCodes($areaIn['postal_codes'] ?? []),
                 'message' => self::text($areaIn['message'] ?? null, 300),
@@ -69,6 +77,17 @@ final class BookingSettings
                 'concurrent_appointments' => self::positiveOrNull($limitsIn['concurrent_appointments'] ?? null, 50),
             ],
         ];
+    }
+
+    /**
+     * Replace the keys given, keep the rest, and store the normalized policy.
+     *
+     * @param  array<string, mixed>  $changes
+     */
+    public static function save(array $changes): void
+    {
+        ShopSettings::current()->forceFill(['online_booking' => self::normalize([...self::forShop(), ...$changes])])->save();
+        ShopSettings::forgetCurrent();
     }
 
     public static function mode(?ShopSettings $settings = null): BookingMode

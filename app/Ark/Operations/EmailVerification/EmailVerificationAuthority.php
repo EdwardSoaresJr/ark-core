@@ -22,7 +22,7 @@ final class EmailVerificationAuthority
 
     public function ready(): bool
     {
-        return filled(config('mail.from.address'));
+        return filled(config('mail.from.address')) && $this->notification->available();
     }
 
     /**
