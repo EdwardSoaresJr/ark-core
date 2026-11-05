@@ -1197,14 +1197,6 @@
             toggleEstimateContext(name) {
                 this.estimateContext = this.estimateContext === name ? null : name;
             },
-            focusCreateScope() {
-                window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', {
-                    detail: {
-                        task: 'add-work',
-                        invokeEl: document.querySelector('[data-workspace-modal-trigger=add-work]'),
-                    },
-                }));
-            },
             openPartsCatalog(key, forceCartSwitch = false, concernId = null) {
                 const catalog = this.partsCatalogByKey(key);
                 this.partsCatalogActionLabel = catalog?.label || '';
@@ -1695,7 +1687,6 @@
                     'repairOrder' => $repairOrder,
                     'mode' => 'edit',
                     'isTerminal' => $isTerminal,
-                    'showConcernStore' => (bool) ($canAuthorRepairOrder ?? false),
                 ])
 
                 @include('operations.repair-orders.partials.repair-order-visit-reason', [

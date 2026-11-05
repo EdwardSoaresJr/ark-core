@@ -1,8 +1,7 @@
-{{-- PartsTech, other parts catalogs, labor guides and the PartsTech cart live in the docked RO footer. --}}
+{{-- Add Work, PartsTech, other parts catalogs, labor guides and the PartsTech cart live in the docked RO footer. --}}
 @php
     $mode = $mode ?? 'edit';
     $isTerminal = $isTerminal ?? false;
-    $showConcernStore = ($showConcernStore ?? false) && $mode === 'edit' && ! $isTerminal;
     $showCaptureDealerQuote = $mode === 'edit' && ! $isTerminal;
     // The customer's estimate as they see it, for staff: shown on locked and closed estimates too.
     $showEstimatePreview = isset($repairOrder)
@@ -14,16 +13,6 @@
 @if ($showCustomerView || $showEstimatePreview)
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" role="toolbar" aria-label="Estimate tools" data-estimate-tools>
         <div class="d-flex flex-wrap align-items-start gap-2">
-            @if ($showConcernStore)
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    @click="focusCreateScope()"
-                >
-                    + Add Work
-                </button>
-            @endif
-
             @if ($showCaptureDealerQuote)
                 <button
                     type="button"
