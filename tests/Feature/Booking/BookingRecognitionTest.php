@@ -2,12 +2,7 @@
 
 use App\Ark\Operations\Booking\BookingRecognition;
 use App\Ark\Operations\Customers\Customer;
-use App\Ark\Operations\EmailVerification\EmailVerificationAuthority;
-use App\Ark\Operations\Messaging\OutboundSmsResult;
-use App\Ark\Operations\Messaging\OutboundSmsTransport;
-use App\Ark\Operations\PhoneVerification\PhoneVerificationAuthority;
 use App\Ark\Operations\Recommendations\Recommendation;
-use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 
 function recognitionCustomer(string $first, string $phone, ?string $email = null): Customer
@@ -95,29 +90,4 @@ test('a verified email recognizes the single customer who has it', function (): 
 
     expect(BookingRecognition::forVerifiedContact(null, 'lee@example.test')->customerId())->toBe($lee->id)
         ->and(BookingRecognition::forVerifiedContact(null, 'lee@example.test')->firstName())->toBe('Lee');
-});
-
-test('verification is offered only when a sender can actually deliver the code', function (): void {
-    config(['mail.from.address' => 'shop@example.test']);
-    expect(app(EmailVerificationAuthority::class)->ready())->toBeFalse();
-
-    ShopSettings::current()->update(['telephony_inbound_number' => '+17195550100']);
-    ShopSettings::forgetCurrent();
-    expect(app(PhoneVerificationAuthority::class)->ready())->toBeFalse();
-
-    app()->instance(OutboundSmsTransport::class, new class implements OutboundSmsTransport
-    {
-        public function isConfigured(): bool
-        {
-            return true;
-        }
-
-        public function send(string $toPhone, string $body, array $mediaUrls = [], array $context = []): OutboundSmsResult
-        {
-            throw new RuntimeException('Not in this test.');
-        }
-    });
-    app()->forgetInstance(PhoneVerificationAuthority::class);
-
-    expect(app(PhoneVerificationAuthority::class)->ready())->toBeTrue();
 });

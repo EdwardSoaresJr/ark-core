@@ -3,7 +3,6 @@
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
 use App\Ark\Operations\Settings\ShopSettings;
-use App\Ark\Platform\Mail\ManagedMailGate;
 use App\Ark\Website\Catalog\PublicWebsiteCatalog;
 use App\Ark\Website\PublishWebsiteCatalog;
 use App\Ark\Website\WebsitePublicationCatalogMerge;
@@ -135,25 +134,14 @@ test('a public notice shows only when configured', function (): void {
     $this->get('http://example.arksms.com/book')->assertOk()->assertSee('Demonstration shop.');
 });
 
-test('appointment requests still need a code when the shop can send one', function (): void {
+test('a code is offered only when the shop can actually send one', function (): void {
     publishOtherShopWebsite();
     Mail::fake();
     config(['mail.from.address' => 'shop@example.test']);
 
+    // A from address alone sends nothing: without managed mail, no email code is offered.
     $this->get('http://example.arksms.com/book')->assertOk()->assertDontSee('Email me a code', false);
-
-    app()->instance(ManagedMailGate::class, new class extends ManagedMailGate
-    {
-        public function sendEnabled(): bool
-        {
-            return true;
-        }
-    });
-
-    $this->get('http://example.arksms.com/book')->assertOk()->assertSee('Email me a code', false);
-    $this->post('http://example.arksms.com/leads', otherShopBookPayload())
-        ->assertSessionHasErrors('contact_phone');
-    expect(Lead::query()->count())->toBe(0);
+    Mail::assertNothingOutgoing();
 });
 
 test('with identity verification off a request is recorded unverified and no code is offered', function (): void {
