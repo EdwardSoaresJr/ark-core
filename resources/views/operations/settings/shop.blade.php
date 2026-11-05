@@ -205,6 +205,7 @@
                 'Your shop' => [
                     ['key' => 'general', 'label' => 'Shop Identity'],
                     ['key' => 'operations', 'label' => 'Appointments & Setup'],
+                    ['key' => 'booking', 'label' => 'Online Requests', 'href' => route('operations.settings.booking')],
                     ['key' => 'staff', 'label' => 'Staff', 'can' => App\Ark\Runtime\Authorization\ArkCapability::StaffManage->value],
                 ],
                 'Money' => [

@@ -1926,7 +1926,6 @@
         "text: app/Ark/Operations/Leads/SendWebsiteLeadConfirmationAction.php contains twilioConfigured(",
         "text: app/Ark/Operations/Messaging/TwilioOutboundSmsTransport.php contains api.twilio.com",
         "text: app/Ark/Operations/Messaging/TwilioOutboundSmsTransport.php contains twilioConfigured(",
-        "text: app/Ark/Operations/PhoneVerification/PhoneVerificationAuthority.php contains twilioConfigured(",
         "text: app/Ark/Operations/Settings/ShopIntegrationCredentials.php contains twilioConfigured(",
         "text: app/Ark/Operations/Telephony/CallQueuePresenter.php contains twilioConfigured(",
         "text: app/Ark/Operations/Telephony/MobileVoice/MobileVoiceRegistrationProjection.php contains twilioConfigured(",

@@ -49,13 +49,27 @@
                         <div class="text-secondary">{{ $customerEmail }}</div>
                     @endif
                     <div class="small text-secondary mt-1" data-appointment-status>{{ $appointment->status->label() }} · {{ \App\Ark\Operations\Appointments\AppointmentSlotMinutes::durationLabel($appointmentLengthMinutes) }}@if ($appointment->estimated_labor_hours) · {{ $appointment->estimated_labor_hours }}h reserved labor @endif</div>
+                    @if ($appointment->bookingRequest || $appointment->service_location_type?->isOnSite())
+                        <div class="d-flex flex-wrap gap-2 mt-2" data-appointment-booking-origin>
+                            @if ($appointment->bookingRequest)
+                                <span class="badge bg-blue-lt">{{ $appointment->bookingRequest->mode === \App\Ark\Operations\Booking\BookingMode::Instant ? 'Booked online' : 'Online request' }}</span>
+                            @endif
+                            @if ($appointment->service_location_type?->isOnSite())
+                                <span class="badge bg-azure-lt">{{ $appointment->service_location_type->label() }}</span>
+                                @php($address = collect($appointment->service_address ?? [])->only(['line1', 'line2', 'city', 'state', 'postal_code'])->filter()->implode(', '))
+                                @if ($address !== '')
+                                    <span class="small">{{ $address }}</span>
+                                @endif
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="card-body p-2 p-md-3">
                     <div class="subheader mb-1">Concern</div>
                     <div>{{ $appointment->concern }}</div>
                     @if ($appointment->notes)
-                        <div class="small text-secondary mt-2">{{ $appointment->notes }}</div>
+                        <div class="small text-secondary mt-2" style="white-space: pre-line">{{ $appointment->notes }}</div>
                     @endif
                 </div>
 

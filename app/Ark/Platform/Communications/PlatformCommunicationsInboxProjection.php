@@ -657,7 +657,7 @@ final class PlatformCommunicationsInboxProjection
                 'known_customer' => $lead->customer_id !== null,
                 'link_status' => $ownerName,
                 'channel_label' => 'Website Lead',
-                'source_label' => 'Website Lead',
+                'source_label' => $lead->contactUnverified() ? 'Website Lead · unverified contact' : 'Website Lead',
                 'turn_label' => $ownerName,
                 'shop_hint' => $vehicle ?? 'No current visit',
                 'assigned_label' => $ownerName,

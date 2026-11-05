@@ -144,6 +144,7 @@ final class PublicBookSubmission
             'metadata' => PublicAppointmentRequest::metadataWithAvailability([
                 'public_page' => 'book',
                 'public_host' => $request->getHost(),
+                'identity' => $identity['verified'] ? 'verified' : 'unverified',
                 'canonical_host' => $website->canonicalHost(),
             ], $date, $period, $preferredLabel),
         ]);

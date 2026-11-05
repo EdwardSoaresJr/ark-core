@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\PhoneVerification;
 
 use App\Ark\Operations\PhoneNumber;
-use App\Ark\Operations\Settings\ShopIntegrationCredentials;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Carbon;
@@ -19,21 +18,24 @@ final class PhoneVerificationAuthority
 {
     public const SESSION_KEY = 'verified_phone_session';
 
+    /**
+     * @param  bool  $requireInboundNumber  false only for senders that deliver nothing (a demonstration shows the code on screen)
+     */
     public function __construct(
         private readonly PhoneVerificationNotification $notification,
-        private readonly ShopIntegrationCredentials $credentials,
+        private readonly bool $requireInboundNumber = true,
     ) {}
 
     /**
-     * True when ARK can deliver an OTP SMS (shop Twilio + inbound SMS number).
+     * True when the shop's outbound SMS transport can deliver an OTP and the shop has an inbound SMS number.
      */
     public function ready(): bool
     {
-        if (! $this->credentials->twilioConfigured()) {
+        if (! $this->notification->available()) {
             return false;
         }
 
-        return PhoneNumber::toE164(ShopSettings::current()->telephony_inbound_number) !== null;
+        return ! $this->requireInboundNumber || PhoneNumber::toE164(ShopSettings::current()->telephony_inbound_number) !== null;
     }
 
     /**
@@ -172,7 +174,8 @@ final class PhoneVerificationAuthority
     }
 
     /**
-     * One-time consume of the verified session for a matching phone.
+     * One-time consume of the verified session for a matching phone. Atomic: of two requests holding
+     * the same proof, only the one whose update changes the verification row succeeds.
      */
     public function consumeVerifiedSession(Session $session, string $phone): bool
     {
@@ -187,16 +190,19 @@ final class PhoneVerificationAuthority
             ? ($session->get(self::SESSION_KEY)['verification_id'] ?? 0)
             : 0);
 
+        $consumed = true;
         if ($verificationId > 0) {
-            PhoneVerification::query()
+            $consumed = PhoneVerification::query()
                 ->where('id', $verificationId)
+                ->where('phone_e164', PhoneNumber::toE164($normalized))
+                ->whereNotNull('verified_at')
                 ->whereNull('consumed_at')
-                ->update(['consumed_at' => now()]);
+                ->update(['consumed_at' => now()]) === 1;
         }
 
         $session->forget(self::SESSION_KEY);
 
-        return true;
+        return $consumed;
     }
 
     /**

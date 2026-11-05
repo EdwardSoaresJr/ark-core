@@ -15,7 +15,6 @@ use App\Ark\Operations\Leads\Public\LeadPhoneVerification;
 use App\Ark\Operations\Leads\Public\PublicAppointmentRequest;
 use App\Ark\Operations\Leads\Public\PublicBookWizardConcerns;
 use App\Ark\Operations\PhoneNumber;
-use Illuminate\Support\Facades\Auth;
 use App\Ark\Website\PublicLegacyRedirect;
 use App\Ark\Website\PublicLlmsTxt;
 use App\Ark\Website\PublicProblemGroups;
@@ -29,6 +28,7 @@ use App\Ark\Website\WebsiteHosts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 final class PublicWebsiteController

@@ -14,6 +14,11 @@ final class PhoneVerificationNotification
         private readonly OutboundSmsTransport $transport,
     ) {}
 
+    public function available(): bool
+    {
+        return $this->transport->isConfigured();
+    }
+
     public function sendSms(string $phoneE164, string $plainCode): void
     {
         $shopName = trim((string) (ShopSettings::current()->shop_name ?? ''));

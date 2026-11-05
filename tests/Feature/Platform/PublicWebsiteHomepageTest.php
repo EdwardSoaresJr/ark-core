@@ -3,6 +3,8 @@
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Website\Catalog\PublicWebsiteCatalog;
 use App\Ark\Website\PublishWebsiteCatalog;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 function publishHomepageSurface(array $documentOverrides = []): void
 {
@@ -46,7 +48,7 @@ function publishHomepageSurface(array $documentOverrides = []): void
     // These examples assert the public https URLs a TLS site emits. A fresh
     // checkout has APP_URL=http://localhost, so force the scheme here instead
     // of depending on a developer .env.
-    \Illuminate\Support\Facades\URL::forceScheme('https');
+    URL::forceScheme('https');
 }
 
 test('homepage tells the shop story with the published photos', function (): void {
@@ -247,7 +249,7 @@ test('site foundation exposes services, problems, and an appointment request', f
         ->assertDontSee('Book an Appointment');
 
     $llms = $this->get('http://lugsnplugs.com/llms.txt')->assertOk()->getContent();
-    $services = \Illuminate\Support\Str::between($llms, "## Services\n", "\n## ");
+    $services = Str::between($llms, "## Services\n", "\n## ");
     expect($services)->toContain('Diagnostics: https://lugsnplugs.com/services/diagnostics')
         ->and($services)->toContain('Brakes: https://lugsnplugs.com/services/brakes')
         ->and($services)->toContain('Maintenance: https://lugsnplugs.com/services/maintenance')
@@ -435,8 +437,8 @@ test('complaint and code pages keep their own presentations', function (): void 
 test('public canvas inset leaves service articles in place', function (): void {
     $css = file_get_contents(base_path('resources/css/app.css'));
 
-    expect($css)->toContain("min(42rem, calc(min(72rem, 100%) - 3rem))")
-        ->and($css)->toContain("min(var(--public-read-max), calc(min(72rem, 100%) - 3rem))")
+    expect($css)->toContain('min(42rem, calc(min(72rem, 100%) - 3rem))')
+        ->and($css)->toContain('min(var(--public-read-max), calc(min(72rem, 100%) - 3rem))')
         ->and($css)->toContain(<<<'CSS'
     .public-service .public-cp-article {
         width: auto;
@@ -444,7 +446,7 @@ test('public canvas inset leaves service articles in place', function (): void {
     }
 CSS
         )
-        ->and($css)->toContain("html.dark .public-surface input:not([type])");
+        ->and($css)->toContain('html.dark .public-surface input:not([type])');
 });
 
 test('contact corrects three answers and financing keeps one set of destinations', function (): void {
@@ -475,7 +477,7 @@ test('contact corrects three answers and financing keeps one set of destinations
         ->assertSee('Yes. We provide vehicle inspections, including pre-purchase and post-purchase inspections.', false)
         ->assertSee('offer financing options for qualifying repairs.', false)
         ->assertSee('href="https://lugsnplugs.com/financing"', false)
-        ->assertSee(">financing options</a>", false)
+        ->assertSee('>financing options</a>', false)
         ->assertSee('We work with Pinky', false)
         ->assertDontSee('generally recommend using parts', false)
         ->assertDontSee('Yes. We can inspect', false)

@@ -40,6 +40,12 @@ class AppointmentStoreController
             $request->user(),
         );
 
+        app(\App\Ark\Operations\Booking\AppointmentRequestDecisions::class)->scheduled(
+            $appointment,
+            $request->user(),
+            $request->integer('appointment_request_id') ?: null,
+        );
+
         $redirect = redirect()
             ->route('operations.appointments.show', $appointment)
             ->with('status', 'Appointment scheduled.')

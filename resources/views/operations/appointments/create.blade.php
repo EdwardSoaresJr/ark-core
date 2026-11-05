@@ -17,6 +17,19 @@
                 <div class="alert alert-danger mb-0" role="alert">{{ $errors->first() }}</div>
             @endif
 
+            @if ($bookingRequest ?? null)
+                <div class="card card-sm border-primary" data-schedule-booking-request="{{ $bookingRequest->id }}">
+                    <div class="card-body">
+                        <div class="subheader">Online request · received {{ \App\Ark\Operations\Settings\ShopDisplayTimezone::format($bookingRequest->created_at, 'M j, g:i A') }}</div>
+                        <div class="fw-bold">{{ $bookingRequest->contact_name }} · {{ $bookingRequest->serviceLabel() }}</div>
+                        <div class="small">Customer would like: {{ $bookingRequest->preferenceLabel() }}. Pick the exact time below; scheduling confirms the request.</div>
+                        @if ($bookingRequest->locationType()->isOnSite())
+                            <div class="small mt-1"><span class="badge bg-azure-lt">{{ $bookingRequest->locationType()->label() }}</span> {{ $bookingRequest->addressLabel() }}</div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             @if ($customer === null && ! ($showUnlinkedForm ?? false))
                 <div class="card" data-schedule-customer-search>
                     <div class="card-body p-2 p-md-3">
@@ -148,6 +161,9 @@
                         @if ($defaultLeadId ?? null)
                             <input type="hidden" name="lead_id" value="{{ $defaultLeadId }}">
                         @endif
+                        @if ($bookingRequest ?? null)
+                            <input type="hidden" name="appointment_request_id" value="{{ $bookingRequest->id }}">
+                        @endif
 
                         @if ($repairOrder ?? null)
                             <input type="hidden" name="repair_order_id" value="{{ $repairOrder->id }}">
@@ -162,7 +178,7 @@
                                 :preferred-date="$preferredDate ?? null"
                                 :request-preference-detail="$requestPreferenceDetail ?? null"
                                 :slot-minutes="$slotMinutes"
-                                :estimated-labor-hours="old('estimated_labor_hours')"
+                                :estimated-labor-hours="$defaultLaborHours ?? old('estimated_labor_hours')"
                             />
                         </div>
 
@@ -190,7 +206,7 @@
 
                         <div class="mb-3">
                             <label class="form-label" for="schedule-notes">Notes</label>
-                            <textarea id="schedule-notes" name="notes" rows="2" maxlength="2000" class="form-control">{{ old('notes') }}</textarea>
+                            <textarea id="schedule-notes" name="notes" rows="2" maxlength="2000" class="form-control">{{ $defaultNotes ?? old('notes') }}</textarea>
                         </div>
 
                         <div class="row">

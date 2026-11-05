@@ -127,6 +127,20 @@ class Lead extends Model
         return $parts !== [] ? implode(' ', $parts) : null;
     }
 
+    /**
+     * A website request whose phone or email was not confirmed with a code. It proves nothing about
+     * who sent it and is never matched to a customer on its contact details alone.
+     */
+    public function contactUnverified(): bool
+    {
+        return ($this->metadata['identity'] ?? null) === 'unverified';
+    }
+
+    public function sourceLabel(): string
+    {
+        return $this->source->label().($this->contactUnverified() ? ' · unverified contact' : '');
+    }
+
     public function ageLabel(): string
     {
         return str_replace(' ago', '', $this->created_at->diffForHumans(short: true, parts: 1));
@@ -142,7 +156,7 @@ class Lead extends Model
         return $this->isOpen() && $this->first_contacted_at === null;
     }
 
-    public function isAging(Carbon $now = null): bool
+    public function isAging(?Carbon $now = null): bool
     {
         $now ??= now();
 
@@ -150,7 +164,7 @@ class Lead extends Model
             && $this->created_at->lt($now->copy()->subDay());
     }
 
-    public function isWaitingFollowUp(Carbon $now = null): bool
+    public function isWaitingFollowUp(?Carbon $now = null): bool
     {
         $now ??= now();
 
@@ -240,7 +254,7 @@ class Lead extends Model
     /**
      * @param  Builder<self>  $query
      */
-    public function scopeAging(Builder $query, Carbon $now = null): Builder
+    public function scopeAging(Builder $query, ?Carbon $now = null): Builder
     {
         $now ??= now();
 

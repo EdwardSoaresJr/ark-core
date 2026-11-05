@@ -10,7 +10,7 @@ class AppointmentShowController
 {
     public function __invoke(Appointment $appointment, AppointmentStaffOptions $staff, AppointmentSmsDelivery $smsDelivery): View
     {
-        $appointment->load(['customer.vehicles', 'vehicle', 'advisor', 'technician', 'workstation', 'repairOrder', 'creator', 'lead']);
+        $appointment->load(['customer.vehicles', 'vehicle', 'advisor', 'technician', 'workstation', 'repairOrder', 'creator', 'lead', 'bookingRequest']);
 
         $smsCanSend = $smsDelivery->canSend($appointment);
         $smsBlockReason = $smsDelivery->blockReason($appointment);

@@ -210,8 +210,8 @@
     <div class="border-top pt-3 mt-3">
         <h4 class="mb-1">Appointment Request Availability</h4>
         <p class="text-secondary small">
-            Controls which days appointment requests may offer. Public booking presentation belongs to ARK Website.
-            Independent of Business Hours and staff Scheduling hours above.
+            Controls which days online booking may offer. Independent of Business Hours and staff Scheduling hours above.
+            Closed dates, daily limits, and whether online customers may take an open time are in <a href="{{ route('operations.settings.booking') }}">Online requests</a>.
         </p>
 
         <fieldset class="mb-3">

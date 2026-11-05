@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\Appointments;
 
+use App\Ark\Operations\Booking\AppointmentRequestDecisions;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Customers\CustomerSearchQuery;
 use App\Ark\Operations\Leads\Lead;
@@ -45,6 +46,13 @@ final class PresentAppointmentCreateForm
         }
 
         $preferenceLead = $this->resolvePreferenceLead($request, $context);
+        $bookingRequest = app(AppointmentRequestDecisions::class)->pendingFor(
+            $request->integer('appointment_request') ?: null,
+            $context->leadId ?? ($request->integer('lead') ?: null),
+        );
+        if ($bookingRequest !== null && old('concern') === null) {
+            $defaultConcern = mb_substr($bookingRequest->concern, 0, 1000);
+        }
         $preferredPeriod = old('preferred_period', $preferenceLead?->preferredPeriod());
         $preferredDate = old(
             'preferred_date',
@@ -71,7 +79,10 @@ final class PresentAppointmentCreateForm
             'defaultAdvisorId' => $request->user()?->id,
             'defaultStartsAt' => $request->filled('starts_at') ? (string) $request->string('starts_at') : null,
             'defaultEndsAt' => $request->filled('ends_at') ? (string) $request->string('ends_at') : null,
-            'defaultDurationMinutes' => $request->integer('duration_minutes') ?: null,
+            'defaultDurationMinutes' => $request->integer('duration_minutes') ?: $bookingRequest?->duration_minutes,
+            'bookingRequest' => $bookingRequest,
+            'defaultNotes' => old('notes', $bookingRequest?->staffNotes()),
+            'defaultLaborHours' => old('estimated_labor_hours', $bookingRequest?->workload_hours),
             'defaultTechnicianId' => $request->integer('technician_user_id') ?: null,
             'defaultWorkstationId' => $request->integer('workstation_id') ?: null,
             'preferredPeriod' => is_string($preferredPeriod) ? $preferredPeriod : null,
@@ -100,6 +111,7 @@ final class PresentAppointmentCreateForm
                 'technician_user_id' => $request->integer('technician_user_id') ?: null,
                 'workstation_id' => $request->integer('workstation_id') ?: null,
                 'vehicle' => $context->vehicleId,
+                'appointment_request' => $bookingRequest?->id,
             ]),
         ]);
     }

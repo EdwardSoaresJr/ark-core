@@ -108,6 +108,11 @@
                 'requestDayStatus' => $requestDayStatus ?? ['requestable' => false, 'weekly_enabled' => false, 'exception' => null],
             ])
 
+            @include('operations.appointments.partials.booking-requests', [
+                'bookingRequests' => $bookingRequests ?? ['count' => 0, 'for_day' => 0, 'rows' => []],
+                'focusDate' => $w['focus_date'] ?? null,
+            ])
+
             @include('operations.appointments.partials.capacity-rail', ['rail' => $w['capacity_rail']])
 
             @if ($boardView === 'month')

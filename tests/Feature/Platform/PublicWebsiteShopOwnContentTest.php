@@ -7,6 +7,7 @@ use App\Ark\Website\Catalog\PublicWebsiteCatalog;
 use App\Ark\Website\PublishWebsiteCatalog;
 use App\Ark\Website\WebsitePublicationCatalogMerge;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 /**
  * A shop whose website is not the imported catalog: its own name, story, and lenders only.
@@ -38,7 +39,7 @@ function publishOtherShopWebsite(array $overrides = []): void
     ];
 
     app(PublishWebsiteCatalog::class)->publish('example.arksms.com', array_replace_recursive($document, $overrides), true);
-    \Illuminate\Support\Facades\URL::forceScheme('https');
+    URL::forceScheme('https');
 }
 
 function otherShopBookPayload(): array
@@ -103,7 +104,7 @@ test('the catalog publication keeps its own story, answers, and merchant link', 
     $document['trust_signals'] = ['financing_available' => true];
     $document['financing']['programs'][1]['url'] = 'https://www.synchrony.com/financing/car-care/prospecting';
     app(PublishWebsiteCatalog::class)->publish('lugsnplugs.arksms.com', $document, true);
-    \Illuminate\Support\Facades\URL::forceScheme('https');
+    URL::forceScheme('https');
 
     $this->get('http://lugsnplugs.arksms.com/')->assertOk()
         ->assertSee('LugsNPlugs Automotive is owned and operated by Edward and Molly Soares.', false)
@@ -133,15 +134,14 @@ test('a public notice shows only when configured', function (): void {
     $this->get('http://example.arksms.com/book')->assertOk()->assertSee('Demonstration shop.');
 });
 
-test('appointment requests still need a code when the shop can send one', function (): void {
+test('a code is offered only when the shop can actually send one', function (): void {
     publishOtherShopWebsite();
     Mail::fake();
     config(['mail.from.address' => 'shop@example.test']);
 
-    $this->get('http://example.arksms.com/book')->assertOk()->assertSee('Email me a code', false);
-    $this->post('http://example.arksms.com/leads', otherShopBookPayload())
-        ->assertSessionHasErrors('contact_phone');
-    expect(Lead::query()->count())->toBe(0);
+    // A from address alone sends nothing: without managed mail, no email code is offered.
+    $this->get('http://example.arksms.com/book')->assertOk()->assertDontSee('Email me a code', false);
+    Mail::assertNothingOutgoing();
 });
 
 test('with identity verification off a request is recorded unverified and no code is offered', function (): void {
