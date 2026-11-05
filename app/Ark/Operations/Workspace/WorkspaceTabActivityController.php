@@ -15,7 +15,7 @@ class WorkspaceTabActivityController
 
         $data = $request->validate([
             'activeKey' => ['nullable', 'string', 'max:120'],
-            'tabs' => ['required', 'array', 'max:12'],
+            'tabs' => ['required', 'array', 'max:'.max(1, (int) config('ark_workspace_tabs.max_tabs', 12))],
             'tabs.*.key' => ['required', 'string', 'max:120'],
             'tabs.*.seen' => ['nullable', 'array'],
             'tabs.*.seen.estimateVersion' => ['nullable', 'integer', 'min:0'],

@@ -76,3 +76,23 @@ test('workspace activity endpoint returns patches for background tabs', function
         ->assertJsonPath('patches.0.key', 'repair_order:'.$backgroundRepairOrder->repair_order_id)
         ->assertJsonPath('patches.0.activity.unread', 2);
 });
+
+test('workspace activity endpoint accepts as many tabs as the strip refreshes at once', function () {
+    $this->seed(ArkAuthorizationSeeder::class);
+    $user = User::factory()->create()->assignRole(ArkRole::Advisor->value);
+    config(['ark_workspace_tabs.max_tabs' => 3]);
+
+    $tabs = fn (int $count): array => array_map(
+        fn (int $id): array => ['key' => 'repair_order:'.$id, 'seen' => []],
+        range(1, $count),
+    );
+
+    $this->actingAs($user)
+        ->postJson(route('operations.workspace.activity'), ['activeKey' => 'repair_order:1', 'tabs' => $tabs(3)])
+        ->assertOk();
+
+    $this->actingAs($user)
+        ->postJson(route('operations.workspace.activity'), ['activeKey' => 'repair_order:1', 'tabs' => $tabs(4)])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('tabs');
+});

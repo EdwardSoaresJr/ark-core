@@ -48,7 +48,7 @@
                 <div class="alert alert-success mb-0" role="status">{{ session('status') }}</div>
             @endif
 
-            <div class="sticky-top bg-body py-2 my-n2">
+            <div class="sticky-top ark-sticky-below-workspace-tabs bg-body py-2 my-n2">
                 @include('operations.workboard.partials.home-board-toolbar', [
                     'homeBoardTechnicians' => $homeBoardTechnicians,
                     'activeRepairOrderCount' => $activeRepairOrderCount,

@@ -8,6 +8,8 @@ import {
     createIntakeWorkspaceId,
     hasIncomingCallPhoneParam,
     INTAKE_LAUNCHER_ENTITY_ID,
+    intakeSearchIsBare,
+    intakeWorkspaceIsUntouched,
     isExplicitIntakeResetRoute,
     intakeWorkspaceIdFromSearch,
     isValidIntakeWorkspaceId,
@@ -15,10 +17,11 @@ import {
     shouldSkipIntakePersist,
 } from './ark-intake-workspace-memory';
 import {
-    keysToEvictForNewTab,
+    arrivalOpensTab,
     pickAdjacentNeighborKey,
-    pickOldestInactiveEvictionCandidate,
-} from './ark-workspace-tab-eviction';
+    splitVisibleTabs,
+    tabsForActivityRefresh,
+} from './ark-workspace-tab-lifecycle';
 import {
     classNames,
     classTokens,
@@ -31,10 +34,11 @@ import {
 
 const cfg = typeof window !== 'undefined' ? window.__ARK_WORKSPACE__ : null;
 
-const CONFIG_MAX_TABS = Math.max(1, cfg?.maxTabs || 12);
+const ACTIVITY_REFRESH_MAX_TABS = Math.max(1, cfg?.maxTabs || 12);
 const TAB_MIN_WIDTH = Math.max(160, cfg?.tabMinWidth || 176);
 const TAB_GAP = 4;
 const TAB_SCROLL_PAD = 8;
+const OVERFLOW_CONTROL_WIDTH = 64;
 const DESKTOP_MIN = cfg?.desktopMinWidth || 1024;
 const STORAGE_KEY = cfg?.storageKey || 'ark_ws_v2_guest';
 const STORAGE_VERSION = 2;
@@ -188,7 +192,7 @@ function loadState() {
             return;
         }
 
-        state.tabs = parsed.tabs.map((tab) => sanitizeTab(tab, { restored: true })).filter(Boolean).slice(0, CONFIG_MAX_TABS);
+        state.tabs = parsed.tabs.map((tab) => sanitizeTab(tab, { restored: true })).filter(Boolean);
         pruneExcludedWorkspaceTabs();
         state.activeKey = parsed.activeKey || null;
 
@@ -200,6 +204,21 @@ function loadState() {
     } catch {
         clearPersistedWorkspaceState();
     }
+}
+
+/**
+ * Every browser window of this user shares the stored tabs. A window adopts what another window saved (and what was
+ * saved while this page sat in the back/forward cache) before it saves again, so it never writes back a tab that was
+ * closed elsewhere. The active tab stays this window's own.
+ */
+function reloadStateFromStorage() {
+    const activeKey = state.activeKey;
+
+    state.tabs = [];
+    loadState();
+    ensureDockTabs();
+    state.activeKey = activeKey && findTab(activeKey) ? activeKey : null;
+    renderBar();
 }
 
 function normalizeStoredRoute(entityType, entityId, route) {
@@ -381,7 +400,11 @@ async function refreshWorkspaceActivity() {
             },
             body: JSON.stringify({
                 activeKey: state.activeKey,
-                tabs: state.tabs.map((tab) => ({
+                tabs: tabsForActivityRefresh({
+                    tabs: state.tabs,
+                    activeKey: state.activeKey,
+                    limit: ACTIVITY_REFRESH_MAX_TABS,
+                }).map((tab) => ({
                     key: tab.key,
                     seen: tab.seen || {},
                 })),
@@ -782,35 +805,6 @@ function getBarAvailableWidth() {
     return Math.max(0, window.innerWidth - sidebar - TAB_SCROLL_PAD);
 }
 
-function getEffectiveMaxTabs() {
-    return CONFIG_MAX_TABS;
-}
-
-function openWorkspaceTabCount() {
-    return state.tabs.filter((tab) => !isDockedTabKey(tab.key)).length;
-}
-
-function isAtOpenTabLimit() {
-    return openWorkspaceTabCount() >= CONFIG_MAX_TABS;
-}
-
-function makeRoomForNewTab(excludeKeys = []) {
-    const removeKeys = keysToEvictForNewTab({
-        tabs: state.tabs,
-        activeKey: state.activeKey,
-        excludeKeys,
-        maxOpen: CONFIG_MAX_TABS,
-        isDocked: isDockedTabKey,
-        isDirty: keyHasUnsavedChanges,
-    });
-
-    removeKeys.forEach((key) => {
-        removeTab(key);
-    });
-
-    return removeKeys;
-}
-
 function getRightDockReserve(tabCount) {
     if (tabCount <= 0) {
         return 0;
@@ -833,8 +827,7 @@ function partitionTabsForDisplay(tabs = state.tabs) {
     return {
         pinned: leftDock,
         rightDock,
-        visible: middle,
-        overflow: [],
+        contextual: middle,
     };
 }
 
@@ -1240,7 +1233,10 @@ function closeOverflowMenus() {
     }
 
     barEl.querySelectorAll('[data-workspace-tabs-overflow-menu]').forEach((menu) => removeClasses(menu, ui.overflowMenuOpen));
-    barEl.querySelectorAll('[data-workspace-tabs-overflow]').forEach((btn) => removeClasses(btn, ui.overflowOpen));
+    barEl.querySelectorAll('[data-workspace-tabs-overflow]').forEach((btn) => {
+        removeClasses(btn, ui.overflowOpen);
+        btn.setAttribute('aria-expanded', 'false');
+    });
 }
 
 function toggleTabPin(key) {
@@ -1411,12 +1407,15 @@ function createOverflowControl(overflowTabs) {
     btn.type = 'button';
     btn.className = ui.overflow;
     btn.setAttribute('data-workspace-tabs-overflow', '');
-    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', `${overflowTabs.length} more open ${overflowTabs.length === 1 ? 'workspace' : 'workspaces'}`);
     btn.textContent = `+${overflowTabs.length}`;
 
     const menu = document.createElement('ul');
     menu.className = ui.overflowMenu;
     menu.setAttribute('data-workspace-tabs-overflow-menu', '');
+    menu.setAttribute('data-bs-popper', 'static');
     menu.setAttribute('role', 'menu');
 
     overflowTabs.forEach((tab) => {
@@ -1450,6 +1449,16 @@ function createOverflowControl(overflowTabs) {
         if (willOpen) {
             addClasses(menu, ui.overflowMenuOpen);
             addClasses(btn, ui.overflowOpen);
+            btn.setAttribute('aria-expanded', 'true');
+            menu.querySelector('[role="menuitem"]')?.focus();
+        }
+    });
+
+    wrap.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && hasClasses(menu, ui.overflowMenuOpen)) {
+            event.stopPropagation();
+            closeOverflowMenus();
+            btn.focus();
         }
     });
 
@@ -1478,6 +1487,14 @@ function syncWorkspaceChromeOffset() {
 
     const measured = Math.max(36, Math.ceil(bar.getBoundingClientRect().height) || 0);
     root.style.setProperty('--ops-workspace-tabs-height', `${measured}px`);
+}
+
+function contextualZoneWidth(scroll) {
+    const style = window.getComputedStyle(scroll);
+    const padding = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+    const used = [...scroll.children].reduce((width, child) => width + child.getBoundingClientRect().width + TAB_GAP, 0);
+
+    return Math.max(0, scroll.clientWidth - padding - used);
 }
 
 function renderBar() {
@@ -1517,33 +1534,23 @@ function renderBar() {
         scroll.appendChild(pinnedZone);
     }
 
-    if (parts.pinned.length > 0 && (parts.visible.length > 0 || parts.overflow.length > 0)) {
+    if (parts.pinned.length > 0 && parts.contextual.length > 0) {
         const divider = document.createElement('div');
         divider.className = ui.divider;
         divider.setAttribute('aria-hidden', 'true');
         scroll.appendChild(divider);
     }
 
-    if (parts.visible.length > 0) {
-        const contextualZone = document.createElement('div');
-        contextualZone.className = ui.contextualZone;
-        contextualZone.setAttribute('data-workspace-tabs-zone', 'contextual');
-        parts.visible.forEach((tab) => contextualZone.appendChild(createTabElement(tab)));
-        scroll.appendChild(contextualZone);
-    }
-
-    if (parts.overflow.length > 0) {
-        scroll.appendChild(createOverflowControl(parts.overflow));
-    }
-
     barEl.innerHTML = '';
     barEl.appendChild(scroll);
 
+    let rightRail = null;
+
     if (parts.rightDock.length > 0) {
-        const rightRail = document.createElement('div');
+        rightRail = document.createElement('div');
         rightRail.className = ui.rightRail;
 
-        const hasLeftTabs = parts.pinned.length > 0 || parts.visible.length > 0 || parts.overflow.length > 0;
+        const hasLeftTabs = parts.pinned.length > 0 || parts.contextual.length > 0;
 
         if (hasLeftTabs) {
             const divider = document.createElement('div');
@@ -1559,6 +1566,26 @@ function renderBar() {
         parts.rightDock.forEach((tab) => rightZone.appendChild(createTabElement(tab)));
         rightRail.appendChild(rightZone);
         barEl.appendChild(rightRail);
+    }
+
+    if (parts.contextual.length > 0) {
+        const { visible, overflow } = splitVisibleTabs({
+            tabs: parts.contextual,
+            activeKey: state.activeKey,
+            availableWidth: contextualZoneWidth(scroll) + TAB_GAP,
+            slotWidth: TAB_MIN_WIDTH + TAB_GAP,
+            overflowWidth: OVERFLOW_CONTROL_WIDTH,
+        });
+
+        const contextualZone = document.createElement('div');
+        contextualZone.className = ui.contextualZone;
+        contextualZone.setAttribute('data-workspace-tabs-zone', 'contextual');
+        visible.forEach((tab) => contextualZone.appendChild(createTabElement(tab)));
+        scroll.appendChild(contextualZone);
+
+        if (overflow.length > 0) {
+            barEl.insertBefore(createOverflowControl(overflow), rightRail);
+        }
     }
 
     const scrollEl = barEl.querySelector('[data-workspace-tabs-scroll]');
@@ -1672,6 +1699,35 @@ function updateIntakeTab({ title, subtitle, route, workspaceId = null } = {}) {
     renderBar();
 }
 
+function isBareIntakeLauncherRoute(route) {
+    try {
+        const url = new URL(String(route), window.location.origin);
+
+        return url.pathname === '/app/intake/new' && intakeSearchIsBare(url.search);
+    } catch {
+        return false;
+    }
+}
+
+/** An open Check In tab with nothing entered, which a new Check In reuses: the current one first, else the latest. */
+function untouchedIntakeTab() {
+    if (isIntakeKey(state.activeKey)) {
+        window.ARK?.intakeWorkspaceMemory?.persist?.();
+    }
+
+    const candidates = state.tabs.filter((tab) => isIntakeKey(tab.key)
+        && !isDockedTabKey(tab.key)
+        && !tab.customerName
+        && !tab.dirty
+        && !keyHasUnsavedChanges(tab.key)
+        && isBareIntakeLauncherRoute(tab.route)
+        && intakeWorkspaceIsUntouched(tab.key.split(':')[1]));
+
+    return candidates.find((tab) => tab.key === state.activeKey)
+        || [...candidates].sort((a, b) => (b.focusedAt || 0) - (a.focusedAt || 0))[0]
+        || null;
+}
+
 function spawnFreshIntakeWorkspace(sourceRoute = '/app/intake/new') {
     openWorkspace({
         entityType: 'intake',
@@ -1731,6 +1787,14 @@ function openWorkspace(opts) {
     if (type === 'intake') {
         freshIntake = isExplicitIntakeResetRoute(targetRoute) || id === INTAKE_LAUNCHER_ENTITY_ID;
 
+        const emptyIntake = freshIntake && isBareIntakeLauncherRoute(targetRoute) ? untouchedIntakeTab() : null;
+
+        if (emptyIntake) {
+            focusWorkspace(emptyIntake.key);
+
+            return;
+        }
+
         if (freshIntake) {
             id = createIntakeWorkspaceId();
             targetRoute = appendIntakeWorkspaceId(targetRoute, id);
@@ -1768,8 +1832,6 @@ function openWorkspace(opts) {
 
             return;
         }
-
-        makeRoomForNewTab([key]);
 
         upsertTab({
             key,
@@ -1909,7 +1971,15 @@ function closeWorkspace(key, force = false) {
     performClose();
 }
 
-function registerCurrentFromPage() {
+function pageNavigationType() {
+    try {
+        return performance.getEntriesByType('navigation')[0]?.type ?? null;
+    } catch {
+        return null;
+    }
+}
+
+function registerCurrentFromPage({ opensTab = arrivalOpensTab(pageNavigationType()) } = {}) {
     const boot = cfg?.boot || null;
     const entity = boot || parseEntityFromLocation(window.location);
 
@@ -1938,8 +2008,11 @@ function registerCurrentFromPage() {
         boot?.route || entity.route || window.location.pathname + window.location.search,
     );
 
-    if (!findTab(key)) {
-        makeRoomForNewTab([key]);
+    if (!findTab(key) && !opensTab) {
+        state.activeKey = null;
+        renderBar();
+
+        return;
     }
 
     upsertTab({
@@ -2125,14 +2198,21 @@ export function initWorkspaceTabs() {
     });
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', registerCurrentFromPage);
+        document.addEventListener('DOMContentLoaded', () => registerCurrentFromPage());
     } else {
         registerCurrentFromPage();
     }
 
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) {
-            registerCurrentFromPage();
+            reloadStateFromStorage();
+            registerCurrentFromPage({ opensTab: arrivalOpensTab('back_forward') });
+        }
+    });
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === STORAGE_KEY || event.key === null) {
+            reloadStateFromStorage();
         }
     });
 
@@ -2177,17 +2257,8 @@ export function initWorkspaceTabs() {
         })),
         hasTab: (key) => !!findTab(key),
         getActiveKey: () => state.activeKey,
-        registerCurrent: registerCurrentFromPage,
+        registerCurrent: () => registerCurrentFromPage({ opensTab: true }),
         updateIntakeTab,
-        getEffectiveMaxTabs,
-        makeRoomForNewTab,
-        pickOldestInactiveEvictionCandidate: (excludeKeys = []) => pickOldestInactiveEvictionCandidate({
-            tabs: state.tabs,
-            activeKey: state.activeKey,
-            excludeKeys,
-            isDocked: isDockedTabKey,
-            isDirty: keyHasUnsavedChanges,
-        }),
         isDesktop,
         reorderTabs,
     };

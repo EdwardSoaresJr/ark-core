@@ -95,6 +95,66 @@ export function clearIntakeWorkspaceMemoryFor(workspaceId = intakeWorkspaceIdFro
     }
 }
 
+const DRAFT_TEXT_FIELDS = [
+    'query',
+    'firstName',
+    'lastName',
+    'phone',
+    'email',
+    'addressLine1',
+    'addressLine2',
+    'city',
+    'state',
+    'postalCode',
+    'referralSource',
+];
+
+/** Whether a Check In draft holds nothing the advisor entered. */
+export function intakeDraftIsEmpty(draft) {
+    if (!draft || typeof draft !== 'object') {
+        return true;
+    }
+
+    if (draft.selectedCustomerId != null && String(draft.selectedCustomerId) !== '') {
+        return false;
+    }
+
+    if (draft.customerType && draft.customerType !== 'Retail') {
+        return false;
+    }
+
+    return DRAFT_TEXT_FIELDS.every((field) => String(draft[field] ?? '').trim() === '');
+}
+
+/** Whether a Check In address carries nothing but its workspace id: no search, customer, vehicle, call, or lead. */
+export function intakeSearchIsBare(search = '') {
+    const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+    params.delete(INTAKE_WS_QUERY_KEY);
+
+    return [...params.keys()].length === 0;
+}
+
+/**
+ * Whether this window's saved record of a Check In workspace shows it untouched. Drafts are kept per window, so a
+ * workspace this window has no record of (one opened in another window) never counts as untouched.
+ */
+export function intakeWorkspaceIsUntouched(workspaceId) {
+    if (!isValidIntakeWorkspaceId(workspaceId)) {
+        return false;
+    }
+
+    try {
+        const raw = sessionStorage.getItem(intakeMemoryStorageKey(workspaceId));
+        const memory = raw ? JSON.parse(raw) : null;
+
+        return memory?.version === 1
+            && intakeSearchIsBare(String(memory.search || ''))
+            && intakeDraftIsEmpty(memory.draft);
+    } catch {
+        return false;
+    }
+}
+
 export function hasIncomingCallPhoneParam(search = window.location.search) {
     try {
         return new URLSearchParams(search).has('phone');

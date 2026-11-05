@@ -517,9 +517,24 @@
     }
 }
 
-/* Legacy sticky panels (the repair order rail) sit below the legacy top bar. Tabler's page has no sticky header from lg. */
+/*
+ * The workspace strip stays at the top while the page scrolls, as the legacy chrome does. It sits above the page's own
+ * sticky bars (1020) and below the header's menus (1030), which open over it.
+ */
+.ark-workspace-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 1021;
+}
+
+/* Legacy sticky panels (the repair order rail) sit below the workspace strip. Tabler's page has no sticky header from lg. */
 .page {
-    --ops-sticky-stack-offset: 1rem;
+    --ops-sticky-stack-offset: calc(var(--ops-workspace-tabs-height, 0px) + 1rem);
+}
+
+/* A page's own sticky toolbar stops below the workspace strip. */
+.ark-sticky-below-workspace-tabs {
+    top: var(--ops-workspace-tabs-height, 0px);
 }
 
 /* .ops-main pads and centres a legacy page. A worksheet island fills its Tabler card or column instead. */

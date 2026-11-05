@@ -178,7 +178,7 @@ test('the workspace tabs mount renders in Tabler mode on a Tabler page and legac
     expect($tablerMount->getAttribute('data-workspace-tabs-ui'))->toBe('tabler')
         ->and($tablerMount->hasAttribute('data-workspace-tabs'))->toBeTrue()
         ->and($tablerMount->getAttribute('data-ark-workspace-dirty'))->toBe('off')
-        ->and($tablerMount->getAttribute('class'))->toBe('d-none d-print-none border-bottom bg-surface')
+        ->and($tablerMount->getAttribute('class'))->toBe('ark-workspace-tabs d-none d-print-none border-bottom bg-surface')
         ->and($tablerMount->getAttribute('aria-hidden'))->toBe('true')
         ->and($tablerMount->getAttribute('aria-label'))->toBe('Workspaces')
         ->and($tabler->query('ancestor::*[contains(concat(" ", normalize-space(@class), " "), " page-wrapper ")]', $tablerMount)->length)->toBe(1)
