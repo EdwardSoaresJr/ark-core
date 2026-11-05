@@ -66,6 +66,177 @@ function replaceSection(sectionId, html) {
     }
 }
 
+function replaceSectionNav(html) {
+    const nav = document.querySelector('[data-comms-section-nav]');
+
+    if (! nav || typeof html !== 'string' || html === '') {
+        return;
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = html.trim();
+    const fresh = template.content.querySelector('[data-comms-section-nav]');
+
+    if (fresh) {
+        nav.replaceWith(fresh);
+    }
+}
+
+const rowKey = (row) => row.getAttribute('data-comms-row-key') || '';
+
+/**
+ * A live update keeps the rows where the advisor left them: rows still in the lane refresh in place, rows that left
+ * it go (the open conversation stays until the advisor moves on), and new or reordered activity waits behind a
+ * "New activity" button instead of rearranging the list under the advisor.
+ */
+function mergeListSection(html, { anchor: keepAnchor = true } = {}) {
+    const body = document.getElementById('ops-comms-workspace-list-body');
+    const current = listItemsEl();
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const freshItems = template.content.querySelector('[data-comms-list-items]');
+
+    if (! body) {
+        return;
+    }
+
+    if (! current || ! current.querySelector(ACTIVE_LIST_ROW)) {
+        const top = current?.scrollTop ?? 0;
+        const pending = Boolean(body.querySelector('[data-comms-list-pending]'));
+        replaceSection('ops-comms-workspace-list-body', html);
+        restoreListScroll(top);
+        showListPending(pending);
+
+        return;
+    }
+
+    if (! freshItems) {
+        current.querySelectorAll('[data-comms-row-key]').forEach((row) => {
+            if (! row.matches(ACTIVE_LIST_ROW)) {
+                row.remove();
+            }
+        });
+
+        return;
+    }
+
+    const anchorKey = rowKey(current.querySelector(ACTIVE_LIST_ROW));
+    const anchorTop = current.querySelector(ACTIVE_LIST_ROW).getBoundingClientRect().top;
+    const freshRows = new Map([...freshItems.querySelectorAll('[data-comms-row-key]')].map((row) => [rowKey(row), row]));
+    const currentRows = [...current.querySelectorAll('[data-comms-row-key]')];
+    const currentKeys = currentRows.map(rowKey);
+    const freshKeys = [...freshRows.keys()];
+
+    if (freshKeys.length === currentKeys.length && freshKeys.every((key, index) => key === currentKeys[index])) {
+        const top = current.scrollTop;
+        replaceSection('ops-comms-workspace-list-body', html);
+        restoreListScroll(top);
+
+        return;
+    }
+
+    currentRows.forEach((row) => {
+        const fresh = freshRows.get(rowKey(row));
+
+        if (fresh) {
+            const copy = fresh.cloneNode(true);
+            copy.classList.toggle('active', row.classList.contains('active'));
+            if (row.classList.contains('active')) {
+                copy.setAttribute('aria-current', 'true');
+            } else {
+                copy.removeAttribute('aria-current');
+            }
+            row.replaceWith(copy);
+        } else if (! row.classList.contains('active')) {
+            row.remove();
+        }
+    });
+
+    const kept = currentKeys.filter((key) => freshRows.has(key));
+    const lastKept = Math.max(-1, ...kept.map((key) => freshKeys.indexOf(key)));
+    // Rows that only fill the page in below the last row shown join quietly at the end; anything new above that is
+    // new activity.
+    const more = current.querySelector('[data-comms-list-more]');
+    freshKeys.slice(lastKept + 1).filter((key) => ! currentKeys.includes(key)).forEach((key) => {
+        current.insertBefore(freshRows.get(key).cloneNode(true), more);
+    });
+    const added = freshKeys.slice(0, lastKept + 1).filter((key) => ! currentKeys.includes(key)).length;
+    // What matters is the advisor's place: a conversation that now sorts above the open one is new activity. The
+    // open one moving (assigning it re-sorts it) is the advisor's own doing, and rows trading places elsewhere
+    // (equal times) change nothing they are looking at.
+    const activeKey = rowKey(current.querySelector(ACTIVE_LIST_ROW) ?? document.createElement('a'));
+    const wasAbove = new Set(currentKeys.slice(0, Math.max(0, currentKeys.indexOf(activeKey))));
+    const moved = freshKeys.slice(0, Math.max(0, freshKeys.indexOf(activeKey)))
+        .some((key) => key !== activeKey && currentKeys.includes(key) && ! wasAbove.has(key));
+    const freshMore = freshItems.querySelector('[data-comms-list-more]');
+    if (more && freshMore) {
+        more.replaceWith(freshMore.cloneNode(true));
+    } else if (more) {
+        more.remove();
+    } else if (freshMore) {
+        current.append(freshMore.cloneNode(true));
+    }
+
+    const freshFilter = template.content.querySelector('nav[aria-label="Advisor filter"]');
+    const currentFilter = body.querySelector('nav[aria-label="Advisor filter"]');
+    if (freshFilter && currentFilter) {
+        currentFilter.replaceWith(freshFilter);
+    }
+
+    // Rows leaving above the open conversation would slide it up; keep it where the advisor left it.
+    const anchor = keepAnchor ? current.querySelector(`[data-comms-row-key="${CSS.escape(anchorKey)}"]`) : null;
+    if (anchor) {
+        current.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+    }
+
+    if (added > 0 || moved) {
+        showListPending(true);
+    }
+}
+
+function showListPending(show) {
+    const list = listItemsEl();
+    const panel = list?.closest('[data-comms-list-panel]');
+    let button = panel?.querySelector('[data-comms-list-pending]');
+
+    if (! show) {
+        button?.remove();
+
+        return;
+    }
+
+    if (! list || ! panel || button) {
+        return;
+    }
+
+    // Floats over the top of the list so the rows do not move.
+    panel.classList.add('position-relative');
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-sm btn-primary position-absolute start-50 translate-middle-x shadow';
+    button.style.top = `${list.offsetTop + 8}px`;
+    button.style.zIndex = '5';
+    button.dataset.commsListPending = '';
+    button.textContent = 'New activity · Show';
+    panel.append(button);
+}
+
+function showActionError(message) {
+    const thread = document.getElementById('ops-comms-workspace-thread');
+
+    if (! thread) {
+        return;
+    }
+
+    thread.querySelector('[data-comms-action-error]')?.remove();
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger m-2 mb-0';
+    alert.setAttribute('role', 'alert');
+    alert.dataset.commsActionError = '';
+    alert.textContent = message;
+    thread.prepend(alert);
+}
+
 function listItemsEl() {
     return document.querySelector('#ops-comms-workspace-list [data-comms-list-items], #ops-comms-workspace-list .ops-comms-workspace__list-items');
 }
@@ -89,6 +260,10 @@ function hrefKey(href) {
 
     try {
         const url = new URL(href, window.location.origin);
+        // Row links never carry the advisor filter or loaded-row count that the address keeps.
+        url.searchParams.delete('owner');
+        url.searchParams.delete('shown');
+        url.searchParams.sort();
 
         return `${url.pathname}${url.search}`;
     } catch {
@@ -528,7 +703,7 @@ export function initCommsWorkspace() {
     let selectionGeneration = 0;
     let lastSignature = root.dataset.pollSignature ?? '';
 
-    const applyPayload = (payload, { replaceList = true, selectedHref = null } = {}) => {
+    const applyPayload = (payload, { replaceList = true, mergeList = false, selectedHref = null } = {}) => {
         if (! payload || payload.unchanged) {
             return;
         }
@@ -546,9 +721,14 @@ export function initCommsWorkspace() {
         const keepThread = selectedHref === null && thread?.dataset.extended === '1'
             && threadScroll !== null && threadScroll.distanceFromBottom >= NEAR_BOTTOM;
 
-        if (replaceList && typeof payload.list === 'string' && payload.list !== '') {
+        if (mergeList && typeof payload.list === 'string' && payload.list !== '') {
+            // After the advisor's own action the next row takes the departed one's place; a live update keeps the
+            // open row still.
+            mergeListSection(payload.list, { anchor: selectedHref === null });
+        } else if (replaceList && typeof payload.list === 'string' && payload.list !== '') {
             replaceSection('ops-comms-workspace-list-body', payload.list);
         }
+        replaceSectionNav(payload.nav);
         let appended = 0;
         if (typeof payload.thread === 'string' && payload.thread !== '' && ! keepThread) {
             replaceSection('ops-comms-workspace-thread', payload.thread);
@@ -572,7 +752,9 @@ export function initCommsWorkspace() {
             } else {
                 restoreDraft();
             }
-            restoreListScroll(listScroll);
+            if (! (mergeList && selectedHref === null)) {
+                restoreListScroll(listScroll);
+            }
             markOpenConversationRead();
 
             const newArrived = keepThread ? appended > 0 : (newestBefore !== '' && lastEntryKey() !== newestBefore);
@@ -602,7 +784,7 @@ export function initCommsWorkspace() {
         return response.json();
     };
 
-    const openSelection = async (nextUrl, { push = true } = {}) => {
+    const openSelection = async (nextUrl, { push = true, replace = false, refreshList = false, mergeList = false } = {}) => {
         const live = document.getElementById('ops-comms-workspace-live');
 
         if (! live) {
@@ -666,11 +848,23 @@ export function initCommsWorkspace() {
 
             lastSignature = String(payload.signature ?? lastSignature);
             setSelectionSwitching(false);
-            applyPayload(payload, { replaceList: false, selectedHref });
+            applyPayload(payload, { replaceList: refreshList, mergeList, selectedHref });
             syncFragmentUrl(nextUrl);
 
+            // Row links name only the conversation and lane; the address keeps the advisor filter and how many rows
+            // are loaded, so Back, Forward and reload return to the same list.
+            const address = new URL(selectedHref, window.location.origin);
+            ['owner', 'shown'].forEach((key) => {
+                if (! address.searchParams.has(key) && fragment.searchParams.has(key)) {
+                    address.searchParams.set(key, fragment.searchParams.get(key));
+                }
+            });
+            const historyHref = `${address.pathname}${address.search}`;
+
             if (push) {
-                window.history.pushState({ commsWorkspace: true }, '', selectedHref);
+                window.history.pushState({ commsWorkspace: true }, '', historyHref);
+            } else if (replace) {
+                window.history.replaceState({ commsWorkspace: true }, '', historyHref);
             }
 
             requestAnimationFrame(() => {
@@ -733,7 +927,7 @@ export function initCommsWorkspace() {
                 lastSignature = signature;
             }
 
-            applyPayload(payload);
+            applyPayload(payload, { replaceList: false, mergeList: true });
         } catch {
             // Polling backup when realtime misses - stay quiet.
         } finally {
@@ -784,6 +978,79 @@ export function initCommsWorkspace() {
         }
 
         setActionBusy(Boolean(event.detail?.active));
+    });
+
+    const SELECTION_KEYS = ['conversation', 'lead', 'call', 'platform_conversation'];
+
+    // Assign, follow-up, waiting, resolve, reopen and mark unread change the conversation in place: the list, the
+    // lane counts, the thread and the context lane update without leaving the page, and a conversation that no
+    // longer belongs in the lane hands over to its neighbour. The server's answer decides; nothing is assumed.
+    const runWorkAction = async (form, submitter) => {
+        const rows = [...(listItemsEl()?.querySelectorAll(LIST_ROW) ?? [])];
+        const at = rows.findIndex((row) => row.matches(ACTIVE_LIST_ROW));
+        const neighbour = at >= 0 ? (rows[at + 1] ?? rows[at - 1] ?? null) : null;
+        const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+        const here = new URL(window.location.href);
+
+        setActionBusy(true);
+
+        try {
+            const response = await fetch(form.getAttribute('action'), {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token },
+                credentials: 'same-origin',
+                body: new FormData(form, submitter ?? undefined),
+            });
+            const result = await response.json().catch(() => null);
+
+            if (! response.ok || result?.ok !== true) {
+                const invalid = result?.errors ? Object.values(result.errors).flat()[0] : null;
+                await openSelection(here, { push: false, mergeList: true });
+                showActionError(result?.message && ! invalid ? result.message : (invalid ?? 'That did not go through. Nothing changed - try again.'));
+
+                return;
+            }
+
+            let next = here;
+            if (result.in_list === false || result.leave === true) {
+                next = new URL(here.href);
+                SELECTION_KEYS.forEach((key) => next.searchParams.delete(key));
+
+                if (neighbour) {
+                    const target = new URL(neighbour.getAttribute('href'), window.location.origin);
+                    SELECTION_KEYS.forEach((key) => {
+                        if (target.searchParams.has(key)) {
+                            next.searchParams.set(key, target.searchParams.get(key));
+                        }
+                    });
+                }
+            }
+
+            showListPending(false);
+            const opened = await openSelection(next, { push: false, replace: true, mergeList: true });
+
+            if (opened === false) {
+                window.location.assign(next.href);
+            }
+        } catch {
+            showActionError('That did not go through. Nothing changed - try again.');
+        } finally {
+            setActionBusy(false);
+        }
+    };
+
+    root.addEventListener('submit', (event) => {
+        const form = event.target;
+
+        if (! (form instanceof HTMLFormElement) || event.defaultPrevented
+            || (form.method || 'get').toLowerCase() !== 'post'
+            // The work forms carry an input named "action", which hides form.action.
+            || ! /\/communications\/conversations\/\d+\/work$/.test(new URL(form.getAttribute('action') ?? '', window.location.origin).pathname)) {
+            return;
+        }
+
+        event.preventDefault();
+        runWorkAction(form, event.submitter);
     });
 
     root.addEventListener('submit', (event) => {
@@ -958,6 +1225,13 @@ export function initCommsWorkspace() {
             return;
         }
 
+        if (event.target instanceof Element && event.target.closest('[data-comms-list-pending]')) {
+            showListPending(false);
+            openSelection(new URL(window.location.href), { push: false, refreshList: true });
+
+            return;
+        }
+
         if (event.target instanceof Element && event.target.closest('[data-comms-new-below]')) {
             scrollThreadToBottom();
             hideNewBelow();
@@ -1018,7 +1292,7 @@ export function initCommsWorkspace() {
             return;
         }
 
-        openSelection(new URL(window.location.href), { push: false });
+        openSelection(new URL(window.location.href), { push: false, refreshList: true });
     });
 
     bindRealtime();

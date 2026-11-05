@@ -9,6 +9,7 @@ use App\Ark\Operations\Conversations\StaleConversationWorkException;
 use App\Ark\Operations\Settings\ShopDisplayTimezone;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,7 @@ final class ConversationWorkController
         Conversation $conversation,
         ConversationWork $work,
         ConversationReadTracker $reads,
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $data = $request->validate([
             'action' => ['required', Rule::in(['assign', 'follow_up', 'wait', 'resolve', 'reopen', 'unread'])],
             'assign_to' => ['nullable', Rule::in(['me', 'user', 'unassign'])],
@@ -35,6 +36,11 @@ final class ConversationWorkController
         if ($data['action'] === 'unread') {
             $reads->markUnread($conversation, $request->user());
 
+            if ($request->expectsJson()) {
+                // The workspace moves on to the next conversation: opening this one again would read it.
+                return response()->json(['ok' => true, 'action' => 'unread', 'status' => 'Marked unread.', 'in_list' => true, 'leave' => true]);
+            }
+
             // Back to the list: opening the conversation again would read it.
             return redirect()
                 ->route('operations.communications.inbox', array_filter([
@@ -47,14 +53,18 @@ final class ConversationWorkController
         try {
             $work->assertCurrent($conversation, $data['posture_changed_at'] ?? null);
         } catch (StaleConversationWorkException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => 'Someone else just updated this conversation. It now shows the latest; try again if it still needs it.'], 409)
+                : back()->with('error', $exception->getMessage());
         }
 
         $actor = $request->user();
 
         if ($data['action'] === 'assign' && ($data['assign_to'] ?? 'me') === 'user'
             && ! User::query()->active()->role([ArkRole::Admin->value, ArkRole::Advisor->value])->whereKey((int) ($data['user_id'] ?? 0))->exists()) {
-            return back()->with('error', 'Choose an active advisor to assign.');
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => 'Choose an active advisor to assign.'], 422)
+                : back()->with('error', 'Choose an active advisor to assign.');
         }
 
         match ($data['action']) {
@@ -86,6 +96,26 @@ final class ConversationWorkController
             'resolve' => 'Conversation resolved.',
             default => 'Conversation reopened.',
         };
+
+        if ($request->expectsJson()) {
+            $listFilter = $this->workingFilter($data['filter'] ?? null);
+            $lane = $work->lane($conversation);
+
+            return response()->json([
+                'ok' => true,
+                'action' => $data['action'],
+                'status' => $status,
+                'lane' => $lane,
+                // Whether it still belongs in the list the advisor is working, so the workspace can move on if not.
+                'in_list' => in_array($lane, $listFilter === 'all' ? ['needs', 'waiting'] : [$listFilter], true)
+                    && match ($data['owner'] ?? 'everyone') {
+                        'mine' => (int) $conversation->owned_by_user_id === (int) $actor->id,
+                        'unassigned' => $conversation->owned_by_user_id === null,
+                        default => true,
+                    },
+                'leave' => false,
+            ]);
+        }
 
         return redirect()
             ->route('operations.communications.inbox', array_filter([
