@@ -643,3 +643,11 @@ test('online bookings send nothing themselves and leave the acknowledgment to th
     Bus::assertNotDispatchedAfterResponse(SendWebsiteLeadConfirmationJob::class);
     expect($request->lead->metadata['identity'])->toBe('unverified');
 });
+
+test('a submission key answers only the contact that used it', function (): void {
+    $first = submitOnline(['submissionKey' => 'form-1']);
+
+    expect(app(OnlineBooking::class)->submit(onlineRequest(['submissionKey' => 'form-1']))->request->id)->toBe($first->id)
+        ->and(refusal(['submissionKey' => 'form-1', 'contactPhone' => '719-555-0199'])->field)->toBe('submission_key')
+        ->and(AppointmentRequest::query()->count())->toBe(1);
+});

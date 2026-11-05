@@ -95,6 +95,10 @@ final class OnlineBooking
 
             if ($input->submissionKey !== null && $input->submissionKey !== ''
                 && ($existing = AppointmentRequest::query()->where('submission_key', $input->submissionKey)->first())) {
+                if ((PhoneNumber::normalize((string) $existing->contact_phone) ?? $existing->contact_phone) !== $phone) {
+                    throw new BookingRefused('submission_key', 'This form was already sent. Start a new booking.');
+                }
+
                 return BookingOutcome::for($existing);
             }
 
