@@ -15,7 +15,7 @@ SurfaceRouting::portalRoutes(function (): void {
             ->middleware(RememberAppointmentAttribution::class)
             ->name('public.book');
         Route::post('/book', [PublicBookingController::class, 'store'])
-            ->middleware('throttle:10,1')
+            ->middleware('throttle:'.PublicBookingController::SUBMIT_LIMITER)
             ->name('public.book.store');
         Route::get('/book/availability', [PublicBookingController::class, 'availability'])
             ->middleware('throttle:60,1')

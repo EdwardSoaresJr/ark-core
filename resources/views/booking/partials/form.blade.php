@@ -66,7 +66,7 @@
             @endif
         </div>
     @else
-        <form class="ark-booking__form" method="post" action="{{ route('public.book.store', [], false) }}" novalidate data-booking-form aria-labelledby="ark-booking-title">
+        <form class="ark-booking__form" method="post" action="{{ route('public.book.store', [], false) }}" novalidate data-booking-form data-availability-mode="{{ $mode->value }}" aria-labelledby="ark-booking-title">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="form_rendered_at" value="{{ $renderStamp }}">
             <input type="hidden" name="submission_key" value="{{ $submissionKey }}">
@@ -280,6 +280,7 @@
                         Pick a day and a time of day. This is your preference; the shop confirms the exact time.
                     @endif
                 </p>
+                <p class="ark-booking__mode" data-booking-notice role="status" @if (empty($availability['notice'])) hidden @endif>{{ $availability['notice'] ?? '' }}</p>
                 <div class="ark-booking__field">
                     <label class="ark-booking__label" for="book-date">Day</label>
                     <select class="public-lead-form__input" id="book-date" name="preferred_date" required data-booking-date @if ($error('preferred_date')) aria-invalid="true" aria-describedby="preferred_date-error" @endif>
@@ -319,7 +320,7 @@
                 </div>
             </section>
 
-            <section class="ark-booking__step" data-book-step="contact" data-step-label="Contact" aria-labelledby="book-step-contact">
+            <section class="ark-booking__step" data-book-step="contact" data-step-label="Contact" @if ($intent !== '') data-booking-resume @endif aria-labelledby="book-step-contact">
                 <h2 class="ark-booking__step-title" id="book-step-contact">How do we reach you?</h2>
                 <div class="ark-booking__field">
                     <label class="ark-booking__label" for="book-name">Name</label>

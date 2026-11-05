@@ -64,10 +64,11 @@ Submission repeats every check inside a lock on the shop's settings row. A resub
 - The form keeps no session. Inside another site's iframe the browser may send no cookies, so:
   - it carries an encrypted render stamp (spam when missing, too fast under 3 seconds, stale after a day);
   - it has a honeypot field;
-  - it posts to `/book` without CSRF, with `throttle:10,1`;
+  - it posts to `/book` without CSRF, at most 10 posts a minute per address (the `online-booking` limiter). Code requests and checks count. Past the limit, the customer gets a "Too many tries" page that the popup can show;
+  - the render stamp keeps the form's first render time when the form comes back after a code request, a code check or an error, so a customer who verifies and sends at once is not told to wait;
   - a signed-in portal customer is trusted only when the post also carries their session's CSRF token.
 - The receipt is a signed link valid for two hours, bound to the shop's host.
-- Embedded pages send `frame-ancestors` for the shop's own host and its listed domains only.
+- Embedded pages send `frame-ancestors` for the shop's own host and its listed domains only, and no `X-Frame-Options`. A web server in front of Core that adds `X-Frame-Options` to every response must leave it off responses that already send `frame-ancestors`. Current Chromium and WebKit (Safari) browsers follow `frame-ancestors` either way (tested), but a browser that only understands `X-Frame-Options` would show a blank popup.
 - Identity verification is unchanged: an ARK Shop code by text or email when the shop can send one. Because cookies may be missing, the proof travels in an encrypted form field and is consumed once. A proof whose verification was already used is refused.
 - Core sends no confirmation or notification. It dispatches `AppointmentRequestReceived` and `AppointmentRequestDecided`; ARK Shop may tell the shop and the customer.
 
@@ -86,7 +87,16 @@ Submission repeats every check inside a lock on the shop's settings row. A resub
   - a technician's or van's own calendar;
   - route-aware windows.
 
-  A constraint that throws is reported and ignored, so booking keeps working when a maps provider is down. Requests still wait for staff.
+  A constraint is **required** unless it implements `AdvisoryBookingConstraint`. When a required constraint throws (a maps provider is down, a technician calendar times out):
+
+  - no exact time is offered or confirmed, in the form or on submission;
+  - a shop that takes confirmed bookings shows the request form instead, with the notice "We can't confirm times online right now, so this will be a request…";
+  - a customer who already picked a time is sent as a request with everything they entered, the time of day holding that time, and "around 9:00 AM" on the request;
+  - the receipt says "Not confirmed yet" and why;
+  - staff see "Not checked online: Travel time" on the waiting request and in the appointment notes;
+  - the error is reported, and logged with the constraint, date, service and location. It is asked once per evaluation, not once per day and start time.
+
+  A refusal from a check that did run still wins: an address outside the ZIP list is refused even while travel time is down. An advisory constraint (one that only prefers some days, never decides whether the work can be done) that throws is reported and treated as allowing the candidate.
 - **Not built here:** routing, dispatch, stop order, per-vehicle repair orders for one visit, and Google Calendar sync. A future visit/stop model can group requests by `service_address` and `vehicles` without changing how customers book.
 
 ## Recovered from the original Book Appointment (V1, removed in ark-stancl `a249ec5`)
@@ -108,3 +118,15 @@ Submission repeats every check inside a lock on the shop's settings row. A resub
 | Emails and texts to the shop and the customer | ARK Shop, from the two events. Core sends nothing. |
 | Facebook post text, short links, UTM | Not restored. The booking link works in any post. |
 | Unused per-service price, cancel-before, auto-approve | Not restored. Auto-approve became the shop's confirmed-booking mode plus "always needs approval". |
+| A line of copy for each of the 7 V1 steps | Title, introduction, instructions, the two confirmation messages, each service's description hint, and each question's help text. The form has fewer steps, and the steps it has are labeled by what they ask. |
+
+### Why one level of options is enough
+
+In V1 the second level was not nested under the first. It was a second list on the same service. V1's seeder created first-level options only, so shops began with one level. When a shop did use both levels, the customer picked one option from each list, and the visit length came from the second pick, else the first, else the service. For example, a shop could set up Brakes with Front, Rear or Full, then Pads or Rotor resurface.
+
+Both uses of that second list are covered without bringing back a second option list:
+
+- **When the second pick changes how long the visit takes**, list the combinations as options: "Front pads 60 min", "Front pads and rotors 90 min", "Rear pads 60 min". Each combination gets its own visit length and labor hours. V1 could not do that, because there only one level's time counted.
+- **When the second pick only tells the shop more**, use a "pick one" question limited to that service, for example "What do you need? Pads / Rotors / Not sure". It can be required, its answer is on the request and in the appointment notes, and staff set the time.
+
+With only a handful of options per service, the combined list stays short. A second option list that changes visit length becomes worth adding only when a shop needs many combinations of two lists, each with a different visit length. That would be a new feature, not a V1 behavior to restore.

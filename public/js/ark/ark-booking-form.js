@@ -38,6 +38,9 @@
         var progress = $(form, '[data-booking-progress]');
         var submit = $(form, '[data-booking-submit]');
         var allSteps = $$(form, '[data-book-step]');
+        // What availability last said (the page as rendered, then each refresh). A service's own
+        // mode is only a guess until availability answers for it.
+        var availabilityMode = form.getAttribute('data-availability-mode');
         var current = 0;
         var refreshTimer = null;
 
@@ -139,7 +142,7 @@
             });
 
             if (service) {
-                applyMode(service.getAttribute('data-booking-mode'));
+                applyMode(availabilityMode || service.getAttribute('data-booking-mode'));
             }
         }
 
@@ -269,7 +272,14 @@
                 });
             }
 
+            availabilityMode = data.mode;
             applyMode(data.mode);
+
+            var notice = $(form, '[data-booking-notice]');
+            if (notice) {
+                notice.textContent = data.notice || '';
+                notice.hidden = !data.notice;
+            }
 
             var hint = $(form, '[data-when-hint]');
             if (hint && !data.accepting && data.message) {
@@ -396,6 +406,7 @@
         form.addEventListener('change', function (event) {
             var target = event.target;
             if (target.name === 'service_id' || (target.name === 'service_option')) {
+                availabilityMode = null;
                 applyService();
                 scheduleRefresh();
             } else if (target.name === 'location') {
@@ -445,9 +456,10 @@
         form.classList.add('is-stepped');
 
         var firstError = $(form, '[aria-invalid="true"], .ark-booking__error');
+        var resume = $(form, '[data-booking-resume]');
         var start = 0;
-        if (firstError) {
-            var owner = firstError.closest('[data-book-step]');
+        if (firstError || resume) {
+            var owner = firstError ? firstError.closest('[data-book-step]') : resume;
             var index = steps().indexOf(owner);
             if (index >= 0) { start = index; }
         } else if (selectedService() && steps()[0] && steps()[0].getAttribute('data-book-step') === 'service') {

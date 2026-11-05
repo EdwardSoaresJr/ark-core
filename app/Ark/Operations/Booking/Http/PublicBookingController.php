@@ -42,6 +42,8 @@ use Illuminate\Validation\ValidationException;
  */
 final class PublicBookingController
 {
+    public const SUBMIT_LIMITER = 'online-booking';
+
     public function __construct(
         private readonly BookingFormProjection $projection,
         private readonly SubmitBooking $submit,
@@ -147,6 +149,16 @@ final class PublicBookingController
             'website' => $website,
             'seo' => $this->seo($website, $settings['title']),
         ]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $headers
+     */
+    public function tooManyTries(Request $request, array $headers): Response
+    {
+        return $this->frameable($request, response()->view('booking.too-many', [
+            'embed' => $request->boolean('embed'),
+        ], 429, $headers));
     }
 
     /** Changes when the booking scripts change, so a cached copy is never served after a release. */
@@ -257,11 +269,22 @@ final class PublicBookingController
             'verifiedPhone' => $this->identity->verifiedPhone($store),
             'verifiedEmail' => $this->identity->verifiedEmail($store),
             'notice' => $notice,
-            'renderStamp' => LeadFormRenderStamp::issue(),
+            'renderStamp' => $this->renderStamp($request),
             'submissionKey' => (string) ($input['submission_key'] ?? Str::random(40)),
             'website' => $website,
             'seo' => $this->seo($website, $view['settings']['title']),
         ], $status));
+    }
+
+    /**
+     * The form's first render time survives code checks and corrections, so a customer who verifies
+     * their phone and sends right away is not told to wait.
+     */
+    private function renderStamp(Request $request): string
+    {
+        $posted = LeadFormRenderStamp::read($request->input('form_rendered_at'));
+
+        return LeadFormRenderStamp::issue($posted['status'] === LeadFormRenderStamp::Ready ? $posted['rendered_at'] : null);
     }
 
     private function receiptRedirect(Request $request, ?AppointmentRequest $bookingRequest): RedirectResponse
