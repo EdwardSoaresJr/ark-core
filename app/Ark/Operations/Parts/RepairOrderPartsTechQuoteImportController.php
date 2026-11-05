@@ -22,6 +22,7 @@ class RepairOrderPartsTechQuoteImportController
         PartsTechActiveCartQuoteReader $reader,
         PartsTechCatalogLauncher $launcher,
         PartsTechCartPreparer $preparer,
+        PartsCartImportLedger $ledger,
     ): JsonResponse {
         $repairOrder->ensureOpenForEditing();
 
@@ -76,7 +77,11 @@ class RepairOrderPartsTechQuoteImportController
             ->sortBy('position')
             ->values();
 
-        $defaultConcern = $concerns->count() === 1 ? $concerns->first() : null;
+        $launchConcern = $request->integer('concern_id') > 0
+            ? $concerns->firstWhere('id', $request->integer('concern_id'))
+            : null;
+        $defaultConcern = $launchConcern ?? ($concerns->count() === 1 ? $concerns->first() : null);
+        $imported = $ledger->importedLines($repairOrder);
         $defaultMatrix = $defaultConcern
             ? $defaultConcern->defaultPartsMatrix($settings)
             : $settings->defaultPartsMatrix();
@@ -94,7 +99,10 @@ class RepairOrderPartsTechQuoteImportController
             'po_sync_warning' => $poSyncWarning,
             'warnings' => $preparer->canPrepare() ? $preparer->lastWarnings() : [],
             'lines' => array_map(
-                fn (PartsTechQuoteLine $line): array => $line->toAssignmentPayload(),
+                fn (PartsTechQuoteLine $line): array => [
+                    ...$line->toAssignmentPayload(),
+                    ...$ledger->statusFor($line, $imported),
+                ],
                 $lines,
             ),
             'concerns' => $concerns
@@ -121,13 +129,41 @@ class RepairOrderPartsTechQuoteImportController
         ]);
     }
 
+    public function pricing(Request $request, RepairOrder $repairOrder, PartsCartPricing $pricing): JsonResponse
+    {
+        $repairOrder->ensureOpenForEditing();
+
+        $data = $request->validate([
+            'rows' => ['required', 'array', 'max:100'],
+            'rows.*.key' => ['required', 'string', 'max:128'],
+            'rows.*.repair_order_concern_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('repair_order_concerns', 'id')->where('repair_order_id', $repairOrder->id),
+            ],
+            'rows.*.part_cost' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'rows.*.quantity' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'rows.*.pricing_matrix_key' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        return response()->json([
+            'rows' => collect($data['rows'])
+                ->map(fn (array $row): array => [
+                    'key' => $row['key'],
+                    ...$pricing->price($repairOrder, $row),
+                ])
+                ->values()
+                ->all(),
+        ]);
+    }
+
     public function store(
         Request $request,
         RepairOrder $repairOrder,
         PartsTechQuoteImporter $importer,
         PartsTechCatalogLauncher $launcher,
         RepairOrderConcurrency $concurrency,
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $repairOrder->ensureOpenForEditing();
         $concurrency->guard($request, $repairOrder);
 
@@ -164,6 +200,7 @@ class RepairOrderPartsTechQuoteImportController
                 'max:255',
                 Rule::in(collect(ShopSettings::current()->partsMatrices())->pluck('key')->all()),
             ],
+            'assignments.*.import_again' => ['nullable', 'boolean'],
         ]);
 
         $assignments = collect($data['assignments'])
@@ -174,6 +211,10 @@ class RepairOrderPartsTechQuoteImportController
         try {
             $result = $importer->importAssignments($repairOrder, $assignments, $request->user());
         } catch (RuntimeException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $exception->getMessage()], 422);
+            }
+
             return redirect()
                 ->route('operations.repair-orders.show', $repairOrder)
                 ->withFragment('estimate-lines')
@@ -188,14 +229,27 @@ class RepairOrderPartsTechQuoteImportController
 
         $this->recordRepairOrderEstimateMutation($repairOrder, $request->user());
 
+        $status = sprintf(
+            'Imported %d part line%s from PartsTech into %s.',
+            $result['imported'],
+            $result['imported'] === 1 ? '' : 's',
+            $concernList !== '' ? $concernList : 'selected concerns',
+        );
+
+        if ($request->expectsJson()) {
+            $request->session()->flash('status', $status);
+
+            return response()->json([
+                'imported' => $result['imported'],
+                'concerns' => $result['concerns'],
+                'message' => $status,
+                'redirect_url' => route('operations.repair-orders.show', $repairOrder).'#'.$fragment,
+            ]);
+        }
+
         return redirect()
             ->route('operations.repair-orders.show', $repairOrder)
             ->withFragment($fragment)
-            ->with('status', sprintf(
-                'Imported %d part line%s from PartsTech into %s.',
-                $result['imported'],
-                $result['imported'] === 1 ? '' : 's',
-                $concernList !== '' ? $concernList : 'selected concerns',
-            ));
+            ->with('status', $status);
     }
 }

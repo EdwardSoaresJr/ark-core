@@ -28,10 +28,13 @@ final class PartsTechQuoteImporter
         private readonly OperationalEventRecorder $events,
         private readonly RepairOrderLifecycleTransition $lifecycle,
         private readonly CustomerPartDescriptionAttributes $customerDescriptions,
+        private readonly PartsCartImportLedger $ledger,
     ) {}
 
     /**
-     * @param  list<array{source_key: string, repair_order_concern_id: int, repair_order_work_group_id?: int|null, part_cost?: string|null, pricing_matrix_key?: string|null}>  $assignments
+     * A cart line already on this repair order is refused unless its assignment sets import_again.
+     *
+     * @param  list<array{source_key: string, repair_order_concern_id: int, repair_order_work_group_id?: int|null, part_cost?: string|null, pricing_matrix_key?: string|null, import_again?: bool|null}>  $assignments
      * @return array{imported: int, concerns: list<string>, work_group_ids: list<int>}
      */
     public function importAssignments(RepairOrder $repairOrder, array $assignments, User $actor): array
@@ -59,6 +62,12 @@ final class PartsTechQuoteImporter
         $workGroupIds = [];
 
         DB::transaction(function () use ($repairOrder, $assignments, $quoteByKey, $concernIds, $actor, &$imported, &$concernSummaries, &$workGroupIds): void {
+            RepairOrder::query()->whereKey($repairOrder->getKey())->lockForUpdate()->first();
+
+            $alreadyImported = $this->ledger->importedLines($repairOrder);
+            /** @var array<string, true> $seen */
+            $seen = [];
+
             foreach ($assignments as $assignment) {
                 $sourceKey = (string) ($assignment['source_key'] ?? '');
                 $concernId = (int) ($assignment['repair_order_concern_id'] ?? 0);
@@ -72,6 +81,18 @@ final class PartsTechQuoteImporter
 
                 if (! in_array($concernId, $concernIds, true)) {
                     throw new RuntimeException('One or more selected concerns are not on this repair order.');
+                }
+
+                if (isset($seen[$sourceKey])) {
+                    throw new RuntimeException('The same cart part was selected twice. Pull the cart again and import once.');
+                }
+
+                $seen[$sourceKey] = true;
+
+                if ($alreadyImported->has($sourceKey) && ! filter_var($assignment['import_again'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                    $description = $quoteByKey->get($sourceKey)?->description ?? 'A selected part';
+
+                    throw new RuntimeException($description.' is already on this estimate. Pull the cart again to see what is new.');
                 }
 
                 $this->assertWorkGroupAssignment($concernId, $workGroupId);
@@ -190,6 +211,8 @@ final class PartsTechQuoteImporter
             'vendor_name' => $pricingAttributes['vendor_name'],
             'part_number' => $pricingAttributes['part_number'],
             'sourcing_notes' => $pricingAttributes['sourcing_notes'],
+            'parts_cart_source_key' => $quoteLine->sourceKey,
+            'parts_cart_snapshot' => $this->ledger->snapshotFor($quoteLine),
             'is_overridden' => $pricingAttributes['is_overridden'],
             'subtotal_cents' => $this->calculator->lineTotalCents($data['quantity'], $pricingAttributes['unit_price_cents']),
         ]);

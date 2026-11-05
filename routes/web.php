@@ -1596,6 +1596,9 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/app/repair-orders/{repairOrder}/partstech/import-quote/preview', [RepairOrderPartsTechQuoteImportController::class, 'preview'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.partstech.import.preview');
+        Route::post('/app/repair-orders/{repairOrder}/partstech/import-quote/pricing', [RepairOrderPartsTechQuoteImportController::class, 'pricing'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
+            ->name('operations.repair-orders.partstech.import.pricing');
         Route::post('/app/repair-orders/{repairOrder}/partstech/import-quote', [RepairOrderPartsTechQuoteImportController::class, 'store'])
             ->middleware('permission:'.ArkCapability::RepairOrdersManage->value)
             ->name('operations.repair-orders.partstech.import');
