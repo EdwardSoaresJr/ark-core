@@ -1028,7 +1028,7 @@
             broadcastChannel: @js(App\Ark\Operations\RepairOrders\RepairOrderEstimateBroadcast::channelName($repairOrder->repair_order_id)),
         }), arkWorksheetContinuity({
             worksheetScopeId: 'estimate-lines',
-            continuityPanelIds: ['worksheet-status-flash', 'ro-identity-band', 'visit-reason', 'estimate-builder-rail', 'estimate-total-panel', 'review-toolbar', 'workspace-modal-host', 'ro-orientation-header'],
+            continuityPanelIds: ['worksheet-status-flash', 'ro-identity-band', 'ro-inspection-tab-signal', 'visit-reason', 'estimate-builder-rail', 'estimate-total-panel', 'review-toolbar', 'workspace-modal-host', 'ro-orientation-header'],
             conflictFragment: 'estimate-lines',
             refreshScopeMap: {
                 worksheet: 'estimate-lines',
@@ -1519,63 +1519,8 @@
         @ark:labor-guide-notice.window="laborGuideNotice = $event.detail.message || ''"
         @keydown.escape.window="partsCatalogMenu = false; laborGuideMenu = false"
     >
-        <x-tabler.page layout="fluid" :title="'RO #'.$repairOrder->repair_order_id" pretitle="Repair order" actions-label="Repair order commands" actions-below>
-            <x-slot:actions>
-                {{-- Worksheet saves replace #review-toolbar from the server, so every control whose state can change lives inside it. --}}
-                <div id="review-toolbar" class="ark-ro-command-bar" data-ro-command-bar>
-                    @include('operations.repair-orders.partials.repair-order-toolbar-visit-signals', [
-                        'repairOrder' => $repairOrder,
-                    ])
-
-                    <div class="ark-ro-command-bar__controls">
-                        @include('operations.repair-orders.partials.repair-order-estimate-toolbar-workflow', [
-                            'repairOrder' => $repairOrder,
-                            'isTerminal' => $isTerminal,
-                            'lifecycleOptions' => $lifecycleOptions,
-                            'closeVariantOptions' => $closeVariantOptions,
-                            'technicians' => $technicians,
-                            'soloOwnerShop' => $soloOwnerShop,
-                            'estimateVersion' => $estimateVersion,
-                            'financial' => $financial,
-                            'balanceProjection' => $balanceProjection ?? null,
-                            'mode' => 'edit',
-                        ])
-
-                        <div class="btn-list flex-nowrap" data-ro-command-actions>
-                            @unless ($isTerminal)
-                                @if ($canAuthorRepairOrder ?? false)
-                                    <button
-                                        type="button"
-                                        class="btn"
-                                        title="Review Estimate Notes"
-                                        aria-label="Review Estimate Notes"
-                                        @click="window.dispatchEvent(new CustomEvent('ark-workspace-modal-open', { detail: { task: 'review-estimate-notes', context: {}, invokeEl: $event.currentTarget } }))"
-                                    >
-                                        <x-tabler.icon name="file-description" />
-                                        <span class="d-none d-sm-inline">Review Estimate Notes</span>
-                                    </button>
-                                @endif
-                            @endunless
-
-                            @include('operations.repair-orders.partials.repair-order-toolbar-print-slot', [
-                                'repairOrder' => $repairOrder,
-                                'financial' => $financial,
-                                'customerDocumentsCount' => ($customerDocuments ?? collect())->count(),
-                                'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
-                                'isTerminal' => $isTerminal,
-                            ])
-                        </div>
-                    </div>
-
-                    @include('operations.repair-orders.partials.repair-order-toolbar-mode-slot', [
-                        'repairOrder' => $repairOrder,
-                        'mode' => 'edit',
-                        'isTerminal' => $isTerminal,
-                        'registerModeShortcut' => false,
-                    ])
-                </div>
-            </x-slot:actions>
-
+        {{-- No page title: the RO number heads the Visit panel, which begins the page. --}}
+        <x-tabler.page layout="fluid">
             <div x-show="partstechCatalogOpening || partstechPullLoading" x-cloak role="status" aria-live="polite">
                 <div class="alert alert-info d-flex align-items-center gap-2">
                     <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -1661,6 +1606,18 @@
             'identityVariant' => 'staff',
             'estimateVersion' => $estimateVersion,
             'totals' => $totals,
+            'visitCommands' => [
+                'repairOrder' => $repairOrder,
+                'isTerminal' => $isTerminal,
+                'lifecycleOptions' => $lifecycleOptions,
+                'closeVariantOptions' => $closeVariantOptions,
+                'technicians' => $technicians,
+                'soloOwnerShop' => $soloOwnerShop,
+                'estimateVersion' => $estimateVersion,
+                'financial' => $financial,
+                'balanceProjection' => $balanceProjection ?? null,
+                'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
+            ],
         ])
 
         <div class="ops-estimate-layout gap-3 mt-3">

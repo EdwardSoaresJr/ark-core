@@ -333,17 +333,16 @@ Migrated: the page header (RO number, customer and vehicle) and the toolbar as i
 
 Still legacy, in `.ark-legacy.ops-main > .ops-estimate-workspace` (the wrapper legacy dark-mode and layout rules expect): the flash messages, collaboration banners, intake band, identity band, workspace tabs, the estimate worksheet, the totals and financial rail, the labor guide panel, and the footer dock. `tabler.css` sets `--ops-left-rail-width` inside islands to the Tabler sidebar width, so the fixed footer dock starts at the sidebar edge.
 
-### Repair order workspace: header and command bar (`operations.repair-orders.show`)
+### Repair order workspace: the Visit panel heads the page (`operations.repair-orders.show`)
 
-The refinement pass on the first slice's header and toolbar.
+The repair order is the vehicle's visit, so the page has no title row: the Customer | Vehicle | Visit panel (`#ro-identity-band`) begins the page under the shell and workspace tabs, and the RO number heads the Visit panel (`h2[data-ro-number]`).
 
-- **Header:** "Repair order" and "RO #…". The customer and vehicle subtitle is gone: the Customer | Vehicle | Visit panel directly below shows both, and the footer dock repeats them.
-- **Command bar:** `#review-toolbar` moved from the header's actions column to a full-width row under the title (`<x-tabler.page actions-below>`). It holds, in order:
-  - the appointment and inspection signals, now Tabler (`.ark-ro-signal`), with the same text, links, `data-arrival-posture` / `data-inspection-posture`, and full detail in `title`;
-  - the technician and status selects (`.ark-ro-command-bar__tech`, `__status`) and the review-request follow-up;
-  - Review Estimate Notes, Paperwork / Add Document, and Print, each with a Tabler icon.
-- **Layout:** at 1920 the bar is one line. Narrower, the controls wrap under the signals and span the row, selects first and actions last. Below `sm` the two selects share a row, the actions show only their icons (named by `aria-label` and `title`), and an open lost-reason panel takes the full row.
-- **Unchanged:** `id="review-toolbar"` and its server replacement after worksheet saves; every form, action URL, hidden field, `data-*` hook, Alpine handler, permission check, and lifecycle rule; the Print menu's items and `arkPrintDocument` calls; the Customer | Vehicle | Visit panel; and the sticky footer. The band variants of the posture partials, used by the customer documents, are untouched.
+- **Visit panel, in order:** the RO number with Review Estimate Notes and Print beside it; `#review-toolbar` with the Status and Technician selects as label | control rows (visible labels; the technician select is `assigned_technician_id`) and the review-request follow-up; then Visit type, mileage, Opened, Estimate by, and Appointment. Without the status select (closed, or no lifecycle capability) the status is a badge beside the RO number, so it appears once.
+- **Estimate by vs Technician:** they are different people. "Estimate by" is who last prepared the estimate (`RepairOrder::serviceAdvisorName()`, the estimate snapshot's `generated_by`; the presenter and the estimate PDF still call it Advisor, only this panel relabels it). Technician is the assignment the select changes. Repair orders have no assigned-advisor field.
+- **Inspection status** is on the Inspection tab (`#ro-inspection-tab-signal`: a status dot and `InspectionPosture::label()`, full detail in `title`), a continuity panel so worksheet saves refresh it.
+- **Paperwork / Add Document** is only in the sticky footer (`RepairOrderFooterProjection`, same users and label). Print stays in the panel: its menu has per-owner tech sheets and Final Invoice, which the footer's PRINT menu does not.
+- **Layout:** Customer, Vehicle, and Visit are thirds from `md`; from `xxl` Visit takes half and Customer and Vehicle a quarter each. The Visit section is a size container: from 32rem wide its controls and details sit side by side, and below 24rem its action buttons show only their icons (named by `aria-label` and `title`). On phones the sections stack in the same Customer, Vehicle, Visit order, so reading, visual, and keyboard order match at every size; the docked footer keeps the RO number and status in view.
+- **Unchanged:** `id="review-toolbar"` (now inside `#ro-identity-band`; both are continuity panels, so a draft in the status controls holds both) and every form, action URL, hidden field, `data-*` hook, Alpine handler, permission check, and lifecycle rule; the Print menu's items and `arkPrintDocument` calls; the sticky footer. The band variants of the posture partials, used by the customer documents, are untouched.
 
 ### Repair order workspace: tabs and rail container (`operations.repair-orders.show`)
 

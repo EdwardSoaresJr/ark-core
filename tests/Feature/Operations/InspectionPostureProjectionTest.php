@@ -124,14 +124,22 @@ test('inspection posture needs review when walk is complete with attention findi
         ->and($posture->remaining)->toBe(0);
 });
 
-test('advisor estimate review renders shared inspection posture on the review toolbar', function () {
+test('advisor estimate review renders shared inspection posture on the Inspection tab', function () {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = inspectionPostureRepairOrder();
 
-    $this->actingAs($advisor)
+    $html = $this->actingAs($advisor)
         ->get(route('operations.repair-orders.show', $repairOrder))
         ->assertOk()
-        ->assertSee('data-ro-visit-signals', false)
-        ->assertSee('data-inspection-posture="not_started"', false)
-        ->assertSee('Not Started', false);
+        ->getContent();
+
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $signal = (new DOMXPath($document))->query('//button[@data-workspace-tab="inspect"]//*[@id="ro-inspection-tab-signal"][@data-inspection-posture="not_started"]')->item(0);
+
+    expect($signal)->toBeInstanceOf(DOMElement::class)
+        ->and($signal->textContent)->toContain('Not Started')
+        ->and($signal->getAttribute('title'))->toStartWith('Inspection · Not Started');
 });

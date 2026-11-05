@@ -10,6 +10,7 @@
         'totals' => $totals ?? null,
         'estimateVersion' => $estimateVersion ?? null,
         'mileageEditable' => $mileageEditable ?? true,
+        'visitCommands' => $visitCommands ?? null,
     ])
     @include('operations.repair-orders.partials.repair-order-lost-reason-record', [
         'repairOrder' => $repairOrder,

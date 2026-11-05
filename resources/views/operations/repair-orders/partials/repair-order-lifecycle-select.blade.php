@@ -23,93 +23,96 @@
 @endphp
 
 @if (! $repairOrder->isTerminal())
-    <div class="ark-ro-command-bar__status">
-        @if ($errors->has('lifecycle'))
-            <div class="small text-danger mb-1">{{ $errors->first('lifecycle') }}</div>
-        @endif
+    <div class="row g-0 align-items-center ark-ro-visit-commands__status">
+        <label for="status-move-{{ $repairOrder->repair_order_id }}" class="col-4 text-secondary">Status</label>
+        <div class="col-8">
+            @if ($errors->has('lifecycle'))
+                <div class="small text-danger mb-1">{{ $errors->first('lifecycle') }}</div>
+            @endif
 
-        <form
-            id="{{ $formId }}"
-            method="POST"
-            action="{{ route('operations.repair-orders.lifecycle.update', $repairOrder) }}"
-            class="m-0"
-            data-lifecycle-form
-            data-continuity-region="workflow"
-            data-refresh-scope="toolbar"
-        >
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
-            <label for="status-move-{{ $repairOrder->repair_order_id }}" class="sr-only">Repair order status</label>
-            <select
-                id="status-move-{{ $repairOrder->repair_order_id }}"
-                name="status"
-                required
-                class="form-select"
-                data-lifecycle-select
-                data-current-status="{{ $repairOrder->status->value }}"
+            <form
+                id="{{ $formId }}"
+                method="POST"
+                action="{{ route('operations.repair-orders.lifecycle.update', $repairOrder) }}"
+                class="m-0"
+                data-lifecycle-form
+                data-continuity-region="workflow"
+                data-refresh-scope="toolbar"
             >
-                <option value="{{ $repairOrder->status->value }}" selected>{{ $repairOrder->statusDisplayLabel() }}</option>
-                @foreach ($lifecycleSelect->statusOptions as $option)
-                    <option
-                        value="{{ $option['value'] }}"
-                        @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
-                    >
-                        {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
-                    </option>
-                @endforeach
-                @foreach ($lifecycleSelect->closeOptions as $option)
-                    <option
-                        value="{{ $option['value'] }}"
-                        @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
-                    >
-                        {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
-                    </option>
-                @endforeach
-                @if ($lifecycleSelect->showLostCloseOption)
-                    <option value="closed:lost">Closed - Lost</option>
-                @endif
-            </select>
-
-            <div
-                class="hidden card card-sm mt-2 border-warning" style="max-width: 20rem"
-                data-lost-reason-panel
-                hidden
-            >
-                <div class="card-body p-2"><div class="fw-bold small mb-2">Why is this repair order closing lost?</div>
-                <label for="lost-reason-key-{{ $repairOrder->repair_order_id }}" class="sr-only">Lost reason</label>
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
                 <select
-                    id="lost-reason-key-{{ $repairOrder->repair_order_id }}"
-                    name="lost_reason_key"
-                    class="form-select mb-2"
+                    id="status-move-{{ $repairOrder->repair_order_id }}"
+                    name="status"
+                    required
+                    class="form-select form-select-sm fw-bold"
+                    aria-label="Repair order status"
+                    data-lifecycle-select
+                    data-current-status="{{ $repairOrder->status->value }}"
                 >
-                    <option value="">Choose lost reason…</option>
-                    @foreach (RepairOrderLostReason::options() as $option)
-                        <option value="{{ $option['value'] }}" @selected(old('lost_reason_key') === $option['value'])>
-                            {{ $option['label'] }}
+                    <option value="{{ $repairOrder->status->value }}" selected>{{ $repairOrder->statusDisplayLabel() }}</option>
+                    @foreach ($lifecycleSelect->statusOptions as $option)
+                        <option
+                            value="{{ $option['value'] }}"
+                            @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                        >
+                            {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
                         </option>
                     @endforeach
+                    @foreach ($lifecycleSelect->closeOptions as $option)
+                        <option
+                            value="{{ $option['value'] }}"
+                            @if ($option['blockedReason'] !== null) data-blocked-reason="{{ $option['blockedReason'] }}" @endif
+                        >
+                            {{ $option['label'] }}@if (filled($option['blockedReason'])) - {{ $option['blockedReason'] }}@endif
+                        </option>
+                    @endforeach
+                    @if ($lifecycleSelect->showLostCloseOption)
+                        <option value="closed:lost">Closed - Lost</option>
+                    @endif
                 </select>
-                <label for="lost-reason-note-{{ $repairOrder->repair_order_id }}" class="sr-only">Lost reason note</label>
-                <input
-                    id="lost-reason-note-{{ $repairOrder->repair_order_id }}"
-                    type="text"
-                    name="lost_reason_note"
-                    value="{{ old('lost_reason_note') }}"
-                    maxlength="500"
-                    placeholder="Required when reason is Other"
-                    class="form-control mb-2"
+
+                <div
+                    class="hidden card card-sm mt-2 border-warning" style="max-width: 20rem"
+                    data-lost-reason-panel
+                    hidden
                 >
-                <div class="btn-list">
-                    <button type="submit" class="btn btn-warning btn-sm">
-                        Confirm close lost
-                    </button>
-                    <button type="button" class="btn btn-link btn-sm" data-lost-reason-cancel>
-                        Cancel
-                    </button>
+                    <div class="card-body p-2"><div class="fw-bold small mb-2">Why is this repair order closing lost?</div>
+                    <label for="lost-reason-key-{{ $repairOrder->repair_order_id }}" class="sr-only">Lost reason</label>
+                    <select
+                        id="lost-reason-key-{{ $repairOrder->repair_order_id }}"
+                        name="lost_reason_key"
+                        class="form-select mb-2"
+                    >
+                        <option value="">Choose lost reason…</option>
+                        @foreach (RepairOrderLostReason::options() as $option)
+                            <option value="{{ $option['value'] }}" @selected(old('lost_reason_key') === $option['value'])>
+                                {{ $option['label'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <label for="lost-reason-note-{{ $repairOrder->repair_order_id }}" class="sr-only">Lost reason note</label>
+                    <input
+                        id="lost-reason-note-{{ $repairOrder->repair_order_id }}"
+                        type="text"
+                        name="lost_reason_note"
+                        value="{{ old('lost_reason_note') }}"
+                        maxlength="500"
+                        placeholder="Required when reason is Other"
+                        class="form-control mb-2"
+                    >
+                    <div class="btn-list">
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            Confirm close lost
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm" data-lost-reason-cancel>
+                            Cancel
+                        </button>
+                    </div>
+                    </div>
                 </div>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 @endif

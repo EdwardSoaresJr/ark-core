@@ -169,7 +169,7 @@
             'visitMode' => $visitMode,
             'canEdit' => $canEditVisitPosture,
         ])
-        {{-- Staff: Appointment + Inspection live on the review toolbar (same bar as PartsTech). --}}
+        {{-- Staff: Appointment lives in the RO's Visit panel, Inspection on its Inspection tab. --}}
         @if ($identityVariant !== 'staff')
             @include('operations.repair-orders.partials.repair-order-arrival-posture-inline', [
                 'arrivalPosture' => $arrivalPosture,
