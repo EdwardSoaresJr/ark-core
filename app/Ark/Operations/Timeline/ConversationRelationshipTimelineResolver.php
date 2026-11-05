@@ -6,7 +6,6 @@ use App\Ark\Operations\Approvals\ApprovalEvent;
 use App\Ark\Operations\Communications\CommunicationEvent;
 use App\Ark\Operations\Conversations\Conversation;
 use App\Ark\Operations\Conversations\ConversationContactSurface;
-use App\Ark\Operations\Conversations\ConversationLink;
 use App\Ark\Operations\Conversations\ConversationParticipant;
 use App\Ark\Operations\Conversations\ConversationParticipantType;
 use App\Ark\Operations\Conversations\ConversationTimeline;
@@ -63,7 +62,7 @@ final class ConversationRelationshipTimelineResolver
         }
 
         return [
-            'messages' => collect(),
+            'messages' => $this->conversationTimeline->forConversation($conversation, $limit),
             'call_sessions' => new EloquentCollection,
             'communication_events' => new EloquentCollection,
             'operational_events' => new EloquentCollection,
@@ -205,10 +204,7 @@ final class ConversationRelationshipTimelineResolver
             return Customer::query()->find($participantCustomerId);
         }
 
-        $linkedCustomerId = ConversationLink::query()
-            ->where('conversation_id', $conversation->id)
-            ->where('linkable_type', (new Customer)->getMorphClass())
-            ->value('linkable_id');
+        $linkedCustomerId = $conversation->linkedCustomerId();
 
         if ($linkedCustomerId !== null) {
             return Customer::query()->find($linkedCustomerId);

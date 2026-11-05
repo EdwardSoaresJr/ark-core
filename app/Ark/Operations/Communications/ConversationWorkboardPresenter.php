@@ -3,6 +3,7 @@
 namespace App\Ark\Operations\Communications;
 
 use App\Ark\Operations\Conversations\Conversation;
+use App\Ark\Operations\Conversations\ConversationContactSurface;
 use App\Ark\Operations\Conversations\ConversationMessage;
 use App\Ark\Operations\Conversations\ConversationStatus;
 use App\Ark\Operations\Conversations\ConversationWaitingOn;
@@ -44,7 +45,11 @@ final class ConversationWorkboardPresenter
         }
 
         $matched = $customer !== null;
-        $headline = $matched ? (string) $customer->name : 'Unknown';
+        $headline = match (true) {
+            $matched => (string) $customer->name,
+            $conversation->contact_surface === ConversationContactSurface::Email && $contactAddress !== '' => $contactAddress,
+            default => 'Unknown',
+        };
         $displayContact = $channel === OperationalCommunicationChannel::Messenger
             ? 'Messenger · '.Str::limit($contactAddress, 16, '…')
             : ($context?->displayPhone ?? PhoneNumber::display($contactAddress) ?? $contactAddress);

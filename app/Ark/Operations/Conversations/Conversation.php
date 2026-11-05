@@ -4,6 +4,7 @@ namespace App\Ark\Operations\Conversations;
 
 use App\Ark\Growth\Models\GrowthSession;
 use App\Ark\Operations\Communications\OperationalCommunicationDirection;
+use App\Ark\Operations\Customers\Customer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -93,5 +94,44 @@ class Conversation extends Model
     public function reads(): HasMany
     {
         return $this->hasMany(ConversationRead::class);
+    }
+
+    /**
+     * Whether this conversation is with that customer. A link records what a conversation concerns (a repair
+     * order's customer, for example); an email thread is the customer's only at their own email address, so a
+     * document emailed to a warranty company from the customer's repair order stays the warranty company's.
+     */
+    public function isWithCustomer(Customer $customer): bool
+    {
+        if ($this->contact_surface !== ConversationContactSurface::Email) {
+            return true;
+        }
+
+        $email = strtolower(trim((string) $customer->email));
+
+        return $email !== '' && $email === strtolower(trim((string) $this->contact_address));
+    }
+
+    /**
+     * The customer this conversation is with, among the customers linked to it.
+     */
+    public function linkedCustomerId(): ?int
+    {
+        $ids = ConversationLink::query()
+            ->where('conversation_id', $this->id)
+            ->where('linkable_type', (new Customer)->getMorphClass())
+            ->orderBy('id')
+            ->pluck('linkable_id');
+
+        if ($this->contact_surface !== ConversationContactSurface::Email) {
+            return $ids->isEmpty() ? null : (int) $ids->first();
+        }
+
+        $customer = Customer::query()
+            ->whereIn('id', $ids->all())
+            ->get()
+            ->first(fn (Customer $customer): bool => $this->isWithCustomer($customer));
+
+        return $customer?->id;
     }
 }

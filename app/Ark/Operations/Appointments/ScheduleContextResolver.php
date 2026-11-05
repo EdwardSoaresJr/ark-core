@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\Appointments;
 
 use App\Ark\Operations\Conversations\Conversation;
-use App\Ark\Operations\Conversations\ConversationLink;
 use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Leads\Lead;
 use App\Ark\Operations\PhoneNumber;
@@ -283,12 +282,7 @@ final class ScheduleContextResolver
 
     private function linkedCustomerId(Conversation $conversation): ?int
     {
-        $link = ConversationLink::query()
-            ->where('conversation_id', $conversation->id)
-            ->where('linkable_type', (new Customer)->getMorphClass())
-            ->first();
-
-        return $link !== null ? (int) $link->linkable_id : null;
+        return $conversation->linkedCustomerId();
     }
 
     private function linkedRepairOrder(Conversation $conversation): ?RepairOrder

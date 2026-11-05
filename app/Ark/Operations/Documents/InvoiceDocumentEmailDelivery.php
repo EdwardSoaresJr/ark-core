@@ -108,7 +108,10 @@ class InvoiceDocumentEmailDelivery
             $repairOrder,
             $actor,
             $recipientEmail,
-            $summary,
+            $summary,            metadata: [
+                'document_label' => 'Final invoice',
+                'estimate_document_id' => $invoice->id,
+            ],
         );
 
         $event = $this->communicationEvents->record(

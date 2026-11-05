@@ -20,13 +20,23 @@
         <div class="card-body overflow-auto flex-fill p-0" data-comms-context-rail>
             @php
                 $customerName = $customer['name'] ?? data_get($context, 'headline') ?? 'Unknown';
-                $customerPhone = $customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone');
+                $primaryPhone = $context['customer_primary_phone'] ?? null;
+                // An email thread's address is an email, never a phone number; its customer is called on their own phone.
+                $threadEmail = data_get($context, 'thread.surface') === 'email' ? trim((string) data_get($context, 'thread.address')) : '';
+                $customerPhone = $threadEmail !== ''
+                    ? ($customer['phone'] ?? data_get($context, 'phone') ?? $primaryPhone)
+                    : ($customer['phone'] ?? data_get($context, 'phone') ?? data_get($context, 'thread.phone'));
                 $phoneHref = \App\Ark\Operations\PhoneNumber::telUri((string) $customerPhone);
                 $permission = is_array($context['permission'] ?? null) ? $context['permission'] : null;
                 // Replies and calls use this conversation's number; say so when it is not the customer's main phone.
-                $primaryPhone = $context['customer_primary_phone'] ?? null;
-                $otherNumber = filled($customerPhone) && filled($primaryPhone)
+                $otherNumber = $threadEmail === '' && filled($customerPhone) && filled($primaryPhone)
                     && \App\Ark\Operations\PhoneNumber::normalize((string) $customerPhone) !== \App\Ark\Operations\PhoneNumber::normalize((string) $primaryPhone);
+                // Replies by email go to this thread's address; say so when it is not the customer's email.
+                $otherEmail = $threadEmail !== '' && strcasecmp($threadEmail, trim((string) ($customer['email'] ?? ''))) !== 0;
+                // Texting the customer from an email thread starts from their own record, not this thread's composer.
+                $textHref = $threadEmail === ''
+                    ? '#comms-thread-composer'
+                    : (filled($context['customer_url'] ?? null) && filled($customerPhone) ? $context['customer_url'].'?compose=text#customer-communication' : null);
             @endphp
             <section class="p-3 border-bottom" aria-labelledby="comms-context-customer">
                 <div class="subheader mb-2" id="comms-context-customer">Customer</div>
@@ -41,7 +51,9 @@
                     @if ($phoneHref !== null)
                         <a href="{{ $phoneHref }}" class="btn btn-icon btn-sm" aria-label="Call" title="Call"><x-tabler.icon name="phone" /></a>
                     @endif
-                    <a href="#comms-thread-composer" class="btn btn-icon btn-sm" aria-label="Text" title="Text" @click="contextOpen = false"><x-tabler.icon name="message" /></a>
+                    @if ($textHref !== null)
+                        <a href="{{ $textHref }}" class="btn btn-icon btn-sm" aria-label="Text" title="Text" @click="contextOpen = false"><x-tabler.icon name="message" /></a>
+                    @endif
                     @if (filled($customer['email'] ?? null))
                         <a href="mailto:{{ $customer['email'] }}" class="btn btn-icon btn-sm" aria-label="Email" title="Email"><x-tabler.icon name="mail" /></a>
                     @endif
@@ -65,7 +77,15 @@
                         <dt class="col-4 text-secondary fw-normal">Phone</dt>
                         <dd class="col-8 mb-1">{{ $customerPhone }}</dd>
                     @endif
-                    @if (filled($customer['email'] ?? null))
+                    @if ($otherEmail)
+                        <dt class="col-4 text-secondary fw-normal">Email</dt>
+                        <dd class="col-8 mb-1 text-truncate">
+                            <div class="text-truncate" data-comms-context-thread-email>{{ $threadEmail }}<div class="text-secondary">This conversation</div></div>
+                            @if (filled($customer['email'] ?? null))
+                                <div class="mt-1 text-truncate" data-comms-context-customer-email>{{ $customer['email'] }}<div class="text-secondary">Customer's email</div></div>
+                            @endif
+                        </dd>
+                    @elseif (filled($customer['email'] ?? null))
                         <dt class="col-4 text-secondary fw-normal">Email</dt>
                         <dd class="col-8 mb-1 text-truncate">{{ $customer['email'] }}</dd>
                     @endif

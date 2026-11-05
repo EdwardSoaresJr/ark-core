@@ -142,6 +142,7 @@
             $emailAddress = trim((string) ($composer['email_address'] ?? ''));
             $emailReason = match (true) {
                 filled($emailUrl) => null,
+                $conversation->contact_surface === \App\Ark\Operations\Conversations\ConversationContactSurface::Phone => 'This conversation is by text. Email the customer from the Customer panel.',
                 $emailAddress === '' => 'No email address on file.',
                 default => 'Email replies are not set up for this shop.',
             };
@@ -196,9 +197,11 @@
                 @php
                     $composerCustomer = $composer['customer'] ?? $composer['repair_order']?->customer;
                     $primaryRepairOrder = $composer['repair_order'] ?? null;
+                    // A text goes to this conversation's own number; a thread by email has none to text.
+                    $textsThisThread = $conversation->contact_surface === \App\Ark\Operations\Conversations\ConversationContactSurface::Phone;
                 @endphp
 
-                @if ($composerCustomer)
+                @if ($textsThisThread && $composerCustomer)
                     <x-operations.conversation-quick-reply
                         :customer="$composerCustomer"
                         :repair-order="$primaryRepairOrder"
@@ -220,7 +223,7 @@
                         ui="tabler"
                         id="comms-thread-composer"
                     />
-                @else
+                @elseif ($textsThisThread)
                     <x-operations.conversation-contact-quick-reply
                         :conversation="$conversation"
                         :display-phone="$composer['display_phone'] ?? ''"
