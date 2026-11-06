@@ -68,7 +68,8 @@ final class QzWorkstationSetup
         }
         $root = QzTraySigning::describeCertificate($pem);
 
-        $template = (string) file_get_contents(resource_path('printing/workstation/'.self::TEMPLATES[$platform]));
+        // Core's own resources: a host application's resource_path() is not Core's.
+        $template = (string) file_get_contents(dirname(__DIR__, 4).'/resources/printing/workstation/'.self::TEMPLATES[$platform]);
         $script = strtr($template, [
             '@@ARK_SETUP_VERSION@@' => self::VERSION,
             '@@ARK_SHOP_HOST@@' => $host,
