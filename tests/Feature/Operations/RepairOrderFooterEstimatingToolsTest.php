@@ -88,6 +88,22 @@ test('the footer carries the estimating tools and the cart manager sits outside 
         ->and($html)->not->toContain('Use concern default');
 });
 
+test('no offcanvas on the repair order is rendered open, so page load leaves the page scrollable', function () {
+    [$repairOrder] = footerToolsRepairOrder();
+
+    $html = $this->get(route('operations.repair-orders.show', $repairOrder))->assertOk()->getContent();
+    $dom = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $dom->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($dom);
+    $sheet = $xpath->query('//*[@data-ro-footer-tools-sheet]')->item(0);
+
+    expect($sheet)->not->toBeNull()
+        ->and($sheet->getAttribute(':class'))->toBe('{ show: toolsOpen }')
+        ->and($xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " offcanvas ")][contains(concat(" ", normalize-space(@class), " "), " show ")]')->length)->toBe(0);
+});
+
 test('a closed repair order has no estimating tools or cart in its footer', function () {
     [$repairOrder] = footerToolsRepairOrder();
     $repairOrder->update(['status' => RepairOrderStatus::Closed]);

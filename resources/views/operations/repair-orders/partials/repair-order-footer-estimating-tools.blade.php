@@ -131,8 +131,10 @@
     </button>
     <div x-show="toolsOpen" x-cloak>
         <div class="offcanvas-backdrop show" @click="toolsOpen = false"></div>
+        {{-- Bootstrap opens every .offcanvas.show it finds on page load and locks the page's scrolling, so show is bound, never rendered. --}}
         <div
-            class="offcanvas offcanvas-bottom show h-auto ark-ro-footer-sheet"
+            class="offcanvas offcanvas-bottom h-auto ark-ro-footer-sheet"
+            :class="{ show: toolsOpen }"
             role="dialog"
             aria-modal="true"
             aria-labelledby="ro-footer-tools-title"
