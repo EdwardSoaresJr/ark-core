@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Ark\Operations\Printing;
 
+use Illuminate\Support\Facades\Route;
+
 final class QzPrintingSettingsReference
 {
     /**
@@ -15,20 +17,25 @@ final class QzPrintingSettingsReference
      *     algorithm: string,
      *     poc_url: ?string,
      *     sign_health_url: string,
+     *     setup_url: string,
      * }
      */
     public static function forSettingsPage(): array
     {
+        $health = QzTraySigning::healthSnapshot();
+        $configured = $health['source'] === QzTraySigning::SOURCE_CONFIGURED;
+
         return [
-            'health' => QzTraySigning::healthSnapshot(),
+            'health' => $health,
             'self_test' => QzTraySigning::selfTestSigningRoundTrip(),
-            'certificate_path' => (string) config('printing.qz.certificate_path', ''),
-            'private_key_path' => (string) config('printing.qz.private_key_path', ''),
+            'certificate_path' => $configured ? (string) config('printing.qz.certificate_path', '') : '',
+            'private_key_path' => $configured ? (string) config('printing.qz.private_key_path', '') : '',
             'algorithm' => QzTraySigning::javascriptSignatureAlgorithm(),
-            'poc_url' => app()->environment('local') && \Illuminate\Support\Facades\Route::has('dev.qz-poc')
+            'poc_url' => app()->environment('local') && Route::has('dev.qz-poc')
                 ? route('dev.qz-poc')
                 : null,
             'sign_health_url' => route('operations.printing.qz.sign-health'),
+            'setup_url' => route('operations.printing.setup'),
         ];
     }
 }

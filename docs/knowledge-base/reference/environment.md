@@ -69,8 +69,9 @@ Replace the example mailbox before you rely on error mail.
 | `LABOR_GUIDE_ALLDATA_URL` | `https://my.alldata.com/repair` | Opens the vendor site. |
 | `LABOR_GUIDE_PRODEMAND_URL` | `https://www.prodemand.com` | Opens the vendor site. |
 | `PDF_CHROME_PATH` | empty | Chromium for PDFs. |
-| `QZ_CERTIFICATE_PATH` | empty | Shop-supplied. Secret. |
-| `QZ_PRIVATE_KEY_PATH` | empty | Shop-supplied. Secret. |
+| `QZ_CERTIFICATE_PATH` | empty | Used only when `storage/app/private/qz` is empty. |
+| `QZ_PRIVATE_KEY_PATH` | empty | Same. Secret. |
+| `QZ_TRUST_ROOT_PATH` | `override.crt` beside the certificate | Public root for ARK Print Setup. |
 
 ## Surfaces
 

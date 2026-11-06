@@ -35,7 +35,7 @@
         'width_mm' => (float) config('printing.key_tag_qz_page.width_mm', 62),
         'height_mm' => (float) config('printing.key_tag_qz_page.height_mm', 38.1),
     ];
-    $arkQzWizardUrl = route('operations.settings.shop.edit', ['section' => 'printing']);
+    $arkQzWizardUrl = route('operations.printing.setup');
     $arkPreflightKeyTagUrl = '';
     $arkPrintJsJsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
     $arkPrintJsMsgNeedKeyTagPrinter = json_encode(__('Configure a key tag printer first'), $arkPrintJsJsonFlags);

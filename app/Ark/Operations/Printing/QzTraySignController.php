@@ -26,7 +26,7 @@ final class QzTraySignController
 
         if (! QzTraySigning::isFullyConfigured()) {
             return response()->json([
-                'error' => 'QZ signing is not configured. Set QZ_CERTIFICATE_PATH and QZ_PRIVATE_KEY_PATH (see config/printing.php).',
+                'error' => 'QZ signing is not ready on this server: the shop has no usable printing certificate and key (see Set Up Printing).',
             ], 501);
         }
 
@@ -86,6 +86,15 @@ final class QzTraySignController
                 'private_key_valid' => $snapshot['private_key_valid'],
                 'certificate_error_hint' => $snapshot['certificate_error_hint'] ?? '',
                 'private_key_error_hint' => $snapshot['private_key_error_hint'] ?? '',
+                'source' => $snapshot['source'],
+                'private_key_matches_certificate' => $snapshot['private_key_matches_certificate'],
+                'private_key_permissions_ok' => $snapshot['private_key_permissions_ok'],
+                'certificate_in_validity_window' => $snapshot['certificate_in_validity_window'],
+                'certificate_expires_soon' => $snapshot['certificate_expires_soon'],
+                'certificate' => $snapshot['certificate'],
+                'trust_root' => $snapshot['trust_root'],
+                'chains_to_trust_root' => $snapshot['chains_to_trust_root'],
+                'trust_root_error_hint' => $snapshot['trust_root_error_hint'],
             ]),
             'algorithm' => (string) config('printing.qz.signature_algorithm', 'sha512'),
         ]);
