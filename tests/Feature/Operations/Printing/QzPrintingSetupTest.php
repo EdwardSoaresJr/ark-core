@@ -8,14 +8,24 @@ use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
 use Database\Seeders\ArkAuthorizationSeeder;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\URL;
 
 function qzSetupTempDir(string $label): string
 {
     $dir = sys_get_temp_dir().'/ark-qz-'.$label.'-'.bin2hex(random_bytes(4));
     mkdir($dir, 0o700, true);
+    $GLOBALS['qzSetupTemporary'][] = $dir;
 
     return $dir;
+}
+
+function qzSetupTempFile(string $suffix): string
+{
+    $path = sys_get_temp_dir().'/ark-print-setup-'.bin2hex(random_bytes(4)).$suffix;
+    $GLOBALS['qzSetupTemporary'][] = $path;
+
+    return $path;
 }
 
 function qzSetupUseStorage(string $dir): void
@@ -57,6 +67,10 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     app()->useStoragePath($this->originalStorage);
+    foreach ($GLOBALS['qzSetupTemporary'] ?? [] as $path) {
+        is_dir($path) ? File::deleteDirectory($path) : @unlink($path);
+    }
+    $GLOBALS['qzSetupTemporary'] = [];
 });
 
 test('the shop signs with its own pair from storage and the sign endpoint verifies against it', function (): void {
@@ -335,7 +349,7 @@ function qzSetupFixture(string $properties): array
 
 function qzSetupMacScript(string $host = 'synthetic-shop.arksms.test'): string
 {
-    $path = sys_get_temp_dir().'/ark-print-setup-'.bin2hex(random_bytes(4)).'.sh';
+    $path = qzSetupTempFile('.sh');
     file_put_contents($path, QzWorkstationSetup::render('macos', $host, 'https://'.$host.'/app/printing/setup'));
 
     return $path;
@@ -427,7 +441,7 @@ test('the Windows setup edits qz-tray.properties the same way and keeps CRLF lin
     $pwsh = getenv('ARK_TEST_PWSH') ?: trim((string) shell_exec('command -v pwsh'));
     $dir = qzSetupShopPair('win');
     $root = QzTraySigning::describeCertificate((string) file_get_contents($dir.'/'.QzTraySigning::TRUST_ROOT_FILE));
-    $script = sys_get_temp_dir().'/ark-print-setup-'.bin2hex(random_bytes(4)).'.cmd';
+    $script = qzSetupTempFile('.cmd');
     file_put_contents($script, QzWorkstationSetup::render('windows', 'synthetic-shop.arksms.test', 'https://synthetic-shop.arksms.test/app/printing/setup'));
 
     $base = qzSetupTempDir('win-layout');
