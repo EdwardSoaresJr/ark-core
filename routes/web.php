@@ -7,7 +7,6 @@ use App\Ark\Operations\Appointments\AppointmentCreateController;
 use App\Ark\Operations\Appointments\AppointmentIndexController;
 use App\Ark\Operations\Appointments\AppointmentReminderSettingsController;
 use App\Ark\Operations\Appointments\AppointmentRequestExceptionController;
-use App\Ark\Operations\Booking\Http\AppointmentRequestDeclineController;
 use App\Ark\Operations\Appointments\AppointmentRescheduleController;
 use App\Ark\Operations\Appointments\AppointmentScheduleBoardViewController;
 use App\Ark\Operations\Appointments\AppointmentShowController;
@@ -20,6 +19,7 @@ use App\Ark\Operations\ArkManager\Http\ArkManagerDraftCommunicationController;
 use App\Ark\Operations\ArkManager\Http\ArkManagerExplainRecommendationController;
 use App\Ark\Operations\Attention\ActOnAdvisorNudgeController;
 use App\Ark\Operations\Attention\DismissAdvisorNudgeController;
+use App\Ark\Operations\Booking\Http\AppointmentRequestDeclineController;
 use App\Ark\Operations\Business\BusinessCockpitController;
 use App\Ark\Operations\Commitments\OperationalCommitmentFulfillController;
 use App\Ark\Operations\Commitments\OperationalCommitmentStoreController;
@@ -160,8 +160,8 @@ use App\Ark\Operations\OperationsHomeController;
 use App\Ark\Operations\OperationsIndexController;
 use App\Ark\Operations\Parts\DealerQuoteShowController;
 use App\Ark\Operations\Parts\RepairOrderDealerQuoteCaptureController;
-use App\Ark\Operations\Parts\RepairOrderPartsTechCatalogController;
 use App\Ark\Operations\Parts\RepairOrderLinkedPartsQuoteController;
+use App\Ark\Operations\Parts\RepairOrderPartsTechCatalogController;
 use App\Ark\Operations\Parts\RepairOrderPartsTechQuoteImportController;
 use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureCancelController;
 use App\Ark\Operations\Payments\Capture\RepairOrderPaymentCaptureController;
@@ -180,6 +180,7 @@ use App\Ark\Operations\Printing\OilChangeStickerPrintController;
 use App\Ark\Operations\Printing\PartsLabelPrintController;
 use App\Ark\Operations\Printing\PrintRoutingController;
 use App\Ark\Operations\Printing\QzPrintingPocController;
+use App\Ark\Operations\Printing\QzPrintingSetupController;
 use App\Ark\Operations\Printing\QzTraySignController;
 use App\Ark\Operations\Recommendations\AddRecommendationToEstimateController;
 use App\Ark\Operations\Recommendations\CreateInspectionRecommendationController;
@@ -340,6 +341,12 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/media/outbound-mms/{token}', OutboundMmsMediaController::class)
             ->middleware('signed')
             ->name('messaging.outbound-media');
+
+        // Lets a Terminal command fetch the macOS printing setup without a browser session (public trust root only).
+        Route::get('/printing/setup/{platform}', [QzPrintingSetupController::class, 'signedDownload'])
+            ->middleware('signed')
+            ->where('platform', 'macos')
+            ->name('operations.printing.setup.signed-download');
 
     });
 
@@ -1281,6 +1288,23 @@ SurfaceRouting::appRoutes(function (): void {
         Route::get('/app/api/printing/health', [QzTraySignController::class, 'printingHealth'])
             ->middleware('permission:'.ArkCapability::SettingsManage->value)
             ->name('operations.printing.health');
+
+        Route::get('/app/printing/setup', [QzPrintingSetupController::class, 'show'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->name('operations.printing.setup');
+
+        Route::get('/app/printing/setup/download/{platform}', [QzPrintingSetupController::class, 'download'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->where('platform', 'windows|macos')
+            ->name('operations.printing.setup.download');
+
+        Route::patch('/app/printing/setup/printers', [QzPrintingSetupController::class, 'updatePrinters'])
+            ->middleware('permission:'.ArkCapability::SettingsManage->value)
+            ->name('operations.printing.setup.printers');
+
+        Route::get('/app/printing/test-label', [QzPrintingSetupController::class, 'testLabel'])
+            ->middleware('permission:'.ArkCapability::RepairOrdersView->value)
+            ->name('operations.printing.test-label');
 
         if (app()->environment('local')) {
             Route::get('/dev/qz-poc', QzPrintingPocController::class)

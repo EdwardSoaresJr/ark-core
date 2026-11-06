@@ -35,7 +35,7 @@
         'width_mm' => (float) config('printing.key_tag_qz_page.width_mm', 62),
         'height_mm' => (float) config('printing.key_tag_qz_page.height_mm', 38.1),
     ];
-    $arkQzWizardUrl = route('operations.settings.shop.edit', ['section' => 'printing']);
+    $arkQzWizardUrl = route('operations.printing.setup');
     $arkPreflightKeyTagUrl = '';
     $arkPrintJsJsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
     $arkPrintJsMsgNeedKeyTagPrinter = json_encode(__('Configure a key tag printer first'), $arkPrintJsJsonFlags);
@@ -517,7 +517,7 @@ function arkToastrWizardPrintingHint(bodyText, title) {
         (url
             ? ' <a href="' +
               url.replace(/"/g, '&quot;') +
-              '" class="font-weight-bold text-decoration-underline ml-1">Run Setup Wizard</a>'
+              '" class="font-weight-bold text-decoration-underline ml-1">Set Up Printing</a>'
             : '');
     if (window.toastr && typeof window.toastr.warning === 'function') {
         window.toastr.warning(html, title || 'Printing', { timeOut: 17000, escapeHtml: false, tapToDismiss: true });
@@ -1048,7 +1048,7 @@ function arkRenderPrinterBanner() {
         '<div class="mb-1 mb-md-0 pr-md-2"><strong>Printing Setup Required:</strong> ' + msg + '</div>' +
         '<div class="flex-shrink-0"><a href="' +
         String(url).replace(/"/g, '&quot;') +
-        '" class="btn btn-sm btn-primary">Run Setup Wizard</a></div>';
+        '" class="btn btn-sm btn-primary">Set Up Printing</a></div>';
     host.appendChild(wrap);
     host.setAttribute('data-ark-qz-banner-done', '1');
 }
@@ -1195,13 +1195,10 @@ function arkNotifyPrintError(err) {
     }
     if (code === 'SIGNING_FAILED') {
         console.error(code, err);
-        if (window.toastr && typeof window.toastr.warning === 'function') {
-            window.toastr.warning(
-                'Server signing failed or QZ could not validate the job. Approve printing in QZ Tray if prompted, check <strong>Advanced → Trusted Sites</strong>, or confirm signing under Repair Order Settings. If prompts repeat after “Always Allow”, the site certificate may have changed.',
-                'Printing',
-                { timeOut: 18000, escapeHtml: false, tapToDismiss: true }
-            );
-        }
+        arkToastrWizardPrintingHint(
+            'QZ Tray did not accept this print from ARK. Open Set Up Printing to check this computer and the shop\'s printing certificate.',
+            'Printing'
+        );
         return;
     }
     if (code === 'MAC_QL_RASTER' || code === 'QL_RASTER') {

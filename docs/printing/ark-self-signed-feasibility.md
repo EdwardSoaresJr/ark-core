@@ -6,6 +6,8 @@
 
 **Status:** Feasible for development proof-of-concept. Production rollout requires per-workstation root trust (or QZ Site Manager whitelist), not server deploy alone.
 
+> **Superseded for operations** by [workstation-setup.md](workstation-setup.md): the shop's pair now lives in `storage/app/private/qz`, and workstations trust it through ARK Print Setup (`authcert.override`), not by copying `override.crt`.
+
 ---
 
 ## Executive summary

@@ -1,7 +1,7 @@
 <div class="ops-learn-prose">
     <h3>QZ Tray for silent labels</h3>
     <p>Key tags and oil change stickers print through QZ Tray signing from the browser - advisors click print on the RO; QZ talks to the local label printer without PDF save dialogs.</p>
-    <p>Admin installs QZ Tray on counter workstations once, then trusts signing certificate via ARK <code>operations.printing.qz.sign</code> flow.</p>
+    <p>On each counter workstation, install QZ Tray once, then open <a href="{{ route('operations.printing.setup') }}">Set Up Printing</a> and run ARK Print Setup so QZ Tray trusts this shop's printing certificate. Run it again after updating QZ Tray.</p>
     <p>Health endpoint <a href="{{ route('operations.printing.health') }}">printing health</a> surfaces broken signing before counter rush.</p>
 
     <x-operations.learn.figure
@@ -18,7 +18,7 @@
     <p>PDF fallbacks (tech sheet, estimate) do not require QZ - only label paths do.</p>
 
     <h3>Troubleshooting</h3>
-    <p>Sign health route verifies certificate chain - rerun after QZ upgrade or macOS permission reset.</p>
+    <p>Set Up Printing → Check connection tells apart a QZ Tray that is not running, a workstation that does not trust the shop yet, and a server certificate problem.</p>
     <p>If labels print blank, check label stock size in driver vs ARK template - software rarely fixes wrong hardware profile.</p>
     <p>Advisor usage: <a href="{{ route('operations.learn.show', ['role' => 'advisor', 'article' => 'ro-printing']) }}">RO printing</a>.</p>
 

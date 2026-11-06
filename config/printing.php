@@ -38,6 +38,7 @@ return [
         'certificate_path' => env('QZ_CERTIFICATE_PATH', ''),
         'private_key_path' => env('QZ_PRIVATE_KEY_PATH', ''),
         'private_key_passphrase' => env('QZ_PRIVATE_KEY_PASSPHRASE', ''),
+        'trust_root_path' => env('QZ_TRUST_ROOT_PATH', ''),
         'signature_algorithm' => env('QZ_SIGNATURE_ALGORITHM', 'sha512'),
         'sign_cache_ttl' => (int) env('QZ_SIGN_CACHE_TTL', 30),
     ],
