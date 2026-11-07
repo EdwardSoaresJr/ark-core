@@ -1,6 +1,6 @@
 /*
  * The top bar's page actions (components.tabler.page-context). Below md the secondary actions move into the bar's
- * overflow menu, so the bar stays one row with the primary action in view; from md they move back in place. The
+ * overflow menu (More page actions), so the bar stays one row with the primary action in view; from md they move back in place. The
  * elements themselves move, keeping their listeners and forms. A worksheet refresh that replaces the bar is
  * arranged again by the observer.
  */

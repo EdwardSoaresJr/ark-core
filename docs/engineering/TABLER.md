@@ -84,7 +84,7 @@ One compact bar holds the page's context and the global controls. `<x-tabler.pag
 
 - **Left:** breadcrumbs, then the title (`h2.page-title`), the `meta` slot (a status badge), and the subtitle. Breadcrumbs are `[['label' => …, 'url' => …], …]`; without them a `pretitle` becomes a single unlinked crumb, and a crumb that repeats the title is dropped. Link a crumb only to a page the same permission opens.
 - **Right:** the page's actions, a divider, then Inbox, the workstation, and the account menu.
-- **Narrow screens:** the title truncates rather than wrapping the bar; the subtitle shows from `xl`, the crumbs from `md`. Below `md` secondary actions (`<x-tabler.page-action>` without `primary`) move into the bar's "More actions" menu (`resources/js/ark-page-context.js`, which moves the elements themselves, so listeners and forms keep working); the primary action stays, icon-only below `sm`. Other markup in the actions slot (a dropdown, a form) stays in the bar.
+- **Narrow screens:** the title truncates rather than wrapping the bar; the subtitle shows from `xl`, the crumbs from `md`. Below `md` secondary actions (`<x-tabler.page-action>` without `primary`) move into the bar's "More page actions" menu (`resources/js/ark-page-context.js`, which moves the elements themselves, so listeners and forms keep working); the primary action stays, icon-only below `sm`. Other markup in the actions slot (a dropdown, a form) stays in the bar.
 - **Scripts:** the bar has its own empty `x-data`, so Alpine handlers in actions run; a handler must not rely on the page's Alpine scope. The bar's id is `ark-page-context`: a worksheet page lists it in `continuityPanelIds` so a refresh replaces the bar with the page's fresh copy (the repair order does).
 - The bar is not sticky; the workspace strip below it is. There is no title row, so the page body starts 1rem under the bar.
 
@@ -134,7 +134,7 @@ Build record pages from these. Do not copy their markup into a view.
 | Component | Renders |
 | --- | --- |
 | `<x-tabler.page layout="…" [title] [breadcrumbs] [pretitle] [subtitle] [title-count] [actions-label]>` | The body in the layout's container; the title, breadcrumbs, subtitle, `meta` slot and `actions` slot in the top bar. `actions-label` names the action group for assistive technology. |
-| `<x-tabler.page-action [href] icon label [primary]>` | A top bar button, one element with its label. Without `href` it is a `<button>`; pass its behavior as attributes, for example `x-on:click`. Secondary actions move into the bar's "More actions" menu below `md`; the primary action is icon-only below `sm`. |
+| `<x-tabler.page-action [href] icon label [primary]>` | A top bar button, one element with its label. Without `href` it is a `<button>`; pass its behavior as attributes, for example `x-on:click`. Secondary actions move into the bar's "More page actions" menu below `md`; the primary action is icon-only below `sm`. |
 | `<x-tabler.search-filters id action query placeholder label clear-url has-filters active-filter-count>` | The search card: search box and button, the phone Filters toggle and count, and the collapsible filter row. The slot holds the filter columns; an optional `hidden` slot holds hidden inputs. Field ids are `{id}-search` and `{id}-filters`. |
 | `<x-tabler.record-card :tone :actions>` | A `.card-sm` with the status color bar, the slot as its body, and the open-in icon row from `operations.partials.tabler-index-card-actions`. |
 | `<x-tabler.empty-state icon clear-url>` | The empty result, with "Clear search" when `clear-url` is set. |
@@ -156,7 +156,7 @@ Design the phone layout first, not as a squeezed desktop.
 - Secondary filters sit in a `.collapse.d-md-block` panel behind a "Filters" toggle that is `d-md-none`. The panel opens on load when a filter is active, and the toggle shows the active count.
 - Labels that repeat a placeholder are `d-none d-md-block`. The input then carries an `aria-label`.
 - The top bar stays one row: page subtitles show from `xl`, breadcrumbs from `md`, and the title truncates.
-- Secondary page actions sit in the top bar's "More actions" menu below `md`. The primary action stays in the bar, icon-only below `sm` with its `aria-label`.
+- Secondary page actions sit in the top bar's "More page actions" menu below `md`. The primary action stays in the bar, icon-only below `sm` with its `aria-label`.
 - Card bodies and search cards use `p-2 p-md-3`. Touch targets stay at Tabler's default button size.
 
 ## Checklist per view
@@ -237,7 +237,7 @@ Still on `app.css`: the shell components. `x-operations.date-field`, `operations
 
 Chosen third: the first record page, with tabs, deep links, inline forms, a modal, and permission-gated commands.
 
-Layout: `fluid`, not `split`. The hub is one record read top to bottom, and its tabs hold long lists and forms; panels that scroll on their own would hide the page's length and trap scrolling on phones. From `xl` the profile is a column beside the tab card (`col-xl-4 col-xxl-3`); below `xl` it sits above, with the contact and open-RO cards side by side from `md`. On a 390px phone the top bar keeps the name on one line, Create RO stays in the bar, and Call, Text, Schedule, and Edit are in its More actions menu.
+Layout: `fluid`, not `split`. The hub is one record read top to bottom, and its tabs hold long lists and forms; panels that scroll on their own would hide the page's length and trap scrolling on phones. From `xl` the profile is a column beside the tab card (`col-xl-4 col-xxl-3`); below `xl` it sits above, with the contact and open-RO cards side by side from `md`. On a 390px phone the top bar keeps the name on one line, Create RO stays in the bar, and Call, Text, Schedule, and Edit are in its More page actions menu.
 
 Before: `ops-hub-layout`, `ops-hub-profile`, `ops-report-tab`, `ops-hub-tab-*`, `ops-workspace`, `ops-section-label`, `ops-hub-vehicle-*`, `ops-ro-card`, `ops-status-chip--{tone}`, `ops-index-btn`, and Tailwind layout utilities.
 

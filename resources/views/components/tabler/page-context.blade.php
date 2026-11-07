@@ -39,7 +39,7 @@
         <div class="ark-page-context__actions btn-list flex-nowrap" role="group" aria-label="{{ $actionsLabel ?: __('Page actions') }}" data-ark-page-actions>
             {{ $actions }}
             <div class="dropdown" data-ark-page-overflow hidden>
-                <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-label="{{ __('More actions') }}" title="{{ __('More actions') }}">
+                <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-label="{{ __('More page actions') }}" title="{{ __('More page actions') }}">
                     <x-tabler.icon name="dots" />
                 </button>
                 <div class="dropdown-menu dropdown-menu-end" data-ark-page-overflow-menu></div>
