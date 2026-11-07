@@ -361,3 +361,28 @@ test('staff can deliberately reduce approved labor kept at the old rate, keeping
         ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder)->totalCents())->toBe(32400)
         ->and(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder)->invoiceTotalCents)->toBe(32400);
 });
+
+test('a zero-rate policy and an explicit no-charge rate stay $0, while Courtesy on Customer Pay keeps its policy rate', function () {
+    $repairOrder = billingRepricingRepairOrder('Retail');
+    $comeback = billingRepricingConcern($repairOrder, 'Comeback', ConcernBillingPosture::Comeback);
+    $customerPay = billingRepricingConcern($repairOrder, 'Customer pay', ConcernBillingPosture::CustomerPay);
+
+    $zeroRatePolicy = billingRepricingLabor($repairOrder, $comeback, 'mechanical');
+    $noCharge = billingRepricingLabor($repairOrder, $customerPay, 'mechanical', [
+        'unit_price' => '0.00',
+        'labor_rate_overridden' => '1',
+        'labor_rate_override_reason' => LaborRateOverrideReason::CustomerGoodwill->value,
+    ]);
+    $courtesy = billingRepricingLabor($repairOrder, $customerPay, 'courtesy');
+
+    expect($zeroRatePolicy->fresh())->unit_price_cents->toBe(0)->resolved_from_posture->toBe('comeback')
+        ->and($noCharge->fresh())->unit_price_cents->toBe(0)->labor_rate_override_reason->toBe('customer_goodwill')
+        ->and($courtesy->fresh())->unit_price_cents->toBe(16500)->resolved_from_posture->toBe('customer_pay');
+
+    billingRepricingChange($repairOrder, $comeback, ConcernBillingPosture::CustomerPay)->assertSessionHasNoErrors();
+    billingRepricingChange($repairOrder, $customerPay, ConcernBillingPosture::RepairPal)->assertSessionHasNoErrors();
+
+    expect($zeroRatePolicy->fresh()->unit_price_cents)->toBe(0)
+        ->and($noCharge->fresh()->unit_price_cents)->toBe(0)
+        ->and($noCharge->fresh()->labor_rate_override_reason)->toBe('customer_goodwill');
+});
