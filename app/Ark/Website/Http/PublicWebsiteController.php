@@ -339,16 +339,23 @@ final class PublicWebsiteController
         ]);
     }
 
+    /**
+     * Any other path on a shop host. A missing page says so: whether this shop's website is published
+     * here or by another product, an unknown address says nothing about it.
+     */
     public function legacy(Request $request, string $legacyPath): RedirectResponse|Response
     {
         $website = $this->requireWebsite($request);
-        if (! $website instanceof PublishedWebsite) {
+        if ($website instanceof RedirectResponse) {
             return $website;
+        }
+        if (! $website instanceof PublishedWebsite) {
+            return $this->pageNotFound();
         }
 
         $target = PublicLegacyRedirect::resolve($legacyPath, $website);
         if ($target === null) {
-            return $this->missing();
+            return $this->pageNotFound();
         }
 
         return $this->legacyRedirect($request, $target);
@@ -488,6 +495,11 @@ XML;
     private function missing(): Response
     {
         return response()->view('website.unpublished', [], 404);
+    }
+
+    private function pageNotFound(): Response
+    {
+        return response()->view('website.not-found', [], 404);
     }
 
     /**
