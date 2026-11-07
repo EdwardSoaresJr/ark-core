@@ -94,6 +94,9 @@ trait NormalizesShopPartsMatrices
                         : ($existing['discount_amount'] ?? null),
                     'default_parts_matrix_key' => $matrixKey !== null && $matrixKeys->contains($matrixKey) ? $matrixKey : null,
                     'pill_color' => $row['pill_color'] ?? $existing['pill_color'] ?? null,
+                    'concern_billing_posture' => array_key_exists('concern_billing_posture', $row)
+                        ? $row['concern_billing_posture']
+                        : ($existing['concern_billing_posture'] ?? null),
                 ]);
             })
             ->values()

@@ -637,6 +637,7 @@ class EstimateTotalsCalculator
             ->filter(fn (RepairOrderLine $line): bool => $line->type->isShopFeeEligible())
             ->filter(fn (RepairOrderLine $line): bool => ($subtotals[$line->id] ?? 0) > 0)
             ->filter(fn (RepairOrderLine $line): bool => $this->shopFeesApplyToLine(
+                $repairOrder,
                 $line,
                 $concernsById,
                 $settings,
@@ -647,8 +648,8 @@ class EstimateTotalsCalculator
             return [];
         }
 
-        $rawFees = $eligibleLines->mapWithKeys(function (RepairOrderLine $line) use ($subtotals, $concernsById, $settings): array {
-            $rate = $this->shopFeeRateForLine($line, $concernsById, $settings);
+        $rawFees = $eligibleLines->mapWithKeys(function (RepairOrderLine $line) use ($repairOrder, $subtotals, $concernsById, $settings): array {
+            $rate = $this->shopFeeRateForLine($repairOrder, $line, $concernsById, $settings);
 
             if (BigDecimal::of($rate)->isZero()) {
                 return [$line->id => 0];
@@ -661,6 +662,10 @@ class EstimateTotalsCalculator
                     ->toInt(),
             ];
         });
+
+        if ($repairOrder->usesPerLineShopFees()) {
+            return $this->perLineShopFees($rawFees, $settings->shop_fee_cap_cents);
+        }
 
         $totalFeeCents = (int) $rawFees->sum();
 
@@ -693,6 +698,45 @@ class EstimateTotalsCalculator
         }
 
         return $allocated;
+    }
+
+    /**
+     * Each line keeps the fee its own rate produced. Only an exceeded cap reduces them, in
+     * proportion to those fees, with leftover cents going to the largest remainders.
+     *
+     * @param  Collection<int, int>  $rawFees
+     * @return array<int, int>
+     */
+    private function perLineShopFees(Collection $rawFees, ?int $capCents): array
+    {
+        $fees = $rawFees->filter(fn (int $fee): bool => $fee > 0);
+        $totalFeeCents = (int) $fees->sum();
+
+        if ($capCents === null || $totalFeeCents <= $capCents) {
+            return $fees->all();
+        }
+
+        $allocated = [];
+        $remainders = [];
+
+        foreach ($fees as $lineId => $fee) {
+            $allocated[$lineId] = intdiv($fee * $capCents, $totalFeeCents);
+            $remainders[$lineId] = ($fee * $capCents) % $totalFeeCents;
+        }
+
+        $leftoverCents = $capCents - array_sum($allocated);
+        arsort($remainders);
+
+        foreach (array_keys($remainders) as $lineId) {
+            if ($leftoverCents <= 0) {
+                break;
+            }
+
+            $allocated[$lineId]++;
+            $leftoverCents--;
+        }
+
+        return array_filter($allocated, fn (int $fee): bool => $fee > 0);
     }
 
     /**
@@ -766,25 +810,27 @@ class EstimateTotalsCalculator
      * @param  Collection<int, RepairOrderConcern>  $concernsById
      */
     private function shopFeesApplyToLine(
+        RepairOrder $repairOrder,
         RepairOrderLine $line,
         Collection $concernsById,
         ShopSettings $settings,
     ): bool {
         $posture = $this->billingPostureForLine($line, $concernsById);
 
-        return $posture->shopFeePolicy($settings)['enabled'];
+        return $repairOrder->shopFeePolicyFor($posture, $settings)['enabled'];
     }
 
     /**
      * @param  Collection<int, RepairOrderConcern>  $concernsById
      */
     private function shopFeeRateForLine(
+        RepairOrder $repairOrder,
         RepairOrderLine $line,
         Collection $concernsById,
         ShopSettings $settings,
     ): string {
         $posture = $this->billingPostureForLine($line, $concernsById);
-        $policy = $posture->shopFeePolicy($settings);
+        $policy = $repairOrder->shopFeePolicyFor($posture, $settings);
 
         if (! $policy['enabled']) {
             return '0';

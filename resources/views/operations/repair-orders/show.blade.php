@@ -1791,8 +1791,7 @@
                         <div id="worksheet-concerns" class="d-flex flex-column gap-3">
                         @forelse ($worksheetConcerns as $concern)
                             @php
-                                $concernPartsMatrixKey = $concern->billing_posture
-                                    ->defaultPartsMatrix($partstechShopSettings)['key'];
+                                $concernPartsMatrixKey = $concern->defaultPartsMatrix($partstechShopSettings, $repairOrder->customer)['key'];
                                 $concernLaborDefaults = $partstechShopSettings->laborDefaultsForConcern(
                                     $concern->billing_posture,
                                     $repairOrder->customer,

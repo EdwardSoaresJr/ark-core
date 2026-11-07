@@ -7,7 +7,7 @@
     $billingDetail = function (array $presentation): string {
         return '$'.$presentation['rate'].'/hr · '.$presentation['matrix_name'].' · '.$presentation['shop_fee_summary'];
     };
-    $currentBilling = $shopSettings->billingPostureOptionPresentation($posture);
+    $currentBilling = $shopSettings->billingPostureOptionPresentation($posture, $repairOrder ?? null);
     $canChangeBilling = auth()->user()?->can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value) ?? false;
 @endphp
 
@@ -59,7 +59,7 @@
                 <h6 class="dropdown-header">Billing</h6>
                 @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $option)
                     @php
-                        $billingOption = $shopSettings->billingPostureOptionPresentation($option);
+                        $billingOption = $shopSettings->billingPostureOptionPresentation($option, $repairOrder ?? null);
                         $isCurrent = $option === $posture;
                     @endphp
                     <button

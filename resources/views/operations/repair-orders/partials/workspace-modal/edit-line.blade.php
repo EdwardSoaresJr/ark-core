@@ -1,7 +1,6 @@
 @php
     $concernDefaultPartPricingMode = $concern->billing_posture->prefersManualPartPricing() ? 'manual' : 'matrix';
-    $concernPartsMatrixKey = $concern->billing_posture
-        ->defaultPartsMatrix($partstechShopSettings)['key'];
+    $concernPartsMatrixKey = $concern->defaultPartsMatrix($partstechShopSettings, $repairOrder->customer)['key'];
     $concernLaborDefaults = $partstechShopSettings->laborDefaultsForConcern(
         $concern->billing_posture,
         $repairOrder->customer,

@@ -21,7 +21,7 @@
         'concerns' => $repairOrder->concerns->sortBy('position')->values()->map(fn ($concern): array => [
             'id' => $concern->id,
             'summary' => $concern->summary,
-            'default_parts_matrix_key' => $concern->defaultPartsMatrix($cartShopSettings)['key'],
+            'default_parts_matrix_key' => $concern->defaultPartsMatrix($cartShopSettings, $repairOrder->customer)['key'],
             'work_groups' => $concern->workGroups
                 ->map(fn ($workGroup): array => [
                     'id' => $workGroup->id,

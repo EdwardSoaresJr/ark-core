@@ -6,6 +6,7 @@ use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\ManualPaymentMethods;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
+use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\Settings\Concerns\InteractsWithShopSettingsPersistence;
 use App\Ark\Operations\Settings\Concerns\NormalizesShopPartsMatrices;
 use App\Ark\Operations\Settings\ShopSettings;
@@ -157,6 +158,10 @@ public function updateCustomerTypes(Request $request): RedirectResponse
             'customer_types.*.discount_amount' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'customer_types.*.document_presentation_profile' => ['nullable', Rule::enum(CustomerPartPresentationProfile::class)],
             'customer_types.*.pill_color' => ['nullable', 'string', Rule::in(\App\Ark\Operations\Settings\BillingClassPillColor::keys())],
+            'customer_types.*.concern_billing_posture' => ['nullable', 'string', Rule::in(array_map(
+                fn (ConcernBillingPosture $posture): string => $posture->value,
+                ConcernBillingPosture::advisorSelectableCases(),
+            ))],
         ]);
 
         $settings = ShopSettings::current();

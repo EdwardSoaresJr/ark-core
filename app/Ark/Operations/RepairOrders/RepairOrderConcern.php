@@ -2,6 +2,7 @@
 
 namespace App\Ark\Operations\RepairOrders;
 
+use App\Ark\Operations\Customers\Customer;
 use App\Ark\Operations\Settings\ShopSettings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -227,9 +228,19 @@ class RepairOrderConcern extends Model
         return $this->disposition === RepairOrderConcernDisposition::Approved;
     }
 
-    public function defaultPartsMatrix(?ShopSettings $settings = null): array
+    /**
+     * A concern on shop default billing follows its customer's billing class, so it uses the parts
+     * matrix that class names.
+     */
+    public function defaultPartsMatrix(?ShopSettings $settings = null, ?Customer $customer = null): array
     {
         $settings ??= ShopSettings::current();
+
+        if ($this->billing_posture === ConcernBillingPosture::Default) {
+            $customerType = ($customer ?? $this->repairOrder?->customer)?->customer_type;
+
+            return $settings->partsMatrixForCustomerTypeProfile($customerType) ?? $settings->defaultPartsMatrix();
+        }
 
         return $this->billing_posture->defaultPartsMatrix($settings);
     }

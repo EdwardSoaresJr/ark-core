@@ -113,7 +113,7 @@ enum ConcernBillingPosture: string
             return self::Default;
         }
 
-        return self::defaultForCustomerTag($customer->customer_type);
+        return ShopSettings::current()->concernBillingPostureForCustomerType($customer->customer_type);
     }
 
     public static function defaultForCustomerTag(?string $customerTag): self

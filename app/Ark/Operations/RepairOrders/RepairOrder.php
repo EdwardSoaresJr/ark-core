@@ -22,6 +22,7 @@ use App\Ark\Operations\Inspections\Inspection;
 use App\Ark\Operations\Inspections\InspectionTemplate;
 use App\Ark\Operations\Portal\EstimateAccessToken;
 use App\Ark\Operations\RepairOrders\Status\RepairOrderStatusCatalog;
+use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Vehicles\Vehicle;
 use App\Ark\Operations\Vehicles\VehicleIdentityPressure;
 use App\Models\User;
@@ -34,7 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
+#[Fillable(['public_id', 'growth_session_id', 'repair_order_id', 'encounter_id', 'customer_id', 'default_billing_posture', 'shop_fee_rules', 'vehicle_id', 'assigned_technician_id', 'required_inspection_template_id', 'status', 'close_variant_key', 'lost_reason_key', 'lost_reason_note', 'lost_reason_recorded_at', 'lost_reason_recorded_by', 'review_request_sent', 'review_not_requested_reason', 'review_request_recorded_at', 'review_request_recorded_by', 'estimate_version', 'estimate_version_actor_id', 'estimate_version_at', 'payment_status', 'collection_disposition', 'collection_disposition_reason', 'paid_at', 'concern_summary', 'visit_reason', 'tow_incoming', 'waiting_here', 'drop_off', 'needs_shuttle', 'warranty', 'fleet', 'appointment', 'mileage_in', 'mileage_out', 'opened_at', 'closed_at', 'posted_at'])]
 class RepairOrder extends Model
 {
     protected static function booted(): void
@@ -51,6 +52,13 @@ class RepairOrder extends Model
             }
 
             $repairOrder->repair_order_id = static::nextShopRepairOrderId();
+        });
+
+        // Stamped once so later recalculations never switch an existing repair order's fee rules.
+        static::creating(function (RepairOrder $repairOrder): void {
+            if (! array_key_exists('shop_fee_rules', $repairOrder->getAttributes())) {
+                $repairOrder->setAttribute('shop_fee_rules', self::SHOP_FEES_PER_LINE);
+            }
         });
     }
 
@@ -654,6 +662,36 @@ class RepairOrder extends Model
         return filled($this->getAttribute('default_billing_posture'));
     }
 
+    /**
+     * Repair orders without per-line fee rules (all created before them) pool their shop fee
+     * and spread it by subtotal, and Shop default concerns use the shop-wide fee rule.
+     */
+    public function usesPerLineShopFees(): bool
+    {
+        return (int) $this->getAttribute('shop_fee_rules') >= self::SHOP_FEES_PER_LINE;
+    }
+
+    /**
+     * @return array{enabled: bool, rate: string|null}
+     */
+    public function shopFeePolicyFor(ConcernBillingPosture $posture, ShopSettings $settings): array
+    {
+        if (! $settings->shop_fee_enabled) {
+            return ['enabled' => false, 'rate' => null];
+        }
+
+        if ($posture === ConcernBillingPosture::Default && $this->usesPerLineShopFees()) {
+            $this->loadMissing('customer');
+            $policy = $settings->shopFeePolicyForCustomerType($this->customer?->customer_type);
+
+            return $policy['enabled'] && $policy['rate'] === null
+                ? $settings->shopFeePolicyForBillingDefault()
+                : $policy;
+        }
+
+        return $posture->shopFeePolicy($settings);
+    }
+
     public function ensureOpenForEditing(): void
     {
         abort_if($this->isTerminal(), 423, 'Terminal repair orders cannot be changed.');
@@ -705,6 +743,8 @@ class RepairOrder extends Model
 
         return ! ($this->vehicle?->hasVin() ?? false);
     }
+
+    public const SHOP_FEES_PER_LINE = 2;
 
     public const ESTIMATE_SEND_DRAFT_ONLY_MESSAGE = 'This estimate only contains Draft concerns. Draft work is not shown to the customer. Mark the work you are recommending before sending it.';
 

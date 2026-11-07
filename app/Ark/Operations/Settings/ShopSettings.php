@@ -15,6 +15,7 @@ use App\Ark\Operations\Labor\LaborAuthority;
 use App\Ark\Operations\Parts\CustomerPartDescriptionMode;
 use App\Ark\Operations\Parts\CustomerPartPresentationProfile;
 use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\RepairOrderVisitMode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -944,13 +945,13 @@ TEXT;
      *     shop_fee_summary: string
      * }
      */
-    public function billingPostureOptionPresentation(ConcernBillingPosture $posture): array
+    public function billingPostureOptionPresentation(ConcernBillingPosture $posture, ?RepairOrder $repairOrder = null): array
     {
         $labor = $this->laborDefaultsForBillingPosture($posture);
         $rate = $labor['rate'];
         $matrix = $posture->defaultPartsMatrix($this);
         $matrixName = (string) ($matrix['name'] ?? 'Shop matrix');
-        $shopFee = $posture->shopFeePolicy($this);
+        $shopFee = $repairOrder?->shopFeePolicyFor($posture, $this) ?? $posture->shopFeePolicy($this);
 
         // decimal:3 cast stringifies as e.g. "5.000" - present "5" / "5.25".
         $feeRate = filled($shopFee['rate'])
@@ -1611,6 +1612,7 @@ TEXT;
             : null;
 
         $resolvedName = $name !== '' ? $name : 'Retail';
+        $concernBillingPosture = self::selectableConcernBillingPosture($row['concern_billing_posture'] ?? null);
 
         return [
             'name' => $resolvedName,
@@ -1630,7 +1632,30 @@ TEXT;
                     : null),
             'default_parts_matrix_key' => $row['default_parts_matrix_key'] ?? $defaults['default_parts_matrix_key'] ?? null,
             'pill_color' => BillingClassPillColor::resolve($row['pill_color'] ?? null, $resolvedName),
+            ...($concernBillingPosture !== null ? ['concern_billing_posture' => $concernBillingPosture->value] : []),
         ];
+    }
+
+    /**
+     * The billing a new concern starts with for a customer in this billing class: the billing the
+     * class names when the shop chose one, otherwise the billing its name implies.
+     */
+    public function concernBillingPostureForCustomerType(?string $customerType): ConcernBillingPosture
+    {
+        $row = collect($this->customerTypeRows())
+            ->first(fn (array $row): bool => strcasecmp($row['name'], trim((string) $customerType)) === 0);
+
+        return self::selectableConcernBillingPosture($row['concern_billing_posture'] ?? null)
+            ?? ConcernBillingPosture::defaultForCustomerTag($customerType);
+    }
+
+    private static function selectableConcernBillingPosture(mixed $value): ?ConcernBillingPosture
+    {
+        $posture = is_string($value) ? ConcernBillingPosture::tryFrom($value) : null;
+
+        return $posture !== null && in_array($posture, ConcernBillingPosture::advisorSelectableCases(), true)
+            ? $posture
+            : null;
     }
 
     /**
