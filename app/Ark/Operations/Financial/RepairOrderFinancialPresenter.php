@@ -86,6 +86,7 @@ final class RepairOrderFinancialPresenter
                 $balance->writeOffsCents > 0
                 || $balance->refundsAppliedCents > 0
                 || $balance->creditsAppliedCents > 0
+                || $balance->creditDueToStoreCreditCents > 0
             );
         $canRefreshInvoice = $invoiceNeedsRefresh
             && ! $invoiceRefreshBlockedBySettlement

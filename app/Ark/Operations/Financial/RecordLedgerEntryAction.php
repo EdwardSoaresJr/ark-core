@@ -90,6 +90,46 @@ final class RecordLedgerEntryAction
         return $this->record($repairOrder, LedgerEntryType::Refund, $amountCents, null, $actor, $reference, $invoice->id);
     }
 
+    /**
+     * Settles credit due on a revised invoice: a refund pays it back; store credit adds it to the
+     * customer's store credit balance. Either way the invoice no longer shows it as owed.
+     */
+    public function resolveCreditDue(
+        RepairOrder $repairOrder,
+        int $amountCents,
+        bool $asStoreCredit,
+        ?User $actor = null,
+        ?string $reference = null,
+    ): RepairOrderLedgerEntry {
+        $repairOrder->loadMissing('customer');
+        $balance = $this->balanceDue->forRepairOrder($repairOrder);
+
+        if ($amountCents <= 0 || $amountCents > $balance->overpaidCents) {
+            throw new RuntimeException('Enter an amount up to the credit due of $'.number_format($balance->overpaidCents / 100, 2).'.');
+        }
+
+        if (! $asStoreCredit) {
+            return $this->recordRefund($repairOrder, $amountCents, $actor, $reference);
+        }
+
+        return DB::transaction(function () use ($repairOrder, $amountCents, $actor, $reference): RepairOrderLedgerEntry {
+            $entry = $this->persistEntry(
+                $repairOrder,
+                $this->balanceDue->issuedInvoice($repairOrder)?->id,
+                LedgerEntryType::StoreCreditIssuance,
+                $amountCents,
+                RepairOrderLedgerEntry::CREDIT_DUE_STORE_CREDIT,
+                $actor,
+                $reference,
+            );
+            $this->increaseStoreCredit($repairOrder->customer, $amountCents);
+            $this->invoicePdfRefresh->markDirtyForRepairOrder($repairOrder);
+            $this->paymentPostureSync->sync($repairOrder->fresh());
+
+            return $entry;
+        });
+    }
+
     public function recordAdjustment(
         RepairOrder $repairOrder,
         int $amountCents,

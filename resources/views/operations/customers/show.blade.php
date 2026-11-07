@@ -98,6 +98,18 @@
                                         @endif
                                     </div>
 
+                                    @if ($creditDueRepairOrders->isNotEmpty())
+                                        <div class="alert alert-danger small mt-2 mb-0" role="status" data-customer-credit-due>
+                                            <div class="fw-bold">Credit due to this customer</div>
+                                            @foreach ($creditDueRepairOrders as $creditDue)
+                                                <div>
+                                                    <a href="{{ route('operations.repair-orders.show', $creditDue['repair_order']) }}#financial-rail">RO #{{ $creditDue['repair_order']->repair_order_id }}</a>:
+                                                    ${{ number_format($creditDue['credit_due_cents'] / 100, 2) }} to refund or issue as store credit
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
                                     @if ($customer->contact_preference || $activeRepairOrders->count() > 0)
                                         <div class="mt-2 d-flex flex-wrap gap-1">
                                             @if ($customer->contact_preference)

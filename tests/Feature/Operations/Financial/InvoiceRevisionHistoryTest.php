@@ -8,11 +8,15 @@ use App\Ark\Operations\Events\OperationalEvent;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Financial\BalanceDueCalculator;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
+use App\Ark\Operations\Financial\FinancialPositionCalculator;
 use App\Ark\Operations\Financial\InvoiceSnapshotBuilder;
 use App\Ark\Operations\Financial\PaymentMethod;
 use App\Ark\Operations\Financial\RecordLedgerEntryAction;
+use App\Ark\Operations\Financial\RefreshCustomerInvoiceAction;
+use App\Ark\Operations\Financial\RepairOrderCloseoutAuthority;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderLine;
+use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\RepairOrders\WorkCompletionAuthorization;
 use App\Ark\Runtime\Authorization\ArkRole;
 use App\Models\User;
@@ -256,4 +260,63 @@ test('raising approved work does not raise the invoice before the customer appro
         ->and($invoice->fresh()->wasPresentedToCustomer())->toBeTrue()
         ->and(app(WorkCompletionAuthorization::class)->linesRequiringAuthorization($repairOrder)->pluck('id')->all())->toBe([$line->id])
         ->and(app(EstimateTotalsCalculator::class)->approvedTotalsForRead($repairOrder)->totalCents())->toBe(15000);
+});
+
+test('a repair order closes with credit due, which stays visible and is settled as store credit once', function () {
+    [$repairOrder, $line, $invoice] = revisionHistoryRepairOrder();
+    payRepairOrderInFull($repairOrder->fresh());
+    revisionHistoryPatchHours($repairOrder, $line, '0.50');
+
+    expect(app(RepairOrderCloseoutAuthority::class)->canClose($repairOrder->fresh()))->toBeTrue();
+    $repairOrder->forceFill(['status' => RepairOrderStatus::Closed])->save();
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee('Refund or credit due: $75.00', false)
+        ->assertSee('data-credit-due-form', false);
+    $this->get(route('operations.customers.show', $repairOrder->customer))
+        ->assertOk()
+        ->assertSee('data-customer-credit-due', false)
+        ->assertSee('$75.00 to refund or issue as store credit', false);
+
+    $this->post(route('operations.repair-orders.credit-due.store', $repairOrder), ['amount' => '80.00', 'settle_as' => 'store_credit'])
+        ->assertSessionHasErrors(['amount' => 'Enter an amount up to the credit due of $75.00.']);
+
+    $this->post(route('operations.repair-orders.credit-due.store', $repairOrder), ['amount' => '75.00', 'settle_as' => 'store_credit'])
+        ->assertSessionHasNoErrors();
+
+    $balance = app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh());
+    expect($balance)
+        ->overpaidCents->toBe(0)
+        ->balanceDueCents->toBe(0)
+        ->creditDueToStoreCreditCents->toBe(7500)
+        ->collectedCents()->toBe(7500)
+        ->and($repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(7500)
+        ->and(app(FinancialPositionCalculator::class)->for($repairOrder->fresh())->customerOwesTodayCents)->toBe(0)
+        ->and(OperationalEvent::query()->where('event_name', OperationalEventName::InvoiceCreditDueResolved->value)->sole()->payload_json)
+        ->toMatchArray(['settled_as' => 'store_credit', 'amount_cents' => 7500]);
+
+    $this->get(route('operations.customers.show', $repairOrder->customer))->assertOk()->assertDontSee('data-customer-credit-due', false);
+});
+
+test('a refund settles credit due, and settled invoices stop updating with a clear explanation', function () {
+    [$repairOrder, $line, $invoice] = revisionHistoryRepairOrder();
+    payRepairOrderInFull($repairOrder->fresh());
+    revisionHistoryPatchHours($repairOrder, $line, '0.50');
+
+    $this->post(route('operations.repair-orders.credit-due.store', $repairOrder), ['amount' => '75.00', 'settle_as' => 'refund'])
+        ->assertSessionHasNoErrors();
+
+    expect(app(BalanceDueCalculator::class)->forRepairOrder($repairOrder->fresh()))
+        ->overpaidCents->toBe(0)
+        ->refundsAppliedCents->toBe(7500)
+        ->and($repairOrder->customer->fresh()->store_credit_balance_cents)->toBe(0);
+
+    revisionHistoryPatchHours($repairOrder, $line, '1.00');
+
+    expect(revisionHistoryTotal($invoice))->toBe(7500);
+
+    $this->get(route('operations.repair-orders.show', $repairOrder))
+        ->assertOk()
+        ->assertSee(RefreshCustomerInvoiceAction::SETTLED_EXPLANATION, false);
 });

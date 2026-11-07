@@ -48,7 +48,7 @@
                         </form>
                     @elseif ($financial['invoiceRefreshBlockedBySettlement'] ?? false)
                         <div class="mt-2">
-                            Write-off, refund, or store credit is on file - invoice cannot auto-update. Use credit memo, adjustment, or refund workflows.
+                            {{ App\Ark\Operations\Financial\RefreshCustomerInvoiceAction::SETTLED_EXPLANATION }}
                         </div>
                     @endif
                 @endcan
@@ -57,7 +57,28 @@
         @if ($financial['invoiceOverpaid'] ?? null)
             <div class="alert alert-danger mb-0 small mt-2" role="status" data-invoice-overpaid="{{ $financial['invoiceOverpaidCents'] }}">
                 <div class="fw-bold">Refund or credit due: {{ $financial['invoiceOverpaid'] }}</div>
-                <div>The revised invoice is less than what the customer paid. Record the refund, or issue store credit, for the difference.</div>
+                <div>The revised invoice is less than what the customer paid. Refund the difference or issue it as store credit. This stays on the repair order until it is settled, including after it is closed.</div>
+                @can(App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersCloseout->value)
+                    <form
+                        method="POST"
+                        action="{{ route('operations.repair-orders.credit-due.store', $repairOrder) }}"
+                        class="d-flex flex-column gap-2 mt-2"
+                        data-refresh-scope="financial"
+                        data-credit-due-form
+                        @submit.prevent="submitWorksheetForm($event)"
+                    >
+                        @csrf
+                        <label class="visually-hidden" for="credit-due-amount-{{ $repairOrder->repair_order_id }}">Amount</label>
+                        <input id="credit-due-amount-{{ $repairOrder->repair_order_id }}" name="amount" inputmode="decimal" required value="{{ number_format($financial['invoiceOverpaidCents'] / 100, 2, '.', '') }}" class="form-control">
+                        <label class="visually-hidden" for="credit-due-settle-{{ $repairOrder->repair_order_id }}">Settle as</label>
+                        <select id="credit-due-settle-{{ $repairOrder->repair_order_id }}" name="settle_as" class="form-select">
+                            <option value="refund">Refund to customer</option>
+                            <option value="store_credit">Issue as store credit</option>
+                        </select>
+                        <input name="reference" type="text" placeholder="Reference / note (optional)" class="form-control">
+                        <button type="submit" class="btn btn-outline-danger w-100">Settle credit due</button>
+                    </form>
+                @endcan
             </div>
         @endif
         </div>

@@ -20,6 +20,8 @@ use RuntimeException;
  */
 final class RefreshCustomerInvoiceAction
 {
+    public const SETTLED_EXPLANATION = 'A refund, store credit or write-off is recorded against this invoice, so ARK no longer updates it automatically. To revise it, void that ledger entry and then use Refresh Invoice, or settle the difference with a refund or store credit.';
+
     public function __construct(
         private readonly BalanceDueCalculator $balanceDue,
         private readonly InvoiceSnapshotBuilder $snapshotBuilder,
@@ -61,8 +63,9 @@ final class RefreshCustomerInvoiceAction
         // applications need a dedicated correction path - not snapshot rewrite.
         if ($balance->writeOffsCents > 0
             || $balance->refundsAppliedCents > 0
-            || $balance->creditsAppliedCents > 0) {
-            throw new RuntimeException('This invoice has write-off, refund, or credit activity. Use credit memo, adjustment, or refund workflows.');
+            || $balance->creditsAppliedCents > 0
+            || $balance->creditDueToStoreCreditCents > 0) {
+            throw new RuntimeException(self::SETTLED_EXPLANATION);
         }
 
         $newSnapshot = $this->snapshotBuilder->build($repairOrder->fresh(), $actor);

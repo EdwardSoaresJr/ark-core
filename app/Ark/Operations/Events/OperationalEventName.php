@@ -39,6 +39,7 @@ enum OperationalEventName: string
     case RteRecommendationOverridden = 'rte_recommendation_overridden';
     case InvoiceEmailedToCustomer = 'invoice_emailed_to_customer';
     case InvoiceRevised = 'invoice_revised';
+    case InvoiceCreditDueResolved = 'invoice_credit_due_resolved';
     case PartSourcingStarted = 'part_sourcing_started';
     case PartOrdered = 'part_ordered';
     case PartReceived = 'part_received';

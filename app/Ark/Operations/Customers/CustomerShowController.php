@@ -4,6 +4,11 @@ namespace App\Ark\Operations\Customers;
 
 use App\Ark\Operations\Conversations\CustomerCallContextResolver;
 use App\Ark\Operations\Documents\DocumentProjection;
+use App\Ark\Operations\Documents\EstimateDocument;
+use App\Ark\Operations\Financial\BalanceDueCalculator;
+use App\Ark\Operations\Financial\FinancialDocumentType;
+use App\Ark\Operations\Financial\InvoiceStatus;
+use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderStatus;
 use App\Ark\Operations\Settings\ShopSettings;
 use App\Ark\Operations\Timeline\OperationalTimeline;
@@ -41,6 +46,22 @@ class CustomerShowController
         $activeRepairOrders = $customer->repairOrders->filter(
             fn ($repairOrder) => in_array($repairOrder->status->value, $activeStatuses, true),
         );
+
+        $invoicedRepairOrders = RepairOrder::query()
+            ->where('customer_id', $customer->id)
+            ->whereIn('id', EstimateDocument::query()
+                ->select('repair_order_id')
+                ->where('document_type', FinancialDocumentType::Invoice->value)
+                ->where('status', '!=', InvoiceStatus::Voided->value))
+            ->get();
+        $balances = app(BalanceDueCalculator::class)->mapForRepairOrders($invoicedRepairOrders);
+        $creditDueRepairOrders = $invoicedRepairOrders
+            ->filter(fn (RepairOrder $repairOrder): bool => $balances[$repairOrder->id]->hasOverpayment())
+            ->map(fn (RepairOrder $repairOrder): array => [
+                'repair_order' => $repairOrder,
+                'credit_due_cents' => $balances[$repairOrder->id]->overpaidCents,
+            ])
+            ->values();
 
         $initialHubTab = match (true) {
             $request->query('compose') === 'text' => 'comms',
@@ -82,6 +103,7 @@ class CustomerShowController
             'customerTypes' => ShopSettings::current()->customerTypeRows(),
             'activeStatuses' => $activeStatuses,
             'activeRepairOrders' => $activeRepairOrders,
+            'creditDueRepairOrders' => $creditDueRepairOrders,
             'vehicleTimelineEntries' => $customer->vehicles
                 ->mapWithKeys(fn ($vehicle): array => [
                     $vehicle->id => $timeline->forVehicleRepairOrders($vehicle->repairOrders, 5),

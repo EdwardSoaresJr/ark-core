@@ -142,8 +142,9 @@ final class BalanceDueCalculator
         $adjustments = $this->sumEntries($entries, [LedgerEntryType::Adjustment]);
         $credits = $this->sumEntries($entries, [LedgerEntryType::StoreCreditApplication]);
         $writeOffs = $this->sumEntries($entries, [LedgerEntryType::WriteOff]);
+        $creditDueToStoreCredit = self::creditDueStoreCreditCents($entries);
 
-        $remainingCents = $invoiceTotal - $deposits - $payments - $writeOffs - $credits + $adjustments + $refunds;
+        $remainingCents = $invoiceTotal - $deposits - $payments - $writeOffs - $credits + $adjustments + $refunds + $creditDueToStoreCredit;
         $balanceDue = max(0, $remainingCents);
 
         return new BalanceDueResult(
@@ -159,6 +160,7 @@ final class BalanceDueCalculator
             unappliedDepositsCents: 0,
             invoiceStatus: $this->resolveInvoiceStatus($invoice, $balanceDue, $invoiceTotal),
             overpaidCents: max(0, -$remainingCents),
+            creditDueToStoreCreditCents: $creditDueToStoreCredit,
         );
     }
 
@@ -177,6 +179,17 @@ final class BalanceDueCalculator
         }
 
         return InvoiceStatus::Issued;
+    }
+
+    /**
+     * @param  Collection<int, RepairOrderLedgerEntry>  $entries
+     */
+    public static function creditDueStoreCreditCents(Collection $entries): int
+    {
+        return (int) $entries
+            ->filter(fn (RepairOrderLedgerEntry $entry): bool => $entry->entry_type === LedgerEntryType::StoreCreditIssuance
+                && $entry->payment_method === RepairOrderLedgerEntry::CREDIT_DUE_STORE_CREDIT)
+            ->sum('amount_cents');
     }
 
     /**

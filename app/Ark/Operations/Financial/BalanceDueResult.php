@@ -17,6 +17,7 @@ final readonly class BalanceDueResult
         public int $unappliedDepositsCents,
         public InvoiceStatus $invoiceStatus,
         public int $overpaidCents = 0,
+        public int $creditDueToStoreCreditCents = 0,
     ) {}
 
     public function isPaid(): bool
@@ -40,7 +41,7 @@ final readonly class BalanceDueResult
 
     public function collectedCents(): int
     {
-        return $this->depositsAppliedCents + $this->paymentsAppliedCents - $this->refundsAppliedCents;
+        return $this->depositsAppliedCents + $this->paymentsAppliedCents - $this->refundsAppliedCents - $this->creditDueToStoreCreditCents;
     }
 
     public function hasSettlementActivity(): bool
@@ -48,6 +49,7 @@ final readonly class BalanceDueResult
         return $this->paymentsAppliedCents > 0
             || $this->writeOffsCents > 0
             || $this->refundsAppliedCents > 0
-            || $this->creditsAppliedCents > 0;
+            || $this->creditsAppliedCents > 0
+            || $this->creditDueToStoreCreditCents > 0;
     }
 }

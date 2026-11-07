@@ -28,6 +28,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class RepairOrderLedgerEntry extends Model
 {
+    /**
+     * Payment method of a store credit issuance that turns credit due on a revised invoice into
+     * store credit. Unlike credit issued from an overpayment at the counter, that money is already
+     * counted in the invoice's payments, so it settles the invoice's credit due.
+     */
+    public const CREDIT_DUE_STORE_CREDIT = 'credit_due';
+
     protected function casts(): array
     {
         return [
