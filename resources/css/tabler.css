@@ -495,23 +495,35 @@
 }
 
 /*
- * The workspace strip stays at the top while the page scrolls, as the legacy chrome does. It sits above the page's own
- * sticky bars (1020) and below the header's menus (1030), which open over it.
+ * The top bar's fixed height. Sticky offsets below it are computed in CSS from the first paint, before any script runs.
+ */
+:root {
+    --ark-topbar-height: 3.5rem;
+}
+
+/* Anchors and focused controls scroll into view below the top bar and the workspace strip, not under them. */
+html:has([data-ark-topbar]) {
+    scroll-padding-top: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px));
+}
+
+/*
+ * The workspace strip stays directly below the top bar while the page scrolls, as the legacy chrome does. It sits above
+ * the page's own sticky bars (1020) and below the top bar (1022), whose menus open over it.
  */
 .ark-workspace-tabs {
     position: sticky;
-    top: 0;
+    top: var(--ark-topbar-height);
     z-index: 1021;
 }
 
-/* Legacy sticky panels (the repair order rail) sit below the workspace strip. Tabler's page has no sticky header from lg. */
+/* Legacy sticky panels (the repair order rail) sit below the top bar and the workspace strip. */
 .page {
-    --ops-sticky-stack-offset: calc(var(--ops-workspace-tabs-height, 0px) + 1rem);
+    --ops-sticky-stack-offset: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px) + 1rem);
 }
 
-/* A page's own sticky toolbar stops below the workspace strip. */
+/* A page's own sticky toolbar stops below the top bar and the workspace strip. */
 .ark-sticky-below-workspace-tabs {
-    top: var(--ops-workspace-tabs-height, 0px);
+    top: calc(var(--ark-topbar-height) + var(--ops-workspace-tabs-height, 0px));
 }
 
 /* .ops-main pads and centres a legacy page. A worksheet island fills its Tabler card or column instead. */
@@ -609,9 +621,17 @@ span.ark-legacy {
  * the left, then the global controls. It stays one row at every width: the title truncates, the crumbs and subtitle give
  * way first, and on phones the secondary actions sit in the overflow menu (tabler.js). There is no title row below it,
  * so the page body starts a short gap under the bar.
+ *
+ * It stays at the top of the viewport at that one height while the page scrolls. The station chooser and lock render
+ * inside it as fixed overlays, so it must not get a transform, filter or backdrop-filter (those would contain them), and
+ * its z-index (1022) keeps them and its menus over the workspace strip, the page's sticky bars and the action dock.
+ * Modals (1055) stay above it.
  */
 .ark-topbar {
-    min-height: 3.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 1022;
+    height: var(--ark-topbar-height);
 }
 
 .ark-topbar > .container-fluid {
