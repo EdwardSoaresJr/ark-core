@@ -212,6 +212,15 @@ final class CustomerTheme
                 '--public-link' => $linkDark,
                 '--public-link-rgb' => ThemeColor::channels($linkDark),
                 '--public-link-hover' => $linkDarkHover,
+                // Differentiated surfaces for night mode; still derived from the shop's ink/brand,
+                // never a hard-coded navy marketing slab.
+                '--public-surface-shop' => self::DARK_SURFACE,
+                '--public-surface-shop-alt' => ThemeColor::mix(self::DARK_SURFACE, '#ffffff', 0.06),
+                '--public-text' => '#f1f5f9',
+                '--public-text-muted' => '#94a3b8',
+                '--public-border' => 'rgb(148 163 184 / 0.2)',
+                '--public-ink' => '#f8fafc',
+                '--public-ink-rgb' => '248 250 252',
             ],
         ];
     }
