@@ -97,7 +97,7 @@ export function arkWorkspaceModal(config = {}) {
         'vehicle-identity': 'Decode VIN or plate, then review identity and equipment before saving.',
         mileage: 'Mileage in and out for this visit.',
         'visit-posture': 'How did this vehicle arrive for work?',
-        'visit-billing': 'Who pays for this visit? Concerns on the current billing follow the change.',
+        'visit-billing': "Sets this repair order's default billing policy: labor rate, parts pricing and shop fees. It does not by itself decide who pays. Concerns on the current billing follow the change.",
         'hub-customer': 'Update customer identity and contact details.',
         'hub-vehicle': 'Update this vehicle on the customer record.',
         'hub-vehicle-create': 'Add a vehicle to this customer.',
