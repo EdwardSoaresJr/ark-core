@@ -173,19 +173,38 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Tests for the changed files
+        id: suite
+        timeout-minutes: 40
         run: |
-          set -euo pipefail
-          mapfile -t tests < <(bash scripts/ci-focused-tests.sh "$BASE" 2> "$RUNNER_TEMP/broad.txt")
+          set -uo pipefail
+          bash scripts/ci-focused-tests.sh "$BASE" > "$RUNNER_TEMP/focused.txt" 2> "$RUNNER_TEMP/broad.txt" || { echo "Selecting the tests failed."; exit 1; }
           if [ -s "$RUNNER_TEMP/broad.txt" ]; then
             echo "::notice::This change touches $(sed 's/^broad: //' "$RUNNER_TEMP/broad.txt" | paste -sd ', ' -). A name search cannot follow its reach; add the full-regression label if it is high-risk."
           fi
+          mapfile -t tests < "$RUNNER_TEMP/focused.txt"
           if [ "${#tests[@]}" -eq 0 ]; then
             echo "No tests name the changed files."
+            echo "selected=0" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "selected=${#tests[@]}" >> "$GITHUB_OUTPUT"
           printf 'Running %d test files:\n' "${#tests[@]}"
           printf '  %s\n' "${tests[@]}"
-          php -d memory_limit=2048M vendor/bin/pest --no-coverage "${tests[@]}"
+          php -d memory_limit=2048M vendor/bin/pest --no-coverage --log-junit "$RUNNER_TEMP/junit.xml" "${tests[@]}"
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+
+      # Failures are checked against the committed known-failure baseline (#147), as the nightly run does: only a failure
+      # it does not list, a crash, a stopped or incomplete run, or a missing report fails this job.
+      - name: Report against the known-failure baseline
+        if: always() && steps.suite.outputs.selected != '0'
+        run: |
+          set -euo pipefail
+          php scripts/ci-regression-report.php \
+            --junit="$RUNNER_TEMP/junit.xml" \
+            --known=.github/regression-known-failures.txt \
+            --files="$RUNNER_TEMP/focused.txt" \
+            --out="$RUNNER_TEMP/failures.txt" \
+            --exit-code="${{ steps.suite.outputs.exit-code || 'missing' }}" | tee -a "$GITHUB_STEP_SUMMARY"
 
   communications-boundary:
     runs-on: ubuntu-latest
