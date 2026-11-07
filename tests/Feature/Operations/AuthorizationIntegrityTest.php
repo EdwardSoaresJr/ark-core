@@ -972,7 +972,7 @@ test('authorization exceptions are append-only and the repair order says they ar
         ->assertSee('data-authorization-exception-line="'.$part->id.'"', false)
         ->assertDontSee('data-authorization-exception-line="'.$labor->id.'"', false)
         ->assertSee('data-authorization-exception-basis>Internal', false)
-        ->assertSee('Recorded by '.$advisor->name, false)
+        ->assertSee('Recorded by '.e($advisor->name), false)
         ->assertSee($recordedAt, false)
         ->assertSee($note, false)
         ->assertSee('Front brake pads', false)
