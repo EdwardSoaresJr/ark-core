@@ -676,10 +676,17 @@ class RepairOrder extends Model
      */
     public function shopFeePolicyFor(ConcernBillingPosture $posture, ShopSettings $settings): array
     {
+        if (! $settings->shop_fee_enabled) {
+            return ['enabled' => false, 'rate' => null];
+        }
+
         if ($posture === ConcernBillingPosture::Default && $this->usesPerLineShopFees()) {
             $this->loadMissing('customer');
+            $policy = $settings->shopFeePolicyForCustomerType($this->customer?->customer_type);
 
-            return $settings->shopFeePolicyForCustomerType($this->customer?->customer_type);
+            return $policy['enabled'] && $policy['rate'] === null
+                ? $settings->shopFeePolicyForBillingDefault()
+                : $policy;
         }
 
         return $posture->shopFeePolicy($settings);
