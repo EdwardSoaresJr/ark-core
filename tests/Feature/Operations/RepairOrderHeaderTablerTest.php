@@ -25,7 +25,7 @@ function repairOrderHeaderHasClass(string $class): string
     return 'contains(concat(" ", normalize-space(@class), " "), " '.$class.' ")';
 }
 
-test('the repair order page begins with the Customer, Vehicle, and Visit panel, and the RO number heads the Visit panel', function (): void {
+test('the top bar carries the RO number, and the page begins with the Customer, Vehicle, and Visit panel', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $repairOrder = repairOrderForEstimateWorkspace();
     $roNumber = 'RO #'.$repairOrder->repair_order_id;
@@ -36,12 +36,15 @@ test('the repair order page begins with the Customer, Vehicle, and Visit panel, 
         ->getContent();
     $xpath = repairOrderHeaderXpath($html);
     $visit = $xpath->query('//*[@id="ro-identity-band"]//section[@data-identity-present="visit"]')->item(0);
+    $context = $xpath->query('//header[@data-ark-topbar]//*[@id="ark-page-context"]')->item(0);
 
     expect($xpath->query('//*['.repairOrderHeaderHasClass('page-header').']')->length)->toBe(0)
         ->and($xpath->query('//*['.repairOrderHeaderHasClass('page-pretitle').']')->length)->toBe(0)
+        ->and($context)->toBeInstanceOf(DOMElement::class)
+        ->and(trim($xpath->query('.//h2['.repairOrderHeaderHasClass('page-title').']', $context)->item(0)->textContent))->toBe($roNumber)
+        ->and($xpath->query('.//ol[@aria-label="Breadcrumbs"]//a[@href="'.route('operations.repair-orders.index').'"][normalize-space()="Repair Orders"]', $context)->length)->toBe(1)
         ->and($visit)->toBeInstanceOf(DOMElement::class)
-        ->and(trim($xpath->query('.//h2[@data-ro-number]', $visit)->item(0)->textContent))->toBe($roNumber)
-        ->and($xpath->query('.//*[@data-ro-visit-heading]['.repairOrderHeaderHasClass('flex-wrap').']//h2[@data-ro-number]', $visit)->length)->toBe(1)
+        ->and($xpath->query('.//*[@data-ro-visit-heading]', $visit)->length)->toBe(0)
         ->and($xpath->query('//h2[normalize-space()="'.$roNumber.'"]')->length)->toBe(1)
         ->and($xpath->query('.//*[@id="review-toolbar"]', $visit)->length)->toBe(1)
         ->and($xpath->query('.//dt[normalize-space()="Visit type"]', $visit)->length)->toBe(1)
@@ -50,7 +53,7 @@ test('the repair order page begins with the Customer, Vehicle, and Visit panel, 
         ->and($xpath->query('.//dt[normalize-space()="Status"]', $visit)->length)->toBe(0);
 });
 
-test('the Visit panel keeps the labeled status and technician selects, Review Estimate Notes, and the print menu; paperwork stays in the footer', function (): void {
+test('the Visit panel keeps the labeled status and technician selects; Review Estimate Notes and the print menu sit in the top bar once; paperwork stays in the footer', function (): void {
     $advisor = User::factory()->create()->assignRole(ArkRole::Advisor->value);
     $technician = User::factory()->create(['name' => 'Bay Technician'])->assignRole(ArkRole::Technician->value);
     $repairOrder = repairOrderForEstimateWorkspace();
@@ -63,7 +66,7 @@ test('the Visit panel keeps the labeled status and technician selects, Review Es
     $xpath = repairOrderHeaderXpath($html);
     $visit = $xpath->query('//section[@data-identity-present="visit"]')->item(0);
     $bar = $xpath->query('.//*[@id="review-toolbar"]', $visit)->item(0);
-    $actions = $xpath->query('.//*[@data-ro-command-actions]', $visit)->item(0);
+    $actions = $xpath->query('//header[@data-ark-topbar]//*[@id="ark-page-context"]//*[@data-ro-command-actions]')->item(0);
 
     expect($xpath->query('.//*[@data-ro-command-workflow]//form[@id="repair-order-workflow"][@data-lifecycle-form][@action="'.route('operations.repair-orders.lifecycle.update', $repairOrder).'"]//select[@id="status-move-'.$id.'"][@data-lifecycle-select]', $bar)->length)->toBe(1)
         ->and(trim($xpath->query('.//label[@for="status-move-'.$id.'"]', $bar)->item(0)->textContent))->toBe('Status')
@@ -74,8 +77,12 @@ test('the Visit panel keeps the labeled status and technician selects, Review Es
         ->and($actions)->toBeInstanceOf(DOMElement::class)
         ->and($xpath->query('.//button[@aria-label="Review Estimate Notes"]', $actions)->length)->toBe(1)
         ->and(preg_match('/aria-label="Review Estimate Notes"\s+@click="[^"]*task: \'review-estimate-notes\'/', $html))->toBe(1)
+        ->and($xpath->query('ancestor::*[@x-data]', $actions)->length)->toBeGreaterThan(0)
         ->and($xpath->query('.//*[@data-ro-print-menu]//button[@data-bs-toggle="dropdown"][@aria-label="Print"]', $actions)->length)->toBe(1)
         ->and($xpath->query('.//*[@data-ro-print-menu]//*[normalize-space()="Estimate PDF"]', $actions)->length)->toBe(1)
+        ->and($xpath->query('//*[@data-ro-command-actions]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-ro-print-menu]')->length)->toBe(1)
+        ->and($xpath->query('//button[@aria-label="Review Estimate Notes"]')->length)->toBe(1)
         ->and($xpath->query('//*[@id="ro-identity-band"]//*[@data-workspace-modal-trigger="document"]')->length)->toBe(0)
         ->and($xpath->query('//*[@data-ro-footer]//*[@data-workspace-modal-trigger="document"]')->length)->toBeGreaterThan(0);
 });

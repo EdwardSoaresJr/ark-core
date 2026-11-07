@@ -43,9 +43,8 @@
     <x-tabler.page
         layout="focused"
         :title="'RO #'.$snapshot['repair_order']['repair_order_id'].' Estimate'"
-        pretitle="Estimate document"
+        :breadcrumbs="[['label' => 'Repair Orders', 'url' => route('operations.repair-orders.index')]]"
         actions-label="Estimate document commands"
-        stack-actions
     >
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.repair-orders.show', $repairOrder)" icon="arrow-left" label="Back to RO Review" />

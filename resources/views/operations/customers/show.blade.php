@@ -28,7 +28,7 @@
     @endphp
 
     <div x-data="arkCustomerHubTabs(@js($initialHubTab))" x-init="init()">
-        <x-tabler.page layout="fluid" :title="$customer->name" pretitle="Customer Service Hub" actions-label="Customer commands" stack-actions>
+        <x-tabler.page layout="fluid" :title="$customer->name" :breadcrumbs="[['label' => 'Customers', 'url' => route('operations.customers.search')]]" actions-label="Customer commands">
             @can(App\Ark\Runtime\Authorization\ArkCapability::CustomersManage->value)
                 <x-slot:actions>
                     @if ($hubCallHref)

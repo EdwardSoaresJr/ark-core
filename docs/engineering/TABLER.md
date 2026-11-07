@@ -70,13 +70,23 @@ The repair order worksheet needs a secure context: `ark-worksheet-collaboration.
 Every migrated view picks one layout. `layout` is required, and an unknown value throws:
 
 ```blade
-<x-tabler.page layout="fluid" title="Customers" pretitle="Records" subtitle="…">
+<x-tabler.page layout="fluid" title="Customers" :breadcrumbs="[['label' => 'Records']]" subtitle="…">
     <x-slot:actions>…</x-slot:actions>
     …
 </x-tabler.page>
 ```
 
-`<x-tabler.page>` renders the page header and body with the same container, so they always align. The shell header and banners are `container-fluid` on every Tabler page.
+`<x-tabler.page>` renders the body in the layout's container. Its title, breadcrumbs, subtitle, `meta` slot and `actions` slot render in the shell's top bar, not in a row of their own (see "The top bar"). The shell header and banners are `container-fluid` on every Tabler page.
+
+### The top bar
+
+One compact bar holds the page's context and the global controls. `<x-tabler.page>` pushes its context to the `ark-page-context` stack and the shell renders it (`components.tabler.page-context`); the shell itself holds no page-specific control.
+
+- **Left:** breadcrumbs, then the title (`h2.page-title`), the `meta` slot (a status badge), and the subtitle. Breadcrumbs are `[['label' => …, 'url' => …], …]`; without them a `pretitle` becomes a single unlinked crumb, and a crumb that repeats the title is dropped. Link a crumb only to a page the same permission opens.
+- **Right:** the page's actions, a divider, then Inbox, the workstation, and the account menu.
+- **Narrow screens:** the title truncates rather than wrapping the bar; the subtitle shows from `xl`, the crumbs from `md`. Below `md` secondary actions (`<x-tabler.page-action>` without `primary`) move into the bar's "More page actions" menu (`resources/js/ark-page-context.js`, which moves the elements themselves, so listeners and forms keep working); the primary action stays, icon-only below `sm`. Other markup in the actions slot (a dropdown, a form) stays in the bar.
+- **Scripts:** the bar has its own empty `x-data`, so Alpine handlers in actions run; a handler must not rely on the page's Alpine scope. The bar's id is `ark-page-context`: a worksheet page lists it in `continuityPanelIds` so a refresh replaces the bar with the page's fresh copy (the repair order does).
+- The bar is not sticky; the workspace strip below it is. There is no title row, so the page body starts 1rem under the bar.
 
 | Layout | Container | Use for |
 | --- | --- | --- |
@@ -110,7 +120,7 @@ Filter rows on fluid pages switch fields to their natural width from `xxl` (`col
 ## Conventions for a migrated view
 
 - Markup is Tabler's. No `ops-*` classes, no Tailwind utilities, and no new CSS. `tabler.css` holds theme tokens, coexistence rules, and the layout rules Tabler has no utility for: `.ark-card-grid`, the repair order line grid, and the Job Board's `.ark-board`.
-- Page: `<x-tabler.page layout="…">` with an `actions` slot. See "Workspace layouts".
+- Page: `<x-tabler.page layout="…" title="…">` with an `actions` slot; the title and actions render in the top bar. See "Workspace layouts" and "The top bar". Do not add a heading row of your own above the content.
 - Forms: `.form-label`, `.form-control`, `.form-select`, `.input-icon`. Native `type="date"`. Keep field `name`s and `id`s.
 - Buttons: `.btn`, `.btn-primary` for the one main action, `.btn-ghost-secondary` for Clear, grouped in `.btn-list`.
 - Icons: `<x-tabler.icon name="…">`. Add an icon by copying its paths from the `@tabler/icons` outline set into that component.
@@ -123,8 +133,8 @@ Build record pages from these. Do not copy their markup into a view.
 
 | Component | Renders |
 | --- | --- |
-| `<x-tabler.page layout="…" [actions-label] [stack-actions] [actions-below]>` | Page header and body in the layout's container. `actions-label` names the action group for assistive technology. `stack-actions` moves the actions below the title on phones, for record pages whose title is a long name. `actions-below` puts the actions on a full-width row under the title at every width, for a command bar too wide for the title row (the repair order). |
-| `<x-tabler.page-action [href] icon label [primary]>` | A header button. Without `href` it is a `<button>`; pass its behavior as attributes, for example `x-on:click`. Secondary actions add an icon-only twin with a tooltip below `sm`. |
+| `<x-tabler.page layout="…" [title] [breadcrumbs] [pretitle] [subtitle] [title-count] [actions-label]>` | The body in the layout's container; the title, breadcrumbs, subtitle, `meta` slot and `actions` slot in the top bar. `actions-label` names the action group for assistive technology. |
+| `<x-tabler.page-action [href] icon label [primary]>` | A top bar button, one element with its label. Without `href` it is a `<button>`; pass its behavior as attributes, for example `x-on:click`. Secondary actions move into the bar's "More page actions" menu below `md`; the primary action is icon-only below `sm`. |
 | `<x-tabler.search-filters id action query placeholder label clear-url has-filters active-filter-count>` | The search card: search box and button, the phone Filters toggle and count, and the collapsible filter row. The slot holds the filter columns; an optional `hidden` slot holds hidden inputs. Field ids are `{id}-search` and `{id}-filters`. |
 | `<x-tabler.record-card :tone :actions>` | A `.card-sm` with the status color bar, the slot as its body, and the open-in icon row from `operations.partials.tabler-index-card-actions`. |
 | `<x-tabler.empty-state icon clear-url>` | The empty result, with "Clear search" when `clear-url` is set. |
@@ -145,8 +155,8 @@ Design the phone layout first, not as a squeezed desktop.
 - The primary task is on screen without scrolling. On a search page that is the search box, its button, and the first result.
 - Secondary filters sit in a `.collapse.d-md-block` panel behind a "Filters" toggle that is `d-md-none`. The panel opens on load when a filter is active, and the toggle shows the active count.
 - Labels that repeat a placeholder are `d-none d-md-block`. The input then carries an `aria-label`.
-- Page subtitles are hidden below `md` by `<x-tabler.page>`.
-- Secondary header actions are icon-only below `sm`: a labelled `.btn.d-none.d-sm-inline-flex` plus a `.btn.btn-icon.d-sm-none` with `aria-label`. The primary action keeps its label.
+- The top bar stays one row: page subtitles show from `xl`, breadcrumbs from `md`, and the title truncates.
+- Secondary page actions sit in the top bar's "More page actions" menu below `md`. The primary action stays in the bar, icon-only below `sm` with its `aria-label`.
 - Card bodies and search cards use `p-2 p-md-3`. Touch targets stay at Tabler's default button size.
 
 ## Checklist per view
@@ -227,7 +237,7 @@ Still on `app.css`: the shell components. `x-operations.date-field`, `operations
 
 Chosen third: the first record page, with tabs, deep links, inline forms, a modal, and permission-gated commands.
 
-Layout: `fluid`, not `split`. The hub is one record read top to bottom, and its tabs hold long lists and forms; panels that scroll on their own would hide the page's length and trap scrolling on phones. From `xl` the profile is a column beside the tab card (`col-xl-4 col-xxl-3`); below `xl` it sits above, with the contact and open-RO cards side by side from `md`. The header uses `stack-actions`, so on a 390px phone the name keeps one line and Call, Text, Schedule, and Edit are 40px icon buttons beside the labelled Create RO.
+Layout: `fluid`, not `split`. The hub is one record read top to bottom, and its tabs hold long lists and forms; panels that scroll on their own would hide the page's length and trap scrolling on phones. From `xl` the profile is a column beside the tab card (`col-xl-4 col-xxl-3`); below `xl` it sits above, with the contact and open-RO cards side by side from `md`. On a 390px phone the top bar keeps the name on one line, Create RO stays in the bar, and Call, Text, Schedule, and Edit are in its More page actions menu.
 
 Before: `ops-hub-layout`, `ops-hub-profile`, `ops-report-tab`, `ops-hub-tab-*`, `ops-workspace`, `ops-section-label`, `ops-hub-vehicle-*`, `ops-ro-card`, `ops-status-chip--{tone}`, `ops-index-btn`, and Tailwind layout utilities.
 
@@ -265,7 +275,7 @@ Still on `app.css`: the shell components listed under "Legacy components on a Ta
 
 Before: `ops-today`, `ops-shop-dash-*` (toolbar, command cards, workflow bar, KPIs, sales table), and the `ops-ro-workspace-tab*` dashboard tabs.
 
-After: Tabler `fluid` page. The date is the pretitle; the open-queue count, Job Board, Comms, and Business are page actions with their existing permission checks. Today and Scoreboard are `nav-pills` from the shared `operations.dashboard.tabs` partial (`'ui' => 'tabler'`); the Scoreboard page keeps the legacy tabs. The four command cards, the status bar and legend, and status dots use the shop's status colors through `RepairOrderStatusColor::tablerColorForChipTone()`. Tabler's `dark` is the dark theme's card color, so a status in the closed tone (Draft, by default) uses `secondary` on the bar and legend. The sales table is a `card-table` that scrolls inside its card on phones. Unchanged: `TodayController`, the projection, every count, amount, link, and hint.
+After: Tabler `fluid` page. The date is the subtitle beside the title in the top bar; the open-queue count, Job Board, Comms, and Business are page actions with their existing permission checks. Today and Scoreboard are `nav-pills` from the shared `operations.dashboard.tabs` partial (`'ui' => 'tabler'`); the Scoreboard page keeps the legacy tabs. The four command cards, the status bar and legend, and status dots use the shop's status colors through `RepairOrderStatusColor::tablerColorForChipTone()`. Tabler's `dark` is the dark theme's card color, so a status in the closed tone (Draft, by default) uses `secondary` on the bar and legend. The sales table is a `card-table` that scrolls inside its card on phones. Unchanged: `TodayController`, the projection, every count, amount, link, and hint.
 
 Staff without a shop dashboard (technicians) get a Tabler `fluid` page titled "Today", with the attention count as the title badge, the greeting as the subtitle (hidden below `md`, like every page subtitle), and Job Board as a page action. Each lane (`operations.today.partials.technician-lanes`) is a `card`: the title and its total count, View all as a card action, and the rows as a flush `list-group` of links to the repair order. The owner label shows from `md` and "Open RO" from `sm`. With no lanes, a card says "You're caught up." with the day's focus. Unchanged: `TodayOperationalComposer`, the lane order and caps, each row's link, and the View all target. Hooks: `data-today-lanes`, `data-today-lane="{key}"`, `data-today-lane-count`, `data-today-action`, and `data-today-caught-up`.
 
@@ -334,11 +344,11 @@ Migrated: the page header (RO number, customer and vehicle) and the toolbar as i
 
 Still legacy, in `.ark-legacy.ops-main > .ops-estimate-workspace` (the wrapper legacy dark-mode and layout rules expect): the flash messages, collaboration banners, intake band, identity band, workspace tabs, the estimate worksheet, the totals and financial rail, the labor guide panel, and the footer dock. `tabler.css` sets `--ops-left-rail-width` inside islands to the Tabler sidebar width, so the fixed footer dock starts at the sidebar edge.
 
-### Repair order workspace: the Visit panel heads the page (`operations.repair-orders.show`)
+### Repair order workspace: the top bar and the Visit panel (`operations.repair-orders.show`)
 
-The repair order is the vehicle's visit, so the page has no title row: the Customer | Vehicle | Visit panel (`#ro-identity-band`) begins the page under the shell and workspace tabs, and the RO number heads the Visit panel (`h2[data-ro-number]`).
+The repair order is the vehicle's visit, so the page has no title row: the top bar carries "Repair Orders / RO #…" with Review Estimate Notes and the Print menu (and, while the RO is in intake, Job Board, which replaced the intake band), and the Customer | Vehicle | Visit panel (`#ro-identity-band`) begins the page under the workspace tabs. `ark-page-context` is a continuity panel, so worksheet saves refresh the bar with the panels.
 
-- **Visit panel, in order:** the RO number with Review Estimate Notes and Print beside it; `#review-toolbar` with the Status and Technician selects as label | control rows (visible labels; the technician select is `assigned_technician_id`) and the review-request follow-up; then Visit type, mileage, Opened, Estimate by, and Appointment. Without the status select (closed, or no lifecycle capability) the status is a badge beside the RO number, so it appears once.
+- **Visit panel, in order:** `#review-toolbar` with the Status and Technician selects as label | control rows (visible labels; the technician select is `assigned_technician_id`) and the review-request follow-up; then Visit type, mileage, Opened, Estimate by, and Appointment. Without the status select (closed, or no lifecycle capability) the status is a badge beside the RO number in the top bar, so it appears once.
 - **Estimate by vs Technician:** they are different people. "Estimate by" is who last prepared the estimate (`RepairOrder::serviceAdvisorName()`, the estimate snapshot's `generated_by`; the presenter and the estimate PDF still call it Advisor, only this panel relabels it). Technician is the assignment the select changes. Repair orders have no assigned-advisor field.
 - **Inspection status** is on the Inspection tab (`#ro-inspection-tab-signal`: a status dot and `InspectionPosture::label()`, full detail in `title`), a continuity panel so worksheet saves refresh it.
 - **Paperwork / Add Document** is only in the sticky footer (`RepairOrderFooterProjection`, same users and label). Print stays in the panel: its menu has per-owner tech sheets and Final Invoice, which the footer's PRINT menu does not.
@@ -472,7 +482,7 @@ Still legacy: the staff history page (`operations.time-clock.staff`), with auto 
 
 ### Appointment detail (`operations.appointments.show`)
 
-The page a Schedule card opens. It's a Tabler `focused` page with `stack-actions`: the appointment date and time as the pretitle, the contact name as the title, and Schedule as the back link.
+The page a Schedule card opens. It's a Tabler `focused` page: "Schedule" as a linked breadcrumb, the contact name as the title, the appointment date and time as the subtitle, and Schedule as the back link.
 
 - **Summary card:** the contact line, "Not linked to a customer yet", and the status, length, and reserved labor line sit in the first card body, because the page subtitle is hidden on phones. Concern and notes follow, then Vehicle and Advisor in a `datagrid`, then the actions in the footer. Check In / Create RO is the one `btn-primary`; Open RO replaces it once a repair order exists.
 - **Customer text and Reschedule or edit:** still `<details>` cards, so `?comms=1` and `?edit=1` open them as before. The summary is a `card-body`, which keeps the browser's disclosure marker.
@@ -496,7 +506,7 @@ The sidebar's Schedule item matches `operations.appointments.*`, so it is not hi
 
 ### Job Board (`operations.index`)
 
-The advisor landing page at `/app` (view `operations.home`). It's a Tabler `fluid` page with no page header. Like the legacy board, it opens on the filter row.
+The advisor landing page at `/app` (view `operations.home`). It's a Tabler `fluid` page titled "Job Board" in the top bar. Like the legacy board, it opens on the filter row.
 
 - **Filters:** search, the employee select, and Check In (primary, for staff who manage repair orders). The row sticks to the top while the lanes scroll, as the legacy toolbar did. Alpine still filters the cards and the lane counts on the client.
 - **Lanes:** `.ark-board` in `tabler.css`. From `md` the five lanes share the width, which fits beside the sidebar from 1280. On phones a lane is 85% of the screen and the board swipes sideways, one lane at a time, with the next lane's edge in view; the page no longer stacks every lane into one tall column. Each lane header is a `card-sm` with `card-status-top` in the lane's color, from `RepairOrderStatusColor`.

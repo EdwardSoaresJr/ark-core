@@ -4,7 +4,6 @@
         :title="$dealerQuote->sourceHeadline()"
         pretitle="Dealer Quote"
         actions-label="Dealer quote commands"
-        stack-actions
     >
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.repair-orders.show', $repairOrder).'#estimate-lines'" icon="arrow-left" label="Back to estimate" />

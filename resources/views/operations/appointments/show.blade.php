@@ -11,8 +11,8 @@
 
     <x-tabler.page
         layout="focused"
-        stack-actions
-        :pretitle="\App\Ark\Operations\Settings\ShopDisplayTimezone::format($appointment->starts_at, 'l, M j · g:i A')"
+        :breadcrumbs="[['label' => 'Schedule', 'url' => route('operations.appointments.index')]]"
+        :subtitle="\App\Ark\Operations\Settings\ShopDisplayTimezone::format($appointment->starts_at, 'l, M j · g:i A')"
         :title="$appointment->displayName()"
         actions-label="Appointment navigation"
     >

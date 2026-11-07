@@ -1036,7 +1036,7 @@
             broadcastChannel: @js(App\Ark\Operations\RepairOrders\RepairOrderEstimateBroadcast::channelName($repairOrder->repair_order_id)),
         }), arkWorksheetContinuity({
             worksheetScopeId: 'estimate-lines',
-            continuityPanelIds: ['worksheet-status-flash', 'ro-identity-band', 'ro-inspection-tab-signal', 'visit-reason', 'estimate-builder-rail', 'estimate-total-panel', 'review-toolbar', 'workspace-modal-host', 'ro-orientation-header'],
+            continuityPanelIds: ['worksheet-status-flash', 'ro-identity-band', 'ro-inspection-tab-signal', 'visit-reason', 'estimate-builder-rail', 'estimate-total-panel', 'review-toolbar', 'workspace-modal-host', 'ro-orientation-header', 'ark-page-context'],
             conflictFragment: 'estimate-lines',
             refreshScopeMap: {
                 worksheet: 'estimate-lines',
@@ -1523,8 +1523,40 @@
         @ark:partstech-open.window="openPartsCatalog('partstech', false, $event.detail?.concernId ?? null)"
         @keydown.escape.window="partsCatalogMenu = false; laborGuideMenu = false"
     >
-        {{-- No page title: the RO number heads the Visit panel, which begins the page. --}}
-        <x-tabler.page layout="fluid">
+        @php
+            $visitCommands = [
+                'repairOrder' => $repairOrder,
+                'isTerminal' => $isTerminal,
+                'lifecycleOptions' => $lifecycleOptions,
+                'closeVariantOptions' => $closeVariantOptions,
+                'technicians' => $technicians,
+                'soloOwnerShop' => $soloOwnerShop,
+                'estimateVersion' => $estimateVersion,
+                'financial' => $financial,
+                'balanceProjection' => $balanceProjection ?? null,
+                'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
+            ];
+            $statusSelectShown = ! $isTerminal
+                && (bool) auth()->user()?->canAny([\App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersManage->value, \App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersLifecycle->value]);
+        @endphp
+        {{-- The top bar carries the RO number and the Visit actions; the Customer, Vehicle and Visit panel begins the page. --}}
+        <x-tabler.page
+            layout="fluid"
+            :title="'RO #'.$repairOrder->repair_order_id"
+            :breadcrumbs="[['label' => 'Repair Orders', 'url' => auth()->user()?->can(\App\Ark\Runtime\Authorization\ArkCapability::RepairOrdersView->value) ? route('operations.repair-orders.index') : null]]"
+            actions-label="Repair order commands"
+        >
+            @unless ($statusSelectShown)
+                <x-slot:meta>
+                    <span class="badge bg-secondary-lt" data-ro-status>{{ $repairOrder->statusDisplayLabel() }}</span>
+                </x-slot:meta>
+            @endunless
+            <x-slot:actions>
+                @if ($repairOrder->status->isIntake())
+                    <x-tabler.page-action :href="route('operations.index')" icon="arrow-left" label="Job Board" />
+                @endif
+                @include('operations.repair-orders.partials.repair-order-visit-actions', $visitCommands)
+            </x-slot:actions>
             <div x-show="partstechCatalogOpening || partstechPullLoading" x-cloak role="status" aria-live="polite">
                 <div class="alert alert-info d-flex align-items-center gap-2">
                     <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -1601,27 +1633,13 @@
 
         @include('operations.repair-orders.partials.repair-order-worksheet-collaboration-banners')
 
-        @include('operations.repair-orders.partials.repair-order-intake-context-band', [
-            'repairOrder' => $repairOrder,
-        ])
 
         @include('operations.repair-orders.partials.operational-identity-band', [
             'repairOrder' => $repairOrder,
             'identityVariant' => 'staff',
             'estimateVersion' => $estimateVersion,
             'totals' => $totals,
-            'visitCommands' => [
-                'repairOrder' => $repairOrder,
-                'isTerminal' => $isTerminal,
-                'lifecycleOptions' => $lifecycleOptions,
-                'closeVariantOptions' => $closeVariantOptions,
-                'technicians' => $technicians,
-                'soloOwnerShop' => $soloOwnerShop,
-                'estimateVersion' => $estimateVersion,
-                'financial' => $financial,
-                'balanceProjection' => $balanceProjection ?? null,
-                'canAuthorRepairOrder' => $canAuthorRepairOrder ?? false,
-            ],
+            'visitCommands' => $visitCommands,
         ])
 
         <div class="ops-estimate-layout gap-3 mt-3">

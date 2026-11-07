@@ -6,7 +6,7 @@
 @endphp
 
 <x-operations.app title="Operational Report" ui="tabler">
-    <x-tabler.page layout="fluid" title="Executive Pulse" :pretitle="'Reports · '.$activeTab->label()" actions-label="Report shortcuts">
+    <x-tabler.page layout="fluid" title="Executive Pulse" :breadcrumbs="[['label' => 'Reports', 'url' => route('operations.reports.index')], ['label' => $activeTab->label()]]" actions-label="Report shortcuts">
         <x-slot:actions>
             <x-tabler.page-action :href="route('operations.reports.index')" icon="arrow-left" label="All reports" />
         </x-slot:actions>

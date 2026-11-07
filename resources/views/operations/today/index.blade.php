@@ -134,7 +134,7 @@
 
 <x-operations.app title="Today" ui="tabler">
     @if ($dashboard !== null)
-        <x-tabler.page layout="fluid" title="Shop Dashboard" :pretitle="$headlineDate" actions-label="Dashboard shortcuts">
+        <x-tabler.page layout="fluid" title="Shop Dashboard" :subtitle="$headlineDate" actions-label="Dashboard shortcuts">
             <x-slot:actions>
                 <x-tabler.page-action :href="$dashboard->openQueueUrl" icon="file-text" :label="$openRepairOrdersLabel" />
                 <x-tabler.page-action :href="$dashboard->jobBoardUrl" icon="layout-grid" label="Job Board" />

@@ -136,13 +136,15 @@ test('customer search uses the fluid workspace and the record card grid', functi
         ->assertDontSee('row-cards', false);
 });
 
-test('each workspace layout renders its Tabler container', function (string $layout, array $expected): void {
+test('each workspace layout renders its Tabler container, with no title row of its own', function (string $layout, array $expected): void {
     $html = (string) $this->blade(
         '<x-tabler.page :layout="$layout" title="Workspace">Body</x-tabler.page>',
         ['layout' => $layout],
     );
 
-    expect($html)->toContain('class="page-title">Workspace</h2>')->toContain('Body');
+    expect($html)->toContain('Body')
+        ->not->toContain('page-header')
+        ->not->toContain('page-title');
 
     foreach ($expected as $fragment) {
         expect($html)->toContain($fragment);
@@ -158,12 +160,38 @@ test('a page must name a known workspace layout', function (): void {
     $this->blade('<x-tabler.page layout="wide">Body</x-tabler.page>');
 })->throws(ViewException::class, 'Unknown Tabler page layout [wide].');
 
-test('icon-only header actions keep an accessible name and a tooltip', function (): void {
+test('the top bar carries the page title, its breadcrumb and its actions, ahead of the global controls', function (): void {
+    $html = $this->actingAs(actingAsLearnCurrentAdvisor())
+        ->get(route('operations.customers.search'))
+        ->assertOk()
+        ->getContent();
+    $document = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $document->loadHTML($html);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($document);
+    $bar = $xpath->query('//header[@data-ark-topbar]')->item(0);
+    $context = $xpath->query('.//*[@id="ark-page-context"]', $bar)->item(0);
+
+    expect($bar)->toBeInstanceOf(DOMElement::class)
+        ->and($xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " page-header ")]')->length)->toBe(0)
+        ->and($xpath->query('//h2[contains(concat(" ", normalize-space(@class), " "), " page-title ")]')->length)->toBe(1)
+        ->and(trim($xpath->query('.//h2[contains(concat(" ", normalize-space(@class), " "), " page-title ")]', $context)->item(0)->textContent))->toBe('Customers')
+        ->and(trim($xpath->query('.//ol[@aria-label="Breadcrumbs"]/li', $context)->item(0)->textContent))->toBe('Records')
+        ->and($xpath->query('//main//*[@id="ark-page-context"]')->length)->toBe(0)
+        // The page's context comes before the global controls (the account menu) in the same bar.
+        ->and($xpath->query('.//*[@id="ark-page-context"]/following-sibling::*[contains(concat(" ", normalize-space(@class), " "), " navbar-nav ")]', $bar)->length)->toBe(1);
+});
+
+test('secondary actions are one labeled element each, marked for the overflow menu on phones', function (): void {
     $this->actingAs(actingAsLearnCurrentAdvisor())
         ->get(route('operations.customers.search'))
         ->assertOk()
-        ->assertSee('class="btn btn-icon d-sm-none" title="Vehicles" aria-label="Vehicles" data-bs-toggle="tooltip"', false)
-        ->assertSee('class="btn btn-icon d-sm-none" title="Job Board" aria-label="Job Board" data-bs-toggle="tooltip"', false);
+        ->assertSee('data-ark-page-action="secondary" aria-label="Vehicles"', false)
+        ->assertSee('data-ark-page-action="secondary" aria-label="Job Board"', false)
+        ->assertSee('data-ark-page-overflow hidden', false)
+        ->assertSee('aria-label="More page actions"', false)
+        ->assertDontSee('btn-icon d-sm-none', false);
 });
 
 test('the Tabler account menu keeps profile, theme, and sign out', function (): void {

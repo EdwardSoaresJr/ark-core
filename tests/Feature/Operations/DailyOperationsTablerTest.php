@@ -53,7 +53,15 @@ function dailyOpsTablerMain(TestResponse $response): string
     expect($start)->not->toBeFalse()
         ->and($end)->not->toBeFalse();
 
-    return substr($html, $start, $end - $start);
+    // The page's title and actions render in the top bar (components.tabler.page-context), ahead of the global controls.
+    $context = '';
+    $contextStart = strpos($html, '<div class="ark-page-context"');
+    if ($contextStart !== false && $contextStart < $start) {
+        $contextEnd = strpos($html, '<div class="navbar-nav', $contextStart);
+        $context = substr($html, $contextStart, ($contextEnd === false ? $start : $contextEnd) - $contextStart);
+    }
+
+    return $context.substr($html, $start, $end - $start);
 }
 
 function expectNoLegacyMarkup(string $main): void
