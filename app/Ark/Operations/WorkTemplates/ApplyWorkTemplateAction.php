@@ -10,7 +10,6 @@ use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
 use App\Ark\Operations\Financial\RefreshCustomerInvoiceAction;
 use App\Ark\Operations\RepairOrders\AssignRepairActionOwnerAction;
-use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\NoteAudience;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
 use App\Ark\Operations\RepairOrders\RecommendationPriority;
@@ -116,7 +115,7 @@ final class ApplyWorkTemplateAction
                     'repair_order_id' => $repairOrder->id,
                     'summary' => $template->title,
                     'disposition' => RepairOrderConcernDisposition::Recommended,
-                    'billing_posture' => ConcernBillingPosture::defaultForCustomerTag($repairOrder->customer?->customer_type),
+                    'billing_posture' => $repairOrder->defaultBillingPosture(),
                     'recommendation_intent' => $semantic?->value,
                     'recommendation_priority' => $priority?->value,
                     'information_only' => $informationOnly,

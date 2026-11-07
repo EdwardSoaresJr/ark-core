@@ -25,6 +25,7 @@ enum OperationalEventName: string
     case ConcernDeleted = 'concern_deleted';
     case ConcernDispositionChanged = 'concern_disposition_changed';
     case ConcernBillingChanged = 'concern_billing_changed';
+    case RepairOrderBillingChanged = 'repair_order_billing_changed';
     case AuthorizationExceptionRecorded = 'authorization_exception_recorded';
     case ConcernMovedToNewRepairOrder = 'concern_moved_to_new_repair_order';
     case ConcernProductionStatusChanged = 'concern_production_status_changed';

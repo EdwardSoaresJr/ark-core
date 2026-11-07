@@ -3,7 +3,6 @@
 namespace App\Ark\Operations\Recommendations;
 
 use App\Ark\Operations\RepairOrders\ConcernRecommendationDefaults;
-use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\PartProcurementState;
 use App\Ark\Operations\RepairOrders\RecordsRepairOrderEstimateMutation;
 use App\Ark\Operations\RepairOrders\RepairActionOwnerType;
@@ -84,7 +83,7 @@ final class AddRecommendationToEstimateAction
                 'disposition' => RepairOrderConcernDisposition::Recommended,
                 'production_status' => ScopeProductionStatus::Pending,
                 'billing_posture' => $source?->billing_posture
-                    ?? ConcernBillingPosture::defaultForCustomerTag($repairOrder->customer?->customer_type),
+                    ?? $repairOrder->defaultBillingPosture(),
                 ...($source instanceof RepairOrderConcern
                     ? $source->recommendationAttributes()
                     : ConcernRecommendationDefaults::forEntryKind(ScopeEntryKind::CustomerRequested)),

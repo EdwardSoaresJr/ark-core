@@ -96,7 +96,7 @@ final class RepairOrderIntakeConcerns
     ): array {
         $defaults = ConcernRecommendationDefaults::forIntake($repairOrder);
         $repairOrder->loadMissing('customer');
-        $defaultBillingPosture = ConcernBillingPosture::defaultForCustomer($repairOrder->customer);
+        $defaultBillingPosture = $repairOrder->defaultBillingPosture();
 
         $created = [];
         $position = 0;

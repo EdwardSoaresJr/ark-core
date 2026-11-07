@@ -130,6 +130,60 @@
         </select>
     </form>
 </div>
+
+@php
+    $visitBilling = $repairOrder->defaultBillingPosture();
+    $visitBillingSettings = ShopSettings::current();
+@endphp
+<div data-workspace-modal-panel x-show="task === 'visit-billing'" x-cloak>
+    <form
+        method="POST"
+        action="{{ route('operations.repair-orders.billing-posture.update', $repairOrder) }}"
+        data-workspace-modal-form="visit-billing"
+        data-refresh-scope="worksheet"
+        data-saving-label="Applying…"
+        @submit.prevent="submitWorksheetForm($event)"
+        x-data="{
+            selected: @js($visitBilling->value),
+            preview: null,
+            async loadPreview() {
+                this.preview = null;
+                const response = await fetch(@js(route('operations.repair-orders.billing-posture.preview', $repairOrder)) + '?billing_posture=' + encodeURIComponent(this.selected), {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                this.preview = response.ok ? await response.json() : null;
+            },
+        }"
+    >
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="{{ App\Ark\Operations\RepairOrders\RepairOrderConcurrency::FIELD }}" value="{{ $estimateVersion }}">
+        <label class="form-label" for="workspace-visit-billing">Billing for this visit</label>
+        <select
+            id="workspace-visit-billing"
+            name="billing_posture"
+            x-model="selected"
+            @change="loadPreview()"
+            required
+            class="form-select"
+        >
+            @foreach (App\Ark\Operations\RepairOrders\ConcernBillingPosture::advisorSelectableCases() as $posture)
+                <option value="{{ $posture->value }}" @selected($visitBilling === $posture)>{{ $visitBillingSettings->billingPostureOptionPresentation($posture)['label'] }}</option>
+            @endforeach
+        </select>
+        <div class="form-hint">
+            Applies to this repair order only. {{ $identityCustomer->name }}'s billing class ({{ $identityCustomer->customer_type ?: 'Retail' }}) stays the same.
+        </div>
+        <div class="alert alert-info small mt-3 mb-0" role="status" x-show="preview" x-cloak data-visit-billing-preview>
+            <div class="fw-bold" x-text="preview?.summary"></div>
+            <ul class="mb-0 mt-1 ps-3" x-show="preview?.details?.length">
+                <template x-for="detail in (preview?.details ?? [])" :key="detail">
+                    <li x-text="detail"></li>
+                </template>
+            </ul>
+        </div>
+    </form>
+</div>
 @endunless
 
 <div data-workspace-modal-panel x-show="task === 'mileage'" x-cloak>

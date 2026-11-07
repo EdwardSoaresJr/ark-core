@@ -6,7 +6,6 @@ use App\Ark\Operations\Documents\EstimateDocumentService;
 use App\Ark\Operations\Events\OperationalEventName;
 use App\Ark\Operations\Events\OperationalEventRecorder;
 use App\Ark\Operations\Financial\EstimateTotalsCalculator;
-use App\Ark\Operations\RepairOrders\ConcernBillingPosture;
 use App\Ark\Operations\RepairOrders\RecommendationIntent;
 use App\Ark\Operations\RepairOrders\RepairOrder;
 use App\Ark\Operations\RepairOrders\RepairOrderConcern;
@@ -86,7 +85,7 @@ final class AddEngineOilServiceAction
                 'repair_order_id' => $repairOrder->id,
                 'summary' => $label,
                 'disposition' => RepairOrderConcernDisposition::Recommended,
-                'billing_posture' => ConcernBillingPosture::defaultForCustomerTag($repairOrder->customer?->customer_type),
+                'billing_posture' => $repairOrder->defaultBillingPosture(),
                 'recommendation_intent' => RecommendationIntent::Maintenance->value,
                 'position' => max(1, $position),
             ]);
